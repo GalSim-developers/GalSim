@@ -16,10 +16,10 @@ from matplotlib.font_manager import FontProperties
 
 # Set some important quantities up top:
 # Which interpolants do we want to test?
-interpolant_list = ['linear', 'cubic', 'quintic', 'nearest']
+interpolant_list = ['linear', 'cubic', 'quintic', 'sinc']
 # Define shear grid
-grid_size = 5. # degrees
-ngrid = 50 # grid points in nominal grid
+grid_size = 10. # degrees
+ngrid = 100 # grid points in nominal grid
 kmin_factor = 3 # factor by which to have the lensing engine internally expand the grid, to get
                 # large-scale shear correlations.
 # Define shear power spectrum file
@@ -27,8 +27,8 @@ pk_file = os.path.join('..','..','examples','data','cosmo-fid.zmed1.00.out')
 # Define files for PS / corr func.
 tmp_cf_file = 'tmp.cf.dat'
 # Set defaults for command-line arguments
-## subsampling factor for the finer grid for which we wish to test results.
-default_subsampling = 5
+## grid offsets: 'random' (i.e., random sub-pixel amounts) or a specific fraction of a pixel
+default_dithering = 'random'
 ## number of realizations to run.
 default_n = 100
 ## number of bins for output PS / corrfunc
@@ -95,7 +95,7 @@ def ft_interp(uvals, interpolant):
 
 
 def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
-                      big_dth, small_dth, type='EE'):
+                      dth, type='EE'):
     """Routine to make power spectrum plots and write them to file.
 
     This routine makes a two-panel plot, with the first panel showing the two power spectra,
@@ -113,9 +113,7 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
 
       ps_plot_prefix ------ Prefix to use for power spectrum plots.
 
-      big_dth ------------- Grid spacing for original, coarse grid (degrees).
-
-      small_dth ----------- Grid spacing for subsampled grid (degrees).
+      dth ----------------- Grid spacing (degrees).
 
       type ---------------- Type of power spectrum?  Options are 'EE', 'BB', 'EB'.  This affects the
                             choice of plots to make.
@@ -129,8 +127,7 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
     # kmax = pi / (theta in radians)
     #      = pi / (2pi * (theta in degrees) / 180.)
     #      = 90 / (theta in degrees)
-    big_kmax = 90. / big_dth
-    small_kmax = 90. / small_dth
+    kmax = 90. / dth
 
     # Set up plot
     fig = plt.figure()
@@ -142,8 +139,7 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
     ax.plot(ell, ell*(ell+1)*ps/(2.*np.pi), color='b', label='Power spectrum')
     ax.plot(ell, ell*(ell+1)*interpolated_ps/(2.*np.pi), color='r',
             label='Interpolated')
-    big_kmax_x_markers = np.array((big_kmax, big_kmax))
-    small_kmax_x_markers = np.array((small_kmax, small_kmax))
+    kmax_x_markers = np.array((kmax, kmax))
     if type=='EE':
         kmax_y_markers = np.array((
                 min(np.min((ell**2)*ps[ps>0]/(2.*np.pi)),
@@ -156,8 +152,7 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
                     np.min((ell**2)*interpolated_ps/(2.*np.pi))),
                 max(np.max((ell**2)*ps/(2.*np.pi)),
                     np.max((ell**2)*interpolated_ps/(2.*np.pi)))))
-    ax.plot(big_kmax_x_markers, kmax_y_markers, '--', color='k', label='Coarse spacing')
-    ax.plot(small_kmax_x_markers, kmax_y_markers, ':', color='k', label='Fine spacing')
+    ax.plot(kmax_x_markers, kmax_y_markers, '--', color='k', label='Grid kmax')
     ax.set_ylabel('Dimensionless %s power'%type)
     ax.set_title('Interpolant: %s'%interpolant)
     ax.set_xscale('log')
@@ -179,9 +174,7 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
             ax.plot(fine_ell, theor_ratio, '--', color='g', label='Theory prediction')
         except:
             print "Could not get theoretical prediction for interpolant %s"%interpolant
-        ax.plot(big_kmax_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), '--',
-                color='k')
-        ax.plot(small_kmax_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), ':',
+        ax.plot(kmax_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), '--',
                 color='k')
         ax.plot(ell, np.ones_like(ell), '--', color='r')
         ax.set_xlabel('ell [1/radians]')
@@ -195,7 +188,7 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
     print "Wrote power spectrum plots to file %r"%outfile
 
 def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
-                      big_dth, small_dth, type='p'):
+                      dth, type='p'):
     """Routine to make correlation function plots and write them to file.
 
     This routine makes a two-panel plot, with the first panel showing the two correlation functions,
@@ -213,9 +206,7 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
 
       cf_plot_prefix ------ Prefix to use for correlation function plots.
 
-      big_dth ------------- Grid spacing for original, coarse grid (degrees).
-
-      small_dth ----------- Grid spacing for subsampled grid (degrees).
+      dth ----------------- Grid spacing (degrees).
 
       type ---------------- Type of correlation function?  Options are 'p' and 'm' for xi_+ and
                             xi_-.
@@ -231,13 +222,11 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
     ax.plot(th, cf, color='b', label='Correlation function')
     ax.plot(th, interpolated_cf, color='r',
             label='Interpolated')
-    dth_big_x_markers = np.array((big_dth, big_dth))
-    dth_small_x_markers = np.array((small_dth, small_dth))
+    dth_x_markers = np.array((dth, dth))
     dth_y_markers = np.array(( min(np.min(cf[cf>0]),
                                    np.min(interpolated_cf[interpolated_cf>0])),
                                2*max(np.max(cf), np.max(interpolated_cf))))
-    ax.plot(dth_big_x_markers, dth_y_markers, '--', color='k', label='Coarse spacing')
-    ax.plot(dth_small_x_markers, dth_y_markers, ':', color='k', label='Fine spacing')
+    ax.plot(dth_x_markers, dth_y_markers, '--', color='k', label='Grid spacing')
     if type=='p':
         ax.set_ylabel('xi_+')
     else:
@@ -251,8 +240,7 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
     ax = fig.add_subplot(212)
     ratio = interpolated_cf/cf
     ax.plot(th, ratio, color='k')
-    ax.plot(dth_big_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), '--', color='k')
-    ax.plot(dth_small_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), ':', color='k')
+    ax.plot(dth_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), '--', color='k')
     ax.plot(th, np.ones_like(th), '--', color='r')
     ax.set_ylim(0.0,1.6)
     ax.set_xlabel('Separation [degrees]')
@@ -383,7 +371,7 @@ def getCF(x, y, g1, g2, dtheta, ngrid, n_output_bins):
     # Define some variables that corr2 needs: range of separations to use.
     min_sep = dtheta
     max_sep = ngrid * np.sqrt(2) * dtheta
-    subprocess.Popen(['corr2','corr2.params',
+    subprocess.Popen(['/Users/rmandelb/svn/mjarvis-read-only/corr2','corr2.params',
                       'file_name=temp.fits',
                       'e2_file_name=%s'%tmp_cf_file,
                       'min_sep=%f'%min_sep,'max_sep=%f'%max_sep,
@@ -398,17 +386,18 @@ def getCF(x, y, g1, g2, dtheta, ngrid, n_output_bins):
     xip_err = results[:,6]
     return r, xip, xim, xip_err
 
-def main(n_realizations, subsampling, n_output_bins, ps_plot_prefix, cf_plot_prefix):
+def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefix):
     """Main routine to drive all tests.
 
     Arguments:
 
         n_realizations ----- Number of random realizations of each shear field.
 
-        subsampling -------- Factor by which to subsample the default grid.  Should be an int > 1.
-                             (Note: have explicitly checked that if subsampling=1, the resulting
-                             two-point functions are the same for the direct calculation and
-                             'interpolation'.)
+        dithering ---------- Sub-pixel dither to apply to the grid onto which we interpolate, with
+                             respect to the original grid on which shears are determined.  If
+                             'random' (default) then each realization has a random (x, y) sub-pixel
+                             offset.  If a string that converts to a float, then that float is used
+                             to determine the x, y offsets for each realization.
 
         n_output_bins ------ Number of bins for calculation of 2-point functions.
 
@@ -417,23 +406,55 @@ def main(n_realizations, subsampling, n_output_bins, ps_plot_prefix, cf_plot_pre
         cf_plot_prefix ----- Prefix to use for correlation function outputs.
 
     """
-    # Set up PowerSpectrum object.
-    ps = galsim.PowerSpectrum(pk_file, units = galsim.radians)
-
     # Get basic grid information
-    default_grid_spacing = grid_size / ngrid
-    default_ngrid = ngrid
+    grid_spacing = grid_size / ngrid
 
-    # Set up subsampled grid and the corresponding x, y lists.
-    subsampled_grid_spacing = grid_size / (ngrid*subsampling)
-    subsampled_ngrid = ngrid*subsampling
-    min = (-subsampled_ngrid/2 + 0.5) * subsampled_grid_spacing
-    max = (subsampled_ngrid/2 - 0.5) * subsampled_grid_spacing
+    # Set up PowerSpectrum object.  We have to be careful to watch out for aliasing due to our
+    # initial P(k) including power on scales above those that can be represented by our grid.  In
+    # order to deal with that, we will define a power spectrum function that equals a cosmological
+    # one for k < k_max and is zero above that.  In principle, hard edges could cause a problem, but
+    # we will cross (burn?) that bridge when we come to it.
+    raw_ps_data = np.loadtxt(pk_file).transpose()
+    raw_ps_k = raw_ps_data[0,:]
+    raw_ps_p = raw_ps_data[1,:]
+    # Find k_max, taking into account that grid spacing is in degrees and our power spectrum is
+    # defined in radians. So
+    #    k_max = pi / (grid_spacing in radians) = pi / [2 pi (grid_spacing in degrees) / 180]
+    #          = 90 / (grid spacing in degrees)
+    k_max = 90. / grid_spacing
+    # Now define a power spectrum that is raw_ps below k_max and zero above that.
+    # If hard edges are a problem, we could use some function that goes smoothly to zero instead.
+    ps = galsim.PowerSpectrum(
+        galsim.LookupTable(raw_ps_k, raw_ps_p*(raw_ps_k<k_max), interpolant='linear'),
+        units = galsim.radians
+        )
+
+    # Set up grid and the corresponding x, y lists.
+    min = (-ngrid/2 + 0.5) * grid_spacing
+    max = (ngrid/2 - 0.5) * grid_spacing
     x, y = np.meshgrid(
-        np.arange(min,max+subsampled_grid_spacing,subsampled_grid_spacing),
-        np.arange(min,max+subsampled_grid_spacing,subsampled_grid_spacing))
-    x = list(x.flatten())
-    y = list(y.flatten())
+        np.arange(min,max+grid_spacing,grid_spacing),
+        np.arange(min,max+grid_spacing,grid_spacing))
+
+    # Parse the input dithering
+    if dithering != 'random':
+        try:
+            dithering = float(dithering)
+        except:
+            raise RuntimeError("Dithering should be 'random' or a float!")
+        if dithering<0 or dithering>1:
+            import warnings
+            dithering = dithering % 1
+            warnings.warn("Dithering converted to a value between 0-1: %f"%dithering)
+        # Now, set up the dithered grid.  Will be (ngrid-1) x (ngrid-1) so as to not go off the
+        # edge.
+        dither_x = x[0:ngrid-1,0:ngrid-1] + dithering*grid_spacing
+        dither_y = y[0:ngrid-1,0:ngrid-1] + dithering*grid_spacing
+        dither_x = list(dither_x.flatten())
+        dither_y = list(dither_y.flatten())
+    else:
+        # Just set up the uniform deviate.
+        u = galsim.UniformDeviate()
 
     # Loop over interpolants.
     for interpolant in interpolant_list:
@@ -456,47 +477,50 @@ def main(n_realizations, subsampling, n_output_bins, ps_plot_prefix, cf_plot_pre
         for i_real in range(n_realizations):
 
             # Get shears on default grid.
-            # Note: kmax_factor = subsampling is given, so that when we rerun this later with the
-            # subsampled grid, the same range of k will be used in both cases, and the only
-            # difference is the interpolation.
-            ps.buildGrid(grid_spacing = default_grid_spacing,
-                         ngrid = default_ngrid,
-                         units = galsim.degrees,
-                         interpolant = interpolant,
-                         kmin_factor = kmin_factor,
-                         kmax_factor = subsampling)
-
-            # Interpolate shears on the subsampled grid.
-            interpolated_g1, interpolated_g2 = ps.getShear(pos=(x,y),
-                                                           units=galsim.degrees)
-            # And put back into the format that the PowerSpectrumEstimator will want.
-            interpolated_g1 = np.array(interpolated_g1).reshape((subsampled_ngrid,
-                                                                 subsampled_ngrid))
-            interpolated_g2 = np.array(interpolated_g2).reshape((subsampled_ngrid,
-                                                                 subsampled_ngrid))
-
-            # Directly get shears on subsampled grid.
-            g1, g2 = ps.buildGrid(grid_spacing = subsampled_grid_spacing,
-                                  ngrid = subsampled_ngrid,
+            g1, g2 = ps.buildGrid(grid_spacing = grid_spacing,
+                                  ngrid = ngrid,
                                   units = galsim.degrees,
+                                  interpolant = interpolant,
                                   kmin_factor = kmin_factor)
 
-            # Get statistics: PS, correlation function.
-            # Set up PowerSpectrumEstimator first.
+            # Set up the grid for interpolation for this realization, if we're using random
+            # dithers.  Will be (ngrid-1) x (ngrid-1) so as to not go off the edge.
+            if dithering == 'random':
+                dither_x = x[0:ngrid-1,0:ngrid-1] + u()*grid_spacing
+                dither_y = y[0:ngrid-1,0:ngrid-1] + u()*grid_spacing
+                dither_x = list(dither_x.flatten())
+                dither_y = list(dither_y.flatten())
+
+            # Interpolate shears on the offset grid.
+            interpolated_g1, interpolated_g2 = ps.getShear(pos=(dither_x,dither_y),
+                                                           units=galsim.degrees)
+            # And put back into the format that the PowerSpectrumEstimator will want.
+            interpolated_g1 = np.array(interpolated_g1).reshape((ngrid-1, ngrid-1))
+            interpolated_g2 = np.array(interpolated_g2).reshape((ngrid-1, ngrid-1))
+
+            # Get statistics: PS, correlation function. 
+            # Set up PowerSpectrumEstimator first.  Reminder: for interpolated points, we need to
+            # omit the last row, since the interpolated grid has gotten shifted outside the original
+            # grid bounds, and therefore was set to zero.
             if i_real == 0:
-                pse = galsim.pse.PowerSpectrumEstimator(subsampled_ngrid,
+                interpolated_pse = galsim.pse.PowerSpectrumEstimator(ngrid-1,
+                                                                    grid_size,
+                                                                    n_output_bins)           
+                pse = galsim.pse.PowerSpectrumEstimator(ngrid,
                                                         grid_size,
-                                                        n_output_bins)            
+                                                        n_output_bins)           
             ell, interpolated_ps_ee, interpolated_ps_bb, interpolated_ps_eb = \
-                pse.estimate(interpolated_g1, interpolated_g2)
+                interpolated_pse.estimate(interpolated_g1,
+                                          interpolated_g2)
             ell, ps_ee, ps_bb, ps_eb = pse.estimate(g1, g2)
             th, interpolated_cfp, interpolated_cfm, cf_err = \
-                getCF(np.array(x), np.array(y), interpolated_g1.flatten(),
-                      interpolated_g2.flatten(), subsampled_grid_spacing,
-                      subsampled_ngrid, n_output_bins)
+                getCF(np.array(dither_x), np.array(dither_y),
+                      interpolated_g1.flatten(),
+                      interpolated_g2.flatten(), grid_spacing,
+                      ngrid, n_output_bins)
             _, cfp, cfm, _ = \
-                getCF(np.array(x), np.array(y), g1.flatten(), g2.flatten(),
-                      subsampled_grid_spacing, subsampled_ngrid, n_output_bins)
+                getCF(x.flatten(), y.flatten(), g1.flatten(), g2.flatten(),
+                      grid_spacing, ngrid, n_output_bins)
 
             # Accumulate statistics.
             mean_interpolated_ps_ee += interpolated_ps_ee
@@ -526,15 +550,15 @@ def main(n_realizations, subsampling, n_output_bins, ps_plot_prefix, cf_plot_pre
         # Plot statistics, and ratios with vs. without interpolants.
         print "Running plotting routines for interpolant=%s..."%interpolant
         generate_ps_plots(ell, mean_ps_ee, mean_interpolated_ps_ee, interpolant, ps_plot_prefix,
-                          default_grid_spacing, subsampled_grid_spacing, type='EE')
+                          grid_spacing, type='EE')
         generate_ps_plots(ell, mean_ps_bb, mean_interpolated_ps_bb, interpolant, ps_plot_prefix,
-                          default_grid_spacing, subsampled_grid_spacing, type='BB')
+                          grid_spacing, type='BB')
         generate_ps_plots(ell, mean_ps_eb, mean_interpolated_ps_eb, interpolant, ps_plot_prefix,
-                          default_grid_spacing, subsampled_grid_spacing, type='EB')
+                          grid_spacing, type='EB')
         generate_cf_plots(th, mean_cfp, mean_interpolated_cfp, interpolant, cf_plot_prefix,
-                          default_grid_spacing, subsampled_grid_spacing, type='p')
+                          grid_spacing, type='p')
         generate_cf_plots(th, mean_cfm, mean_interpolated_cfm, interpolant, cf_plot_prefix,
-                          default_grid_spacing, subsampled_grid_spacing, type='m')
+                          grid_spacing, type='m')
 
         # Output results.
         print "Outputting tables of results..."
@@ -556,8 +580,8 @@ if __name__ == "__main__":
                         help='Number of objects to run tests on (default: %i)'%default_n,
                         default=default_n, type=int, dest='n_realizations')
     parser.add_argument('-s','--subsampling', 
-                        help='Subsampling factor to test (default: %i)'%default_subsampling,
-                        default=default_subsampling, type=int, dest='subsampling')
+                        help='Grid dithering to test (default: %s)'%default_dithering,
+                        default=default_dithering, type=str, dest='dithering')
     parser.add_argument('-n_out','--n_output_bins',
                         help='Number of bins for calculating 2-point functions '
                         '(default: %i)'%default_n_output_bins,
@@ -583,7 +607,7 @@ if __name__ == "__main__":
         check_dir(dir)
 
     main(n_realizations=args.n_realizations,
-         subsampling=args.subsampling,
+         dithering=args.dithering,
          n_output_bins=args.n_output_bins,
          ps_plot_prefix=args.ps_plot_prefix,
          cf_plot_prefix=args.cf_plot_prefix)
