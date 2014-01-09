@@ -1369,39 +1369,50 @@ class AffineTransform(BaseWCS):
  
 # Some helper functions for serializing arbitrary functions.  Used by both UVFunction and 
 # RaDecFunction.
-def _writeFuncToHeader(func, letter, header):
-    import types, cPickle, marshal, base64
-    if type(func) == types.FunctionType:
-        # Note: I got the starting point for this code from:
-        # http://stackoverflow.com/questions/1253528/
+def _writeFuncToHeader(func, func_str, letter, header):
+    if func_str is not None:
+        # If we have the string version, then just write that
+        s = func_str
+        first_key = 'GS_'+letter+'_STR'
+
+    elif func is not None:
+        # Otherwise things get more interesting.  We have to serialize a python function.
+        # I got the starting point for this code from:
+        #     http://stackoverflow.com/questions/1253528/
         # In particular, marshal can serialize arbitrary code. (!)
-        code = marshal.dumps(func.func_code)
-        name = func.func_name
-        defaults = func.func_defaults
+        import types, cPickle, marshal, base64
+        if type(func) == types.FunctionType:
+            code = marshal.dumps(func.func_code)
+            name = func.func_name
+            defaults = func.func_defaults
 
-        # Functions may also have something called closure cells.  If there are any, we need
-        # to include them as well.  Help for this part came from:
-        # http://stackoverflow.com/questions/573569/
-        if func.func_closure:
-            closure = tuple(c.cell_contents for c in func.func_closure)
+            # Functions may also have something called closure cells.  If there are any, we need
+            # to include them as well.  Help for this part came from:
+            # http://stackoverflow.com/questions/573569/
+            if func.func_closure:
+                closure = tuple(c.cell_contents for c in func.func_closure)
+            else:
+                closure = None
+            all = (0,code,name,defaults,closure)
         else:
-            closure = None
-        all = (0,code,name,defaults,closure)
+            # For things other than regular functions, we can try to pickle it directly, but
+            # it might not work.  Let pickle raise the appropriate error if it fails.
+
+            # The first item in the tuple is what I'm calling a type_code to indicate what to
+            # do with the results of unpickling.  So far I just have 0 = function, 1 = other,
+            # but this could be extended if we find a good reason to.
+            all = (1,func)
+
+        # Now we can use pickle to serialize the full thing.
+        s = cPickle.dumps(all)
+
+        # Fits can't handle arbitrary strings.  Shrink to a base-64 alphabet that are printable.
+        # (This is like UUencoding for those of you who remember that...)
+        s = base64.b64encode(s)
+        first_key = 'GS_'+letter+'_FN'
     else:
-        # For things other than regular functions, we can try to pickle it directly, but
-        # it might not work.  Let pickle raise the appropriate error if it fails.
-
-        # The first item in the tuple is what I'm calling a type_code to indicate what to
-        # do with the results of unpickling.  So far I just have 0 = function, 1 = other,
-        # but this could be extended if we find a good reason to.
-        all = (1,func)
-
-    # Now we can use pickle to serialize the full thing.
-    s = cPickle.dumps(all)
-
-    # Fits can't handle arbitrary strings.  Shrink to a base-64 alphabet that are printable.
-    # (This is like UUencoding for those of you who remember that...)
-    s = base64.b64encode(s)
+        # Nothing to write.
+        return
 
     # Fits header strings cannot be more than 68 characters long, so split it up.
     fits_len = 68
@@ -1411,8 +1422,10 @@ def _writeFuncToHeader(func, letter, header):
     # The total number of string splits is stored in fits key GS_U_N.
     header["GS_" + letter + "_N"] = n+1
     for i in range(n+1):
-        # Use key names: GS_U0000, GS_U00001, etc.
-        key = 'GS_%s%04d'%(letter,i)
+        # Use key names like GS_U0000, GS_U00001, etc. for the function versions
+        # and like GS_SU000, GS_SU001, etc. for the string versions.
+        if i == 0: key = first_key
+        else: key = 'GS_%s%04d'%(letter,i)
         header[key] = s_array[i]
 
 def _makecell(value):
@@ -1424,25 +1437,39 @@ def _makecell(value):
 def _readFuncFromHeader(letter, header):
     # This undoes the process of _writeFuncToHeader.  See the comments in that code for details.
     import types, cPickle, marshal, base64, types
-    n = header["GS_" + letter + "_N"]
-    s = ''
-    for i in range(n):
-        key = 'GS_%s%04d'%(letter,i)
-        s += header[key]
-    s = base64.b64decode(s)
-    all = cPickle.loads(s)
-    type_code = all[0]
-    if type_code == 0:
-        code_str, name, defaults, closure_tuple = all[1:]
-        code = marshal.loads(code_str)
-        if closure_tuple is None:
-            closure = None
+    if 'GS_'+letter+'_STR' in header:
+        # Read in a regular string
+        n = header["GS_" + letter + "_N"]
+        s = ''
+        for i in range(n):
+            if i == 0: key = 'GS_'+letter+'_STR'
+            else: key = 'GS_%s%04d'%(letter,i)
+            s += header[key]
+        return s
+    elif 'GS_'+letter+'_FN' in header:
+        # Read in an encoded function
+        n = header["GS_" + letter + "_N"]
+        s = ''
+        for i in range(n):
+            if i == 0: key = 'GS_'+letter+'_FN'
+            else: key = 'GS_%s%04d'%(letter,i)
+            s += header[key]
+        s = base64.b64decode(s)
+        all = cPickle.loads(s)
+        type_code = all[0]
+        if type_code == 0:
+            code_str, name, defaults, closure_tuple = all[1:]
+            code = marshal.loads(code_str)
+            if closure_tuple is None:
+                closure = None
+            else:
+                closure = tuple(_makecell(c) for c in closure_tuple)
+            func = types.FunctionType(code, globals(), name, defaults, closure)
+            return func
         else:
-            closure = tuple(_makecell(c) for c in closure_tuple)
-        func = types.FunctionType(code, globals(), name, defaults, closure)
-        return func
+            return all[1]
     else:
-        return all[1]
+        return None
 
 class UVFunction(BaseWCS):
     """This WCS takes two arbitrary functions for u(x,y) and v(x,y).
@@ -1487,20 +1514,31 @@ class UVFunction(BaseWCS):
         import math  # In case needed by function evals
         if isinstance(ufunc, basestring):
             self._ufunc = eval('lambda x,y : ' + ufunc)
+            self._ufunc_str = ufunc
         else:
             self._ufunc = ufunc
+            self._ufunc_str = None
+
         if isinstance(vfunc, basestring):
             self._vfunc = eval('lambda x,y : ' + vfunc)
+            self._vfunc_str = vfunc
         else:
             self._vfunc = vfunc
+            self._vfunc_str = None
+
         if isinstance(xfunc, basestring):
             self._xfunc = eval('lambda u,v : ' + xfunc)
+            self._xfunc_str = xfunc
         else:
             self._xfunc = xfunc
+            self._xfunc_str = None
+
         if isinstance(yfunc, basestring):
             self._yfunc = eval('lambda u,v : ' + yfunc)
+            self._yfunc_str = yfunc
         else:
             self._yfunc = yfunc
+            self._yfunc_str = None
 
         if origin == None:
             self._x0 = 0
@@ -1514,7 +1552,6 @@ class UVFunction(BaseWCS):
         else:
             self._u0 = world_origin.x
             self._v0 = world_origin.y
-
 
     @property
     def ufunc(self): return self._ufunc
@@ -1531,15 +1568,19 @@ class UVFunction(BaseWCS):
     def world_origin(self): return galsim.PositionD(self._u0, self._v0)
 
     def _u(self, x, y):
+        import math
         return self._ufunc(x-self._x0, y-self._y0) + self._u0
 
     def _v(self, x, y):
+        import math
         return self._vfunc(x-self._x0, y-self._y0) + self._v0
 
     def _x(self, u, v):
+        import math
         return self._xfunc(u-self._u0, v-self._v0) + self._x0
 
     def _y(self, u, v):
+        import math
         return self._yfunc(u-self._u0, v-self._v0) + self._y0
 
     def _posToWorld(self, image_pos):
@@ -1560,15 +1601,17 @@ class UVFunction(BaseWCS):
             image_pos = self._posToImage(world_pos)
         x0 = image_pos.x - self._x0
         y0 = image_pos.y - self._y0
-        u0 = self._u(x0,y0)
-        v0 = self._v(x0,y0)
+        # For this, we ignore the possible _u0,_v0 values, since they don't affect the derivatives.
+        u0 = self._ufunc(x0,y0)
+        v0 = self._vfunc(x0,y0)
         # Use dx,dy = 1 pixel for numerical derivatives
         dx = 1
         dy = 1
-        dudx = 0.5*(self._u(x0+dx,y0) - self._u(x0-dx,y0))/dx
-        dudy = 0.5*(self._u(x0,y0+dy) - self._u(x0,y0-dy))/dy
-        dvdx = 0.5*(self._v(x0+dx,y0) - self._v(x0-dx,y0))/dx
-        dvdy = 0.5*(self._v(x0,y0+dy) - self._v(x0,y0-dy))/dy
+
+        dudx = 0.5*(self._ufunc(x0+dx,y0) - self._ufunc(x0-dx,y0))/dx
+        dudy = 0.5*(self._ufunc(x0,y0+dy) - self._ufunc(x0,y0-dy))/dy
+        dvdx = 0.5*(self._vfunc(x0+dx,y0) - self._vfunc(x0-dx,y0))/dx
+        dvdy = 0.5*(self._vfunc(x0,y0+dy) - self._vfunc(x0,y0-dy))/dy
 
         return JacobianWCS(dudx, dudy, dvdx, dvdy)
 
@@ -1582,12 +1625,10 @@ class UVFunction(BaseWCS):
         header["GS_U0"] = (self.world_origin.x, "GalSim world origin u")
         header["GS_V0"] = (self.world_origin.y, "GalSim world origin v")
 
-        _writeFuncToHeader(self._ufunc, 'U', header)
-        _writeFuncToHeader(self._vfunc, 'V', header)
-        if self._xfunc:
-            _writeFuncToHeader(self._xfunc, 'X', header)
-        if self._yfunc:
-            _writeFuncToHeader(self._yfunc, 'Y', header)
+        _writeFuncToHeader(self._ufunc, self._ufunc_str, 'U', header)
+        _writeFuncToHeader(self._vfunc, self._vfunc_str, 'V', header)
+        _writeFuncToHeader(self._xfunc, self._xfunc_str, 'X', header)
+        _writeFuncToHeader(self._yfunc, self._yfunc_str, 'Y', header)
 
         return self.affine(bounds.trueCenter())._writeLinearWCS(header, bounds)
 
@@ -1599,12 +1640,8 @@ class UVFunction(BaseWCS):
         v0 = header["GS_V0"]
         ufunc = _readFuncFromHeader('U', header)
         vfunc = _readFuncFromHeader('V', header)
-        xfunc = None
-        yfunc = None
-        if 'GS_X' in header:
-            xfunc = _readFuncFromHeader('X', header)
-        if 'GS_Y' in header:
-            yfunc = _readFuncFromHeader('Y', header)
+        xfunc = _readFuncFromHeader('X', header)
+        yfunc = _readFuncFromHeader('Y', header)
         return UVFunction(ufunc, vfunc, xfunc, yfunc, galsim.PositionD(x0,y0),
                           galsim.PositionD(u0,v0))
 
@@ -1692,12 +1729,18 @@ class RaDecFunction(BaseWCS):
         self._is_celestial = True
         if isinstance(rafunc, basestring):
             self._rafunc = eval('lambda x,y : ' + rafunc)
+            self._rafunc_str = rafunc
         else:
             self._rafunc = rafunc
+            self._rafunc_str = None
+
         if isinstance(decfunc, basestring):
             self._decfunc = eval('lambda x,y : ' + decfunc)
+            self._decfunc_str = decfunc
         else:
             self._decfunc = decfunc
+            self._decfunc_str = None
+
         if origin == None:
             self._x0 = 0
             self._y0 = 0
@@ -1750,8 +1793,8 @@ class RaDecFunction(BaseWCS):
         header["GS_X0"] = (self.origin.x, "GalSim image origin x")
         header["GS_Y0"] = (self.origin.y, "GalSim image origin y")
 
-        _writeFuncToHeader(self._rafunc, 'R', header)
-        _writeFuncToHeader(self._decfunc, 'D', header)
+        _writeFuncToHeader(self._rafunc, self._rafunc_str, 'R', header)
+        _writeFuncToHeader(self._decfunc, self._decfunc_str, 'D', header)
 
         return self.affine(bounds.trueCenter())._writeLinearWCS(header, bounds)
 
