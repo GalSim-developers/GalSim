@@ -74,17 +74,17 @@ def main(argv):
         wave, flambda = numpy.genfromtxt('data/{}.sed'.format(SED_name)).T
         wave /= 10 # convert from Angstroms to nanometers
         photons = flambda*wave
-        #normalize SEDs to 1 photon per nm at 502nm
+        # normalize SEDs to 1 photon per nm at 502nm
         photons /= photons[wave == 502]
         SEDs[SED_name] = {'wave':wave, 'photons':photons}
     logger.debug('Successfully read in SEDs')
 
-    # read in the r-, i-, and z-band LSST filters
+    # read in the LSST filters
     filter_names = 'ugrizy'
     filters = {}
     for filter_name in filter_names:
         wave, throughput = numpy.genfromtxt('data/LSST_{}.dat'.format(filter_name)).T
-        #thin filters out a bit to increase speed
+        # thin filters out a bit to increase speed
         filters[filter_name] = {'wave':wave[::10], 'throughput':throughput[::10]}
     logger.debug('Read in filters')
 
@@ -120,8 +120,8 @@ def main(argv):
     final = galsim.ChromaticConvolve([gal, pix, PSF])
     logger.debug('Created final profile')
 
-    for filter_name in filter_names:
-        filter_ = filters[filter_name]
+    # draw profile through LSST filters
+    for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, pixel_scale)
         final.draw(wave=filter_['wave'], throughput=filter_['throughput'], image=img)
         img.addNoise(gaussian_noise)
@@ -140,24 +140,27 @@ def main(argv):
     logger.info('Starting part B: chromatic bulge+disk galaxy')
     redshift = 0.8
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
+    # make a bulge ...
     bulge = galsim.ChromaticGSObject(galsim.DeVaucouleurs,
                                      SEDs['CWW_E_ext']['wave'] * (1+redshift),
                                      SEDs['CWW_E_ext']['photons'],
                                      half_light_radius=0.5)
     bulge.applyShear(g1=0.12, g2=0.07)
     logger.debug('Created bulge component')
-    disk =  galsim.ChromaticGSObject(galsim.Exponential,
-                                     SEDs['CWW_Im_ext']['wave'] * (1+redshift),
-                                     SEDs['CWW_Im_ext']['photons'],
-                                     half_light_radius=2.0)
+    # ... and a disk ...
+    disk = galsim.ChromaticGSObject(galsim.Exponential,
+                                    SEDs['CWW_Im_ext']['wave'] * (1+redshift),
+                                    SEDs['CWW_Im_ext']['photons'],
+                                    half_light_radius=2.0)
     disk.applyShear(g1=0.4, g2=0.2)
     logger.debug('Created disk component')
+    # ... and then combine them.
     bdgal = bulge+disk*5 # you can add and multiply ChromaticGSObjects just like GSObjects
     bdfinal = galsim.ChromaticConvolve([bdgal, pix, PSF])
     logger.debug('Created bulge+disk galaxy final profile')
 
-    for filter_name in filter_names:
-        filter_ = filters[filter_name]
+    # draw profile through LSST filters
+    for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, pixel_scale)
         bdfinal.draw(wave=filter_['wave'], throughput=filter_['throughput'], image=img)
         img.addNoise(gaussian_noise)
@@ -172,7 +175,7 @@ def main(argv):
                 +' -zoom 2')
 
     #-----------------------------------------------------------------------------------------------
-    # Part C: chromatic bulge+disk galaxy
+    # Part C: chromatic PSF
 
     logger.info('')
     logger.info('Starting part C: chromatic PSF')
@@ -195,19 +198,22 @@ def main(argv):
     # These two effects can be modeled together using the galsim.ChromaticShiftAndDilate class.
 
     # First we define the shifting function due to DCR.  We normalize to the shift at 500 nm so the
-    # images don't fall off of the postage stamp completely.
+    # galaxy images land close to (0,0).
     zenith_angle = 30 * galsim.degrees
+    # get_refraction returns its output as a galsim.AngleUnit
     R500 = galsim.dcr.get_refraction(500.0, zenith_angle) / galsim.arcsec
+    # we'll assume the y-direction is the zenith direction, so only shift along the second component.
     shift_fn = lambda w:(0,(galsim.dcr.get_refraction(w, zenith_angle) / galsim.arcsec) - R500)
 
-    # Second define the dilation function due to Kolmogorov turbulence.
+    # Define the dilation function due to Kolmogorov turbulence.
+    # Normalize to 500 nm, at which wavelength the PSF will have FWHM=0.6 as defined below.
     dilate_fn = lambda w: (w/500.0)**(-0.2)
 
     # galsim.ChromaticShiftAndDilate functions similarly to ChromaticGSObject, in that it
-    # chromaticizes and existing GSObject.  In this case, we'll use a Moffat profile as the fiducial
-    # PSF.  The way we've set up the shifting and dilating functions, this is equivalent to the PSF
-    # at 500nm.  Note that arguments to the fiducial Moffat profile are passed after the shift and
-    # dilate functions.
+    # chromaticizes an existing GSObject.  In this case, the existing object is a fiducial PSF which
+    # gets Shifted and Dilated according to shift_fn and dilate_fn.  We'll use a Moffat profile as
+    # the fiducial PSF.  Note that arguments to the fiducial Moffat profile are passed after the
+    # shift and dilate functions, similar to the way ChromaticGSObject works.
     PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat, shift_fn, dilate_fn, beta=2.5, fwhm=0.6)
 
     # convolve with pixel and PSF to create final profile
@@ -215,9 +221,9 @@ def main(argv):
     final = galsim.ChromaticConvolve([gal, pix, PSF])
     logger.debug('Created chromatic PSF finale profile')
 
+    # Draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.03)
-    for filter_name in filter_names:
-        filter_ = filters[filter_name]
+    for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, pixel_scale)
         final.draw(wave=filter_['wave'], throughput=filter_['throughput'], image=img)
         img.addNoise(gaussian_noise)

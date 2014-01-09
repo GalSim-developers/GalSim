@@ -48,14 +48,14 @@ class ChromaticObject(object):
         @returns           The drawn image.
         """
 
-        #Assume that wave is linear, and compute constant dwave.
+        # Assume that wave is linear, and compute constant dwave.
         dwave = wave[1] - wave[0]
 
-        #Initialize Image from first wavelength.
+        # Initialize Image from first wavelength.
         prof = self.evaluateAtWavelength(wave[0]) * throughput[0] * dwave
         image = prof.draw(image=image, add_to_image=add_to_image)
 
-        #And now add in the remaining wavelengths drawing each one in turn
+        # And now add in the remaining wavelengths drawing each one in turn
         for w, tp in zip(wave, throughput)[1:]:
             prof = self.evaluateAtWavelength(w) * tp * dwave
             prof.draw(image=image, add_to_image=True, *args, **kwargs)
@@ -110,8 +110,8 @@ class ChromaticGSObject(ChromaticObject):
         """
         self.photons = galsim.LookupTable(wave, photons)
         self.gsobj = gsobj(*args, **kwargs)
-        # We classify ChromaticObjects as either seperable, in which case the wavelength-dependent
-        # surface-brightness can be written f(x,y,lambda) = g(x,y) * h(lambda), or as inseperable,
+        # We classify ChromaticObjects as either separable, in which case the wavelength-dependent
+        # surface-brightness can be written f(x,y,lambda) = g(x,y) * h(lambda), or as inseparable,
         # in which case the profile cannot be decomposed into factors.
         self.separable = True
 
@@ -230,7 +230,7 @@ class ChromaticConvolve(ChromaticObject):
 
     def draw(self, wave, throughput, image=None, add_to_image=False, *args, **kwargs):
         # Only make temporary changes to objlist...
-        objlist = self.objlist[:]
+        objlist = list(self.objlist)
 
         # expand any `ChromaticConvolve`s in the object list
         L = len(objlist)
@@ -243,9 +243,16 @@ class ChromaticConvolve(ChromaticObject):
                 # appending to the end of the objlist means we don't have to recurse in order to
                 # expand a hierarchy of `ChromaticAdd`s; we just have to keep going until the end of
                 # the ever-expanding list.
-                # I.e.  {{{A, B}, C}, D}  i = 0, length = 2
-                #    -> {D, {A, B}, C}    i = 1, length = 3
-                #    -> {D, C, A, B}      i = 2..3, length = 4
+                # I.e., `*` marks progress through list...
+                # {{{A, B}, C}, D}  i = 0, length = 2
+                #  *
+                # {D, {A, B}, C}    i = 1, length = 3
+                #     *
+                # {D, C, A, B}      i = 2, length = 4
+                #        *
+                # {D, C, A, B}      i = 3, length = 4
+                #           *
+                # Done!
                 objlist.extend(objlist[i].objlist)
                 del objlist[i]
                 i -= 1
@@ -258,47 +265,47 @@ class ChromaticConvolve(ChromaticObject):
         #     C(f1, f2) denotes the convolution of surface brightness profiles f1 & f2.
         #     A(f1, f2) denotes the addition of surface brightness profiles f1 & f2.
         #
-        # In general, chromatic s.b. profiles can be classified as either seperable or inseperable.
-        # Write seperable profiles as g(x,y) * h(lambda), and leave inseperable profiles as
+        # In general, chromatic s.b. profiles can be classified as either separable or inseparable.
+        # Write separable profiles as g(x,y) * h(lambda), and leave inseparable profiles as
         # f(x,y,lambda).
         # We will suppress the arguments `x`, `y`, `lambda`, hereforward, but generally an `f` refers
-        # to an inseperable profile, a `g` refers to the spatial part of a seperable profile, and an
-        # `h` refers to the spectral part of a seperable profile.
+        # to an inseparable profile, a `g` refers to the spatial part of a separable profile, and an
+        # `h` refers to the spectral part of a separable profile.
         #
-        # Now, analyze a typical scenario, a bulge+disk galaxy model (each of which is seperable,
+        # Now, analyze a typical scenario, a bulge+disk galaxy model (each of which is separable,
         # e.g., an SED times an exponential profile for the disk, and another SED times a DeV profile
-        # for the bulge).  Suppose the PSF is inseperable.  (Chromatic PSF's will generally be
-        # inseper since we usually think of the PSF as being normalized to unit integral, no matter
+        # for the bulge).  Suppose the PSF is inseparable.  (Chromatic PSF's will generally be
+        # insepar since we usually think of the PSF as being normalized to unit integral, no matter
         # the wavelength we evaluate it at.)  Say there's also an achromatic pix to convolve with.
         # The formula for this might look like:
         #
         # img = I(C(A(bulge, disk), PSF, pix))
-        #     = I(C(A(g1*h1, g2*h2), f3, g4))                #note pix is lambda-independent
-        #     = I(A(C(g1*h1, f3, g4)), C(A(g2*h2, f3, g4)))  #distribute the A over the C
-        #     = A(I(C(g1*h1, f3, g4)), I(C(g2*h2, f3, g4)))  #distribute the A over the I
-        #     = A(C(g1,I(h1*f3),g4), C(g2,I(h2*f3),g4))      #factor lambda-independent terms out of I
+        #     = I(C(A(g1*h1, g2*h2), f3, g4))                # note pix is lambda-independent
+        #     = I(A(C(g1*h1, f3, g4)), C(A(g2*h2, f3, g4)))  # distribute the A over the C
+        #     = A(I(C(g1*h1, f3, g4)), I(C(g2*h2, f3, g4)))  # distribute the A over the I
+        #     = A(C(g1,I(h1*f3),g4), C(g2,I(h2*f3),g4))      # factor lambda-indep terms out of I
         #
         # The result is that the integral is now inside the convolution, meaning we only have to
         # compute two convolutions instead of a convolution for each wavelength at which we evaluate
         # the integrand.  This technique, making an `effective` PSF profile for each of the bulge and
         # disk, is a significant time savings most of the time.
         # In general, we make effective profiles by splitting up `ChromaticAdd`s and collecting the
-        # inseperable terms on which to do integration first, and then finish with convolution last.
+        # inseparable terms on which to do integration first, and then finish with convolution last.
 
         # Here is the logic to turn I(C(A(...))) into A(C(..., I(...)))
         returnme = False
         for i, obj in enumerate(objlist):
-            if isinstance(obj, ChromaticAdd):  #say obj.objlist = [A,B,C]
+            if isinstance(obj, ChromaticAdd):
+                # say obj.objlist = [A,B,C], where obj is a ChromaticAdd object
                 returnme = True
-                del objlist[i] #remove the add object from self.objlist
-                convlist = objlist #the remaining items to be convolved with each of A,B,C
-                tmplist = list(convlist)
-                tmplist.append(obj.objlist[0]) #add A to convolve list
+                del objlist[i] # remove the add object from objlist
+                tmplist = list(objlist) # the remaining items to be convolved with each of A,B,C
+                tmplist.append(obj.objlist[0]) # add A to convolve list
                 tmpobj = ChromaticConvolve(tmplist)
                 image = tmpobj.draw(wave, throughput, image=image, add_to_image=add_to_image,
                                     *args, **kwargs)
-                for summand in obj.objlist[1:]: #now do B, C, and so on...
-                    tmplist = list(convlist)
+                for summand in obj.objlist[1:]: # now do B, C, and so on...
+                    tmplist = list(objlist)
                     tmplist.append(summand)
                     tmpobj = ChromaticConvolve(tmplist)
                     image = tmpobj.draw(wave, throughput, image=image, add_to_image=True,
@@ -306,13 +313,14 @@ class ChromaticConvolve(ChromaticObject):
         if returnme:
             return image
 
-        # If program gets this far, the objects in self.objlist should be atomic (non-ChromaticAdd
-        # and non-ChromaticConvolve), both seperable and inseperable.
-        # Classify these into lists.
+        # If program gets this far, the objects in objlist should be atomic (non-ChromaticAdd
+        # and non-ChromaticConvolve).
+        # Sort these atomic objects into separable and inseparable lists, and collect
+        # the spectral parts of the separable profiles.
         sep_profs = []
         insep_profs = []
         sep_photons = []
-        for obj in self.objlist:
+        for obj in objlist:
             if obj.separable:
                 if isinstance(obj, galsim.GSObject):
                     sep_profs.append(obj) # The g(x,y)'s (see above)
@@ -323,7 +331,7 @@ class ChromaticConvolve(ChromaticObject):
                 insep_profs.append(obj) # The f(x,y,lambda)'s (see above)
 
         dwave = wave[1] - wave[0] # assume wavelengths are linear
-        # check if any inseperable profiles
+        # check if there are any inseparable profiles
         if insep_profs == []:
             multiplier = 0.0
             for w, tp in zip(wave, throughput):
@@ -333,13 +341,17 @@ class ChromaticConvolve(ChromaticObject):
                 multiplier += term * dwave
         else:
             # make an effective profile from inseparables and the chromatic part of separables
-            # start assembling monochromatic profiles into an effective profile
+            # start combining monochromatic profiles into an effective profile
             multiplier = 1.0
+            # start with the first wavelength
             mono_prof = galsim.Convolve([insp.evaluateAtWavelength(wave[0]) for insp in insep_profs])
             mono_prof *= throughput[0] * dwave
+            # multiply it by the appropriate spectral factor
             for s in sep_photons:
                 mono_prof *= s(wave[0])
+            # start drawing effective profile
             effective_prof_image = mono_prof.draw(*args, **kwargs)
+            # now loop over remaining wavelengths and keep adding to effective profile
             for w, tp in zip(wave, throughput)[1:]:
                 mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
                 mono_prof *= tp * dwave
@@ -347,9 +359,11 @@ class ChromaticConvolve(ChromaticObject):
                     mono_prof *= s(w)
                 mono_prof.draw(image=effective_prof_image, add_to_image=True,
                                *args, **kwargs)
-
+            # turn drawn effective profile into a GSObject
             effective_prof = galsim.InterpolatedImage(effective_prof_image)
+            # append effective profile to separable profiles (which are all GSObjects)
             sep_profs.append(effective_prof)
+        # finally, Convolve and draw.
         final_prof = multiplier * galsim.Convolve(sep_profs)
         return final_prof.draw(image=image, add_to_image=add_to_image,
                                *args, **kwargs)

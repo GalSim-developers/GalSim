@@ -34,8 +34,9 @@ except ImportError:
 #     imshow(image.array)
 #     show()
 
+# liberal use of globals here...
 zenith_angle = 20 * galsim.degrees
-R610 = galsim.dcr.get_refraction(610.0, zenith_angle) #normalize refraction to 610nm
+R610 = galsim.dcr.get_refraction(610.0, zenith_angle) # normalize refraction to 610nm
 
 # some profile parameters to test with
 bulge_n = 4.0
@@ -251,7 +252,7 @@ def test_dcr_moments():
     dR_image = (mom1[1] - mom2[1]) * pixel_scale
     dV_image = (mom1[3] - mom2[3]) * (pixel_scale)**2
 
-    #analytic first moment differences
+    # analytic first moment differences
     sed1 = galsim.LookupTable(Egal_wave, Egal_photons)
     sed2 = galsim.LookupTable(Sbcgal_wave, Sbcgal_photons)
     filt = galsim.LookupTable(filter_wave, filter_throughput)
@@ -265,7 +266,7 @@ def test_dcr_moments():
     R2 = numR2/den2
     dR_analytic = R1 - R2
 
-    #analytic second moment differences
+    # analytic second moment differences
     V1_kernel = lambda w:(R(w) - R1)**2
     V2_kernel = lambda w:(R(w) - R2)**2
     numV1 = galsim.integ.int1d(lambda w:V1_kernel(w) * filt(w) * sed1(w), 500, 720)
@@ -324,7 +325,7 @@ def test_chromatic_seeing_moments():
         mom2 = getmoments(image2)
         dr2byr2_image = ((mom1[2]+mom1[3]) - (mom2[2]+mom2[3])) / (mom1[2]+mom1[3])
 
-        #analytic moment differences
+        # analytic moment differences
         sed1 = galsim.LookupTable(Egal_wave, Egal_photons)
         sed2 = galsim.LookupTable(Sbcgal_wave, Sbcgal_photons)
         filt = galsim.LookupTable(filter_wave, filter_throughput)
@@ -402,7 +403,7 @@ def test_monochromatic_filter():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_flux():
+def test_chromatic_flux():
     import time
     t1 = time.time()
 
@@ -441,4 +442,4 @@ if __name__ == "__main__":
     test_dcr_moments()
     test_chromatic_seeing_moments()
     test_monochromatic_filter()
-    test_flux()
+    test_chromatic_flux()
