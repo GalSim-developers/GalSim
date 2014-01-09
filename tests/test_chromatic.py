@@ -96,7 +96,7 @@ def test_direct_sum_vs_chromatic():
 
     # make effective PSF
     mPSFs = [] # list of flux-scaled monochromatic PSFs
-    # normalize position to that at middle of r-band: ~500nm
+    # normalize position to that at middle of r-band: ~610nm
     shifts = (galsim.dcr.get_refraction(filter_wave, zenith_angle) - R610) / galsim.arcsec
     dilations = (filter_wave/500.0)**(-0.2)
     dwave = filter_wave[1] - filter_wave[0]
@@ -229,8 +229,6 @@ def test_dcr_moments():
     star2 = galsim.ChromaticGSObject(galsim.Gaussian, Sbcgal_wave, Sbcgal_photons,
                                      fwhm=1e-8)
 
-    # shift_fn = lambda w:(0, ((galsim.dcr.get_refraction(w, zenith_angle) - R610)
-    #                          / galsim.arcsec / pixel_scale))
     shift_fn = lambda w:(0, ((galsim.dcr.get_refraction(w, zenith_angle) - R610)
                              / galsim.arcsec))
     PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat,
@@ -252,14 +250,11 @@ def test_dcr_moments():
     mom2 = getmoments(image2)
     dR_image = (mom1[1] - mom2[1]) * pixel_scale
     dV_image = (mom1[3] - mom2[3]) * (pixel_scale)**2
-    # dR_image = (mom1[1] - mom2[1])
-    # dV_image = (mom1[3] - mom2[3])
 
     #analytic first moment differences
     sed1 = galsim.LookupTable(Egal_wave, Egal_photons)
     sed2 = galsim.LookupTable(Sbcgal_wave, Sbcgal_photons)
     filt = galsim.LookupTable(filter_wave, filter_throughput)
-    # R = lambda w:(galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec / pixel_scale
     R = lambda w:(galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec
     numR1 = galsim.integ.int1d(lambda w: R(w) * filt(w) * sed1(w), 500, 720)
     numR2 = galsim.integ.int1d(lambda w: R(w) * filt(w) * sed2(w), 500, 720)
