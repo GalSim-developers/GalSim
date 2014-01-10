@@ -31,6 +31,20 @@ except ImportError:
 # This file has some helper functions that are used by tests from multiple files to help
 # avoid code duplication.
 
+def gsobject_compare(obj1, obj2, conv=None):
+    """Helper function to check that two GSObjects are equivalent
+    """
+    if conv:
+        obj1 = galsim.Convolve([obj1,conv])
+        obj2 = galsim.Convolve([obj2,conv])
+
+    im1 = galsim.ImageD(16,16)
+    im2 = galsim.ImageD(16,16)
+    obj1.draw(scale=0.2, image=im1, normalization='sb')
+    obj2.draw(scale=0.2, image=im2, normalization='sb')
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 10)
+
+
 def printval(image1, image2):
     print "New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array)
     print "Sum of values: ", np.sum(image1.array), np.sum(image2.array)

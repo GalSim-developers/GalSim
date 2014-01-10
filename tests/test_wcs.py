@@ -423,6 +423,51 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
                 'world_profile and image_profile were different when drawn for '+name)
 
 
+def do_jac_decomp(wcs, name):
+
+    print 'Check deomposition for ',name,wcs
+    import math
+
+    scale, shear, theta, flip = wcs.getDecomposition()
+    #print 'decomposition = ',scale, shear, theta, flip
+
+    # First see if we can recreate the right matrix from this:
+    S = np.matrix( [ [ 1.+shear.g1, shear.g2 ],
+                     [ shear.g2, 1.-shear.g1 ] ] ) / np.sqrt(1.-shear.g1**2-shear.g2**2)
+    R = np.matrix( [ [ np.cos(theta.rad()), -np.sin(theta.rad()) ],
+                     [ np.sin(theta.rad()), np.cos(theta.rad()) ] ] )
+    if flip:
+        F = np.matrix( [ [ 0, 1 ],
+                            [ 1, 0 ] ] )
+    else:
+        F = np.matrix( [ [ 1, 0 ],
+                            [ 0, 1 ] ] )
+
+    M = scale * S * R * F
+    J = wcs.getMatrix()
+    np.testing.assert_almost_equal(
+            M, J, 8, "Decomposition was inconsistent with jacobian for "+name)
+
+    # Also check that the profile is transformed equivalently as advertised in the docstring
+    # for getDecomposition.
+    base_obj = galsim.Gaussian(sigma=2)
+    # Make sure it doesn't have any initial symmetry!
+    base_obj.applyShear(g1=0.1, g2=0.23)
+    base_obj.applyShift(0.17, -0.37)
+
+    obj1 = base_obj.copy()
+    obj1.applyTransformation(wcs.dudx, wcs.dudy, wcs.dvdx, wcs.dvdy)
+
+    obj2 = base_obj.copy()
+    if flip:
+        obj2.applyTransformation(0,1,1,0)
+    obj2.applyRotation(theta)
+    obj2.applyShear(shear)
+    obj2.applyExpansion(scale)
+
+    gsobject_compare(obj1, obj2)
+
+
 def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
 
     print 'Start testing non-local WCS '+name
@@ -662,6 +707,9 @@ def test_pixelscale():
     np.testing.assert_almost_equal(jac.dvdy, scale, digits,
                                    'PixelScale dvdy does not match expected value.')
 
+    # Check the decomposition:
+    do_jac_decomp(jac, 'PixelScale')
+
     # Add an image origin offset
     x0 = 1
     y0 = 1
@@ -752,6 +800,9 @@ def test_shearwcs():
     np.testing.assert_almost_equal(jac.dvdy, (1.+g1) * scale * factor,  digits,
                                    'ShearWCS dvdy does not match expected value.')
 
+    # Check the decomposition:
+    do_jac_decomp(jac, 'ShearWCS')
+
     # Add an image origin offset
     x0 = 1
     y0 = 1
@@ -809,7 +860,7 @@ def test_affinetransform():
 
     global digits
     digits = 6
-    # First a simple tweak on a simple scale factor
+    # First a slight tweak on a simple scale factor
     dudx = 0.2342
     dudy = 0.0023
     dvdx = 0.0019
@@ -832,6 +883,9 @@ def test_affinetransform():
     ufunc = lambda x,y: dudx*x + dudy*y
     vfunc = lambda x,y: dvdx*x + dvdy*y
     do_local_wcs(wcs, ufunc, vfunc, 'JacobianWCS 1')
+
+    # Check the decomposition:
+    do_jac_decomp(wcs, 'JacobianWCS 1')
 
     # Add an image origin offset
     x0 = 1
@@ -860,15 +914,18 @@ def test_affinetransform():
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'AffineTransform 1')
 
     # Next one with a flip and significant rotation and a large (u,v) offset
-    dudy = 0.1432
-    dudx = 0.2342
-    dvdy = 0.2391
-    dvdx = 0.1409
+    dudx = 0.1432
+    dudy = 0.2342
+    dvdx = 0.2391
+    dvdy = 0.1409
 
     wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
     ufunc = lambda x,y: dudx*x + dudy*y
     vfunc = lambda x,y: dvdx*x + dvdy*y
     do_local_wcs(wcs, ufunc, vfunc, 'JacobianWCS 2')
+
+    # Check the decomposition:
+    do_jac_decomp(wcs, 'JacobianWCS 2')
 
     # Add a world origin offset
     u0 = 124.3
@@ -879,15 +936,18 @@ def test_affinetransform():
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'AffineTransform 2')
 
     # Finally a really crazy one that isn't remotely regular
-    dudy = -0.1432
     dudx = 0.2342
-    dvdy = -0.3013
+    dudy = -0.1432
     dvdx = 0.0924
+    dvdy = -0.3013
 
     wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
     ufunc = lambda x,y: dudx*x + dudy*y
     vfunc = lambda x,y: dvdx*x + dvdy*y
     do_local_wcs(wcs, ufunc, vfunc, 'Jacobian 3')
+
+    # Check the decomposition:
+    do_jac_decomp(wcs, 'JacobianWCS 3')
 
     # Check that using a wcs in the context of an image works correctly
     do_wcs_image(wcs, 'JacobianWCS')
@@ -1326,9 +1386,10 @@ def test_radecfunction():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def do_ref(wcs, ref_list, approx=False, image=None):
-    """Test that the given wcs object correctly converts the reference positions
-    """
+def do_ref(wcs, ref_list, name, approx=False, image=None):
+    # Test that the given wcs object correctly converts the reference positions
+
+    print 'Start reference testing for '+name
     global digits
     for ref in ref_list:
         ra = galsim.HMS_Angle(ref[0])
@@ -1388,10 +1449,10 @@ def test_astropywcs():
     digits = 4
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        print tag,' file_name = ',file_name
+        #print tag,' file_name = ',file_name
         wcs = galsim.AstropyWCS(file_name, dir=dir)
 
-        do_ref(wcs, ref_list)
+        do_ref(wcs, ref_list, 'AstropyWCS '+tag)
 
         do_celestial_wcs(wcs, 'Astropy file '+file_name)
 
@@ -1424,13 +1485,13 @@ def test_pyastwcs():
     digits = 4
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        print tag,' file_name = ',file_name
+        #print tag,' file_name = ',file_name
         wcs = galsim.PyAstWCS(file_name, dir=dir)
 
         # The PyAst implementation of the SIP type only gets the inverse transformation
         # approximately correct.  So we need to be a bit looser in that check.
         approx = tag in [ 'SIP' , 'ZPX' ]
-        do_ref(wcs, ref_list, approx)
+        do_ref(wcs, ref_list, 'PyAstWCS '+tag, approx)
 
         do_celestial_wcs(wcs, 'PyAst file '+file_name)
 
@@ -1464,13 +1525,13 @@ def test_wcstools():
     digits = 4
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        print tag,' file_name = ',file_name
+        #print tag,' file_name = ',file_name
         wcs = galsim.WcsToolsWCS(file_name, dir=dir)
 
         # The wcstools implementation of the SIP and TPV types only gets the inverse 
         # transformations approximately correct.  So we need to be a bit looser in those checks.
         approx = tag in [ 'SIP' , 'TPV' ]
-        do_ref(wcs, ref_list, approx)
+        do_ref(wcs, ref_list, 'WcsToolsWCS '+tag, approx)
 
         # Recenter (x,y) = (0,0) at the image center to avoid wcstools warnings about going
         # off the image.
@@ -1498,10 +1559,10 @@ def test_gsfitswcs():
     digits = 4
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        print tag,' file_name = ',file_name
+        #print tag,' file_name = ',file_name
         wcs = galsim.GSFitsWCS(file_name, dir=dir)
 
-        do_ref(wcs, ref_list)
+        do_ref(wcs, ref_list, 'GSFitsWCS '+tag)
 
         do_celestial_wcs(wcs, 'GSFitsWCS '+file_name)
 
@@ -1531,7 +1592,7 @@ def test_fitswcs():
     digits = 4
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        print tag,' file_name = ',file_name
+        #print tag,' file_name = ',file_name
         wcs = galsim.FitsWCS(file_name, dir=dir)
         print 'FitsWCS is really ',type(wcs)
 
@@ -1542,14 +1603,14 @@ def test_fitswcs():
             approx = ( (tag in ['SIP', 'ZPX'] and isinstance(wcs, galsim.PyAstWCS)) or
                        (tag in ['SIP', 'TPV'] and isinstance(wcs, galsim.WcsToolsWCS)) )
 
-            do_ref(wcs, ref_list, approx)
+            do_ref(wcs, ref_list, 'FitsWCS '+tag, approx)
             do_celestial_wcs(wcs, 'FitsWCS '+file_name)
             do_wcs_image(wcs, 'FitsWCS_'+tag, approx)
 
             # Should also be able to build the file just from a fits.read() call, which 
             # uses FitsWCS behind the scenes.
             im = galsim.fits.read(file_name, dir=dir)
-            do_ref(im.wcs, ref_list, approx, im)
+            do_ref(im.wcs, ref_list, 'WCS from fits.read '+tag, approx, im)
 
         # Finally, also check that AffineTransform can read the file.
         # We don't really have any accuracy checks here.  This really just checks that the

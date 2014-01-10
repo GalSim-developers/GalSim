@@ -457,7 +457,7 @@ class GSObject(object):
         Note that this function is similar to applyExpansion in that it preserves
         surface brightness, not flux.  If you want to preserve flux, you should also do
 
-            prof.scaleFlux( 1. / (dudx*dvdy - dudy*dvdx) )
+            prof.scaleFlux( 1. / abs(dudx*dvdy - dudy*dvdx) )
 
         After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond

@@ -846,7 +846,16 @@ class JacobianWCS(BaseWCS):
         v = dvdx x + dvdy y
 
     A JacobianWCS has attributes dudx, dudy, dvdx, dvdy that you can access directly if that 
-    is convenient.
+    is convenient.  You can also access these as a numpy matrix directly with 
+
+        J = jac_wcs.getMatrix()
+
+    Also, JacobianWCS has an additional method that other WCS classes do not have. The call
+
+        scale, shear, theta, flip = jac_wcs.getDecomposition()
+
+    will return the equivalent expansion, shear, rotation and possible flip corresponding to 
+    this transformation.  See the docstring for that method for more information.
 
     Initialization
     --------------
@@ -910,41 +919,126 @@ class JacobianWCS(BaseWCS):
 
     def _profileToWorld(self, image_profile):
         ret = image_profile.createTransformed(self._dudx, self._dudy, self._dvdx, self._dvdy)
-        ret.scaleFlux(1./self._det)
+        ret.scaleFlux(1./self._pixelArea())
         return ret
 
     def _profileToImage(self, world_profile):
         ret = world_profile.createTransformed(self._dvdy/self._det, -self._dudy/self._det,
                                               -self._dvdx/self._det, self._dudx/self._det)
-        ret.scaleFlux(self._det)
+        ret.scaleFlux(self._pixelArea())
         return ret
 
     def _pixelArea(self):
-        return self._det
+        return abs(self._det)
+
+    def getMatrix(self):
+        """Get the jacobian as a numpy matrix:
+
+                numpy.matrix( [[ dudx, dudy ],
+                               [ dvdx, dvdy ]] )
+        """
+        import numpy
+        return numpy.matrix( [[ self._dudx, self._dudy ],
+                              [ self._dvdx, self._dvdy ]] )
+
+    def getDecomposition(self):
+        """Get the equivalent expansion, shear, rotation and possible flip corresponding to 
+        this jacobian transformation.
+
+        A non-singular real matrix can always be decomposed into a symmetric positive definite 
+        matrix times an orthogonal matrix:
+        
+            M = P Q
+
+        In our case, P includes an overall scale and a shear, and Q is a rotation and possibly
+        a flip of (x,y) -> (y,x).
+
+            ( dudx  dudy ) = scale/sqrt(1-g1^2-g2^2) ( 1+g1  g2  ) ( cos(theta)  -sin(theta) ) F
+            ( dvdx  dvdy )                           (  g2  1-g2 ) ( sin(theta)   cos(theta) )
+
+        where F is either the identity matrix, ( 1 0 ), or a flip matrix, ( 0 1 ).
+                                               ( 0 1 )                    ( 1 0 )
+
+        If there is no flip, then this means that the effect of 
+        
+                prof.applyTransformation(dudx, dudy, dvdx, dvdy)
+
+        is equivalent to 
+
+                prof.applyRotation(theta)
+                prof.applyShear(shear)
+                prof.applyExpansion(scale)
+
+        in that order.  (Rotation and shear do not commute.)
+
+        The decomposition is returned as a tuple: (scale, shear, theta, flip), where scale is a 
+        float, shear is a galsim.Shear, theta is a galsim.Angle, and flip is a bool.
+        """
+        import math
+        # First we need to see whether or not the transformation includes a flip.  The evidence
+        # for a flip is that the determinant is negative.
+        if self._det == 0.:
+            raise RuntimeError("Transformation is singular")
+        elif self._det < 0.:
+            flip = True
+            scale = math.sqrt(-self._det)
+            dudx = self._dudy
+            dudy = self._dudx
+            dvdx = self._dvdy
+            dvdy = self._dvdx
+        else:
+            flip = False
+            scale = math.sqrt(self._det)
+            dudx = self._dudx
+            dudy = self._dudy
+            dvdx = self._dvdx
+            dvdy = self._dvdy
+
+        # A small bit of algebraic manipulations yield the following two equations that # let us 
+        # determine theta:
+        #
+        # (dudx + dvdy) = 2 scale/sqrt(1-g^2) cos(t)
+        # (dvdx - dudy) = 2 scale/sqrt(1-g^2) sin(t)
+
+        C = dudx + dvdy
+        S = dvdx - dudy
+        theta = math.atan2(S,C) * galsim.radians
+
+        # The next step uses the following equations that you can get from a bit more algebra:
+        #
+        # cost (dudx - dvdy) - sint (dudy + dvdx) = 2 scale/sqrt(1-g^2) g1
+        # sint (dudx - dvdy) + cost (dudy + dvdx) = 2 scale/sqrt(1-g^2) g2
+        factor = C*C+S*S    # factor = (2 scale/sqrt(1-g^2))^2
+        C /= factor         # C is now cost / (2 scale/sqrt(1-g^2))
+        S /= factor         # S is now sint / (2 scale/sqrt(1-g^2))
+
+        g1 = C*(dudx-dvdy) - S*(dudy+dvdx)
+        g2 = S*(dudx-dvdy) + C*(dudy+dvdx)
+
+        return scale, galsim.Shear(g1=g1, g2=g2), theta, flip
 
     def _minScale(self):
-        # The corners of the parallelogram defined by:
-        # J = ( a  b )
-        #     ( c  d )
-        # are:
-        #     (0,0)  (a,c)
-        #     (b,d)  (a+b,c+d)
-        # That is, the corners of the unit square with positions (0,0), (0,1), (1,0), (1,1)
-        # are mapped onto these points.
-        #
-        # So the two diagonals are from (0,0) to (a+b, c+d) and from (a,c) to (b,d)
-        # We divide these values by sqrt(2) to account for the fact that the original
-        # square had a distance of sqrt(2) for each of these distances.
-        import numpy
-        d1 = numpy.sqrt( 0.5* ((self._dudx+self._dudy)**2 + (self._dvdx+self._dvdy)**2) )
-        d2 = numpy.sqrt( 0.5* ((self._dudx-self._dudy)**2 + (self._dvdx-self._dvdy)**2) )
-        return min(d1,d2)
+        import math
+        # min scale is scale * (1-|g|) / sqrt(1-|g|^2)
+        # We can get this from the decomposition:
+        scale, shear, theta, flip = self.getDecomposition()
+        g1 = shear.g1
+        g2 = shear.g2
+        gsq = g1*g1 + g2*g2
+        # I'm sure there is a more efficient calculation of this.  Certainly, we don't need the 
+        # atan2 call from getDecomposition.  But I think we at least need at least 2 of the 3
+        # sqrts, which are also rather slow.  So I'm not sure how much of a speedup is actually
+        # possible.  Plus I doubt this is ever a time critical operation.  :)
+        return scale * (1.-math.sqrt(gsq)) / math.sqrt(1.-gsq)
 
     def _maxScale(self):
-        import numpy
-        d1 = numpy.sqrt( 0.5* ((self._dudx+self._dudy)**2 + (self._dvdx+self._dvdy)**2) )
-        d2 = numpy.sqrt( 0.5* ((self._dudx-self._dudy)**2 + (self._dvdx-self._dvdy)**2) )
-        return max(d1,d2)
+        import math
+        # max scale is scale * (1+|g|) / sqrt(1-|g|^2)
+        scale, shear, theta, flip = self.getDecomposition()
+        g1 = shear.g1
+        g2 = shear.g2
+        gsq = g1*g1 + g2*g2
+        return scale * (1.+math.sqrt(gsq)) / math.sqrt(1.-gsq)
 
     def _toJacobian(self):
         return self
