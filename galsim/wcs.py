@@ -1982,8 +1982,8 @@ class AstropyWCS(BaseWCS):
                           The default is to use either the primary or first extension as 
                           appropriate for the given compression.  (e.g. for rice, the first 
                           extension is the one you normally want.) [ Default `hdu = None` ]
-    @param header         The header of an open pyfits (or astropy.io) hdu. 
-                          [ Default `header = None` ]
+    @param header         The header of an open pyfits (or astropy.io) hdu.  Or, it can be
+                          a galsim.FitsHeader object.  [ Default `header = None` ]
     @param compression    Which decompression scheme to use (if any). See galsim.fits.read
                           for the available options.  [ Default `compression = 'auto'` ]
     @param wcs            An existing astropy.wcs.WCS instance [ Default: `wcs = None` ]
@@ -2257,8 +2257,8 @@ class PyAstWCS(BaseWCS):
                           The default is to use either the primary or first extension as 
                           appropriate for the given compression.  (e.g. for rice, the first 
                           extension is the one you normally want.) [ Default `hdu = None` ]
-    @param header         The header of an open pyfits (or astropy.io) hdu. 
-                          [ Default `header = None` ]
+    @param header         The header of an open pyfits (or astropy.io) hdu.  Or, it can be
+                          a galsim.FitsHeader object.  [ Default `header = None` ]
     @param compression    Which decompression scheme to use (if any). See galsim.fits.read
                           for the available options.  [ Default `compression = 'auto'` ]
     @param wcsinfo        An existing starlink.Ast.WcsMap [ Default: `wcsinfo = None` ]
@@ -2683,8 +2683,8 @@ class GSFitsWCS(BaseWCS):
                           The default is to use either the primary or first extension as 
                           appropriate for the given compression.  (e.g. for rice, the first 
                           extension is the one you normally want.) [ Default `hdu = None` ]
-    @param header         The header of an open pyfits (or astropy.io) hdu. 
-                          [ Default `header = None` ]
+    @param header         The header of an open pyfits (or astropy.io) hdu.  Or, it can be
+                          a galsim.FitsHeader object.  [ Default `header = None` ]
     @param compression    Which decompression scheme to use (if any). See galsim.fits.read
                           for the available options.  [ Default `compression = 'auto'` ]
     @param origin         Optional origin position for the image coordinate system.
@@ -2794,7 +2794,10 @@ class GSFitsWCS(BaseWCS):
         # the appropriate matrix, but since it is usually up to PVi_10, so far
         # we just implement that.
         # See http://fits.gsfc.nasa.gov/registry/tpvwcs/tpv.html for details.
-        if 'PV1_3' in header or 'PV1_11' in header:
+        if ( 'PV1_3' in header and header['PV1_3'] != 0.0 or
+             'PV1_11' in header and header['PV1_11'] != 0.0 or
+             'PV2_3' in header and header['PV1_3'] != 0.0 or
+             'PV2_11' in header and header['PV1_11'] != 0.0 ):
             raise NotImplementedError("We don't implement odd powers of r for TPV")
         if 'PV1_12' in header:
             raise NotImplementedError("We don't implement past 3rd order terms for TPV")
@@ -3064,8 +3067,8 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto')
                           The default is to use either the primary or first extension as 
                           appropriate for the given compression.  (e.g. for rice, the first 
                           extension is the one you normally want.) [ Default `hdu = None` ]
-    @param header         The header of an open pyfits (or astropy.io) hdu. 
-                          [ Default `header = None` ]
+    @param header         The header of an open pyfits (or astropy.io) hdu.  Or, it can be
+                          a galsim.FitsHeader object.  [ Default `header = None` ]
     @param compression    Which decompression scheme to use (if any). See galsim.fits.read
                           for the available options.  [ Default `compression = 'auto'` ]
     """

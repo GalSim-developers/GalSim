@@ -37,15 +37,12 @@ class DES_Shapelet(object):
         
         ...
 
-        pos = galsim.Position(image_x, image_y)  # position in pixels on the image
-                                                 # NOT in arcsec on the sky!
-        psf = des_shapelet.getPSF(pos)
+        psf = des_shapelet.getPSF(image_pos)    # position in image coordinates
+                                                # NOT world coordinates!
 
-    Note that the DES_Shapelet profile is measured with respect to sky coordinates, not 
-    pixel coordinates.  So if you want the drawn image to look like the original, it should be
-    drawn with the same WCS as found in the original image.  However, GalSim doesn't yet have
-    the ability to handle such WCS functions.  This is Issue #364.  Until then, an approximate
-    workaround is to use pixel_scale=0.262, and apply a rotation of -90 degrees before drawing.
+    Note that the returned psf here already includes the pixel.  This is what is sometimes
+    called an "effective PSF".  Thus, you should not convolve by the pixel profile again
+    (nor integrate over the pixel).  This would effectively include the pixel twice!
 
     This class will only interpolate within the defining bounds.  It won't extrapolate
     beyond the bounding box of where the stars defined the interpolation.
@@ -58,14 +55,14 @@ class DES_Shapelet(object):
             [...skip this object...]
 
 
-    @param file_name  The file name to be read in.
-    @param dir        Optionally a directory name can be provided if the file_name does not 
-                      already include it.
-    @param file_type  Either 'ASCII' or 'FITS' or None.  If None, infer from the file name ending
-                      (default = None).
+    @param file_name        The name of the file to be read in.
+    @param dir              Optionally a directory name can be provided if the file names do not 
+                            already include it.
+    @param file_type        Either 'ASCII' or 'FITS' or None.  If None, infer from the file name 
+                            ending. (default = None).
     """
     _req_params = { 'file_name' : str }
-    _opt_params = { 'file_type' : str , 'dir' : str }
+    _opt_params = { 'dir' : str, 'file_type' : str }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
@@ -167,15 +164,15 @@ class DES_Shapelet(object):
     def getOrder(self):
         return self.psf_order
 
-    def getPSF(self, pos, gsparams=None):
+    def getPSF(self, image_pos, gsparams=None):
         """Returns the PSF at position pos
 
-        @param pos       The position in pixel units for which to build the PSF.
-        @param gsparams  (Optional) A GSParams instance to pass to the constructed GSObject.
+        @param image_pos    The position in pixel units for which to build the PSF.
+        @param gsparams     (Optional) A GSParams instance to pass to the constructed GSObject.
 
-        @returns a galsim.Shapelet instance.
+        @returns the PSF as a galsim.Shapelet instance
         """
-        return galsim.Shapelet(self.sigma, self.psf_order, self.getB(pos), gsparams=gsparams)
+        return galsim.Shapelet(self.sigma, self.psf_order, self.getB(image_pos), gsparams=gsparams)
 
     def getB(self, pos):
         """Get the B vector as a numpy array at position pos
@@ -257,7 +254,7 @@ def BuildDES_Shapelet(config, key, base, ignore, gsparams, logger):
 
     if des_shapelet.getBounds().includes(image_pos):
         #psf = des_shapelet.getPSF(image_pos, gsparams)
-        # Because of the serialization issues, the above call doesn't work.  So we need to 
+        # Because of serialization issues, the above call doesn't work.  So we need to 
         # repeat the internals of getPSF here.
         b = des_shapelet.getB(image_pos)
         sigma = des_shapelet.getSigma()

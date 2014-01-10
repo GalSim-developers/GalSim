@@ -42,26 +42,15 @@ that.
 
 import galsim
 import os
+import sys
 import math
 import galsim.des
 
 def main(argv):
-    # For the file names, I pick a particular exposure.  The directory structure corresponds 
-    # to where the files are stored on folio at UPenn.
 
     root = 'DECam_00154912' 
 
-    # Directories in the Galsim repo
-    img_dir = 'des_data'
-    wl_dir = 'des_data'
-
-    # Directories on Mike's laptop
-    #img_dir = '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
-    #wl_dir = '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
-
-    # Directories on folio
-    #img_dir = '/data3/DECAM/SV/DECam_154912'
-    #wl_dir = '/data3/DECAM/wl/DECam_00154912_wl'
+    data_dir = 'des_data'
 
     # Set which chips to run on
     first_chip = 1
@@ -81,7 +70,6 @@ def main(argv):
 
     xsize_key = 'NAXIS1'
     ysize_key = 'NAXIS2'
-    pixel_scale_key = 'PIXSCAL1'
     sky_level_key = 'SKYBRITE'
     sky_sigma_key = 'SKYSIGMA'
 
@@ -101,24 +89,24 @@ def main(argv):
         fitpsf_image_file = '%s_%02d_fitpsf_image.fits'%(root,chipnum)
     
         # Get some parameters about the image from the data image header information
-        image_header = galsim.FitsHeader(image_file, dir=img_dir)
+        image_header = galsim.FitsHeader(image_file, dir=data_dir)
         xsize = image_header[xsize_key]
         ysize = image_header[ysize_key]
-        pixel_scale = image_header[pixel_scale_key]
         sky_sigma = image_header[sky_sigma_key]  # This is sqrt(variance) / pixel
         sky_level = image_header[sky_level_key]  # This is in ADU / pixel
         gain = sky_level / sky_sigma**2  # an approximation, since gain is missing.
 
+        # Read the WCS
+        wcs = galsim.GSFitsWCS(header=image_header)
+
         # Setup the images:
-        psfex_image = galsim.ImageF(xsize,ysize)
-        psfex_image.scale = pixel_scale
-        fitpsf_image = galsim.ImageF(xsize,ysize)
-        fitpsf_image.scale = pixel_scale
+        psfex_image = galsim.Image(xsize, ysize, wcs=wcs)
+        fitpsf_image = galsim.Image(xsize, ysize, wcs=wcs)
 
         # Read the other input files
-        cat = galsim.Catalog(cat_file, hdu=2, dir=img_dir)
-        psfex = galsim.des.DES_PSFEx(psfex_file, dir=wl_dir)
-        fitpsf = galsim.des.DES_Shapelet(fitpsf_file, dir=wl_dir)
+        cat = galsim.Catalog(cat_file, hdu=2, dir=data_dir)
+        psfex = galsim.des.DES_PSFEx(psfex_file, image_file, dir=data_dir)
+        fitpsf = galsim.des.DES_Shapelet(fitpsf_file, dir=data_dir)
 
         nobj = cat.nobjects
         print 'Catalog has ',nobj,' objects'
@@ -150,21 +138,18 @@ def main(argv):
 
             # Also get the flux of the galaxy from the catalog
             flux = cat.getFloat(k,flux_col)
-
-            # Define the pixel
-            pix = galsim.Pixel(pixel_scale)
+            #print '    flux = ',flux
+            #print '    wcs = ',wcs.local(image_pos)
 
             # First do the PSFEx image:
             if True:
                 # Define the PSF profile
-                psf = psfex.getPSF(image_pos, pixel_scale)
+                psf = psfex.getPSF(image_pos)
+                #print '    psfex psf = ',psf
                 psf.setFlux(flux)
 
-                # Make the final image, convolving with pix
-                final = galsim.Convolve([pix,psf])
-
                 # Draw the postage stamp image
-                stamp = final.draw(scale=pixel_scale, offset=offset)
+                stamp = psf.draw(wcs=wcs.local(image_pos), offset=offset)
 
                 # Recenter the stamp at the desired position:
                 stamp.setCenter(ix,iy)
@@ -180,22 +165,11 @@ def main(argv):
             if fitpsf.bounds.includes(image_pos):
                 # Define the PSF profile
                 psf = fitpsf.getPSF(image_pos)
+                #print '    fitpsf psf = ',psf
                 psf.setFlux(flux)
 
-                # Galsim doesn't have WCS functionality yet.  
-                # But for the shapelet PSF, it is important, since it really describes the
-                # PSF in sky coordinates, not pixel coordinates.  But to first order,
-                # the DES WCS is 90 degrees rotated from the sky, so for now, just apply
-                # a 90 degree rotation to get the images to look approximately correct.
-                # Eventually, we'll want to have a DES_WCS that can read the full WCS from
-                # the fits header and account for all of the field distortion correctly.
-                psf.applyRotation(-90*galsim.degrees)
-
-                # Make the final image, convolving with pix
-                final = galsim.Convolve([pix,psf])
-
                 # Draw the postage stamp image
-                stamp = final.draw(scale=pixel_scale, offset=offset)
+                stamp = psf.draw(wcs=wcs.local(image_pos), offset=offset)
 
                 # Recenter the stamp at the desired position:
                 stamp.setCenter(ix,iy)
@@ -234,5 +208,4 @@ def main(argv):
         random_seed += nobj
 
 if __name__ == "__main__":
-    import sys
     main(sys.argv)
