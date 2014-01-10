@@ -70,8 +70,10 @@ Sbcgal_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
 Sbcgal_wave /= 10 # Angstrom -> nm
 disk_sed = galsim.LookupTable(Sbcgal_wave, Sbcgal_photons)
 
+bluelim = 500
+redlim = 720
 filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
-wgood = (filter_wave >= 500) & (filter_wave <= 720) # truncate out-of-band wavelengths
+wgood = (filter_wave >= bluelim) & (filter_wave <= redlim) # truncate out-of-band wavelengths
 filter_wave = filter_wave[wgood][0::40]  # sparsify from 1 Ang binning to 40 Ang binning
 filter_throughput = filter_throughput[wgood][0::40]
 
@@ -136,7 +138,7 @@ def test_direct_sum_vs_chromatic():
     # final profile
     chromatic_final = galsim.ChromaticConvolve([chromatic_gal, chromatic_PSF, pixel])
     chromatic_image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
-    chromatic_final.draw(filter_wave, filter_throughput, image=chromatic_image, wmult=2)
+    chromatic_final.draw(filter_wave, filter_throughput, image=chromatic_image)
     # plotme(chromatic_image)
 
     #-----------
@@ -208,7 +210,7 @@ def test_chromatic_add():
 
     printval(image2, piecewise_image)
     np.testing.assert_array_almost_equal(
-            image2.array, piecewise_image.array, 10,
+            image2.array, piecewise_image.array, 5,
             err_msg="`+=` operator doesn't match manual image addition")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -257,10 +259,10 @@ def test_dcr_moments():
     sed2 = galsim.LookupTable(Sbcgal_wave, Sbcgal_photons)
     filt = galsim.LookupTable(filter_wave, filter_throughput)
     R = lambda w:(galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec
-    numR1 = galsim.integ.int1d(lambda w: R(w) * filt(w) * sed1(w), 500, 720)
-    numR2 = galsim.integ.int1d(lambda w: R(w) * filt(w) * sed2(w), 500, 720)
-    den1 = galsim.integ.int1d((lambda w:filt(w) * sed1(w)), 500, 720)
-    den2 = galsim.integ.int1d((lambda w:filt(w) * sed2(w)), 500, 720)
+    numR1 = galsim.integ.int1d(lambda w: R(w) * filt(w) * sed1(w), bluelim, redlim)
+    numR2 = galsim.integ.int1d(lambda w: R(w) * filt(w) * sed2(w), bluelim, redlim)
+    den1 = galsim.integ.int1d((lambda w:filt(w) * sed1(w)), bluelim, redlim)
+    den2 = galsim.integ.int1d((lambda w:filt(w) * sed2(w)), bluelim, redlim)
 
     R1 = numR1/den1
     R2 = numR2/den2
@@ -269,21 +271,21 @@ def test_dcr_moments():
     # analytic second moment differences
     V1_kernel = lambda w:(R(w) - R1)**2
     V2_kernel = lambda w:(R(w) - R2)**2
-    numV1 = galsim.integ.int1d(lambda w:V1_kernel(w) * filt(w) * sed1(w), 500, 720)
-    numV2 = galsim.integ.int1d(lambda w:V2_kernel(w) * filt(w) * sed2(w), 500, 720)
+    numV1 = galsim.integ.int1d(lambda w:V1_kernel(w) * filt(w) * sed1(w), bluelim, redlim)
+    numV2 = galsim.integ.int1d(lambda w:V2_kernel(w) * filt(w) * sed2(w), bluelim, redlim)
     V1 = numV1/den1
     V2 = numV2/den2
     dV_analytic = V1 - V2
-
-    np.testing.assert_almost_equal(dR_image, dR_analytic, 4,
-                                   err_msg="Moment Shift from DCR doesn't match analytic formula")
-    np.testing.assert_almost_equal(dV_image, dV_analytic, 4,
-                                   err_msg="Moment Shift from DCR doesn't match analytic formula")
 
     print 'image delta R:    {}'.format(dR_image)
     print 'analytic delta R: {}'.format(dR_analytic)
     print 'image delta V:    {}'.format(dV_image)
     print 'analytic delta V: {}'.format(dV_analytic)
+    np.testing.assert_almost_equal(dR_image, dR_analytic, 5,
+                                   err_msg="Moment Shift from DCR doesn't match analytic formula")
+    np.testing.assert_almost_equal(dV_image, dV_analytic, 5,
+                                   err_msg="Moment Shift from DCR doesn't match analytic formula")
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -329,10 +331,10 @@ def test_chromatic_seeing_moments():
         sed1 = galsim.LookupTable(Egal_wave, Egal_photons)
         sed2 = galsim.LookupTable(Sbcgal_wave, Sbcgal_photons)
         filt = galsim.LookupTable(filter_wave, filter_throughput)
-        num1 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * filt(w) * sed1(w), 500, 720)
-        num2 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * filt(w) * sed2(w), 500, 720)
-        den1 = galsim.integ.int1d(lambda w:filt(w) * sed1(w), 500, 720)
-        den2 = galsim.integ.int1d(lambda w:filt(w) * sed2(w), 500, 720)
+        num1 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * filt(w) * sed1(w), bluelim, redlim)
+        num2 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * filt(w) * sed2(w), bluelim, redlim)
+        den1 = galsim.integ.int1d(lambda w:filt(w) * sed1(w), bluelim, redlim)
+        den2 = galsim.integ.int1d(lambda w:filt(w) * sed2(w), bluelim, redlim)
 
         r2_1 = num1/den1
         r2_2 = num2/den2
@@ -420,17 +422,17 @@ def test_chromatic_flux():
 
     final = galsim.ChromaticConvolve([star, PSF, pix])
     image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
-    final.draw(filter_wave, filter_throughput, image=image, wmult=2)
+    final.draw(filter_wave, filter_throughput, image=image)
 
     image_flux = image.added_flux
 
     # analytic integral...
     sed = galsim.LookupTable(Egal_wave, Egal_photons)
     filt = galsim.LookupTable(filter_wave, filter_throughput)
-    analytic_flux = galsim.integ.int1d(lambda w: sed(w) * filt(w), 520, 700)
+    analytic_flux = galsim.integ.int1d(lambda w: sed(w) * filt(w), bluelim, redlim)
 
     # should probably strive to better than this, but this works for now...
-    np.testing.assert_almost_equal(image_flux/analytic_flux, 1.0, 2,
+    np.testing.assert_almost_equal(image_flux/analytic_flux, 1.0, 4,
                                    err_msg="Drawn flux doesn't match analytic prediction")
 
     t2 = time.time()
