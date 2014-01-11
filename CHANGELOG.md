@@ -41,12 +41,20 @@ Python layer API changes:
     `im = ImageF(nx, ny, scale=scale, init_value=init_val)`.
 * Removed the `im.at(x,y)` syntax.  This had been equivalent to `im(x,y)`, 
   so any such code should now be switched to that. (Issue #364)
+* Angle.wrap() now returns the wrapped angle rather than modifying the 
+  original.
+  * `angle.wrap()` should now be `angle = angle.wrap()`.
 
 Updates to config options:
 
 * Remove pix top layer in config structure.  Add draw_method=no_pixel to 
   do what `pix : None` used to do. (Issue #364)
 * Changed the name of sky_pos to world_pos. (Issue #364)
+* Add ability to index Sequences by any running index, rather than just the 
+  default.  i.e. obj_num, image_num, or file_num. (Issue #364)
+* Changed the previous behavior of the image.wcs field to allow several WCS
+  types: PixelScale, Offset, Shear, OffsetShear, UVFunction, RaDecFunction,
+  and Fits. (Issue #364)
 * Added a new image.retry_failures item that can be set so that if the 
   construction of a GSObject fails for any reason, you can ask it to retry.
   An example of this functionality has been added to demo8. (Issue #482)
@@ -64,9 +72,90 @@ Updates to config options:
 * Allowed the user to modify or add config parameters from the command line. 
   (Issue #479)
 
+New WCS classes: (Issue #364)
+
+* Every place in the code that used to need a pixel scale item (e.g. Image
+  constructor, GSObject.draw(), InterpolatedImage, etc.) now can take a 
+  wcs item.  The scale parameter is still an option, but now it is just 
+  shorthand for `wcs = PixelScale(scale)`.
+* There are three classes that we call "local WCS classes":
+  * PixelScale describes a simple scale conversion from pixels to arcsec.
+  * ShearWCS describes a uniformly sheared coordinate system.
+  * JacobianWCS describes an arbitrary 2x2 Jacobian matrix.
+* There are four non-local WCS classes that use Euclidean coordinates for 
+  the world coordinate system:
+  * OffsetWCS is a PixelScale with the world (0,0) location offset from 
+    the (0,0) position in image coordinates.
+  * OffsetShearWCS is a ShearWCS with a similar offset.
+  * AffineTransform is a JacobianWCS with an offset.  It is the most general
+    possible _uniform_ WCS transformation.  i.e. one where the pixel shape
+    is uniform across the image.
+  * UVFunction is an arbitrary transformation from (x,y) coordinates to
+    Euclidean (u,v) coordinates.  It takes arbitrary function u(x,y) and
+    v(x,y) as inputs.  (And optionally x(u,v) and y(u,v) for the inverse
+    transformations.)
+* There are five WCS classes that use celestial coordinates for the world
+  coordinate system. i.e. the world coordinates are in terms of right
+  ascension and declination (RA, Dec).  There is a new CelestialCoord
+  class that encapsulates this kind of position on the sphere.
+  * RaDecFunction takes arbitrary function ra(x,y) and dec(x,y).
+  * AstropyWCS uses the astropy.wcs package to read in a given FITS file.
+  * PyAstWCS uses the starlink.Ast package to read in a given FITS file.
+  * WcsToolsWCS uses wcstools commands for a given FITS file.
+  * GSFitsWCS is GalSim code to read FITS files that use TAN and TPV 
+    WCS types.  Less flexible than the others, but still useful since
+    these are probably the most common WCS types for optical astronomical
+    images.  Plus it is quite a bit faster than the others.
+* Finally, there is a factory function called FitsWCS that will try the 
+  various classes that can read FITS files until it finds one that works.
+  It will revert to AffineTransform if it cannot find anything better.
+* When reading in an image from a FITS file, the image will automatically
+  try to read the WCS information from the header with the FitsWCS function.
+* See the docstring for BaseWCS (the base class for all of these WCS classes)
+  for information about how to use these classes.
+* Also, check out demo3, demo9 and demo10 for example usage.
+
+New CelestialCoord class: (Issue #364)
+
+* This class describes a position on the celestial sphere according to 
+  RightAscension (RA) and Declination (Dec).  These two values are accessible
+  as coord.ra and coord.dec.  So it is used by some of the WCS classes for
+  the world coordinate positions.
+* It has methods to handle a number of spherical trigonometry operations 
+  that are sometimes required when dealing with celestial coordinates:
+  * `coord1.diatanceTo(coord2)` returns the great circle distance between two
+    coordinates (as a galsim.Angle).
+  * `coord1.angleBetween(coord2,coord3)` returns the angle between the two 
+    great circles (coord1-coord2) and (coord1-coord3).
+  * `coord1.project(coord2)` applies a tangent plane projection of coord2 with 
+    respect to the tangent point coord1 using one of 4 possible projection 
+    schemes specified by the optional keyword `projection`: lambert, 
+    stereographic, gnomonic, or postel.  See the docstring for this function 
+    for details.
+  * `coord1.deproject(pos)` reverses the projection to go from the position
+    on the tangent plane back to celestial coordinates.
+  * `coord.precess(from_epoch, to_epoch)` precesses the coordinates to a 
+    different epoch.
+  * `coord.getGalaxyPos()` returns the galaxy longitude and latitude as
+    a tuple (el, b).
+
 Other new features:
 
-* New WCS classes.  See the new wcs.py file for details. (Issue #364)
+* New functions to convert an angle to/from DMS strings.  Sometimes handy
+  when dealing with RA or Dec. (Issue #364)
+  * angle.dms() returns the angle as a string in the form +/-ddmmss.decimal.
+  * angle.hms() returns the angle as a string in the form +/-hhmmss.decimal.
+  * angle = DMS_Angle(str) convert from dms back to a galsim.Angle.
+  * angle = HMS_Angle(str) convert from hms back to a galsim.Angle.
+* profile.applyTransformation(dudx, dudy, dvdx, dvdy) applies a general 
+  (linear) coordinate transformation to a GSObject profile.  It is a 
+  generalization of applyShear, applyRotation, etc.  There is also the 
+  corresponding createTransformed as well. (Issue #364)
+* A new `galsim.fits.readFile()` function reads a FITS file and returns the
+  hdu_list.  Normally, this is equivalent to `pyfits.open(file_name)`, but
+  it has a `compression` option that works the same way `compression` works
+  for the other `galsim.fits.read*` functions, so it may be convenient
+  at times. (Issue #364)
 * Permit users to initialize OpticalPSF with a list or array of aberrations,
   as an alternative to specifying each one individually.  (The innards of 
   OpticalPSF were also rearranged to use arrays instead of individual values, 
