@@ -52,3 +52,10 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
         return result
     else:
         raise RuntimeError(result)
+
+def midpoint_int_image(f_image, a, b, n):
+    import operator
+    import multiprocessing
+    h = (b-a)/n
+    x = [a + h * (i+0.5) for i in range(n)]
+    return h*reduce(multiprocessing.Pool().map(f_image, x), operator.add)

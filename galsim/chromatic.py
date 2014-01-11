@@ -28,7 +28,7 @@ import galsim
 class ChromaticObject(object):
     """Base class for defining wavelength dependent objects.
     """
-    def draw(self, wave, throughput, image=None, add_to_image=False,
+    def draw(self, throughput_fn, bluelim, redlim, N, image=None, add_to_image=False,
              *args, **kwargs):
         """Draws an Image of a chromatic object as observed through a bandpass filter.
 
@@ -37,29 +37,38 @@ class ChromaticObject(object):
         should try to override this method if they can think of clever ways to reduce the number of
         convolutions needed (see ChromaticConvolve below, for instance)
 
-        @param wave        Wavelengths in nanometers describing bandpass filter.  For now these are
-                           assumed to be linearly spaced.  This needs to be indexable, iterable, and
-                           have at least two elements.
-        @param throughput  Dimensionless throughput at each wavelength, i.e., the probability that
-                           any particular photon at the corresponding wavelength is detected.  This
-                           needs to be indexable, iterable, and have the same number of elements as
-                           wave.
+        @param throughput_fn  A function to take wavelength in nanometers and return the total system
+                              dimensionless throughput.
+        @bluelim              Lower (blue) limit for wavelength integration.
+        @redlim               Upper (red) limit for wavelength integration.
+        @N                    Number of points to use for Riemann sum evaluation.
 
         @returns           The drawn image.
         """
 
-        # Assume that wave is linear, and compute constant dwave.
-        dwave = wave[1] - wave[0]
+        # # Assume that wave is linear, and compute constant dwave.
+        # dwave = wave[1] - wave[0]
 
-        # Initialize Image from first wavelength.
-        prof = self.evaluateAtWavelength(wave[0]) * throughput[0] * dwave
-        image = prof.draw(image=image, add_to_image=add_to_image)
+        # # Initialize Image from first wavelength.
+        # prof = self.evaluateAtWavelength(wave[0]) * throughput[0] * dwave
+        # image = prof.draw(image=image, add_to_image=add_to_image)
 
-        # And now add in the remaining wavelengths drawing each one in turn
-        for w, tp in zip(wave, throughput)[1:]:
-            prof = self.evaluateAtWavelength(w) * tp * dwave
-            prof.draw(image=image, add_to_image=True, *args, **kwargs)
+        # # And now add in the remaining wavelengths drawing each one in turn
+        # for w, tp in zip(wave, throughput)[1:]:
+        #     prof = self.evaluateAtWavelength(w) * tp * dwave
+        #     prof.draw(image=image, add_to_image=True, *args, **kwargs)
 
+        # return image
+
+        h = (redlim * 1.0 - bluelim) / N
+        ws = [bluelim + h * (i+0.5) for i in range(N)]
+
+        prof = self.evaluateAtWavelength(ws[0]) * throughput_fn(ws[0]) * h
+        image = prof.draw(image=image, add_to_image=add_to_image, *args, **kwargs)
+
+        for w in ws[1:]:
+            prof = self.evaluateAtWavelength(w) * throughput_fn(w) * h
+            image = prof.draw(image=image, add_to_image=True, *args, **kwargs)
         return image
 
     def __add__(self, other):
@@ -179,11 +188,16 @@ class ChromaticAdd(ChromaticObject):
         """
         return galsim.Add([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
-    def draw(self, wave, throughput, image=None, add_to_image=False):
+    def draw(self, throughput_fn, bluelim, redlim, N, image=None, add_to_image=False,
+             *args, **kwargs):
         # is the most efficient method to just add up one component at a time...?
-        image = self.objlist[0].draw(wave, throughput, image=image)
+        image = self.objlist[0].draw(wave, throughput_fn, bluelim, redlim, N,
+                                     image=image, add_to_image=add_to_image,
+                                     *args, **kwargs)
         for obj in self.objlist[1:]:
-            image = obj.draw(wave, throughput, image=image, add_to_image=True)
+            image = obj.draw(wave, throughput_fn, bluelim, redlim, N,
+                             image=image, add_to_image=True,
+                             *args, **kwargs)
 
     def applyShear(self, *args, **kwargs):
         for obj in self.objlist:
@@ -228,7 +242,8 @@ class ChromaticConvolve(ChromaticObject):
         """
         return galsim.Convolve([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
-    def draw(self, wave, throughput, image=None, add_to_image=False, *args, **kwargs):
+    def draw(self, throughput_fn, bluelim, redlim, N, image=None, add_to_image=False,
+             *args, **kwargs):
         # Only make temporary changes to objlist...
         objlist = list(self.objlist)
 
@@ -302,13 +317,15 @@ class ChromaticConvolve(ChromaticObject):
                 tmplist = list(objlist) # the remaining items to be convolved with each of A,B,C
                 tmplist.append(obj.objlist[0]) # add A to convolve list
                 tmpobj = ChromaticConvolve(tmplist)
-                image = tmpobj.draw(wave, throughput, image=image, add_to_image=add_to_image,
+                image = tmpobj.draw(throughput_fn, bluelim, redlim, N,
+                                    image=image, add_to_image=add_to_image,
                                     *args, **kwargs)
                 for summand in obj.objlist[1:]: # now do B, C, and so on...
                     tmplist = list(objlist)
                     tmplist.append(summand)
                     tmpobj = ChromaticConvolve(tmplist)
-                    image = tmpobj.draw(wave, throughput, image=image, add_to_image=True,
+                    image = tmpobj.draw(throughput_fn, bluelim, redlim, N,
+                                        image=image, add_to_image=True,
                                         *args, **kwargs)
         if returnme:
             return image
@@ -330,35 +347,76 @@ class ChromaticConvolve(ChromaticObject):
             else:
                 insep_profs.append(obj) # The f(x,y,lambda)'s (see above)
 
-        dwave = wave[1] - wave[0] # assume wavelengths are linear
+        # dwave = wave[1] - wave[0] # assume wavelengths are linear
+        # # check if there are any inseparable profiles
+        # if insep_profs == []:
+        #     multiplier = 0.0
+        #     for w, tp in zip(wave, throughput):
+        #         term = tp
+        #         for s in sep_photons:
+        #             term *= s(w)
+        #         multiplier += term * dwave
+        # else:
+        #     # make an effective profile from inseparables and the chromatic part of separables
+        #     # start combining monochromatic profiles into an effective profile
+        #     multiplier = 1.0
+        #     # start with the first wavelength
+        #     mono_prof = galsim.Convolve([insp.evaluateAtWavelength(wave[0]) for insp in insep_profs])
+        #     mono_prof *= throughput[0] * dwave
+        #     # multiply it by the appropriate spectral factor
+        #     for s in sep_photons:
+        #         mono_prof *= s(wave[0])
+        #     # start drawing effective profile
+        #     effective_prof_image = mono_prof.draw(*args, **kwargs)
+        #     # now loop over remaining wavelengths and keep adding to effective profile
+        #     for w, tp in zip(wave, throughput)[1:]:
+        #         mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
+        #         mono_prof *= tp * dwave
+        #         for s in sep_photons:
+        #             mono_prof *= s(w)
+        #         mono_prof.draw(image=effective_prof_image, add_to_image=True,
+        #                        *args, **kwargs)
+        #     # turn drawn effective profile into a GSObject
+        #     effective_prof = galsim.InterpolatedImage(effective_prof_image)
+        #     # append effective profile to separable profiles (which are all GSObjects)
+        #     sep_profs.append(effective_prof)
+        # # finally, Convolve and draw.
+        # final_prof = multiplier * galsim.Convolve(sep_profs)
+        # return final_prof.draw(image=image, add_to_image=add_to_image,
+        #                        *args, **kwargs)
+
+
+        # replace array-indexing Riemann sum with function-calling midpoint rule...
+        h = (redlim * 1.0 - bluelim) / N
+        ws = [bluelim + h * (i+0.5) for i in range(N)]
         # check if there are any inseparable profiles
         if insep_profs == []:
             multiplier = 0.0
-            for w, tp in zip(wave, throughput):
-                term = tp
+            for w in ws:
+                term = throughput_fn(w) * h
                 for s in sep_photons:
                     term *= s(w)
-                multiplier += term * dwave
+                multiplier += term
         else:
             # make an effective profile from inseparables and the chromatic part of separables
             # start combining monochromatic profiles into an effective profile
             multiplier = 1.0
             # start with the first wavelength
-            mono_prof = galsim.Convolve([insp.evaluateAtWavelength(wave[0]) for insp in insep_profs])
-            mono_prof *= throughput[0] * dwave
+            mono_prof = galsim.Convolve([insp.evaluateAtWavelength(ws[0]) for insp in insep_profs])
+            mono_prof *= throughput_fn(ws[0]) * h
             # multiply it by the appropriate spectral factor
             for s in sep_photons:
-                mono_prof *= s(wave[0])
+                mono_prof *= s(ws[0])
             # start drawing effective profile
             effective_prof_image = mono_prof.draw(*args, **kwargs)
             # now loop over remaining wavelengths and keep adding to effective profile
-            for w, tp in zip(wave, throughput)[1:]:
+            for w in ws[1:]:
                 mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
-                mono_prof *= tp * dwave
+                mono_prof *= throughput_fn(w) * h
                 for s in sep_photons:
                     mono_prof *= s(w)
-                mono_prof.draw(image=effective_prof_image, add_to_image=True,
-                               *args, **kwargs)
+                effective_prof_image = mono_prof.draw(image=effective_prof_image, add_to_image=True,
+                                                      *args, **kwargs)
             # turn drawn effective profile into a GSObject
             effective_prof = galsim.InterpolatedImage(effective_prof_image)
             # append effective profile to separable profiles (which are all GSObjects)
