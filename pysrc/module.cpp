@@ -38,7 +38,6 @@ namespace galsim {
     void pyExportCppShear();
     void pyExportCppEllipse();
     void pyExportImage();
-    void pyExportPhotonArray();
     void pyExportSBProfile();
     void pyExportSBAdd();
     void pyExportSBConvolve();
@@ -76,7 +75,6 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportCppShear();
     galsim::pyExportCppEllipse();
     galsim::pyExportImage();
-    galsim::pyExportPhotonArray();
     galsim::pyExportSBProfile();
     galsim::pyExportSBAdd();
     galsim::pyExportSBConvolve();
