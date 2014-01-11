@@ -24,5 +24,3 @@ Integ.cpp
 Table.cpp
 Interpolant.cpp
 CorrelatedNoise.cpp
-
-CppEllipse.cpp
