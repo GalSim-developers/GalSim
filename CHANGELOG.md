@@ -41,6 +41,9 @@ Python layer API changes:
     `im = ImageF(nx, ny, scale=scale, init_value=init_val)`.
 * Removed the `im.at(x,y)` syntax.  This had been equivalent to `im(x,y)`, 
   so any such code should now be switched to that. (Issue #364)
+* Removed the previously deprecated Ellipse and AtmosphericPSF classes.
+  Also removed PhotonArray from the python layer, since it is only used
+  by the C++ layer.  (Issue #364)
 
 Updates to config options:
 
