@@ -338,6 +338,9 @@ def Process(config, logger=None):
     build and write the specified files.  The input field is processed before
     building each file.
     """
+    # First thing to do is deep copy the input config to make sure we don't modify the original.
+    import copy
+    config = copy.deepcopy(config)
 
     # If we don't have a root specified yet, we generate it from the current script.
     if 'root' not in config:
