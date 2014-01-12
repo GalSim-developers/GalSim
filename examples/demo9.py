@@ -27,7 +27,8 @@ applied to each galaxy is calculated for an NFW halo mass profile.  We simulate 
 of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster
 has its own file, organized into 4 directories (one for each mass).  For each cluster, we
 draw 20 lensed galaxies at random positions of the image.  The PSF is appropriate for a
-a space-like simulation.  (Some of the numbers used are the values for HST.)
+space-like simulation.  (Some of the numbers used are the values for HST.)  And we apply
+a cubic telescope distortion for the WCS.
 
 New features introduced in this demo:
 
@@ -38,6 +39,7 @@ New features introduced in this demo:
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMagnification(pos, z)
 - pos = bounds.trueCenter()
+- wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc, origin)
 - wcs.toWorld(profile, image_pos)
 - image_pos = wcs.toImage(pos)
 
