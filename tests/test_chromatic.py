@@ -127,8 +127,8 @@ def test_direct_sum_vs_chromatic():
     chromatic_gal.applyShear(g1=shear_g1, g2=shear_g2)
 
     # make chromatic PSF
-    chromatic_PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat, shift_fn, dilate_fn,
-                                                   beta=PSF_beta, half_light_radius=PSF_hlr)
+    mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
+    chromatic_PSF = galsim.ChromaticShiftAndDilate(mono_PSF, shift_fn, dilate_fn)
     chromatic_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
 
     # final profile
@@ -177,8 +177,8 @@ def test_chromatic_add():
     # create PSF
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec)
     dilate_fn = lambda w:(w/500.0)**(-0.2)
-    chromatic_PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat, shift_fn, dilate_fn,
-                                                   beta=PSF_beta, half_light_radius=PSF_hlr)
+    mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
+    chromatic_PSF = galsim.ChromaticShiftAndDilate(mono_PSF, shift_fn, dilate_fn)
     chromatic_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
 
     # create final profile
@@ -235,9 +235,8 @@ def test_dcr_moments():
 
     shift_fn = lambda w:(0, ((galsim.dcr.get_refraction(w, zenith_angle) - R610)
                              / galsim.arcsec))
-    PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat,
-                                         shift_fn = shift_fn,
-                                         beta=PSF_beta, half_light_radius=PSF_hlr)
+    mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
+    PSF = galsim.ChromaticShiftAndDilate(mono_PSF,shift_fn = shift_fn)
 
     pix = galsim.Pixel(pixel_scale)
     final1 = galsim.Convolve([star1, PSF, pix])
@@ -308,9 +307,9 @@ def test_chromatic_seeing_moments():
     indices = [-0.2, 0.6, 1.0]
     for index in indices:
 
-        PSF = galsim.ChromaticShiftAndDilate(galsim.Gaussian,
-                                             dilate_fn=lambda w:(w/500.0)**index,
-                                             half_light_radius=PSF_hlr)
+        mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
+        PSF = galsim.ChromaticShiftAndDilate(mono_PSF,
+                                             dilate_fn=lambda w:(w/500.0)**index)
 
         final1 = galsim.Convolve([star1, PSF, pix])
         final2 = galsim.Convolve([star2, PSF, pix])
@@ -366,8 +365,8 @@ def test_monochromatic_filter():
 
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec)
     dilate_fn = lambda wave: (wave/500.0)**(-0.2)
-    chromatic_PSF = galsim.ChromaticShiftAndDilate(galsim.Gaussian, shift_fn, dilate_fn,
-                                                   half_light_radius=PSF_hlr)
+    mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
+    chromatic_PSF = galsim.ChromaticShiftAndDilate(mono_PSF, shift_fn, dilate_fn)
     chromatic_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
 
     pix = galsim.Pixel(pixel_scale)
@@ -411,9 +410,9 @@ def test_chromatic_flux():
     # stars are fundamentally delta-fns with an SED
     star = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
     pix = galsim.Pixel(pixel_scale)
-    PSF = galsim.ChromaticShiftAndDilate(galsim.Gaussian,
-                                         dilate_fn=lambda w:(w/500.0)**(-0.2),
-                                         half_light_radius=PSF_hlr)
+    mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
+    PSF = galsim.ChromaticShiftAndDilate(mono_PSF,
+                                         dilate_fn=lambda w:(w/500.0)**(-0.2))
 
     final = galsim.Convolve([star, PSF, pix])
     image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)

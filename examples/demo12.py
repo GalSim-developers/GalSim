@@ -211,9 +211,8 @@ def main(argv):
     # galsim.ChromaticShiftAndDilate functions similarly to Chromatic, in that it
     # chromaticizes an existing GSObject.  In this case, the existing object is a fiducial PSF which
     # gets Shifted and Dilated according to shift_fn and dilate_fn.  We'll use a Moffat profile as
-    # the fiducial PSF.  Note that arguments to the fiducial Moffat profile are passed after the
-    # shift and dilate functions, similar to the way Chromatic works.
-    PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat, shift_fn, dilate_fn, beta=2.5, fwhm=0.6)
+    # the fiducial PSF.
+    PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat(beta=2.5, fwhm=0.5), shift_rn, dilate_fn)
 
     # convolve with pixel and PSF to create final profile
     pix = galsim.Pixel(pixel_scale)

@@ -371,17 +371,16 @@ class ChromaticShiftAndDilate(ChromaticObject):
     See tests/test_chromatic.py for an example.
     """
     def __init__(self, gsobj,
-                 shift_fn=None, dilate_fn=None,
-                 **kwargs):
+                 shift_fn=None, dilate_fn=None):
         """
-        @param gsobj      Fiducial galsim.base profile to shift and dilate.
+        @param gsobj      Fiducial profile (as a GSObject instance) to shift and dilate.
         @param shift_fn   Function that takes wavelength in nanometers and returns a
                           galsim.Position object, or parameters which can be transformed into a
                           galsim.Position object (dx, dy).
         @param dilate_fn  Function that takes wavelength in nanometers and returns a dilation
                           scale factor.
         """
-        self.gsobj = gsobj(**kwargs)
+        self.gsobj = gsobj
         if shift_fn is None:
             self.shift_fn = lambda x: (0,0)
         else:
