@@ -74,40 +74,29 @@ class Chromatic(ChromaticObject):
 
     >>> bulge_wave, bulge_photons = user_function_to_get_bulge_spectrum()
     >>> disk_wave, disk_photons = user_function_to_get_disk_spectrum()
-    >>> bulge = galsim.Chromatic(galsim.Sersic, bulge_wave, bulge_photons,
-                                 n=4, half_light_radius=1.0)
-    >>> disk = galsim.Chromatic(galsim.Sersic, disk_wave, disk_photons,
-                                n=1, half_light_radius=2.0)
+    >>> bulge_mono = galsim.DeVaucouleurs(half_light_radius=1.0)
+    >>> bulge = galsim.Chromatic(mono, bulge_wave, bulge_photons)
+    >>> disk_mono = galsim.Exponential(half_light_radius=2.0)
+    >>> disk = galsim.Chromatic(disk_mono, disk_wave, disk_photons)
     >>> gal = galsim.ChromaticSum([bulge, disk])
 
-    Notice that positional and keyword arguments which apply to the specific base class being
-    generalized (e.g., n=4, half_light_radius = 1.0 for the bulge component) are passed to
-    Chromatic after the base object type and SED.
-
-    The SED is specified with a wavelength array and a photon array.  At present, the wavelength
-    array is assumed to be linear.  The photon array specifies the distribution of source photons
-    over wavelength, i.e., it is proportional to f_lambda * lambda.  Flux normalization is set
-    such that the Riemann sum over the wavelength and photon array is equal to the total number of
-    photons in an infinite aperture.
+    The SED is specified with a wavelength array and a photon array.  The photon array specifies the
+    distribution of source photons over wavelength, i.e., it is proportional to f_lambda * lambda.
+    Flux normalization is set such that the Riemann sum over the wavelength and photon array is
+    equal to the total number of photons in an infinite aperture.
     """
-    def __init__(self, gsobj, wave, photons, *args, **kwargs):
+    def __init__(self, gsobj, wave, photons):
         """Initialize Chromatic.
 
-        @param gsobj    One of the GSObjects defined in base.py.  Possibly works with other GSObjects
-                        too.
+        @param gsobj    An GSObject instance to be chromaticized.
         @param wave     Wavelength array in nanometers for SED.  Must be indexable, iterable, and
                         have at least two elements.
         @param photons  Photon array in photons per nanometers.  Must be indexable, iterable, and
                         be the same length as wave.
-        @param args
-        @param kwargs   Additional positional and keyword arguments are forwarded to the gsobj
-                        constructor.
         """
         self.photons = galsim.LookupTable(wave, photons)
-        self.gsobj = gsobj(*args, **kwargs)
-        # We classify ChromaticObjects as either separable, in which case the wavelength-dependent
-        # surface-brightness can be written f(x,y,lambda) = g(x,y) * h(lambda), or as inseparable,
-        # in which case the profile cannot be decomposed into factors.
+        self.gsobj = gsobj
+        # Chromaticized GSObjects are separable into spatial (x,y) and spectral (lambda) factors.
         self.separable = True
 
     # Make op* and op*= work to adjust the flux of an object
@@ -126,7 +115,7 @@ class Chromatic(ChromaticObject):
         return ret
 
     # Make a copy of an object
-    # Do I need to worry about `photons` being mutable here?
+    # Not sure if `photons` and `gsobj` copy cleanly here or not...
     def copy(self):
         cls = self.__class__
         ret = cls.__new__(cls)

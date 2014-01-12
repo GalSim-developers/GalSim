@@ -44,7 +44,6 @@ For all cases, suggested parameters for viewing in ds9 are also included.
 New features introduced in this demo:
 
 - gal = galsim.Chromatic(GSObject, wave, photons)
-- obj = galsim.ChromaticConvolve([list of ChromaticObjects and GSObjects])
 - obj = galsim.ChromaticAdd([list of ChromaticObjects])
 - ChromaticObject.draw(throughput_fn, bluelim, redlim)
 - PSF = galsim.ChromaticShiftAndDilate(GSObject, shift_fn, dilate_fn)
@@ -99,20 +98,18 @@ def main(argv):
     #-----------------------------------------------------------------------------------------------
     # Part A: chromatic Sersic galaxy
 
-    # Here we create a chromatic version of a Sersic profile using the Chromatic class.
+    # Here we create a chromatic version of an Exponential profile using the Chromatic class.
     # This class lets one create chromatic versions of any galsim GSObject class.  The first argument
-    # is the GSObject class to be chromaticized, and the second and third arguments are the
-    # wavelength and photon array for the profile's SED.  Any required or optional arguments for the
-    # GSObject are then inserted, such as the `n=1` and `half_light_radius=0.5` needed for
-    # galsim.Sersic profile as seen below.
+    # is the GSObject instance to be chromaticized, and the second and third arguments are the
+    # wavelength and photon array for the profile's SED.
 
     logger.info('')
     logger.info('Starting part A: chromatic Sersic galaxy')
     redshift = 0.8
-    gal = galsim.Chromatic(galsim.Sersic,
+    mono_gal = galsim.Exponential(half_light_radius=0.5)
+    gal = galsim.Chromatic(mono_gal,
                            SEDs['CWW_E_ext']['wave'] * (1+redshift),
-                           SEDs['CWW_E_ext']['photons'],
-                           n=1, half_light_radius=0.5)
+                           SEDs['CWW_E_ext']['photons'])
     # You can still shear, shift, and dilate the resulting chromatic object.
     gal.applyShear(g1=0.5, g2=0.3)
     gal.applyDilation(1.05)
@@ -122,8 +119,7 @@ def main(argv):
     # convolve with pixel and PSF to make final profile
     pix = galsim.Pixel(pixel_scale)
     PSF = galsim.Moffat(fwhm=0.6, beta=2.5)
-    # Note we need ChromaticConvolve instead of Convolve
-    final = galsim.ChromaticConvolve([gal, pix, PSF])
+    final = galsim.Convolve([gal, pix, PSF])
     logger.debug('Created final profile')
 
     # draw profile through LSST filters
@@ -148,22 +144,22 @@ def main(argv):
     redshift = 0.8
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
     # make a bulge ...
-    bulge = galsim.Chromatic(galsim.DeVaucouleurs,
+    mono_bulge = galsim.DeVaucouleurs(half_light_radius=0.5)
+    bulge = galsim.Chromatic(mono_bulge,
                              SEDs['CWW_E_ext']['wave'] * (1+redshift),
-                             SEDs['CWW_E_ext']['photons'],
-                             half_light_radius=0.5)
+                             SEDs['CWW_E_ext']['photons'])
     bulge.applyShear(g1=0.12, g2=0.07)
     logger.debug('Created bulge component')
     # ... and a disk ...
-    disk = galsim.Chromatic(galsim.Exponential,
+    mono_disk = galsim.Exponential(half_light_radius=2.0)
+    disk = galsim.Chromatic(mono_disk,
                             SEDs['CWW_Im_ext']['wave'] * (1+redshift),
-                            SEDs['CWW_Im_ext']['photons'],
-                            half_light_radius=2.0)
+                            SEDs['CWW_Im_ext']['photons'])
     disk.applyShear(g1=0.4, g2=0.2)
     logger.debug('Created disk component')
     # ... and then combine them.
     bdgal = bulge+disk*5 # you can add and multiply ChromaticObjects just like GSObjects
-    bdfinal = galsim.ChromaticConvolve([bdgal, pix, PSF])
+    bdfinal = galsim.Convolve([bdgal, pix, PSF])
     logger.debug('Created bulge+disk galaxy final profile')
 
     # draw profile through LSST filters
@@ -188,10 +184,10 @@ def main(argv):
     logger.info('')
     logger.info('Starting part C: chromatic PSF')
     redshift = 0.0
-    gal = galsim.Chromatic(galsim.Sersic,
+    mono_gal = galsim.Exponential(half_light_radius=0.5)
+    gal = galsim.Chromatic(mono_gal,
                            SEDs['CWW_Im_ext']['wave'] * (1+redshift),
-                           SEDs['CWW_Im_ext']['photons'],
-                           n=1, half_light_radius=0.5)
+                           SEDs['CWW_Im_ext']['photons'])
     gal.applyShear(g1=0.5, g2=0.3)
     logger.debug('Created Chromatic')
 
@@ -226,7 +222,7 @@ def main(argv):
 
     # convolve with pixel and PSF to create final profile
     pix = galsim.Pixel(pixel_scale)
-    final = galsim.ChromaticConvolve([gal, pix, PSF])
+    final = galsim.Convolve([gal, pix, PSF])
     logger.debug('Created chromatic PSF finale profile')
 
     # Draw profile through LSST filters
