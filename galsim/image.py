@@ -396,7 +396,7 @@ class Image(object):
         if delta.x != 0 or delta.y != 0:
             self.image.shift(delta)
             if self.wcs is not None:
-                self.wcs = self.wcs.setOrigin(galsim.PositionD(delta.x,delta.y))
+                self.wcs = self.wcs.setOrigin(delta)
 
     def setCenter(self, *args, **kwargs):
         """Set the center of the image to the given (integral) (xcen, ycen)

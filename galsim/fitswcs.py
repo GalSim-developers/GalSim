@@ -283,14 +283,11 @@ class AstropyWCS(galsim.wcs.BaseWCS):
     def _setOrigin(self, origin):
         return AstropyWCS(wcs=self._wcs, origin=origin)
 
-    def _writeHeader(self, inital_header, bounds):
+    def _writeHeader(self, header, bounds):
         # Make a new header with the contents of this WCS.
         # Note: relax = True means to write out non-standard FITS types.
         # Weirdly, this is the default when reading the header, but not when writing.
         header = self._wcs.to_header(relax=True)
-
-        # Add in whatever was already written to the header dict.
-        galsim.fits._writeDictToFitsHeader(inital_header, header)
 
         # And write the name as a special GalSim key
         header["GS_WCS"] = ("AstropyWCS", "GalSim WCS name")
@@ -487,7 +484,7 @@ class PyAstWCS(galsim.wcs.BaseWCS):
     def _setOrigin(self, origin):
         return PyAstWCS(wcsinfo=self._wcsinfo, origin=origin)
 
-    def _writeHeader(self, inital_header, bounds):
+    def _writeHeader(self, header, bounds):
         # See https://github.com/Starlink/starlink/issues/24 for helpful information from 
         # David Berry, who assisted me in getting this working.
 
@@ -507,9 +504,6 @@ class PyAstWCS(galsim.wcs.BaseWCS):
         fc2.write(self._wcsinfo)
         fc2.writefits()
         header = hdu.header
-
-        # Add in whatever was already written to the header dict.
-        galsim.fits._writeDictToFitsHeader(inital_header, header)
 
         # And write the name as a special GalSim key
         header["GS_WCS"] = ("PyAstWCS", "GalSim WCS name")

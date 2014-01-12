@@ -293,46 +293,6 @@ def _get_hdu(hdu_list, hdu, pyfits_compress):
     _check_hdu(hdu, pyfits_compress)
     return hdu
 
-def _writeDictToFitsHeader(h, fits_header):
-    # PyFits has changed its syntax for writing to fits headers, so rather than have our
-    # various things that write to the fits header do so directly, we have them write to
-    # a dict, which we then write to the actual fits header, making sure to do things 
-    # correctly given the PyFits version.
-
-    if isinstance(h, dict):
-        # For dicts, we want the keys in sorted order, so the normal python dict order doesn't
-        # randomly scramble things up.
-        items = sorted(h.items())
-    else:
-        # Otherwise, h is probably a PyFits header, so the keys come out in natural order.
-        items = h.items()
-
-    if pyfits_version < '3.1':
-        for key, value in items:
-            try:
-                fits_header.update(key, value)
-            except:
-                fits_header.update(key, value[0], value[1])
-    else:
-        for key, value in items:
-            try:
-                fits_header.set(key, value)
-            except:
-                fits_header.set(key, value[0], value[1])
-
-def _wcsFromFitsHeader(header):
-    xmin = header.get("GS_XMIN", 1)
-    ymin = header.get("GS_YMIN", 1)
-    origin = galsim.PositionI(xmin, ymin)
-    wcs_name = header.get("GS_WCS", None)
-    if wcs_name:
-        wcs_type = eval('galsim.' + wcs_name)
-        wcs = wcs_type._readHeader(header)
-    elif 'CTYPE1' in header:
-        wcs = galsim.FitsWCS(header=header)
-    else:
-        wcs = galsim.PixelScale(1.)
-    return wcs, origin
 
 # Unlike the other helpers, this one doesn't start with an underscore, since we make it 
 # available to people who use the function ReadFile.
@@ -406,11 +366,8 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
         hdu_list = pyfits.HDUList()
 
     hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
-    wcs = image.wcs
-    if wcs is None: wcs = galsim.PixelScale(1)
-    h = {}
-    h = wcs.writeHeader(h, image.bounds)
-    _writeDictToFitsHeader(h, hdu.header)
+    if image.wcs:
+        image.wcs.writeToFitsHeader(hdu.header, image.bounds)
 
     if file_name:
         _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
@@ -448,11 +405,8 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
 
     for image in image_list:
         hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
-        wcs = image.wcs
-        if wcs is None: wcs = galsim.PixelScale(1)
-        h = {}
-        h = wcs.writeHeader(h, image.bounds)
-        _writeDictToFitsHeader(h, hdu.header)
+        if image.wcs:
+            image.wcs.writeToFitsHeader(hdu.header, image.bounds)
 
     if file_name:
         _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
@@ -504,8 +458,7 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
         nimages = cube.shape[0]
         nx = cube.shape[1]
         ny = cube.shape[2]
-        # Use default values for scale, bounds
-        wcs = galsim.PixelScale(1)
+        # Use default values for bounds
         bounds = galsim.BoundsI(1,nx,1,ny)
     else:
         nimages = len(image_list)
@@ -517,7 +470,6 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
         ny = im.ymax - im.ymin + 1
         # Use the first image's wcs and bounds
         wcs = im.wcs
-        if wcs is None: wcs = galsim.PixelScale(1)
         bounds = im.bounds
         # Note: numpy shape is y,x
         array_shape = (nimages, ny, nx)
@@ -531,10 +483,10 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
                     "Shape is (%d,%d).  Should be (%d,%d)"%(nx_k,ny_k,nx,ny))
             cube[k,:,:] = image_list[k].array
 
+
     hdu = _add_hdu(hdu_list, cube, pyfits_compress)
-    h = {}
-    h = wcs.writeHeader(h, bounds)
-    _writeDictToFitsHeader(h, hdu.header)
+    if wcs:
+        wcs.writeToFitsHeader(hdu.header, bounds)
 
     if file_name:
         _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
@@ -640,7 +592,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
 
     hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
-    wcs, origin = _wcsFromFitsHeader(hdu.header)
+    wcs, origin = galsim.BaseWCS.readFromFitsHeader(hdu.header)
     pixel = hdu.data.dtype.type
     if pixel in galsim.Image.valid_dtypes:
         data = hdu.data
@@ -792,7 +744,7 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
 
     hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
-    wcs, origin = _wcsFromFitsHeader(hdu.header)
+    wcs, origin = galsim.BaseWCS.readFromFitsHeader(hdu.header)
     pixel = hdu.data.dtype.type
     if pixel in galsim.Image.valid_dtypes:
         data = hdu.data

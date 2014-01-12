@@ -257,8 +257,6 @@ def do_wcs_image(wcs, name, approx=False):
         digits2 = 1
     else:
         digits2 = digits
-    #print 'im.wcs = ',im.wcs
-    #print 'im2.wcs = ',im2.wcs
     np.testing.assert_equal(im2.origin().x, im.origin().x, "origin changed after write/read")
     np.testing.assert_equal(im2.origin().y, im.origin().y, "origin changed after write/read")
     check_world(im2.wcs.toWorld(im.origin()), world1, digits2,
@@ -279,6 +277,7 @@ def do_wcs_image(wcs, name, approx=False):
         # describe an equivalent WCS as this one.
         hdu, hdu_list, fin = galsim.fits.readFile(test_name, dir=dir)
         affine = galsim.AffineTransform._readHeader(hdu.header)
+        affine = affine.setOrigin(galsim.PositionD(dx,dy))
         galsim.fits.closeHDUList(hdu_list, fin)
         check_world(affine.toWorld(im.origin()), world1, digits2,
                     "World position of origin is wrong after write/read.")
@@ -959,8 +958,7 @@ def test_affinetransform():
     v0 = 8242.7
     origin = galsim.PositionD(x0,y0)
     world_origin = galsim.PositionD(u0,v0)
-    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin=origin,
-                                 world_origin=world_origin)
+    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin=origin, world_origin=world_origin)
     ufunc = lambda x,y: dudx*(x-x0) + dudy*(y-y0) + u0
     vfunc = lambda x,y: dvdx*(x-x0) + dvdy*(y-y0) + v0
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'AffineTransform 3')

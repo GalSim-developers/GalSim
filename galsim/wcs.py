@@ -576,8 +576,8 @@ class BaseWCS(object):
                 world_origin += self.world_origin - self._posToWorld(self.origin)
             return self._setOrigin(origin, world_origin)
 
-    def writeHeader(self, header, bounds):
-        """Write this WCS function to a fits header.
+    def writeToFitsHeader(self, header, bounds):
+        """Write this WCS function to a FITS header.
 
         This is normally called automatically from within the galsim.fits.write() function.
 
@@ -587,16 +587,104 @@ class BaseWCS(object):
         at the image center.)  
 
         However, this is not necessary for the WCS to survive a round trip through the FITS
-        header, as it will also write GalSim-specific key words that (normally) allow it to 
+        header, as it will also write GalSim-specific key words that should allow it to 
         reconstruct the WCS correctly.
 
         @param header       The fits header to write the data to.
         @param bounds       The bounds of the image.
         """
-        # Always need these, so just do them here.
+        # First write the XMIN, YMIN values
         header["GS_XMIN"] = (bounds.xmin, "GalSim image minimum x coordinate")
         header["GS_YMIN"] = (bounds.ymin, "GalSim image minimum y coordinate")
-        return self._writeHeader(header, bounds)
+
+        if bounds.xmin != 1 or bounds.ymin != 1:
+            # ds9 always assumes the image has an origin at (1,1), so we always write the 
+            # WCS to the file with this convention.  We'll convert back when we read it 
+            # in if necessary.
+            delta = galsim.PositionI(1-bounds.xmin, 1-bounds.ymin)
+            bounds = bounds.shift(delta)
+            wcs = self.setOrigin(delta)
+        else:
+            wcs = self
+
+        # PyFits has changed its syntax for writing to fits headers, so rather than have our
+        # various things that write to the fits header do so directly, we have them write to
+        # a dict, which we then write to the actual fits header, making sure to do things 
+        # correctly given the PyFits version.
+        h = wcs._writeHeader({}, bounds)
+
+        if isinstance(h, dict):
+            # For dicts, we want the keys in sorted order, so the normal python dict order doesn't
+            # randomly scramble things up.
+            items = sorted(h.items())
+        else:
+            # Otherwise, h is probably a PyFits header, so the keys come out in natural order.
+            items = h.items()
+
+        from galsim import pyfits_version
+        if pyfits_version < '3.1':
+            for key, value in items:
+                try:
+                    header.update(key, value)
+                except:
+                    header.update(key, value[0], value[1])
+        else:
+            for key, value in items:
+                try:
+                    header.set(key, value)
+                except:
+                    header.set(key, value[0], value[1])
+
+    @staticmethod
+    def readFromFitsHeader(header):
+        """Read a WCS function from a FITS header.
+
+        This is normally called automatically from within the galsim.fits.read() function.
+
+        If the file was originally written by GalSim using one of the galsim.fits.write functions,
+        then this should always succeed in reading back in the original WCS.  It may not end up 
+        as exactly the same class as the original, but the underlying world coordinate system
+        transformation should be preserved.
+
+        If the file was not written by GalSim, then this code will do its best to read the 
+        WCS information in the FITS header.  Depending on what kind of WCS is encoded in the 
+        header, this may or may not be successful.
+
+        If there is no WCS information in the header, then this will default to a pixel scale
+        of 1.
+
+        In addition to the wcs, this function will also return the image origin that the WCS
+        is assuming for the image.  If the file was originally written by GalSim, this should
+        correspond to the original image origin.  If not, it will default to (1,1).
+
+        Note that this function is a static method of BaseWCS.  So to use it, you would write
+
+                wcs, origin = BaseWCS.readFromFitsHeader(header)
+
+
+        @param header           The fits header to write the data to.
+
+        @returns wcs, origin    The wcs and the image origin.
+        """
+        xmin = header.get("GS_XMIN", 1)
+        ymin = header.get("GS_YMIN", 1)
+        origin = galsim.PositionI(xmin, ymin)
+        wcs_name = header.get("GS_WCS", None)
+        if wcs_name:
+            wcs_type = eval('galsim.' + wcs_name)
+            wcs = wcs_type._readHeader(header)
+        elif 'CTYPE1' in header:
+            wcs = galsim.FitsWCS(header=header)
+        else:
+            wcs = galsim.PixelScale(1.)
+
+        if xmin != 1 or ymin != 1:
+            # ds9 always assumes the image has an origin at (1,1), so convert back to actual
+            # xmin, ymin if necessary.
+            delta = galsim.PositionI(xmin-1, ymin-1)
+            wcs = wcs.setOrigin(delta)
+
+        return wcs, origin
 
 
 
