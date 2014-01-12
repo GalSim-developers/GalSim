@@ -848,8 +848,8 @@ class GSObject(object):
                         `= pi/maxK()`.
                       (Default `scale = None`.)
 
-        @param wcs    If provided, use this as the wcs for the image.
-                      Only one of scale and wcs is allowed to be not None.  (Default `wcs - None`.)
+        @param wcs    If provided, use this as the wcs for the image.  At most one of scale or 
+                      wcs may be provided. (Default `wcs - None`.)
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the 
                       numbers output from a CCD).  (Default `gain =  1.`)
@@ -965,9 +965,9 @@ class GSObject(object):
         to randomly sample the profile of the object. The resulting image will thus have Poisson
         noise due to the finite number of photons shot.  drawShoot() can create a new Image or use
         an existing one, depending on the choice of the `image` keyword parameter.  Other keywords
-        of particular relevance for users are those that set the pixel scale for the image 
-        (`scale`), that choose the normalization convention for the flux (`normalization`), and 
-        that decide whether the clear the input Image before shooting photons into it 
+        of particular relevance for users are those that set the pixel scale or wcs for the image 
+        (`scale`, `wcs`), that choose the normalization convention for the flux (`normalization`),
+        and that decide whether the clear the input Image before shooting photons into it 
         (`add_to_image`).
 
         As for the draw command, the object will always be drawn with its nominal center at the 
@@ -998,7 +998,7 @@ class GSObject(object):
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
                       If `image != None`, but its bounds are undefined (e.g. if it was constructed 
-                        with `image = galsim.Image()`), then it will be resized appropriately base 
+                        with `image = galsim.Image()`), then it will be resized appropriately based
                         on the profile's size.
                       (Default `image = None`.)
 
@@ -1011,8 +1011,8 @@ class GSObject(object):
                         `= pi/maxK()`.
                       (Default `scale = None`.)
 
-        @param wcs    If provided, use this as the wcs for the image.
-                      Only one of scale and wcs is allowed to be not None.  (Default `wcs - None`.)
+        @param wcs    If provided, use this as the wcs for the image.  At most one of scale or 
+                      wcs may be provided. (Default `wcs - None`.)
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the 
                       numbers output from a CCD).  (Default `gain =  1.`)
@@ -1658,7 +1658,7 @@ class Pixel(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, scale, flux=1., gsparams=None):
-        GSObject.__init__(self, galsim.SBBox(xw=scale, yw=scale, flux=flux, gsparams=gsparams))
+        GSObject.__init__(self, galsim.SBBox(scale, scale, flux=flux, gsparams=gsparams))
 
     def getScale(self):
         """Return the pixel scale
@@ -1703,7 +1703,7 @@ class Box(GSObject):
     def __init__(self, width, height, flux=1., gsparams=None):
         width = float(width)
         height = float(height)
-        GSObject.__init__(self, galsim.SBBox(xw=width, yw=height, flux=flux, gsparams=gsparams))
+        GSObject.__init__(self, galsim.SBBox(width, height, flux=flux, gsparams=gsparams))
 
     def getWidth(self):
         """Return the width of the pixel in the x dimension.

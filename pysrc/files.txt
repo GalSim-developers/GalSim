@@ -17,7 +17,6 @@ SBAiry.cpp
 SBShapelet.cpp
 SBInterpolatedImage.cpp
 SBKolmogorov.cpp
-PhotonArray.cpp
 Random.cpp
 Noise.cpp
 HSM.cpp
@@ -25,5 +24,3 @@ Integ.cpp
 Table.cpp
 Interpolant.cpp
 CorrelatedNoise.cpp
-
-CppEllipse.cpp

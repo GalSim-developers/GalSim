@@ -44,6 +44,9 @@ Python layer API changes:
 * Angle.wrap() now returns the wrapped angle rather than modifying the 
   original.
   * `angle.wrap()` should now be `angle = angle.wrap()`.
+* Removed the previously deprecated Ellipse and AtmosphericPSF classes.
+  Also removed PhotonArray from the python layer, since it is only used
+  by the C++ layer.  (Issue #364)
 
 Updates to config options:
 

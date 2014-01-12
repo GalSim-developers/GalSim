@@ -1115,7 +1115,7 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
     """
     def __init__(self, rng, wcs, variance, gsparams=None):
         # Need variance == xvalue(0,0)
-        # Pixel has flux of f/scale^2, so us f = varaince * scale^2
+        # Pixel has flux of f/scale^2, so use f = variance * scale^2
         if variance < 0:
             raise ValueError("Input keyword variance must be zero or positive.")
         image_pix = galsim.Pixel(scale=1.0, flux=variance * wcs.pixelArea(), gsparams=gsparams)

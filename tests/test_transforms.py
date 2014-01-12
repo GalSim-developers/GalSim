@@ -386,7 +386,7 @@ def test_shift():
     import time
     t1 = time.time()
     dx = 0.2
-    mySBP = galsim.SBBox(xw=dx, yw=dx, flux=1)
+    mySBP = galsim.SBBox(dx, dx, flux=1)
     mySBP.applyShift(galsim.PositionD(dx, -dx))
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_shift.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
