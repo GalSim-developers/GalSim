@@ -55,13 +55,14 @@ class BaseWCS(object):
     All the user-functions are defined here, which defines the common interface
     for all subclasses.
 
-    There are two types of WCS classes that we implement.
+    There are three types of WCS classes that we implement.
 
     1. Local WCS classes are those which really just define a pixel size and shape.
        They implicitly have the origin in image coordinates correspond to the origin
-       in world coordinates.  They primarily designed to handle local transformations
+       in world coordinates.  They are primarily designed to handle local transformations
        at the location of a single galaxy, where it should usually be a good approximation
-       to consider the pixel shape to be constant over the size of the galaxy.
+       to consider the pixel shape to be constant over the size of the galaxy.  We sometimes
+       use the notation (u,v) for the world coordinates and (x,y) for the image coordinates.
 
        Currently we define the following local WCS classes:
 
@@ -69,28 +70,37 @@ class BaseWCS(object):
             ShearWCS
             JacobianWCS
 
-    2. Non-local WCS classes may have a constant pixel size and shape, but they don't have to.
-       They may also have an arbitrary origin in both image coordinates and world coordinates.
-       Furthermore, the world coordinates may be either a regular Euclidean coordinate system 
-       (using galsim.PositionD for the world positions) or coordinates on the celestial sphere 
-       (using galsim.CelestialCoord for the world positions, marked with a * below).
+    2. Non-local, Euclidean WCS classes may have a constant pixel size and shape, but they don't 
+       have to.  They may also have an arbitrary origin in both image coordinates and world 
+       coordinates.  The world coordinates are a regular Euclidean coordinate system, using
+       galsim.PositionD for the world positions.  We sometimes use the notation (u,v) for the 
+       world coordinates and (x,y) for the image coordinates.
 
-       Currently we define the following non-local WCS classes:
+       Currently we define the following non-local, Euclidean WCS classes:
 
             OffsetWCS
             OffsetShearWCS
             AffineTransform
             UVFunction
-           *RaDecFunction
+
+    3. Celestial WCS classes are defined with their world coordinates on the celestial sphere
+       in terms of right ascension (RA) and declination (Dec).  The pixel size and shape are
+       always variable.  We use galsim.CelestialCoord for the world coordinates to facilitate
+       some of the spherical trigonometry that is sometimes required.
+
+       Currently we define the following celestial WCS classes: (The ones marked with a *
+       are defined in the file fitswcs.py.)
+
+            RaDecFunction
            *AstropyWCS          -- requires astropy.wcs python module to be installed
            *PyAstWCS            -- requires starlink.Ast python module to be installed
            *WcsToolsWCS         -- requires wcstools command line functions to be installed
            *GSFitsWCS           -- native code, but has less functionality than the above
 
-    There is also a factory function called FitsWCS, which is intended to act like a 
-    class initializer.  It tries to read a fits file using one of the above classes
-    and returns an instance of whichever one it found was successful.  It should always
-    be successful, since it's final attempt uses AffineTransform, which has reasonable 
+    There is also a factory function called FitsWCS (also defined in fitswcs.py, which is 
+    intended to act like a class initializer.  It tries to read a fits file using one of the
+    above classes and returns an instance of whichever one it found was successful.  It should 
+    always be successful, since it's final attempt uses AffineTransform, which has reasonable 
     defaults when the WCS key words are not in the file, but of course this will only be 
     a very rough approximation of the true WCS.
 
@@ -165,7 +175,7 @@ class BaseWCS(object):
                 wcs.isLocal()       # is this a local WCS?
                 wcs.isUniform()     # does this WCS have a uniform pixel size/shape?
                 wcs.isCelestial()   # are the world coordinates on the celestial sphere?
-                wcs.isPixelScale()  # is this a PixelScale or OffsetWCS?
+                wcs.isPixelScale()  # is this either a PixelScale or an OffsetWCS?
     """
     def __init__(self):
         raise TypeError("BaseWCS is an abstract base class.  It cannot be instantiated.")

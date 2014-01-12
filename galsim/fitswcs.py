@@ -305,7 +305,9 @@ class AstropyWCS(galsim.wcs.BaseWCS):
         return AstropyWCS(header=header)
 
     def copy(self):
-        return AstropyWCS(wcs=self._wcs, origin=self.origin)
+        # The copy module version of copying the dict works fine here.
+        import copy
+        return copy.copy(self)
 
     def __eq__(self, other):
         if not isinstance(other, AstropyWCS):
@@ -521,7 +523,9 @@ class PyAstWCS(galsim.wcs.BaseWCS):
         return PyAstWCS(header=header, origin=galsim.PositionD(x0,y0))
  
     def copy(self):
-        return PyAstWCS(wcsinfo=self._wcsinfo, origin=self.origin)
+        # The copy module version of copying the dict works fine here.
+        import copy
+        return copy.copy(self)
 
     def __eq__(self, other):
         if not isinstance(other, PyAstWCS):
@@ -738,7 +742,9 @@ class WcsToolsWCS(galsim.wcs.BaseWCS):
         return WcsToolsWCS(file, origin=galsim.PositionD(x0,y0))
 
     def copy(self):
-        return WcsToolsWCS(self._file_name, origin=self.origin)
+        # The copy module version of copying the dict works fine here.
+        import copy
+        return copy.copy(self)
 
     def __eq__(self, other):
         if not isinstance(other, WcsToolsWCS):
