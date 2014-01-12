@@ -106,7 +106,9 @@ class AstropyWCS(galsim.wcs.BaseWCS):
         self._is_uniform = False
         self._is_celestial = True
         import astropy.wcs
-        self._tag = None # Write something useful here.
+        self._tag = None # Write something useful here.  (It is just used for the repr.)
+
+        # Read the file if given.
         if file_name is not None:
             self._tag = file_name
             if header is not None:
@@ -116,6 +118,7 @@ class AstropyWCS(galsim.wcs.BaseWCS):
             hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
             header = hdu.header
 
+        # Load the wcs from the header.
         if header is not None:
             if self._tag is None: self._tag = 'header'
             if wcs is not None:
@@ -224,23 +227,19 @@ class AstropyWCS(galsim.wcs.BaseWCS):
                 warnings.simplefilter("ignore")
                 x0 = self._wcs.wcs_world2pix(numpy.atleast_2d(world), origin).flatten()
 
-            func = lambda pix: (self._wcs.all_pix2world(numpy.atleast_2d(pix),
-                                origin) - world).flatten()
+            # Note that fmod bit accounts for the possibility that ra and the ra returned from 
+            # all_pix2world have a different wrapping around 360.  We fmod dec too even though 
+            # it won't do anything, since that's how the numpy array fmod2 has to work.
+            func = lambda pix: (
+                    (numpy.fmod(self._wcs.all_pix2world(numpy.atleast_2d(pix),origin) - 
+                                world + 180,360) - 180).flatten() )
 
             # This is the main bit that the astropy function is missing.
             # The scipy.optimize.broyden1 function can't handle starting at exactly the right
-            # solution.  It iterates to its limit and then ends with:
+            # solution.  It iterates to its limit and then ends with
             #     Traceback (most recent call last):
-            #       File "test_wcs.py", line 654, in <module>
-            #         test_astropywcs()
-            #       File "test_wcs.py", line 645, in test_astropywcs
-            #         pos = wcs.toImage(galsim.CelestialCoord(ra,dec))
-            #       File "/sw/lib/python2.7/site-packages/galsim/wcs.py", line 106, in toImage
-            #         return self._posToImage(arg)
-            #       File "/sw/lib/python2.7/site-packages/galsim/wcs.py", line 793, in _posToImage
-            #         soln = scipy.optimize.broyden1(func, x0, x_tol=tolerance, verbose=True, alpha=alpha)
-            #       File "<string>", line 8, in broyden1
-            #       File "/sw/lib/python2.7/site-packages/scipy/optimize/nonlin.py", line 331, in nonlin_solve
+            #       [... snip ...]
+            #       File "[...]/site-packages/scipy/optimize/nonlin.py", line 331, in nonlin_solve
             #         raise NoConvergence(_array_like(x, x0))
             #     scipy.optimize.nonlin.NoConvergence: [ 113.74961526  179.99982209]
             #
@@ -385,8 +384,10 @@ class PyAstWCS(galsim.wcs.BaseWCS):
         import starlink.Ast, starlink.Atl
         # Note: For much of this class implementation, I've followed the example provided here:
         #       http://dsberry.github.io/starlink/node4.html
-        self._tag = None # Write something useful here.
+        self._tag = None # Write something useful here for the repr.
         hdu = None
+
+        # Read the file if given.
         if file_name is not None:
             self._tag = file_name
             if header is not None:
@@ -396,6 +397,7 @@ class PyAstWCS(galsim.wcs.BaseWCS):
             hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
             header = hdu.header
 
+        # Load the wcs from the header.
         if header is not None:
             if self._tag is None: self._tag = 'header'
             if wcsinfo is not None:
@@ -811,6 +813,8 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
         self._is_local = False
         self._is_uniform = False
         self._is_celestial = True
+
+        # Read the file if given.
         if file_name is not None:
             if header is not None:
                 raise TypeError("Cannot provide both file_name and pyfits header")
@@ -820,6 +824,7 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
         if header is None:
             raise TypeError("Must provide either file_name or header")
 
+        # Read the wcs information from the header.
         self._read_header(header)
 
         if file_name is not None:
@@ -955,6 +960,8 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
         import numpy, numpy.linalg
 
         uv = self.center.project( world_pos, projection='gnomonic' )
+        # The FITS standard defines u,v backwards relative to our standard.
+        # They have +u increasing to the east, not west.
         u = uv.x * (-1. * galsim.arcsec / self.ra_units)
         v = uv.y * (1. * galsim.arcsec / self.dec_units)
         p2 = numpy.array( [ u, v ] )

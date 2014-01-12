@@ -67,7 +67,9 @@ class CelestialCoord(object):
             raise TypeError("ra must be a galsim.Angle")
         if not isinstance(dec, galsim.Angle):
             raise TypeError("dec must be a galsim.Angle")
-        self._ra = ra
+        self._ra = ra.wrap()
+        if dec/galsim.degrees > 90. or dec/galsim.degrees < -90.:
+            raise ValueError("dec must be between -90 deg and +90 deg.")
         self._dec = dec
         self._x = None  # Indicate that x,y,z are not set yet.
 
