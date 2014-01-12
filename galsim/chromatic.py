@@ -72,29 +72,25 @@ class Chromatic(ChromaticObject):
     multi-component galaxies, each with a different SED. For example, a bulge+disk galaxy could be
     constructed:
 
-    >>> bulge_wave, bulge_photons = user_function_to_get_bulge_spectrum()
-    >>> disk_wave, disk_photons = user_function_to_get_disk_spectrum()
+    >>> bulge_SED = user_function_to_get_bulge_spectrum()
+    >>> disk_SED = user_function_to_get_disk_spectrum()
     >>> bulge_mono = galsim.DeVaucouleurs(half_light_radius=1.0)
-    >>> bulge = galsim.Chromatic(mono, bulge_wave, bulge_photons)
+    >>> bulge = galsim.Chromatic(mono, bulge_SED)
     >>> disk_mono = galsim.Exponential(half_light_radius=2.0)
-    >>> disk = galsim.Chromatic(disk_mono, disk_wave, disk_photons)
+    >>> disk = galsim.Chromatic(disk_mono, disk_SED)
     >>> gal = galsim.ChromaticSum([bulge, disk])
 
-    The SED is specified with a wavelength array and a photon array.  The photon array specifies the
-    distribution of source photons over wavelength, i.e., it is proportional to f_lambda * lambda.
-    Flux normalization is set such that the Riemann sum over the wavelength and photon array is
-    equal to the total number of photons in an infinite aperture.
+    The SED is specified as a galsim.SED object.  The normalization is set via the SED.  I.e., the
+    SED implicitly has units of counts per nanometer.  The drawn flux will be an intregral over this
+    distribution.
     """
-    def __init__(self, gsobj, wave, photons):
+    def __init__(self, gsobj, SED):
         """Initialize Chromatic.
 
         @param gsobj    An GSObject instance to be chromaticized.
-        @param wave     Wavelength array in nanometers for SED.  Must be indexable, iterable, and
-                        have at least two elements.
-        @param photons  Photon array in photons per nanometers.  Must be indexable, iterable, and
-                        be the same length as wave.
+        @param SED      A SED object.
         """
-        self.photons = galsim.LookupTable(wave, photons)
+        self.SED = SED
         self.gsobj = gsobj
         # Chromaticized GSObjects are separable into spatial (x,y) and spectral (lambda) factors.
         self.separable = True
@@ -115,7 +111,7 @@ class Chromatic(ChromaticObject):
         return ret
 
     # Make a copy of an object
-    # Not sure if `photons` and `gsobj` copy cleanly here or not...
+    # Not sure if `SED` and `gsobj` copy cleanly here or not...
     def copy(self):
         cls = self.__class__
         ret = cls.__new__(cls)
@@ -148,7 +144,7 @@ class Chromatic(ChromaticObject):
         @param wave  Wavelength in nanometers.
         @returns     GSObject for profile at specified wavelength
         """
-        return self.photons(wave) * self.gsobj
+        return self.SED(wave) * self.gsobj
 
 class ChromaticSum(ChromaticObject):
     """Sum ChromaticObjects and/or GSObjects together.  GSObjects are treated as having flat spectra.
@@ -312,14 +308,14 @@ class ChromaticConvolution(ChromaticObject):
         # the spectral parts of the separable profiles.
         sep_profs = []
         insep_profs = []
-        sep_photons = []
+        sep_SED = []
         for obj in objlist:
             if obj.separable:
                 if isinstance(obj, galsim.GSObject):
                     sep_profs.append(obj) # The g(x,y)'s (see above)
                 else:
                     sep_profs.append(obj.gsobj) # more g(x,y)'s
-                sep_photons.append(obj.photons) # The h(lambda)'s (see above)
+                sep_SED.append(obj.SED) # The h(lambda)'s (see above)
             else:
                 insep_profs.append(obj) # The f(x,y,lambda)'s (see above)
 
@@ -331,7 +327,7 @@ class ChromaticConvolution(ChromaticObject):
             multiplier = 0.0
             for w in ws:
                 term = throughput_fn(w) * h
-                for s in sep_photons:
+                for s in sep_SED:
                     term *= s(w)
                 multiplier += term
         else:
@@ -342,7 +338,7 @@ class ChromaticConvolution(ChromaticObject):
             mono_prof = galsim.Convolve([insp.evaluateAtWavelength(ws[0]) for insp in insep_profs])
             mono_prof *= throughput_fn(ws[0]) * h
             # multiply it by the appropriate spectral factor
-            for s in sep_photons:
+            for s in sep_SED:
                 mono_prof *= s(ws[0])
             # start drawing effective profile
             effective_prof_image = mono_prof.draw(*args, **kwargs)
@@ -350,7 +346,7 @@ class ChromaticConvolution(ChromaticObject):
             for w in ws[1:]:
                 mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
                 mono_prof *= throughput_fn(w) * h
-                for s in sep_photons:
+                for s in sep_SED:
                     mono_prof *= s(w)
                 effective_prof_image = mono_prof.draw(image=effective_prof_image, add_to_image=True,
                                                       *args, **kwargs)
@@ -408,3 +404,33 @@ class ChromaticShiftAndDilate(ChromaticObject):
         PSF.applyDilation(self.dilate_fn(wave))
         PSF.applyShift(self.shift_fn(wave))
         return PSF
+
+class SED(object):
+    """Simple class to represent chromatic objects' spectral energy distributions."""
+    def __init__(self, wave=None, photons=None, flambda=None, photon_fn=None,
+                 redshift=None, base_wavelength=None, norm=None):
+        if photon_fn is not None:
+            self.photon_fn = photon_fn
+        elif wave is not None and photons is not None:
+            self.photon_fn = galsim.LookupTable(wave, photons)
+        elif wave is not None and flambda is not None:
+            self.photon_fn = galsim.LookupTable(wave,
+                                                [wave[i] * flambda[i] for i in range(len(wave))])
+        if redshift is None:
+            self.redshift = 0.0
+        else:
+            self.redshift = redshift
+
+        self.norm = 1.0
+        if norm is not None and base_wavelength is not None:
+            self.normalize(base_wavelength, norm)
+
+    def setRedshift(self, redshift):
+        self.redshift = redshift
+
+    def normalize(self, base_wavelength, norm):
+        f0 = self.photon_fn(base_wavelength / (1.0 + self.redshift))
+        self.norm = norm/f0
+
+    def __call__(self, wave):
+        return self.norm * self.photon_fn(wave / (1.0 + self.redshift))

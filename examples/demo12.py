@@ -69,7 +69,6 @@ def main(argv):
     # initialize (pseudo-)random number generator
     random_seed = 1234567
     rng = galsim.BaseDeviate(random_seed)
-    gaussian_noise = galsim.GaussianNoise(rng, sigma=0.1)
 
     # read in SEDs
     SED_names = ['CWW_E_ext', 'CWW_Sbc_ext', 'CWW_Scd_ext', 'CWW_Im_ext']
@@ -78,10 +77,8 @@ def main(argv):
         SED_filename = os.path.join(datapath, '{}.sed'.format(SED_name))
         wave, flambda = numpy.genfromtxt(SED_filename).T
         wave /= 10 # convert from Angstroms to nanometers
-        photons = flambda*wave
-        # normalize SEDs to 1 photon per nm at 502nm
-        photons /= photons[wave == 502]
-        SEDs[SED_name] = {'wave':wave, 'photons':photons}
+        # Create SED and normalize such that photon density is 1 photon per nm at 500 nm
+        SEDs[SED_name] = galsim.SED(wave=wave, flambda=flambda, base_wavelength=500, norm=1.0)
     logger.debug('Successfully read in SEDs')
 
     # read in the LSST filters
@@ -107,9 +104,9 @@ def main(argv):
     logger.info('Starting part A: chromatic Sersic galaxy')
     redshift = 0.8
     mono_gal = galsim.Exponential(half_light_radius=0.5)
-    gal = galsim.Chromatic(mono_gal,
-                           SEDs['CWW_E_ext']['wave'] * (1+redshift),
-                           SEDs['CWW_E_ext']['photons'])
+    SEDs['CWW_E_ext'].setRedshift(redshift)
+    gal = galsim.Chromatic(mono_gal, SEDs['CWW_E_ext'])
+
     # You can still shear, shift, and dilate the resulting chromatic object.
     gal.applyShear(g1=0.5, g2=0.3)
     gal.applyDilation(1.05)
@@ -123,6 +120,7 @@ def main(argv):
     logger.debug('Created final profile')
 
     # draw profile through LSST filters
+    gaussian_noise = galsim.GaussianNoise(rng, sigma=0.1)
     for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, pixel_scale)
         final.draw(filter_, 300, 1100, image=img)
@@ -142,19 +140,16 @@ def main(argv):
     logger.info('')
     logger.info('Starting part B: chromatic bulge+disk galaxy')
     redshift = 0.8
-    gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
     # make a bulge ...
     mono_bulge = galsim.DeVaucouleurs(half_light_radius=0.5)
-    bulge = galsim.Chromatic(mono_bulge,
-                             SEDs['CWW_E_ext']['wave'] * (1+redshift),
-                             SEDs['CWW_E_ext']['photons'])
+    SEDs['CWW_E_ext'].setRedshift(redshift)
+    bulge = galsim.Chromatic(mono_bulge, SEDs['CWW_E_ext'])
     bulge.applyShear(g1=0.12, g2=0.07)
     logger.debug('Created bulge component')
     # ... and a disk ...
     mono_disk = galsim.Exponential(half_light_radius=2.0)
-    disk = galsim.Chromatic(mono_disk,
-                            SEDs['CWW_Im_ext']['wave'] * (1+redshift),
-                            SEDs['CWW_Im_ext']['photons'])
+    SEDs['CWW_Im_ext'].setRedshift(redshift)
+    disk = galsim.Chromatic(mono_disk, SEDs['CWW_Im_ext'])
     disk.applyShear(g1=0.4, g2=0.2)
     logger.debug('Created disk component')
     # ... and then combine them.
@@ -163,6 +158,7 @@ def main(argv):
     logger.debug('Created bulge+disk galaxy final profile')
 
     # draw profile through LSST filters
+    gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
     for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, pixel_scale)
         bdfinal.draw(filter_, 300, 1100, image=img)
@@ -185,9 +181,8 @@ def main(argv):
     logger.info('Starting part C: chromatic PSF')
     redshift = 0.0
     mono_gal = galsim.Exponential(half_light_radius=0.5)
-    gal = galsim.Chromatic(mono_gal,
-                           SEDs['CWW_Im_ext']['wave'] * (1+redshift),
-                           SEDs['CWW_Im_ext']['photons'])
+    SEDs['CWW_Im_ext'].setRedshift(redshift)
+    gal = galsim.Chromatic(mono_gal, SEDs['CWW_Im_ext'])
     gal.applyShear(g1=0.5, g2=0.3)
     logger.debug('Created Chromatic')
 

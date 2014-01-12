@@ -59,16 +59,12 @@ shear_g2 = 0.02
 
 # load some spectra and a filter
 Egal_wave, Egal_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_E_ext.sed')).T
-Egal_photons = Egal_flambda * Egal_wave # ergs -> N_photons
-Egal_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
 Egal_wave /= 10 # Angstrom -> nm
-bulge_sed = galsim.LookupTable(Egal_wave, Egal_photons)
+bulge_SED = galsim.SED(wave=Egal_wave, flambda=Egal_flambda, base_wavelength=500.0, norm=0.3)
 
 Sbcgal_wave, Sbcgal_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_Sbc_ext.sed')).T
-Sbcgal_photons = Sbcgal_flambda * Sbcgal_wave # ergs -> N_photons
-Sbcgal_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
 Sbcgal_wave /= 10 # Angstrom -> nm
-disk_sed = galsim.LookupTable(Sbcgal_wave, Sbcgal_photons)
+disk_SED = galsim.SED(wave=Sbcgal_wave, flambda=Sbcgal_flambda, base_wavelength=500.0, norm=0.3)
 
 bluelim = 500
 redlim = 720
@@ -106,24 +102,12 @@ def test_direct_sum_vs_chromatic():
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec)
     dilate_fn = lambda w:(w/500.0)**(-0.2)
     for w in ws:
-        flux = bulge_sed(w) * filter_fn(w) * h
+        flux = bulge_SED(w) * filter_fn(w) * h
         mPSF = galsim.Moffat(flux=flux, beta=PSF_beta, half_light_radius=PSF_hlr*dilate_fn(w))
         mPSF.applyShear(e1=PSF_e1, e2=PSF_e2)
         mPSF.applyShift(shift_fn(w))
         mPSFs.append(mPSF)
     PSF = galsim.Add(mPSFs)
-
-    # # normalize position to that at middle of r-band: ~610nm
-    # shifts = (galsim.dcr.get_refraction(filter_wave, zenith_angle) - R610) / galsim.arcsec
-    # dilations = (filter_wave/500.0)**(-0.2)
-    # # dwave = filter_wave[1] - filter_wave[0]
-    # for w, tp, d, shift in zip(filter_wave, filter_throughput, dilations, shifts):
-    #     flux = bulge_sed(w) * tp * dwave
-    #     mPSF = galsim.Moffat(flux=flux, beta=PSF_beta, half_light_radius=PSF_hlr*d)
-    #     mPSF.applyShear(e1=PSF_e1, e2=PSF_e2)
-    #     mPSF.applyShift((0, shift))
-    #     mPSFs.append(mPSF)
-    # PSF = galsim.Add(mPSFs)
 
     # final profile
     pixel = galsim.Pixel(pixel_scale)
@@ -138,7 +122,7 @@ def test_direct_sum_vs_chromatic():
 
     # make galaxy
     mono_gal = galsim.Sersic(n=bulge_n, half_light_radius=bulge_hlr)
-    chromatic_gal = galsim.Chromatic(mono_gal, Egal_wave, Egal_photons)
+    chromatic_gal = galsim.Chromatic(mono_gal, bulge_SED)
     chromatic_gal.applyShear(e1=bulge_e1, e2=bulge_e2)
     chromatic_gal.applyShear(g1=shear_g1, g2=shear_g2)
 
@@ -158,8 +142,7 @@ def test_direct_sum_vs_chromatic():
     # comparison
     #-----------
 
-    analytic_flux = galsim.integ.int1d(lambda w: bulge_sed(w) * filter_fn(w), bluelim, redlim)
-    print analytic_flux
+    analytic_flux = galsim.integ.int1d(lambda w: bulge_SED(w) * filter_fn(w), bluelim, redlim)
     peak1 = chromatic_image.array.max()
 
     printval(GS_image, chromatic_image)
@@ -180,11 +163,11 @@ def test_chromatic_add():
 
     # create galaxy profiles
     mono_bulge = galsim.Sersic(n=bulge_n, half_light_radius=bulge_hlr)
-    bulge = galsim.Chromatic(mono_bulge, Egal_wave, Egal_photons)
+    bulge = galsim.Chromatic(mono_bulge, bulge_SED)
     bulge.applyShear(e1=bulge_e1, e2=bulge_e2)
 
     mono_disk = galsim.Sersic(n=disk_n, half_light_radius=disk_hlr)
-    disk = galsim.Chromatic(mono_disk, Sbcgal_wave, Sbcgal_photons)
+    disk = galsim.Chromatic(mono_disk, disk_SED)
     disk.applyShear(e1=disk_e1, e2=disk_e2)
 
     # test `+` operator
@@ -217,7 +200,7 @@ def test_chromatic_add():
     piecewise_image = bulge_image + disk_image
     printval(image, piecewise_image)
     np.testing.assert_array_almost_equal(
-            image.array, piecewise_image.array, 10,
+            image.array, piecewise_image.array, 6,
             err_msg="`+` operator doesn't match manual image addition")
 
     # also test the `+=` operator
@@ -230,7 +213,7 @@ def test_chromatic_add():
 
     printval(image2, piecewise_image)
     np.testing.assert_array_almost_equal(
-            image2.array, piecewise_image.array, 5,
+            image2.array, piecewise_image.array, 6,
             err_msg="`+=` operator doesn't match manual image addition")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -247,8 +230,8 @@ def test_dcr_moments():
     pixel_scale = 0.025
 
     # stars are fundamentally delta-fns with an SED
-    star1 = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), Egal_wave, Egal_photons)
-    star2 = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), Sbcgal_wave, Sbcgal_photons)
+    star1 = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
+    star2 = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), disk_SED)
 
     shift_fn = lambda w:(0, ((galsim.dcr.get_refraction(w, zenith_angle) - R610)
                              / galsim.arcsec))
@@ -275,13 +258,11 @@ def test_dcr_moments():
     dV_image = (mom1[3] - mom2[3]) * (pixel_scale)**2
 
     # analytic first moment differences
-    sed1 = galsim.LookupTable(Egal_wave, Egal_photons)
-    sed2 = galsim.LookupTable(Sbcgal_wave, Sbcgal_photons)
     R = lambda w:(galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec
-    numR1 = galsim.integ.int1d(lambda w: R(w) * filter_fn(w) * sed1(w), bluelim, redlim)
-    numR2 = galsim.integ.int1d(lambda w: R(w) * filter_fn(w) * sed2(w), bluelim, redlim)
-    den1 = galsim.integ.int1d((lambda w:filter_fn(w) * sed1(w)), bluelim, redlim)
-    den2 = galsim.integ.int1d((lambda w:filter_fn(w) * sed2(w)), bluelim, redlim)
+    numR1 = galsim.integ.int1d(lambda w: R(w) * filter_fn(w) * bulge_SED(w), bluelim, redlim)
+    numR2 = galsim.integ.int1d(lambda w: R(w) * filter_fn(w) * disk_SED(w), bluelim, redlim)
+    den1 = galsim.integ.int1d((lambda w:filter_fn(w) * bulge_SED(w)), bluelim, redlim)
+    den2 = galsim.integ.int1d((lambda w:filter_fn(w) * disk_SED(w)), bluelim, redlim)
 
     R1 = numR1/den1
     R2 = numR2/den2
@@ -290,8 +271,8 @@ def test_dcr_moments():
     # analytic second moment differences
     V1_kernel = lambda w:(R(w) - R1)**2
     V2_kernel = lambda w:(R(w) - R2)**2
-    numV1 = galsim.integ.int1d(lambda w:V1_kernel(w) * filter_fn(w) * sed1(w), bluelim, redlim)
-    numV2 = galsim.integ.int1d(lambda w:V2_kernel(w) * filter_fn(w) * sed2(w), bluelim, redlim)
+    numV1 = galsim.integ.int1d(lambda w:V1_kernel(w) * filter_fn(w) * bulge_SED(w), bluelim, redlim)
+    numV2 = galsim.integ.int1d(lambda w:V2_kernel(w) * filter_fn(w) * disk_SED(w), bluelim, redlim)
     V1 = numV1/den1
     V2 = numV2/den2
     dV_analytic = V1 - V2
@@ -320,8 +301,8 @@ def test_chromatic_seeing_moments():
     stamp_size = 1024
 
     # stars are fundamentally delta-fns with an SED
-    star1 = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), Egal_wave, Egal_photons)
-    star2 = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), Sbcgal_wave, Sbcgal_photons)
+    star1 = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
+    star2 = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), disk_SED)
     pix = galsim.Pixel(pixel_scale)
 
     indices = [-0.2, 0.6, 1.0]
@@ -347,14 +328,12 @@ def test_chromatic_seeing_moments():
         dr2byr2_image = ((mom1[2]+mom1[3]) - (mom2[2]+mom2[3])) / (mom1[2]+mom1[3])
 
         # analytic moment differences
-        sed1 = galsim.LookupTable(Egal_wave, Egal_photons)
-        sed2 = galsim.LookupTable(Sbcgal_wave, Sbcgal_photons)
-        num1 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * filter_fn(w) * sed1(w),
+        num1 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * filter_fn(w) * bulge_SED(w),
                                   bluelim, redlim)
-        num2 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * filter_fn(w) * sed2(w),
+        num2 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * filter_fn(w) * disk_SED(w),
                                   bluelim, redlim)
-        den1 = galsim.integ.int1d(lambda w:filter_fn(w) * sed1(w), bluelim, redlim)
-        den2 = galsim.integ.int1d(lambda w:filter_fn(w) * sed2(w), bluelim, redlim)
+        den1 = galsim.integ.int1d(lambda w:filter_fn(w) * bulge_SED(w), bluelim, redlim)
+        den2 = galsim.integ.int1d(lambda w:filter_fn(w) * disk_SED(w), bluelim, redlim)
 
         r2_1 = num1/den1
         r2_2 = num2/den2
@@ -382,7 +361,7 @@ def test_monochromatic_filter():
     pixel_scale = 0.2
     stamp_size = 32
 
-    chromatic_gal = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), Egal_wave, Egal_photons)
+    chromatic_gal = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
     GS_gal = galsim.Gaussian(fwhm=1.0)
 
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec)
@@ -401,7 +380,7 @@ def test_monochromatic_filter():
                                                image=chromatic_image)
         # take out normalization
         chromatic_image /= 0.02
-        chromatic_image /= galsim.LookupTable(Egal_wave, Egal_photons)(fw)
+        chromatic_image /= bulge_SED(fw)
 
         # now do non-chromatic version
         GS_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
@@ -430,7 +409,7 @@ def test_chromatic_flux():
     stamp_size = 64
 
     # stars are fundamentally delta-fns with an SED
-    star = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), Egal_wave, Egal_photons)
+    star = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
     pix = galsim.Pixel(pixel_scale)
     PSF = galsim.ChromaticShiftAndDilate(galsim.Gaussian,
                                          dilate_fn=lambda w:(w/500.0)**(-0.2),
@@ -446,7 +425,7 @@ def test_chromatic_flux():
     ChromaticObject_flux = image.array.sum()
 
     # analytic integral...
-    analytic_flux = galsim.integ.int1d(lambda w: bulge_sed(w) * filter_fn(w), bluelim, redlim)
+    analytic_flux = galsim.integ.int1d(lambda w: bulge_SED(w) * filter_fn(w), bluelim, redlim)
 
     np.testing.assert_almost_equal(ChromaticObject_flux/analytic_flux, 1.0, 5,
                                    err_msg="Drawn ChromaticObject flux doesn't match " +
