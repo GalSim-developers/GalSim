@@ -46,7 +46,7 @@ New features introduced in this demo:
 - gal = galsim.ChromaticGSObject(GSObject, wave, photons)
 - obj = galsim.ChromaticConvolve([list of ChromaticObjects and GSObjects])
 - obj = galsim.ChromaticAdd([list of ChromaticObjects])
-- ChromaticObject.draw(filter_wave, filter_throughput)
+- ChromaticObject.draw(throughput_fn, bluelim, redlim)
 - PSF = galsim.ChromaticShiftAndDilate(GSObject, shift_fn, dilate_fn)
 """
 
@@ -58,6 +58,11 @@ import logging
 import galsim
 
 def main(argv):
+    # Where to find and output data
+    path, filename = os.path.split(__file__)
+    datapath = os.path.abspath(os.path.join(path, "data/"))
+    outpath = os.path.abspath(os.path.join(path, "output/"))
+
     # In non-script code, use getLogger(__name__) at module scope instead.
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo12")
@@ -71,7 +76,8 @@ def main(argv):
     SED_names = ['CWW_E_ext', 'CWW_Sbc_ext', 'CWW_Scd_ext', 'CWW_Im_ext']
     SEDs = {}
     for SED_name in SED_names:
-        wave, flambda = numpy.genfromtxt('data/{}.sed'.format(SED_name)).T
+        SED_filename = os.path.join(datapath, '{}.sed'.format(SED_name))
+        wave, flambda = numpy.genfromtxt(SED_filename).T
         wave /= 10 # convert from Angstroms to nanometers
         photons = flambda*wave
         # normalize SEDs to 1 photon per nm at 502nm
@@ -83,9 +89,9 @@ def main(argv):
     filter_names = 'ugrizy'
     filters = {}
     for filter_name in filter_names:
-        wave, throughput = numpy.genfromtxt('data/LSST_{}.dat'.format(filter_name)).T
-        # thin filters out a bit to increase speed
-        filters[filter_name] = {'wave':wave[::10], 'throughput':throughput[::10]}
+        filter_filename = os.path.join(datapath, 'LSST_{}.dat'.format(filter_name))
+        wave, throughput = numpy.genfromtxt(filter_filename).T
+        filters[filter_name] = galsim.LookupTable(wave, throughput)
     logger.debug('Read in filters')
 
     pixel_scale = 0.2 # arcseconds
@@ -123,10 +129,11 @@ def main(argv):
     # draw profile through LSST filters
     for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, pixel_scale)
-        final.draw(wave=filter_['wave'], throughput=filter_['throughput'], image=img)
+        final.draw(filter_, 300, 1100, image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
-        galsim.fits.write(img, 'output/demo12a_{}.fits'.format(filter_name))
+        out_filename = os.path.join(outpath, 'demo12a_{}.fits'.format(filter_name))
+        galsim.fits.write(img, out_filename)
         logger.debug('Wrote {}-band image to disk'.format(filter_name))
         logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
 
@@ -162,10 +169,11 @@ def main(argv):
     # draw profile through LSST filters
     for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, pixel_scale)
-        bdfinal.draw(wave=filter_['wave'], throughput=filter_['throughput'], image=img)
+        bdfinal.draw(filter_, 300, 1100, image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
-        galsim.fits.write(img, 'output/demo12b_{}.fits'.format(filter_name))
+        out_filename = os.path.join(outpath, 'demo12b_{}.fits'.format(filter_name))
+        galsim.fits.write(img, out_filename)
         logger.debug('Wrote {}-band image to disk'.format(filter_name))
         logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
 
@@ -225,10 +233,11 @@ def main(argv):
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.03)
     for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, pixel_scale)
-        final.draw(wave=filter_['wave'], throughput=filter_['throughput'], image=img)
+        final.draw(filter_, 300, 1100, image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
-        galsim.fits.write(img, 'output/demo12c_{}.fits'.format(filter_name))
+        out_filename = os.path.join(outpath, 'demo12c_{}.fits'.format(filter_name))
+        galsim.fits.write(img, out_filename)
         logger.debug('Wrote {}-band image to disk'.format(filter_name))
         logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
     logger.info('You can display the output in ds9 with a command line that looks something like:')
