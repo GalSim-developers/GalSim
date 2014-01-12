@@ -124,19 +124,20 @@ class GSObject(object):
         return galsim.Add([self, other])
 
     # op+= converts this into the equivalent of an Add object
-    def __iadd__(self, other):
-        GSObject.__init__(self, galsim.Add([self, other]))
-        self.__class__ = galsim.Add
-        return self
+    # def __iadd__(self, other):
+    #     GSObject.__init__(self, galsim.Add([self, other]))
+    #     self.__class__ = galsim.Add
+    #     return self
+
 
     # op- is unusual, but allowed.  It subtracts off one profile from another.
     def __sub__(self, other):
         return galsim.Add([self, (-1. * other)])
 
-    def __isub__(self, other):
-        GSObject.__init__(self, galsim.Add([self, (-1. * other)]))
-        self.__class__ = galsim.Add
-        return self
+    # def __isub__(self, other):
+    #     GSObject.__init__(self, galsim.Add([self, (-1. * other)]))
+    #     self.__class__ = galsim.Add
+    #     return self
 
     # Make op* and op*= work to adjust the flux of an object
     def __imul__(self, other):

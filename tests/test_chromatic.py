@@ -148,7 +148,7 @@ def test_direct_sum_vs_chromatic():
     chromatic_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
 
     # final profile
-    chromatic_final = galsim.ChromaticConvolve([chromatic_gal, chromatic_PSF, pixel])
+    chromatic_final = galsim.Convolve([chromatic_gal, chromatic_PSF, pixel])
     chromatic_image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
     # chromatic_final.draw(filter_wave, filter_throughput, image=chromatic_image)
     chromatic_image = chromatic_final.draw(filter_fn, bluelim, redlim, N, image=chromatic_image)
@@ -200,17 +200,17 @@ def test_chromatic_add():
 
     # create final profile
     pixel = galsim.Pixel(pixel_scale)
-    final = galsim.ChromaticConvolve([bdgal, chromatic_PSF, pixel])
+    final = galsim.Convolve([bdgal, chromatic_PSF, pixel])
     image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
     # final.draw(filter_wave, filter_throughput, image=image)
     image = final.draw(filter_fn, bluelim, redlim, 100, image=image)
 
     bulge_image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
-    bulge_part = galsim.ChromaticConvolve([bulge, chromatic_PSF, pixel])
+    bulge_part = galsim.Convolve([bulge, chromatic_PSF, pixel])
     # bulge_part.draw(filter_wave, filter_throughput, image=bulge_image)
     bulge_image = bulge_part.draw(filter_fn, bluelim, redlim, 100, image=bulge_image)
     disk_image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
-    disk_part = galsim.ChromaticConvolve([disk, chromatic_PSF, pixel])
+    disk_part = galsim.Convolve([disk, chromatic_PSF, pixel])
     # disk_part.draw(filter_wave, filter_throughput, image=disk_image)
     disk_image = disk_part.draw(filter_fn, bluelim, redlim, 100, image=disk_image)
 
@@ -223,7 +223,7 @@ def test_chromatic_add():
     # also test the `+=` operator
     bdgal2 = bulge
     bdgal2 += disk
-    final2 = galsim.ChromaticConvolve([bdgal2, chromatic_PSF, pixel])
+    final2 = galsim.Convolve([bdgal2, chromatic_PSF, pixel])
     image2 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
     # final2.draw(filter_wave, filter_throughput, image=image2)
     image2 = final2.draw(filter_fn, bluelim, redlim, 100, image=image2)
@@ -259,8 +259,8 @@ def test_dcr_moments():
                                          beta=PSF_beta, half_light_radius=PSF_hlr)
 
     pix = galsim.Pixel(pixel_scale)
-    final1 = galsim.ChromaticConvolve([star1, PSF, pix])
-    final2 = galsim.ChromaticConvolve([star2, PSF, pix])
+    final1 = galsim.Convolve([star1, PSF, pix])
+    final2 = galsim.Convolve([star2, PSF, pix])
 
     image1 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
     image2 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
@@ -335,8 +335,8 @@ def test_chromatic_seeing_moments():
                                              dilate_fn=lambda w:(w/500.0)**index,
                                              half_light_radius=PSF_hlr)
 
-        final1 = galsim.ChromaticConvolve([star1, PSF, pix])
-        final2 = galsim.ChromaticConvolve([star2, PSF, pix])
+        final1 = galsim.Convolve([star1, PSF, pix])
+        final2 = galsim.Convolve([star2, PSF, pix])
 
         image1 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
         image2 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
@@ -396,7 +396,7 @@ def test_monochromatic_filter():
     chromatic_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
 
     pix = galsim.Pixel(pixel_scale)
-    chromatic_final = galsim.ChromaticConvolve([chromatic_gal, chromatic_PSF, pix])
+    chromatic_final = galsim.Convolve([chromatic_gal, chromatic_PSF, pix])
 
     fws = [350, 475, 625, 750, 875, 975] # approximage ugrizy filter central wavelengths
     for fw in fws:
@@ -441,7 +441,7 @@ def test_chromatic_flux():
                                          dilate_fn=lambda w:(w/500.0)**(-0.2),
                                          half_light_radius=PSF_hlr)
 
-    final = galsim.ChromaticConvolve([star, PSF, pix])
+    final = galsim.Convolve([star, PSF, pix])
     image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
 
     image = final.draw(filter_fn, bluelim, redlim, 100, image=image)
