@@ -42,6 +42,29 @@ fontP = FontProperties()
 fontP.set_size('small')
 
 # Utility functions go here, above main():
+def cutoff_func(k_ratio):
+    """Softening function for the power spectrum cutoff, instead of a hard cutoff.
+
+    The argument is the ratio of k to k_max for this grid.  We use an arctan function to go smoothly
+    from 1 to 0 above k_max.
+    """
+    # The magic numbers in the code below come from the following:
+    # We define the function as
+    #     (arctan[A log(k/k_max) + B] + pi/2)/pi
+    # For our current purposes, we will define A and B by requiring that this function go to 0.95
+    # (0.05) for k/k_max = 0.95 (1).  This gives two equations:
+    #     0.95 = (arctan[log(0.95) A + B] + pi/2)/pi
+    #     0.05 = (arctan[B] + pi/2)/pi.
+    # We will solve the second equation:
+    #     -0.45 pi = arctan(B), or
+    #     B = tan(-0.45 pi).
+    b = np.tan(-0.45*np.pi)
+    # Then, we get A from the first equation:
+    #     0.45 pi = arctan[log(0.95) A + B]
+    #     tan(0.45 pi) = log(0.95) A  + B
+    a = (np.tan(0.45*np.pi)-b) / np.log(0.95)
+    return (np.arctan(a*np.log(k_ratio)+b) + np.pi/2.)/np.pi
+
 def check_dir(dir):
     """Utility to make an output directory if necessary.
 
@@ -412,8 +435,8 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
     # Set up PowerSpectrum object.  We have to be careful to watch out for aliasing due to our
     # initial P(k) including power on scales above those that can be represented by our grid.  In
     # order to deal with that, we will define a power spectrum function that equals a cosmological
-    # one for k < k_max and is zero above that.  In principle, hard edges could cause a problem, but
-    # we will cross (burn?) that bridge when we come to it.
+    # one for k < k_max and is zero above that, with some smoothing function rather than a hard
+    # cutoff.
     raw_ps_data = np.loadtxt(pk_file).transpose()
     raw_ps_k = raw_ps_data[0,:]
     raw_ps_p = raw_ps_data[1,:]
@@ -422,10 +445,9 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
     #    k_max = pi / (grid_spacing in radians) = pi / [2 pi (grid_spacing in degrees) / 180]
     #          = 90 / (grid spacing in degrees)
     k_max = 90. / grid_spacing
-    # Now define a power spectrum that is raw_ps below k_max and zero above that.
-    # If hard edges are a problem, we could use some function that goes smoothly to zero instead.
+    # Now define a power spectrum that is raw_ps below k_max and goes smoothly to zero above that.
     ps = galsim.PowerSpectrum(
-        galsim.LookupTable(raw_ps_k, raw_ps_p*(raw_ps_k<k_max), interpolant='linear'),
+        galsim.LookupTable(raw_ps_k, raw_ps_p*cutoff_func(raw_ps_k/k_max), interpolant='linear'),
         units = galsim.radians
         )
 
