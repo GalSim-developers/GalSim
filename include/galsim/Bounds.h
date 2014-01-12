@@ -31,8 +31,8 @@
 
 namespace galsim {
 
-    template <class T>
     /// @brief Class for storing 2d position vectors in an (x, y) format.
+    template <class T>
     class Position 
     {
     public:
@@ -126,22 +126,27 @@ namespace galsim {
     public:
         /// @brief Constructor using four scalar positions (xmin, xmax, ymin, ymax).
         Bounds(const T x1, const T x2, const T y1, const T y2) :
-            defined(x1<=x2 && y1<=y2),xmin(x1),xmax(x2),ymin(y1),ymax(y2) {}
+            defined(x1<=x2 && y1<=y2), xmin(x1), xmax(x2), ymin(y1), ymax(y2) {}
 
         /// @brief Constructor using a single Position vector x/ymin = x/ymax.
         Bounds(const Position<T>& pos) :
-            defined(1),xmin(pos.x),xmax(pos.x),ymin(pos.y),ymax(pos.y) {}
+            defined(1), xmin(pos.x), xmax(pos.x), ymin(pos.y), ymax(pos.y) {}
 
         /// @brief Constructor using two Positions, first for x/ymin, second for x/ymax.
         Bounds(const Position<T>& pos1, const Position<T>& pos2) :
-            defined(1),xmin(std::min(pos1.x,pos2.x)),xmax(std::max(pos1.x,pos2.x)),
-            ymin(std::min(pos1.y,pos2.y)),ymax(std::max(pos1.y,pos2.y)) {}
+            defined(1), xmin(std::min(pos1.x,pos2.x)), xmax(std::max(pos1.x,pos2.x)),
+            ymin(std::min(pos1.y,pos2.y)), ymax(std::max(pos1.y,pos2.y)) {}
 
         /// @brief Constructor for empty Bounds, .isDefined() method will return false.
-        Bounds() : defined(0),xmin(0),xmax(0),ymin(0),ymax(0) {}
+        Bounds() : defined(0), xmin(0), xmax(0), ymin(0), ymax(0) {}
 
         /// @brief Destructor.
         ~Bounds() {}
+
+        // NB. The default copy constructor and operator= are fine.
+
+        /// @brief Make a copy of this Bounds object
+        Bounds<T> copy() const { return Bounds<T>(*this); }
 
         /// @brief Set the xmin of the Bounds rectangle.
         void setXMin(const T x) { xmin = x; defined= xmin<=xmax && ymin<=ymax; }
@@ -184,20 +189,35 @@ namespace galsim {
         /// that case falls between two pixels.
         Position<double> trueCenter() const;
 
+        //@{
         /// @brief expand bounds to include this point
         void operator+=(const Position<T>& pos);
+        Bounds<T> operator+(const Position<T>& pos) const
+        { Bounds<T> ret = copy(); ret += pos; return ret; }
+        //@}
 
+        //@{
         /// @brief expand bounds to include these bounds
         void operator+=(const Bounds<T>& rec);
+        Bounds<T> operator+(const Bounds<T>& rec) const
+        { Bounds<T> ret = copy(); ret += rec; return ret; }
+        //@}
 
         //@{
         /// @brief add a border of size d around existing bounds
         void addBorder(const T d);
         void operator+=(const T d) { addBorder(d); }
+        Bounds<T> withBorder(const T d) const
+        { Bounds<T> ret = copy(); ret += d; return ret; }
+        Bounds<T> operator+(const T d) const { return withBorder(d); }
         //@}
 
+        //@{
         /// @brief expand bounds by a factor m around the current center.
         void expand(const double m); 
+        Bounds<T> makeExpanded(const double m) const
+        { Bounds<T> ret = copy(); ret.expand(m); return ret; }
+        //@}
 
         /// @brief find the intersection of two bounds
         const Bounds<T> operator&(const Bounds<T>& rhs) const; 
@@ -205,7 +225,11 @@ namespace galsim {
         //@{
         /// @brief shift the bounding box by some amount.
         void shift(const T dx, const T dy) { xmin+=dx; xmax+=dx; ymin+=dy; ymax+=dy; }
-        void shift(Position<T> dx) { shift(dx.x,dx.y); }
+        void shift(const Position<T>& delta) { shift(delta.x,delta.y); }
+        Bounds<T> makeShifted(const T dx, const T dy) const
+        { Bounds<T> ret = copy(); ret.shift(dx,dy); return ret; }
+        Bounds<T> makeShifted(const Position<T>& delta) const
+        { Bounds<T> ret = copy(); ret.shift(delta); return ret; }
         //@}
 
         //@{

@@ -399,7 +399,7 @@ class PowerSpectrum(object):
                                       center.y + ngrid * grid_spacing / 2. )
         # Expand the bounds slightly to make sure rounding errors don't lead to points on the 
         # edge being considered off the edge.
-        self.bounds.expand( 1. + 1.e-15 )
+        self.bounds = self.bounds.expand( 1. + 1.e-15 )
 
         # Make a GaussianDeviate if necessary
         if rng is None:

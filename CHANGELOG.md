@@ -46,7 +46,11 @@ Python layer API changes:
   * `angle.wrap()` should now be `angle = angle.wrap()`.
 * Removed the previously deprecated Ellipse and AtmosphericPSF classes.
   Also removed PhotonArray from the python layer, since it is only used
-  by the C++ layer.  (Issue #364)
+  by the C++ layer. (Issue #364)
+* Changed Bounds methods `addBorder`, `shift`, and `expand` to return new
+  Bounds objects rather than changing the original (in the python layer 
+  only). (Issue #364)
+
 
 Updates to config options:
 
@@ -148,8 +152,8 @@ Other new features:
   when dealing with RA or Dec. (Issue #364)
   * angle.dms() returns the angle as a string in the form +/-ddmmss.decimal.
   * angle.hms() returns the angle as a string in the form +/-hhmmss.decimal.
-  * angle = DMS_Angle(str) convert from dms back to a galsim.Angle.
-  * angle = HMS_Angle(str) convert from hms back to a galsim.Angle.
+  * angle = DMS_Angle(str) convert from a dms string back to a galsim.Angle.
+  * angle = HMS_Angle(str) convert from an hms string back to a galsim.Angle.
 * profile.applyTransformation(dudx, dudy, dvdx, dvdy) applies a general 
   (linear) coordinate transformation to a GSObject profile.  It is a 
   generalization of applyShear, applyRotation, etc.  There is also the 

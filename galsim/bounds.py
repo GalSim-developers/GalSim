@@ -153,10 +153,10 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     the type of the bounds instance:
 
             bounds = BoundsI(1,32,1,32)
-            bounds.shift(galsim.PositionI(3, 2))
+            bounds = bounds.shift(galsim.PositionI(3, 2))
 
             bounds = BoundsD(0, 37.4, 0, 49.9)
-            bounds.shift(galsim.PositionD(3.9, 2.1))
+            bounds = bounds.shift(galsim.PositionD(3.9, 2.1))
     """ 
 
 

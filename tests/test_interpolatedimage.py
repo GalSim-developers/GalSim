@@ -266,6 +266,12 @@ def test_operations_simple():
     lam_over_diam *= 206265  # arcsec
     im_size = 512
 
+    # define subregion for comparison
+    comp_region=30 # compare the central region of this linear size
+    comp_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
+    comp_bounds = comp_bounds.shift(galsim.PositionI((im_size-comp_region)/2,
+                                                     (im_size-comp_region)/2))
+
     bulge = galsim.Sersic(4, half_light_radius=bulge_hlr)
     bulge.applyShear(e=bulge_e, beta=bulge_pos_angle)
     disk = galsim.Exponential(half_light_radius = disk_hlr)
@@ -284,7 +290,6 @@ def test_operations_simple():
     test_g1=-0.07
     test_g2=0.1
     test_decimal=2 # in % difference, i.e. 2 means 1% agreement
-    comp_region=30 # compare the central region of this linear size
     test_int_im = int_im.createSheared(g1=test_g1, g2=test_g2)
     ref_obj = obj.createSheared(g1=test_g1, g2=test_g2)
     # make large images
@@ -293,10 +298,8 @@ def test_operations_simple():
     test_int_im.draw(image=im, scale=pix_scale)
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
-    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift(galsim.PositionI((im_size-comp_region)/2, (im_size-comp_region)/2))
-    im_sub = im.subImage(new_bounds)
-    ref_im_sub = ref_im.subImage(new_bounds)
+    im_sub = im.subImage(comp_bounds)
+    ref_im_sub = ref_im.subImage(comp_bounds)
     diff_im=im_sub-ref_im_sub
     rel = diff_im/im_sub
     zeros_arr = np.zeros((comp_region, comp_region))
@@ -317,10 +320,8 @@ def test_operations_simple():
     test_int_im.draw(image=im, scale=pix_scale)
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
-    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift(galsim.PositionI((im_size-comp_region)/2, (im_size-comp_region)/2))
-    im_sub = im.subImage(new_bounds)
-    ref_im_sub = ref_im.subImage(new_bounds)
+    im_sub = im.subImage(comp_bounds)
+    ref_im_sub = ref_im.subImage(comp_bounds)
     diff_im=im_sub-ref_im_sub
     rel = diff_im/im_sub
     zeros_arr = np.zeros((comp_region, comp_region))
@@ -343,10 +344,8 @@ def test_operations_simple():
     test_int_im.draw(image=im, scale=pix_scale)
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
-    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift(galsim.PositionI((im_size-comp_region)/2, (im_size-comp_region)/2))
-    im_sub = im.subImage(new_bounds)
-    ref_im_sub = ref_im.subImage(new_bounds)
+    im_sub = im.subImage(comp_bounds)
+    ref_im_sub = ref_im.subImage(comp_bounds)
     diff_im=im_sub-ref_im_sub
     rel = diff_im/im_sub
     zeros_arr = np.zeros((comp_region, comp_region))
@@ -367,10 +366,8 @@ def test_operations_simple():
     test_int_im.draw(image=im, scale=pix_scale)
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
-    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift(galsim.PositionI((im_size-comp_region)/2, (im_size-comp_region)/2))
-    im_sub = im.subImage(new_bounds)
-    ref_im_sub = ref_im.subImage(new_bounds)
+    im_sub = im.subImage(comp_bounds)
+    ref_im_sub = ref_im.subImage(comp_bounds)
     diff_im=im_sub-ref_im_sub
     rel = diff_im/im_sub
     zeros_arr = np.zeros((comp_region, comp_region))
@@ -392,10 +389,8 @@ def test_operations_simple():
     test_int_im.draw(image=im, scale=pix_scale)
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
-    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift(galsim.PositionI((im_size-comp_region)/2, (im_size-comp_region)/2))
-    im_sub = im.subImage(new_bounds)
-    ref_im_sub = ref_im.subImage(new_bounds)
+    im_sub = im.subImage(comp_bounds)
+    ref_im_sub = ref_im.subImage(comp_bounds)
     diff_im=im_sub-ref_im_sub
     rel = diff_im/im_sub
     zeros_arr = np.zeros((comp_region, comp_region))
