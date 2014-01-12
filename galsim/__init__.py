@@ -41,7 +41,7 @@ from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
 from shear import Shear
 from wcs import BaseWCS, PixelScale, ShearWCS, JacobianWCS
 from wcs import OffsetWCS, OffsetShearWCS, AffineTransform, UVFunction, RaDecFunction
-from fitswcs import AstropyWCS, PyAstWCS, WcsToolsWCS, GSFitsWCS, FitsWCS
+from fitswcs import AstropyWCS, PyAstWCS, WcsToolsWCS, GSFitsWCS, FitsWCS, TanWCS
 from lensing_ps import PowerSpectrum
 from nfw_halo import NFWHalo, Cosmology
 from catalog import Catalog, Dict

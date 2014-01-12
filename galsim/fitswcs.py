@@ -803,10 +803,23 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
     _takes_logger = False
 
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
-                 origin=None):
+                 origin=None, _data=None):
+        # Note: _data is not intended for end-user use.  It enables the equivalent of a 
+        #       private constructor of GSFitsWCS by the function TanWCS.  The details of its
+        #       use are intentionally not documented above.
+
         self._is_local = False
         self._is_uniform = False
         self._is_celestial = True
+
+        # If _data is given, copy the data and we're done.
+        if _data is not None:
+            self.wcs_type = _data[0]
+            self.crpix = _data[1]
+            self.cd = _data[2]
+            self.center = _data[5]
+            self.pv = _data[6]
+            return
 
         # Read the file if given.
         if file_name is not None:
@@ -869,13 +882,13 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
         if 'CUNIT1' in header:
             cunit1 = header['CUNIT1']
             cunit2 = header['CUNIT2']
-            self.ra_units = galsim.angle.get_angle_unit(cunit1)
-            self.dec_units = galsim.angle.get_angle_unit(cunit2)
+            ra_units = galsim.angle.get_angle_unit(cunit1)
+            dec_units = galsim.angle.get_angle_unit(cunit2)
         else:
-            self.ra_units = galsim.degrees
-            self.dec_units = galsim.degrees
+            ra_units = galsim.degrees
+            dec_units = galsim.degrees
 
-        self.center = galsim.CelestialCoord(crval1 * self.ra_units, crval2 * self.dec_units)
+        self.center = galsim.CelestialCoord(crval1 * ra_units, crval2 * dec_units)
 
         # There was an older proposed standard that used TAN with PV values, which is used by
         # SCamp, so we want to support it if possible.  The standard is now called TPV, so
@@ -886,6 +899,17 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
         self.pv = None
         if self.wcs_type == 'TPV':
             self._read_tpv(header)
+
+        # I think the CUNIT specification applies to the CD matrix as well, but I couldn't actually
+        # find good documentation for this.  Plus all the examples I saw used degrees anyway, so 
+        # it's hard to tell.  Hopefully this will never matter, but if CUNIT is not deg, this 
+        # next bit might be wrong.
+        # I did see documentation that the PV matrices always use degrees, so at least we shouldn't
+        # have to worry about that.
+        if ra_units != galsim.degrees:
+            self.cd[0,:] *= 1. * ra_units / galsim.degrees
+        if dec_units != galsim.degrees:
+            self.cd[1,:] *= 1. * dec_units / galsim.degrees
 
     def _read_tpv(self, header):
 
@@ -941,8 +965,10 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
             vpow = numpy.array([ 1., v, vsq, vsq*v ])
             p2 = numpy.dot(numpy.dot(self.pv, vpow), upow)
 
-        # Convert (u,v) from degrees (typically) to arcsec
-        p2 *= [ -1. * self.ra_units / galsim.arcsec , 1. * self.dec_units / galsim.arcsec ]
+        # Convert (u,v) from degrees to arcsec
+        # Also, the FITS standard defines u,v backwards relative to our standard.
+        # They have +u increasing to the east, not west.  Hence the -1 for u.
+        p2 *= [ -1. * galsim.degrees / galsim.arcsec , 1. * galsim.degrees / galsim.arcsec ]
 
         # Finally convert from (u,v) to (ra, dec)
         # The TAN projection is also known as a gnomonic projection, which is what
@@ -954,10 +980,9 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
         import numpy, numpy.linalg
 
         uv = self.center.project( world_pos, projection='gnomonic' )
-        # The FITS standard defines u,v backwards relative to our standard.
-        # They have +u increasing to the east, not west.
-        u = uv.x * (-1. * galsim.arcsec / self.ra_units)
-        v = uv.y * (1. * galsim.arcsec / self.dec_units)
+        # Again, FITS has +u increasing to the east, not west.  Hence the -1.
+        u = uv.x * (-1. * galsim.arcsec / galsim.degrees)
+        v = uv.y * (1. * galsim.arcsec / galsim.degrees)
         p2 = numpy.array( [ u, v ] )
 
         if self.wcs_type == 'TPV':
@@ -1051,7 +1076,7 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
                                    numpy.dot(numpy.dot(self.pv, dvpow), upow) ])
             jac = numpy.dot(j1,jac)
 
-        unit_convert = [ -1. * self.ra_units / galsim.arcsec , 1. * self.dec_units / galsim.arcsec ]
+        unit_convert = [ -1. * galsim.degrees / galsim.arcsec , 1. * galsim.degrees / galsim.arcsec ]
         p2 *= unit_convert
         # Subtle point: Don't use jac *= ..., because jac might currently be self.cd, and 
         #               that would change self.cd!
@@ -1117,17 +1142,60 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
                 (self.crpix == other.crpix).all() and
                 (self.cd == other.cd).all() and
                 self.center == other.center and
-                self.ra_units == other.ra_units and
-                self.dec_units == other.dec_units and
                 self.pv == other.pv )
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return "GSFitsWCS(%r,%r,%r,%r,%r,%r,%r)"%(self.wcs_type, self.crpix, self.cd, self.center,
-                                                  self.ra_units, self.dec_units, self.pv)
+        return "GSFitsWCS(%r,%r,%r,%r,%r)"%(self.wcs_type, repr(self.crpix), repr(self.cd), 
+                                            self.center, repr(self.pv))
 
+
+def TanWCS(affine, center):
+    """This is a function that returns a GSFitsWCS object for a TAN WCS projection.
+
+    The TAN projection is essentially an affine transformation from image coordinates to
+    Euclidean (u,v) coordinates on a tangent plane, and then a "deprojection" of this plane
+    onto the sphere given a particular RA, Dec for the location of the tangent point.
+
+    @param affine       An AffineTransform defining the transformation from image coordinates
+                        to the coordinates on the tangent plane.
+    @param center       A CelestialCoord defining the location on the sphere where the 
+                        tangent plane is centered.
+
+    @returns A GSFitsWCS describing this WCS.
+    """
+    import numpy, numpy.linalg
+    # These will raise the appropriate errors if affine is not the right type.
+    dudx = affine.dudx * galsim.arcsec / galsim.degrees
+    dudy = affine.dudy * galsim.arcsec / galsim.degrees
+    dvdx = affine.dvdx * galsim.arcsec / galsim.degrees
+    dvdy = affine.dvdy * galsim.arcsec / galsim.degrees
+    origin = affine.origin
+    world_origin = affine.world_origin
+    # The - signs are because the Fits standard is in terms of +u going east, rather than west
+    # as we have defined.  So just switch the sign in the CD matrix.
+    cd = numpy.array( [ [ -dudx, -dudy ], [ dvdx, dvdy ] ] )
+    crpix = numpy.array( [ origin.x, origin.y ] )
+    print 'cd = ',cd
+    print 'crpix = ',crpix
+    print 'center = ',center
+
+    if world_origin is not None:
+        # Then we need to absorb this back into crpix, since GSFits is expecting crpix to 
+        # be the location of the tangent point in image coordinates.
+        # (u,v) = CD * (x-x0,y-y0) + (u0,v0)
+        #       = CD * (x,y) - CD * (x0,y0) + (u0,v0)
+        #       = CD * (x,y) - CD * (x0',y0')
+        # CD (x0',y0') = CD (x0,y0) - (u0,v0)
+        # (x0',y0') = (x0,y0) - CD^-1 (u0,v0)
+        uv = numpy.array( [ world_origin.x, world_origin.y ] )
+        crpix -= numpy.dot(numpy.linalg.inv(cd) , uv)
+
+    # Invoke the private constructor of GSFits using the _data kwarg.
+    data = ('TAN', crpix, cd, galsim.arcsec, galsim.arcsec, center, None)
+    return GSFitsWCS(_data=data)
 
 
 # This is a list of all the WCS types that can potentially read a WCS from a FITS file.

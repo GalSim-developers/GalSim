@@ -1566,6 +1566,48 @@ def test_gsfitswcs():
 
         do_wcs_image(wcs, 'GSFitsWCS_'+tag)
 
+    # Use TanWCS function to create TAN GSFitsWCS objects from scratch.
+    # First a slight tweak on a simple scale factor
+    dudx = 0.2342
+    dudy = 0.0023
+    dvdx = 0.0019
+    dvdy = 0.2391
+    x0 = 1
+    y0 = 1
+    origin = galsim.PositionD(x0,y0)
+    affine = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin)
+    center = galsim.CelestialCoord(0.*galsim.radians, 0.*galsim.radians)
+    wcs = galsim.TanWCS(affine, center)
+    do_celestial_wcs(wcs, 'TanWCS 1')
+
+    # Next one with a flip and significant rotation and a large (u,v) offset
+    dudx = 0.1432
+    dudy = 0.2342
+    dvdx = 0.2391
+    dvdy = 0.1409
+    u0 = 124.3
+    v0 = -141.9
+    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, world_origin=galsim.PositionD(u0,v0))
+    center = galsim.CelestialCoord(3.4 * galsim.hours, -17.9 * galsim.degrees)
+    wcs = galsim.TanWCS(affine, center)
+    do_celestial_wcs(wcs, 'TanWCS 2')
+
+    # Finally a really crazy one that isn't remotely regular
+    dudx = 0.2342
+    dudy = -0.1432
+    dvdx = 0.0924
+    dvdy = -0.3013
+    x0 = -3
+    y0 = 104
+    u0 = 1423.9
+    v0 = 8242.7
+    origin = galsim.PositionD(x0,y0)
+    world_origin = galsim.PositionD(u0,v0)
+    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin=origin, world_origin=world_origin)
+    center = galsim.CelestialCoord(-241.4 * galsim.hours, 87.9 * galsim.degrees)
+    wcs = galsim.TanWCS(affine, center)
+    do_celestial_wcs(wcs, 'TanWCS 3')
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
