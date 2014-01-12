@@ -137,8 +137,8 @@ def test_direct_sum_vs_chromatic():
     #----------
 
     # make galaxy
-    chromatic_gal = galsim.ChromaticGSObject(galsim.Sersic, Egal_wave, Egal_photons,
-                                             n=bulge_n, half_light_radius=bulge_hlr)
+    chromatic_gal = galsim.Chromatic(galsim.Sersic, Egal_wave, Egal_photons,
+                                     n=bulge_n, half_light_radius=bulge_hlr)
     chromatic_gal.applyShear(e1=bulge_e1, e2=bulge_e2)
     chromatic_gal.applyShear(g1=shear_g1, g2=shear_g2)
 
@@ -179,12 +179,12 @@ def test_chromatic_add():
     pixel_scale = 0.2
 
     # create galaxy profiles
-    bulge = galsim.ChromaticGSObject(galsim.Sersic, Egal_wave, Egal_photons,
-                                     n=bulge_n, half_light_radius=bulge_hlr)
+    bulge = galsim.Chromatic(galsim.Sersic, Egal_wave, Egal_photons,
+                             n=bulge_n, half_light_radius=bulge_hlr)
     bulge.applyShear(e1=bulge_e1, e2=bulge_e2)
 
-    disk = galsim.ChromaticGSObject(galsim.Sersic, Sbcgal_wave, Sbcgal_photons,
-                                    n=disk_n, half_light_radius=disk_hlr)
+    disk = galsim.Chromatic(galsim.Sersic, Sbcgal_wave, Sbcgal_photons,
+                            n=disk_n, half_light_radius=disk_hlr)
     disk.applyShear(e1=disk_e1, e2=disk_e2)
 
     # test `+` operator
@@ -247,10 +247,8 @@ def test_dcr_moments():
     pixel_scale = 0.025
 
     # stars are fundamentally delta-fns with an SED
-    star1 = galsim.ChromaticGSObject(galsim.Gaussian, Egal_wave, Egal_photons,
-                                     fwhm=1e-8)
-    star2 = galsim.ChromaticGSObject(galsim.Gaussian, Sbcgal_wave, Sbcgal_photons,
-                                     fwhm=1e-8)
+    star1 = galsim.Chromatic(galsim.Gaussian, Egal_wave, Egal_photons, fwhm=1e-8)
+    star2 = galsim.Chromatic(galsim.Gaussian, Sbcgal_wave, Sbcgal_photons, fwhm=1e-8)
 
     shift_fn = lambda w:(0, ((galsim.dcr.get_refraction(w, zenith_angle) - R610)
                              / galsim.arcsec))
@@ -322,10 +320,8 @@ def test_chromatic_seeing_moments():
     stamp_size = 1024
 
     # stars are fundamentally delta-fns with an SED
-    star1 = galsim.ChromaticGSObject(galsim.Gaussian, Egal_wave, Egal_photons,
-                                     fwhm=1e-8)
-    star2 = galsim.ChromaticGSObject(galsim.Gaussian, Sbcgal_wave, Sbcgal_photons,
-                                     fwhm=1e-8)
+    star1 = galsim.Chromatic(galsim.Gaussian, Egal_wave, Egal_photons, fwhm=1e-8)
+    star2 = galsim.Chromatic(galsim.Gaussian, Sbcgal_wave, Sbcgal_photons, fwhm=1e-8)
     pix = galsim.Pixel(pixel_scale)
 
     indices = [-0.2, 0.6, 1.0]
@@ -386,7 +382,7 @@ def test_monochromatic_filter():
     pixel_scale = 0.2
     stamp_size = 32
 
-    chromatic_gal = galsim.ChromaticGSObject(galsim.Gaussian, Egal_wave, Egal_photons, fwhm=1.0)
+    chromatic_gal = galsim.Chromatic(galsim.Gaussian, Egal_wave, Egal_photons, fwhm=1.0)
     GS_gal = galsim.Gaussian(fwhm=1.0)
 
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec)
@@ -434,8 +430,7 @@ def test_chromatic_flux():
     stamp_size = 64
 
     # stars are fundamentally delta-fns with an SED
-    star = galsim.ChromaticGSObject(galsim.Gaussian, Egal_wave, Egal_photons,
-                                    fwhm=1e-8)
+    star = galsim.Chromatic(galsim.Gaussian, Egal_wave, Egal_photons, fwhm=1e-8)
     pix = galsim.Pixel(pixel_scale)
     PSF = galsim.ChromaticShiftAndDilate(galsim.Gaussian,
                                          dilate_fn=lambda w:(w/500.0)**(-0.2),
