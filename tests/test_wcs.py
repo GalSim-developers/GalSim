@@ -1259,8 +1259,8 @@ def test_radecfunction():
         for cenra, cendec in centers:
             center = galsim.CelestialCoord(cenra * galsim.degrees, cendec * galsim.degrees)
             # Unit test the hms, dms parsers:
-            np.testing.assert_almost_equal(galsim.HMS_Angle(center.ra.hms()) / galsim.arcsec,
-                                           center.ra / galsim.arcsec, 6, 'HMS parser error')
+            np.testing.assert_almost_equal(galsim.HMS_Angle(center.ra.hms()).wrap() / galsim.arcsec,
+                                           center.ra.wrap() / galsim.arcsec, 6, 'HMS parser error')
             np.testing.assert_almost_equal(galsim.DMS_Angle(center.dec.dms()) / galsim.arcsec,
                                            center.dec / galsim.arcsec, 6, 'DMS parser error')
 

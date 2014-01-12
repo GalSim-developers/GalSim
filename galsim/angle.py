@@ -192,11 +192,15 @@ def _make_dms_string(decimal):
 
 def hms(self):
     """Return an HMS representation of the angle as a string: (+/-)hhmmss.decimal"""
-    return _make_dms_string(self / galsim.hours)
+    # HMS convention is usually to have the hours between 0 and 24, not -12 and 12
+    h = self.wrap() / galsim.hours
+    if h < 0: h += 24.
+    return _make_dms_string(h)
 
 def dms(self):
     """Return a DMS representation of the angle as a string: (+/-)ddmmss.decimal"""
-    return _make_dms_string(self / galsim.degrees)
+    d = self.wrap() / galsim.degrees
+    return _make_dms_string(d)
 
 galsim.Angle.__str__ = __str__
 galsim.Angle.__repr__ = __repr__
