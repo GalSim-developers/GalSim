@@ -512,66 +512,69 @@ class BaseWCS(object):
         # where ufunc, vfunc represent the underlying wcs transformations.
         #
         # The _setOrigin call is expecting new values for the (x0,y0) and (u0,v0), so
-        # we need to figure out how to modify the parameters give the current values.
+        # we need to figure out how to modify the parameters given the current values.
         #
         #     Use (x1,y1) and (u1,v1) for the new values that we will pass to _setOrigin.
         #     Use (x2,y2) and (u2,v2) for the values passed as arguments.
         #
-        # If world_origin is None, we want the new functions to be:
+        # If the wcs is a celestial WCS, then we want the new wcs to have wcs.toWorld(x2,y)
+        # match the current wcs.toWorld(0,0).  So,
         #
-        #     u' = u(x-x2, y-y2)
-        #     v' = v(x-x2, y-y2)
-        #     u' = ufunc(x-x0-x2, y-y0-y2) + u0
-        #     v' = vfunc(x-x0-x2, y-y0-y2) + v0
+        #     u' = ufunc(x-x1, y-y1)        # In this case, there are no u0,v0
+        #     v' = vfunc(x-x1, y-y1)
         #
-        # So, x1 = x0 + x2
-        #     y1 = y0 + y2,
-        #     u1 = u0
-        #     v1 = v0
+        #     u'(x2,y2) = u(0,0)    v'(x2,y2) = v(0,0)
         #
-        # However, if world_origin is given, u2,v2 aren't quite as simple.
-        #
-        #     u' = ufunc(x-x0-x2, y-y0-y2) + u1
-        #     v' = vfunc(x-x0-x2, y-y0-y2) + v1
-        #
-        # We want to have:
-        #
-        #     u2 = u'(x2, y2)
-        #     u2 = v'(x2, y2)
-        #
-        #     u2 = ufunc(x2-x0-x2, y2-y0-y2) + u1
-        #     v2 = vfunc(x2-x0-x2, y2-y0-y2) + v1
-        #     u1 = u2 - ufunc(-x0, -y0)
-        #     v1 = v2 - vfunc(-x0, -y0)
-        #     u1 = u2 - u(0, 0) + u0
-        #     v1 = v2 - v(0, 0) + u0
-        #
-        # So, x1 = x0 + x2
-        #     y1 = y0 + y2,
-        #     u1 = u0 + u2 - u(0,0)
-        #     v1 = v0 + v2 - v(0,0)
-        #
-        # So we only update origin if world_origin is None.
-        if world_origin is None and not self._is_local:
-            origin += self.origin
+        #     x2 - x1 = 0 - x0      y2 - y1 = 0 - y0
+        # =>  x1 = x0 + x2          y1 = y0 + y2
 
-        if not self._is_celestial:
-            if world_origin is None:
-                if not self._is_local:
-                    world_origin = self.world_origin
-            else:
-                if isinstance(world_origin, galsim.PositionI):
-                    world_origin = galsim.PositionD(world_origin.x, world_origin.y)
-                elif not isinstance(origin, galsim.PositionD):
-                    raise TypeError("world_origin must be a PositionD or PositionI argument")
-                if not self._is_local:
-                    world_origin += self.toWorld(galsim.PositionD(0,0))
-                world_origin -= self.toWorld(galsim.PositionD(0,0))
-            return self._setOrigin(origin, world_origin)
-        else:
+        if self._is_celestial:
             if world_origin is not None:
                 raise TypeError("world_origin is invalid for non-uniform WCS classes")
+            origin += self.origin
             return self._setOrigin(origin)
+
+        # If world_origin is None, then we want to do basically the same thing, 
+        # except we also need to pass the function the current value of wcs.world_pos
+        # to keep it from resetting the world_pos back to None.
+
+        elif world_origin is None:
+            if not self._is_local:
+                origin += self.origin
+                world_origin = self.world_origin
+            return self._setOrigin(origin, world_origin)
+
+        # Finally, if world_origin is given, it isn't quite as simple.
+        #
+        #     u' = ufunc(x-x1, y-y1) + u1
+        #     v' = vfunc(x-x1, y-y1) + v1
+        #
+        # We want to have:
+        #     u'(x2,y2) = u2
+        #     ufunc(x2-x1, y2-y1) + u1 = u2
+        #
+        # We don't have access to ufunc directly, just u, so 
+        #     (u(x2-x1+x0, y2-y1+y0) - u0) + u1 = u2
+        #
+        # If we take
+        #     x1 = x2
+        #     y1 = y2
+        #
+        # Then 
+        #     u(x0,y0) - u0 + u1 = u2
+        # =>  u1 = u0 + u2 - u(x0,y0)
+        #
+        # And similarly,
+        #     v1 = v0 + v2 - v(x0,y0)
+
+        else:
+            if isinstance(world_origin, galsim.PositionI):
+                world_origin = galsim.PositionD(world_origin.x, world_origin.y)
+            elif not isinstance(origin, galsim.PositionD):
+                raise TypeError("world_origin must be a PositionD or PositionI argument")
+            if not self._is_local:
+                world_origin += self.world_origin - self._posToWorld(self.origin)
+            return self._setOrigin(origin, world_origin)
 
     def writeHeader(self, header, bounds):
         """Write this WCS function to a fits header.

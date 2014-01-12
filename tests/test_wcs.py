@@ -497,7 +497,7 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
     np.testing.assert_almost_equal(
             world_pos2.y, world_pos1.y, digits,
             'setOrigin(new_origin) returned wrong world position')
-    if wcs.isUniform():
+    if not wcs.isCelestial():
         new_world_origin = galsim.PositionD(5352.7, 9234.3)
         wcs5 = wcs.setOrigin(new_origin, new_world_origin)
         world_pos3 = wcs5.toWorld(new_origin)
