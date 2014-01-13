@@ -40,7 +40,7 @@ namespace galsim {
                                 boost::shared_ptr<GSParams> gsparams) 
         {
             if (width.ptr() == Py_None || height.ptr() == Py_None) {
-                PyErr_SetString(PyExc_TypeError, "SBBox requires x and y width parameters");
+                PyErr_SetString(PyExc_TypeError, "SBBox requires width and height parameters");
                 bp::throw_error_already_set();
             }
             return new SBBox(bp::extract<double>(width), bp::extract<double>(height), flux,
