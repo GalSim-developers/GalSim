@@ -374,6 +374,11 @@ class Image(object):
         """
         self.subImage(bounds).image.copyFrom(rhs.image)
 
+    def copyFrom(self, rhs):
+        """Copy the contents of another image
+        """
+        self.image.copyFrom(rhs.image)
+
     def view(self, make_const=False):
         """Make a view of this image, which lets you change the scale, wcs, origin, etc.
         but view the same underlying data as the original image.
