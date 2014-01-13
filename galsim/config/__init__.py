@@ -19,5 +19,6 @@
 from process import *
 from image import *
 from stamp import *
+from wcs import *
 from gsobject import *
 from value import *

@@ -368,6 +368,14 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 # Calculate and save the position relative to the image center
                 world_pos = config['wcs'].toWorld(image_pos)
 
+                # Wherever we use the world position, we expect a Euclidean position, not a 
+                # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the 
+                # image center.
+                if isinstance(world_pos, galsim.CelestialCoord):
+                    # Then project this position relative to the image center.
+                    world_center = config['wcs'].toWorld(config['image_center'])
+                    world_pos = world_center.project(world_pos, projection='gnomonic')
+
             elif 'world_pos' in config['image']:
                 world_pos = galsim.config.ParseValue(
                     config['image'], 'world_pos', config, galsim.PositionD)[0]

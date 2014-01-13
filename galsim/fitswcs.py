@@ -817,8 +817,8 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
             self.wcs_type = _data[0]
             self.crpix = _data[1]
             self.cd = _data[2]
-            self.center = _data[5]
-            self.pv = _data[6]
+            self.center = _data[3]
+            self.pv = _data[4]
             return
 
         # Read the file if given.
@@ -1152,49 +1152,49 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
                                             self.center, repr(self.pv))
 
 
-def TanWCS(affine, center):
+def TanWCS(affine, world_origin, units=galsim.arcsec):
     """This is a function that returns a GSFitsWCS object for a TAN WCS projection.
 
     The TAN projection is essentially an affine transformation from image coordinates to
     Euclidean (u,v) coordinates on a tangent plane, and then a "deprojection" of this plane
-    onto the sphere given a particular RA, Dec for the location of the tangent point.
+    onto the sphere given a particular RA, Dec for the location of the tangent point.  
+    The tangent point will correspond to the location of (u,v) = (0,0) in the intermediate
+    coordinate system.
 
-    @param affine       An AffineTransform defining the transformation from image coordinates
-                        to the coordinates on the tangent plane.
-    @param center       A CelestialCoord defining the location on the sphere where the 
-                        tangent plane is centered.
+    @param affine        An AffineTransform defining the transformation from image coordinates
+                         to the coordinates on the tangent plane.
+    @param world_origin  A CelestialCoord defining the location on the sphere where the 
+                         tangent plane is centered.
+    @param units         The angular units of the (u,v) intermediate coordinate system.
+                         [ Default `units = galsim.arcsec` ]
 
     @returns A GSFitsWCS describing this WCS.
     """
     import numpy, numpy.linalg
     # These will raise the appropriate errors if affine is not the right type.
-    dudx = affine.dudx * galsim.arcsec / galsim.degrees
-    dudy = affine.dudy * galsim.arcsec / galsim.degrees
-    dvdx = affine.dvdx * galsim.arcsec / galsim.degrees
-    dvdy = affine.dvdy * galsim.arcsec / galsim.degrees
+    dudx = affine.dudx * units / galsim.degrees
+    dudy = affine.dudy * units / galsim.degrees
+    dvdx = affine.dvdx * units / galsim.degrees
+    dvdy = affine.dvdy * units / galsim.degrees
     origin = affine.origin
-    world_origin = affine.world_origin
     # The - signs are because the Fits standard is in terms of +u going east, rather than west
     # as we have defined.  So just switch the sign in the CD matrix.
     cd = numpy.array( [ [ -dudx, -dudy ], [ dvdx, dvdy ] ] )
     crpix = numpy.array( [ origin.x, origin.y ] )
-    print 'cd = ',cd
-    print 'crpix = ',crpix
-    print 'center = ',center
 
-    if world_origin is not None:
+    if affine.world_origin is not None:
         # Then we need to absorb this back into crpix, since GSFits is expecting crpix to 
-        # be the location of the tangent point in image coordinates.
+        # be the location of the tangent point in image coordinates.  i.e. where (u,v) = (0,0)
         # (u,v) = CD * (x-x0,y-y0) + (u0,v0)
-        #       = CD * (x,y) - CD * (x0,y0) + (u0,v0)
-        #       = CD * (x,y) - CD * (x0',y0')
+        # (0,0) = CD * (x0',y0') - CD * (x0,y0) + (u0,v0)
         # CD (x0',y0') = CD (x0,y0) - (u0,v0)
         # (x0',y0') = (x0,y0) - CD^-1 (u0,v0)
-        uv = numpy.array( [ world_origin.x, world_origin.y ] )
+        uv = numpy.array( [ affine.world_origin.x * units / galsim.degrees,
+                            affine.world_origin.y * units / galsim.degrees ] )
         crpix -= numpy.dot(numpy.linalg.inv(cd) , uv)
 
     # Invoke the private constructor of GSFits using the _data kwarg.
-    data = ('TAN', crpix, cd, galsim.arcsec, galsim.arcsec, center, None)
+    data = ('TAN', crpix, cd, world_origin, None)
     return GSFitsWCS(_data=data)
 
 

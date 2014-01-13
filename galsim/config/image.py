@@ -29,23 +29,6 @@ valid_image_types = {
 }
 
 
-# The only item in the tuple is the name of the WCS class (or build function).
-# We made it a tuple to make it easier to add extra features later.
-valid_wcs_types = { 
-    'PixelScale' : ( 'galsim.PixelScale', ),
-    'Offset' : ( 'galsim.OffsetWCS', ),
-    'Shear' : ( 'galsim.ShearWCS', ),
-    'OffsetShear' : ( 'galsim.OffsetShearWCS', ),
-    'Jacobian' : ( 'galsim.JacobianWCS', ),
-    'AffineTransform' : ( 'galsim.AffineTransform', ),
-    'UVFunction' : ( 'galsim.UVFunction', ),
-    # TODO: Not everything works with the celestial wcs classes.  There are a few places
-    # where we assume that the world coordinates are Euclidean (u,v) coordinates. It needs a 
-    # bit of work to make sure everything is working correctly with celestial coordinates.
-    'RaDecFunction' : ( 'galsim.RaDecFunction', ),
-    'Fits' : ( 'galsim.FitsWCS', ),
-}
-
 
 def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
                 make_psf_image=False, make_weight_image=False, make_badpix_image=False):
@@ -348,80 +331,10 @@ def _set_image_origin(config, convention):
     else:
         raise AttributeError("Unknown index_convention: %s"%convention)
     config['image_origin'] = galsim.PositionI(origin,origin)
-
-
-def _read_wcs(config, logger=None):
-    """Read the wcs from the config dict, writing both it and, if it is well-defined, the 
-    pixel_scale to the config.  If the wcs does not have a well-defined pixel_scale, it will 
-    be stored as None.
-    """
-    image = config['image']
-
-    # If there is a wcs field, read it and update the wcs variable.
-    if 'wcs' in image:
-        image_wcs = image['wcs']
-        if 'type' in image_wcs:
-            type = image_wcs['type']
-        elif 'origin' in image_wcs:
-            type = 'Offset'
-        else:
-            type = 'PixelScale'
-
-        # Special case: origin == center means to use image_center for the wcs origin
-        if 'origin' in image_wcs and image_wcs['origin'] == 'center':
-            xsize = config['image_xsize']
-            ysize = config['image_ysize']
-            if xsize == 0 or ysize == 0:
-                raise AttributeError("Cannot use origin=center if image size is not defined.")
-            origin = galsim.PositionD( (1.+xsize)/2., (1.+ysize)/2. )
-            if logger:
-                logger.debug('image %d: Using origin = %s',config['image_num'],str(origin))
-            image_wcs['origin'] = origin
-
-        if type not in valid_wcs_types:
-            raise AttributeError("Invalid image.wcs.type=%s."%type)
-
-        build_func = eval(valid_wcs_types[type][0])
-
-        if logger:
-            logger.debug('image %d: Build WCS for type = %s using %s',
-                         config['image_num'],type,str(build_func))
-
-        req = build_func._req_params
-        opt = build_func._opt_params
-        single = build_func._single_params
-
-        # Pull in the image layer pixel_scale as a scale item if necessary.
-        if ( ('scale' in req or 'scale' in opt) and 'scale' not in image_wcs and 
-             'pixel_scale' in image ):
-            image_wcs['scale'] = image['pixel_scale']
-
-        kwargs, safe = galsim.config.GetAllParams(image_wcs, type, config, req, opt, single)
-
-        if logger and build_func._takes_logger: 
-            kwargs['logger'] = logger
-
-        # This would be weird, but might as well check...
-        if build_func._takes_rng:
-            if 'rng' not in config:
-                raise ValueError("No config['rng'] available for %s.type = %s"%(key,type))
-            kwargs['rng'] = config['rng']
-
-        if logger:
-            logger.debug('image %d: kwargs = %s',config['image_num'],str(kwargs))
-        wcs = build_func(**kwargs) 
-
-    else:
-        # Default if no wcs is to use PixelScale
-        if 'pixel_scale' in image:
-            scale = galsim.config.ParseValue(image, 'pixel_scale', config, float)[0]
-        else:
-            scale = 1.0
-        wcs = galsim.PixelScale(scale)
-
-    # Write it to the config dict and also return it.
-    config['wcs'] = wcs
-    return wcs
+    # Also define the overall image center while we're at it.
+    xsize = config['image_xsize']
+    ysize = config['image_ysize']
+    config['image_center'] = galsim.PositionD( origin + (xsize-1.)/2., origin + (ysize-1.)/2. )
 
 
 def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
@@ -459,9 +372,6 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
 
-    convention = params.get('index_convention','1')
-    _set_image_origin(config,convention)
-
     # If image_force_xsize and image_force_ysize were set in config, this overrides the 
     # read-in params.
     if 'image_force_xsize' in config and 'image_force_ysize' in config:
@@ -471,14 +381,19 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
         size = params.get('size',0)
         xsize = params.get('xsize',size)
         ysize = params.get('ysize',size)
-    config['image_xsize'] = xsize
-    config['image_ysize'] = ysize
-
     if (xsize == 0) != (ysize == 0):
         raise AttributeError(
             "Both (or neither) of image.xsize and image.ysize need to be defined  and != 0.")
 
-    wcs = _read_wcs(config, logger)
+    config['image_xsize'] = xsize
+    config['image_ysize'] = ysize
+    convention = params.get('index_convention','1')
+    _set_image_origin(config,convention)
+    if logger:
+        logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
+        logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
+
+    wcs = galsim.config.BuildWCS(config, logger)
 
     if 'world_pos' in config['image']:
         config['image']['image_pos'] = (0,0)
@@ -545,9 +460,6 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     config['tile_xsize'] = stamp_xsize
     config['tile_ysize'] = stamp_ysize
 
-    convention = params.get('index_convention','1')
-    _set_image_origin(config,convention)
-
     if (stamp_xsize == 0) or (stamp_ysize == 0):
         raise AttributeError(
             "Both image.stamp_xsize and image.stamp_ysize need to be defined and != 0.")
@@ -579,7 +491,13 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     if logger:
         logger.debug('image %d: image_size = %d, %d',image_num,full_xsize,full_ysize)
 
-    wcs = _read_wcs(config, logger)
+    convention = params.get('index_convention','1')
+    _set_image_origin(config,convention)
+    if logger:
+        logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
+        logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
+
+    wcs = galsim.config.BuildWCS(config, logger)
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
@@ -627,33 +545,25 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     nproc = params.get('nproc',1)
 
-    full_image = galsim.ImageF(full_xsize, full_ysize, wcs=wcs)
+    full_image = galsim.ImageF(full_xsize, full_ysize)
     full_image.setOrigin(config['image_origin'])
+    full_image.wcs = wcs
     full_image.setZero()
 
-    # Also define the overall image center, since we need that to calculate the position 
-    # of each stamp relative to the center.
-    config['image_center'] = full_image.bounds.trueCenter()
-    if logger:
-        logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
-
     if make_psf_image:
-        full_psf_image = galsim.ImageF(full_xsize, full_ysize, wcs=wcs)
-        full_psf_image.setOrigin(config['image_origin'])
+        full_psf_image = galsim.ImageF(full_image.bounds, wcs=wcs)
         full_psf_image.setZero()
     else:
         full_psf_image = None
 
     if make_weight_image:
-        full_weight_image = galsim.ImageF(full_xsize, full_ysize, wcs=wcs)
-        full_weight_image.setOrigin(config['image_origin'])
+        full_weight_image = galsim.ImageF(full_image.bounds, wcs=wcs)
         full_weight_image.setZero()
     else:
         full_weight_image = None
 
     if make_badpix_image:
-        full_badpix_image = galsim.ImageS(full_xsize, full_ysize, wcs=wcs)
-        full_badpix_image.setOrigin(config['image_origin'])
+        full_badpix_image = galsim.ImageS(full_image.bounds, wcs=wcs)
         full_badpix_image.setZero()
     else:
         full_badpix_image = None
@@ -720,7 +630,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                 # Then there was whitening applied in the individual stamps.
                 # But there could be a different variance in each postage stamp, so the first
                 # thing we need to do is bring everything up to a common level.
-                noise_image = galsim.ImageF(full_image.bounds, scale=full_image.scale)
+                noise_image = galsim.ImageF(full_image.bounds)
                 for k in range(nobjects): noise_image[images[k].bounds] += current_vars[k]
                 # Update this, since overlapping postage stamps may have led to a larger 
                 # value in some pixels.
@@ -808,8 +718,6 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         full_ysize = params['size']
 
 
-    convention = params.get('index_convention','1')
-    _set_image_origin(config,convention)
     # If image_force_xsize and image_force_ysize were set in config, make sure it matches.
     if ( ('image_force_xsize' in config and full_xsize != config['image_force_xsize']) or
          ('image_force_ysize' in config and full_ysize != config['image_force_ysize']) ):
@@ -819,7 +727,13 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['image_xsize'] = full_xsize
     config['image_ysize'] = full_ysize
 
-    wcs = _read_wcs(config, logger)
+    convention = params.get('index_convention','1')
+    _set_image_origin(config,convention)
+    if logger:
+        logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
+        logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
+
+    wcs = galsim.config.BuildWCS(config, logger)
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
@@ -852,33 +766,25 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     nproc = params.get('nproc',1)
 
-    full_image = galsim.ImageF(full_xsize, full_ysize, wcs=wcs)
+    full_image = galsim.ImageF(full_xsize, full_ysize)
     full_image.setOrigin(config['image_origin'])
+    full_image.wcs = wcs
     full_image.setZero()
 
-    # Also define the overall image center, since we need that to calculate the position 
-    # of each stamp relative to the center.
-    config['image_center'] = full_image.bounds.trueCenter()
-    if logger:
-        logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
-
     if make_psf_image:
-        full_psf_image = galsim.ImageF(full_xsize, full_ysize, wcs=wcs)
-        full_psf_image.setOrigin(config['image_origin'])
+        full_psf_image = galsim.ImageF(full_image.bounds, wcs=wcs)
         full_psf_image.setZero()
     else:
         full_psf_image = None
 
     if make_weight_image:
-        full_weight_image = galsim.ImageF(full_xsize, full_ysize, wcs=wcs)
-        full_weight_image.setOrigin(config['image_origin'])
+        full_weight_image = galsim.ImageF(full_image.bounds, wcs=wcs)
         full_weight_image.setZero()
     else:
         full_weight_image = None
 
     if make_badpix_image:
-        full_badpix_image = galsim.ImageS(full_xsize, full_ysize, wcs=wcs)
-        full_badpix_image.setOrigin(config['image_origin'])
+        full_badpix_image = galsim.ImageS(full_image.bounds, wcs=wcs)
         full_badpix_image.setZero()
     else:
         full_badpix_image = None
@@ -955,7 +861,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             # Then there was whitening applied in the individual stamps.
             # But there could be a different variance in each postage stamp, so the first
             # thing we need to do is bring everything up to a common level.
-            noise_image = galsim.ImageF(full_image.bounds, scale=full_image.scale)
+            noise_image = galsim.ImageF(full_image.bounds)
             for k in range(nobjects): 
                 b = images[k].bounds & full_image.bounds
                 if b.isDefined(): noise_image[b] += current_vars[k]
@@ -1061,7 +967,10 @@ def PowerSpectrumInit(ps, config, base):
 
     # We don't care about the output here.  This just builds the grid, which we'll
     # access for each object using its position.
-    world_center = base['wcs'].toWorld(base['image_center'])
+    if base['wcs'].isCelestial():
+        world_center = galsim.PositionD(0,0)
+    else:
+        world_center = base['wcs'].toWorld(base['image_center'])
     ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, center=world_center,
                  rng=base['rng'], interpolant=interpolant)
 
