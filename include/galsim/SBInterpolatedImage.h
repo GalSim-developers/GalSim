@@ -165,8 +165,9 @@ namespace galsim {
      * need to use a higher-order Lanczos interpolant instead, but this is not the recommended
      * usage.
      *
-     * There is also an optional argument for the pixel size (default is to get it from
-     * the image).
+     * The surface brightness profile will be in terms of the image pixels.  The python layer
+     * InterpolatedImage class takes care of converting between these units and the arcsec units
+     * that are usually desired.
      *
      * You can also make an SBInterpolatedImage as a weighted sum of several images
      * using MultipleImageHelper.  This helper object holds the images and their fourier
