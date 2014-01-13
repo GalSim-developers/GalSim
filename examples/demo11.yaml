@@ -22,6 +22,7 @@
 # - image : draw_method (no_pixel)
 # - input.power_spectrum : (e_power_file, delta2, units)
 # - image.index_convention : (0 or 'C' or 'python') vs (1 or 'Fortran' or 'FITS')
+# - wcs type : Tan(dudx, dudy, dvdx, dvdy, units, origin, ra, dec)
 #
 # - Power spectrum shears and magnifications for non-gridded positions.
 # - Reading a compressed FITS image (using BZip2 compression).
@@ -44,7 +45,7 @@ psf :
     # Or we can also override that by providing an explicit pixel scale here.
     # This file is a real SDSS PSF, which means pixel scale of 0.396 arcsec.  However, the 
     # typical seeing is 1.2 arcsec and we want to simulate better seeing, so we will just 
-    # tell GalSim that the pixel scale is 0.2 arcsec to match our image : pixel_scale below.
+    # tell GalSim that the pixel scale is 0.2 arcsec to match the pixel scale we use below.
     scale : 0.2
 
 # Define the galaxy profile
@@ -166,7 +167,27 @@ image :
         type : Gaussian
         variance : 1.0e4   # Total variance including whatever the whitening process needs.
 
-    pixel_scale : 0.20  # arcsec / pixel
+    # For the WCS, we use one that has the world coordinates on the celestial sphere, using
+    # a TAN projection.  This WCS uses an affine transform first to get to a (u,v) coordinate
+    # system.  Then this plane is projected onto the sky using a given point as the tangent
+    # point.  For the affine transform, we just use a slight rotation and center it at the
+    # center of the image.
+    wcs :
+        type : Tan
+        # theta and pixel_scale are defined in eval_variables, so we can use them here.
+        dudx : { type : Eval, str : 'math.cos(theta.rad()) * pixel_scale' }
+        dudy : { type : Eval, str : '-math.sin(theta.rad()) * pixel_scale' }
+        dvdx : { type : Eval, str : 'math.sin(theta.rad()) * pixel_scale' }
+        dvdy : { type : Eval, str : 'math.cos(theta.rad()) * pixel_scale' }
+
+        # This is the default, but we put it in anyway to make it explicit.
+        # It sets the angular units of the (u,v) intermediate coordinate system.
+        units : arcsec
+
+        origin : center
+
+        ra : 19.3 hours
+        dec : -33.1 degrees
 
     # Normally, the draw routine accounts for a convolution by the pixel.  In this case we 
     # we don't want it to do that, since the psf here is what is sometimes called an 
@@ -177,6 +198,12 @@ image :
 
     random_seed : 24783923
 
+# Some variable we use in the Evals above for the wcs field.
+eval_variables :
+    # An unusual prefix.  Reminder, the a stands for Angle.
+    atheta : 0.17 degrees
+    # A more typical one: f = float.
+    fpixel_scale : 0.2    # The units for this, arcsec, are given by the wcs.units item.
 
 # Define the input files
 input :

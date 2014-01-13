@@ -14,6 +14,9 @@ particularly irregular ones.  These are taken from the same catalog of 100 objec
 
 New features introduced in this demo:
 
+- coord = galsim.CelestialCoord(ra, dec)
+- wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin)
+- wcs = galsim.TanWCS(affine, world_origin, units)
 - psf = galsim.InterpolatedImage(psf_filename, scale, flux)
 - tab = galsim.LookupTable(file)
 - gal = galsim.RealGalaxy(..., noise_pad_size)
@@ -28,6 +31,7 @@ New features introduced in this demo:
 - Power spectrum shears and magnifications for non-gridded positions.
 - Reading a compressed FITS image (using BZip2 compression).
 - Writing a compressed FITS image (using Rice compression).
+- Writing WCS information to a FITS header that ds9 reads as RA, Dec
 """
 
 import sys
@@ -143,7 +147,7 @@ def main(argv):
     logger.info('Read in PSF image from bzipped FITS file')
 
     # Setup the image:
-    full_image = galsim.ImageF(image_size, image_size, scale=pixel_scale)
+    full_image = galsim.ImageF(image_size, image_size)
 
     # The default convention for indexing an image is to follow the FITS standard where the 
     # lower-left pixel is called (1,1).  However, this can be counter-intuitive to people more 
@@ -151,9 +155,6 @@ def main(argv):
     # coordinates of the lower-left pixel with the methods `setOrigin`.  For this demo, we
     # switch to 0-based indexing, so the lower-left pixel will be called (0,0).
     full_image.setOrigin(0,0)
-
-    # Get the center of the image in arcsec
-    center = full_image.bounds.trueCenter() * pixel_scale
 
     # As for demo10, we use random_seed+nobj for the random numbers required for the 
     # whole image.  In this case, both the power spectrum realization and the noise on the 
@@ -165,16 +166,39 @@ def main(argv):
     # positions within that.  So, let's make the grid.  We're going to make it as large as the
     # image, with grid points spaced by 90 arcsec (hence interpolation only happens below 90"
     # scales, below the interesting scales on which we want the shear power spectrum to be
-    # represented exactly).  Lensing engine wants positions in arcsec, so calculate that:
+    # represented exactly).  The lensing engine wants positions in arcsec, so calculate that:
     ps.buildGrid(grid_spacing = grid_spacing,
                  ngrid = int(math.ceil(image_size_arcsec / grid_spacing)),
-                 center = center, rng = rng.duplicate())
+                 rng = rng.duplicate())
     logger.info('Made gridded shears')
 
     # We keep track of how much noise is already in the image from the RealGalaxies.
     # The default initial value is all pixels = 0.
-    noise_image = galsim.ImageF(image_size, image_size, scale=pixel_scale)
+    noise_image = galsim.ImageF(image_size, image_size)
     noise_image.setOrigin(0,0)
+
+    # Make a slightly non-trivial WCS.  We'll use a slightly rotated coordinate system
+    # and center it at the image center.
+    theta = 0.17 * galsim.degrees
+    # ( dudx  dudy ) = ( cos(theta)  -sin(theta) ) * pixel_scale
+    # ( dvdx  dvdy )   ( sin(theta)   cos(theta) )
+    dudx = math.cos(theta.rad()) * pixel_scale
+    dudy = -math.sin(theta.rad()) * pixel_scale
+    dvdx = math.sin(theta.rad()) * pixel_scale
+    dvdy = math.cos(theta.rad()) * pixel_scale
+    image_center = full_image.trueCenter()
+    affine = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin=full_image.trueCenter())
+
+    # We can also put it on the celestial sphere to give it a bit more realism.
+    # The TAN projection takes a (u,v) coordinate system on a tangent plane and projects
+    # that plane onto the sky using a given point as the tangent point.  The tangent 
+    # point should be given as a CelestialCoord.
+    sky_center = galsim.CelestialCoord(ra=19.3*galsim.hours, dec=-33.1*galsim.degrees)
+    # The third parameter, units, defaults to arcsec, but we make it explicit here.
+    # It sets the angular units of the (u,v) intermediate coordinate system.
+
+    wcs = galsim.TanWCS(affine, sky_center, units=galsim.arcsec)
+    full_image.wcs = wcs
 
     # Now we need to loop over our objects:
     for k in range(nobj):
@@ -197,12 +221,15 @@ def main(argv):
         # Choose a random position in the image
         x = ud()*(image_size-1)
         y = ud()*(image_size-1)
+        image_pos = galsim.PositionD(x,y)
 
-        # Turn this into a position in arcsec
-        pos = galsim.PositionD(x,y) * pixel_scale
+        # Turn this into a position in world coordinates
+        # We leave this in the (u,v) plane, since the PowerSpectrum class is really defined
+        # on the tangent plane, not in (ra,dec).
+        world_pos = affine.toWorld(image_pos)
         
         # Get the reduced shears and magnification at this point
-        g1, g2, mu = ps.getLensing(pos = pos)
+        g1, g2, mu = ps.getLensing(pos = world_pos)
 
         # Construct the galaxy:
         # Select randomly from among our list of galaxies.
@@ -258,7 +285,7 @@ def main(argv):
         # Note: We make the stamp size odd to make the above calculation of the offset easier.
         this_stamp_size = 2 * int(math.ceil(base_stamp_size * dilat / 2)) + 1
         stamp = galsim.ImageF(this_stamp_size,this_stamp_size)
-        final.draw(image=stamp, scale=pixel_scale, offset=offset)
+        final.draw(image=stamp, wcs=wcs.local(image_pos), offset=offset)
 
         # Now we can whiten the noise on the postage stamp.
         # Galsim automatically propagates the noise correctly from the initial RealGalaxy object
@@ -291,7 +318,8 @@ def main(argv):
 
         time2 = time.time()
         tot_time = time2-time1
-        logger.info('Galaxy %d: position relative to corner = %s, t=%f s', k, str(pos), tot_time)
+        logger.info('Galaxy %d: position relative to center = %s, t=%f s',
+                    k, str(world_pos), tot_time)
 
     # We already have some noise in the image, but it isn't uniform.  So the first thing to do is
     # to make the Gaussian noise uniform across the whole image.  We have a special noise class
@@ -319,6 +347,23 @@ def main(argv):
     # since the filename we provide ends in .fz.
     full_image.write(file_name)
     logger.info('Wrote image to %r',file_name) 
+
+    # Compute some sky positions of some of the pixels to compare with the values of RA, Dec
+    # that ds9 reports.  ds9 always uses (1,1) for the lower left pixel, so the pixel coordinates
+    # of these pixels are different by 1, but you can check that the RA and Dec values are
+    # the same as what GalSim calculates.
+    ra_str = sky_center.ra.hms()
+    dec_str = sky_center.dec.dms()
+    logger.info('Center of image    is at RA %sh %sm %ss, DEC %sd %sm %ss',
+                ra_str[0:3], ra_str[3:5], ra_str[5:], dec_str[0:3], dec_str[3:5], dec_str[5:])
+    for (x,y) in [ (0,0), (0,image_size-1), (image_size-1,0), (image_size-1,image_size-1) ]:
+        world_pos = wcs.toWorld(galsim.PositionD(x,y))
+        ra_str = world_pos.ra.hms()
+        dec_str = world_pos.dec.dms()
+        logger.info('Pixel (%4d, %4d) is at RA %sh %sm %ss, DEC %sd %sm %ss',x,y,
+                    ra_str[0:3], ra_str[3:5], ra_str[5:], dec_str[0:3], dec_str[3:5], dec_str[5:])
+    logger.info('ds9 reports these pixels as (1,1), (1,3600), etc. with the same RA, Dec.')
+
 
 if __name__ == "__main__":
     main(sys.argv)

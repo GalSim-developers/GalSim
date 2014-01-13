@@ -230,8 +230,9 @@ image :
         # In order to get the world coordinates to be (0,0) at the center of the image, we 
         # need to tell it that we want the origin there.  The default origin for the world
         # coordinates is (x,y) = (0,0).
-        # You can set a particular position for the origin, or you can use this special case
-        # that sets the origin to the image center.
+        # You can set a particular (x,y) position for the origin, or you can use this special
+        # case that sets the origin to the image center.  This is probably the more typical
+        # usage for the origin keyword.
         origin : center
 
     noise :
