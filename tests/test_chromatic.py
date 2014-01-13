@@ -147,11 +147,84 @@ def test_direct_sum_vs_chromatic():
 
     printval(GS_image, chromatic_image)
     np.testing.assert_array_almost_equal(
-            chromatic_image.array/peak1, GS_image.array/peak1, 3,
-            err_msg="Directly computed chromatic image disagrees with image created using "
-                    "galsim.chromatic")
+        chromatic_image.array/peak1, GS_image.array/peak1, 3,
+        err_msg="Directly computed chromatic image disagrees with image created using "
+                +"galsim.chromatic")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_draw2():
+    import time
+    t1 = time.time()
+
+    pixel_scale = 0.1
+    stamp_size = 64
+
+    # stars are fundamentally delta-fns with an SED
+    star = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
+    pix = galsim.Pixel(pixel_scale)
+    mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
+    PSF = galsim.ChromaticShiftAndDilate(mono_PSF,
+                                         dilate_fn=lambda w:(w/500.0)**(-0.2))
+
+    final = galsim.Convolve([star, PSF, pix])
+    image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+
+    image = galsim.ChromaticObject.draw(final, filter_fn, bluelim, redlim, 100, image=image)
+    draw_flux = image.array.sum()
+
+    image2 = image.copy()
+    image2 = galsim.ChromaticObject.draw2(final, filter_fn, bluelim, redlim, 100, image=image2)
+    draw2_flux = image2.array.sum()
+
+    #compare
+    np.testing.assert_array_almost_equal(
+        image.array, image2.array, 5,
+        err_msg="draw not equivalent to draw2")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def compare_integrators():
+    import galsim.integ
+    import time
+
+    pixel_scale = 0.1
+    stamp_size = 64
+
+    # stars are fundamentally delta-fns with an SED
+    star = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
+    pix = galsim.Pixel(pixel_scale)
+    mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
+    PSF = galsim.ChromaticShiftAndDilate(mono_PSF,
+                                         dilate_fn=lambda w:(w/500.0)**(-0.2))
+
+    final = galsim.Convolve([star, PSF, pix])
+    image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+
+    t1 = time.time()
+    print 'midpoint'
+    for N in [100, 200, 300, 400, 500, 998, 5000]:
+        image = galsim.ChromaticObject.draw2(final, filter_fn, bluelim, redlim, N, image=image)
+        print '{:04d} {:14.11f}'.format(N, image.array.sum())
+    t2 = time.time()
+    print 'time for midpoint = %.2f'%(t2-t1)
+
+    print 'trapezoidal'
+    for N in [100, 200, 300, 400, 500, 998, 5000]:
+        image = galsim.ChromaticObject.draw2(final, filter_fn, bluelim, redlim, N, image=image,
+                                             integrator = galsim.integ.trapezoidal_int_image)
+        print '{:04d} {:14.11f}'.format(N, image.array.sum())
+    t3 = time.time()
+    print 'time for trapezoidal = %.2f'%(t3-t2)
+
+    print 'Simpson\'s'
+    for N in [100, 200, 300, 400, 500, 998, 5000]:
+        image = galsim.ChromaticObject.draw2(final, filter_fn, bluelim, redlim, N, image=image,
+                                             integrator = galsim.integ.simpsons_int_image)
+        print '{:04d} {:14.11f}'.format(N, image.array.sum())
+    t4 = time.time()
+    print 'time for simpsons = %.2f'%(t4-t3)
 
 def test_chromatic_add():
     """Test the `+` operator on ChromaticObjects"""
@@ -437,9 +510,11 @@ def test_chromatic_flux():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
-    test_direct_sum_vs_chromatic()
-    test_chromatic_add()
-    test_dcr_moments()
-    test_chromatic_seeing_moments()
-    test_monochromatic_filter()
-    test_chromatic_flux()
+    # test_direct_sum_vs_chromatic()
+    # test_chromatic_add()
+    # test_dcr_moments()
+    # test_chromatic_seeing_moments()
+    # test_monochromatic_filter()
+    # test_chromatic_flux()
+    # test_draw2()
+    compare_integrators()

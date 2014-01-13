@@ -53,9 +53,25 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     else:
         raise RuntimeError(result)
 
-def midpoint_int_image(f_image, a, b, n):
-    import operator
-    import multiprocessing
-    h = (b-a)/n
-    x = [a + h * (i+0.5) for i in range(n)]
-    return h*reduce(multiprocessing.Pool().map(f_image, x), operator.add)
+def midpoint_int_image(f_image, a, b, N):
+    h = (b*1.0 - a)/N
+    w = [a + h * (i+0.5) for i in range(N)]
+    images = map(f_image, w)
+    return h*reduce(lambda x, y: x+y, images)
+
+def trapezoidal_int_image(f_image, a, b, N):
+    h = (b*1.0 - a)/N
+    w = [a + h * i for i in range(N+1)]
+    images = map(f_image, w)
+    return 0.5*h*(images[0] + 2.0*reduce(lambda x, y: x+y, images[1:-1]) + images[-1])
+
+def simpsons_int_image(f_image, a, b, N):
+    if N%2 == 1:
+        N += 1
+    h = (b*1.0 - a)/N
+    w = [a + h * i for i in range(N+1)]
+    images = map(f_image, w)
+    return h/3.0 * (images[0]
+                    + 4.0*reduce(lambda x, y: x+y, images[1:-1:2])
+                    + 2.0*reduce(lambda x, y: x+y, images[2:-2:2])
+                    + images[-1])

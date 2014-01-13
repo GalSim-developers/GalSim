@@ -24,6 +24,7 @@ one to implement wavelength-dependent PSFs or galaxies with color gradients.
 """
 
 import galsim
+import galsim.integ
 
 class ChromaticObject(object):
     """Base class for defining wavelength dependent objects.
@@ -51,11 +52,32 @@ class ChromaticObject(object):
 
         prof = self.evaluateAtWavelength(ws[0]) * throughput_fn(ws[0]) * h
         image = prof.draw(image=image, add_to_image=add_to_image, *args, **kwargs)
-
         for w in ws[1:]:
             prof = self.evaluateAtWavelength(w) * throughput_fn(w) * h
             image = prof.draw(image=image, add_to_image=True, *args, **kwargs)
         return image
+
+    def draw2(self, throughput_fn, bluelim, redlim, N=100, image=None, add_to_image=False,
+              integrator=galsim.integ.midpoint_int_image, *args, **kwargs):
+        h = (redlim * 1.0 - bluelim) / N
+        w0 = bluelim + h * 0.5
+        prof0 = self.evaluateAtWavelength(w0) * throughput_fn(w0) * h
+
+        if image is not None:
+            tmpimage = image.copy()
+            tmpimage = prof0.draw(image=tmpimage, *args, **kwargs)
+        else:
+            tmpimage = prof0.draw(*args, **kwargs)
+        scale = tmpimage.scale
+        width, height = tmpimage.array.shape
+
+        def f_image(w):
+            prof = self.evaluateAtWavelength(w) * throughput_fn(w)
+            tmpimage = galsim.ImageD(width, height, scale)
+            prof.draw(image=tmpimage, *args, **kwargs)
+            return tmpimage
+
+        return integrator(f_image, bluelim, redlim, N)
 
     def __add__(self, other):
         return galsim.ChromaticSum([self, other])
