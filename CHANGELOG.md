@@ -21,7 +21,7 @@ Python layer API changes:
   the appropriate C++ image class as an attribute. (Issue #364)
   * `im = Image[type](...)` should now be `Image(..., dtype=type)`
   * `im = ImageView[type](numpy_array.astype(type))` should now be 
-     `im = Image(numpy_array.astype(type)`.  i.e. The data type inherits
+     `im = Image(numpy_array.astype(type))`.  i.e. The data type inherits
      from the numpy_array argument when appropriate.  If it is already
      the correct type, you do not need the `astype(type)` part.
   * `im = ConstImageView[type](numpy_array.astype(type))` should now be 
