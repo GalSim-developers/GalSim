@@ -275,19 +275,6 @@ def RemoveCurrent(config, keep_safe=False):
         else:
             RemoveCurrent(config[key], keep_safe)
 
-def _get_sky_level_pixel(config, base, image_pos):
-    if 'sky_level' in config and 'sky_level_pixel' in config:
-        raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
-            "noise.type = %s"%type)
-    if 'sky_level_pixel' in config:
-        sky_level_pixel = galsim.config.ParseValue(config,'sky_level_pixel',base,float)[0]
-    elif 'sky_level' in config:
-        sky_level = galsim.config.ParseValue(config,'sky_level',base,float)[0]
-        sky_level_pixel = sky_level * base['wcs'].pixelArea(image_pos)
-    else:
-        sky_level_pixel = 0.
-    return sky_level_pixel
-
 
 def BuildSingleStamp(config, xsize=0, ysize=0,
                      obj_num=0, do_noise=True, logger=None,
@@ -470,7 +457,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             else:
                 no_pixel = False
 
-            sky_level_pixel = _get_sky_level_pixel(config['image'], config, image_pos)
+            sky_level_pixel = galsim.config.noise._get_sky_level_pixel(config, image_pos)
 
             if skip: 
                 if xsize and ysize:
@@ -503,8 +490,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     weight_im = None
                 if do_noise:
                     if 'noise' in config['image']:
-                        AddNoiseFFT(im,weight_im,current_var,config['image']['noise'],config,
-                                    rng,sky_level_pixel,logger)
+                        galsim.config.AddNoiseFFT(config,im,weight_im,current_var,sky_level_pixel,logger)
                     elif sky_level_pixel:
                         im += sky_level_pixel
 
@@ -520,8 +506,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     weight_im = None
                 if do_noise:
                     if 'noise' in config['image']:
-                        AddNoisePhot(im,weight_im,current_var,config['image']['noise'],config,
-                                    rng,sky_level_pixel,logger)
+                        galsim.config.AddNoisePhot(config,im,weight_im,current_var,sky_level_pixel,logger)
                     elif sky_level_pixel:
                         im += sky_level_pixel
 
@@ -541,7 +526,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 if ('output' in config and 'psf' in config['output'] and 
                         'signal_to_noise' in config['output']['psf'] and
                         'noise' in config['image']):
-                    AddNoiseFFT(psf_im,None,0,config['image']['noise'],config,rng,0,logger)
+                    galsim.config.AddNoiseFFT(config,psf_im,None,0,0,logger)
             else:
                 psf_im = None
 
@@ -652,7 +637,7 @@ def DrawStampFFT(psf, gal, config, xsize, ysize, sky_level_pixel, offset, no_pix
                 'Only one of signal_to_noise or flux may be specified for %s'%root_key)
 
         if 'image' in config and 'noise' in config['image']:
-            noise_var = CalculateNoiseVar(config['image']['noise'], config, sky_level_pixel)
+            noise_var = galsim.config.CalculateNoiseVar(config, sky_level_pixel)
         else:
             raise AttributeError(
                 "Need to specify noise level when using %s.signal_to_noise"%root_key)
@@ -677,192 +662,6 @@ def DrawStampFFT(psf, gal, config, xsize, ysize, sky_level_pixel, offset, no_pix
             current_var *= flux**2
 
     return im, current_var
-
-def AddNoiseFFT(im, weight_im, current_var, noise, base, rng, sky_level_pixel, logger=None):
-    """
-    Add noise to an image according to the noise specifications in the noise dict
-    appropriate for an image that has been drawn using the FFT method.
-    """
-    if not isinstance(noise, dict):
-        raise AttributeError("image.noise is not a dict.")
-
-    if 'type' not in noise:
-        noise['type'] = 'Poisson'  # Default is Poisson
-    type = noise['type']
-
-    # First add the background sky level, if provided
-    if sky_level_pixel:
-        im += sky_level_pixel
-
-    # Check if a weight image should include the object variance.
-    if weight_im:
-        include_obj_var = False
-        if ('output' in base and 'weight' in base['output'] and 
-            'include_obj_var' in base['output']['weight']):
-            include_obj_var = galsim.config.ParseValue(
-                base['output']['weight'], 'include_obj_var', base, bool)[0]
-
-    # Then add the correct kind of noise
-    if type == 'Gaussian':
-        single = [ { 'sigma' : float , 'variance' : float } ]
-        params = galsim.config.GetAllParams(noise, 'noise', base, single=single)[0]
-
-        if 'sigma' in params:
-            sigma = params['sigma']
-            if current_var: 
-                var = sigma**2
-                if var < current_var:
-                    raise RuntimeError(
-                        "Whitening already added more noise than requested Gaussian noise.")
-                sigma = sqrt(var - current_var)
-        else:
-            import math
-            var = params['variance']
-            if current_var:
-                if var < current_var: 
-                    raise RuntimeError(
-                        "Whitening already added more noise than requested Gaussian noise.")
-                var -= current_var
-            sigma = math.sqrt(var)
-        im.addNoise(galsim.GaussianNoise(rng,sigma=sigma))
-
-        if weight_im:
-            weight_im += sigma*sigma + current_var
-        if logger:
-            logger.debug('image %d, obj %d: Added Gaussian noise with sigma = %f',
-                         base['image_num'],base['obj_num'],sigma)
-
-    elif type == 'Poisson':
-        opt = {}
-        single = []
-        if sky_level_pixel:
-            # The noise sky_level is only required here if the image doesn't have any.
-            opt['sky_level'] = float
-            opt['sky_level_pixel'] = float
-        else:
-            single = [ { 'sky_level' : float , 'sky_level_pixel' : float } ]
-            sky_level_pixel = 0.
-        params = galsim.config.GetAllParams(noise, 'noise', base, opt=opt, single=single)[0]
-        if 'sky_level' in params and 'sky_level_pixel' in params:
-            raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
-                "noise.type = %s"%type)
-        extra_sky_level_pixel = 0.
-        if 'sky_level' in params:
-            extra_sky_level_pixel = params['sky_level'] * im.wcs.pixelArea(base['image_pos'])
-        if 'sky_level_pixel' in params:
-            extra_sky_level_pixel = params['sky_level_pixel']
-        sky_level_pixel += extra_sky_level_pixel
-
-        if current_var:
-            if sky_level_pixel < current_var:
-                raise RuntimeError(
-                    "Whitening already added more noise than requested Poisson noise.")
-            extra_sky_level_pixel -= current_var
-
-        if weight_im:
-            if include_obj_var:
-                # The image right now has the variance in each pixel.  So before going on with the 
-                # noise, copy these over to the weight image.  (We invert this later...)
-                weight_im.copyFrom(im)
-            else:
-                # Otherwise, just add the sky noise:
-                weight_im += sky_level_pixel
-
-        im.addNoise(galsim.PoissonNoise(rng, sky_level=extra_sky_level_pixel))
-        if logger:
-            logger.debug('image %d, obj %d: Added Poisson noise with sky_level_pixel = %f',
-                         base['image_num'],base['obj_num'],sky_level_pixel)
-
-    elif type == 'CCD':
-        opt = { 'gain' : float , 'read_noise' : float }
-        single = []
-        if sky_level_pixel:
-            # The noise sky_level is only required here if the image doesn't have any.
-            opt['sky_level'] = float
-            opt['sky_level_pixel'] = float
-        else:
-            single = [ { 'sky_level' : float , 'sky_level_pixel' : float } ]
-            sky_level_pixel = 0.
-        params = galsim.config.GetAllParams(noise, 'noise', base, opt=opt, single=single)[0]
-        gain = params.get('gain',1.0)
-        read_noise = params.get('read_noise',0.0)
-        if 'sky_level' in params and 'sky_level_pixel' in params:
-            raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
-                "noise.type = %s"%type)
-        extra_sky_level_pixel = 0.
-        if 'sky_level' in params:
-            extra_sky_level_pixel = params['sky_level'] * im.wcs.pixelArea(base['image_pos'])
-        if 'sky_level_pixel' in params:
-            extra_sky_level_pixel = params['sky_level_pixel']
-        sky_level_pixel += extra_sky_level_pixel
-        read_noise_var = read_noise**2
-
-        if weight_im:
-            if include_obj_var:
-                # The image right now has the variance in each pixel.  So before going on with the 
-                # noise, copy these over to the weight image and invert.
-                weight_im.copyFrom(im)
-                if gain != 1.0:
-                    import math
-                    weight_im /= math.sqrt(gain)
-                if read_noise != 0.0:
-                    weight_im += read_noise_var
-            else:
-                # Otherwise, just add the sky and read_noise:
-                weight_im += sky_level_pixel / gain + read_noise_var
-
-        if current_var:
-            if sky_level_pixel / gain + read_noise_var < current_var:
-                raise RuntimeError(
-                    "Whitening already added more noise than requested CCD noise.")
-            if read_noise_var >= current_var:
-                import math
-                # First try to take away from the read_noise, since this one is actually Gaussian.
-                read_noise_var -= current_var
-                read_noise = math.sqrt(read_noise_var)
-            else:
-                # Take read_noise down to zero, since already have at least that much already.
-                current_var -= read_noise_var
-                read_noise = 0
-                # Take the rest away from the sky level
-                extra_sky_level_pixel -= current_var * gain
-
-        im.addNoise(galsim.CCDNoise(rng, sky_level=extra_sky_level_pixel, gain=gain,
-                                    read_noise=read_noise))
-        if logger:
-            logger.debug('image %d, obj %d: Added CCD noise with sky_level_pixel = %f, ' +
-                         'gain = %f, read_noise = %f',
-                         base['image_num'],base['obj_num'],extra_sky_level_pixel,gain,read_noise)
-
-    elif type == 'COSMOS':
-        req = { 'file_name' : str }
-        opt = { 'cosmos_scale' : float, 'variance' : float }
-        
-        kwargs = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
-
-        # Build the correlated noise 
-        cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
-        cn_var = cn.getVariance()
-
-        # Subtract off the current variance if any
-        if current_var:
-            if cn_var < current_var:
-                raise RuntimeError(
-                    "Whitening already added more noise than requested COSMOS noise.")
-            cn -= galsim.UncorrelatedNoise(rng, im.wcs, current_var)
-
-        # Add the noise to the image
-        im.addNoise(cn)
-
-        # Then add the variance to the weight image, using the zero-lag correlation function value
-        if weight_im: weight_im += cn_var
-
-        if logger:
-            logger.debug('image %d, obj %d: Added COSMOS correlated noise with variance = %f',
-                         base['image_num'],base['obj_num'],cn_var)
-
-    else:
-        raise AttributeError("Invalid type %s for noise"%type)
 
 
 def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, offset):
@@ -915,7 +714,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, offset):
 
         if max_extra_noise > 0.:
             if 'image' in config and 'noise' in config['image']:
-                noise_var = CalculateNoiseVar(config['image']['noise'], config, sky_level_pixel)
+                noise_var = galsim.config.CalculateNoiseVar(config, sky_level_pixel)
             else:
                 raise AttributeError(
                     "Need to specify noise level when using draw_method = phot")
@@ -935,180 +734,6 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, offset):
 
     return im, current_var
     
-def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, logger=None):
-    """
-    Add noise to an image according to the noise specifications in the noise dict
-    appropriate for an image that has been drawn using the photon-shooting method.
-    """
-    if not isinstance(noise, dict):
-        raise AttributeError("image.noise is not a dict.")
-
-    if 'type' not in noise:
-        noise['type'] = 'Poisson'  # Default is Poisson
-    type = noise['type']
-
-    # First add the sky noise, if provided
-    if sky_level_pixel:
-        im += sky_level_pixel
-
-    if type == 'Gaussian':
-        single = [ { 'sigma' : float , 'variance' : float } ]
-        params = galsim.config.GetAllParams(noise, 'noise', base, single=single)[0]
-
-        if 'sigma' in params:
-            sigma = params['sigma']
-            if current_var: 
-                var = sigma**2
-                if var < current_var:
-                    raise RuntimeError(
-                        "Whitening already added more noise than requested Gaussian noise.")
-                sigma = sqrt(var - current_var)
-        else:
-            import math
-            var = params['variance']
-            if current_var:
-                if var < current_var:
-                    raise RuntimeError(
-                        "Whitening already added more noise than requested Gaussian noise.")
-                var -= current_var
-            sigma = math.sqrt(var)
-        im.addNoise(galsim.GaussianNoise(rng,sigma=sigma))
-
-        if weight_im:
-            weight_im += sigma*sigma + current_var
-        if logger:
-            logger.debug('image %d, obj %d: Added Gaussian noise with sigma = %f',
-                         base['image_num'],base['obj_num'],sigma)
-
-    elif type == 'Poisson':
-        opt = {}
-        if sky_level_pixel:
-            opt['sky_level'] = float
-            opt['sky_level_pixel'] = float
-        else:
-            single = [ { 'sky_level' : float , 'sky_level_pixel' : float } ]
-            sky_level_pixel = 0. # Switch from None to 0.
-        params = galsim.config.GetAllParams(noise, 'noise', base, opt=opt, single=single)[0]
-        if 'sky_level' in params and 'sky_level_pixel' in params:
-            raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
-                "noise.type = %s"%type)
-        if 'sky_level' in params:
-            sky_level_pixel += params['sky_level'] * im.wcs.pixelArea(base['image_pos'])
-        if 'sky_level_pixel' in params:
-            sky_level_pixel += params['sky_level_pixel']
-        if current_var:
-            if sky_level_pixel < current_var:
-                raise RuntimeError(
-                    "Whitening already added more noise than requested Poisson noise.")
-            sky_level_pixel -= current_var
-
-        # We don't have an exact value for the variance in each pixel, but the drawn image
-        # before adding the Poisson noise is our best guess for the variance from the 
-        # object's flux, so just use that for starters.
-        if weight_im and include_obj_var:
-            weight_im.copyFrom(im)
-
-        # For photon shooting, galaxy already has Poisson noise, so we want 
-        # to make sure not to add that again!
-        if sky_level_pixel != 0.:
-            im.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel)))
-            im -= sky_level_pixel
-            if weight_im:
-                weight_im += sky_level_pixel + current_var
-
-        if logger:
-            logger.debug('image %d, obj %d: Added Poisson noise with sky_level_pixel = %f',
-                         base['image_num'],base['obj_num'],sky_level_pixel)
-
-    elif type == 'CCD':
-        opt = { 'gain' : float , 'read_noise' : float }
-        if sky_level_pixel:
-            opt['sky_level'] = float
-            opt['sky_level_pixel'] = float
-        else:
-            single = [ { 'sky_level' : float , 'sky_level_pixel' : float } ]
-            sky_level_pixel = 0. # Switch from None to 0.
-        params = galsim.config.GetAllParams(noise, 'noise', base, opt=opt, single=single)[0]
-        if 'sky_level' in params and 'sky_level_pixel' in params:
-            raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
-                "noise.type = %s"%type)
-        if 'sky_level' in params:
-            sky_level_pixel += params['sky_level'] * im.wcs.pixelArea(base['image_pos'])
-        if 'sky_level_pixel' in params:
-            sky_level_pixel += params['sky_level_pixel']
-        gain = params.get('gain',1.0)
-        read_noise = params.get('read_noise',0.0)
-        read_noise_var = read_noise**2
-
-        if weight_im:
-            # We don't have an exact value for the variance in each pixel, but the drawn image
-            # before adding the Poisson noise is our best guess for the variance from the 
-            # object's flux, so just use that for starters.
-            if include_obj_var: weight_im.copyFrom(im)
-            if sky_level_pixel != 0.0 or read_noise != 0.0:
-                weight_im += sky_level_pixel / gain + read_noise_var
-
-        if current_var:
-            if sky_level_pixel / gain + read_noise_var < current_var:
-                raise RuntimeError(
-                    "Whitening already added more noise than requested CCD noise.")
-            if read_noise_var >= current_var:
-                import math
-                # First try to take away from the read_noise, since this one is actually Gaussian.
-                read_noise_var -= current_var
-                read_noise = math.sqrt(read_noise_var)
-            else:
-                # Take read_noise down to zero, since already have at least that much already.
-                current_var -= read_noise_var
-                read_noise = 0
-                # Take the rest away from the sky level
-                sky_level_pixel -= current_var * gain
- 
-        # For photon shooting, galaxy already has Poisson noise, so we want 
-        # to make sure not to add that again!
-        if sky_level_pixel != 0.:
-            if gain != 1.0: im *= gain
-            im.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel*gain)))
-            if gain != 1.0: im /= gain
-            im -= sky_level_pixel*gain
-        if read_noise != 0.:
-            im.addNoise(galsim.GaussianNoise(rng, sigma=read_noise))
-
-        if logger:
-            logger.debug('image %d, obj %d: Added CCD noise with sky_level_pixel = %f, ' +
-                         'gain = %f, read_noise = %f',
-                         base['image_num'],base['obj_num'],sky_level_pixel,gain,read_noise)
-
-    elif type == 'COSMOS':
-        req = { 'file_name' : str }
-        opt = { 'cosmos_scale' : float, 'variance' : float }
-        
-        kwargs = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
-
-        # Build and add the correlated noise 
-        cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
-        cn_var = cn.getVariance()
-
-        # Subtract off the current variance if any
-        if current_var:
-            if cn_var < current_var:
-                raise RuntimeError(
-                    "Whitening already added more noise than requested COSMOS noise.")
-            cn -= galsim.UncorrelatedNoise(rng, im.wcs, current_var)
-
-        # Add the noise to the image
-        im.addNoise(cn)
-
-        # Then add the variance to the weight image, using the zero-lag correlation function value
-        if weight_im: weight_im += cn_var
-
-        if logger:
-            logger.debug('image %d, obj %d: Added COSMOS correlated noise with variance = %f',
-                         base['image_num'],base['obj_num'],cn_var)
-
-    else:
-        raise AttributeError("Invalid type %s for noise",type)
-
 
 def DrawPSFStamp(psf, config, bounds, sky_level_pixel, offset, no_pixel):
     """
@@ -1152,7 +777,7 @@ def DrawPSFStamp(psf, config, bounds, sky_level_pixel, offset, no_pixel):
         import numpy
 
         if 'image' in config and 'noise' in config['image']:
-            noise_var = CalculateNoiseVar(config['image']['noise'], config, sky_level_pixel)
+            noise_var = galsim.config.CalculateNoiseVar(config, sky_level_pixel)
         else:
             raise AttributeError(
                 "Need to specify noise level when using psf.signal_to_noise")
@@ -1170,84 +795,4 @@ def DrawPSFStamp(psf, config, bounds, sky_level_pixel, offset, no_pixel):
 
     return im
            
-def CalculateNoiseVar(noise, base, sky_level_pixel):
-    """
-    Calculate the noise variance from the noise specified in the noise dict.
-    """
-    if not isinstance(noise, dict):
-        raise AttributeError("image.noise is not a dict.")
-
-    if 'type' not in noise:
-        noise['type'] = 'Poisson'  # Default is Poisson
-    type = noise['type']
-
-    if type == 'Gaussian':
-        single = [ { 'sigma' : float , 'variance' : float } ]
-        params = galsim.config.GetAllParams(noise, 'noise', base, single=single)[0]
-        if 'sigma' in params:
-            sigma = params['sigma']
-            var = sigma * sigma
-        else:
-            var = params['variance']
-
-    elif type == 'Poisson':
-        opt = {}
-        single = []
-        if sky_level_pixel:
-            opt['sky_level'] = float
-            opt['sky_level_pixel'] = float
-        else:
-            single = [ { 'sky_level' : float , 'sky_level_pixel' : float } ]
-            sky_level_pixel = 0. # Switch from None to 0.
-        params = galsim.config.GetAllParams(noise, 'noise', base, opt=opt, single=single)[0]
-        if 'sky_level' in params and 'sky_level_pixel' in params:
-            raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
-                "noise.type = %s"%type)
-        if 'sky_level' in params:
-            sky_level_pixel += params['sky_level'] * base['wcs'].pixelArea(base['image_pos'])
-        if 'sky_level_pixel' in params:
-            sky_level_pixel += params['sky_level_pixel']
-        var = sky_level_pixel
-
-    elif type == 'CCD':
-        opt = { 'gain' : float , 'read_noise' : float }
-        single = []
-        if sky_level_pixel:
-            opt['sky_level'] = float
-            opt['sky_level_pixel'] = float
-        else:
-            single = [ { 'sky_level' : float , 'sky_level_pixel' : float } ]
-            sky_level_pixel = 0. # Switch from None to 0.
-        params = galsim.config.GetAllParams(noise, 'noise', base, opt=opt, single=single)[0]
-        if 'sky_level' in params and 'sky_level_pixel' in params:
-            raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
-                "noise.type = %s"%type)
-        if 'sky_level' in params:
-            sky_level_pixel += params['sky_level'] * base['wcs'].pixelArea(base['image_pos'])
-        if 'sky_level_pixel' in params:
-            sky_level_pixel += params['sky_level_pixel']
-        gain = params.get('gain',1.0)
-        read_noise = params.get('read_noise',0.0)
-        var = sky_level_pixel / gain + read_noise * read_noise
-
-    elif type == 'COSMOS':
-        req = { 'file_name' : str }
-        opt = { 'cosmos_scale' : float, 'variance' : float }
-        
-        kwargs = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
-
-        # Build and add the correlated noise (lets the cn internals handle dealing with the options
-        # for default variance: quick and ensures we don't needlessly duplicate code) 
-        # Note: the rng being passed here is arbitrary, since we don't need it to calculate the
-        # variance.  Building a BaseDeviate with a particular seed is the fastest option.
-        cn = galsim.correlatednoise.getCOSMOSNoise(galsim.BaseDeviate(123), **kwargs)
-
-        # zero distance correlation function value returned as variance
-        var = cn.getVariance()
-
-    else:
-        raise AttributeError("Invalid type %s for noise",type)
-
-    return var
-
 

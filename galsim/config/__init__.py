@@ -19,6 +19,7 @@
 from process import *
 from image import *
 from stamp import *
+from noise import *
 from wcs import *
 from gsobject import *
 from value import *

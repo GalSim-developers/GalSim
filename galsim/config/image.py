@@ -617,8 +617,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         if current_vars[k] > max_current_var: max_current_var = current_vars[k]
 
     if not do_noise:
-        sky_level_pixel = galsim.config.stamp._get_sky_level_pixel(
-                config['image'], config, config['image_center'])
+        sky_level_pixel = galsim.config.noise._get_sky_level_pixel(config)
         config['image_pos'] = config['image_center']
 
         if 'noise' in config['image']:
@@ -641,14 +640,13 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                 full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
             # Now max_current_var is how much noise is in each pixel.
 
+            config['rng'] = rng
             if draw_method in [ 'fft', 'no_pixel' ]:
                 galsim.config.AddNoiseFFT(
-                    full_image,full_weight_image,max_current_var,config['image']['noise'],config,
-                    rng,sky_level_pixel)
+                    config,full_image,full_weight_image,max_current_var,sky_level_pixel)
             elif draw_method == 'phot':
                 galsim.config.AddNoisePhot(
-                    full_image,full_weight_image,max_current_var,config['image']['noise'],config,
-                    rng,sky_level_pixel)
+                    config,full_image,full_weight_image,max_current_var,sky_level_pixel)
             else:
                 raise AttributeError("Unknown draw_method %s."%draw_method)
         elif sky_level_pixel:
@@ -848,8 +846,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # TODO: This is not correct when the WCS has a variable pixel area.  Really, 
     # we want to have sky level vary according to the pixel area, but we don't 
     # do that currently.  We just take the pixel area at the center of the image.
-    sky_level_pixel = galsim.config.stamp._get_sky_level_pixel(
-            config['image'], config, config['image_center'])
+    sky_level_pixel = galsim.config.noise._get_sky_level_pixel(config)
     # Use this within AddNoise functions when the image_pos is requested.
     config['image_pos'] = config['image_center']
 
@@ -874,14 +871,13 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
         # Now max_current_var is how much noise is in each pixel.
 
+        config['rng'] = rng
         if draw_method in [ 'fft', 'no_pixel' ]:
             galsim.config.AddNoiseFFT(
-                full_image,full_weight_image,max_current_var,config['image']['noise'],config,
-                rng,sky_level_pixel)
+                config,full_image,full_weight_image,max_current_var,sky_level_pixel)
         elif draw_method == 'phot':
             galsim.config.AddNoisePhot(
-                full_image,full_weight_image,max_current_var,config['image']['noise'],config,
-                rng,sky_level_pixel)
+                config,full_image,full_weight_image,max_current_var,sky_level_pixel)
         else:
             raise AttributeError("Unknown draw_method %s."%draw_method)
 
