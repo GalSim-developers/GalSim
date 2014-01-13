@@ -457,16 +457,14 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             else:
                 no_pixel = False
 
-            sky_level_pixel = galsim.config.noise._get_sky_level_pixel(config, image_pos)
-
             if skip: 
                 if xsize and ysize:
                     # If the size is set, we need to do something reasonable to return this size.
                     im = galsim.ImageF(xsize, ysize)
                     im.setOrigin(config['image_origin'])
                     im.setZero()
-                    if do_noise and sky_level_pixel:
-                        im += sky_level_pixel
+                    if do_noise:
+                        galsim.config.AddNoise(config,'skip',im,weight_im,current_var,logger)
                 else:
                     # Otherwise, we don't set the bounds, so it will be noticed as invalid upstream.
                     im = galsim.ImageF()
@@ -479,8 +477,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 current_var = 0
 
             elif draw_method == 'fft':
-                im, current_var = DrawStampFFT(psf,gal,config,xsize,ysize,sky_level_pixel,offset,
-                                               no_pixel)
+                im, current_var = DrawStampFFT(psf,gal,config,xsize,ysize,offset,no_pixel)
                 if icenter:
                     im.setCenter(icenter.x, icenter.y)
                 if make_weight_image:
@@ -489,14 +486,10 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 else:
                     weight_im = None
                 if do_noise:
-                    if 'noise' in config['image']:
-                        galsim.config.AddNoiseFFT(config,im,weight_im,current_var,sky_level_pixel,logger)
-                    elif sky_level_pixel:
-                        im += sky_level_pixel
+                    galsim.config.AddNoise(config,'fft',im,weight_im,current_var,logger)
 
             elif draw_method == 'phot':
-                im, current_var = DrawStampPhot(psf,gal,config,xsize,ysize,rng,sky_level_pixel,
-                                                offset)
+                im, current_var = DrawStampPhot(psf,gal,config,xsize,ysize,rng,offset)
                 if icenter:
                     im.setCenter(icenter.x, icenter.y)
                 if make_weight_image:
@@ -505,10 +498,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 else:
                     weight_im = None
                 if do_noise:
-                    if 'noise' in config['image']:
-                        galsim.config.AddNoisePhot(config,im,weight_im,current_var,sky_level_pixel,logger)
-                    elif sky_level_pixel:
-                        im += sky_level_pixel
+                    galsim.config.AddNoise(config,'phot',im,weight_im,current_var,logger)
 
             else:
                 raise AttributeError("Unknown draw_method %s."%draw_method)
@@ -522,11 +512,11 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             t5 = time.time()
 
             if make_psf_image:
-                psf_im = DrawPSFStamp(psf,config,im.bounds,sky_level_pixel,offset,no_pixel)
+                psf_im = DrawPSFStamp(psf,config,im.bounds,offset,no_pixel)
                 if ('output' in config and 'psf' in config['output'] and 
                         'signal_to_noise' in config['output']['psf'] and
                         'noise' in config['image']):
-                    galsim.config.AddNoiseFFT(config,psf_im,None,0,0,logger)
+                    galsim.config.AddNoise(config,'fft',psf_im,None,0,logger,add_sky=False)
             else:
                 psf_im = None
 
@@ -590,7 +580,7 @@ def BuildGal(config, logger=None, gsparams={}):
 
 
 
-def DrawStampFFT(psf, gal, config, xsize, ysize, sky_level_pixel, offset, no_pixel):
+def DrawStampFFT(psf, gal, config, xsize, ysize, offset, no_pixel):
     """
     Draw an image using the given psf, pix and gal profiles (which may be None)
     using the FFT method for doing the convolution.
@@ -637,7 +627,7 @@ def DrawStampFFT(psf, gal, config, xsize, ysize, sky_level_pixel, offset, no_pix
                 'Only one of signal_to_noise or flux may be specified for %s'%root_key)
 
         if 'image' in config and 'noise' in config['image']:
-            noise_var = galsim.config.CalculateNoiseVar(config, sky_level_pixel)
+            noise_var = galsim.config.CalculateNoiseVar(config)
         else:
             raise AttributeError(
                 "Need to specify noise level when using %s.signal_to_noise"%root_key)
@@ -664,7 +654,7 @@ def DrawStampFFT(psf, gal, config, xsize, ysize, sky_level_pixel, offset, no_pix
     return im, current_var
 
 
-def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, offset):
+def DrawStampPhot(psf, gal, config, xsize, ysize, rng, offset):
     """
     Draw an image using the given psf and gal profiles (which may be None)
     using the photon shooting method for doing the convolution.
@@ -714,7 +704,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, offset):
 
         if max_extra_noise > 0.:
             if 'image' in config and 'noise' in config['image']:
-                noise_var = galsim.config.CalculateNoiseVar(config, sky_level_pixel)
+                noise_var = galsim.config.CalculateNoiseVar(config)
             else:
                 raise AttributeError(
                     "Need to specify noise level when using draw_method = phot")
@@ -735,7 +725,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, offset):
     return im, current_var
     
 
-def DrawPSFStamp(psf, config, bounds, sky_level_pixel, offset, no_pixel):
+def DrawPSFStamp(psf, config, bounds, offset, no_pixel):
     """
     Draw an image using the given psf profile.
 
@@ -777,7 +767,7 @@ def DrawPSFStamp(psf, config, bounds, sky_level_pixel, offset, no_pixel):
         import numpy
 
         if 'image' in config and 'noise' in config['image']:
-            noise_var = galsim.config.CalculateNoiseVar(config, sky_level_pixel)
+            noise_var = galsim.config.CalculateNoiseVar(config)
         else:
             raise AttributeError(
                 "Need to specify noise level when using psf.signal_to_noise")
