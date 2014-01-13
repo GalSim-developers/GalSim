@@ -23,7 +23,7 @@ ngrid = 100 # grid points in nominal grid
 kmin_factor = 3 # factor by which to have the lensing engine internally expand the grid, to get
                 # large-scale shear correlations.
 # Define shear power spectrum file
-pk_file = os.path.join('..','..','examples','data','cosmo-fid.zmed1.00.out')
+pk_file = os.path.join('..','..','examples','data','cosmo-fid.zmed1.00_smoothed.out')
 # Define files for PS / corr func.
 tmp_cf_file = 'tmp.cf.dat'
 # Set defaults for command-line arguments
@@ -506,26 +506,31 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
                                   kmin_factor = kmin_factor)
 
             # Set up the grid for interpolation for this realization, if we're using random
-            # dithers.  Will be (ngrid-1) x (ngrid-1) so as to not go off the edge.
+            # dithers.
             if dithering == 'random':
-                dither_x = x[0:ngrid-1,0:ngrid-1] + u()*grid_spacing
-                dither_y = y[0:ngrid-1,0:ngrid-1] + u()*grid_spacing
+                dither_x = x + u()*grid_spacing
+                dither_y = y + u()*grid_spacing
                 dither_x = list(dither_x.flatten())
                 dither_y = list(dither_y.flatten())
 
-            # Interpolate shears on the offset grid.
+            # Interpolate shears on the offset grid, with periodic interpolation.
             interpolated_g1, interpolated_g2 = ps.getShear(pos=(dither_x,dither_y),
-                                                           units=galsim.degrees)
+                                                           units=galsim.degrees,
+                                                           periodic=True)
             # And put back into the format that the PowerSpectrumEstimator will want.
-            interpolated_g1 = np.array(interpolated_g1).reshape((ngrid-1, ngrid-1))
-            interpolated_g2 = np.array(interpolated_g2).reshape((ngrid-1, ngrid-1))
+            interpolated_g1 = np.array(interpolated_g1).reshape((ngrid, ngrid))
+            interpolated_g2 = np.array(interpolated_g2).reshape((ngrid, ngrid))
+            # Commented out lines below are to allow a check of what happens just from cutting off
+            # the grid.
+            # interpolated_g1 = g1[0:ngrid-1,0:ngrid-1]
+            # interpolated_g2 = g2[0:ngrid-1,0:ngrid-1]
 
             # Get statistics: PS, correlation function. 
             # Set up PowerSpectrumEstimator first.  Reminder: for interpolated points, we need to
             # omit the last row, since the interpolated grid has gotten shifted outside the original
             # grid bounds, and therefore was set to zero.
             if i_real == 0:
-                interpolated_pse = galsim.pse.PowerSpectrumEstimator(ngrid-1,
+                interpolated_pse = galsim.pse.PowerSpectrumEstimator(ngrid,
                                                                     grid_size,
                                                                     n_output_bins)           
                 pse = galsim.pse.PowerSpectrumEstimator(ngrid,
