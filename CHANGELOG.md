@@ -52,33 +52,6 @@ Python layer API changes:
   only). (Issue #364)
 
 
-Updates to config options:
-
-* Remove pix top layer in config structure.  Add draw_method=no_pixel to 
-  do what `pix : None` used to do. (Issue #364)
-* Changed the name of sky_pos to world_pos. (Issue #364)
-* Add ability to index Sequences by any running index, rather than just the 
-  default.  i.e. obj_num, image_num, or file_num. (Issue #364)
-* Changed the previous behavior of the image.wcs field to allow several WCS
-  types: PixelScale, Offset, Shear, OffsetShear, UVFunction, RaDecFunction,
-  and Fits. (Issue #364)
-* Added a new image.retry_failures item that can be set so that if the 
-  construction of a GSObject fails for any reason, you can ask it to retry.
-  An example of this functionality has been added to demo8. (Issue #482)
-* Added a new output.retry_io item that can be set so that if the output write 
-  command fails (due to hard drive overloading for example), then it will wait 
-  a second and try again. (Issue #482)
-* Changed the sequence indexing within an image to always start at 0, rather 
-  than use obj_num (which continues increasing through all objects in the run).
-  Functionally, this would usually only matter if the number of objects per
-  file or image is not a constant.  If the number of objects is constant, the 
-  automatic looping of the sequencing index essentially did this for you.
-  (Issue #487)
-* Added Sum type for value types for which it makes sense: float, int, angle,
-  shear, position. (Issue #457)
-* Allowed the user to modify or add config parameters from the command line. 
-  (Issue #479)
-
 New WCS classes: (Issue #364)
 
 * Every place in the code that used to need a pixel scale item (e.g. Image
@@ -116,11 +89,14 @@ New WCS classes: (Issue #364)
 * Finally, there is a factory function called FitsWCS that will try the 
   various classes that can read FITS files until it finds one that works.
   It will revert to AffineTransform if it cannot find anything better.
+* Another function, TanWCS, acts like a WCS class.  It builds a WCS using
+  TAN projection and returns a GSFitsWCS implementing it.
 * When reading in an image from a FITS file, the image will automatically
   try to read the WCS information from the header with the FitsWCS function.
 * See the docstring for BaseWCS (the base class for all of these WCS classes)
   for information about how to use these classes.
-* Also, check out demo3, demo9 and demo10 for example usage.
+* Also, check out demo3, demo9, demo10, and demo11 for example usage.
+
 
 New CelestialCoord class: (Issue #364)
 
@@ -145,6 +121,35 @@ New CelestialCoord class: (Issue #364)
     different epoch.
   * `coord.getGalaxyPos()` returns the galaxy longitude and latitude as
     a tuple (el, b).
+
+
+Updates to config options:
+
+* Remove pix top layer in config structure.  Add draw_method=no_pixel to 
+  do what `pix : None` used to do. (Issue #364)
+* Changed the name of sky_pos to world_pos. (Issue #364)
+* Add ability to index Sequences by any running index, rather than just the 
+  default.  i.e. obj_num, image_num, or file_num. (Issue #364)
+* Changed the previous behavior of the image.wcs field to allow several WCS
+  types: PixelScale, Offset, Shear, OffsetShear, UVFunction, RaDecFunction,
+  Fits, and Tan. (Issue #364)
+* Added Sum type for value types for which it makes sense: float, int, angle,
+  shear, position. (Issue #457)
+* Allowed the user to modify or add config parameters from the command line. 
+  (Issue #479)
+* Added a new image.retry_failures item that can be set so that if the 
+  construction of a GSObject fails for any reason, you can ask it to retry.
+  An example of this functionality has been added to demo8. (Issue #482)
+* Added a new output.retry_io item that can be set so that if the output write 
+  command fails (due to hard drive overloading for example), then it will wait 
+  a second and try again. (Issue #482)
+* Changed the sequence indexing within an image to always start at 0, rather 
+  than use obj_num (which continues increasing through all objects in the run).
+  Functionally, this would usually only matter if the number of objects per
+  file or image is not a constant.  If the number of objects is constant, the 
+  automatic looping of the sequencing index essentially did this for you.
+  (Issue #487)
+
 
 Other new features:
 
