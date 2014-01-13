@@ -502,7 +502,7 @@ class PowerSpectrum(object):
         return pf
 
 
-    def getShear(self, pos, units=galsim.arcsec, reduced=True):
+    def getShear(self, pos, units=galsim.arcsec, reduced=True, periodic=False):
         """
         This function can interpolate between grid positions to find the shear values for a given
         list of input positions (or just a single position).  Before calling this function, you must
@@ -553,6 +553,11 @@ class PowerSpectrum(object):
                                     x-positions and array[1] contains y-positions
         @param units            The angular units used for the positions.  [default = arcsec]
         @param reduced          Whether returned shear(s) should be reduced shears. [default=True]
+        @param periodic         Whether the interpolation should treat the positions as being
+                                defined with respect to a periodic grid, which will wrap them around
+                                if they are outside the bounds of the original grid on which shears
+                                were defined.  If not, then shears are set to zero for positions
+                                outside the original grid.  [default=False]
 
         @return g1,g2           If given a single position: the two shear components g_1 and g_2.
                                 If given a list of positions: each is a python list of values.
@@ -588,18 +593,35 @@ class PowerSpectrum(object):
             sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp=interpolant2d, kInterp=quint2d)
             sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp=interpolant2d, kInterp=quint2d)
 
+        # Calculate some numbers that are useful to calculate before the loop over positions, but
+        # only if we are doing a periodic treatment of the box.
+        if periodic:
+            dx = self.bounds.xmax-self.bounds.xmin
+            dy = self.bounds.ymax-self.bounds.ymin
+
         # interpolate if necessary
         g1,g2 = [], []
         for iter_pos in [ galsim.PositionD(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
             # Check that the position is in the bounds of the interpolated image
             if not self.bounds.includes(iter_pos):
-                import warnings
-                warnings.warn(
-                    "Warning: position (%f,%f) not within the bounds "%(iter_pos.x,iter_pos.y) +
-                    "of the gridded shear values: " + str(self.bounds) +
-                    ".  Returning a shear of (0,0) for this point.")
-                g1.append(0.)
-                g2.append(0.)
+                if not periodic:
+                    # We're not treating this as a periodic box, so issue a warning and set the
+                    # shear to zero for positions that are outside the original grid.
+                    import warnings
+                    warnings.warn(
+                        "Warning: position (%f,%f) not within the bounds "%(iter_pos.x,iter_pos.y) +
+                        "of the gridded shear values: " + str(self.bounds) +
+                        ".  Returning a shear of (0,0) for this point.")
+                    g1.append(0.)
+                    g2.append(0.)
+                else:
+                    # Treat this as a periodic box.
+                    wrap_pos = galsim.PositionD(
+                        (iter_pos.x-self.bounds.xmin) % dx + self.bounds.xmin,
+                        (iter_pos.y-self.bounds.ymin) % dy + self.bounds.ymin
+                        )
+                    g1.append(sbii_g1.xValue(wrap_pos+self.offset))
+                    g2.append(sbii_g2.xValue(wrap_pos+self.offset))
             else:
                 g1.append(sbii_g1.xValue(iter_pos+self.offset))
                 g2.append(sbii_g2.xValue(iter_pos+self.offset))
