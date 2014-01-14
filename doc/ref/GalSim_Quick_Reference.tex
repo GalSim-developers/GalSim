@@ -525,31 +525,52 @@ One common way to use the random deviates is as part of a noise model for adding
 noise to an image.  These have their own separate hierarchy of classes
 
 \begin{itemize}
-\item[$\circ$] \texttt{galsim.GaussianNoise(rng, sigma=1.)} 
-\newline {Every pixel gets Gaussian noise with rms \texttt{sigma}.}
+\item[$\circ$] \texttt{galsim.GaussianNoise(dev, sigma=1.)}  \newline
+  {Every pixel gets Gaussian noise with rms \texttt{sigma}, using the
+    same random number generator as the supplied Deviate instance
+    \texttt{dev}.}
 
-\item[$\circ$] \texttt{galsim.PoissonNoise(rng, sky\_level=0.)} 
-\newline {Every pixel gets Poisson noise according to the flux in the image plus an option sky level, \texttt{sky\_level}.}
+\item[$\circ$] \texttt{galsim.PoissonNoise(dev, sky\_level=0.)}
+  \newline {Every pixel gets Poisson noise according to the flux in
+    the image plus an option sky level, \texttt{sky\_level}, using the
+    same random number generator as the supplied Deviate instance
+    \texttt{dev}.}
 
-\item[$\circ$] \texttt{galsim.DeviateNoise(dev)} 
-\newline {The noise value for every pixel is drawn from the given Deviate instance.}
+\item[$\circ$] \texttt{galsim.DeviateNoise(dev)} \newline {The noise
+    value for every pixel is drawn from the given Deviate instance
+    \texttt{dev}.}
 
-\item[$\circ$] \texttt{galsim.CCDNoise(rng, sky\_level=0., gain=1., read\_noise=0.)}  
-\newline {A combination of Poisson noise (with a gain value in electrons/ADU) and Gaussian read noise.}
+\item[$\circ$] \texttt{galsim.CCDNoise(dev, sky\_level=0., gain=1.,
+    read\_noise=0.)}  \newline {A combination of Poisson noise (with a
+    gain value in electrons/ADU) and Gaussian read noise, using the
+    same random number generator as the supplied Deviate instance
+    \texttt{dev}.}
 
 \end{itemize}
 
-These noise models are used with a method of \texttt{Image} objects
-(see Section \ref{sect:image}, below).  This takes the following form:
+To apply noise to an \texttt{Image} using these noise models,
+the command is simply:
 
 \begin{itemize}
 
-\item[$\circ$] \texttt{image.addNoise(noise)} \newline {this adds
+\item[$\circ$] \texttt{noise.applyTo(image)} \newline {This adds
     stochastic noise, according to the noise model \texttt{noise},
     to each element of the data array in the
     \texttt{Image} instance \texttt{image}.}
 
 \end{itemize}
+
+A functionally equivalent command uses these noise instances with a
+method of \texttt{Image} objects (see Section~\ref{sect:image},
+below).  This takes the following form:
+\begin{itemize}
+
+\item[$\circ$] \texttt{image.addNoise(noise)}
+
+\end{itemize}
+However, this usage is now deprecated in favour of the
+\texttt{noise.applyTo(image)} command.
+
 
 \section{Images}\label{sect:image}
 
@@ -629,11 +650,11 @@ methods for such an instance are:
     scale \texttt{scale} for this image.  The getter only works if the WCS 
     is really just a pixel scale.  The setter will make it a pixel scale.}  
 
-%TODO: This usage is deprecated.  dev.applyTo(image) is preferred.
 \item[$\circ$] \texttt{image.addNoise(dev)} \newline {this adds
     stochastic noise, distributed as represented by the random deviate
     instance \texttt{dev}, to each element of the data array in
-    \texttt{image}.  This is the method previously referenced in Section~\ref{sect:random}.}
+    \texttt{image}.  This is the (deprecated) method previously
+    referenced in Section~\ref{sect:noisemodels}.}
 
 \item[$\circ$] \texttt{image.write(fits, \dots)}  \newline {write the
     \texttt{imageView} to a FITS file or object as determined by the
