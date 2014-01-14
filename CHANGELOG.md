@@ -78,7 +78,8 @@ New WCS classes: (Issue #364)
   coordinate system. i.e. the world coordinates are in terms of right
   ascension and declination (RA, Dec).  There is a new CelestialCoord
   class that encapsulates this kind of position on the sphere.
-  * RaDecFunction takes arbitrary function ra(x,y) and dec(x,y).
+  * RaDecFunction takes an arbitrary function radec_func(x,y) that returns
+    the RA and Dec.
   * AstropyWCS uses the astropy.wcs package to read in a given FITS file.
   * PyAstWCS uses the starlink.Ast package to read in a given FITS file.
   * WcsToolsWCS uses wcstools commands for a given FITS file.
@@ -125,14 +126,18 @@ New CelestialCoord class: (Issue #364)
 
 Updates to config options:
 
-* Remove pix top layer in config structure.  Add draw_method=no_pixel to 
-  do what `pix : None` used to do. (Issue #364)
-* Changed the name of sky_pos to world_pos. (Issue #364)
-* Add ability to index Sequences by any running index, rather than just the 
-  default.  i.e. obj_num, image_num, or file_num. (Issue #364)
 * Changed the previous behavior of the image.wcs field to allow several WCS
   types: PixelScale, Offset, Shear, OffsetShear, UVFunction, RaDecFunction,
   Fits, and Tan. (Issue #364)
+* Changed the name of sky_pos to world_pos. (Issue #364)
+* Remove pix top layer in config structure.  Add draw_method=no_pixel to 
+  do what `pix : None` used to do. (Issue #364)
+* Add draw_method=real_space to try to use real-space convolution.  This
+  had been an option for the psf draw, but not the main draw.  This is only
+  possible if there is only one items being convolved with the pixel.
+  (Issue #364)
+* Add ability to index Sequences by any running index, rather than just the 
+  default.  i.e. obj_num, image_num, or file_num. (Issue #364)
 * Removed sky_level_pixel option for specifying the sky.  Now the sky level 
   can only be specified in units of ADU/arcsec^2 (or, technically, whatever 
   the world units are if not arcsec) via the sky_level value.  The alternate

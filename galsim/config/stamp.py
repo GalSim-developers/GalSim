@@ -456,6 +456,11 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 no_pixel = True
             else:
                 no_pixel = False
+            if draw_method == 'real_space':
+                draw_method = 'fft'
+                real_space = True
+            else:
+                real_space = False
 
             if skip: 
                 if xsize and ysize:
@@ -477,7 +482,8 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 current_var = 0
 
             elif draw_method == 'fft':
-                im, current_var = DrawStampFFT(psf,gal,config,xsize,ysize,offset,no_pixel)
+                im, current_var = DrawStampFFT(psf,gal,config,xsize,ysize,offset,
+                                               no_pixel,real_space)
                 if icenter:
                     im.setCenter(icenter.x, icenter.y)
                 if make_weight_image:
@@ -512,7 +518,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             t5 = time.time()
 
             if make_psf_image:
-                psf_im = DrawPSFStamp(psf,config,im.bounds,offset,no_pixel)
+                psf_im = DrawPSFStamp(psf,config,im.bounds,offset,no_pixel,real_space)
                 if ('output' in config and 'psf' in config['output'] and 
                         'signal_to_noise' in config['output']['psf'] and
                         'noise' in config['image']):
@@ -580,7 +586,7 @@ def BuildGal(config, logger=None, gsparams={}):
 
 
 
-def DrawStampFFT(psf, gal, config, xsize, ysize, offset, no_pixel):
+def DrawStampFFT(psf, gal, config, xsize, ysize, offset, no_pixel, real_space):
     """
     Draw an image using the given psf, pix and gal profiles (which may be None)
     using the FFT method for doing the convolution.
@@ -588,8 +594,12 @@ def DrawStampFFT(psf, gal, config, xsize, ysize, offset, no_pixel):
     @return the resulting image.
     """
 
+    # The real_space parameter being False really means let Convolve decide.
+    if real_space == False:
+        real_space = None
+     
     fft_list = [ prof for prof in (psf,gal) if prof is not None ]
-    final = galsim.Convolve(fft_list)
+    final = galsim.Convolve(fft_list, real_space=real_space)
 
     if 'image' in config and 'wmult' in config['image']:
         wmult = galsim.config.ParseValue(config['image'], 'wmult', config, float)[0]
@@ -604,7 +614,7 @@ def DrawStampFFT(psf, gal, config, xsize, ysize, offset, no_pixel):
     wcs = config['wcs'].local(image_pos = config['image_pos'])
     if not no_pixel:
         pix = wcs.toWorld(galsim.Pixel(1.0))
-        final = galsim.Convolve(final, pix)
+        final = galsim.Convolve(final, pix, real_space=real_space)
 
     im = final.draw(image=im, wcs=wcs, wmult=wmult, offset=offset)
     im.setOrigin(config['image_origin'])
@@ -725,7 +735,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, offset):
     return im, current_var
     
 
-def DrawPSFStamp(psf, config, bounds, offset, no_pixel):
+def DrawPSFStamp(psf, config, bounds, offset, no_pixel, real_space):
     """
     Draw an image using the given psf profile.
 
@@ -736,11 +746,13 @@ def DrawPSFStamp(psf, config, bounds, offset, no_pixel):
         raise AttributeError("DrawPSFStamp requires psf to be provided.")
     psf = psf.copy()
 
-    if ('output' in config and 
-        'psf' in config['output'] and 
+    if ('output' in config and 'psf' in config['output'] and 
         'real_space' in config['output']['psf'] ):
+        # Let this override the input real_space from the draw_method.
         real_space = galsim.config.ParseValue(config['output']['psf'],'real_space',config,bool)[0]
-    else:
+
+    # The real_space parameter being False really means let Convolve decide.
+    if real_space == False:
         real_space = None
      
     # Special: if the galaxy was shifted, then also shift the psf 
