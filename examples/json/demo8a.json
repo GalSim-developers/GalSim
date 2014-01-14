@@ -9,11 +9,14 @@
 "#" : "do the same thing as these demo*.json files directly in python.  Now we turn the tables",
 "#" : "and show how to use some of the machinery in the GalSim configuration processing ",
 "#" : "from within python itself.  As such, this config file doesn't add much in the way",
-"#" : "of new features -- just the ability to build an image using multiple processes.",
-"#" : "We build the same image using a single process and again using 4 processes.",
+"#" : "of new features -- just an option to retry building objects that fail the first time, ",
+"#" : "and the ability to build an image using multiple processes.  We intentionally have the",
+"#" : "ellipticity occasionally come out larger than 1, so we redo these objects.",
+"#" : "And we build the same image using a single process and again using 4 processes.",
 
 "#" : "New features introduced in this demo:",
 
+"#" : "- image : retry_failures",
 "#" : "- image : nproc",
 
 "#" : "There are two .json files to do this.  The first one (demo8a.json) does the ",
@@ -50,9 +53,15 @@
             "#" : "then it is given whatever is needed to bring the total to 1.",
             "#" : "This is especially useful when other components have a random value.",
             "ellip" : {
-                "type" : "EBeta",
-                "e" : { "type" : "Random" , "min" : 0.2 , "max" : 0.8 },
-                "beta" : { "type" : "Random" }
+                "type" : "E1E2",
+                "e1" : { "type" : "RandomGaussian" , "sigma" : 0.4 },
+                "e2" : { "type" : "RandomGaussian" , "sigma" : 0.4 },
+                "#" : "These will sometimes have |e| > 1.",
+                "#" : "In the past, we've dealt with this by truncating the distribution with",
+                "#" : "min/max.  This time, we let the values generated exceed 1, which internally",
+                "#" : "will fail the stamp generation process.  We set retry_failures = 2 below to",
+                "#" : "indicate that the object generation stage should just try again (up to 2",
+                "#" : "times) whenever a failure is encountered."
             }
         }
     ],
@@ -76,7 +85,9 @@
         "sky_level" : 1.0e4
     },
 
-    "random_seed" : 22345921
+    "random_seed" : 22345921,
+
+    "retry_failures" : 2
 },
 
 "#" : "Define the name and format of the output file",

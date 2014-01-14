@@ -282,13 +282,15 @@ namespace galsim {
 
     template <typename T>
     void ShapeletFitImage(double sigma, LVector& bvec, const BaseImage<T>& image,
-                          const Position<double>& center)
+                          double image_scale, const Position<double>& center)
     {
+        // TODO: It would be nice to be able to fit this with an arbitrary WCS to fit in 
+        //       sky coordinates.  For now, just use the image_scale.
         dbg<<"Start ShapeletFitImage:\n";
         xdbg<<"sigma = "<<sigma<<std::endl;
         xdbg<<"bvec = "<<bvec<<std::endl;
         xdbg<<"center = "<<center<<std::endl;
-        double scale = image.getScale() / sigma;
+        double scale = image_scale / sigma;
         xdbg<<"scale = "<<scale<<std::endl;
         const int nx = image.getXMax() - image.getXMin() + 1;
         const int ny = image.getYMax() - image.getYMin() + 1;
@@ -321,16 +323,16 @@ namespace galsim {
     }
 
     template void ShapeletFitImage(
-        double sigma, LVector& bvec, const BaseImage<double>& image,
+        double sigma, LVector& bvec, const BaseImage<double>& image, double image_scale,
         const Position<double>& center);
     template void ShapeletFitImage(
-        double sigma, LVector& bvec, const BaseImage<float>& image,
+        double sigma, LVector& bvec, const BaseImage<float>& image, double image_scale,
         const Position<double>& center);
     template void ShapeletFitImage(
-        double sigma, LVector& bvec, const BaseImage<int32_t>& image,
+        double sigma, LVector& bvec, const BaseImage<int32_t>& image, double image_scale,
         const Position<double>& center);
     template void ShapeletFitImage(
-        double sigma, LVector& bvec, const BaseImage<int16_t>& image,
+        double sigma, LVector& bvec, const BaseImage<int16_t>& image, double image_scale,
         const Position<double>& center);
 }
 

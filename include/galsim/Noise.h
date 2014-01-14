@@ -93,7 +93,7 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T> data) 
+        void applyToView(ImageView<T> data) 
         { 
             // This uses the standard workaround for the fact that you can't have a 
             // virtual template function.  The doApplyTo functions are virtual and 
@@ -106,7 +106,7 @@ namespace galsim {
         mutable boost::shared_ptr<BaseDeviate> _rng;
 
         // These need to be defined by the derived class.  They typically would in turn
-        // immediately call their own templated applyTo function that defines the actual
+        // immediately call their own templated applyToView function that defines the actual
         // application of the noise.
         virtual void doApplyTo(ImageView<double>& data) = 0;
         virtual void doApplyTo(ImageView<float>& data) = 0;
@@ -182,7 +182,7 @@ namespace galsim {
          * @brief Add noise to an Image.
          */
         template <typename T>
-        void applyTo(ImageView<T> data) 
+        void applyToView(ImageView<T> data) 
         {
             // Typedef for image row iterable
             typedef typename ImageView<T>::iterator ImIter;
@@ -198,10 +198,10 @@ namespace galsim {
 
     protected:
         using BaseNoise::_rng;
-        void doApplyTo(ImageView<double>& data) { applyTo(data); }
-        void doApplyTo(ImageView<float>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
+        void doApplyTo(ImageView<double>& data) { applyToView(data); }
+        void doApplyTo(ImageView<float>& data) { applyToView(data); }
+        void doApplyTo(ImageView<int32_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<int16_t>& data) { applyToView(data); }
 
     private: 
         double _sigma;
@@ -280,7 +280,7 @@ namespace galsim {
          * @brief Add noise to an Image.
          */
         template <typename T>
-        void applyTo(ImageView<T> data) 
+        void applyToView(ImageView<T> data) 
         {
             // Above this many e's, assume Poisson distribution == Gaussian 
             // The Gaussian deviate is about 20% faster than Poisson, and for high N
@@ -313,10 +313,10 @@ namespace galsim {
 
     protected:
         using BaseNoise::_rng;
-        void doApplyTo(ImageView<double>& data) { applyTo(data); }
-        void doApplyTo(ImageView<float>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
+        void doApplyTo(ImageView<double>& data) { applyToView(data); }
+        void doApplyTo(ImageView<float>& data) { applyToView(data); }
+        void doApplyTo(ImageView<int32_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<int16_t>& data) { applyToView(data); }
 
     private: 
         double _sky_level;
@@ -441,7 +441,7 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T> data) 
+        void applyToView(ImageView<T> data) 
         {
             // Above this many e's, assume Poisson distribution == Gaussian 
             // The Gaussian deviate is about 20% faster than Poisson, and for high N
@@ -489,7 +489,7 @@ namespace galsim {
         /**
          * @brief Add noise to an Image and also report variance of each pixel.
          *
-         * Adds noise as in applyTo(Image) signature, but second Image is filled with
+         * Adds noise as in applyToView(Image) signature, but second Image is filled with
          * variance of added noise.  Note: the variance image must be the same size as the 
          * data image.
          *
@@ -518,15 +518,15 @@ namespace galsim {
                 } 
             }
             // then call noise method to instantiate noise
-            applyTo(data);
+            applyToView(data);
         }
 
     protected:
         using BaseNoise::_rng;
-        void doApplyTo(ImageView<double>& data) { applyTo(data); }
-        void doApplyTo(ImageView<float>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
+        void doApplyTo(ImageView<double>& data) { applyToView(data); }
+        void doApplyTo(ImageView<float>& data) { applyToView(data); }
+        void doApplyTo(ImageView<int32_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<int16_t>& data) { applyToView(data); }
 
     private: 
         double _sky_level;
@@ -593,7 +593,7 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T> data) 
+        void applyToView(ImageView<T> data) 
         {
             // Typedef for image row iterable
             typedef typename ImageView<T>::iterator ImIter;
@@ -606,19 +606,19 @@ namespace galsim {
 
     protected:
         using BaseNoise::_rng;
-        void doApplyTo(ImageView<double>& data) { applyTo(data); }
-        void doApplyTo(ImageView<float>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
+        void doApplyTo(ImageView<double>& data) { applyToView(data); }
+        void doApplyTo(ImageView<float>& data) { applyToView(data); }
+        void doApplyTo(ImageView<int32_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<int16_t>& data) { applyToView(data); }
     };
 
     /** 
      * @brief Class implementing variable Gaussian noise.
      *
-     * The VariableGaussianNoise class implements Gaussian noise where each pixel may have 
+     * The VarGaussianNoise class implements Gaussian noise where each pixel may have 
      * a different variance.
      */
-    class VariableGaussianNoise : public BaseNoise
+    class VarGaussianNoise : public BaseNoise
     {
     public:
  
@@ -628,7 +628,7 @@ namespace galsim {
          * @param[in] rng         The BaseDeviate to use for the random number generation.
          * @param[in] var_image   Image with the variance values for the noise in each pixel.
          */
-        VariableGaussianNoise(boost::shared_ptr<BaseDeviate> rng,
+        VarGaussianNoise(boost::shared_ptr<BaseDeviate> rng,
                               const BaseImage<float>& var_image) :
             BaseNoise(rng), _var_image(var_image.view())
         {}
@@ -638,7 +638,7 @@ namespace galsim {
          *
          * Note: the default constructed op= function will do the same thing.
          */
-        VariableGaussianNoise(const VariableGaussianNoise& rhs) : 
+        VarGaussianNoise(const VarGaussianNoise& rhs) : 
             BaseNoise(rhs), _var_image(rhs._var_image)
         {}
  
@@ -678,7 +678,7 @@ namespace galsim {
          * @brief Add noise to an Image.
          */
         template <typename T>
-        void applyTo(ImageView<T> data) 
+        void applyToView(ImageView<T> data) 
         {
             if ( (data.getYMax()-data.getYMin() != _var_image.getYMax()-_var_image.getYMin()) ||
                  (data.getXMax()-data.getXMin() != _var_image.getXMax()-_var_image.getXMin()) ) {
@@ -706,10 +706,10 @@ namespace galsim {
 
     protected:
         using BaseNoise::_rng;
-        void doApplyTo(ImageView<double>& data) { applyTo(data); }
-        void doApplyTo(ImageView<float>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
+        void doApplyTo(ImageView<double>& data) { applyToView(data); }
+        void doApplyTo(ImageView<float>& data) { applyToView(data); }
+        void doApplyTo(ImageView<int32_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<int16_t>& data) { applyToView(data); }
 
     private: 
         ConstImageView<float> _var_image;

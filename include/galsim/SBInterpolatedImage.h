@@ -50,29 +50,22 @@ namespace galsim {
          * @brief Construct from a std::vector of images.
          *
          * @param[in] images      List of images to use
-         * @param[in] dx          Stepsize between pixels in image data table (if dx==0.,
-         *                        it checks the Image header for a suitable stepsize, or sets 
-         *                        to 1 if none is found). 
          * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding 
          *                        for the Fourier transform.
          */
         template <typename T>
         MultipleImageHelper(const std::vector<boost::shared_ptr<BaseImage<T> > >& images,
-                            double dx, double pad_factor);
+                            double pad_factor);
 
         /** 
          * @brief Convenience constructor that only takes a single image.
          *
          * @param[in] image       Single input image
-         * @param[in] dx          Stepsize between pixels in image data table (if dx==0.,
-         *                        it checks the Image header for a suitable stepsize, or sets 
-         *                        to 1 if none is found). 
          * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
          *                        for the Fourier transform.
          */
         template <typename T>
-        MultipleImageHelper(const BaseImage<T>& image,
-                            double dx, double pad_factor);
+        MultipleImageHelper(const BaseImage<T>& image, double pad_factor);
 
         /// @brief Copies are shallow, so can pass by value without any copying.
         MultipleImageHelper(const MultipleImageHelper& rhs) : _pimpl(rhs._pimpl) {}
@@ -113,9 +106,6 @@ namespace galsim {
         /// @brief Get the size of the images in k-space.
         int getNft() const { return _pimpl->Nk; }
 
-        /// @brief Get the scale size being used for the images.
-        double getScale() const { return _pimpl->dx; }
-
     private:
         // Note: I'm not bothering to make this a real class with setters and getters and all.
         // A struct is good enough for what we need.
@@ -124,7 +114,6 @@ namespace galsim {
         {
             int Ninitial; ///< maximum size of input images
             int Nk;  ///< Size of the padded grids and Discrete Fourier transform table.
-            double dx;  ///< Input pixel scales.
 
             Bounds<int> init_bounds;
 
@@ -176,14 +165,14 @@ namespace galsim {
      * need to use a higher-order Lanczos interpolant instead, but this is not the recommended
      * usage.
      *
-     * There is also an optional argument for the pixel size (default is to get it from
-     * the image).
+     * The surface brightness profile will be in terms of the image pixels.  The python layer
+     * InterpolatedImage class takes care of converting between these units and the arcsec units
+     * that are usually desired.
      *
      * You can also make an SBInterpolatedImage as a weighted sum of several images
      * using MultipleImageHelper.  This helper object holds the images and their fourier
      * transforms, so it is efficient to make many SBInterpolatedImages with different
-     * weight vectors.  This version does not take the `dx` or `pad_factor` parameters,
-     * since these are set in the MultipleImageHelper constructor.
+     * weight vectors.
      */
     class SBInterpolatedImage : public SBProfile 
     {
@@ -195,9 +184,6 @@ namespace galsim {
          * @param[in] image       Input Image (any of ImageF, ImageD, ImageS, ImageI).
          * @param[in] xInterp     Interpolation scheme to adopt between pixels 
          * @param[in] kInterp     Interpolation scheme to adopt in k-space
-         * @param[in] dx          Stepsize between pixels in image data table (if dx==0.,
-         *                        it checks the Image header for a suitable stepsize, or sets 
-         *                        to 1 if none is found). 
          * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
          *                        for the Fourier transform.
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
@@ -208,7 +194,7 @@ namespace galsim {
             const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double dx, double pad_factor, const GSParamsPtr& gsparams);
+            double pad_factor, const GSParamsPtr& gsparams);
 
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 

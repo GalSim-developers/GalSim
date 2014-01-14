@@ -69,12 +69,14 @@ def test_convolve():
     fwhm_backwards_compatible = 1.0927449310213702
     mySBP = galsim.SBMoffat(beta=1.5, fwhm=fwhm_backwards_compatible, 
                             trunc=4*fwhm_backwards_compatible, flux=1)
-    mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
+    dx = 0.2
+    mySBP2 = galsim.SBBox(dx, dx, flux=1.)
     myConv = galsim.SBConvolve([mySBP,mySBP2])
     # Using an exact Maple calculation for the comparison.  Only accurate to 4 decimal places.
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
-    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
-    myConv.draw(myImg.view())
+    myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myConv.applyExpansion(1./dx)
+    myConv.draw(myImg.image.view())
     printval(myImg, savedImg)
  
     np.testing.assert_array_almost_equal(
@@ -84,7 +86,7 @@ def test_convolve():
     # Repeat with the GSObject version of this:
     psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible, trunc=4*fwhm_backwards_compatible,
                         flux=1)
-    pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
+    pixel = galsim.Pixel(scale=dx, flux=1.)
     # Note: Since both of these have hard edges, GalSim wants to do this with real_space=True.
     # Here we are intentionally tesing the Fourier convolution, so we want to suppress the
     # warning that GalSim emits.
@@ -93,27 +95,27 @@ def test_convolve():
         warnings.simplefilter("ignore")
         # We'll do the real space convolution below
         conv = galsim.Convolve([psf,pixel],real_space=False)
-        conv.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+        conv.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
         np.testing.assert_array_almost_equal(
                 myImg.array, savedImg.array, 4,
                 err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
 
         # Other ways to do the convolution:
         conv = galsim.Convolve(psf,pixel,real_space=False)
-        conv.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+        conv.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
         np.testing.assert_array_almost_equal(
                 myImg.array, savedImg.array, 4,
                 err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
 
         # Check with default_params
         conv = galsim.Convolve([psf,pixel],real_space=False,gsparams=default_params)
-        conv.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+        conv.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
         np.testing.assert_array_almost_equal(
                 myImg.array, savedImg.array, 4,
                 err_msg="Using GSObject Convolve([psf,pixel]) with default_params disagrees with"
                 "expected result")
         conv = galsim.Convolve([psf,pixel],real_space=False,gsparams=galsim.GSParams())
-        conv.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+        conv.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
         np.testing.assert_array_almost_equal(
                 myImg.array, savedImg.array, 4,
                 err_msg="Using GSObject Convolve([psf,pixel]) with GSParams() disagrees with"
@@ -201,11 +203,13 @@ def test_shearconvolve():
     # test at SBProfile level using applyShear
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     mySBP.applyShear(myShear._shear)
-    mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
+    dx = 0.2
+    mySBP2 = galsim.SBBox(dx, dx, flux=1.)
     myConv = galsim.SBConvolve([mySBP,mySBP2])
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
-    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
-    myConv.draw(myImg.view())
+    myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myConv.applyExpansion(1./dx)
+    myConv.draw(myImg.image.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -215,27 +219,27 @@ def test_shearconvolve():
     psf = galsim.Gaussian(flux=1, sigma=1)
     psf2 = psf.createSheared(e1=e1, e2=e2)
     psf.applyShear(e1=e1, e2=e2)
-    pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
+    pixel = galsim.Pixel(scale=dx, flux=1.)
     conv = galsim.Convolve([psf,pixel])
-    conv.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
     conv2 = galsim.Convolve([psf2,pixel])
-    conv2.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv2.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
 
     # Check with default_params
     conv = galsim.Convolve([psf,pixel],gsparams=default_params)
-    conv.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) with default_params disagrees with "
             "expected result")
     conv = galsim.Convolve([psf,pixel],gsparams=galsim.GSParams())
-    conv.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) with GSParams() disagrees with "
@@ -243,7 +247,7 @@ def test_shearconvolve():
  
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel)
-    conv.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
@@ -272,12 +276,14 @@ def test_realspace_convolve():
                           #trunc=4*fwhm_backwards_compatible, flux=1)
     psf = galsim.SBMoffat(beta=1.5, half_light_radius=1,
                           trunc=4*fwhm_backwards_compatible, flux=1)
-    pixel = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
+    dx = 0.2
+    pixel = galsim.SBBox(dx, dx, flux=1.)
     conv = galsim.SBConvolve([psf,pixel],real_space=True)
     # Note: Using an image created from Maple "exact" calculations.
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
-    img = galsim.ImageF(saved_img.bounds, scale=0.2)
-    conv.draw(img.view())
+    img = galsim.ImageF(saved_img.bounds, scale=dx)
+    conv.applyExpansion(1./dx)
+    conv.draw(img.image.view())
     printval(img, saved_img)
     arg = abs(saved_img.array-img.array).argmax()
     np.testing.assert_array_almost_equal(
@@ -289,22 +295,22 @@ def test_realspace_convolve():
                         trunc=4*fwhm_backwards_compatible, flux=1)
     #psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible,
                         #trunc=4*fwhm_backwards_compatible, flux=1)
-    pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
+    pixel = galsim.Pixel(scale=dx, flux=1.)
     conv = galsim.Convolve([psf,pixel],real_space=True)
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
 
     # Check with default_params
     conv = galsim.Convolve([psf,pixel],real_space=True,gsparams=default_params)
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) with default_params disagrees with "
             "expected result")
     conv = galsim.Convolve([psf,pixel],real_space=True,gsparams=galsim.GSParams())
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) with GSParams() disagrees with "
@@ -312,7 +318,7 @@ def test_realspace_convolve():
 
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel,real_space=True)
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
@@ -320,7 +326,7 @@ def test_realspace_convolve():
     # The real-space convolution algorithm is not (trivially) independent of the order of
     # the two things being convolved.  So check the opposite order.
     conv = galsim.Convolve([pixel,psf],real_space=True)
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
@@ -347,7 +353,8 @@ def test_realspace_distorted_convolve():
                           #trunc=4*fwhm_backwards_compatible, flux=1)  
     psf.applyShear(galsim.Shear(g1=0.11,g2=0.17)._shear)
     psf.applyRotation(13 * galsim.degrees)
-    pixel = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
+    dx = 0.2
+    pixel = galsim.SBBox(dx, dx, flux=1.)
     pixel.applyShear(galsim.Shear(g1=0.2,g2=0.0)._shear)
     pixel.applyRotation(80 * galsim.degrees)
     pixel.applyShift(0.13,0.27)
@@ -355,8 +362,9 @@ def test_realspace_distorted_convolve():
 
     # Note: Using an image created from Maple "exact" calculations.
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel_distorted.fits"))
-    img = galsim.ImageF(saved_img.bounds, scale=0.2)
-    conv.draw(img.view())
+    img = galsim.ImageF(saved_img.bounds, scale=dx)
+    conv.applyExpansion(1./dx)
+    conv.draw(img.image.view())
     printval(img, saved_img)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
@@ -369,26 +377,26 @@ def test_realspace_distorted_convolve():
                         #trunc=4*fwhm_backwards_compatible, flux=1)
     psf.applyShear(g1=0.11,g2=0.17)
     psf.applyRotation(13 * galsim.degrees)
-    pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
+    pixel = galsim.Pixel(scale=dx, flux=1.)
     pixel.applyShear(g1=0.2,g2=0.0)
     pixel.applyRotation(80 * galsim.degrees)
     pixel.applyShift(0.13,0.27)
     # NB: real-space is chosen automatically
     conv = galsim.Convolve([psf,pixel])
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using Convolve([psf,pixel]) (distorted) disagrees with expected result")
 
     # Check with default_params
     conv = galsim.Convolve([psf,pixel],gsparams=default_params)
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using Convolve([psf,pixel]) (distorted) with default_params disagrees with "
             "expected result")
     conv = galsim.Convolve([psf,pixel],gsparams=galsim.GSParams())
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using Convolve([psf,pixel]) (distorted) with GSParams() disagrees with "
@@ -396,7 +404,7 @@ def test_realspace_distorted_convolve():
 
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel)
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using Convolve(psf,pixel) (distorted) disagrees with expected result")
@@ -404,7 +412,7 @@ def test_realspace_distorted_convolve():
     # The real-space convolution algorithm is not (trivially) independent of the order of
     # the two things being convolved.  So check the opposite order.
     conv = galsim.Convolve([pixel,psf])
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using Convolve([pixel,psf]) (distorted) disagrees with expected result")
@@ -423,11 +431,13 @@ def test_realspace_shearconvolve():
     e2 = 0.0
     myShear = galsim.Shear(e1=e1, e2=e2)
     psf.applyShear(myShear._shear)
-    pix = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
+    dx = 0.2
+    pix = galsim.SBBox(dx, dx, flux=1.)
     conv = galsim.SBConvolve([psf,pix],real_space=True)
     saved_img = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
-    img = galsim.ImageF(saved_img.bounds, scale=0.2)
-    conv.draw(img.view())
+    img = galsim.ImageF(saved_img.bounds, scale=dx)
+    conv.applyExpansion(1./dx)
+    conv.draw(img.image.view())
     printval(img, saved_img)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
@@ -436,22 +446,22 @@ def test_realspace_shearconvolve():
     # Repeat with the GSObject version of this:
     psf = galsim.Gaussian(flux=1, sigma=1)
     psf.applyShear(e1=e1,e2=e2)
-    pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
+    pixel = galsim.Pixel(scale=dx, flux=1.)
     conv = galsim.Convolve([psf,pixel],real_space=True)
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
 
     # Check with default_params
     conv = galsim.Convolve([psf,pixel],real_space=True,gsparams=default_params)
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) with default_params disagrees with "
             "expected result")
     conv = galsim.Convolve([psf,pixel],real_space=True,gsparams=galsim.GSParams())
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) with GSParams() disagrees with "
@@ -459,7 +469,7 @@ def test_realspace_shearconvolve():
 
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel,real_space=True)
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
@@ -467,7 +477,7 @@ def test_realspace_shearconvolve():
     # The real-space convolution algorithm is not (trivially) independent of the order of
     # the two things being convolved.  So check the opposite order.
     conv = galsim.Convolve([pixel,psf],real_space=True)
-    conv.draw(img,dx=0.2, normalization="surface brightness", use_true_center=False)
+    conv.draw(img,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
@@ -485,8 +495,10 @@ def test_add():
     mySBP2 = galsim.SBGaussian(flux=0.25, sigma=3)
     myAdd = galsim.SBAdd([mySBP, mySBP2])
     savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
-    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
-    myAdd.draw(myImg.view())
+    dx = 0.2
+    myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myAdd.applyExpansion(1./dx)
+    myAdd.draw(myImg.image.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -496,7 +508,7 @@ def test_add():
     gauss1 = galsim.Gaussian(flux=0.75, sigma=1)
     gauss2 = galsim.Gaussian(flux=0.25, sigma=3)
     sum = galsim.Add(gauss1,gauss2)
-    sum.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    sum.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -504,13 +516,13 @@ def test_add():
 
     # Check with default_params
     sum = galsim.Add(gauss1,gauss2,gsparams=default_params)
-    sum.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    sum.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Add(gauss1,gauss2) with default_params disagrees with "
             "expected result")
     sum = galsim.Add(gauss1,gauss2,gsparams=galsim.GSParams())
-    sum.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    sum.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Add(gauss1,gauss2) with GSParams() disagrees with "
@@ -518,20 +530,20 @@ def test_add():
 
     # Other ways to do the sum:
     sum = gauss1 + gauss2
-    sum.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    sum.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject gauss1 + gauss2 disagrees with expected result")
     sum = gauss1.copy()
     sum += gauss2
-    sum.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    sum.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject sum = gauss1; sum += gauss2 disagrees with expected result")
     sum = galsim.Add([gauss1,gauss2])
-    sum.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    sum.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -539,14 +551,14 @@ def test_add():
     gauss1 = galsim.Gaussian(flux=1, sigma=1)
     gauss2 = galsim.Gaussian(flux=1, sigma=3)
     sum = 0.75 * gauss1 + 0.25 * gauss2
-    sum.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    sum.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject 0.75 * gauss1 + 0.25 * gauss2 disagrees with expected result")
     sum = 0.75 * gauss1
     sum += 0.25 * gauss2
-    sum.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    sum.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -628,11 +640,14 @@ def test_autoconvolve():
 
     mySBP = galsim.SBMoffat(beta=3.8, fwhm=1.3, flux=5)
     myConv = galsim.SBConvolve([mySBP,mySBP])
-    myImg1 = galsim.ImageF(80,80, scale=0.4)
-    myConv.draw(myImg1.view())
+    dx = 0.4
+    myImg1 = galsim.ImageF(80,80, scale=dx)
+    myConv.applyExpansion(1./dx)
+    myConv.draw(myImg1.image.view())
     myAutoConv = galsim.SBAutoConvolve(mySBP)
-    myImg2 = galsim.ImageF(80,80, scale=0.4)
-    myAutoConv.draw(myImg2.view())
+    myImg2 = galsim.ImageF(80,80, scale=dx)
+    myAutoConv.applyExpansion(1./dx)
+    myAutoConv.draw(myImg2.image.view())
     printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
             myImg1.array, myImg2.array, 4,
@@ -722,11 +737,14 @@ def test_autocorrelate():
     # Here we rotate by 180 degrees to create mirror image
     mySBP2.applyRotation(180. * galsim.degrees)
     myConv = galsim.SBConvolve([mySBP1, mySBP2])
-    myImg1 = galsim.ImageF(80,80, scale=0.7)
-    myConv.draw(myImg1.view())
+    dx = 0.7
+    myImg1 = galsim.ImageF(80,80, scale=dx)
+    myConv.applyExpansion(1./dx)
+    myConv.draw(myImg1.image.view())
     myAutoCorr = galsim.SBAutoCorrelate(mySBP1)
-    myImg2 = galsim.ImageF(80,80, scale=0.7)
-    myAutoCorr.draw(myImg2.view())
+    myImg2 = galsim.ImageF(80,80, scale=dx)
+    myAutoCorr.applyExpansion(1./dx)
+    myAutoCorr.draw(myImg2.image.view())
     printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
             myImg1.array, myImg2.array, 4,

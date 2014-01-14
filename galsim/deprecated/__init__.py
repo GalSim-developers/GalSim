@@ -16,5 +16,3 @@
 # You should have received a copy of the GNU General Public License
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
-from atmosphere import *
-from ellipse import *

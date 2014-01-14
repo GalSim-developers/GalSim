@@ -188,7 +188,8 @@ def _convertMask(image, weight = None, badpix = None):
             raise ValueError("Weight image cannot contain negative values!")
 
         # if weight is an ImageI, then we can use it as the mask image:
-        if isinstance(weight.view(), galsim.ImageViewI):
+        import numpy
+        if weight.dtype == numpy.int32:
             if not badpix:
                 mask = weight
             else:
@@ -212,8 +213,8 @@ def _convertMask(image, weight = None, badpix = None):
     if mask.array.sum() == 0:
         raise RuntimeError("No pixels are being used!")
 
-    # finally, return the ImageView for the weight map
-    return mask.view()
+    # finally, return the Image for the weight map
+    return mask.image.view()
 
 def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 0.0,
                   shear_est = "REGAUSS", recompute_flux = "FIT", guess_sig_gal = 5.0,
@@ -272,8 +273,8 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
                 n_fail += 1
         print "Number of failures: ", n_fail
 
-    @param gal_image         The Image or ImageView of the galaxy being measured.
-    @param PSF_image         The Image or ImageView for the PSF.
+    @param gal_image         The Image of the galaxy being measured.
+    @param PSF_image         The Image for the PSF.
     @param weight            The optional weight image for the galaxy being measured.  Can be an int
                              or a float array.  Currently, GalSim does not account for the variation
                              in non-zero weights, i.e., a weight map is converted to an image with 0
@@ -315,8 +316,8 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
     @return                  A ShapeData object containing the results of shape measurement.
     """
     # prepare inputs to C++ routines: ImageView for galaxy, PSF, and weight map
-    gal_image_view = gal_image.view()
-    PSF_image_view = PSF_image.view()
+    gal_image_view = gal_image.image.view()
+    PSF_image_view = PSF_image.image.view()
     weight_view = _convertMask(gal_image, weight=weight, badpix=badpix)
 
     try:
@@ -335,7 +336,7 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
             raise
         else:
             result = _galsim._CppShapeData()
-            result.error_message = err.message
+            result.error_message = str(err)
     return ShapeData(result)
 
 def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0, precision = 1.0e-6,
@@ -349,7 +350,7 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     weighted moments, recomputing the moments using the result of the previous step as the weight
     function, and so on until the moments that are measured are the same as those used for the
     weight function.  FindAdaptiveMom can be used either as a free function, or as a method of the
-    ImageViewI(), ImageViewD() etc. classes.
+    Image class.
 
     Like EstimateShear, FindAdaptiveMom works on Image inputs, and fails if the object is small
     compared to the pixel scale.  For more details, see galsim.hsm.EstimateShear.
@@ -395,7 +396,7 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
         >>> new_params = galsim.hsm.HSMParams(max_amoment=5.0e5)
         >>> my_moments = my_gaussian_image.FindAdaptiveMom(hsmparams = new_params)
 
-    @param object_image      The Image or ImageView for the object being measured.
+    @param object_image      The Image for the object being measured.
     @param weight            The optional weight image for the object being measured.  Can be an int
                              or a float array.  Currently, GalSim does not account for the variation
                              in non-zero weights, i.e., a weight map is converted to an image with 0
@@ -426,7 +427,7 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     @return                  A ShapeData object containing the results of moment measurement.
     """
     # prepare inputs to C++ routines: ImageView for the object being measured and the weight map.
-    object_image_view = object_image.view()
+    object_image_view = object_image.image.view()
     weight_view = _convertMask(object_image, weight=weight, badpix=badpix)
 
     try:
@@ -440,14 +441,8 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
             raise
         else:
             result = _galsim._CppShapeData()
-            result.error_message = err.message
+            result.error_message = str(err)
     return ShapeData(result)
 
-# make FindAdaptiveMom a method of Image and ImageView classes
-for Class in _galsim.ImageView.itervalues():
-    Class.FindAdaptiveMom = FindAdaptiveMom
-
-for Class in _galsim.Image.itervalues():
-    Class.FindAdaptiveMom = FindAdaptiveMom
-
-del Class # cleanup public namespace
+# make FindAdaptiveMom a method of Image class
+galsim.Image.FindAdaptiveMom = FindAdaptiveMom

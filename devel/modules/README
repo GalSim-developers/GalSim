@@ -4,9 +4,6 @@ developers' scientific choices.
 
 ---Interpolation---
 
-finterp.pdf: a document by Gary Bernstein and Daniel Gruen describing some of the basic theoretical
-underpinnings of interpolation choice and doing some basic testing.
-
 test_interpolants.py: a script to test the deviations from expected behavior of the x- and k-space
 interpolants for the RealGalaxy class.
 

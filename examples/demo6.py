@@ -123,7 +123,7 @@ def main(argv):
     # convolve PSF and pixel response function to get the effective PSF (ePSF)
     epsf = galsim.Convolve([psf, pix])
     # Draw this one with no noise.
-    epsf_image = epsf.draw(dx = pixel_scale)
+    epsf_image = epsf.draw(scale = pixel_scale)
     # write to file
     epsf_image.write(psf_file_name)
     logger.info('Created ePSF and wrote to file %r',psf_file_name)
@@ -170,11 +170,11 @@ def main(argv):
         # Draw the profile
         if k == 0:
             # Note that the offset argument may be a galsim.PositionD object or a tuple (dx,dy).
-            im = final.draw(dx=pixel_scale, offset=(dx,dy))
+            im = final.draw(scale=pixel_scale, offset=(dx,dy))
             xsize, ysize = im.array.shape
         else:
             im = galsim.ImageF(xsize,ysize)
-            final.draw(im, dx=pixel_scale, offset=(dx,dy))
+            final.draw(im, scale=pixel_scale, offset=(dx,dy))
 
         logger.debug('   Drew image')
         t3 = time.time()

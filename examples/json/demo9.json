@@ -83,7 +83,20 @@
     },
 
     "shear": {
-        "type" : "NFWHaloShear"
+        "#" : "All value types that can be added up can use a Sum type to list the items to be ",
+        "#" : "added together.  The only one that can be slightly non-intuitive is the Sum of",
+        "#" : "Shear items.  Shear addition is not commutative, so the order of the elements",
+        "#" : "matters.  The items in the Sum should be listed in order from the observer",
+        "#" : "to the source.  This is a somewhat standard convention for what g_a + g_b means",
+        "#" : "in shear space.  g_b is applied to the profile first, and then g_a is applied.",
+        "#" : "In our case, we have a field shear (a constant value across the field) that is ",
+        "#" : "taken to be a kind of cosmic shear component behind the foreground cluster, so ",
+        "#" : "it is listed second.",
+        "type" : "Sum",
+        "items" : [
+            { "type" : "NFWHaloShear" },
+            { "type" : "G1G2", "g1" : 0.03, "g2" : 0.01 }
+        ]
     },
 
     "#" : "Note: the redshift could be variable for each galaxy.  We just use a constant here.",
@@ -157,17 +170,17 @@
     "#" : "There are two ways to specify the location of each postage stamp on the full image.",
     "#" : "You may specify:",
     "#" : "  image_pos = the position in pixels on the full image",
-    "#" : "  sky_pos   = the position in arcsec (or whatever sky units you are using) relative",
+    "#" : "  world_pos = the position in arcsec (or whatever sky units you are using) relative",
     "#" : "              to the center of the image",
 
     "#" : "The difference between these and gal.shift is that gal.shift moves the object with ",
     "#" : "respect to the center of the postage stamp, while these set the position of the ",
     "#" : "postage stamp on the larger full image.",
 
-    "#" : "In this case we use stamp_sky_pos to place each object in sky coordinates relative to",
+    "#" : "In this case we use world_pos to place each object in sky coordinates relative to",
     "#" : "the center of the image.  We use RandomCircle with an inner radius to avoid placing",
     "#" : "galaxies too close to the halo center where the lensing is not weak.",
-    "sky_pos" : {
+    "world_pos" : {
         "type" : "RandomCircle",
         "radius" : 12,
         "inner_radius" : 3

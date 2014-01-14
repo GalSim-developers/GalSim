@@ -98,11 +98,15 @@ def main(argv):
     gal_flux_min = 1.e4    # ADU
     gal_flux_max = 1.e6    # ADU
 
+    field_g1 = 0.03        # The field shear is some cosmic shear applied to the whole field,
+    field_g2 = 0.01        # taken to be behind the foreground NFW halo.
     nfw_conc = 4           # concentration parameter = virial radius / NFW scale radius
     nfw_z_halo = 0.3       # redshift of the halo
     nfw_z_source = 0.6     # redshift of the lensed sources
     omega_m = 0.3          # Omega matter for the background cosmology.
     omega_lam = 0.7        # Omega lambda for the background cosmology.
+
+    field_shear = galsim.Shear(g1=field_g1, g2=field_g2)
 
     random_seed = 8383721
 
@@ -219,27 +223,41 @@ def main(argv):
             # the NFW halo mass.
             try:
                 g1,g2 = nfw.getShear( pos , nfw_z_source )
-                shear = galsim.Shear(g1=g1,g2=g2)
+                nfw_shear = galsim.Shear(g1=g1,g2=g2)
             except:
                 # This shouldn't happen, since we exclude the inner 10 arcsec, but it's a 
                 # good idea to use the try/except block here anyway.
                 import warnings        
                 warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
                               "Using shear = 0.")
-                shear = galsim.Shear(g1=0,g2=0)
+                nfw_shear = galsim.Shear(g1=0,g2=0)
 
-            mu = nfw.getMagnification( pos , nfw_z_source )
-            if mu < 0:
+            nfw_mu = nfw.getMagnification( pos , nfw_z_source )
+            if nfw_mu < 0:
                 import warnings
                 warnings.warn("Warning: mu < 0 means strong lensing!  Using mu=25.")
-                mu = 25
-            elif mu > 25:
+                nfw_mu = 25
+            elif nfw_mu > 25:
                 import warnings
                 warnings.warn("Warning: mu > 25 means strong lensing!  Using mu=25.")
-                mu = 25
+                nfw_mu = 25
 
-            gal.applyMagnification(mu)
-            gal.applyShear(shear)
+            # Calculate the total shear to apply
+            # Since shear addition is not commutative, it is worth pointing out that
+            # the order is in the sense that the second shear is applied first, and then 
+            # the first shear.  i.e. The field shear is taken to be behind the cluster.
+            # Kind of a cosmic shear contribution between the source and the cluster.
+            # However, this is not quite the same thing as doing:
+            #     gal.applyShear(field_shear)
+            #     gal.applyShear(nfw_shear)
+            # since the shear addition ignores the rotation that would occur when doing the
+            # above lines.  This is normally ok, because the rotation is not observable, but 
+            # it is worth keeping in mind.
+            total_shear = nfw_shear + field_shear
+
+            # Apply the magnification and shear to the galaxy
+            gal.applyMagnification(nfw_mu)
+            gal.applyShear(total_shear)
 
             # Build the final object
             final = galsim.Convolve([psf, pix, gal])
@@ -248,7 +266,7 @@ def main(argv):
             # To draw the image at a position other than the center of the image, you can
             # use the offset parameter, which applies an offset in pixels relative to the
             # center of the image.
-            stamp = final.draw(dx=pixel_scale, offset=offset)
+            stamp = final.draw(scale=pixel_scale, offset=offset)
 
             # Recenter the stamp at the desired position:
             stamp.setCenter(ix_nominal,iy_nominal)
@@ -260,7 +278,7 @@ def main(argv):
             # Also draw the PSF
             psf_final = galsim.Convolve([psf, pix])
             psf_stamp = galsim.ImageF(stamp.bounds) # Use same bounds as galaxy stamp
-            psf_final.draw(psf_stamp, dx=pixel_scale, offset=offset)
+            psf_final.draw(psf_stamp, scale=pixel_scale, offset=offset)
             psf_image[bounds] += psf_stamp[bounds]
 
 

@@ -75,11 +75,16 @@ namespace galsim {
      * SBProfile with another.
      *
      * Every SBProfile knows how to draw an Image<float> of itself in real and k space.  Each also
-     * knows what is needed to prevent aliasing or truncation of itself when drawn.  **Note** that
-     * when you use the SBProfile::draw() routines you will get an image of **surface brightness**
-     * values in each pixel, not the flux that fell into the pixel.  To get flux, you must multiply
-     * the image by (dx*dx).  Likewise, the xValue routine returns the value of the surface
-     * brightness. drawK() routines are normalized such that I(0,0) is the total flux.
+     * knows what is needed to prevent aliasing or truncation of itself when drawn.  The classes
+     * model the surface brightness of the object, so the xValue routine returns the value of the 
+     * surface brightness at a given point.  Usually we define this as flux/arcsec^2.
+     *
+     * However, when drawing an SBProfile, any distance measures used to define the SBProfile will be 
+     * taken to be in units of pixels.  Thus the image, which is nominally a **surface brightness** 
+     * image is also a **flux** image.  The flux in each pixel is the flux/pixel^2.  The python layer 
+     * takes care of the typical case of defining an SBProfile in terms of arcsec, then converting the 
+     * image to pixels (scaling the size and flux appropriately), so that the draw command here has the 
+     * correct flux.  
      *
      * This isn't an abstract base class.  An SBProfile is a concrete object
      * which internally has a pointer to the implementation details (which _is_ an abstract
@@ -372,8 +377,10 @@ namespace galsim {
          * It is important to remember that the `Image` produced by `drawShoot` represents the
          * `SBProfile` _as convolved with the square Image pixel._ So do not expect an exact match,
          * even in the limit of large photon number, between the outputs of `draw` and `drawShoot`.
-         * You should convolve the `SBProfile` with an `SBBox(dx)` in order to match what will be
-         * produced by `drawShoot` onto an image with pixel scale `dx`.
+         * You should convolve the `SBProfile` with an `SBBox(1,1)` in order to match what 
+         * will be produced by `drawShoot` onto an image.  (The 1 here represents 1 pixel, which 
+         * is the implicit units being used here.  The python layer drawShoot takes care of the 
+         * conversion from arcsec to pixels.)
          *
          * @param[in,out]  image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
          * @param[in] N Total number of photons to produce.
@@ -475,7 +482,9 @@ namespace galsim {
          * @brief Draw an image of the SBProfile in k space.
          *
          * For drawing in k space: routines are analagous to real space, except 2 images are 
-         * needed since the SBProfile is complex.
+         * needed since the SBProfile is complex. The images are normalized such that I(0,0) is the 
+         * total flux.
+         *
          * If the input images are Image's and have null dimension, square 
          * images will be drawn which are big enough to avoid "folding."  If drawing is done using 
          * FFT, they will be scaled up to a power of 2, or 3x2^n, whicher fits.

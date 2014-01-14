@@ -69,7 +69,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     // Tests are designed for these to be odd, but not necessarily equal
     const int ncol=7;  // x ranges from 1 .. ncol
     const int nrow=5;  // y ranges from 1 .. nrow
-    const double scale=1.; // We aren't really testing scale stuff here, so just use 1.
     T ref_array[nrow*ncol] = {
         // x  -> 
         11, 21, 31, 41, 51, 61, 71,  // y
@@ -80,7 +79,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     // Of course, when viewed as an image, the rows are generally drawn from bottom to top.
 
     // Check basic constructor from nrow,ncol
-    galsim::Image<T> im1(ncol,nrow, scale);
+    galsim::ImageAlloc<T> im1(ncol,nrow);
     galsim::Bounds<int> bounds(1,ncol,1,nrow);
 
     BOOST_CHECK(im1.getXMin()==1);
@@ -93,7 +92,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     BOOST_CHECK(im1.getStride() == ncol);
 
     // Check alternate constructor from bounds
-    galsim::Image<T> im2(bounds, scale);
+    galsim::ImageAlloc<T> im2(bounds);
     galsim::ImageView<T> im2_view = im2;
     galsim::ConstImageView<T> im2_cview = im2;
 
@@ -143,8 +142,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     // Check view of given data
     // Note: Our array is on the stack, so we don't have any ownership to pass around.
     //       Hence, use a default shared_ptr constructor.
-    galsim::ImageView<T> im3_view(ref_array, boost::shared_ptr<T>(), ncol, bounds, 1.);
-    galsim::ConstImageView<T> im3_cview(ref_array, boost::shared_ptr<T>(), ncol, bounds, 1.);
+    galsim::ImageView<T> im3_view(ref_array, boost::shared_ptr<T>(), ncol, bounds);
+    galsim::ConstImageView<T> im3_cview(ref_array, boost::shared_ptr<T>(), ncol, bounds);
     for (int y=1; y<=nrow; ++y) {
         for (int x=1; x<=ncol; ++x) {
             BOOST_CHECK(im3_view(x,y) == 10*x+y);
@@ -191,10 +190,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
         15, 25, 35, 45, 55, 65, 75 };
     galsim::Bounds<int> bounds(1,ncol,1,nrow);
 
-    galsim::ConstImageView<T> ref_im(ref_array, boost::shared_ptr<T>(), ncol, bounds, 1.);
+    galsim::ConstImageView<T> ref_im(ref_array, boost::shared_ptr<T>(), ncol, bounds);
 
-    galsim::Image<T> im1 = ref_im;
-    galsim::Image<T> im2 = T(2) * ref_im;
+    galsim::ImageAlloc<T> im1 = ref_im;
+    galsim::ImageAlloc<T> im2 = T(2) * ref_im;
     for (int y=1; y<=nrow; ++y) {
         for (int x=1; x<=ncol; ++x) {
             BOOST_CHECK(im2(x,y) == 2 * ref_im(x,y));
@@ -203,7 +202,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test image addition
     { 
-        galsim::Image<T> im3 = im1 + im2;
+        galsim::ImageAlloc<T> im3 = im1 + im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -233,7 +232,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test image subtraction
     { 
-        galsim::Image<T> im3 = im1 - im2;
+        galsim::ImageAlloc<T> im3 = im1 - im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -263,7 +262,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test binary multiplication
     { 
-        galsim::Image<T> im3 = im1 * im2;
+        galsim::ImageAlloc<T> im3 = im1 * im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -302,7 +301,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
                 im1(x,y) = 4 * ref_im(x,y) * ref_im(x,y);
             }
         }
-        galsim::Image<T> im3 = im1 / im2;
+        galsim::ImageAlloc<T> im3 = im1 / im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -335,7 +334,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test image scalar addition
     { 
-        galsim::Image<T> im3 = im1 + T(3);
+        galsim::ImageAlloc<T> im3 = im1 + T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -365,7 +364,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test image subtraction
     { 
-        galsim::Image<T> im3 = im1 - T(3);
+        galsim::ImageAlloc<T> im3 = im1 - T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -395,7 +394,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test binary multiplication
     { 
-        galsim::Image<T> im3 = im1 * T(3);
+        galsim::ImageAlloc<T> im3 = im1 * T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -430,7 +429,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
                 im1(x,y) = ref_im(x,y) * 27;
             }
         }
-        galsim::Image<T> im3 = im1 / T(3);
+        galsim::ImageAlloc<T> im3 = im1 / T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {

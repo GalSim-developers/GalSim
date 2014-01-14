@@ -461,7 +461,7 @@ def test_shear_get():
     # choose a power spectrum and grid setup
     my_ps = galsim.PowerSpectrum(lambda k : k**0.5)
     # build the grid
-    grid_spacing = 1.
+    grid_spacing = 17.
     ngrid = 100
     g1, g2, kappa = my_ps.buildGrid(grid_spacing = grid_spacing, ngrid = ngrid,
                                     get_convergence = True)
@@ -559,9 +559,10 @@ def test_tabulated():
 
     # draw shears on a grid from both PowerSpectrum objects, with same random seed
     seed = 12345
-    g1_analytic, g2_analytic = ps_analytic.buildGrid(grid_spacing = 1., ngrid = 10,
+    g1_analytic, g2_analytic = ps_analytic.buildGrid(grid_spacing = 1.7, ngrid = 10,
                                                      rng = galsim.BaseDeviate(seed))
-    g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1., ngrid = 10, rng = galsim.BaseDeviate(seed))
+    g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1.7, ngrid = 10,
+                                      rng = galsim.BaseDeviate(seed))
 
     # make sure that shears that are drawn are essentially identical
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
@@ -576,7 +577,7 @@ def test_tabulated():
     np.savetxt(filename, data)
     tab2 = galsim.LookupTable(file = filename)
     ps_tab2 = galsim.PowerSpectrum(tab2)
-    g1_tab2, g2_tab2 = ps_tab2.buildGrid(grid_spacing = 1., ngrid = 10,
+    g1_tab2, g2_tab2 = ps_tab2.buildGrid(grid_spacing = 1.7, ngrid = 10,
                                          rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab2, 6,
         err_msg = "g1 from file-based tabulated P(k) differs from expectation!")
@@ -585,21 +586,24 @@ def test_tabulated():
     # check that we get the same answer whether we use interpolation in log for k, P, or both
     tab = galsim.LookupTable(k_arr, p_arr, x_log = True)
     ps_tab = galsim.PowerSpectrum(tab)
-    g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1., ngrid = 10, rng = galsim.BaseDeviate(seed))
+    g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1.7, ngrid = 10,
+                                      rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
         err_msg = "g1 of shear field from tabulated P(k) with x_log differs from expectation!")
     np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
         err_msg = "g2 of shear field from tabulated P(k) with x_log differs from expectation!")
     tab = galsim.LookupTable(k_arr, p_arr, f_log = True)
     ps_tab = galsim.PowerSpectrum(tab)
-    g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1., ngrid = 10, rng = galsim.BaseDeviate(seed))
+    g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1.7, ngrid = 10,
+                                      rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
         err_msg = "g1 of shear field from tabulated P(k) with f_log differs from expectation!")
     np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
         err_msg = "g2 of shear field from tabulated P(k) with f_log differs from expectation!")
     tab = galsim.LookupTable(k_arr, p_arr, x_log = True, f_log = True)
     ps_tab = galsim.PowerSpectrum(tab)
-    g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1., ngrid = 10, rng = galsim.BaseDeviate(seed))
+    g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1.7, ngrid = 10,
+                                      rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
         err_msg="g1 of shear field from tabulated P(k) with x_log, f_log differs from expectation!")
     np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
@@ -621,7 +625,7 @@ def test_tabulated():
         ## exception should be raised)
         t = galsim.LookupTable((0.99,1.,1.01),(0.99,1.,1.01))
         ps = galsim.PowerSpectrum(t)
-        np.testing.assert_raises(ValueError, ps.buildGrid, grid_spacing=1., ngrid=100)
+        np.testing.assert_raises(ValueError, ps.buildGrid, grid_spacing=1.7, ngrid=100)
         ## try to interpolate in log, but with zero values included
         np.testing.assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.),
                                  x_log=True)

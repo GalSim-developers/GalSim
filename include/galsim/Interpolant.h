@@ -313,10 +313,10 @@ namespace galsim {
      * @brief Nearest-neighbor interpolation: boxcar 
      *
      * The nearest-neighbor interpolant performs poorly as a k-space or x-space interpolant for
-     * SBInterpolatedImage.  (See document by Bernstein & Gruen, devel/modules/finterp.pdf in the
-     * GalSim repository.)  The objection to its use in Fourier space does not apply when shooting
-     * photons to generate an image; in that case, the nearest-neighbor interpolant is quite
-     * efficient (but not necessarily the best choice in terms of accuracy).
+     * SBInterpolatedImage.  (See paper by Bernstein & Gruen, http://arxiv.org/abs/1401.2636.)
+     * The objection to its use in Fourier space does not apply when shooting photons to generate an
+     * image; in that case, the nearest-neighbor interpolant is quite efficient (but not necessarily
+     * the best choice in terms of accuracy).
      *
      * Tolerance determines how far onto sinc wiggles the uval will go.  Very far, by default!
      */
@@ -394,10 +394,10 @@ namespace galsim {
      * @brief Linear interpolant
      *
      * The linear interpolant is a poor choice for FFT-based operations on SBInterpolatedImage, as
-     * it rings to high frequencies.  (See Bernstein & Gruen, devel/modules/finterp.pdf in the
-     * GalSim repository.)  This objection does not apply when shooting photons, in which case the
-     * linear interpolant is quite efficient (but not necessarily the best choice in terms of
-     * accuracy).
+     * it rings to high frequencies.  (See paper by Bernstein & Gruen,
+     * http://arxiv.org/abs/1401.2636.)  This objection does not apply when shooting photons, in
+     * which case the linear interpolant is quite efficient (but not necessarily the best choice in
+     * terms of accuracy).
      */
     class Linear : public Interpolant 
     {
@@ -437,8 +437,7 @@ namespace galsim {
      * From R. G. Keys, IEEE Trans. Acoustics, Speech, & Signal Proc 29, p 1153, 1981
      *
      * The cubic interpolant is a reasonable choice for a four-point interpolant for
-     * SBInterpolatedImage.   (See Bernstein & Gruen, devel/modules/finterp.pdf in the
-     * GalSim repository.)
+     * SBInterpolatedImage.   (See paper by Bernstein & Gruen, http://arxiv.org/abs/1401.2636.)
      */
     class Cubic : public Interpolant 
     {
@@ -484,7 +483,7 @@ namespace galsim {
     /**
      * @brief Piecewise-quintic polynomial interpolant, ideal for Fourier-space interpolation
      *
-     * See Bernstein & Gruen, devel/modules/finterp.pdf in the GalSim repository.
+     * See paper by Bernstein & Gruen, http://arxiv.org/abs/1401.2636.
      */
 
     class Quintic : public Interpolant 

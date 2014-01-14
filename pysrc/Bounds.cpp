@@ -64,13 +64,6 @@ struct PyPosition {
             .def("assign", &Position<T>::operator=, bp::return_self<>())
             .enable_pickling()
             ;
-        // These are done separately to avoid a clang warning about 
-        // "multiple unsequenced modifications to 'self' [-Wunsequenced]"
-        // Clang doesn't understand that bp::self isn't actually being modified here!  :)
-        pyPosition.def(bp::self += bp::self);
-        pyPosition.def(bp::self -= bp::self);
-        pyPosition.def(bp::self *= bp::other<T>());
-        pyPosition.def(bp::self /= bp::other<T>());
     }
 
 };
