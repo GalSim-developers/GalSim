@@ -35,12 +35,12 @@ class ChromaticObject(object):
         """Draws an Image of a chromatic object as observed through a bandpass filter.
 
         Draws the image wavelength by wavelength, i.e., using a Riemann sum.  This is often slow,
-        especially if each wavelength involves multiple convolutions, for example.  Hence, subclasses
-        should try to override this method if they can think of clever ways to reduce the number of
-        convolutions needed (see ChromaticConvolution below, for instance)
+        especially if each wavelength involves multiple convolutions, for example.  Hence,
+        subclasses should try to override this method if they can think of clever ways to reduce
+        the number of convolutions needed (see ChromaticConvolution below, for instance)
 
-        @param throughput_fn  A function to take wavelength in nanometers and return the total system
-                              dimensionless throughput.
+        @param throughput_fn  A function to take wavelength in nanometers and return the total
+                              system dimensionless throughput.
         @bluelim              Lower (blue) limit for wavelength integration.
         @redlim               Upper (red) limit for wavelength integration.
         @N                    Number of points to use for Riemann sum evaluation.  Default 100.
@@ -63,10 +63,12 @@ class ChromaticObject(object):
                               add_to_image=True, use_true_center=use_true_center, offset=offset)
         return image
 
-    def draw2(self, throughput_fn, bluelim, redlim, N=100,
+    def draw2(self, throughput_fn, bluelim, redlim,
              image=None, dx=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
-             integrator=galsim.integ.midpoint_int_image):
+             integrator=None, **kwargs):
+        if integrator is None:
+            integrator = galsim.integ.midpoint_int_image
         prof0 = self.evaluateAtWavelength(bluelim) * throughput_fn(bluelim)
         prof0 = prof0._fix_center(image, dx, offset, use_true_center, reverse=False)
         image = prof0._draw_setup_image(image, dx, wmult, add_to_image)
@@ -79,18 +81,15 @@ class ChromaticObject(object):
                       add_to_image=False, use_true_center=use_true_center, offset=offset)
             return tmpimage
 
-        integral = integrator(f_image, bluelim, redlim, N)
-        if add_to_image:
-            return image + integral
-        else:
-            return integral
+        integral = integrator(f_image, bluelim, redlim, **kwargs)
+
+        if not add_to_image:
+            image.setZero()
+        image += integral
+        return image
 
     def __add__(self, other):
         return galsim.ChromaticSum([self, other])
-
-    def __iadd__(self, other):
-        self = galsim.ChromaticSum([self, other])
-        return self
 
 class Chromatic(ChromaticObject):
     """Construct chromatic versions of the galsim GSObjects.
@@ -201,6 +200,21 @@ class ChromaticSum(ChromaticObject):
                                      add_to_image=True, use_true_center=use_true_center,
                                      offset=offset)
 
+    def draw2(self, throughput_fn, bluelim, redlim,
+              image=None, dx=None, gain=1.0, wmult=1.0,
+              add_to_image=False, use_true_center=True, offset=None,
+              integrator=None, **kwargs):
+        # is the most efficient method to just add up one component at a time...?
+        image = self.objlist[0].draw2(wave, throughput_fn, bluelim, redlim,
+                                     image=image, dx=dx, gain=gain, wmult=wmult,
+                                     add_to_image=add_to_image, use_true_center=use_true_center,
+                                     offset=offset, integrator=integrator, **kwargs)
+        for obj in self.objlist[1:]:
+            image = obj.draw2(wave, throughput_fn, bluelim, redlim,
+                              image=image, dx=dx, gain=gain, wmult=wmult,
+                              add_to_image=True, use_true_center=use_true_center,
+                              offset=offset, integrator=integrator, **kwargs)
+
     def applyShear(self, *args, **kwargs):
         for obj in self.objlist:
             obj.applyShear(*args, **kwargs)
@@ -283,7 +297,8 @@ class ChromaticConvolution(ChromaticObject):
         #     C(f1, f2) denotes the convolution of surface brightness profiles f1 & f2.
         #     A(f1, f2) denotes the addition of surface brightness profiles f1 & f2.
         #
-        # In general, chromatic s.b. profiles can be classified as either separable or inseparable.
+        # In general, chromatic s.b. profiles can be classified as either separable or inseparable,
+        # depending on whether they can be factored into spatial and spectral components or not.
         # Write separable profiles as g(x,y) * h(lambda), and leave inseparable profiles as
         # f(x,y,lambda).
         # We will suppress the arguments `x`, `y`, `lambda`, hereforward, but generally an `f` refers
@@ -291,10 +306,10 @@ class ChromaticConvolution(ChromaticObject):
         # `h` refers to the spectral part of a separable profile.
         #
         # Now, analyze a typical scenario, a bulge+disk galaxy model (each of which is separable,
-        # e.g., an SED times an exponential profile for the disk, and another SED times a DeV profile
-        # for the bulge).  Suppose the PSF is inseparable.  (Chromatic PSF's will generally be
-        # inseparable since we usually think of the PSF as being normalized to unit integral, no
-        # matter the wavelength we evaluate it at.)  Say there's also an achromatic pixel to
+        # e.g., an SED times an exponential profile for the disk, and a different SED times a DeV
+        # profile for the bulge).  Suppose the PSF is inseparable.  (Chromatic PSF's will generally
+        # be inseparable since we usually think of the spatial part of the PSF being normalized to
+        # unit integral for any fixed wavelength.)  Say there's also an achromatic pixel to
         # convolve with.
         # The formula for this might look like:
         #
@@ -302,12 +317,12 @@ class ChromaticConvolution(ChromaticObject):
         #     = I(C(A(g1*h1, g2*h2), f3, g4))                # note pix is lambda-independent
         #     = I(A(C(g1*h1, f3, g4)), C(A(g2*h2, f3, g4)))  # distribute the A over the C
         #     = A(I(C(g1*h1, f3, g4)), I(C(g2*h2, f3, g4)))  # distribute the A over the I
-        #     = A(C(g1,I(h1*f3),g4), C(g2,I(h2*f3),g4))      # factor lambda-indep terms out of I
+        #     = A(C(g1,I(h1*f3),g4), C(g2,I(h2*f3),g4))      # move lambda-indep terms out of I
         #
         # The result is that the integral is now inside the convolution, meaning we only have to
         # compute two convolutions instead of a convolution for each wavelength at which we evaluate
         # the integrand.  This technique, making an `effective` PSF profile for each of the bulge and
-        # disk, is a significant time savings most of the time.
+        # disk, is a significant time savings in most cases.
         # In general, we make effective profiles by splitting up `ChromaticSum`s and collecting the
         # inseparable terms on which to do integration first, and then finish with convolution last.
 
@@ -394,6 +409,180 @@ class ChromaticConvolution(ChromaticObject):
         return final_prof.draw(image=image, gain=gain, wmult=wmult, add_to_image=add_to_image,
                                use_true_center=use_true_center, offset=offset)
 
+    def draw2(self, throughput_fn, bluelim, redlim,
+              image=None, dx=None, gain=1.0, wmult=1.0,
+              add_to_image=False, use_true_center=True, offset=None,
+              integrator=None, **kwargs):
+        if integrator is None:
+            integrator = galsim.integ.midpoint_int_image
+        # Only make temporary changes to objlist...
+        objlist = list(self.objlist)
+
+        # expand any `ChromaticConvolution`s in the object list
+        L = len(objlist)
+        i = 0
+        while i < L:
+            if isinstance(objlist[i], ChromaticConvolution):
+                # found a ChromaticConvolution object, so unpack its obj.objlist to end of objlist,
+                # delete obj from objlist, and update list length `L` and list index `i`.
+                L += len(objlist[i].objlist) - 1
+                # appending to the end of the objlist means we don't have to recurse in order to
+                # expand a hierarchy of `ChromaticSum`s; we just have to keep going until the end of
+                # the ever-expanding list.
+                # I.e., `*` marks progress through list...
+                # {{{A, B}, C}, D}  i = 0, length = 2
+                #  *
+                # {D, {A, B}, C}    i = 1, length = 3
+                #     *
+                # {D, C, A, B}      i = 2, length = 4
+                #        *
+                # {D, C, A, B}      i = 3, length = 4
+                #           *
+                # Done!
+                objlist.extend(objlist[i].objlist)
+                del objlist[i]
+                i -= 1
+            i += 1
+
+        # Now split up any `ChromaticSum`s:
+        # This is the tricky part.  Some notation first:
+        #     I(f(x,y,lambda)) denotes the integral over wavelength of a chromatic surface brightness
+        #         profile f(x,y,lambda).
+        #     C(f1, f2) denotes the convolution of surface brightness profiles f1 & f2.
+        #     A(f1, f2) denotes the addition of surface brightness profiles f1 & f2.
+        #
+        # In general, chromatic s.b. profiles can be classified as either separable or inseparable,
+        # depending on whether they can be factored into spatial and spectral components or not.
+        # Write separable profiles as g(x,y) * h(lambda), and leave inseparable profiles as
+        # f(x,y,lambda).
+        # We will suppress the arguments `x`, `y`, `lambda`, hereforward, but generally an `f` refers
+        # to an inseparable profile, a `g` refers to the spatial part of a separable profile, and an
+        # `h` refers to the spectral part of a separable profile.
+        #
+        # Now, analyze a typical scenario, a bulge+disk galaxy model (each of which is separable,
+        # e.g., an SED times an exponential profile for the disk, and a different SED times a DeV
+        # profile for the bulge).  Suppose the PSF is inseparable.  (Chromatic PSF's will generally
+        # be inseparable since we usually think of the spatial part of the PSF being normalized to
+        # unit integral for any fixed wavelength.)  Say there's also an achromatic pixel to
+        # convolve with.
+        # The formula for this might look like:
+        #
+        # img = I(C(A(bulge, disk), PSF, pix))
+        #     = I(C(A(g1*h1, g2*h2), f3, g4))                # note pix is lambda-independent
+        #     = I(A(C(g1*h1, f3, g4)), C(A(g2*h2, f3, g4)))  # distribute the A over the C
+        #     = A(I(C(g1*h1, f3, g4)), I(C(g2*h2, f3, g4)))  # distribute the A over the I
+        #     = A(C(g1,I(h1*f3),g4), C(g2,I(h2*f3),g4))      # move lambda-indep terms out of I
+        #
+        # The result is that the integral is now inside the convolution, meaning we only have to
+        # compute two convolutions instead of a convolution for each wavelength at which we evaluate
+        # the integrand.  This technique, making an `effective` PSF profile for each of the bulge and
+        # disk, is a significant time savings in most cases.
+        # In general, we make effective profiles by splitting up `ChromaticSum`s and collecting the
+        # inseparable terms on which to do integration first, and then finish with convolution last.
+
+        # Here is the logic to turn I(C(A(...))) into A(C(..., I(...)))
+        returnme = False
+        for i, obj in enumerate(objlist):
+            if isinstance(obj, ChromaticSum):
+                # say obj.objlist = [A,B,C], where obj is a ChromaticSum object
+                returnme = True
+                del objlist[i] # remove the add object from objlist
+                tmplist = list(objlist) # collect remaining items to be convolved with each of A,B,C
+                tmplist.append(obj.objlist[0]) # add A to this convolve list
+                tmpobj = ChromaticConvolution(tmplist) # draw image
+                image = tmpobj.draw2(throughput_fn, bluelim, redlim,
+                                    image=image, gain=gain, wmult=wmult,
+                                    add_to_image=add_to_image, use_true_center=use_true_center,
+                                    offset=offset, **kwargs)
+                for summand in obj.objlist[1:]: # now do the same for B and C
+                    tmplist = list(objlist)
+                    tmplist.append(summand)
+                    tmpobj = ChromaticConvolution(tmplist)
+                    image = tmpobj.draw2(throughput_fn, bluelim, redlim, # add to previous image
+                                        image=image, gain=gain, wmult=wmult,
+                                        add_to_image=True, use_true_center=use_true_center,
+                                        offset=offset, **kwargs)
+        if returnme:
+            return image
+
+        # If program gets this far, the objects in objlist should be atomic (non-ChromaticSum
+        # and non-ChromaticConvolution).
+        # Sort these atomic objects into separable and inseparable lists, and collect
+        # the spectral parts of the separable profiles.
+        sep_profs = []
+        insep_profs = []
+        sep_SED = []
+        for obj in objlist:
+            if obj.separable:
+                if isinstance(obj, galsim.GSObject):
+                    sep_profs.append(obj) # The g(x,y)'s (see above)
+                else:
+                    sep_profs.append(obj.gsobj) # more g(x,y)'s
+                sep_SED.append(obj.SED) # The h(lambda)'s (see above)
+            else:
+                insep_profs.append(obj) # The f(x,y,lambda)'s (see above)
+
+        # check if there are any inseparable profiles
+        if insep_profs == []:
+            def f(w):
+                term = throughput_fn(w)
+                for s in sep_SED:
+                    term *= s(w)
+                return term
+            multiplier = galsim.integ.int1d(f, bluelim, redlim)
+        else:
+            multiplier = 1.0
+            mono_prof0 = galsim.Convolve([p.evaluateAtWavelength(bluelim) for p in insep_profs])
+            mono_prof0 = mono_prof0._fix_center(image=None, scale=None, offset=None,
+                                                use_true_center=True, reverse=False)
+            mono_prof_image = mono_prof0._draw_setup_image(image=None, dx=None, wmult=wmult,
+                                                           add_to_image=False)
+            def f_image(w):
+                mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
+                mono_prof *= throughput_fn(w)
+                for s in sep_SED:
+                    mono_prof *= s(w)
+                tmpimage = mono_prof_image.copy()
+                tmpimage.setZero()
+                mono_prof.draw(image=tmpimage, wmult=wmult)
+                # print 'f_image {} {}'.format(w, mono_prof.getFlux()* 2.2)
+                return tmpimage
+            effective_prof_image = integrator(f_image, bluelim, redlim, **kwargs)
+
+            # # OLD WAY
+            # N = 100
+            # h = (redlim * 1.0 - bluelim) / N
+            # ws = [bluelim + h * (i+0.5) for i in range(N)]
+            # # make an effective profile from inseparables and the chromatic part of separables
+            # # start combining monochromatic profiles into an effective profile
+            # multiplier = 1.0
+
+            # # start with the first wavelength
+            # mono_prof = galsim.Convolve([insp.evaluateAtWavelength(ws[0]) for insp in insep_profs])
+            # mono_prof *= throughput_fn(ws[0]) * h
+            # # multiply it by the appropriate spectral factor
+            # for s in sep_SED:
+            #     mono_prof *= s(ws[0])
+            # # start drawing effective profile
+            # effective_prof_image2 = mono_prof.draw(wmult=wmult)
+            # # now loop over remaining wavelengths and keep adding to effective profile
+            # for w in ws[1:]:
+            #     mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
+            #     mono_prof *= throughput_fn(w) * h
+            #     for s in sep_SED:
+            #         mono_prof *= s(w)
+            #     effective_prof_image2 = mono_prof.draw(image=effective_prof_image2, add_to_image=True,
+            #                                            wmult=wmult)
+            # END OLD WAY
+
+            # turn drawn effective profile into a GSObject
+            effective_prof = galsim.InterpolatedImage(effective_prof_image)
+            # append effective profile to separable profiles (which are all GSObjects)
+            sep_profs.append(effective_prof)
+        # finally, convolve and draw.
+        final_prof = multiplier * galsim.Convolve(sep_profs)
+        return final_prof.draw(image=image, gain=gain, wmult=wmult, add_to_image=add_to_image,
+                               use_true_center=use_true_center, offset=offset)
 
 class ChromaticShiftAndDilate(ChromaticObject):
     """Class representing chromatic profiles whose wavelength dependence consists of shifting and
