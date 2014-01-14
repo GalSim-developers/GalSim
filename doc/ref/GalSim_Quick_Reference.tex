@@ -553,24 +553,12 @@ the command is simply:
 
 \begin{itemize}
 
-\item[$\circ$] \texttt{noise.applyTo(image)} \newline {This adds
+\item[$\circ$] \texttt{image.addNoise(noise)} \newline {this adds
     stochastic noise, according to the noise model \texttt{noise},
     to each element of the data array in the
     \texttt{Image} instance \texttt{image}.}
 
 \end{itemize}
-
-A functionally equivalent command uses these noise instances with a
-method of \texttt{Image} objects (see Section~\ref{sect:image},
-below).  This takes the following form:
-\begin{itemize}
-
-\item[$\circ$] \texttt{image.addNoise(noise)}
-
-\end{itemize}
-However, this usage is now deprecated in favour of the
-\texttt{noise.applyTo(image)} command.
-
 
 \section{Images}\label{sect:image}
 
@@ -653,8 +641,7 @@ methods for such an instance are:
 \item[$\circ$] \texttt{image.addNoise(dev)} \newline {this adds
     stochastic noise, distributed as represented by the random deviate
     instance \texttt{dev}, to each element of the data array in
-    \texttt{image}.  This is the (deprecated) method previously
-    referenced in Section~\ref{sect:noisemodels}.}
+    \texttt{image}.  This is the method previously referenced in Section~\ref{sect:random}.}
 
 \item[$\circ$] \texttt{image.write(fits, \dots)}  \newline {write the
     \texttt{imageView} to a FITS file or object as determined by the
