@@ -75,3 +75,91 @@ def simpsons_int_image(f_image, a, b, N):
                     + 4.0*reduce(lambda x, y: x+y, images[1:-1:2])
                     + 2.0*reduce(lambda x, y: x+y, images[2:-2:2])
                     + images[-1])
+
+#Node locations and weights for Gaussian-Kronrod quadrature
+GK_nodes = [-0.9914553711208126392068547,
+            -0.9491079123427585245261897,
+            -0.8648644233597690727897128,
+            -0.7415311855993944398638648,
+            -0.5860872354676911302941448,
+            -0.4058451513773971669066064,
+            -0.2077849550078984676006894,
+             0.0,
+             0.2077849550078984676006894,
+             0.4058451513773971669066064,
+             0.5860872354676911302941448,
+             0.7415311855993944398638648,
+             0.8648644233597690727897128,
+             0.9491079123427585245261897,
+             0.9914553711208126392068547]
+K_weights = [0.0229353220105292249637320,
+             0.0630920926299785532907007,
+             0.1047900103222501838398763,
+             0.1406532597155259187451896,
+             0.1690047266392679028265834,
+             0.1903505780647854099132564,
+             0.2044329400752988924141620,
+             0.2094821410847278280129992,
+             0.2044329400752988924141620,
+             0.1903505780647854099132564,
+             0.1690047266392679028265834,
+             0.1406532597155259187451896,
+             0.1047900103222501838398763,
+             0.0630920926299785532907007,
+             0.0229353220105292249637320]
+G_weights = [0.0,
+             0.1294849661688696932706114,
+             0.0,
+             0.2797053914892766670114678,
+             0.0,
+             0.3818300505051189449503698,
+             0.0,
+             0.4179591836734693877551020,
+             0.0,
+             0.3818300505051189449503698,
+             0.0,
+             0.2797053914892766670114678,
+             0.0,
+             0.1294849661688696932706114,
+             0.0]
+
+def gauss_kronrod_image_rule(f, a, b):
+    z = [(b-a)/2.0 * n + (a+b)/2.0 for n in GK_nodes]
+    fz = map(f, z)
+    GImage = fz[0].copy()
+    KImage = fz[0].copy()
+    GImage.setZero()
+    KImage.setZero()
+    for i in xrange(15):
+        GImage += fz[i] * G_weights[i]
+        KImage += fz[i] * K_weights[i]
+    GImage *= (b-a)/2.0
+    KImage *= (b-a)/2.0
+    errarray = (200 * abs(GImage.array-KImage.array))**1.5
+    errImage = KImage.copy()
+    errImage.setZero()
+    errImage.array[:] = errarray
+    return KImage, errImage
+
+def globally_adaptive_GK_int_image(f, a, b, rel_err=1.e-3):
+    SImage, errImage = gauss_kronrod_image_rule(f, a, b)
+    err = errImage.array.sum()
+    heap = [(a, b, SImage, errImage, err)]
+    iter_=0
+    while ((err / SImage.array.sum()) > rel_err) and iter_<100:
+        errs = [heap[i][4] for i in range(len(heap))]
+        max_ = max(errs)
+        k = errs.index(max_)
+        a = heap[k][0]
+        b = heap[k][1]
+        m = (a*1.0 + b)/2.0
+        SImageLeft, errImageLeft = gauss_kronrod_image_rule(f, a, m)
+        SImageRight, errImageRight = gauss_kronrod_image_rule(f, m, b)
+        SImage = SImage - heap[k][2] + SImageLeft + SImageRight
+        errImage = errImage - heap[k][3] + errImageLeft + errImageRight
+        del heap[k]
+        heap.append((a, m, SImageLeft, errImageLeft, errImageLeft.array.sum()))
+        heap.append((m, b, SImageRight, errImageRight, errImageRight.array.sum()))
+        err = errImage.array.sum()
+        iter_ += 1
+    return SImage
