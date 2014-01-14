@@ -41,7 +41,9 @@ New features introduced in this demo:
 - pos = bounds.trueCenter()
 - wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc, origin)
 - wcs.toWorld(profile, image_pos)
+- wcs.makeSkyImage(image, sky_level)
 - image_pos = wcs.toImage(pos)
+- image.invertSelf()
 
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
@@ -371,25 +373,32 @@ def main(argv):
 
         # Add Poisson noise to the full image
         # Note: The normal calculation of Poission noise isn't quite correct right now.
-        # We should have a different sky value in each pixel because the pixel area varies 
-        # across the image.  But we just use the pixel area at the center, which will
-        # underestimate the sky brightness near the edges.  (Well, everywhere really,
-        # but especially near the edges.)
-        sky_level_pixel = sky_level * wcs.pixelArea(im_center)
+        # The pixel area is variable, which means the amount of sky flux that enters each
+        # pixel is also variable.  The wcs classes have a function `makeSkyImage` which
+        # will fill an image with the correct amount of sky flux given the sky level
+        # in units of ADU/arcsec^2.  We use the weight image as our work space for this.
+        wcs.makeSkyImage(weight_image, sky_level)
 
+        # Add this to the current full_image (temporarily).
+        full_image += weight_image
+
+        # Add Poisson noise, given the current full_image.
         # Going to the next seed isn't really required, but it matches the behavior of the 
         # config parser, so doing this will result in identical output files.
         # If you didn't care about that, you could instead construct this as a continuation
         # of the last RNG from the above loop
         rng = galsim.BaseDeviate(seed+nobj)
-        full_image.addNoise(galsim.PoissonNoise(rng,sky_level=sky_level_pixel))
+        full_image.addNoise(galsim.PoissonNoise(rng))
 
-        # For the weight image, we only want the noise from the sky.  (If we were including
-        # read_noise, we'd want that as well.)  Including the Poisson noise from the objects
-        # as well tends to bias fits that use this as a weight, since the model becomes
-        # magnitude-dependent.
-        # The variance is just sky_level_pixel.  And we want the inverse of this.
-        weight_image.fill(1./sky_level_pixel)
+        # Subtract the sky back off.
+        full_image -= weight_image
+
+        # For the weight image, we only want the noise from the sky, which is already has. 
+        # (If we were including read_noise, we'd want that as well.)  Including the Poisson noise 
+        # from the objects as well tends to bias fits that use this as a weight, since the model 
+        # becomes magnitude-dependent.  So all we need to do now is to invert the values in
+        # weight_image.  
+        weight_image.invertSelf()
 
         # Write the file to disk:
         galsim.fits.writeMulti([full_image, badpix_image, weight_image, psf_image], file_name)

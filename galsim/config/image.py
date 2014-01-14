@@ -614,8 +614,10 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             full_badpix_image[b] |= badpix_images[k]
         if current_vars[k] > max_current_var: max_current_var = current_vars[k]
 
-    # Use this position for any pixelArea calls that get made.
-    config['image_pos'] = config['image_center']
+    # Mark that we are no longer doing a single galaxy by deleting image_pos from config top 
+    # level, so it cannot be used for things like wcs.pixelArea(image_pos).  
+    if 'image_pos' in config: del config['image_pos']
+
     # If didn't do noise above in the stamps, then need to do it here.
     if not do_noise:
         if 'noise' in config['image']:
@@ -837,11 +839,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                         full_image.bounds.ymin, full_image.bounds.ymax))
         if current_vars[k] > max_current_var: max_current_var = current_vars[k]
 
-    # TODO: This is not correct when the WCS has a variable pixel area.  Really, 
-    # we want to have sky level vary according to the pixel area, but we don't 
-    # do that currently.  We just take the pixel area at the center of the image.
-    # Use this within AddNoise functions when the image_pos is requested.
-    config['image_pos'] = config['image_center']
+    # Mark that we are no longer doing a single galaxy by deleting image_pos from config top 
+    # level, so it cannot be used for things like wcs.pixelArea(image_pos).  
+    if 'image_pos' in config: del config['image_pos']
 
     if 'noise' in config['image']:
         # Apply the noise to the full image

@@ -714,7 +714,7 @@ class BaseWCS(object):
             u = self._u(x,y)
             v = self._v(x,y)
         except:
-            # If that didn't work, we have to do it manually for each position. :(
+            # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
             u = numpy.zeros((ny,nx))
             v = numpy.zeros((ny,nx))
             for i in range(ny):
