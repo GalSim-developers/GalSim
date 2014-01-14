@@ -153,6 +153,39 @@ def test_direct_sum_vs_chromatic():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_CC_interpolatedImage():
+    import time
+    t1 = time.time()
+
+    pixel_scale = 0.1
+    stamp_size = 64
+
+    # stars are fundamentally delta-fns with an SED
+    star = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
+    pix = galsim.Pixel(pixel_scale)
+    mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
+    shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec)
+    dilate_fn = lambda w:(w/500.0)**(-0.2)
+    PSF = galsim.ChromaticShiftAndDilate(mono_PSF, shift_fn=shift_fn, dilate_fn=dilate_fn)
+
+    final = galsim.Convolve([star, PSF, pix])
+    image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+
+    image = galsim.ChromaticConvolution.draw(final, filter_fn, bluelim, redlim, 100, image=image)
+    draw_flux = image.array.sum()
+
+    image2 = image.copy()
+    image2 = galsim.ChromaticObject.draw(final, filter_fn, bluelim, redlim, 100, image=image2)
+    draw2_flux = image2.array.sum()
+
+    #compare
+    np.testing.assert_array_almost_equal(
+        image.array, image2.array, 5,
+        err_msg="draw not equivalent to draw2")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_draw2():
     import time
     t1 = time.time()
@@ -164,8 +197,9 @@ def test_draw2():
     star = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
     pix = galsim.Pixel(pixel_scale)
     mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
-    PSF = galsim.ChromaticShiftAndDilate(mono_PSF,
-                                         dilate_fn=lambda w:(w/500.0)**(-0.2))
+    shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec)
+    dilate_fn = lambda w:(w/500.0)**(-0.2)
+    PSF = galsim.ChromaticShiftAndDilate(mono_PSF, shift_fn=shift_fn, dilate_fn=dilate_fn)
 
     final = galsim.Convolve([star, PSF, pix])
     image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
@@ -178,6 +212,7 @@ def test_draw2():
     draw2_flux = image2.array.sum()
 
     #compare
+    printval(image, image2)
     np.testing.assert_array_almost_equal(
         image.array, image2.array, 5,
         err_msg="draw not equivalent to draw2")
@@ -271,6 +306,10 @@ def test_chromatic_add():
     disk_image = disk_part.draw(filter_fn, bluelim, redlim, 100, image=disk_image)
 
     piecewise_image = bulge_image + disk_image
+    print 'bulge image flux: {}'.format(bulge_image.array.sum())
+    print 'disk image flux: {}'.format(disk_image.array.sum())
+    print 'piecewise image flux: {}'.format(piecewise_image.array.sum())
+    print 'bdimage flux: {}'.format(image.array.sum())
     printval(image, piecewise_image)
     np.testing.assert_array_almost_equal(
             image.array, piecewise_image.array, 6,
@@ -484,21 +523,24 @@ def test_chromatic_flux():
     star = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
     pix = galsim.Pixel(pixel_scale)
     mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
-    PSF = galsim.ChromaticShiftAndDilate(mono_PSF,
-                                         dilate_fn=lambda w:(w/500.0)**(-0.2))
+    shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec)
+    dilate_fn = lambda w:(w/500.0)**(-0.2)
+    PSF = galsim.ChromaticShiftAndDilate(mono_PSF, shift_fn=shift_fn, dilate_fn=dilate_fn)
 
     final = galsim.Convolve([star, PSF, pix])
     image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+    image2 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
 
-    image = final.draw(filter_fn, bluelim, redlim, 100, image=image)
+    image = galsim.ChromaticConvolution.draw(final, filter_fn, bluelim, redlim, 100, image=image)
     ChromaticConvolve_flux = image.array.sum()
 
-    image = galsim.ChromaticObject.draw(final, filter_fn, bluelim, redlim, 100, image=image)
-    ChromaticObject_flux = image.array.sum()
+    image2 = galsim.ChromaticObject.draw(final, filter_fn, bluelim, redlim, 100, image=image2)
+    ChromaticObject_flux = image2.array.sum()
 
     # analytic integral...
     analytic_flux = galsim.integ.int1d(lambda w: bulge_SED(w) * filter_fn(w), bluelim, redlim)
 
+    printval(image, image2)
     np.testing.assert_almost_equal(ChromaticObject_flux/analytic_flux, 1.0, 5,
                                    err_msg="Drawn ChromaticObject flux doesn't match " +
                                    "analytic prediction")
@@ -510,11 +552,12 @@ def test_chromatic_flux():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
-    # test_direct_sum_vs_chromatic()
-    # test_chromatic_add()
-    # test_dcr_moments()
-    # test_chromatic_seeing_moments()
-    # test_monochromatic_filter()
-    # test_chromatic_flux()
-    # test_draw2()
-    compare_integrators()
+    # test_CC_interpolatedImage()
+    test_direct_sum_vs_chromatic()
+    test_chromatic_add()
+    test_dcr_moments()
+    test_chromatic_seeing_moments()
+    test_monochromatic_filter()
+    test_draw2()
+    # compare_integrators()
+    test_chromatic_flux()

@@ -29,8 +29,9 @@ import galsim.integ
 class ChromaticObject(object):
     """Base class for defining wavelength dependent objects.
     """
-    def draw(self, throughput_fn, bluelim, redlim, N=100, image=None, add_to_image=False,
-             *args, **kwargs):
+    def draw(self, throughput_fn, bluelim, redlim, N=100,
+             image=None, dx=None, gain=1.0, wmult=1.0,
+             add_to_image=False, use_true_center=True, offset=None):
         """Draws an Image of a chromatic object as observed through a bandpass filter.
 
         Draws the image wavelength by wavelength, i.e., using a Riemann sum.  This is often slow,
@@ -47,37 +48,42 @@ class ChromaticObject(object):
         @returns           The drawn image.
         """
 
+        prof0 = self.evaluateAtWavelength(bluelim) * throughput_fn(bluelim)
+        prof0 = prof0._fix_center(image, dx, offset, use_true_center, reverse=False)
+        image = prof0._draw_setup_image(image, dx, wmult, add_to_image)
+
         h = (redlim * 1.0 - bluelim) / N
         ws = [bluelim + h * (i+0.5) for i in range(N)]
-
         prof = self.evaluateAtWavelength(ws[0]) * throughput_fn(ws[0]) * h
-        image = prof.draw(image=image, add_to_image=add_to_image, *args, **kwargs)
+        image = prof.draw(image=image, gain=gain, wmult=wmult,
+                          add_to_image=add_to_image, use_true_center=use_true_center, offset=offset)
         for w in ws[1:]:
             prof = self.evaluateAtWavelength(w) * throughput_fn(w) * h
-            image = prof.draw(image=image, add_to_image=True, *args, **kwargs)
+            image = prof.draw(image=image, gain=gain, wmult=wmult,
+                              add_to_image=True, use_true_center=use_true_center, offset=offset)
         return image
 
-    def draw2(self, throughput_fn, bluelim, redlim, N=100, image=None, add_to_image=False,
-              integrator=galsim.integ.midpoint_int_image, *args, **kwargs):
-        h = (redlim * 1.0 - bluelim) / N
-        w0 = bluelim + h * 0.5
-        prof0 = self.evaluateAtWavelength(w0) * throughput_fn(w0) * h
-
-        if image is not None:
-            tmpimage = image.copy()
-            tmpimage = prof0.draw(image=tmpimage, *args, **kwargs)
-        else:
-            tmpimage = prof0.draw(*args, **kwargs)
-        scale = tmpimage.scale
-        width, height = tmpimage.array.shape
+    def draw2(self, throughput_fn, bluelim, redlim, N=100,
+             image=None, dx=None, gain=1.0, wmult=1.0,
+             add_to_image=False, use_true_center=True, offset=None,
+             integrator=galsim.integ.midpoint_int_image):
+        prof0 = self.evaluateAtWavelength(bluelim) * throughput_fn(bluelim)
+        prof0 = prof0._fix_center(image, dx, offset, use_true_center, reverse=False)
+        image = prof0._draw_setup_image(image, dx, wmult, add_to_image)
 
         def f_image(w):
             prof = self.evaluateAtWavelength(w) * throughput_fn(w)
-            tmpimage = galsim.ImageD(width, height, scale)
-            prof.draw(image=tmpimage, *args, **kwargs)
+            tmpimage = image.copy()
+            tmpimage.setZero()
+            prof.draw(image=tmpimage, gain=gain, wmult=wmult,
+                      add_to_image=False, use_true_center=use_true_center, offset=offset)
             return tmpimage
 
-        return integrator(f_image, bluelim, redlim, N)
+        integral = integrator(f_image, bluelim, redlim, N)
+        if add_to_image:
+            return image + integral
+        else:
+            return integral
 
     def __add__(self, other):
         return galsim.ChromaticSum([self, other])
@@ -181,16 +187,19 @@ class ChromaticSum(ChromaticObject):
         """
         return galsim.Sum([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
-    def draw(self, throughput_fn, bluelim, redlim, N=100, image=None, add_to_image=False,
-             *args, **kwargs):
+    def draw(self, throughput_fn, bluelim, redlim, N=100,
+             image=None, dx=None, gain=1.0, wmult=1.0,
+             add_to_image=False, use_true_center=True, offset=None):
         # is the most efficient method to just add up one component at a time...?
         image = self.objlist[0].draw(wave, throughput_fn, bluelim, redlim, N=N,
-                                     image=image, add_to_image=add_to_image,
-                                     *args, **kwargs)
+                                     image=image, dx=dx, gain=gain, wmult=wmult,
+                                     add_to_image=add_to_image, use_true_center=use_true_center,
+                                     offset=offset)
         for obj in self.objlist[1:]:
             image = obj.draw(wave, throughput_fn, bluelim, redlim, N=N,
-                             image=image, add_to_image=True,
-                             *args, **kwargs)
+                                     image=image, dx=dx, gain=gain, wmult=wmult,
+                                     add_to_image=True, use_true_center=use_true_center,
+                                     offset=offset)
 
     def applyShear(self, *args, **kwargs):
         for obj in self.objlist:
@@ -235,8 +244,9 @@ class ChromaticConvolution(ChromaticObject):
         """
         return galsim.Convolve([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
-    def draw(self, throughput_fn, bluelim, redlim, N=100, image=None, add_to_image=False,
-             *args, **kwargs):
+    def draw(self, throughput_fn, bluelim, redlim, N=100,
+             image=None, dx=None, gain=1.0, wmult=1.0,
+             add_to_image=False, use_true_center=True, offset=None):
         # Only make temporary changes to objlist...
         objlist = list(self.objlist)
 
@@ -312,15 +322,17 @@ class ChromaticConvolution(ChromaticObject):
                 tmplist.append(obj.objlist[0]) # add A to this convolve list
                 tmpobj = ChromaticConvolution(tmplist) # draw image
                 image = tmpobj.draw(throughput_fn, bluelim, redlim, N=N,
-                                    image=image, add_to_image=add_to_image,
-                                    *args, **kwargs)
+                                    image=image, gain=gain, wmult=wmult,
+                                    add_to_image=add_to_image, use_true_center=use_true_center,
+                                    offset=offset)
                 for summand in obj.objlist[1:]: # now do the same for B and C
                     tmplist = list(objlist)
                     tmplist.append(summand)
                     tmpobj = ChromaticConvolution(tmplist)
                     image = tmpobj.draw(throughput_fn, bluelim, redlim, N=N, # add to previous image
-                                        image=image, add_to_image=True,
-                                        *args, **kwargs)
+                                        image=image, gain=gain, wmult=wmult,
+                                        add_to_image=True, use_true_center=use_true_center,
+                                        offset=offset)
         if returnme:
             return image
 
@@ -356,6 +368,7 @@ class ChromaticConvolution(ChromaticObject):
             # make an effective profile from inseparables and the chromatic part of separables
             # start combining monochromatic profiles into an effective profile
             multiplier = 1.0
+
             # start with the first wavelength
             mono_prof = galsim.Convolve([insp.evaluateAtWavelength(ws[0]) for insp in insep_profs])
             mono_prof *= throughput_fn(ws[0]) * h
@@ -363,7 +376,7 @@ class ChromaticConvolution(ChromaticObject):
             for s in sep_SED:
                 mono_prof *= s(ws[0])
             # start drawing effective profile
-            effective_prof_image = mono_prof.draw(*args, **kwargs)
+            effective_prof_image = mono_prof.draw(wmult=wmult)
             # now loop over remaining wavelengths and keep adding to effective profile
             for w in ws[1:]:
                 mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
@@ -371,15 +384,15 @@ class ChromaticConvolution(ChromaticObject):
                 for s in sep_SED:
                     mono_prof *= s(w)
                 effective_prof_image = mono_prof.draw(image=effective_prof_image, add_to_image=True,
-                                                      *args, **kwargs)
+                                                      wmult=wmult)
             # turn drawn effective profile into a GSObject
             effective_prof = galsim.InterpolatedImage(effective_prof_image)
             # append effective profile to separable profiles (which are all GSObjects)
             sep_profs.append(effective_prof)
         # finally, convolve and draw.
         final_prof = multiplier * galsim.Convolve(sep_profs)
-        return final_prof.draw(image=image, add_to_image=add_to_image,
-                               *args, **kwargs)
+        return final_prof.draw(image=image, gain=gain, wmult=wmult, add_to_image=add_to_image,
+                               use_true_center=use_true_center, offset=offset)
 
 
 class ChromaticShiftAndDilate(ChromaticObject):
