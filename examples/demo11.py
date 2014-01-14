@@ -27,6 +27,7 @@ New features introduced in this demo:
 - vn = galsim.VariableGaussianNoise(rng, var_image)
 - image.addNoise(cn)
 - image.setOrigin(x,y)
+- angle.dms(), angle.hms()
 
 - Power spectrum shears and magnifications for non-gridded positions.
 - Reading a compressed FITS image (using BZip2 compression).
