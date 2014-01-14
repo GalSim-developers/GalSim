@@ -56,10 +56,9 @@ class InterpolatedImage(GSObject):
     `k_interpolant` and `pad_factor` from the defaults without careful testing.  The user is given 
     complete freedom to choose interpolants and pad factors, and no warnings are raised when the 
     code is modified to choose some combination that is known to give significant error.  More 
-    details can be found in devel/modules/finterp.pdf, especially table 1, in the GalSim 
-    repository, and in comment 
-    https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621 and following
-    comments.  
+    details can be found in http://arxiv.org/abs/1401.2636, especially table 1, and in comment 
+    https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621 and the following
+    comments.
     
     The user can choose to pad the image with a noise profile if desired.  To do so, specify
     the target size for the noise padding in `noise_pad_size`, and specify the kind of noise
