@@ -1262,9 +1262,10 @@ def test_radecfunction():
             np.testing.assert_almost_equal(galsim.DMS_Angle(center.dec.dms()) / galsim.arcsec,
                                            center.dec / galsim.arcsec, 6, 'DMS parser error')
 
-            rafunc = lambda x,y: center.deproject(galsim.PositionD(ufunc(x,y), vfunc(x,y))).ra
-            decfunc = lambda x,y: center.deproject(galsim.PositionD(ufunc(x,y), vfunc(x,y))).dec
-            wcs2 = galsim.RaDecFunction(rafunc, decfunc)
+            radec_func = ( lambda x,y: 
+                    [ (c.ra.rad(), c.dec.rad()) for c in 
+                            [ center.deproject(galsim.PositionD(ufunc(x,y), vfunc(x,y))) ] ][0] )
+            wcs2 = galsim.RaDecFunction(radec_func)
 
             # Check that distance, jacobian for some x,y positions match the UV values.
             for x,y in zip(far_x_list, far_y_list):
@@ -1273,11 +1274,10 @@ def test_radecfunction():
                 u = ufunc(x,y)
                 v = vfunc(x,y)
                 coord = center.deproject(galsim.PositionD(u,v))
-                ra = rafunc(x,y)
-                dec = decfunc(x,y)
-                np.testing.assert_almost_equal(ra/galsim.degrees, coord.ra/galsim.degrees, 6,
+                ra, dec = radec_func(x,y)
+                np.testing.assert_almost_equal(ra, coord.ra.rad(), 8,
                                                'rafunc produced wrong value')
-                np.testing.assert_almost_equal(dec/galsim.degrees, coord.dec/galsim.degrees, 6,
+                np.testing.assert_almost_equal(dec, coord.dec.rad(), 8,
                                                'decfunc produced wrong value')
                 pos = center.project(coord)
                 np.testing.assert_almost_equal(pos.x, u, 6, 'project x was inconsistent')

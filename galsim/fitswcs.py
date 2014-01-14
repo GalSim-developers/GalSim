@@ -42,7 +42,6 @@ import galsim
 #     copy              return a copy
 #     __eq__            check if this equals another WCS
 #     __ne__            check if this is not equal to another WCS
-#     _local            function returning a local WCS at a given location
 #     _writeHeader      function that writes the WCS to a fits header.
 #     _readHeader       static function that reads the WCS from a fits header.
 #
@@ -172,9 +171,12 @@ class AstropyWCS(galsim.wcs.BaseWCS):
         # So far, we don't have any, but something could be added in the future.
         pass
 
-    def _posToWorld(self, image_pos):
-        x = image_pos.x - self._x0
-        y = image_pos.y - self._y0
+    def _radec(self, x, y):
+        import numpy
+        # Need this to look like 
+        #    [ [ x1, y1 ], [ x2, y2 ], ... ] 
+        # if input is either scalar x,y or two arrays.
+        xy = numpy.atleast_2d([x, y])
         # Apparently, the returned values aren't _necessarily_ (ra, dec).  They could be
         # (dec, ra) instead!  But if you add ra_dec_order=True, then it will be (ra, dec).
         # I can't imagnie why that isn't the default, but there you go.
@@ -182,13 +184,29 @@ class AstropyWCS(galsim.wcs.BaseWCS):
             # This currently fails with an AttributeError about astropy.wcs.Wcsprm.lattype
             # c.f. https://github.com/astropy/astropy/pull/1463
             # Once they fix it, this is what we want.
-            ra, dec = self._wcs.all_pix2world( [ [x, y] ], 1, ra_dec_order=True)[0]
-        except AttributeError:
+            world = self._wcs.all_pix2world( xy, 1, ra_dec_order=True)
+        except:
             # Until then, just assume that the returned values really are ra, dec.
-            ra, dec = self._wcs.all_pix2world( [ [x, y] ], 1)[0]
+            world = self._wcs.all_pix2world( xy, 1)
 
-        # astropy.wcs returns (ra, dec) in degrees.  Convert to our CelestialCoord class.
-        return galsim.CelestialCoord(ra * galsim.degrees, dec * galsim.degrees)
+        # astropy outputs ra, dec in degrees.  Need to convert to radians.
+        world *= 1. * galsim.degrees / galsim.radians
+
+        try:
+            # If the inputs were numpy arrays, return the same
+            len(x)
+            ra, dec = world.transpose()
+        except:
+            # Otherwise, return scalars
+            assert len(world) == 1
+            ra, dec = world[0]
+        return ra, dec
+
+    def _posToWorld(self, image_pos):
+        x = image_pos.x - self._x0
+        y = image_pos.y - self._y0
+        ra, dec = self._radec(x,y)
+        return galsim.CelestialCoord(ra * galsim.radians, dec * galsim.radians)
 
     def _posToImage(self, world_pos):
         ra = world_pos.ra / galsim.degrees
@@ -255,30 +273,6 @@ class AstropyWCS(galsim.wcs.BaseWCS):
             x,y = soln
 
         return galsim.PositionD(x + self._x0, y + self._y0)
-
-    def _local(self, image_pos, world_pos):
-        if image_pos is None:
-            image_pos = self._posToImage(world_pos)
-        x0 = image_pos.x - self._x0
-        y0 = image_pos.y - self._y0
-        # Use dx,dy = 1 pixel for numerical derivatives
-        dx = 1
-        dy = 1
-
-        # all_pix2world can take an array to do everything at once.
-        try:
-            world = self._wcs.all_pix2world(
-                    [ [x0,y0], [x0+dx,y0], [x0-dx,y0], [x0,y0+dy], [x0,y0-dy] ], 1,
-                    ra_dec_order=True)
-        except AttributeError:
-            world = self._wcs.all_pix2world(
-                    [ [x0,y0], [x0+dx,y0], [x0-dx,y0], [x0,y0+dy], [x0,y0-dy] ], 1)
-
-        # Convert to a list of ra and dec separately
-        ra = [ w[0] for w in world ]
-        dec = [ w[1] for w in world ]
-
-        return galsim.wcs.makeJacFromNumericalRaDec(ra, dec, dx, dy)
 
     def _setOrigin(self, origin):
         return AstropyWCS(wcs=self._wcs, origin=origin)
@@ -450,36 +444,37 @@ class PyAstWCS(galsim.wcs.BaseWCS):
             header['CTYPE1'] = header['CTYPE1'].replace('TAN','TPV')
             header['CTYPE2'] = header['CTYPE2'].replace('TAN','TPV')
 
+    def _radec(self, x, y):
+        import numpy
+        # Need this to look like 
+        #    [ [ x1, x2, x3... ], [ y1, y2, y3... ] ] 
+        # if input is either scalar x,y or two arrays.
+        xy = numpy.array([numpy.atleast_1d(x), numpy.atleast_1d(y)])
+
+        ra, dec = self._wcsinfo.tran( xy )
+        # PyAst returns ra, dec in radians, so we're good.
+
+        try:
+            len(x)
+        except:
+            # If the inputs weren't numpy arrays, return scalars
+            assert len(ra) == 1
+            assert len(dec) == 1
+            ra = ra[0]
+            dec = dec[0]
+        return ra, dec
+
     def _posToWorld(self, image_pos):
         x = image_pos.x - self._x0
         y = image_pos.y - self._y0
-        ra, dec = self._wcsinfo.tran( [ [x], [y] ] )
-        # PyAst returns ra, dec in radians
-        return galsim.CelestialCoord(ra[0] * galsim.radians, dec[0] * galsim.radians)
+        ra, dec = self._radec(x,y)
+        return galsim.CelestialCoord(ra * galsim.radians, dec * galsim.radians)
 
     def _posToImage(self, world_pos):
         ra = world_pos.ra / galsim.radians
         dec = world_pos.dec / galsim.radians
         x,y = self._wcsinfo.tran( [ [ra], [dec] ], False)
         return galsim.PositionD(x[0] + self._x0, y[0] + self._y0)
-
-    def _local(self, image_pos, world_pos):
-        if image_pos is None:
-            image_pos = self._posToImage(world_pos)
-        x0 = image_pos.x - self._x0
-        y0 = image_pos.y - self._y0
-        # Use dx,dy = 1 pixel for numerical derivatives
-        dx = 1
-        dy = 1
-
-        # wcsinfo.tran can take arrays to do everything at once.
-        ra, dec = self._wcsinfo.tran( [ [ x0, x0+dx, x0-dx, x0,    x0    ],
-                                        [ y0, y0,    y0,    y0+dy, y0-dy ] ])
-
-        # Convert to degrees as needed by makeJacFromNumericalRaDec:
-        ra = [ r * galsim.radians / galsim.degrees for r in ra ]
-        dec = [ d * galsim.radians / galsim.degrees for d in dec ]
-        return galsim.wcs.makeJacFromNumericalRaDec(ra, dec, dx, dy)
 
     def _setOrigin(self, origin):
         return PyAstWCS(wcsinfo=self._wcsinfo, origin=origin)
@@ -602,19 +597,23 @@ class WcsToolsWCS(galsim.wcs.BaseWCS):
     @property
     def origin(self): return galsim.PositionD(self._x0, self._y0)
 
-    def _posToWorld(self, image_pos):
-        x = image_pos.x - self._x0
-        y = image_pos.y - self._y0
-
+    def _radec(self, x, y):
+        import numpy
+        # Need this to look like 
+        #    [ x1, y1, x2, y2, ... ] 
+        # if input is either scalar x,y or two arrays.
+        xy = numpy.array([x, y]).transpose().flatten()
+        
         import subprocess
         # We'd like to get the output to 10 digits of accuracy.  This corresponds to
         # an accuracy of about 1.e-6 arcsec.  But sometimes xy2sky cannot handle it,
         # in which case the output will start with *************.  If this happens, just
         # decrease digits and try again.
         for digits in range(10,5,-1):
+            xy_strs = [ str(z) for z in xy ]
             # If xy2sky is not installed, this will raise an OSError
-            p = subprocess.Popen(['xy2sky', '-d', '-n', str(digits), self._file_name,
-                                  str(x), str(y)], stdout=subprocess.PIPE)
+            p = subprocess.Popen(['xy2sky', '-d', '-n', str(digits), self._file_name] + xy_strs,
+                                 stdout=subprocess.PIPE)
             results = p.communicate()[0]
             p.stdout.close()
             if len(results) == 0:
@@ -622,17 +621,39 @@ class WcsToolsWCS(galsim.wcs.BaseWCS):
             if results[0] != '*': break
         if results[0] == '*':
             raise IOError('wcstools (specifically xy2sky) was unable to read '+self._file_name)
+        lines = results.splitlines()
+
         # Each line of output should looke like:
         #    x y J2000 ra dec
         # However, if there was an error, the J200 might be missing or the output might look like
         #    Off map x y
-        vals = results.split()
-        if len(vals) != 5:
-            raise RuntimeError('wcstools xy2sky returned invalid result for %f,%f'%(x0,y0))
-        ra = float(vals[0])
-        dec = float(vals[1])
+        ra = []
+        dec = []
+        for line in lines:
+            vals = line.split()
+            if len(vals) != 5:
+                raise RuntimeError('wcstools xy2sky returned invalid result near %f,%f'%(x0,y0))
+            ra.append(float(vals[0]))
+            dec.append(float(vals[1]))
 
-        return galsim.CelestialCoord(ra * galsim.degrees, dec * galsim.degrees)
+        # wcstools reports ra, dec in degrees, so convert to radians
+        factor = 1. * galsim.degrees / galsim.radians
+
+        try:
+            len(x)
+            # If the inputs were numpy arrays, return the same
+            return numpy.array(ra)*factor, numpy.array(dec)*factor
+        except:
+            # Otherwise return scalars
+            assert len(ra) == 1
+            assert len(dec) == 1
+            return ra[0]*factor, dec[0]*factor
+
+    def _posToWorld(self, image_pos):
+        x = image_pos.x - self._x0
+        y = image_pos.y - self._y0
+        ra, dec = self._radec(x,y)
+        return galsim.CelestialCoord(ra * galsim.radians, dec * galsim.radians)
 
     def _posToImage(self, world_pos):
         ra = world_pos.ra / galsim.degrees
@@ -663,44 +684,6 @@ class WcsToolsWCS(galsim.wcs.BaseWCS):
         x = float(vals[4])
         y = float(vals[5])
         return galsim.PositionD(x + self._x0, y + self._y0)
-
-    def _local(self, image_pos, world_pos):
-        if image_pos is None:
-            image_pos = self._posToImage(world_pos)
-        x0 = image_pos.x - self._x0
-        y0 = image_pos.y - self._y0
-        # Use dx,dy = 1 pixel for numerical derivatives
-        dx = 1
-        dy = 1
-
-        import subprocess
-        for digits in range(10,5,-1):
-            xy = [ str(z) for z in [ x0,y0, x0+dx,y0, x0-dx,y0, x0,y0+dy, x0,y0-dy ] ]
-            p = subprocess.Popen(['xy2sky', '-d', '-n', str(digits), self._file_name] + xy,
-                                 stdout=subprocess.PIPE)
-            results = p.communicate()[0]
-            p.stdout.close()
-            if len(results) == 0:
-                raise IOError('wcstools (specifically xy2sky) was unable to read '+self._file_name)
-            if results[0] != '*': break
-        if results[0] == '*':
-            raise IOError('wcstools (specifically xy2sky) was unable to read '+self._file_name)
-        lines = results.splitlines()
-
-        # Each line of output should looke like:
-        #    x y J2000 ra dec
-        # However, if there was an error, the J200 might be missing or the output might look like
-        #    Off map x y
-        ra = []
-        dec = []
-        for line in lines:
-            vals = line.split()
-            if len(vals) != 5:
-                raise RuntimeError('wcstools xy2sky returned invalid result near %f,%f'%(x0,y0))
-            ra.append(float(vals[0]))
-            dec.append(float(vals[1]))
-
-        return galsim.wcs.makeJacFromNumericalRaDec(ra, dec, dx, dy)
 
     def _setOrigin(self, origin):
         return WcsToolsWCS(self._file_name, origin=origin)
@@ -840,8 +823,14 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
         if origin is not None:
             self.crpix += [ origin.x, origin.y ]
 
+    # Some function assume these exist.  In this class, we keep crpix up to date rather than
+    # use these.  So just make dummy properties that return 0.
     @property
     def origin(self): return galsim.PositionD(0.,0.)
+    @property
+    def _x0(self): return 0.
+    @property
+    def _y0(self): return 0.
 
     def _read_header(self, header):
         # Start by reading the basic WCS stuff that most types have.
@@ -946,11 +935,11 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
                                    [ pv2[5], pv2[8],   0.  ,   0.   ],
                                    [ pv2[9],   0.  ,   0.  ,   0.   ] ] ] )
 
-    def _posToWorld(self, image_pos):
+    def _radec(self, x, y):
         import numpy
 
         # Start with (x,y) = the image position
-        p1 = numpy.array( [ image_pos.x, image_pos.y ] )
+        p1 = numpy.array( [ x, y ] )
 
         # This converts to (u,v) in the tangent plane
         p2 = numpy.dot(self.cd, p1 - self.crpix) 
@@ -974,7 +963,13 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
         # The TAN projection is also known as a gnomonic projection, which is what
         # we call it in the CelestialCoord class.
         world_pos = self.center.deproject( galsim.PositionD(p2[0],p2[1]) , projection='gnomonic' )
-        return world_pos
+        return world_pos.ra.rad(), world_pos.dec.rad()
+
+    def _posToWorld(self, image_pos):
+        x = image_pos.x 
+        y = image_pos.y
+        ra, dec = self._radec(x,y)
+        return galsim.CelestialCoord(ra * galsim.radians, dec * galsim.radians)
 
     def _posToImage(self, world_pos):
         import numpy, numpy.linalg
@@ -1033,9 +1028,8 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
 
         return galsim.PositionD(p1[0], p1[1])
 
-    def _local(self, image_pos, world_pos):
-        if image_pos is None:
-            image_pos = self._posToImage(world_pos)
+    # Override the version in the base class, since we can do this more efficiently.
+    def _localFromCelestial(self, image_pos):
         # The key lemma here is that chain rule for jacobians is just matrix multiplication.
         # i.e. if s = s(u,v), t = t(u,v) and u = u(x,y), v = v(x,y), then
         # ( dsdx  dsdy ) = ( dsdu dudx + dsdv dvdx   dsdu dudy + dsdv dvdy )
@@ -1076,7 +1070,7 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
                                    numpy.dot(numpy.dot(self.pv, dvpow), upow) ])
             jac = numpy.dot(j1,jac)
 
-        unit_convert = [ -1. * galsim.degrees / galsim.arcsec , 1. * galsim.degrees / galsim.arcsec ]
+        unit_convert = [ -1 * galsim.degrees / galsim.arcsec, 1 * galsim.degrees / galsim.arcsec ]
         p2 *= unit_convert
         # Subtle point: Don't use jac *= ..., because jac might currently be self.cd, and 
         #               that would change self.cd!

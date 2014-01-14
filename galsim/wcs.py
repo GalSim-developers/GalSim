@@ -205,9 +205,21 @@ class BaseWCS(object):
         #     _maxScale         function returning the maximum linear pixel scale
         #     _toJacobian       function returning an equivalent JacobianWCS
         #
-        # Non-local WCS classes must define the following:
+        # Non-local, uniform WCS classes must define the following:
         #
-        #     _local            function returning a local WCS at a given location
+        #     _local            function returning a local WCS with the same pixel shape
+        #
+        # Non-uniform, Euclidean WCS classes must define the following:
+        #
+        #     _u                function returning u(x,y)
+        #     _v                function returning v(x,y)
+        #
+        # Celestial WCS classes must define the following:
+        #
+        #     _radec            function returning (ra, dec) in _radians_ at (x,y)
+        #
+        # Note: _u,_v or _radec do not include any origin items in the WCS.  So for example,
+        # one would invoke it as u = _u(x-x0, y-y0) + u0.
 
 
     def toWorld(self, arg, **kwargs):
@@ -382,10 +394,77 @@ class BaseWCS(object):
             raise TypeError("Only one of image_pos or world_pos may be provided")
         if self.isLocal():
             return self
+        elif self.isUniform():
+            return self._local()
         else:
-            if not self.isUniform() and image_pos==None and world_pos==None:
-                raise TypeError("Either image_pos or world_pos must be provided")
-            return self._local(image_pos, world_pos)
+            if image_pos is None:
+                if world_pos is None:
+                    raise TypeError("Either image_pos or world_pos must be provided")
+                image_pos = self._posToImage(world_pos)
+            if self.isCelestial():
+                return self._localFromCelestial(image_pos)
+            else:
+                return self._localFromVariable(image_pos)
+
+    def _localFromVariable(self, image_pos):
+        # Calculate the Jacobian using finite differences for the derivatives.
+        x0 = image_pos.x - self._x0
+        y0 = image_pos.y - self._y0
+        u0 = self._u(x0,y0)
+        v0 = self._v(x0,y0)
+
+        # Use dx,dy = 1 pixel for numerical derivatives
+        dx = 1
+        dy = 1
+
+        dudx = 0.5*(self._u(x0+dx,y0) - self._u(x0-dx,y0))/dx
+        dudy = 0.5*(self._u(x0,y0+dy) - self._u(x0,y0-dy))/dy
+        dvdx = 0.5*(self._v(x0+dx,y0) - self._v(x0-dx,y0))/dx
+        dvdy = 0.5*(self._v(x0,y0+dy) - self._v(x0,y0-dy))/dy
+
+        return JacobianWCS(dudx, dudy, dvdx, dvdy)
+
+    def _localFromCelestial(self, image_pos):
+        # Same as above, but convert from dra,ddec to du,dv locally at the given position.
+        x0 = image_pos.x - self._x0
+        y0 = image_pos.y - self._y0
+        # Use dx,dy = 1 pixel for numerical derivatives
+        dx = 1
+        dy = 1
+
+        import numpy
+        xlist = numpy.array([ x0, x0+dx, x0-dx, x0,    x0    ])
+        ylist = numpy.array([ y0, y0,    y0,    y0+dy, y0-dy ])
+        try :
+            # Try using numpy arrays first, since it should be faster if it works.
+            ra, dec = self._radec(xlist,ylist)
+        except:
+            # Otherwise do them one at a time.
+            world = [ self._radec(x,y) for (x,y) in zip(xlist,ylist) ]
+            ra = [ w[0] for w in world ]
+            dec = [ w[1] for w in world ]
+
+        ra0, ra1, ra2, ra3, ra4 = ra
+        dec0, dec1, dec2, dec3, dec4 = dec
+        # Note: This currently doesn't use position (ra0, dec0), but the option is here in case it
+        # would be useful in the future to have some check that the central value is consistent with
+        # the derivatives found from the +-dx,dy positions.
+        # However, dec0 is used for the cos factor.
+
+        import numpy
+        # Note: our convention is that ra increases to the left!
+        # i.e. The u,v plane is the tangent plane as seen from Earth with +v pointing
+        # north, and +u pointing west.
+        # That means the du values are the negative of dra.
+        cosdec = numpy.cos(dec0)
+        dudx = -0.5*(ra1 - ra2)/dx * cosdec
+        dudy = -0.5*(ra3 - ra4)/dy * cosdec
+        dvdx = 0.5*(dec1 - dec2)/dx
+        dvdy = 0.5*(dec3 - dec4)/dy
+
+        # These values are all in radians.  Convert to arcsec as per our usual standard.
+        factor = 1. * galsim.radians / galsim.arcsec
+        return JacobianWCS(dudx*factor, dudy*factor, dvdx*factor, dvdy*factor)
 
     def jacobian(self, image_pos=None, world_pos=None):
         """Return the local JacobianWCS of the WCS at a given point.
@@ -709,6 +788,8 @@ class BaseWCS(object):
         ny = b.ymax-b.ymin+1 + 2
         x,y = numpy.meshgrid( numpy.linspace(b.xmin-1,b.xmax+1,nx),
                               numpy.linspace(b.ymin-1,b.ymax+1,ny) )
+        x -= self._x0
+        y -= self._y0
         try:
             # First try to use the _u, _v function with the numpy arrays.
             u = self._u(x,y)
@@ -1276,19 +1357,21 @@ class JacobianWCS(BaseWCS):
 #     copy              return a copy
 #     __eq__            check if this equals another WCS
 #     __ne__            check if this is not equal to another WCS
-#     _local            function returning a local WCS at a given location
 #     _writeHeader      function that writes the WCS to a fits header.
 #     _readHeader       static function that reads the WCS from a fits header.
 #
-# Furthermore, if the function is celestial, it must provide the functions:
+# Furthermore, non-local, uniform WCS classes must define the following:
 #
-#     _ra               function returning ra(x,y)
-#     _dec              function returning dec(x,y)
+#     _local            function returning a local WCS with the same pixel shape
 #
-# If not, it must provide the functions:
+# Non-uniform, Euclidean WCS classes must define the following:
 #
 #     _u                function returning u(x,y)
 #     _v                function returning v(x,y)
+#
+# Celestial WCS classes must define the following:
+#
+#     _radec            function returning (ra, dec) in _radians_ at position (x,y)
 #
 # Ideally, the above functions would work with numpy arrays as inputs.
 #
@@ -1351,14 +1434,14 @@ class OffsetWCS(BaseWCS):
     def world_origin(self): return galsim.PositionD(self._u0, self._v0)
 
     def _u(self, x, y):
-        return self._scale * (x-self._x0) + self._u0
+        return self._scale * x
     def _v(self, x, y):
-        return self._scale * (y-self._y0) + self._v0
+        return self._scale * y
 
     def _posToWorld(self, image_pos):
-        x = image_pos.x
-        y = image_pos.y
-        return galsim.PositionD(self._u(x,y),self._v(x,y))
+        x = image_pos.x - self._x0
+        y = image_pos.y - self._y0
+        return galsim.PositionD(self._u(x,y)+self._u0,self._v(x,y)+self._v0)
 
     def _posToImage(self, world_pos):
         u = world_pos.x
@@ -1367,7 +1450,7 @@ class OffsetWCS(BaseWCS):
         y = (v-self._v0) / self._scale + self._y0
         return galsim.PositionD(x,y)
 
-    def _local(self, image_pos, world_pos):
+    def _local(self):
         return PixelScale(self._scale)
 
     def _setOrigin(self, origin, world_origin):
@@ -1477,19 +1560,19 @@ class OffsetShearWCS(BaseWCS):
     def world_origin(self): return galsim.PositionD(self._u0, self._v0)
 
     def _u(self, x, y):
-        return self._shearwcs._u(x-self._x0,y-self._y0) + self._u0
+        return self._shearwcs._u(x,y)
     def _v(self, x, y):
-        return self._shearwcs._v(x-self._x0,y-self._y0) + self._v0
+        return self._shearwcs._v(x,y)
 
     def _posToWorld(self, image_pos):
-        x = image_pos.x
-        y = image_pos.y
-        return galsim.PositionD(self._u(x,y),self._v(x,y))
+        x = image_pos.x - self._x0
+        y = image_pos.y - self._y0
+        return galsim.PositionD(self._u(x,y)+self._u0,self._v(x,y)+self._v0)
 
     def _posToImage(self, world_pos):
         return self._shearwcs._posToImage(world_pos - self.world_origin) + self.origin
 
-    def _local(self, image_pos, world_pos):
+    def _local(self):
         return self._shearwcs
 
     def _setOrigin(self, origin, world_origin):
@@ -1609,19 +1692,19 @@ class AffineTransform(BaseWCS):
     def world_origin(self): return galsim.PositionD(self._u0, self._v0)
  
     def _u(self, x, y):
-        return self._jacwcs._u(x-self._x0,y-self._y0) + self._u0
+        return self._jacwcs._u(x,y)
     def _v(self, x, y):
-        return self._jacwcs._v(x-self._x0,y-self._y0) + self._v0
+        return self._jacwcs._v(x,y)
 
     def _posToWorld(self, image_pos):
-        x = image_pos.x
-        y = image_pos.y
-        return galsim.PositionD(self._u(x,y),self._v(x,y))
+        x = image_pos.x - self._x0
+        y = image_pos.y - self._y0
+        return galsim.PositionD(self._u(x,y)+self._u0,self._v(x,y)+self._v0)
 
     def _posToImage(self, world_pos):
         return self._jacwcs._posToImage(world_pos - self.world_origin) + self.origin
 
-    def _local(self, image_pos, world_pos):
+    def _local(self):
         return self._jacwcs
 
     def _setOrigin(self, origin, world_origin):
@@ -1804,6 +1887,11 @@ class UVFunction(BaseWCS):
     These are not required, but if you do not provide them, then any operation that requires 
     going from world to image coordinates will raise a NotImplementedError.
 
+    Note: some internal calculations will be faster if the functions can take numpy arrays
+    for x,y and output arrays for u,v.  Usually this does not require any change to your 
+    function, but it is worth keeping in mind.  For example, if you want to do a sqrt, you 
+    may be better off using `numpy.sqrt` rather than `math.sqrt`.
+
     Initialization
     --------------
     A UVFunction is initialized with the command:
@@ -1833,6 +1921,7 @@ class UVFunction(BaseWCS):
         self._is_uniform = False
         self._is_celestial = False
         import math  # In case needed by function evals
+        import numpy
         if isinstance(ufunc, basestring):
             self._ufunc = eval('lambda x,y : ' + ufunc)
             self._ufunc_str = ufunc
@@ -1890,51 +1979,36 @@ class UVFunction(BaseWCS):
 
     def _u(self, x, y):
         import math
-        return self._ufunc(x-self._x0, y-self._y0) + self._u0
+        import numpy
+        return self._ufunc(x,y)
 
     def _v(self, x, y):
         import math
-        return self._vfunc(x-self._x0, y-self._y0) + self._v0
+        import numpy
+        return self._vfunc(x,y)
 
     def _x(self, u, v):
         import math
-        return self._xfunc(u-self._u0, v-self._v0) + self._x0
+        import numpy
+        return self._xfunc(u,v)
 
     def _y(self, u, v):
         import math
-        return self._yfunc(u-self._u0, v-self._v0) + self._y0
+        import numpy
+        return self._yfunc(u,v)
 
     def _posToWorld(self, image_pos):
-        u = self._u(image_pos.x, image_pos.y)
-        v = self._v(image_pos.x, image_pos.y)
-        return galsim.PositionD(u,v)
+        x = image_pos.x - self._x0
+        y = image_pos.y - self._y0
+        return galsim.PositionD(self._u(x,y)+self._u0,self._v(x,y)+self._v0)
 
     def _posToImage(self, world_pos):
         if self._xfunc is None or self._yfunc is None:
             raise NotImplementedError(
                 "World -> Image direction not implemented for this UVFunction")
-        x = self._x(world_pos.x, world_pos.y)
-        y = self._y(world_pos.x, world_pos.y)
-        return galsim.PositionD(x,y)
-
-    def _local(self, image_pos, world_pos):
-        if image_pos is None:
-            image_pos = self._posToImage(world_pos)
-        x0 = image_pos.x - self._x0
-        y0 = image_pos.y - self._y0
-        # For this, we ignore the possible _u0,_v0 values, since they don't affect the derivatives.
-        u0 = self._ufunc(x0,y0)
-        v0 = self._vfunc(x0,y0)
-        # Use dx,dy = 1 pixel for numerical derivatives
-        dx = 1
-        dy = 1
-
-        dudx = 0.5*(self._ufunc(x0+dx,y0) - self._ufunc(x0-dx,y0))/dx
-        dudy = 0.5*(self._ufunc(x0,y0+dy) - self._ufunc(x0,y0-dy))/dy
-        dvdx = 0.5*(self._vfunc(x0+dx,y0) - self._vfunc(x0-dx,y0))/dx
-        dvdy = 0.5*(self._vfunc(x0,y0+dy) - self._vfunc(x0,y0-dy))/dy
-
-        return JacobianWCS(dudx, dudy, dvdx, dvdy)
+        u = world_pos.x - self._u0
+        v = world_pos.y - self._v0
+        return galsim.PositionD(self._x(u,v)+self._x0,self._y(u,v)+self._y0)
 
     def _setOrigin(self, origin, world_origin):
         return UVFunction(self._ufunc, self._vfunc, self._xfunc, self._yfunc, origin, world_origin)
@@ -1992,75 +2066,52 @@ class UVFunction(BaseWCS):
                                                 self.origin, self.world_origin)
 
 
-def makeJacFromNumericalRaDec(ra, dec, dx, dy):
-    """Convert a list of list of ra, dec values for (0,0), (dx,0), (-dx,0), (0,dy), and (0,-dy)
-       into a JacobianWCS.  The input ra, dec values should be in degrees.
-    """
-    ra0, ra1, ra2, ra3, ra4 = ra
-    dec0, dec1, dec2, dec3, dec4 = dec
-    # Note: This currently doesn't use position (ra0, dec0), but the option is here in case it
-    # would be useful in the future to have some check that the central value is consistent with
-    # the derivatives found from the +-dx,dy positions.
-    # However, dec0 is used for the cos factor.
-
-    import numpy
-    # Note: our convention is that ra increases to the left!
-    # i.e. The u,v plane is the tangent plane as seen from Earth with +v pointing
-    # north, and +u pointing west.
-    # That means the du values are the negative of dra.
-    cosdec = numpy.cos(dec0 * galsim.degrees / galsim.radians)
-    dudx = -0.5*(ra1 - ra2)/dx * cosdec
-    dudy = -0.5*(ra3 - ra4)/dy * cosdec
-    dvdx = 0.5*(dec1 - dec2)/dx
-    dvdy = 0.5*(dec3 - dec4)/dy
-
-    # These values are all in degrees.  Convert to arcsec as per our usual standard.
-    return JacobianWCS(dudx*3600., dudy*3600., dvdx*3600., dvdy*3600.)
-
 class RaDecFunction(BaseWCS):
-    """This WCS takes two arbitrary functions for ra(x,y) and dec(x,y).
+    """This WCS takes an arbitrary function for the Right Ascension and Declination.
 
-    The rafunc and decfunc parameters may be:
-        - python functions that take (x,y) arguments
-        - python objects with a __call__ method that takes (x,y) arguments
-        - strings which can be parsed with eval('lambda x,y: '+str)
-    The functions should return galsim.Angles.
+    The radec_func(x,y) may be:
+        - a python functions that take (x,y) arguments
+        - a python object with a __call__ method that takes (x,y) arguments
+        - a string which can be parsed with eval('lambda x,y: '+str)
+
+    The functions should return a tuple of ( ra , dec ) in _radians_.
+    
+    We don't want a function that return galsim.Angles, because we want to allow for the 
+    possibility of using numpy arrays as inputs and outputs to speed up some calculations.  The 
+    function isn't _required_ to work with numpy arrays, but it is possible that some things 
+    will be faster if it does.  If it were expected to return galsim.Angles, then it definitely
+    couldn't work with arrays.
 
     Initialization
     --------------
     An RaDecFunction is initialized with the command:
 
-        wcs = galsim.RaDecFunction(rafunc, decfunc, origin=None)
+        wcs = galsim.RaDecFunction(radec_func, origin=None)
 
-    @param rafunc         The function ra(x,y)
-    @param decfunc        The function dec(x,y)
+    @param radec_func     A function radec(x,y) returning (ra, dec) in radians.
     @param origin         Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI.
                           [ Default: `origin = None` ]
     """
-    _req_params = { "rafunc" : str, "decfunc" : str }
+    _req_params = { "radec_func" : str }
     _opt_params = { "origin" : galsim.PositionD }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
-    def __init__(self, rafunc, decfunc, origin=None):
+    def __init__(self, radec_func, origin=None):
         self._is_local = False
         self._is_uniform = False
         self._is_celestial = True
-        if isinstance(rafunc, basestring):
-            self._rafunc = eval('lambda x,y : ' + rafunc)
-            self._rafunc_str = rafunc
+        # Allow the input function to use either math or numpy functions
+        if isinstance(radec_func, basestring):
+            import math
+            import numpy
+            self._radec_func = eval('lambda x,y : ' + radec_func)
+            self._radec_func_str = radec_func
         else:
-            self._rafunc = rafunc
-            self._rafunc_str = None
-
-        if isinstance(decfunc, basestring):
-            self._decfunc = eval('lambda x,y : ' + decfunc)
-            self._decfunc_str = decfunc
-        else:
-            self._decfunc = decfunc
-            self._decfunc_str = None
+            self._radec_func = radec_func
+            self._radec_func_str = None
 
         if origin == None:
             self._x0 = 0
@@ -2070,54 +2121,34 @@ class RaDecFunction(BaseWCS):
             self._y0 = origin.y
 
     @property
-    def rafunc(self): return self._rafunc
-    @property
-    def decfunc(self): return self._decfunc
+    def radec_func(self): return self._radec_func
 
     @property
     def origin(self): return galsim.PositionD(self._x0, self._y0)
 
-    def _ra(self, x, y):
+    def _radec(self, x, y):
         import math
-        return self._rafunc(x-self._x0, y-self._y0)
-
-    def _dec(self, x, y):
-        import math
-        return self._decfunc(x-self._x0, y-self._y0)
+        import numpy
+        return self._radec_func(x,y)
 
     def _posToWorld(self, image_pos):
-        ra = self._ra(image_pos.x, image_pos.y)
-        dec = self._dec(image_pos.x, image_pos.y)
-        return galsim.CelestialCoord(ra,dec)
+        x = image_pos.x - self._x0
+        y = image_pos.y - self._y0
+        ra, dec = self._radec(x,y)
+        return galsim.CelestialCoord(ra*galsim.radians, dec*galsim.radians)
 
     def _posToImage(self, world_pos):
         raise NotImplementedError("World -> Image direction not implemented for RaDecFunction")
 
-    def _local(self, image_pos, world_pos):
-        if world_pos is not None:
-            raise NotImplementedError('RaDecFunction.local() cannot take world_pos.')
-        x0 = image_pos.x - self._x0
-        y0 = image_pos.y - self._y0
-        # Use dx,dy = 1 pixel for numerical derivatives
-        dx = 1
-        dy = 1
-
-        pos_list = [ (x0,y0), (x0+dx,y0), (x0-dx,y0), (x0,y0+dy), (x0,y0-dy) ]
-        ra = [ self._ra(x,y) / galsim.degrees for (x,y) in pos_list ]
-        dec = [ self._dec(x,y) / galsim.degrees for (x,y) in pos_list ]
-
-        return makeJacFromNumericalRaDec(ra, dec, dx, dy)
-
     def _setOrigin(self, origin):
-        return RaDecFunction(self._rafunc, self._decfunc, origin)
+        return RaDecFunction(self._radec_func, origin)
  
     def _writeHeader(self, header, bounds):
         header["GS_WCS"]  = ("RaDecFunction", "GalSim WCS name")
         header["GS_X0"] = (self.origin.x, "GalSim image origin x")
         header["GS_Y0"] = (self.origin.y, "GalSim image origin y")
 
-        _writeFuncToHeader(self._rafunc, self._rafunc_str, 'R', header)
-        _writeFuncToHeader(self._decfunc, self._decfunc_str, 'D', header)
+        _writeFuncToHeader(self._radec_func, self._radec_func_str, 'F', header)
 
         return self.affine(bounds.trueCenter())._writeLinearWCS(header, bounds)
 
@@ -2125,28 +2156,24 @@ class RaDecFunction(BaseWCS):
     def _readHeader(header):
         x0 = header["GS_X0"]
         y0 = header["GS_Y0"]
-        rafunc = _readFuncFromHeader('R', header)
-        decfunc = _readFuncFromHeader('D', header)
-        return RaDecFunction(rafunc, decfunc, galsim.PositionD(x0,y0))
+        radec_func = _readFuncFromHeader('F', header)
+        return RaDecFunction(radec_func, galsim.PositionD(x0,y0))
 
     def copy(self):
-        return RaDecFunction(self._rafunc, self._decfunc, self.origin)
+        return RaDecFunction(self._radec_func, self.origin)
 
     def __eq__(self, other):
         if not isinstance(other, RaDecFunction):
             return False
         else:
             return (
-                self._rafunc == other._rafunc and
-                self._decfunc == other._decfunc and
+                self._radec_func == other._radec_func and
                 self._x0 == other._x0 and
-                self._y0 == other._y0 and
-                self._u0 == other._u0 and
-                self._v0 == other._v0)
+                self._y0 == other._y0)
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return "RaDecFunction(%r,%r,%r)"%(self.rafunc, self.decfunc, self.origin)
+        return "RaDecFunction(%r,%r,%r)"%(self.radec_func, self.origin)
 
