@@ -161,7 +161,7 @@ def rand_arr(shape, deviate):
         raise ValueError("Can only make a 2d array from this function!")
     # note reversed indices due to Numpy vs. Image array indexing conventions!
     tmp_img = galsim.ImageD(shape[1], shape[0])
-    galsim.DeviateNoise(deviate).applyTo(tmp_img.view())
+    tmp_img.addNoise(galsim.DeviateNoise(deviate))
     return tmp_img.array
 
 def convert_interpolant_to_2d(interpolant):

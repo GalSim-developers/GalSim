@@ -54,7 +54,7 @@ namespace galsim {
 
     template <typename T> class AssignableToImage;
     template <typename T> class BaseImage;
-    template <typename T> class Image;
+    template <typename T> class ImageAlloc;
     template <typename T> class ImageView;
 
     //
@@ -295,7 +295,7 @@ namespace galsim {
     {
         if (image1.getData()) {
             typedef typename ImageView<T1>::iterator Iter1;
-            typedef typename Image<T2>::iterator Iter2;
+            typedef typename BaseImage<T2>::iterator Iter2;
             if (!image1.getBounds().includes(bounds) || !image2.getBounds().includes(bounds))
                 throw ImageError("transform_pixel range exceeds image range");
 
@@ -371,7 +371,7 @@ namespace galsim {
     { transform_pixel(im, bind2nd(std::plus<T>(),x)); return im; }
 
     template <typename T>
-    inline Image<T>& operator+=(Image<T>& im, const T& x) 
+    inline ImageAlloc<T>& operator+=(ImageAlloc<T>& im, const T& x) 
     { im.view() += x; return im; }
 
 
@@ -388,7 +388,7 @@ namespace galsim {
     { im += T(-x); return im; }
 
     template <typename T>
-    inline Image<T>& operator-=(Image<T>& im, const T& x) 
+    inline ImageAlloc<T>& operator-=(ImageAlloc<T>& im, const T& x) 
     { im.view() -= x; return im; }
 
 
@@ -422,7 +422,7 @@ namespace galsim {
     { transform_pixel(im, bind2nd(std::multiplies<T>(),x)); return im; }
 
     template <typename T>
-    inline Image<T>& operator*=(Image<T>& im, const T& x) 
+    inline ImageAlloc<T>& operator*=(ImageAlloc<T>& im, const T& x) 
     { im.view() *= x; return im; }
 
     //
@@ -455,7 +455,7 @@ namespace galsim {
     { transform_pixel(im, bind2nd(std::divides<T>(),x)); return im; }
 
     template <typename T>
-    inline Image<T>& operator/=(Image<T>& im, const T& x) 
+    inline ImageAlloc<T>& operator/=(ImageAlloc<T>& im, const T& x) 
     { im.view() /= x; return im; }
 
     //
@@ -493,7 +493,7 @@ namespace galsim {
     }
 
     template <typename T1, typename T2> 
-    inline Image<T1>& operator+=(Image<T1>& im, const BaseImage<T2>& x) 
+    inline ImageAlloc<T1>& operator+=(ImageAlloc<T1>& im, const BaseImage<T2>& x) 
     { im.view() += x; return im; }
 
 
@@ -532,7 +532,7 @@ namespace galsim {
     }
 
     template <typename T1, typename T2> 
-    inline Image<T1>& operator-=(Image<T1>& im, const BaseImage<T2>& x) 
+    inline ImageAlloc<T1>& operator-=(ImageAlloc<T1>& im, const BaseImage<T2>& x) 
     { im.view() -= x; return im; }
 
 
@@ -571,7 +571,7 @@ namespace galsim {
     }
 
     template <typename T1, typename T2>
-    inline Image<T1>& operator*=(Image<T1>& im, const BaseImage<T2>& x) 
+    inline ImageAlloc<T1>& operator*=(ImageAlloc<T1>& im, const BaseImage<T2>& x) 
     { im.view() *= x; return im; }
 
 
@@ -610,7 +610,7 @@ namespace galsim {
     }
 
     template <typename T1, typename T2>
-    inline Image<T1>& operator/=(Image<T1>& im, const BaseImage<T2>& x) 
+    inline ImageAlloc<T1>& operator/=(ImageAlloc<T1>& im, const BaseImage<T2>& x) 
     { im.view() /= x; return im; }
 
     //! @endcond

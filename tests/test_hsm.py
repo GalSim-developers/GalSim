@@ -125,7 +125,7 @@ def test_moments_basic():
                 distortion_2 = g2*conversion_factor
                 gal = galsim.Gaussian(flux = 1.0, sigma = sig)
                 gal.applyShear(g1=g1, g2=g2)
-                gal_image = gal.draw(dx = pixel_scale)
+                gal_image = gal.draw(scale = pixel_scale)
                 result = gal_image.FindAdaptiveMom()
                 # make sure we find the right Gaussian sigma
                 np.testing.assert_almost_equal(np.fabs(result.moments_sigma-sig/pixel_scale), 0.0,
@@ -155,8 +155,8 @@ def test_shearest_basic():
                 psf = galsim.Gaussian(flux = 1.0, sigma = sig)
                 gal.applyShear(g1=g1, g2=g2)
                 final = galsim.Convolve([gal, psf])
-                final_image = final.draw(dx = pixel_scale)
-                epsf_image = psf.draw(dx = pixel_scale)
+                final_image = final.draw(scale = pixel_scale)
+                epsf_image = psf.draw(scale = pixel_scale)
                 result = galsim.hsm.EstimateShear(final_image, epsf_image)
                 # make sure we find the right e after PSF correction
                 # with regauss, which returns a distortion
@@ -239,8 +239,8 @@ def test_masks():
     obj = galsim.Convolve(g, p)
     im = galsim.ImageF(imsize, imsize)
     p_im = galsim.ImageF(imsize, imsize)
-    obj.draw(image = im, dx = my_pixscale)
-    p.draw(image = p_im, dx = my_pixscale)
+    obj.draw(image = im, scale = my_pixscale)
+    p.draw(image = p_im, scale = my_pixscale)
 
     # make some screwy weight and badpix images that should cause issues, and check that the
     # exception is thrown
@@ -445,8 +445,8 @@ def test_shearest_shape():
                         final_image = galsim.ImageF(gal_x_imsize, gal_y_imsize)
                         epsf_image = galsim.ImageF(psf_x_imsize, psf_y_imsize)
 
-                        final.draw(image = final_image, dx = pixel_scale)
-                        psf.draw(image = epsf_image, dx = pixel_scale)
+                        final.draw(image = final_image, scale = pixel_scale)
+                        psf.draw(image = epsf_image, scale = pixel_scale)
                         result = galsim.hsm.EstimateShear(final_image, epsf_image,
                             shear_est = correction_methods[method_index])
                         e1 = result.corrected_e1
@@ -496,8 +496,8 @@ def test_hsmparams():
     gal = bulge + disk   # equal weighting, i.e., B/T=0.5
     tot_gal = galsim.Convolve(gal, psf, pix)
     tot_psf = galsim.Convolve(psf, pix)
-    tot_gal_image = tot_gal.draw(dx=0.18)
-    tot_psf_image = tot_psf.draw(dx=0.18)
+    tot_gal_image = tot_gal.draw(scale=0.18)
+    tot_psf_image = tot_psf.draw(scale=0.18)
 
     res = tot_gal_image.FindAdaptiveMom()
     res_def = tot_gal_image.FindAdaptiveMom(hsmparams = default_hsmparams)
@@ -535,8 +535,8 @@ def test_hsmparams_nodefault():
     gal = bulge + disk   # equal weighting, i.e., B/T=0.5
     tot_gal = galsim.Convolve(gal, psf, pix)
     tot_psf = galsim.Convolve(psf, pix)
-    tot_gal_image = tot_gal.draw(dx=0.18)
-    tot_psf_image = tot_psf.draw(dx=0.18)
+    tot_gal_image = tot_gal.draw(scale=0.18)
+    tot_psf_image = tot_psf.draw(scale=0.18)
 
     # Check that recompute_flux changes give results that are as expected
     test_t = time.time()
@@ -553,8 +553,8 @@ def test_hsmparams_nodefault():
     g = galsim.Gaussian(fwhm=20.)
     g.applyShear(g1=0.5)
     obj = galsim.Convolve(g, p)
-    im = obj.draw(dx=1.)
-    psf_im = p.draw(dx=1.)
+    im = obj.draw(scale=1.)
+    psf_im = p.draw(scale=1.)
     test_t1 = time.time()
     g_res = galsim.hsm.EstimateShear(im, psf_im)
     test_t2 = time.time()

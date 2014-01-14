@@ -18,10 +18,10 @@
 #
 """
 Simple test of shooting photons to sample from an existing pixelized image.
-Usage: ShootInterpolated.py <input FITS> <output FITS> <dx> <dim> <nPhotons> [g1] [g2]
+Usage: ShootInterpolated.py <input FITS> <output FITS> <scale> <dim> <nPhotons> [g1] [g2]
 <input FITS> is name of the input FITS image, whose pixel scale will be treated as 1 unit.
 <output FITS> is name of FITS file image to be produced by sampling input
-dx is pixel scale for output image
+scale is pixel scale for output image
 dim is number of pixels per side for output image
 nPhotons is number of photons to shoot through the image
 g1 and g2 are reduced shears to be applied while shooting
@@ -54,7 +54,7 @@ def main(argv):
     try:
         inname = argv[1]
         outname = argv[2]
-        dxOut = float(argv[3])
+        scaleOut = float(argv[3])
         dim = int(argv[4])
         nPhotons = int(argv[5])
         g1 = float(argv[6]) if len(argv) > 6 else 0.
@@ -64,12 +64,12 @@ def main(argv):
         raise err
 
     galaxyImg = galsim.fits.read(inname)
-    galaxy = galsim.InterpolatedImage(galaxyImg, x_interpolant=interp2d, dx=1.)
+    galaxy = galsim.InterpolatedImage(galaxyImg, x_interpolant=interp2d, scale=1.)
     galaxy.applyShear(g1=g1,g2=g2)
 
     rng = galsim.UniformDeviate(1534225)
     bounds = galsim.BoundsI(-dim/2, dim/2+1, -dim/2, dim/2+1)
-    img = galsim.ImageF(bounds, scale=dxOut)
+    img = galsim.ImageF(bounds, scale=scaleOut)
     galaxy.drawShoot(image=img, n_photons=nPhotons, rng=rng)
     img.write(outname)
 

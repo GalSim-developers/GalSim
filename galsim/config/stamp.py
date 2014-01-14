@@ -346,37 +346,37 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             if ysize: config['stamp_ysize'] = ysize
 
             # Determine where this object is going to go:
-            if 'image_pos' in config['image'] and 'sky_pos' in config['image']:
+            if 'image_pos' in config['image'] and 'world_pos' in config['image']:
                 image_pos = galsim.config.ParseValue(
                     config['image'], 'image_pos', config, galsim.PositionD)[0]
-                sky_pos = galsim.config.ParseValue(
-                    config['image'], 'sky_pos', config, galsim.PositionD)[0]
+                world_pos = galsim.config.ParseValue(
+                    config['image'], 'world_pos', config, galsim.PositionD)[0]
 
             elif 'image_pos' in config['image']:
                 image_pos = galsim.config.ParseValue(
                     config['image'], 'image_pos', config, galsim.PositionD)[0]
                 # Calculate and save the position relative to the image center
-                sky_pos = (image_pos - config['image_center']) * config['pixel_scale']
+                world_pos = (image_pos - config['image_center']) * config['pixel_scale']
 
-            elif 'sky_pos' in config['image']:
-                sky_pos = galsim.config.ParseValue(
-                    config['image'], 'sky_pos', config, galsim.PositionD)[0]
+            elif 'world_pos' in config['image']:
+                world_pos = galsim.config.ParseValue(
+                    config['image'], 'world_pos', config, galsim.PositionD)[0]
                 # Calculate and save the position relative to the image center
-                image_pos = (sky_pos / config['pixel_scale']) + config['image_center']
+                image_pos = (world_pos / config['pixel_scale']) + config['image_center']
 
             else:
                 image_pos = None
-                sky_pos = None
+                world_pos = None
 
             # Save these values for possible use in Evals or other modules
             if image_pos is not None:
                 config['image_pos'] = image_pos
                 if logger:
                     logger.debug('obj %d: image_pos = %s',obj_num,str(config['image_pos']))
-            if sky_pos is not None:
-                config['sky_pos'] = sky_pos
+            if world_pos is not None:
+                config['world_pos'] = world_pos
                 if logger:
-                    logger.debug('obj %d: sky_pos = %s',obj_num,str(config['sky_pos']))
+                    logger.debug('obj %d: world_pos = %s',obj_num,str(config['world_pos']))
 
             if image_pos is not None:
                 import math
@@ -634,7 +634,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, offset):
     else:
         im = None
 
-    im = final.draw(image=im, dx=pixel_scale, wmult=wmult, offset=offset)
+    im = final.draw(image=im, scale=pixel_scale, wmult=wmult, offset=offset)
     im.setOrigin(config['image_origin'])
 
     # Whiten if requested.  Our signal to do so is that the object will have a noise attribute.
@@ -840,7 +840,7 @@ def AddNoiseFFT(im, weight_im, current_var, noise, base, rng, sky_level_pixel, l
 
     elif type == 'COSMOS':
         req = { 'file_name' : str }
-        opt = { 'dx_cosmos' : float, 'variance' : float }
+        opt = { 'cosmos_scale' : float, 'variance' : float }
         
         kwargs = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
 
@@ -914,7 +914,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, offset):
 
         n_photons = galsim.config.ParseValue(
             config['image'], 'n_photons', config, int)[0]
-        im = final.drawShoot(image=im, dx=pixel_scale, n_photons=n_photons, rng=rng,
+        im = final.drawShoot(image=im, scale=pixel_scale, n_photons=n_photons, rng=rng,
                              offset=offset)
         im.setOrigin(config['image_origin'])
 
@@ -940,7 +940,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, offset):
                 raise ValueError("noise_var calculated to be < 0.")
             max_extra_noise *= noise_var
 
-        im = final.drawShoot(image=im, dx=pixel_scale, max_extra_noise=max_extra_noise, rng=rng,
+        im = final.drawShoot(image=im, scale=pixel_scale, max_extra_noise=max_extra_noise, rng=rng,
                              offset=offset)
         im.setOrigin(config['image_origin'])
 
@@ -1100,7 +1100,7 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
 
     elif type == 'COSMOS':
         req = { 'file_name' : str }
-        opt = { 'dx_cosmos' : float, 'variance' : float }
+        opt = { 'cosmos_scale' : float, 'variance' : float }
         
         kwargs = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
 
@@ -1171,7 +1171,7 @@ def DrawPSFStamp(psf, pix, config, bounds, sky_level_pixel, offset):
         final_psf.applyShift(gal_shift)
 
     im = galsim.ImageF(bounds, scale=pixel_scale)
-    final_psf.draw(im, dx=pixel_scale, offset=offset)
+    final_psf.draw(im, scale=pixel_scale, offset=offset)
 
     if (('output' in config and 'psf' in config['output'] 
             and 'signal_to_noise' in config['output']['psf']) or
@@ -1281,7 +1281,7 @@ def CalculateNoiseVar(noise, base, pixel_scale, sky_level_pixel):
 
     elif type == 'COSMOS':
         req = { 'file_name' : str }
-        opt = { 'dx_cosmos' : float, 'variance' : float }
+        opt = { 'cosmos_scale' : float, 'variance' : float }
         
         kwargs = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
 

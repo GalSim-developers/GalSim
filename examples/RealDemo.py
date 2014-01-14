@@ -87,16 +87,16 @@ sim_image_bad_shear = galsim.simReal(real_galaxy, bad_epsf, pixel_scale, g1=g1, 
 # note: will differ each time it is run, because we chose a random image
 print "Drawing images and writing to files!"
 
-orig_gal_img = real_galaxy.original_image.draw(dx=pixel_scale)
+orig_gal_img = real_galaxy.original_image.draw(scale=pixel_scale)
 orig_gal_img.write(os.path.join(output_dir, 'demoreal.orig_gal.fits'), clobber=True)
 
-orig_psf_img = real_galaxy.original_PSF.draw(dx=pixel_scale)
+orig_psf_img = real_galaxy.original_PSF.draw(scale=pixel_scale)
 orig_psf_img.write(os.path.join(output_dir, 'demoreal.orig_PSF.fits'), clobber=True)
 
-good_epsf_img = good_epsf.draw(dx=pixel_scale)
+good_epsf_img = good_epsf.draw(scale=pixel_scale)
 good_epsf_img.write(os.path.join(output_dir, 'demoreal.good_target_PSF.fits'), clobber=True)
 
-bad_epsf_img = bad_epsf.draw(dx=pixel_scale)
+bad_epsf_img = bad_epsf.draw(scale=pixel_scale)
 bad_epsf_img.write(os.path.join(output_dir, 'demoreal.bad_target_PSF.fits'), clobber=True)
 
 sim_image_good_noshear.write(os.path.join(output_dir, 'demoreal.good_simulated_image.noshear.fits'),

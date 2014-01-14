@@ -44,8 +44,8 @@ def main(argv):
     l3 = galsim.Lanczos(3, True, 1.0E-4)
     l32d = galsim.InterpolantXY(l3)
 
-    dxHST = 0.03
-    dxSDSS = 0.396
+    scaleHST = 0.03
+    scaleSDSS = 0.396
     g1 = 0.02
     g2 = 0.0
     psfSky = 1000.0
@@ -60,13 +60,14 @@ def main(argv):
     #e = galsim.Ellipse(s, -(g1*g1+g2*g2), galsim.PositionD(xshift,yshift));
 
     galaxyImg = galsim.fits.read(rootname + "_masknoise.fits")
-    galaxy = galsim.InterpolatedImage(galaxyImg, x_interpolant=l32d, dx=dxHST, flux=0.804*1000.*dxSDSS*dxSDSS)
+    galaxy = galsim.InterpolatedImage(galaxyImg, x_interpolant=l32d, scale=scaleHST,
+                                      flux=0.804*1000.*scaleSDSS*scaleSDSS)
 
     psf1Img = galsim.fits.read(rootname + ".psf.fits")
-    psf1 = galsim.InterpolatedImage(psf1Img, x_interpolant=l32d, dx=dxHST, flux=1.)
+    psf1 = galsim.InterpolatedImage(psf1Img, x_interpolant=l32d, scale=scaleHST, flux=1.)
 
     psf2Img = galsim.fits.read(rootname + ".sdsspsf.fits")
-    psf2 = galsim.InterpolatedImage(psf2Img, x_interpolant=l32d, dx=dxSDSS, flux=1.)
+    psf2 = galsim.InterpolatedImage(psf2Img, x_interpolant=l32d, scale=scaleSDSS, flux=1.)
 
     outImg = galsim.fits.read(rootname + ".g1_0.02.g2_0.00.fits")
     result = outImg.copy()
@@ -76,7 +77,7 @@ def main(argv):
     sheared = deconv.createTransformed(e)
     out = galsim.Convolve(sheared, psf2)
 
-    test_outImg = out.draw(result, dx=dxSDSS)
+    test_outImg = out.draw(result, scale=scaleSDSS)
     test_outImg.write(rootname + ".gary.fits")
     result += psfSky
     result -= test_outImg

@@ -185,7 +185,7 @@ def test_shapelet_fit():
         scale = 0.2
         pixel = galsim.Pixel(scale)
         conv = galsim.Convolve([psf,pixel])
-        im1 = conv.draw(dx=scale, normalization=norm)
+        im1 = conv.draw(scale=scale, normalization=norm)
 
         sigma = 1.2  # Match half-light-radius as a decent first approximation.
         shapelet = galsim.Shapelet(sigma=sigma, order=10)
@@ -250,7 +250,7 @@ def test_shapelet_adjustments():
 
     ref_shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
     ref_im = galsim.ImageF(nx,ny)
-    ref_shapelet.draw(ref_im, dx=scale)
+    ref_shapelet.draw(ref_im, scale=scale)
 
     # Test setSigma
     shapelet = galsim.Shapelet(sigma=1., order=order, bvec=bvec)

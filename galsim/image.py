@@ -17,26 +17,26 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file image.py
-A few adjustments to the galsim.Image classes at the Python layer, including the addition of 
-docstrings.
+The Image class and some modifications to the docs for the C++ layer ImageAlloc and ImageView
+classes.
 """
-
 
 from . import _galsim
 import numpy
+import galsim
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion 
-# when doing arithmetic with images.  So just make sure both of them point to ImageI in the Image 
-# dict.  One of them is what you get when you just write numpy.int32.  The other is what numpy 
-# decides an int16 + int32 is.  The first one is usually the one that's already in the Image dict,
-# but we assign both versions just to be sure.
+# when doing arithmetic with images.  So just make sure both of them point to ImageAllocI in the 
+# ImageAlloc dict.  One of them is what you get when you just write numpy.int32.  The other is 
+# what numpy decides an int16 + int32 is.  The first one is usually the one that's already in the 
+# ImageAlloc dict, but we assign both versions just to be sure.
 
-_galsim.Image[numpy.int32] = _galsim.ImageI
+_galsim.ImageAlloc[numpy.int32] = _galsim.ImageAllocI
 _galsim.ImageView[numpy.int32] = _galsim.ImageViewI
 _galsim.ConstImageView[numpy.int32] = _galsim.ConstImageViewI
 
 alt_int32 = ( numpy.array([0]).astype(numpy.int32) + 1).dtype.type
-_galsim.Image[alt_int32] = _galsim.ImageI
+_galsim.ImageAlloc[alt_int32] = _galsim.ImageAllocI
 _galsim.ImageView[alt_int32] = _galsim.ImageViewI
 _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 
@@ -44,7 +44,7 @@ _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 # just in case there are systems where this doesn't work but the above does.
 alt_int32 = ( numpy.array([0]).astype(numpy.int16) + 
               numpy.array([0]).astype(numpy.int32) ).dtype.type
-_galsim.Image[alt_int32] = _galsim.ImageI
+_galsim.ImageAlloc[alt_int32] = _galsim.ImageAllocI
 _galsim.ImageView[alt_int32] = _galsim.ImageViewI
 _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 
@@ -53,45 +53,575 @@ _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 # http://projects.scipy.org/numpy/ticket/1246
 
 
-# First of all we add docstrings to the Image, ImageView and ConstImageView classes for each of the
-# S, F, I & D datatypes
-#
-for Class in _galsim.Image.itervalues():
-    Class.__doc__ = """
-    The ImageS, ImageI, ImageF and ImageD classes.
-    
-    Image[SIFD], ImageView[SIFD] and ConstImage[SIFD] are the classes that represent the primary way
-    to pass image data between Python and the GalSim C++ library.
+class Image(object):
+    """A class for storing image data along with the pixel scale or wcs information
 
-    There is a separate Python class for each C++ template instantiation, and these can be accessed
-    using numpy types as keys in the Image dict:
+    The python layer Image class is mostly a wrapper around the C++ classes ImageAlloc and
+    ImageView.  The former allocates its own memory, and the latter views memory allocated by some
+    other object (typically an ImageAlloc or a numpy array).
 
-        ImageS == Image[numpy.int16]
-        ImageI == Image[numpy.int32]
-        ImageF == Image[numpy.float32]
-        ImageD == Image[numpy.float64]
-    
-    An Image can be thought of as containing a 2-d, row-contiguous numpy array (which it may share
-    with other ImageView objects), an origin point, and a pixel scale (the origin and pixel scale
-    are not shared).
+    The Image class contains an `image` attribute, which holds the appropriate C++ ImageAlloc or
+    ImageView object.  Most operations that act on the pixel values will just pass the command to
+    the C++ layer.
+
+    There are 4 data types that the image object can use for the data values.  These are
+    numpy.int16, numpy.int32, numpy.float32, and numpy.float64.  If you are constructing a new Image
+    from scratch, the default is numpy.float32, but you can specify one of the other data types.  If
+    you construct an Image from an existing allocation such as a numpy array, then the dtype must be
+    one of these or you will get an error.
 
     There are several ways to construct an Image:
 
-        Image(ncol, nrow, scale=0, init_value=0) # size, scale, and initial value, origin @ (1,1)
-        Image(bounds, scale=0 init_value=0)      # bounding box, scale, and initial value
+        Image(ncol, nrow, dtype=numpy.float32, init_value=0, ...)
 
-    The default scale=0 essentially means that it is undefined.  When drawing onto such an image,
-    a suitable scale will be automatically set.
+                    Construct a new image, allocating memory for the pixel values according
+                    to the number of columns and rows.  You can specify the data type as `dtype` 
+                    if you want.  The default is `numpy.float32` if you don't specify it.  You can 
+                    also optionally provide an initial value for the pixels, which defaults to 0.
 
-    After construction, the scale and bounds may be set with 
+        Image(bounds, dtype=numpy.float32, init_value=0, ...)
+
+                    Construct a new image, allocating memory for the pixel values according
+                    to a given bounds object.  The bounds should be a galsim.BoundsI instance.
+                    You can specify the data type as `dtype` if you want.  The default is 
+                    `numpy.float32` if you don't specify it.  You can also optionally provide
+                    an initial value for the pixels, which defaults to 0.
+
+        Image(array, xmin=1, ymin=1, make_const=False, ...)
+
+                    View an existing numpy array as a galsim Image.  The dtype is taken from
+                    the dtype of the numpy array, which must be one of the allowed types listed
+                    above.  You can also optionally set the origin (xmin, ymin) if you want it to 
+                    be something other than (1,1).  You can also optionally force the image to
+                    be read-only with `make_const=True`.
+
+        Image(image)
+                    
+                    Cast a C++-layer image object (an ImageArray, ImageView or ConstImageView)
+                    as an Image.
+
+    You can specify the `ncol`, `nrow`, `bounds`, `array`, or `image`  parameters by keyword 
+    argument if you want, or you can pass them as simple args, and the constructor will figure out 
+    what they are.
+
+    The other arguments (shown as ... above) relate to the conversion between sky coordinates,
+    which is how all the galsim objects are defined, and the pixel coordinates.  There are
+    three options for this:
+
+        scale       You can optionally specify a pixel scale to use.  This would normally have
+                    units arcsec/pixel, but it doesn't have to be arcsec.  If you want to 
+                    use different units for the physical scale of your galsim objects, then
+                    the same unit would be used here.
+        wcs         A WCS object that provides a non-trivial mapping between sky units and
+                    pixel units.  The scale parameter is equivalent to wcs=PixelScale(scale).
+                    But there are a number of more complicated options.  See the WCS class
+                    for more details.
+        None        If you do not provide either of the above, then the conversion is undefined.
+                    When drawing onto such an image, a suitable pixel scale will be automatically
+                    set according to the Nyquist scale of the object being drawn.
+
+    After construction, you can set or change the scale or wcs with 
+
+        im.scale = new_scale
+        im.wcs = new_wcs
+
+    Note that im.scale will only work if the WCS is a galsim.PixelScale.  Once you set the 
+    wcs to be something non-trivial, then you must interact with it via the wcs attribute.
+    The im.scale syntax will raise an exception.
+
+    There are also two read-only attributes:
+
+        im.bounds
+        im.array
+
+    The 'array' attribute provides a numpy view into the Image's pixels.  The individual elements 
+    in the array attribute are accessed as im.array[y,x], matching the standard numpy convention,
+    while the Image class's own accessor uses (x,y).
+
+    Methods:
+
+        view        Return a view of the image.
+        subImage    Return a view of a portion of the full image.
+        shift       Shift the origin of the image by (dx,dy).
+        setCenter   Set a new position for the center of the image.
+        setOrigin   Set a new position for the origin (x,y) = (0,0) of the image.
+        im(x,y)     Get the value of a single pixel.
+        setValue    Set the value of a single pixel.
+        resize      Resize the image to have a new bounds.
+        fill        Fill the image with the same value in all pixels.
+        setZero     Fill the image with zeros.
+        invertSelf  Convert each value x to 1/x.
+
+    """
+    cpp_valid_dtypes = _galsim.ImageView.keys()
+    alias_dtypes = { 
+        int : cpp_valid_dtypes[1],    # int32
+        float : cpp_valid_dtypes[3],  # float64
+    }
+    valid_dtypes = cpp_valid_dtypes + alias_dtypes.keys()
+
+    def __init__(self, *args, **kwargs):
+        import numpy
+
+        # Parse the args, kwargs
+        ncol = None
+        nrow = None
+        bounds = None
+        array = None
+        image = None
+        if len(args) > 2:
+            raise TypeError("Error, too many unnamed arguments to Image constructor")
+        elif len(args) == 2:
+            ncol = args[0]
+            nrow = args[1]
+        elif len(args) == 1:
+            if isinstance(args[0], numpy.ndarray):
+                array = args[0]
+                xmin = kwargs.pop('xmin',1)
+                ymin = kwargs.pop('ymin',1)
+                make_const = kwargs.pop('make_const',False)
+            elif isinstance(args[0], galsim.BoundsI):
+                bounds = args[0]
+            else:
+                image = args[0]
+        else:
+            if 'array' in kwargs:
+                array = kwargs.pop('array')
+                xmin = kwargs.pop('xmin',1)
+                ymin = kwargs.pop('ymin',1)
+                make_const = kwargs.pop('make_const',False)
+            elif 'bounds' in kwargs:
+                bounds = kwargs.pop('bounds')
+            elif 'image' in kwargs:
+                image = kwargs.pop('image')
+            else:
+                ncol = kwargs.pop('ncol',None)
+                nrow = kwargs.pop('nrow',None)
+
+        # Pop off the other valid kwargs:
+        dtype = kwargs.pop('dtype', None)
+        init_value = kwargs.pop('init_value', None)
+        scale = kwargs.pop('scale', None)
+        wcs = kwargs.pop('wcs', None)
+
+        # Check that we got them all
+        if kwargs:
+            raise TypeError("Image constructor got unexpected keyword arguments: %s",kwargs)
+
+        # Figure out what dtype we want:
+        if dtype in Image.alias_dtypes: dtype = Image.alias_dtypes[dtype]
+        if dtype != None and dtype not in Image.valid_dtypes:
+            raise ValueError("dtype must be one of "+str(Image.valid_dtypes)+
+                             ".  Instead got "+str(dtype))
+        if array != None:
+            if array.dtype.type not in Image.cpp_valid_dtypes and dtype == None:
+                raise ValueError("array's dtype.type must be one of "+str(Image.cpp_valid_dtypes)+
+                                 ".  Instead got "+str(array.dtype.type)+".  Or can set "+
+                                 "dtype explicitly.")
+            if dtype != None and dtype != array.dtype.type:
+                array = array.astype(dtype)
+            self.dtype = array.dtype.type
+        elif dtype != None:
+            self.dtype = dtype
+        else:
+            self.dtype = numpy.float32
+
+        # Construct the image attribute
+        if (ncol != None or nrow != None):
+            if bounds != None:
+                raise TypeError("Cannot specify both ncol/nrow and bounds")
+            if array != None:
+                raise TypeError("Cannot specify both ncol/nrow and array")
+            if image != None:
+                raise TypeError("Cannot specify both ncol/nrow and image")
+            if ncol == None or nrow == None:
+                raise TypeError("Both nrow and ncol must be provided")
+            try:
+                ncol = int(ncol)
+                nrow = int(nrow)
+            except:
+                raise TypeError("Cannot parse ncol, nrow as integers")
+            self.image = _galsim.ImageAlloc[self.dtype](ncol, nrow)
+            if init_value != None:
+                self.image.fill(init_value)
+        elif bounds != None:
+            if array != None:
+                raise TypeError("Cannot specify both bounds and array")
+            if image != None:
+                raise TypeError("Cannot specify both bounds and image")
+            if not isinstance(bounds, galsim.BoundsI):
+                raise TypeError("bounds must be a galsim.BoundsI instance")
+            self.image = _galsim.ImageAlloc[self.dtype](bounds)
+            if init_value != None:
+                self.image.fill(init_value)
+        elif array != None:
+            if image != None:
+                raise TypeError("Cannot specify both array and image")
+            if not isinstance(array, numpy.ndarray):
+                raise TypeError("array must be a numpy ndarray instance")
+            if make_const:
+                self.image = _galsim.ConstImageView[self.dtype](array, xmin, ymin)
+            else:
+                self.image = _galsim.ImageView[self.dtype](array, xmin, ymin)
+            if init_value != None:
+                raise TypeError("Cannot specify init_value with array")
+        elif image != None:
+            if isinstance(image, Image):
+                image = image.image
+            self.image = None
+            for im_dtype in Image.cpp_valid_dtypes:
+                if ( isinstance(image,_galsim.ImageAlloc[im_dtype]) or
+                     isinstance(image,_galsim.ImageView[im_dtype]) or
+                     isinstance(image,_galsim.ConstImageView[im_dtype]) ):
+                    if dtype != None and im_dtype != dtype:
+                        # Allow dtype to force a retyping of the provided image
+                        # e.g. im = ImageF(...)
+                        #      im2 = ImageD(im)
+                        self.image = _galsim.ImageAlloc(image)
+                    else:
+                        self.image = image
+                    break
+            if self.image == None:
+                # Then never found the dtype above:
+                raise TypeError("image must be an Image or BaseImage type")
+            if init_value != None:
+                raise TypeError("Cannot specify init_value with image")
+        else:
+            self.image = _galsim.ImageAlloc[self.dtype]()
+            if init_value != None:
+                raise TypeError("Cannot specify init_value without setting an initial size")
+
+        # Construct the wcs attribute
+        if scale is not None:
+            if wcs is not None:
+                raise TypeError("Cannot provide both scale and wcs to Image constructor")
+            self.wcs = galsim.PixelScale(scale)
+        else:
+            if wcs is not None and not isinstance(wcs,galsim.BaseWCS):
+                raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
+            self.wcs = wcs
+
+    # bounds and array are really properties which pass the request to the image
+    @property
+    def bounds(self): return self.image.bounds
+    @property
+    def array(self): return self.image.array
+
+    # Allow scale to work as a PixelScale wcs.
+    @property
+    def scale(self): 
+        if self.wcs:
+            if not isinstance(self.wcs, galsim.PixelScale):
+                raise TypeError("image.wcs is not a simple PixelScale; scale is undefined.")
+            return self.wcs.scale
+        else:
+            return None
+
+    @scale.setter
+    def scale(self, value):
+        if self.wcs and not isinstance(self.wcs, galsim.PixelScale):
+            raise TypeError("image.wcs is not a simple PixelScale; scale is undefined.")
+        self.wcs = galsim.PixelScale(value)
+
+    # Convenience functions
+    @property
+    def xmin(self): return self.image.bounds.xmin
+    @property
+    def xmax(self): return self.image.bounds.xmax
+    @property
+    def ymin(self): return self.image.bounds.ymin
+    @property
+    def ymax(self): return self.image.bounds.ymax
+    def getXMin(self): return self.image.getXMin()
+    def getXMax(self): return self.image.getXMax()
+    def getYMin(self): return self.image.getYMin()
+    def getYMax(self): return self.image.getYMax()
+    def getBounds(self): return self.image.getBounds()
+
+    def copy(self):
+        return Image(image=self.image.copy(), wcs=self.wcs)
+
+    def resize(self, bounds):
+        """Resize the image to have a new bounds (must be a BoundsI instance)
+        """
+        if not isinstance(bounds, galsim.BoundsI):
+            raise TypeError("bounds must be a galsim.BoundsI instance")
+        try:
+            self.image.resize(bounds)
+        except:
+            # if the image wasn't an ImageAlloc, then above won't work.  So just make it one.
+            self.image = _galsim.ImageAlloc[self.dtype](bounds)
+
+    def subImage(self, bounds):
+        """Return a view of a portion of the full image
+        """
+        if not isinstance(bounds, galsim.BoundsI):
+            raise TypeError("bounds must be a galsim.BoundsI instance")
+        subimage = self.image.subImage(bounds)
+        # TODO: Make sure new WCS is correct for the subImage.  Not trivial!
+        return Image(image=subimage, wcs=self.wcs)
+
+    def __getitem__(self, bounds):
+        """Return a view of a portion of the full image
+        """
+        return self.subImage(bounds)
+
+    def __setitem__(self, bounds, rhs):
+        """Set a portion of the full image to the values in another image
+        """
+        self.subImage(bounds).image.copyFrom(rhs.image)
+
+    def view(self, make_const=False):
+        """Make a view of this image, which lets you change the scale, wcs, origin, etc.
+        but view the same underlying data as the original image.
+
+        You can make this a const view with the make_const parameter.
+        """
+        if make_const:
+            return Image(image=_galsim.ConstImageView[self.dtype](self.image.view()),
+                         wcs=self.wcs)
+        else:
+            return Image(image=self.image.view(), wcs=self.wcs)
+
+    def shift(self, *args, **kwargs):
+        """Shift the pixel coordinates by some (integral) dx,dy.
+
+        The arguments here may be either (dx, dy) or a PositionI instance.
+        Or you can provide dx, dy as named kwargs.
+        """
+        if len(args) == 0:
+            # Then dx,dy need to be kwargs
+            # If not, then python will raise an appropriate error.
+            dx = kwargs.pop('dx')
+            dy = kwargs.pop('dy')
+        elif len(args) == 1:
+            if isinstance(args[0], galsim.PositionI):
+                dx = args[0].x
+                dy = args[0].y
+            else:
+                # Let python raise the appropriate exception if this isn't valid.
+                dx = args[0][0]
+                dy = args[0][1]
+        elif len(args) == 2:
+            dx = args[0]
+            dy = args[1]
+        else:
+            raise TypeError("Too many arguments supplied to shift ")
+        if kwargs:
+            raise TypeError("shift() got unexpected keyword arguments: %s",kwargs)
+        self.image.shift(int(dx),int(dy))
+
+    def setCenter(self, *args, **kwargs):
+        """Set the center of the image to the given (integral) (xcen, ycen)
+
+        The arguments here may be either (xcen, ycen) or a PositionI instance.
+        Or you can provide xcen, ycen as named kwargs.
+        """
+        if len(args) == 0:
+            # Then xcen,ycen need to be kwargs
+            # If not, then python will raise an appropriate error.
+            xcen = kwargs.pop('xcen')
+            ycen = kwargs.pop('ycen')
+        elif len(args) == 1:
+            if isinstance(args[0], galsim.PositionI):
+                xcen = args[0].x
+                ycen = args[0].y
+            else:
+                # Let python raise the appropriate exception if this isn't valid.
+                xcen = args[0][0]
+                ycen = args[0][1]
+        elif len(args) == 2:
+            xcen = args[0]
+            ycen = args[1]
+        else:
+            raise TypeError("Too many arguments supplied to setCenter")
+        if kwargs:
+            raise TypeError("setCenter() got unexpected keyword arguments: %s",kwargs)
+        self.image.setCenter(int(xcen),int(ycen))
+
+    def setOrigin(self, *args, **kwargs):
+        """Set the origin of the image to the given (integral) (x0, y0)
+
+        The arguments here may be either (x0, y0) or a PositionI instance.
+        Or you can provide x0, y0 as named kwargs.
+        """
+        if len(args) == 0:
+            # Then x0,y0 need to be kwargs
+            # If not, then python will raise an appropriate error.
+            x0 = kwargs.pop('x0')
+            y0 = kwargs.pop('y0')
+        elif len(args) == 1:
+            if isinstance(args[0], galsim.PositionI):
+                x0 = args[0].x
+                y0 = args[0].y
+            else:
+                # Let python raise the appropriate exception if this isn't valid.
+                x0 = args[0][0]
+                y0 = args[0][1]
+        elif len(args) == 2:
+            x0 = args[0]
+            y0 = args[1]
+        else:
+            raise TypeError("Too many arguments supplied to setOrigin")
+        if kwargs:
+            raise TypeError("setOrigin() got unexpected keyword arguments: %s",kwargs)
+        self.image.setOrigin(int(x0),int(y0))
+
+    def __call__(self, *args, **kwargs):
+        """Get the pixel value at given position 
+
+        The arguments here may be either (x, y) or a PositionI instance.
+        Or you can provide x, y as named kwargs.
+        """
+        if len(args) == 0:
+            # Then x,y need to be kwargs
+            # If not, then python will raise an appropriate error.
+            x = kwargs.pop('x')
+            y = kwargs.pop('y')
+        elif len(args) == 1:
+            if isinstance(args[0], galsim.PositionI):
+                x = args[0].x
+                y = args[0].y
+            else:
+                # Let python raise the appropriate exception if this isn't valid.
+                x = args[0][0]
+                y = args[0][1]
+        elif len(args) == 2:
+            x = args[0]
+            y = args[1]
+        else:
+            raise TypeError("Too many arguments supplied to image(x,y)")
+        if kwargs:
+            raise TypeError("image(x,y) got unexpected keyword arguments: %s",kwargs)
+        return self.image(int(x),int(y))
+
+
+    def setValue(self, *args, **kwargs):
+        """Set the pixel value at given position 
+
+        The arguments here may be either (x, y, value) or (pos, value) where pos is a PositionI.
+        Or you can provide x, y, value as named kwargs.
+        """
+        if len(args) == 0:
+            # Then x,y,value need to be kwargs
+            # If not, then python will raise an appropriate error.
+            x = kwargs.pop('x')
+            y = kwargs.pop('y')
+            value = kwargs.pop('value')
+        elif len(args) == 1:
+            if isinstance(args[0], galsim.PositionI):
+                x = args[0].x
+                y = args[0].y
+            else:
+                # Let python raise the appropriate exception if this isn't valid.
+                x = args[0][0]
+                y = args[0][1]
+            value = kwargs.pop('value')
+        elif len(args) == 2:
+            if isinstance(args[0], galsim.PositionI):
+                x = args[0].x
+                y = args[0].y
+                value = args[1]
+            else:
+                x = args[0]
+                y = args[1]
+                value = kwargs.pop('value')
+        elif len(args) == 3:
+            x = args[0]
+            y = args[1]
+            value = args[2]
+        else:
+            raise TypeError("Too many arguments supplied to image(x,y)")
+        if kwargs:
+            raise TypeError("setValue() got unexpected keyword arguments: %s",kwargs)
+        self.image.setValue(int(x),int(y),value)
+
+    def fill(self, value):
+        """Set all pixel values to the given value
+        """
+        self.image.fill(value)
+
+    def setZero(self):
+        """Set all pixel values to zero.
+        """
+        self.image.setZero()
+
+    def invertSelf(self):
+        """Set all pixel values to their inverse: x -> 1/x.
+        """
+        self.image.invertSelf()
+
+
+# These are essentially aliases for the regular Image with the correct dtype
+def ImageS(*args, **kwargs):
+    """Alias for galsim.Image(..., dtype=numpy.int16)
+    """
+    kwargs['dtype'] = numpy.int16
+    return Image(*args, **kwargs)
+
+def ImageI(*args, **kwargs):
+    """Alias for galsim.Image(..., dtype=numpy.int32)
+    """
+    kwargs['dtype'] = numpy.int32
+    return Image(*args, **kwargs)
+
+def ImageF(*args, **kwargs):
+    """Alias for galsim.Image(..., dtype=numpy.float32)
+    """
+    kwargs['dtype'] = numpy.float32
+    return Image(*args, **kwargs)
+
+def ImageD(*args, **kwargs):
+    """Alias for galsim.Image(..., dtype=numpy.float64)
+    """
+    kwargs['dtype'] = numpy.float64
+    return Image(*args, **kwargs)
+
+
+
+################################################################################################
+#
+# Now we have to make some modifications to the C++ layer objects.  Mostly editing their :
+# doc strings and adding some arithemetic functions, so they work more intuitively.
+#
+
+
+# First of all we add docstrings to the ImageAlloc, ImageView and ConstImageView classes for each 
+# of the S, F, I & D datatypes
+#
+for Class in _galsim.ImageAlloc.itervalues():
+    Class.__doc__ = """
+    The ImageAllocS, ImageAllocI, ImageAllocF and ImageAllocD classes.
+    
+    ImageAlloc[SIFD], ImageView[SIFD] and ConstImage[SIFD] are the classes that represent the 
+    primary way to pass image data between Python and the GalSim C++ library.
+
+    There is a separate Python class for each C++ template instantiation, and these can be accessed
+    using numpy types as keys in the ImageAlloc dict:
+
+        ImageAllocS == ImageAlloc[numpy.int16]
+        ImageAllocI == ImageAlloc[numpy.int32]
+        ImageAllocF == ImageAlloc[numpy.float32]
+        ImageAllocD == ImageAlloc[numpy.float64]
+    
+    An ImageAlloc can be thought of as containing a 2-d, row-contiguous numpy array (which it may 
+    share with other ImageView objects), an origin point, and a pixel scale (the origin and pixel 
+    scale are not shared).
+
+    There are several ways to construct an ImageAlloc:
+
+        ImageAlloc(ncol, nrow, init_value=0)  # size and initial value, origin @ (1,1)
+        ImageAlloc(bounds, init_value=0)      # bounding box and initial value
+
+    After construction, the bounds may be set with 
 
         im.bounds = new_bounds
-        im.scale = new_scale
 
-    An Image also has an 'array' attribute that provides a numpy view into the Image's pixels.
+    An ImageAlloc also has an 'array' attribute that provides a numpy view into the ImageAlloc's 
+    pixels.
 
     The individual elements in the array attribute are accessed as im.array[y,x], matching the
-    standard numpy convention, while the Image class's own accessors are all (x,y).
+    standard numpy convention, while the ImageAlloc class's own accessors are all (x,y).
     """
 
 
@@ -164,13 +694,15 @@ def Image_getitem(self, key):
 
 # Define a utility function to be used by the arithmetic functions below
 def check_image_consistency(im1, im2):
-    if (type(im2) in _galsim.Image.values() or
-        type(im2) in _galsim.ImageView.values() or
-        type(im2) in _galsim.ConstImageView.values()):
-        if im1.scale != im2.scale:
-            raise ValueError("Image scales are inconsistent!")
+    if ( isinstance(im2, Image) or
+         type(im2) in _galsim.ImageAlloc.values() or
+         type(im2) in _galsim.ImageView.values() or
+         type(im2) in _galsim.ConstImageView.values()):
         if im1.array.shape != im2.array.shape:
-            raise ValueError("Image shapes are inconsistent!")
+            raise ValueError("Image shapes are inconsistent")
+    if isinstance(im2, Image):
+        if im1.wcs != im2.wcs:
+            raise ValueError("Image wcs attributes are different")
 
 def Image_add(self, other):
     result = self.copy()
@@ -288,26 +820,51 @@ def Image_ior(self, other):
     return self
 
 def Image_copy(self):
-    # self can be an Image or an ImageView, but the return type needs to be an Image.
+    # self can be an ImageAlloc or an ImageView, but the return type needs to be an ImageAlloc.
     # So use the array.dtype.type attribute to get the type of the underlying data,
-    # which in turn can be used to index our Image dictionary:
-    return _galsim.Image[self.array.dtype.type](self)
+    # which in turn can be used to index our ImageAlloc dictionary:
+    return _galsim.ImageAlloc[self.array.dtype.type](self)
 
 # Some functions to enable pickling of images
 def ImageView_getinitargs(self):
-    return self.array, self.xmin, self.ymin, self.scale
+    return self.array, self.xmin, self.ymin
 
 # An image is really pickled as an ImageView
-def Image_getstate(self):
-    return self.array, self.xmin, self.ymin, self.scale
+def ImageAlloc_getstate(self):
+    return self.array, self.xmin, self.ymin
 
-def Image_setstate(self, args):
+def ImageAlloc_setstate(self, args):
     self_type = args[0].dtype.type
     self.__class__ = _galsim.ImageView[self_type]
     self.__init__(*args)
 
-# inject these as methods of Image classes
-for Class in _galsim.Image.itervalues():
+# inject the arithmetic operators as methods of the Image class:
+Image.__add__ = Image_add
+Image.__radd__ = Image_add
+Image.__iadd__ = Image_iadd
+Image.__sub__ = Image_sub
+Image.__rsub__ = Image_rsub
+Image.__isub__ = Image_isub
+Image.__mul__ = Image_mul
+Image.__rmul__ = Image_mul
+Image.__imul__ = Image_imul
+Image.__div__ = Image_div
+Image.__rdiv__ = Image_div
+Image.__truediv__ = Image_div
+Image.__rtruediv__ = Image_rdiv
+Image.__idiv__ = Image_idiv
+Image.__itruediv__ = Image_idiv
+Image.__ipow__ = Image_ipow
+Image.__pow__ = Image_pow
+Image.__and__ = Image_and
+Image.__xor__ = Image_xor
+Image.__or__ = Image_or
+Image.__iand__ = Image_iand
+Image.__ixor__ = Image_ixor
+Image.__ior__ = Image_ior
+
+# inject these as methods of ImageAlloc classes
+for Class in _galsim.ImageAlloc.itervalues():
     Class.__setitem__ = Image_setitem
     Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
@@ -329,8 +886,8 @@ for Class in _galsim.Image.itervalues():
     Class.__pow__ = Image_pow
     Class.copy = Image_copy
     Class.__getstate_manages_dict__ = 1
-    Class.__getstate__ = Image_getstate
-    Class.__setstate__ = Image_setstate
+    Class.__getstate__ = ImageAlloc_getstate
+    Class.__setstate__ = ImageAlloc_setstate
 
 for Class in _galsim.ImageView.itervalues():
     Class.__setitem__ = Image_setitem
@@ -373,12 +930,12 @@ for Class in _galsim.ConstImageView.itervalues():
 
 import numpy as np
 for int_type in [ np.int16, np.int32 ]:
-    for Class in [ _galsim.Image[int_type], _galsim.ImageView[int_type],
+    for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type],
                    _galsim.ConstImageView[int_type] ]:
         Class.__and__ = Image_and
         Class.__xor__ = Image_xor
         Class.__or__ = Image_or
-    for Class in [ _galsim.Image[int_type], _galsim.ImageView[int_type] ]:
+    for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type] ]:
         Class.__iand__ = Image_iand
         Class.__ixor__ = Image_ixor
         Class.__ior__ = Image_ior

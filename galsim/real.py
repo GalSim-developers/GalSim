@@ -183,7 +183,7 @@ class RealGalaxy(GSObject):
         if noise_image is None:
             self.noise = galsim.UncorrelatedNoise(rng, pixel_scale, var, gsparams)
         else:
-            ii = galsim.InterpolatedImage(noise_image, dx=pixel_scale, normalization="sb",
+            ii = galsim.InterpolatedImage(noise_image, scale=pixel_scale, normalization="sb",
                                           calculate_stepk=False, calculate_maxk=False,
                                           x_interpolant='linear', gsparams=gsparams)
             self.noise = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii)
@@ -205,7 +205,7 @@ class RealGalaxy(GSObject):
         # Build the InterpolatedImage of the PSF.
         self.original_psf = galsim.InterpolatedImage(
             self.psf_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
-            flux=1.0, dx=self.pixel_scale, gsparams=gsparams)
+            flux=1.0, scale=self.pixel_scale, gsparams=gsparams)
         if logger:
             logger.debug('RealGalaxy %d: Made original_psf',use_index)
 
@@ -215,7 +215,7 @@ class RealGalaxy(GSObject):
         # leads to problems.)
         self.original_image = galsim.InterpolatedImage(
                 self.gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
-                dx=self.pixel_scale, pad_factor=pad_factor, noise_pad_size=noise_pad_size,
+                scale=self.pixel_scale, pad_factor=pad_factor, noise_pad_size=noise_pad_size,
                 calculate_stepk=self.original_psf.stepK(),
                 calculate_maxk=self.original_psf.maxK(),
                 noise_pad=noise_pad, rng=rng, gsparams=gsparams)
@@ -488,7 +488,7 @@ class RealGalaxyCatalog(object):
         return f
 
     def getGal(self, i):
-        """Returns the galaxy at index `i` as an ImageViewD object.
+        """Returns the galaxy at index `i` as an Image object.
         """
         import numpy
         if self.logger:
@@ -502,12 +502,12 @@ class RealGalaxyCatalog(object):
         self.gal_lock.acquire()
         array = f[self.gal_hdu[i]].data
         self.gal_lock.release()
-        im = galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
+        im = galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)))
         return im
 
 
     def getPSF(self, i):
-        """Returns the PSF at index `i` as an ImageViewD object.
+        """Returns the PSF at index `i` as an Image object.
         """
         import numpy
         if self.logger:
@@ -519,7 +519,7 @@ class RealGalaxyCatalog(object):
         self.psf_lock.acquire()
         array = f[self.psf_hdu[i]].data
         self.psf_lock.release()
-        return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
+        return galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
     def getNoiseProperties(self, i):
         """Returns the components needed to make the noise cf at index `i`.
@@ -550,7 +550,7 @@ class RealGalaxyCatalog(object):
                 else:
                     import numpy
                     array = pyfits.getdata(self.noise_file_name[i])
-                    im = galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
+                    im = galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)))
                     self.saved_noise_im[self.noise_file_name[i]] = im
                     if self.logger:
                         self.logger.debug('RealGalaxyCatalog %d: Built noise im',i)
@@ -567,7 +567,7 @@ class RealGalaxyCatalog(object):
         if im is None:
             cf = galsim.UncorrelatedNoise(rng, scale, var, gsparams)
         else:
-            ii = galsim.InterpolatedImage(im, dx=scale, normalization="sb",
+            ii = galsim.InterpolatedImage(im, scale=scale, normalization="sb",
                                           calculate_stepk=False, calculate_maxk=False,
                                           x_interpolant='linear', gsparams=gsparams)
             cf = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii)
@@ -594,7 +594,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
 
     @param real_galaxy         The RealGalaxy object to use, not modified in generating the
                                simulated image.
-    @param target_PSF          The target PSF, either one of our base classes or an ImageView/Image.
+    @param target_PSF          The target PSF, either one of our base classes or an Image.
     @param target_pixel_scale  The pixel scale for the final image, in arcsec.
     @param g1                  First component of shear to impose (components defined with respect
                                to pixel coordinates), [Default `g1 = 0.`]
@@ -616,12 +616,10 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     # do some checking of arguments
     if not isinstance(real_galaxy, galsim.RealGalaxy):
         raise RuntimeError("Error: simReal requires a RealGalaxy!")
-    for Class in galsim.Image.values() + galsim.ImageView.values():
-        if isinstance(target_PSF, Class):
-            target_PSF = galsim.InterpolatedImage(target_PSF.view(), dx=target_pixel_scale)
-            break
+    if isinstance(target_PSF, galsim.Image):
+        target_PSF = galsim.InterpolatedImage(target_PSF, scale=target_pixel_scale)
     if not isinstance(target_PSF, galsim.GSObject):
-        raise RuntimeError("Error: target PSF is not an Image, ImageView, or GSObject!")
+        raise RuntimeError("Error: target PSF is not an Image or GSObject!")
     if rotation_angle != None and not isinstance(rotation_angle, galsim.Angle):
         raise RuntimeError("Error: specified rotation angle is not an Angle instance!")
     if (target_pixel_scale < real_galaxy.pixel_scale):
@@ -660,7 +658,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
 
     # convolve, resample
     out_gal = galsim.Convolve([real_galaxy_copy, target_PSF])
-    image = out_gal.draw(image=image, dx = target_pixel_scale)
+    image = out_gal.draw(image=image, scale = target_pixel_scale)
 
     # return simulated image
     return image

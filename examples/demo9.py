@@ -266,7 +266,7 @@ def main(argv):
             # To draw the image at a position other than the center of the image, you can
             # use the offset parameter, which applies an offset in pixels relative to the
             # center of the image.
-            stamp = final.draw(dx=pixel_scale, offset=offset)
+            stamp = final.draw(scale=pixel_scale, offset=offset)
 
             # Recenter the stamp at the desired position:
             stamp.setCenter(ix_nominal,iy_nominal)
@@ -278,7 +278,7 @@ def main(argv):
             # Also draw the PSF
             psf_final = galsim.Convolve([psf, pix])
             psf_stamp = galsim.ImageF(stamp.bounds) # Use same bounds as galaxy stamp
-            psf_final.draw(psf_stamp, dx=pixel_scale, offset=offset)
+            psf_final.draw(psf_stamp, scale=pixel_scale, offset=offset)
             psf_image[bounds] += psf_stamp[bounds]
 
 

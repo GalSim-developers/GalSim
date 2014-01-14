@@ -31,10 +31,9 @@ class InterpolatedImage(GSObject):
 
     The InterpolatedImage class is useful if you have a non-parametric description of an object as 
     an Image, that you wish to manipulate / transform using GSObject methods such as applyShear(),
-    applyMagnification(), applyShift(), etc.  The input Image can be any BaseImage (i.e., Image,
-    ImageView, or ConstImageView).  Note that when convolving an InterpolatedImage, the use of
-    real-space convolution is not recommended, since it is typically a great deal slower than 
-    Fourier-space convolution for this kind of object.
+    applyMagnification(), applyShift(), etc.  Note that when convolving an InterpolatedImage, the 
+    use of real-space convolution is not recommended, since it is typically a great deal slower 
+    than Fourier-space convolution for this kind of object.
 
     The constructor needs to know how the Image was drawn: is it an Image of flux or of surface
     brightness?  Since our default for drawing Images using draw() and drawShoot() is that
@@ -43,8 +42,9 @@ class InterpolatedImage(GSObject):
     specify 'surface brightness' normalization if desired, or alternatively, can instead specify 
     the desired flux for the object.
 
-    If the input Image has a scale associated with it, then there is no need to specify an input
-    scale `dx`.
+    If the input Image has a scale or wcs associated with it, then there is no need to specify one
+    as a parameter here.  But if one is provided, that will override any scale or wcs that
+    is native to the Image.
 
     The user may optionally specify an interpolant, `x_interpolant`, for real-space manipulations
     (e.g., shearing, resampling).  If none is specified, then by default, a quintic interpolant is
@@ -82,7 +82,8 @@ class InterpolatedImage(GSObject):
     
         >>> interpolated_image = galsim.InterpolatedImage(
                 image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
-                dx = None, flux = None, pad_factor = 4., noise_pad_size = 0, noise_pad = 0.,
+                scale = None, wcs = None, flux = None, pad_factor = 4.,
+                noise_pad_size = 0, noise_pad = 0.,
                 use_cache = True, pad_image = None, rng = None, calculate_stepk = True,
                 calculate_maxk = True, use_true_center = True, offset = None)
 
@@ -105,8 +106,8 @@ class InterpolatedImage(GSObject):
     re-drawn at a different size.
 
     @param image           The Image from which to construct the object.
-                           This may be either an Image (or ImageView) instance or a string
-                           indicating a fits file from which to read the image.
+                           This may be either an Image instance or a string indicating a fits 
+                           file from which to read the image.
     @param x_interpolant   Either an Interpolant2d (or Interpolant) instance or a string indicating
                            which real-space interpolant should be used.  Options are 'nearest',
                            'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
@@ -123,10 +124,12 @@ class InterpolatedImage(GSObject):
                               "surface brightness" or "sb" means that the pixels sample
                                   the surface brightness distribution at each location.
                               (Default `normalization = "flux"`)
-    @param dx              If provided, use this as the pixel scale for the Image; this will
-                           override the pixel scale stored by the provided Image, in any.  If `dx`
-                           is `None`, then take the provided image's pixel scale.
-                           (Default `dx = None`.)
+    @param scale           If provided, use this as the pixel scale for the Image; this will
+                           override the pixel scale stored by the provided Image, in any.  
+                           If `scale` is `None`, then take the provided image's pixel scale.
+                           (Default `scale = None`.)
+    @param wcs             If provided, use this as the wcs for the image.  At most one of scale or 
+                           wcs may be provided. (Default `wcs - None`.)
     @param flux            Optionally specify a total flux for the object, which overrides the
                            implied flux normalization from the Image itself.
     @param pad_factor      Factor by which to pad the Image with zeros.  We strongly recommend 
@@ -172,8 +175,8 @@ class InterpolatedImage(GSObject):
                                (a) as a galsim.Image; or
                                (b) as a string which is interpreted as a filename containing an
                                    image to use.
-                           The `pad_image` scale is ignored, and taken to be equal to that
-                           of the `image`.
+                           The `pad_image` scale or wcs is ignored.  It uses the same scale or
+                           wcs for both the `image` and the `pad_image`.
                            The user should be careful to ensure that the image used for padding has 
                            roughly zero mean.  The purpose of this keyword is to allow for a more 
                            flexible representation of some noise field around an object; if the 
@@ -223,7 +226,7 @@ class InterpolatedImage(GSObject):
         'x_interpolant' : str ,
         'k_interpolant' : str ,
         'normalization' : str ,
-        'dx' : float ,
+        'scale' : float ,
         'flux' : float ,
         'pad_factor' : float ,
         'noise_pad_size' : float ,
@@ -240,9 +243,11 @@ class InterpolatedImage(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
-                 dx = None, flux = None, pad_factor = 4., noise_pad_size=0, noise_pad = 0.,
+                 scale = None, wcs = None, flux = None, pad_factor = 4.,
+                 noise_pad_size=0, noise_pad = 0.,
                  rng = None, pad_image = None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None):
+        import numpy
 
         # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
@@ -252,7 +257,9 @@ class InterpolatedImage(GSObject):
             pass
 
         # make sure image is really an image and has a float type
-        if not isinstance(image, galsim.BaseImageF) and not isinstance(image, galsim.BaseImageD):
+        if not isinstance(image, galsim.Image):
+            raise ValueError("Supplied image is not an Image instance")
+        if image.dtype != numpy.float32 and image.dtype != numpy.float64:
             raise ValueError("Supplied image is not an image of floats or doubles!")
 
         # it must have well-defined bounds, otherwise seg fault in SBInterpolatedImage constructor
@@ -276,27 +283,22 @@ class InterpolatedImage(GSObject):
         else:
             self.k_interpolant = galsim.utilities.convert_interpolant_to_2d(k_interpolant)
 
-        # Make sure we don't change the original image in anything we do to it here.
-        # (e.g. set scale, etc.)
-        image = image.view()
-
-        # Check for input dx, and check whether Image already has one set.  At the end of this
-        # code block, either an exception will have been raised, or the input image will have a
-        # valid scale set.
-        if dx is None:
-            dx = image.scale
-            if dx == 0:
-                raise ValueError("No information given with Image or keywords about pixel scale!")
-        else:
-            if type(dx) != float:
-                dx = float(dx)
-            if dx <= 0.0:
-                raise ValueError("dx may not be <= 0.0")
-            image.scale = dx
-
-        # Store the image as an attribute
-        self.orig_image = image
+        # Store the image as an attribute and make sure we don't change the original image
+        # in anything we do here.  (e.g. set scale, etc.)
+        self.image = image.view()
         self.use_cache = use_cache
+
+        # Set the wcs if necessary
+        if scale is not None:
+            if wcs is not None:
+                raise TypeError("Cannot provide both scale and wcs to InterpolatedImage")
+            self.image.wcs = galsim.PixelScale(scale)
+        elif wcs is not None:
+            if not isinstance(wcs, galsim.BaseWCS):
+                raise TypeError("wcs parameter is not a galsim.BaseWCS instance")
+            self.image.wcs = wcs
+        elif self.image.wcs is None:
+            raise ValueError("No information given with Image or keywords about pixel scale!")
 
         # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
         # of a valid type.
@@ -307,10 +309,12 @@ class InterpolatedImage(GSObject):
 
         # Check that given pad_image is valid:
         if pad_image:
+            import numpy
             if isinstance(pad_image, str):
                 pad_image = galsim.fits.read(pad_image)
-            if ( not isinstance(pad_image, galsim.BaseImageF) and 
-                 not isinstance(pad_image, galsim.BaseImageD) ):
+            if not isinstance(pad_image, galsim.Image):
+                raise ValueError("Supplied pad_image is not an Image!")
+            if pad_image.dtype != numpy.float32 and pad_image.dtype != numpy.float64:
                 raise ValueError("Supplied pad_image is not one of the allowed types!")
 
         # Check that the given noise_pad is valid:
@@ -329,18 +333,26 @@ class InterpolatedImage(GSObject):
         if pad_factor <= 0.:
             raise ValueError("Invalid pad_factor <= 0 in InterpolatedImage")
 
+        if use_true_center:
+            im_cen = self.image.bounds.trueCenter()
+        else:
+            im_cen = self.image.bounds.center()
+
         # Make sure the image fits in the noise pad image:
         if noise_pad_size:
             import math
-            # Convert from arcsec to pixels according to the image scale.
-            noise_pad_size = int(math.ceil(noise_pad_size / image.scale))
+            # Convert from arcsec to pixels according to the wcs.
+            # Use the minimum scale, since we want to make sure noise_pad_size is
+            # as large as we need in any direction.
+            scale = self.image.wcs.minLinearScale(image_pos=im_cen)
+            noise_pad_size = int(math.ceil(noise_pad_size / scale))
             # Round up to a good size for doing FFTs
             noise_pad_size = goodFFTSize(noise_pad_size)
-            if noise_pad_size <= min(image.array.shape):
+            if noise_pad_size <= min(self.image.array.shape):
                 # Don't need any noise padding in this case.
                 noise_pad_size = 0
-            elif noise_pad_size < max(image.array.shape):
-                noise_pad_size = max(image.array.shape)
+            elif noise_pad_size < max(self.image.array.shape):
+                noise_pad_size = max(self.image.array.shape)
 
         # See if we need to pad out the image with either a pad_image or noise_pad
         if noise_pad_size:
@@ -364,29 +376,24 @@ class InterpolatedImage(GSObject):
 
         elif pad_image:
             # Just make sure pad_image is the right type
-            if ( isinstance(image, galsim.BaseImageF) and 
-                 not isinstance(pad_image, galsim.BaseImageF) ):
-                pad_image = galsim.ImageF(pad_image)
-            elif ( isinstance(image, galsim.BaseImageD) and 
-                   not isinstance(pad_image, galsim.BaseImageD) ):
-                pad_image = galsim.ImageD(pad_image)
+            pad_image = galsim.Image(pad_image, dtype=image.dtype)
 
         # Now place the given image in the center of the padding image:
         if pad_image:
             pad_image.setCenter(0,0)
-            image.setCenter(0,0)
-            if pad_image.bounds.includes(image.bounds):
-                pad_image[image.bounds] = image
+            self.image.setCenter(0,0)
+            if pad_image.bounds.includes(self.image.bounds):
+                pad_image[self.image.bounds] = self.image
             else:
                 # If padding was smaller than original image, just use the original image.
-                pad_image = image
+                pad_image = self.image
         else:
-            pad_image = image
+            pad_image = self.image
 
         # Make the SBInterpolatedImage out of the image.
         sbinterpolatedimage = galsim.SBInterpolatedImage(
-                pad_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
-                dx=dx, pad_factor=pad_factor, gsparams=gsparams)
+                pad_image.image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
+                pad_factor=pad_factor, gsparams=gsparams)
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
         # input image.  So it is usually worth it to do a manual calculation here.
@@ -403,37 +410,35 @@ class InterpolatedImage(GSObject):
                 # If not a bool, then value is max_maxk
                 sbinterpolatedimage.calculateMaxK(max_maxk=calculate_maxk)
 
-        # If the user specified a flux, then set to that flux value.
-        if flux != None:
-            if type(flux) != flux:
-                flux = float(flux)
-            sbinterpolatedimage.setFlux(flux)
-        # If the user specified a flux normalization for the input Image, then since
-        # SBInterpolatedImage works in terms of surface brightness, have to rescale the values to
-        # get proper normalization.
-        elif flux is None and normalization.lower() in ['flux','f'] and dx != 1.:
-            sbinterpolatedimage.scaleFlux(1./(dx**2))
-        # If the input Image normalization is 'sb' then since that is the SBInterpolated default
-        # assumption, no rescaling is needed.
-
         # Initialize the SBProfile
         GSObject.__init__(self, sbinterpolatedimage)
+
+        # Bring the profile from image coordinates into world coordinates
+        prof = self.image.wcs.toWorld(self, image_pos=im_cen)
+        GSObject.__init__(self, prof)
+
+        # If the user specified a flux, then set to that flux value.
+        if flux != None:
+            self.setFlux(float(flux))
+        # If the user specified a surface brightness normalization for the input Image, then
+        # need to rescale flux by the pixel area to get proper normalization.
+        elif normalization.lower() in ['surface brightness','sb']:
+            self.scaleFlux(self.image.wcs.pixelArea(image_pos=im_cen))
 
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note reverse=True, since we want to fix the center in the opposite sense of what the 
         # draw function does.
-        prof = self._fix_center(image, dx, offset, use_true_center, reverse=True)
-        GSObject.__init__(self, prof.SBProfile)
+        prof = self._fix_center(self.image, None, offset, use_true_center, reverse=True)
+        GSObject.__init__(self, prof)
 
 
     def buildNoisePadImage(self, noise_pad_size, noise_pad, rng):
         """A helper function that builds the pad_image from the given noise_pad specification.
         """
         import numpy as np
-        if isinstance(self.orig_image, galsim.BaseImageF):
-            pad_image = galsim.ImageF(noise_pad_size, noise_pad_size)
-        if isinstance(self.orig_image, galsim.BaseImageD):
-            pad_image = galsim.ImageD(noise_pad_size, noise_pad_size)
+
+        # Make it with the same dtype as the image
+        pad_image = galsim.Image(noise_pad_size, noise_pad_size, dtype=self.image.dtype)
 
         # Figure out what kind of noise to apply to the image
         if isinstance(noise_pad, float):
@@ -442,7 +447,7 @@ class InterpolatedImage(GSObject):
             noise = noise_pad.copy()
             if rng: # Let a user supplied RNG take precedence over that in user CN
                 noise.setRNG(rng)
-        elif isinstance(noise_pad,galsim.BaseImageF) or isinstance(noise_pad,galsim.BaseImageD):
+        elif isinstance(noise_pad,galsim.Image):
             noise = galsim.CorrelatedNoise(rng, noise_pad)
         elif self.use_cache and noise_pad in InterpolatedImage._cache_noise_pad:
             noise = InterpolatedImage._cache_noise_pad[noise_pad]
