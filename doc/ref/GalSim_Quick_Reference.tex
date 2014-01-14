@@ -186,16 +186,16 @@ Requires one of the
     about other optional parameters, see the documentation for this object.}
 \item[$\circ$]
   \texttt{galsim.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_interpolated_image.html}{\texttt{InterpolatedImage}}\texttt{(image, \dots)} 
-  \newline {a base class representing in principle
+  \newline {a class representing in principle
     arbitrary surface brightness
     profiles for which we have an Image representation.  For information
     about other optional parameters, see the documentation for this object.}
 \item[$\circ$]
-  \texttt{galsim.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_pixel.html}{\texttt{Pixel}}\texttt{(xw, yw = None, flux=1.)} 
-  \newline {used for integrating light onto square or
-  rectangular pixels, requires at least one side dimension
-  \texttt{xw}.  If no width \texttt{yw} for the $y$ dimension of the
-  \texttt{Pixel}} is given, the assumed shape is square.
+  \texttt{galsim.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_pixel.html}{\texttt{Pixel}}\texttt{(scale, flux=1.)} 
+  \newline {used for integrating light onto square pixels.}
+\item[$\circ$]
+  \texttt{galsim.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_box.html}{\texttt{Box}}\texttt{(width, height, flux=1.)} 
+  \newline {an arbitrary rectangular box profile.}
 \item[$\circ$]
   \texttt{galsim.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_sersic.html}{\texttt{Sersic}}\texttt{(n, half\_light\_radius, flux=1.)} 
   \newline{ the S\'{e}rsic family of galaxy light
@@ -244,13 +244,13 @@ parameter.
 The choice of units for the size parameters is up to the user,
 but it must be kept consistent between all \texttt{GSObjects}.  These
 units must also adopted when specifying the \texttt{Image} pixel
-scale \texttt{dx}, whether this is set via the \texttt{GSObject}
+\texttt{scale}, whether this is set via the \texttt{GSObject}
 instance methods \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{draw}}\texttt{(\dots)}
 and
 \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{drawShoot}}\texttt{(\dots)}
 (see Section~\ref{sect:gsobjectmethods}),
-or when setting the scale of an \texttt{Image} with a given
-\texttt{dx} using the \texttt{image.setScale(dx)} method (see Section~\ref{sect:image}).
+or when setting the scale of an \texttt{Image}
+using \texttt{image.scale = scale} (see Section~\ref{sect:image}).
 
 As an example, consider the
 \texttt{lam\_over\_diam} parameter, which provides an angular scale for
@@ -362,7 +362,7 @@ instance are:
   \newline {apply a $(dx, dy)$ position shift to the
     \texttt{GSObject} centroid.}
 \item[$\circ$]
-  \texttt{image = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{draw}}\texttt{(image=None, dx=None, add\_to\_image=False, \dots)}
+  \texttt{image = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{draw}}\texttt{(image=None, scale=None, add\_to\_image=False, \dots)}
   \newline {draw and return an \texttt{Image} (see Section \ref{sect:image}) of the \texttt{GSObject}~using Discrete Fourier
   Transforms and interpolation to perform the image rendering.  
   Note
@@ -378,8 +378,8 @@ instance are:
     \texttt{Image} instance \texttt{image}.  If not supplied
     (i.e. \texttt{image = None}), an
     automatically-sized \texttt{Image} instance will be returned.
-  \item \texttt{dx} (default = \texttt{None}) \newline 
-    the optional image pixel scale \texttt{dx}, which if provided
+  \item \texttt{scale} (default = \texttt{None}) \newline 
+    the optional image pixel \texttt{scale}, which if provided
     should use the same units as used for the \texttt{GSObject} size
     parameters.  If not provided, will take either the scale from a
     supplied \texttt{image}, else use the Nyquist scale given the
@@ -393,7 +393,7 @@ The \texttt{draw} method has a number of additional optional
  details.
  }
 \item[$\circ$]
-  \texttt{image = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{drawShoot}}\texttt{(image=None, dx=None, \\~~ add\_to\_image=False, \dots)}
+  \texttt{image = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{drawShoot}}\texttt{(image=None, scale=None, \\~~ add\_to\_image=False, \dots)}
   \newline {draw and return an \texttt{Image} (see
     Section \ref{sect:image}) of the \texttt{GSObject}~by shooting a
     finite number of photons.
@@ -554,37 +554,38 @@ These noise models are used with a method of \texttt{Image} objects
 \section{Images}\label{sect:image}
 
 \subsection{Image classes and when to use them}\label{sect:imageclasses}
-The GalSim \texttt{Image} classes store array data, along with a
-figure for the pixel separation in physical units and image bounds
-information (origin, extent).\footnote{
-There are additional flavours
-of \texttt{Image} that you might also encounter: \texttt{ImageView}
-provides a mutable view into \texttt{Image} instance data, and
-\texttt{ConstImageView} an immutable view into \texttt{Image}
-instance data.  These may be the type of images returned from
-various GalSim functions, but as they work the same way as \texttt{Image},
-you shouldn't notice the difference.  See their docstrings for more information.}
+The GalSim \texttt{Image} classes store array data, along with the bounds
+of the array, and a
+function that converts between image coordinates and world coordinates 
+(also known as sky coordinates).  The most common World Coordinate System
+(WCS) function that you will encounter is a simple scaling of the units
+from pixels to arcsec.  This WCS can be specified simply by \texttt{im.scale},
+as we have seen already.  More complicated WCS functions would need to
+referenced via \texttt{im.wcs}.  See the docstring for \texttt{BaseWCS}
+for more details.
+
 \texttt{Image} instances can be operated upon to add stochastic noise
 simulating real astronomical images (see Section~\ref{sect:random}),
 and have methods for writing to FITS format output.
 
-There are four types of GalSim \texttt{Image}, one for each of four
-supported array data types.  The most common way to initialize an
+The most common way to initialize an
 image is with two integer parameters \texttt{nx} and \texttt{ny},
 giving the image extent in the $x$ and $y$ dimensions, respectively.
-Example initialization calls for the four types of \texttt{Image} are
-therefore:
+Example initialization is therefore:
 \begin{itemize}
-\item[$\circ$] \texttt{galsim.ImageS(nx, ny)} {for short integers (typically 16 bit).}
+\item[$\circ$] \texttt{galsim.Image(nx, ny)}
+\end{itemize}
+This would create an image with single precision (32 bit) floats for the data elements, which
+is usually the most appropriate type for astronomical images.  However, you can specify
+other types for the data using a suffix letter after \texttt{Image}:
+\begin{itemize}
+\item[$\circ$] \texttt{galsim.ImageS(nx, ny)} {for 16 bit integers.}
 
-\item[$\circ$] \texttt{galsim.ImageI(nx, ny)} {for integers (typically 32 bit).}
+\item[$\circ$] \texttt{galsim.ImageI(nx, ny)} {for 32 bit integers.}
 
-\item[$\circ$] \texttt{galsim.ImageF(nx, ny)} {for single precision (typically 32 bit)
-  floats.}
+\item[$\circ$] \texttt{galsim.ImageF(nx, ny)} {for single precision (32 bit) floats.}
 
-\item[$\circ$] \texttt{galsim.ImageD(nx, ny)} {for double precision (typically 64 bit)
-  floats.}
-
+\item[$\circ$] \texttt{galsim.ImageD(nx, ny)} {for double precision (64 bit) floats.}
 \end{itemize}
 Other ways to construct an \texttt{Image} can be found in the docstrings.
 
@@ -595,6 +596,7 @@ the array attribute are accessed as \texttt{image.array[y,x]}, matching
 the standard NumPy convention, while the \texttt{Image} class's own
 accessors are all $(x,y)$ in ordering.
 
+% TODO: They should have hyperlinks now.  Update this.
 Unfortunately the \texttt{Image} classes are not yet fully integrated
 within the online documentation, due to their being in C++ with
 compiled Python wrappers.  This means that the class names above and
@@ -618,14 +620,16 @@ This \texttt{Image} instance is then ready to pass to a
 methods for such an instance are:
 \begin{itemize}
 
-\item[$\circ$] \texttt{image.getScale()} \newline {get the pixel
-    scale \texttt{dx} for this image.}
+\item[$\circ$] \texttt{image.bounds} \newline {get the bounding box of the data.}
 
-\item[$\circ$] \texttt{image.setScale(dx)} \newline {set the pixel
-    scale for this image to \texttt{dx} --- note that this scale
-    should use the same units adopted for the \texttt{GSObject}
-    sizes.}
+\item[$\circ$] \texttt{image.wcs} \newline {get the WCS function to convert between
+    image coordinates and world coordinates.}
 
+\item[$\circ$] \texttt{image.scale} \newline {get or set the pixel
+    scale \texttt{scale} for this image.  The getter only works if the WCS 
+    is really just a pixel scale.  The setter will make it a pixel scale.}  
+
+%TODO: This usage is deprecated.  dev.applyTo(image) is preferred.
 \item[$\circ$] \texttt{image.addNoise(dev)} \newline {this adds
     stochastic noise, distributed as represented by the random deviate
     instance \texttt{dev}, to each element of the data array in
@@ -640,9 +644,7 @@ methods for such an instance are:
 
 \end{itemize}
 
-\texttt{Image}\footnote{Actually, the functionally almost-equivalent
-  \texttt{ImageView}, see the footnote in Section
-  \ref{sect:imageclasses}.}  instances are also returned when
+\texttt{Image} instances are also returned when
 accessing a sub-section of an existing \texttt{Image}.  For example
 
 {\tt >>> imsub = image.subImage(bounds)}
