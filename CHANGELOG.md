@@ -133,6 +133,11 @@ Updates to config options:
 * Changed the previous behavior of the image.wcs field to allow several WCS
   types: PixelScale, Offset, Shear, OffsetShear, UVFunction, RaDecFunction,
   Fits, and Tan. (Issue #364)
+* Removed sky_level_pixel option for specifying the sky.  Now the sky level 
+  can only be specified in units of ADU/arcsec^2 (or, technically, whatever 
+  the world units are if not arcsec) via the sky_level value.  The alternate
+  sky_level_pixel option was never used in our demos, so I doubt many people 
+  have been using it. (Issue #364)
 * Added Sum type for value types for which it makes sense: float, int, angle,
   shear, position. (Issue #457)
 * Allowed the user to modify or add config parameters from the command line. 
