@@ -1582,7 +1582,7 @@ class Pixel(GSObject):
     def getScale(self):
         """Return the pixel scale
         """
-        return self.SBProfile.getXWidth()
+        return self.SBProfile.getWidth()
 
 
 class Box(GSObject):
@@ -1625,14 +1625,14 @@ class Box(GSObject):
         GSObject.__init__(self, galsim.SBBox(width, height, flux=flux, gsparams=gsparams))
 
     def getWidth(self):
-        """Return the width of the pixel in the x dimension.
+        """Return the width of the box in the x dimension.
         """
-        return self.SBProfile.getXWidth()
+        return self.SBProfile.getWidth()
 
     def getHeight(self):
-        """Return the height of the pixel in the y dimension.
+        """Return the height of the box in the y dimension.
         """
-        return self.SBProfile.getYWidth()
+        return self.SBProfile.getHeight()
 
 
 class Sersic(GSObject):
