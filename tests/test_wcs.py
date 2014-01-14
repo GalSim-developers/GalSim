@@ -52,8 +52,12 @@ prof = prof + galsim.Exponential(scale_radius = 1.3, flux = 20).createShifted(-0
 profiles.append(prof)
 
 # How many digits of accuracy should we demand?  
-# This mostly comes into play for functions with a non-trivial local approximation.
-digits = 6
+# We test everything in units of arcsec, so this corresponds to 1.e-3 arcsec.  
+# 1 mas should be plenty accurate for our purposes.  (And note that most classes do much
+# better than this.  Just a few things that require iterative solutions for the world->image
+# transformation or things that output to a fits file at slightly less than full precision
+# do worse than 6 digits.)
+digits = 3
 
 # The HPX, TAN, TSC, and ZPN files were downloaded from the web site:
 # 
@@ -133,9 +137,6 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0):
     # _anywhere_ in the name an tries to run it.  So make sure the name doesn't 
     # have 'test' in it.  There are a bunch of other do* functions that work similarly.
 
-    global digits
-    orig_digits = digits
-
     #print 'start do_wcs_pos for ',name, wcs
     # Check that (x,y) -> (u,v) and converse work correctly
     if 'local' in name or 'jacobian' in name or 'affine' in name:
@@ -143,10 +144,13 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0):
         # count on the far positions to be sufficiently accurate. Just use near positions.
         x_list = near_x_list
         y_list = near_y_list
-        digits = 2
+        # And even then, it sometimes fails at our normal 3 digits because of the 2nd derivative
+        # coming into play.
+        digits2 = 2
     else:
         x_list = all_x_list
         y_list = all_y_list
+        digits2 = digits
     u_list = [ ufunc(x+x0,y+y0) for x,y in zip(x_list, y_list) ]
     v_list = [ vfunc(x+x0,y+y0) for x,y in zip(x_list, y_list) ]
 
@@ -158,10 +162,10 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0):
         world_pos2 = wcs.toWorld(image_pos)
         #print 'world_pos2 = ',world_pos2
         np.testing.assert_almost_equal(
-                world_pos.x, world_pos2.x, digits,
+                world_pos.x, world_pos2.x, digits2,
                 'wcs.toWorld returned wrong world position for '+name)
         np.testing.assert_almost_equal(
-                world_pos.y, world_pos2.y, digits,
+                world_pos.y, world_pos2.y, digits2,
                 'wcs.toWorld returned wrong world position for '+name)
 
         scale = wcs.maxLinearScale(image_pos)
@@ -171,10 +175,10 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0):
             image_pos2 = wcs.toImage(world_pos)
             #print 'image_pos2 = ',image_pos2
             np.testing.assert_almost_equal(
-                    image_pos.x*scale, image_pos2.x*scale, digits,
+                    image_pos.x*scale, image_pos2.x*scale, digits2,
                     'wcs.toImage returned wrong image position for '+name)
             np.testing.assert_almost_equal(
-                    image_pos.y*scale, image_pos2.y*scale, digits,
+                    image_pos.y*scale, image_pos2.y*scale, digits2,
                     'wcs.toImage returned wrong image position for '+name)
         except NotImplementedError:
             pass
@@ -183,12 +187,11 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0):
         # The last item in list should also work as a PositionI
         image_pos = galsim.PositionI(x,y)
         np.testing.assert_almost_equal(
-                world_pos.x, wcs.toWorld(image_pos).x, digits,
+                world_pos.x, wcs.toWorld(image_pos).x, digits2,
                 'wcs.toWorld gave different value with PositionI image_pos for '+name)
         np.testing.assert_almost_equal(
-                world_pos.y, wcs.toWorld(image_pos).y, digits,
+                world_pos.y, wcs.toWorld(image_pos).y, digits2,
                 'wcs.toWorld gave different value with PositionI image_pos for '+name)
-    digits = orig_digits
 
 
 def check_world(pos1, pos2, digits, err_msg):
@@ -437,10 +440,10 @@ def do_jac_decomp(wcs, name):
                      [ np.sin(theta.rad()), np.cos(theta.rad()) ] ] )
     if flip:
         F = np.matrix( [ [ 0, 1 ],
-                            [ 1, 0 ] ] )
+                         [ 1, 0 ] ] )
     else:
         F = np.matrix( [ [ 1, 0 ],
-                            [ 0, 1 ] ] )
+                         [ 0, 1 ] ] )
 
     M = scale * S * R * F
     J = wcs.getMatrix()
@@ -582,7 +585,6 @@ def do_celestial_wcs(wcs, name):
 
     print 'Start testing celestial WCS '+name
     #print 'wcs = ',wcs
-    global digits
 
     # Check that setOrigin and local work correctly:
     new_origin = galsim.PositionI(123,321)
@@ -604,12 +606,13 @@ def do_celestial_wcs(wcs, name):
     full_im2 = galsim.Image(galsim.BoundsI(-1023,1024,-1023,1024), scale=1.)
 
     # Some of the FITS images have really huge pixel scales.  Lower the accuracy requirement
-    # for them.
+    # for them.  2 digits in arcsec corresponds to 4 digits in pixels.
     max_scale = wcs.maxLinearScale(wcs.origin)
     #print 'max_scale = ',max_scale
-    orig_digits = digits
     if max_scale > 100:  # arcsec
-        digits = 2
+        digits2 = 2
+    else:
+        digits2 = digits
 
     for x0,y0 in zip(near_x_list, near_y_list):
         image_pos = galsim.PositionD(x0,y0)
@@ -623,16 +626,16 @@ def do_celestial_wcs(wcs, name):
         cosdec = np.cos(world_pos.dec.rad())
         jac = wcs.jacobian(image_pos)
         np.testing.assert_array_almost_equal(
-                jac.dudx, (w2.ra - w1.ra)/galsim.arcsec * cosdec, digits,
+                jac.dudx, (w2.ra - w1.ra)/galsim.arcsec * cosdec, digits2,
                 'jacobian dudx incorrect for '+name)
         np.testing.assert_array_almost_equal(
-                jac.dudy, (w4.ra - w3.ra)/galsim.arcsec * cosdec, digits,
+                jac.dudy, (w4.ra - w3.ra)/galsim.arcsec * cosdec, digits2,
                 'jacobian dudy incorrect for '+name)
         np.testing.assert_array_almost_equal(
-                jac.dvdx, (w1.dec - w2.dec)/galsim.arcsec, digits,
+                jac.dvdx, (w1.dec - w2.dec)/galsim.arcsec, digits2,
                 'jacobian dvdx incorrect for '+name)
         np.testing.assert_array_almost_equal(
-                jac.dvdy, (w3.dec - w4.dec)/galsim.arcsec, digits,
+                jac.dvdy, (w3.dec - w4.dec)/galsim.arcsec, digits2,
                 'jacobian dvdy incorrect for '+name)
 
         # Test drawing the profile on an image with the given wcs
@@ -666,17 +669,12 @@ def do_celestial_wcs(wcs, name):
             except NotImplementedError:
                 pass
 
-    digits = orig_digits
-
-
 def test_pixelscale():
     """Test the PixelScale class
     """
     import time
     t1 = time.time()
 
-    global digits
-    digits = 6
     scale = 0.23
     wcs = galsim.PixelScale(scale)
 
@@ -762,8 +760,6 @@ def test_shearwcs():
     import time
     t1 = time.time()
 
-    global digits
-    digits = 6
     scale = 0.23
     g1 = 0.14
     g2 = -0.37
@@ -857,8 +853,6 @@ def test_affinetransform():
     import time
     t1 = time.time()
 
-    global digits
-    digits = 6
     # First a slight tweak on a simple scale factor
     dudx = 0.2342
     dudy = 0.0023
@@ -1017,9 +1011,6 @@ def test_uvfunction():
     import time
     t1 = time.time()
 
-    global digits
-    digits = 6
-
     # First make some that are identical to simpler WCS classes:
     # 1. Like PixelScale
     scale = 0.17
@@ -1107,8 +1098,6 @@ def test_uvfunction():
     assert wcs != wcs3d, 'UVFunction is not != a different one (world_origin)'
 
     # 5. Now some non-trivial 3rd order radial function.
-    # This is only designed to be accurate to 5 digits, rather than usual 6.
-    digits = 5
     origin = galsim.PositionD(x0,y0)
     wcs = galsim.UVFunction(radial_u, radial_v, origin=origin)
 
@@ -1190,9 +1179,6 @@ def test_radecfunction():
     import time
     t1 = time.time()
 
-    global digits
-    digits = 6
-
     # Do a sterographic projection of the above UV functions around a given reference point.
     funcs = []
 
@@ -1258,9 +1244,11 @@ def test_radecfunction():
             center = galsim.CelestialCoord(cenra * galsim.degrees, cendec * galsim.degrees)
             # Unit test the hms, dms parsers:
             np.testing.assert_almost_equal(galsim.HMS_Angle(center.ra.hms()).wrap() / galsim.arcsec,
-                                           center.ra.wrap() / galsim.arcsec, 6, 'HMS parser error')
+                                           center.ra.wrap() / galsim.arcsec, digits,
+                                           'HMS parser error')
             np.testing.assert_almost_equal(galsim.DMS_Angle(center.dec.dms()) / galsim.arcsec,
-                                           center.dec / galsim.arcsec, 6, 'DMS parser error')
+                                           center.dec / galsim.arcsec, digits, 
+                                           'DMS parser error')
 
             radec_func = ( lambda x,y: 
                     [ (c.ra.rad(), c.dec.rad()) for c in 
@@ -1280,8 +1268,8 @@ def test_radecfunction():
                 np.testing.assert_almost_equal(dec, coord.dec.rad(), 8,
                                                'decfunc produced wrong value')
                 pos = center.project(coord)
-                np.testing.assert_almost_equal(pos.x, u, 6, 'project x was inconsistent')
-                np.testing.assert_almost_equal(pos.y, v, 6, 'project y was inconsistent')
+                np.testing.assert_almost_equal(pos.x, u, digits, 'project x was inconsistent')
+                np.testing.assert_almost_equal(pos.y, v, digits, 'project y was inconsistent')
                 d1 = np.sqrt(u*u+v*v)
                 d2 = center.distanceTo(coord)
                 # The distances aren't expected to match.  Instead, for a Lambert projection,
@@ -1289,7 +1277,7 @@ def test_radecfunction():
                 import math
                 d2 = 2.*math.sin(d2.rad()/2) * galsim.radians / galsim.arcsec
                 np.testing.assert_almost_equal(
-                        d2, d1, 5, 'deprojected dist does not match expected value.')
+                        d2, d1, digits, 'deprojected dist does not match expected value.')
 
                 # Now test the wcs that uses deproject
                 image_pos = galsim.PositionD(x,y)
@@ -1300,9 +1288,9 @@ def test_radecfunction():
                 d4 = center.distanceTo(world_pos2)
                 d4 = 2.*math.sin(d4.rad()/2) * galsim.radians / galsim.arcsec
                 np.testing.assert_almost_equal(
-                        d3, d1, 5, 'UVFunction '+name+' dist does not match expected value.')
+                        d3, d1, digits, 'UV '+name+' dist does not match expected value.')
                 np.testing.assert_almost_equal(
-                        d4, d1, 5, 'RaDecFunction '+name+' dist does not match expected value.')
+                        d4, d1, digits, 'RaDec '+name+' dist does not match expected value.')
 
                 # Calculate the Jacobians for each wcs
                 jac1 = wcs1.jacobian(image_pos)
@@ -1311,25 +1299,25 @@ def test_radecfunction():
                 # The pixel area should match pretty much exactly.  The Lambert projection
                 # is an area preserving projection.
                 np.testing.assert_almost_equal(
-                        jac2.pixelArea(), jac1.pixelArea(), 7,
+                        jac2.pixelArea(), jac1.pixelArea(), digits,
                         'RaDecFunction '+name+' pixelArea() does not match expected value.')
                 np.testing.assert_almost_equal(
-                        wcs2.pixelArea(image_pos), jac1.pixelArea(), 7,
+                        wcs2.pixelArea(image_pos), jac1.pixelArea(), digits,
                         'RaDecFunction '+name+' pixelArea(pos) does not match expected value.')
 
                 # The distortion should be pretty small, so the min/max linear scale should
                 # match pretty well.
                 np.testing.assert_almost_equal(
-                        jac2.minLinearScale(), jac1.minLinearScale(), 5,
+                        jac2.minLinearScale(), jac1.minLinearScale(), digits,
                         'RaDecFunction '+name+' minLinearScale() does not match expected value.')
                 np.testing.assert_almost_equal(
-                        wcs2.minLinearScale(image_pos), jac1.minLinearScale(), 5,
+                        wcs2.minLinearScale(image_pos), jac1.minLinearScale(), digits,
                         'RaDecFunction '+name+' minLinearScale(pos) does not match expected value.')
                 np.testing.assert_almost_equal(
-                        jac2.maxLinearScale(), jac1.maxLinearScale(), 5,
+                        jac2.maxLinearScale(), jac1.maxLinearScale(), digits,
                         'RaDecFunction '+name+' maxLinearScale() does not match expected value.')
                 np.testing.assert_almost_equal(
-                        wcs2.maxLinearScale(image_pos), jac1.maxLinearScale(), 5,
+                        wcs2.maxLinearScale(image_pos), jac1.maxLinearScale(), digits,
                         'RaDecFunction '+name+' maxLinearScale(pos) does not match expected value.')
 
                 # The main discrepancy between the jacobians is a rotation term. 
@@ -1345,7 +1333,7 @@ def test_radecfunction():
                 # The angle C should equal coord.ra - cneter.ra, so use this as a unit test of
                 # the angleBetween function:
                 np.testing.assert_almost_equal(
-                        C / galsim.degrees, (coord.ra - center.ra) / galsim.degrees, 6,
+                        C / galsim.degrees, (coord.ra - center.ra) / galsim.degrees, digits,
                         'CelestialCoord calculated the wrong angle between center and coord')
                 angle = 180 * galsim.degrees - A - B
 
@@ -1358,16 +1346,16 @@ def test_radecfunction():
                 rot_dvdy = -s*jac2.dudy + c*jac2.dvdy
 
                 np.testing.assert_almost_equal(
-                        rot_dudx, jac1.dudx, 4,
+                        rot_dudx, jac1.dudx, digits,
                         'RaDecFunction '+name+' dudx (rotated) does not match expected value.')
                 np.testing.assert_almost_equal(
-                        rot_dudy, jac1.dudy, 4,
+                        rot_dudy, jac1.dudy, digits,
                         'RaDecFunction '+name+' dudy (rotated) does not match expected value.')
                 np.testing.assert_almost_equal(
-                        rot_dvdx, jac1.dvdx, 4,
+                        rot_dvdx, jac1.dvdx, digits,
                         'RaDecFunction '+name+' dvdx (rotated) does not match expected value.')
                 np.testing.assert_almost_equal(
-                        rot_dvdy, jac1.dvdy, 4,
+                        rot_dvdy, jac1.dvdy, digits,
                         'RaDecFunction '+name+' dvdy (rotated) does not match expected value.')
 
             if abs(center.dec/galsim.degrees) < 45:
@@ -1388,7 +1376,6 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
     # Test that the given wcs object correctly converts the reference positions
 
     print 'Start reference testing for '+name
-    global digits
     for ref in ref_list:
         ra = galsim.HMS_Angle(ref[0])
         dec = galsim.DMS_Angle(ref[1])
@@ -1403,22 +1390,21 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
         dist = ref_coord.distanceTo(coord) / galsim.arcsec
         np.testing.assert_almost_equal(dist, 0, digits, 'wcs.toWorld differed from expected value')
 
-        # Normally, we check the agreement to 1.e-4 arcsec.
+        # Normally, we check the agreement to 1.e-3 arcsec.
         # However, we allow the caller to indicate the that inverse transform is
         # only approximate.  In this case, we only check to 1 digit.
-        orig_digits = digits
         if approx:
-            digits = 1
+            digits2 = 1
+        else:
+            digits2 = digits
 
         # Check world -> image
         pixel_scale = wcs.minLinearScale(galsim.PositionD(x,y))
         pos = wcs.toImage(galsim.CelestialCoord(ra,dec))
-        np.testing.assert_almost_equal((x-pos.x)*pixel_scale, 0, digits,
+        np.testing.assert_almost_equal((x-pos.x)*pixel_scale, 0, digits2,
                                        'wcs.toImage differed from expected value')
-        np.testing.assert_almost_equal((y-pos.y)*pixel_scale, 0, digits,
+        np.testing.assert_almost_equal((y-pos.y)*pixel_scale, 0, digits2,
                                        'wcs.toImage differed from expected value')
-        digits = orig_digits
-
         if image:
             np.testing.assert_almost_equal(image(x,y), val, digits,
                                            'image(x,y) differed from reference value')
@@ -1443,8 +1429,6 @@ def test_astropywcs():
         test_tags = [ 'SIP' ]
 
     dir = 'fits_files'
-    global digits
-    digits = 4
     for tag in test_tags:
         file_name, ref_list = references[tag]
         #print tag,' file_name = ',file_name
@@ -1479,8 +1463,6 @@ def test_pyastwcs():
         test_tags = [ 'ZPX' ]
 
     dir = 'fits_files'
-    global digits
-    digits = 4
     for tag in test_tags:
         file_name, ref_list = references[tag]
         #print tag,' file_name = ',file_name
@@ -1488,11 +1470,12 @@ def test_pyastwcs():
 
         # The PyAst implementation of the SIP type only gets the inverse transformation
         # approximately correct.  So we need to be a bit looser in that check.
-        approx = tag in [ 'SIP' , 'ZPX' ]
+        approx = tag in [ 'SIP' ]
         do_ref(wcs, ref_list, 'PyAstWCS '+tag, approx)
 
         do_celestial_wcs(wcs, 'PyAst file '+file_name)
 
+        approx = tag in [ 'ZPX' ]
         do_wcs_image(wcs, 'PyAstWCS_'+tag, approx)
 
     t2 = time.time()
@@ -1519,8 +1502,6 @@ def test_wcstools():
         print 'Unable to execute xy2sky.  Skipping WcsToolsWCS tests.'
         return
 
-    global digits
-    digits = 4
     for tag in test_tags:
         file_name, ref_list = references[tag]
         #print tag,' file_name = ',file_name
@@ -1528,7 +1509,7 @@ def test_wcstools():
 
         # The wcstools implementation of the SIP and TPV types only gets the inverse 
         # transformations approximately correct.  So we need to be a bit looser in those checks.
-        approx = tag in [ 'SIP' , 'TPV' ]
+        approx = tag in [ 'SIP' ]
         do_ref(wcs, ref_list, 'WcsToolsWCS '+tag, approx)
 
         # Recenter (x,y) = (0,0) at the image center to avoid wcstools warnings about going
@@ -1553,8 +1534,6 @@ def test_gsfitswcs():
 
     dir = 'fits_files'
 
-    global digits
-    digits = 4
     for tag in test_tags:
         file_name, ref_list = references[tag]
         #print tag,' file_name = ',file_name
@@ -1628,8 +1607,6 @@ def test_fitswcs():
 
     dir = 'fits_files'
 
-    global digits
-    digits = 4
     for tag in test_tags:
         file_name, ref_list = references[tag]
         #print tag,' file_name = ',file_name
@@ -1640,17 +1617,17 @@ def test_fitswcs():
             import warnings
             warnings.warn("None of the existing WCS classes were able to read "+file_name)
         else:
-            approx = ( (tag in ['SIP', 'ZPX'] and isinstance(wcs, galsim.PyAstWCS)) or
-                       (tag in ['SIP', 'TPV'] and isinstance(wcs, galsim.WcsToolsWCS)) )
-
-            do_ref(wcs, ref_list, 'FitsWCS '+tag, approx)
+            approx1 = ( (tag == 'SIP' and isinstance(wcs, galsim.PyAstWCS)) or
+                        (tag == 'SIP' and isinstance(wcs, galsim.WcsToolsWCS)) )
+            approx2 = tag == 'ZPX' and isinstance(wcs, galsim.PyAstWCS)
+            do_ref(wcs, ref_list, 'FitsWCS '+tag, approx1)
             do_celestial_wcs(wcs, 'FitsWCS '+file_name)
-            do_wcs_image(wcs, 'FitsWCS_'+tag, approx)
+            do_wcs_image(wcs, 'FitsWCS_'+tag, approx2)
 
             # Should also be able to build the file just from a fits.read() call, which 
             # uses FitsWCS behind the scenes.
             im = galsim.fits.read(file_name, dir=dir)
-            do_ref(im.wcs, ref_list, 'WCS from fits.read '+tag, approx, im)
+            do_ref(im.wcs, ref_list, 'WCS from fits.read '+tag, approx1, im)
 
         # Finally, also check that AffineTransform can read the file.
         # We don't really have any accuracy checks here.  This really just checks that the

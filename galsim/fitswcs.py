@@ -483,21 +483,23 @@ class PyAstWCS(galsim.wcs.BaseWCS):
         # See https://github.com/Starlink/starlink/issues/24 for helpful information from 
         # David Berry, who assisted me in getting this working.
 
-        # Note: As David described on that page, starlink knows how to write using a 
-        # FITS-WCS encoding that things like ds9 can read.  However, it doesn't do so at 
-        # very high precision.  So the WCS after a round trip through the FITS-WCS encoding
-        # is only accurate to about 1.e-2 arcsec.  The NATIVE encoding (which is the default
-        # used here) usually writes things with enough digits to remain accurate.  But even 
-        # then, there are a couple of WCS types where the round trip is only accurate to 
-        # about 1.e-2 arcsec.
-        
         from galsim import pyfits
         import starlink.Atl
 
         hdu = pyfits.PrimaryHDU()
-        fc2 = starlink.Ast.FitsChan( None, starlink.Atl.PyFITSAdapter(hdu) )
-        fc2.write(self._wcsinfo)
-        fc2.writefits()
+        fc = starlink.Ast.FitsChan( None, starlink.Atl.PyFITSAdapter(hdu) , "Encoding=FITS-WCS")
+        success = fc.write(self._wcsinfo)
+        # PyAst doesn't write out TPV or ZPX correctly.  It writes them as TAN and ZPN 
+        # respectively.  However, it claims success nonetheless, so we need to countermand that.  
+        # The easiest way I found to check for them is that the string TPV is in the string 
+        # version of wcsinfo.  So check for that and set success = False in that case.
+        if 'TPN' in str(self._wcsinfo): success = False
+        if not success:
+            # This should always work, since it uses starlinks own proprietary encoding, but 
+            # it won't necessarily be readable by ds9.
+            fc = starlink.Ast.FitsChan( None, starlink.Atl.PyFITSAdapter(hdu))
+            fc.write(self._wcsinfo)
+        fc.writefits()
         header = hdu.header
 
         # And write the name as a special GalSim key
