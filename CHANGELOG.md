@@ -19,21 +19,21 @@ Python layer API changes:
 * Combined the old `Image`, `ImageView` and `ConstImageView` arrays of class 
   names into a single python layer `Image` class that automatically constructs
   the appropriate C++ image class as an attribute. (Issue #364)
-  * `im = Image[type](...)` should now be `Image(..., dtype=type)`
-  * `im = ImageView[type](numpy_array.astype(type))` should now be 
-     `im = Image(numpy_array.astype(type)`.  i.e. The data type inherits
-     from the numpy_array argument when appropriate.  If it is already
-     the correct type, you do not need the `astype(type)` part.
-  * `im = ConstImageView[type](numpy_array.astype(type))` should now be 
-    `im = Image(numpy_array.astype(type), make_const=True)`
   * `im = ImageF(...)` and similar is still valid.
+  * `im = ImageF(...)` _may_ now be written as `im = Image(...)`.  That is,
+    the numpy.float32 type is the default data type if you do not specify
+    something else either through the type letter or the `dtype` parameter.
   * `im = ImageViewF(...)` and similar should now be `im = ImageF(...)`
     (preserving the same type letter S, I, F or D).
   * `im = ConstImageViewF(...)` and similar should now be 
     `im = ImageF(..., make_const=True)` (again preserving the type letter).
-  * `im = ImageF(...)` _may_ now be written as `im = Image(...)`.  That is,
-    the numpy.float32 type is the default data type if you do not specify
-    something else either through the type letter or the `dtype` parameter.
+  * `im = Image[type](...)` should now be `Image(..., dtype=type)`
+  * `im = ImageView[type](numpy_array.astype(type))` should now be 
+     `im = Image(numpy_array.astype(type))`.  i.e. The data type inherits
+     from the numpy_array argument when appropriate.  If it is already
+     the correct type, you do not need the `astype(type)` part.
+  * `im = ConstImageView[type](numpy_array.astype(type))` should now be 
+    `im = Image(numpy_array.astype(type), make_const=True)`
 * Changed the handling of the `scale` and `init_value` parameters of the 
   `Image` constructor, so that now they have to be named keyword arguments
   rather than a positional arguments. (Issue #364)

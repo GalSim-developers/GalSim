@@ -336,7 +336,7 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
             raise
         else:
             result = _galsim._CppShapeData()
-            result.error_message = err.message
+            result.error_message = str(err)
     return ShapeData(result)
 
 def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0, precision = 1.0e-6,
@@ -441,7 +441,7 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
             raise
         else:
             result = _galsim._CppShapeData()
-            result.error_message = err.message
+            result.error_message = str(err)
     return ShapeData(result)
 
 # make FindAdaptiveMom a method of Image class

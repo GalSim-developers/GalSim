@@ -140,6 +140,7 @@ class Image(object):
 
     Methods:
 
+        view        Return a view of the image.
         subImage    Return a view of a portion of the full image.
         shift       Shift the origin of the image by (dx,dy).
         setCenter   Set a new position for the center of the image.
