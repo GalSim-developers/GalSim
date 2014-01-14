@@ -284,11 +284,11 @@ class BaseWCS(object):
 
         This is equivalent to wcs.toImage(world_pos).
         """
-        if self._is_celestial and not isinstance(world_pos, galsim.CelestialCoord):
+        if self.isCelestial() and not isinstance(world_pos, galsim.CelestialCoord):
             raise TypeError("toImage requires a CelestialCoord argument")
-        elif not self._is_celestial and isinstance(world_pos, galsim.PositionI):
+        elif not self.isCelestial() and isinstance(world_pos, galsim.PositionI):
             world_pos = galsim.PositionD(world_pos.x, world_pos.y)
-        elif not self._is_celestial and not isinstance(world_pos, galsim.PositionD):
+        elif not self.isCelestial() and not isinstance(world_pos, galsim.PositionD):
             raise TypeError("toImage requires a PositionD or PositionI argument")
         return self._posToImage(world_pos)
 
@@ -380,10 +380,10 @@ class BaseWCS(object):
         """
         if image_pos and world_pos:
             raise TypeError("Only one of image_pos or world_pos may be provided")
-        if self._is_local:
+        if self.isLocal():
             return self
         else:
-            if not self._is_uniform and image_pos==None and world_pos==None:
+            if not self.isUniform() and image_pos==None and world_pos==None:
                 raise TypeError("Either image_pos or world_pos must be provided")
             return self._local(image_pos, world_pos)
 
@@ -455,7 +455,7 @@ class BaseWCS(object):
             # Both are None.  Must be a local WCS
             image_pos = galsim.PositionD(0,0)
 
-        if self._is_celestial:
+        if self.isCelestial():
             return jac.setOrigin(image_pos, galsim.PositionD(0,0))
         else:
             if world_pos is None:
@@ -528,7 +528,7 @@ class BaseWCS(object):
         #     x2 - x1 = 0 - x0      y2 - y1 = 0 - y0
         # =>  x1 = x0 + x2          y1 = y0 + y2
 
-        if self._is_celestial:
+        if self.isCelestial():
             if world_origin is not None:
                 raise TypeError("world_origin is invalid for non-uniform WCS classes")
             origin += self.origin
@@ -539,7 +539,7 @@ class BaseWCS(object):
         # to keep it from resetting the world_pos back to None.
 
         elif world_origin is None:
-            if not self._is_local:
+            if not self.isLocal():
                 origin += self.origin
                 world_origin = self.world_origin
             return self._setOrigin(origin, world_origin)
@@ -572,7 +572,7 @@ class BaseWCS(object):
                 world_origin = galsim.PositionD(world_origin.x, world_origin.y)
             elif not isinstance(origin, galsim.PositionD):
                 raise TypeError("world_origin must be a PositionD or PositionI argument")
-            if not self._is_local:
+            if not self.isLocal():
                 world_origin += self.world_origin - self._posToWorld(self.origin)
             return self._setOrigin(origin, world_origin)
 
@@ -686,6 +686,62 @@ class BaseWCS(object):
 
         return wcs, origin
 
+    def makeSkyImage(self, image, sky_level):
+        """Make an image of the sky, correctly accounting for the pixel area, which might be
+        variable over the image.
+        
+        @param image        The image onto which the sky values will be put.
+        @param sky_level    The sky level in ADU/arcsec^2 (or whatever your world coordinate
+                            system units are, if not arcsec).
+        """
+        if self.isUniform():
+            image.fill(sky_level * self.pixelArea())
+        elif self.isCelestial():
+            self._makeCelestialSkyImage(image, sky_level)
+        else:
+            self._makeVariableSkyImage(image, sky_level)
+
+    def _makeVariableSkyImage(self, image, sky_level):
+        # A specialization for variable pixels when there are _u(x,y) and _v(x,y) functions
+        import numpy
+        b = image.bounds
+        nx = b.xmax-b.xmin+1 + 2  # +2 more than in image to get row/col off each edge.
+        ny = b.ymax-b.ymin+1 + 2
+        x,y = numpy.meshgrid( numpy.linspace(b.xmin-1,b.xmax+1,nx),
+                              numpy.linspace(b.ymin-1,b.ymax+1,ny) )
+        try:
+            # First try to use the _u, _v function with the numpy arrays.
+            u = self._u(x,y)
+            v = self._v(x,y)
+        except:
+            # If that didn't work, we have to do it manually for each position. :(
+            u = numpy.zeros((ny,nx))
+            v = numpy.zeros((ny,nx))
+            for i in range(ny):
+                for j in range(nx):
+                    x1 = x[i,j]
+                    y1 = y[i,j]
+                    u[i,j] = self._u(x1,y1)
+                    v[i,j] = self._v(x1,y1)
+        # Use the finite differences to estimate the derivatives.
+        dudx = 0.5 * (u[1:ny-1,2:nx] - u[1:ny-1,0:nx-2])
+        dudy = 0.5 * (u[2:ny,1:nx-1] - u[0:ny-2,1:nx-1])
+        dvdx = 0.5 * (v[1:ny-1,2:nx] - v[1:ny-1,0:nx-2])
+        dvdy = 0.5 * (v[2:ny,1:nx-1] - v[0:ny-2,1:nx-1])
+
+        area = dudx * dvdy - dvdx * dudy
+        image.image.array[:,:] = area
+
+    def _makeCelestialSkyImage(self, image, sky_level):
+        # TODO: This method is really slow.  It would not be too hard to provide something like I 
+        # did for the above for Variable WCS classes that would work when the classes have 
+        # an _ra and _dec function.  But I haven't done that yet.
+        b = image.bounds
+        for x in range(b.xmin,b.xmax+1):
+            for y in range(b.ymin,b.ymax+1):
+                image_pos = galsim.PositionD(x,y)
+                image.setValue(x,y, self.pixelArea(image_pos))
+
 
 
 #########################################################################################
@@ -757,11 +813,17 @@ class PixelScale(BaseWCS):
     @property
     def world_origin(self): return galsim.PositionD(0,0)
 
+    def _u(self, x, y):
+        return x * self._scale
+
+    def _v(self, x, y):
+        return y * self._scale
+
     def _posToWorld(self, image_pos):
-        return galsim.PositionD(image_pos.x * self._scale, image_pos.y * self._scale)
+        return image_pos * self._scale
 
     def _posToImage(self, world_pos):
-        return galsim.PositionD(world_pos.x / self._scale, world_pos.y / self._scale)
+        return world_pos / self._scale
 
     def _profileToWorld(self, image_profile):
         return image_profile.createDilated(self._scale)
@@ -862,12 +924,20 @@ class ShearWCS(BaseWCS):
     @property
     def world_origin(self): return galsim.PositionD(0,0)
 
-    def _posToWorld(self, image_pos):
-        u = image_pos.x * (1.-self._g1) - image_pos.y * self._g2
-        v = image_pos.y * (1.+self._g1) - image_pos.x * self._g2
+    def _u(self, x, y):
+        u = x * (1.-self._g1) - y * self._g2
         u *= self._scale * self._gfactor
+        return u;
+
+    def _v(self, x, y):
+        v = y * (1.+self._g1) - x * self._g2
         v *= self._scale * self._gfactor
-        return galsim.PositionD(u,v)
+        return v;
+
+    def _posToWorld(self, image_pos):
+        x = image_pos.x
+        y = image_pos.y
+        return galsim.PositionD(self._u(x,y),self._v(x,y))
 
     def _posToImage(self, world_pos):
         x = world_pos.x * (1.+self._g1) + world_pos.y * self._g2
@@ -1000,12 +1070,15 @@ class JacobianWCS(BaseWCS):
     @property
     def world_origin(self): return galsim.PositionD(0,0)
 
+    def _u(self, x, y):
+        return self._dudx * x + self._dudy * y
+    def _v(self, x, y):
+        return self._dvdx * x + self._dvdy * y
+
     def _posToWorld(self, image_pos):
         x = image_pos.x
         y = image_pos.y
-        u = self._dudx * x + self._dudy * y
-        v = self._dvdx * x + self._dvdy * y
-        return galsim.PositionD(u,v)
+        return galsim.PositionD(self._u(x,y),self._v(x,y))
 
     def _posToImage(self, world_pos):
         #  J = ( dudx  dudy )
@@ -1207,6 +1280,18 @@ class JacobianWCS(BaseWCS):
 #     _writeHeader      function that writes the WCS to a fits header.
 #     _readHeader       static function that reads the WCS from a fits header.
 #
+# Furthermore, if the function is celestial, it must provide the functions:
+#
+#     _ra               function returning ra(x,y)
+#     _dec              function returning dec(x,y)
+#
+# If not, it must provide the functions:
+#
+#     _u                function returning u(x,y)
+#     _v                function returning v(x,y)
+#
+# Ideally, the above functions would work with numpy arrays as inputs.
+#
 #########################################################################################
 
 
@@ -1265,12 +1350,15 @@ class OffsetWCS(BaseWCS):
     @property
     def world_origin(self): return galsim.PositionD(self._u0, self._v0)
 
+    def _u(self, x, y):
+        return self._scale * (x-self._x0) + self._u0
+    def _v(self, x, y):
+        return self._scale * (y-self._y0) + self._v0
+
     def _posToWorld(self, image_pos):
         x = image_pos.x
         y = image_pos.y
-        u = self._scale * (x-self._x0) + self._u0
-        v = self._scale * (y-self._y0) + self._v0
-        return galsim.PositionD(u,v)
+        return galsim.PositionD(self._u(x,y),self._v(x,y))
 
     def _posToImage(self, world_pos):
         u = world_pos.x
@@ -1365,13 +1453,18 @@ class OffsetShearWCS(BaseWCS):
         # and we'll pass along any shear calculations to that.
         self._shearwcs = ShearWCS(scale, shear)
         if origin == None:
-            self._origin = galsim.PositionD(0,0)
+            self._x0 = 0
+            self._y0 = 0
         else:
-            self._origin = origin
+            self._x0 = origin.x
+            self._y0 = origin.y
         if world_origin == None:
-            self._world_origin = galsim.PositionD(0,0)
+            self._u0 = 0
+            self._v0 = 0
         else:
-            self._world_origin = world_origin
+            self._u0 = world_origin.x
+            self._v0 = world_origin.y
+
 
     @property
     def scale(self): return self._shearwcs.scale
@@ -1379,15 +1472,22 @@ class OffsetShearWCS(BaseWCS):
     def shear(self): return self._shearwcs.shear
 
     @property
-    def origin(self): return self._origin
+    def origin(self): return galsim.PositionD(self._x0, self._y0)
     @property
-    def world_origin(self): return self._world_origin
+    def world_origin(self): return galsim.PositionD(self._u0, self._v0)
+
+    def _u(self, x, y):
+        return self._shearwcs._u(x-self._x0,y-self._y0) + self._u0
+    def _v(self, x, y):
+        return self._shearwcs._v(x-self._x0,y-self._y0) + self._v0
 
     def _posToWorld(self, image_pos):
-        return self._shearwcs._posToWorld(image_pos - self._origin) + self._world_origin
+        x = image_pos.x
+        y = image_pos.y
+        return galsim.PositionD(self._u(x,y),self._v(x,y))
 
     def _posToImage(self, world_pos):
-        return self._shearwcs._posToImage(world_pos - self._world_origin) + self._origin
+        return self._shearwcs._posToImage(world_pos - self.world_origin) + self.origin
 
     def _local(self, image_pos, world_pos):
         return self._shearwcs
@@ -1426,8 +1526,8 @@ class OffsetShearWCS(BaseWCS):
             return False
         else:
             return ( self._shearwcs == other._shearwcs and
-                     self._origin == other._origin and
-                     self._world_origin == other._world_origin )
+                     self.origin == other.origin and
+                     self.world_origin == other.world_origin )
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -1482,13 +1582,17 @@ class AffineTransform(BaseWCS):
         # As with OffsetShearWCS, we store a JacobianWCS, rather than reimplement everything.
         self._jacwcs = JacobianWCS(dudx, dudy, dvdx, dvdy)
         if origin == None:
-            self._origin = galsim.PositionD(0,0)
+            self._x0 = 0
+            self._y0 = 0
         else:
-            self._origin = origin
+            self._x0 = origin.x
+            self._y0 = origin.y
         if world_origin == None:
-            self._world_origin = galsim.PositionD(0,0)
+            self._u0 = 0
+            self._v0 = 0
         else:
-            self._world_origin = world_origin
+            self._u0 = world_origin.x
+            self._v0 = world_origin.y
 
     @property
     def dudx(self): return self._jacwcs.dudx
@@ -1500,24 +1604,22 @@ class AffineTransform(BaseWCS):
     def dvdy(self): return self._jacwcs.dvdy
 
     @property
-    def x0(self): return self._origin.x
+    def origin(self): return galsim.PositionD(self._x0, self._y0)
     @property
-    def y0(self): return self._origin.y
-    @property
-    def u0(self): return self._world_origin.x
-    @property
-    def v0(self): return self._world_origin.y
-
-    @property
-    def origin(self): return self._origin
-    @property
-    def world_origin(self): return self._world_origin
+    def world_origin(self): return galsim.PositionD(self._u0, self._v0)
+ 
+    def _u(self, x, y):
+        return self._jacwcs._u(x-self._x0,y-self._y0) + self._u0
+    def _v(self, x, y):
+        return self._jacwcs._v(x-self._x0,y-self._y0) + self._v0
 
     def _posToWorld(self, image_pos):
-        return self._jacwcs._posToWorld(image_pos - self._origin) + self._world_origin
+        x = image_pos.x
+        y = image_pos.y
+        return galsim.PositionD(self._u(x,y),self._v(x,y))
 
     def _posToImage(self, world_pos):
-        return self._jacwcs._posToImage(world_pos - self._world_origin) + self._origin
+        return self._jacwcs._posToImage(world_pos - self.world_origin) + self.origin
 
     def _local(self, image_pos, world_pos):
         return self._jacwcs
@@ -1533,10 +1635,10 @@ class AffineTransform(BaseWCS):
     def _writeLinearWCS(self, header, bounds):
         header["CTYPE1"] = ("LINEAR", "name of the world coordinate axis")
         header["CTYPE2"] = ("LINEAR", "name of the world coordinate axis")
-        header["CRVAL1"] = (self.u0, "world coordinate at reference pixel = u0")
-        header["CRVAL2"] = (self.v0, "world coordinate at reference pixel = v0")
-        header["CRPIX1"] = (self.x0, "image coordinate of reference pixel = x0")
-        header["CRPIX2"] = (self.y0, "image coordinate of reference pixel = y0")
+        header["CRVAL1"] = (self._u0, "world coordinate at reference pixel = u0")
+        header["CRVAL2"] = (self._v0, "world coordinate at reference pixel = v0")
+        header["CRPIX1"] = (self._x0, "image coordinate of reference pixel = x0")
+        header["CRPIX2"] = (self._y0, "image coordinate of reference pixel = y0")
         header["CD1_1"] = (self.dudx, "CD1_1 = dudx")
         header["CD1_2"] = (self.dudy, "CD1_2 = dudy")
         header["CD2_1"] = (self.dvdx, "CD2_1 = dvdx")
@@ -1575,8 +1677,8 @@ class AffineTransform(BaseWCS):
             return False
         else:
             return ( self._jacwcs == other._jacwcs and
-                     self._origin == other._origin and
-                     self._world_origin == other._world_origin )
+                     self.origin == other.origin and
+                     self.world_origin == other.world_origin )
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -1880,7 +1982,7 @@ class UVFunction(BaseWCS):
                 self._x0 == other._x0 and
                 self._y0 == other._y0 and
                 self._u0 == other._u0 and
-                self._y0 == other._y0)
+                self._v0 == other._v0)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -1976,9 +2078,11 @@ class RaDecFunction(BaseWCS):
     def origin(self): return galsim.PositionD(self._x0, self._y0)
 
     def _ra(self, x, y):
+        import math
         return self._rafunc(x-self._x0, y-self._y0)
 
     def _dec(self, x, y):
+        import math
         return self._decfunc(x-self._x0, y-self._y0)
 
     def _posToWorld(self, image_pos):
@@ -2036,7 +2140,9 @@ class RaDecFunction(BaseWCS):
                 self._rafunc == other._rafunc and
                 self._decfunc == other._decfunc and
                 self._x0 == other._x0 and
-                self._y0 == other._y0)
+                self._y0 == other._y0 and
+                self._u0 == other._u0 and
+                self._v0 == other._v0)
 
     def __ne__(self, other):
         return not self.__eq__(other)
