@@ -35,14 +35,12 @@ import galsim
 #
 # As for all CelestialWCS classes, they must define the following:
 #
-#     _posToWorld       function converting image_pos to world_pos
-#     _posToImage       function converting world_pos to image_pos
+#     _radec            function returning (ra, dec) in _radians_ at position (x,y)
+#     _xy               function returning (x, y) given (ra, dec) in _radians_.
 #     _writeHeader      function that writes the WCS to a fits header.
 #     _readHeader       static function that reads the WCS from a fits header.
 #     copy              return a copy
 #     __eq__            check if this equals another WCS
-#     __ne__            check if this is not equal to another WCS
-#     _radec            function returning (ra, dec) in _radians_ at position (x,y)
 #
 #########################################################################################
 
@@ -147,18 +145,15 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
         self._wcs = wcs
         if origin == None:
-            self._x0 = 0
-            self._y0 = 0
+            self._origin = galsim.PositionD(0,0)
         else:
-            self._x0 = origin.x
-            self._y0 = origin.y
-
+            self._origin = origin
 
     @property
     def wcs(self): return self._wcs
 
     @property
-    def origin(self): return galsim.PositionD(self._x0, self._y0)
+    def origin(self): return self._origin
 
     def _fix_header(self, header):
         # We allow for the option to fix up the header information when a modification can
@@ -198,15 +193,11 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             ra, dec = world[0]
         return ra, dec
 
-    def _posToWorld(self, image_pos):
-        x = image_pos.x - self._x0
-        y = image_pos.y - self._y0
-        ra, dec = self._radec(x,y)
-        return galsim.CelestialCoord(ra * galsim.radians, dec * galsim.radians)
-
-    def _posToImage(self, world_pos):
-        ra = world_pos.ra / galsim.degrees
-        dec = world_pos.dec / galsim.degrees
+    def _xy(self, ra, dec):
+        import numpy
+        ra *= 1. * galsim.radians / galsim.degrees
+        dec *= 1. * galsim.radians / galsim.degrees
+        rd = numpy.atleast_2d([ra, dec])
         # Here we have to work around another astropy.wcs bug.  The way they use scipy's
         # Broyden's method doesn't work.  So I implement a fix here.
         try:
@@ -215,11 +206,11 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             try:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
-                    x, y = self._wcs.all_world2pix( [ [ra, dec] ], 1, ra_dec_order=True)[0]
+                    xy = self._wcs.all_world2pix(rd, 1, ra_dec_order=True)[0]
             except AttributeError:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
-                    x, y = self._wcs.all_world2pix( [ [ra, dec] ], 1)[0]
+                    xy = self._wcs.all_world2pix(rd, 1)[0]
         except:
             # This section is basically a copy of astropy.wcs's _all_world2pix function, but
             # simplified a bit to remove some features we don't need, and with corrections
@@ -229,24 +220,23 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             import numpy
             import warnings
 
-            world = [ra,dec]
             origin = 1
             tolerance = 1.e-6
 
             # This call emits a RuntimeWarning about:
-            #     /sw/lib/python2.7/site-packages/scipy/optimize/nonlin.py:943: RuntimeWarning: invalid value encountered in divide
+            #     [...]/site-packages/scipy/optimize/nonlin.py:943: RuntimeWarning: invalid value encountered in divide
             #       d = v / vdot(df, v)
             # It seems to be harmless, so we explicitly ignore it here:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                x0 = self._wcs.wcs_world2pix(numpy.atleast_2d(world), origin).flatten()
+                xy0 = self._wcs.wcs_world2pix(rd, origin)
 
-            # Note that fmod bit accounts for the possibility that ra and the ra returned from 
-            # all_pix2world have a different wrapping around 360.  We fmod dec too even though 
-            # it won't do anything, since that's how the numpy array fmod2 has to work.
+            # Note that the fmod bit accounts for the possibility that ra and the ra returned
+            # from all_pix2world have a different wrapping around 360.  We fmod dec too even
+            # though it won't do anything, since that's how the numpy array fmod2 has to work.
             func = lambda pix: (
                     (numpy.fmod(self._wcs.all_pix2world(numpy.atleast_2d(pix),origin) - 
-                                world + 180,360) - 180).flatten() )
+                                rd + 180,360) - 180).flatten() )
 
             # This is the main bit that the astropy function is missing.
             # The scipy.optimize.broyden1 function can't handle starting at exactly the right
@@ -265,10 +255,18 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                soln = scipy.optimize.broyden1(func, x0, x_tol=tolerance, alpha=alpha)
-            x,y = soln
+                xy = [ scipy.optimize.broyden1(func, xy_init, x_tol=tolerance, alpha=alpha)
+                            for xy_init in xy0 ]
 
-        return galsim.PositionD(x + self._x0, y + self._y0)
+        try:
+            # If the inputs were numpy arrays, return the same
+            len(ra)
+            x, y = numpy.array(xy).transpose()
+        except:
+            # Otherwise, return scalars
+            assert len(xy) == 1
+            x, y = xy[0]
+        return x, y
 
     def _newOrigin(self, origin):
         return AstropyWCS(wcs=self._wcs, origin=origin)
@@ -296,16 +294,9 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         return copy.copy(self)
 
     def __eq__(self, other):
-        if not isinstance(other, AstropyWCS):
-            return False
-        else:
-            return (
-                self._wcs == other._wcs and
-                self._x0 == other._x0 and
-                self._y0 == other._y0)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
+        return ( isinstance(other, AstropyWCS) and
+                 self._wcs == other._wcs and
+                 self.origin == other.origin )
 
     def __repr__(self):
         return "AstropyWCS(%r,%r)"%(self._tag, self.origin)
@@ -412,17 +403,15 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
 
         self._wcsinfo = wcsinfo
         if origin == None:
-            self._x0 = 0
-            self._y0 = 0
+            self._origin = galsim.PositionD(0,0)
         else:
-            self._x0 = origin.x
-            self._y0 = origin.y
+            self._origin = origin
 
     @property
     def wcsinfo(self): return self._wcsinfo
 
     @property
-    def origin(self): return galsim.PositionD(self._x0, self._y0)
+    def origin(self): return self._origin
 
     def _fix_header(self, header):
         # We allow for the option to fix up the header information when a modification can
@@ -457,17 +446,20 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             dec = dec[0]
         return ra, dec
 
-    def _posToWorld(self, image_pos):
-        x = image_pos.x - self._x0
-        y = image_pos.y - self._y0
-        ra, dec = self._radec(x,y)
-        return galsim.CelestialCoord(ra * galsim.radians, dec * galsim.radians)
+    def _xy(self, ra, dec):
+        import numpy
+        rd = numpy.array([numpy.atleast_1d(ra), numpy.atleast_1d(dec)])
 
-    def _posToImage(self, world_pos):
-        ra = world_pos.ra / galsim.radians
-        dec = world_pos.dec / galsim.radians
-        x,y = self._wcsinfo.tran( [ [ra], [dec] ], False)
-        return galsim.PositionD(x[0] + self._x0, y[0] + self._y0)
+        x, y = self._wcsinfo.tran( rd, False )
+
+        try:
+            len(ra)
+        except:
+            assert len(x) == 1
+            assert len(y) == 1
+            x = x[0]
+            y = y[0]
+        return x, y
 
     def _newOrigin(self, origin):
         return PyAstWCS(wcsinfo=self._wcsinfo, origin=origin)
@@ -514,16 +506,9 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         return copy.copy(self)
 
     def __eq__(self, other):
-        if not isinstance(other, PyAstWCS):
-            return False
-        else:
-            return (
-                self._wcsinfo == other._wcsinfo and
-                self._x0 == other._x0 and
-                self._y0 == other._y0)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
+        return ( isinstance(other, PyAstWCS) and
+                 self._wcsinfo == other._wcsinfo and
+                 self.origin == other.origin)
 
     def __repr__(self):
         return "PyAstWCS(%r,%r)"%(self._tag, self.origin)
@@ -577,17 +562,15 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
 
         self._file_name = file_name
         if origin == None:
-            self._x0 = 0
-            self._y0 = 0
+            self._origin = galsim.PositionD(0,0)
         else:
-            self._x0 = origin.x
-            self._y0 = origin.y
+            self._origin = origin
 
     @property
     def file_name(self): return self._file_name
 
     @property
-    def origin(self): return galsim.PositionD(self._x0, self._y0)
+    def origin(self): return self._origin
 
     def _radec(self, x, y):
         import numpy
@@ -641,20 +624,15 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             assert len(dec) == 1
             return ra[0]*factor, dec[0]*factor
 
-    def _posToWorld(self, image_pos):
-        x = image_pos.x - self._x0
-        y = image_pos.y - self._y0
-        ra, dec = self._radec(x,y)
-        return galsim.CelestialCoord(ra * galsim.radians, dec * galsim.radians)
-
-    def _posToImage(self, world_pos):
-        ra = world_pos.ra / galsim.degrees
-        dec = world_pos.dec / galsim.degrees
-
+    def _xy(self, ra, dec):
         import subprocess
+        import numpy
+        rd = numpy.array([ra, dec]).transpose().flatten()
+        rd *= 1. * galsim.radians / galsim.degrees
         for digits in range(10,5,-1):
-            p = subprocess.Popen(['sky2xy', '-n', str(digits), self._file_name,
-                                  str(ra), str(dec)], stdout=subprocess.PIPE)
+            rd_strs = [ str(z) for z in rd ]
+            p = subprocess.Popen(['sky2xy', '-n', str(digits), self._file_name] + rd_strs,
+                                 stdout=subprocess.PIPE)
             results = p.communicate()[0]
             p.stdout.close()
             if len(results) == 0:
@@ -662,21 +640,34 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             if results[0] != '*': break
         if results[0] == '*':
             raise IOError('wcstools (specifically sky2xy) was unable to read '+self._file_name)
+        lines = results.splitlines()
 
         # The output should looke like:
         #    ra dec J2000 -> x y
         # However, if there was an error, the J200 might be missing.
-        vals = results.split()
-        if len(vals) < 6:
-            raise RuntimeError('wcstools sky2xy returned invalid result for %f,%f'%(ra,dec))
-        if len(vals) > 6:
-            import warnings
-            warnings.warn('wcstools sky2xy indicates that %f,%f is off the image\n'%(ra,dec) +
-                          'output is %r'%results)
-        x = float(vals[4])
-        y = float(vals[5])
-        return galsim.PositionD(x + self._x0, y + self._y0)
+        x = []
+        y = []
+        for line in lines:
+            vals = results.split()
+            if len(vals) < 6:
+                raise RuntimeError('wcstools sky2xy returned invalid result for %f,%f'%(ra,dec))
+            if len(vals) > 6:
+                import warnings
+                warnings.warn('wcstools sky2xy indicates that %f,%f is off the image\n'%(ra,dec) +
+                              'output is %r'%results)
+            x.append(float(vals[4]))
+            y.append(float(vals[5]))
 
+        try:
+            len(ra)
+            # If the inputs were numpy arrays, return the same
+            return numpy.array(x), numpy.array(y)
+        except:
+            # Otherwise return scalars
+            assert len(x) == 1
+            assert len(y) == 1
+            return x[0], y[0]
+ 
     def _newOrigin(self, origin):
         return WcsToolsWCS(self._file_name, origin=origin)
 
@@ -718,16 +709,9 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
         return copy.copy(self)
 
     def __eq__(self, other):
-        if not isinstance(other, WcsToolsWCS):
-            return False
-        else:
-            return (
-                self._file_name == other._file_name and
-                self._x0 == other._x0 and
-                self._y0 == other._y0)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
+        return ( isinstance(other, WcsToolsWCS) and
+                 self._file_name == other._file_name and
+                 self.origin == other.origin )
 
     def __repr__(self):
         return "WcsToolsWCS(%r,%r)"%(self._file_name, self.origin)
@@ -816,10 +800,6 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
     # use these.  So just make dummy properties that return 0.
     @property
     def origin(self): return galsim.PositionD(0.,0.)
-    @property
-    def _x0(self): return 0.
-    @property
-    def _y0(self): return 0.
 
     def _read_header(self, header):
         # Start by reading the basic WCS stuff that most types have.
@@ -954,16 +934,11 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         world_pos = self.center.deproject( galsim.PositionD(p2[0],p2[1]) , projection='gnomonic' )
         return world_pos.ra.rad(), world_pos.dec.rad()
 
-    def _posToWorld(self, image_pos):
-        x = image_pos.x 
-        y = image_pos.y
-        ra, dec = self._radec(x,y)
-        return galsim.CelestialCoord(ra * galsim.radians, dec * galsim.radians)
-
-    def _posToImage(self, world_pos):
+    def _xy(self, ra, dec):
         import numpy, numpy.linalg
 
-        uv = self.center.project( world_pos, projection='gnomonic' )
+        uv = self.center.project( galsim.CelestialCoord(ra*galsim.radians,dec*galsim.radians), 
+                                  projection='gnomonic' )
         # Again, FITS has +u increasing to the east, not west.  Hence the -1.
         u = uv.x * (-1. * galsim.arcsec / galsim.degrees)
         v = uv.y * (1. * galsim.arcsec / galsim.degrees)
@@ -1014,8 +989,9 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                 raise RuntimeError("Unable to solve for image_pos (max iter reached)")
 
         p1 = numpy.dot(numpy.linalg.inv(self.cd), p2) + self.crpix
+        x, y = p1
 
-        return galsim.PositionD(p1[0], p1[1])
+        return x, y
 
     # Override the version CelestialWCS, since we can do this more efficiently.
     def _local(self, image_pos, world_pos):
@@ -1122,18 +1098,13 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         return copy.copy(self)
 
     def __eq__(self, other):
-        if not isinstance(other, GSFitsWCS):
-            return False
-        else:
-            return (
-                self.wcs_type == other.wcs_type and
-                (self.crpix == other.crpix).all() and
-                (self.cd == other.cd).all() and
-                self.center == other.center and
-                self.pv == other.pv )
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
+        return ( isinstance(other, GSFitsWCS) and
+                 self.wcs_type == other.wcs_type and
+                 (self.crpix == other.crpix).all() and
+                 (self.cd == other.cd).all() and
+                 self.center == other.center and
+                 ( (self.pv == None and other.pv == None) or
+                   (self.pv == other.pv).all() ) )
 
     def __repr__(self):
         return "GSFitsWCS(%r,%r,%r,%r,%r)"%(self.wcs_type, repr(self.crpix), repr(self.cd), 
