@@ -55,35 +55,49 @@ class BaseWCS(object):
     All the user-functions are defined here, which defines the common interface
     for all subclasses.
 
-    There are three types of WCS classes that we implement.
+    There are several types of WCS classes that we implement. The class hierarchy is:
 
-    1. Local WCS classes are those which really just define a pixel size and shape.
+    BaseWCS
+        --- EuclideanWCS
+                --- UniformWCS
+                        --- LocalWCS
+        --- CelestialWCS
+
+    These base classes are not constructible.  They do not have __init__ defined.
+
+    1. LocalWCS classes are those which really just define a pixel size and shape.
        They implicitly have the origin in image coordinates correspond to the origin
        in world coordinates.  They are primarily designed to handle local transformations
        at the location of a single galaxy, where it should usually be a good approximation
        to consider the pixel shape to be constant over the size of the galaxy.  We sometimes
        use the notation (u,v) for the world coordinates and (x,y) for the image coordinates.
 
-       Currently we define the following local WCS classes:
+       Currently we define the following LocalWCS classes:
 
             PixelScale
             ShearWCS
             JacobianWCS
 
-    2. Non-local, Euclidean WCS classes may have a constant pixel size and shape, but they don't 
-       have to.  They may also have an arbitrary origin in both image coordinates and world 
-       coordinates.  The world coordinates are a regular Euclidean coordinate system, using
-       galsim.PositionD for the world positions.  We sometimes use the notation (u,v) for the 
-       world coordinates and (x,y) for the image coordinates.
-
-       Currently we define the following non-local, Euclidean WCS classes:
+    2. UniformWCS classes have a constant pixel size and shape, but they have an arbitrary origin 
+       in both image coordinates and world coordinates.  A LocalWCS class can be turned into a 
+       non-local UniformWCS class when an image has its bounds changed (e.g. by the commands 
+       `setCenter`, `setOrigin` or `shift`.
+       
+       Currently we define the following non-local, UniformWCS classes:
 
             OffsetWCS
             OffsetShearWCS
             AffineTransform
+
+    3. EuclideanWCS classes use a regular Euclidean coordinate system for the world coordinates,
+       using galsim.PositionD for the world positions.  We sometimes use the notation (u,v) for 
+       the world coordinates and (x,y) for the image coordinates.
+
+       Currently we define the following non-uniform, Euclidean WCS class:
+
             UVFunction
 
-    3. Celestial WCS classes are defined with their world coordinates on the celestial sphere
+    4. CelestialWCS classes are defined with their world coordinates on the celestial sphere
        in terms of right ascension (RA) and declination (Dec).  The pixel size and shape are
        always variable.  We use galsim.CelestialCoord for the world coordinates to facilitate
        some of the spherical trigonometry that is sometimes required.
@@ -319,7 +333,7 @@ class BaseWCS(object):
         im.scale works to read and write the pixel scale.  If not, im.scale will raise a 
         TypeError exception.
         """
-        return isinstance(self,PixelScale) or isinstance(self,OffsetWCS)
+        return False   # Overridden by PixelScale and OffsetWCS
 
     def isLocal(self):
         """Return whether the WCS transformation is a local, linear approximation.
@@ -328,15 +342,15 @@ class BaseWCS(object):
             1. The image position (x,y) = (0,0) is at the world position (u,v) = (0,0).
             2. The pixel area and shape do not vary with position.
         """
-        return False   # Overridden by subclasses for which this is True
+        return False   # Overridden by LocalWCS
 
     def isUniform(self):
         """Return whether the pixels in this WCS have uniform size and shape"""
-        return False   # Overridden by subclasses for which this is True
+        return False   # Overridden by UniformWCS
 
     def isCelestial(self):
         """Return whether the world coordinates are CelestialCoord (i.e. ra,dec).  """
-        return False   # Overridden by subclasses for which this is True
+        return False   # Overridden by CelestialWCS
 
     def local(self, image_pos=None, world_pos=None):
         """Return the local linear approximation of the WCS at a given point.
@@ -450,9 +464,9 @@ class BaseWCS(object):
                 world_pos2 = wcs2.toWorld(new_origin)
                 # world_pos1 should be equal to world_pos2
 
-        Furthermore, if the current WCS uses Euclidean world coordinates (isCelestial() == False)
-        you may also provide a world_origin argument which defines what (u,v) position you want
-        to correspond to the new origin.  Continuing the previous example:
+        Furthermore, if the current WCS is a EuclideanWCS (wcs.isCelestial() == False) you may 
+        also provide a world_origin argument which defines what (u,v) position you want to 
+        correspond to the new origin.  Continuing the previous example:
 
                 wcs3 = wcs.setOrigin(new_origin, new_world_origin)
                 world_pos3 = wcs3.toWorld(new_origin)
@@ -588,19 +602,6 @@ class BaseWCS(object):
                             system units are, if not arcsec).
         """
         self._makeSkyImage(image, sky_level)
-
-#
-# The class hierarchy is:
-#
-# BaseWCS
-#     --- EuclideanWCS
-#             --- UniformWCS
-#                     --- LocalWCS
-#     --- CelestialWCS
-#
-# The base classes are not constructible.  They do not have __init__ defined.
-# They do have a few implementations that can be done once rather than repeatedly in 
-# each relevant subclass.
 
 class EuclideanWCS(BaseWCS):
     """A EuclideanWCS is a BaseWCS whose world coordinates are on a Euclidean plane.
@@ -889,6 +890,9 @@ class PixelScale(LocalWCS):
     def origin(self): return galsim.PositionD(0,0)
     @property
     def world_origin(self): return galsim.PositionD(0,0)
+
+    def isPixelScale(self):
+        return True
 
     def _u(self, x, y):
         return x * self._scale
@@ -1403,6 +1407,9 @@ class OffsetWCS(UniformWCS):
     @property
     def _local_wcs(self): return PixelScale(self._scale)
 
+    def isPixelScale(self):
+        return True
+
     def _u(self, x, y):
         return self._scale * x
     def _v(self, x, y):
@@ -1419,7 +1426,6 @@ class OffsetWCS(UniformWCS):
         x = (u-self._u0) / self._scale + self._x0
         y = (v-self._v0) / self._scale + self._y0
         return galsim.PositionD(x,y)
-
 
     def _newOrigin(self, origin, world_origin):
         return OffsetWCS(self._scale, origin, world_origin)

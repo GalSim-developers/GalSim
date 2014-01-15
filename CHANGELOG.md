@@ -41,7 +41,7 @@ Python layer API changes:
     `im = ImageF(nx, ny, scale=scale, init_value=init_val)`.
 * Removed the `im.at(x,y)` syntax.  This had been equivalent to `im(x,y)`, 
   so any such code should now be switched to that. (Issue #364)
-* `Angle.wrap()` now returns the wrapped angle rather than modifying the 
+* Changed `Angle.wrap()` to return the wrapped angle rather than modifying the 
   original. (Issue #364)
   * `angle.wrap()` should now be `angle = angle.wrap()`.
 * Removed the previously deprecated `Ellipse` and `AtmosphericPSF` classes.
@@ -58,24 +58,27 @@ New WCS classes: (Issue #364)
   constructor, `GSObject.draw()`, `InterpolatedImage`, etc.) now can take a 
   `wcs` item.  The `scale` parameter is still an option, but now it is just 
   shorthand for `wcs = PixelScale(scale)`.
-* There are three classes that we call "local WCS classes":
+* There are three LocalWCS classes that have a common origin for image and 
+  world coordinates:
   * `PixelScale` describes a simple scale conversion from pixels to arcsec.
   * `ShearWCS` describes a uniformly sheared coordinate system.
   * `JacobianWCS` describes an arbitrary 2x2 Jacobian matrix.
-* There are four non-local WCS classes that use Euclidean coordinates for 
-  the world coordinate system:
+* There are three non-local UniformWCS classes that have a uniform pixel
+  size and shape, but not necessarily the same origin.
   * `OffsetWCS` is a `PixelScale` with the world (0,0) location offset from 
     the (0,0) position in image coordinates.
   * `OffsetShearWCS` is a `ShearWCS` with a similar offset.
-  * `AffineTransform` is a `JacobianWCS` with an offset.  It is the most general
-    possible _uniform_ WCS transformation.  i.e. one where the pixel shape
-    is uniform across the image.
+  * `AffineTransform` is a `JacobianWCS` with an offset.  It is the most 
+    general possible _uniform_ WCS transformation.  i.e. one where the pixel 
+    shape is uniform across the image.
+* There is one non-uniform EuclideanWCS class that uses Euclidean coordinates 
+  for the world coordinate system:
   * `UVFunction` is an arbitrary transformation from (x,y) coordinates to
     Euclidean (u,v) coordinates.  It takes arbitrary function u(x,y) and
     v(x,y) as inputs.  (And optionally x(u,v) and y(u,v) for the inverse
     transformations.)
-* There are five WCS classes that use celestial coordinates for the world
-  coordinate system. i.e. the world coordinates are in terms of right
+* There are five CelestialWCS classes that use celestial coordinates for the 
+  world coordinate system. i.e. the world coordinates are in terms of right
   ascension and declination (RA, Dec).  There is a new CelestialCoord
   class that encapsulates this kind of position on the sphere.
   * `RaDecFunction` takes an arbitrary function radec_func(x,y) that returns
@@ -87,16 +90,17 @@ New WCS classes: (Issue #364)
     WCS types.  Less flexible than the others, but still useful since
     these are probably the most common WCS types for optical astronomical
     images.  Plus it is quite a bit faster than the others.
-* Finally, there is a factory function called `FitsWCS` that will try the 
-  various classes that can read FITS files until it finds one that works.
-  It will revert to `AffineTransform` if it cannot find anything better.
+* There is a factory function called `FitsWCS` that will try the various 
+  classes that can read FITS files until it finds one that works.  It will 
+  revert to `AffineTransform` if it cannot find anything better.
 * Another function, `TanWCS`, acts like a WCS class.  It builds a WCS using
   TAN projection and returns a `GSFitsWCS` implementing it.
 * When reading in an image from a FITS file, the image will automatically
   try to read the WCS information from the header with the `FitsWCS` function.
-* See the docstring for `BaseWCS` (the base class for all of these WCS classes)
-  for information about how to use these classes.
-* Also, check out demo3, demo9, demo10, and demo11 for example usage.
+
+See the docstring for `BaseWCS` (the base class for all of these WCS classes)
+for information about how to use these classes. Also, check out demo3, demo9, 
+demo10, and demo11 for example usage.
 
 
 New `CelestialCoord` class: (Issue #364)
@@ -163,17 +167,17 @@ Updates to config options:
 
 Other new features:
 
-* New functions to convert an angle to/from DMS strings.  Sometimes handy
-  when dealing with RA or Dec. (Issue #364)
+* Added some new functions to convert an angle to/from DMS strings.  Sometimes 
+  handy when dealing with RA or Dec. (Issue #364)
   * `angle.dms()` returns the angle as a string in the form +/-ddmmss.decimal.
   * `angle.hms()` returns the angle as a string in the form +/-hhmmss.decimal.
   * `angle = DMS_Angle(str)` convert from a dms string to a `galsim.Angle`.
   * `angle = HMS_Angle(str)` convert from an hms string to a `galsim.Angle`.
-* `profile.applyTransformation(dudx, dudy, dvdx, dvdy)` applies a general 
+* Added `profile.applyTransformation(dudx, dudy, dvdx, dvdy)` applies a general
   (linear) coordinate transformation to a GSObject profile.  It is a 
   generalization of `applyShear`, `applyRotation`, etc.  There is also the 
   corresponding `createTransformed` as well. (Issue #364)
-* A new `galsim.fits.readFile()` function reads a FITS file and returns the
+* Added `galsim.fits.readFile()` function reads a FITS file and returns the
   hdu_list.  Normally, this is equivalent to `pyfits.open(file_name)`, but
   it has a `compression` option that works the same way `compression` works
   for the other `galsim.fits.read*` functions, so it may be convenient
