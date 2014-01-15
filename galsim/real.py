@@ -69,11 +69,11 @@ class RealGalaxy(GSObject):
     (probabilities for objects to make it into the training sample).  
 
     Note that tests suggest that for optimal balance between accuracy and speed,`k_interpolant` and
-    `pad_factor` should be kept at their default values.  The user should be aware that significant 
-    inaccuracy can result from using other combinations of these parameters; see 
-    devel/modules/finterp.pdf, especially table 1, in the GalSim repository, and comment
-    https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621 and following
-    comments. 
+    `pad_factor` should be kept at their default values.  The user should be aware that significant
+    inaccuracy can result from using other combinations of these parameters; more details can be
+    found in http://arxiv.org/abs/1401.2636, especially table 1, and in comment
+    https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621 and the following
+    comments.
 
     @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
                                 find the data, etc.

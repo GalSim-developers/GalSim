@@ -403,13 +403,6 @@ namespace galsim {
             ','<<ymin<<','<<1.<<','<<-ymin<<std::endl;
         fillXValue(val.view(),xmin,1.,-xmin,ymin,1.,-ymin);
 
-        // Sometimes rounding errors cause the nominal (0,0) to be slightly off.
-        // So redo (0,0) just to be sure.
-        // TODO: This is really just to get the unit tests to pass.  It's usually the value
-        // for Sersic that fails to match the central peak at 5 digits of accuracy.
-        // Probaby, we should just update reference images and remove this line...
-        val(-xmin,-ymin) = xValue(Position<double>(0.,0.));
-
         if (gain != 1.) val /= gain;
 
         tmv::MatrixView<T> mI(I.getData(),m,n,1,I.getStride(),tmv::NonConj);

@@ -506,8 +506,8 @@ namespace galsim {
     {
         x = std::abs(x);
 #ifdef ALT_QUINTIC
-        // Gary claims in finterp.pdf that his quintic function (below) has the following 
-        // properties:
+        // Gary claims in http://arxiv.org/abs/1401.2636 that his quintic function (below) has the
+        // following properties:
         //
         // f(0) = 1
         // f(1) = f(2) = f(3) = 0
@@ -780,7 +780,7 @@ namespace galsim {
             // For x < 1.e-4, the errors in this approximation are less than 1.e-16.
         }
 
-        // Gary's original write up about this is in devel/modules/finterp.pdf.
+        // Gary's write up about this is in http://arxiv.org/abs/1401.2636.
         // We start with Gary's eqn 22, and extend the subsequent derivation to 3rd order.
         // (More in uCalc below than here...)
         //
