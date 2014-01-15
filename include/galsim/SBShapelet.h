@@ -63,8 +63,8 @@ namespace galsim {
     };
 
     template <typename T>
-    void ShapeletFitImage(double sigma, LVector& bvec, const BaseImage<T>& image, 
-                          const Position<double>& center);
+    void ShapeletFitImage(double sigma, LVector& bvec, const BaseImage<T>& image,
+                          double image_scale, const Position<double>& center);
 }
 
 #endif // SBSHAPELET_H

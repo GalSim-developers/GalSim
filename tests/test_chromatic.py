@@ -113,7 +113,7 @@ def test_draw_add_commutivity():
     # final profile
     pixel = galsim.Pixel(pixel_scale)
     final = galsim.Convolve([GS_gal, PSF, pixel])
-    GS_image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+    GS_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     GS_image = final.draw(image=GS_image)
     # plotme(GS_image)
 
@@ -136,7 +136,7 @@ def test_draw_add_commutivity():
 
     # final profile
     chromatic_final = galsim.Convolve([chromatic_gal, chromatic_PSF, pixel])
-    chromatic_image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+    chromatic_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     # use chromatic parent class to draw without ChromaticConvolution acceleration...
     galsim.ChromaticObject.draw(chromatic_final, filter_fn, bluelim, redlim,
                                 image=chromatic_image)
@@ -170,7 +170,7 @@ def test_ChromaticConvolution_InterpolatedImage():
     PSF = galsim.ChromaticShiftAndDilate(mono_PSF, shift_fn=shift_fn, dilate_fn=dilate_fn)
 
     final = galsim.Convolve([star, PSF, pix])
-    image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+    image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
     II_image = galsim.ChromaticConvolution.draw(final, filter_fn, bluelim, redlim, image=image)
     II_flux = II_image.array.sum()
@@ -218,13 +218,13 @@ def test_chromatic_add():
     # create final profile
     pixel = galsim.Pixel(pixel_scale)
     final = galsim.Convolve([bdgal, chromatic_PSF, pixel])
-    image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+    image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     image = final.draw(filter_fn, bluelim, redlim, image=image)
 
-    bulge_image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+    bulge_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     bulge_part = galsim.Convolve([bulge, chromatic_PSF, pixel])
     bulge_image = bulge_part.draw(filter_fn, bluelim, redlim, image=bulge_image)
-    disk_image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+    disk_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     disk_part = galsim.Convolve([disk, chromatic_PSF, pixel])
     disk_image = disk_part.draw(filter_fn, bluelim, redlim, image=disk_image)
 
@@ -265,8 +265,8 @@ def test_dcr_moments():
     final1 = galsim.Convolve([star1, PSF, pix])
     final2 = galsim.Convolve([star2, PSF, pix])
 
-    image1 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
-    image2 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+    image1 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    image2 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
     image1 = final1.draw(filter_fn, bluelim, redlim, image=image1)
     image2 = final2.draw(filter_fn, bluelim, redlim, image=image2)
@@ -335,8 +335,8 @@ def test_chromatic_seeing_moments():
         final1 = galsim.Convolve([star1, PSF, pix])
         final2 = galsim.Convolve([star2, PSF, pix])
 
-        image1 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
-        image2 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+        image1 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+        image2 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
         image1 = final1.draw(filter_fn, bluelim, redlim, image=image1)
         image2 = final2.draw(filter_fn, bluelim, redlim, image=image2)
@@ -393,7 +393,7 @@ def test_monochromatic_filter():
 
     fws = [350, 475, 625, 750, 875, 975] # approximage ugrizy filter central wavelengths
     for fw in fws:
-        chromatic_image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+        chromatic_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
         chromatic_image = chromatic_final.draw(lambda x:1.0, fw-0.01, fw+0.01, image=chromatic_image)
         # take out normalization
         chromatic_image /= 0.02
@@ -405,7 +405,7 @@ def test_monochromatic_filter():
         GS_PSF.applyDilation(dilate_fn(fw))
         GS_PSF.applyShift(shift_fn(fw))
         GS_final = galsim.Convolve([GS_gal, GS_PSF, pix])
-        GS_image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+        GS_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
         GS_final.draw(image=GS_image)
         # plotme(GS_image)
 
@@ -434,8 +434,8 @@ def test_chromatic_flux():
     PSF = galsim.ChromaticShiftAndDilate(mono_PSF, shift_fn=shift_fn, dilate_fn=dilate_fn)
 
     final = galsim.Convolve([star, PSF, pix])
-    image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
-    image2 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+    image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    image2 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
     final.draw(filter_fn, bluelim, redlim, image=image)
     ChromaticConvolve_flux = image.array.sum()

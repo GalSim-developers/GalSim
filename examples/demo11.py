@@ -14,7 +14,7 @@ particularly irregular ones.  These are taken from the same catalog of 100 objec
 
 New features introduced in this demo:
 
-- psf = galsim.InterpolatedImage(psf_filename, dx, flux)
+- psf = galsim.InterpolatedImage(psf_filename, scale, flux)
 - tab = galsim.LookupTable(file)
 - gal = galsim.RealGalaxy(..., noise_pad_size)
 - ps = galsim.PowerSpectrum(..., units)
@@ -137,7 +137,7 @@ def main(argv):
     # manipulate it as needed (here, the only manipulation needed is convolution).  We want a PSF
     # with flux 1, and we can set the pixel scale using a keyword.
     psf_file = os.path.join('data','example_sdss_psf_sky0.fits.bz2')
-    psf = galsim.InterpolatedImage(psf_file, dx = pixel_scale, flux = 1.)
+    psf = galsim.InterpolatedImage(psf_file, scale = pixel_scale, flux = 1.)
     # We do not include a pixel response function galsim.Pixel here, because the image that was read
     # in from file already included it.
     logger.info('Read in PSF image from bzipped FITS file')
@@ -258,7 +258,7 @@ def main(argv):
         # Note: We make the stamp size odd to make the above calculation of the offset easier.
         this_stamp_size = 2 * int(math.ceil(base_stamp_size * dilat / 2)) + 1
         stamp = galsim.ImageF(this_stamp_size,this_stamp_size)
-        final.draw(image=stamp, dx=pixel_scale, offset=offset)
+        final.draw(image=stamp, scale=pixel_scale, offset=offset)
 
         # Now we can whiten the noise on the postage stamp.
         # Galsim automatically propagates the noise correctly from the initial RealGalaxy object

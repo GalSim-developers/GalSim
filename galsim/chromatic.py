@@ -30,7 +30,7 @@ class ChromaticObject(object):
     """Base class for defining wavelength dependent objects.
     """
     def draw(self, throughput_fn, bluelim, redlim,
-             image=None, dx=None, gain=1.0, wmult=1.0,
+             image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
         # default integrator is Riemann sum
@@ -38,8 +38,8 @@ class ChromaticObject(object):
             integrator = galsim.integ.midpoint_int_image
         # setup output image
         prof0 = self.evaluateAtWavelength(bluelim) * throughput_fn(bluelim)
-        prof0 = prof0._fix_center(image, dx, offset, use_true_center, reverse=False)
-        image = prof0._draw_setup_image(image, dx, wmult, add_to_image)
+        prof0 = prof0._fix_center(image, scale, offset, use_true_center, reverse=False)
+        image = prof0._draw_setup_image(image, scale, wmult, add_to_image)
 
         # integrand returns an image at each wavelength
         def f_image(w):
@@ -158,17 +158,17 @@ class ChromaticSum(ChromaticObject):
         return galsim.Sum([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
     def draw(self, throughput_fn, bluelim, redlim,
-             image=None, dx=None, gain=1.0, wmult=1.0,
+             image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
         # is the most efficient method to just add up one component at a time...?
         image = self.objlist[0].draw(wave, throughput_fn, bluelim, redlim,
-                                     image=image, dx=dx, gain=gain, wmult=wmult,
+                                     image=image, scale=scale, gain=gain, wmult=wmult,
                                      add_to_image=add_to_image, use_true_center=use_true_center,
                                      offset=offset, integrator=integrator, **kwargs)
         for obj in self.objlist[1:]:
             image = obj.draw(wave, throughput_fn, bluelim, redlim,
-                             image=image, dx=dx, gain=gain, wmult=wmult,
+                             image=image, scale=scale, gain=gain, wmult=wmult,
                              add_to_image=True, use_true_center=use_true_center,
                              offset=offset, integrator=integrator, **kwargs)
 
@@ -216,7 +216,7 @@ class ChromaticConvolution(ChromaticObject):
         return galsim.Convolve([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
     def draw(self, throughput_fn, bluelim, redlim,
-             image=None, dx=None, gain=1.0, wmult=1.0,
+             image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
         if integrator is None:
@@ -342,7 +342,7 @@ class ChromaticConvolution(ChromaticObject):
             mono_prof0 = galsim.Convolve([p.evaluateAtWavelength(bluelim) for p in insep_profs])
             mono_prof0 = mono_prof0._fix_center(image=None, scale=None, offset=None,
                                                 use_true_center=True, reverse=False)
-            mono_prof_image = mono_prof0._draw_setup_image(image=None, dx=None, wmult=wmult,
+            mono_prof_image = mono_prof0._draw_setup_image(image=None, scale=None, wmult=wmult,
                                                            add_to_image=False)
             # integrand for effective profile
             def f_image(w):

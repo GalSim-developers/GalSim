@@ -382,15 +382,15 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
         raise AttributeError(
             "Both (or neither) of image.xsize and image.ysize need to be defined  and != 0.")
 
-    if 'sky_pos' in config['image']:
+    if 'world_pos' in config['image']:
         config['image']['image_pos'] = (0,0)
-        # We allow sky_pos to be in config[image], but we don't want it to lead to a final_shift
+        # We allow world_pos to be in config[image], but we don't want it to lead to a final_shift
         # in BuildSingleStamp.  The easiest way to do this is to set image_pos to (0,0).
 
     pixel_scale = params.get('pixel_scale',1.0)
     config['pixel_scale'] = pixel_scale
     if 'pix' not in config:
-        config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
+        config['pix'] = { 'type' : 'Pixel' , 'scale' : pixel_scale }
 
     if 'sky_level' in params and 'sky_level_pixel' in params:
         raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
@@ -504,7 +504,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         logger.debug('image %d: image_size = %d, %d',image_num,full_xsize,full_ysize)
 
     if 'pix' not in config:
-        config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
+        config['pix'] = { 'type' : 'Pixel' , 'scale' : pixel_scale }
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
@@ -642,7 +642,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                 # Then there was whitening applied in the individual stamps.
                 # But there could be a different variance in each postage stamp, so the first
                 # thing we need to do is bring everything up to a common level.
-                noise_image = galsim.ImageF(full_image.bounds, full_image.scale)
+                noise_image = galsim.ImageF(full_image.bounds, scale=full_image.scale)
                 for k in range(nobjects): noise_image[images[k].bounds] += current_vars[k]
                 # Update this, since overlapping postage stamps may have led to a larger 
                 # value in some pixels.
@@ -704,7 +704,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         logger.debug('image %d: nobj = %d',image_num,nobjects)
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'retry_failures',
-               'image_pos', 'sky_pos', 'n_photons', 'wmult', 'offset',
+               'image_pos', 'world_pos', 'n_photons', 'wmult', 'offset',
                'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams', 'nobjects' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
             'pixel_scale' : float , 'nproc' : int , 'index_convention' : str,
@@ -752,7 +752,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['image_ysize'] = full_ysize
 
     if 'pix' not in config:
-        config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
+        config['pix'] = { 'type' : 'Pixel' , 'scale' : pixel_scale }
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
@@ -769,10 +769,10 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         rng = galsim.BaseDeviate()
     config['rng'] = rng
 
-    if 'image_pos' in config['image'] and 'sky_pos' in config['image']:
-        raise AttributeError("Both image_pos and sky_pos specified for Scattered image.")
+    if 'image_pos' in config['image'] and 'world_pos' in config['image']:
+        raise AttributeError("Both image_pos and world_pos specified for Scattered image.")
 
-    if 'image_pos' not in config['image'] and 'sky_pos' not in config['image']:
+    if 'image_pos' not in config['image'] and 'world_pos' not in config['image']:
         xmin = config['image_origin'].x
         xmax = xmin + full_xsize-1
         ymin = config['image_origin'].y
@@ -881,7 +881,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             # Then there was whitening applied in the individual stamps.
             # But there could be a different variance in each postage stamp, so the first
             # thing we need to do is bring everything up to a common level.
-            noise_image = galsim.ImageF(full_image.bounds, full_image.scale)
+            noise_image = galsim.ImageF(full_image.bounds, scale=full_image.scale)
             for k in range(nobjects): 
                 b = images[k].bounds & full_image.bounds
                 if b.isDefined(): noise_image[b] += current_vars[k]

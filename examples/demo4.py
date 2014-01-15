@@ -152,7 +152,7 @@ def main(argv):
 
         # Draw the profile
         image = galsim.ImageF(xsize, ysize)
-        final.draw(image, dx=pixel_scale)
+        final.draw(image, scale=pixel_scale)
 
         # Add Poisson noise to the image:
         image.addNoise(galsim.PoissonNoise(rng, sky_level * pixel_scale**2))

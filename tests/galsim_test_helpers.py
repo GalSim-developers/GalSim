@@ -86,7 +86,7 @@ def do_shoot(prof, img, name):
     # Test photon shooting for a particular profile (given as prof). 
     # Since shooting implicitly convolves with the pixel, we need to compare it to 
     # the given profile convolved with a pixel.
-    pix = galsim.Pixel(xw=img.scale)
+    pix = galsim.Pixel(scale=img.scale)
     compar = galsim.Convolve(prof,pix)
     compar.draw(img)
     flux_max = img.array.max()

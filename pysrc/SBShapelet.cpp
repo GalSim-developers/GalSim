@@ -112,11 +112,11 @@ namespace galsim {
         template <typename U>
         static void wrapImageTemplates() {
             typedef void (*ShapeletFitImage_type)(
-                double sigma, LVector& bvec, const BaseImage<U>& image,
+                double sigma, LVector& bvec, const BaseImage<U>& image, double scale,
                 const Position<double>& center);
 
             bp::def("ShapeletFitImage", ShapeletFitImage_type(&ShapeletFitImage),
-                    bp::args("sigma","bvec","image","center"),
+                    bp::args("sigma","bvec","image","image_scale","center"),
                     "Fit a Shapelet decomposition to the provided image");
         }
 

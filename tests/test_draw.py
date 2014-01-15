@@ -172,7 +172,7 @@ def test_draw():
     #   - create a new image using that dx for the scale
     #   - return the new image
     #   - set the size large enough to contain 99.5% of the flux
-    im7 = obj2.draw(dx=0.51)
+    im7 = obj2.draw(scale=0.51)
     np.testing.assert_almost_equal(im7.scale, 0.51, 9,
                                    "obj2.draw(dx) produced image with wrong scale")
     np.testing.assert_almost_equal(im7.array.astype(float).sum(), test_flux, 2,
@@ -187,7 +187,7 @@ def test_draw():
     #   - create a new image using that dx for the scale
     #   - set the size a factor of wmult times larger in each direction.
     #   - return the new image
-    im8 = obj2.draw(dx=0.51, wmult=4.)
+    im8 = obj2.draw(scale=0.51, wmult=4.)
     np.testing.assert_almost_equal(im8.scale, 0.51, 9,
                                    "obj2.draw(dx,wmult) produced image with wrong scale")
     np.testing.assert_almost_equal(im8.array.astype(float).sum(), test_flux, 4,
@@ -239,7 +239,7 @@ def test_draw():
     #   - write the new dx value to the image's scale
     im9.scale = 0.73
     im9.setZero()
-    obj2.draw(im9, dx=0.51)
+    obj2.draw(im9, scale=0.51)
     np.testing.assert_almost_equal(im9.scale, 0.51, 9,
                                    "obj2.draw(im9,dx) produced image with wrong scale")
     np.testing.assert_almost_equal(im9.array.sum(), test_flux, 4,
@@ -252,7 +252,7 @@ def test_draw():
     #   - set the scale to obj2.nyquistDx()
     im9.scale = 0.73
     im9.setZero()
-    obj2.draw(im9, dx=-0.51)
+    obj2.draw(im9, scale=-0.51)
     np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
                                    "obj2.draw(im9,dx<0) produced image with wrong scale")
     np.testing.assert_almost_equal(im9.array.sum(), test_flux, 4,
@@ -261,13 +261,13 @@ def test_draw():
                                    "Measured wrong scale after obj2.draw(im9,dx<0)")
     im9.scale = 0.73
     im9.setZero()
-    obj2.draw(im9, dx=0)
+    obj2.draw(im9, scale=0)
     np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
-                                   "obj2.draw(im9,dx=0) produced image with wrong scale")
+                                   "obj2.draw(im9,scale=0) produced image with wrong scale")
     np.testing.assert_almost_equal(im9.array.sum(), test_flux, 4,
-                                   "obj2.draw(im9,dx=0) produced image with wrong flux")
+                                   "obj2.draw(im9,scale=0) produced image with wrong flux")
     np.testing.assert_almost_equal(CalculateScale(im9), 2, 2,
-                                   "Measured wrong scale after obj2.draw(im9,dx=0)")
+                                   "Measured wrong scale after obj2.draw(im9,scale=0)")
     
     
     t2 = time.time()
@@ -275,7 +275,7 @@ def test_draw():
 
 def test_drawK():
     """Test the various optional parameters to the drawK function.
-       In particular test the parameters image, and dk in various combinations.
+       In particular test the parameters image, and scale in various combinations.
     """
     import time
     t1 = time.time()
@@ -368,11 +368,11 @@ def test_drawK():
     assert im5.bounds == galsim.BoundsI(1,N,1,N),(
             "obj.drawK(re5,im5) produced image with wrong bounds")
 
-    # Test if we provide a dk to use.  It should:
+    # Test if we provide a scale to use.  It should:
     #   - create a new image using that dx for the scale
     #   - return the new image
     #   - set the size large enough to contain 99.5% of the flux
-    re7, im7 = obj.drawK(dk=0.51)
+    re7, im7 = obj.drawK(scale=0.51)
     np.testing.assert_almost_equal(re7.scale, 0.51, 9,
                                    "obj.drawK(dx) produced real image with wrong scale")
     np.testing.assert_almost_equal(im7.scale, 0.51, 9,
@@ -442,49 +442,49 @@ def test_drawK():
     re9.scale = 0.73
     im9.scale = 0.73
     re9.setZero()
-    obj.drawK(re9, im9, dk=0.51)
+    obj.drawK(re9, im9, scale=0.51)
     np.testing.assert_almost_equal(re9.scale, 0.51, 9,
-                                   "obj.drawK(re9,im9,dk) produced real image with wrong scale")
+                                   "obj.drawK(re9,im9,scale) produced real image with wrong scale")
     np.testing.assert_almost_equal(im9.scale, 0.51, 9,
-                                   "obj.drawK(re9,im9,dk) produced imag image with wrong scale")
+                                   "obj.drawK(re9,im9,scale) produced imag image with wrong scale")
     np.testing.assert_almost_equal(re9(re9.bounds.center()), test_flux, 4,
-                                   "obj.drawK(re9,im9,dk) produced real image with wrong flux")
+                                   "obj.drawK(re9,im9,scale) produced real image with wrong flux")
     np.testing.assert_almost_equal(im9.array.sum(), 0., 5,
-                                   "obj.drawK(re9,im9,dk) produced non-zero imaginary image")
+                                   "obj.drawK(re9,im9,scale) produced non-zero imaginary image")
     np.testing.assert_almost_equal(CalculateScale(re9), 2, 1,
-                                   "Measured wrong scale after obj.drawK(re9,im9,dk)")
+                                   "Measured wrong scale after obj.drawK(re9,im9,scale)")
 
-    # Test if we provide an image and dk <= 0.  It should:
+    # Test if we provide an image and scale <= 0.  It should:
     #   - write to the existing image
     #   - set the scale to obj.stepK()
     re3.scale = 0.73
     im3.scale = 0.73
     re3.setZero()
-    obj.drawK(re3, im3, dk=-0.51)
+    obj.drawK(re3, im3, scale=-0.51)
     np.testing.assert_almost_equal(re3.scale, stepk, 9,
-                                   "obj.drawK(re3,im3,dk<0) produced real image with wrong scale")
+                                   "obj.drawK(re3,im3,scale<0) produced real image with wrong scale")
     np.testing.assert_almost_equal(im3.scale, stepk, 9,
-                                   "obj.drawK(re3,im3,dk<0) produced imag image with wrong scale")
+                                   "obj.drawK(re3,im3,scale<0) produced imag image with wrong scale")
     np.testing.assert_almost_equal(re3(re3.bounds.center()), test_flux, 4,
-                                   "obj.drawK(re3,im3,dk<0) produced real image with wrong flux")
+                                   "obj.drawK(re3,im3,scale<0) produced real image with wrong flux")
     np.testing.assert_almost_equal(im3.array.sum(), 0., 5,
-                                   "obj.drawK(re3,im3,dk<0) produced non-zero imaginary image")
+                                   "obj.drawK(re3,im3,scale<0) produced non-zero imaginary image")
     np.testing.assert_almost_equal(CalculateScale(re3), 2, 1,
-                                   "Measured wrong scale after obj.drawK(re3,im3,dk<0)")
+                                   "Measured wrong scale after obj.drawK(re3,im3,scale<0)")
     re3.scale = 0.73
     im3.scale = 0.73
     re3.setZero()
-    obj.drawK(re3, im3, dk=0)
+    obj.drawK(re3, im3, scale=0)
     np.testing.assert_almost_equal(re3.scale, stepk, 9,
-                                   "obj.drawK(re3,im3,dk=0) produced real image with wrong scale")
+                                   "obj.drawK(re3,im3,scale=0) produced real image with wrong scale")
     np.testing.assert_almost_equal(im3.scale, stepk, 9,
-                                   "obj.drawK(re3,im3,dk=0) produced imag image with wrong scale")
+                                   "obj.drawK(re3,im3,scale=0) produced imag image with wrong scale")
     np.testing.assert_almost_equal(re3(re3.bounds.center()), test_flux, 4,
-                                   "obj.drawK(re3,im3,dk=0) produced real image with wrong flux")
+                                   "obj.drawK(re3,im3,scale=0) produced real image with wrong flux")
     np.testing.assert_almost_equal(im3.array.sum(), 0., 5,
-                                   "obj.drawK(re3,im3,dk=0) produced non-zero imaginary image")
+                                   "obj.drawK(re3,im3,scale=0) produced non-zero imaginary image")
     np.testing.assert_almost_equal(CalculateScale(re3), 2, 1,
-                                   "Measured wrong scale after obj.drawK(re3,im3,dk=0)")
+                                   "Measured wrong scale after obj.drawK(re3,im3,scale=0)")
     
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -517,14 +517,14 @@ def test_drawK_Gaussian():
     rekimage_test = galsim.ImageD(test_imsize, test_imsize)
     imkimage_test = galsim.ImageD(test_imsize, test_imsize)
 
-    # Then compare these two objects at a couple of different dk (reasonably matched for size)
-    for dk_test in (0.03 / test_sigma, 0.4 / test_sigma):
-        gal.drawK(re=rekimage_test, im=imkimage_test, dk=dk_test) 
-        gal_hankel.draw(image_test, dx=dk_test, use_true_center=False, normalization="sb")
+    # Then compare these two objects at a couple of different scale (reasonably matched for size)
+    for scale_test in (0.03 / test_sigma, 0.4 / test_sigma):
+        gal.drawK(re=rekimage_test, im=imkimage_test, scale=scale_test) 
+        gal_hankel.draw(image_test, scale=scale_test, use_true_center=False, normalization="sb")
         np.testing.assert_array_almost_equal(
             rekimage_test.array, image_test.array, decimal=12,
             err_msg="Test object drawK() and draw() from Hankel conjugate do not match for grid "+
-            "spacing dk = "+str(dk_test))
+            "spacing scale = "+str(scale_test))
         np.testing.assert_array_almost_equal(
             imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=12,
             err_msg="Non-zero imaginary part for drawK from test object that is purely centred on "+
@@ -564,14 +564,14 @@ def test_drawK_Exponential_Moffat():
     rekimage_test = galsim.ImageD(test_imsize, test_imsize)
     imkimage_test = galsim.ImageD(test_imsize, test_imsize)
 
-    # Then compare these two objects at a couple of different dk (reasonably matched for size)
-    for dk_test in (0.15 / test_scale_radius, 0.6 / test_scale_radius):
-        gal.drawK(re=rekimage_test, im=imkimage_test, dk=dk_test) 
-        gal_hankel.draw(image_test, dx=dk_test, use_true_center=False, normalization="sb")
+    # Then compare these two objects at a couple of different scale (reasonably matched for size)
+    for scale_test in (0.15 / test_scale_radius, 0.6 / test_scale_radius):
+        gal.drawK(re=rekimage_test, im=imkimage_test, scale=scale_test) 
+        gal_hankel.draw(image_test, scale=scale_test, use_true_center=False, normalization="sb")
         np.testing.assert_array_almost_equal(
             rekimage_test.array, image_test.array, decimal=12,
             err_msg="Test object drawK() and draw() from Hankel conjugate do not match for grid "+
-            "spacing dk = "+str(dk_test))
+            "spacing scale = "+str(scale_test))
         np.testing.assert_array_almost_equal(
             imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=12,
             err_msg="Non-zero imaginary part for drawK from test object that is purely centred on "+

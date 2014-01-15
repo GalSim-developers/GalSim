@@ -40,7 +40,7 @@ New features introduced in this demo:
 - obj2 = obj.copy()
 - obj.applyDilation(scale)
 - image.scale = pixel_scale
-- obj.draw(image)  -- i.e. taking the scale from the image rather than a dx= argument
+- obj.draw(image)  -- i.e. taking the scale from the image rather than a scale= argument
 - obj.drawShoot(image, max_extra_noise, rng)
 - dev = galsim.PoissonDeviate(rng, mean)
 - noise = galsim.DeviateNoise(dev)
@@ -127,7 +127,7 @@ def main(argv):
     logger.info('Starting demo script 7')
 
     # Make the pixel:
-    pix = galsim.Pixel(xw = pixel_scale)
+    pix = galsim.Pixel(pixel_scale)
 
     # Make the PSF profiles:
     psf1 = galsim.Gaussian(fwhm = psf_fwhm, gsparams=gsparams)
@@ -236,12 +236,12 @@ def main(argv):
                 final_nopix = galsim.Convolve([psf, gal1])
 
                 # Create the large, double width output image
-                # Rather than provide a dx= argument to the draw commands, we can also
+                # Rather than provide a scale= argument to the draw commands, we can also
                 # set the pixel scale in the image constructor.
                 # Note: You can also change it after the construction with im.scale=pixel_scale
                 image = galsim.ImageF(2*nx+2, ny, scale=pixel_scale)
 
-                # Assign the following two "ImageViews", fft_image and phot_image.
+                # Assign the following two Image "views", fft_image and phot_image.
                 # Using the syntax below, these are views into the larger image.  
                 # Changes/additions to the sub-images referenced by the views are automatically 
                 # reflected in the original image.

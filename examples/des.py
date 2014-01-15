@@ -164,7 +164,7 @@ def main(argv):
                 final = galsim.Convolve([pix,psf])
 
                 # Draw the postage stamp image
-                stamp = final.draw(dx=pixel_scale, offset=offset)
+                stamp = final.draw(scale=pixel_scale, offset=offset)
 
                 # Recenter the stamp at the desired position:
                 stamp.setCenter(ix,iy)
@@ -195,7 +195,7 @@ def main(argv):
                 final = galsim.Convolve([pix,psf])
 
                 # Draw the postage stamp image
-                stamp = final.draw(dx=pixel_scale, offset=offset)
+                stamp = final.draw(scale=pixel_scale, offset=offset)
 
                 # Recenter the stamp at the desired position:
                 stamp.setCenter(ix,iy)

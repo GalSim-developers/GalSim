@@ -97,8 +97,8 @@ namespace galsim {
 
             static const char* nearest_doc =
             "Nearest-neighbor interpolation (boxcar): The nearest-neighbor interpolant performs\n"
-            "poorly as a k-space or x-space interpolant for interpolated images.  (See document by\n"
-            "Bernstein & Gruen, devel/modules/finterp.pdf in the GalSim repository.)  The\n"
+            "poorly as a k-space or x-space interpolant for interpolated images.  (See paper by\n"
+            "Bernstein & Gruen, http://arxiv.org/abs/1401.2636.)  The\n"
             "objection to its use in Fourier space does not apply when shooting photons to\n"
             "generate an image; in that case, the nearest-neighbor interpolant is quite efficient\n"
             "(but not necessarily the best choice in terms of accuracy).\n\n"
@@ -126,7 +126,7 @@ namespace galsim {
             static const char* linear_doc =
             "Linear interpolant: The linear interpolant is a poor choice for FFT-based operations\n"
             "on interpolated images, as it rings to high frequencies.  (See Bernstein & Gruen,\n"
-            "devel/modules/finterp.pdf in the GalSim repository.)  This objection does not apply\n"
+            "http://arxiv.org/abs/1401.2636.)  This objection does not apply\n"
             "when shooting photons, in which case the linear interpolant is quite efficient (but\n"
             "not necessarily the best choice in terms of accuracy).\n\n"
             "Tolerance `tol` determines how far onto sinc^2 wiggles the uval will go.  Very far,\n"
@@ -158,8 +158,7 @@ namespace galsim {
             "Cubic interpolator exact to 3rd order Taylor expansion (from R. G. Keys,\n"
             "IEEE Trans. Acoustics, Speech, & Signal Proc 29, p 1153, 1981\n\n"
             "The cubic interpolant is a reasonable choice for a four-point interpolant for\n"
-            "interpolated images.  (See Bernstein & Gruen, devel/modules/finterp.pdf in the\n"
-            "GalSim repository.)\n\n"
+            "interpolated images.  (See Bernstein & Gruen, http://arxiv.org/abs/1401.2636.)\n\n"
             "Default tolerance parameter `tol=1e-4`.\n";
             bp::class_<Cubic,bp::bases<Interpolant>,boost::noncopyable>(
                 "Cubic", cubic_doc, bp::init<double>(bp::arg("tol")=1E-4)
@@ -167,7 +166,7 @@ namespace galsim {
 
             static const char* quintic_doc =
             "Piecewise-quintic polynomial interpolant, ideal for k-space interpolation:\n"
-            "See Bernstein & Gruen, devel/modules/finterp.pdf in the GalSim repository.\n\n"
+            "See Bernstein & Gruen, http://arxiv.org/abs/1401.2636.\n\n"
             "Default tolerance parameter `tol=1e-4`.\n";
             bp::class_<Quintic,bp::bases<Interpolant>,boost::noncopyable>(
                 "Quintic", quintic_doc, bp::init<double>(bp::arg("tol")=1E-4)

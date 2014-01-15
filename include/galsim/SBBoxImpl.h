@@ -30,7 +30,7 @@ namespace galsim {
     class SBBox::SBBoxImpl : public SBProfileImpl 
     {
     public:
-        SBBoxImpl(double xw, double yw, double flux, const GSParamsPtr& gsparams);
+        SBBoxImpl(double width, double height, double flux, const GSParamsPtr& gsparams);
         ~SBBoxImpl() {}
 
         double xValue(const Position<double>& p) const;
@@ -45,20 +45,19 @@ namespace galsim {
         double stepK() const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
-        { xmin = -0.5*_xw;  xmax = 0.5*_xw; }
+        { xmin = -0.5*_width;  xmax = 0.5*_width; }
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
-        { ymin = -0.5*_yw;  ymax = 0.5*_yw; }
+        { ymin = -0.5*_height;  ymax = 0.5*_height; }
 
         Position<double> centroid() const 
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
 
-        double getXWidth() const { return _xw; }
-        double getYWidth() const { return _yw; }
+        double getWidth() const { return _width; }
+        double getHeight() const { return _height; }
 
-        /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         // Override both for efficiency and to put in fractional edge values which
@@ -78,10 +77,10 @@ namespace galsim {
                         double y0, double dy, double dyx) const;
 
     private:
-        double _xw;   ///< Boxcar function is `xw` x `yw` across.
-        double _yw;   ///< Boxcar function is `xw` x `yw` across.
-        double _flux; ///< Flux.
-        double _norm; ///< Calculated value: flux / (xw*yw)
+        double _width;
+        double _height;
+        double _flux;
+        double _norm; // Calculated value: flux / (width*height)
 
         // Sinc function used to describe Boxcar in k space. 
         double sinc(double u) const; 
