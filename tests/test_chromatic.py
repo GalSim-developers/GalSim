@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
+import os
+
 import numpy as np
 
 from galsim_test_helpers import *
@@ -69,9 +71,6 @@ disk_SED = galsim.SED(wave=Sbcgal_wave, flambda=Sbcgal_flambda, base_wavelength=
 bluelim = 500
 redlim = 720
 filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
-wgood = (filter_wave >= bluelim) & (filter_wave <= redlim) # truncate out-of-band wavelengths
-filter_wave = filter_wave[wgood][0::40]  # sparsify from 1 Ang binning to 40 Ang binning
-filter_throughput = filter_throughput[wgood][0::40]
 filter_fn = galsim.LookupTable(filter_wave, filter_throughput)
 
 def test_draw_add_commutivity():
@@ -98,7 +97,7 @@ def test_draw_add_commutivity():
 
     # make effective PSF with Riemann sum midpoint rule
     mPSFs = [] # list of flux-scaled monochromatic PSFs
-    N = 100
+    N = 150
     h = (redlim * 1.0 - bluelim) / N
     ws = [bluelim + h*(i+0.5) for i in range(N)]
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec)
@@ -139,8 +138,8 @@ def test_draw_add_commutivity():
     chromatic_final = galsim.Convolve([chromatic_gal, chromatic_PSF, pixel])
     chromatic_image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
     # use chromatic parent class to draw without ChromaticConvolution acceleration...
-    galsim.ChromaticObject.draw2(chromatic_final, filter_fn, bluelim, redlim,
-                                 image=chromatic_image)
+    galsim.ChromaticObject.draw(chromatic_final, filter_fn, bluelim, redlim,
+                                image=chromatic_image)
     # plotme(chromatic_image)
 
     # comparison
@@ -173,108 +172,20 @@ def test_ChromaticConvolution_InterpolatedImage():
     final = galsim.Convolve([star, PSF, pix])
     image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
 
-    II_image = galsim.ChromaticConvolution.draw2(final, filter_fn, bluelim, redlim, image=image)
+    II_image = galsim.ChromaticConvolution.draw(final, filter_fn, bluelim, redlim, image=image)
     II_flux = II_image.array.sum()
 
     image2 = image.copy()
-    D_image = galsim.ChromaticObject.draw2(final, filter_fn, bluelim, redlim, image=image2)
+    D_image = galsim.ChromaticObject.draw(final, filter_fn, bluelim, redlim, image=image2)
     D_flux = D_image.array.sum()
 
     #compare
     np.testing.assert_array_almost_equal(
         II_image.array, D_image.array, 1, #stupid 10% test right now...  Should this be better?
-        err_msg="draw not equivalent to draw2")
+        err_msg="draw not equivalent to draw")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-def test_draw2():
-    import time
-    t1 = time.time()
-
-    pixel_scale = 0.1
-    stamp_size = 64
-
-    # stars are fundamentally delta-fns with an SED
-    star = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
-    pix = galsim.Pixel(pixel_scale)
-    mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
-    shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec)
-    dilate_fn = lambda w:(w/500.0)**(-0.2)
-    PSF = galsim.ChromaticShiftAndDilate(mono_PSF, shift_fn=shift_fn, dilate_fn=dilate_fn)
-
-    final = galsim.Convolve([star, PSF, pix])
-    image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
-
-    image = galsim.ChromaticObject.draw(final, filter_fn, bluelim, redlim, 100, image=image)
-    draw_flux = image.array.sum()
-
-    image2 = image.copy()
-    image2 = galsim.ChromaticObject.draw2(final, filter_fn, bluelim, redlim, N=100, image=image2)
-    draw2_flux = image2.array.sum()
-
-    #compare
-    printval(image, image2)
-    np.testing.assert_array_almost_equal(
-        image.array, image2.array, 5,
-        err_msg="draw not equivalent to draw2")
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-def compare_integrators():
-    import galsim.integ
-    import time
-
-    pixel_scale = 0.2
-    stamp_size = 128
-
-    gal = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
-    pix = galsim.Pixel(pixel_scale)
-    mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
-    PSF = galsim.ChromaticShiftAndDilate(mono_PSF,
-                                         dilate_fn=lambda w:(w/500.0)**(-0.2))
-
-    final = galsim.Convolve([gal, PSF, pix])
-    image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
-
-    # truth
-    target = galsim.integ.int1d(lambda w:bulge_SED(w) * filter_fn(w), bluelim, redlim)
-    print 'target'
-    print '     {:14.11f}'.format(target)
-
-    t1 = time.time()
-    print 'midpoint'
-    for N in [100, 200, 300, 400, 500, 998, 5000]:
-        image = galsim.ChromaticObject.draw2(final, filter_fn, bluelim, redlim, N=N, image=image)
-        print '{:4d} {:14.11f} {:14.11f}'.format(N, image.array.sum(), image.array.sum()-target)
-    t2 = time.time()
-    print 'time for midpoint = %.2f'%(t2-t1)
-
-    print 'trapezoidal'
-    for N in [100, 200, 300, 400, 500, 998, 5000]:
-        image = galsim.ChromaticObject.draw2(final, filter_fn, bluelim, redlim, N=N, image=image,
-                                             integrator = galsim.integ.trapezoidal_int_image)
-        print '{:4d} {:14.11f} {:14.11f}'.format(N, image.array.sum(), image.array.sum()-target)
-    t3 = time.time()
-    print 'time for trapezoidal = %.2f'%(t3-t2)
-
-    print 'Simpson\'s'
-    for N in [100, 200, 300, 400, 500, 998, 5000]:
-        image = galsim.ChromaticObject.draw2(final, filter_fn, bluelim, redlim, N=N, image=image,
-                                             integrator = galsim.integ.simpsons_int_image)
-        print '{:4d} {:14.11f} {:14.11f}'.format(N, image.array.sum(), image.array.sum()-target)
-    t4 = time.time()
-    print 'time for simpsons = %.2f'%(t4-t3)
-
-    print 'Globally Adaptive Gaussian-Kronrod'
-    for rel_err in [1.e-1, 1.e-2, 1.e-3, 1.e-4, 1.e-5, 1.e-6, 1.e-7, 1.e-8]:
-        image = galsim.ChromaticObject.draw2(final, filter_fn, bluelim, redlim, image=image,
-                                             integrator = galsim.integ.globally_adaptive_GK_int_image,
-            rel_err=rel_err)
-        print '{:6.2e} {:14.11f} {:14.11f}'.format(rel_err, image.array.sum(), image.array.sum()-target)
-    t5 = time.time()
-    print 'time for Globally Adaptive Gaussian-Kronrod = %.2f'%(t5-t4)
 
 def test_chromatic_add():
     """Test the `+` operator on ChromaticObjects"""
@@ -308,17 +219,14 @@ def test_chromatic_add():
     pixel = galsim.Pixel(pixel_scale)
     final = galsim.Convolve([bdgal, chromatic_PSF, pixel])
     image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
-    # final.draw(filter_wave, filter_throughput, image=image)
-    image = final.draw2(filter_fn, bluelim, redlim, image=image)
+    image = final.draw(filter_fn, bluelim, redlim, image=image)
 
     bulge_image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
     bulge_part = galsim.Convolve([bulge, chromatic_PSF, pixel])
-    # bulge_part.draw(filter_wave, filter_throughput, image=bulge_image)
-    bulge_image = bulge_part.draw2(filter_fn, bluelim, redlim, image=bulge_image)
+    bulge_image = bulge_part.draw(filter_fn, bluelim, redlim, image=bulge_image)
     disk_image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
     disk_part = galsim.Convolve([disk, chromatic_PSF, pixel])
-    # disk_part.draw(filter_wave, filter_throughput, image=disk_image)
-    disk_image = disk_part.draw2(filter_fn, bluelim, redlim, image=disk_image)
+    disk_image = disk_part.draw(filter_fn, bluelim, redlim, image=disk_image)
 
     piecewise_image = bulge_image + disk_image
     print 'bulge image flux: {}'.format(bulge_image.array.sum())
@@ -360,10 +268,8 @@ def test_dcr_moments():
     image1 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
     image2 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
 
-    # final1.draw(filter_wave, filter_throughput, image=image1)
-    # final2.draw(filter_wave, filter_throughput, image=image2)
-    image1 = final1.draw2(filter_fn, bluelim, redlim, image=image1)
-    image2 = final2.draw2(filter_fn, bluelim, redlim, image=image2)
+    image1 = final1.draw(filter_fn, bluelim, redlim, image=image1)
+    image2 = final2.draw(filter_fn, bluelim, redlim, image=image2)
     # plotme(image1)
 
     mom1 = getmoments(image1)
@@ -432,10 +338,8 @@ def test_chromatic_seeing_moments():
         image1 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
         image2 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
 
-        # final1.draw(filter_wave, filter_throughput, image=image1)
-        # final2.draw(filter_wave, filter_throughput, image=image2)
-        image1 = final1.draw2(filter_fn, bluelim, redlim, image=image1)
-        image2 = final2.draw2(filter_fn, bluelim, redlim, image=image2)
+        image1 = final1.draw(filter_fn, bluelim, redlim, image=image1)
+        image2 = final2.draw(filter_fn, bluelim, redlim, image=image2)
 
         mom1 = getmoments(image1)
         mom2 = getmoments(image2)
@@ -490,7 +394,7 @@ def test_monochromatic_filter():
     fws = [350, 475, 625, 750, 875, 975] # approximage ugrizy filter central wavelengths
     for fw in fws:
         chromatic_image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
-        chromatic_image = chromatic_final.draw2(lambda x:1.0, fw-0.01, fw+0.01, image=chromatic_image)
+        chromatic_image = chromatic_final.draw(lambda x:1.0, fw-0.01, fw+0.01, image=chromatic_image)
         # take out normalization
         chromatic_image /= 0.02
         chromatic_image /= bulge_SED(fw)
@@ -518,7 +422,7 @@ def test_chromatic_flux():
     import time
     t1 = time.time()
 
-    pixel_scale = 0.1
+    pixel_scale = 0.5
     stamp_size = 64
 
     # stars are fundamentally delta-fns with an SED
@@ -533,20 +437,20 @@ def test_chromatic_flux():
     image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
     image2 = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
 
-    image = galsim.ChromaticConvolution.draw2(final, filter_fn, bluelim, redlim, image=image)
+    final.draw(filter_fn, bluelim, redlim, image=image)
     ChromaticConvolve_flux = image.array.sum()
 
-    image2 = galsim.ChromaticObject.draw2(final, filter_fn, bluelim, redlim, image=image2)
+    galsim.ChromaticObject.draw(final, filter_fn, bluelim, redlim, image=image2)
     ChromaticObject_flux = image2.array.sum()
 
     # analytic integral...
     analytic_flux = galsim.integ.int1d(lambda w: bulge_SED(w) * filter_fn(w), bluelim, redlim)
 
     printval(image, image2)
-    np.testing.assert_almost_equal(ChromaticObject_flux/analytic_flux, 1.0, 5,
+    np.testing.assert_almost_equal(ChromaticObject_flux/analytic_flux, 1.0, 3,
                                    err_msg="Drawn ChromaticObject flux doesn't match " +
                                    "analytic prediction")
-    np.testing.assert_almost_equal(ChromaticConvolve_flux/analytic_flux, 1.0, 5,
+    np.testing.assert_almost_equal(ChromaticConvolve_flux/analytic_flux, 1.0, 3,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "analytic prediction")
 
@@ -555,14 +459,11 @@ def test_chromatic_flux():
 
 if __name__ == "__main__":
     test_draw_add_commutivity()
-
     test_ChromaticConvolution_InterpolatedImage()
     test_chromatic_add()
     test_dcr_moments()
     test_chromatic_seeing_moments()
     test_monochromatic_filter()
-    test_draw2()
-    compare_integrators()
     test_chromatic_flux()
 
     #add absolute moment shifts for DCR, (seeing?)
@@ -573,5 +474,5 @@ if __name__ == "__main__":
     #next do add
     #commutativity and InterpolatedImage may fail...  they're not very good right now.
     #mono filter should work
-    #goal is to eliminate draw2(), be able to use all integrators from single function:
+    #goal is to eliminate draw(), be able to use all integrators from single function:
     #  midpoint, trapezoid, Simpsons, GAGK, ...

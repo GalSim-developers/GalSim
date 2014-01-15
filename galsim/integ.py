@@ -54,24 +54,24 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     else:
         raise RuntimeError(result)
 
-def midpoint_int_image(f_image, a, b, N=100):
+def midpoint_int_image(f_image, a, b, N=150):
     h = (b*1.0 - a)/N
     w = [a + h * (i+0.5) for i in range(N)]
-    images = map(f_image, w)
+    images = [f_image(i) for i in w]
     return h*reduce(lambda x, y: x+y, images)
 
-def trapezoidal_int_image(f_image, a, b, N=100):
+def trapezoidal_int_image(f_image, a, b, N=150):
     h = (b*1.0 - a)/N
     w = [a + h * i for i in range(N+1)]
-    images = map(f_image, w)
+    images = [f_image(i) for i in w]
     return 0.5*h*(images[0] + 2.0*reduce(lambda x, y: x+y, images[1:-1]) + images[-1])
 
-def simpsons_int_image(f_image, a, b, N=100):
+def simpsons_int_image(f_image, a, b, N=150):
     if N%2 == 1:
         N += 1
     h = (b*1.0 - a)/N
     w = [a + h * i for i in range(N+1)]
-    images = map(f_image, w)
+    images = [f_image(i) for i in w]
     return h/3.0 * (images[0]
                     + 4.0*reduce(lambda x, y: x+y, images[1:-1:2])
                     + 2.0*reduce(lambda x, y: x+y, images[2:-2:2])
@@ -126,7 +126,7 @@ G_weights = [0.0,
 
 def gauss_kronrod_image_rule(f, a, b):
     z = [(b-a)/2.0 * n + (a+b)/2.0 for n in GK_nodes]
-    fz = map(f, z)
+    fz = [f(i) for i in z]
     GArray = np.zeros_like(fz[0].array)
     KArray = np.zeros_like(fz[0].array)
     for i in xrange(15):
@@ -143,7 +143,7 @@ def gauss_kronrod_image_rule(f, a, b):
     errImage.array[:] = errArray
     return QImage, errImage
 
-def globally_adaptive_GK_int_image(f, a, b, rel_err=1.e-3, maxiter=100):
+def globally_adaptive_GK_int_image(f, a, b, rel_err=1.e-3, maxiter=100, verbose=False):
     SImage, errImage = gauss_kronrod_image_rule(f, a, b)
     err = errImage.array.sum()
     heap = [(a, b, SImage, errImage, err)]
@@ -164,5 +164,6 @@ def globally_adaptive_GK_int_image(f, a, b, rel_err=1.e-3, maxiter=100):
         heap.append((m, b, SImageRight, errImageRight, errImageRight.array.sum()))
         err = errImage.array.sum()
         iter_ += 1
-    #print 'GAGK iter: {}  N_eval: {}'.format(iter_, iter_*15)
+    if verbose:
+        print 'GAGK iter: {}  N_eval: {}'.format(iter_, iter_*15)
     return SImage
