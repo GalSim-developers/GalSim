@@ -31,24 +31,23 @@ import galsim
 #     AstropyWCS
 #     PyAstWCS
 #     WcsToolsWCS
+#     GSFitsWCS
 #
-# As for all global WCS classes, they must define the following:
+# As for all CelestialWCS classes, they must define the following:
 #
-#     _is_local         boolean variable declaring whether the WCS is local, linear
-#     _is_uniform       boolean variable declaring whether the pixels are uniform
-#     _is_celestial     boolean variable declaring whether the world coords are celestial
 #     _posToWorld       function converting image_pos to world_pos
 #     _posToImage       function converting world_pos to image_pos
+#     _writeHeader      function that writes the WCS to a fits header.
+#     _readHeader       static function that reads the WCS from a fits header.
 #     copy              return a copy
 #     __eq__            check if this equals another WCS
 #     __ne__            check if this is not equal to another WCS
-#     _writeHeader      function that writes the WCS to a fits header.
-#     _readHeader       static function that reads the WCS from a fits header.
+#     _radec            function returning (ra, dec) in _radians_ at position (x,y)
 #
 #########################################################################################
 
 
-class AstropyWCS(galsim.wcs.BaseWCS):
+class AstropyWCS(galsim.wcs.CelestialWCS):
     """This WCS uses astropy.wcs to read WCS information from a FITS file.
     It requires the astropy.wcs python module to be installed.
 
@@ -101,9 +100,6 @@ class AstropyWCS(galsim.wcs.BaseWCS):
 
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
                  wcs=None, origin=None):
-        self._is_local = False
-        self._is_uniform = False
-        self._is_celestial = True
         import astropy.wcs
         self._tag = None # Write something useful here.  (It is just used for the repr.)
 
@@ -274,7 +270,7 @@ class AstropyWCS(galsim.wcs.BaseWCS):
 
         return galsim.PositionD(x + self._x0, y + self._y0)
 
-    def _setOrigin(self, origin):
+    def _newOrigin(self, origin):
         return AstropyWCS(wcs=self._wcs, origin=origin)
 
     def _writeHeader(self, header, bounds):
@@ -315,7 +311,7 @@ class AstropyWCS(galsim.wcs.BaseWCS):
         return "AstropyWCS(%r,%r)"%(self._tag, self.origin)
 
 
-class PyAstWCS(galsim.wcs.BaseWCS):
+class PyAstWCS(galsim.wcs.CelestialWCS):
     """This WCS uses PyAst (the python front end for the Starlink AST code) to read WCS
     information from a FITS file.  It requires the starlink.Ast python module to be installed.
 
@@ -369,9 +365,6 @@ class PyAstWCS(galsim.wcs.BaseWCS):
 
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
                  wcsinfo=None, origin=None):
-        self._is_local = False
-        self._is_uniform = False
-        self._is_celestial = True
         import starlink.Ast, starlink.Atl
         # Note: For much of this class implementation, I've followed the example provided here:
         #       http://dsberry.github.io/starlink/node4.html
@@ -476,7 +469,7 @@ class PyAstWCS(galsim.wcs.BaseWCS):
         x,y = self._wcsinfo.tran( [ [ra], [dec] ], False)
         return galsim.PositionD(x[0] + self._x0, y[0] + self._y0)
 
-    def _setOrigin(self, origin):
+    def _newOrigin(self, origin):
         return PyAstWCS(wcsinfo=self._wcsinfo, origin=origin)
 
     def _writeHeader(self, header, bounds):
@@ -536,7 +529,7 @@ class PyAstWCS(galsim.wcs.BaseWCS):
         return "PyAstWCS(%r,%r)"%(self._tag, self.origin)
 
 
-class WcsToolsWCS(galsim.wcs.BaseWCS):
+class WcsToolsWCS(galsim.wcs.CelestialWCS):
     """This WCS uses wcstools executables to perform the appropriate WCS transformations
     for a given FITS file.  It requires wcstools command line functions to be installed.
 
@@ -566,9 +559,6 @@ class WcsToolsWCS(galsim.wcs.BaseWCS):
     _takes_logger = False
 
     def __init__(self, file_name, dir=None, origin=None):
-        self._is_local = False
-        self._is_uniform = False
-        self._is_celestial = True
         import os
         if dir:
             file_name = os.path.join(dir, file_name)
@@ -687,7 +677,7 @@ class WcsToolsWCS(galsim.wcs.BaseWCS):
         y = float(vals[5])
         return galsim.PositionD(x + self._x0, y + self._y0)
 
-    def _setOrigin(self, origin):
+    def _newOrigin(self, origin):
         return WcsToolsWCS(self._file_name, origin=origin)
 
     def _writeHeader(self, header, bounds):
@@ -743,7 +733,7 @@ class WcsToolsWCS(galsim.wcs.BaseWCS):
         return "WcsToolsWCS(%r,%r)"%(self._file_name, self.origin)
 
 
-class GSFitsWCS(galsim.wcs.BaseWCS):
+class GSFitsWCS(galsim.wcs.CelestialWCS):
     """This WCS uses a GalSim implementation to read a WCS from a FITS file.
 
     It doesn't do nearly as many WCS types as the other options, and it does not try to be
@@ -793,9 +783,6 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
         #       private constructor of GSFitsWCS by the function TanWCS.  The details of its
         #       use are intentionally not documented above.
 
-        self._is_local = False
-        self._is_uniform = False
-        self._is_celestial = True
 
         # If _data is given, copy the data and we're done.
         if _data is not None:
@@ -1030,8 +1017,13 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
 
         return galsim.PositionD(p1[0], p1[1])
 
-    # Override the version in the base class, since we can do this more efficiently.
-    def _localFromCelestial(self, image_pos):
+    # Override the version CelestialWCS, since we can do this more efficiently.
+    def _local(self, image_pos, world_pos):
+        if image_pos is None:
+            if world_pos is None:
+                raise TypeError("Either image_pos or world_pos must be provided")
+            image_pos = self._posToImage(world_pos)
+
         # The key lemma here is that chain rule for jacobians is just matrix multiplication.
         # i.e. if s = s(u,v), t = t(u,v) and u = u(x,y), v = v(x,y), then
         # ( dsdx  dsdy ) = ( dsdu dudx + dsdv dvdx   dsdu dudy + dsdv dvdy )
@@ -1089,7 +1081,7 @@ class GSFitsWCS(galsim.wcs.BaseWCS):
         return galsim.JacobianWCS(jac[0,0], jac[0,1], jac[1,0], jac[1,1])
 
 
-    def _setOrigin(self, origin):
+    def _newOrigin(self, origin):
         ret = self.copy()
         if origin is not None:
             ret.crpix = ret.crpix + [ origin.x, origin.y ]
