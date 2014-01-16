@@ -640,42 +640,19 @@ class EuclideanWCS(BaseWCS):
     @property
     def v0(self): return self.world_origin.y
 
-    # If the class doesn't define something else, then we can approximate the local jacobian
-    # from finite differences for the derivatives.  This will be overridden by UniformWCS.
-    def _local(self, image_pos, world_pos):
-        if image_pos is None:
-            if world_pos is None:
-                raise TypeError("Either image_pos or world_pos must be provided")
-            image_pos = self._posToImage(world_pos)
+    # Simple.  Just call _u, _v.  The inverse is not so easy in general, so each class needs
+    # to define that itself.
+    def _posToWorld(self, image_pos):
+        x = image_pos.x - self.x0
+        y = image_pos.y - self.y0
+        return galsim.PositionD(self._u(x,y), self._v(x,y)) + self.world_origin
 
-        # Calculate the Jacobian using finite differences for the derivatives.
-        x0 = image_pos.x - self.x0
-        y0 = image_pos.y - self.y0
-        u0 = self._u(x0,y0)
-        v0 = self._v(x0,y0)
-
-        # Use dx,dy = 1 pixel for numerical derivatives
-        dx = 1
-        dy = 1
-
-        import numpy
-        xlist = numpy.array([ x0+dx, x0-dx, x0,    x0    ])
-        ylist = numpy.array([ y0,    y0,    y0+dy, y0-dy ])
-        try :
-            # Try using numpy arrays first, since it should be faster if it works.
-            u = self._u(xlist,ylist)
-            v = self._v(xlist,ylist)
-        except:
-            # Otherwise do them one at a time.
-            u = [ self._u(x,y) for (x,y) in zip(xlist,ylist) ]
-            v = [ self._v(x,y) for (x,y) in zip(xlist,ylist) ]
-
-        dudx = 0.5 * (u[0] - u[1]) / dx
-        dudy = 0.5 * (u[2] - u[3]) / dx
-        dvdx = 0.5 * (v[0] - v[1]) / dx
-        dvdy = 0.5 * (v[2] - v[3]) / dx
-
-        return JacobianWCS(dudx, dudy, dvdx, dvdy)
+    # Also simple if _x,_y are implemented.  However, they are allowed to raise a 
+    # NotImplementedError.
+    def _posToImage(self, world_pos):
+        u = world_pos.x - self.u0
+        v = world_pos.y - self.v0
+        return galsim.PositionD(self._x(u,v),self._y(u,v)) + self.origin
 
     # Each subclass has a function _newOrigin, which just calls the constructor with new
     # values for origin and world_origin.  This function figures out what those values 
@@ -734,6 +711,43 @@ class EuclideanWCS(BaseWCS):
                 world_origin += self.world_origin - self._posToWorld(self.origin)
             return self._newOrigin(origin, world_origin)
 
+    # If the class doesn't define something else, then we can approximate the local jacobian
+    # from finite differences for the derivatives.  This will be overridden by UniformWCS.
+    def _local(self, image_pos, world_pos):
+        if image_pos is None:
+            if world_pos is None:
+                raise TypeError("Either image_pos or world_pos must be provided")
+            image_pos = self._posToImage(world_pos)
+
+        # Calculate the Jacobian using finite differences for the derivatives.
+        x0 = image_pos.x - self.x0
+        y0 = image_pos.y - self.y0
+        u0 = self._u(x0,y0)
+        v0 = self._v(x0,y0)
+
+        # Use dx,dy = 1 pixel for numerical derivatives
+        dx = 1
+        dy = 1
+
+        import numpy
+        xlist = numpy.array([ x0+dx, x0-dx, x0,    x0    ]).astype(float)
+        ylist = numpy.array([ y0,    y0,    y0+dy, y0-dy ]).astype(float)
+        try :
+            # Try using numpy arrays first, since it should be faster if it works.
+            u = self._u(xlist,ylist)
+            v = self._v(xlist,ylist)
+        except:
+            # Otherwise do them one at a time.
+            u = [ self._u(x,y) for (x,y) in zip(xlist,ylist) ]
+            v = [ self._v(x,y) for (x,y) in zip(xlist,ylist) ]
+
+        dudx = 0.5 * (u[0] - u[1]) / dx
+        dudy = 0.5 * (u[2] - u[3]) / dx
+        dvdx = 0.5 * (v[0] - v[1]) / dx
+        dvdy = 0.5 * (v[2] - v[3]) / dx
+
+        return JacobianWCS(dudx, dudy, dvdx, dvdy)
+
     # The naive way to make the sky image is to loop over pixels and call pixelArea(pos)
     # for that position.  This is extremely slow.  Here, we use the fact that the _u and _v
     # functions might work with numpy arrays.  If they do, this function is quite fast.
@@ -752,40 +766,22 @@ class EuclideanWCS(BaseWCS):
         y -= self.y0
         try:
             # First try to use the _u, _v function with the numpy arrays.
-            u = self._u(x,y)
-            v = self._v(x,y)
+            u = self._u(x.flatten(),y.flatten())
+            v = self._v(x.flatten(),y.flatten())
         except:
             # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
-            u = numpy.zeros((ny,nx))
-            v = numpy.zeros((ny,nx))
-            for i in range(ny):
-                for j in range(nx):
-                    x1 = x[i,j]
-                    y1 = y[i,j]
-                    u[i,j] = self._u(x1,y1)
-                    v[i,j] = self._v(x1,y1)
+            u = numpy.array([ self._u(x1,y1) for x1,y1 in zip(x.flatten(),y.flatten()) ])
+            v = numpy.array([ self._v(x1,y1) for x1,y1 in zip(x.flatten(),y.flatten()) ])
+        u = numpy.reshape(u, x.shape)
+        v = numpy.reshape(v, x.shape)
         # Use the finite differences to estimate the derivatives.
         dudx = 0.5 * (u[1:ny-1,2:nx] - u[1:ny-1,0:nx-2])
         dudy = 0.5 * (u[2:ny,1:nx-1] - u[0:ny-2,1:nx-1])
         dvdx = 0.5 * (v[1:ny-1,2:nx] - v[1:ny-1,0:nx-2])
         dvdy = 0.5 * (v[2:ny,1:nx-1] - v[0:ny-2,1:nx-1])
 
-        area = dudx * dvdy - dvdx * dudy
-        image.image.array[:,:] = area
-
-    # Simple.  Just call _u, _v.  The inverse is not so easy in general, so each class needs
-    # to define that itself.
-    def _posToWorld(self, image_pos):
-        x = image_pos.x - self.x0
-        y = image_pos.y - self.y0
-        return galsim.PositionD(self._u(x,y), self._v(x,y)) + self.world_origin
-
-    # Also simple if _x,_y are implemented.  However, they are allowed to raise a 
-    # NotImplementedError.
-    def _posToImage(self, world_pos):
-        u = world_pos.x - self.u0
-        v = world_pos.y - self.v0
-        return galsim.PositionD(self._x(u,v),self._y(u,v)) + self.origin
+        area = numpy.abs(dudx * dvdy - dvdx * dudy)
+        image.image.array[:,:] = area * sky_level
 
     # Each class should define the __eq__ function.  Then __ne__ is obvious.
     def __ne__(self, other):
@@ -797,10 +793,6 @@ class UniformWCS(EuclideanWCS):
     """
     def isUniform(self): return True
 
-    # For UniformWCS, the local WCS is an attribute.  Just return it.
-    def _local(self, image_pos=None, world_pos=None): 
-        return self._local_wcs
-
     # These can also just pass through to the _localwcs attribute.
     def _u(self, x, y):
         return self._local_wcs._u(x,y)
@@ -810,6 +802,10 @@ class UniformWCS(EuclideanWCS):
         return self._local_wcs._x(u,v)
     def _y(self, u, v):
         return self._local_wcs._y(u,v)
+
+    # For UniformWCS, the local WCS is an attribute.  Just return it.
+    def _local(self, image_pos=None, world_pos=None): 
+        return self._local_wcs
 
     # This is very simple if the pixels are uniform.
     def _makeSkyImage(self, image, sky_level):
@@ -830,9 +826,11 @@ class LocalWCS(UniformWCS):
     """
     def isLocal(self): return True
 
-    # For LocalWCS, this is of course trivial.
-    def _local(self, image_pos, world_pos): 
-        return self
+    # The origins are definitionally (0,0) for these.  So just define them here.
+    @property
+    def origin(self): return galsim.PositionD(0,0)
+    @property
+    def world_origin(self): return galsim.PositionD(0,0)
 
     # For LocalWCS, there is no origin to worry about.
     def _posToWorld(self, image_pos):
@@ -840,12 +838,15 @@ class LocalWCS(UniformWCS):
         y = image_pos.y
         return galsim.PositionD(self._u(x,y),self._v(x,y))
 
-    # The origins are definitionally (0,0) for these.  So just define them here.
-    @property
-    def origin(self): return galsim.PositionD(0,0)
-    @property
-    def world_origin(self): return galsim.PositionD(0,0)
+    # For LocalWCS, there is no origin to worry about.
+    def _posToImage(self, world_pos):
+        u = world_pos.x
+        v = world_pos.y
+        return galsim.PositionD(self._x(u,v),self._y(u,v))
 
+    # For LocalWCS, this is of course trivial.
+    def _local(self, image_pos, world_pos): 
+        return self
 
 
 class CelestialWCS(BaseWCS):
@@ -859,6 +860,23 @@ class CelestialWCS(BaseWCS):
     def x0(self): return self.origin.x
     @property
     def y0(self): return self.origin.y
+
+    # This is a bit simpler than the EuclideanWCS version, since there is no world_origin.
+    def _setOrigin(self, origin, world_origin):
+        # We want the new wcs to have wcs.toWorld(x2,y) match the current wcs.toWorld(0,0).
+        # So,
+        #
+        #     u' = ufunc(x-x1, y-y1)        # In this case, there are no u0,v0
+        #     v' = vfunc(x-x1, y-y1)
+        #
+        #     u'(x2,y2) = u(0,0)    v'(x2,y2) = v(0,0)
+        #
+        #     x2 - x1 = 0 - x0      y2 - y1 = 0 - y0
+        # =>  x1 = x0 + x2          y1 = y0 + y2
+        if world_origin is not None:
+            raise TypeError("world_origin is invalid for CelestialWCS classes")
+        origin += self.origin
+        return self._newOrigin(origin)
 
     # If the class doesn't define something else, then we can approximate the local jacobian
     # from finite differences for the derivatives of ra and dec.  Very similar to the 
@@ -903,32 +921,39 @@ class CelestialWCS(BaseWCS):
         factor = 1. * galsim.radians / galsim.arcsec
         return JacobianWCS(dudx*factor, dudy*factor, dvdx*factor, dvdy*factor)
 
-    # This is a bit simpler than the EuclideanWCS version, since there is no world_origin.
-    def _setOrigin(self, origin, world_origin):
-        # We want the new wcs to have wcs.toWorld(x2,y) match the current wcs.toWorld(0,0).
-        # So,
-        #
-        #     u' = ufunc(x-x1, y-y1)        # In this case, there are no u0,v0
-        #     v' = vfunc(x-x1, y-y1)
-        #
-        #     u'(x2,y2) = u(0,0)    v'(x2,y2) = v(0,0)
-        #
-        #     x2 - x1 = 0 - x0      y2 - y1 = 0 - y0
-        # =>  x1 = x0 + x2          y1 = y0 + y2
-        if world_origin is not None:
-            raise TypeError("world_origin is invalid for CelestialWCS classes")
-        origin += self.origin
-        return self._newOrigin(origin)
-
-    # TODO: This method is really slow.  It would not be too hard to provide something like I 
-    # did for the above for EuclideanWCS that would work with the _radec function.
-    # But I haven't done that yet.
+    # This is similar to the version for EuclideanWCS, but uses dra, ddec.
+    # Again, it is much faster if the _radec function works with numpy arrays.
     def _makeSkyImage(self, image, sky_level):
+        import numpy
         b = image.bounds
-        for x in range(b.xmin,b.xmax+1):
-            for y in range(b.ymin,b.ymax+1):
-                image_pos = galsim.PositionD(x,y)
-                image.setValue(x,y, self.pixelArea(image_pos))
+        nx = b.xmax-b.xmin+1 + 2  # +2 more than in image to get row/col off each edge.
+        ny = b.ymax-b.ymin+1 + 2
+        x,y = numpy.meshgrid( numpy.linspace(b.xmin-1,b.xmax+1,nx),
+                              numpy.linspace(b.ymin-1,b.ymax+1,ny) )
+        x -= self.x0
+        y -= self.y0
+        try:
+            # First try to use the _radec function with the numpy arrays.
+            ra, dec = self._radec(x.flatten(),y.flatten())
+        except:
+            # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
+            rd = [ self._radec(x1,y1) for x1,y1 in zip(x.flatten(),y.flatten()) ]
+            ra = numpy.array([ radec[0] for radec in rd ])
+            dec = numpy.array([ radec[1] for radec in rd ])
+        ra = numpy.reshape(ra, x.shape)
+        dec = numpy.reshape(dec, x.shape)
+
+        # Use the finite differences to estimate the derivatives.
+        cosdec = numpy.cos(dec[1:ny-1,1:nx-1])
+        dudx = -0.5 * (ra[1:ny-1,2:nx] - ra[1:ny-1,0:nx-2]) * cosdec
+        dudy = -0.5 * (ra[2:ny,1:nx-1] - ra[0:ny-2,1:nx-1]) * cosdec
+        dvdx = 0.5 * (dec[1:ny-1,2:nx] - dec[1:ny-1,0:nx-2])
+        dvdy = 0.5 * (dec[2:ny,1:nx-1] - dec[0:ny-2,1:nx-1])
+
+        area = numpy.abs(dudx * dvdy - dvdx * dudy)
+        factor = 1. * galsim.radians / galsim.arcsec
+        image.image.array[:,:] = area * sky_level * factor**2
+
 
     # Simple.  Just call _radec.  The inverse is not so easy in general, so each class needs
     # to define that itself.
