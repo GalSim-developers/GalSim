@@ -730,8 +730,8 @@ class EuclideanWCS(BaseWCS):
         dy = 1
 
         import numpy
-        xlist = numpy.array([ x0+dx, x0-dx, x0,    x0    ]).astype(float)
-        ylist = numpy.array([ y0,    y0,    y0+dy, y0-dy ]).astype(float)
+        xlist = numpy.array([ x0+dx, x0-dx, x0,    x0    ])
+        ylist = numpy.array([ y0,    y0,    y0+dy, y0-dy ])
         try :
             # Try using numpy arrays first, since it should be faster if it works.
             u = self._u(xlist,ylist)
@@ -2187,5 +2187,5 @@ class RaDecFunction(CelestialWCS):
                  self.origin == other.origin )
 
     def __repr__(self):
-        return "RaDecFunction(%r,%r,%r)"%(self.radec_func, self.origin)
+        return "RaDecFunction(%r,%r)"%(self.radec_func, self.origin)
 
