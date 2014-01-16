@@ -1827,7 +1827,17 @@ def _writeFuncToHeader(func, func_str, letter, header):
             # to include them as well.  Help for this part came from:
             # http://stackoverflow.com/questions/573569/
             if func.func_closure:
-                closure = tuple(c.cell_contents for c in func.func_closure)
+                from types import ModuleType
+                closure = []
+                for c in func.func_closure:
+                    if isinstance(c.cell_contents, ModuleType):
+                        # Can't really pickle the modules.  e.g. math if they use math functions.
+                        # The modules just need to be loaded on the other side.  But we still need 
+                        # to make a cell for the module closure item, so just use its name and
+                        # mark it as a module so we can recover it correctly.
+                        closure.append( 'module_'+c.cell_contents.__name__ )
+                    else:
+                        closure.append( c.cell_contents )
             else:
                 closure = None
             all = (0,code,name,defaults,closure)
@@ -1895,12 +1905,19 @@ def _readFuncFromHeader(letter, header):
         all = cPickle.loads(s)
         type_code = all[0]
         if type_code == 0:
-            code_str, name, defaults, closure_tuple = all[1:]
+            code_str, name, defaults, closure_items = all[1:]
             code = marshal.loads(code_str)
-            if closure_tuple is None:
+            if closure_items is None:
                 closure = None
             else:
-                closure = tuple(_makecell(c) for c in closure_tuple)
+                closure = []
+                for value in closure_items:
+                    if isinstance(value,basestring) and value.startswith('module_'):
+                        module_name = value[7:]
+                        closure.append(_makecell(__import__(module_name)))
+                    else:
+                        closure.append(_makecell(value))
+                closure = tuple(closure)
             func = types.FunctionType(code, globals(), name, defaults, closure)
             return func
         else:
