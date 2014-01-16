@@ -178,6 +178,19 @@ class CelestialCoord(object):
 
         Returns (u,v) in arcsec as a PositionD object.
         """
+        if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
+            raise ValueError('Unknown projection ' + projection)
+
+        self._set_aux()
+        other._set_aux()
+
+        # The core calculation is done in a helper function:
+        u, v = self._project_core(other._cosra, other._sinra, other._cosdec, other._sindec,
+                                 projection)
+
+        return galsim.PositionD(u,v)
+
+    def _project_core(self, cosra, sinra, cosdec, sindec, projection):
         # The equations are given at the above mathworld websites.  They are the same except
         # for the definition of k:
         #
@@ -194,44 +207,61 @@ class CelestialCoord(object):
         #   k = c / sin(c)
         # where cos(c) = sin(dec0) sin(dec) + cos(dec0) cos(dec) cos(ra-ra0)
 
-        if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
-            raise ValueError('Unknown projection ' + projection)
-
-        self._set_aux()
-        other._set_aux()
-
         # cosdra = cos(ra - ra0) = cosra cosra0 + sinra sinra0
-        cosdra = self._cosra * other._cosra + self._sinra * other._sinra
+        cosdra = self._cosra * cosra + self._sinra * sinra
 
         # sindra = -sin(ra - ra0);
         # Note: - sign here is to make +x correspond to -ra,
         #       so x increases for decreasing ra.
         #       East is to the left on the sky!
         # sindra = -sinra cosra0 + cosra sinra0
-        sindra = -self._cosra * other._sinra + self._sinra * other._cosra
+        sindra = -self._cosra * sinra + self._sinra * cosra
 
         # Calculate k according to which projection we are using
-        cosc = self._sindec * other._sindec + self._cosdec * other._cosdec * cosdra
+        cosc = self._sindec * sindec + self._cosdec * cosdec * cosdra
         if projection[0] == 'l':
-            import math
-            k = math.sqrt( 2. / (1.+cosc) )
+            import numpy
+            k = numpy.sqrt( 2. / (1.+cosc) )
         elif projection[0] == 's':
             k = 2. / (1. + cosc)
         elif projection[0] == 'g':
             k = 1. / cosc
         else:
-            import math
-            c = math.acos(cosc)
-            k = c / math.sin(c)
+            import numpy
+            c = numpy.arccos(cosc)
+            k = c / numpy.sin(c)
 
-        x = k * other._cosdec * sindra
-        y = k * ( self._cosdec * other._sindec - self._sindec * other._cosdec * cosdra )
+        u = k * cosdec * sindra
+        v = k * ( self._cosdec * sindec - self._sindec * cosdec * cosdra )
 
         # Convert to arcsec
-        x = x * galsim.radians / galsim.arcsec
-        y = y * galsim.radians / galsim.arcsec
+        factor = 1. * galsim.radians / galsim.arcsec
+        u *= factor
+        v *= factor
 
-        return galsim.PositionD(x,y)
+        return u, v
+
+    def project_rad(self, ra, dec, projection):
+        """This is basically identical to the project function except that the input ra, dec are 
+        given in radians rather than packaged as a CelestialCoord object.
+
+        Also, the output is returned as a tuple (x,y), rather than packaged as a PositionD object.
+
+        The main advantage to this is that it will work if ra and dec are numpy arrays, in which 
+        case the output x, y will also be numpy arrays.
+        """
+        if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
+            raise ValueError('Unknown projection ' + projection)
+
+        self._set_aux()
+
+        import numpy
+        cosra = numpy.cos(ra)
+        sinra = numpy.sin(ra)
+        cosdec = numpy.cos(dec)
+        sindec = numpy.sin(dec)
+
+        return self._project_core(cosra, sinra, cosdec, sindec, projection)
 
     def deproject(self, pos, projection='lambert'):
         """Do the reverse process from the project function.
@@ -240,6 +270,15 @@ class CelestialCoord(object):
         corresponding celestial coordinate, using the current coordinate as the center
         point of the tangent plane projection.
         """
+        if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
+            raise ValueError('Unknown projection ' + projection)
+
+        # Again, do the core calculations in a helper function
+        ra, dec = self._deproject_core(pos.x, pos.y, projection)
+
+        return CelestialCoord(ra*galsim.radians,dec*galsim.radians)
+
+    def _deproject_core(self, u, v, projection):
         # The inverse equations are also given at the same web sites:
         #
         # sin(dec) = cos(c) sin(dec0) + v sin(c) cos(dec0)/r
@@ -253,14 +292,12 @@ class CelestialCoord(object):
         # c = tan^(-1)(r)     for gnomonic
         # c = r               for postel
 
-        if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
-            raise ValueError('Unknown projection ' + projection)
-
         # Convert from arcsec to radians
-        u = pos.x * galsim.arcsec / galsim.radians
-        v = pos.y * galsim.arcsec / galsim.radians
+        factor = 1. * galsim.arcsec / galsim.radians
+        u = u * factor
+        v = v * factor
 
-        import math
+        import numpy
         # Compute r, c
         # r = sqrt(u*u + v*v)
         # c = 2 * arctan(r/2) for num == 1
@@ -278,7 +315,7 @@ class CelestialCoord(object):
             # cos(c) = 1 - r^2/2
             # sin(c) = r sqrt(4-r^2) / 2
             cosc = 1. - rsq/2.
-            sinc_over_r = math.sqrt(4.-rsq) / 2.
+            sinc_over_r = numpy.sqrt(4.-rsq) / 2.
         elif projection[0] == 's':
             # c = 2 * arctan(r/2)
             # Some trig manipulations reveal:
@@ -290,15 +327,15 @@ class CelestialCoord(object):
             # c = arctan(r)
             # cos(c) = 1 / sqrt(1+r^2)
             # sin(c) = r / sqrt(1+r^2)
-            cosc = sinc_over_r = 1./math.sqrt(1.+rsq)
+            cosc = sinc_over_r = 1./numpy.sqrt(1.+rsq)
         else:
-            r = math.sqrt(rsq)
+            r = numpy.sqrt(rsq)
             if r == 0.:
                 cosc = 1
                 sinc_over_r = 1
             else:
-                cosc = math.cos(r)
-                sinc_over_r = math.sin(r)/r
+                cosc = numpy.cos(r)
+                sinc_over_r = numpy.sin(r)/r
 
         # Compute sindec, tandra
         self._set_aux()
@@ -307,24 +344,42 @@ class CelestialCoord(object):
         tandra_num = -u * sinc_over_r
         tandra_denom = cosc * self._cosdec - v * sinc_over_r * self._sindec
 
-        dec = math.asin(sindec) * galsim.radians
-        ra = self.ra + math.atan2(tandra_num, tandra_denom) * galsim.radians
+        dec = numpy.arcsin(sindec)
+        ra = self.ra.rad() + numpy.arctan2(tandra_num, tandra_denom)
 
-        return CelestialCoord(ra,dec)
+        return ra, dec
 
-    def deproject_jac(self, pos, projection='lambert'):
-        """Return the jacobian of the deprojection.
+    def deproject_rad(self, u, v, projection='lambert'):
+        """This is basically identical to the deproject function except that the output ra, dec 
+        are returned as a tuple (ra, dec) in radians rather than packaged as a CelestialCoord 
+        object.
 
-        i.e. if the input position is (u,v) then return the matrix
+        Also, the input is taken as a tuple (u,v), rather than packaged as a PositionD object.
 
-        J = ( dra/du cos(dec)  dra/dv cos(dec) )
-            (    ddec/du          ddec/dv      )
+        The main advantage to this is that it will work if u and v are numpy arrays, in which 
+        case the output ra, dec will also be numpy arrays.
         """
         if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
             raise ValueError('Unknown projection ' + projection)
 
-        u = pos.x * galsim.arcsec / galsim.radians
-        v = pos.y * galsim.arcsec / galsim.radians
+        return self._deproject_core(u, v, projection)
+
+    def deproject_jac(self, u, v, projection='lambert'):
+        """Return the jacobian of the deprojection.
+
+        i.e. if the input position is (u,v) (in arcsec) then return the matrix is
+
+        J = ( dra/du cos(dec)  dra/dv cos(dec) )
+            (    ddec/du          ddec/dv      )
+
+        The matrix is returned as a tuple (J00, J01, J10, J11)
+        """
+        if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
+            raise ValueError('Unknown projection ' + projection)
+
+        factor = 1. * galsim.arcsec / galsim.radians
+        u = u * factor
+        v = v * factor
 
         # sin(dec) = cos(c) sin(dec0) + v sin(c)/r cos(dec0)
         # tan(ra-ra0) = u sin(c)/r / (cos(dec0) cos(c) - v sin(dec0) sin(c)/r)
@@ -338,13 +393,13 @@ class CelestialCoord(object):
         #       c0 = cos(dec0) 
         #       A = c c0 - v s s0
 
-        import math
+        import numpy
         rsq = u*u + v*v
         rsq1 = (u+1.e-4)**2 + v**2
         rsq2 = u**2 + (v+1.e-4)**2
         if projection[0] == 'l':
             c = 1. - rsq/2.
-            s = math.sqrt(4.-rsq) / 2.
+            s = numpy.sqrt(4.-rsq) / 2.
             dcdu = -u
             dcdv = -v
             dsdu = -u/(4.*s)
@@ -358,17 +413,17 @@ class CelestialCoord(object):
             dsdu = 0.5*dcdu
             dsdv = 0.5*dcdv
         elif projection[0] == 'g':
-            c = s = 1./math.sqrt(1.+rsq)
+            c = s = 1./numpy.sqrt(1.+rsq)
             s3 = s*s*s
             dcdu = dsdu = -u*s3
             dcdv = dsdv = -v*s3
         else:
-            r = math.sqrt(rsq)
+            r = numpy.sqrt(rsq)
             if r == 0.:
                 c = s = 1
             else:
-                c = math.cos(r)
-                s = math.sin(r)/r
+                c = numpy.cos(r)
+                s = numpy.sin(r)/r
             dcdu = -s*u
             dcdv = -s*v
             dcdu = (c-s)*u/rsq
@@ -378,7 +433,7 @@ class CelestialCoord(object):
         s0 = self._sindec
         c0 = self._cosdec
         sindec = c * s0 + v * s * c0
-        cosdec = math.sqrt(1.-sindec*sindec)
+        cosdec = numpy.sqrt(1.-sindec*sindec)
         dddu = ( s0 * dcdu + v * dsdu * c0 ) / cosdec
         dddv = ( s0 * dcdv + (v * dsdv + s) * c0 ) / cosdec
 

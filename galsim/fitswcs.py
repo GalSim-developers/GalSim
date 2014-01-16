@@ -164,40 +164,41 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
     def _radec(self, x, y):
         import numpy
-        # Need this to look like 
-        #    [ [ x1, y1 ], [ x2, y2 ], ... ] 
-        # if input is either scalar x,y or two arrays.
-        xy = numpy.atleast_2d([x, y])
-        # Apparently, the returned values aren't _necessarily_ (ra, dec).  They could be
-        # (dec, ra) instead!  But if you add ra_dec_order=True, then it will be (ra, dec).
-        # I can't imagnie why that isn't the default, but there you go.
+        x1 = numpy.atleast_1d(x)
+        y1 = numpy.atleast_1d(y)
+
         try:
+            # Apparently, the returned values aren't _necessarily_ (ra, dec).  They could be
+            # (dec, ra) instead!  But if you add ra_dec_order=True, then it will be (ra, dec).
+            # I can't imagnie why that isn't the default, but there you go.
             # This currently fails with an AttributeError about astropy.wcs.Wcsprm.lattype
             # c.f. https://github.com/astropy/astropy/pull/1463
             # Once they fix it, this is what we want.
-            world = self._wcs.all_pix2world( xy, 1, ra_dec_order=True)
+            ra, dec = self._wcs.all_pix2world(x1, y1, 1, ra_dec_order=True)
         except:
             # Until then, just assume that the returned values really are ra, dec.
-            world = self._wcs.all_pix2world( xy, 1)
+            ra, dec = self._wcs.all_pix2world(x1, y1, 1)
 
         # astropy outputs ra, dec in degrees.  Need to convert to radians.
-        world *= 1. * galsim.degrees / galsim.radians
+        factor = 1. * galsim.degrees / galsim.radians
+        ra *= factor
+        dec *= factor
 
         try:
             # If the inputs were numpy arrays, return the same
             len(x)
-            ra, dec = world.transpose()
         except:
             # Otherwise, return scalars
-            assert len(world) == 1
-            ra, dec = world[0]
+            assert len(ra) == 1
+            assert len(dec) == 1
+            ra = ra[0]
+            dec = dec[0]
         return ra, dec
 
     def _xy(self, ra, dec):
         import numpy
-        ra *= 1. * galsim.radians / galsim.degrees
-        dec *= 1. * galsim.radians / galsim.degrees
-        rd = numpy.atleast_2d([ra, dec])
+        factor = 1. * galsim.radians / galsim.degrees
+        rd = numpy.atleast_2d([ra, dec]) * factor
         # Here we have to work around another astropy.wcs bug.  The way they use scipy's
         # Broyden's method doesn't work.  So I implement a fix here.
         try:
@@ -579,37 +580,52 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
         # if input is either scalar x,y or two arrays.
         xy = numpy.array([x, y]).transpose().flatten()
         
-        import subprocess
-        # We'd like to get the output to 10 digits of accuracy.  This corresponds to
-        # an accuracy of about 1.e-6 arcsec.  But sometimes xy2sky cannot handle it,
-        # in which case the output will start with *************.  If this happens, just
-        # decrease digits and try again.
-        for digits in range(10,5,-1):
-            xy_strs = [ str(z) for z in xy ]
-            # If xy2sky is not installed, this will raise an OSError
-            p = subprocess.Popen(['xy2sky', '-d', '-n', str(digits), self._file_name] + xy_strs,
-                                 stdout=subprocess.PIPE)
-            results = p.communicate()[0]
-            p.stdout.close()
-            if len(results) == 0:
-                raise IOError('wcstools (specifically xy2sky) was unable to read '+self._file_name)
-            if results[0] != '*': break
-        if results[0] == '*':
-            raise IOError('wcstools (specifically xy2sky) was unable to read '+self._file_name)
-        lines = results.splitlines()
+        # The OS cannot handle arbitrarily long commad lines, so we may need to split up
+        # the list into smaller chunks.
+        import os
+        if 'SC_ARG_MAX' in os.sysconf_names:
+            arg_max = os.sysconf('SC_ARG_MAX') 
+        else:
+            arg_max = 32768  # A conservative guess. My machines have 131072, 262144, and 2621440
 
-        # Each line of output should looke like:
-        #    x y J2000 ra dec
-        # However, if there was an error, the J200 might be missing or the output might look like
-        #    Off map x y
+        # This corresponds to the total number of characters in the line.  
+        # Lets be conservative again and assume each argument is 20 characters
+        nargs = (arg_max/40) * 2  # Make sure it is even!
+
+        xy_strs = [ str(z) for z in xy ]
         ra = []
         dec = []
-        for line in lines:
-            vals = line.split()
-            if len(vals) != 5:
-                raise RuntimeError('wcstools xy2sky returned invalid result near %f,%f'%(x0,y0))
-            ra.append(float(vals[0]))
-            dec.append(float(vals[1]))
+
+        for i in range(0,len(xy_strs),nargs):
+            xy1 = xy_strs[i:i+nargs]
+            import subprocess
+            # We'd like to get the output to 10 digits of accuracy.  This corresponds to
+            # an accuracy of about 1.e-6 arcsec.  But sometimes xy2sky cannot handle it,
+            # in which case the output will start with *************.  If this happens, just
+            # decrease digits and try again.
+            for digits in range(10,5,-1):
+                # If xy2sky is not installed, this will raise an OSError
+                p = subprocess.Popen(['xy2sky', '-d', '-n', str(digits), self._file_name] + xy1,
+                                    stdout=subprocess.PIPE)
+                results = p.communicate()[0]
+                p.stdout.close()
+                if len(results) == 0:
+                    raise IOError('wcstools command xy2sky was unable to read '+ self._file_name)
+                if results[0] != '*': break
+            if results[0] == '*':
+                raise IOError('wcstools command xy2sky was unable to read '+self._file_name)
+            lines = results.splitlines()
+
+            # Each line of output should looke like:
+            #    x y J2000 ra dec
+            # But if there was an error, the J200 might be missing or the output might look like
+            #    Off map x y
+            for line in lines:
+                vals = line.split()
+                if len(vals) != 5:
+                    raise RuntimeError('wcstools xy2sky returned invalid result near %f,%f'%(x0,y0))
+                ra.append(float(vals[0]))
+                dec.append(float(vals[1]))
 
         # wcstools reports ra, dec in degrees, so convert to radians
         factor = 1. * galsim.degrees / galsim.radians
@@ -908,10 +924,10 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         import numpy
 
         # Start with (x,y) = the image position
-        p1 = numpy.array( [ x, y ] )
+        p1 = numpy.array( [ numpy.atleast_1d(x), numpy.atleast_1d(y) ] )
 
         # This converts to (u,v) in the tangent plane
-        p2 = numpy.dot(self.cd, p1 - self.crpix) 
+        p2 = numpy.dot(self.cd, p1 - self.crpix[:,numpy.newaxis]) 
 
         if self.wcs_type == 'TPV':
             # Now we apply the distortion terms
@@ -919,29 +935,44 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             v = p2[1]
             usq = u*u
             vsq = v*v
-            upow = numpy.array([ 1., u, usq, usq*u ])
-            vpow = numpy.array([ 1., v, vsq, vsq*v ])
-            p2 = numpy.dot(numpy.dot(self.pv, vpow), upow)
+            ones = numpy.ones(u.shape)
+            upow = numpy.array([ ones, u, usq, usq*u ])
+            vpow = numpy.array([ ones, v, vsq, vsq*v ])
+            temp = numpy.dot(self.pv, vpow)
+            p2 = numpy.sum(upow * temp, axis=1)
 
         # Convert (u,v) from degrees to arcsec
         # Also, the FITS standard defines u,v backwards relative to our standard.
-        # They have +u increasing to the east, not west.  Hence the -1 for u.
-        p2 *= [ -1. * galsim.degrees / galsim.arcsec , 1. * galsim.degrees / galsim.arcsec ]
+        # They have +u increasing to the east, not west.  Hence the - for u.
+        factor = 1. * galsim.degrees / galsim.arcsec
+        u = -p2[0] * factor
+        v = p2[1] * factor
 
         # Finally convert from (u,v) to (ra, dec)
         # The TAN projection is also known as a gnomonic projection, which is what
         # we call it in the CelestialCoord class.
-        world_pos = self.center.deproject( galsim.PositionD(p2[0],p2[1]) , projection='gnomonic' )
-        return world_pos.ra.rad(), world_pos.dec.rad()
+        ra, dec = self.center.deproject_rad(u, v, projection='gnomonic' )
 
+        try:
+            len(x)
+            # If the inputs were numpy arrays, return the same
+            return ra, dec
+        except:
+            # Otherwise return scalars
+            assert len(ra) == 1
+            assert len(dec) == 1
+            return ra[0], dec[0]
+ 
     def _xy(self, ra, dec):
         import numpy, numpy.linalg
 
-        uv = self.center.project( galsim.CelestialCoord(ra*galsim.radians,dec*galsim.radians), 
-                                  projection='gnomonic' )
-        # Again, FITS has +u increasing to the east, not west.  Hence the -1.
-        u = uv.x * (-1. * galsim.arcsec / galsim.degrees)
-        v = uv.y * (1. * galsim.arcsec / galsim.degrees)
+        u, v = self.center.project_rad(ra, dec, projection='gnomonic' )
+
+        # Again, FITS has +u increasing to the east, not west.  Hence the - for u.
+        factor = 1. * galsim.arcsec / galsim.degrees
+        u *= -factor
+        v *= factor
+
         p2 = numpy.array( [ u, v ] )
 
         if self.wcs_type == 'TPV':
@@ -957,6 +988,8 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             MAX_ITER = 10
             TOL = 1.e-8 * galsim.arcsec / galsim.degrees   # pv always uses degrees units
             prev_err = None
+            u = p2[0]
+            v = p2[1]
             for iter in range(MAX_ITER):
                 usq = u*u
                 vsq = v*v
@@ -990,7 +1023,6 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
         p1 = numpy.dot(numpy.linalg.inv(self.cd), p2) + self.crpix
         x, y = p1
-
         return x, y
 
     # Override the version CelestialWCS, since we can do this more efficiently.
@@ -1048,8 +1080,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
         # Finally convert from (u,v) to (ra, dec).  We have a special function that computes
         # the jacobian of this set in the CelestialCoord class.
-        drdu, drdv, dddu, dddv = self.center.deproject_jac( galsim.PositionD(p2[0],p2[1]) ,
-                                                            projection='gnomonic' )
+        drdu, drdv, dddu, dddv = self.center.deproject_jac(p2[0], p2[1], projection='gnomonic' )
         j2 = numpy.array([ [ drdu, drdv ],
                            [ dddu, dddv ] ])
         jac = numpy.dot(j2,jac)
