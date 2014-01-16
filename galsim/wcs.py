@@ -501,8 +501,13 @@ class BaseWCS(object):
         @param bounds       The bounds of the image.
         """
         # First write the XMIN, YMIN values
-        header["GS_XMIN"] = (bounds.xmin, "GalSim image minimum x coordinate")
-        header["GS_YMIN"] = (bounds.ymin, "GalSim image minimum y coordinate")
+        from galsim import pyfits_version
+        if pyfits_version < '3.1':
+            header.update("GS_XMIN", bounds.xmin, "GalSim image minimum x coordinate")
+            header.update("GS_YMIN", bounds.ymin, "GalSim image minimum y coordinate")
+        else:
+            header.set("GS_XMIN", bounds.xmin, "GalSim image minimum x coordinate")
+            header.set("GS_YMIN", bounds.ymin, "GalSim image minimum y coordinate")
 
         if bounds.xmin != 1 or bounds.ymin != 1:
             # ds9 always assumes the image has an origin at (1,1), so we always write the 
@@ -528,7 +533,6 @@ class BaseWCS(object):
             # Otherwise, h is probably a PyFits header, so the keys come out in natural order.
             items = h.items()
 
-        from galsim import pyfits_version
         if pyfits_version < '3.1':
             for key, value in items:
                 try:
