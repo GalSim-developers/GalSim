@@ -559,7 +559,7 @@ def test_pad_image():
 
     # Use a few different kinds of shapes for that padding. 
     for (pad_nx, pad_ny) in [ (160,160), (179,191), (256,256), (305, 307) ]:
-        print 'pad size = ',pad_nx, pad_ny
+        #print 'pad size = ',pad_nx, pad_ny
 
         # make the pad_image 
         pad_img = galsim.ImageF(pad_nx, pad_ny, scale=1.)
@@ -567,13 +567,10 @@ def test_pad_image():
         pad_img.setCenter(0,0)
 
         # make an interpolated image padded with the pad_image, and outside of that
-        orig_img.write('junk1.fits')
-        pad_img.write('junk2.fits')
         int_im = galsim.InterpolatedImage(orig_img, pad_image=pad_img, use_true_center=False)
 
         # draw into the larger image
         int_im.draw(big_img, use_true_center=False)
-        big_img.write('junk3.fits')
 
         # check that variance is diluted by expected amount 
         # Note -- we don't use np.var, since that computes the variance relative to the 
@@ -720,8 +717,11 @@ def test_realspace_conv():
     psf1 = galsim.Gaussian(flux=1, half_light_radius=0.77)
     psf_im = psf1.draw(scale=raw_scale, image=galsim.ImageD(raw_size,raw_size))
 
-    #for interp in ['nearest', 'linear', 'cubic', 'quintic', 'lanczos3', 'lanczos5', 'lanczos7']:
-    for interp in ['linear', 'cubic', 'quintic']:
+    if __name__ == "__main__":
+        interp_list = ['linear', 'cubic', 'quintic', 'lanczos3', 'lanczos5', 'lanczos7']
+    else:
+        interp_list = ['linear', 'cubic', 'quintic']
+    for interp in interp_list:
         # Note 1: The Lanczos interpolants pass these tests just fine.  They just take a long 
         # time to run, even with the small images we are working with.  So skip them for regular 
         # unit testing.  Developers working on this should re-enable those while testing.
