@@ -330,6 +330,21 @@ def do_wcs_image(wcs, name, approx=False):
     np.testing.assert_almost_equal(im(image_pos), value3, digits,
                                    "Image value at center after setCenter is wrong.")
 
+    # Test makeSkyImage
+    new_origin = (-134, 128)
+    im.setOrigin(new_origin)
+    sky_level = 177
+    wcs.makeSkyImage(im, sky_level)
+    for x,y in [ (im.bounds.xmin, im.bounds.ymin), 
+                 (im.bounds.xmax, im.bounds.ymin),
+                 (im.bounds.xmin, im.bounds.ymax),
+                 (im.bounds.xmax, im.bounds.ymax),
+                 (im.center().x, im.center().y) ]:
+        val = im(x,y)
+        area = wcs.pixelArea(galsim.PositionD(x,y))
+        np.testing.assert_almost_equal(val/(area*sky_level), 1., digits,
+                                       "SkyImage at %d,%d is wrong"%(x,y))
+
 
 def do_local_wcs(wcs, ufunc, vfunc, name):
 
