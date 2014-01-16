@@ -1160,26 +1160,26 @@ def test_uvfunction():
 
     # 7. Test the UVFunction that is used in demo9 to confirm that I got the 
     # inverse function correct!
-    ufunc = lambda x,y : 0.05 * x * (1. + 1.e-6 * (x**2 + y**2))
-    vfunc = lambda x,y : 0.05 * y * (1. + 1.e-6 * (x**2 + y**2))
-    # w = 0.05 r + 5.e-8 r^3
-    # 0 = r^3 + 1e6 r - 2e7 w
+    ufunc = lambda x,y : 0.05 * x * (1. + 2.e-6 * (x**2 + y**2))
+    vfunc = lambda x,y : 0.05 * y * (1. + 2.e-6 * (x**2 + y**2))
+    # w = 0.05 (r + 2.e-6 r^3)
+    # 0 = r^3 + 5e5 r - 1e7 w
     # 
     # Cardano's formula gives
     # (http://en.wikipedia.org/wiki/Cubic_function#Cardano.27s_method)
-    # r = ( sqrt( (1e7 w)^2 + (1e6)^3/27 ) + (1e7 w) )^1/3 -
-    #     ( sqrt( (1e7 w)^2 + (1e6)^3/27 ) - (1e7 w) )^1/3
-    #   = 100 ( ( 10 sqrt( w^2 + 1.e4/27 ) + 10 w )^1/3 -
-    #           ( 10 sqrt( w^2 + 1.e4/27 ) - 10 w )^1/3 )
+    # r = ( sqrt( (5e6 w)^2 + (5e5)^3/27 ) + (5e6 w) )^1/3 -
+    #     ( sqrt( (5e6 w)^2 + (5e5)^3/27 ) - (5e6 w) )^1/3
+    #   = 100 ( ( 5 sqrt( w^2 + 5.e3/27 ) + 5 w )^1/3 -
+    #           ( 5 sqrt( w^2 + 5.e3/27 ) - 5 w )^1/3 )
     import math
     xfunc = lambda u,v : (
         lambda w: ( 0. if w==0. else
-            100.*u/w*(( 10*math.sqrt(w**2+1.e4/27.)+10.*w )**(1./3.) -
-                      ( 10*math.sqrt(w**2+1.e4/27.)-10.*w )**(1./3.))) )(math.sqrt(u**2+v**2))
+            100.*u/w*(( 5*math.sqrt(w**2+5.e3/27.)+5*w )**(1./3.) -
+                      ( 5*math.sqrt(w**2+5.e3/27.)-5*w )**(1./3.))) )(math.sqrt(u**2+v**2))
     yfunc = lambda u,v : (
         lambda w: ( 0. if w==0. else
-            100.*v/w*(( 10*math.sqrt(w**2+1.e4/27.)+10.*w )**(1./3.) -
-                      ( 10*math.sqrt(w**2+1.e4/27.)-10.*w )**(1./3.))) )(math.sqrt(u**2+v**2))
+            100.*v/w*(( 5*math.sqrt(w**2+5.e3/27.)+5*w )**(1./3.) -
+                      ( 5*math.sqrt(w**2+5.e3/27.)-5*w )**(1./3.))) )(math.sqrt(u**2+v**2))
     wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc)
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction from demo9')
 

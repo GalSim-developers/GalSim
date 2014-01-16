@@ -136,9 +136,11 @@ def main(argv):
         # pincushion distortion.  This is a typical kind of telescope distortion, although
         # we exaggerate the magnitude of the effect to make it more apparent.
         # The pixel size in the center of the image is 0.05, but near the corners (r=362),
-        # the pixel size is approximately 0.057.
-        ufunc1 = lambda x,y : 0.05 * x * (1. + 1.e-6 * (x**2 + y**2))
-        vfunc1 = lambda x,y : 0.05 * y * (1. + 1.e-6 * (x**2 + y**2))
+        # the pixel size is approximately 0.075, which is much more distortion than is 
+        # normally present in typical telescopes.  But it makes the effect of the variable 
+        # pixel area obvious when you look at the weight image in the output files.
+        ufunc1 = lambda x,y : 0.05 * x * (1. + 2.e-6 * (x**2 + y**2))
+        vfunc1 = lambda x,y : 0.05 * y * (1. + 2.e-6 * (x**2 + y**2))
 
         # It's not required to provide the inverse functions.  However, if we don't, then
         # you will only be able to do toWorld operations, not the inverse toImage.
@@ -150,9 +152,9 @@ def main(argv):
         # x = (u/w) r and y = (u/w) r, and we use Cardano's method to solve for r given w:
         # See http://en.wikipedia.org/wiki/Cubic_function#Cardano.27s_method
         # 
-        # w = 0.05 r + 1.e-6 * 0.05 * r**3
-        # r = 100 * ( ( 10*sqrt(w**2 + 1.e4/27) + 10*w )**(1./3.) -
-        #           - ( 10*sqrt(w**2 + 1.e4/27) - 10*w )**(1./3.) )
+        # w = 0.05 r + 2.e-6 * 0.05 * r**3
+        # r = 100 * ( ( 5 sqrt(w**2 + 5.e3/27) + 5 w )**(1./3.) -
+        #           - ( 5 sqrt(w**2 + 5.e3/27) - 5 w )**(1./3.) )
 
         def xfunc1(u,v):
             import math
@@ -161,8 +163,8 @@ def main(argv):
                 return 0.
             else:
                 w = math.sqrt(wsq)
-                temp = math.sqrt(wsq + 1.e4/27)
-                r = 100. * ( ( 10.*(temp + w) )**(1./3.) - ( 10.*(temp - w) )**(1./3) )
+                temp = 5. * math.sqrt(wsq + 5.e3/27)
+                r = 100. * ( (temp + 5*w)**(1./3.) - (temp - 5*w)**(1./3) )
                 return u * r/w
 
         def yfunc1(u,v):
@@ -172,8 +174,8 @@ def main(argv):
                 return 0.
             else:
                 w = math.sqrt(wsq)
-                temp = math.sqrt(wsq + 1.e4/27)
-                r = 100. * ( ( 10.*(temp + w) )**(1./3.) - ( 10.*(temp - w) )**(1./3) )
+                temp = 5. * math.sqrt(wsq + 5.e3/27)
+                r = 100. * ( (temp + 5*w)**(1./3.) - (temp - 5*w)**(1./3) )
                 return v * r/w
 
         # You could pass the above functions to UVFunction, and normally we would do that.
@@ -191,14 +193,14 @@ def main(argv):
         # always try to do.  The config file has no choice but to specify the functions
         # as strings.
 
-        ufunc = '0.05 * x * (1. + 1.e-6 * (x**2 + y**2))'
-        vfunc = '0.05 * y * (1. + 1.e-6 * (x**2 + y**2))'
+        ufunc = '0.05 * x * (1. + 2.e-6 * (x**2 + y**2))'
+        vfunc = '0.05 * y * (1. + 2.e-6 * (x**2 + y**2))'
         xfunc = ('( lambda w: ( 0 if w==0 else ' +
-                 '100.*u/w*(( 10.*(w**2+1.e4/27.)**0.5 + 10.*w )**(1./3.) - ' +
-                           '( 10.*(w**2+1.e4/27.)**0.5 - 10.*w )**(1./3.))))( (u**2+v**2)**0.5 )')
+                 '100.*u/w*(( 5*(w**2 + 5.e3/27.)**0.5 + 5*w )**(1./3.) - ' +
+                           '( 5*(w**2 + 5.e3/27.)**0.5 - 5*w )**(1./3.))))( (u**2+v**2)**0.5 )')
         yfunc = ('( lambda w: ( 0 if w==0 else ' +
-                 '100.*v/w*(( 10.*(w**2+1.e4/27.)**0.5 + 10.*w )**(1./3.) - ' +
-                           '( 10.*(w**2+1.e4/27.)**0.5 - 10.*w )**(1./3.))))( (u**2+v**2)**0.5 )')
+                 '100.*v/w*(( 5*(w**2 + 5.e3/27.)**0.5 + 5*w )**(1./3.) - ' +
+                           '( 5*(w**2 + 5.e3/27.)**0.5 - 5*w )**(1./3.))))( (u**2+v**2)**0.5 )')
 
         # The origin parameter defines where on the image should be considered (x,y) = (0,0)
         # in the WCS functions.

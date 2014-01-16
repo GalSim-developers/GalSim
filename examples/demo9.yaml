@@ -204,13 +204,15 @@ image :
     # pincushion distortion.  This is a typical kind of telescope distortion, although
     # we exaggerate the magnitude of the effect to make it more apparent.
     # The pixel size in the center of the image is 0.05, but near the corners (r=362),
-    # the pixel size is approximately 0.057.
+    # the pixel size is approximately 0.075, which is much more distortion than is 
+    # normally present in typical telescopes.  But it makes the effect of the variable 
+    # pixel area obvious when you look at the weight image in the output files.
     wcs :
         type : UVFunction
         # The functions will be evaluated as eval('lambda x,y : '+ufunc), and likewise
         # for vfunc.  
-        ufunc : '0.05 * x * (1. + 1.e-6 * (x**2 + y**2))'
-        vfunc : '0.05 * y * (1. + 1.e-6 * (x**2 + y**2))'
+        ufunc : '0.05 * x * (1. + 2.e-6 * (x**2 + y**2))'
+        vfunc : '0.05 * y * (1. + 2.e-6 * (x**2 + y**2))'
 
         # It's not required to provide the inverse functions x(u,v) and y(u.v).  
         # However, if we don't, then we would have to provide image_pos rather than 
@@ -221,11 +223,11 @@ image :
         # for the derivation as well as a more intelligible (and equivalent) implementation 
         # using normal function calls.
         xfunc : '( lambda w: ( 0 if w==0 else 
-            100.*u/w*(( 10.*(w**2+1.e4/27.)**0.5 + 10.*w )**(1./3.) - 
-                      ( 10.*(w**2+1.e4/27.)**0.5 - 10.*w )**(1./3.))))( (u**2+v**2)**0.5 )'
+            100.*u/w*(( 5*(w**2 + 5.e3/27.)**0.5 + 5*w )**(1./3.) - 
+                      ( 5*(w**2 + 5.e3/27.)**0.5 - 5*w )**(1./3.))))( (u**2+v**2)**0.5 )'
         yfunc : '( lambda w: ( 0 if w==0 else 
-            100.*v/w*(( 10.*(w**2+1.e4/27.)**0.5 + 10.*w )**(1./3.) - 
-                      ( 10.*(w**2+1.e4/27.)**0.5 - 10.*w )**(1./3.))))( (u**2+v**2)**0.5 )'
+            100.*v/w*(( 5*(w**2 + 5.e3/27.)**0.5 + 5*w )**(1./3.) - 
+                      ( 5*(w**2 + 5.e3/27.)**0.5 - 5*w )**(1./3.))))( (u**2+v**2)**0.5 )'
 
         # In order to get the world coordinates to be (0,0) at the center of the image, we 
         # need to tell it that we want the origin there.  The default origin for the world
