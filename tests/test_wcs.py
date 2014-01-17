@@ -38,18 +38,26 @@ near_y_list = [ 0, -0.173, 2.003, -7 ]
 far_x_list = [ 10, -31.7, -183.6, -700 ]
 far_y_list = [ 10, 12.5, 103.3, 500 ]
 
-all_x_list = near_x_list + far_x_list
-all_y_list = near_y_list + far_y_list
-
 # Make a few different profiles to check.  Make sure to include ones that 
 # aren't symmetrical so we don't get fooled by symmetries.
-profiles = []
-prof = galsim.Gaussian(sigma = 1.7, flux = 100)
-profiles.append(prof)
-prof = prof.createSheared(g1=0.3, g2=-0.12)
-profiles.append(prof)
-prof = prof + galsim.Exponential(scale_radius = 1.3, flux = 20).createShifted(-0.1,-0.4)
-profiles.append(prof)
+prof1 = galsim.Gaussian(sigma = 1.7, flux = 100)
+prof2 = prof1.createSheared(g1=0.3, g2=-0.12)
+prof3 = prof2 + galsim.Exponential(scale_radius = 1.3, flux = 20).createShifted(-0.1,-0.4)
+profiles = [ prof1, prof2, prof3 ]
+
+if __name__ != "__main__":
+    # Some of the classes we test here are not terribly fast.  WcsToolsWCS in particular.
+    # So reduce the number of tests.  Keep the hardest ones, since the easier ones are mostly
+    # useful as diagnostics when there are problems.  So they will get run when doing
+    # python test_wcs.py.  But not during a nosetests run.
+    near_x_list = near_x_list[-2:]
+    near_y_list = near_y_list[-2:]
+    far_x_list = far_x_list[-2:]
+    far_y_list = far_y_list[-2:]
+    profiles = [ prof3 ]
+
+all_x_list = near_x_list + far_x_list
+all_y_list = near_y_list + far_y_list
 
 # How many digits of accuracy should we demand?  
 # We test everything in units of arcsec, so this corresponds to 1.e-3 arcsec.  
@@ -59,17 +67,17 @@ profiles.append(prof)
 # do worse than 6 digits.)
 digits = 3
 
-# The HPX, TAN, TSC, and ZPN files were downloaded from the web site:
+# The HPX, TAN, TSC, STG, ZEA, and ZPN files were downloaded from the web site:
 # 
 # http://www.atnf.csiro.au/people/mcalabre/WCS/example_data.html
 # 
 # From that page: "The example maps and spectra are offered mainly as test material for 
 # software that deals with FITS WCS."
 #
-# I picked 4 that looked rather different in ds9, but there are a bunch more on that web 
-# page as well.  In particular, I included ZPN, since that uses PV values, so it is a bit 
-# different from the others.  Also, HPX is not implemented in wcstools, so that's also 
-# worth including.
+# I picked the 4 that GSFitsWCS can do plus a couple others that struck me as interstingly 
+# different, but there are a bunch more on that web page as well.  In particular, I included ZPN,
+# since that uses PV values, which the others don't, and HPX, since it is not implemented in 
+# wcstools.
 # 
 # The SIP, TPV, ZPX, REGION, and TNX are either new or "non-standard" that are not implemented 
 # by (at least older versions of) wcslib.  They were downloaded from the web site:
@@ -80,7 +88,8 @@ digits = 3
 # points on opposite sides of the image so any non-linearities in the WCS are maximized.
 # For most of them, I then use wcstools to get the ra and dec to 6 digits of accuracy.
 # (Unfortunately, ds9's ra and dec information is only accurate to 2 or 3 digits.)
-# The exception is HPX, for which I used the PyAst library to compute accurate values.
+# The exception is HPX, for which I used the PyAst library to compute accurate values,
+# since wcstools can't understand it.
 
 references = {
     # Note: the four 1904-66 files use the brightest pixels in the same two stars.
@@ -400,6 +409,7 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
     im2 = galsim.Image(64,64, scale=1.)
 
     for world_profile in profiles:
+        #print 'profile = ',world_profile
         # The profiles build above are in world coordinates (as usual)
     
         # Convert to image coordinates
@@ -410,6 +420,7 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
         image_profile2 = wcs.toImage(world_profile2)
 
         for x,y,u,v in zip(near_x_list, near_y_list, near_u_list, near_v_list):
+            print x,y,u,v
             image_pos = galsim.PositionD(x,y)
             world_pos = galsim.PositionD(u,v)
             pixel_area = wcs.pixelArea(image_pos=image_pos)
@@ -579,6 +590,7 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
         im2 = full_im2[b]
 
         for world_profile in profiles:
+            #print 'profile = ',world_profile
             image_profile = wcs.toImage(world_profile, image_pos=image_pos)
 
             world_profile.draw(im1, offset=(dx,dy))
@@ -638,6 +650,7 @@ def do_celestial_wcs(wcs, name):
         digits2 = digits
 
     for x0,y0 in zip(near_x_list, near_y_list):
+        #print 'x0,y0 = ',x0,y0
         image_pos = galsim.PositionD(x0,y0)
         world_pos = wcs.toWorld(image_pos)
 
@@ -671,6 +684,7 @@ def do_celestial_wcs(wcs, name):
         im2 = full_im2[b]
 
         for world_profile in profiles:
+            #print 'profile = ',world_profile
             image_profile = wcs.toImage(world_profile, image_pos=image_pos)
 
             world_profile.draw(im1, offset=(dx,dy))
@@ -1471,7 +1485,6 @@ def test_astropywcs():
     # Test all of them when running python test_wcs.py.
     if __name__ == "__main__":
         test_tags = [ 'HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'REGION' ]
-        test_tags = [ 'SIP' ]
     else:
         test_tags = [ 'SIP' ]
 

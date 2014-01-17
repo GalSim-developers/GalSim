@@ -201,7 +201,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         rd = numpy.atleast_2d([ra, dec]) * factor
         # Here we have to work around another astropy.wcs bug.  The way they use scipy's
         # Broyden's method doesn't work.  So I implement a fix here.
-        try:
+        if False:
             # Try their version first (with and without ra_dec_order) in case they fix this.
             import warnings
             try:
@@ -212,7 +212,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     xy = self._wcs.all_world2pix(rd, 1)[0]
-        except:
+        else:
             # This section is basically a copy of astropy.wcs's _all_world2pix function, but
             # simplified a bit to remove some features we don't need, and with corrections
             # to make it work correctly.
@@ -1231,13 +1231,18 @@ fits_wcs_types = [
                     # TAN projection, and also TPV, which is used by SCamp.  If it does work, it 
                     # is a good choice, since it is easily the fastest of any of these.
 
-    PyAstWCS,       # This requires `import starlink.Ast` to succeed.  This handles the largest
-                    # number of WCS types of any of these.  In fact, it worked for every one
-                    # we tried in our unit tests (which was not exhaustive).
-
     AstropyWCS,     # This requires `import astropy.wcs` to succeed.  So far, they only handle
                     # the standard official WCS types.  So not TPV, for instance.  Also, it is
-                    # quite a bit slower than PyAst, so we prefer PyAst when it is available.
+                    # a little faster than PyAst, so we prefer PyAst when it is available.
+                    # (But only because of our fix in the _xy function to not use the astropy
+                    # version of all_world2pix function!)
+
+    PyAstWCS,       # This requires `import starlink.Ast` to succeed.  This handles the largest
+                    # number of WCS types of any of these.  In fact, it worked for every one
+                    # we tried in our unit tests (which was not exhaustive).  This is a bit 
+                    # slower than Astropy, but I think mostly due to their initial reading of 
+                    # the fits header -- that seems to take a lot of time for some reason.
+                    # Once it is loaded, the actual usage seems to be quite fast.
 
     WcsToolsWCS,    # This requires the wcstool command line functions to be installed.
                     # It is very slow, so it should only be used as a last resort.
