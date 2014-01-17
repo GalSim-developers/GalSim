@@ -74,7 +74,13 @@ ref_array = np.array([
     [14, 24, 34, 44, 54, 64, 74], 
     [15, 25, 35, 45, 55, 65, 75] ]).astype(np.int16)
 
-nimages = 12  # Depth of FITS datacubes and multi-extension FITS files
+# Depth of FITS datacubes and multi-extension FITS files
+if __name__ == "__main__":
+    nimages = 12  
+else:
+    # There really are 12, but testing the first 3 should be plenty as a unit test, and 
+    # it helps speed things up.
+    nimages = 3
 
 datadir = os.path.join(".", "Image_comparison_images")
 

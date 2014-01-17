@@ -41,6 +41,13 @@ test_scale = [1.8, 0.05, 0.002, 0.002]
 test_sersic_trunc = [0., 8.5]
 test_flux = 1.8
 
+if __name__ == "__main__":
+    # If doing a nosetests run, we don't actually need to do all 4 sersic n values.
+    # Two should be enough to notice if there is a problem, and the full list will be tested
+    # when running python test_base.py to try to diagnose the problem.
+    test_sersic_n = [1.5, -4]
+    test_scale = [1.8, 0.002]
+
 # These are the default GSParams used when unspecified.  We'll check that specifying 
 # these explicitly produces the same results.
 default_params = galsim.GSParams(
