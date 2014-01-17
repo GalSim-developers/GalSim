@@ -131,8 +131,8 @@ New `CelestialCoord` class: (Issue #364)
 Updates to config options:
 
 * Changed the previous behavior of the `image.wcs` field to allow several WCS
-  types: `PixelScale`, `Offset`, `Shear`, `OffsetShear`, `UVFunction`, 
-  `RaDecFunction`, `Fits`, and `Tan`. (Issue #364)
+  types: 'PixelScale', 'Shear', 'Jacobian', 'Affine', 'UVFunction',
+  'RaDecFunction', 'Fits', and 'Tan'. (Issue #364)
 * Changed the name of `sky_pos` to `world_pos`. (Issue #364)
 * Remove pix top layer in config structure.  Add `draw_method=no_pixel` to 
   do what `pix : None` used to do. (Issue #364)

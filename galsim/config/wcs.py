@@ -20,23 +20,22 @@
 import galsim
 
 
-# The only item in the tuple is the name of the WCS class (or build function).
-# We made it a tuple to make it easier to add extra features later.
-# Most WCS types can use the normal _req_params, etc.  Currently, only TanWCS has a custom builder.
+# We distunguish some classes according to whether they have an origin parameter.
+# The first item in the tuple is the builder class or function that does not take an 
+# offset parameter.  The second item is the version that does.
+# Most WCS types can use the normal _req_params, etc.  Currently, only Tan has a custom builder.
 valid_wcs_types = { 
-    'PixelScale' : ( 'galsim.PixelScale', ),
-    'Offset' : ( 'galsim.OffsetWCS', ),
-    'Shear' : ( 'galsim.ShearWCS', ),
-    'OffsetShear' : ( 'galsim.OffsetShearWCS', ),
-    'Jacobian' : ( 'galsim.JacobianWCS', ),
-    'AffineTransform' : ( 'galsim.AffineTransform', ),
-    'UVFunction' : ( 'galsim.UVFunction', ),
+    'PixelScale' : ( 'galsim.PixelScale', 'galsim.OffsetWCS' ),
+    'Shear' : ( 'galsim.ShearWCS', 'galsim.OffsetShearWCS' ),
+    'Jacobian' : ( 'galsim.JacobianWCS', 'galsim.AffineTransform' ),
+    'Affine' : ( 'galsim.JacobianWCS', 'galsim.AffineTransform', ),
+    'UVFunction' : ( 'galsim.UVFunction', 'galsim.UVFunction' ),
     # TODO: Not everything works with the celestial wcs classes.  There are a few places
     # where we assume that the world coordinates are Euclidean (u,v) coordinates. It needs a 
     # bit of work to make sure everything is working correctly with celestial coordinates.
-    'RaDecFunction' : ( 'galsim.RaDecFunction', ),
-    'Fits' : ( 'galsim.FitsWCS', ),
-    'Tan' : ( 'TanWCSBuilder', ),
+    'RaDecFunction' : ( 'galsim.RaDecFunction', 'galsim.RaDecFunction' ),
+    'Fits' : ( 'galsim.FitsWCS', 'galsim.FitsWCS' ),
+    'Tan' : ( 'TanWCSBuilder', 'TanWCSBuilder' ),
 }
 
 def BuildWCS(config, logger=None):
@@ -51,8 +50,6 @@ def BuildWCS(config, logger=None):
         image_wcs = image['wcs']
         if 'type' in image_wcs:
             type = image_wcs['type']
-        elif 'origin' in image_wcs:
-            type = 'Offset'
         else:
             type = 'PixelScale'
 
@@ -66,7 +63,10 @@ def BuildWCS(config, logger=None):
         if type not in valid_wcs_types:
             raise AttributeError("Invalid image.wcs.type=%s."%type)
 
-        build_func = eval(valid_wcs_types[type][0])
+        if 'origin' in image_wcs or 'world_origin' in image_wcs:
+            build_func = eval(valid_wcs_types[type][1])
+        else:
+            build_func = eval(valid_wcs_types[type][0])
 
         if logger:
             logger.debug('image %d: Build WCS for type = %s using %s',
