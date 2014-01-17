@@ -284,7 +284,7 @@ namespace galsim {
          *
          * The parameters are the four elements of the jacobian: dudx, dudy, dvdx, dvdy.
          */
-        void applyJacobian(double dudx, double dudy, double dvdx, double dvdy);
+        void applyTransformation(double dudx, double dudy, double dvdx, double dvdy);
 
         /**
          * @brief Apply a translation.

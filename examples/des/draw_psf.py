@@ -97,7 +97,7 @@ def main(argv):
         gain = sky_level / sky_sigma**2  # an approximation, since gain is missing.
 
         # Read the WCS
-        wcs = galsim.GSFitsWCS(header=image_header)
+        wcs = galsim.FitsWCS(header=image_header)
 
         # Setup the images:
         psfex_image = galsim.Image(xsize, ysize, wcs=wcs)

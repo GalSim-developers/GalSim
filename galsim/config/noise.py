@@ -188,17 +188,18 @@ def AddNoisePoisson(noise, config, draw_method, rng, im, weight_im, current_var,
     # If we are saving the noise level in a weight image, do that now.
     if weight_im:
         # Check if a weight image should include the object variance.
-        # Note: For the phot case, we don't actually have an exact value for the variance in each pixel,
-        # but the drawn image before adding the Poisson noise is our best guess for the variance from the 
-        # object's flux, so if we want the object variance included, this is still the best we can do.
+        # Note: For the phot case, we don't actually have an exact value for the variance in each 
+        # pixel, but the drawn image before adding the Poisson noise is our best guess for the 
+        # variance from the object's flux, so if we want the object variance included, this is 
+        # still the best we can do.
         include_obj_var = False
         if ('output' in config and 'weight' in config['output'] and 
             'include_obj_var' in config['output']['weight']):
             include_obj_var = galsim.config.ParseValue(
                 config['output']['weight'], 'include_obj_var', config, bool)[0]
         if include_obj_var:
-            # The image right now has the object variance in each pixel.  So before going on with the 
-            # noise, copy these over to the weight image.  (We invert this later...)
+            # The image right now has the object variance in each pixel.  So before going on with 
+            # the noise, copy these over to the weight image.  (We invert this later...)
             weight_im.copyFrom(im)
         else:
             # Otherwise, just add in the current sky noise:
@@ -241,7 +242,8 @@ def AddNoisePoisson(noise, config, draw_method, rng, im, weight_im, current_var,
             total_sky = sky + extra_sky
             if total_sky > 0.:
                 im.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=total_sky)))
-                # This deviate adds a noisy version of the sky, so need to subtract the mean back off.
+                # This deviate adds a noisy version of the sky, so need to subtract the mean back 
+                # off.
                 im -= total_sky
 
     if logger:
@@ -278,7 +280,7 @@ def AddNoiseCCD(noise, config, draw_method, rng, im, weight_im, current_var, sky
     # This process goes a lot like the Poisson routine.  There are just two differences.
     # The Poisson noise is in the electron, not ADU, and now we allow for a gain = e-/ADU,
     # so we need to account for that properly.  And we also allow for an additional Gaussian
-    # read noise.j
+    # read noise.
 
     # Get how much extra sky to assume from the image.noise attribute.
     opt = { 'gain' : float , 'read_noise' : float }
@@ -307,17 +309,18 @@ def AddNoiseCCD(noise, config, draw_method, rng, im, weight_im, current_var, sky
     # If we are saving the noise level in a weight image, do that now.
     if weight_im:
         # Check if a weight image should include the object variance.
-        # Note: For the phot case, we don't actually have an exact value for the variance in each pixel,
-        # but the drawn image before adding the Poisson noise is our best guess for the variance from the 
-        # object's flux, so if we want the object variance included, this is still the best we can do.
+        # Note: For the phot case, we don't actually have an exact value for the variance in each 
+        # pixel, but the drawn image before adding the Poisson noise is our best guess for the 
+        # variance from the object's flux, so if we want the object variance included, this is 
+        # still the best we can do.
         include_obj_var = False
         if ('output' in config and 'weight' in config['output'] and 
             'include_obj_var' in config['output']['weight']):
             include_obj_var = galsim.config.ParseValue(
                 config['output']['weight'], 'include_obj_var', config, bool)[0]
         if include_obj_var:
-            # The image right now has the object variance in each pixel.  So before going on with the 
-            # noise, copy these over to the weight image.  (We invert this later...)
+            # The image right now has the object variance in each pixel.  So before going on with 
+            # the noise, copy these over to the weight image.  (We invert this later...)
             weight_im.copyFrom(im)
 
             # Account for the gain and read noise
@@ -334,10 +337,10 @@ def AddNoiseCCD(noise, config, draw_method, rng, im, weight_im, current_var, sky
         # And add in the extra sky noise:
         if extra_sky: weight_im += extra_sky
 
-    # If we already have some variance in the image (from whitening), then we try to subtract it from
-    # the read noise if possible.  If now, we subtract the rest off of the sky level.  It's not 
-    # precisely accurate, since the existing variance is Gaussian, rather than Poisson, but it's the 
-    # best we can do.
+    # If we already have some variance in the image (from whitening), then we try to subtract it 
+    # from the read noise if possible.  If now, we subtract the rest off of the sky level.  It's 
+    # not precisely accurate, since the existing variance is Gaussian, rather than Poisson, but 
+    # it's the best we can do.
     if current_var:
         if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
             test = ((sky+extra_sky).image.array/gain + read_noise_var < current_var).any()

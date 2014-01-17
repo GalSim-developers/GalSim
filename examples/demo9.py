@@ -395,7 +395,7 @@ def main(argv):
         # Subtract the sky back off.
         full_image -= weight_image
 
-        # For the weight image, we only want the noise from the sky, which is already has. 
+        # For the weight image, we only want the noise from the sky, which it already has. 
         # (If we were including read_noise, we'd want that as well.)  Including the Poisson noise 
         # from the objects as well tends to bias fits that use this as a weight, since the model 
         # becomes magnitude-dependent.  So all we need to do now is to invert the values in

@@ -62,7 +62,7 @@ def main(argv):
     psf_beta = 5       #
     psf_re = 1.0       # arcsec
     pixel_scale = 0.2  # arcsec / pixel
-    sky_level = 2.5e4  # counts / arcsec^2
+    sky_level = 2.5e3  # counts / arcsec^2
 
     # This time use a particular seed, so the image is deterministic.
     # This is the same seed that is used in demo2.yaml, which means the images produced

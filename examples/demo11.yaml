@@ -184,8 +184,10 @@ image :
         # It sets the angular units of the (u,v) intermediate coordinate system.
         units : arcsec
 
+        # Set (u,v) = (0,0) to be the center of the image.
         origin : center
 
+        # These are the celestial coordinates of (u,v) = (0,0).
         ra : 19.3 hours
         dec : -33.1 degrees
 

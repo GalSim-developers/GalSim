@@ -477,7 +477,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         success = fc.write(self._wcsinfo)
         # PyAst doesn't write out TPV or ZPX correctly.  It writes them as TAN and ZPN 
         # respectively.  However, it claims success nonetheless, so we need to countermand that.  
-        # The easiest way I found to check for them is that the string TPV is in the string 
+        # The easiest way I found to check for them is that the string TPN is in the string 
         # version of wcsinfo.  So check for that and set success = False in that case.
         if 'TPN' in str(self._wcsinfo): success = False
         if not success:
@@ -738,7 +738,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
     It doesn't do nearly as many WCS types as the other options, and it does not try to be
     as rigorous about supporting all possible valid variations in the FITS parameters.
-    However, it does a few popular WCS types properly, and it doesn't require any additional 
+    However, it does some popular WCS types properly, and it doesn't require any additional 
     python modules to be installed, which can be helpful.
 
     Currrently, it is able to parse the following WCS types: TAN, TPV
@@ -754,6 +754,10 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
     without it being named:
 
         wcs = galsim.GSFitsWCS(file_name)
+
+    In addition to reading from a FITS file, there is also a factory function that builds
+    a GSFitsWCS object implementing a TAN projection.  See the docstring of TanWCS for
+    more details.
 
     @param file_name      The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [ Default: `file_name = None` ]
@@ -812,8 +816,9 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         if origin is not None:
             self.crpix += [ origin.x, origin.y ]
 
-    # Some function assume these exist.  In this class, we keep crpix up to date rather than
-    # use these.  So just make dummy properties that return 0.
+    # The origin is a required attribute/property, since it is used by some functions like
+    # setOrigin to get the current origin value.  We don't use it in this class, though, so
+    # just make origin a dummy property that returns 0,0.
     @property
     def origin(self): return galsim.PositionD(0.,0.)
 
@@ -908,7 +913,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             raise NotImplementedError("We don't implement past 3rd order terms for TPV")
 
         import numpy
-        # Another strange thing is that the two matrices are define in the opposite order
+        # Another strange thing is that the two matrices are defined in the opposite order
         # with respect to their element ordering.  And remember that we skipped k=3 in the
         # original reading, so indices 3..9 here were originally called PVi_4..10
         self.pv = numpy.array( [ [ [ pv1[0], pv1[2], pv1[5], pv1[9] ],
@@ -938,6 +943,14 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             ones = numpy.ones(u.shape)
             upow = numpy.array([ ones, u, usq, usq*u ])
             vpow = numpy.array([ ones, v, vsq, vsq*v ])
+            # If we only have one input position, then p2 is 
+            #     p2[0] = upowT . pv[0] . vpow
+            #     p2[1] = upowT . pv[1] . vpow
+            # using matrix products, which are effected with the numpy.dot function.
+            # When there are multiple inputs, then upow and vpow are each 4xN matrices.
+            # The values we want are the diagonal of the matrix you would get from the 
+            # above formulae.  So we use the fact that 
+            #     diag(AT . B) = sum_rows(A * B)
             temp = numpy.dot(self.pv, vpow)
             p2 = numpy.sum(upow * temp, axis=1)
 
@@ -982,7 +995,9 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             #
             # Start with (u,v) = (s,t)
             #
-            # Then use Newton-Raphson iteration to improve (u,v).
+            # Then use Newton-Raphson iteration to improve (u,v).  This is extremely fast
+            # for typical PV distortions, since the distortions are generally very small.
+            # Newton-Raphson doubles the number of significant digits in each iteration.
 
 
             MAX_ITER = 10
@@ -1025,7 +1040,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         x, y = p1
         return x, y
 
-    # Override the version CelestialWCS, since we can do this more efficiently.
+    # Override the version in CelestialWCS, since we can do this more efficiently.
     def _local(self, image_pos, world_pos):
         if image_pos is None:
             if world_pos is None:
@@ -1042,8 +1057,8 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         # So if we can find the jacobian for each step of the process, we just multiply the 
         # jacobians.
         #
-        # We also need to keep track of the position along the way, so we have to repeat the 
-        # steps in _posToWorld.
+        # We also need to keep track of the position along the way, so we have to repeat many
+        # of the steps in _radec.
 
         import numpy
         p1 = numpy.array( [ image_pos.x, image_pos.y ] )
@@ -1079,7 +1094,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         jac = jac * numpy.transpose( [ unit_convert ] )
 
         # Finally convert from (u,v) to (ra, dec).  We have a special function that computes
-        # the jacobian of this set in the CelestialCoord class.
+        # the jacobian of this step in the CelestialCoord class.
         drdu, drdv, dddu, dddv = self.center.deproject_jac(p2[0], p2[1], projection='gnomonic' )
         j2 = numpy.array([ [ drdu, drdv ],
                            [ dddu, dddv ] ])

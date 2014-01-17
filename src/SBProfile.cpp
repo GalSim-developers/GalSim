@@ -211,7 +211,7 @@ namespace galsim {
         _pimpl = d._pimpl;
     }
 
-    void SBProfile::applyJacobian(double dudx, double dudy, double dvdx, double dvdy)
+    void SBProfile::applyTransformation(double dudx, double dudy, double dvdx, double dvdy)
     {
         SBTransform d(*this, dudx, dudy, dvdx, dvdy);
         _pimpl = d._pimpl;

@@ -30,9 +30,6 @@ valid_wcs_types = {
     'Jacobian' : ( 'galsim.JacobianWCS', 'galsim.AffineTransform' ),
     'Affine' : ( 'galsim.JacobianWCS', 'galsim.AffineTransform', ),
     'UVFunction' : ( 'galsim.UVFunction', 'galsim.UVFunction' ),
-    # TODO: Not everything works with the celestial wcs classes.  There are a few places
-    # where we assume that the world coordinates are Euclidean (u,v) coordinates. It needs a 
-    # bit of work to make sure everything is working correctly with celestial coordinates.
     'RaDecFunction' : ( 'galsim.RaDecFunction', 'galsim.RaDecFunction' ),
     'Fits' : ( 'galsim.FitsWCS', 'galsim.FitsWCS' ),
     'Tan' : ( 'TanWCSBuilder', 'TanWCSBuilder' ),
@@ -106,6 +103,14 @@ def BuildWCS(config, logger=None):
 
     # Write it to the config dict and also return it.
     config['wcs'] = wcs
+
+    # If the WCS is a PixelScale or OffsetWCS, then store the pixel_scale in base.  The 
+    # config apparatus does not use it -- we always use the wcs -- but we keep it in case
+    # the user wants to use it for an Eval item.  It's one of the variables they are allowed
+    # to assume will be present for them.
+    if wcs.isPixelScale():
+        config['pixel_scale'] = wcs.scale
+
     return wcs
 
 
@@ -118,10 +123,10 @@ def TanWCSBuilder(dudx, dudy, dvdx, dvdy, ra, dec, units='arcsec', origin=galsim
     units = galsim.angle.get_angle_unit(units)
     return galsim.TanWCS(affine, world_origin, units)
 
-
 TanWCSBuilder._req_params = { "dudx" : float, "dudy" : float, "dvdx" : float, "dvdy" : float,
                               "ra" : galsim.Angle, "dec" : galsim.Angle }
 TanWCSBuilder._opt_params = { "units" : str, "origin" : galsim.PositionD }
 TanWCSBuilder._single_params = []
 TanWCSBuilder._takes_rng = False
 TanWCSBuilder._takes_logger = False
+

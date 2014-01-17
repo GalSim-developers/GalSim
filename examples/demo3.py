@@ -182,20 +182,24 @@ def main(argv):
                                obscuration = opt_obscuration)
     logger.debug('Made optical PSF profile')
 
-    # So far, our WCS has been just a scaling between pixels and arcsec, which we have 
-    # defined as the "pixel scale".  This is fine for many purposes, so we have made it 
-    # easy to treat the WCS this way via the `scale` parameter to commands like draw.
+    # So far, our coordinate transformation between image and sky coordinates has been just a 
+    # scaling of the units between pixels and arcsec, which we have defined as the "pixel scale".
+    # This is fine for many purposes, so we have made it easy to treat the coordinate systems
+    # this we via the `scale` parameter to commands like draw.  However, in general, the 
+    # transformation between the two coordinate systems can be more complicated than that,
+    # including distortions, rotations, variation in pixel size, and so forth.  GalSim can 
+    # model a number of different "World Coordinate System" (WCS) transformations.  See the
+    # docstring for BaseWCS for more information.  
 
-    # However, we also have the ability to model a more complicated WCS.  In this case,
-    # we use a WCS that includes a distortion (specified as g1,g2 in this case), which
-    # we call a ShearWCS.
+    # In this case, we use a WCS that includes a distortion (specified as g1,g2 in this case),
+    # which we call a ShearWCS.
     wcs = galsim.ShearWCS(scale=pixel_scale, shear=galsim.Shear(g1=wcs_g1, g2=wcs_g2))
     logger.debug('Made the WCS')
 
     # Using a non-trivial WCS means that the pixel is no longer a square box profile.
     # At least not in world coordinates, where we have typically been defining the profiles.
-    # It is a square in image coordinates though, so the easiest way to deal the pixel is
-    # to define it as a unit pixel in image coordinates and let the WCS object convert it 
+    # It is a square in image coordinates though, so the easiest way to deal with the pixel
+    # is to define it as a unit pixel in image coordinates and let the WCS object convert it 
     # to world coordinates.
     pix = wcs.toWorld(galsim.Pixel(1.0))
     logger.debug('Made pixel profile')
@@ -226,7 +230,7 @@ def main(argv):
 
     # We also draw the optical part of the PSF at its own Nyquist-sampled pixel size
     # in order to better see the features of the (highly structured) profile.
-    image_opticalpsf = optics.draw(scale=lam_over_diam/2.)
+    image_opticalpsf = optics.draw()
     logger.debug('Made image of the profile')
 
     # Add a constant sky level to the image.

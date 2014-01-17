@@ -687,8 +687,8 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         logger.debug('image %d: nobj = %d',image_num,nobjects)
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc',
-               'retry_failures', 'image_pos', 'world_pos', 'n_photons', 'wmult', 'offset', 'sky_level',
-               'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams', 'nobjects' ]
+               'retry_failures', 'image_pos', 'world_pos', 'n_photons', 'wmult', 'offset', 
+               'sky_level', 'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams', 'nobjects' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
             'nproc' : int , 'index_convention' : str }
     params = galsim.config.GetAllParams(

@@ -266,7 +266,7 @@ namespace galsim {
                 .def("applyRotation", &SBProfile::applyRotation, bp::args("theta"))
                 .def("applyShift", &SBProfile::applyShift, bp::args("delta"))
                 .def("applyExpansion", &SBProfile::applyExpansion, bp::args("scale"))
-                .def("applyJacobian", &SBProfile::applyJacobian,
+                .def("applyTransformation", &SBProfile::applyTransformation,
                      bp::args("dudx", "dudy", "dvdx", "dvdy"))
                 .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
                 ;

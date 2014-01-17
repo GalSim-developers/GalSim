@@ -235,7 +235,7 @@ def parse_dms(s):
 def HMS_Angle(str):
     """Convert a string of the form hhmmss.decimal into an Angle.
 
-    There may be an initial + or - (or neither), then 2 digits for the hours, two for the
+    There may be an initial + or - (or neither), then two digits for the hours, two for the
     minutes, and two for the seconds.  Then there may be a decimal point followed by more
     digits.
 
@@ -246,7 +246,7 @@ def HMS_Angle(str):
 def DMS_Angle(str):
     """Convert a string of the form ddmmss.decimal into an Angle.
 
-    There may be an initial + or - (or neither), then 2 digits for the degrees, two for the
+    There may be an initial + or - (or neither), then two digits for the degrees, two for the
     minutes, and two for the seconds.  Then there may be a decimal point followed by more
     digits.
 

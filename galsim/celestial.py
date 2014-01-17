@@ -37,7 +37,7 @@ class CelestialCoord(object):
 
             d = coord.distanceTo(other_coord)
 
-    There are two tangent plane projections you can use:
+    There are several tangent plane projections you can use:
         - a Lambert projection, which preserves area
         - a stereographic projection, which preserves angles
         - a gnomonic projection, which makes all great circles straight lines
@@ -47,11 +47,11 @@ class CelestialCoord(object):
     You can also precess a coordinate from one epoch to another and get the galaxy
     coordinates with
 
-            coord_1950 = coord2000.precess(2000, 1950)
+            coord1950 = coord2000.precess(2000, 1950)
             el, b = coord.getGalaxyPos()
 
     We don't use either of these for anything within GalSim, but I had the code to do it
-    lying around, so I included it here.
+    lying around, so I included it here in case someone might find it useful.
 
     Initialization
     --------------
@@ -167,7 +167,7 @@ class CelestialCoord(object):
                     not area.  For more information, see
                     http://mathworld.wolfram.com/StereographicProjection.html
             'gnomonic' uses a gnomonic projection (i.e. a projection from the center of the
-                    spehere, which has the property that all great circles become straight 
+                    sphere, which has the property that all great circles become straight 
                     lines.  For more information, see
                     http://mathworld.wolfram.com/GnomonicProjection.html
             'postel' uses a Postel equidistant proejection, which preserves distances from
@@ -207,14 +207,14 @@ class CelestialCoord(object):
         #   k = c / sin(c)
         # where cos(c) = sin(dec0) sin(dec) + cos(dec0) cos(dec) cos(ra-ra0)
 
-        # cosdra = cos(ra - ra0) = cosra cosra0 + sinra sinra0
+        # cos(dra) = cos(ra-ra0) = cos(ra0) cos(ra) + sin(ra0) sin(ra)
         cosdra = self._cosra * cosra + self._sinra * sinra
 
-        # sindra = -sin(ra - ra0);
+        # sin(dra) = -sin(ra - ra0);
         # Note: - sign here is to make +x correspond to -ra,
         #       so x increases for decreasing ra.
         #       East is to the left on the sky!
-        # sindra = -sinra cosra0 + cosra sinra0
+        # sin(dra) = -cos(ra0) sin(ra) + sin(ra0) cos(ra)
         sindra = -self._cosra * sinra + self._sinra * cosra
 
         # Calculate k according to which projection we are using
@@ -281,7 +281,7 @@ class CelestialCoord(object):
     def _deproject_core(self, u, v, projection):
         # The inverse equations are also given at the same web sites:
         #
-        # sin(dec) = cos(c) sin(dec0) + v sin(c) cos(dec0)/r
+        # sin(dec) = cos(c) sin(dec0) + v sin(c) cos(dec0) / r
         # tan(ra-ra0) = u sin(c) / (r cos(dec0) cos(c) - v sin(dec0) sin(c))
         #
         # where
@@ -297,17 +297,15 @@ class CelestialCoord(object):
         u = u * factor
         v = v * factor
 
-        import numpy
-        # Compute r, c
-        # r = sqrt(u*u + v*v)
-        # c = 2 * arctan(r/2) for num == 1
-        # c = 2 * arcsin(r/2) for num == 2
         # Note that we can rewrite the formulae as:
         #
         # sin(dec) = cos(c) sin(dec0) + v (sin(c)/r) cos(dec0)
         # tan(ra-ra0) = u (sin(c)/r) / (cos(dec0) cos(c) - v sin(dec0) (sin(c)/r))
         #
-        # which means we only need cos(c) and sin(c)/r
+        # which means we only need cos(c) and sin(c)/r.  For most of the projections, 
+        # this saves us from having to take sqrt(rsq).
+
+        import numpy
         rsq = u*u + v*v
         if projection[0] == 'l':
             # c = 2 * arcsin(r/2)
@@ -450,8 +448,8 @@ class CelestialCoord(object):
 
     def precess(self, from_epoch, to_epoch):
         """This function precesses equatorial ra and dec from one epoch to another.
-           It is adapted from a set if fortran subroutines found in precess.f,
-           which  were based on (a) pages 30-34 fo the Eplanatory Supplement
+           It is adapted from a set of fortran subroutines found in precess.f,
+           which  were based on (a) pages 30-34 fo the Explanatory Supplement
            to the AE, (b) Lieske, et al. (1977) A&A 58, 1-16, and
            (c) Lieske (1979) A&A 73, 282-284.
         """
@@ -499,10 +497,6 @@ class CelestialCoord(object):
         new_dec = math.atan2(z2,math.sqrt(x2**2+y2**2)) * galsim.radians
         new_ra = math.atan2(y2,x2) * galsim.radians
         new_coord = CelestialCoord(new_ra,new_dec)
-        # Since we already knwo these, might as well set them.
-        new_coord._x = x2
-        new_coord._y = y2
-        new_coord._z = z2
         return new_coord
 
     def getGalaxyPos(self, epoch=2000.):
@@ -511,7 +505,7 @@ class CelestialCoord(object):
         It returns the longitude and latitude as a tuple (el, b).  They are each given
         as galsim.Angle instances.
 
-        The formulae are implemented in terms of the 1950 coordinates, so it needs to
+        The formulae are implemented in terms of the 1950 coordinates, so we need to
         precess from the current epoch to 1950.  The current epoch is assumed to be 2000
         by default, but you may also specify a different value with the epoch parameter.
         """

@@ -249,7 +249,7 @@ class GSObject(object):
         @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in real
                          space.
         """
-        # Explicitly use PositionD(x,y) syntax in case image_pos is a PositionI
+        # Explicitly use PositionD(x,y) syntax in case image_pos is a PositionI.
         # The C++ function requires a PositionD argument.
         return self.SBProfile.xValue(galsim.PositionD(image_pos.x, image_pos.y))
 
@@ -472,7 +472,7 @@ class GSObject(object):
         import numpy as np
         if hasattr(self,'noise'):
             self.noise.applyTransformation(dudx,dudy,dvdx,dvdy)
-        self.SBProfile.applyJacobian(dudx,dudy,dvdx,dvdy)
+        self.SBProfile.applyTransformation(dudx,dudy,dvdx,dvdy)
         self.__class__ = GSObject
  
 

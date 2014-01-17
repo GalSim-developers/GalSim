@@ -140,11 +140,10 @@ image :
     size : 64  # pixels in each direction
     # (You can also specify xsize and ysize separately for non-square images.)
    
-    # You may provide a WCS to be applied to the image.
-    # In this case, we simply have a constant telescope distortion over the image.
-    # The valid types here are the class names in galsim/wcs.py.  See the docstring
-    # for galsim.BaseWCS to see descriptions of them all.  For the class names that 
-    # end in WCS, you may (optionally) drop the WCS part of the name, as we did here.
+    # You may provide a World Coordinate System (WCS) transformation to be applied 
+    # to the image.  In this case, we simply have a constant telescope distortion 
+    # over the image.  See the config wiki page for a list of all the allowed WCS
+    # types and their parameters.  (We'll use two others in demo9 and demo11.)
     wcs : 
         type : Shear
         shear : 
