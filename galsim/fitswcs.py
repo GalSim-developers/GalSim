@@ -738,10 +738,10 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
     It doesn't do nearly as many WCS types as the other options, and it does not try to be
     as rigorous about supporting all possible valid variations in the FITS parameters.
-    However, it does some popular WCS types properly, and it doesn't require any additional 
+    However, it does several popular WCS types properly, and it doesn't require any additional 
     python modules to be installed, which can be helpful.
 
-    Currrently, it is able to parse the following WCS types: TAN, TPV
+    Currrently, it is able to parse the following WCS types: TAN, STG, ZEA, ARC, TPV
 
     Initialization
     --------------
@@ -795,6 +795,14 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             self.cd = _data[2]
             self.center = _data[3]
             self.pv = _data[4]
+            if self.wcs_type in [ 'TAN', 'TPV' ]:
+                self.projection = 'gnomonic'
+            elif self.wcs_type == 'STG':
+                self.projection = 'stereographic'
+            elif self.wcs_type == 'ZEA':
+                self.projection = 'lambert'
+            elif self.wcs_type == 'ARC':
+                self.projection = 'postel'
             return
 
         # Read the file if given.
@@ -826,12 +834,22 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         # Start by reading the basic WCS stuff that most types have.
         ctype1 = header['CTYPE1']
         ctype2 = header['CTYPE2']
-        if ctype1 in [ 'RA---TAN', 'RA---TPV' ]:
-            self.wcs_type = ctype1[-3:]
-            if ctype2 != 'DEC--' + self.wcs_type:
-                raise RuntimeError("ctype1, ctype2 are not as expected")
+        if not (ctype1.startswith('RA---') and ctype2.startswith('DEC--')):
+            raise NotImplementedError("GSFitsWCS can only handle cases where CTYPE1 is RA " +
+                                      "and CTYPE2 is DEC")
+        if ctype1[5:] != ctype2[5:]:
+            raise RuntimeError("ctype1, ctype2 do not seem to agree on the WCS type")
+        self.wcs_type = ctype1[5:]
+        if self.wcs_type in [ 'TAN', 'TPV' ]:
+            self.projection = 'gnomonic'
+        elif self.wcs_type == 'STG':
+            self.projection = 'stereographic'
+        elif self.wcs_type == 'ZEA':
+            self.projection = 'lambert'
+        elif self.wcs_type == 'ARC':
+            self.projection = 'postel'
         else:
-            raise RuntimeError("GSFitsWCS cannot read this type of FITS WCS")
+            raise RuntimeError("GSFitsWCS cannot read files using WCS type "+self.wcs_type)
         crval1 = float(header['CRVAL1'])
         crval2 = float(header['CRVAL2'])
         crpix1 = float(header['CRPIX1'])
@@ -934,7 +952,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         # This converts to (u,v) in the tangent plane
         p2 = numpy.dot(self.cd, p1 - self.crpix[:,numpy.newaxis]) 
 
-        if self.wcs_type == 'TPV':
+        if self.pv is not None:
             # Now we apply the distortion terms
             u = p2[0]
             v = p2[1]
@@ -961,10 +979,8 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         u = -p2[0] * factor
         v = p2[1] * factor
 
-        # Finally convert from (u,v) to (ra, dec)
-        # The TAN projection is also known as a gnomonic projection, which is what
-        # we call it in the CelestialCoord class.
-        ra, dec = self.center.deproject_rad(u, v, projection='gnomonic' )
+        # Finally convert from (u,v) to (ra, dec) using the appropriate projection.
+        ra, dec = self.center.deproject_rad(u, v, projection=self.projection)
 
         try:
             len(x)
@@ -979,7 +995,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
     def _xy(self, ra, dec):
         import numpy, numpy.linalg
 
-        u, v = self.center.project_rad(ra, dec, projection='gnomonic' )
+        u, v = self.center.project_rad(ra, dec, projection=self.projection)
 
         # Again, FITS has +u increasing to the east, not west.  Hence the - for u.
         factor = 1. * galsim.arcsec / galsim.degrees
@@ -988,7 +1004,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
         p2 = numpy.array( [ u, v ] )
 
-        if self.wcs_type == 'TPV':
+        if self.pv is not None:
             # Let (s,t) be the current value of (u,v).  Then we want to find a new (u,v) such that
             #
             #       [ s t ] = [ 1 u u^2 u^3 ] pv [ 1 v v^2 v^3 ]^T
@@ -1067,7 +1083,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         # The jacobian here is just the cd matrix.
         jac = self.cd
 
-        if self.wcs_type == 'TPV':
+        if self.pv is not None:
             # Now we apply the distortion terms
             u = p2[0]
             v = p2[1]
@@ -1095,7 +1111,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
         # Finally convert from (u,v) to (ra, dec).  We have a special function that computes
         # the jacobian of this step in the CelestialCoord class.
-        drdu, drdv, dddu, dddv = self.center.deproject_jac(p2[0], p2[1], projection='gnomonic' )
+        drdu, drdv, dddu, dddv = self.center.deproject_jac(p2[0], p2[1], projection=self.projection)
         j2 = numpy.array([ [ drdu, drdv ],
                            [ dddu, dddv ] ])
         jac = numpy.dot(j2,jac)
@@ -1123,7 +1139,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         header["CUNIT2"] = 'deg'
         header["CRVAL1"] = self.center.ra / galsim.degrees
         header["CRVAL2"] = self.center.dec / galsim.degrees
-        if self.wcs_type == 'TPV':
+        if self.pv is not None:
             k = 0
             for n in range(4):
                 for j in range(n+1):
@@ -1215,12 +1231,13 @@ fits_wcs_types = [
                     # TAN projection, and also TPV, which is used by SCamp.  If it does work, it 
                     # is a good choice, since it is easily the fastest of any of these.
 
-    AstropyWCS,     # This requires `import astropy.wcs` to succeed.  So far, they only handle
-                    # the standard official WCS types.  So not TPV, for instance.
-
     PyAstWCS,       # This requires `import starlink.Ast` to succeed.  This handles the largest
                     # number of WCS types of any of these.  In fact, it worked for every one
                     # we tried in our unit tests (which was not exhaustive).
+
+    AstropyWCS,     # This requires `import astropy.wcs` to succeed.  So far, they only handle
+                    # the standard official WCS types.  So not TPV, for instance.  Also, it is
+                    # quite a bit slower than PyAst, so we prefer PyAst when it is available.
 
     WcsToolsWCS,    # This requires the wcstool command line functions to be installed.
                     # It is very slow, so it should only be used as a last resort.

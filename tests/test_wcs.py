@@ -95,6 +95,15 @@ references = {
     'TSC' : ('1904-66_TSC.fits' , 
             [ ('193939.996553', '-634114.585586', 113, 161, 12.48409),
               ('181905.985494', '-634905.781036', 141, 48, 11.65945) ] ),
+    'STG' : ('1904-66_STG.fits' ,
+            [ ('193914.752140', '-634420.882465', 112, 172, 13.1618),
+              ('181937.824461', '-634624.483497', 147, 38, 11.6091) ] ),
+    'ZEA' : ('1904-66_ZEA.fits' ,
+            [ ('193926.871566', '-634326.059526', 110, 170, 13.253),
+              ('181934.480902', '-634640.038427', 144, 39, 11.62) ] ),
+    'ARC' : ('1904-66_ARC.fits' ,
+            [ ('193928.622018', '-634153.658982', 111, 171, 13.7654),
+              ('181947.020701', '-634622.381334', 145, 39, 11.2099) ] ),
     'ZPN' : ('1904-66_ZPN.fits' ,
             [ ('193924.948254', '-634643.636138', 95, 151, 12.84769),
               ('181924.149409', '-634937.453404', 122, 48, 11.01434) ] ),
@@ -129,7 +138,7 @@ references = {
             [ ('174653.214511', '-300847.895372', 32, 91, 7140),
               ('174658.100741', '-300750.121787', 246, 326, 15022) ] ),
 }
-all_tags = [ 'HPX', 'TAN', 'TSC', 'ZPN', 'SIP', 'TPV', 'ZPX', 'TAN-PV', 'REGION', 'TNX' ]
+all_tags = references.keys()
 
 
 def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0):
@@ -1422,6 +1431,8 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
         # Check image -> world
         ref_coord = galsim.CelestialCoord(ra,dec)
         coord = wcs.toWorld(galsim.PositionD(x,y))
+        #print 'ref_coord = ',ra.hms(), dec.dms()
+        #print 'coord = ',coord.ra.hms(), coord.dec.dms()
         dist = ref_coord.distanceTo(coord) / galsim.arcsec
         np.testing.assert_almost_equal(dist, 0, digits, 'wcs.toWorld differed from expected value')
 
@@ -1459,7 +1470,8 @@ def test_astropywcs():
     # These all work, but it is quite slow, so only test one of the for the regular unit tests.
     # Test all of them when running python test_wcs.py.
     if __name__ == "__main__":
-        test_tags = [ 'HPX', 'TAN', 'TSC', 'ZPN', 'SIP', 'REGION' ]
+        test_tags = [ 'HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'REGION' ]
+        test_tags = [ 'SIP' ]
     else:
         test_tags = [ 'SIP' ]
 
@@ -1493,7 +1505,8 @@ def test_pyastwcs():
     # These all work, but it is quite slow, so only test one of the for the regular unit tests.
     # Test all of them when running python test_wcs.py.
     if __name__ == "__main__":
-        test_tags = [ 'HPX', 'TAN', 'TSC', 'ZPN', 'SIP', 'TPV', 'ZPX', 'TAN-PV', 'REGION', 'TNX' ]
+        test_tags = [ 'HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TPV', 'ZPX',
+                      'TAN-PV', 'REGION', 'TNX' ]
     else:
         test_tags = [ 'ZPX' ]
 
@@ -1526,7 +1539,8 @@ def test_wcstools():
     # These all work, but it is quite slow, so only test one of the for the regular unit tests.
     # Test all of them when running python test_wcs.py.
     if __name__ == "__main__":
-        test_tags = [ 'TAN', 'TSC', 'ZPN', 'SIP', 'TPV', 'ZPX', 'REGION', 'TNX' ]
+        test_tags = [ 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TPV', 'ZPX', 
+                      'REGION', 'TNX' ]
     else:
         test_tags = [ 'TNX' ]
 
@@ -1565,7 +1579,13 @@ def test_gsfitswcs():
     import time
     t1 = time.time()
 
-    test_tags = [ 'TAN', 'TPV', 'TAN-PV' ]
+    # These are all relatively fast (total time for all 6 and the TanWCS stuff below is about 
+    # 1.6 seconds), but longer than my arbitrary 1 second goal for any unit test, so only do the 
+    # two most important ones as part of the regular test suite runs.
+    if __name__ == "__main__":
+        test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV' ]
+    else:
+        test_tags = [ 'TAN', 'TPV' ]
 
     dir = 'fits_files'
 
