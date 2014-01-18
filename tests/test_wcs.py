@@ -420,7 +420,7 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
         image_profile2 = wcs.toImage(world_profile2)
 
         for x,y,u,v in zip(near_x_list, near_y_list, near_u_list, near_v_list):
-            print x,y,u,v
+            #print x,y,u,v
             image_pos = galsim.PositionD(x,y)
             world_pos = galsim.PositionD(u,v)
             pixel_area = wcs.pixelArea(image_pos=image_pos)
@@ -1448,6 +1448,9 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
         #print 'ref_coord = ',ra.hms(), dec.dms()
         #print 'coord = ',coord.ra.hms(), coord.dec.dms()
         dist = ref_coord.distanceTo(coord) / galsim.arcsec
+        #print 'delta(ra) = ',(ref_coord.ra - coord.ra)/galsim.arcsec
+        #print 'delta(dec) = ',(ref_coord.dec - coord.dec)/galsim.arcsec
+        #print 'dist = ',dist
         np.testing.assert_almost_equal(dist, 0, digits, 'wcs.toWorld differed from expected value')
 
         # Normally, we check the agreement to 1.e-3 arcsec.
@@ -1461,6 +1464,8 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
         # Check world -> image
         pixel_scale = wcs.minLinearScale(galsim.PositionD(x,y))
         pos = wcs.toImage(galsim.CelestialCoord(ra,dec))
+        #print 'x,y = ',x,y
+        #print 'pos = ',pos
         np.testing.assert_almost_equal((x-pos.x)*pixel_scale, 0, digits2,
                                        'wcs.toImage differed from expected value')
         np.testing.assert_almost_equal((y-pos.y)*pixel_scale, 0, digits2,
@@ -1596,7 +1601,7 @@ def test_gsfitswcs():
     # 1.6 seconds), but longer than my arbitrary 1 second goal for any unit test, so only do the 
     # two most important ones as part of the regular test suite runs.
     if __name__ == "__main__":
-        test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV' ]
+        test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TNX' ]
     else:
         test_tags = [ 'TAN', 'TPV' ]
 

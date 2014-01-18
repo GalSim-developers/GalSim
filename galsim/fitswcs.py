@@ -741,7 +741,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
     However, it does several popular WCS types properly, and it doesn't require any additional 
     python modules to be installed, which can be helpful.
 
-    Currrently, it is able to parse the following WCS types: TAN, STG, ZEA, ARC, TPV
+    Currrently, it is able to parse the following WCS types: TAN, STG, ZEA, ARC, TPV, TNX
 
     Initialization
     --------------
@@ -840,7 +840,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         if ctype1[5:] != ctype2[5:]:
             raise RuntimeError("ctype1, ctype2 do not seem to agree on the WCS type")
         self.wcs_type = ctype1[5:]
-        if self.wcs_type in [ 'TAN', 'TPV' ]:
+        if self.wcs_type in [ 'TAN', 'TPV', 'TNX' ]:
             self.projection = 'gnomonic'
         elif self.wcs_type == 'STG':
             self.projection = 'stereographic'
@@ -896,6 +896,8 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         self.pv = None
         if self.wcs_type == 'TPV':
             self._read_tpv(header)
+        elif self.wcs_type == 'TNX':
+            self._read_tnx(header)
 
         # I think the CUNIT specification applies to the CD matrix as well, but I couldn't actually
         # find good documentation for this.  Plus all the examples I saw used degrees anyway, so 
@@ -942,6 +944,165 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                                    [ pv2[2], pv2[4], pv2[7],   0.   ],
                                    [ pv2[5], pv2[8],   0.  ,   0.   ],
                                    [ pv2[9],   0.  ,   0.  ,   0.   ] ] ] )
+
+    def _read_tnx(self, header):
+
+        # TNX has a few different options.  Rather than keep things in the native format, 
+        # we actually convert to the equivalent of TPV to make the actual operations faster.
+        # See http://iraf.noao.edu/projects/ccdmosaic/tnx.html for details.
+        
+        # First, parse the input values, which are stored in WAT keywords:
+        k = 1
+        wat1 = ""
+        key = 'WAT1_%03d'%k
+        while key in header:
+            wat1 += header[key]
+            k = k+1
+            key = 'WAT1_%03d'%k
+        wat1 = wat1.split()
+
+        k = 1
+        wat2 = ""
+        key = 'WAT2_%03d'%k
+        while key in header:
+            wat2 += header[key]
+            k = k+1
+            key = 'WAT2_%03d'%k
+        wat2 = wat2.split()
+
+        if ( len(wat1) < 12 or
+             wat1[0] != 'wtype=tnx' or 
+             wat1[1] != 'axtype=ra' or
+             wat1[2] != 'lngcor' or
+             wat1[3] != '=' or 
+             not wat1[4].startswith('"') or
+             not wat1[-1].endswith('"') ):
+            raise RuntimeError("TNX WAT1 was not as expected")
+        if ( len(wat2) < 12 or
+             wat2[0] != 'wtype=tnx' or 
+             wat2[1] != 'axtype=dec' or
+             wat2[2] != 'latcor' or
+             wat2[3] != '=' or 
+             not wat2[4].startswith('"') or
+             not wat2[-1].endswith('"') ):
+            raise RuntimeError("TNX WAT2 was not as expected")
+
+        # Break the next bit out into another function, since it is the same for x and y.
+        pv1 = self._parse_tnx_data(wat1[4:])
+        pv2 = self._parse_tnx_data(wat2[4:])
+
+        # Those just give the adjustments to the position, not the matrix that gives the final
+        # position.  i.e. the TNX standard uses u = u + [1 u u^2 u^3] PV [1 v v^2 v^3]T.
+        # So we need to add 1 to the correct term in each matrix to get what we really want.
+        pv1[1,0] += 1.
+        pv2[0,1] += 1.
+
+        # Finally, store these as our pv 3-d array.
+        import numpy
+        self.pv = numpy.array([pv1, pv2])
+
+        # We've now converted this to TPV, so call it that when we output to a fits header.
+        self.wcs_type = 'TPV'
+
+    def _parse_tnx_data(self, data):
+
+        # I'm not sure if there is any requirement on there being a space before the final " and
+        # not before the initial ".  But both the example in the description of the standard and
+        # the one we have in our test directory are this way.  Here, if the " is by itself, I
+        # remove the item, and if it is part of a longer string, I just strip it off.  Seems the 
+        # most sensible thing to do.
+        if data[0] == '"':
+            data = data[1:]
+        else:
+            data[0] = data[0][1:]
+        if data[-1] == '"':
+            data = data[:-1]
+        else:
+            data[-1] = data[-1][:-1]
+
+        code = int(data[0].strip('.'))  # Weirdly, these integers are given with decimal points.
+        xorder = int(data[1].strip('.'))
+        yorder = int(data[2].strip('.'))
+        cross = int(data[3].strip('.'))
+        if cross != 2:
+            raise NotImplementedError("TNX only implemented for half-cross option.")
+        if xorder != 4 or yorder != 4:
+            raise NotImplementedError("TNX only implemented for order = 4")
+        # Note: order = 4 really means cubic.  order is how large the pv matrix is, i.e. 4x4.
+
+        xmin = float(data[4])
+        xmax = float(data[5])
+        ymin = float(data[6])
+        ymax = float(data[7])
+
+        pv1 = [ float(x) for x in data[8:] ]
+        if len(pv1) != 10:
+            raise RuntimeError("Wrong number of items found in WAT data")
+
+        # Put these into our matrix formulation.
+        import numpy
+        pv = numpy.array( [ [ pv1[0], pv1[4], pv1[7], pv1[9] ],
+                            [ pv1[1], pv1[5], pv1[8],   0.   ],
+                            [ pv1[2], pv1[6],   0.  ,   0.   ],
+                            [ pv1[3],   0.  ,   0.  ,   0.   ] ] )
+
+        # Convert from Legendre or Chebyshev polynomials into regular polynomials.
+        if code < 3:
+            # Instead of 1, x, x^2, x^3, Chebyshev uses: 1, x', 2x'^2 - 1, 4x'^3 - 3x
+            # where x' = (2x - xmin - xmax) / (xmax-xmin).
+            # Similarly, with y' = (2y - ymin - ymin) / (ymax-ymin)
+            # We'd like to convert the pv matrix from being in terms of x' and y' to being 
+            # in terms of just x, y.  To see how this works, look at what pv[1,1] means:
+            #
+            # First, let's say we can write x as (a + bx), and we can write y' as (c + dy).
+            # Then the term for pv[1,1] is:
+            #
+            # term = x' * pv[1,1] * y'
+            #      = (a + bx) * pv[1,1] * (d + ey)
+            #      =       a * pv[1,1] * c  +      a * pv[1,1] * d * y
+            #        + x * b * pv[1,1] * c  +  x * b * pv[1,1] * d * y
+            #
+            # So the single term initially will contribute to 4 different terms in the final 
+            # matrix.  And the contributions will just be pv[1,1] times the outer product
+            # [a b]T [d e].  So if we can determine the matrix that converts from 
+            # [1, x, x^2, x^3] to the Chebyshev vector, the the matrix we want is simply
+            # xmT pv ym.
+            a = -(xmax+xmin)/(xmax-xmin)
+            b = 2./(xmax-xmin)
+            c = -(ymax+ymin)/(ymax-ymin)
+            d = 2./(ymax-ymin)
+            xm = numpy.zeros((4,4))
+            ym = numpy.zeros((4,4))
+            xm[0,0] = 1.
+            xm[1,0] = a
+            xm[1,1] = b
+            ym[0,0] = 1.
+            ym[1,0] = c
+            ym[1,1] = d
+            if code == 1:
+                for m in range(2,4):
+                    # The recursion rule is Pm = 2 x' Pm-1 - Pm-2
+                    # Pm = 2 a Pm-1 - Pm-2 + x * 2 b Pm-1
+                    xm[m] = 2. * a * xm[m-1] - xm[m-2]
+                    xm[m,1:] += 2. * b * xm[m-1,:-1]
+                    ym[m] = 2. * c * ym[m-1] - ym[m-2]
+                    ym[m,1:] += 2. * d * ym[m-1,:-1]
+            else:
+                # code == 2 means Legendre.  The same argument applies, but we have a 
+                # different recursion rule.
+                # WARNING: This branch has not been tested!  I don't have any TNX files
+                # with Legendre functions to test it on.  I think it's right, but beware!
+                for m in range(2,4):
+                    # The recursion rule is Pm = ((2m-1) x' Pm-1 - (m-1) Pm-2) / m
+                    # Pm = ((2m-1) a Pm-1 - (m-1) Pm-2) / m
+                    #      + x * ((2m-1) b Pm-1) / m
+                    xm[m] = ((2.*m-1.) * a * xm[m-1] - (m-1.) * xm[m-2]) / m
+                    xm[m,1:] += ((2.*m-1.) * b * xm[m-1,:-1]) / m
+                    ym[m] = ((2.*m-1.) * c * ym[m-1] - (m-1.) * ym[m-2]) / m
+                    ym[m,1:] += ((2.*m-1.) * d * ym[m-1,:-1]) / m
+
+            pv2 = numpy.dot(xm.T , numpy.dot(pv, ym))
+            return pv2
 
     def _radec(self, x, y):
         import numpy
@@ -1030,7 +1191,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                 diff = numpy.dot(numpy.dot(self.pv, vpow), upow) - p2
 
                 # Check that things are improving...
-                err = numpy.max(diff)
+                err = numpy.max(numpy.abs(diff))
                 if prev_err:
                     if err > prev_err:
                         raise RuntimeError("Unable to solve for image_pos (not improving)")
