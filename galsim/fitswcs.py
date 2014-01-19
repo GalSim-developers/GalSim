@@ -202,6 +202,10 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         # Here we have to work around another astropy.wcs bug.  The way they use scipy's
         # Broyden's method doesn't work.  So I implement a fix here.
         if False:
+            # This is what I would like to have done, but it doesn't work.  I've reported
+            # the issue at:
+            # https://github.com/astropy/astropy/issues/1977
+
             # Try their version first (with and without ra_dec_order) in case they fix this.
             import warnings
             try:
