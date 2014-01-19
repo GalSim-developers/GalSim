@@ -387,14 +387,37 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
             world_pos2.y, world_pos1.y, digits,
             'setOrigin(new_origin) returned wrong world position')
     new_world_origin = galsim.PositionD(5352.7, 9234.3)
-    wcs5 = wcs.setOrigin(new_origin, new_world_origin)
-    world_pos3 = wcs5.toWorld(new_origin)
+    wcs4 = wcs.setOrigin(new_origin, new_world_origin)
+    world_pos3 = wcs4.toWorld(new_origin)
     np.testing.assert_almost_equal(
             world_pos3.x, new_world_origin.x, digits,
             'setOrigin(new_origin, new_world_origin) returned wrong position')
     np.testing.assert_almost_equal(
             world_pos3.y, new_world_origin.y, digits,
             'setOrigin(new_origin, new_world_origin) returned wrong position')
+
+    # Check inverse:
+    image_pos = wcs.inverse().toWorld(world_pos1)
+    np.testing.assert_almost_equal(
+            image_pos.x, 0, digits,
+            'wcs.inverse().toWorld(world_pos) returned wrong image position')
+    np.testing.assert_almost_equal(
+            image_pos.y, 0, digits,
+            'wcs.inverse().toWorld(world_pos) returned wrong image position')
+    image_pos = wcs4.toImage(new_world_origin)
+    np.testing.assert_almost_equal(
+            image_pos.x, new_origin.x, digits,
+            'wcs4.toImage(new_world_origin) returned wrong image position')
+    np.testing.assert_almost_equal(
+            image_pos.y, new_origin.y, digits,
+            'wcs4.toImage(new_world_origin) returned wrong image position')
+    image_pos = wcs4.inverse().toWorld(new_world_origin)
+    np.testing.assert_almost_equal(
+            image_pos.x, new_origin.x, digits,
+            'wcs4.inverse().toWorld(new_world_origin) returned wrong image position')
+    np.testing.assert_almost_equal(
+            image_pos.y, new_origin.y, digits,
+            'wcs4.inverse().toWorld(new_world_origin) returned wrong image position')
 
     # Check that (x,y) -> (u,v) and converse work correctly
     do_wcs_pos(wcs, ufunc, vfunc, name)
@@ -462,7 +485,7 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
 
 def do_jac_decomp(wcs, name):
 
-    print 'Check deomposition for ',name,wcs
+    #print 'Check deomposition for ',name,wcs
 
     scale, shear, theta, flip = wcs.getDecomposition()
     #print 'decomposition = ',scale, shear, theta, flip
@@ -483,6 +506,20 @@ def do_jac_decomp(wcs, name):
     J = wcs.getMatrix()
     np.testing.assert_almost_equal(
             M, J, 8, "Decomposition was inconsistent with jacobian for "+name)
+
+    # There are some relations between the decomposition and the inverse decomposition that should 
+    # be true:
+    scale2, shear2, theta2, flip2 = wcs.inverse().getDecomposition()
+    #print 'inverse decomposition = ',scale2, shear2, theta2, flip2
+    np.testing.assert_equal(flip, flip2, "inverse flip")
+    np.testing.assert_almost_equal(scale, 1./scale2, 6, "inverse scale")
+    if flip:
+        np.testing.assert_almost_equal(theta.rad(), theta2.rad(), 6, "inverse theta")
+    else:
+        np.testing.assert_almost_equal(theta.rad(), -theta2.rad(), 6, "inverse theta")
+    np.testing.assert_almost_equal(shear.getG(), shear2.getG(), 6, "inverse shear")
+    # There is no simple relation between the directions of the shear in the two cases.
+    # The shear direction gets mixed up by the rotation if that is non-zero.
 
     # Also check that the profile is transformed equivalently as advertised in the docstring
     # for getDecomposition.
@@ -1597,7 +1634,7 @@ def test_gsfitswcs():
     import time
     t1 = time.time()
 
-    # These are all relatively fast (total time for all 6 and the TanWCS stuff below is about 
+    # These are all relatively fast (total time for all 7 and the TanWCS stuff below is about 
     # 1.6 seconds), but longer than my arbitrary 1 second goal for any unit test, so only do the 
     # two most important ones as part of the regular test suite runs.
     if __name__ == "__main__":

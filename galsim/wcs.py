@@ -813,6 +813,18 @@ class UniformWCS(EuclideanWCS):
     def _local(self, image_pos=None, world_pos=None): 
         return self._local_wcs
 
+    # UniformWCS transformations can be inverted easily, so might as well provide that function.
+    def inverse(self):
+        """Return the inverse transformation, i.e. the transformation that swaps the roles of 
+        the "image" and "world" coordinates.
+        """
+        return self._inverse()
+
+    # We'll override this for LocalWCS classes. Non-local UniformWCS classes can use that function
+    # do the inversion.
+    def _inverse(self):
+        return self._local_wcs._inverse()._newOrigin(self.world_origin, self.origin)
+
     # This is very simple if the pixels are uniform.
     def _makeSkyImage(self, image, sky_level):
         image.fill(sky_level * self.pixelArea())
@@ -1074,6 +1086,9 @@ class PixelScale(LocalWCS):
     def _maxScale(self):
         return self._scale
 
+    def _inverse(self):
+        return PixelScale(1./self._scale)
+
     def _toJacobian(self):
         return JacobianWCS(self._scale, 0., 0., self._scale)
 
@@ -1192,6 +1207,9 @@ class ShearWCS(LocalWCS):
         # max stretch is (1+|g|) / sqrt(1-|g|^2)
         import numpy
         return self._scale * (1. + numpy.sqrt(self._gsq)) * self._gfactor
+
+    def _inverse(self):
+        return ShearWCS(1./self._scale, -self._shear)
 
     def _toJacobian(self):
         return JacobianWCS(
@@ -1426,6 +1444,12 @@ class JacobianWCS(LocalWCS):
         g2 = shear.g2
         gsq = g1*g1 + g2*g2
         return scale * (1.+math.sqrt(gsq)) / math.sqrt(1.-gsq)
+
+        #  J^-1 = (1/det) (  dvdy  -dudy )
+        #                 ( -dvdx   dudx )
+    def _inverse(self):
+        return JacobianWCS(self._dvdy/self._det, -self._dudy/self._det,
+                           -self._dvdx/self._det, self._dudx/self._det)
 
     def _toJacobian(self):
         return self
