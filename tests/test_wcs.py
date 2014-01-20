@@ -507,6 +507,15 @@ def do_jac_decomp(wcs, name):
     np.testing.assert_almost_equal(
             M, J, 8, "Decomposition was inconsistent with jacobian for "+name)
 
+    # The minLinearScale is scale * (1-g) / sqrt(1-g^2)
+    import math
+    g = shear.getG()
+    min_scale = scale * (1.-g) / math.sqrt(1.-g**2)
+    np.testing.assert_almost_equal(wcs.minLinearScale(), min_scale, 6, "minLinearScale")
+    # The maxLinearScale is scale * (1+g) / sqrt(1-g^2)
+    max_scale = scale * (1.+g) / math.sqrt(1.-g**2)
+    np.testing.assert_almost_equal(wcs.maxLinearScale(), max_scale, 6, "minLinearScale")
+
     # There are some relations between the decomposition and the inverse decomposition that should 
     # be true:
     scale2, shear2, theta2, flip2 = wcs.inverse().getDecomposition()

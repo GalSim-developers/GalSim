@@ -1425,28 +1425,22 @@ class JacobianWCS(LocalWCS):
     def _minScale(self):
         import math
         # min scale is scale * (1-|g|) / sqrt(1-|g|^2)
-        # We can get this from the decomposition:
-        scale, shear, theta, flip = self.getDecomposition()
-        g1 = shear.g1
-        g2 = shear.g2
-        gsq = g1*g1 + g2*g2
-        # I'm sure there is a more efficient calculation of this.  Certainly, we don't need the 
-        # atan2 call from getDecomposition.  But I think we at least need at least 2 of the 3
-        # sqrts, which are also rather slow.  So I'm not sure how much of a speedup is actually
-        # possible.  Plus I doubt this is ever a time critical operation.  :)
-        return scale * (1.-math.sqrt(gsq)) / math.sqrt(1.-gsq)
+        # We could get this from the decomposition, but some algebra finds that this 
+        # reduces to the following calculation:
+        # NB: The unit tests test for the equivalence with the above formula.
+        h1 = math.sqrt( (self._dudx + self._dvdy)**2 + (self._dudy - self._dvdx)**2 )
+        h2 = math.sqrt( (self._dudx - self._dvdy)**2 + (self._dudy + self._dvdx)**2 )
+        return 0.5 * abs(h1 - h2)
 
     def _maxScale(self):
         import math
-        # max scale is scale * (1+|g|) / sqrt(1-|g|^2)
-        scale, shear, theta, flip = self.getDecomposition()
-        g1 = shear.g1
-        g2 = shear.g2
-        gsq = g1*g1 + g2*g2
-        return scale * (1.+math.sqrt(gsq)) / math.sqrt(1.-gsq)
+        # min scale is scale * (1+|g|) / sqrt(1-|g|^2)
+        # which is equivalent to the following:
+        # NB: The unit tests test for the equivalence with the above formula.
+        h1 = math.sqrt( (self._dudx + self._dvdy)**2 + (self._dudy - self._dvdx)**2 )
+        h2 = math.sqrt( (self._dudx - self._dvdy)**2 + (self._dudy + self._dvdx)**2 )
+        return 0.5 * abs(h1 + h2)
 
-        #  J^-1 = (1/det) (  dvdy  -dudy )
-        #                 ( -dvdx   dudx )
     def _inverse(self):
         return JacobianWCS(self._dvdy/self._det, -self._dudy/self._det,
                            -self._dvdx/self._det, self._dudx/self._det)
