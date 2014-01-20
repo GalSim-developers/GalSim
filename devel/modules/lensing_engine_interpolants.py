@@ -11,6 +11,7 @@ import numpy as np
 import os
 import subprocess
 import pyfits
+import optparse
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 
@@ -116,6 +117,59 @@ def ft_interp(uvals, interpolant):
     else:
         raise NotImplementedError
 
+def generate_ps_cutoff_plots(ell, ps, theory_ps,
+                             nocutoff_ell, nocutoff_ps, nocutoff_theory_ps,
+                             interpolant, ps_plot_prefix, type='EE'):
+    """Routine to make power spectrum plots for edge cutoff vs. not (in both cases, without
+       interpolation) and write them to file.
+
+    Arguments:
+
+      ell ----------------- Wavenumber k (flat-sky version of ell) in 1/radians, after cutting off
+                            grid edges.
+
+      ps ------------------ Power spectrum in radians^2 after cutting off grid edges.
+
+      theory_ps ----------- Rebinned theory power spectrum after cutting off grid edges.
+
+      nocutoff_ell -------- Wavenumber k (flat-sky version of ell) in 1/radians, before cutting off
+                            grid edges.
+
+      nocutoff_ps --------- Power spectrum in radian^2 before cutting off grid edges.
+
+      nocutoff_theory_ps -- Rebinned theory power spectrum before cutting off grid edges.
+
+      interpolant --------- Which interpolant was used?
+
+      ps_plot_prefix ------ Prefix to use for power spectrum plots.
+
+      type ---------------- Type of power spectrum?  Options are 'EE', 'BB', 'EB'.
+
+    """
+    # Sanity checks on acceptable inputs
+    assert ell.shape == ps.shape
+    assert ell.shape == theory_ps.shape
+    assert nocutoff_ell.shape == nocutoff_ps.shape
+    assert nocutoff_ell.shape == nocutoff_theory_ps.shape
+
+    # Set up plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(ell, ell*(ell+1)*ps/(2.*np.pi), color='b', label='Power spectrum')
+    ax.plot(ell, ell*(ell+1)*theory_ps/(2.*np.pi), color='c', label='Theory power spectrum')
+    ax.plot(nocutoff_ell, nocutoff_ell*(nocutoff_ell+1)*nocutoff_ps/(2.*np.pi),
+            color='r', label='Power spectrum without cutoff')
+    ax.plot(nocutoff_ell, nocutoff_ell*(nocutoff_ell+1)*nocutoff_theory_ps/(2.*np.pi),
+            color='m', label='Theory power spectrum without cutoff')
+    if type=='EE':
+        ax.set_yscale('log')
+    plt.legend(loc='upper right', prop=fontP)
+
+    # Write to file.
+    outfile = ps_plot_prefix + interpolant + '_grid_cutoff_' + type + '.png'
+    plt.savefig(outfile)
+    print "Wrote power spectrum (grid cutoff) plot to file %r"%outfile
+
 
 def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
                       dth, type='EE'):
@@ -128,7 +182,8 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
 
       ell ----------------- Wavenumber k (flat-sky version of ell) in 1/radians.
 
-      ps ------------------ Actual power spectrum, in radians^2.
+      ps ------------------ Actual power spectrum for original grid, pre-interpolation,, in
+                            radians^2.
 
       interpolated_ps ----- Power spectrum including effects of the interpolant.
 
@@ -209,6 +264,52 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
     outfile = ps_plot_prefix + interpolant + '_' + type + '.png'
     plt.savefig(outfile)
     print "Wrote power spectrum plots to file %r"%outfile
+
+def generate_cf_cutoff_plots(th, cf, nocutoff_th, nocutoff_cf, interpolant, cf_plot_prefix,
+                             type='p'):
+    """Routine to make correlation function plots for edge cutoff vs. not (in both cases, without
+       interpolation) and write them to file.
+
+    Arguments:
+
+      th ------------------ Angle theta (separation on sky), in degrees, after grid cutoff
+
+      cf ------------------ Correlation function xi_+ (dimensionless), after grid cutoff.
+
+      nocutoff_th --------- Angle theta (separation on sky), in degrees, before grid cutoff
+
+      nocutoff_cf --------- Correlation function xi_+ (dimensionless), before grid cutoff.
+
+      interpolant --------- Which interpolant was used?
+
+      cf_plot_prefix ------ Prefix to use for correlation function plots.
+
+      type ---------------- Type of correlation function?  Options are 'p' and 'm' for xi_+ and
+                            xi_-.
+    """
+    # Sanity checks on acceptable inputs
+    assert th.shape == cf.shape
+    assert nocutoff_th.shape == nocutoff_cf.shape
+
+    # Set up plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(th, cf, color='b', label='Correlation function')
+    ax.plot(nocutoff_th, nocutoff_cf, color='r',
+            label='Correlation function with grid cutoff')
+    if type=='p':
+        ax.set_ylabel('xi_+')
+    else:
+        ax.set_ylabel('xi_-')
+    ax.set_title('Interpolant: %s'%interpolant)
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    plt.legend(loc='upper right', prop=fontP)
+
+    # Write to file.
+    outfile = cf_plot_prefix + interpolant + '_grid_cutoff_' + type + '.png'
+    plt.savefig(outfile)
+    print "Wrote correlation function (grid cutoff) plots to file %r"%outfile
 
 def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
                       dth, type='p'):
@@ -409,7 +510,26 @@ def getCF(x, y, g1, g2, dtheta, ngrid, n_output_bins):
     xip_err = results[:,6]
     return r, xip, xim, xip_err
 
-def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefix):
+def nCutoff(interpolant):
+    """How many rows/columns around the edge to cut off for a given interpolant?
+
+    Arguments:
+
+        interpolant ------- String indicating which interpolant to use.  Options are "nearest",
+                            "linear", "cubic", "quintic".
+    """
+    options = {"nearest" : 1,
+               "linear" : 1,
+               "cubic" : 2,
+               "quintic" : 3}
+
+    try:
+        return options[interpolant]
+    except KeyError:
+        raise RuntimeError("No cutoff scheme was defined for interpolant %s!"%interpolant)
+
+def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefix,
+    edge_cutoff=False):
     """Main routine to drive all tests.
 
     Arguments:
@@ -428,6 +548,10 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
 
         cf_plot_prefix ----- Prefix to use for correlation function outputs.
 
+        edge_cutoff -------- Cut off grid edges when comparing original vs. interpolation?  The
+                             motivation for doing so would be to check for effects due to the edge
+                             pixels being affected most by interpolation.
+                             (default=False)
     """
     # Get basic grid information
     grid_spacing = grid_size / ngrid
@@ -446,10 +570,9 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
     #          = 90 / (grid spacing in degrees)
     k_max = 90. / grid_spacing
     # Now define a power spectrum that is raw_ps below k_max and goes smoothly to zero above that.
-    ps = galsim.PowerSpectrum(
-        galsim.LookupTable(raw_ps_k, raw_ps_p*cutoff_func(raw_ps_k/k_max), interpolant='linear'),
-        units = galsim.radians
-        )
+    ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*cutoff_func(raw_ps_k/k_max),
+                                  interpolant='linear')
+    ps = galsim.PowerSpectrum(ps_table, units = galsim.radians)
 
     # Set up grid and the corresponding x, y lists.
     min = (-ngrid/2 + 0.5) * grid_spacing
@@ -484,6 +607,15 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
         print "  Generating %d realizations..."%n_realizations
 
         # Initialize arrays for two-point functions.
+        if edge_cutoff:
+            # If we are cutting off edge points, then all the functions we store will include that
+            # cutoff.  However, we will save results for the original grids without the cutoffs just
+            # in order to test what happens with / without a cutoff in the no-interpolation case.
+            mean_nocutoff_ps_ee = np.zeros(n_output_bins)
+            mean_nocutoff_ps_bb = np.zeros(n_output_bins)
+            mean_nocutoff_ps_eb = np.zeros(n_output_bins)
+            mean_nocutoff_cfp = np.zeros(n_output_bins)
+            mean_nocutoff_cfm = np.zeros(n_output_bins)
         mean_interpolated_ps_ee = np.zeros(n_output_bins)
         mean_ps_ee = np.zeros(n_output_bins)
         mean_interpolated_ps_bb = np.zeros(n_output_bins)
@@ -510,44 +642,85 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
             if dithering == 'random':
                 dither_x = x + u()*grid_spacing
                 dither_y = y + u()*grid_spacing
-                dither_x = list(dither_x.flatten())
-                dither_y = list(dither_y.flatten())
+                dither_x_list = list(dither_x.flatten())
+                dither_y_list = list(dither_y.flatten())
 
             # Interpolate shears on the offset grid, with periodic interpolation.
-            interpolated_g1, interpolated_g2 = ps.getShear(pos=(dither_x,dither_y),
+            interpolated_g1, interpolated_g2 = ps.getShear(pos=(dither_x_list,dither_y_list),
                                                            units=galsim.degrees,
                                                            periodic=True)
             # And put back into the format that the PowerSpectrumEstimator will want.
             interpolated_g1 = np.array(interpolated_g1).reshape((ngrid, ngrid))
             interpolated_g2 = np.array(interpolated_g2).reshape((ngrid, ngrid))
-            # Commented out lines below are to allow a check of what happens just from cutting off
-            # the grid.
-            # interpolated_g1 = g1[0:ngrid-1,0:ngrid-1]
-            # interpolated_g2 = g2[0:ngrid-1,0:ngrid-1]
+
+            # Now, we consider the question of whether we want cutoff grids.  If so, then we should
+            # (a) store some results for the non-cutoff grids, and (b) cutoff the original and
+            # interpolated grids before doing any further calculations.  If not, then nothing else
+            # is really needed here.
+            if edge_cutoff:
+                # Get the PS for non-cutoff grid, and store results.
+                nocutoff_pse = galsim.pse.PowerSpectrumEstimator(ngrid, grid_size, n_output_bins)
+                nocutoff_ell, tmp_ps_ee, tmp_ps_bb, tmp_ps_eb, nocutoff_ps_ee_theory = \
+                    nocutoff_pse.estimate(g1, g2, theory_func=ps_table)
+                mean_nocutoff_ps_ee += tmp_ps_ee
+                mean_nocutoff_ps_bb += tmp_ps_bb
+                mean_nocutoff_ps_eb += tmp_ps_eb
+
+                # Get the corr func for non-cutoff grid, and store results.
+                nocutoff_th, tmp_cfp, tmp_cfm, _ = \
+                    getCF(x.flatten(), y.flatten(), g1.flatten(), g2.flatten(),
+                          grid_spacing, ngrid, n_output_bins)
+                mean_nocutoff_cfp += tmp_cfp
+                mean_nocutoff_cfm += tmp_cfm
+
+                # Cut off the original, interpolated grids before doing any more calculations.
+                # Store grid size that we actually use for everything else in future, post-cutoff.
+                n_cutoff = nCutoff(interpolant)
+                ngrid_use = ngrid - 2*n_cutoff
+                grid_size_use = grid_size * float(ngrid_use)/ngrid
+                if ngrid_use <= 2:
+                    raise RuntimeError("After applying edge cutoff, grid is too small!"
+                                       "Increase grid size or remove cutoff, or both.")
+                g1 = g1[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
+                g2 = g2[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
+                interpolated_g1 = interpolated_g1[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
+                interpolated_g2 = interpolated_g2[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
+                x_use = x[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
+                y_use = y[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
+                dither_x_use = dither_x[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
+                dither_y_use = dither_y[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
+            else:
+                # Just store the grid size and other quantities that we actually use.
+                ngrid_use = ngrid
+                x_use = x
+                y_use = y
+                dither_x_use = dither_x
+                dither_y_use = dither_y
 
             # Get statistics: PS, correlation function. 
-            # Set up PowerSpectrumEstimator first.  Reminder: for interpolated points, we need to
-            # omit the last row, since the interpolated grid has gotten shifted outside the original
-            # grid bounds, and therefore was set to zero.
+            # Set up PowerSpectrumEstimator first, with the grid size and so on depending on whether
+            # we have cut off the edges using the edge_cutoff.  The block of code just above this
+            # one should have set all variables appropriately.
             if i_real == 0:
-                interpolated_pse = galsim.pse.PowerSpectrumEstimator(ngrid,
-                                                                    grid_size,
-                                                                    n_output_bins)           
-                pse = galsim.pse.PowerSpectrumEstimator(ngrid,
-                                                        grid_size,
+                interpolated_pse = galsim.pse.PowerSpectrumEstimator(ngrid_use,
+                                                                     grid_size_use,
+                                                                     n_output_bins)           
+                pse = galsim.pse.PowerSpectrumEstimator(ngrid_use,
+                                                        grid_size_use,
                                                         n_output_bins)           
-            ell, interpolated_ps_ee, interpolated_ps_bb, interpolated_ps_eb = \
+            int_ell, interpolated_ps_ee, interpolated_ps_bb, interpolated_ps_eb, \
+                interpolated_ps_ee_theory = \
                 interpolated_pse.estimate(interpolated_g1,
-                                          interpolated_g2)
-            ell, ps_ee, ps_bb, ps_eb = pse.estimate(g1, g2)
-            th, interpolated_cfp, interpolated_cfm, cf_err = \
-                getCF(np.array(dither_x), np.array(dither_y),
-                      interpolated_g1.flatten(),
-                      interpolated_g2.flatten(), grid_spacing,
-                      ngrid, n_output_bins)
-            _, cfp, cfm, _ = \
-                getCF(x.flatten(), y.flatten(), g1.flatten(), g2.flatten(),
-                      grid_spacing, ngrid, n_output_bins)
+                                          interpolated_g2,
+                                          theory_func=ps_table)
+            ell, ps_ee, ps_bb, ps_eb, ps_ee_theory = pse.estimate(g1, g2, theory_func=ps_table)
+            int_th, interpolated_cfp, interpolated_cfm, cf_err = \
+                getCF(dither_x_use.flatten(), dither_y_use.flatten(),
+                      interpolated_g1.flatten(), interpolated_g2.flatten(),
+                      grid_spacing, ngrid_use, n_output_bins)
+            th, cfp, cfm, _ = \
+                getCF(x_use.flatten(), y_use.flatten(), g1.flatten(), g2.flatten(),
+                      grid_spacing, ngrid_use, n_output_bins)
 
             # Accumulate statistics.
             mean_interpolated_ps_ee += interpolated_ps_ee
@@ -573,15 +746,32 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
         mean_cfp /= n_realizations
         mean_interpolated_cfm /= n_realizations
         mean_cfm /= n_realizations
+        if edge_cutoff:
+            mean_nocutoff_ps_ee /= n_realizations
+            mean_nocutoff_ps_bb /= n_realizations
+            mean_nocutoff_ps_eb /= n_realizations
+            mean_nocutoff_cfp /= n_realizations
+            mean_nocutoff_cfm /= n_realizations
 
         # Plot statistics, and ratios with vs. without interpolants.
         print "Running plotting routines for interpolant=%s..."%interpolant
+        if edge_cutoff:
+            generate_ps_cutoff_plots(ell, mean_ps_ee, ps_ee_theory,
+                                     nocutoff_ell, mean_nocutoff_ps_ee, nocutoff_ps_ee_theory,
+                                     interpolant, ps_plot_prefix, type='EE')
         generate_ps_plots(ell, mean_ps_ee, mean_interpolated_ps_ee, interpolant, ps_plot_prefix,
                           grid_spacing, type='EE')
         generate_ps_plots(ell, mean_ps_bb, mean_interpolated_ps_bb, interpolant, ps_plot_prefix,
                           grid_spacing, type='BB')
         generate_ps_plots(ell, mean_ps_eb, mean_interpolated_ps_eb, interpolant, ps_plot_prefix,
                           grid_spacing, type='EB')
+        if edge_cutoff:
+            generate_cf_cutoff_plots(th, mean_cfp, 
+                                     nocutoff_th, mean_nocutoff_cfp,
+                                     interpolant, cf_plot_prefix, type='p')
+            generate_cf_cutoff_plots(th, mean_cfm, 
+                                     nocutoff_th, mean_nocutoff_cfm,
+                                     interpolant, cf_plot_prefix, type='m')
         generate_cf_plots(th, mean_cfp, mean_interpolated_cfp, interpolant, cf_plot_prefix,
                           grid_spacing, type='p')
         generate_cf_plots(th, mean_cfm, mean_interpolated_cfm, interpolant, cf_plot_prefix,
@@ -600,41 +790,44 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
         print ""
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(
-        description='Run tests of GalSim interpolants on lensing engine outputs.')
-    parser.add_argument('-n','--number-of-realizations', 
-                        help='Number of objects to run tests on (default: %i)'%default_n,
-                        default=default_n, type=int, dest='n_realizations')
-    parser.add_argument('-s','--subsampling', 
+    description='Run tests of GalSim interpolants on lensing engine outputs.'
+    usage='usage: %prog [options]'
+    parser = optparse.OptionParser(usage=usage, description=description)
+    parser.add_option('--n', dest="n_realizations", type=int,
+                      default=default_n,
+                      help='Number of objects to run tests on (default: %i)'%default_n)
+    parser.add_option('--subsampling', dest='dithering', type=str,
                         help='Grid dithering to test (default: %s)'%default_dithering,
-                        default=default_dithering, type=str, dest='dithering')
-    parser.add_argument('-n_out','--n_output_bins',
-                        help='Number of bins for calculating 2-point functions '
-                        '(default: %i)'%default_n_output_bins,
-                        default=default_n_output_bins, type=int,
-                        dest='n_output_bins')
-    parser.add_argument('--ps_plot_prefix',
-                        help='Prefix for output power spectrum plots '
-                        '(default: %s)'%default_ps_plot_prefix,
-                        default=default_ps_plot_prefix, type=str,
-                        dest='ps_plot_prefix')
-    parser.add_argument('--cf_plot_prefix',
-                        help='Prefix for output correlation function plots '
-                        '(default: %s)'%default_cf_plot_prefix,
-                        default=default_cf_plot_prefix, type=str,
-                        dest='cf_plot_prefix')
-    args = parser.parse_args()
+                        default=default_dithering)
+    parser.add_option('--n_output_bins',
+                      help='Number of bins for calculating 2-point functions '
+                      '(default: %i)'%default_n_output_bins,
+                      default=default_n_output_bins, type=int,
+                      dest='n_output_bins')
+    parser.add_option('--ps_plot_prefix',
+                      help='Prefix for output power spectrum plots '
+                      '(default: %s)'%default_ps_plot_prefix,
+                      default=default_ps_plot_prefix, type=str,
+                      dest='ps_plot_prefix')
+    parser.add_option('--cf_plot_prefix',
+                      help='Prefix for output correlation function plots '
+                      '(default: %s)'%default_cf_plot_prefix,
+                      default=default_cf_plot_prefix, type=str,
+                      dest='cf_plot_prefix')
+    parser.add_option('--edge_cutoff', dest="edge_cutoff", action='store_true', default=False,
+                      help='Cut off edges of grid that are affected by interpolation')
+    opts, args = parser.parse_args()
     # Make directories if necessary.
-    dir = os.path.dirname(args.ps_plot_prefix)
+    dir = os.path.dirname(opts.ps_plot_prefix)
     if dir is not '':
         check_dir(dir)
-    dir = os.path.dirname(args.cf_plot_prefix)
+    dir = os.path.dirname(opts.cf_plot_prefix)
     if dir is not '':
         check_dir(dir)
 
-    main(n_realizations=args.n_realizations,
-         dithering=args.dithering,
-         n_output_bins=args.n_output_bins,
-         ps_plot_prefix=args.ps_plot_prefix,
-         cf_plot_prefix=args.cf_plot_prefix)
+    main(n_realizations=opts.n_realizations,
+         dithering=opts.dithering,
+         n_output_bins=opts.n_output_bins,
+         ps_plot_prefix=opts.ps_plot_prefix,
+         cf_plot_prefix=opts.cf_plot_prefix,
+         edge_cutoff=opts.edge_cutoff)
