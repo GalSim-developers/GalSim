@@ -839,32 +839,44 @@ class FitsHeader(object):
     """A class storing key/value pairs from a FITS Header
 
     This class works a lot like the regular read() function, but rather than returning
-    the image part of the FITS file, it stores the header from which you can access the
-    various key values. 
+    the image part of the FITS file, it gives you access to the header information.
 
     After construction, you can access a header value by
 
         value = fits_header[key]
 
-    In fact, all the normal functions available for an immutable dict are available:
+    or write to it with
+
+        fits_header[key] = value                # If you just want to set a value.
+        fits_header[key] = (value, comment)     # If you want to include a comment field.
+
+    In fact, most of the normal functions available for a dict are available:
     
         keys = fits_header.keys()
         items = fits_header.items()
         for key in fits_header:
             value = fits_header[key]
         value = fits_header.get(key, default)
+        del fits_header[key]
         etc.
+
+    This is a particularly useful abstraction, since pyfits has changed its syntax for how 
+    to write to a fits header, so this class will work regardless of which version of pyfits
+    (or astropy.io.fits) is installed.
 
     Constructor parameters:
 
-    @param file_name    The name of the file to read in.  Either `file_name` or `hdu_list` is 
-                        required.
+    @param header       A pyfits Header object.  One of `file_name`, `hdu_list` or `header`
+                        is required.  The `header` parameter may be given without the keyword
+                        name.
+    @param file_name    The name of the file to read in.  One of `file_name`, `hdu_list` or 
+                        `header` is required.
     @param dir          Optionally a directory name can be provided if the file_name does not 
                         already include it.
     @param hdu_list     Either a `pyfits.HDUList`, a `pyfits.PrimaryHDU`, or `pyfits.ImageHDU`.
                         In the former case, the `hdu` in the list will be selected.  In the latter
-                        two cases, the `hdu` parameter is ignored.  Either `file_name` or 
-                        `hdu_list` is required.
+                        two cases, the `hdu` parameter is ignored.  One of `file_name`, `hdu_list`
+                        or `header is required.
     @param hdu          The number of the HDU to return.  The default is to return either the 
                         primary or first extension as appropriate for the given compression.
                         (e.g. for rice, the first extension is the one you normally want.)
@@ -889,51 +901,87 @@ class FitsHeader(object):
     _takes_rng = False
     _takes_logger = False
 
-    def __init__(self, file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
+    def __init__(self, header=None, file_name=None, dir=None, hdu_list=None, hdu=None,
+                 compression='auto'):
     
         file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
-        if file_name and hdu_list is not None:
-            raise TypeError("Cannot provide both file_name and hdu_list to read()")
-        if not (file_name or hdu_list is not None):
-            raise TypeError("Must provide either file_name or hdu_list to read()")
+        if header and file_name:
+            raise TypeError("Cannot provide both file_name and header to FitsHeader")
+        if header and hdu_list:
+            raise TypeError("Cannot provide both hdu_list and header to FitsHeader")
+        if file_name and hdu_list:
+            raise TypeError("Cannot provide both file_name and hdu_list to FitsHeader")
+        if not (header or file_name or hdu_list):
+            raise TypeError("Must provide one of header, file_name or hdu_list to FitsHeader")
 
         if file_name:
             hdu_list, fin = _read_file(file_name, dir, file_compress)
 
-        hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
+        if hdu_list:
+            hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
+            header = hdu.header
 
-        import copy
-        self.header = copy.copy(hdu.header)
-
-        # If we opened a file, don't forget to close it.
         if file_name:
+            # If we opened a file, don't forget to close it.
+            # Also need to make a copy of the header to keep it available.
+            # If we construct a FitsHeader from an hdu_list, then we don't want to do this,
+            # since we want the header to remain attached to the original hdu.
+            import copy
+            self.header = copy.copy(header)
             closeHDUList(hdu_list, fin)
+        else:
+            self.header = header
 
     # The rest of the functions are typical non-mutating functions for a dict, for which we just
     # pass the request along to self.header.
     def __len__(self):
         return len(self.header)
 
-    def __getitem__(self, key):
-        return self.header[key]
-
     def __contains__(self, key):
         return key in self.header
+
+    def __delitem__(self, key):
+        # This is equivalent to the newer pyfits implementation, but older versions silently
+        # did nothing if the key was not in the header.
+        if key in self.header:
+            del self.header[key]
+        else:
+            raise KeyError("key "+key+" not in FitsHeader")
+
+    def __getitem__(self, key):
+        return self.header[key]
 
     def __iter__(self):
         return self.header.__iter__
 
+    def __len__(self):
+        if pyfits_version < '3.1':
+            return len(self.header.ascard)
+        else:
+            return len(self.header)
+
+    def __setitem__(self, key, value):
+        if pyfits_version < '3.1':
+            try:
+                # header[key] = (value, comment) syntax
+                self.header.update(key, value[0], value[1])
+            except:
+                # header[key] = value syntax
+                self.header.update(key, value)
+        else:
+            self.header[key] = value
+
+    def clear(self):
+        self.header.clear()
+
     def get(self, key, default=None):
         return self.header.get(key, default)
 
-    def keys(self):
-        return self.header.keys()
-
-    def values(self):
-        return self.header.values()
-
     def items(self):
+        return self.header.items()
+
+    def iteritems(self):
         return self.header.iteritems()
 
     def iterkeys(self):
@@ -942,8 +990,19 @@ class FitsHeader(object):
     def itervalues(self):
         return self.header.itervalues()
 
-    def iteritems(self):
-        return self.header.iteritems()
+    def keys(self):
+        return self.header.keys()
+
+    def update(self, dict2):
+        # dict2 may be a dict or another FitsHeader (or anything that acts like a dict).
+        if pyfits_version < '3.1':
+            for k, v in dict2.iteritems:
+                self[k] = v
+        else:
+            self.header.update(dict2)
+
+    def values(self):
+        return self.header.values()
 
 
 # inject write as method of Image class

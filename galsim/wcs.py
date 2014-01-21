@@ -504,17 +504,15 @@ class BaseWCS(object):
         header, as it will also write GalSim-specific key words that should allow it to 
         reconstruct the WCS correctly.
 
-        @param header       The fits header to write the data to.
+        @param header       A galsim.FitsHeader object to write the data to.
         @param bounds       The bounds of the image.
         """
         # First write the XMIN, YMIN values
         from galsim import pyfits_version
-        if pyfits_version < '3.1':
-            header.update("GS_XMIN", bounds.xmin, "GalSim image minimum x coordinate")
-            header.update("GS_YMIN", bounds.ymin, "GalSim image minimum y coordinate")
-        else:
-            header.set("GS_XMIN", bounds.xmin, "GalSim image minimum x coordinate")
-            header.set("GS_YMIN", bounds.ymin, "GalSim image minimum y coordinate")
+        if not isinstance(header, galsim.fits.FitsHeader):
+            header = galsim.fits.FitsHeader(header)
+        header["GS_XMIN"] = (bounds.xmin, "GalSim image minimum x coordinate")
+        header["GS_YMIN"] = (bounds.ymin, "GalSim image minimum y coordinate")
 
         if bounds.xmin != 1 or bounds.ymin != 1:
             # ds9 always assumes the image has an origin at (1,1), so we always write the 
@@ -526,32 +524,8 @@ class BaseWCS(object):
         else:
             wcs = self
 
-        # PyFits has changed its syntax for writing to fits headers, so rather than have our
-        # various things that write to the fits header do so directly, we have them write to
-        # a dict, which we then write to the actual fits header, making sure to do things 
-        # correctly given the PyFits version.
-        h = wcs._writeHeader({}, bounds)
+        wcs._writeHeader(header, bounds)
 
-        if isinstance(h, dict):
-            # For dicts, we want the keys in sorted order, so the normal python dict order doesn't
-            # randomly scramble things up.
-            items = sorted(h.items())
-        else:
-            # Otherwise, h is probably a PyFits header, so the keys come out in natural order.
-            items = h.items()
-
-        if pyfits_version < '3.1':
-            for key, value in items:
-                try:
-                    header.update(key, value)
-                except:
-                    header.update(key, value[0], value[1])
-        else:
-            for key, value in items:
-                try:
-                    header.set(key, value)
-                except:
-                    header.set(key, value[0], value[1])
 
     @staticmethod
     def readFromFitsHeader(header):
@@ -584,6 +558,8 @@ class BaseWCS(object):
 
         @returns wcs, origin    The wcs and the image origin.
         """
+        if not isinstance(header, galsim.fits.FitsHeader):
+            header = galsim.fits.FitsHeader(header)
         xmin = header.get("GS_XMIN", 1)
         ymin = header.get("GS_YMIN", 1)
         origin = galsim.PositionI(xmin, ymin)

@@ -280,13 +280,15 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         # Make a new header with the contents of this WCS.
         # Note: relax = True means to write out non-standard FITS types.
         # Weirdly, this is the default when reading the header, but not when writing.
-        header = self._wcs.to_header(relax=True)
+        header.update(self._wcs.to_header(relax=True))
 
         # And write the name as a special GalSim key
         header["GS_WCS"] = ("AstropyWCS", "GalSim WCS name")
         # Finally, update the CRPIX items if necessary.
-        header["CRPIX1"] = header["CRPIX1"] + self.origin.x
-        header["CRPIX2"] = header["CRPIX2"] + self.origin.y
+        if self.origin.x != 0:
+            header["CRPIX1"] = header["CRPIX1"] + self.origin.x
+        if self.origin.y != 0:
+            header["CRPIX2"] = header["CRPIX2"] + self.origin.y
         return header
 
     @staticmethod
@@ -388,7 +390,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             if hdu is None:
                 from galsim import pyfits
                 hdu = pyfits.PrimaryHDU()
-                hdu.header = header
+                galsim.fits.FitsHeader(hdu_list=hdu).update(header)
             fc = starlink.Ast.FitsChan( starlink.Atl.PyFITSAdapter(hdu) )
             wcsinfo = fc.read()
             if wcsinfo == None:
@@ -490,7 +492,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             fc = starlink.Ast.FitsChan( None, starlink.Atl.PyFITSAdapter(hdu))
             fc.write(self._wcsinfo)
         fc.writefits()
-        header = hdu.header
+        header.update(hdu.header)
 
         # And write the name as a special GalSim key
         header["GS_WCS"] = ("PyAstWCS", "GalSim WCS name")
