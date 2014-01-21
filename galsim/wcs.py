@@ -1806,10 +1806,10 @@ class AffineTransform(UniformWCS):
 
 # Some helper functions for serializing arbitrary functions.  Used by both UVFunction and 
 # RaDecFunction.
-def _writeFuncToHeader(func, func_str, letter, header):
-    if func_str is not None:
+def _writeFuncToHeader(func, letter, header):
+    if isinstance(func, basestring):
         # If we have the string version, then just write that
-        s = func_str
+        s = func
         first_key = 'GS_'+letter+'_STR'
 
     elif func is not None:
@@ -1969,33 +1969,32 @@ class UVFunction(EuclideanWCS):
     def __init__(self, ufunc, vfunc, xfunc=None, yfunc=None, origin=None, world_origin=None):
         import math  # In case needed by function evals
         import numpy
+
+        # Keep these to use in copies, etc.
+        self._orig_ufunc = ufunc
+        self._orig_vfunc = vfunc
+        self._orig_xfunc = xfunc
+        self._orig_yfunc = yfunc
+
         if isinstance(ufunc, basestring):
             self._ufunc = eval('lambda x,y : ' + ufunc)
-            self._ufunc_str = ufunc
         else:
             self._ufunc = ufunc
-            self._ufunc_str = None
 
         if isinstance(vfunc, basestring):
             self._vfunc = eval('lambda x,y : ' + vfunc)
-            self._vfunc_str = vfunc
         else:
             self._vfunc = vfunc
-            self._vfunc_str = None
 
         if isinstance(xfunc, basestring):
             self._xfunc = eval('lambda u,v : ' + xfunc)
-            self._xfunc_str = xfunc
         else:
             self._xfunc = xfunc
-            self._xfunc_str = None
 
         if isinstance(yfunc, basestring):
             self._yfunc = eval('lambda u,v : ' + yfunc)
-            self._yfunc_str = yfunc
         else:
             self._yfunc = yfunc
-            self._yfunc_str = None
 
         if origin == None:
             self._origin = galsim.PositionD(0,0)
@@ -2049,7 +2048,8 @@ class UVFunction(EuclideanWCS):
             return self._yfunc(u,v)
 
     def _newOrigin(self, origin, world_origin):
-        return UVFunction(self._ufunc, self._vfunc, self._xfunc, self._yfunc, origin, world_origin)
+        return UVFunction(self._orig_ufunc, self._orig_vfunc, self._orig_xfunc, self._orig_yfunc,
+                          origin, world_origin)
  
     def _writeHeader(self, header, bounds):
         header["GS_WCS"]  = ("UVFunction", "GalSim WCS name")
@@ -2058,10 +2058,10 @@ class UVFunction(EuclideanWCS):
         header["GS_U0"] = (self.world_origin.x, "GalSim world origin u")
         header["GS_V0"] = (self.world_origin.y, "GalSim world origin v")
 
-        _writeFuncToHeader(self._ufunc, self._ufunc_str, 'U', header)
-        _writeFuncToHeader(self._vfunc, self._vfunc_str, 'V', header)
-        _writeFuncToHeader(self._xfunc, self._xfunc_str, 'X', header)
-        _writeFuncToHeader(self._yfunc, self._yfunc_str, 'Y', header)
+        _writeFuncToHeader(self._orig_ufunc, 'U', header)
+        _writeFuncToHeader(self._orig_vfunc, 'V', header)
+        _writeFuncToHeader(self._orig_xfunc, 'X', header)
+        _writeFuncToHeader(self._orig_yfunc, 'Y', header)
 
         return self.affine(bounds.trueCenter())._writeLinearWCS(header, bounds)
 
@@ -2079,8 +2079,8 @@ class UVFunction(EuclideanWCS):
                           galsim.PositionD(u0,v0))
 
     def copy(self):
-        return UVFunction(self._ufunc, self._vfunc, self._xfunc, self._yfunc, self.origin,
-                          self.world_origin)
+        return UVFunction(self._orig_ufunc, self._orig_vfunc, self._orig_xfunc, self._orig_yfunc,
+                          self.origin, self.world_origin)
 
     def __eq__(self, other):
         return ( isinstance(other, UVFunction) and
@@ -2092,7 +2092,8 @@ class UVFunction(EuclideanWCS):
                  self.world_origin == other.world_origin )
 
     def __repr__(self):
-        return "UVFunction(%r,%r,%r,%r,%r,%r)"%(self._ufunc, self._vfunc, self._xfunc, self._yfunc,
+        return "UVFunction(%r,%r,%r,%r,%r,%r)"%(self._orig_ufunc, self._orig_vfunc,
+                                                self._orig_xfunc, self._orig_yfunc,
                                                 self.origin, self.world_origin)
 
 
@@ -2131,14 +2132,14 @@ class RaDecFunction(CelestialWCS):
 
     def __init__(self, radec_func, origin=None):
         # Allow the input function to use either math or numpy functions
+        self._orig_radec_func = radec_func
+
         if isinstance(radec_func, basestring):
             import math
             import numpy
             self._radec_func = eval('lambda x,y : ' + radec_func)
-            self._radec_func_str = radec_func
         else:
             self._radec_func = radec_func
-            self._radec_func_str = None
 
         if origin == None:
             self._origin = galsim.PositionD(0,0)
@@ -2160,14 +2161,14 @@ class RaDecFunction(CelestialWCS):
         raise NotImplementedError("World -> Image direction not implemented for RaDecFunction")
 
     def _newOrigin(self, origin):
-        return RaDecFunction(self._radec_func, origin)
+        return RaDecFunction(self._orig_radec_func, origin)
  
     def _writeHeader(self, header, bounds):
         header["GS_WCS"]  = ("RaDecFunction", "GalSim WCS name")
         header["GS_X0"] = (self.origin.x, "GalSim image origin x")
         header["GS_Y0"] = (self.origin.y, "GalSim image origin y")
 
-        _writeFuncToHeader(self._radec_func, self._radec_func_str, 'R', header)
+        _writeFuncToHeader(self._orig_radec_func, 'R', header)
 
         return self.affine(bounds.trueCenter())._writeLinearWCS(header, bounds)
 
@@ -2179,7 +2180,7 @@ class RaDecFunction(CelestialWCS):
         return RaDecFunction(radec_func, galsim.PositionD(x0,y0))
 
     def copy(self):
-        return RaDecFunction(self._radec_func, self.origin)
+        return RaDecFunction(self._orig_radec_func, self.origin)
 
     def __eq__(self, other):
         return ( isinstance(other, RaDecFunction) and
@@ -2187,5 +2188,5 @@ class RaDecFunction(CelestialWCS):
                  self.origin == other.origin )
 
     def __repr__(self):
-        return "RaDecFunction(%r,%r)"%(self.radec_func, self.origin)
+        return "RaDecFunction(%r,%r)"%(self._orig_radec_func, self.origin)
 

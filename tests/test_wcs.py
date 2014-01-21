@@ -1760,6 +1760,8 @@ def test_fitswcs():
 
 
 if __name__ == "__main__":
+    test_uvfunction()
+
     test_pixelscale()
     test_shearwcs()
     test_affinetransform()
