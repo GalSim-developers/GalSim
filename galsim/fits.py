@@ -963,13 +963,22 @@ class FitsHeader(object):
 
     def __setitem__(self, key, value):
         if pyfits_version < '3.1':
-            try:
+            if isinstance(value, tuple):
                 # header[key] = (value, comment) syntax
-                self.header.update(key, value[0], value[1])
-            except:
+                if not (0 < len(value) <= 2):
+                    raise ValueError(
+                        'A Header item may be set with either a scalar value, '
+                        'a 1-tuple containing a scalar value, or a 2-tuple '
+                        'containing a scalar value and comment string.')
+                elif len(value) == 1:
+                    self.header.update(key, value[0])
+                else:
+                    self.header.update(key, value[0], value[1])
+            else:
                 # header[key] = value syntax
                 self.header.update(key, value)
         else:
+            # Recent versions implement the above logic with the regular setitem method.
             self.header[key] = value
 
     def clear(self):
