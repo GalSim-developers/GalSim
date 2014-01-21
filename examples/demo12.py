@@ -122,7 +122,7 @@ def main(argv):
     # draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.1)
     for filter_name, filter_ in filters.iteritems():
-        img = galsim.ImageF(64, 64, pixel_scale)
+        img = galsim.ImageF(64, 64, scale=pixel_scale)
         final.draw(filter_, 300, 1100, image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
@@ -160,7 +160,7 @@ def main(argv):
     # draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
     for filter_name, filter_ in filters.iteritems():
-        img = galsim.ImageF(64, 64, pixel_scale)
+        img = galsim.ImageF(64, 64, scale=pixel_scale)
         bdfinal.draw(filter_, 300, 1100, image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
@@ -212,7 +212,7 @@ def main(argv):
     # chromaticizes an existing GSObject.  In this case, the existing object is a fiducial PSF which
     # gets Shifted and Dilated according to shift_fn and dilate_fn.  We'll use a Moffat profile as
     # the fiducial PSF.
-    PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat(beta=2.5, fwhm=0.5), shift_rn, dilate_fn)
+    PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat(beta=2.5, fwhm=0.5), shift_fn, dilate_fn)
 
     # convolve with pixel and PSF to create final profile
     pix = galsim.Pixel(pixel_scale)
@@ -222,7 +222,7 @@ def main(argv):
     # Draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.03)
     for filter_name, filter_ in filters.iteritems():
-        img = galsim.ImageF(64, 64, pixel_scale)
+        img = galsim.ImageF(64, 64, scale=pixel_scale)
         final.draw(filter_, 300, 1100, image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
