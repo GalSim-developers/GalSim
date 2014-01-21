@@ -54,19 +54,22 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     else:
         raise RuntimeError(result)
 
-def midpoint_int_image(f_image, a, b, N=150):
+def midpoint_int_image(f_image, a, b, N=100):
+    """Integrate an f_image, which generates an image as a function of a single variable,
+    (e.g., wavelength in the chromatic modules), using the midpoint rule.
+    """
     h = (b*1.0 - a)/N
     w = [a + h * (i+0.5) for i in range(N)]
     images = [f_image(i) for i in w]
     return h*reduce(lambda x, y: x+y, images)
 
-def trapezoidal_int_image(f_image, a, b, N=150):
+def trapezoidal_int_image(f_image, a, b, N=100):
     h = (b*1.0 - a)/N
     w = [a + h * i for i in range(N+1)]
     images = [f_image(i) for i in w]
     return 0.5*h*(images[0] + 2.0*reduce(lambda x, y: x+y, images[1:-1]) + images[-1])
 
-def simpsons_int_image(f_image, a, b, N=150):
+def simpsons_int_image(f_image, a, b, N=100):
     if N%2 == 1:
         N += 1
     h = (b*1.0 - a)/N
