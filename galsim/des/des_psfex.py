@@ -50,24 +50,31 @@ class DES_PSFEx(object):
 
     @param file_name       The file name to be read in.
     @param image_file_name The name of the fits file of the original image (needed for the
-                           WCS information in the header).
+                           WCS information in the header).  If unavailable, you may omit this
+                           (or use None), but then the returned profiles will be in image
+                           coordinates, not world coordinates.  (Default `image_file_name=None`)
     @param dir             Optionally a directory name can be provided if the file_name does not 
-                           already include it.
+                           already include it.  (The image file is assumed to be in the same
+                           directory.) (Default `dir=None`)
     """
+    # For config, image_file_name is required, since that always works in world coordinates.
     _req_params = { 'file_name' : str , 'image_file_name' : str }
     _opt_params = { 'dir' : str }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
-    def __init__(self, file_name, image_file_name, dir=None):
+    def __init__(self, file_name, image_file_name=None, dir=None):
 
         if dir:
             import os
             file_name = os.path.join(dir,file_name)
             image_file_name = os.path.join(dir,image_file_name)
         self.file_name = file_name
-        self.wcs = galsim.GSFitsWCS(image_file_name)
+        if image_file_name:
+            self.wcs = galsim.GSFitsWCS(image_file_name)
+        else:
+            self.wcs = None
         self.read()
 
     def read(self):
@@ -177,7 +184,13 @@ class DES_PSFEx(object):
         return self.sample_scale
 
     def getLocalWCS(self, image_pos):
-        return self.wcs.local(image_pos)
+        """If the original image was provided to the constructor, this will return the local
+        WCS at a given location in that original image.  If not, this will return None.
+        """
+        if self.wcs:
+            return self.wcs.local(image_pos)
+        else:
+            return None
 
     def getPSF(self, image_pos, gsparams=None):
         """Returns the PSF at position pos
@@ -195,7 +208,8 @@ class DES_PSFEx(object):
                                        x_interpolant=galsim.Lanczos(3), gsparams=gsparams)
 
         # This brings if from image coordinates to world coordinates.
-        psf = self.wcs.toWorld(psf, image_pos=image_pos)
+        if self.wcs:
+            psf = self.wcs.toWorld(psf, image_pos=image_pos)
 
         return psf
 

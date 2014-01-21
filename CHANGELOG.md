@@ -50,6 +50,12 @@ Python layer API changes:
 * Changed Bounds methods `addBorder`, `shift`, and `expand` to return new
   Bounds objects rather than changing the original (in the python layer 
   only). (Issue #364)
+* Changed DES_PSFEx class to take in the original image file to get the correct
+  WCS information to convert from image coordinates to world coordinates.  If
+  unavailable, then the returned PSF profiles will be in image coordinates.
+  * `psfex = galsim.des.DES_PSFEx(psf_file)` `psf = psfex.getPSF(pos, scale)`
+     should become `psfex = galsim.des.DES_PSFEx(psf_file, image_file)`
+     `psf = psfex.getPSF(pos)`.
 
 
 New WCS classes: (Issue #364)
