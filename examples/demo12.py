@@ -78,7 +78,8 @@ def main(argv):
         wave, flambda = numpy.genfromtxt(SED_filename).T
         wave /= 10 # convert from Angstroms to nanometers
         # Create SED and normalize such that photon density is 1 photon per nm at 500 nm
-        SEDs[SED_name] = galsim.SED(wave=wave, flambda=flambda, base_wavelength=500, norm=1.0)
+        SEDs[SED_name] = galsim.SED(wave=wave, flambda=flambda,
+                                    base_wavelength=500, normalization=1.0)
     logger.debug('Successfully read in SEDs')
 
     # read in the LSST filters
@@ -87,7 +88,9 @@ def main(argv):
     for filter_name in filter_names:
         filter_filename = os.path.join(datapath, 'LSST_{}.dat'.format(filter_name))
         wave, throughput = numpy.genfromtxt(filter_filename).T
-        filters[filter_name] = galsim.LookupTable(wave, throughput)
+        filters[filter_name] = galsim.Bandpass(wave, throughput)
+        # don't waste time integrating where there's less than 1% throughput.
+        filters[filter_name].truncate(rel_throughput=0.01)
     logger.debug('Read in filters')
 
     pixel_scale = 0.2 # arcseconds
@@ -123,7 +126,7 @@ def main(argv):
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.1)
     for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
-        final.draw(filter_, 300, 1100, image=img)
+        final.draw(filter_, image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo12a_{}.fits'.format(filter_name))
@@ -153,15 +156,15 @@ def main(argv):
     disk.applyShear(g1=0.4, g2=0.2)
     logger.debug('Created disk component')
     # ... and then combine them.
-    bdgal = bulge+disk*5 # you can add and multiply ChromaticObjects just like GSObjects
+    bdgal = 8*bulge+3*disk # you can add and multiply ChromaticObjects just like GSObjects
     bdfinal = galsim.Convolve([bdgal, pix, PSF])
     logger.debug('Created bulge+disk galaxy final profile')
 
     # draw profile through LSST filters
-    gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
+    gaussian_noise = galsim.GaussianNoise(rng, sigma=0.01)
     for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
-        bdfinal.draw(filter_, 300, 1100, image=img)
+        bdfinal.draw(filter_, image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo12b_{}.fits'.format(filter_name))
@@ -170,8 +173,8 @@ def main(argv):
         logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
 
     logger.info('You can display the output in ds9 with a command line that looks something like:')
-    logger.info('ds9 -rgb -blue -scale limits -0.2 0.8 output/demo12b_r.fits -green -scale limits'
-                +' -0.25 1 output/demo12b_i.fits -red -scale limits -0.25 1 output/demo12b_z.fits'
+    logger.info('ds9 -rgb -blue -scale limits -0.1 0.5 output/demo12b_r.fits -green -scale limits'
+                +' -0.1 0.5 output/demo12b_i.fits -red -scale limits -0.1 0.5 output/demo12b_z.fits'
                 +' -zoom 2')
 
     #-----------------------------------------------------------------------------------------------
@@ -223,7 +226,7 @@ def main(argv):
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.03)
     for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
-        final.draw(filter_, 300, 1100, image=img)
+        final.draw(filter_, image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo12c_{}.fits'.format(filter_name))

@@ -23,27 +23,28 @@ This file extends the base GalSim classes by allowing them to be wavelength depe
 one to implement wavelength-dependent PSFs or galaxies with color gradients.
 """
 
+import numpy
+
 import galsim
 import galsim.integ
 
 class ChromaticObject(object):
     """Base class for defining wavelength dependent objects.
     """
-    def draw(self, throughput_fn, bluelim, redlim,
-             image=None, scale=None, gain=1.0, wmult=1.0,
+    def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
         # default integrator is Riemann sum
         if integrator is None:
             integrator = galsim.integ.midpoint_int_image
         # setup output image
-        prof0 = self.evaluateAtWavelength(bluelim) * throughput_fn(bluelim)
+        prof0 = self.evaluateAtWavelength(bandpass.bluelim) * bandpass(bandpass.bluelim)
         prof0 = prof0._fix_center(image, scale, offset, use_true_center, reverse=False)
         image = prof0._draw_setup_image(image, scale, wmult, add_to_image)
 
         # integrand returns an image at each wavelength
         def f_image(w):
-            prof = self.evaluateAtWavelength(w) * throughput_fn(w)
+            prof = self.evaluateAtWavelength(w) * bandpass(w)
             tmpimage = image.copy()
             tmpimage.setZero()
             prof.draw(image=tmpimage, gain=gain, wmult=wmult,
@@ -51,7 +52,7 @@ class ChromaticObject(object):
             return tmpimage
 
         # wavelength integral
-        integral = integrator(f_image, bluelim, redlim, **kwargs)
+        integral = integrator(f_image, bandpass.bluelim, bandpass.redlim, **kwargs)
 
         # clear image?
         if not add_to_image:
@@ -157,18 +158,15 @@ class ChromaticSum(ChromaticObject):
         """
         return galsim.Sum([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
-    def draw(self, throughput_fn, bluelim, redlim,
-             image=None, scale=None, gain=1.0, wmult=1.0,
+    def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
         # is the most efficient method to just add up one component at a time...?
-        image = self.objlist[0].draw(wave, throughput_fn, bluelim, redlim,
-                                     image=image, scale=scale, gain=gain, wmult=wmult,
+        image = self.objlist[0].draw(bandpass, image=image, scale=scale, gain=gain, wmult=wmult,
                                      add_to_image=add_to_image, use_true_center=use_true_center,
                                      offset=offset, integrator=integrator, **kwargs)
         for obj in self.objlist[1:]:
-            image = obj.draw(wave, throughput_fn, bluelim, redlim,
-                             image=image, scale=scale, gain=gain, wmult=wmult,
+            image = obj.draw(bandpass, image=image, scale=scale, gain=gain, wmult=wmult,
                              add_to_image=True, use_true_center=use_true_center,
                              offset=offset, integrator=integrator, **kwargs)
 
@@ -215,8 +213,7 @@ class ChromaticConvolution(ChromaticObject):
         """
         return galsim.Convolve([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
-    def draw(self, throughput_fn, bluelim, redlim,
-             image=None, scale=None, gain=1.0, wmult=1.0,
+    def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
         if integrator is None:
@@ -296,16 +293,15 @@ class ChromaticConvolution(ChromaticObject):
                 tmplist = list(objlist) # collect remaining items to be convolved with each of A,B,C
                 tmplist.append(obj.objlist[0]) # add A to this convolve list
                 tmpobj = ChromaticConvolution(tmplist) # draw image
-                image = tmpobj.draw(throughput_fn, bluelim, redlim,
-                                    image=image, gain=gain, wmult=wmult,
+                image = tmpobj.draw(bandpass, image=image, gain=gain, wmult=wmult,
                                     add_to_image=add_to_image, use_true_center=use_true_center,
                                     offset=offset, **kwargs)
                 for summand in obj.objlist[1:]: # now do the same for B and C
                     tmplist = list(objlist)
                     tmplist.append(summand)
                     tmpobj = ChromaticConvolution(tmplist)
-                    image = tmpobj.draw(throughput_fn, bluelim, redlim, # add to previous image
-                                        image=image, gain=gain, wmult=wmult,
+                    # add to previously started image
+                    image = tmpobj.draw(bandpass, image=image, gain=gain, wmult=wmult,
                                         add_to_image=True, use_true_center=use_true_center,
                                         offset=offset, **kwargs)
         if returnme:
@@ -331,15 +327,16 @@ class ChromaticConvolution(ChromaticObject):
         # check if there are any inseparable profiles
         if insep_profs == []:
             def f(w):
-                term = throughput_fn(w)
+                term = bandpass(w)
                 for s in sep_SED:
                     term *= s(w)
                 return term
-            multiplier = galsim.integ.int1d(f, bluelim, redlim)
+            multiplier = galsim.integ.int1d(f, bandpass.bluelim, bandpass.redlim)
         else:
             multiplier = 1.0
             # setup image for effective profile
-            mono_prof0 = galsim.Convolve([p.evaluateAtWavelength(bluelim) for p in insep_profs])
+            mono_prof0 = galsim.Convolve([p.evaluateAtWavelength(bandpass.bluelim)
+                                          for p in insep_profs])
             mono_prof0 = mono_prof0._fix_center(image=None, scale=None, offset=None,
                                                 use_true_center=True, reverse=False)
             mono_prof_image = mono_prof0._draw_setup_image(image=None, scale=None, wmult=wmult,
@@ -347,7 +344,7 @@ class ChromaticConvolution(ChromaticObject):
             # integrand for effective profile
             def f_image(w):
                 mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
-                mono_prof *= throughput_fn(w)
+                mono_prof *= bandpass(w)
                 for s in sep_SED:
                     mono_prof *= s(w)
                 tmpimage = mono_prof_image.copy()
@@ -356,7 +353,7 @@ class ChromaticConvolution(ChromaticObject):
                 # print 'f_image {} {}'.format(w, mono_prof.getFlux()* 2.2)
                 return tmpimage
             # wavelength integral
-            effective_prof_image = integrator(f_image, bluelim, redlim, **kwargs)
+            effective_prof_image = integrator(f_image, bandpass.bluelim, bandpass.redlim, **kwargs)
             # Image -> InterpolatedImage
             effective_prof = galsim.InterpolatedImage(effective_prof_image)
             # append effective profile to separable profiles (which are all GSObjects)
@@ -411,31 +408,89 @@ class ChromaticShiftAndDilate(ChromaticObject):
         return PSF
 
 class SED(object):
-    """Simple class to represent chromatic objects' spectral energy distributions."""
-    def __init__(self, wave=None, photons=None, flambda=None, photon_fn=None,
-                 redshift=None, base_wavelength=None, norm=None):
-        if photon_fn is not None:
-            self.photon_fn = photon_fn
-        elif wave is not None and photons is not None:
-            self.photon_fn = galsim.LookupTable(wave, photons)
-        elif wave is not None and flambda is not None:
-            self.photon_fn = galsim.LookupTable(wave,
-                                                [wave[i] * flambda[i] for i in range(len(wave))])
-        if redshift is None:
-            self.redshift = 0.0
-        else:
-            self.redshift = redshift
+    """Very simple SED object."""
+    def __init__(self, wave=None, flambda=None, fnu=None, fphotons=None,
+                 base_wavelength=None, normalization=None):
+        self.wave = wave
+        if flambda is not None:
+            self.fphotons = flambda * wave
+        elif fnu is not None:
+            self.fphotons = fnu / wave
+        elif fphotons is not None:
+            self.fphotons = fphotons
 
-        self.norm = 1.0
-        if norm is not None and base_wavelength is not None:
-            self.normalize(base_wavelength, norm)
+        self.needs_new_interp=True
+        if base_wavelength is not None and normalization is not None:
+            self.setNormalization(base_wavelength, normalization)
+
+    def __call__(self, wave, force_new_interp=False):
+        interp = self._get_interp(force_new_interp=force_new_interp)
+        return interp(wave)
+
+    def _get_interp(self, force_new_interp=False):
+        if force_new_interp or self.needs_new_interp:
+            self.interp = galsim.LookupTable(self.wave, self.fphotons)
+            self.needs_new_interp=False
+        return self.interp
+
+    def setNormalization(self, base_wavelength, normalization):
+        current_fphoton = self(base_wavelength)
+        self.fphotons *= normalization/current_fphoton
+        self.needs_new_interp = True
+
+    def setMagnitude(self, bandpass, mag_norm):
+        current_mag = self.getMagnitude(bandpass)
+        multiplier = 10**(-0.4 * (mag_norm - current_mag))
+        self.fphotons *= multiplier
+        self.needs_new_interp=True
 
     def setRedshift(self, redshift):
-        self.redshift = redshift
+        self.wave *= (1.0 + redshift)
+        self.interp = galsim.LookupTable(self.wave, self.fphotons)
+        self.needs_new_interp=True
 
-    def normalize(self, base_wavelength, norm):
-        f0 = self.photon_fn(base_wavelength / (1.0 + self.redshift))
-        self.norm = norm/f0
+    def getMagnitude(self, bandpass):
+        interp = self._get_interp()
+        flux = integ.int1d(lambda w:bandpass(w)*interp(w), bandpass.bluelim, bandpass.redlim)
+        return -2.5 * numpy.log10(flux) - bandpass.AB_zeropoint()
+
+class Bandpass(object):
+    """Very simple Bandpass filter object."""
+    def __init__(self, wave, throughput):
+        self.wave = numpy.array(wave)
+        self.throughput = numpy.array(throughput)
+        self.bluelim = self.wave[0]
+        self.redlim = self.wave[-1]
+        self.interp = galsim.LookupTable(wave, throughput)
 
     def __call__(self, wave):
-        return self.norm * self.photon_fn(wave / (1.0 + self.redshift))
+        return self.interp(wave)
+
+    def truncate(self, rel_throughput=None, bluelim=None, redlim=None):
+        if bluelim is None:
+            bluelim = self.bluelim
+        if redlim is None:
+            redlim = self.redlim
+        if rel_throughput is not None:
+            mx = self.throughput.max()
+            w = (self.throughput > mx*rel_throughput).nonzero()
+            bluelim = max([min(self.wave[w]), bluelim]) # first True in `w`
+            redlim = min([max(self.wave[w]), redlim]) # last True in `w`
+        w = (self.wave >= bluelim) & (self.wave <= redlim)
+        self.wave = self.wave[w]
+        self.throughput = self.throughput[w]
+        self.bluelim = self.wave[0]
+        self.redlim = self.wave[-1]
+        self.interp = galsim.LookupTable(self.wave, self.throughput)
+
+    def AB_zeropoint(self, force_new_zeropoint=False):
+        if not (hasattr(self, 'zp') or force_new_zeropoint):
+            AB_source = 3631e-23 # 3631 Jy -> erg/s/Hz/cm^2
+            c = 29979245800.0 # speed of light in cm/s
+            nm_to_cm = 1.0e-7
+            # convert AB source from erg/s/Hz/cm^2*cm/s/nm^2 -> erg/s/cm^2/nm
+            AB_flambda = AB_source * c / self.wave**2 / nm_to_cm
+            AB_photons = galsim.LookupTable(self.wave, AB_flambda * self.wave * self.throughput)
+            AB_flux = integ.int1d(AB_photons, self.bluelim, self.redlim)
+            self.zp = -2.5 * numpy.log10(AB_flux)
+        return self.zp
