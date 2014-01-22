@@ -45,8 +45,8 @@ New features introduced in this demo:
 
 - gal = galsim.Chromatic(GSObject, wave, photons)
 - obj = galsim.ChromaticAdd([list of ChromaticObjects])
-- ChromaticObject.draw(throughput_fn, bluelim, redlim)
-- PSF = galsim.ChromaticShiftAndDilate(GSObject, shift_fn, dilate_fn)
+- ChromaticObject.draw(bandpass)
+- PSF = galsim.ChromaticAtmosphere(GSObject, base_wavelength, zenith_angle)
 """
 
 import sys
@@ -76,10 +76,12 @@ def main(argv):
     for SED_name in SED_names:
         SED_filename = os.path.join(datapath, '{}.sed'.format(SED_name))
         wave, flambda = numpy.genfromtxt(SED_filename).T
-        wave /= 10 # convert from Angstroms to nanometers
+        # Convert from Angstroms to nanometers.  This is important for the differential
+        # chromatic refraction routines below, which assume wavelengths are in nanometers.
+        wave /= 10
         # Create SED and normalize such that photon density is 1 photon per nm at 500 nm
-        SEDs[SED_name] = galsim.SED(wave=wave, flambda=flambda,
-                                    base_wavelength=500, normalization=1.0)
+        SEDs[SED_name] = galsim.SED(wave=wave, flambda=flambda)
+        SEDs[SED_name].setNormalization(base_wavelength=500, normalization=1.0)
     logger.debug('Successfully read in SEDs')
 
     # read in the LSST filters
@@ -189,33 +191,28 @@ def main(argv):
     gal.applyShear(g1=0.5, g2=0.3)
     logger.debug('Created Chromatic')
 
-    # Create chromatic PSF implementing differential chromatic refraction (DCR) and chromatic seeing
+    # The for a ground-based PSF, two chromatic effects are introduced by the atmosphere:
+    # differential chromatic refraction (DCR), and chromatic seeing.
     #
-    # DCR shifts the position of the PSF as a function of wavelength.  The galsim.dcr module contains
-    # code to compute the magnitude of this shift.
+    # DCR shifts the position of the PSF as a function of wavelength.  Blue light is shifted
+    # toward the zenith slightly more than red light.  The galsim.dcr module contains code to
+    # compute the magnitude of this shift.
     #
     # Kolmogorov turbulence in the atmosphere leads to a seeing size (e.g., FWHM) that scales with
     # wavelength to the (-0.2) power.
     #
-    # These two effects can be modeled together using the galsim.ChromaticShiftAndDilate class.
+    # These effects are both implemented in the ChroamticAtmosphere class.
 
-    # First we define the shifting function due to DCR.  We normalize to the shift at 500 nm so the
-    # galaxy images land close to (0,0).
-    zenith_angle = 30 * galsim.degrees
-    # get_refraction returns its output as a galsim.AngleUnit
-    R500 = galsim.dcr.get_refraction(500.0, zenith_angle) / galsim.arcsec
-    # we'll assume the y-direction is the zenith direction, so only shift along the second component.
-    shift_fn = lambda w:(0,(galsim.dcr.get_refraction(w, zenith_angle) / galsim.arcsec) - R500)
-
-    # Define the dilation function due to Kolmogorov turbulence.
-    # Normalize to 500 nm, at which wavelength the PSF will have FWHM=0.6 as defined below.
-    dilate_fn = lambda w: (w/500.0)**(-0.2)
-
-    # galsim.ChromaticShiftAndDilate functions similarly to Chromatic, in that it
-    # chromaticizes an existing GSObject.  In this case, the existing object is a fiducial PSF which
-    # gets Shifted and Dilated according to shift_fn and dilate_fn.  We'll use a Moffat profile as
-    # the fiducial PSF.
-    PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat(beta=2.5, fwhm=0.5), shift_fn, dilate_fn)
+    # First we define a fiducial PSF that will be the monochromatic PSF for some base wavelength,
+    # which we choose.
+    PSF_500 = galsim.Moffat(beta=2.5, fwhm=0.5)
+    # Then we use ChromaticAtmosphere to manipulate this fiducial PSF as a function of wavelength.
+    # We also specify the wavelength of our fiducial PSF, and the zenith_angle of the observation
+    # so that the DCR can be computed.  We can also optionally specify the parallactic angle of
+    # the observation (the direction on the image which is towards zenith).  The default of 0.0
+    # implies that zenith is "up".
+    PSF = galsim.ChromaticAtmosphere(PSF_500, 500.0, zenith_angle=30.0 * galsim.degrees,
+                                     parallactic_angle=0.0 * galsim.radians)
 
     # convolve with pixel and PSF to create final profile
     pix = galsim.Pixel(pixel_scale)

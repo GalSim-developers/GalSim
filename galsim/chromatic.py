@@ -27,6 +27,7 @@ import numpy
 
 import galsim
 import galsim.integ
+import galsim.dcr
 
 class ChromaticObject(object):
     """Base class for defining wavelength dependent objects.
@@ -54,7 +55,7 @@ class ChromaticObject(object):
         # wavelength integral
         integral = integrator(f_image, bandpass.bluelim, bandpass.redlim, **kwargs)
 
-        # clear image?
+        # clear image unless add_to_image is True
         if not add_to_image:
             image.setZero()
         image += integral
@@ -402,15 +403,46 @@ class ChromaticShiftAndDilate(ChromaticObject):
         @param wave  Wavelength in nanometers.
         @returns     GSObject for profile at specified wavelength
         """
-        PSF = self.gsobj.copy()
-        PSF.applyDilation(self.dilate_fn(wave))
-        PSF.applyShift(self.shift_fn(wave))
-        return PSF
+        profile = self.gsobj.copy()
+        profile.applyDilation(self.dilate_fn(wave))
+        profile.applyShift(self.shift_fn(wave))
+        return profile
+
+class ChromaticAtmosphere(ChromaticObject):
+    def __init__(self, base_obj, base_wavelength, zenith_angle, alpha=-0.2,
+                 parallactic_angle=0*galsim.radians, **kwargs):
+        self.base_obj = base_obj
+        self.base_wavelength = base_wavelength
+        self.zenith_angle = zenith_angle
+        self.alpha = alpha
+        self.kwargs = kwargs
+        self.parallactic_angle = parallactic_angle
+
+        self.base_refraction = galsim.dcr.get_refraction(base_wavelength, zenith_angle, **kwargs)
+        self.separable = False
+
+    def evaluateAtWavelength(self, wave):
+        profile = self.base_obj.copy()
+        dilation = (wave/self.base_wavelength)**self.alpha
+        shift_magnitude = galsim.dcr.get_refraction(wave, self.zenith_angle, **self.kwargs)
+        shift_magnitude -= self.base_refraction
+        shift_magnitude = shift_magnitude / galsim.arcsec
+        shift = (shift_magnitude*numpy.sin(self.parallactic_angle.rad()),
+                 shift_magnitude*numpy.cos(self.parallactic_angle.rad()))
+        profile.applyDilation(dilation)
+        profile.applyShift(shift)
+        return profile
 
 class SED(object):
     """Very simple SED object."""
-    def __init__(self, wave=None, flambda=None, fnu=None, fphotons=None,
-                 base_wavelength=None, normalization=None):
+    def __init__(self, wave=None, flambda=None, fnu=None, fphotons=None):
+        """ Initialize SED with a wavelength array and a flux density array.  The flux density
+        can be represented in one of three ways.
+        @param wave     Array of wavelengths at which the SED is sampled.
+        @param flambda  Array of flux density samples.  Units proprotional to erg/nm
+        @param fnu      Array of flux density samples.  Units proprotional to erg/Hz
+        @param fphotons Array of photon density samples.  Units proportional to photons/nm
+        """
         self.wave = wave
         if flambda is not None:
             self.fphotons = flambda * wave
@@ -420,31 +452,44 @@ class SED(object):
             self.fphotons = fphotons
 
         self.needs_new_interp=True
-        if base_wavelength is not None and normalization is not None:
-            self.setNormalization(base_wavelength, normalization)
 
     def __call__(self, wave, force_new_interp=False):
+        """ Uses a galsim.LookupTable to interpolate the photon density at the requested wavelength.
+        The LookupTable is cached for future use.
+
+        @param force_new_interp     Force rebuild of LookupTable.
+
+        @returns photon density, Units proportional to photons/nm
+        """
         interp = self._get_interp(force_new_interp=force_new_interp)
         return interp(wave)
 
     def _get_interp(self, force_new_interp=False):
+        """ Return LookupTable, rebuild if requested.
+        """
         if force_new_interp or self.needs_new_interp:
             self.interp = galsim.LookupTable(self.wave, self.fphotons)
             self.needs_new_interp=False
         return self.interp
 
     def setNormalization(self, base_wavelength, normalization):
+        """ Set photon density normalization at specified wavelength
+        """
         current_fphoton = self(base_wavelength)
         self.fphotons *= normalization/current_fphoton
         self.needs_new_interp = True
 
     def setMagnitude(self, bandpass, mag_norm):
+        """ Set relative AB magnitude of SED when observed through given bandpass.
+        """
         current_mag = self.getMagnitude(bandpass)
         multiplier = 10**(-0.4 * (mag_norm - current_mag))
         self.fphotons *= multiplier
         self.needs_new_interp = True
 
     def setFlux(self, bandpass, flux_norm):
+        """ Set relative flux of SED when observed through given bandpass.
+        """
         current_flux = self.getFlux(bandpass)
         multiplier = flux_norm/current_flux
         self.fphotons *= multiplier
@@ -473,9 +518,18 @@ class Bandpass(object):
         self.interp = galsim.LookupTable(wave, throughput)
 
     def __call__(self, wave):
+        """ Return throughput of bandpass at given wavelength.
+        """
         return self.interp(wave)
 
     def truncate(self, rel_throughput=None, bluelim=None, redlim=None):
+        """ Truncate filter wavelength range.
+
+        @param   bluelim   Truncate blue side of bandpass here.
+        @param   redlim    Truncate red side of bandpass here.
+        @param   rel_throughput  Truncate wavelength ranges which
+                                 have relative throughput less than this value.
+        """
         if bluelim is None:
             bluelim = self.bluelim
         if redlim is None:
@@ -483,8 +537,8 @@ class Bandpass(object):
         if rel_throughput is not None:
             mx = self.throughput.max()
             w = (self.throughput > mx*rel_throughput).nonzero()
-            bluelim = max([min(self.wave[w]), bluelim]) # first True in `w`
-            redlim = min([max(self.wave[w]), redlim]) # last True in `w`
+            bluelim = max([min(self.wave[w]), bluelim])
+            redlim = min([max(self.wave[w]), redlim])
         w = (self.wave >= bluelim) & (self.wave <= redlim)
         self.wave = self.wave[w]
         self.throughput = self.throughput[w]
