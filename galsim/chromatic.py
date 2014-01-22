@@ -442,16 +442,25 @@ class SED(object):
         current_mag = self.getMagnitude(bandpass)
         multiplier = 10**(-0.4 * (mag_norm - current_mag))
         self.fphotons *= multiplier
-        self.needs_new_interp=True
+        self.needs_new_interp = True
+
+    def setFlux(self, bandpass, flux_norm):
+        current_flux = self.getFlux(bandpass)
+        multiplier = flux_norm/current_flux
+        self.fphotons *= multiplier
+        self.needs_new_interp = True
 
     def setRedshift(self, redshift):
         self.wave *= (1.0 + redshift)
         self.interp = galsim.LookupTable(self.wave, self.fphotons)
         self.needs_new_interp=True
 
-    def getMagnitude(self, bandpass):
+    def getFlux(self, bandpass):
         interp = self._get_interp()
-        flux = integ.int1d(lambda w:bandpass(w)*interp(w), bandpass.bluelim, bandpass.redlim)
+        return galsim.integ.int1d(lambda w:bandpass(w)*interp(w), bandpass.bluelim, bandpass.redlim)
+
+    def getMagnitude(self, bandpass):
+        flux = self.getFlux(bandpass)
         return -2.5 * numpy.log10(flux) - bandpass.AB_zeropoint()
 
 class Bandpass(object):
@@ -491,6 +500,6 @@ class Bandpass(object):
             # convert AB source from erg/s/Hz/cm^2*cm/s/nm^2 -> erg/s/cm^2/nm
             AB_flambda = AB_source * c / self.wave**2 / nm_to_cm
             AB_photons = galsim.LookupTable(self.wave, AB_flambda * self.wave * self.throughput)
-            AB_flux = integ.int1d(AB_photons, self.bluelim, self.redlim)
+            AB_flux = galsim.integ.int1d(AB_photons, self.bluelim, self.redlim)
             self.zp = -2.5 * numpy.log10(AB_flux)
         return self.zp

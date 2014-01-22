@@ -466,6 +466,15 @@ def test_chromatic_flux():
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "analytic prediction")
 
+    # try adjusting flux to something else.
+    target_flux = 2.63
+    bulge_SED.setFlux(bandpass, target_flux)
+    final = galsim.Convolve([star, PSF, pix])
+    final.draw(bandpass, image=image)
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 3,
+                                   err_msg="Drawn ChromaticConvolve flux doesn't match " +
+                                   "SED setFlux")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
