@@ -128,6 +128,9 @@ class _ReadFile:
         # This normally works.  But it might not on old versions of pyfits.
         fin = bz2.BZ2File(file, 'rb')
         hdu_list = pyfits.open(fin, 'readonly')
+        # Sometimes this doesn't work.  The symptoms may be that this raises an
+        # exception, or possibly the hdu_list comes back empty, in which case the 
+        # next line will raise an exception.
         hdu = hdu_list[0]
         return hdu_list, fin
 
@@ -183,14 +186,119 @@ class _ReadFile:
             raise ValueError("Unknown file_compression")
 _read_file = _ReadFile()
 
-# Do the same trick for _write_file(file,hdus,clobber,file_compress,pyfits_compress):
+# Do the same trick for _write_file(file,hdu_list,clobber,file_compress,pyfits_compress):
 class _WriteFile:
-    def __init__(self):
-        # Store whether it is ok to use the in-memory version.
-        self.in_mem = True
 
-    def __call__(self, file, hdus, clobber, file_compress, pyfits_compress):
+    # There are several methods available for each of gzip and bzip2.  Each is its own function.
+    def gzip_call2(self, hdu_list, file):
         import os
+        root, ext = os.path.splitext(file)
+        hdu_list.writeto(root)
+        import subprocess
+        p = subprocess.Popen(["gzip", "-S", ext, root], close_fds=True)
+        p.communicate()
+        assert p.returncode == 0 
+
+    def gzip_call(self, hdu_list, file):
+        import subprocess
+        fout = open(file, 'wb')
+        p = subprocess.Popen(["gzip", "-"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
+        hdu_list.writeto(p.stdin)
+        p.communicate()
+        assert p.returncode == 0 
+        fout.close()
+ 
+    def gzip_in_mem(self, hdu_list, file):
+        import gzip
+        import io
+        # The compression routines work better if we first write to an internal buffer
+        # and then output that to a file.
+        buf = io.BytesIO()
+        hdu_list.writeto(buf)
+        data = buf.getvalue()
+        # There is a compresslevel option (for both gzip and bz2), but we just use the 
+        # default.
+        fout = gzip.open(file, 'wb')
+        fout.write(data)
+        fout.close()
+
+    def gzip_tmp(self, hdu_list, file):
+        import gzip
+        # However, pyfits versions before 2.3 do not support writing to a buffer, so the
+        # abover code with fail.  We need to use a temporary in that case.
+        tmp = file + '.tmp'
+        # It would be pretty odd for this filename to already exist, but just in case...
+        while os.path.isfile(tmp):
+            tmp = tmp + '.tmp'
+        hdu_list.writeto(tmp)
+        with open(tmp,"r") as buf:
+            data = buf.read()
+        os.remove(tmp)
+        fout = gzip.open(file, 'wb')
+        fout.write(data)
+        fout.close()
+
+    def bzip2_call2(self, hdu_list, file):
+        import os
+        root, ext = os.path.splitext(file)
+        hdu_list.writeto(root)
+        import subprocess
+        if ext == '.bz2':
+            p = subprocess.Popen(["bzip2", root], close_fds=True)
+            p.communicate()
+            assert p.returncode == 0 
+        else:
+            p = subprocess.Popen(["bzip2", file], close_fds=True)
+            p.communicate()
+            assert p.returncode == 0 
+            os.rename(file + '.bz2', file)
+
+    def bzip2_call(self, hdu_list, file):
+        import subprocess
+        fout = open(file, 'wb')
+        p = subprocess.Popen(["bzip2"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
+        hdu_list.writeto(p.stdin)
+        p.communicate()
+        assert p.returncode == 0 
+        fout.close()
+ 
+    def bz2_in_mem(self, hdu_list, file):
+        import bz2
+        import io
+        buf = io.BytesIO()
+        hdu_list.writeto(buf)
+        data = buf.getvalue()
+        fout = bz2.BZ2File(file, 'wb')
+        fout.write(data)
+        fout.close()
+
+    def bz2_tmp(self, hdu_list, file):
+        import bz2
+        tmp = file + '.tmp'
+        while os.path.isfile(tmp):
+            tmp = tmp + '.tmp'
+        hdu_list.writeto(tmp)
+        with open(tmp,"r") as buf:
+            data = buf.read()
+        os.remove(tmp)
+        fout = bz2.BZ2File(file, 'wb')
+        fout.write(data)
+        fout.close()
+
+    def __init__(self):
+        # For each compression type, we try them in order of efficiency and keep track of 
+        # which method worked for next time.  Whenever one doesn't work, we increment the 
+        # method number and try the next one.
+        self.gzip_method = 0
+        self.bz2_method = 0
+        self.gzip_methods = [self.gzip_call, self.gzip_in_mem, self.gzip_tmp]
+        self.bz2_methods = [self.bzip2_call, self.bz2_in_mem, self.bz2_tmp]
+
+    def __call__(self, file, hdu_list, clobber, file_compress, pyfits_compress):
+        import os
+        if dir:
+            file = os.path.join(dir,file)
+
         if os.path.isfile(file):
             if clobber:
                 os.remove(file)
@@ -198,53 +306,39 @@ class _WriteFile:
                 raise IOError('File %r already exists'%file)
     
         if not file_compress:
-            hdus.writeto(file)
-        else:
-            if self.in_mem:
+            hdu_list.writeto(file)
+        elif file_compress == 'gzip':
+            while self.gzip_method < len(self.gzip_methods):
+                #print 'Current gzip method = ',self.gzip_method,self.gzip_methods[self.gzip_method]
                 try:
-                    # The compression routines work better if we first write to an internal buffer
-                    # and then output that to a file.
-                    import io
-                    buf = io.BytesIO()
-                    hdus.writeto(buf)
-                    data = buf.getvalue()
+                    return self.gzip_methods[self.gzip_method](hdu_list, file)
                 except:
-                    self.in_mem = False
-                    return self(file,hdus,clobber,file_compress)
-            else:
-                # However, pyfits versions before 2.3 do not support writing to a buffer, so the
-                # abover code with fail.  We need to use a temporary in that case.
-                tmp = file + '.tmp'
-                # It would be pretty odd for this filename to already exist, but just in case...
-                while os.path.isfile(tmp):
-                    tmp = tmp + '.tmp'
-                hdus.writeto(tmp)
-                with open(tmp,"r") as buf:
-                    data = buf.read()
-                os.remove(tmp)
+                    #print 'That method failed:'
+                    #import traceback
+                    #traceback.print_exc()
+                    self.gzip_method += 1
+            raise RuntimeError("None of the options for gunzipping were successful.")
+        elif file_compress == 'bzip2':
+            while self.bz2_method < len(self.bz2_methods):
+                #print 'Current bzip2 method = ',self.bz2_method,self.bz2_methods[self.bz2_method]
+                try:
+                    return self.bz2_methods[self.bz2_method](hdu_list, file)
+                except:
+                    #print 'That method failed:'
+                    #import traceback
+                    #traceback.print_exc()
+                    self.bz2_method += 1
+            raise RuntimeError("None of the options for bunzipping were successful.")
+        else:
+            raise ValueError("Unknown file_compression")
 
-            if file_compress == 'gzip':
-                import gzip
-                # There is a compresslevel option (for both gzip and bz2), but we just use the 
-                # default.
-                fout = gzip.open(file, 'wb')
-                fout.write(data)
-                fout.close()
-            elif file_compress == 'bzip2':
-                import bz2
-                fout = bz2.BZ2File(file, 'wb')
-                fout.write(data)
-                fout.close()
-            else:
-                raise ValueError("Unknown file_compression")
-    
         # There is a bug in pyfits where they don't add the size of the variable length array
         # to the TFORMx header keywords.  They should have size at the end of them.
         # This bug has been fixed in version 3.1.2.
         # (See http://trac.assembla.com/pyfits/ticket/199)
         if pyfits_compress and pyfits_version < '3.1.2':
-            with pyfits.open(file,'update',disable_image_compression=True) as hdus:
-                for hdu in hdus[1:]: # Skip PrimaryHDU
+            with pyfits.open(file,'update',disable_image_compression=True) as hdu_list:
+                for hdu in hdu_list[1:]: # Skip PrimaryHDU
                     # Find the maximum variable array length  
                     max_ar_len = max([ len(ar[0]) for ar in hdu.data ])
                     # Add '(N)' to the TFORMx keywords for the variable array items
@@ -263,7 +357,6 @@ class _WriteFile:
             if (pyfits_version > '3.0' and pyfits_version < '3.0.8' and
                 'COMPRESSION_ENABLED' in pyfits.hdu.compressed.__dict__):
                 pyfits.hdu.compressed.COMPRESSION_ENABLED = True
-                
 _write_file = _WriteFile()
 
 def _write_header(hdu, add_wcs, scale, xmin, ymin):
