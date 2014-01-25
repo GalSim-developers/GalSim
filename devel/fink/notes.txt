@@ -11,6 +11,7 @@ Process for updating fink with a new version:
 - dpkg -c /sw/fink/debs/galsim_[...].deb
 - fink validate /sw/fink/debs/galsim_[...].deb
 - fink install galsim
+- Check that otool -L /sw/lib/libgalsim[...].dylib has the right version number and directory.
 - Make sure check_yaml works if you set python to /sw/bin/python2.7 and bin to /sw/bin
 - In tests directory run /sw/bin/nosetests2.7
 - git add new info file for this version.
