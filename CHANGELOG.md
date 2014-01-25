@@ -21,3 +21,7 @@ Changes from v1.0.0 to v1.0.1:
 * Support astropy.io.fits in lieu of stand-alone pyfits module. (#488)
   This is where pyfits will live going forward.  So we now support both
   the astropy distribution as well as the legacy pyfits module.
+
+* Fixed a bug in the drawing of a Pixel all by itself.  It had been rendered
+  incorrectly, although the bug did not affect the rendering of other profiles
+  convolved by a Pixel. (#497)
