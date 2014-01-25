@@ -12,6 +12,7 @@ v1.0.1
 * Support astropy.io.fits in lieu of stand-alone pyfits module. (#488)
 * Fixed a bug in config where 'safe' objects were not being correctly 
   invalidated when a new input item should have invalidated them.
+* Fixed a bug in the drawing of a Pixel all by itself. (#497)
 
 
 v1.0
