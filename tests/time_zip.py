@@ -70,28 +70,53 @@ def time_gzip():
 
         outfile_name = os.path.join(dir,gzfile)
         t1 = time.time()
-        for iter in range(n_iter):
-            if os.path.isfile(outfile_name):
-                os.remove(outfile_name)
-            galsim.fits._write_file.gzip_in_mem(hdu_list, outfile_name)
+        try:
+            for iter in range(n_iter):
+                if os.path.isfile(outfile_name):
+                    os.remove(outfile_name)
+                galsim.fits._write_file.gzip_in_mem(hdu_list, outfile_name)
+        except:
+            # Only report error the first time.
+            if n_iter == 1:
+                import traceback
+                print 'gzip_in_mem failed with exception:'
+                traceback.print_exc()
         t2 = time.time()
 
-        for iter in range(n_iter):
-            if os.path.isfile(outfile_name):
-                os.remove(outfile_name)
-            galsim.fits._write_file.gzip_tmp(hdu_list, outfile_name)
+        try:
+            for iter in range(n_iter):
+                if os.path.isfile(outfile_name):
+                    os.remove(outfile_name)
+                galsim.fits._write_file.gzip_tmp(hdu_list, outfile_name)
+        except:
+            if n_iter == 1:
+                import traceback
+                print 'gzip_tmp failed with exception:'
+                traceback.print_exc()
         t3 = time.time()
 
-        for iter in range(n_iter):
-            if os.path.isfile(outfile_name):
-                os.remove(outfile_name)
-            galsim.fits._write_file.gzip_call(hdu_list, outfile_name)
+        try:
+            for iter in range(n_iter):
+                if os.path.isfile(outfile_name):
+                    os.remove(outfile_name)
+                galsim.fits._write_file.gzip_call(hdu_list, outfile_name)
+        except:
+            if n_iter == 1:
+                import traceback
+                print 'gzip_call failed with exception:'
+                traceback.print_exc()
         t4 = time.time()
 
-        for iter in range(n_iter):
-            if os.path.isfile(outfile_name):
-                os.remove(outfile_name)
-            galsim.fits._write_file.gzip_call2(hdu_list, outfile_name)
+        try:
+            for iter in range(n_iter):
+                if os.path.isfile(outfile_name):
+                    os.remove(outfile_name)
+                galsim.fits._write_file.gzip_call2(hdu_list, outfile_name)
+        except:
+            if n_iter == 1:
+                import traceback
+                print 'gzip_call2 failed with exception:'
+                traceback.print_exc()
         t5 = time.time()
 
         galsim.fits.closeHDUList(hdu_list, fin)
@@ -119,28 +144,52 @@ def time_bzip2():
 
         outfile_name = os.path.join(dir,bz2file)
         t1 = time.time()
-        for iter in range(n_iter):
-            if os.path.isfile(outfile_name):
-                os.remove(outfile_name)
-            galsim.fits._write_file.bz2_in_mem(hdu_list, outfile_name)
+        try:
+            for iter in range(n_iter):
+                if os.path.isfile(outfile_name):
+                    os.remove(outfile_name)
+                galsim.fits._write_file.bz2_in_mem(hdu_list, outfile_name)
+        except:
+            if n_iter == 1:
+                import traceback
+                print 'bz2_in_mem failed with exception:'
+                traceback.print_exc()
         t2 = time.time()
 
-        for iter in range(n_iter):
-            if os.path.isfile(outfile_name):
-                os.remove(outfile_name)
-            galsim.fits._write_file.bz2_tmp(hdu_list, outfile_name)
+        try:
+            for iter in range(n_iter):
+                if os.path.isfile(outfile_name):
+                    os.remove(outfile_name)
+                galsim.fits._write_file.bz2_tmp(hdu_list, outfile_name)
+        except:
+            if n_iter == 1:
+                import traceback
+                print 'bz2_tmp failed with exception:'
+                traceback.print_exc()
         t3 = time.time()
 
-        for iter in range(n_iter):
-            if os.path.isfile(outfile_name):
-                os.remove(outfile_name)
-            galsim.fits._write_file.bzip2_call(hdu_list, outfile_name)
+        try:
+            for iter in range(n_iter):
+                if os.path.isfile(outfile_name):
+                    os.remove(outfile_name)
+                galsim.fits._write_file.bzip2_call(hdu_list, outfile_name)
+        except:
+            if n_iter == 1:
+                import traceback
+                print 'bzip2_call failed with exception:'
+                traceback.print_exc()
         t4 = time.time()
 
-        for iter in range(n_iter):
-            if os.path.isfile(outfile_name):
-                os.remove(outfile_name)
-            galsim.fits._write_file.bzip2_call2(hdu_list, outfile_name)
+        try:
+            for iter in range(n_iter):
+                if os.path.isfile(outfile_name):
+                    os.remove(outfile_name)
+                galsim.fits._write_file.bzip2_call2(hdu_list, outfile_name)
+        except:
+            if n_iter == 1:
+                import traceback
+                print 'bzip2_call2 failed with exception:'
+                traceback.print_exc()
         t5 = time.time()
 
         galsim.fits.closeHDUList(hdu_list, fin)
@@ -166,28 +215,52 @@ def time_gunzip():
         file_name = os.path.join(dir,gzfile)
 
         t1 = time.time()
-        for iter in range(n_iter):
-            hdu_list, fin = galsim.fits._read_file.gzip_in_mem(file_name)
-            im = galsim.fits.read(hdu_list = hdu_list)
-            galsim.fits.closeHDUList(hdu_list,fin)
+        try:
+            for iter in range(n_iter):
+                hdu_list, fin = galsim.fits._read_file.gzip_in_mem(file_name)
+                im = galsim.fits.read(hdu_list = hdu_list)
+                galsim.fits.closeHDUList(hdu_list,fin)
+        except:
+            if n_iter == 1:
+                import traceback
+                print 'gzip_in_mem failed with exception:'
+                traceback.print_exc()
         t2 = time.time()
 
-        for iter in range(n_iter):
-            hdu_list, fin = galsim.fits._read_file.gzip_tmp(file_name)
-            im = galsim.fits.read(hdu_list = hdu_list)
-            galsim.fits.closeHDUList(hdu_list,fin)
+        try:
+            for iter in range(n_iter):
+                hdu_list, fin = galsim.fits._read_file.gzip_tmp(file_name)
+                im = galsim.fits.read(hdu_list = hdu_list)
+                galsim.fits.closeHDUList(hdu_list,fin)
+        except:
+            if n_iter == 1:
+                import traceback
+                print 'gzip_tmp failed with exception:'
+                traceback.print_exc()
         t3 = time.time()
 
-        for iter in range(n_iter):
-            hdu_list, fin = galsim.fits._read_file.gunzip_call(file_name)
-            im = galsim.fits.read(hdu_list = hdu_list)
-            galsim.fits.closeHDUList(hdu_list,fin)
+        try:
+            for iter in range(n_iter):
+                hdu_list, fin = galsim.fits._read_file.gunzip_call(file_name)
+                im = galsim.fits.read(hdu_list = hdu_list)
+                galsim.fits.closeHDUList(hdu_list,fin)
+        except:
+            if n_iter == 1:
+                import traceback
+                print 'gunzip_call failed with exception:'
+                traceback.print_exc()
         t4 = time.time()
 
-        for iter in range(n_iter):
-            hdu_list, fin = galsim.fits._read_file.pyfits_open(file_name)
-            im = galsim.fits.read(hdu_list = hdu_list)
-            galsim.fits.closeHDUList(hdu_list,fin)
+        try:
+            for iter in range(n_iter):
+                hdu_list, fin = galsim.fits._read_file.pyfits_open(file_name)
+                im = galsim.fits.read(hdu_list = hdu_list)
+                galsim.fits.closeHDUList(hdu_list,fin)
+        except:
+            if n_iter == 1:
+                import traceback
+                print 'pyfits_open failed with exception:'
+                traceback.print_exc()
         t5 = time.time()
 
         galsim.fits.closeHDUList(hdu_list, fin)
@@ -214,22 +287,40 @@ def time_bunzip2():
         file_name = os.path.join(dir,bz2file)
 
         t1 = time.time()
-        for iter in range(n_iter):
-            hdu_list, fin = galsim.fits._read_file.bz2_in_mem(file_name)
-            im = galsim.fits.read(hdu_list = hdu_list)
-            galsim.fits.closeHDUList(hdu_list,fin)
+        try:
+            for iter in range(n_iter):
+                hdu_list, fin = galsim.fits._read_file.bz2_in_mem(file_name)
+                im = galsim.fits.read(hdu_list = hdu_list)
+                galsim.fits.closeHDUList(hdu_list,fin)
+        except:
+            if n_iter == 1:
+                import traceback
+                print 'bz2_in_mem failed with exception:'
+                traceback.print_exc()
         t2 = time.time()
 
-        for iter in range(n_iter):
-            hdu_list, fin = galsim.fits._read_file.bz2_tmp(file_name)
-            im = galsim.fits.read(hdu_list = hdu_list)
-            galsim.fits.closeHDUList(hdu_list,fin)
+        try:
+            for iter in range(n_iter):
+                hdu_list, fin = galsim.fits._read_file.bz2_tmp(file_name)
+                im = galsim.fits.read(hdu_list = hdu_list)
+                galsim.fits.closeHDUList(hdu_list,fin)
+        except:
+            if n_iter == 1:
+                import traceback
+                print 'bz2_tmp failed with exception:'
+                traceback.print_exc()
         t3 = time.time()
 
-        for iter in range(n_iter):
-            hdu_list, fin = galsim.fits._read_file.bunzip2_call(file_name)
-            im = galsim.fits.read(hdu_list = hdu_list)
-            galsim.fits.closeHDUList(hdu_list,fin)
+        try:
+            for iter in range(n_iter):
+                hdu_list, fin = galsim.fits._read_file.bunzip2_call(file_name)
+                im = galsim.fits.read(hdu_list = hdu_list)
+                galsim.fits.closeHDUList(hdu_list,fin)
+        except:
+            if n_iter == 1:
+                import traceback
+                print 'bunzip_call failed with exception:'
+                traceback.print_exc()
         t4 = time.time()
 
         galsim.fits.closeHDUList(hdu_list, fin)
