@@ -71,8 +71,7 @@ class _ReadFile:
         from cStringIO import StringIO
         # We use gunzip -c rather than zcat, since the latter is sometimes called gzcat
         # (with zcat being a symlink to uncompress instead).
-        p = subprocess.Popen(["gunzip", "-c", os.path.join(file)], stdout=subprocess.PIPE,
-                             close_fds=True)
+        p = subprocess.Popen(["gunzip", "-c", file], stdout=subprocess.PIPE, close_fds=True)
         fin = StringIO(p.communicate()[0])
         assert p.returncode == 0 
         hdu_list = pyfits.open(fin, 'readonly')
@@ -116,8 +115,7 @@ class _ReadFile:
     def bunzip2_call(self, file):
         import subprocess
         from cStringIO import StringIO
-        p = subprocess.Popen(["bunzip2", "-c", os.path.join(file)], stdout=subprocess.PIPE,
-                             close_fds=True)
+        p = subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE, close_fds=True)
         fin = StringIO(p.communicate()[0])
         assert p.returncode == 0 
         hdu_list = pyfits.open(fin, 'readonly')
@@ -191,7 +189,6 @@ class _WriteFile:
 
     # There are several methods available for each of gzip and bzip2.  Each is its own function.
     def gzip_call2(self, hdu_list, file):
-        import os
         root, ext = os.path.splitext(file)
         hdu_list.writeto(root)
         import subprocess
@@ -239,7 +236,6 @@ class _WriteFile:
         fout.close()
 
     def bzip2_call2(self, hdu_list, file):
-        import os
         root, ext = os.path.splitext(file)
         hdu_list.writeto(root)
         import subprocess
@@ -295,10 +291,6 @@ class _WriteFile:
         self.bz2_methods = [self.bzip2_call, self.bz2_in_mem, self.bz2_tmp]
 
     def __call__(self, file, hdu_list, clobber, file_compress, pyfits_compress):
-        import os
-        if dir:
-            file = os.path.join(dir,file)
-
         if os.path.isfile(file):
             if clobber:
                 os.remove(file)
@@ -487,7 +479,6 @@ def write(image, file_name=None, dir=None, hdu_list=None, add_wcs=True, clobber=
 
     if file_name:
         if dir:
-            import os
             file_name = os.path.join(dir,file_name)
         _write_file(file_name, hdu_list, clobber, file_compress, pyfits_compress)
 
@@ -529,7 +520,6 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True
 
     if file_name:
         if dir:
-            import os
             file_name = os.path.join(dir,file_name)
         _write_file(file_name, hdu_list, clobber, file_compress, pyfits_compress)
 
@@ -613,7 +603,6 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True,
 
     if file_name:
         if dir:
-            import os
             file_name = os.path.join(dir,file_name)
         _write_file(file_name, hdu_list, clobber, file_compress, pyfits_compress)
 
@@ -647,7 +636,6 @@ def writeFile(file_name, hdu_list, dir=None, clobber=True, compression='auto'):
                         it must be applied when writing each hdu.
     """
     if dir:
-        import os
         file_name = os.path.join(dir,file_name)
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
     if pyfits_compress:
@@ -708,7 +696,6 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
     fin = None
     if file_name:
         if dir:
-            import os
             file_name = os.path.join(dir,file_name)
         hdu_list, fin = _read_file(file_name, file_compress)
 
@@ -760,7 +747,6 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
         hdu_list.close()
         if isinstance(fin, basestring):
             # In this case, it is a file name that we need to delete.
-            import os
             os.remove(fin)
         else:
             fin.close()
@@ -815,7 +801,6 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
     fin = None
     if file_name:
         if dir:
-            import os
             file_name = os.path.join(dir,file_name)
         hdu_list, fin = _read_file(file_name, file_compress)
     elif not isinstance(hdu_list, pyfits.HDUList):
@@ -838,7 +823,6 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
         hdu_list.close()
         if isinstance(fin, basestring):
             # In this case, it is a file name that we need to delete.
-            import os
             os.remove(fin)
         else:
             fin.close()
@@ -892,7 +876,6 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto')
     fin = None
     if file_name:
         if dir:
-            import os
             file_name = os.path.join(dir,file_name)
         hdu_list, fin = _read_file(file_name, file_compress)
 
@@ -948,7 +931,6 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto')
         hdu_list.close()
         if isinstance(fin, basestring):
             # In this case, it is a file name that we need to delete.
-            import os
             os.remove(fin)
         else:
             fin.close()
@@ -1021,7 +1003,6 @@ class FitsHeader(object):
         fin = None
         if file_name:
             if dir:
-                import os
                 file_name = os.path.join(dir,file_name)
             hdu_list, fin = _read_file(file_name, file_compress)
 
@@ -1047,7 +1028,6 @@ class FitsHeader(object):
             hdu_list.close()
             if isinstance(fin, basestring):
                 # In this case, it is a file name that we need to delete.
-                import os
                 os.remove(fin)
             else:
                 fin.close()

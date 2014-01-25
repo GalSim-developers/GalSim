@@ -20,6 +20,7 @@ import numpy as np
 import os
 import sys
 from galsim_test_helpers import *
+from galsim import pyfits
 
 """Time the different ways to zip and unzip and image
 """
@@ -66,7 +67,7 @@ def time_gzip():
                                         (small_im_file, small_im_file_gz, 200, 400) ]:
 
         infile_name = os.path.join(dir,file)
-        hdu, hdu_list, fin = galsim.fits.readFile(infile_name)
+        hdu_list = pyfits.open(infile_name)
 
         outfile_name = os.path.join(dir,gzfile)
         t1 = time.time()
@@ -119,8 +120,6 @@ def time_gzip():
                 traceback.print_exc()
         t5 = time.time()
 
-        galsim.fits.closeHDUList(hdu_list, fin)
-
         print 'Times for %d iterations of writing to %s (%d x %d): '%(n_iter, gzfile, size, size)
         print '   time for gzip_in_mem = %.2f'%(t2-t1)
         print '   time for gzip_tmp = %.2f'%(t3-t2)
@@ -140,7 +139,7 @@ def time_bzip2():
                                          (small_im_file, small_im_file_bz2, 200, 400) ]:
 
         infile_name = os.path.join(dir,file)
-        hdu, hdu_list, fin = galsim.fits.readFile(infile_name)
+        hdu_list = pyfits.open(infile_name)
 
         outfile_name = os.path.join(dir,bz2file)
         t1 = time.time()
@@ -192,8 +191,6 @@ def time_bzip2():
                 traceback.print_exc()
         t5 = time.time()
 
-        galsim.fits.closeHDUList(hdu_list, fin)
-
         print 'Times for %d iterations of writing to %s (%d x %d): '%(n_iter, bz2file, size, size)
         print '   time for bz2_in_mem = %.2f'%(t2-t1)
         print '   time for bz2_tmp = %.2f'%(t3-t2)
@@ -219,7 +216,8 @@ def time_gunzip():
             for iter in range(n_iter):
                 hdu_list, fin = galsim.fits._read_file.gzip_in_mem(file_name)
                 im = galsim.fits.read(hdu_list = hdu_list)
-                galsim.fits.closeHDUList(hdu_list,fin)
+                fin.close()
+                hdu_list.close()
         except:
             if n_iter == 1:
                 import traceback
@@ -231,7 +229,8 @@ def time_gunzip():
             for iter in range(n_iter):
                 hdu_list, fin = galsim.fits._read_file.gzip_tmp(file_name)
                 im = galsim.fits.read(hdu_list = hdu_list)
-                galsim.fits.closeHDUList(hdu_list,fin)
+                os.remove(fin)
+                hdu_list.close()
         except:
             if n_iter == 1:
                 import traceback
@@ -243,7 +242,8 @@ def time_gunzip():
             for iter in range(n_iter):
                 hdu_list, fin = galsim.fits._read_file.gunzip_call(file_name)
                 im = galsim.fits.read(hdu_list = hdu_list)
-                galsim.fits.closeHDUList(hdu_list,fin)
+                fin.close()
+                hdu_list.close()
         except:
             if n_iter == 1:
                 import traceback
@@ -255,15 +255,13 @@ def time_gunzip():
             for iter in range(n_iter):
                 hdu_list, fin = galsim.fits._read_file.pyfits_open(file_name)
                 im = galsim.fits.read(hdu_list = hdu_list)
-                galsim.fits.closeHDUList(hdu_list,fin)
+                hdu_list.close()
         except:
             if n_iter == 1:
                 import traceback
                 print 'pyfits_open failed with exception:'
                 traceback.print_exc()
         t5 = time.time()
-
-        galsim.fits.closeHDUList(hdu_list, fin)
 
         print 'Times for %d iterations of reading %s (%d x %d): '%(n_iter, gzfile, size, size)
         print '   time for gzip_in_mem = %.2f'%(t2-t1)
@@ -291,7 +289,8 @@ def time_bunzip2():
             for iter in range(n_iter):
                 hdu_list, fin = galsim.fits._read_file.bz2_in_mem(file_name)
                 im = galsim.fits.read(hdu_list = hdu_list)
-                galsim.fits.closeHDUList(hdu_list,fin)
+                fin.close()
+                hdu_list.close()
         except:
             if n_iter == 1:
                 import traceback
@@ -303,7 +302,8 @@ def time_bunzip2():
             for iter in range(n_iter):
                 hdu_list, fin = galsim.fits._read_file.bz2_tmp(file_name)
                 im = galsim.fits.read(hdu_list = hdu_list)
-                galsim.fits.closeHDUList(hdu_list,fin)
+                os.remove(fin)
+                hdu_list.close()
         except:
             if n_iter == 1:
                 import traceback
@@ -315,15 +315,14 @@ def time_bunzip2():
             for iter in range(n_iter):
                 hdu_list, fin = galsim.fits._read_file.bunzip2_call(file_name)
                 im = galsim.fits.read(hdu_list = hdu_list)
-                galsim.fits.closeHDUList(hdu_list,fin)
+                fin.close()
+                hdu_list.close()
         except:
             if n_iter == 1:
                 import traceback
                 print 'bunzip_call failed with exception:'
                 traceback.print_exc()
         t4 = time.time()
-
-        galsim.fits.closeHDUList(hdu_list, fin)
 
         print 'Times for %d iterations of reading %s (%d x %d): '%(n_iter, bz2file, size, size)
         print '   time for bz2_in_mem = %.2f'%(t2-t1)
