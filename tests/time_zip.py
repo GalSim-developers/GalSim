@@ -126,7 +126,7 @@ def time_gzip():
         print '   time for gzip_call = %.2f'%(t4-t3)
         print '   time for gzip_call2 = %.2f'%(t5-t4)
 
-    default_order = [ f.__name__ for f in galsim.fits._write_file.gzip_methods ]
+    default_order = [ f.__name__ for f in galsim.fits._write_file.gz_methods ]
     print 'The current default order for gzip write is ',default_order
     print
 
@@ -269,7 +269,7 @@ def time_gunzip():
         print '   time for gunzip_call = %.2f'%(t4-t3)
         print '   time for pyfits_open = %.2f'%(t5-t4)
 
-    default_order = [ f.__name__ for f in galsim.fits._read_file.gzip_methods ]
+    default_order = [ f.__name__ for f in galsim.fits._read_file.gz_methods ]
     print 'The current default order for gzip read is ',default_order
     print
 
