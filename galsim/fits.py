@@ -149,36 +149,41 @@ class _ReadFile:
         # For each compression type, we try them in order of efficiency and keep track of 
         # which method worked for next time.  Whenever one doesn't work, we increment the 
         # method number and try the next one.
-        self.gzip_method = 0
-        self.bz2_method = 0
+        # For each compression type, we try them in rough order of efficiency and keep track of 
+        # which method worked for next time.  Whenever one doesn't work, we increment the 
+        # method number and try the next one.  The *_call methods are usually the fastest,
+        # sometimes much, much faster than the *_in_mem version.  At least for largish files,
+        # which are precisely the ones that people would most likely want to compress.
+        # However, we can't require the user to have the system executables installed.  So if 
+        # that fails, we move on to the other options.  It varies which of the other options
+        # is fastest, but they all usually succeed, which is the most important thing for a 
+        # backup method, so it probably doesn't matter much what order we do the rest.
+        self.gzip_index = 0
+        self.bz2_index = 0
         self.gzip_methods = [self.gunzip_call, self.gzip_in_mem, self.pyfits_open, self.gzip_tmp]
         self.bz2_methods = [self.bunzip2_call, self.bz2_in_mem, self.bz2_tmp]
+        self.gz = self.gzip_methods[0]
+        self.bz2 = self.bz2_methods[0]
 
     def __call__(self, file, file_compress):
         if not file_compress:
             hdu_list = pyfits.open(file, 'readonly')
             return hdu_list, None
         elif file_compress == 'gzip':
-            while self.gzip_method < len(self.gzip_methods):
-                #print 'Current gzip method = ',self.gzip_method,self.gzip_methods[self.gzip_method]
+            while self.gzip_index < len(self.gzip_methods):
                 try:
-                    return self.gzip_methods[self.gzip_method](file)
+                    return self.gz(file)
                 except:
-                    #print 'That method failed:'
-                    #import traceback
-                    #traceback.print_exc()
-                    self.gzip_method += 1
+                    self.gzip_index += 1
+                    self.gz = self.gzip_methods[self.gzip_index]
             raise RuntimeError("None of the options for gunzipping were successful.")
         elif file_compress == 'bzip2':
-            while self.bz2_method < len(self.bz2_methods):
-                #print 'Current bzip2 method = ',self.bz2_method,self.bz2_methods[self.bz2_method]
+            while self.bz2_index < len(self.bz2_methods):
                 try:
-                    return self.bz2_methods[self.bz2_method](file)
+                    return self.bz2(file)
                 except:
-                    #print 'That method failed:'
-                    #import traceback
-                    #traceback.print_exc()
                     self.bz2_method += 1
+                    self.bz2 = self.bz2_methods[self.bz2_index]
             raise RuntimeError("None of the options for bunzipping were successful.")
         else:
             raise ValueError("Unknown file_compression")
@@ -282,13 +287,19 @@ class _WriteFile:
         fout.close()
 
     def __init__(self):
-        # For each compression type, we try them in order of efficiency and keep track of 
+        # For each compression type, we try them in rough order of efficiency and keep track of 
         # which method worked for next time.  Whenever one doesn't work, we increment the 
-        # method number and try the next one.
-        self.gzip_method = 0
-        self.bz2_method = 0
-        self.gzip_methods = [self.gzip_call, self.gzip_in_mem, self.gzip_tmp]
-        self.bz2_methods = [self.bzip2_call, self.bz2_in_mem, self.bz2_tmp]
+        # method number and try the next one.  The *_call methods seem to be usually the fastest,
+        # and we expect that they will usually work.  However, we can't require the user
+        # to have the system executables.  Also, some versions of pyfits can't handle writing
+        # to the stdin pipe of a subprocess.  So if that fails, the next one, *_in_mem, is 
+        # usually almost as good.  The other two are just there because why not.
+        self.gzip_index = 0
+        self.bz2_index = 0
+        self.gzip_methods = [self.gzip_call, self.gzip_in_mem, self.gzip_tmp, self.gzip_call2]
+        self.bz2_methods = [self.bzip2_call, self.bz2_in_mem, self.bz2_tmp, self.bzip2_call2]
+        self.gz = self.gzip_methods[0]
+        self.bz2 = self.bz2_methods[0]
 
     def __call__(self, file, hdu_list, clobber, file_compress, pyfits_compress):
         if os.path.isfile(file):
@@ -300,26 +311,20 @@ class _WriteFile:
         if not file_compress:
             hdu_list.writeto(file)
         elif file_compress == 'gzip':
-            while self.gzip_method < len(self.gzip_methods):
-                #print 'Current gzip method = ',self.gzip_method,self.gzip_methods[self.gzip_method]
+            while self.gzip_index < len(self.gzip_methods):
                 try:
-                    return self.gzip_methods[self.gzip_method](hdu_list, file)
+                    return self.gz(hdu_list, file)
                 except:
-                    #print 'That method failed:'
-                    #import traceback
-                    #traceback.print_exc()
-                    self.gzip_method += 1
+                    self.gzip_index += 1
+                    self.gz = self.gzip_methods[self.gzip_index]
             raise RuntimeError("None of the options for gunzipping were successful.")
         elif file_compress == 'bzip2':
-            while self.bz2_method < len(self.bz2_methods):
-                #print 'Current bzip2 method = ',self.bz2_method,self.bz2_methods[self.bz2_method]
+            while self.bz2_index < len(self.bz2_methods):
                 try:
-                    return self.bz2_methods[self.bz2_method](hdu_list, file)
+                    return self.bz2(hdu_list, file)
                 except:
-                    #print 'That method failed:'
-                    #import traceback
-                    #traceback.print_exc()
                     self.bz2_method += 1
+                    self.bz2 = self.bz2_methods[self.bz2_index]
             raise RuntimeError("None of the options for bunzipping were successful.")
         else:
             raise ValueError("Unknown file_compression")
