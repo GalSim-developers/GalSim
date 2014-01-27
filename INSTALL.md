@@ -454,8 +454,8 @@ intend to use for running GalSim.
 The solution may be to install Boost C++ manually. This can be done by following
 the instructions of Section 1.v), above.
 
-ii) Mac OSX
------------
+ii) Mac OSX 10.8 and earlier
+----------------------------
 a) Use of Fink -- the `fink` (http://www.finkproject.org) package management 
 software is popular with Mac users.  Once it is installed, you can get either
 most or all of the prerequisites using it, depending on whether you want
@@ -589,6 +589,27 @@ should be installable via
 
     brew tap camphogg/science
     brew install gal-sim
+
+
+iii) Mac OSX 10.9 (Mavericks)
+-----------------------------
+
+Most of what applies above for earlier Mac OSX versions seems to apply for
+GalSim on Mavericks too, although not all combinations have yet been tested.
+
+However, it has been found that GalSim and its dependencies can be sensitive
+(e.g. Issue #483) to the fact that under Mavericks the system `gcc` is NOT in
+fact the Gnu Compiler Collection, but in fact Clang masquerading as such.  This
+can lead to problems when linking libraries, as described in the following
+GalSim Wiki FAQ item:
+https://github.com/GalSim-developers/GalSim/wiki/Installation-FAQ#
+wiki-what-should-i-do-about-undefined-symbols-for-architecture-x86_64-errors
+
+(concatenate lines in above URL together and copy-paste to browser) 
+
+The best success seems to be achieved in Mavericks by *explicitly* specifying
+`clang` and `clang++` as the compiler to GalSim and all its dependencies when
+building (as in the example above).
 
 
 5. More SCons options
