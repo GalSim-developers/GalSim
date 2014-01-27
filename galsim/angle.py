@@ -254,3 +254,13 @@ def DMS_Angle(str):
     """
     return parse_dms(str) * galsim.degrees
 
+galsim.Angle.wrap.__func__.__doc__ = """Wrap Angle to [-pi, pi) radians rather than [0, 2 * pi).
+
+Depending on the context, theta = 2pi radians and theta = 0 radians are the same thing.
+If you want your angles to be wrapped to [-pi,pi) radians, you can do this by calling
+
+    >>> theta = theta.wrap()
+
+This could be appropriate before testing for the equality of two angles for example, or
+calculating the difference between them.
+"""
