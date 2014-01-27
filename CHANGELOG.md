@@ -130,8 +130,8 @@ New `CelestialCoord` class: (Issue #364)
     on the tangent plane back to celestial coordinates.
   * `coord.precess(from_epoch, to_epoch)` precesses the coordinates to a 
     different epoch.
-  * `coord.getGalaxyPos()` returns the galaxy longitude and latitude as
-    a tuple (el, b).
+  * `coord.getGalaxyPos()` returns the longitude and latitude in the galactic
+    coordinate system as a tuple (el, b).
 
 
 Updates to config options:
