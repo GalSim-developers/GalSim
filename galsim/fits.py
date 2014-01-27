@@ -158,11 +158,11 @@ class _ReadFile:
         # that fails, we move on to the other options.  It varies which of the other options
         # is fastest, but they all usually succeed, which is the most important thing for a 
         # backup method, so it probably doesn't matter much what order we do the rest.
-        self.gzip_index = 0
+        self.gz_index = 0
         self.bz2_index = 0
-        self.gzip_methods = [self.gunzip_call, self.gzip_in_mem, self.pyfits_open, self.gzip_tmp]
+        self.gz_methods = [self.gunzip_call, self.gzip_in_mem, self.pyfits_open, self.gzip_tmp]
         self.bz2_methods = [self.bunzip2_call, self.bz2_in_mem, self.bz2_tmp]
-        self.gz = self.gzip_methods[0]
+        self.gz = self.gz_methods[0]
         self.bz2 = self.bz2_methods[0]
 
     def __call__(self, file, file_compress):
@@ -170,12 +170,12 @@ class _ReadFile:
             hdu_list = pyfits.open(file, 'readonly')
             return hdu_list, None
         elif file_compress == 'gzip':
-            while self.gzip_index < len(self.gzip_methods):
+            while self.gz_index < len(self.gz_methods):
                 try:
                     return self.gz(file)
                 except:
-                    self.gzip_index += 1
-                    self.gz = self.gzip_methods[self.gzip_index]
+                    self.gz_index += 1
+                    self.gz = self.gz_methods[self.gz_index]
             raise RuntimeError("None of the options for gunzipping were successful.")
         elif file_compress == 'bzip2':
             while self.bz2_index < len(self.bz2_methods):
@@ -292,13 +292,17 @@ class _WriteFile:
         # method number and try the next one.  The *_call methods seem to be usually the fastest,
         # and we expect that they will usually work.  However, we can't require the user
         # to have the system executables.  Also, some versions of pyfits can't handle writing
-        # to the stdin pipe of a subprocess.  So if that fails, the next one, *_in_mem, is 
-        # usually almost as good.  The other two are just there because why not.
-        self.gzip_index = 0
+        # to the stdin pipe of a subprocess.  So if that fails, the next one, *_call2 is often
+        # fastest if the failure was due to pyfits.  If the user does not have gzip or bzip2 (then 
+        # why are they requesting this compression?), we switch to *_in_mem, which is often
+        # almost as good.  (Sometimes it is faster than the call2 option, but when it is slower it
+        # can be much slower.)  And finally, if this fails, which I think may happen for very old 
+        # versions of pyfits, *_tmp is the fallback option.
+        self.gz_index = 0
         self.bz2_index = 0
-        self.gzip_methods = [self.gzip_call, self.gzip_in_mem, self.gzip_tmp, self.gzip_call2]
-        self.bz2_methods = [self.bzip2_call, self.bz2_in_mem, self.bz2_tmp, self.bzip2_call2]
-        self.gz = self.gzip_methods[0]
+        self.gz_methods = [self.gzip_call, self.gzip_call2, self.gzip_in_mem, self.gzip_tmp]
+        self.bz2_methods = [self.bzip2_call, self.bzip2_call2,  self.bz2_in_mem, self.bz2_tmp]
+        self.gz = self.gz_methods[0]
         self.bz2 = self.bz2_methods[0]
 
     def __call__(self, file, hdu_list, clobber, file_compress, pyfits_compress):
@@ -311,12 +315,12 @@ class _WriteFile:
         if not file_compress:
             hdu_list.writeto(file)
         elif file_compress == 'gzip':
-            while self.gzip_index < len(self.gzip_methods):
+            while self.gz_index < len(self.gz_methods):
                 try:
                     return self.gz(hdu_list, file)
                 except:
-                    self.gzip_index += 1
-                    self.gz = self.gzip_methods[self.gzip_index]
+                    self.gz_index += 1
+                    self.gz = self.gz_methods[self.gz_index]
             raise RuntimeError("None of the options for gunzipping were successful.")
         elif file_compress == 'bzip2':
             while self.bz2_index < len(self.bz2_methods):
