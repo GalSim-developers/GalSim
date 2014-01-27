@@ -117,7 +117,7 @@ New `CelestialCoord` class: (Issue #364)
   the world coordinate positions.
 * It has methods to handle a number of spherical trigonometry operations 
   that are sometimes required when dealing with celestial coordinates:
-  * `coord1.diatanceTo(coord2)` returns the great circle distance between two
+  * `coord1.distanceTo(coord2)` returns the great circle distance between two
     coordinates (as a `galsim.Angle`).
   * `coord1.angleBetween(coord2,coord3)` returns the angle between the two 
     great circles (coord1-coord2) and (coord1-coord3).
