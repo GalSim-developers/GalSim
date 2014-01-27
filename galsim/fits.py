@@ -190,7 +190,7 @@ class _WriteFile:
     # There are several methods available for each of gzip and bzip2.  Each is its own function.
     def gzip_call2(self, hdu_list, file):
         root, ext = os.path.splitext(file)
-        hdu_list.writeto(root)
+        hdu_list.writeto(root, clobber=True)
         import subprocess
         p = subprocess.Popen(["gzip", "-S", ext, root], close_fds=True)
         p.communicate()
@@ -237,7 +237,7 @@ class _WriteFile:
 
     def bzip2_call2(self, hdu_list, file):
         root, ext = os.path.splitext(file)
-        hdu_list.writeto(root)
+        hdu_list.writeto(root, clobber=True)
         import subprocess
         if ext == '.bz2':
             p = subprocess.Popen(["bzip2", root], close_fds=True)
