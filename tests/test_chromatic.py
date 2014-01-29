@@ -167,9 +167,8 @@ def test_ChromaticConvolution_InterpolatedImage():
     star = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
     pix = galsim.Pixel(pixel_scale)
     mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
-    shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
-    dilate_fn = lambda w:(w/500.0)**(-0.2)
-    PSF = galsim.ChromaticShiftAndDilate(mono_PSF, shift_fn=shift_fn, dilate_fn=dilate_fn)
+    PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500.0,
+                                     zenith_angle = zenith_angle)
 
     final = galsim.Convolve([star, PSF, pix])
     image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
@@ -214,8 +213,9 @@ def test_chromatic_add():
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
     dilate_fn = lambda w:(w/500.0)**(-0.2)
     mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
-    chromatic_PSF = galsim.ChromaticShiftAndDilate(mono_PSF, shift_fn, dilate_fn)
-    chromatic_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
+    mono_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
+    chromatic_PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500.0,
+                                               zenith_angle=zenith_angle)
 
     # create final profile
     pixel = galsim.Pixel(pixel_scale)
@@ -395,8 +395,8 @@ def test_monochromatic_filter():
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
     dilate_fn = lambda wave: (wave/500.0)**(-0.2)
     mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
+    mono_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
     chromatic_PSF = galsim.ChromaticShiftAndDilate(mono_PSF, shift_fn, dilate_fn)
-    chromatic_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
 
     pix = galsim.Pixel(pixel_scale)
     chromatic_final = galsim.Convolve([chromatic_gal, chromatic_PSF, pix])
@@ -440,9 +440,8 @@ def test_chromatic_flux():
     star = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
     pix = galsim.Pixel(pixel_scale)
     mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
-    shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
-    dilate_fn = lambda w:(w/500.0)**(-0.2)
-    PSF = galsim.ChromaticShiftAndDilate(mono_PSF, shift_fn=shift_fn, dilate_fn=dilate_fn)
+    PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500,
+                                     zenith_angle=zenith_angle)
 
     final = galsim.Convolve([star, PSF, pix])
     image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
