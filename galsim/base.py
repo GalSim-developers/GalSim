@@ -117,7 +117,7 @@ class GSObject(object):
         else:
             raise TypeError("GSObject must be initialized with an SBProfile or another GSObject!")
         # a couple of definitions for using GSObjects as duck-typed ChromaticObjects
-        self.SED = lambda x: 1
+        self.SED = lambda w: 1.0 # flat spectrum in photons/nanometer
         self.separable = True
 
     # Make op+ of two GSObjects work to return an Add object
@@ -592,9 +592,9 @@ class GSObject(object):
     def _draw_setup_image(self, image, scale, wmult, add_to_image, scale_is_dk=False):
 
         # If image already exists, and its wcs is not a PixelScale, then we're all set.
-        # No need to run through the rest of this.  (And in fact, trying to access 
+        # No need to run through the rest of this.  (And in fact, trying to access
         # image.scale would raise an exception.)
-        if (image is not None and image.wcs is not None and 
+        if (image is not None and image.wcs is not None and
                 not isinstance(image.wcs, galsim.PixelScale)):
             # Clear the image if we are not adding to it.
             if not add_to_image:
@@ -685,7 +685,7 @@ class GSObject(object):
             shape = image.array.shape
 
         if scale is None:
-            if (image is not None and image.wcs is not None and 
+            if (image is not None and image.wcs is not None and
                     (not isinstance(image.wcs, galsim.PixelScale) or image.scale > 0.)):
                 if use_true_center:
                     im_cen = image.bounds.trueCenter()
@@ -720,7 +720,7 @@ class GSObject(object):
             if shape[0] % 2 == 0: dy -= 0.5
 
         # For InterpolatedImage offsets, we apply the offset in the opposite direction.
-        if reverse: 
+        if reverse:
             dx = -dx
             dy = -dy
 
@@ -739,8 +739,8 @@ class GSObject(object):
         used), and using interpolation to carry out image transformations such as shearing.  This
         method can create a new Image or can draw into an existing one, depending on the choice of
         the `image` keyword parameter.  Other keywords of particular relevance for users are those
-        that set the pixel scale or wcs for the image (`scale`, `wcs`), that choose the 
-        normalization convention for the flux (`normalization`), and that decide whether to clear 
+        that set the pixel scale or wcs for the image (`scale`, `wcs`), that choose the
+        normalization convention for the flux (`normalization`), and that decide whether to clear
         the input Image before drawing into it (`add_to_image`).
 
         The object will always be drawn with its nominal center at the center location of the
@@ -780,20 +780,20 @@ class GSObject(object):
 
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
-                      If `image != None`, but its bounds are undefined (e.g. if it was 
+                      If `image != None`, but its bounds are undefined (e.g. if it was
                         constructed with `image = galsim.Image()`), then it will be resized
                         appropriately based on the profile's size (Default `image = None`).
 
         @param scale  If provided, use this as the pixel scale for the image.
-                      If `scale` is `None` and `image != None`, then take the provided image's 
+                      If `scale` is `None` and `image != None`, then take the provided image's
                         pixel scale.
-                      If `scale` is `None` and `image == None`, then use the Nyquist scale 
+                      If `scale` is `None` and `image == None`, then use the Nyquist scale
                         `= pi/maxK()`.
-                      If `scale <= 0` (regardless of image), then use the Nyquist scale 
+                      If `scale <= 0` (regardless of image), then use the Nyquist scale
                         `= pi/maxK()`.
                       (Default `scale = None`.)
 
-        @param wcs    If provided, use this as the wcs for the image.  At most one of scale or 
+        @param wcs    If provided, use this as the wcs for the image.  At most one of scale or
                       wcs may be provided. (Default `wcs - None`.)
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the
@@ -904,9 +904,9 @@ class GSObject(object):
         to randomly sample the profile of the object. The resulting image will thus have Poisson
         noise due to the finite number of photons shot.  drawShoot() can create a new Image or use
         an existing one, depending on the choice of the `image` keyword parameter.  Other keywords
-        of particular relevance for users are those that set the pixel scale or wcs for the image 
+        of particular relevance for users are those that set the pixel scale or wcs for the image
         (`scale`, `wcs`), that choose the normalization convention for the flux (`normalization`),
-        and that decide whether the clear the input Image before shooting photons into it 
+        and that decide whether the clear the input Image before shooting photons into it
         (`add_to_image`).
 
         As for the draw command, the object will always be drawn with its nominal center at the
@@ -917,7 +917,7 @@ class GSObject(object):
         convolved with the square image pixel.  So when using drawShoot() instead of draw(), you
         should not explicitly include the pixel response by convolving with a Pixel GSObject.  Using
         drawShoot without convolving with a Pixel will produce the equivalent image (for very large
-        n_photons) as draw() produces when the same object is convolved with `Pixel(scale=scale)` 
+        n_photons) as draw() produces when the same object is convolved with `Pixel(scale=scale)`
         when drawing onto an image with pixel scale `scale`.
 
         Note that the drawShoot method is unavailable for Deconvolve objects or compound objects
@@ -936,21 +936,21 @@ class GSObject(object):
 
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
-                      If `image != None`, but its bounds are undefined (e.g. if it was constructed 
+                      If `image != None`, but its bounds are undefined (e.g. if it was constructed
                         with `image = galsim.Image()`), then it will be resized appropriately based
                         on the profile's size.
                       (Default `image = None`.)
 
         @param scale  If provided, use this as the pixel scale for the image.
-                      If `scale` is `None` and `image != None`, then take the provided image's 
+                      If `scale` is `None` and `image != None`, then take the provided image's
                         pixel scale (or wcs).
-                      If `scale` is `None` and `image == None`, then use the Nyquist scale 
+                      If `scale` is `None` and `image == None`, then use the Nyquist scale
                         `= pi/maxK()`.
-                      If `scale <= 0` (regardless of image), then use the Nyquist scale 
+                      If `scale <= 0` (regardless of image), then use the Nyquist scale
                         `= pi/maxK()`.
                       (Default `scale = None`.)
 
-        @param wcs    If provided, use this as the wcs for the image.  At most one of scale or 
+        @param wcs    If provided, use this as the wcs for the image.  At most one of scale or
                       wcs may be provided. (Default `wcs - None`.)
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the
@@ -1130,23 +1130,23 @@ class GSObject(object):
 
         @param re     If provided, this will be the real part of the k-space image.
                       If `re = None`, then an automatically-sized image will be created.
-                      If `re != None`, but its bounds are undefined (e.g. if it was 
+                      If `re != None`, but its bounds are undefined (e.g. if it was
                         constructed with `re = galsim.Image()`), then it will be resized
                         appropriately based on the profile's size (Default `re = None`).
 
         @param im     If provided, this will be the imaginary part of the k-space image.
                       A provided im must match the size and scale of re.
                       If `im = None`, then an automatically-sized image will be created.
-                      If `im != None`, but its bounds are undefined (e.g. if it was 
+                      If `im != None`, but its bounds are undefined (e.g. if it was
                         constructed with `im = galsim.Image()`), then it will be resized
                         appropriately based on the profile's size (Default `im = None`).
 
         @param scale  If provided, use this as the pixel scale for the images.
-                      If `scale` is `None` and `re, im != None`, then take the provided images' 
+                      If `scale` is `None` and `re, im != None`, then take the provided images'
                         pixel scale (which must be equal).
-                      If `scale` is `None` and `re, im == None`, then use the Nyquist scale 
+                      If `scale` is `None` and `re, im == None`, then use the Nyquist scale
                         `= pi/maxK()`.
-                      If `scale <= 0` (regardless of image), then use the Nyquist scale 
+                      If `scale <= 0` (regardless of image), then use the Nyquist scale
                          `= pi/maxK()`.
                       (Default `scale = None`.)
 
@@ -1185,7 +1185,7 @@ class GSObject(object):
         im = self._draw_setup_image(im,scale,1.0,add_to_image,scale_is_dk=True)
 
         # Convert the profile in world coordinates to the profile in image coordinates:
-        # The scale in the wcs objects is the dk scale, not dx.  So the conversion to 
+        # The scale in the wcs objects is the dk scale, not dx.  So the conversion to
         # image coordinates needs to apply the inverse pixel scale.
         # The following are all equivalent ways to do this:
         #    re.wcs.toWorld(prof)
@@ -1554,8 +1554,8 @@ class Pixel(GSObject):
 
     Initialization
     --------------
-    A Pixel is initialized with a `scale` parameter, that represents the pixel scale, the size 
-    of the box in both the x and y dimensions.  There is also an optional flux parameter 
+    A Pixel is initialized with a `scale` parameter, that represents the pixel scale, the size
+    of the box in both the x and y dimensions.  There is also an optional flux parameter
     [default `flux = 1.`].
 
     You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
@@ -1593,12 +1593,12 @@ class Pixel(GSObject):
 
 
 class Box(GSObject):
-    """A class describing a box profile.  This is just a 2-d top-hat function, where the 
+    """A class describing a box profile.  This is just a 2-d top-hat function, where the
     width and height are allowed to be different.
 
     Initialization
     --------------
-    A Box is initialized with an x dimension `width`, a y dimension `height`, and an optional 
+    A Box is initialized with an x dimension `width`, a y dimension `height`, and an optional
     flux parameter [default `flux = 1.`].
 
     You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
@@ -1606,11 +1606,11 @@ class Box(GSObject):
 
     Methods
     -------
-    The Box is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
+    The Box is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
     applyShear() etc.) and operator bindings.
 
-    Note: We have not implemented drawing a sheared or rotated Box in real space.  It's a 
-          bit tricky to get right at the edges where fractional fluxes are required.  
+    Note: We have not implemented drawing a sheared or rotated Box in real space.  It's a
+          bit tricky to get right at the edges where fractional fluxes are required.
           Fortunately, this is almost never needed.  Box profiles are almost always convolved
           by something else rather than drawn by themselves, in which case either the fourier
           space method is used, or photon shooting.  Both of these are implemented in GalSim.

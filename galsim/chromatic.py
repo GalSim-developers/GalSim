@@ -24,6 +24,7 @@ one to implement wavelength-dependent PSFs or galaxies with color gradients.
 """
 
 import numpy
+import copy
 
 import galsim
 import galsim.integ
@@ -35,10 +36,47 @@ class ChromaticObject(object):
     def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
+        """Base chromatic image draw function, for subclasses that don't choose to override it.
+        In practice, ChromaticConvolution.draw() will usually end up being called instead.
+
+        The task of ChromaticObject.draw(bandpass) is to integrate a chromatic surface brightness
+        profile multiplied by the throughput of `bandpass`, over the wavelength interval indicated
+        by `bandpass`.  To evaluate the integrand, this method constructs an appropriate GSObject
+        and uses its .draw() method.
+
+        The wavelength integration can be done using several different schemes, all defined in
+        integ.py.  The default, galsim.integ.midpoint_int_image, implements the midpoint rule,
+        i.e., it makes rectangular (in wavelength) approximations to the integral over equally
+        spaced subintervals.  Fancier available integrators include
+        galsim.integ.trapezoidal_int_image, galsim.integ.simpsons_int_image, and
+        galsim.integ.globally_adaptive_GK_int_image, which implements a globally adaptive
+        Gauss-Kronrod integration scheme.
+
+        Image integrators can receive additional keyword parameters through **kwargs.  For
+        instance, galsim.integ.midpoint_int_image can accept `N`, the number of subintervals into
+        which to divide the bandpass wavelength interval.  Likewise, `N` is also an option for
+        galsim.integ.trapezoidal_int_image and galsim.integ.simpsons_int_image.  For
+        galsim.integ.globally_adaptive_GK_int_image, a relative error tolerance `rel_err` can be
+        passed instead.
+
+        @param bandpass           A galsim.Bandpass object representing the filter
+                                  against which to integrate.
+        @param image              see GSObject.draw()
+        @param scale              see GSObject.draw()
+        @param gain               see GSObject.draw()
+        @param wmult              see GSObject.draw()
+        @param add_to_image       see GSObject.draw()
+        @param use_true_center    see GSObject.draw()
+        @param offset             see GSObject.draw()
+        @param integrator         An image integrator.
+
+        @returns                  galsim.Image drawn through filter.
+        """
+
         # default integrator is Riemann sum
         if integrator is None:
             integrator = galsim.integ.midpoint_int_image
-        # setup output image
+        # setup output image (using bluest wavelength in bandpass!)
         prof0 = self.evaluateAtWavelength(bandpass.bluelim) * bandpass(bandpass.bluelim)
         prof0 = prof0._fix_center(image, scale, offset, use_true_center, reverse=False)
         image = prof0._draw_setup_image(image, scale, wmult, add_to_image)
@@ -64,10 +102,16 @@ class ChromaticObject(object):
     def __add__(self, other):
         return galsim.ChromaticSum([self, other])
 
+    def copy(self):
+        cls = self.__class__
+        ret = cls.__new__(cls)
+        ret.__dict__.update(self.__dict__)
+        return ret
+
 class Chromatic(ChromaticObject):
     """Construct chromatic versions of the galsim GSObjects.
 
-    This class extends the base GSObjects in basy.py by adding SEDs.  Useful to consistently generate
+    This class extends the base GSObjects in base.py by adding SEDs.  Useful to consistently generate
     the same galaxy observed through different filters, or, with the ChromaticSum class, to construct
     multi-component galaxies, each with a different SED. For example, a bulge+disk galaxy could be
     constructed:
@@ -80,15 +124,23 @@ class Chromatic(ChromaticObject):
     >>> disk = galsim.Chromatic(disk_mono, disk_SED)
     >>> gal = galsim.ChromaticSum([bulge, disk])
 
-    The SED is specified as a galsim.SED object.  The normalization is set via the SED.  I.e., the
-    SED implicitly has units of counts per nanometer.  The drawn flux will be an intregral over this
-    distribution.
+    The SED is usually specified as a galsim.SED object, though any callable that returns
+    photons/nanometer as a function of wavelength in nanometers should work.
+
+    The flux normalization comes from a combination of the `flux` attribute of the GSObject being
+    chromaticized and the SED.  The SED implicitly has units of photons per nanometer.  Multiplying
+    this by a dimensionless throughput function (see galsim.Bandpass) and then integrating over
+    wavelength gives the relative number of photons contributed by the SED/bandpass combination.
+    This integral is then effectively multiplied by the `flux` attribute of the chromaticized
+    GSObject to give the final number of drawn photons.
     """
     def __init__(self, gsobj, SED):
         """Initialize Chromatic.
 
         @param gsobj    An GSObject instance to be chromaticized.
-        @param SED      A SED object.
+        @param SED      Typically a galsim.SED object, but any callable that returns the relative
+                        number of photons per nanometer as a function of wavelength in nanometers
+                        should work.
         """
         self.SED = SED
         self.gsobj = gsobj
@@ -110,13 +162,8 @@ class Chromatic(ChromaticObject):
         ret *= other
         return ret
 
-    # Make a copy of an object
-    # Not sure if `SED` and `gsobj` copy cleanly here or not...
-    def copy(self):
-        cls = self.__class__
-        ret = cls.__new__(cls)
-        ret.__dict__.update(self.__dict__)
-        return ret
+    def scaleFlux(self, scale):
+        self.gsobj.scaleFlux(scale)
 
     def applyShear(self, *args, **kwargs):
         self.gsobj.applyShear(*args, **kwargs)
@@ -147,7 +194,8 @@ class Chromatic(ChromaticObject):
         return self.SED(wave) * self.gsobj
 
 class ChromaticSum(ChromaticObject):
-    """Sum ChromaticObjects and/or GSObjects together.  GSObjects are treated as having flat spectra.
+    """Sum ChromaticObjects and/or GSObjects together.  If a GSObject is part of a sum, then its
+    SED is assumed to be flat with density of 1 photon per nanometer.
     """
     def __init__(self, objlist):
         self.objlist = objlist
@@ -155,14 +203,17 @@ class ChromaticSum(ChromaticObject):
     def evaluateAtWavelength(self, wave):
         """
         @param wave  Wavelength in nanometers.
-        @returns     GSObject for profile at specified wavelength
+        @returns     galsim.Sum object for profile at specified wavelength
         """
         return galsim.Sum([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
     def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
-        # is the most efficient method to just add up one component at a time...?
+        """ Slightly optimized "drawer" for ChromaticSum's.  Draw each summand individually.
+        This will waste time if both summands have the same associated SED, but in general can
+        speed things up by breaking the profile up into separable (=fast) pieces.
+        """
         image = self.objlist[0].draw(bandpass, image=image, scale=scale, gain=gain, wmult=wmult,
                                      add_to_image=add_to_image, use_true_center=use_true_center,
                                      offset=offset, integrator=integrator, **kwargs)
@@ -171,17 +222,37 @@ class ChromaticSum(ChromaticObject):
                              add_to_image=True, use_true_center=use_true_center,
                              offset=offset, integrator=integrator, **kwargs)
 
+    def __imul__(self, other):
+        for obj in self.objlist:
+            obj.scaleFlux(other)
+        return self
+
+    def __mul__(self, other): # do I need to define both this and __rmul__?
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    def __rmul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    def scaleFlux(self, scale):
+        self.objlist[0].scaleFlux(scale)
+
     def applyShear(self, *args, **kwargs):
         for obj in self.objlist:
             obj.applyShear(*args, **kwargs)
 
-    def applyDilation(self, *args, **kwargs):
-        for obj in self.objlist:
-            obj.applyDilation(*args, **kwargs)
-
     def applyShift(self, *args, **kwargs):
         for obj in self.objlist:
             obj.applyShift(*args, **kwargs)
+
+    # not sure if this one makes sense.  do dilation and addition commute?
+    # what about other `apply`s?
+    def applyDilation(self, *args, **kwargs):
+        for obj in self.objlist:
+            obj.applyDilation(*args, **kwargs)
 
     def applyExpansion(self, *args, **kwargs):
         for obj in self.objlist:
@@ -195,7 +266,6 @@ class ChromaticSum(ChromaticObject):
         for obj in self.objlist:
             obj.applyLensing(*args, **kwargs)
 
-    # Does this work?  About which point is the rotation applied?
     def applyRotation(self, *args, **kwargs):
         for obj in self.objlist:
             obj.applyRotation(*args, **kwargs)
@@ -206,6 +276,23 @@ class ChromaticConvolution(ChromaticObject):
     """
     def __init__(self, objlist):
         self.objlist = objlist
+
+    def __imul__(self, other):
+        self.objlist[0].scaleFlux(other)
+        return self
+
+    def __mul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    def __rmul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    def scaleFlux(self, scale):
+        self.objlist[0].scaleFlux(scale)
 
     def evaluateAtWavelength(self, wave):
         """
@@ -325,15 +412,14 @@ class ChromaticConvolution(ChromaticObject):
             else:
                 insep_profs.append(obj) # The f(x,y,lambda)'s (see above)
 
-        # check if there are any inseparable profiles
-        if insep_profs == []:
+        if insep_profs == []: # didn't find any inseparable profiles
             def f(w):
                 term = bandpass(w)
                 for s in sep_SED:
                     term *= s(w)
                 return term
             multiplier = galsim.integ.int1d(f, bandpass.bluelim, bandpass.redlim)
-        else:
+        else: # did find inseparable profiles
             multiplier = 1.0
             # setup image for effective profile
             mono_prof0 = galsim.Convolve([p.evaluateAtWavelength(bandpass.bluelim)
@@ -351,11 +437,12 @@ class ChromaticConvolution(ChromaticObject):
                 tmpimage = mono_prof_image.copy()
                 tmpimage.setZero()
                 mono_prof.draw(image=tmpimage, wmult=wmult)
-                # print 'f_image {} {}'.format(w, mono_prof.getFlux()* 2.2)
                 return tmpimage
             # wavelength integral
             effective_prof_image = integrator(f_image, bandpass.bluelim, bandpass.redlim, **kwargs)
             # Image -> InterpolatedImage
+            # It could be useful to cache this result if drawing more than one object with the same
+            # PSF+SED combination for instance.  Must think on this...
             effective_prof = galsim.InterpolatedImage(effective_prof_image)
             # append effective profile to separable profiles (which are all GSObjects)
             sep_profs.append(effective_prof)
@@ -374,8 +461,7 @@ class ChromaticShiftAndDilate(ChromaticObject):
     the diffraction limit are dilations.  This class can compactly represent all of these effects.
     See tests/test_chromatic.py for an example.
     """
-    def __init__(self, gsobj,
-                 shift_fn=None, dilate_fn=None):
+    def __init__(self, gsobj, shift_fn=None, dilate_fn=None, SED=None):
         """
         @param gsobj      Fiducial profile (as a GSObject instance) to shift and dilate.
         @param shift_fn   Function that takes wavelength in nanometers and returns a
@@ -398,6 +484,9 @@ class ChromaticShiftAndDilate(ChromaticObject):
     def applyShear(self, *args, **kwargs):
         self.gsobj.applyShear(*args, **kwargs)
 
+    def scaleFlux(self, scale):
+        self.gsobj.scaleFlux(scale)
+
     def evaluateAtWavelength(self, wave):
         """
         @param wave  Wavelength in nanometers.
@@ -409,14 +498,30 @@ class ChromaticShiftAndDilate(ChromaticObject):
         return profile
 
 class ChromaticAtmosphere(ChromaticObject):
+    """Class implementing two atmospheric chromatic effects: differential chromatic refraction
+    (DCR) and wavelength-dependent seeing.
+    Due to DCR, blue photons land closer to the zenith than red photons.
+    Kolmogorov turbulence also predicts that blue photons get spread out more by the atmosphere
+    than red photons, specifically FWHM is proportional to wavelength^(-0.2).
+    """
     def __init__(self, base_obj, base_wavelength, zenith_angle, alpha=-0.2,
-                 parallactic_angle=0*galsim.radians, **kwargs):
+                 position_angle=0*galsim.radians, **kwargs):
+        """
+        @param base_obj           Fiducial PSF, equal to the monochromatic PSF at base_wavelength
+        @param base_wavelength    Wavelength represented by the fiducial PSF.
+        @param zenith_angle       Angle from object to zenith, expressed as a galsim.AngleUnit
+        @param alpha              Power law index for wavelength-dependent seeing.  Default of -0.2
+                                  is the prediction for Kolmogorov turbulence.
+        @param position_angle     Angle pointing toward zenith, measured from "up" through "right".
+        @param **kwargs           Other arguments are passed on to dcr.get_refraction, and can
+                                  include temperature, pressure, and H20_pressure.
+        """
         self.base_obj = base_obj
         self.base_wavelength = base_wavelength
         self.zenith_angle = zenith_angle
         self.alpha = alpha
         self.kwargs = kwargs
-        self.parallactic_angle = parallactic_angle
+        self.position_angle = position_angle
 
         self.base_refraction = galsim.dcr.get_refraction(base_wavelength, zenith_angle, **kwargs)
         self.separable = False
@@ -427,133 +532,8 @@ class ChromaticAtmosphere(ChromaticObject):
         shift_magnitude = galsim.dcr.get_refraction(wave, self.zenith_angle, **self.kwargs)
         shift_magnitude -= self.base_refraction
         shift_magnitude = shift_magnitude / galsim.arcsec
-        shift = (shift_magnitude*numpy.sin(self.parallactic_angle.rad()),
-                 shift_magnitude*numpy.cos(self.parallactic_angle.rad()))
+        shift = (shift_magnitude*numpy.sin(self.position_angle.rad()),
+                 shift_magnitude*numpy.cos(self.position_angle.rad()))
         profile.applyDilation(dilation)
         profile.applyShift(shift)
         return profile
-
-class SED(object):
-    """Very simple SED object."""
-    def __init__(self, wave=None, flambda=None, fnu=None, fphotons=None):
-        """ Initialize SED with a wavelength array and a flux density array.  The flux density
-        can be represented in one of three ways.
-        @param wave     Array of wavelengths at which the SED is sampled.
-        @param flambda  Array of flux density samples.  Units proprotional to erg/nm
-        @param fnu      Array of flux density samples.  Units proprotional to erg/Hz
-        @param fphotons Array of photon density samples.  Units proportional to photons/nm
-        """
-        self.wave = wave
-        if flambda is not None:
-            self.fphotons = flambda * wave
-        elif fnu is not None:
-            self.fphotons = fnu / wave
-        elif fphotons is not None:
-            self.fphotons = fphotons
-
-        self.needs_new_interp=True
-
-    def __call__(self, wave, force_new_interp=False):
-        """ Uses a galsim.LookupTable to interpolate the photon density at the requested wavelength.
-        The LookupTable is cached for future use.
-
-        @param force_new_interp     Force rebuild of LookupTable.
-
-        @returns photon density, Units proportional to photons/nm
-        """
-        interp = self._get_interp(force_new_interp=force_new_interp)
-        return interp(wave)
-
-    def _get_interp(self, force_new_interp=False):
-        """ Return LookupTable, rebuild if requested.
-        """
-        if force_new_interp or self.needs_new_interp:
-            self.interp = galsim.LookupTable(self.wave, self.fphotons)
-            self.needs_new_interp=False
-        return self.interp
-
-    def setNormalization(self, base_wavelength, normalization):
-        """ Set photon density normalization at specified wavelength
-        """
-        current_fphoton = self(base_wavelength)
-        self.fphotons *= normalization/current_fphoton
-        self.needs_new_interp = True
-
-    def setMagnitude(self, bandpass, mag_norm):
-        """ Set relative AB magnitude of SED when observed through given bandpass.
-        """
-        current_mag = self.getMagnitude(bandpass)
-        multiplier = 10**(-0.4 * (mag_norm - current_mag))
-        self.fphotons *= multiplier
-        self.needs_new_interp = True
-
-    def setFlux(self, bandpass, flux_norm):
-        """ Set relative flux of SED when observed through given bandpass.
-        """
-        current_flux = self.getFlux(bandpass)
-        multiplier = flux_norm/current_flux
-        self.fphotons *= multiplier
-        self.needs_new_interp = True
-
-    def setRedshift(self, redshift):
-        self.wave *= (1.0 + redshift)
-        self.interp = galsim.LookupTable(self.wave, self.fphotons)
-        self.needs_new_interp=True
-
-    def getFlux(self, bandpass):
-        interp = self._get_interp()
-        return galsim.integ.int1d(lambda w:bandpass(w)*interp(w), bandpass.bluelim, bandpass.redlim)
-
-    def getMagnitude(self, bandpass):
-        flux = self.getFlux(bandpass)
-        return -2.5 * numpy.log10(flux) - bandpass.AB_zeropoint()
-
-class Bandpass(object):
-    """Very simple Bandpass filter object."""
-    def __init__(self, wave, throughput):
-        self.wave = numpy.array(wave)
-        self.throughput = numpy.array(throughput)
-        self.bluelim = self.wave[0]
-        self.redlim = self.wave[-1]
-        self.interp = galsim.LookupTable(wave, throughput)
-
-    def __call__(self, wave):
-        """ Return throughput of bandpass at given wavelength.
-        """
-        return self.interp(wave)
-
-    def truncate(self, rel_throughput=None, bluelim=None, redlim=None):
-        """ Truncate filter wavelength range.
-
-        @param   bluelim   Truncate blue side of bandpass here.
-        @param   redlim    Truncate red side of bandpass here.
-        @param   rel_throughput  Truncate wavelength ranges which
-                                 have relative throughput less than this value.
-        """
-        if bluelim is None:
-            bluelim = self.bluelim
-        if redlim is None:
-            redlim = self.redlim
-        if rel_throughput is not None:
-            mx = self.throughput.max()
-            w = (self.throughput > mx*rel_throughput).nonzero()
-            bluelim = max([min(self.wave[w]), bluelim])
-            redlim = min([max(self.wave[w]), redlim])
-        w = (self.wave >= bluelim) & (self.wave <= redlim)
-        self.wave = self.wave[w]
-        self.throughput = self.throughput[w]
-        self.bluelim = self.wave[0]
-        self.redlim = self.wave[-1]
-        self.interp = galsim.LookupTable(self.wave, self.throughput)
-
-    def AB_zeropoint(self, force_new_zeropoint=False):
-        if not (hasattr(self, 'zp') or force_new_zeropoint):
-            AB_source = 3631e-23 # 3631 Jy -> erg/s/Hz/cm^2
-            c = 29979245800.0 # speed of light in cm/s
-            nm_to_cm = 1.0e-7
-            # convert AB source from erg/s/Hz/cm^2*cm/s/nm^2 -> erg/s/cm^2/nm
-            AB_flambda = AB_source * c / self.wave**2 / nm_to_cm
-            AB_photons = galsim.LookupTable(self.wave, AB_flambda * self.wave * self.throughput)
-            AB_flux = galsim.integ.int1d(AB_photons, self.bluelim, self.redlim)
-            self.zp = -2.5 * numpy.log10(AB_flux)
-        return self.zp

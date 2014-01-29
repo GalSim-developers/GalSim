@@ -33,6 +33,8 @@ from ._galsim import *
 from image import Image, ImageS, ImageI, ImageF, ImageD
 from base import *
 from chromatic import *
+from sed import *
+from bandpass import *
 from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
 from shapelet import Shapelet

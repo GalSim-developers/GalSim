@@ -137,7 +137,7 @@ def gauss_kronrod_image_rule(f, a, b):
         KArray += fz[i].array * K_weights[i]
     GArray *= (b-a)/2.0
     KArray *= (b-a)/2.0
-    errArray = (200 * abs(GArray-KArray))**1.5
+    errArray = (200 * abs(GArray-KArray))**1.5 #need citation
     QImage = fz[0].copy()
     errImage = fz[0].copy()
     QImage.setZero()

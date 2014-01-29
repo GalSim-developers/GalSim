@@ -30,8 +30,7 @@ except ImportError:
     import galsim
 
 # liberal use of globals here...
-zenith_angle = 20 * galsim.degrees
-R610 = galsim.dcr.get_refraction(610.0, zenith_angle) # normalize refraction to 610nm
+zenith_angle = 30 * galsim.degrees
 
 # some profile parameters to test with
 bulge_n = 4.0
@@ -55,16 +54,17 @@ shear_g2 = 0.02
 # load some spectra and a filter
 Egal_wave, Egal_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_E_ext.sed')).T
 Egal_wave /= 10 # Angstrom -> nm
-bulge_SED = galsim.SED(wave=Egal_wave, flambda=Egal_flambda, base_wavelength=500.0, norm=0.3)
+bulge_SED = galsim.SED(wave=Egal_wave, flambda=Egal_flambda)
+bulge_SED.setNormalization(base_wavelength=500.0, normalization=0.3)
 
 Sbcgal_wave, Sbcgal_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_Sbc_ext.sed')).T
 Sbcgal_wave /= 10 # Angstrom -> nm
-disk_SED = galsim.SED(wave=Sbcgal_wave, flambda=Sbcgal_flambda, base_wavelength=500.0, norm=0.3)
+disk_SED = galsim.SED(wave=Sbcgal_wave, flambda=Sbcgal_flambda)
+disk_SED.setNormalization(base_wavelength=500.0, normalization=0.3)
 
-bluelim = 500
-redlim = 720
 filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
-filter_fn = galsim.LookupTable(filter_wave, filter_throughput)
+bandpass = galsim.Bandpass(filter_wave, filter_throughput)
+bandpass.truncate(rel_throughput=0.01)
 
 def silentgetmoments(image1):
     xgrid, ygrid = np.meshgrid(np.arange(image1.array.shape[1]) + image1.getXMin(),
@@ -85,23 +85,22 @@ def compare_image_integrators():
 
     gal = galsim.Chromatic(galsim.Gaussian(half_light_radius=0.5), disk_SED)
     pix = galsim.Pixel(pixel_scale)
-    mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
-    shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R610) / galsim.arcsec)
-    dilate_fn = lambda w:(w/500.0)**(-0.2)
-    PSF = galsim.ChromaticShiftAndDilate(mono_PSF, dilate_fn=dilate_fn, shift_fn=shift_fn)
+    PSF_500 = galsim.Gaussian(half_light_radius=PSF_hlr)
+    PSF = galsim.ChromaticAtmosphere(PSF_500, 500.0, zenith_angle)
 
     final = galsim.Convolve([gal, PSF, pix])
-    image = galsim.ImageD(stamp_size, stamp_size, pixel_scale)
+    image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
     # truth
-    target = galsim.integ.int1d(lambda w:disk_SED(w) * filter_fn(w), bluelim, redlim)
+    target = galsim.integ.int1d(lambda w:disk_SED(w) * bandpass(w),
+                                bandpass.bluelim, bandpass.redlim)
     print 'target'
     print '        {:14.11f}'.format(target)
 
     t1 = time.time()
     print 'midpoint'
     for N in [10, 30, 100, 300, 1000]:
-        image = galsim.ChromaticObject.draw(final, filter_fn, bluelim, redlim, N=N, image=image)
+        image = galsim.ChromaticObject.draw(final, bandpass, N=N, image=image)
         mom = silentgetmoments(image)
         outstring = '   {:4d} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f}'
         print outstring.format(N, image.array.sum(), image.array.sum()-target, *mom)
@@ -110,7 +109,7 @@ def compare_image_integrators():
 
     print 'trapezoidal'
     for N in [10, 30, 100, 300, 1000]:
-        image = galsim.ChromaticObject.draw(final, filter_fn, bluelim, redlim, N=N, image=image,
+        image = galsim.ChromaticObject.draw(final, bandpass, N=N, image=image,
                                              integrator = galsim.integ.trapezoidal_int_image)
         mom = silentgetmoments(image)
         outstring = '   {:4d} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f}'
@@ -120,7 +119,7 @@ def compare_image_integrators():
 
     print 'Simpson\'s'
     for N in [10, 30, 100, 300, 1000]:
-        image = galsim.ChromaticObject.draw(final, filter_fn, bluelim, redlim, N=N, image=image,
+        image = galsim.ChromaticObject.draw(final, bandpass, N=N, image=image,
                                              integrator = galsim.integ.simpsons_int_image)
         mom = silentgetmoments(image)
         outstring = '   {:4d} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f}'
@@ -130,7 +129,7 @@ def compare_image_integrators():
 
     print 'Globally Adaptive Gaussian-Kronrod'
     for rel_err in [1.e-1, 1.e-2, 1.e-3, 1.e-4, 1.e-5, 1.e-6]:
-        image = galsim.ChromaticObject.draw(final, filter_fn, bluelim, redlim, image=image,
+        image = galsim.ChromaticObject.draw(final, bandpass, image=image,
                                             integrator = galsim.integ.globally_adaptive_GK_int_image,
                                             rel_err=rel_err, verbose=True)
         mom = silentgetmoments(image)
