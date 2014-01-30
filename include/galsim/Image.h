@@ -34,6 +34,7 @@
 // Hopefully all our compilers will conform to the C99 standard which includes stdint.h.
 #include <stdint.h>
 
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/shared_ptr.hpp>
 
 #include "Std.h"

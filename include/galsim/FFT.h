@@ -62,6 +62,7 @@
 #include <stdexcept>
 #include <deque>
 #include <complex>
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/shared_ptr.hpp>
 
 #include "fftw3.h"

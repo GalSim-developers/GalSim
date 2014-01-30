@@ -23,6 +23,7 @@
 #define INTERPOLANT_H
 
 #include <cmath>
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/shared_ptr.hpp>
 #include <map>
 

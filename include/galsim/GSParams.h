@@ -22,6 +22,7 @@
 #ifndef GSPARAMS_H
 #define GSPARAMS_H
 
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/shared_ptr.hpp>
 #include <cassert>
 #include <ostream>

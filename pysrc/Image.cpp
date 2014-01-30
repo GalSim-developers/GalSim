@@ -25,6 +25,7 @@
 #endif
 #endif
 
+#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp" // header that includes Python.h always needs to come first
 
 #include "NumpyHelper.h"
