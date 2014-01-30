@@ -56,6 +56,7 @@
 
 #endif
 
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/mpl/list.hpp>

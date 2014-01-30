@@ -34,6 +34,7 @@
 #endif
 #endif
 
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/special_functions/bessel.hpp>
 

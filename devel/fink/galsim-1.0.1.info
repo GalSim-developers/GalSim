@@ -1,6 +1,6 @@
 Package: galsim
-Version: 1.0
-Revision: 2
+Version: 1.0.1
+Revision: 1
 Description: Galaxy Image Simulator
 HomePage: https://github.com/GalSim-developers/GalSim
 License: GPL
@@ -24,8 +24,8 @@ Depends: <<
     yaml-py27
 <<
 
-Source: https://github.com/GalSim-developers/GalSim/archive/v%v.1.tar.gz 
-SourceRename: GalSim-%v.1.tar.gz
+Source: https://github.com/GalSim-developers/GalSim/archive/v%v.tar.gz 
+SourceRename: GalSim-%v.tar.gz
 Source-MD5: fc6299d7e070082fa406c3798874d1fd
 GCC: 4.0
 NoSetMAKEFLAGS: true

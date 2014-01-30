@@ -34,6 +34,10 @@
 #include <map>
 #include <vector>
 #include <algorithm>
+
+// Some versions of boost don't have the right guard to avoid C++-11 extensions. 
+// This #define helps avoid warnings on clang, and it doesn't hurt elsewhere.
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/shared_ptr.hpp>
 
 #include "Std.h"
