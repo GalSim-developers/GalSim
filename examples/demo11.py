@@ -195,9 +195,9 @@ def main(argv):
     # that plane onto the sky using a given point as the tangent point.  The tangent 
     # point should be given as a CelestialCoord.
     sky_center = galsim.CelestialCoord(ra=19.3*galsim.hours, dec=-33.1*galsim.degrees)
+
     # The third parameter, units, defaults to arcsec, but we make it explicit here.
     # It sets the angular units of the (u,v) intermediate coordinate system.
-
     wcs = galsim.TanWCS(affine, sky_center, units=galsim.arcsec)
     full_image.wcs = wcs
 

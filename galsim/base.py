@@ -233,41 +233,48 @@ class GSObject(object):
         """
         return self.SBProfile.getFlux()
 
-    def xValue(self, image_pos):
+    def xValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in real space.
         
-        xValue() is available if obj.isAnalyticX() == True.
-
-        This function assumes all are real-valued.  xValue() may not be implemented for derived 
-        classes (e.g. Convolve) that require a Discrete Fourier Transform to determine real space 
-        values.  In this case, an exception will be thrown at the C++ layer (raises a RuntimeError
-        in Python).  Users who wish to use the xValue() method for an object that is the 
-        convolution of other profiles can do so by drawing the convolved profile into an image,
-        using the image to initialize a new InterpolatedImage, and then using the xValue() method
-        for that new object.
+        This function returns the surface brightness of the object at a particular position
+        in real space.  The position argument may be provided as a PositionD or PositionI
+        argument, or it may be given as x,y (either as a tuple or as two arguments). 
         
-        @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in real
-                         space.
-        """
-        # Explicitly use PositionD(x,y) syntax in case image_pos is a PositionI.
-        # The C++ function requires a PositionD argument.
-        return self.SBProfile.xValue(galsim.PositionD(image_pos.x, image_pos.y))
+        The object surface brightness profiles are typically defined in world coordinates, so
+        the position here should be in world coordinates as well.
 
-    def kValue(self, k_pos):
+        Not all GSObject classes can use this method.  Classes like Convolve that require a 
+        Discrete Fourier Transform to determine the real space values will not do so for a 
+        single position.  Instead a RuntimeError will be raised.  The xValue(pos) method 
+        is available if and only if obj.isAnalyticX() == True.
+
+        Users who wish to use the xValue() method for an object that is the convolution of other 
+        profiles can do so by drawing the convolved profile into an image, using the image to 
+        initialize a new InterpolatedImage, and then using the xValue() method for that new object.
+        
+        @param position  The position at which you want the surface brightness of the object.
+        @returns xvalue  The surface brightness at that position.
+        """
+        pos = galsim.utilities.parse_pos_args(args,kwargs,'x','y')
+        return self.SBProfile.xValue(pos)
+
+    def kValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in k space.
 
-        kValue() is available if the given obj has obj.isAnalyticK() == True. 
+        This function returns the amplitude of the fourier transform of the surface brightness
+        profile at a given position in k space.  The position argument may be provided as a 
+        PositionD or PositionI argument, or it may be given as kx,ky (either as a tuple or as two 
+        arguments). 
 
-        kValue() can be used for all of our simple base classes.  However, if a Convolve object
-        representing the convolution of multiple objects uses real-space convolution rather than the
-        DFT approach, i.e., real_space=True (either by argument or if it decides on its own to do
-        so), then it is not analytic in k-space, so kValue() will raise an exception.  An exception
-        will be thrown at the C++ layer (raises a RuntimeError in Python).
+        Techinically, kValue() is available if and only if the given obj has obj.isAnalyticK() 
+        == True, but this is the case for all GSObjects currently, so that should never be an
+        issue (unlike for xValue).
 
-        @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in k 
-                         space.
+        @param position  The position in k space at which you want the fourier amplitude.
+        @returns kvalue  The amplitude of the fourier transform at that position.
         """
-        return self.SBProfile.kValue(galsim.PositionD(k_pos.x, k_pos.y))
+        kpos = galsim.utilities.parse_pos_args(args,kwargs,'kx','ky')
+        return self.SBProfile.kValue(kpos)
 
     def scaleFlux(self, flux_ratio):
         """Multiply the flux of the object by flux_ratio
@@ -321,7 +328,6 @@ class GSObject(object):
 
         @param scale The factor by which to scale the linear dimension of the object.
         """
-        import numpy as np
         if hasattr(self,'noise'):
             self.noise.applyExpansion(scale)
         self.SBProfile.applyExpansion(scale)
@@ -469,7 +475,6 @@ class GSObject(object):
         @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
         """
-        import numpy as np
         if hasattr(self,'noise'):
             self.noise.applyTransformation(dudx,dudy,dvdx,dvdy)
         self.SBProfile.applyTransformation(dudx,dudy,dvdx,dvdy)
