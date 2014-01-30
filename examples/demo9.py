@@ -395,11 +395,12 @@ def main(argv):
         # Subtract the sky back off.
         full_image -= weight_image
 
-        # For the weight image, we only want the noise from the sky, which it already has. 
-        # (If we were including read_noise, we'd want that as well.)  Including the Poisson noise 
-        # from the objects as well tends to bias fits that use this as a weight, since the model 
-        # becomes magnitude-dependent.  So all we need to do now is to invert the values in
-        # weight_image.  
+        # The weight image is nominally the inverse variance of the pixel noise.  However, it is 
+        # common to exclude the Poisson noise from the objects themselves and only include the
+        # noise from the sky photons.  The variance of the noise is just the sky level, which is 
+        # what is currently in the weight_image.  (If we wanted to include the variance from the 
+        # objects too, then we could use the full_image before we added the PoissonNoise to it.)
+        # So all we need to do now is to invert the values in weight_image.  
         weight_image.invertSelf()
 
         # Write the file to disk:
