@@ -715,6 +715,7 @@ class GSObject(object):
             obj_cen = image.bounds.trueCenter()
         else:
             obj_cen = image.bounds.center()
+            # Convert from PositionI to PositionD
             obj_cen = galsim.PositionD(obj_cen.x, obj_cen.y)
         if offset:
             obj_cen += offset
