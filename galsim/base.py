@@ -448,9 +448,9 @@ class GSObject(object):
         self.__class__ = GSObject
 
     def applyTransformation(self, dudx, dudy, dvdx, dvdy):
-        """Apply a transformation to this object defined by an arbitrary jacobian matrix.
+        """Apply a transformation to this object defined by an arbitrary Jacobian matrix.
 
-        This applies a jacobian matrix to the coordinate system in which this object 
+        This applies a Jacobian matrix to the coordinate system in which this object 
         is defined.  It changes a profile defined in terms of (x,y) to one defined in 
         terms of (u,v) where:
 
@@ -588,9 +588,9 @@ class GSObject(object):
         return ret
         
     def createTransformed(self, dudx, dudy, dvdx, dvdy):
-        """Returns a new GSObject by applying a transformation given by a jacobian matrix.
+        """Returns a new GSObject by applying a transformation given by a Jacobian matrix.
 
-        This applies a jacobian matrix to the coordinate system in which this object 
+        This applies a Jacobian matrix to the coordinate system in which this object 
         is defined.  It takes a profile defined in terms of (x,y) and returns the equivalent
         profile defined in terms of (u,v) where:
 
