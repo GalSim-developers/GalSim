@@ -37,7 +37,7 @@ and then drawn using LSST filters.
 
 3) A wavelength-dependent PSF is created to represent atmospheric effects of differential chromatic
 refraction, and the wavelength dependence of Kolmogorov-turbulence-induced seeing.  This PSF is used
-to draw a single Sersic galaxy in LSST filters.
+to draw a single Sersic galaxy in the LSST filters.
 
 For all cases, suggested parameters for viewing in ds9 are also included.
 

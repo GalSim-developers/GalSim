@@ -25,7 +25,8 @@ import numpy
 import galsim
 
 class SED(object):
-    """Very simple SED container object."""
+    """Very simple SED container object.  The created object is callable, returning the flux in
+    photons/nm as a function of wavelength in nm."""
     def __init__(self, wave=None, flambda=None, fnu=None, fphotons=None):
         """ Initialize SED with a wavelength array and a flux density array.  The flux density
         array can be represented in one of three ways.
@@ -86,14 +87,15 @@ class SED(object):
         return self
 
     def __add__(self, other):
-        # SED's can be added together, with a couple of caveats:
+        # Add together two SEDs, with caveats listed below:
+        #
         # 1) The resulting SED will be defined on the wavelength range set by the overlap of
         #    the (possibly redshifted!) wavelength ranges of the two SED operands.
         # 2) The wavelength sampling of the resulting SED will be set to the union of the
-        #    (possibly redshifted!) wavelength samplings of the SED operands.
+        #    (possibly redshifted!) wavelength samplings of the SED operands in the overlap region.
         # 3) The redshift of the resulting SED will be set to 0.0 regardless of the redshifts of the
         #    SED operands.
-        # These ensure that SED.__add__ is commutative.
+        # These ensure that SED addition is commutative.
 
         # Find overlapping wavelength interval
         bluelim = max([self.wave[0] * (1.0 + self.redshift),
@@ -146,10 +148,17 @@ class SED(object):
 
     def setRedshift(self, redshift):
         """ Scale the wavelength axis of the SED.
+
+        @param redshift
         """
         self.redshift = redshift
         self.needs_new_interp=True
 
     def getFlux(self, bandpass):
+        """ Return the SED flux through a bandpass.
+
+        @param bandpass   galsim.Bandpass object representing a filter.
+        @returns   Flux through bandpass.
+        """
         interp = self._get_interp()
         return galsim.integ.int1d(lambda w:bandpass(w)*interp(w), bandpass.bluelim, bandpass.redlim)

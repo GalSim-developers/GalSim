@@ -19,9 +19,9 @@
 """@file dcr.py
 Implementation of atmospheric differential chromatic refraction.
 
-This file is used to implement atmospheric differential chromatic refraction.  Functions are defined
-that return the refraction angle (the angle between the true and apparent zenith angles of an
-object), as a function of zenith angle, wavelength, temperature, pressure, and water vapor content.
+This file defines functions that return the refraction angle (the angle between the true and
+apparent zenith angles of an object), as a function of zenith angle, wavelength, temperature,
+pressure, and water vapor content.
 """
 
 import numpy
@@ -31,12 +31,12 @@ import galsim
 def air_refractive_index(wave, pressure=69.328, temperature=293.15, H2O_pressure=1.067):
     """Return the refractive index of air as function of wavelength.
 
-    Uses the formulae given in Filippenko (1982), which appears to come from Edlen (1953),
+    Uses the formulae given in Filippenko (1982), which appear to come from Edlen (1953),
     and Coleman, Bozman, and Meggers (1960).  The units of the original formula are non-SI,
     being mmHg for pressure (and water vapor pressure), and degrees C for temperature.  This
-    function accepts SI units however, and transforms them when plugging into the formula.
+    function accepts SI units, however, and transforms them when plugging into the formula.
 
-    @param wave           Wavelength in nanometers (Array)
+    @param wave           Wavelength array in nanometers
     @param pressure       Air pressure in kiloPascals.  (Default of 69.328 kPa = 520 mmHg is default
                           value from PhoSim, and assumed typical for LSST / Cerro Pachon.)
     @param temperature    Temperature in Kelvins.  (Default of 293.15 K = 20 C is default value from
@@ -64,11 +64,11 @@ def get_refraction(wave, zenith_angle, **kwargs):
     change in zenith angle for a photon with a given wavelength.  Output is a positive number of
     radians, even though the apparent zenith angle technically decreases due to this effect.
 
-    @param wave          Wavelength in nanometers (Array)
-    @param zenith_angle  as a galsim.Angle
+    @param wave          Wavelength array in nanometers
+    @param zenith_angle  as a galsim.AngleUnit
     @param kwargs        Keyword arguments to pass to air_refractive_index() to override default
                          pressure, temperature, and/or H2O_pressure.
-    @returns             Absolute value of change in zenith angle as a galsim.Angle
+    @returns             Absolute value of change in zenith angle as a galsim.AngleUnit
     """
     n_squared = air_refractive_index(wave, **kwargs)**2
     r0 = (n_squared - 1.0) / (2.0 * n_squared)

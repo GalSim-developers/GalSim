@@ -17,7 +17,7 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file bandpass.py
-Very simple implementation of a filter bandpass.  Used by galsim.chromatic
+Very simple implementation of a filter bandpass.  Used by galsim.chromatic.
 """
 
 import numpy
@@ -25,8 +25,15 @@ import numpy
 import galsim
 
 class Bandpass(object):
-    """Very simple Bandpass filter object."""
+    """Very simple Bandpass filter object.  This object is callable, returning dimensionless
+    throughput as a function of wavelength in nanometers.
+    """
     def __init__(self, wave, throughput):
+        """ Create a bandpass filter object.
+
+        @param wave          Wavelength array in nanometers.
+        @param throughput    Congruent dimensionless throughput array.
+        """
         self.wave = numpy.array(wave)
         self.throughput = numpy.array(throughput)
         self.bluelim = self.wave[0]
@@ -34,7 +41,9 @@ class Bandpass(object):
         self.interp = galsim.LookupTable(wave, throughput)
 
     def __call__(self, wave):
-        """ Return throughput of bandpass at given wavelength.
+        """ Return dimensionless throughput of bandpass at given wavelength in nanometers.
+        @param wave   Wavelength in nanometers.
+        @returns      Dimensionless throughput.
         """
         return self.interp(wave)
 
@@ -44,9 +53,8 @@ class Bandpass(object):
         @param   bluelim   Truncate blue side of bandpass here.
         @param   redlim    Truncate red side of bandpass here.
         @param   relative_throughput     Truncate leading and trailing wavelength ranges where the
-                                         throughput is less than this amount.  Do not truncate any
-                                         intermediate ranges though.
-
+                                         throughput is less than this amount.  Do not remove any
+                                         intermediate wavelength ranges.
         """
         if bluelim is None:
             bluelim = self.bluelim

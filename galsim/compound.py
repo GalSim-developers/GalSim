@@ -34,6 +34,13 @@ from galsim import ChromaticObject
 # --- Compound GSObject classes: Sum, Convolution, AutoConvolve, and AutoCorrelate ---
 
 def Add(*args, **kwargs):
+    """A function for adding 2 or more GSObjects or ChromaticObjects.
+
+    This function will inspect its input arguments to decide if a galsim.Sum object or a
+    galsim.ChromaticSum object is required to represent the sum of surface brightness profiles.
+
+    @returns galsim.Sum or galsim.ChromaticSum as appropriate.
+    """
     if len(args) == 0:
         # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
         # exception instead.
@@ -119,6 +126,14 @@ class Sum(GSObject):
                 self.noise = noise
 
 def Convolve(*args, **kwargs):
+    """A function for convolving 2 or more GSObjects or ChromaticObjects.
+
+    This function will inspect its input arguments to decide if a galsim.Convolution object or a
+    galsim.ChromaticConvolution object is required to represent the convolution of surface
+    brightness profiles.
+
+    @returns galsim.Convolution or galsim.ChromaticConvolution as appropriate.
+    """
     # First check for number of arguments != 0
     if len(args) == 0:
         # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
