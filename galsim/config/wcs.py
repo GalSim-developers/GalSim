@@ -20,7 +20,7 @@
 import galsim
 
 
-# We distunguish some classes according to whether they have an origin parameter.
+# We distinguish some classes according to whether they have an origin parameter.
 # The first item in the tuple is the builder class or function that does not take an 
 # offset parameter.  The second item is the version that does.
 # Most WCS types can use the normal _req_params, etc.  Currently, only Tan has a custom builder.
