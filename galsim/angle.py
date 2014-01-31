@@ -247,7 +247,8 @@ def HMS_Angle(str):
 
     There may be an initial + or - (or neither), then two digits for the hours, two for the
     minutes, and two for the seconds.  Then there may be a decimal point followed by more
-    digits.
+    digits.  There may be a colon separating hh, mm, and ss, or whitespace, or nothing at all.
+    In fact, the code will ignore any non-digits between the hours, minutes, and seconds.
 
     @returns the corresponding Angle instance
     """
@@ -258,7 +259,8 @@ def DMS_Angle(str):
 
     There may be an initial + or - (or neither), then two digits for the degrees, two for the
     minutes, and two for the seconds.  Then there may be a decimal point followed by more
-    digits.
+    digits.  There may be a colon separating dd, mm, and ss, or whitespace, or nothing at all.
+    In fact, the code will ignore any non-digits between the degrees, minutes, and seconds.
 
     @returns the corresponding Angle instance
     """
