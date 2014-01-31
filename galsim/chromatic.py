@@ -17,10 +17,13 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file chromatic.py
-Definitions for GalSim classes implementing wavelength-dependence.
+Define wavelength-dependent surface brightness profiles.
 
-This file extends the base GalSim classes by allowing them to be wavelength dependent.  This allows
-one to implement wavelength-dependent PSFs or galaxies with color gradients.
+Implementation is done by constructing GSObjects as functions of wavelength.  Draw methods then
+integrate over wavelength while also multiplying in a throughput function.
+
+Possible uses include galaxies with color gradients, automatically drawing a given galaxy through
+different filters, or  implementing wavelength-dependent point spread functions.
 """
 
 import numpy
@@ -37,12 +40,14 @@ class ChromaticObject(object):
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
         """Base chromatic image draw function, for subclasses that don't choose to override it.
-        In practice, ChromaticConvolution.draw() will usually end up being called instead.
+        Since most galsim use cases will probably finish with a convolution,
+        ChromaticConvolution.draw() will often be the draw method used in practice.
 
         The task of ChromaticObject.draw(bandpass) is to integrate a chromatic surface brightness
         profile multiplied by the throughput of `bandpass`, over the wavelength interval indicated
-        by `bandpass`.  To evaluate the integrand, this method constructs an appropriate GSObject
-        and uses its .draw() method.
+        by `bandpass`.  To evaluate the integrand, this method creates a function that accepts a
+        single argument, a wavelength in nanometers, and returns an image of the surface brightness
+        profile at that wavelength using GSObject.draw().
 
         The wavelength integration can be done using several different schemes, all defined in
         integ.py.  The default, galsim.integ.midpoint_int_image, implements the midpoint rule,
@@ -68,20 +73,20 @@ class ChromaticObject(object):
         @param add_to_image       see GSObject.draw()
         @param use_true_center    see GSObject.draw()
         @param offset             see GSObject.draw()
-        @param integrator         An image integrator.
+        @param integrator         One of the image integrators from galsim.integ
 
         @returns                  galsim.Image drawn through filter.
         """
 
-        # default integrator is Riemann sum
+        # default integrator uses midpoint rule.
         if integrator is None:
             integrator = galsim.integ.midpoint_int_image
-        # setup output image (using bluest wavelength in bandpass!)
+        # setup output image (arbitrarily using bluest wavelength in bandpass!)
         prof0 = self.evaluateAtWavelength(bandpass.bluelim) * bandpass(bandpass.bluelim)
         prof0 = prof0._fix_center(image, scale, offset, use_true_center, reverse=False)
         image = prof0._draw_setup_image(image, scale, wmult, add_to_image)
 
-        # integrand returns an image at each wavelength
+        # integrand returns an galsim.Image at each wavelength
         def f_image(w):
             prof = self.evaluateAtWavelength(w) * bandpass(w)
             tmpimage = image.copy()
@@ -90,16 +95,18 @@ class ChromaticObject(object):
                       add_to_image=False, use_true_center=use_true_center, offset=offset)
             return tmpimage
 
-        # wavelength integral
+        # Do the wavelength integral
         integral = integrator(f_image, bandpass.bluelim, bandpass.redlim, **kwargs)
 
-        # clear image unless add_to_image is True
+        # Clear image if add_to_image is False
         if not add_to_image:
             image.setZero()
         image += integral
         return image
 
     def __add__(self, other):
+        """Add together two ChromaticObjects, or a ChromaticObject and a GSObject.
+        """
         return galsim.ChromaticSum([self, other])
 
     def copy(self):
@@ -109,9 +116,9 @@ class ChromaticObject(object):
         return ret
 
 class Chromatic(ChromaticObject):
-    """Construct chromatic versions of the galsim GSObjects.
+    """Construct chromatic versions of galsim GSObjects.
 
-    This class extends the base GSObjects in base.py by adding SEDs.  Useful to consistently generate
+    This class attaches an SED to a galsim GSObject.  This is useful to consistently generate
     the same galaxy observed through different filters, or, with the ChromaticSum class, to construct
     multi-component galaxies, each with a different SED. For example, a bulge+disk galaxy could be
     constructed:
@@ -119,13 +126,13 @@ class Chromatic(ChromaticObject):
     >>> bulge_SED = user_function_to_get_bulge_spectrum()
     >>> disk_SED = user_function_to_get_disk_spectrum()
     >>> bulge_mono = galsim.DeVaucouleurs(half_light_radius=1.0)
-    >>> bulge = galsim.Chromatic(mono, bulge_SED)
+    >>> bulge = galsim.Chromatic(bulge_mono, bulge_SED)
     >>> disk_mono = galsim.Exponential(half_light_radius=2.0)
     >>> disk = galsim.Chromatic(disk_mono, disk_SED)
-    >>> gal = galsim.ChromaticSum([bulge, disk])
+    >>> gal = bulge + disk
 
     The SED is usually specified as a galsim.SED object, though any callable that returns
-    photons/nanometer as a function of wavelength in nanometers should work.
+    spectral density in photons/nanometer as a function of wavelength in nanometers should work.
 
     The flux normalization comes from a combination of the `flux` attribute of the GSObject being
     chromaticized and the SED.  The SED implicitly has units of photons per nanometer.  Multiplying
@@ -135,19 +142,19 @@ class Chromatic(ChromaticObject):
     GSObject to give the final number of drawn photons.
     """
     def __init__(self, gsobj, SED):
-        """Initialize Chromatic.
+        """Attach an SED to a GSObject.
 
         @param gsobj    An GSObject instance to be chromaticized.
-        @param SED      Typically a galsim.SED object, but any callable that returns the relative
-                        number of photons per nanometer as a function of wavelength in nanometers
-                        should work.
+        @param SED      Typically a galsim.SED object, though any callable that returns
+                        spectral density in photons/nanometer as a function of wavelength
+                        in nanometers should work.
         """
         self.SED = SED
         self.gsobj = gsobj
         # Chromaticized GSObjects are separable into spatial (x,y) and spectral (lambda) factors.
         self.separable = True
 
-    # Make op* and op*= work to adjust the flux of an object
+    # Make op* and op*= work to adjust the flux of the object
     def __imul__(self, other):
         self.gsobj.scaleFlux(other)
         return self
@@ -162,6 +169,7 @@ class Chromatic(ChromaticObject):
         ret *= other
         return ret
 
+    # Apply following transformations to the underlying GSObject
     def scaleFlux(self, scale):
         self.gsobj.scaleFlux(scale)
 
@@ -187,32 +195,50 @@ class Chromatic(ChromaticObject):
         self.gsobj.applyRotation(*args, **kwargs)
 
     def evaluateAtWavelength(self, wave):
-        """
+        """Evaluate underlying GSObject scaled by self.SED(`wave`).
+
         @param wave  Wavelength in nanometers.
         @returns     GSObject for profile at specified wavelength
         """
         return self.SED(wave) * self.gsobj
 
 class ChromaticSum(ChromaticObject):
-    """Sum ChromaticObjects and/or GSObjects together.  If a GSObject is part of a sum, then its
-    SED is assumed to be flat with density of 1 photon per nanometer.
+    """Add ChromaticObjects and/or GSObjects together.  If a GSObject is part of a sum, then its
+    SED is assumed to be flat with spectral density of 1 photon per nanometer.
     """
     def __init__(self, objlist):
         self.objlist = objlist
 
     def evaluateAtWavelength(self, wave):
-        """
+        """Evaluate underlying GSObjects scaled by their attached SEDs evaluated at `wave`.
+
         @param wave  Wavelength in nanometers.
-        @returns     galsim.Sum object for profile at specified wavelength
+        @returns     galsim.Sum GSObject for profile at specified wavelength.
         """
         return galsim.Sum([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
     def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
-        """ Slightly optimized "drawer" for ChromaticSum's.  Draw each summand individually.
-        This will waste time if both summands have the same associated SED, but in general can
-        speed things up by breaking the profile up into separable (=fast) pieces.
+        """ Slightly optimized draw method for ChromaticSum's.  Draw each summand individually
+        and add resulting images together.  This will waste time if both summands have the same
+        associated SED, in which case the summands should be added together first and the
+        resulting galsim.Sum object can then be chromaticized.  In general, however, drawing
+        individual sums independently can help with speed by identifying chromatic profiles that
+        are separable into spectral and spatial factors.
+
+        @param bandpass           A galsim.Bandpass object representing the filter
+                                  against which to integrate.
+        @param image              see GSObject.draw()
+        @param scale              see GSObject.draw()
+        @param gain               see GSObject.draw()
+        @param wmult              see GSObject.draw()
+        @param add_to_image       see GSObject.draw()
+        @param use_true_center    see GSObject.draw()
+        @param offset             see GSObject.draw()
+        @param integrator         One of the image integrators from galsim.integ
+
+        @returns                  galsim.Image drawn through filter.
         """
         image = self.objlist[0].draw(bandpass, image=image, scale=scale, gain=gain, wmult=wmult,
                                      add_to_image=add_to_image, use_true_center=use_true_center,
@@ -222,12 +248,13 @@ class ChromaticSum(ChromaticObject):
                              add_to_image=True, use_true_center=use_true_center,
                              offset=offset, integrator=integrator, **kwargs)
 
+    # Make op* and op*= work to adjust the flux of the object
     def __imul__(self, other):
         for obj in self.objlist:
             obj.scaleFlux(other)
         return self
 
-    def __mul__(self, other): # do I need to define both this and __rmul__?
+    def __mul__(self, other):
         ret = self.copy()
         ret *= other
         return ret
@@ -237,6 +264,7 @@ class ChromaticSum(ChromaticObject):
         ret *= other
         return ret
 
+    # apply following transformations to all underlying summands
     def scaleFlux(self, scale):
         self.objlist[0].scaleFlux(scale)
 
@@ -248,8 +276,6 @@ class ChromaticSum(ChromaticObject):
         for obj in self.objlist:
             obj.applyShift(*args, **kwargs)
 
-    # not sure if this one makes sense.  do dilation and addition commute?
-    # what about other `apply`s?
     def applyDilation(self, *args, **kwargs):
         for obj in self.objlist:
             obj.applyDilation(*args, **kwargs)
@@ -277,23 +303,6 @@ class ChromaticConvolution(ChromaticObject):
     def __init__(self, objlist):
         self.objlist = objlist
 
-    def __imul__(self, other):
-        self.objlist[0].scaleFlux(other)
-        return self
-
-    def __mul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
-
-    def __rmul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
-
-    def scaleFlux(self, scale):
-        self.objlist[0].scaleFlux(scale)
-
     def evaluateAtWavelength(self, wave):
         """
         @param wave  Wavelength in nanometers.
@@ -304,6 +313,23 @@ class ChromaticConvolution(ChromaticObject):
     def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
+        """ Optimized draw method for ChromaticConvolution.  Works by finding sums of profiles
+        which include separable portions, which can then be integrated without before doing any
+        convolutions, which are pushed to the end.
+
+        @param bandpass           A galsim.Bandpass object representing the filter
+                                  against which to integrate.
+        @param image              see GSObject.draw()
+        @param scale              see GSObject.draw()
+        @param gain               see GSObject.draw()
+        @param wmult              see GSObject.draw()
+        @param add_to_image       see GSObject.draw()
+        @param use_true_center    see GSObject.draw()
+        @param offset             see GSObject.draw()
+        @param integrator         One of the image integrators from galsim.integ
+
+        @returns                  galsim.Image drawn through filter.
+        """
         if integrator is None:
             integrator = galsim.integ.midpoint_int_image
         # Only make temporary changes to objlist...
@@ -397,6 +423,12 @@ class ChromaticConvolution(ChromaticObject):
 
         # If program gets this far, the objects in objlist should be atomic (non-ChromaticSum
         # and non-ChromaticConvolution).
+
+        # setup output image (using bluest wavelength in bandpass!)
+        prof0 = self.evaluateAtWavelength(bandpass.bluelim) * bandpass(bandpass.bluelim)
+        prof0 = prof0._fix_center(image, scale, offset, use_true_center, reverse=False)
+        image = prof0._draw_setup_image(image, scale, wmult, add_to_image)
+
         # Sort these atomic objects into separable and inseparable lists, and collect
         # the spectral parts of the separable profiles.
         sep_profs = []
@@ -442,14 +474,35 @@ class ChromaticConvolution(ChromaticObject):
             effective_prof_image = integrator(f_image, bandpass.bluelim, bandpass.redlim, **kwargs)
             # Image -> InterpolatedImage
             # It could be useful to cache this result if drawing more than one object with the same
-            # PSF+SED combination for instance.  Must think on this...
+            # PSF+SED combination.  This naturally happens in a ring test or when fitting the
+            # parameters of a galaxy profile to an image when the PSF is constant.
             effective_prof = galsim.InterpolatedImage(effective_prof_image)
-            # append effective profile to separable profiles (which are all GSObjects)
+            # append effective profile to separable profiles (which should all be GSObjects)
             sep_profs.append(effective_prof)
         # finally, convolve and draw.
         final_prof = multiplier * galsim.Convolve(sep_profs)
         return final_prof.draw(image=image, gain=gain, wmult=wmult, add_to_image=add_to_image,
                                use_true_center=use_true_center, offset=offset)
+
+    # Make op* and op*= work to adjust the flux of the object by altering flux of the
+    # first object in self.objlist
+    def __imul__(self, other):
+        self.objlist[0].scaleFlux(other)
+        return self
+
+    def __mul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    def __rmul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    def scaleFlux(self, scale):
+        self.objlist[0].scaleFlux(scale)
+
 
 class ChromaticShiftAndDilate(ChromaticObject):
     """Class representing chromatic profiles whose wavelength dependence consists of shifting and
@@ -459,33 +512,32 @@ class ChromaticShiftAndDilate(ChromaticObject):
     be effected.  For instance, differential chromatic refraction is just shifting the PSF center as
     a function of wavelength.  The wavelength-dependence of seeing, and the wavelength-dependence of
     the diffraction limit are dilations.  This class can compactly represent all of these effects.
-    See tests/test_chromatic.py for an example.
     """
     def __init__(self, gsobj, shift_fn=None, dilate_fn=None, SED=None):
         """
-        @param gsobj      Fiducial profile (as a GSObject instance) to shift and dilate.
+        @param gsobj      Fiducial GSObject profile to shift and dilate.
         @param shift_fn   Function that takes wavelength in nanometers and returns a
                           galsim.Position object, or parameters which can be transformed into a
-                          galsim.Position object (dx, dy).
+                          galsim.Position object (dx, dy).  The fiducial GSObject is then shifted
+                          this amount when evaluated at specified wavelengths.
         @param dilate_fn  Function that takes wavelength in nanometers and returns a dilation
-                          scale factor.
+                          scale factor.  The fiducial GSObject is then dilated this amount when
+                          evaluated at specified wavelengths.
         """
         self.gsobj = gsobj
+        self.separable = False
+
+        # Default is no shifting
         if shift_fn is None:
             self.shift_fn = lambda x: (0,0)
         else:
             self.shift_fn = shift_fn
+
+        # Default is no dilating
         if dilate_fn is None:
             self.dilate_fn = lambda x: 1.0
         else:
             self.dilate_fn = dilate_fn
-        self.separable = False
-
-    def applyShear(self, *args, **kwargs):
-        self.gsobj.applyShear(*args, **kwargs)
-
-    def scaleFlux(self, scale):
-        self.gsobj.scaleFlux(scale)
 
     def evaluateAtWavelength(self, wave):
         """
@@ -497,7 +549,13 @@ class ChromaticShiftAndDilate(ChromaticObject):
         profile.applyShift(self.shift_fn(wave))
         return profile
 
-class ChromaticAtmosphere(ChromaticObject):
+    def scaleFlux(self, scale):
+        self.gsobj.scaleFlux(scale)
+
+    # The apply* transforms don't commute with shifting and dilating, so simply
+    # alter self.gsobj like above...
+
+class ChromaticAtmosphere(ChromaticShiftAndDilate):
     """Class implementing two atmospheric chromatic effects: differential chromatic refraction
     (DCR) and wavelength-dependent seeing.
     Due to DCR, blue photons land closer to the zenith than red photons.
@@ -513,27 +571,18 @@ class ChromaticAtmosphere(ChromaticObject):
         @param alpha              Power law index for wavelength-dependent seeing.  Default of -0.2
                                   is the prediction for Kolmogorov turbulence.
         @param position_angle     Angle pointing toward zenith, measured from "up" through "right".
-        @param **kwargs           Other arguments are passed on to dcr.get_refraction, and can
+        @param **kwargs           Additional arguments are passed to dcr.get_refraction, and can
                                   include temperature, pressure, and H20_pressure.
         """
-        self.base_obj = base_obj
-        self.base_wavelength = base_wavelength
-        self.zenith_angle = zenith_angle
-        self.alpha = alpha
-        self.kwargs = kwargs
-        self.position_angle = position_angle
-
-        self.base_refraction = galsim.dcr.get_refraction(base_wavelength, zenith_angle, **kwargs)
+        self.gsobj = base_obj
         self.separable = False
-
-    def evaluateAtWavelength(self, wave):
-        profile = self.base_obj.copy()
-        dilation = (wave/self.base_wavelength)**self.alpha
-        shift_magnitude = galsim.dcr.get_refraction(wave, self.zenith_angle, **self.kwargs)
-        shift_magnitude -= self.base_refraction
-        shift_magnitude = shift_magnitude / galsim.arcsec
-        shift = (shift_magnitude*numpy.sin(self.position_angle.rad()),
-                 shift_magnitude*numpy.cos(self.position_angle.rad()))
-        profile.applyDilation(dilation)
-        profile.applyShift(shift)
-        return profile
+        self.dilate_fn = lambda w: (w/base_wavelength)**(alpha)
+        base_refraction = galsim.dcr.get_refraction(base_wavelength, zenith_angle, **kwargs)
+        def shift_fn(w):
+            shift_magnitude = galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
+            shift_magnitude -= base_refraction
+            shift_magnitude = shift_magnitude / galsim.arcsec
+            shift = (shift_magnitude*numpy.sin(position_angle.rad()),
+                     shift_magnitude*numpy.cos(position_angle.rad()))
+            return shift
+        self.shift_fn = shift_fn
