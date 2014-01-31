@@ -44,8 +44,8 @@ class CelestialCoord(object):
         - a Postel projection, which preserves distances from the tangent point
     See the project and deproject functions for details.
 
-    You can also precess a coordinate from one epoch to another and get the galaxy
-    coordinates with
+    You can also precess a coordinate from one epoch to another and get galactic coordinates
+    with, e.g.
 
             coord1950 = coord2000.precess(2000, 1950)
             el, b = coord.getGalaxyPos()
