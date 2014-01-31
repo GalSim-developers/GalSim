@@ -312,7 +312,7 @@ class ChromaticConvolution(ChromaticObject):
 
     def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
-             integrator=None, **kwargs):
+             integrator=None, iimult=None, **kwargs):
         """ Optimized draw method for ChromaticConvolution.  Works by finding sums of profiles
         which include separable portions, which can then be integrated without before doing any
         convolutions, which are pushed to the end.
@@ -327,6 +327,8 @@ class ChromaticConvolution(ChromaticObject):
         @param use_true_center    see GSObject.draw()
         @param offset             see GSObject.draw()
         @param integrator         One of the image integrators from galsim.integ
+        @param iimult             Oversample any intermediate InterpolatedImages created to hold
+                                  effective profiles by this amount.
 
         @returns                  galsim.Image drawn through filter.
         """
@@ -409,7 +411,7 @@ class ChromaticConvolution(ChromaticObject):
                 tmpobj = ChromaticConvolution(tmplist) # draw image
                 image = tmpobj.draw(bandpass, image=image, gain=gain, wmult=wmult,
                                     add_to_image=add_to_image, use_true_center=use_true_center,
-                                    offset=offset, **kwargs)
+                                    offset=offset, integrator=integrator, iimult=iimult, **kwargs)
                 for summand in obj.objlist[1:]: # now do the same for B and C
                     tmplist = list(objlist)
                     tmplist.append(summand)
@@ -417,7 +419,8 @@ class ChromaticConvolution(ChromaticObject):
                     # add to previously started image
                     image = tmpobj.draw(bandpass, image=image, gain=gain, wmult=wmult,
                                         add_to_image=True, use_true_center=use_true_center,
-                                        offset=offset, **kwargs)
+                                        offset=offset, integrator=integrator, iimult=iimult,
+                                        **kwargs)
         if returnme:
             return image
 
@@ -460,6 +463,11 @@ class ChromaticConvolution(ChromaticObject):
                                                 use_true_center=True, reverse=False)
             mono_prof_image = mono_prof0._draw_setup_image(image=None, scale=None, wmult=wmult,
                                                            add_to_image=False)
+            # Modify image size/scale wrt requested oversampling
+            if iimult is not None:
+                mono_prof_image = galsim.ImageD(mono_prof_image.array.shape[0] * iimult,
+                                                mono_prof_image.array.shape[1] * iimult,
+                                                scale=(mono_prof_image.scale * 1.0/iimult))
             # integrand for effective profile
             def f_image(w):
                 mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
