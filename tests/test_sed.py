@@ -22,16 +22,16 @@ import numpy as np
 import galsim
 
 def test_SED_add():
+    """Check that SEDs add like I think they should...
+    """
     a = galsim.SED(wave=[1,2,3,4,5], fphotons=[1.1,2.2,3.3,4.4,5.5])
     b = galsim.SED(wave=[1.1,2.2,3.0,4.4,5.5], fphotons=[1.11,2.22,3.33,4.44,5.55])
     c = a+b
-    np.testing.assert_almost_equal(c.wave[0], 1.1, 5,
-                                   err_msg="Found wrong wavelength intersection interval in" +
-                                   "SED.__add__")
-    np.testing.assert_almost_equal(c.wave[-1], 5.0, 5,
-                                   err_msg="Found wrong wavelength intersection interval in" +
-                                   "SED.__add__")
-    np.testing.assert_almost_equal(c(3.0), 3.3 + 3.33, 5,
+    np.testing.assert_almost_equal(c.wave[0], 1.1, 10,
+                                   err_msg="Found wrong blue limit in SED.__add__")
+    np.testing.assert_almost_equal(c.wave[-1], 5.0, 10,
+                                   err_msg="Found wrong red limit in SED.__add__")
+    np.testing.assert_almost_equal(c(3.0), 3.3 + 3.33, 10,
                                    err_msg="Wrong sum in SED.__add__")
 
 if __name__ == "__main__":

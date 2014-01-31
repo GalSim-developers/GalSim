@@ -99,7 +99,7 @@ def test_draw_add_commutivity():
 
     # make effective PSF with Riemann sum midpoint rule
     mPSFs = [] # list of flux-scaled monochromatic PSFs
-    N = 150
+    N = 250
     h = (bandpass.redlim * 1.0 - bandpass.bluelim) / N
     ws = [bandpass.bluelim + h*(i+0.5) for i in range(N)]
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
@@ -150,7 +150,7 @@ def test_draw_add_commutivity():
 
     printval(GS_image, chromatic_image)
     np.testing.assert_array_almost_equal(
-        chromatic_image.array/peak1, GS_image.array/peak1, 5,
+        chromatic_image.array/peak1, GS_image.array/peak1, 6,
         err_msg="Directly computed chromatic image disagrees with image created using "
                 +"galsim.chromatic")
     t2 = time.time()
@@ -164,25 +164,31 @@ def test_ChromaticConvolution_InterpolatedImage():
     stamp_size = 32
 
     # stars are fundamentally delta-fns with an SED
-    star = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
+    star = galsim.Chromatic(galsim.Gaussian(fwhm=1.e-8), bulge_SED)
     pix = galsim.Pixel(pixel_scale)
     mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
     PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500.0,
-                                     zenith_angle = zenith_angle)
+                                     zenith_angle=zenith_angle)
 
     final = galsim.Convolve([star, PSF, pix])
     image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
-    II_image = galsim.ChromaticConvolution.draw(final, bandpass, image=image)
+    # draw image using speed tricks in ChromaticConvolution.draw
+    # For this particular test, need to set iimult=4 in order to pass.
+    II_image = galsim.ChromaticConvolution.draw(final, bandpass, image=image, iimult=4)
     II_flux = II_image.array.sum()
 
     image2 = image.copy()
+    # draw image without any speed tricks using ChromaticObject.draw
     D_image = galsim.ChromaticObject.draw(final, bandpass, image=image2)
     D_flux = D_image.array.sum()
 
     #compare
+    print 'Flux when integrating first, convolving second: {}'.format(II_flux)
+    print 'Flux when convolving first, integrating second: {}'.format(D_flux)
+    printval(II_image, D_image)
     np.testing.assert_array_almost_equal(
-        II_image.array, D_image.array, 1, #stupid 10% test right now...  Should this be better?
+        II_image.array, D_image.array, 5,
         err_msg="draw not equivalent to draw")
 
     t2 = time.time()
@@ -368,7 +374,7 @@ def test_chromatic_seeing_moments():
 
         dr2byr2_analytic = (r2_1 - r2_2) / r2_1
 
-        np.testing.assert_almost_equal(dr2byr2_image, dr2byr2_analytic, 4,
+        np.testing.assert_almost_equal(dr2byr2_image, dr2byr2_analytic, 5,
                                        err_msg="Moment Shift from chromatic seeing doesn't"+
                                                " match analytic formula")
 
@@ -401,7 +407,7 @@ def test_monochromatic_filter():
     pix = galsim.Pixel(pixel_scale)
     chromatic_final = galsim.Convolve([chromatic_gal, chromatic_PSF, pix])
 
-    fws = [350, 475, 625, 750, 875, 975] # approximage ugrizy filter central wavelengths
+    fws = [350, 475, 625, 750, 875, 975] # approximate ugrizy filter central wavelengths
     for fw in fws:
         chromatic_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
         narrow_filter = galsim.Bandpass([fw-0.01, fw, fw+0.01], [1.0, 1.0, 1.0])
@@ -458,10 +464,10 @@ def test_chromatic_flux():
                                        bandpass.bluelim, bandpass.redlim)
 
     printval(image, image2)
-    np.testing.assert_almost_equal(ChromaticObject_flux/analytic_flux, 1.0, 3,
+    np.testing.assert_almost_equal(ChromaticObject_flux/analytic_flux, 1.0, 4,
                                    err_msg="Drawn ChromaticObject flux doesn't match " +
                                    "analytic prediction")
-    np.testing.assert_almost_equal(ChromaticConvolve_flux/analytic_flux, 1.0, 3,
+    np.testing.assert_almost_equal(ChromaticConvolve_flux/analytic_flux, 1.0, 4,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "analytic prediction")
 
@@ -470,7 +476,7 @@ def test_chromatic_flux():
     bulge_SED.setFlux(bandpass, target_flux)
     final = galsim.Convolve([star, PSF, pix])
     final.draw(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 3,
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "SED setFlux")
 
