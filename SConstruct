@@ -835,6 +835,23 @@ int main()
     return 1
 
 
+def CheckBoost(config):
+    # At the C++ level, we only need boost header files, so no need to check libraries.
+    # Use boost/shared_ptr.hpp as a representative choice.
+
+    boost_source_file = """
+#define BOOST_NO_CXX11_SMART_PTR
+#include "boost/shared_ptr.hpp"
+"""
+    config.Message('Checking for boost header files... ')
+    if not config.TryCompile(boost_source_file, ".cpp"):
+        ErrorExit(
+            'Boost not found',
+            'You should specify the location of Boost as BOOST_DIR=...')
+    config.Result(1)
+    return 1
+
+
 def CheckTMV(config):
     tmv_source_file = """
 #include "TMV_Sym.h"
@@ -1239,6 +1256,7 @@ def CheckBoostPython(config):
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #endif
 #endif
+#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 
 int check_bp_run() { return 23; }
@@ -1274,6 +1292,7 @@ def CheckPythonExcept(config):
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #endif
 #endif
+#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 #include <stdexcept>
 
@@ -1408,13 +1427,7 @@ def DoCppChecks(config):
 
     #####
     # Check for boost:
-
-    # At the C++ level, we only need boost header files, so no need to check libraries.
-    # Use boost/shared_ptr.hpp as a representative choice.
-    if not config.CheckHeader('boost/shared_ptr.hpp',language='C++'):
-        ErrorExit(
-            'Boost not found',
-            'You should specify the location of Boost as BOOST_DIR=...')
+    config.CheckBoost()
 
     #####
     # Check for tmv:
@@ -1445,15 +1458,16 @@ def DoCppChecks(config):
         # The Mac BLAS library is notoriously sketchy.  In particular, we have discovered that it
         # is thread-unsafe for Mac OS 10.7.  Try to give an appropriate warning if we can tell that 
         # this is what the TMV library is using.
+        # Update: This is still a problem with 10.9.
         import platform
         print 'Mac version is ',platform.mac_ver()[0]
         if (platform.mac_ver()[0] >= '10.7' and '-latlas' not in tmv_link and
             ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
             print 'WARNING: The Apple BLAS library has been found not to be thread safe on'
-            print '         Mac OS version 10.7 (and possibly higher), even across multiple'
-            print '         processes (i.e. not just multiple threads in the same process).'
-            print '         The symptom is that `scons tests` will hang when running nosetests'
-            print '         using multiple processes.'
+            print '         Mac OS versions 10.7 - 10.9 (and possibly higher), even across'
+            print '         multiple processes (i.e. not just multiple threads in the same'
+            print '         process.)  The symptom is that `scons tests` will hang when '
+            print '         running nosetests using multiple processes.'
             print '         If this occurs, the solution is to compile TMV either with a '
             print '         different BLAS library (e.g. ATLAS) or with no BLAS library at '
             print '         all (using WITH_BLAS=false).'
@@ -1556,6 +1570,7 @@ def DoConfig(env):
         config = env.Configure(custom_tests = {
             'CheckTMV' : CheckTMV ,
             'CheckFFTW' : CheckFFTW ,
+            'CheckBoost' : CheckBoost ,
             })
         DoCppChecks(config)
         env = config.Finish()

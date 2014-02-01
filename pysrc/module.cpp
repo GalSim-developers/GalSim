@@ -24,6 +24,7 @@
 #endif
 #endif
 
+#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION

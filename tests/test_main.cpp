@@ -55,6 +55,7 @@
 
 #endif // !INTEL
 
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/test/included/unit_test.hpp>
 
 //JAZ Nothing needs to go here - the test module definitions above create a main function.

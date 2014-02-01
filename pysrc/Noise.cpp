@@ -24,6 +24,7 @@
 #endif
 #endif
 
+#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 #include "Noise.h"
 #include "NumpyHelper.h"
