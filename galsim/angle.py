@@ -234,7 +234,7 @@ def parse_dms(s):
 
     d = int(s[k:k+2])
     k = k+2
-    while not ('0' <= s[k] < '9'): k = k+1
+    while not '0' <= s[k] < '9': k = k+1
     m = int(s[k:k+2])
     k = k+2
     while not '0' <= s[k] < '9': k = k+1

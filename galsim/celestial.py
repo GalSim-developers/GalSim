@@ -48,7 +48,7 @@ class CelestialCoord(object):
     with, e.g.
 
             coord1950 = coord2000.precess(2000, 1950)
-            el, b = coord.getGalaxyPos()
+            el, b = coord.galactic()
 
     We don't use either of these for anything within GalSim, but I had the code to do it
     lying around, so I included it here in case someone might find it useful.
@@ -495,11 +495,11 @@ class CelestialCoord(object):
         new_coord = CelestialCoord(new_ra,new_dec)
         return new_coord
 
-    def getGalaxyPos(self, epoch=2000.):
-        """Get the galaxy longitude and latitude corresponding to this position.
+    def galactic(self, epoch=2000.):
+        """Get the longitude and latitude in galactic coordinates corresponding to this position.
 
-        It returns the longitude and latitude as a tuple (el, b).  They are each given
-        as galsim.Angle instances.
+        It returns the longitude and latitude as a tuple (el, b).  They are each given as 
+        galsim.Angle instances.
 
         The formulae are implemented in terms of the 1950 coordinates, so we need to
         precess from the current epoch to 1950.  The current epoch is assumed to be 2000
