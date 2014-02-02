@@ -81,8 +81,9 @@ class ChromaticObject(object):
         # default integrator uses midpoint rule.
         if integrator is None:
             integrator = galsim.integ.midpoint_int_image
-        # setup output image (arbitrarily using bluest wavelength in bandpass!)
-        prof0 = self.evaluateAtWavelength(bandpass.bluelim) * bandpass(bandpass.bluelim)
+        # setup output image (semi-arbitrarily using midpoint of bandpass wavelength interval)
+        middle_wavelength = 0.5 * (bandpass.bluelim + bandpass.redlim)
+        prof0 = self.evaluateAtWavelength(middle_wavelength) * bandpass(middle_wavelength)
         prof0 = prof0._fix_center(image, scale, offset, use_true_center, reverse=False)
         image = prof0._draw_setup_image(image, scale, wmult, add_to_image)
 
@@ -427,8 +428,9 @@ class ChromaticConvolution(ChromaticObject):
         # If program gets this far, the objects in objlist should be atomic (non-ChromaticSum
         # and non-ChromaticConvolution).
 
-        # setup output image (using bluest wavelength in bandpass!)
-        prof0 = self.evaluateAtWavelength(bandpass.bluelim) * bandpass(bandpass.bluelim)
+        # setup output image (semi-arbitrarily using midpoint of bandpass wavelength interval)
+        middle_wavelength = 0.5 * (bandpass.bluelim + bandpass.redlim)
+        prof0 = self.evaluateAtWavelength(middle_wavelength) * bandpass(middle_wavelength)
         prof0 = prof0._fix_center(image, scale, offset, use_true_center, reverse=False)
         image = prof0._draw_setup_image(image, scale, wmult, add_to_image)
 
@@ -457,7 +459,8 @@ class ChromaticConvolution(ChromaticObject):
         else: # did find inseparable profiles
             multiplier = 1.0
             # setup image for effective profile
-            mono_prof0 = galsim.Convolve([p.evaluateAtWavelength(bandpass.bluelim)
+            middle_wavelength = 0.5 * (bandpass.bluelim + bandpass.redlim)
+            mono_prof0 = galsim.Convolve([p.evaluateAtWavelength(middle_wavelength)
                                           for p in insep_profs])
             mono_prof0 = mono_prof0._fix_center(image=None, scale=None, offset=None,
                                                 use_true_center=True, reverse=False)
