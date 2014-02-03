@@ -645,6 +645,13 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
                 dither_x_list = list(dither_x.flatten())
                 dither_y_list = list(dither_y.flatten())
 
+            # Basic sanity check: can comment out if unnecessary.
+            #test_g1, test_g2 = ps.getShear(pos=(list(x.flatten()), list(y.flatten())),
+            #                               units = galsim.degrees,
+            #                               periodic=True, reduced=False)
+            #np.testing.assert_array_almost_equal(g1.flatten(), test_g1, decimal=13)
+            #np.testing.assert_array_almost_equal(g2.flatten(), test_g2, decimal=13)
+
             # Interpolate shears on the offset grid, with periodic interpolation.
             # Note: setting 'reduced=False' here, so as to compare g1 and g2 from original grid with
             # the interpolated g1 and g2 rather than reduced shear.
