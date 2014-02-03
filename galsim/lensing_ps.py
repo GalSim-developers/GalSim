@@ -500,6 +500,66 @@ class PowerSpectrum(object):
                     "Power function MUST return a list/array same length as input")
         return pf
 
+    def _wrap_image(self, im, border=5):
+        """
+        Utility function to wrap an image with some number of border pixels.
+        """
+        # We should throw an exception if the image is smaller than 'border', since at this point
+        # this process doesn't make sense.
+        if im.bounds.xmax - im.bounds.xmin < border:
+            raise RuntimeError("Periodic wrapping does not work with images this small!")
+        expanded_bounds = galsim.BoundsI(im.bounds.xmin-border, im.bounds.xmax+border,
+                                         im.bounds.ymin-border, im.bounds.xmax+border)
+        # Make new image with those bounds.
+        im_new = galsim.ImageD(expanded_bounds)
+        # Make the central subarray equal to what we want.
+        im_new[im.bounds] = galsim.Image(im)
+        # Set the strips around the center properly.  There are four strips around the edge, and 4
+        # corner squares that need to be filled in.  Consider turning this into some method at the
+        # C++ layer, but for now, we write it allllll out here.  Surely there must be a smarter
+        # python-y way of doing this, but I'm not clever enough to figure it out.
+        ## Strip along left-hand side
+        b1 = border-1
+        im_new[galsim.BoundsI(expanded_bounds.xmin, im.bounds.xmin-1,
+                              im.bounds.ymin, im.bounds.ymax)] = \
+                              galsim.Image(im[galsim.BoundsI(im.bounds.xmax-b1,im.bounds.xmax,
+                                                             im.bounds.ymin, im.bounds.ymax)])
+        ## Strip along right-hand side
+        im_new[galsim.BoundsI(im.bounds.xmax+1, expanded_bounds.xmax,
+                              im.bounds.ymin, im.bounds.ymax)] = \
+                              galsim.Image(im[galsim.BoundsI(im.bounds.xmin, im.bounds.xmin+b1,
+                                                             im.bounds.ymin, im.bounds.ymax)])
+        ## Strip along the bottom
+        im_new[galsim.BoundsI(im.bounds.xmin, im.bounds.xmax,
+                              expanded_bounds.ymin, im.bounds.ymin-1)] = \
+                              galsim.Image(im[galsim.BoundsI(im.bounds.xmin, im.bounds.xmax,
+                                                             im.bounds.ymax-b1, im.bounds.ymax)])
+        ## Strip along the top
+        im_new[galsim.BoundsI(im.bounds.xmin, im.bounds.xmax,
+                              im.bounds.ymax+1, expanded_bounds.ymax)] = \
+                              galsim.Image(im[galsim.BoundsI(im.bounds.xmin, im.bounds.xmax,
+                                                             im.bounds.ymin, im.bounds.ymin+b1)])
+        ## Lower-left corner
+        im_new[galsim.BoundsI(expanded_bounds.xmin, im.bounds.xmin-1,
+                              expanded_bounds.ymin, im.bounds.ymin-1)] = \
+                              galsim.Image(im[galsim.BoundsI(im.bounds.xmax-b1, im.bounds.xmax,
+                                                             im.bounds.ymax-b1, im.bounds.ymax)])
+        ## Upper-right corner
+        im_new[galsim.BoundsI(im.bounds.xmax+1, expanded_bounds.xmax,
+                              im.bounds.ymax+1, expanded_bounds.ymax)] = \
+                              galsim.Image(im[galsim.BoundsI(im.bounds.xmin, im.bounds.xmin+b1,
+                                                             im.bounds.ymin, im.bounds.ymin+b1)])
+        ## Upper-left corner
+        im_new[galsim.BoundsI(expanded_bounds.xmin, im.bounds.xmin-1,
+                              im.bounds.ymax+1, expanded_bounds.ymax)] = \
+                              galsim.Image(im[galsim.BoundsI(im.bounds.xmax-b1, im.bounds.xmax,
+                                                             im.bounds.ymin, im.bounds.ymin+b1)])
+        ## Lower-right corner
+        im_new[galsim.BoundsI(im.bounds.xmax+1, expanded_bounds.xmax,
+                              expanded_bounds.ymin, im.bounds.ymin-1)] = \
+                              galsim.Image(im[galsim.BoundsI(im.bounds.xmin, im.bounds.xmin+b1,
+                                                             im.bounds.ymax-b1, im.bounds.ymax)])
+        return im_new
 
     def getShear(self, pos, units=galsim.arcsec, reduced=True, periodic=False):
         """
@@ -579,13 +639,32 @@ class PowerSpectrum(object):
                                                                self.im_kappa.array)
             g1_r = galsim.ImageViewD(g1_r)
             g2_r = galsim.ImageViewD(g2_r)
-            # Make an SBInterpolatedImage, which will do the heavy lifting for the
-            # interpolation.
-            sbii_g1 = galsim.SBInterpolatedImage(g1_r, xInterp=xinterp, kInterp=kinterp)
-            sbii_g2 = galsim.SBInterpolatedImage(g2_r, xInterp=xinterp, kInterp=kinterp)
+            # Make an SBInterpolatedImage, which will do the heavy lifting for the interpolation.
+            # However, if we are doing wrapped interpolation then we will want to manually stick the
+            # wrapped grid bits around the edges, because otherwise the interpolant will treat
+            # everything off the edges as zero.
+            if periodic:
+                # Make an expanded bounds.  We expand by 5 (default) to be safe, though most
+                # interpolants don't need that much.
+                g1_r_new = self._wrap_image(g1_r)
+                g2_r_new = self._wrap_image(g2_r)
+
+                # Then make the SBInterpolated image.
+                sbii_g1 = galsim.SBInterpolatedImage(g1_r_new.image, xInterp=xinterp, kInterp=kinterp)
+                sbii_g2 = galsim.SBInterpolatedImage(g2_r_new.image, xInterp=xinterp, kInterp=kinterp)
+            else:
+                sbii_g1 = galsim.SBInterpolatedImage(g1_r, xInterp=xinterp, kInterp=kinterp)
+                sbii_g2 = galsim.SBInterpolatedImage(g2_r, xInterp=xinterp, kInterp=kinterp)
         else:
-            sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp=xinterp, kInterp=kinterp)
-            sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp=xinterp, kInterp=kinterp)
+            if periodic:
+                # Need to expand array here, as well.
+                g1_r_new = self._wrap_image(self.im_g1)
+                g2_r_new = self._wrap_image(self.im_g2)
+                sbii_g1 = galsim.SBInterpolatedImage(g1_r_new.image, xInterp=xinterp, kInterp=kinterp)
+                sbii_g2 = galsim.SBInterpolatedImage(g2_r_new.image, xInterp=xinterp, kInterp=kinterp)
+            else:
+                sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp=xinterp, kInterp=kinterp)
+                sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp=xinterp, kInterp=kinterp)
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.
