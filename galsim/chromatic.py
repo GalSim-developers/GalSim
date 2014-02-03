@@ -401,11 +401,9 @@ class ChromaticConvolution(ChromaticObject):
         # inseparable terms on which to do integration first, and then finish with convolution last.
 
         # Here is the logic to turn I(C(A(...))) into A(C(..., I(...)))
-        returnme = False
         for i, obj in enumerate(objlist):
             if isinstance(obj, ChromaticSum):
                 # say obj.objlist = [A,B,C], where obj is a ChromaticSum object
-                returnme = True
                 del objlist[i] # remove the add object from objlist
                 tmplist = list(objlist) # collect remaining items to be convolved with each of A,B,C
                 tmplist.append(obj.objlist[0]) # add A to this convolve list
@@ -422,8 +420,7 @@ class ChromaticConvolution(ChromaticObject):
                                         add_to_image=True, use_true_center=use_true_center,
                                         offset=offset, integrator=integrator, iimult=iimult,
                                         **kwargs)
-        if returnme:
-            return image
+                return image
 
         # If program gets this far, the objects in objlist should be atomic (non-ChromaticSum
         # and non-ChromaticConvolution).
@@ -445,7 +442,7 @@ class ChromaticConvolution(ChromaticObject):
                     sep_profs.append(obj) # The g(x,y)'s (see above)
                 else:
                     sep_profs.append(obj.gsobj) # more g(x,y)'s
-                sep_SED.append(obj.SED) # The h(lambda)'s (see above)
+                    sep_SED.append(obj.SED) # The h(lambda)'s (see above)
             else:
                 insep_profs.append(obj) # The f(x,y,lambda)'s (see above)
 

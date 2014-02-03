@@ -483,6 +483,35 @@ def test_chromatic_flux():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_double_ChromaticSum():
+    ''' Test logic section of ChromaticConvolve that splits apart ChromaticSums for the case that
+    more than one ChromaticSum's are convolved together.
+    '''
+    import time
+    t1 = time.time()
+
+    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
+    b = galsim.Chromatic(galsim.Gaussian(fwhm=2.0), bulge_SED)
+    c = galsim.Chromatic(galsim.Gaussian(fwhm=3.0), bulge_SED)
+    d = galsim.Chromatic(galsim.Gaussian(fwhm=4.0), bulge_SED)
+
+    image = galsim.ImageD(16, 16, scale=0.2)
+    obj = galsim.Convolve(a+b, c+d)
+    obj.draw(bandpass, image=image)
+
+    image_a = galsim.ImageD(16, 16, scale=0.2)
+    image_b = galsim.ImageD(16, 16, scale=0.2)
+    obj_a = galsim.Convolve(a, c+d)
+    obj_b = galsim.Convolve(b, c+d)
+    obj_a.draw(bandpass, image = image_a)
+    obj_b.draw(bandpass, image = image_b)
+    printval(image, image_a+image_b)
+
+    np.testing.assert_almost_equal(image.array, (image_a+image_b).array, 5,
+                                   err_msg="Convolving two ChromaticSums failed")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_draw_add_commutivity()
     test_ChromaticConvolution_InterpolatedImage()
@@ -491,3 +520,4 @@ if __name__ == "__main__":
     test_chromatic_seeing_moments()
     test_monochromatic_filter()
     test_chromatic_flux()
+    test_double_ChromaticSum()
