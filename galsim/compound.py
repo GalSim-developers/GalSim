@@ -44,15 +44,16 @@ def Add(*args, **kwargs):
     if len(args) == 0:
         # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
         # exception instead.
-        raise ValueError("Sum must be initialized with at least one GSObject.")
+        raise ValueError("Sum must be initialized with at least one ChromaticObject or GSObject.")
     elif len(args) == 1:
         # 1 argument.  Should be either a GSObject or a list of GSObjects
-        if isinstance(args[0], GSObject):
+        if isinstance(args[0], GSObject) or isinstance(args[0], ChromaticObject):
             args = [args[0]]
         elif isinstance(args[0], list):
             args = args[0]
         else:
-            raise TypeError("Single input argument must be a GSObject or list of them.")
+            raise TypeError("Single input argument must be a GSObject, ChromaticObject or "
+                            + "a (possibly mixed) list of them.")
     # else args is already the list of objects
 
     if any([isinstance(a, ChromaticObject) for a in args]):
@@ -138,14 +139,16 @@ def Convolve(*args, **kwargs):
     if len(args) == 0:
         # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
         # exception instead.
-        raise ValueError("Convolution must be initialized with at least one GSObject.")
+        raise ValueError("Convolution must be initialized with at least one GSObject "
+                         + "or ChromaticObject.")
     elif len(args) == 1:
-        if isinstance(args[0], GSObject):
+        if isinstance(args[0], GSObject) or isinstance(args[0], ChromaticObject):
             args = [args[0]]
         elif isinstance(args[0], list):
             args = args[0]
         else:
-            raise TypeError("Single input argument must be a GSObject or list of them.")
+            raise TypeError("Single input argument must be a GSObject, ChromaticObject, "
+                            + "or a (possibly mixed) list of them.")
     # else args is already the list of objects
 
     if any([isinstance(a, ChromaticObject) for a in args]):
@@ -312,8 +315,8 @@ class Deconvolve(GSObject):
     """A class for deconvolving a GSObject.
 
     The Deconvolve class represents a deconvolution kernel.  Note that the Deconvolve class, or
-    compound objects (Sum, Convolve) that include a Deconvolve as one of the components, cannot be
-    photon-shot using the drawShoot method.
+    compound objects (Sum, Convolution) that include a Deconvolve as one of the components, cannot
+    be photon-shot using the drawShoot method.
 
     You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
     help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
