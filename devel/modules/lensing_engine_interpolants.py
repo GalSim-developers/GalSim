@@ -529,7 +529,7 @@ def nCutoff(interpolant):
         raise RuntimeError("No cutoff scheme was defined for interpolant %s!"%interpolant)
 
 def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefix,
-    edge_cutoff=False):
+         edge_cutoff=False, periodic=False):
     """Main routine to drive all tests.
 
     Arguments:
@@ -552,6 +552,9 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
                              motivation for doing so would be to check for effects due to the edge
                              pixels being affected most by interpolation.
                              (default=False)
+
+        periodic ----------- Use periodic interpolation when getting the shears at the dithered grid
+                             positions? (default=False)
     """
     # Get basic grid information
     grid_spacing = grid_size / ngrid
@@ -648,7 +651,7 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
             # Basic sanity check: can comment out if unnecessary.
             #test_g1, test_g2 = ps.getShear(pos=(list(x.flatten()), list(y.flatten())),
             #                               units = galsim.degrees,
-            #                               periodic=True, reduced=False)
+            #                               periodic=periodic, reduced=False)
             #np.testing.assert_array_almost_equal(g1.flatten(), test_g1, decimal=13)
             #np.testing.assert_array_almost_equal(g2.flatten(), test_g2, decimal=13)
 
@@ -657,7 +660,7 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
             # the interpolated g1 and g2 rather than reduced shear.
             interpolated_g1, interpolated_g2 = ps.getShear(pos=(dither_x_list,dither_y_list),
                                                            units=galsim.degrees,
-                                                           periodic=True, reduced=False)
+                                                           periodic=periodic, reduced=False)
             # And put back into the format that the PowerSpectrumEstimator will want.
             interpolated_g1 = np.array(interpolated_g1).reshape((ngrid, ngrid))
             interpolated_g2 = np.array(interpolated_g2).reshape((ngrid, ngrid))
@@ -826,6 +829,8 @@ if __name__ == "__main__":
                       dest='cf_plot_prefix')
     parser.add_option('--edge_cutoff', dest="edge_cutoff", action='store_true', default=False,
                       help='Cut off edges of grid that are affected by interpolation')
+    parser.add_option('--periodic', dest="periodic", action='store_true', default=False,
+                      help='Do interpolation assuming a periodic grid')
     opts, args = parser.parse_args()
     # Make directories if necessary.
     dir = os.path.dirname(opts.ps_plot_prefix)
@@ -840,4 +845,5 @@ if __name__ == "__main__":
          n_output_bins=opts.n_output_bins,
          ps_plot_prefix=opts.ps_plot_prefix,
          cf_plot_prefix=opts.cf_plot_prefix,
-         edge_cutoff=opts.edge_cutoff)
+         edge_cutoff=opts.edge_cutoff,
+         periodic=opts.periodic)
