@@ -50,11 +50,12 @@ class Bandpass(object):
     def truncate(self, relative_throughput=None, blue_limit=None, red_limit=None):
         """ Return a bandpass with its wavelength range truncated.
 
-        @param   blue_limit   Truncate blue side of bandpass here.
-        @param   red_limit    Truncate red side of bandpass here.
-        @param   relative_throughput     Truncate leading and trailing wavelength ranges where the
-                                         relative throughput is less than this amount.  Do not
-                                         remove any intermediate wavelength ranges.
+        @param blue_limit             Truncate blue side of bandpass here.
+        @param red_limit              Truncate red side of bandpass here.
+        @param relative_throughput    Truncate leading and trailing wavelength ranges where the
+                                      relative throughput is less than this amount.  Do not
+                                      remove any intermediate wavelength ranges.
+        @returns   The truncated Bandpass.
         """
         if blue_limit is None:
             blue_limit = self.blue_limit
@@ -67,3 +68,18 @@ class Bandpass(object):
             red_limit = min([max(self.wave[w]), red_limit])
         w = (self.wave >= blue_limit) & (self.wave <= red_limit)
         return Bandpass(self.wave[w], self.throughput[w])
+
+    def thin(self, step):
+        """ Return a Bandpass with its tabulated wavelengths and throughputs thinned by only keeping
+        every `step`th index.
+
+        @param step     Factor by which to thin the tabulated Bandpass wavelength and throughput
+                        arrays.
+        @returns  The thinned Bandpass.
+        """
+        wave = self.wave[::step]
+        throughput = self.throughput[::step]
+        # maintain the same red_limit, even if it breaks the step size a bit.
+        if throughput[-1] != self.throughput[-1]:
+            throughput.append(self.throughput[-1])
+        return Bandpass(wave, throughput)
