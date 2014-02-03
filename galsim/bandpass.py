@@ -48,13 +48,13 @@ class Bandpass(object):
         return self.interp(wave)
 
     def truncate(self, relative_throughput=None, blue_limit=None, red_limit=None):
-        """ Truncate filter wavelength range.
+        """ Return a bandpass with its wavelength range truncated.
 
         @param   blue_limit   Truncate blue side of bandpass here.
         @param   red_limit    Truncate red side of bandpass here.
         @param   relative_throughput     Truncate leading and trailing wavelength ranges where the
-                                         throughput is less than this amount.  Do not remove any
-                                         intermediate wavelength ranges.
+                                         relative throughput is less than this amount.  Do not
+                                         remove any intermediate wavelength ranges.
         """
         if blue_limit is None:
             blue_limit = self.blue_limit
@@ -66,8 +66,4 @@ class Bandpass(object):
             blue_limit = max([min(self.wave[w]), blue_limit])
             red_limit = min([max(self.wave[w]), red_limit])
         w = (self.wave >= blue_limit) & (self.wave <= red_limit)
-        self.wave = self.wave[w]
-        self.throughput = self.throughput[w]
-        self.blue_limit = self.wave[0]
-        self.red_limit = self.wave[-1]
-        self.interp = galsim.LookupTable(self.wave, self.throughput)
+        return Bandpass(self.wave[w], self.throughput[w])

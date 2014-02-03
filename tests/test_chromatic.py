@@ -62,7 +62,7 @@ shear_g2 = 0.02
 # load a filter
 filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
 bandpass = galsim.Bandpass(filter_wave, filter_throughput)
-bandpass.truncate(relative_throughput=0.01)
+bandpass = bandpass.truncate(relative_throughput=0.01)
 
 # load some spectra
 Egal_wave, Egal_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_E_ext.sed')).T

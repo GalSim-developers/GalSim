@@ -64,7 +64,7 @@ disk_SED.setNormalization(base_wavelength=500.0, normalization=0.3)
 
 filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
 bandpass = galsim.Bandpass(filter_wave, filter_throughput)
-bandpass.truncate(relative_throughput=0.001)
+bandpass = bandpass.truncate(relative_throughput=0.001)
 
 def silentgetmoments(image1):
     xgrid, ygrid = np.meshgrid(np.arange(image1.array.shape[1]) + image1.getXMin(),
