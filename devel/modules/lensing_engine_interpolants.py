@@ -21,13 +21,13 @@ interpolant_list = ['linear', 'cubic', 'quintic', 'nearest']
 # Define shear grid
 grid_size = 10. # degrees
 ngrid = 100 # grid points in nominal grid
-kmin_factor = 3 # factor by which to have the lensing engine internally expand the grid, to get
-                # large-scale shear correlations.
 # Define shear power spectrum file
 pk_file = os.path.join('..','..','examples','data','cosmo-fid.zmed1.00_smoothed.out')
 # Define files for PS / corr func.
 tmp_cf_file = 'tmp.cf.dat'
 # Set defaults for command-line arguments
+default_kmin_factor = 3 # factor by which to have the lensing engine internally expand the grid, to
+                        # get large-scale shear correlations.
 ## grid offsets: 'random' (i.e., random sub-pixel amounts) or a specific fraction of a pixel
 default_dithering = 'random'
 ## number of realizations to run.
@@ -528,7 +528,7 @@ def nCutoff(interpolant):
     except KeyError:
         raise RuntimeError("No cutoff scheme was defined for interpolant %s!"%interpolant)
 
-def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefix,
+def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, cf_plot_prefix,
          edge_cutoff=False, periodic=False):
     """Main routine to drive all tests.
 
@@ -543,6 +543,9 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
                              to determine the x, y offsets for each realization.
 
         n_output_bins ------ Number of bins for calculation of 2-point functions.
+
+        kmin_factor -------- Factor by which to multiply the native kmin of the grid (as an argument
+                             to the lensing engine).  Default: 3.
 
         ps_plot_prefix ----- Prefix to use for power-spectrum outputs.
 
@@ -817,6 +820,10 @@ if __name__ == "__main__":
                       '(default: %i)'%default_n_output_bins,
                       default=default_n_output_bins, type=int,
                       dest='n_output_bins')
+    parser.add_option('--kmin_factor',
+                      help='Factor by which to multiply kmin (default: %i)'%default_kmin_factor,
+                      default=default_kmin_factor, type=int,
+                      dest='kmin_factor')
     parser.add_option('--ps_plot_prefix',
                       help='Prefix for output power spectrum plots '
                       '(default: %s)'%default_ps_plot_prefix,
@@ -843,6 +850,7 @@ if __name__ == "__main__":
     main(n_realizations=opts.n_realizations,
          dithering=opts.dithering,
          n_output_bins=opts.n_output_bins,
+         kmin_factor=opts.kmin_factor,
          ps_plot_prefix=opts.ps_plot_prefix,
          cf_plot_prefix=opts.cf_plot_prefix,
          edge_cutoff=opts.edge_cutoff,
