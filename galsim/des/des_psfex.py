@@ -40,9 +40,9 @@ class DES_PSFEx(object):
         
         ...
 
-        pos = galsim.PositionD(image_x, image_y)  # position in pixels on the image
-                                                  # NOT in arcsec on the sky!
-        psf = des_psfex.getPSF(pos, pixel_scale=0.27)
+        image_pos = galsim.PositionD(image_x, image_y)  # position in pixels on the image
+                                                        # NOT in arcsec on the sky!
+        psf = des_psfex.getPSF(image_pos, pixel_scale=0.27)
 
     Note that the returned psf here already includes the pixel.  This is what is sometimes
     called an "effective PSF".  Thus, you should not convolve by the pixel profile again
@@ -193,7 +193,7 @@ class DES_PSFEx(object):
             return None
 
     def getPSF(self, image_pos, gsparams=None):
-        """Returns the PSF at position pos
+        """Returns the PSF at position image_pos
 
         @param image_pos    The position in image coordinates at which to build the PSF.
         @param gsparams     (Optional) A GSParams instance to pass to the constructed GSObject.
