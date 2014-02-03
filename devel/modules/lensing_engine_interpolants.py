@@ -249,7 +249,7 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
         # convert from actual distances to "interpolation units"
         try:
             theor_ratio = (ft_interp(u, interpolant))**2
-            ax.plot(fine_ell, theor_ratio, '--', color='g', label='Theory prediction')
+            ax.plot(fine_ell, theor_ratio, '--', color='g', label='|FT interpolant|^2')
         except:
             print "Could not get theoretical prediction for interpolant %s"%interpolant
         ax.plot(kmax_x_markers, np.array((np.min(ratio), np.max(ratio))), '--',
@@ -646,9 +646,11 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
                 dither_y_list = list(dither_y.flatten())
 
             # Interpolate shears on the offset grid, with periodic interpolation.
+            # Note: setting 'reduced=False' here, so as to compare g1 and g2 from original grid with
+            # the interpolated g1 and g2 rather than reduced shear.
             interpolated_g1, interpolated_g2 = ps.getShear(pos=(dither_x_list,dither_y_list),
                                                            units=galsim.degrees,
-                                                           periodic=True)
+                                                           periodic=True, reduced=False)
             # And put back into the format that the PowerSpectrumEstimator will want.
             interpolated_g1 = np.array(interpolated_g1).reshape((ngrid, ngrid))
             interpolated_g2 = np.array(interpolated_g2).reshape((ngrid, ngrid))
@@ -692,6 +694,7 @@ def main(n_realizations, dithering, n_output_bins, ps_plot_prefix, cf_plot_prefi
             else:
                 # Just store the grid size and other quantities that we actually use.
                 ngrid_use = ngrid
+                grid_size_use = grid_size
                 x_use = x
                 y_use = y
                 dither_x_use = dither_x
