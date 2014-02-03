@@ -65,10 +65,10 @@ def get_refraction(wave, zenith_angle, **kwargs):
     radians, even though the apparent zenith angle technically decreases due to this effect.
 
     @param wave          Wavelength array in nanometers
-    @param zenith_angle  as a galsim.AngleUnit
+    @param zenith_angle  as a galsim.Angle
     @param kwargs        Keyword arguments to pass to air_refractive_index() to override default
                          pressure, temperature, and/or H2O_pressure.
-    @returns             Absolute value of change in zenith angle as a galsim.AngleUnit
+    @returns             Absolute value of change in zenith angle as a galsim.Angle
     """
     n_squared = air_refractive_index(wave, **kwargs)**2
     r0 = (n_squared - 1.0) / (2.0 * n_squared)

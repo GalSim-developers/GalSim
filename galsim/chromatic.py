@@ -366,10 +366,10 @@ class ChromaticConvolution(ChromaticObject):
 
         # Now split up any `ChromaticSum`s:
         # This is the tricky part.  Some notation first:
-        #     I(f(x,y,lambda)) denotes the integral over wavelength of a chromatic surface brightness
+        #     int(f(x,y,lambda)) denotes the integral over wavelength of chromatic surface brightness
         #         profile f(x,y,lambda).
-        #     C(f1, f2) denotes the convolution of surface brightness profiles f1 & f2.
-        #     A(f1, f2) denotes the addition of surface brightness profiles f1 & f2.
+        #     (f1 * f2) denotes the convolution of surface brightness profiles f1 & f2.
+        #     (f1 + f2) denotes the addition of surface brightness profiles f1 & f2.
         #
         # In general, chromatic s.b. profiles can be classified as either separable or inseparable,
         # depending on whether they can be factored into spatial and spectral components or not.
@@ -387,11 +387,11 @@ class ChromaticConvolution(ChromaticObject):
         # convolve with.
         # The formula for this might look like:
         #
-        # img = I(C(A(bulge, disk), PSF, pix))
-        #     = I(C(A(g1*h1, g2*h2), f3, g4))                # note pix is lambda-independent
-        #     = I(A(C(g1*h1, f3, g4)), C(A(g2*h2, f3, g4)))  # distribute the A over the C
-        #     = A(I(C(g1*h1, f3, g4)), I(C(g2*h2, f3, g4)))  # distribute the A over the I
-        #     = A(C(g1,I(h1*f3),g4), C(g2,I(h2*f3),g4))      # move lambda-indep terms out of I
+        # img = int((bulge + disk) * PSF * pix)
+        #     = int((g1 h1 + g2 h2) * f3 * g4)               # note pix is lambda-independent
+        #     = int(g1 h1 * f3 * g4 + g2 h2 * f3 * g4)       # distribute the + over the *
+        #     = int(g1 h1 * f3 * g4) + int(g2 h2 * f3 * g4)  # distribute the + over the int
+        #     = g1 * g4 * int(h1 f3) + g2 * g4 * int(h2 f3)  # move lambda-indep terms out of int
         #
         # The result is that the integral is now inside the convolution, meaning we only have to
         # compute two convolutions instead of a convolution for each wavelength at which we evaluate
@@ -400,7 +400,7 @@ class ChromaticConvolution(ChromaticObject):
         # In general, we make effective profiles by splitting up `ChromaticSum`s and collecting the
         # inseparable terms on which to do integration first, and then finish with convolution last.
 
-        # Here is the logic to turn I(C(A(...))) into A(C(..., I(...)))
+        # Here is the logic to turn int((g1 h1 + g2 h2) * f3) -> g1 * int(h1 f3) + g2 * int(h2 f3)
         for i, obj in enumerate(objlist):
             if isinstance(obj, ChromaticSum):
                 # say obj.objlist = [A,B,C], where obj is a ChromaticSum object
@@ -576,7 +576,7 @@ class ChromaticAtmosphere(ChromaticShiftAndDilate):
         """
         @param base_obj           Fiducial PSF, equal to the monochromatic PSF at base_wavelength
         @param base_wavelength    Wavelength represented by the fiducial PSF.
-        @param zenith_angle       Angle from object to zenith, expressed as a galsim.AngleUnit
+        @param zenith_angle       Angle from object to zenith, expressed as a galsim.Angle
         @param alpha              Power law index for wavelength-dependent seeing.  Default of -0.2
                                   is the prediction for Kolmogorov turbulence.
         @param position_angle     Angle pointing toward zenith, measured from "up" through "right".
