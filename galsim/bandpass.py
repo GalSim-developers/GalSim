@@ -36,8 +36,8 @@ class Bandpass(object):
         """
         self.wave = numpy.array(wave)
         self.throughput = numpy.array(throughput)
-        self.bluelim = self.wave[0]
-        self.redlim = self.wave[-1]
+        self.blue_limit = self.wave[0]
+        self.red_limit = self.wave[-1]
         self.interp = galsim.LookupTable(wave, throughput)
 
     def __call__(self, wave):
@@ -47,27 +47,27 @@ class Bandpass(object):
         """
         return self.interp(wave)
 
-    def truncate(self, relative_throughput=None, bluelim=None, redlim=None):
+    def truncate(self, relative_throughput=None, blue_limit=None, red_limit=None):
         """ Truncate filter wavelength range.
 
-        @param   bluelim   Truncate blue side of bandpass here.
-        @param   redlim    Truncate red side of bandpass here.
+        @param   blue_limit   Truncate blue side of bandpass here.
+        @param   red_limit    Truncate red side of bandpass here.
         @param   relative_throughput     Truncate leading and trailing wavelength ranges where the
                                          throughput is less than this amount.  Do not remove any
                                          intermediate wavelength ranges.
         """
-        if bluelim is None:
-            bluelim = self.bluelim
-        if redlim is None:
-            redlim = self.redlim
+        if blue_limit is None:
+            blue_limit = self.blue_limit
+        if red_limit is None:
+            red_limit = self.red_limit
         if relative_throughput is not None:
             mx = self.throughput.max()
             w = (self.throughput > mx*relative_throughput).nonzero()
-            bluelim = max([min(self.wave[w]), bluelim])
-            redlim = min([max(self.wave[w]), redlim])
-        w = (self.wave >= bluelim) & (self.wave <= redlim)
+            blue_limit = max([min(self.wave[w]), blue_limit])
+            red_limit = min([max(self.wave[w]), red_limit])
+        w = (self.wave >= blue_limit) & (self.wave <= red_limit)
         self.wave = self.wave[w]
         self.throughput = self.throughput[w]
-        self.bluelim = self.wave[0]
-        self.redlim = self.wave[-1]
+        self.blue_limit = self.wave[0]
+        self.red_limit = self.wave[-1]
         self.interp = galsim.LookupTable(self.wave, self.throughput)

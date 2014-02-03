@@ -100,8 +100,8 @@ def test_draw_add_commutivity():
     # make effective PSF with Riemann sum midpoint rule
     mPSFs = [] # list of flux-scaled monochromatic PSFs
     N = 250
-    h = (bandpass.redlim * 1.0 - bandpass.bluelim) / N
-    ws = [bandpass.bluelim + h*(i+0.5) for i in range(N)]
+    h = (bandpass.red_limit * 1.0 - bandpass.blue_limit) / N
+    ws = [bandpass.blue_limit + h*(i+0.5) for i in range(N)]
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
     dilate_fn = lambda w:(w/500.0)**(-0.2)
     for w in ws:
@@ -145,7 +145,7 @@ def test_draw_add_commutivity():
 
     # comparison
     analytic_flux = galsim.integ.int1d(lambda w: bulge_SED(w) * bandpass(w),
-                                       bandpass.bluelim, bandpass.redlim)
+                                       bandpass.blue_limit, bandpass.red_limit)
     peak1 = chromatic_image.array.max()
 
     printval(GS_image, chromatic_image)
@@ -288,13 +288,13 @@ def test_dcr_moments():
     # analytic first moment differences
     R = lambda w:(galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec
     numR1 = galsim.integ.int1d(lambda w: R(w) * bandpass(w) * bulge_SED(w),
-                               bandpass.bluelim, bandpass.redlim)
+                               bandpass.blue_limit, bandpass.red_limit)
     numR2 = galsim.integ.int1d(lambda w: R(w) * bandpass(w) * disk_SED(w),
-                               bandpass.bluelim, bandpass.redlim)
+                               bandpass.blue_limit, bandpass.red_limit)
     den1 = galsim.integ.int1d((lambda w:bandpass(w) * bulge_SED(w)),
-                              bandpass.bluelim, bandpass.redlim)
+                              bandpass.blue_limit, bandpass.red_limit)
     den2 = galsim.integ.int1d((lambda w:bandpass(w) * disk_SED(w)),
-                              bandpass.bluelim, bandpass.redlim)
+                              bandpass.blue_limit, bandpass.red_limit)
 
     R1 = numR1/den1
     R2 = numR2/den2
@@ -304,9 +304,9 @@ def test_dcr_moments():
     V1_kernel = lambda w:(R(w) - R1)**2
     V2_kernel = lambda w:(R(w) - R2)**2
     numV1 = galsim.integ.int1d(lambda w:V1_kernel(w) * bandpass(w) * bulge_SED(w),
-                               bandpass.bluelim, bandpass.redlim)
+                               bandpass.blue_limit, bandpass.red_limit)
     numV2 = galsim.integ.int1d(lambda w:V2_kernel(w) * bandpass(w) * disk_SED(w),
-                               bandpass.bluelim, bandpass.redlim)
+                               bandpass.blue_limit, bandpass.red_limit)
     V1 = numV1/den1
     V2 = numV2/den2
     dV_analytic = V1 - V2
@@ -361,13 +361,13 @@ def test_chromatic_seeing_moments():
 
         # analytic moment differences
         num1 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * bandpass(w) * bulge_SED(w),
-                                  bandpass.bluelim, bandpass.redlim)
+                                  bandpass.blue_limit, bandpass.red_limit)
         num2 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * bandpass(w) * disk_SED(w),
-                                  bandpass.bluelim, bandpass.redlim)
+                                  bandpass.blue_limit, bandpass.red_limit)
         den1 = galsim.integ.int1d(lambda w:bandpass(w) * bulge_SED(w),
-                                  bandpass.bluelim, bandpass.redlim)
+                                  bandpass.blue_limit, bandpass.red_limit)
         den2 = galsim.integ.int1d(lambda w:bandpass(w) * disk_SED(w),
-                                  bandpass.bluelim, bandpass.redlim)
+                                  bandpass.blue_limit, bandpass.red_limit)
 
         r2_1 = num1/den1
         r2_2 = num2/den2
@@ -461,7 +461,7 @@ def test_chromatic_flux():
 
     # analytic integral...
     analytic_flux = galsim.integ.int1d(lambda w: bulge_SED(w) * bandpass(w),
-                                       bandpass.bluelim, bandpass.redlim)
+                                       bandpass.blue_limit, bandpass.red_limit)
 
     printval(image, image2)
     np.testing.assert_almost_equal(ChromaticObject_flux/analytic_flux, 1.0, 4,

@@ -93,7 +93,7 @@ def compare_image_integrators():
 
     # truth flux
     target = galsim.integ.int1d(lambda w:disk_SED(w) * bandpass(w),
-                                bandpass.bluelim, bandpass.redlim)
+                                bandpass.blue_limit, bandpass.red_limit)
     print 'target'
     print '        {:14.11f}'.format(target)
 

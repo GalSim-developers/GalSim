@@ -98,16 +98,16 @@ class SED(object):
         # These ensure that SED addition is commutative.
 
         # Find overlapping wavelength interval
-        bluelim = max([self.wave[0] * (1.0 + self.redshift),
+        blue_limit = max([self.wave[0] * (1.0 + self.redshift),
                        other.wave[0] * (1.0 + other.redshift)])
-        redlim = min([self.wave[-1] * (1.0 + self.redshift),
+        red_limit = min([self.wave[-1] * (1.0 + self.redshift),
                       other.wave[-1] * (1.0 + other.redshift)])
         # Unionize wavelengths
         wave = set(self.wave * (1.0 + self.redshift)).union(other.wave * (1.0 + other.redshift))
         wave = numpy.array(list(wave))
         wave.sort()
         # Clip to overlap region
-        wave = wave[(wave >= bluelim) & (wave <= redlim)]
+        wave = wave[(wave >= blue_limit) & (wave <= red_limit)]
         # Evaluate sum on new wavelength array
         fphotons = self(wave) + other(wave)
 
@@ -161,4 +161,5 @@ class SED(object):
         @returns   Flux through bandpass.
         """
         interp = self._get_interp()
-        return galsim.integ.int1d(lambda w:bandpass(w)*interp(w), bandpass.bluelim, bandpass.redlim)
+        return galsim.integ.int1d(lambda w:bandpass(w)*interp(w),
+                                  bandpass.blue_limit, bandpass.red_limit)
