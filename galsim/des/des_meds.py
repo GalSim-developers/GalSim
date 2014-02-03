@@ -51,7 +51,7 @@ class MultiExposureObject(object):
         self.images             list of images of the object (GalSim Images)
         self.weights            list of weight maps (GalSim Images)
         self.segs               list of segmentation masks (GalSim Images)
-        self.wcs                list of WCS transformation (GalSim AffineTransforms)
+        self.wcs                list of WCS transformations (GalSim AffineTransforms)
         self.n_cutouts          number of exposures
         self.box_size           size of each exposure image
 
@@ -60,7 +60,7 @@ class MultiExposureObject(object):
     @param weights              list of weight maps (GalSim Images)
     @param badpix               list of bad pixel masks (GalSim Images)
     @param segs                 list of segmentation maps (GalSim Images)
-    @param wcs                  list of WCS transformation (GalSim AffineTransforms)
+    @param wcs                  list of WCS transformations (GalSim AffineTransforms)
     @param id                   galaxy id
 
     Images, weights and segs have to be square numpy arrays with size in
