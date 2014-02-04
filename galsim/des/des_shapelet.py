@@ -31,14 +31,20 @@ class DES_Shapelet(object):
     These are usually stored as *_fitpsf.fits files, although there is also an ASCII
     version stored as *_fitpsf.dat.
 
+    The shapelet PSFs are built as part of the WL portion of the DES pipeline.  They measure
+    a shapelet decomposition of each star and interpolate the shapelet coefficients over the 
+    image positions.
+
+    Unlike PSFEx, these PSF models are built directly in world coordinates.  The shapelets know
+    about the WCS, so they are able to fit the shapelet model directly in terms of arcsec.
+    Thus, the getPSF function always returns a profile in world coordinates.
+
     Typical usage:
         
         des_shapelet = galsim.des.DES_Shapelet(fitpsf_file_name)
-        
-        ...
-
-        psf = des_shapelet.getPSF(image_pos)    # position in image coordinates
-                                                # NOT world coordinates!
+        image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
+                                                          # NOT in arcsec on the sky!
+        psf = des_shapelet.getPSF(image_pos)   # profile is in world coordinates
 
     Note that the returned psf here already includes the pixel.  This is what is sometimes
     called an "effective PSF".  Thus, you should not convolve by the pixel profile again
@@ -165,7 +171,7 @@ class DES_Shapelet(object):
         return self.psf_order
 
     def getPSF(self, image_pos, gsparams=None):
-        """Returns the PSF at position pos
+        """Returns the PSF at position image_pos
 
         @param image_pos    The position in pixel units for which to build the PSF.
         @param gsparams     (Optional) A GSParams instance to pass to the constructed GSObject.

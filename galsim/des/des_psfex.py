@@ -34,15 +34,49 @@ class DES_PSFEx(object):
     """Class that handles DES files describing interpolated principal component images
     of the PSF.  These are usually stored as *_psfcat.psf files.
 
-    Typical usage:
-        
-        des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name, image_file_name)
-        
-        ...
+    PSFEx is software written by Emmanuel Bertin.  If you want more detail about it, please
+    check out the web site:
 
-        image_pos = galsim.PositionD(image_x, image_y)  # position in pixels on the image
-                                                        # NOT in arcsec on the sky!
-        psf = des_psfex.getPSF(image_pos, pixel_scale=0.27)
+        http://www.astromatic.net/software/psfex
+
+    It builds PSF objects from images of stars in a given exposure, finds a reasonable basis
+    set to describe those images, and then fits the coefficient of these bases as a function
+    of the (x,y) position on the image.
+
+    Note that while the interpolation is done in image coordinates, GalSim usually deals with
+    object profiles in world coordinates.  However, PSFEx does not consider the WCS of the 
+    image when building its bases.  The bases are built in image coordinates.  So there are 
+    two options to get GalSim to handle this difference.
+    
+    1. Ignore the WCS of the original image.  In this case, the *.psf files have all the
+       information you need:
+
+           des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name)
+           image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
+                                                             # NOT in arcsec on the sky!
+           psf = des_psfex.getPSF(image_pos)      # profile is in image coordinates
+
+       The psf profile that is returned will be in image coordinates.  Therefore, it should be 
+       drawn onto an image with no wcs.  (Or equivalently, one with `scale = 1`.)  If you want 
+       to use this to convolve a galaxy profile, you would want to either project the galaxy
+       (typically constructed in world coordinates) to the correct image coordinates or project
+       the PSF up into world coordinates.
+
+    2. Build the PSF in world coordinates directly.  The DES_PSFEx constructor can take an 
+       extra argument, either `image_file_name` or `wcs`, to tell GalSim what WCS to use for 
+       the coversion between image and world coordinates.  The former option is the name of 
+       the file from which to read the WCS, which will often be more convenient, but you can
+       also just pass in a WCS object directly.
+
+           des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name, image_file_name)
+           image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
+                                                             # NOT in arcsec on the sky!
+           psf = des_psfex.getPSF(image_pos)      # profile is in world coordinates
+
+       This time the psf profile that is returned will already be in world coordinates as 
+       GalSim normally expects, so you can use it in the normal ways.  If you want to draw it
+       (or a convolved object) onto an image with the original WCS at that location, you can use
+       `des_psfex.getLocalWCS(image_pos)` for the local wcs at the location of the PSF.
 
     Note that the returned psf here already includes the pixel.  This is what is sometimes
     called an "effective PSF".  Thus, you should not convolve by the pixel profile again
@@ -52,10 +86,12 @@ class DES_PSFEx(object):
     @param image_file_name The name of the fits file of the original image (needed for the
                            WCS information in the header).  If unavailable, you may omit this
                            (or use None), but then the returned profiles will be in image
-                           coordinates, not world coordinates.  (Default `image_file_name=None`)
+                           coordinates, not world coordinates.  (Default `image_file_name = None`)
+    @param wcs             Optional way to provide the WCS if you already have it loaded from the
+                           image file. (Default `wcs = None`)
     @param dir             Optionally a directory name can be provided if the file_name does not 
                            already include it.  (The image file is assumed to be in the same
-                           directory.) (Default `dir=None`)
+                           directory.) (Default `dir = None`)
     """
     # For config, image_file_name is required, since that always works in world coordinates.
     _req_params = { 'file_name' : str , 'image_file_name' : str }
@@ -64,7 +100,7 @@ class DES_PSFEx(object):
     _takes_rng = False
     _takes_logger = False
 
-    def __init__(self, file_name, image_file_name=None, dir=None):
+    def __init__(self, file_name, image_file_name=None, wcs=None, dir=None):
 
         if dir:
             import os
@@ -72,7 +108,11 @@ class DES_PSFEx(object):
             image_file_name = os.path.join(dir,image_file_name)
         self.file_name = file_name
         if image_file_name:
+            if wcs is not None:
+                raise AttributeError("Cannot provide both image_file_name and wcs")
             self.wcs = galsim.GSFitsWCS(image_file_name)
+        elif wcs:
+            self.wcs = wcs
         else:
             self.wcs = None
         self.read()
@@ -282,6 +322,9 @@ def BuildDES_PSFEx(config, key, base, ignore, gsparams, logger):
     #psf = des_psfex.getPSF(image_pos, gsparams=gsparams)
     # Because of serialization issues, the above call doesn't work.  So we need to 
     # repeat the internals of getPSF here.
+    # Also, this is why we have getSampleScale and getLocalWCS.  The multiprocessing.managers
+    # stuff only makes available methods of classes that are proxied, not all the attributes.
+    # So this is the only way to access these attributes.
     im = galsim.Image(des_psfex.getPSFArray(image_pos))
     psf = galsim.InterpolatedImage(im, scale=des_psfex.getSampleScale(), flux=1, 
                                    x_interpolant=galsim.Lanczos(3), gsparams=gsparams)
