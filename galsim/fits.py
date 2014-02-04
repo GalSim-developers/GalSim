@@ -420,7 +420,13 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
     The details of how the images are written to file depends on the arguments.  Unlike for 
     writeMulti, when writing a data cube it is necessary that each Image in `image_list` has the 
     same size `(nx, ny)`.  No check is made to confirm that all images have the same origin and 
-    pixel scale.
+    pixel scale (or WCS).  
+    
+    In fact, the WCS of the first image is the one that gets put into the FITS header (since only 
+    one WCS can be put into a FITS header).  Thus, if the images have different WCS functions,
+    only the first one will be rendered correctly by plotting programs such as ds9.  The FITS 
+    standard does not support any way to have the various images in a data cube to have different
+    WCS solutions.
 
     @param image_list   The `image_list` can also be either an array of NumPy arrays or a 3d NumPy
                         array, in which case this is written to the fits file directly.  In the 
