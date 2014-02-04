@@ -25,61 +25,103 @@ import numpy
 import galsim
 
 class Bandpass(object):
-    """Very simple Bandpass filter object.  This object is callable, returning dimensionless
-    throughput as a function of wavelength in nanometers.
-    """
-    def __init__(self, wave, throughput):
-        """ Create a bandpass filter object.
+    def __init__(self, throughput, blue_limit=None, red_limit=None):
+        """Very simple Bandpass filter object.  This object is callable, returning dimensionless
+        throughput as a function of wavelength in nanometers.
 
-        @param wave          Wavelength array in nanometers.
-        @param throughput    Congruent dimensionless throughput array.
+        The input parameter, throughput, may be one of several possible forms:
+        1. a regular python function (or an object that acts like a function)
+        2. a galsim.LookupTable
+        3. a file from which a LookupTable can be read in
+        4. a string which can be evaluated into a function of `wave`
+           via `eval('lambda wave : '+throughput)
+           e.g. throughput = '0.8 + 0.2 * (wave-800)`
+
+        The argument of the function will be the wavelength in nanometers, and the output should be
+        the dimensionless throughput at that wavelength.  (Note we use wave rather than lambda,
+        since lambda is a python reserved word.)
+
+        @param throughput    Function defining the throughput at each wavelength.  See above for
+                             valid options for this parameter.
+        @param blue_limit    Hard cut off of bandpass on the blue side.  This is optional if the
+                             throughput is a LookupTable or a file, but is required if the
+                             throughput is a function.
+        @param red_limit     Hard cut off of bandpass on the red side.  This is optional if the
+                             throughput is a LookupTable or a file, but is required if the
+                             throughput is a function.
         """
-        self.wave = numpy.array(wave)
-        self.throughput = numpy.array(throughput)
-        self.blue_limit = self.wave[0]
-        self.red_limit = self.wave[-1]
-        self.interp = galsim.LookupTable(wave, throughput)
+        tp = throughput  # For brevity within this function
+        if isinstance(tp, str):
+            import os
+            if os.path.isfile(tp):
+                tp = galsim.LookupTable(file=tp)
+            else:
+                tp = eval('lambda wave : ' + tp)
+        if blue_limit is None:
+            if not isinstance(tp, galsim.LookupTable):
+                raise AttributeError("blue_limit is required if throughput is not a LookupTable.")
+            blue_limit = tp.x_min
+        if red_limit is None:
+            if not isinstance(tp, galsim.LookupTable):
+                raise AttributeError("red_limit is required if throughput is not a LookupTable.")
+            red_limit = tp.x_max
+        self.func = tp
+        self.blue_limit = blue_limit
+        self.red_limit = red_limit
 
     def __call__(self, wave):
         """ Return dimensionless throughput of bandpass at given wavelength in nanometers.
         @param wave   Wavelength in nanometers.
         @returns      Dimensionless throughput.
         """
-        return self.interp(wave)
+        return self.func(wave)
 
     def truncate(self, relative_throughput=None, blue_limit=None, red_limit=None):
         """ Return a bandpass with its wavelength range truncated.
 
         @param blue_limit             Truncate blue side of bandpass here.
         @param red_limit              Truncate red side of bandpass here.
-        @param relative_throughput    Truncate leading and trailing wavelength ranges where the
-                                      relative throughput is less than this amount.  Do not
-                                      remove any intermediate wavelength ranges.
+        @param relative_throughput    If the bandpass was initialized with a galsim.LookupTable or
+                                      from a file (which internally creates a galsim.LookupTable),
+                                      then truncate leading and trailing wavelength ranges where the
+                                      relative throughput is less than this amount.  Do not remove
+                                      any intermediate wavelength ranges.  This option is not
+                                      available for bandpasses initialized with a function or
+                                      `eval` string.
         @returns   The truncated Bandpass.
         """
         if blue_limit is None:
             blue_limit = self.blue_limit
         if red_limit is None:
             red_limit = self.red_limit
-        if relative_throughput is not None:
-            mx = self.throughput.max()
-            w = (self.throughput > mx*relative_throughput).nonzero()
-            blue_limit = max([min(self.wave[w]), blue_limit])
-            red_limit = min([max(self.wave[w]), red_limit])
-        w = (self.wave >= blue_limit) & (self.wave <= red_limit)
-        return Bandpass(self.wave[w], self.throughput[w])
+        if isinstance(self.func, galsim.LookupTable):
+            tp = numpy.array(self.func.getVals())
+            wave = numpy.array(self.func.getArgs())
+            if relative_throughput is not None:
+                w = (tp >= tp.max()*relative_throughput).nonzero()
+                blue_limit = max([min(wave[w]), blue_limit])
+                red_limit = min([max(wave[w]), red_limit])
+            w = (wave >= blue_limit) & (wave <= red_limit)
+            return Bandpass(galsim.LookupTable(wave[w], tp[w]))
+        else:
+            if relative_throughput is not None:
+                raise ValueError("relative_throughput only available for galsim.LookupTable")
+            return Bandpass(self.func, blue_limit=blue_limit, red_limit=red_limit)
 
     def thin(self, step):
-        """ Return a Bandpass with its tabulated wavelengths and throughputs thinned by only keeping
-        every `step`th index.
+        """ If the bandpass was initialized with a galsim.LookupTable or from a file (which
+        internally creates a galsim.LookupTable), then thin the tabulated wavelengths and
+        throughput by keeping only every `step`th index.  Always keep the first and last index,
+        however, to maintain the same blue_limit and red_limit.
 
         @param step     Factor by which to thin the tabulated Bandpass wavelength and throughput
                         arrays.
         @returns  The thinned Bandpass.
         """
-        wave = self.wave[::step]
-        throughput = self.throughput[::step]
-        # maintain the same red_limit, even if it breaks the step size a bit.
-        if throughput[-1] != self.throughput[-1]:
-            throughput.append(self.throughput[-1])
-        return Bandpass(wave, throughput)
+        if isinstance(self.func, galsim.LookupTable):
+            wave = self.func.getArgs()[::step]
+            throughput = self.func.getVals()[::step]
+            # maintain the same red_limit, even if it breaks the step size a bit.
+            if throughput[-1] != self.func.x_max:
+                throughput.append(self.func.x_max)
+            return Bandpass(galsim.LookupTable(wave, throughput))

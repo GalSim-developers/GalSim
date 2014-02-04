@@ -45,7 +45,7 @@ New features introduced in this demo:
 
 - SED = galsim.SED(wave, flambda)
 - SED.setRedshift(redshift)
-- bandpass = galsim.Bandpass(wave, throughput)
+- bandpass = galsim.Bandpass(filename)
 - bandpass = bandpass.truncate(relative_throughput=X)
 - gal = galsim.Chromatic(GSObject, wave, photons)
 - obj = galsim.Add([list of ChromaticObjects])
@@ -95,9 +95,8 @@ def main(argv):
     filters = {}
     for filter_name in filter_names:
         filter_filename = os.path.join(datapath, 'LSST_{}.dat'.format(filter_name))
-        wave, throughput = numpy.genfromtxt(filter_filename).T
-        # LSST filter files are already have wavelength in nanometers, so no need to adjust.
-        filters[filter_name] = galsim.Bandpass(wave, throughput)
+        # Columns required to be 1) Wavelength in nm, 2) Dimensionless throughput
+        filters[filter_name] = galsim.Bandpass(filter_filename)
         # don't waste time integrating where there's less than 1% relative throughput.
         filters[filter_name] = filters[filter_name].truncate(relative_throughput=0.01)
     logger.debug('Read in filters')

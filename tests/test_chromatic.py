@@ -60,8 +60,7 @@ shear_g1 = 0.01
 shear_g2 = 0.02
 
 # load a filter
-filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
-bandpass = galsim.Bandpass(filter_wave, filter_throughput)
+bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
 bandpass = bandpass.truncate(relative_throughput=0.01)
 
 # load some spectra
@@ -410,7 +409,8 @@ def test_monochromatic_filter():
     fws = [350, 475, 625, 750, 875, 975] # approximate ugrizy filter central wavelengths
     for fw in fws:
         chromatic_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
-        narrow_filter = galsim.Bandpass([fw-0.01, fw, fw+0.01], [1.0, 1.0, 1.0])
+        narrow_filter = galsim.Bandpass(galsim.LookupTable([fw-0.01, fw, fw+0.01],
+                                                           [1.0, 1.0, 1.0]))
         chromatic_image = chromatic_final.draw(narrow_filter, image=chromatic_image)
         # take out normalization
         chromatic_image /= 0.02
