@@ -302,7 +302,12 @@ class ChromaticConvolution(ChromaticObject):
     spectra.
     """
     def __init__(self, objlist):
-        self.objlist = objlist
+        self.objlist = []
+        for obj in objlist:
+            if isinstance(obj, ChromaticConvolution):
+                self.objlist.extend(obj.objlist)
+            else:
+                self.objlist.append(obj)
 
     def evaluateAtWavelength(self, wave):
         """
@@ -337,32 +342,6 @@ class ChromaticConvolution(ChromaticObject):
             integrator = galsim.integ.midpoint_int_image
         # Only make temporary changes to objlist...
         objlist = list(self.objlist)
-
-        # expand any `ChromaticConvolution`s in the object list
-        L = len(objlist)
-        i = 0
-        while i < L:
-            if isinstance(objlist[i], ChromaticConvolution):
-                # found a ChromaticConvolution object, so unpack its obj.objlist to end of objlist,
-                # delete obj from objlist, and update list length `L` and list index `i`.
-                L += len(objlist[i].objlist) - 1
-                # appending to the end of the objlist means we don't have to recurse in order to
-                # expand a hierarchy of `ChromaticSum`s; we just have to keep going until the end of
-                # the ever-expanding list.
-                # I.e., `*` marks progress through list...
-                # {{{A, B}, C}, D}  i = 0, length = 2
-                #  *
-                # {D, {A, B}, C}    i = 1, length = 3
-                #     *
-                # {D, C, A, B}      i = 2, length = 4
-                #        *
-                # {D, C, A, B}      i = 3, length = 4
-                #           *
-                # Done!
-                objlist.extend(objlist[i].objlist)
-                del objlist[i]
-                i -= 1
-            i += 1
 
         # Now split up any `ChromaticSum`s:
         # This is the tricky part.  Some notation first:

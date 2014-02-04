@@ -512,6 +512,18 @@ def test_double_ChromaticSum():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_ChromaticConvolution_of_ChromaticConvolution():
+    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
+    b = galsim.Chromatic(galsim.Gaussian(fwhm=2.0), bulge_SED)
+    c = galsim.Chromatic(galsim.Gaussian(fwhm=3.0), bulge_SED)
+    d = galsim.Chromatic(galsim.Gaussian(fwhm=4.0), bulge_SED)
+
+    e = galsim.Convolve(a, b)
+    f = galsim.Convolve(c, d)
+    g = galsim.Convolve(e, f)
+    if any([not isinstance(h, galsim.Chromatic) for h in g.objlist]):
+        raise AssertionError("ChromaticConvolution did not expand ChromaticConvolution argument")
+
 if __name__ == "__main__":
     test_draw_add_commutivity()
     test_ChromaticConvolution_InterpolatedImage()
@@ -521,3 +533,4 @@ if __name__ == "__main__":
     test_monochromatic_filter()
     test_chromatic_flux()
     test_double_ChromaticSum()
+    test_ChromaticConvolution_of_ChromaticConvolution()
