@@ -148,11 +148,6 @@ Updates to config options:
   (Issue #364)
 * Add ability to index Sequences by any running index, rather than just the 
   default.  i.e. `obj_num`, `image_num`, or `file_num`. (Issue #364)
-* Removed `sky_level_pixel` option for specifying the sky.  Now the sky level 
-  can only be specified in units of ADU/arcsec^2 (or, technically, whatever 
-  the world units are if not arcsec) via the `sky_level` value.  The alternate
-  `sky_level_pixel` option was never used in our demos, so I doubt many people 
-  have been using it. (Issue #364)
 * Added `Sum` type for value types for which it makes sense: float, int, angle,
   shear, position. (Issue #457)
 * Allowed the user to modify or add config parameters from the command line. 

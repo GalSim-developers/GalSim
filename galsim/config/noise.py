@@ -30,26 +30,29 @@ valid_noise_types = {
 }
 
 
-def _get_sky(config, im=None):
+def _get_sky(config, base, wcs=None):
 
-    if im:
-        wcs = im.wcs
-    else:
-        wcs = config['wcs']
-
-    if 'sky_level' not in config['image']:
-        return 0.
-    else:
-        sky_level = galsim.config.ParseValue(config['image'],'sky_level',config,float)[0]
+    if 'sky_level' in config:
+        if 'sky_level_pixel' in config:
+            raise AttributeError("Cannot specify both sky_level and sky_level_pixel")
+        sky_level = galsim.config.ParseValue(config,'sky_level',base,float)[0]
+        if not wcs:
+            wcs = config['wcs']
         if wcs.isUniform():
             return sky_level * wcs.pixelArea()
-        elif 'image_pos' in config:
-            return sky_level * wcs.pixelArea(config['image_pos'])
+        elif 'image_pos' in base:
+            return sky_level * wcs.pixelArea(base['image_pos'])
         else:
             # We should never get to this point unless im != None.
             sky = galsim.Image(im.bounds, wcs=wcs)
             wcs.makeSkyImage(sky, sky_level)
             return sky
+    elif 'sky_level_pixel' in config:
+        sky_level_pixel = galsim.config.ParseValue(config,'sky_level_pixel',base,float)[0]
+        return sky_level_pixel
+    else:
+        return 0.
+
 
 #
 # First the driver functions:
@@ -71,7 +74,7 @@ def AddNoise(config, draw_method, im, weight_im, current_var, logger, add_sky=Tr
 
     # Add the overall sky level, if desired
     if add_sky:
-        sky = _get_sky(config, im)
+        sky = _get_sky(config['image'], config, wcs=im.wcs)
         im += sky
     else:
         sky = 0.
@@ -165,15 +168,17 @@ def NoiseVarGaussian(noise, config):
 def AddNoisePoisson(noise, config, draw_method, rng, im, weight_im, current_var, sky, logger):
 
     # Get how much extra sky to assume from the image.noise attribute.
-    opt = {}
-    req = {}
     if sky:
-        # The noise sky_level is only required here if the image doesn't have any.
-        opt['sky_level'] = float
+        opt = { 'sky_level' : float, 'sky_level_pixel' : float }
+        single = []
     else:
-        req['sky_level'] = float
-    params = galsim.config.GetAllParams(noise, 'noise', config, req=req, opt=opt)[0]
+        opt = {}
+        single = [ { 'sky_level' : float , 'sky_level_pixel' : float } ]
+    params = galsim.config.GetAllParams(noise, 'noise', config, opt=opt, single=single)[0]
     if 'sky_level' in params:
+        if 'sky_level_pixel' in params:
+            raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
+                                 "noise.type = Poisson")
         sky_level = params['sky_level']
         if im.wcs.isUniform():
             extra_sky = sky_level * im.wcs.pixelArea()
@@ -182,6 +187,8 @@ def AddNoisePoisson(noise, config, draw_method, rng, im, weight_im, current_var,
         else:
             extra_sky = galsim.Image(im.bounds, wcs=im.wcs)
             im.wcs.makeSkyImage(extra_sky, sky_level)
+    elif 'sky_level_pixel' in params:
+        extra_sky = params['sky_level_pixel']
     else:
         extra_sky = 0.
 
@@ -255,18 +262,23 @@ def NoiseVarPoisson(noise, config):
     # The noise variance is the net sky level per pixel
 
     # Start with the background sky level for the image
-    sky = _get_sky(config)
+    sky = _get_sky(config['image'], config)
 
     # And add in any extra sky level request for the noise
-    req = {}
-    opt = {}
     if sky:
-        opt['sky_level'] = float
+        opt = { 'sky_level' : float, 'sky_level_pixel' : float }
+        single = []
     else:
-        req['sky_level'] = float
-    params = galsim.config.GetAllParams(noise, 'noise', config, req=req, opt=opt)[0]
+        opt = {}
+        single = [ { 'sky_level' : float , 'sky_level_pixel' : float } ]
+    params = galsim.config.GetAllParams(noise, 'noise', config, opt=opt, single=single)[0]
     if 'sky_level' in params:
+        if 'sky_level_pixel' in params:
+            raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
+                                 "noise.type = Poisson")
         sky += params['sky_level'] * config['wcs'].pixelArea(config['image_pos'])
+    elif 'sky_level_pixel' in params:
+        sky += params['sky_level_pixel']
 
     return sky
 
@@ -284,17 +296,21 @@ def AddNoiseCCD(noise, config, draw_method, rng, im, weight_im, current_var, sky
 
     # Get how much extra sky to assume from the image.noise attribute.
     opt = { 'gain' : float , 'read_noise' : float }
-    req = {}
+    # The noise sky_level is only required here if the image doesn't have any.
     if sky:
-        # The noise sky_level is only required here if the image doesn't have any.
         opt['sky_level'] = float
+        opt['sky_level_pixel'] = float
+        single = []
     else:
-        req['sky_level'] = float
-    params = galsim.config.GetAllParams(noise, 'noise', config, req=req, opt=opt)[0]
+        single = [ { 'sky_level' : float , 'sky_level_pixel' : float } ]
+    params = galsim.config.GetAllParams(noise, 'noise', config, opt=opt, single=single)[0]
     gain = params.get('gain',1.0)
     read_noise = params.get('read_noise',0.0)
     read_noise_var = read_noise**2
     if 'sky_level' in params:
+        if 'sky_level_pixel' in params:
+            raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
+                                 "noise.type = CCD")
         sky_level = params['sky_level']
         if im.wcs.isUniform():
             extra_sky = sky_level * im.wcs.pixelArea()
@@ -303,6 +319,8 @@ def AddNoiseCCD(noise, config, draw_method, rng, im, weight_im, current_var, sky
         else:
             extra_sky = galsim.Image(im.bounds, wcs=im.wcs)
             im.wcs.makeSkyImage(extra_sky, sky_level)
+    elif 'sky_level_pixel' in params:
+        extra_sky = params['sky_level_pixel']
     else:
         extra_sky = 0.
 
@@ -402,18 +420,24 @@ def NoiseVarCCD(noise, config):
     # The noise variance is sky / gain + read_noise^2
 
     # Start with the background sky level for the image
-    sky = _get_sky(config)
+    sky = _get_sky(config['image'], config)
 
     # Add in any extra sky level request for the noise
     opt = { 'gain' : float , 'read_noise' : float }
-    req = {}
     if sky:
         opt['sky_level'] = float
+        opt['sky_level_pixel'] = float
+        single = []
     else:
-        req['sky_level'] = float
-    params = galsim.config.GetAllParams(noise, 'noise', config, req=req, opt=opt)[0]
+        single = [ { 'sky_level' : float , 'sky_level_pixel' : float } ]
+    params = galsim.config.GetAllParams(noise, 'noise', config, opt=opt, single=single)[0]
     if 'sky_level' in params:
+        if 'sky_level_pixel' in params:
+            raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
+                                 "noise.type = CCD")
         sky += params['sky_level'] * config['wcs'].pixelArea(config['image_pos'])
+    elif 'sky_level_pixel' in params:
+        sky += params['sky_level_pixel']
 
     # Account for the gain and read_noise
     gain = params.get('gain',1.0)
