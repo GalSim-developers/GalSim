@@ -69,6 +69,54 @@ class Bandpass(object):
         self.blue_limit = blue_limit
         self.red_limit = red_limit
 
+    def __mul__(self, other):
+        """ Multiply bandpass by a function, other Bandpass object, or scalar
+        """
+        blue_limit = self.blue_limit
+        red_limit = self.red_limit
+        if isinstance(other, galsim.Bandpass):
+            blue_limit = max([self.blue_limit, other.blue_limit])
+            red_limit = min([self.red_limit, other.red_limit])
+        if hasattr(other, '__call__'):
+            return Bandpass(lambda w: other(w)*self(w), blue_limit=blue_limit, red_limit=red_limit)
+        else:
+            return Bandpass(lambda w: other*self(w), blue_limit=blue_limit, red_limit=red_limit)
+
+    def __rmul__(self, other):
+        return self*other
+
+    def __div__(self, other):
+        """ Divide bandpass by a function, other Bandpass object, or scalar.
+        """
+        # Doesn't check for divide by zero, so be careful.
+        blue_limit = self.blue_limit
+        red_limit = self.red_limit
+        if isinstance(other, galsim.Bandpass):
+            blue_limit = max([self.blue_limit, other.blue_limit])
+            red_limit = min([self.red_limit, other.red_limit])
+        if hasattr(other, '__call__'):
+            return Bandpass(lambda w: self(w)/other(w), blue_limit=blue_limit, red_limit=red_limit)
+        else:
+            return Bandpass(lambda w: self(w)/other, blue_limit=blue_limit, red_limit=red_limit)
+
+    def __rdiv__(self, other):
+        # Doesn't check for divide by zero, so be careful.
+        blue_limit = self.blue_limit
+        red_limit = self.red_limit
+        if isinstance(other, galsim.Bandpass):
+            blue_limit = max([self.blue_limit, other.blue_limit])
+            red_limit = min([self.red_limit, other.red_limit])
+        if hasattr(other, '__call__'):
+            return Bandpass(lambda w: other(w)/self(w), blue_limit=blue_limit, red_limit=red_limit)
+        else:
+            return Bandpass(lambda w: other/self(w), blue_limit=blue_limit, red_limit=red_limit)
+
+    def __truediv__(self, other):
+        return __div__(self, other)
+
+    def __rtruediv__(self, other):
+        return __rdiv__(self, other)
+
     def __call__(self, wave):
         """ Return dimensionless throughput of bandpass at given wavelength in nanometers.
         @param wave   Wavelength in nanometers.
