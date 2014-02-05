@@ -92,7 +92,7 @@ class SED(object):
         elif flux_type == 'fphotons':
             self.fphotons = spec
         else:
-            raise ValueError("Unknown flux_type in SED.__init__")
+            raise ValueError("Unknown flux_type `{}` in SED.__init__".format(flux_type))
 
         self.redshift = 0.0
 
@@ -113,18 +113,20 @@ class SED(object):
         """ Return photon density at wavelength `wave`.
 
         Note that outside of the wavelength range defined by the `blue_limit` and `red_limit`
-        attributes, the SED is considered undefined, and this method will raise an exception if a flux
-        at a wavelength outside the defined range is requested.
+        attributes, the SED is considered undefined, and this method will raise an exception if a
+        flux at a wavelength outside the defined range is requested.
 
         @param   wave  Wavelength at which to evaluate the SED.
         @returns       Photon density, Units proportional to photons/nm
         """
         if self.blue_limit is not None:
             if wave < self.blue_limit:
-                raise ValueError("Wavelength out of range for SED")
+                raise ValueError("Wavelength ({}) is bluer than SED blue limit ({})"
+                                 .format(wave, self.blue_lim))
         if self.red_limit is not None:
             if wave > self.red_limit:
-                raise ValueError("Wavelength out of range for SED")
+                raise ValueError("Wavelength ({}) redder than SED red limit ({})"
+                                 .format(wave, self.red_limit))
         return self.fphotons(wave)
 
     def __mul__(self, other):

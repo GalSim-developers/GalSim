@@ -144,9 +144,11 @@ class Bandpass(object):
         @returns      Dimensionless throughput.
         """
         if wave < self.blue_limit:
-            raise ValueError("Wavelength out of range for Bandpass")
+            raise ValueError("Wavelength ({}) is bluer than Bandpass blue limit ({})"
+                             .format(wave, self.blue_limit))
         if wave > self.red_limit:
-            raise ValueError("Wavelength out of range for Bandpass")
+            raise ValueError("Wavelength ({}) is redder than Bandpass red limit ({})"
+                             .format(wave, self.red_limit))
         return self.func(wave)
 
     def truncate(self, relative_throughput=None, blue_limit=None, red_limit=None):
@@ -178,7 +180,8 @@ class Bandpass(object):
             return Bandpass(galsim.LookupTable(wave[w], tp[w]))
         else:
             if relative_throughput is not None:
-                raise ValueError("relative_throughput only available for galsim.LookupTable")
+                raise ValueError("relative_throughput only available if Bandpass is specified as"
+                                 +" a galsim.LookupTable")
             return Bandpass(self.func, blue_limit=blue_limit, red_limit=red_limit)
 
     def thin(self, step):
