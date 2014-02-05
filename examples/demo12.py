@@ -44,9 +44,9 @@ For all cases, suggested parameters for viewing in ds9 are also included.
 New features introduced in this demo:
 
 - SED = galsim.SED(wave, flambda)
-- SED.setRedshift(redshift)
+- SED2 = SED.setRedshift(redshift)
 - bandpass = galsim.Bandpass(filename)
-- bandpass = bandpass.truncate(relative_throughput=X)
+- bandpass2 = bandpass.truncate(relative_throughput=X)
 - gal = galsim.Chromatic(GSObject, wave, photons)
 - obj = galsim.Add([list of ChromaticObjects])
 - ChromaticObject.draw(bandpass)
@@ -79,15 +79,13 @@ def main(argv):
     SEDs = {}
     for SED_name in SED_names:
         SED_filename = os.path.join(datapath, '{}.sed'.format(SED_name))
-        wave, flambda = numpy.genfromtxt(SED_filename).T
-        # Convert from Angstroms to nanometers.  This is important for the differential
-        # chromatic refraction routines below, which assume wavelengths are in nanometers.
-        # Without the DCR routines, then it's enough to just match the wavelength units
-        # of the SED and the bandpass.
-        wave /= 10
-        # Create SED and normalize such that photon density is 1 photon per nm at 500 nm
-        SEDs[SED_name] = galsim.SED(wave=wave, flambda=flambda)
-        SEDs[SED_name].setNormalization(base_wavelength=500, normalization=1.0)
+        # Wavelengths read are in nanometers, flux in flambda.  This is important for the
+        # differential chromatic refraction routines below, which assume wavelengths are in
+        # nanometers. Without the DCR routines, then it's enough to just match the wavelength
+        # units of the SED and the bandpass.
+        SED = galsim.SED(SED_filename)
+        # Normalize such that photon density is 1 photon per nm at 500 nm
+        SEDs[SED_name] = SED.setNormalization(base_wavelength=500, normalization=1.0)
     logger.debug('Successfully read in SEDs')
 
     # read in the LSST filters
@@ -115,8 +113,8 @@ def main(argv):
     logger.info('Starting part A: chromatic Sersic galaxy')
     redshift = 0.8
     mono_gal = galsim.Exponential(half_light_radius=0.5)
-    SEDs['CWW_E_ext'].setRedshift(redshift)
-    gal = galsim.Chromatic(mono_gal, SEDs['CWW_E_ext'])
+    SED = SEDs['CWW_E_ext'].setRedshift(redshift)
+    gal = galsim.Chromatic(mono_gal, SED)
 
     # You can still shear, shift, and dilate the resulting chromatic object.
     gal.applyShear(g1=0.5, g2=0.3)
@@ -153,14 +151,14 @@ def main(argv):
     redshift = 0.8
     # make a bulge ...
     mono_bulge = galsim.DeVaucouleurs(half_light_radius=0.5)
-    SEDs['CWW_E_ext'].setRedshift(redshift)
-    bulge = galsim.Chromatic(mono_bulge, SEDs['CWW_E_ext'])
+    bulge_SED = SEDs['CWW_E_ext'].setRedshift(redshift)
+    bulge = galsim.Chromatic(mono_bulge, bulge_SED)
     bulge.applyShear(g1=0.12, g2=0.07)
     logger.debug('Created bulge component')
     # ... and a disk ...
     mono_disk = galsim.Exponential(half_light_radius=2.0)
-    SEDs['CWW_Im_ext'].setRedshift(redshift)
-    disk = galsim.Chromatic(mono_disk, SEDs['CWW_Im_ext'])
+    disk_SED = SEDs['CWW_Im_ext'].setRedshift(redshift)
+    disk = galsim.Chromatic(mono_disk, disk_SED)
     disk.applyShear(g1=0.4, g2=0.2)
     logger.debug('Created disk component')
     # ... and then combine them.
@@ -192,8 +190,8 @@ def main(argv):
     logger.info('Starting part C: chromatic PSF')
     redshift = 0.0
     mono_gal = galsim.Exponential(half_light_radius=0.5)
-    SEDs['CWW_Im_ext'].setRedshift(redshift)
-    gal = galsim.Chromatic(mono_gal, SEDs['CWW_Im_ext'])
+    SED = SEDs['CWW_Im_ext'].setRedshift(redshift)
+    gal = galsim.Chromatic(mono_gal, SED)
     gal.applyShear(g1=0.5, g2=0.3)
     logger.debug('Created Chromatic')
 

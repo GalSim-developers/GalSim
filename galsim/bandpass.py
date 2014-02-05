@@ -25,6 +25,24 @@ import numpy
 import galsim
 
 class Bandpass(object):
+    """Simple bandpass object.
+
+    Bandpasses are callable, returning dimensionless throughput as a function of wavelength in nm.
+
+    Bandpasses are immutable; all transformative methods return *new* Bandpasses, and leave their
+    originating Bandpasses unaltered.
+
+    Bandpasses require `blue_limit` and `red_limit` attributes, which may either be explicity set
+    at initialization, or are inferred from the initializing galsim.LookupTable or 2-column file.
+
+    Bandpases are only defined between `blue_limit` and `red_limit`.  Requesting a throughput value
+    outside of this range raises an exception.
+
+    Bandpasses may be multiplied by other Bandpasses, functions, or scalars.
+
+    Products of two Bandpasses are defined only on the overlapping wavelengths for which their
+    multiplicands are defined, with `blue_limit` and `red_limit` updated to match.
+    """
     def __init__(self, throughput, blue_limit=None, red_limit=None):
         """Very simple Bandpass filter object.  This object is callable, returning dimensionless
         throughput as a function of wavelength in nanometers.
@@ -70,8 +88,6 @@ class Bandpass(object):
         self.red_limit = red_limit
 
     def __mul__(self, other):
-        """ Multiply bandpass by a function, other Bandpass object, or scalar
-        """
         blue_limit = self.blue_limit
         red_limit = self.red_limit
         if isinstance(other, galsim.Bandpass):
@@ -85,10 +101,8 @@ class Bandpass(object):
     def __rmul__(self, other):
         return self*other
 
+    # Doesn't check for divide by zero, so be careful.
     def __div__(self, other):
-        """ Divide bandpass by a function, other Bandpass object, or scalar.
-        """
-        # Doesn't check for divide by zero, so be careful.
         blue_limit = self.blue_limit
         red_limit = self.red_limit
         if isinstance(other, galsim.Bandpass):
@@ -99,8 +113,8 @@ class Bandpass(object):
         else:
             return Bandpass(lambda w: self(w)/other, blue_limit=blue_limit, red_limit=red_limit)
 
+    # Doesn't check for divide by zero, so be careful.
     def __rdiv__(self, other):
-        # Doesn't check for divide by zero, so be careful.
         blue_limit = self.blue_limit
         red_limit = self.red_limit
         if isinstance(other, galsim.Bandpass):
@@ -111,17 +125,28 @@ class Bandpass(object):
         else:
             return Bandpass(lambda w: other/self(w), blue_limit=blue_limit, red_limit=red_limit)
 
+    # Doesn't check for divide by zero, so be careful.
     def __truediv__(self, other):
         return __div__(self, other)
 
+    # Doesn't check for divide by zero, so be careful.
     def __rtruediv__(self, other):
         return __rdiv__(self, other)
 
     def __call__(self, wave):
         """ Return dimensionless throughput of bandpass at given wavelength in nanometers.
+
+        Note that outside of the wavelength range defined by the `blue_limit` and `red_limit`
+        attributes, the Bandpass is considered undefined, and this method will raise an exception
+        if a throughput at a wavelength outside the defined range is requested.
+
         @param wave   Wavelength in nanometers.
         @returns      Dimensionless throughput.
         """
+        if wave < self.blue_limit:
+            raise ValueError("Wavelength out of range for Bandpass")
+        if wave > self.red_limit:
+            raise ValueError("Wavelength out of range for Bandpass")
         return self.func(wave)
 
     def truncate(self, relative_throughput=None, blue_limit=None, red_limit=None):

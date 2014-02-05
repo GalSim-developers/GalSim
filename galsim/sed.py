@@ -20,105 +20,184 @@
 Simple spectral energy distribution class.  Used by galsim.chromatic.py
 """
 
+import copy
+
 import numpy
 
 import galsim
 
 class SED(object):
-    """Very simple SED container object.  The created object is callable, returning the flux in
-    photons/nm as a function of wavelength in nm."""
-    def __init__(self, wave=None, flambda=None, fnu=None, fphotons=None):
-        """ Initialize SED with a wavelength array and a flux density array.  The flux density
-        array can be represented in one of three ways.
+    """Simple SED object.
 
-        @param wave     Array of wavelengths at which the SED is sampled.
-        @param flambda  Array of flux density samples.  Units proprotional to erg/nm
-        @param fnu      Array of flux density samples.  Units proprotional to erg/Hz
-        @param fphotons Array of photon density samples.  Units proportional to photons/nm
+    SEDs are callable, returning the flux in photons/nm as a function of wavelength in nm.
+
+    SEDs are immutable; all transformative SED methods return *new* SEDs, and leave their
+    originating SEDs unaltered.
+
+    SEDs have `blue_limit` and `red_limit` attributes, which may be set to `None` in the case that
+    the SED is defined by a python function or lambda `eval` string.  SEDs are considered undefined
+    outside of this range, and __call__ will raise an exception if a flux is requested outside of
+    this range.
+
+    SEDs may be multiplied by scalars or scalar functions of wavelength.
+
+    SEDs may added together.  The resulting SED will only be defined on the wavelength
+    region where both of the operand SEDs are defined. `blue_limit` and `red_limit` will be reset
+    accordingly.
+    """
+    def __init__(self, spec, flux_type='flambda'):
+        """Simple SED object.  This object is callable, returning the flux in
+        photons/nm as a function of wavelength in nm.
+
+        The input parameter, spec, may be one of several possible forms:
+        1. a regular python function (or an object that acts like a function)
+        2. a galsim.LookupTable
+        3. a file from which a LookupTable can be read in
+        4. a string which can be evaluated into a function of `wave`
+           via `eval('lambda wave : '+spec)
+           e.g. spec = '0.8 + 0.2 * (wave-800)`
+
+        The argument of the function will be the wavelength in nanometers, and the output should be
+        the dimensionless throughput at that wavelength.  (Note we use wave rather than lambda,
+        since lambda is a python reserved word.)
+
+        The argument `flux_type` specifies the type of spectral density and must be one of:
+        1. 'flambda':  `spec` is proportional to erg/nm
+        2. 'fnu':      `spec` is proportional to erg/Hz
+        3. 'fphotons': `spec` is proportional to photons/nm
+
+        @param spec          Function defining the spectrum at each wavelength.  See above for
+                             valid options for this parameter.
+        @param flux_type     String specifying what type of spectral density `spec` represents.  See
+                             above for valid options for this parameter.
         """
-        self.wave = numpy.array(wave, dtype=numpy.float)
+        if isinstance(spec, str):
+            import os
+            if os.path.isfile(spec):
+                spec = galsim.LookupTable(file=spec)
+            else:
+                spec = eval('lambda wave : ' + spec)
+
+        if isinstance(spec, galsim.LookupTable):
+            self.blue_limit = spec.x_min
+            self.red_limit = spec.x_max
+        else:
+            self.blue_limit = None
+            self.red_limit = None
+
+        if flux_type == 'flambda':
+            self.fphotons = lambda w: spec(w) * w
+        elif flux_type == 'fnu':
+            self.fphotons = lambda w: spec(w) / w
+        elif flux_type == 'fphotons':
+            self.fphotons = spec
+        else:
+            raise ValueError("Unknown flux_type in SED.__init__")
+
         self.redshift = 0.0
-        # could be more careful here with factors of hbar, c, etc...
-        if flambda is not None:
-            self.fphotons = numpy.array(flambda * wave, dtype=numpy.float)
-        elif fnu is not None:
-            self.fphotons = numpy.array(fnu / wave, dtype=numpy.float)
-        elif fphotons is not None:
-            self.fphotons = numpy.array(fphotons, dtype=numpy.float)
 
-        self.needs_new_interp = True
+    def _wavelength_intersection(self, other):
+        blue_limit = None
+        if self.blue_limit is not None:
+            blue_limit = self.blue_limit
+        if other.blue_limit is not None and blue_limit is not None:
+            blue_limit = max([blue_limit, other.blue_limit])
+        red_limit = None
+        if self.red_limit is not None:
+            red_limit = self.red_limit
+        if other.red_limit is not None and red_limit is not None:
+            red_limit = min([red_limit, other.red_limit])
+        return blue_limit, red_limit
 
-    def __call__(self, wave, force_new_interp=False):
-        """ Uses a galsim.LookupTable to interpolate the photon density at the requested wavelength.
-        The LookupTable is cached for future use.
+    def __call__(self, wave):
+        """ Return photon density at wavelength `wave`.
 
-        @param force_new_interp     Force rebuild of LookupTable.
+        Note that outside of the wavelength range defined by the `blue_limit` and `red_limit`
+        attributes, the SED is considered undefined, and this method will raise an exception if a flux
+        at a wavelength outside the defined range is requested.
 
-        @returns photon density, Units proportional to photons/nm
+        @param   wave  Wavelength at which to evaluate the SED.
+        @returns       Photon density, Units proportional to photons/nm
         """
-        interp = self._get_interp(force_new_interp=force_new_interp)
-        return interp(wave)
+        if self.blue_limit is not None:
+            if wave < self.blue_limit:
+                raise ValueError("Wavelength out of range for SED")
+        if self.red_limit is not None:
+            if wave > self.red_limit:
+                raise ValueError("Wavelength out of range for SED")
+        return self.fphotons(wave)
 
-    def _get_interp(self, force_new_interp=False):
-        # Return SED LookupTable, rebuild if requested.
-        if force_new_interp or self.needs_new_interp:
-            self.interp = galsim.LookupTable(self.wave * (1.0 + self.redshift), self.fphotons)
-            self.needs_new_interp=False
-        return self.interp
-
-    def __mul__(self, factor):
-        # SED's can be multiplied by scalars.
+    def __mul__(self, other):
+        # SEDs can be multiplied by scalars or functions (callables)
         ret = self.copy()
-        ret.fphotons *= factor
-        ret.needs_new_interp = True
+        if hasattr(other, '__call__'):
+            ret.fphotons = lambda w: self.fphotons(w) * other(w)
+        else:
+            ret.fphotons = lambda w: self.fphotons(w) * other
         return ret
 
-    def __rmul__(self, factor):
-        # SED's can be multiplied by scalars.
+    def __rmul__(self, other):
+        return self*other
+
+    def __div__(self, other):
+        # SEDs can be divided by scalars or functions (callables)
         ret = self.copy()
-        ret.fphotons *= factor
-        ret.needs_new_interp = True
+        if hasattr(other, '__call__'):
+            ret.fphotons = lambda w: self.fphotons(w) / other(w)
+        else:
+            ret.fphotons = lambda w: self.fphotons(w) / other
         return ret
 
-    def __imul__(self, factor):
-        # SED's can be multiplied by scalars.
-        self.fphotons *= factor
-        self.needs_new_interp = True
-        return self
+    def __rdiv__(self, other):
+        # SEDs can be divided by scalars or functions (callables)
+        ret = self.copy()
+        if hasattr(other, '__call__'):
+            ret.fphotons = lambda w: other(w) / self.fphotons(w)
+        else:
+            ret.fphotons = lambda w: other / self.fphotons(w)
+        return ret
+
+    def __truediv__(self, other):
+        return self.__div__(other)
+
+    def __rtruediv__(self, other):
+        return self.__rdiv__(other)
 
     def __add__(self, other):
         # Add together two SEDs, with caveats listed below:
         #
         # 1) The resulting SED will be defined on the wavelength range set by the overlap of
         #    the (possibly redshifted!) wavelength ranges of the two SED operands.
-        # 2) The wavelength sampling of the resulting SED will be set to the union of the
-        #    (possibly redshifted!) wavelength samplings of the SED operands in the overlap region.
-        # 3) The redshift of the resulting SED will be set to 0.0 regardless of the redshifts of the
+        # 2) The redshift of the resulting SED will be set to 0.0 regardless of the redshifts of the
         #    SED operands.
         # These ensure that SED addition is commutative.
 
         # Find overlapping wavelength interval
-        blue_limit = max([self.wave[0] * (1.0 + self.redshift),
-                       other.wave[0] * (1.0 + other.redshift)])
-        red_limit = min([self.wave[-1] * (1.0 + self.redshift),
-                      other.wave[-1] * (1.0 + other.redshift)])
-        # Unionize wavelengths
-        wave = set(self.wave * (1.0 + self.redshift)).union(other.wave * (1.0 + other.redshift))
-        wave = numpy.array(list(wave))
-        wave.sort()
-        # Clip to overlap region
-        wave = wave[(wave >= blue_limit) & (wave <= red_limit)]
-        # Evaluate sum on new wavelength array
-        fphotons = self(wave) + other(wave)
-
-        ret = SED(wave=wave, fphotons=fphotons)
+        blue_limit, red_limit = self._wavelength_intersection(other)
+        ret = self.copy()
+        ret.blue_limit = blue_limit
+        ret.red_limit = red_limit
+        ret.fphotons = lambda w: self(w) + other(w)
+        ret.redshift = 0.0
         return ret
+
+    def __sub__(self, other):
+        # Subtract two SEDs, with caveats listed below:
+        #
+        # 1) The resulting SED will be defined on the wavelength range set by the overlap of
+        #    the (possibly redshifted!) wavelength ranges of the two SED operands.
+        # 2) The redshift of the resulting SED will be set to 0.0 regardless of the redshifts of the
+        #    SED operands.
+        # These ensure that SED subtraction is anticommutative.
+
+        # Find overlapping wavelength interval
+        return self.__add__(-1.0 * other)
 
     def copy(self):
         cls = self.__class__
         ret = cls.__new__(cls)
         for k, v in self.__dict__.iteritems():
-            ret.__dict__[k] = copy.deepcopy(v) # need deepcopy for copying self.interp
+            ret.__dict__[k] = copy.deepcopy(v) # need deepcopy for copying self.fphotons
         return ret
 
     def setNormalization(self, base_wavelength, normalization):
@@ -129,9 +208,11 @@ class SED(object):
                                   be set.
         @param normalization      The target *relative* normalization in photons / nm.
         """
-        current_fphoton = self(base_wavelength)
-        self.fphotons *= normalization/current_fphoton
-        self.needs_new_interp = True
+        current_fphotons = self(base_wavelength)
+        norm = normalization / current_fphotons
+        ret = self.copy()
+        ret.fphotons = lambda w: self.fphotons(w) * norm
+        return ret
 
     def setFlux(self, bandpass, flux_norm):
         """ Set flux of SED when observed through given bandpass.  Note that the final number
@@ -142,24 +223,41 @@ class SED(object):
         @param flux_norm  Desired *relative* flux contribution from the SED.
         """
         current_flux = self.getFlux(bandpass)
-        multiplier = flux_norm/current_flux
-        self.fphotons *= multiplier
-        self.needs_new_interp = True
+        norm = flux_norm/current_flux
+        ret = self.copy()
+        ret.fphotons = lambda w: self.fphotons(w) * norm
+        return ret
 
     def setRedshift(self, redshift):
         """ Scale the wavelength axis of the SED.
 
         @param redshift
         """
-        self.redshift = redshift
-        self.needs_new_interp=True
+        ret = self.copy()
+        wave_factor = (1.0 + redshift) / (1.0 + self.redshift)
+        ret.fphotons = lambda w: self.fphotons(w / wave_factor)
+        ret.redshift = redshift
+        ret.blue_limit = self.blue_limit * wave_factor
+        ret.red_limit = self.red_limit * wave_factor
+        return ret
 
     def getFlux(self, bandpass):
         """ Return the SED flux through a bandpass.
 
-        @param bandpass   galsim.Bandpass object representing a filter.
+        @param bandpass   galsim.Bandpass object representing a filter, or None for bolometric
+                          flux (over defined wavelengths).
         @returns   Flux through bandpass.
         """
-        interp = self._get_interp()
-        return galsim.integ.int1d(lambda w:bandpass(w)*interp(w),
-                                  bandpass.blue_limit, bandpass.red_limit)
+        if bandpass is None:
+            if self.blue_limit is None:
+                blue_limit = 0.0
+            else:
+                blue_limit = self.blue_limit
+            if self.red_limit is None:
+                red_limit = 1.e11 # = infinity in int1d
+            else:
+                red_limit = self.red_limit
+            return galsim.integ.int1d(self.fphotons, blue_limit, red_limit)
+        else:
+            return galsim.integ.int1d(lambda w: bandpass(w)*self.fphotons(w),
+                                      bandpass.blue_limit, bandpass.red_limit)
