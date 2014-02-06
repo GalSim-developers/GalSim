@@ -136,8 +136,8 @@ class BaseWCS(object):
       be a galsim.CelestialCoord if the transformation is in terms of celestial coordinates
       (c.f. wcs.isCelestial()).  Otherwise, it will be a PositionD as well.
 
-    - Convert a GSObject, which is naturally defined in world coordinates, to the equivalent
-      profile using image coordinates (or vice versa):
+    - Convert a GSObject that is defined in world coordinates to the equivalent profile defined 
+      in terms of image coordinates (or vice versa):
 
                 image_profile = wcs.toImage(world_profile)
                 world_profile = wcs.toWorld(image_profile)
@@ -155,6 +155,9 @@ class BaseWCS(object):
       If wcs.toWorld(image_pos) is not implemented for a particular WCS class, then a
       NotImplementedError will be raised if you pass in a world_pos argument.
 
+      The returned local_wcs is usually a JacobianWCS instance, but see the doc string for 
+      local for more details.
+
     - Construct a full affine approximation of a WCS at a given location:
 
                 affine_wcs = wcs.affine(image_pos = image_pos)
@@ -163,13 +166,7 @@ class BaseWCS(object):
       This preserves the transformation near the location of image_pos, but it is linear, so
       the transformed values may not agree as you get farther from the given point.
 
-    - Shift a transformation to use a new location for what is currently considered
-      image_pos = (0,0).  For local WCS types, this also converts to a non-local WCS.
-
-                world_pos1 = wcs.toWorld(PositionD(0,0))
-                shifted = wcs.setOrigin(origin)
-                world_pos2 = shifted.toWorld(origin)
-                # world_pos1 should be equal to world_pos2
+      The returned affine_wcs is always an AffineTransform instance.
 
     - Get some properties of the pixel size and shape:
 
@@ -725,9 +722,9 @@ class EuclideanWCS(BaseWCS):
             v = [ self._v(x,y) for (x,y) in zip(xlist,ylist) ]
 
         dudx = 0.5 * (u[0] - u[1]) / dx
-        dudy = 0.5 * (u[2] - u[3]) / dx
+        dudy = 0.5 * (u[2] - u[3]) / dy
         dvdx = 0.5 * (v[0] - v[1]) / dx
-        dvdy = 0.5 * (v[2] - v[3]) / dx
+        dvdy = 0.5 * (v[2] - v[3]) / dy
 
         return JacobianWCS(dudx, dudy, dvdx, dvdy)
 
