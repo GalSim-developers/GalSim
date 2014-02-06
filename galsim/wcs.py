@@ -28,7 +28,7 @@ There are two kinds of world coordinates that we use here:
 
 - Celestial coordinates are defined in terms of right ascension (ra) and declination (dec).
   They are a spherical coordinate system on the sky, akin to longitude and latitude on Earth.
-  c.f. http://en.wikipedia.org/wiki/Celestial_coordinate_system
+  cf. http://en.wikipedia.org/wiki/Celestial_coordinate_system
 
 - Euclidean coordinates are defined relative to a tangent plane projection of the sky. 
   If you imagine the sky coordinates on an actual sphere with a particular radius, then the 
@@ -134,7 +134,7 @@ class BaseWCS(object):
 
       The image_pos parameter should be a galsim.PositionD.  However, world_pos will
       be a galsim.CelestialCoord if the transformation is in terms of celestial coordinates
-      (c.f. wcs.isCelestial()).  Otherwise, it will be a PositionD as well.
+      (if wcs.isCelestial() == True).  Otherwise, it will be a PositionD as well.
 
     - Convert a GSObject, which is naturally defined in world coordinates, to the equivalent
       profile using image coordinates (or vice versa):
@@ -142,8 +142,8 @@ class BaseWCS(object):
                 image_profile = wcs.toImage(world_profile)
                 world_profile = wcs.toWorld(image_profile)
 
-      For non-uniform WCS types (c.f. wcs.isUniform()), these need either an image_pos or
-      world_pos parameter to say where this conversion should happen:
+      For non-uniform WCS types (for which wcs.isUniform() == False), these need either an
+      image_pos or world_pos parameter to say where this conversion should happen:
 
                 image_profile = wcs.toImage(world_profile, image_pos=image_pos)
 
