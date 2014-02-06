@@ -83,6 +83,10 @@ class Bandpass(object):
             if not isinstance(tp, galsim.LookupTable):
                 raise AttributeError("red_limit is required if throughput is not a LookupTable.")
             red_limit = tp.x_max
+        if isinstance(tp, galsim.LookupTable):
+            self.wave_list = tp.getArgs()
+        else:
+            self.wave_list = []
         self.func = tp
         self.blue_limit = blue_limit
         self.red_limit = red_limit
@@ -90,13 +94,21 @@ class Bandpass(object):
     def __mul__(self, other):
         blue_limit = self.blue_limit
         red_limit = self.red_limit
+        wave_list = set(self.wave_list)
         if isinstance(other, galsim.Bandpass):
             blue_limit = max([self.blue_limit, other.blue_limit])
             red_limit = min([self.red_limit, other.red_limit])
+            if other.wave_list != []:
+                wave_list = wave_list.union(other.wave_list)
         if hasattr(other, '__call__'):
-            return Bandpass(lambda w: other(w)*self(w), blue_limit=blue_limit, red_limit=red_limit)
+            ret = Bandpass(lambda w: other(w)*self(w), blue_limit=blue_limit, red_limit=red_limit)
         else:
-            return Bandpass(lambda w: other*self(w), blue_limit=blue_limit, red_limit=red_limit)
+            ret = Bandpass(lambda w: other*self(w), blue_limit=blue_limit, red_limit=red_limit)
+        wave_list = list(wave_list)
+        wave_list = [w for w in wave_list if w >= blue_limit and w <= red_limit]
+        wave_list.sort()
+        ret.wave_list = wave_list
+        return ret
 
     def __rmul__(self, other):
         return self*other
@@ -105,25 +117,41 @@ class Bandpass(object):
     def __div__(self, other):
         blue_limit = self.blue_limit
         red_limit = self.red_limit
+        wave_list = set(self.wave_list)
         if isinstance(other, galsim.Bandpass):
             blue_limit = max([self.blue_limit, other.blue_limit])
             red_limit = min([self.red_limit, other.red_limit])
+            if other.wave_list != []:
+                wave_list = wave_list.union(other.wave_list)
         if hasattr(other, '__call__'):
-            return Bandpass(lambda w: self(w)/other(w), blue_limit=blue_limit, red_limit=red_limit)
+            ret = Bandpass(lambda w: self(w)/other(w), blue_limit=blue_limit, red_limit=red_limit)
         else:
-            return Bandpass(lambda w: self(w)/other, blue_limit=blue_limit, red_limit=red_limit)
+            ret = Bandpass(lambda w: self(w)/other, blue_limit=blue_limit, red_limit=red_limit)
+        wave_list = list(wave_list)
+        wave_list = [w for w in wave_list if w >= blue_limit and w <= red_limit]
+        wave_list.sort()
+        ret.wave_list = wave_list
+        return ret
 
     # Doesn't check for divide by zero, so be careful.
     def __rdiv__(self, other):
         blue_limit = self.blue_limit
         red_limit = self.red_limit
+        wave_list = set(self.wave_list)
         if isinstance(other, galsim.Bandpass):
             blue_limit = max([self.blue_limit, other.blue_limit])
             red_limit = min([self.red_limit, other.red_limit])
+            if other.wave_list != []:
+                wave_list = wave_list.union(other.wave_list)
         if hasattr(other, '__call__'):
-            return Bandpass(lambda w: other(w)/self(w), blue_limit=blue_limit, red_limit=red_limit)
+            ret = Bandpass(lambda w: other(w)/self(w), blue_limit=blue_limit, red_limit=red_limit)
         else:
-            return Bandpass(lambda w: other/self(w), blue_limit=blue_limit, red_limit=red_limit)
+            ret = Bandpass(lambda w: other/self(w), blue_limit=blue_limit, red_limit=red_limit)
+        wave_list = list(wave_list)
+        wave_list = [w for w in wave_list if w >= blue_limit and w <= red_limit]
+        wave_list.sort()
+        ret.wave_list = wave_list
+        return ret
 
     # Doesn't check for divide by zero, so be careful.
     def __truediv__(self, other):
