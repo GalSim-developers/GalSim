@@ -171,12 +171,18 @@ class Bandpass(object):
         @param wave   Wavelength in nanometers.
         @returns      Dimensionless throughput.
         """
-        if wave < self.blue_limit:
+        if hasattr(wave, '__iter__'): # Only iterables respond to min(), max()
+            wmin = min(wave)
+            wmax = max(wave)
+        else: # python scalar
+            wmin = wave
+            wmax = wave
+        if wmin < self.blue_limit:
             raise ValueError("Wavelength ({}) is bluer than Bandpass blue limit ({})"
-                             .format(wave, self.blue_limit))
-        if wave > self.red_limit:
+                             .format(wmin, self.blue_limit))
+        if wmax > self.red_limit:
             raise ValueError("Wavelength ({}) is redder than Bandpass red limit ({})"
-                             .format(wave, self.red_limit))
+                             .format(wmax, self.red_limit))
         return self.func(wave)
 
     def truncate(self, relative_throughput=None, blue_limit=None, red_limit=None):

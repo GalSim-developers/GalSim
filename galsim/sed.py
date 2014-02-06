@@ -119,14 +119,20 @@ class SED(object):
         @param   wave  Wavelength at which to evaluate the SED.
         @returns       Photon density, Units proportional to photons/nm
         """
+        if hasattr(wave, '__iter__'): # Only iterables respond to min(), max()
+            wmin = min(wave)
+            wmax = max(wave)
+        else: # python scalar
+            wmin = wave
+            wmax = wave
         if self.blue_limit is not None:
-            if wave < self.blue_limit:
+            if wmin < self.blue_limit:
                 raise ValueError("Wavelength ({}) is bluer than SED blue limit ({})"
-                                 .format(wave, self.blue_lim))
+                                 .format(wmin, self.blue_lim))
         if self.red_limit is not None:
-            if wave > self.red_limit:
+            if wmax > self.red_limit:
                 raise ValueError("Wavelength ({}) redder than SED red limit ({})"
-                                 .format(wave, self.red_limit))
+                                 .format(wmax, self.red_limit))
         return self.fphotons(wave)
 
     def __mul__(self, other):
