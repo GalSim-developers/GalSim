@@ -116,6 +116,37 @@ class ChromaticObject(object):
         ret.__dict__.update(self.__dict__)
         return ret
 
+    # reminder to developers to add apply* methods to subclasses below
+    def createDilated(scale):
+        ret = self.copy()
+        ret.applyDilation(scale)
+        return ret
+
+    def createMagnified(mu):
+        ret = self.copy()
+        ret.applyMagnification(mu)
+        return ret
+
+    def createSheared(*args, **kwargs):
+        ret = self.copy()
+        ret.applyShear(*args, **kwargs)
+        return ret
+
+    def createLensed(g1, g2, mu):
+        ret = self.copy()
+        ret.applyLensing(g1, g2, mu)
+        return ret
+
+    def createRotated(theta):
+        ret = self.copy()
+        ret.applyRotation(theta)
+        return ret
+
+    def createShifted(*args, **kwargs):
+        ret = self.copy()
+        ret.applyShift(*args, **kwargs)
+        return ret
+
 class Chromatic(ChromaticObject):
     """Construct chromatic versions of galsim GSObjects.
 
@@ -177,23 +208,23 @@ class Chromatic(ChromaticObject):
     def applyShear(self, *args, **kwargs):
         self.gsobj.applyShear(*args, **kwargs)
 
-    def applyDilation(self, *args, **kwargs):
-        self.gsobj.applyDilation(*args, **kwargs)
+    def applyDilation(self, scale):
+        self.gsobj.applyDilation(scale)
 
     def applyShift(self, *args, **kwargs):
         self.gsobj.applyShift(*args, **kwargs)
 
-    def applyExpansion(self, *args, **kwargs):
-        self.gsobj.applyExpansion(*args, **kwargs)
+    def applyExpansion(self, scale):
+        self.gsobj.applyExpansion(scale)
 
-    def applyMagnification(self, *args, **kwargs):
-        self.gsobj.applyMagnification(*args, **kwargs)
+    def applyMagnification(self, mu):
+        self.gsobj.applyMagnification(mu)
 
-    def applyLensing(self, *args, **kwargs):
-        self.gsobj.applyLensing(*args, **kwargs)
+    def applyLensing(self, g1, g2, mu):
+        self.gsobj.applyLensing(g1, g2, mu)
 
-    def applyRotation(self, *args, **kwargs):
-        self.gsobj.applyRotation(*args, **kwargs)
+    def applyRotation(self, theta):
+        self.gsobj.applyRotation(theta)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate underlying GSObject scaled by self.SED(`wave`).
@@ -267,35 +298,36 @@ class ChromaticSum(ChromaticObject):
 
     # apply following transformations to all underlying summands
     def scaleFlux(self, scale):
-        self.objlist[0].scaleFlux(scale)
+        for obj in self.objlist:
+            obj.scaleFlux(scale)
 
     def applyShear(self, *args, **kwargs):
         for obj in self.objlist:
             obj.applyShear(*args, **kwargs)
 
+    def applyDilation(self, scale):
+        for obj in self.objlist:
+            obj.applyDilation(scale)
+
     def applyShift(self, *args, **kwargs):
         for obj in self.objlist:
             obj.applyShift(*args, **kwargs)
 
-    def applyDilation(self, *args, **kwargs):
+    def applyExpansion(self, scale):
         for obj in self.objlist:
-            obj.applyDilation(*args, **kwargs)
+            obj.applyExpansion(scale)
 
-    def applyExpansion(self, *args, **kwargs):
+    def applyMagnification(self, mu):
         for obj in self.objlist:
-            obj.applyExpansion(*args, **kwargs)
+            obj.applyMagnification(mu)
 
-    def applyMagnification(self, *args, **kwargs):
+    def applyLensing(self, g1, g2, mu):
         for obj in self.objlist:
-            obj.applyMagnification(*args, **kwargs)
+            obj.applyLensing(g1, g2, mu)
 
-    def applyLensing(self, *args, **kwargs):
+    def applyRotation(self, theta):
         for obj in self.objlist:
-            obj.applyLensing(*args, **kwargs)
-
-    def applyRotation(self, *args, **kwargs):
-        for obj in self.objlist:
-            obj.applyRotation(*args, **kwargs)
+            obj.applyRotation(theta)
 
 class ChromaticConvolution(ChromaticObject):
     """Convolve ChromaticObjects and/or GSObjects together.  GSObjects are treated as having flat
@@ -540,7 +572,7 @@ class ChromaticShiftAndDilate(ChromaticObject):
     def scaleFlux(self, scale):
         self.gsobj.scaleFlux(scale)
 
-    # The apply* transforms don't commute with shifting and dilating, so simply
+    # The apply* transforms don't commute with shifting and dilating, so cannot simply
     # alter self.gsobj like above...
 
 class ChromaticAtmosphere(ChromaticShiftAndDilate):
