@@ -23,7 +23,7 @@ Implementation is done by constructing GSObjects as functions of wavelength.  Dr
 integrate over wavelength while also multiplying in a throughput function.
 
 Possible uses include galaxies with color gradients, automatically drawing a given galaxy through
-different filters, or  implementing wavelength-dependent point spread functions.
+different filters, or implementing wavelength-dependent point spread functions.
 """
 
 import numpy

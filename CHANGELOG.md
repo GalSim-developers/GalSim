@@ -44,7 +44,7 @@ Python layer API changes:
 * Removed the previously deprecated Ellipse and AtmosphericPSF classes.
   Also removed PhotonArray from the python layer, since it is only used
   by the C++ layer.  (Issue #364)
-* Added `ChromaticObject` and dependecies `SED` and `Bandpass` to implement
+* Added `ChromaticObject` and dependencies `SED` and `Bandpass` to implement
   wavelength dependence. (Issue #467)
 * Added demo12.py for wavelength dependence examples.
 

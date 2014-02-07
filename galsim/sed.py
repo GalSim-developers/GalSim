@@ -17,7 +17,7 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file sed.py
-Simple spectral energy distribution class.  Used by galsim.chromatic.py
+Simple spectral energy distribution class.  Used by galsim/chromatic.py
 """
 
 import copy
@@ -41,7 +41,7 @@ class SED(object):
 
     SEDs may be multiplied by scalars or scalar functions of wavelength.
 
-    SEDs may added together.  The resulting SED will only be defined on the wavelength
+    SEDs may be added together.  The resulting SED will only be defined on the wavelength
     region where both of the operand SEDs are defined. `blue_limit` and `red_limit` will be reset
     accordingly.
     """

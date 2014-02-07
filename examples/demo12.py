@@ -19,7 +19,7 @@
 """
 Demo #12
 
-The twelvth script in our tutorial about using GalSim in python scripts: examples/demo*.py.
+The twelfth script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
 This script currently doesn't have an equivalent demo*.yaml or demo*.json file.  The API for catalog

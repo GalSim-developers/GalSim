@@ -32,7 +32,7 @@ class Bandpass(object):
     Bandpasses are immutable; all transformative methods return *new* Bandpasses, and leave their
     originating Bandpasses unaltered.
 
-    Bandpasses require `blue_limit` and `red_limit` attributes, which may either be explicity set
+    Bandpasses require `blue_limit` and `red_limit` attributes, which may either be explicitly set
     at initialization, or are inferred from the initializing galsim.LookupTable or 2-column file.
 
     Bandpases are only defined between `blue_limit` and `red_limit`.  Requesting a throughput value
