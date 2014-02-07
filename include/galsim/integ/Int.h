@@ -137,6 +137,7 @@
 #include <ostream>
 #include <complex>
 #include <stdexcept>
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/shared_ptr.hpp>
 
 #include "MoreFunctional.h"

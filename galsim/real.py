@@ -181,7 +181,8 @@ class RealGalaxy(GSObject):
             logger.debug('RealGalaxy %d: Got noise_image',use_index)
 
         if noise_image is None:
-            self.noise = galsim.UncorrelatedNoise(rng, pixel_scale, var, gsparams)
+            wcs = galsim.PixelScale(pixel_scale)
+            self.noise = galsim.UncorrelatedNoise(rng, wcs, var, gsparams)
         else:
             ii = galsim.InterpolatedImage(noise_image, scale=pixel_scale, normalization="sb",
                                           calculate_stepk=False, calculate_maxk=False,
@@ -565,7 +566,8 @@ class RealGalaxyCatalog(object):
         """
         im, scale, var = self.getNoiseProperties(i)
         if im is None:
-            cf = galsim.UncorrelatedNoise(rng, scale, var, gsparams)
+            wcs = galsim.PixelScale(pixel_scale)
+            cf = galsim.UncorrelatedNoise(rng, wcs, var, gsparams)
         else:
             ii = galsim.InterpolatedImage(im, scale=scale, normalization="sb",
                                           calculate_stepk=False, calculate_maxk=False,

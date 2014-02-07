@@ -34,33 +34,87 @@ class DES_PSFEx(object):
     """Class that handles DES files describing interpolated principal component images
     of the PSF.  These are usually stored as *_psfcat.psf files.
 
-    Typical usage:
-        
-        des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name)
-        
-        ...
+    PSFEx is software written by Emmanuel Bertin.  If you want more detail about it, please
+    check out the web site:
 
-        pos = galsim.PositionD(image_x, image_y)  # position in pixels on the image
-                                                  # NOT in arcsec on the sky!
-        psf = des_psfex.getPSF(pos, pixel_scale=0.27)
+        http://www.astromatic.net/software/psfex
 
+    It builds PSF objects from images of stars in a given exposure, finds a reasonable basis
+    set to describe those images, and then fits the coefficient of these bases as a function
+    of the (x,y) position on the image.
 
-    @param file_name  The file name to be read in.
-    @param dir        Optionally a directory name can be provided if the file_name does not 
-                      already include it.
+    Note that while the interpolation is done in image coordinates, GalSim usually deals with
+    object profiles in world coordinates.  However, PSFEx does not consider the WCS of the 
+    image when building its bases.  The bases are built in image coordinates.  So there are 
+    two options to get GalSim to handle this difference.
+    
+    1. Ignore the WCS of the original image.  In this case, the *.psf files have all the
+       information you need:
+
+           des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name)
+           image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
+                                                             # NOT in arcsec on the sky!
+           psf = des_psfex.getPSF(image_pos)      # profile is in image coordinates
+
+       The psf profile that is returned will be in image coordinates.  Therefore, it should be 
+       drawn onto an image with no wcs.  (Or equivalently, one with `scale = 1`.)  If you want 
+       to use this to convolve a galaxy profile, you would want to either project the galaxy
+       (typically constructed in world coordinates) to the correct image coordinates or project
+       the PSF up into world coordinates.
+
+    2. Build the PSF in world coordinates directly.  The DES_PSFEx constructor can take an 
+       extra argument, either `image_file_name` or `wcs`, to tell GalSim what WCS to use for 
+       the coversion between image and world coordinates.  The former option is the name of 
+       the file from which to read the WCS, which will often be more convenient, but you can
+       also just pass in a WCS object directly.
+
+           des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name, image_file_name)
+           image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
+                                                             # NOT in arcsec on the sky!
+           psf = des_psfex.getPSF(image_pos)      # profile is in world coordinates
+
+       This time the psf profile that is returned will already be in world coordinates as 
+       GalSim normally expects, so you can use it in the normal ways.  If you want to draw it
+       (or a convolved object) onto an image with the original WCS at that location, you can use
+       `des_psfex.getLocalWCS(image_pos)` for the local wcs at the location of the PSF.
+
+    Note that the returned psf here already includes the pixel.  This is what is sometimes
+    called an "effective PSF".  Thus, you should not convolve by the pixel profile again
+    (nor integrate over the pixel).  This would effectively include the pixel twice!
+
+    @param file_name       The file name to be read in.
+    @param image_file_name The name of the fits file of the original image (needed for the
+                           WCS information in the header).  If unavailable, you may omit this
+                           (or use None), but then the returned profiles will be in image
+                           coordinates, not world coordinates.  (Default `image_file_name = None`)
+    @param wcs             Optional way to provide the WCS if you already have it loaded from the
+                           image file. (Default `wcs = None`)
+    @param dir             Optionally a directory name can be provided if the file_name does not 
+                           already include it.  (The image file is assumed to be in the same
+                           directory.) (Default `dir = None`)
     """
-    _req_params = { 'file_name' : str }
+    # For config, image_file_name is required, since that always works in world coordinates.
+    _req_params = { 'file_name' : str , 'image_file_name' : str }
     _opt_params = { 'dir' : str }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
-    def __init__(self, file_name, dir=None):
+    def __init__(self, file_name, image_file_name=None, wcs=None, dir=None):
 
         if dir:
             import os
             file_name = os.path.join(dir,file_name)
+            image_file_name = os.path.join(dir,image_file_name)
         self.file_name = file_name
+        if image_file_name:
+            if wcs is not None:
+                raise AttributeError("Cannot provide both image_file_name and wcs")
+            self.wcs = galsim.GSFitsWCS(image_file_name)
+        elif wcs:
+            self.wcs = wcs
+        else:
+            self.wcs = None
         self.read()
 
     def read(self):
@@ -169,33 +223,42 @@ class DES_PSFEx(object):
     def getSampleScale(self): 
         return self.sample_scale
 
-    def getPSF(self, pos, pixel_scale, gsparams=None):
-        """Returns the PSF at position pos
+    def getLocalWCS(self, image_pos):
+        """If the original image was provided to the constructor, this will return the local
+        WCS at a given location in that original image.  If not, this will return None.
+        """
+        if self.wcs:
+            return self.wcs.local(image_pos)
+        else:
+            return None
 
-        The PSFEx class does everything in pixel units, so it has no concept of the pixel_scale.
-        For Galsim, we do everything in physical units (i.e. arcsec typically), so the returned 
-        psf needs to account for the pixel_scale.
+    def getPSF(self, image_pos, gsparams=None):
+        """Returns the PSF at position image_pos
 
-        @param pos          The position in pixel units for which to build the PSF.
-        @param pixel_scale  The pixel scale in arcsec/pixel.
+        @param image_pos    The position in image coordinates at which to build the PSF.
         @param gsparams     (Optional) A GSParams instance to pass to the constructed GSObject.
 
-        @returns an InterpolatedImage instance.
+        @returns the PSF as a GSObject
         """
-        im = galsim.ImageViewF(self.getPSFArray(pos))
-        # We need the scale in arcsec/psfex_pixel, which is 
-        #    (arcsec / image_pixel) * (image_pixel / psfex_pixel)
-        #    = pixel_scale * sample_scale
-        im.scale = pixel_scale * self.sample_scale
-        return galsim.InterpolatedImage(im, flux=1, x_interpolant=galsim.Lanczos(3),
-                                        gsparams=gsparams)
+        # Build an image version of the numpy array
+        im = galsim.Image(self.getPSFArray(image_pos))
 
-    def getPSFArray(self, pos):
-        """Returns the PSF image as a numpy array at position pos
+        # Build the PSF profile in the image coordinate system.
+        psf = galsim.InterpolatedImage(im, scale=self.sample_scale, flux=1, 
+                                       x_interpolant=galsim.Lanczos(3), gsparams=gsparams)
+
+        # This brings if from image coordinates to world coordinates.
+        if self.wcs:
+            psf = self.wcs.toWorld(psf, image_pos=image_pos)
+
+        return psf
+
+    def getPSFArray(self, image_pos):
+        """Returns the PSF image as a numpy array at position image_pos in image coordinates.
         """
         import numpy
-        xto = self._define_xto( (pos.x - self.x_zero) / self.x_scale )
-        yto = self._define_xto( (pos.y - self.y_zero) / self.y_scale )
+        xto = self._define_xto( (image_pos.x - self.x_zero) / self.x_scale )
+        yto = self._define_xto( (image_pos.y - self.y_zero) / self.y_scale )
         order = self.fit_order
         P = numpy.array([ xto[nx] * yto[ny] for ny in range(order+1) for nx in range(order+1-ny) ])
         assert len(P) == self.fit_size
@@ -234,8 +297,7 @@ galsim.config.process.valid_input_types['des_psfex'] = ('galsim.des.DES_PSFEx',
 def BuildDES_PSFEx(config, key, base, ignore, gsparams, logger):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
-    opt = { 'flux' : float ,
-            'num' : int }
+    opt = { 'flux' : float , 'num' : int }
     kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt, ignore=ignore)
 
     if 'des_psfex' not in base:
@@ -253,20 +315,20 @@ def BuildDES_PSFEx(config, key, base, ignore, gsparams, logger):
         raise ValueError("DES_PSFEx requested, but no image_pos defined in base.")
     image_pos = base['image_pos']
 
-    if 'pixel_scale' not in base:
-        raise ValueError("DES_PSFEx requested, but no pixel_scale defined in base.")
-    pixel_scale = base['pixel_scale']
-
     # Convert gsparams from a dict to an actual GSParams object
     if gsparams: gsparams = galsim.GSParams(**gsparams)
     else: gsparams = None
 
-    #psf = des_psfex.getPSF(image_pos, pixel_scale, gsparams=gsparams)
-    # Because of the serialization issues, the above call doesn't work.  So we need to 
-    # repeat the last bit of getPSF here.
-    im = galsim.ImageViewF(des_psfex.getPSFArray(image_pos))
-    im.scale = pixel_scale * des_psfex.getSampleScale()
-    psf = galsim.InterpolatedImage(im, flux=1, x_interpolant=galsim.Lanczos(3), gsparams=gsparams)
+    #psf = des_psfex.getPSF(image_pos, gsparams=gsparams)
+    # Because of serialization issues, the above call doesn't work.  So we need to 
+    # repeat the internals of getPSF here.
+    # Also, this is why we have getSampleScale and getLocalWCS.  The multiprocessing.managers
+    # stuff only makes available methods of classes that are proxied, not all the attributes.
+    # So this is the only way to access these attributes.
+    im = galsim.Image(des_psfex.getPSFArray(image_pos))
+    psf = galsim.InterpolatedImage(im, scale=des_psfex.getSampleScale(), flux=1, 
+                                   x_interpolant=galsim.Lanczos(3), gsparams=gsparams)
+    psf = des_psfex.getLocalWCS(image_pos).toWorld(psf)
 
     if 'flux' in kwargs:
         psf.setFlux(kwargs['flux'])

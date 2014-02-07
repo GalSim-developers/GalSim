@@ -248,7 +248,8 @@ class Shapelet(GSObject):
         sigma = self.SBProfile.getSigma()
         bvec = self.SBProfile.getBVec().copy()
 
-        if image.wcs != None and not isinstance(image.wcs, galsim.PixelScale):
+        if image.wcs != None and not image.wcs.isPixelScale():
+            # TODO: Add ability for ShapeletFitImage to take jacobian matrix.
             raise NotImplementedError("Sorry, cannot (yet) fit a shapelet model to an image "+
                                       "with a non-trivial WCS.")
 

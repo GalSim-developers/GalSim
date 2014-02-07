@@ -56,6 +56,7 @@
 
 #endif
 
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/mpl/list.hpp>
@@ -154,9 +155,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     // Check shift ops
     int dx = 31;
     int dy = 16;
-    im1.shift(dx,dy);
-    im2_view.setOrigin( 1+dx , 1+dy );
-    im3_cview.setCenter( (ncol+1)/2+dx , (nrow+1)/2+dy );
+    galsim::Position<int> delta(dx,dy);
+
+    im1.shift(delta);
+    im2_view.shift(delta);
+    im3_cview.shift(delta);
     galsim::Bounds<int> shifted_bounds(1+dx, ncol+dx, 1+dy, nrow+dy);
 
     BOOST_CHECK(im1.getBounds() == shifted_bounds);

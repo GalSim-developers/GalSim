@@ -648,7 +648,7 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     """
     ignore = [ 'default' ]
     opt = { 'first' : value_type, 'last' : value_type, 'step' : value_type,
-            'repeat' : int, 'nitems' : int }
+            'repeat' : int, 'nitems' : int, 'index' : str }
     kwargs, safe = GetAllParams(param, param_name, base, opt=opt, ignore=ignore)
 
     step = kwargs.get('step',1)
@@ -656,6 +656,7 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     repeat = kwargs.get('repeat',1)
     last = kwargs.get('last',None)
     nitems = kwargs.get('nitems',None)
+    index_key = kwargs.get('index','seq_index')
     if repeat <= 0:
         raise ValueError(
             "Invalid repeat=%d (must be > 0) for %s.type = Sequence"%(repeat,param_name))
@@ -663,6 +664,9 @@ def _GenerateFromSequence(param, param_name, base, value_type):
         raise AttributeError(
             "At most one of the attributes last and nitems is allowed for %s.type = Sequence"%(
                 param_name))
+    if index_key not in [ 'seq_index', 'obj_num', 'image_num', 'file_num' ]:
+        raise AttributeError(
+            "Invalid index=%s for %s.type = Sequence."%(index_key,param_name))
 
     if value_type is bool:
         # Then there are only really two valid sequences: Either 010101... or 101010...
@@ -683,14 +687,14 @@ def _GenerateFromSequence(param, param_name, base, value_type):
         if last is not None:
             nitems = (last - first)/step + 1
 
-    k = base['seq_index']
+    k = base[index_key]
     k = k / repeat
 
     if nitems is not None and nitems > 0:
         k = k % nitems
 
     index = first + k*step
-    #print base['seq_index'],'Sequence index = %s + %d*%s = %s'%(first,k,step,index)
+    #print base[index_key],'Sequence index = %s + %d*%s = %s'%(first,k,step,index)
     return index, False
 
 
@@ -1082,6 +1086,21 @@ def _GenerateFromCurrent(param, param_name, base, value_type):
     # Make a list of keys
     chain = key.split('.')
     d = base
+
+    # We may need to make one adjustment.  If the first item in the key is 'input', then
+    # the key is probably wrong relative to the current config dict.  We make each input
+    # item a list, so the user can have more than one input dict for example.  But if 
+    # they aren't using that, we don't want them to have to know about it if they try to 
+    # take soemthing from there for a Current item.  
+    # So we change, e.g., 
+    #     input.fits_header.file_name 
+    # --> input.fits_header.0.file_name
+    if chain[0] == 'input' and len(chain) > 2:
+        try:
+            k = int(chain[2])
+        except:
+            chain.insert(2,0)
+
     while len(chain):
         k = chain.pop(0)
 

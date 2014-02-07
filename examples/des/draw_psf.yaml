@@ -19,7 +19,7 @@
 #
 # Draw DES PSFs at the locations of observed galaxies.  To run it type:
 # 
-#     galsim -m des des.yaml
+#     galsim -m des -v1 draw_psf.yaml
 #
 # This demo probably isn't so useful as an actual program, but it does showcase how to
 # use the DES module that comes with GalSim, which can be modified to do what you actually
@@ -52,16 +52,7 @@ eval_variables :
     sroot : &root 'DECam_00154912_'
 
     # Directories in the Galsim repo
-    simg_dir : &img_dir 'des_data'
-    swl_dir : &wl_dir 'des_data'
-
-    # Directories on Mike's laptop
-    #simg_dir : &img_dir '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
-    #swl_dir : &wl_dir '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
-    
-    # Directories on folio
-    #simg_dir : &img_dir '/data3/DECAM/SV/DECam_154912'
-    #swl_dir : &wl_dir '/data3/DECAM/wl/DECam_00154912_wl'
+    sdata_dir : &data_dir 'des_data'
 
     # Set which chips to run on
     ifirst_chip : &first_chip 1
@@ -70,7 +61,7 @@ eval_variables :
     #ilast_chip : &last_chip 12
     
 
-# Define the PSF profile to use the DES shapelet files
+# Define the PSF profile.  For now, just the items common to both shapelet and PSFEx PSFs.
 psf : 
     skip : { type : Catalog, col : 'FLAGS' }
     flux : { type : Catalog, col : 'FLUX_AUTO' }
@@ -79,7 +70,7 @@ psf :
 # Setup input files
 input :
     catalog :
-        dir : *img_dir
+        dir : *data_dir
         file_name : 
             type : NumberedFile
             root : *root
@@ -89,7 +80,7 @@ input :
         hdu : 2
 
     fits_header :
-        dir : *img_dir
+        dir : *data_dir
         file_name : 
             type : NumberedFile
             root : *root
@@ -122,6 +113,15 @@ image :
         x : { type : Catalog , col : 'X_IMAGE' }
         y : { type : Catalog , col : 'Y_IMAGE' }
 
+    draw_method : no_pixel  # The PSFs here already include the pixel response.
+
+    wcs :
+        type : Fits
+        dir : *data_dir
+        file_name : 
+            type : Current
+            key : input.fits_header.file_name
+
     random_seed : 1339201
 
 
@@ -146,15 +146,10 @@ output :
 psf :
     type : DES_Shapelet
 
-    # Account for the 1st order effect of the WCS.
-    # Eventually, we need an implementation of the DES WCS.  But Galsim doesn't really do 
-    # WCS at all yet, so wait for that.
-    rotation : '-90 deg'
-
 input :
     des_shapelet :
-        # Can't use *wl_dir here, since the anchors don't follow across yaml documents.
-        dir : { type : Eval, str : 'wl_dir' }
+        # Can't use *data_dir here, since the anchors don't follow across yaml documents.
+        dir : { type : Eval, str : 'data_dir' }
         file_name :
             type : NumberedFile
             root : { type : Eval, str : 'root' }
@@ -174,16 +169,18 @@ psf :
 
 input :
     des_psfex :
-        dir : { type : Eval, str : 'wl_dir' }
+        dir : { type : Eval, str : 'data_dir' }
         file_name :
             type : NumberedFile
             root : { type : Eval, str : 'root' }
             digits : 2
             ext : '_psfcat.psf'
             num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
-
+        image_file_name : 
+            type : Current
+            key : input.fits_header.file_name
+ 
 output :
     file_name :
         ext : '_psfex_image.fits'
-
 

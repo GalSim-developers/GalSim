@@ -99,6 +99,73 @@ def rotate_xy(x, y, theta):
     y_rot = x * sint + y * cost
     return x_rot, y_rot
 
+def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
+    """Parse the args and kwargs of a function call to be some kind of position.
+
+    We allow four options:
+
+        f(x,y)
+        f(galsim.PositionD(x,y)) or f(galsim.PositionI(x,y))
+        f( (x,y) )  (or any indexable thing)
+        f(name1=x, name2=y)
+
+    If the inputs must be integers, set `integer=True`.
+    If there are other args/kwargs to parse after these, then their names should be 
+    be given as the parameter `others`, which are passed back in a tuple after the position.
+    """
+    def canindex(arg):
+        try: arg[0], arg[1]
+        except: return False
+        else: return True
+
+    other_vals = []
+    if len(args) == 0:
+        # Then name1,name2 need to be kwargs
+        # If not, then python will raise an appropriate error.
+        x = kwargs.pop(name1)
+        y = kwargs.pop(name2)
+    elif ( ( isinstance(args[0], galsim.PositionI) or
+             (not integer and isinstance(args[0], galsim.PositionD)) ) and
+           len(args) <= 1+len(others) ):
+        x = args[0].x
+        y = args[0].y
+        for arg in args[1:]:
+            other_vals.append(arg)
+            others.pop(0)
+    elif canindex(args[0]) and len(args) <= 1+len(others):
+        x = args[0][0]
+        y = args[0][1]
+        for arg in args[1:]:
+            other_vals.append(arg)
+            others.pop(0)
+    elif len(args) == 1:
+        raise TypeError("Cannot parse argument "+str(args[0])+" as a position")
+    elif len(args) <= 2 + len(others):
+        x = args[0]
+        y = args[1]
+        for arg in args[2:]:
+            other_vals.append(arg)
+            others.pop(0)
+    else:
+        raise TypeError("Too many arguments supplied")
+    # Read any remaining other kwargs
+    if others:
+        for name in others:
+            val = kwargs.pop(name)
+            other_vals.append(val)
+    if kwargs:
+        raise TypeError("Received unexpected keyword arguments: %s",kwargs)
+
+    if integer:
+        pos = galsim.PositionI(int(x),int(y))
+    else:
+        pos = galsim.PositionD(float(x),float(y))
+    if other_vals:
+        return (pos,) + tuple(other_vals)
+    else:
+        return pos
+
+
 class SimpleGenerator:
     """A simple class that is constructed with an arbitrary object.
     Then generator() will return that object.

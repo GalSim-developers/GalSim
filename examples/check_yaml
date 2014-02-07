@@ -22,15 +22,8 @@
 python=../bin/installed_python  # For python scripts
 bin=../bin  # For galsim executable
 
-if [ ! -d "output" ]; then
-    mkdir output
-fi
-if [ ! -d "output_yaml" ]; then
-    mkdir output_yaml
-fi
-
-/bin/rm -rf output/*
-/bin/rm -rf output_yaml/*
+/bin/rm -rf output
+/bin/rm -rf output_yaml
 
 time $python demo1.py || exit
 time $bin/galsim demo1.yaml || exit

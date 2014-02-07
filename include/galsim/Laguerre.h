@@ -27,6 +27,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/shared_ptr.hpp>
 #include "TMV.h"
 

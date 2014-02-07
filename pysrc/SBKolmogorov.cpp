@@ -24,6 +24,7 @@
 #endif
 #endif
 
+#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 #include "boost/python/stl_iterator.hpp"
 

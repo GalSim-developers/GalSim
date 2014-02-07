@@ -94,7 +94,7 @@ class InterpolatedImage(GSObject):
 
         image = galsim.fits.read('data/147246.0_150.416558_1.998697_masknoise.fits')
         int_im1 = galsim.InterpolatedImage(image)
-        int_im2 = galsim.InterpolatedImage(image, noise_pad='../tests/blankimg.fits')
+        int_im2 = galsim.InterpolatedImage(image, noise_pad='data/blankimg.fits')
         im1 = galsim.ImageF(1000,1000)
         im2 = galsim.ImageF(1000,1000)
         int_im1.draw(im1)
@@ -423,6 +423,9 @@ class InterpolatedImage(GSObject):
         # need to rescale flux by the pixel area to get proper normalization.
         elif normalization.lower() in ['surface brightness','sb']:
             self.scaleFlux(self.image.wcs.pixelArea(image_pos=im_cen))
+
+        # Make sure offset is a PositionD
+        offset = self._parse_offset(offset)
 
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note reverse=True, since we want to fix the center in the opposite sense of what the 

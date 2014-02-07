@@ -24,6 +24,7 @@
 #endif
 #endif
 
+#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 #include "Angle.h"
 
@@ -39,7 +40,9 @@ struct PyAngleUnit {
         pyAngleUnit
             .def(bp::init<double>(bp::arg("val")))
             .def(bp::self == bp::self)
+            .def("getValue", &AngleUnit::getValue)
             .def(bp::other<double>() * bp::self)
+            .enable_pickling()
             ;
     }
 
@@ -67,6 +70,7 @@ struct PyAngle {
             .def(bp::self >= bp::self)
             .def(bp::self > bp::self)
             .def(str(bp::self))
+            .enable_pickling()
             ;
     }
 

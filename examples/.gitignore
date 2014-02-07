@@ -1,3 +1,5 @@
 test*out
 test*fits
-des_data
+output
+output_yaml
+output_json

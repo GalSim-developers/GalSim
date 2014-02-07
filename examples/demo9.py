@@ -27,17 +27,23 @@ applied to each galaxy is calculated for an NFW halo mass profile.  We simulate 
 of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster
 has its own file, organized into 4 directories (one for each mass).  For each cluster, we
 draw 20 lensed galaxies at random positions of the image.  The PSF is appropriate for a
-a space-like simulation.  (Some of the numbers used are the values for HST.)
+space-like simulation.  (Some of the numbers used are the values for HST.)  And we apply
+a cubic telescope distortion for the WCS.
 
 New features introduced in this demo:
 
 - psf = OpticalPSF(..., trefoil1, trefoil2, nstruts, strut_thick, strut_angle)
-- im = galsim.ImageS(xsize, ysize)
+- im = galsim.ImageS(xsize, ysize, wcs)
 - pos = galsim.PositionD(x, y)
 - nfw = galsim.NFWHalo(mass, conc, z, omega_m, omega_lam)
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMagnification(pos, z)
 - pos = bounds.trueCenter()
+- wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc, origin)
+- wcs.toWorld(profile, image_pos)
+- wcs.makeSkyImage(image, sky_level)
+- image_pos = wcs.toImage(pos)
+- image.invertSelf()
 
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
@@ -75,7 +81,6 @@ def main(argv):
     nfiles = 5             # number of files per item in mass list
 
     image_size = 512       # pixels
-    pixel_scale = 0.05     # arcsec / pixel
     sky_level = 1.e2       # ADU / arcsec^2
 
     psf_lam_over_D = 0.077 # (900nm / 2.4m) * 206265 arcsec/rad = 0.077 arcsec
@@ -118,10 +123,95 @@ def main(argv):
         """
         t1 = time.time()
 
-        full_image = galsim.ImageF(image_size, image_size, scale=pixel_scale)
+        # Build the image onto which we will draw the galaxies.
+        full_image = galsim.ImageF(image_size, image_size)
+
+        # The "true" center of the image is allowed to be halfway between two pixels, as is the 
+        # case for even-sized images.  full_image.bounds.center() is an integer position,
+        # which would be 1/2 pixel up and to the right of the true center in this case.
+        im_center = full_image.bounds.trueCenter()
+
+        # For the WCS, this time we use UVFunction, which lets you define arbitrary u(x,y)
+        # and v(x,y) functions.  We use a simple cubic radial function to create a 
+        # pincushion distortion.  This is a typical kind of telescope distortion, although
+        # we exaggerate the magnitude of the effect to make it more apparent.
+        # The pixel size in the center of the image is 0.05, but near the corners (r=362),
+        # the pixel size is approximately 0.075, which is much more distortion than is 
+        # normally present in typical telescopes.  But it makes the effect of the variable 
+        # pixel area obvious when you look at the weight image in the output files.
+        ufunc1 = lambda x,y : 0.05 * x * (1. + 2.e-6 * (x**2 + y**2))
+        vfunc1 = lambda x,y : 0.05 * y * (1. + 2.e-6 * (x**2 + y**2))
+
+        # It's not required to provide the inverse functions.  However, if we don't, then
+        # you will only be able to do toWorld operations, not the inverse toImage.
+        # The inverse function does not have to be exact either.  For example, you could provide
+        # a function that does some kind of iterative solution to whatever accuracy you care
+        # about.  But in this case, we can do the exact inverse.
+        #
+        # Let w = sqrt(u**2 + v**2) and r = sqrt(x**2 + y**2).  Then the solutions are:
+        # x = (u/w) r and y = (u/w) r, and we use Cardano's method to solve for r given w:
+        # See http://en.wikipedia.org/wiki/Cubic_function#Cardano.27s_method
+        # 
+        # w = 0.05 r + 2.e-6 * 0.05 * r**3
+        # r = 100 * ( ( 5 sqrt(w**2 + 5.e3/27) + 5 w )**(1./3.) -
+        #           - ( 5 sqrt(w**2 + 5.e3/27) - 5 w )**(1./3.) )
+
+        def xfunc1(u,v):
+            import math
+            wsq = u*u + v*v
+            if wsq == 0.: 
+                return 0.
+            else:
+                w = math.sqrt(wsq)
+                temp = 5. * math.sqrt(wsq + 5.e3/27)
+                r = 100. * ( (temp + 5*w)**(1./3.) - (temp - 5*w)**(1./3) )
+                return u * r/w
+
+        def yfunc1(u,v):
+            import math
+            wsq = u*u + v*v
+            if wsq == 0.: 
+                return 0.
+            else:
+                w = math.sqrt(wsq)
+                temp = 5. * math.sqrt(wsq + 5.e3/27)
+                r = 100. * ( (temp + 5*w)**(1./3.) - (temp - 5*w)**(1./3) )
+                return v * r/w
+
+        # You could pass the above functions to UVFunction, and normally we would do that.
+        # The only down side to doing so is that the specification of the WCS in the FITS
+        # file is rather ugly.  GalSim is able to turn the python byte code into strings, 
+        # but they are basically a really ugly mess of random-looking characters.  GalSim
+        # will be able to read it back in, but human readers will have no idea what WCS
+        # function was used.  To see what they look like, uncomment this line and comment 
+        # out the later wcs line.
+        #wcs = galsim.UVFunction(ufunc1, vfunc1, xfunc1, yfunc1, origin=im_center)
+
+        # If you provide the functions as strings, then those strings will be preserved
+        # in the FITS header in a form that is more legible to human readers.
+        # It also has the extra benefit of matching the output from demo9.yaml, which we
+        # always try to do.  The config file has no choice but to specify the functions
+        # as strings.
+
+        ufunc = '0.05 * x * (1. + 2.e-6 * (x**2 + y**2))'
+        vfunc = '0.05 * y * (1. + 2.e-6 * (x**2 + y**2))'
+        xfunc = ('( lambda w: ( 0 if w==0 else ' +
+                 '100.*u/w*(( 5*(w**2 + 5.e3/27.)**0.5 + 5*w )**(1./3.) - ' +
+                           '( 5*(w**2 + 5.e3/27.)**0.5 - 5*w )**(1./3.))))( (u**2+v**2)**0.5 )')
+        yfunc = ('( lambda w: ( 0 if w==0 else ' +
+                 '100.*v/w*(( 5*(w**2 + 5.e3/27.)**0.5 + 5*w )**(1./3.) - ' +
+                           '( 5*(w**2 + 5.e3/27.)**0.5 - 5*w )**(1./3.))))( (u**2+v**2)**0.5 )')
+
+        # The origin parameter defines where on the image should be considered (x,y) = (0,0)
+        # in the WCS functions.
+        wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc, origin=im_center)
+
+        # Assign this wcs to full_image
+        full_image.wcs = wcs
 
         # The weight image will hold the inverse variance for each pixel.
-        weight_image = galsim.ImageF(image_size, image_size, scale=pixel_scale)
+        # We can set the wcs directly on construction with the wcs parameter.
+        weight_image = galsim.ImageF(image_size, image_size, wcs=wcs)
 
         # It is common for astrometric images to also have a bad pixel mask.  We don't have any
         # defect simulation currently, so our bad pixel masks are currently all zeros. 
@@ -129,14 +219,14 @@ def main(argv):
         # be able to mark those defects on a bad pixel mask.
         # Note: the S in ImageS means to use "short int" for the data type.
         # This is a typical choice for a bad pixel image.
-        badpix_image = galsim.ImageS(image_size, image_size, scale=pixel_scale)
+        badpix_image = galsim.ImageS(image_size, image_size, wcs=wcs)
 
         # We also draw a PSF image at the location of every galaxy.  This isn't normally done,
         # and since some of the PSFs overlap, it's not necessarily so useful to have this kind 
         # of image.  But in this case, it's fun to look at the psf image, especially with 
         # something like log scaling in ds9 to see how crazy an aberrated OpticalPSF with 
         # struts can look when there is no atmospheric component to blur it out.
-        psf_image = galsim.ImageF(image_size, image_size, scale=pixel_scale)
+        psf_image = galsim.ImageF(image_size, image_size, wcs=wcs)
 
         # Setup the NFWHalo stuff:
         nfw = galsim.NFWHalo(mass=mass, conc=nfw_conc, redshift=nfw_z_halo,
@@ -148,11 +238,6 @@ def main(argv):
         # If you want to include either radiation or more complicated dark energy models,
         # you can define your own cosmology class that defines the functions a(z), E(a), and 
         # Da(z_source, z_lens).  Then you can pass this to NFWHalo as a `cosmo` parameter.
-
-        # The "true" center of the image is allowed to be halfway between two pixels, as is the 
-        # case for even-sized images.  full_image.bounds.center() is an integer position,
-        # which would be 1/2 pixel up and to the right of the true center in this case.
-        im_center = full_image.bounds.trueCenter()
 
         # Make the PSF profile outside the loop to minimize the (significant) OpticalPSF 
         # construction overhead.
@@ -185,7 +270,7 @@ def main(argv):
 
             # We also need the position in pixels to determine where to place the postage
             # stamp on the full image.
-            image_pos = pos / pixel_scale + im_center
+            image_pos = wcs.toImage(pos)
 
             # For even-sized postage stamps, the nominal center (returned by stamp.bounds.center())
             # cannot be at the true center (returned by stamp.bounds.trueCenter()) of the postage 
@@ -205,8 +290,12 @@ def main(argv):
             dy = y_nominal - iy_nominal
             offset = galsim.PositionD(dx,dy)
 
-            # Make the pixel:
-            pix = galsim.Pixel(pixel_scale)
+            # Make the pixel the same way we did in demo3.  We make it in image coordinates
+            # and let the wcs convert it to world coordinates  The only difference here is
+            # that the wcs needs to know where we are on the image, since the shape of the 
+            # pixel is variable.  So we need to provide an image_pos parameter.
+            # (Or a world_pos parameter would also have worked.)
+            pix = wcs.toWorld(galsim.Pixel(1.0), image_pos=image_pos)
 
             # Determine the random values for the galaxy:
             flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
@@ -266,7 +355,9 @@ def main(argv):
             # To draw the image at a position other than the center of the image, you can
             # use the offset parameter, which applies an offset in pixels relative to the
             # center of the image.
-            stamp = final.draw(scale=pixel_scale, offset=offset)
+            # We also need to provide the local wcs at the current position.
+            local_wcs = wcs.local(image_pos)
+            stamp = final.draw(wcs=local_wcs, offset=offset)
 
             # Recenter the stamp at the desired position:
             stamp.setCenter(ix_nominal,iy_nominal)
@@ -278,26 +369,39 @@ def main(argv):
             # Also draw the PSF
             psf_final = galsim.Convolve([psf, pix])
             psf_stamp = galsim.ImageF(stamp.bounds) # Use same bounds as galaxy stamp
-            psf_final.draw(psf_stamp, scale=pixel_scale, offset=offset)
+            psf_final.draw(psf_stamp, wcs=local_wcs, offset=offset)
             psf_image[bounds] += psf_stamp[bounds]
 
 
         # Add Poisson noise to the full image
-        sky_level_pixel = sky_level * pixel_scale**2
+        # Note: The normal calculation of Poission noise isn't quite correct right now.
+        # The pixel area is variable, which means the amount of sky flux that enters each
+        # pixel is also variable.  The wcs classes have a function `makeSkyImage` which
+        # will fill an image with the correct amount of sky flux given the sky level
+        # in units of ADU/arcsec^2.  We use the weight image as our work space for this.
+        wcs.makeSkyImage(weight_image, sky_level)
 
+        # Add this to the current full_image (temporarily).
+        full_image += weight_image
+
+        # Add Poisson noise, given the current full_image.
         # Going to the next seed isn't really required, but it matches the behavior of the 
         # config parser, so doing this will result in identical output files.
         # If you didn't care about that, you could instead construct this as a continuation
         # of the last RNG from the above loop
         rng = galsim.BaseDeviate(seed+nobj)
-        full_image.addNoise(galsim.PoissonNoise(rng,sky_level=sky_level_pixel))
+        full_image.addNoise(galsim.PoissonNoise(rng))
 
-        # For the weight image, we only want the noise from the sky.  (If we were including
-        # read_noise, we'd want that as well.)  Including the Poisson noise from the objects
-        # as well tends to bias fits that use this as a weight, since the model becomes
-        # magnitude-dependent.
-        # The variance is just sky_level_pixel.  And we want the inverse of this.
-        weight_image.fill(1./sky_level_pixel)
+        # Subtract the sky back off.
+        full_image -= weight_image
+
+        # The weight image is nominally the inverse variance of the pixel noise.  However, it is 
+        # common to exclude the Poisson noise from the objects themselves and only include the
+        # noise from the sky photons.  The variance of the noise is just the sky level, which is 
+        # what is currently in the weight_image.  (If we wanted to include the variance from the 
+        # objects too, then we could use the full_image before we added the PoissonNoise to it.)
+        # So all we need to do now is to invert the values in weight_image.  
+        weight_image.invertSelf()
 
         # Write the file to disk:
         galsim.fits.writeMulti([full_image, badpix_image, weight_image, psf_image], file_name)

@@ -211,9 +211,15 @@ namespace galsim {
         _pimpl = d._pimpl;
     }
 
-    void SBProfile::applyShift(double dx, double dy)
+    void SBProfile::applyTransformation(double dudx, double dudy, double dvdx, double dvdy)
+    {
+        SBTransform d(*this, dudx, dudy, dvdx, dvdy);
+        _pimpl = d._pimpl;
+    }
+
+    void SBProfile::applyShift(const Position<double>& delta)
     { 
-        SBTransform d(*this,1.,0.,0.,1., Position<double>(dx,dy));
+        SBTransform d(*this,1.,0.,0.,1., delta);
         _pimpl = d._pimpl;
     }
 
@@ -259,9 +265,6 @@ namespace galsim {
     double SBProfile::plainDraw(ImageView<T> I, double gain) const 
     {
         dbg<<"Start plainDraw"<<std::endl;
-        // recenter an existing image, to be consistent with fourierDraw:
-        I.setCenter(0,0);
-
         assert(_pimpl.get());
         return _pimpl->fillXImage(I, gain);
     }
@@ -439,8 +442,6 @@ namespace galsim {
         NFT = std::max(NFT,_pimpl->gsparams->minimum_fft_size);
         dbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
 
-        // Move the output image to be centered near zero
-        I.setCenter(0,0);
         double dk = 2.*M_PI/NFT;
         dbg << 
             " After adjustments: dk " << dk << 
@@ -518,12 +519,9 @@ namespace galsim {
     template <typename T>
     void SBProfile::plainDrawK(ImageView<T> Re, ImageView<T> Im, double gain) const 
     {
-        // Make sure input images match or are both null
         dbg<<"Start plainDrawK: \n";
-
-        // recenter an existing image, to be consistent with fourierDrawK:
-        Re.setCenter(0,0);
-        Im.setCenter(0,0);
+        // Make sure input images match or are both null
+        assert(Re.getBounds() == Im.getBounds());
 
         const int m = (Re.getXMax()-Re.getXMin()+1);
         const int n = (Re.getYMax()-Re.getYMin()+1);
@@ -559,6 +557,7 @@ namespace galsim {
     template <typename T>
     void SBProfile::fourierDrawK(ImageView<T> Re, ImageView<T> Im, double gain, double wmult) const 
     {
+        dbg<<"Start fourierDrawK: \n";
         // Make sure input images match or are both null
         assert(Re.getBounds() == Im.getBounds());
 
@@ -589,10 +588,6 @@ namespace galsim {
         if (NFT > _pimpl->gsparams->maximum_fft_size)
             FormatAndThrow<SBError>() << 
                 "fourierDrawK() requires an FFT that is too large, " << NFT;
-
-        // Move the output image to be centered near zero
-        Re.setCenter(0,0);
-        Im.setCenter(0,0);
 
         double dx = 2.*M_PI*oversamp/NFT;
         XTable xt(NFT,dx);
@@ -914,8 +909,7 @@ namespace galsim {
         // If not adding to the current image, zero it out:
         if (!add_to_image) img.setZero();
 
-        // Center the image at 0,0:
-        img.setCenter(0,0);
+        // (The image should already be centered by the python layer.)
         dbg<<"On input, image has central value = "<<img(0,0)<<std::endl;
 
         // Store the PhotonArrays to be added here rather than add them as we go,

@@ -34,6 +34,7 @@
 // Hopefully all our compilers will conform to the C99 standard which includes stdint.h.
 #include <stdint.h>
 
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/shared_ptr.hpp>
 
 #include "Std.h"
@@ -73,7 +74,7 @@ namespace galsim {
         /**
          *  @brief Return the bounding box of the image.
          */
-        const Bounds<int>& getBounds() const { return this->_bounds; }
+        const Bounds<int>& getBounds() const { return _bounds; }
 
     protected:
 
@@ -161,7 +162,7 @@ namespace galsim {
          *  (getStride() == getBounds().getXMax() - getBounds().getXMin() + 1)
          */
         bool isContiguous() const
-        { return (getStride() == this->getBounds().getXMax() - this->getBounds().getXMin() + 1); }
+        { return (getStride() == this->_bounds.getXMax() - this->_bounds.getXMin() + 1); }
 
         /**
          *  @brief Deep copy the image.
@@ -190,68 +191,31 @@ namespace galsim {
         ConstImageView<T> operator[](const Bounds<int>& bounds) const
         { return subImage(bounds); }
 
-        //@{
         /**
-         *  @brief Shift the bounding box of the image, changing the logical location of the pixels.
+         *  @brief Shift the bounding box of the image, changing the logical location of the pixels
          *
          *  xmin_new = xmin + dx
          *  xmax_new = xmax + dx
          *  ymin_new = ymin + dy
          *  ymax_new = ymax + dy
          */
-        void shift(int dx, int dy) { this->_bounds.shift(dx, dy); }
-        void shift(const Position<int>& dpos) { shift(dpos.x, dpos.y); }
-        //@}
-
-        //@{
-        /**
-         *  @brief Move the origin of the image, changing the logical location of the pixels.
-         *
-         *  (x0,y0) becomes the new lower-left corner of the image.
-         *
-         *  xmin_new = x0
-         *  xmax_new = x0 + xmax - xmin
-         *  ymin_new = y0
-         *  ymax_new = y0 + ymax - ymin
-         */
-        void setOrigin(int x0, int y0) { shift(x0 - this->getXMin(), y0 - this->getYMin()); }
-        void setOrigin(const Position<int>& pos) { setOrigin(pos.x,pos.y); }
-        //@}
-
-        //@{
-        /**
-         *  @brief Move the center of the image, changing the logical location of the pixels.
-         *
-         *  (x0,y0) becomes the new center of the image if the x and y ranges are odd.
-         *  If the x range is even, then the new center will be x0 + 1/2.
-         *  Likewise for y.
-         *
-         *  xmin_new = x0 - (xmax - xmin)/2
-         *  xmax_new = xmin_new + xmax - xmin
-         *  ymin_new = y0 - (ymax - ymin)/2
-         *  ymax_new = ymin_new + ymax - ymin
-         */
-        void setCenter(int x0, int y0) 
-        { 
-            shift(x0 - (this->getXMax()+this->getXMin()+1)/2 ,
-                  y0 - (this->getYMax()+this->getYMin()+1)/2 ); 
-        }
-        void setCenter(const Position<int>& pos) { setCenter(pos.x,pos.y); }
-        //@}
+        void shift(const Position<int>& delta) { this->_bounds.shift(delta); }
 
         /**
          *  @brief Return the bounding box of the image.
          */
-        const Bounds<int>& getBounds() const { return AssignableToImage<T>::getBounds(); }
+        // (Repeat this here for the sake of the boost python wrapping, so we don't have to
+        // wrap AssignableToImage.)
+        const Bounds<int>& getBounds() const { return this->_bounds; }
 
         //@{
         /**
          *  @brief Convenience accessors for the bounding box corners.
          */
-        int getXMin() const { return getBounds().getXMin(); }
-        int getXMax() const { return getBounds().getXMax(); }
-        int getYMin() const { return getBounds().getYMin(); }
-        int getYMax() const { return getBounds().getYMax(); }
+        int getXMin() const { return this->_bounds.getXMin(); }
+        int getXMax() const { return this->_bounds.getXMax(); }
+        int getYMin() const { return this->_bounds.getYMin(); }
+        int getYMax() const { return this->_bounds.getYMax(); }
         //@}
         
         //@{
@@ -587,7 +551,7 @@ namespace galsim {
         template <class U>
         void copyFrom(const BaseImage<U>& rhs) const
         {
-            if (!this->getBounds().isSameShapeAs(rhs.getBounds()))
+            if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
                 throw ImageError("Attempt im1 = im2, but bounds not the same shape");
             for (int y=this->getYMin(), y2=rhs.getYMin(); y <= this->getYMax(); ++y, ++y2) {
                 iterator it1 = rowBegin(y);

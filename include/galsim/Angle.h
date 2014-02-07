@@ -81,6 +81,8 @@ namespace galsim {
         bool operator==(AngleUnit rhs) const { return (_val == rhs._val); }
         bool operator!=(AngleUnit rhs) const { return (_val != rhs._val); }
         //@}
+        
+        double getValue() const { return _val; }
 
     private:
         double _val;
@@ -188,11 +190,12 @@ namespace galsim {
         { os << theta._val; return os; }
 
         /// Wraps this angle to the range (-pi, pi]
-        void wrap() {
+        Angle wrap() {
             const double TWOPI = 2.*M_PI;
-            _val = std::fmod(_val, TWOPI); // now in range (-TWOPI, TWOPI)
-            if (_val <= -M_PI) _val += TWOPI;
-            if (_val > M_PI) _val -= TWOPI;
+            double new_val = std::fmod(_val, TWOPI); // now in range (-TWOPI, TWOPI)
+            if (new_val <= -M_PI) new_val += TWOPI;
+            if (new_val > M_PI) new_val -= TWOPI;
+            return Angle(new_val, radians);
         }
 
     private:

@@ -31,6 +31,7 @@ New features introduced in this demo:
 
 - obj = galsim.Exponential(flux, scale_radius)
 - obj = galsim.Moffat(beta, flux, half_light_radius)
+- obj = galsim.Pixel(scale)
 - obj.applyShear(g1, g2)  -- with explanation of other ways to specify shear
 - rng = galsim.BaseDeviate(seed)
 - noise = galsim.PoissonNoise(rng, sky_level)
@@ -61,7 +62,7 @@ def main(argv):
     psf_beta = 5       #
     psf_re = 1.0       # arcsec
     pixel_scale = 0.2  # arcsec / pixel
-    sky_level = 2.5e4  # counts / arcsec^2
+    sky_level = 2.5e3  # counts / arcsec^2
 
     # This time use a particular seed, so the image is deterministic.
     # This is the same seed that is used in demo2.yaml, which means the images produced
@@ -98,8 +99,9 @@ def main(argv):
     psf = galsim.Moffat(beta=psf_beta, flux=1., half_light_radius=psf_re)
     logger.debug('Made PSF profile')
 
-    # Define the pixel size
-    pix = galsim.Pixel(pixel_scale)
+    # Define the pixel size.  It's not usually necessary, but the pixel scale parameter
+    # is named scale, so you can use a keyword argument if you want.
+    pix = galsim.Pixel(scale=pixel_scale)
     logger.debug('Made pixel profile')
 
     # Final profile is the convolution of these.

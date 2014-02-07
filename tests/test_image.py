@@ -74,7 +74,13 @@ ref_array = np.array([
     [14, 24, 34, 44, 54, 64, 74], 
     [15, 25, 35, 45, 55, 65, 75] ]).astype(np.int16)
 
-nimages = 12  # Depth of FITS datacubes and multi-extension FITS files
+# Depth of FITS datacubes and multi-extension FITS files
+if __name__ == "__main__":
+    nimages = 12  
+else:
+    # There really are 12, but testing the first 3 should be plenty as a unit test, and 
+    # it helps speed things up.
+    nimages = 3
 
 datadir = os.path.join(".", "Image_comparison_images")
 
@@ -256,9 +262,11 @@ def test_Image_FITS_IO():
         # Test various compression schemes
         #
 
-        # These tests are a bit slow, so we only bother to run them for the first dtype.
-        # When working on the code, it is a good idea to comment out this line.
-        if i > 0: continue
+        # These tests are a bit slow, so we only bother to run them for the first dtype
+        # when doing the regular unit tests.  When running python test_image.py, all of them
+        # will run, so when working on the code, it is a good idea to run the tests that way.
+        if i > 0 and __name__ != "__main__":
+            continue
 
         # Test full-file gzip
         test_file = os.path.join(datadir, "test"+tchar[i]+".fits.gz")
@@ -355,6 +363,7 @@ def test_Image_MultiFITS_IO():
     """
     import time
     t1 = time.time()
+
     for i in xrange(ntypes):
         array_type = types[i]
 
@@ -442,14 +451,15 @@ def test_Image_MultiFITS_IO():
                     test_image_list[k].array, 
                     err_msg="Image"+tchar[i]+" readMulti failed after using writeFile")
 
-
         #
         # Test various compression schemes
         #
 
-        # These tests are a bit slow, so we only bother to run them for the first dtype.
-        # When working on the code, it is a good idea to comment out this line.
-        if i > 0: continue
+        # These tests are a bit slow, so we only bother to run them for the first dtype
+        # when doing the regular unit tests.  When running python test_image.py, all of them
+        # will run, so when working on the code, it is a good idea to run the tests that way.
+        if i > 0 and __name__ != "__main__":
+            continue
 
         # Test full-file gzip
         test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits.gz")
@@ -646,9 +656,11 @@ def test_Image_CubeFITS_IO():
         # Test various compression schemes
         #
 
-        # These tests are a bit slow, so we only bother to run them for the first dtype.
-        # When working on the code, it is a good idea to comment out this line.
-        if i > 0: continue
+        # These tests are a bit slow, so we only bother to run them for the first dtype
+        # when doing the regular unit tests.  When running python test_image.py, all of them
+        # will run, so when working on the code, it is a good idea to run the tests that way.
+        if i > 0 and __name__ != "__main__":
+            continue
 
         # Test full-file gzip
         test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits.gz")
@@ -815,17 +827,11 @@ def test_Image_binary_add():
                     +str(types[i])+" and "+str(types[j]))
 
         # Check for exceptions if we try to do this operation for images without matching
-        # scale/shape.  Note that this test is only included here (not in the unit tests for all
+        # shape.  Note that this test is only included here (not in the unit tests for all
         # other operations) because all operations have the same error-checking code, so it should
         # only be necessary to check once.
         try:
-            # first, try two images with different scales
             image1 = galsim.Image(ref_array.astype(types[i]))
-            image1.scale = 1.
-            image2 = image1.copy()
-            image2.scale = 2.
-            np.testing.assert_raises(ValueError, image1.__add__, image2)
-            # now, try two images with different shapes
             image2 = image1.subImage(galsim.BoundsI(image1.xmin, image1.xmax-1,
                                                     image1.ymin+1, image1.ymax))
             np.testing.assert_raises(ValueError, image1.__add__, image2)

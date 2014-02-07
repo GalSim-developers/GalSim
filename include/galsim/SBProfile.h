@@ -34,6 +34,10 @@
 #include <map>
 #include <vector>
 #include <algorithm>
+
+// Some versions of boost don't have the right guard to avoid C++-11 extensions. 
+// This #define helps avoid warnings on clang, and it doesn't hurt elsewhere.
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/shared_ptr.hpp>
 
 #include "Std.h"
@@ -253,7 +257,7 @@ namespace galsim {
         /**
          * @brief Apply an overall scale change to the profile, preserving surface brightness.
          *
-         * This transforms the object by the given transformation.  As with scaleFlux, it does not
+         * This expands the linear scale factor of the object. As with scaleFlux, it does not
          * invalidate any previous uses of this object.
          */
         void applyExpansion(double scale);
@@ -277,12 +281,22 @@ namespace galsim {
         void applyRotation(const Angle& theta);
 
         /**
+         * @brief Apply a transformation given by an arbitrary jacobian matrix
+         *
+         * This transforms the object by the given transformation. As with scaleFlux, it does not 
+         * invalidate any previous uses of this object.
+         *
+         * The parameters are the four elements of the jacobian: dudx, dudy, dvdx, dvdy.
+         */
+        void applyTransformation(double dudx, double dudy, double dvdx, double dvdy);
+
+        /**
          * @brief Apply a translation.
          *
          * This shifts the object by the given amount.  As with scaleFlux, it does not invalidate
          * any previous uses of this object.
          */
-        void applyShift(double dx, double dy);
+        void applyShift(const Position<double>& delta);
 
         /**
          * @brief Shoot photons through this SBProfile.

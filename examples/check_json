@@ -22,15 +22,8 @@
 python=../bin/installed_python  # For python scripts
 bin=../bin  # For galsim executable
 
-if [ ! -d "output" ]; then
-    mkdir output
-fi
-if [ ! -d "output_json" ]; then
-    mkdir output_json
-fi
-
-/bin/rm -rf output/*
-/bin/rm -rf output_json/*
+/bin/rm -rf output
+/bin/rm -rf output_json
 
 time $python demo1.py || exit
 time $bin/galsim json/demo1.json || exit
