@@ -42,6 +42,9 @@ class Bandpass(object):
 
     Products of two Bandpasses are defined only on the overlapping wavelengths for which their
     multiplicands are defined, with `blue_limit` and `red_limit` updated to match.
+
+    A Bandpass.effective_wavelength will be computed upon construction.  We use throughput-weighted
+    average wavelength (which is independent of any SED) as our definition for effective wavelength.
     """
     def __init__(self, throughput, blue_limit=None, red_limit=None):
         """Very simple Bandpass filter object.  This object is callable, returning dimensionless
@@ -90,6 +93,12 @@ class Bandpass(object):
         self.func = tp
         self.blue_limit = blue_limit
         self.red_limit = red_limit
+        # We define bandpass effective wavelength as the throughput-weighted average wavelength,
+        # independent of any SED.
+        self.effective_wavelength = (galsim.integ.int1d(lambda w: self.func(w) * w,
+                                                        self.blue_limit, self.red_limit)
+                                     / galsim.integ.int1d(self.func,
+                                                          self.blue_limit, self.red_limit))
 
     def __mul__(self, other):
         blue_limit = self.blue_limit
