@@ -66,7 +66,7 @@ class _ReadFile:
 
     # There are several methods available for each of gzip and bzip2.  Each is its own function.
     def gunzip_call(self, file):
-        # c.f. http://bugs.python.org/issue7471
+        # cf. http://bugs.python.org/issue7471
         import subprocess
         from cStringIO import StringIO
         # We use gunzip -c rather than zcat, since the latter is sometimes called gzcat
@@ -146,9 +146,6 @@ class _ReadFile:
         return hdu_list, tmp
  
     def __init__(self):
-        # For each compression type, we try them in order of efficiency and keep track of 
-        # which method worked for next time.  Whenever one doesn't work, we increment the 
-        # method number and try the next one.
         # For each compression type, we try them in rough order of efficiency and keep track of 
         # which method worked for next time.  Whenever one doesn't work, we increment the 
         # method number and try the next one.  The *_call methods are usually the fastest,
