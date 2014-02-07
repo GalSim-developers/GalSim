@@ -136,8 +136,8 @@ class BaseWCS(object):
       be a galsim.CelestialCoord if the transformation is in terms of celestial coordinates
       (if wcs.isCelestial() == True).  Otherwise, it will be a PositionD as well.
 
-    - Convert a GSObject, which is naturally defined in world coordinates, to the equivalent
-      profile using image coordinates (or vice versa):
+    - Convert a GSObject that is defined in world coordinates to the equivalent profile defined 
+      in terms of image coordinates (or vice versa):
 
                 image_profile = wcs.toImage(world_profile)
                 world_profile = wcs.toWorld(image_profile)
@@ -155,6 +155,9 @@ class BaseWCS(object):
       If wcs.toWorld(image_pos) is not implemented for a particular WCS class, then a
       NotImplementedError will be raised if you pass in a world_pos argument.
 
+      The returned local_wcs is usually a JacobianWCS instance, but see the doc string for 
+      local for more details.
+
     - Construct a full affine approximation of a WCS at a given location:
 
                 affine_wcs = wcs.affine(image_pos = image_pos)
@@ -163,13 +166,7 @@ class BaseWCS(object):
       This preserves the transformation near the location of image_pos, but it is linear, so
       the transformed values may not agree as you get farther from the given point.
 
-    - Shift a transformation to use a new location for what is currently considered
-      image_pos = (0,0).  For local WCS types, this also converts to a non-local WCS.
-
-                world_pos1 = wcs.toWorld(PositionD(0,0))
-                shifted = wcs.setOrigin(origin)
-                world_pos2 = shifted.toWorld(origin)
-                # world_pos1 should be equal to world_pos2
+      The returned affine_wcs is always an AffineTransform instance.
 
     - Get some properties of the pixel size and shape:
 
@@ -526,60 +523,6 @@ class BaseWCS(object):
 
         wcs._writeHeader(header, bounds)
 
-
-    @staticmethod
-    def readFromFitsHeader(header):
-        """Read a WCS function from a FITS header.
-
-        This is normally called automatically from within the galsim.fits.read() function.
-
-        If the file was originally written by GalSim using one of the galsim.fits.write functions,
-        then this should always succeed in reading back in the original WCS.  It may not end up 
-        as exactly the same class as the original, but the underlying world coordinate system
-        transformation should be preserved.
-
-        If the file was not written by GalSim, then this code will do its best to read the 
-        WCS information in the FITS header.  Depending on what kind of WCS is encoded in the 
-        header, this may or may not be successful.
-
-        If there is no WCS information in the header, then this will default to a pixel scale
-        of 1.
-
-        In addition to the wcs, this function will also return the image origin that the WCS
-        is assuming for the image.  If the file was originally written by GalSim, this should
-        correspond to the original image origin.  If not, it will default to (1,1).
-
-        Note that this function is a static method of BaseWCS.  So to use it, you would write
-
-                wcs, origin = BaseWCS.readFromFitsHeader(header)
-
-
-        @param header           The fits header to write the data to.
-
-        @returns wcs, origin    The wcs and the image origin.
-        """
-        if not isinstance(header, galsim.fits.FitsHeader):
-            header = galsim.fits.FitsHeader(header)
-        xmin = header.get("GS_XMIN", 1)
-        ymin = header.get("GS_YMIN", 1)
-        origin = galsim.PositionI(xmin, ymin)
-        wcs_name = header.get("GS_WCS", None)
-        if wcs_name:
-            wcs_type = eval('galsim.' + wcs_name)
-            wcs = wcs_type._readHeader(header)
-        elif 'CTYPE1' in header:
-            wcs = galsim.FitsWCS(header=header)
-        else:
-            wcs = galsim.PixelScale(1.)
-
-        if xmin != 1 or ymin != 1:
-            # ds9 always assumes the image has an origin at (1,1), so convert back to actual
-            # xmin, ymin if necessary.
-            delta = galsim.PositionI(xmin-1, ymin-1)
-            wcs = wcs.setOrigin(delta)
-
-        return wcs, origin
-
     def makeSkyImage(self, image, sky_level):
         """Make an image of the sky, correctly accounting for the pixel area, which might be
         variable over the image.
@@ -589,6 +532,61 @@ class BaseWCS(object):
                             system units are, if not arcsec).
         """
         self._makeSkyImage(image, sky_level)
+
+def readFromFitsHeader(header):
+    """Read a WCS function from a FITS header.
+
+    This is normally called automatically from within the galsim.fits.read() function, but
+    you can also call it directly as 
+    
+        wcs, origin = galsim.wcs.readFromFitsHeader(header)
+
+    If the file was originally written by GalSim using one of the galsim.fits.write functions,
+    then this should always succeed in reading back in the original WCS.  It may not end up 
+    as exactly the same class as the original, but the underlying world coordinate system
+    transformation should be preserved.
+
+    If the file was not written by GalSim, then this code will do its best to read the 
+    WCS information in the FITS header.  Depending on what kind of WCS is encoded in the 
+    header, this may or may not be successful.
+
+    If there is no WCS information in the header, then this will default to a pixel scale
+    of 1.
+
+    In addition to the wcs, this function will also return the image origin that the WCS
+    is assuming for the image.  If the file was originally written by GalSim, this should
+    correspond to the original image origin.  If not, it will default to (1,1).
+
+    @param header           The fits header to write the data to.
+
+    @returns wcs, origin    The wcs and the image origin.
+    """
+    if not isinstance(header, galsim.fits.FitsHeader):
+        header = galsim.fits.FitsHeader(header)
+    xmin = header.get("GS_XMIN", 1)
+    ymin = header.get("GS_YMIN", 1)
+    origin = galsim.PositionI(xmin, ymin)
+    wcs_name = header.get("GS_WCS", None)
+    if wcs_name:
+        wcs_type = eval('galsim.' + wcs_name)
+        wcs = wcs_type._readHeader(header)
+    elif 'CTYPE1' in header:
+        try:
+            wcs = galsim.FitsWCS(header=header)
+        except:
+            # This shouldn't ever happen, but just in case...
+            wcs = galsim.PixelScale(1.)
+    else:
+        wcs = galsim.PixelScale(1.)
+
+    if xmin != 1 or ymin != 1:
+        # ds9 always assumes the image has an origin at (1,1), so convert back to actual
+        # xmin, ymin if necessary.
+        delta = galsim.PositionI(xmin-1, ymin-1)
+        wcs = wcs.setOrigin(delta)
+
+    return wcs, origin
+
 
 #########################################################################################
 #
@@ -724,9 +722,9 @@ class EuclideanWCS(BaseWCS):
             v = [ self._v(x,y) for (x,y) in zip(xlist,ylist) ]
 
         dudx = 0.5 * (u[0] - u[1]) / dx
-        dudy = 0.5 * (u[2] - u[3]) / dx
+        dudy = 0.5 * (u[2] - u[3]) / dy
         dvdx = 0.5 * (v[0] - v[1]) / dx
-        dvdy = 0.5 * (v[2] - v[3]) / dx
+        dvdy = 0.5 * (v[2] - v[3]) / dy
 
         return JacobianWCS(dudx, dudy, dvdx, dvdy)
 
