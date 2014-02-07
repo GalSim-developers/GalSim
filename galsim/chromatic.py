@@ -19,7 +19,7 @@
 """@file chromatic.py
 Define wavelength-dependent surface brightness profiles.
 
-Implementation is done by constructing GSObjects as functions of wavelength.  Draw methods then
+Implementation is done by constructing GSObjects as functions of wavelength.  `draw` methods then
 integrate over wavelength while also multiplying in a throughput function.
 
 Possible uses include galaxies with color gradients, automatically drawing a given galaxy through
