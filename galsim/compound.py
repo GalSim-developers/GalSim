@@ -301,7 +301,7 @@ class Convolution(GSObject):
                 if len(others) == 1:
                     noise.convolveWith(others[0])
                 else:
-                    noise.convolveWith(galsim.Convolution(others))
+                    noise.convolveWith(Convolution(others))
 
         # Then finally initialize the SBProfile using the objects' SBProfiles.
         SBList = [ obj.SBProfile for obj in args ]
