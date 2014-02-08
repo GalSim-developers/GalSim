@@ -38,7 +38,7 @@ class ChromaticObject(object):
     """
     def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
-             integrator=None, **kwargs):
+             integrator=galsim.integ.midpoint_int_image, **kwargs):
         """Base chromatic image draw function, for subclasses that don't choose to override it.
         Since most galsim use cases will probably finish with a convolution,
         ChromaticConvolution.draw() will often be the draw method used in practice.
@@ -78,18 +78,12 @@ class ChromaticObject(object):
         @returns                  galsim.Image drawn through filter.
         """
 
-        # default integrator uses midpoint rule.
-        if integrator is None:
-            integrator = galsim.integ.midpoint_int_image
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
-        prof0 = prof0._fix_center(image, scale, offset, use_true_center, reverse=False)
-        image = prof0._draw_setup_image(image, scale, wmult, add_to_image)
+        prof1 = prof0._fix_center(image, scale, offset, use_true_center, reverse=False)
+        image = prof1._draw_setup_image(image, scale, wmult, add_to_image)
 
         if self.separable:
-            # *why* do I have to do this?  Maybe there's another setting I should be altering
-            # instead of redoing this profile?
-            prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
             multiplier = galsim.integ.int1d(lambda w: self.SED(w) * bandpass(w),
                                             bandpass.blue_limit, bandpass.red_limit)
             prof0 *= multiplier/self.SED(bandpass.effective_wavelength)

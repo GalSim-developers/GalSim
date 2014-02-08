@@ -510,6 +510,8 @@ def test_double_ChromaticSum():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_ChromaticConvolution_of_ChromaticConvolution():
+    import time
+    t1 = time.time()
     a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
     b = galsim.Chromatic(galsim.Gaussian(fwhm=2.0), bulge_SED)
     c = galsim.Chromatic(galsim.Gaussian(fwhm=3.0), bulge_SED)
@@ -520,8 +522,12 @@ def test_ChromaticConvolution_of_ChromaticConvolution():
     g = galsim.Convolve(e, f)
     if any([not isinstance(h, galsim.Chromatic) for h in g.objlist]):
         raise AssertionError("ChromaticConvolution did not expand ChromaticConvolution argument")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_ChromaticAutoConvolution():
+    import time
+    t1 = time.time()
     a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
@@ -529,11 +535,16 @@ def test_ChromaticAutoConvolution():
     b.draw(bandpass, image=im1)
     c = galsim.AutoConvolve(a)
     c.draw(bandpass, image=im2)
+    printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticAutoConvolution(a) not equal to "
                                          "ChromaticConvolution(a,a)")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_ChromaticAutoCorrelation():
+    import time
+    t1 = time.time()
     a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
@@ -541,12 +552,17 @@ def test_ChromaticAutoCorrelation():
     b.draw(bandpass, image=im1)
     c = galsim.AutoCorrelate(a)
     c.draw(bandpass, image=im2)
+    printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticAutoCorrelate(a) not equal to "
                                          "ChromaticConvolution(a,a.createRotated("
                                          "180.0*galsim.degrees)")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
+    import time
+    t1 = time.time()
     test_draw_add_commutativity()
     test_ChromaticConvolution_InterpolatedImage()
     test_chromatic_add()
