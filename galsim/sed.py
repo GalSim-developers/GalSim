@@ -71,7 +71,7 @@ class SED(object):
         @param flux_type     String specifying what type of spectral density `spec` represents.  See
                              above for valid options for this parameter.
         """
-        if isinstance(spec, str):
+        if isinstance(spec, (str, unicode)):
             import os
             if os.path.isfile(spec):
                 spec = galsim.LookupTable(file=spec)

@@ -72,7 +72,7 @@ class Bandpass(object):
                              throughput is a function.
         """
         tp = throughput  # For brevity within this function
-        if isinstance(tp, str):
+        if isinstance(tp, (str, unicode)):
             import os
             if os.path.isfile(tp):
                 tp = galsim.LookupTable(file=tp)
