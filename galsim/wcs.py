@@ -898,7 +898,6 @@ class CelestialWCS(BaseWCS):
             ra = [ w[0] for w in world ]
             dec = [ w[1] for w in world ]
 
-        import numpy
         # Note: our convention is that ra increases to the left!
         # i.e. The u,v plane is the tangent plane as seen from Earth with +v pointing
         # north, and +u pointing west.
