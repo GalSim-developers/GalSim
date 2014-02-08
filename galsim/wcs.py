@@ -1124,8 +1124,8 @@ class ShearWCS(LocalWCS):
         self._g1 = shear.g1
         self._g2 = shear.g2
         self._gsq = self._g1**2 + self._g2**2
-        import numpy
-        self._gfactor = 1. / numpy.sqrt(1. - self._gsq)
+        import math
+        self._gfactor = 1. / math.sqrt(1. - self._gsq)
 
     # Help make sure ShearWCS is read-only.
     @property
@@ -1173,13 +1173,13 @@ class ShearWCS(LocalWCS):
 
     def _minScale(self):
         # min stretch is (1-|g|) / sqrt(1-|g|^2)
-        import numpy
-        return self._scale * (1. - numpy.sqrt(self._gsq)) * self._gfactor
+        import math
+        return self._scale * (1. - math.sqrt(self._gsq)) * self._gfactor
 
     def _maxScale(self):
         # max stretch is (1+|g|) / sqrt(1-|g|^2)
-        import numpy
-        return self._scale * (1. + numpy.sqrt(self._gsq)) * self._gfactor
+        import math
+        return self._scale * (1. + math.sqrt(self._gsq)) * self._gfactor
 
     def _inverse(self):
         return ShearWCS(1./self._scale, -self._shear)
