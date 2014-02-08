@@ -521,6 +521,31 @@ def test_ChromaticConvolution_of_ChromaticConvolution():
     if any([not isinstance(h, galsim.Chromatic) for h in g.objlist]):
         raise AssertionError("ChromaticConvolution did not expand ChromaticConvolution argument")
 
+def test_ChromaticAutoConvolution():
+    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
+    im1 = galsim.ImageD(32, 32, scale=0.2)
+    im2 = galsim.ImageD(32, 32, scale=0.2)
+    b = galsim.Convolve(a, a)
+    b.draw(bandpass, image=im1)
+    c = galsim.AutoConvolve(a)
+    c.draw(bandpass, image=im2)
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
+                                         "ChromaticAutoConvolution(a) not equal to "
+                                         "ChromaticConvolution(a,a)")
+
+def test_ChromaticAutoCorrelation():
+    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
+    im1 = galsim.ImageD(32, 32, scale=0.2)
+    im2 = galsim.ImageD(32, 32, scale=0.2)
+    b = galsim.Convolve(a, a.createRotated(180.0 * galsim.degrees))
+    b.draw(bandpass, image=im1)
+    c = galsim.AutoCorrelate(a)
+    c.draw(bandpass, image=im2)
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
+                                         "ChromaticAutoCorrelate(a) not equal to "
+                                         "ChromaticConvolution(a,a.createRotated("
+                                         "180.0*galsim.degrees)")
+
 if __name__ == "__main__":
     test_draw_add_commutativity()
     test_ChromaticConvolution_InterpolatedImage()
@@ -531,3 +556,5 @@ if __name__ == "__main__":
     test_chromatic_flux()
     test_double_ChromaticSum()
     test_ChromaticConvolution_of_ChromaticConvolution()
+    test_ChromaticAutoConvolution()
+    test_ChromaticAutoCorrelation()

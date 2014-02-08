@@ -86,6 +86,17 @@ class ChromaticObject(object):
         prof0 = prof0._fix_center(image, scale, offset, use_true_center, reverse=False)
         image = prof0._draw_setup_image(image, scale, wmult, add_to_image)
 
+        if self.separable:
+            # *why* do I have to do this?  Maybe there's another setting I should be altering
+            # instead of redoing this profile?
+            prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
+            multiplier = galsim.integ.int1d(lambda w: self.SED(w) * bandpass(w),
+                                            bandpass.blue_limit, bandpass.red_limit)
+            prof0 *= multiplier/self.SED(bandpass.effective_wavelength)
+            prof0.draw(image=image, gain=gain, wmult=wmult,
+                       add_to_image=add_to_image, offset=offset)
+            return image
+
         # integrand returns an galsim.Image at each wavelength
         def f_image(w):
             prof = self.evaluateAtWavelength(w) * bandpass(w)
@@ -116,32 +127,32 @@ class ChromaticObject(object):
         return ret
 
     # reminder to developers to add apply* methods to subclasses below
-    def createDilated(scale):
+    def createDilated(self, scale):
         ret = self.copy()
         ret.applyDilation(scale)
         return ret
 
-    def createMagnified(mu):
+    def createMagnified(self, mu):
         ret = self.copy()
         ret.applyMagnification(mu)
         return ret
 
-    def createSheared(*args, **kwargs):
+    def createSheared(self, *args, **kwargs):
         ret = self.copy()
         ret.applyShear(*args, **kwargs)
         return ret
 
-    def createLensed(g1, g2, mu):
+    def createLensed(self, g1, g2, mu):
         ret = self.copy()
         ret.applyLensing(g1, g2, mu)
         return ret
 
-    def createRotated(theta):
+    def createRotated(self, theta):
         ret = self.copy()
         ret.applyRotation(theta)
         return ret
 
-    def createShifted(*args, **kwargs):
+    def createShifted(self, *args, **kwargs):
         ret = self.copy()
         ret.applyShift(*args, **kwargs)
         return ret
@@ -239,6 +250,7 @@ class ChromaticSum(ChromaticObject):
     """
     def __init__(self, objlist):
         self.objlist = objlist
+        self.separable = False
 
     def evaluateAtWavelength(self, wave):
         """Evaluate underlying GSObjects scaled by their attached SEDs evaluated at `wave`.
@@ -339,6 +351,11 @@ class ChromaticConvolution(ChromaticObject):
                 self.objlist.extend(obj.objlist)
             else:
                 self.objlist.append(obj)
+        if all([obj.separable for obj in self.objlist]):
+            self.separable = True
+            self.SED = lambda w: reduce(lambda x,y:x*y, [obj.SED(w) for obj in self.objlist])
+        else:
+            self.separable = False
 
     def evaluateAtWavelength(self, wave):
         """
@@ -467,9 +484,9 @@ class ChromaticConvolution(ChromaticObject):
             # setup output image (semi-arbitrarily using the bandpass effective wavelength)
             mono_prof0 = galsim.Convolve([p.evaluateAtWavelength(bandpass.effective_wavelength)
                                           for p in insep_profs])
-            mono_prof0 = mono_prof0._fix_center(image=None, scale=None, offset=None,
-                                                use_true_center=True, reverse=False)
-            mono_prof_image = mono_prof0._draw_setup_image(image=None, scale=None, wmult=wmult,
+            mono_prof0 = mono_prof0._fix_center(image=None, scale=scale, offset=offset,
+                                                use_true_center=use_true_center, reverse=False)
+            mono_prof_image = mono_prof0._draw_setup_image(image=None, scale=scale, wmult=wmult,
                                                            add_to_image=False)
             # Modify image size/scale wrt requested oversampling
             if iimult is not None:
@@ -603,3 +620,36 @@ class ChromaticAtmosphere(ChromaticShiftAndDilate):
                      shift_magnitude*numpy.cos(position_angle.rad()))
             return shift
         self.shift_fn = shift_fn
+
+class ChromaticDeconvolution(ChromaticObject):
+    def __init__(self, obj, **kwargs):
+        self.obj = obj
+        self.kwargs = kwargs
+        self.separable = obj.separable
+        if self.separable:
+            self.SED = obj.SED
+
+    def evaluateAtWavelength(self, wave):
+        return galsim.Deconvolve(self.obj.evaluateAtWavelength(wave), **self.kwargs)
+
+class ChromaticAutoConvolution(ChromaticObject):
+    def __init__(self, obj, **kwargs):
+        self.obj = obj
+        self.kwargs = kwargs
+        self.separable = obj.separable
+        if self.separable:
+            self.SED = lambda w: (obj.SED(w))**2
+
+    def evaluateAtWavelength(self, wave):
+        return galsim.AutoConvolve(self.obj.evaluateAtWavelength(wave), **self.kwargs)
+
+class ChromaticAutoCorrelation(ChromaticObject):
+    def __init__(self, obj, **kwargs):
+        self.obj = obj
+        self.kwargs = kwargs
+        self.separable = obj.separable
+        if self.separable:
+            self.SED = lambda w: (obj.SED(w))**2
+
+    def evaluateAtWavelength(self, wave):
+        return galsim.AutoCorrelate(self.obj.evaluateAtWavelength(wave), **self.kwargs)

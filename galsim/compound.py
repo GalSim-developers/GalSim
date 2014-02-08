@@ -17,11 +17,11 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file compound.py
-Some compount GSObject classes that contain other GSObjects:
+Some compound GSObject classes that contain other GSObjects:
 
 Sum = sum of multiple profiles
 Convolution = convolution of multiple profiles
-Deconvolve = deconvolution by a given profile
+Deconvolution = deconvolution by a given profile
 AutoConvolve = convolution of a profile by itself
 AutoCorrelate = convolution of a profile by its reflection
 """
@@ -60,6 +60,7 @@ def Add(*args, **kwargs):
         return galsim.ChromaticSum(args, **kwargs)
     else:
         return Sum(*args, **kwargs)
+
 
 class Sum(GSObject):
     """A class for adding 2 or more GSObjects.
@@ -126,6 +127,7 @@ class Sum(GSObject):
             if noise is not None:
                 self.noise = noise
 
+
 def Convolve(*args, **kwargs):
     """A function for convolving 2 or more GSObjects or ChromaticObjects.
 
@@ -155,6 +157,7 @@ def Convolve(*args, **kwargs):
         return galsim.ChromaticConvolution(args, **kwargs)
     else:
         return Convolution(*args, **kwargs)
+
 
 class Convolution(GSObject):
     """A class for convolving 2 or more GSObjects.
@@ -311,16 +314,25 @@ class Convolution(GSObject):
             self.noise = noise
 
 
-class Deconvolve(GSObject):
+def Deconvolve(obj, gsparams=None):
+    if isinstance(obj, galsim.ChromaticObject):
+        return galsim.ChromaticDeconvolution(obj, gsparams=gsparams)
+    elif isinstance(obj, galsim.GSObject):
+        return Deconvolution(obj, gsparams=gsparams)
+    else:
+        raise TypeError("Argument to Deconvolve must be either a GSObject or a ChromaticObject.")
+
+
+class Deconvolution(GSObject):
     """A class for deconvolving a GSObject.
 
-    The Deconvolve class represents a deconvolution kernel.  Note that the Deconvolve class, or
-    compound objects (Sum, Convolution) that include a Deconvolve as one of the components, cannot
-    be photon-shot using the drawShoot method.
+    The Deconvolution class represents a deconvolution kernel.  Note that the Deconvolution class,
+    or compound objects (Sum, Convolution) that include a Deconvolution as one of the components,
+    cannot be photon-shot using the drawShoot method.
 
     You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
     help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
-    (or None), then the Deconvolve instance inherits the same GSParams as the object being
+    (or None), then the Deconvolution instance inherits the same GSParams as the object being
     deconvolved.
 
     @param obj        The object to deconvolve.
@@ -329,14 +341,23 @@ class Deconvolve(GSObject):
     # --- Public Class methods ---
     def __init__(self, obj, gsparams=None):
         if not isinstance(obj, GSObject):
-            raise TypeError("Argument to Deconvolve must be a GSObject.")
+            raise TypeError("Argument to Deconvolution must be a GSObject.")
         GSObject.__init__(self, galsim.SBDeconvolve(obj.SBProfile, gsparams=gsparams))
         if hasattr(obj,'noise'):
             import warnings
-            warnings.warn("Unable to propagate noise in galsim.Deconvolve")
+            warnings.warn("Unable to propagate noise in galsim.Deconvolution")
 
 
-class AutoConvolve(GSObject):
+def AutoConvolve(obj, real_space=None, gsparams=None):
+    if isinstance(obj, galsim.ChromaticObject):
+        return galsim.ChromaticAutoConvolution(obj, real_space=real_space, gsparams=gsparams)
+    elif isinstance(obj, galsim.GSObject):
+        return AutoConvolution(obj, real_space=real_space, gsparams=gsparams)
+    else:
+        raise TypeError("Argument to AutoConvolve must be either a GSObject or a ChromaticObject.")
+
+
+class AutoConvolution(GSObject):
     """A special class for convolving a GSObject with itself.
 
     It is equivalent in functionality to galsim.Convolve([obj,obj]), but takes advantage of
@@ -350,7 +371,7 @@ class AutoConvolve(GSObject):
     # --- Public Class methods ---
     def __init__(self, obj, real_space=None, gsparams=None):
         if not isinstance(obj, GSObject):
-            raise TypeError("Argument to AutoConvolve must be a GSObject.")
+            raise TypeError("Argument to AutoConvolution must be a GSObject.")
 
         # Check whether to perform real space convolution...
         # Start by checking if obj has a hard edge.
@@ -382,10 +403,19 @@ class AutoConvolve(GSObject):
                                                       gsparams=gsparams))
         if hasattr(obj,'noise'):
             import warnings
-            warnings.warn("Unable to propagate noise in galsim.AutoConvolve")
+            warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
 
 
-class AutoCorrelate(GSObject):
+def AutoCorrelate(obj, real_space=None, gsparams=None):
+    if isinstance(obj, galsim.ChromaticObject):
+        return galsim.ChromaticAutoCorrelation(obj, real_space=real_space, gsparams=gsparams)
+    elif isinstance(obj, galsim.GSObject):
+        return AutoCorrelation(obj, real_space=real_space, gsparams=gsparams)
+    else:
+        raise TypeError("Argument to AutoCorrelate must be either a GSObject or a ChromaticObject.")
+
+
+class AutoCorrelation(GSObject):
     """A special class for correlating a GSObject with itself.
 
     It is equivalent in functionality to
@@ -403,7 +433,7 @@ class AutoCorrelate(GSObject):
     # --- Public Class methods ---
     def __init__(self, obj, real_space=None, gsparams=None):
         if not isinstance(obj, GSObject):
-            raise TypeError("Argument to AutoCorrelate must be a GSObject.")
+            raise TypeError("Argument to AutoCorrelation must be a GSObject.")
 
         # Check whether to perform real space convolution...
         # Start by checking if obj has a hard edge.
@@ -436,4 +466,4 @@ class AutoCorrelate(GSObject):
 
         if hasattr(obj,'noise'):
             import warnings
-            warnings.warn("Unable to propagate noise in galsim.AutoCorrelate")
+            warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")
