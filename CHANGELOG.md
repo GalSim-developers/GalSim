@@ -168,6 +168,8 @@ Updates to config options:
 
 Other new features:
 
+* Sped up the gzip and bzip2 I/O by using the shell gzip and bzip2 executables
+  if they are available on the system. (Issue #344)
 * Added some new functions to convert an angle to/from DMS strings.  Sometimes 
   handy when dealing with RA or Dec. (Issue #364)
   * `angle.dms()` returns the angle as a string in the form +/-ddmmss.decimal.
@@ -187,3 +189,4 @@ Other new features:
   as an alternative to specifying each one individually.  (The innards of 
   OpticalPSF were also rearranged to use arrays instead of individual values, 
   but this is not important for users, just developers.) (Issue #409)
+

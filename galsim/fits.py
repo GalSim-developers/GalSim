@@ -66,16 +66,108 @@ def _parse_compression(compression, file_name):
             
     return file_compress, pyfits_compress
 
-# This is a class rather than a def, since we want to store a variable, and 
-# python doesn't really have static variables.  But this will be used as though
-# it were a normal function: _read_file(file, file_compress)
+# This is a class rather than a def, since we want to store some variable, and that's easier
+# to do with a class than a function.  But this will be used as though it were a normal 
+# function: _read_file(file, file_compress)
 class _ReadFile:
+
+    # There are several methods available for each of gzip and bzip2.  Each is its own function.
+    def gunzip_call(self, file):
+        # cf. http://bugs.python.org/issue7471
+        import subprocess
+        from cStringIO import StringIO
+        # We use gunzip -c rather than zcat, since the latter is sometimes called gzcat
+        # (with zcat being a symlink to uncompress instead).
+        p = subprocess.Popen(["gunzip", "-c", file], stdout=subprocess.PIPE, close_fds=True)
+        fin = StringIO(p.communicate()[0])
+        assert p.returncode == 0 
+        hdu_list = pyfits.open(fin, 'readonly')
+        return hdu_list, fin
+
+    def gzip_in_mem(self, file):
+        import gzip
+        fin = gzip.open(file, 'rb')
+        hdu_list = pyfits.open(fin, 'readonly')
+        # Sometimes this doesn't work.  The symptoms may be that this raises an
+        # exception, or possibly the hdu_list comes back empty, in which case the 
+        # next line will raise an exception.
+        hdu = hdu_list[0]
+        # pyfits doesn't actually read the file yet, so we can't close fin here.
+        # Need to pass it back to the caller and let them close it when they are 
+        # done with hdu_list.
+        return hdu_list, fin
+
+    def pyfits_open(self, file):
+        # This usually works, although pyfits internally may (depending on the version)
+        # use a temporary file, which is why we prefer the above in-memory code if it works.
+        # For some versions of pyfits, this is actually the same as the in_mem version.
+        hdu_list = pyfits.open(file, 'readonly')
+        return hdu_list, None
+
+    def gzip_tmp(self, file):
+        import gzip
+        # Finally, just in case, if everything else failed, here is an implementation that 
+        # should always work.
+        fin = gzip.open(file, 'rb')
+        data = fin.read()
+        tmp = file + '.tmp'
+        # It would be pretty odd for this filename to already exist, but just in case...
+        while os.path.isfile(tmp):
+            tmp = tmp + '.tmp'
+        with open(tmp,"w") as tmpout:
+            tmpout.write(data)
+        hdu_list = pyfits.open(tmp)
+        return hdu_list, tmp
+
+    def bunzip2_call(self, file):
+        import subprocess
+        from cStringIO import StringIO
+        p = subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE, close_fds=True)
+        fin = StringIO(p.communicate()[0])
+        assert p.returncode == 0 
+        hdu_list = pyfits.open(fin, 'readonly')
+        return hdu_list, fin
+
+    def bz2_in_mem(self, file):
+        import bz2
+        # This normally works.  But it might not on old versions of pyfits.
+        fin = bz2.BZ2File(file, 'rb')
+        hdu_list = pyfits.open(fin, 'readonly')
+        # Sometimes this doesn't work.  The symptoms may be that this raises an
+        # exception, or possibly the hdu_list comes back empty, in which case the 
+        # next line will raise an exception.
+        hdu = hdu_list[0]
+        return hdu_list, fin
+
+    def bz2_tmp(self, file):
+        import bz2
+        fin = bz2.BZ2File(file, 'rb')
+        data = fin.read()
+        tmp = file + '.tmp'
+        # It would be pretty odd for this filename to already exist, but just in case...
+        while os.path.isfile(tmp):
+            tmp = tmp + '.tmp'
+        with open(tmp,"w") as tmpout:
+            tmpout.write(data)
+        hdu_list = pyfits.open(tmp)
+        return hdu_list, tmp
+ 
     def __init__(self):
-        # Store whether we have a bad interaction between gzip and pyfits, so we 
-        # don't need to keep trying code that doesn't work after the first time 
-        # we discover it fails.
-        self.gzip_in_mem = True
-        self.bz2_in_mem = True
+        # For each compression type, we try them in rough order of efficiency and keep track of 
+        # which method worked for next time.  Whenever one doesn't work, we increment the 
+        # method number and try the next one.  The *_call methods are usually the fastest,
+        # sometimes much, much faster than the *_in_mem version.  At least for largish files,
+        # which are precisely the ones that people would most likely want to compress.
+        # However, we can't require the user to have the system executables installed.  So if 
+        # that fails, we move on to the other options.  It varies which of the other options
+        # is fastest, but they all usually succeed, which is the most important thing for a 
+        # backup method, so it probably doesn't matter much what order we do the rest.
+        self.gz_index = 0
+        self.bz2_index = 0
+        self.gz_methods = [self.gunzip_call, self.gzip_in_mem, self.pyfits_open, self.gzip_tmp]
+        self.bz2_methods = [self.bunzip2_call, self.bz2_in_mem, self.bz2_tmp]
+        self.gz = self.gz_methods[0]
+        self.bz2 = self.bz2_methods[0]
 
     def __call__(self, file, dir, file_compress):
         if dir:
@@ -86,81 +178,142 @@ class _ReadFile:
             hdu_list = pyfits.open(file, 'readonly')
             return hdu_list, None
         elif file_compress == 'gzip':
-            import gzip
-            if self.gzip_in_mem:
+            while self.gz_index < len(self.gz_methods):
                 try:
-                    fin = gzip.GzipFile(file, 'rb')
-                    hdu_list = pyfits.open(fin, 'readonly')
-                    # Sometimes this doesn't work.  The symptoms may be that this raises an
-                    # exception, or possibly the hdu_list comes back empty, in which case the 
-                    # next line will raise an exception.
-                    hdu = hdu_list[0]
-                    # pyfits doesn't actually read the file yet, so we can't close fin here.
-                    # Need to pass it back to the caller and let them close it when they are 
-                    # done with hdu_list.
-                    return hdu_list, fin
+                    return self.gz(file)
                 except:
-                    # Mark that we can't do this the efficient way so next time (and afterward)
-                    # it will use the below code instead.
-                    self.gzip_in_mem = False
-                    return self(file,file_compress)
-            else:
-                try:
-                    # This usually works, although pyfits internally uses a temporary file,
-                    # which is why we prefer the above code if it works.
-                    hdu_list = pyfits.open(file, 'readonly')
-                    return hdu_list, None
-                except:
-                    # But just in case, here is an implementation that should always work.
-                    fin = gzip.GzipFile(file, 'rb')
-                    data = fin.read()
-                    tmp = file + '.tmp'
-                    # It would be pretty odd for this filename to already exist, but just in case...
-                    while os.path.isfile(tmp):
-                        tmp = tmp + '.tmp'
-                    with open(tmp,"w") as tmpout:
-                        tmpout.write(data)
-                    hdu_list = pyfits.open(tmp)
-                    return hdu_list, tmp
+                    self.gz_index += 1
+                    self.gz = self.gz_methods[self.gz_index]
+            raise RuntimeError("None of the options for gunzipping were successful.")
         elif file_compress == 'bzip2':
-            import bz2
-            if self.bz2_in_mem:
+            while self.bz2_index < len(self.bz2_methods):
                 try:
-                    # This normally works.  But it might not on old versions of pyfits.
-                    fin = bz2.BZ2File(file, 'rb')
-                    hdu_list = pyfits.open(fin, 'readonly')
-                    hdu = hdu_list[0]
-                    return hdu_list, fin
+                    return self.bz2(file)
                 except:
-                    # Mark that we can't do this the efficient way so next time (and afterward)
-                    # it will use the below code instead.
-                    self.bz2_in_mem = False
-                    return self(file,file_compress)
-            else:
-                fin = bz2.BZ2File(file, 'rb')
-                data = fin.read()
-                tmp = file + '.tmp'
-                # It would be pretty odd for this filename to already exist, but just in case...
-                while os.path.isfile(tmp):
-                    tmp = tmp + '.tmp'
-                with open(tmp,"w") as tmpout:
-                    tmpout.write(data)
-                hdu_list = pyfits.open(tmp)
-                return hdu_list, tmp
+                    self.bz2_method += 1
+                    self.bz2 = self.bz2_methods[self.bz2_index]
+            raise RuntimeError("None of the options for bunzipping were successful.")
         else:
             raise ValueError("Unknown file_compression")
 _read_file = _ReadFile()
 
 # Do the same trick for _write_file(file,hdu_list,clobber,file_compress,pyfits_compress):
 class _WriteFile:
-    def __init__(self):
-        # Store whether it is ok to use the in-memory version.
-        self.in_mem = True
 
-    def __call__(self, file, dir, hdu_list, clobber, file_compress, pyfits_compress):
-        import os
-        if dir:
-            file = os.path.join(dir,file)
+    # There are several methods available for each of gzip and bzip2.  Each is its own function.
+    def gzip_call2(self, hdu_list, file):
+        root, ext = os.path.splitext(file)
+        hdu_list.writeto(root, clobber=True)
+        import subprocess
+        p = subprocess.Popen(["gzip", "-S", ext, root], close_fds=True)
+        p.communicate()
+        assert p.returncode == 0 
+
+    def gzip_call(self, hdu_list, file):
+        import subprocess
+        fout = open(file, 'wb')
+        p = subprocess.Popen(["gzip", "-"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
+        hdu_list.writeto(p.stdin)
+        p.communicate()
+        assert p.returncode == 0 
+        fout.close()
+ 
+    def gzip_in_mem(self, hdu_list, file):
+        import gzip
+        import io
+        # The compression routines work better if we first write to an internal buffer
+        # and then output that to a file.
+        buf = io.BytesIO()
+        hdu_list.writeto(buf)
+        data = buf.getvalue()
+        # There is a compresslevel option (for both gzip and bz2), but we just use the 
+        # default.
+        fout = gzip.open(file, 'wb')
+        fout.write(data)
+        fout.close()
+
+    def gzip_tmp(self, hdu_list, file):
+        import gzip
+        # However, pyfits versions before 2.3 do not support writing to a buffer, so the
+        # above code will fail.  We need to use a temporary in that case.
+        tmp = file + '.tmp'
+        # It would be pretty odd for this filename to already exist, but just in case...
+        while os.path.isfile(tmp):
+            tmp = tmp + '.tmp'
+        hdu_list.writeto(tmp)
+        with open(tmp,"r") as buf:
+            data = buf.read()
+        os.remove(tmp)
+        fout = gzip.open(file, 'wb')
+        fout.write(data)
+        fout.close()
+
+    def bzip2_call2(self, hdu_list, file):
+        root, ext = os.path.splitext(file)
+        hdu_list.writeto(root, clobber=True)
+        import subprocess
+        if ext == '.bz2':
+            p = subprocess.Popen(["bzip2", root], close_fds=True)
+            p.communicate()
+            assert p.returncode == 0 
+        else:
+            p = subprocess.Popen(["bzip2", file], close_fds=True)
+            p.communicate()
+            assert p.returncode == 0 
+            os.rename(file + '.bz2', file)
+
+    def bzip2_call(self, hdu_list, file):
+        import subprocess
+        fout = open(file, 'wb')
+        p = subprocess.Popen(["bzip2"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
+        hdu_list.writeto(p.stdin)
+        p.communicate()
+        assert p.returncode == 0 
+        fout.close()
+ 
+    def bz2_in_mem(self, hdu_list, file):
+        import bz2
+        import io
+        buf = io.BytesIO()
+        hdu_list.writeto(buf)
+        data = buf.getvalue()
+        fout = bz2.BZ2File(file, 'wb')
+        fout.write(data)
+        fout.close()
+
+    def bz2_tmp(self, hdu_list, file):
+        import bz2
+        tmp = file + '.tmp'
+        while os.path.isfile(tmp):
+            tmp = tmp + '.tmp'
+        hdu_list.writeto(tmp)
+        with open(tmp,"r") as buf:
+            data = buf.read()
+        os.remove(tmp)
+        fout = bz2.BZ2File(file, 'wb')
+        fout.write(data)
+        fout.close()
+
+    def __init__(self):
+        # For each compression type, we try them in rough order of efficiency and keep track of 
+        # which method worked for next time.  Whenever one doesn't work, we increment the 
+        # method number and try the next one.  The *_call methods seem to be usually the fastest,
+        # and we expect that they will usually work.  However, we can't require the user
+        # to have the system executables.  Also, some versions of pyfits can't handle writing
+        # to the stdin pipe of a subprocess.  So if that fails, the next one, *_call2 is often
+        # fastest if the failure was due to pyfits.  If the user does not have gzip or bzip2 (then 
+        # why are they requesting this compression?), we switch to *_in_mem, which is often
+        # almost as good.  (Sometimes it is faster than the call2 option, but when it is slower it
+        # can be much slower.)  And finally, if this fails, which I think may happen for very old 
+        # versions of pyfits, *_tmp is the fallback option.
+        self.gz_index = 0
+        self.bz2_index = 0
+        self.gz_methods = [self.gzip_call, self.gzip_call2, self.gzip_in_mem, self.gzip_tmp]
+        self.bz2_methods = [self.bzip2_call, self.bzip2_call2,  self.bz2_in_mem, self.bz2_tmp]
+        self.gz = self.gz_methods[0]
+        self.bz2 = self.bz2_methods[0]
+
+    def __call__(self, file, hdu_list, clobber, file_compress, pyfits_compress):
         if os.path.isfile(file):
             if clobber:
                 os.remove(file)
@@ -169,45 +322,25 @@ class _WriteFile:
     
         if not file_compress:
             hdu_list.writeto(file)
-        else:
-            if self.in_mem:
+        elif file_compress == 'gzip':
+            while self.gz_index < len(self.gz_methods):
                 try:
-                    # The compression routines work better if we first write to an internal buffer
-                    # and then output that to a file.
-                    import io
-                    buf = io.BytesIO()
-                    hdu_list.writeto(buf)
-                    data = buf.getvalue()
+                    return self.gz(hdu_list, file)
                 except:
-                    self.in_mem = False
-                    return self(file,hdu_list,clobber,file_compress)
-            else:
-                # However, pyfits versions before 2.3 do not support writing to a buffer, so the
-                # abover code with fail.  We need to use a temporary in that case.
-                tmp = file + '.tmp'
-                # It would be pretty odd for this filename to already exist, but just in case...
-                while os.path.isfile(tmp):
-                    tmp = tmp + '.tmp'
-                hdu_list.writeto(tmp)
-                with open(tmp,"r") as buf:
-                    data = buf.read()
-                os.remove(tmp)
+                    self.gz_index += 1
+                    self.gz = self.gz_methods[self.gz_index]
+            raise RuntimeError("None of the options for gunzipping were successful.")
+        elif file_compress == 'bzip2':
+            while self.bz2_index < len(self.bz2_methods):
+                try:
+                    return self.bz2(hdu_list, file)
+                except:
+                    self.bz2_method += 1
+                    self.bz2 = self.bz2_methods[self.bz2_index]
+            raise RuntimeError("None of the options for bunzipping were successful.")
+        else:
+            raise ValueError("Unknown file_compression")
 
-            if file_compress == 'gzip':
-                import gzip
-                # There is a compresslevel option (for both gzip and bz2), but we just use the 
-                # default.
-                fout = gzip.GzipFile(file, 'wb')
-                fout.write(data)
-                fout.close()
-            elif file_compress == 'bzip2':
-                import bz2
-                fout = bz2.BZ2File(file, 'wb')
-                fout.write(data)
-                fout.close()
-            else:
-                raise ValueError("Unknown file_compression")
-    
         # There is a bug in pyfits where they don't add the size of the variable length array
         # to the TFORMx header keywords.  They should have size at the end of them.
         # This bug has been fixed in version 3.1.2.
@@ -233,7 +366,6 @@ class _WriteFile:
             if (pyfits_version > '3.0' and pyfits_version < '3.0.8' and
                 'COMPRESSION_ENABLED' in pyfits.hdu.compressed.__dict__):
                 pyfits.hdu.compressed.COMPRESSION_ENABLED = True
-                
 _write_file = _WriteFile()
 
 def _add_hdu(hdu_list, data, pyfits_compress):
