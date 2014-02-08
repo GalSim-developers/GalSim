@@ -224,7 +224,7 @@ class _WriteFile:
     def gzip_tmp(self, hdu_list, file):
         import gzip
         # However, pyfits versions before 2.3 do not support writing to a buffer, so the
-        # abover code with fail.  We need to use a temporary in that case.
+        # above code will fail.  We need to use a temporary in that case.
         tmp = file + '.tmp'
         # It would be pretty odd for this filename to already exist, but just in case...
         while os.path.isfile(tmp):
