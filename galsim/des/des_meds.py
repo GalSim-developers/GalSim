@@ -1,4 +1,4 @@
-# Copyright 2012, 2013 The GalSim developers:
+# Copyright 2012-2014 The GalSim developers:
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
-
+#
 """@file des_meds.py  Module for generating DES Multi-Epoch Data Structures (MEDS) in GalSim.
 
 This module defines the `MultiExposureObject` class for representing multiple exposure data for a single object, and the `WCSTransform` class used to store general, locally-linearized WCS information per exposure.  The `write_meds` function

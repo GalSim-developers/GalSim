@@ -1,5 +1,5 @@
-/*
- * Copyright 2012, 2013 The GalSim developers:
+/* -*- c++ -*-
+ * Copyright 2012-2014 The GalSim developers:
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.

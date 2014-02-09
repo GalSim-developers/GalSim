@@ -1,4 +1,4 @@
-# Copyright 2012, 2013 The GalSim developers:
+# Copyright 2012-2014 The GalSim developers:
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -45,9 +45,10 @@ def test_corr_padding_cf():
     orig_nx = 147
     orig_ny = 124
     orig_seed = 151241
+    rng = galsim.BaseDeviate(orig_seed)
 
     # Make an ImageCorrFunc
-    cf = galsim.ImageCorrFunc(galsim.fits.read(imgfile))
+    cf = galsim.CorrelatedNoise(rng, galsim.fits.read(imgfile))
 
     # first, make the base image
     orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
