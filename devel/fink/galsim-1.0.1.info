@@ -52,4 +52,4 @@ InstallScript: <<
 <<
 
 DocFiles: README.md CHANGELOG.md HISTORY.md LICENSE doc/GalSim_Quick_Reference.pdf
-Shlibs: !%p/lib/libgalsim.%v.dylib 
+Shlibs: !%p/lib/libgalsim.1.0.dylib 

@@ -1,4 +1,4 @@
-# Copyright 2012, 2013 The GalSim developers:
+# Copyright 2012-2014 The GalSim developers:
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -28,7 +28,7 @@ There are two kinds of world coordinates that we use here:
 
 - Celestial coordinates are defined in terms of right ascension (ra) and declination (dec).
   They are a spherical coordinate system on the sky, akin to longitude and latitude on Earth.
-  c.f. http://en.wikipedia.org/wiki/Celestial_coordinate_system
+  cf. http://en.wikipedia.org/wiki/Celestial_coordinate_system
 
 - Euclidean coordinates are defined relative to a tangent plane projection of the sky. 
   If you imagine the sky coordinates on an actual sphere with a particular radius, then the 
@@ -134,7 +134,7 @@ class BaseWCS(object):
 
       The image_pos parameter should be a galsim.PositionD.  However, world_pos will
       be a galsim.CelestialCoord if the transformation is in terms of celestial coordinates
-      (c.f. wcs.isCelestial()).  Otherwise, it will be a PositionD as well.
+      (if wcs.isCelestial() == True).  Otherwise, it will be a PositionD as well.
 
     - Convert a GSObject that is defined in world coordinates to the equivalent profile defined 
       in terms of image coordinates (or vice versa):
@@ -142,8 +142,8 @@ class BaseWCS(object):
                 image_profile = wcs.toImage(world_profile)
                 world_profile = wcs.toWorld(image_profile)
 
-      For non-uniform WCS types (c.f. wcs.isUniform()), these need either an image_pos or
-      world_pos parameter to say where this conversion should happen:
+      For non-uniform WCS types (for which wcs.isUniform() == False), these need either an
+      image_pos or world_pos parameter to say where this conversion should happen:
 
                 image_profile = wcs.toImage(world_profile, image_pos=image_pos)
 
@@ -855,7 +855,7 @@ class CelestialWCS(BaseWCS):
 
     # This is a bit simpler than the EuclideanWCS version, since there is no world_origin.
     def _setOrigin(self, origin, world_origin):
-        # We want the new wcs to have wcs.toWorld(x2,y) match the current wcs.toWorld(0,0).
+        # We want the new wcs to have wcs.toWorld(x2,y2) match the current wcs.toWorld(0,0).
         # So,
         #
         #     u' = ufunc(x-x1, y-y1)        # In this case, there are no u0,v0
@@ -898,7 +898,6 @@ class CelestialWCS(BaseWCS):
             ra = [ w[0] for w in world ]
             dec = [ w[1] for w in world ]
 
-        import numpy
         # Note: our convention is that ra increases to the left!
         # i.e. The u,v plane is the tangent plane as seen from Earth with +v pointing
         # north, and +u pointing west.
@@ -1125,8 +1124,8 @@ class ShearWCS(LocalWCS):
         self._g1 = shear.g1
         self._g2 = shear.g2
         self._gsq = self._g1**2 + self._g2**2
-        import numpy
-        self._gfactor = 1. / numpy.sqrt(1. - self._gsq)
+        import math
+        self._gfactor = 1. / math.sqrt(1. - self._gsq)
 
     # Help make sure ShearWCS is read-only.
     @property
@@ -1174,13 +1173,13 @@ class ShearWCS(LocalWCS):
 
     def _minScale(self):
         # min stretch is (1-|g|) / sqrt(1-|g|^2)
-        import numpy
-        return self._scale * (1. - numpy.sqrt(self._gsq)) * self._gfactor
+        import math
+        return self._scale * (1. - math.sqrt(self._gsq)) * self._gfactor
 
     def _maxScale(self):
         # max stretch is (1+|g|) / sqrt(1-|g|^2)
-        import numpy
-        return self._scale * (1. + numpy.sqrt(self._gsq)) * self._gfactor
+        import math
+        return self._scale * (1. + math.sqrt(self._gsq)) * self._gfactor
 
     def _inverse(self):
         return ShearWCS(1./self._scale, -self._shear)

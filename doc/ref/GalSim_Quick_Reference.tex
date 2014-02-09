@@ -1,6 +1,4 @@
-\documentclass[preprint,11pt]{../../devel/modules/aastex}
-
-% Copyright 2012, 2013 The GalSim developers:
+% Copyright 2012-2014 The GalSim developers:
 % https://github.com/GalSim-developers
 %
 % This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -18,6 +16,8 @@
 % You should have received a copy of the GNU General Public License
 % along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 %
+
+\documentclass[preprint,11pt]{../../devel/modules/aastex}
 
 % packages for figures
 \usepackage{graphicx,times}
@@ -159,7 +159,7 @@ parameters available for use (e.g.\ total \texttt{flux}) along with default valu
   \texttt{galsim.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_atmospheric_p_s_f.html}{\texttt{AtmosphericPSF}}\texttt{(\emph{size}, flux=1.)}
   \newline {currently simply an image-based
   implementation of a Kolmogorov PSF (see below), and therefore deprecated, but expected to evolve to
-  store a stochastically modelled atmospheric PSF in the near future.
+  store a stochastically modeled atmospheric PSF in the near future.
 Requires one of the
     following \emph{\texttt{size}} parameters to be set as a keyword argument:
     \texttt{fwhm}; \texttt{lam\_over\_r0}.  For information
@@ -362,7 +362,8 @@ instance are:
   \newline {apply a $(dx, dy)$ position shift to the
     \texttt{GSObject} centroid.}
 \item[$\circ$]
-  \texttt{image = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{draw}}\texttt{(image=None, scale=None, add\_to\_image=False, \dots)}
+  \texttt{image = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{draw}}\texttt{(image=None, scale=None, wcs=None, \\
+  \phantom{image = obj.draw(}add\_to\_image=False, \dots)}
   \newline {draw and return an \texttt{Image} (see Section \ref{sect:image}) of the \texttt{GSObject}~using Discrete Fourier
   Transforms and interpolation to perform the image rendering.  
   Note
@@ -381,9 +382,17 @@ instance are:
   \item \texttt{scale} (default = \texttt{None}) \newline 
     the optional image pixel \texttt{scale}, which if provided
     should use the same units as used for the \texttt{GSObject} size
-    parameters.  If not provided, will take either the scale from a
-    supplied \texttt{image}, else use the Nyquist scale given the
-    maximum modelled frequency in the \texttt{GSObject}.
+    parameters.  
+  \item \texttt{wcs} (default = \texttt{None}) \newline 
+    the \texttt{wcs} may optionally be provided in lieu of a simple pixel scale,
+    in which case this would specify the conversion between image
+    coordinates and world (aka sky) coordinates.  The \texttt{GSObject}
+    is taken to be defined in world coordinates and this function tells
+    GalSim how to convert to image coordinates when it draws the profile.
+    If neither \texttt{scale} nor \texttt{wcs} are provided here, then GalSim will
+    use the \texttt{wcs} attribute of the \texttt{image} if available.
+    Otherwise, it will use the Nyquist scale given the
+    maximum modeled frequency in the \texttt{GSObject}.
   \item \texttt{add\_to\_image} (default = \texttt{False}) \newline
    Whether to add flux to a (must be supplied) \texttt{image} rather than clear out
    anything in the image before drawing.
@@ -393,7 +402,8 @@ The \texttt{draw} method has a number of additional optional
  details.
  }
 \item[$\circ$]
-  \texttt{image = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{drawShoot}}\texttt{(image=None, scale=None, \\~~ add\_to\_image=False, \dots)}
+  \texttt{image = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{drawShoot}}\texttt{(image=None, scale=None, wcs=None \\
+  \phantom{image = obj.drawShoot(}add\_to\_image=False, \dots)}
   \newline {draw and return an \texttt{Image} (see
     Section \ref{sect:image}) of the \texttt{GSObject}~by shooting a
     finite number of photons.
@@ -441,7 +451,7 @@ for many of the \texttt{GSObject}s.
 \section{Random deviates}\label{sect:random}
 \subsection{Random deviate classes and when to use them}
 Random deviates can be used to add a stochastic
-component to the modelling of astronomical images, such as drawing
+component to the modeling of astronomical images, such as drawing
 object parameters according to a given distribution or generating random
 numbers to be added to image pixel values to model noise. 
 
@@ -806,7 +816,8 @@ galsim/pse.py (see documentation in that file for more information).
   representation \texttt{fits}.  If \texttt{fits} is a string it is
   interpreted as a filename, otherwise it is interpreted as a PyFITS
   representation of HDU data (see
-  \texttt{galsim/fits.py}).}
+  \texttt{galsim/fits.py}). If the FITS file has a WCS defined in the header,
+  then GalSim will attempt to read that WCS and store it as \texttt{image.wcs}.}
 \item[$\circ$] \texttt{image\_list = galsim.fits.readMulti(fits)}
   \newline
 {returns a Python \texttt{list} of \texttt{Image} instances (\texttt{image\_list}) from a
