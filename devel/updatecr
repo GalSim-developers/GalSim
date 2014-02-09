@@ -1,0 +1,82 @@
+#!/usr/bin/perl
+
+# Copyright 2012-2014 The GalSim developers:
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+#
+# GalSim is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GalSim is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+#
+
+# Typical usage:
+#
+# Copy the old copyright notice to oldcr, and the new one to newcr.
+# Then type things like the following:
+#
+#     ls ../*/*.py | updatecr
+#
+# Use the # version for *.py, *.yaml, and use the /**/ version for *.h, *.cpp.
+#
+# After you've finished the obvious cases, it's a good idea to check
+# that you didn't miss anything with lines like
+#
+#     grep Copyright */*/* | grep 2013
+#
+# There are a few other random things that may be # easier to update manually.
+# Especially when the copyright notice doesn't start on the first line (this
+# file for example).
+
+# Count how many lines to remove
+open(A,"oldcr") || die "Cannot open oldcr: $!";
+$nlines = 0;
+while (<A>) {
+    $nlines = $nlines + 1
+}
+
+while ($file = <STDIN>) {
+    $file =~ s/\s+$//;  # Remove trailing eol
+    print $file;
+    open(F,$file) || die "Cannot open $file: $!";
+    open(G,"newcr") || die "Cannot open newcr: $!";
+    open(J,">junk") || die "Cannot open junk: $!";
+
+    # Skip the first nlines
+    $count = $nlines;
+    while ($count > 0) { <F>; --$count; }
+
+    # Write the new cr file
+    while (<G>) {
+        print J $_;
+    }
+
+    # Write the rest of the source file
+    while (<F>) {
+        print J $_;
+    }
+
+    # Done first pass
+    close G;
+    close F;
+    close J;
+
+    open(F,">$file") || die "Cannot open $file: $!";
+    open(J,"junk") || die "Cannot open junk: $!";
+
+    # Copy back to original file name
+    while (<J>) {
+        print F $_;
+    }
+    print "   done\n"
+}
+
