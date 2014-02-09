@@ -1,20 +1,20 @@
+# Copyright 2012-2014 The GalSim developers:
+# https://github.com/GalSim-developers
 #
-# Demo #11
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
 #
-# The eleventh YAML configuration file in our tutorial about using Galsim config files.
-# (This file is designed to be viewed in a window 100 characters wide.)
+# GalSim is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-# This script uses a constant PSF from real data (an image read in from a bzipped FITS file, 
-# not a parametric model) and variable shear and magnification according to some cosmological 
-# model for which we have a tabulated power spectrum at specific k values only.  The 288 
-# galaxies in the 0.2 x 0.2 degree field (representing a low number density of 2/arcmin^2) 
-# are randomly located and permitted to overlap, but we do take care to avoid being too close 
-# to the edge of the large image.  For the galaxies, we use a random selection from 5
-# specific RealGalaxy objects, selected to be 5 particularly irregular ones.  These are taken 
-# from the same catalog of 100 objects that demo6 used.  We also use the whitening option to 
-# remove the correlations in the noise originally present in the HST images.
+# GalSim is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 #
-# New features introduced in this demo:
+# You should have received a copy of the GNU General Public License
+# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 # - obj type : InterpolatedImage(image, scale)
 # - obj type : RealGalaxy(..., whiten)

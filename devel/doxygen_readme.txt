@@ -129,23 +129,23 @@ what type of objects you typically expect it to be called with.  As in C++, the 
 keywords indicate a description of parameters and return values.
 
 class Astronomer(object):
-	"""A single Astronomer.
-	
-	An astronomer has any number of paper and exactly one name.
-	It has a specialism, height, and age, and lifespan which is determined 
-	primarily by its height.  Astronomers use Telescope object to observe.
-	"""
-	def __init__(self, name, papers=None):
-		"""
-		Construct an astronomer.
-		
-		Make up an astronomer object by specifying its components. All the normal 
-		properties of astronomers are assumed.
-		
-		@param name (String) Mandatory - the astronomer's surname
-		@param papers (List of strings) Optional - a list of papers by the astronomer
-		@return (Astronomer) A new astronomer instance
-		"""
+    """A single Astronomer.
+    
+    An astronomer has any number of paper and exactly one name.
+    It has a specialism, height, and age, and lifespan which is determined 
+    primarily by its height.  Astronomers use Telescope object to observe.
+    """
+    def __init__(self, name, papers=None):
+        """
+        Construct an astronomer.
+        
+        Make up an astronomer object by specifying its components. All the normal 
+        properties of astronomers are assumed.
+        
+        @param name (String) Mandatory - the astronomer's surname
+        @param papers (List of strings) Optional - a list of papers by the astronomer
+        @return (Astronomer) A new astronomer instance
+        """
 
 
 DOCUMENTING FILES
@@ -191,10 +191,10 @@ def __init__(self, name, ...):
 ...
 ...
 ...
-	##(String) The astronomer surname
-	#
-	## The astronomer surname including any hyphenation.
-	self.name=name  
+    ##(String) The astronomer surname
+    #
+    ## The astronomer surname including any hyphenation.
+    self.name=name  
 
 
 
@@ -232,21 +232,3 @@ nicely document both C++ and Python at once.
 [1] This is an option in the Doxyfile that I have set.
 [2] But please don't put many variables at global scope.  That's usually a bad sign.
 
-# Copyright 2012, 2013 The GalSim developers:
-# https://github.com/GalSim-developers
-#
-# This file is part of GalSim: The modular galaxy image simulation toolkit.
-#
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
-#
