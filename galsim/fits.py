@@ -313,7 +313,11 @@ class _WriteFile:
         self.gz = self.gz_methods[0]
         self.bz2 = self.bz2_methods[0]
 
-    def __call__(self, file, hdu_list, clobber, file_compress, pyfits_compress):
+    def __call__(self, file, dir, hdu_list, clobber, file_compress, pyfits_compress):
+        import os
+        if dir:
+            file = os.path.join(dir,file)
+
         if os.path.isfile(file):
             if clobber:
                 os.remove(file)
