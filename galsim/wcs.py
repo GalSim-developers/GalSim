@@ -855,7 +855,7 @@ class CelestialWCS(BaseWCS):
 
     # This is a bit simpler than the EuclideanWCS version, since there is no world_origin.
     def _setOrigin(self, origin, world_origin):
-        # We want the new wcs to have wcs.toWorld(x2,y) match the current wcs.toWorld(0,0).
+        # We want the new wcs to have wcs.toWorld(x2,y2) match the current wcs.toWorld(0,0).
         # So,
         #
         #     u' = ufunc(x-x1, y-y1)        # In this case, there are no u0,v0
