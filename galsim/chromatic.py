@@ -117,7 +117,12 @@ class ChromaticObject(object):
     def copy(self):
         cls = self.__class__
         ret = cls.__new__(cls)
-        ret.__dict__.update(self.__dict__)
+        for k, v in self.__dict__.iteritems():
+            if k == 'objlist':
+                ret.__dict__[k] = [o.copy() for o in v]
+            else:
+                ret.__dict__[k] = copy.copy(v)
+        #ret.__dict__.update(self.__dict__)
         return ret
 
     # reminder to developers to add apply* methods to subclasses below
@@ -150,6 +155,85 @@ class ChromaticObject(object):
         ret = self.copy()
         ret.applyShift(*args, **kwargs)
         return ret
+
+    def applyDilation(self, scale):
+        if isinstance(self, ChromaticAffineTransform):
+            self.abcd = lambda w:self.abcd(w) * scale
+            self.A = lambda w:self.A(w) * scale
+            self.dx = lambda w:self.dx(w) * scale
+            self.dy = lambda w:self.dy(w) * scale
+        else:
+            #transform self into a ChromaticAffineTransform
+            self.obj = self.copy()
+            self.__class__ = ChromaticAffineTransform
+            self.abcd = lambda w: numpy.matrix(numpy.identity(2))*scale
+            self.dx = lambda w: 0
+            self.dy = lambda w: 0
+            self.separable = self.obj.separable
+            if hasattr(self, 'gsobj'):
+                del self.gsobj
+            # note, self.SED should already exist if this is a separable object
+
+    def applyRotation(self, theta):
+        cth = numpy.cos(theta.rad())
+        sth = numpy.sin(theta.rad())
+        R = numpy.matrix([[cth, -sth], [sth, cth]], dtype=float)
+        if isinstance(self, ChromaticAffineTransform):
+            abcd = self.abcd
+            def f(w):
+                return abcd(w) * R
+            self.abcd = f
+            self.dx = lambda w:cth*self.dx(w) - sth*self.dy(w)
+            self.dy = lambda w:sth*self.dx(w) + cth*self.dy(w)
+        else:
+            #transform self into a ChromaticAffineTransform
+            self.obj = self.copy()
+            self.__class__ = ChromaticAffineTransform
+            self.abcd = lambda w: R
+            self.dx = lambda w: 0
+            self.dy = lambda w: 0
+            self.separable = self.obj.separable
+            if hasattr(self, 'gsobj'):
+                del self.gsobj
+            # note, self.SED should already exist if this is a separable object
+
+    def applyShear(self, *args, **kwargs):
+        if len(args) == 1:
+            if kwargs:
+                raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
+            if not isinstance(args[0], galsim.Shear):
+                raise TypeError("Error, unnamed argument to applyShear is not a Shear!")
+            shear = args[0]
+        elif len(args) > 1:
+            raise TypeError("Error, too many unnamed arguments to applyShear!")
+        else:
+            shear = galsim.Shear(**kwargs)
+        cb = numpy.cos(shear.beta.rad())
+        sb = numpy.sin(shear.beta.rad())
+        ce2 = numpy.cosh(shear.eta/2.0)
+        se2 = numpy.sinh(shear.eta/2.0)
+        #Bernstein&Jarvis (2002) equation 2.9
+        S = numpy.matrix([[ce2+cb*se2, sb*se2], [sb*se2, ce2-cb*se2]], dtype=float)
+        if isinstance(self, ChromaticAffineTransform):
+            abcd = self.abcd
+            def f(w):
+                return abcd(w) * S
+            self.abcd = f
+            self.dx = lambda w:0 #this isn't right... fill me in later.
+            self.dy = lambda w:0
+        else:
+            #transform self into a ChromaticAffineTransform
+            newobj = self.copy()
+            self.__class__ = ChromaticAffineTransform
+            self.abcd = lambda w: S
+            self.dx = lambda w: 0
+            self.dy = lambda w: 0
+            self.separable = newobj.separable
+            self.obj = newobj
+            if hasattr(self, 'gsobj'):
+                del self.gsobj
+            # note, self.SED should already exist if this is a separable object
+
 
 class Chromatic(ChromaticObject):
     """Construct chromatic versions of galsim GSObjects.
@@ -186,7 +270,7 @@ class Chromatic(ChromaticObject):
                         in nanometers should work.
         """
         self.SED = SED
-        self.gsobj = gsobj
+        self.gsobj = gsobj.copy()
         # Chromaticized GSObjects are separable into spatial (x,y) and spectral (lambda) factors.
         self.separable = True
 
@@ -209,11 +293,11 @@ class Chromatic(ChromaticObject):
     def scaleFlux(self, scale):
         self.gsobj.scaleFlux(scale)
 
-    def applyShear(self, *args, **kwargs):
-        self.gsobj.applyShear(*args, **kwargs)
+#    def applyShear(self, *args, **kwargs):
+#        self.gsobj.applyShear(*args, **kwargs)
 
-    def applyDilation(self, scale):
-        self.gsobj.applyDilation(scale)
+#    def applyDilation(self, scale):
+#        self.gsobj.applyDilation(scale)
 
     def applyShift(self, *args, **kwargs):
         self.gsobj.applyShift(*args, **kwargs)
@@ -227,8 +311,8 @@ class Chromatic(ChromaticObject):
     def applyLensing(self, g1, g2, mu):
         self.gsobj.applyLensing(g1, g2, mu)
 
-    def applyRotation(self, theta):
-        self.gsobj.applyRotation(theta)
+    # def applyRotation(self, theta):
+    #     self.gsobj.applyRotation(theta)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate underlying GSObject scaled by self.SED(`wave`).
@@ -243,7 +327,7 @@ class ChromaticSum(ChromaticObject):
     SED is assumed to be flat with spectral density of 1 photon per nanometer.
     """
     def __init__(self, objlist):
-        self.objlist = objlist
+        self.objlist = [o.copy() for o in objlist]
         self.separable = False
 
     def evaluateAtWavelength(self, wave):
@@ -252,7 +336,7 @@ class ChromaticSum(ChromaticObject):
         @param wave  Wavelength in nanometers.
         @returns     galsim.Sum GSObject for profile at specified wavelength.
         """
-        return galsim.Sum([obj.evaluateAtWavelength(wave) for obj in self.objlist])
+        return galsim.Add([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
     def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
@@ -306,13 +390,13 @@ class ChromaticSum(ChromaticObject):
         for obj in self.objlist:
             obj.scaleFlux(scale)
 
-    def applyShear(self, *args, **kwargs):
-        for obj in self.objlist:
-            obj.applyShear(*args, **kwargs)
+    # def applyShear(self, *args, **kwargs):
+    #     for obj in self.objlist:
+    #         obj.applyShear(*args, **kwargs)
 
-    def applyDilation(self, scale):
-        for obj in self.objlist:
-            obj.applyDilation(scale)
+    # def applyDilation(self, scale):
+    #     for obj in self.objlist:
+    #         obj.applyDilation(scale)
 
     def applyShift(self, *args, **kwargs):
         for obj in self.objlist:
@@ -330,9 +414,9 @@ class ChromaticSum(ChromaticObject):
         for obj in self.objlist:
             obj.applyLensing(g1, g2, mu)
 
-    def applyRotation(self, theta):
-        for obj in self.objlist:
-            obj.applyRotation(theta)
+    # def applyRotation(self, theta):
+    #     for obj in self.objlist:
+    #         obj.applyRotation(theta)
 
 class ChromaticConvolution(ChromaticObject):
     """Convolve ChromaticObjects and/or GSObjects together.  GSObjects are treated as having flat
@@ -342,9 +426,9 @@ class ChromaticConvolution(ChromaticObject):
         self.objlist = []
         for obj in objlist:
             if isinstance(obj, ChromaticConvolution):
-                self.objlist.extend(obj.objlist)
+                self.objlist.extend([o.copy() for o in obj.objlist])
             else:
-                self.objlist.append(obj)
+                self.objlist.append(obj.copy())
         if all([obj.separable for obj in self.objlist]):
             self.separable = True
             self.SED = lambda w: reduce(lambda x,y:x*y, [obj.SED(w) for obj in self.objlist])
@@ -383,7 +467,7 @@ class ChromaticConvolution(ChromaticObject):
         if integrator is None:
             integrator = galsim.integ.midpoint_int_image
         # Only make temporary changes to objlist...
-        objlist = list(self.objlist)
+        objlist = [o.copy() for o in self.objlist]
 
         # Now split up any `ChromaticSum`s:
         # This is the tricky part.  Some notation first:
@@ -426,14 +510,15 @@ class ChromaticConvolution(ChromaticObject):
             if isinstance(obj, ChromaticSum):
                 # say obj.objlist = [A,B,C], where obj is a ChromaticSum object
                 del objlist[i] # remove the add object from objlist
-                tmplist = list(objlist) # collect remaining items to be convolved with each of A,B,C
+                # collect remaining items to be convolved with each of A,B,C
+                tmplist = [o.copy() for o in objlist]
                 tmplist.append(obj.objlist[0]) # add A to this convolve list
                 tmpobj = ChromaticConvolution(tmplist) # draw image
                 image = tmpobj.draw(bandpass, image=image, gain=gain, wmult=wmult,
                                     add_to_image=add_to_image, use_true_center=use_true_center,
                                     offset=offset, integrator=integrator, iimult=iimult, **kwargs)
                 for summand in obj.objlist[1:]: # now do the same for B and C
-                    tmplist = list(objlist)
+                    tmplist = [o.copy() for o in objlist]
                     tmplist.append(summand)
                     tmpobj = ChromaticConvolution(tmplist)
                     # add to previously started image
@@ -461,7 +546,8 @@ class ChromaticConvolution(ChromaticObject):
                 if isinstance(obj, galsim.GSObject):
                     sep_profs.append(obj) # The g(x,y)'s (see above)
                 else:
-                    sep_profs.append(obj.gsobj) # more g(x,y)'s
+                    sep_profs.append(obj.evaluateAtWavelength(bandpass.effective_wavelength)
+                                     /obj.SED(bandpass.effective_wavelength)) # more g(x,y)'s
                     sep_SED.append(obj.SED) # The h(lambda)'s (see above)
             else:
                 insep_profs.append(obj) # The f(x,y,lambda)'s (see above)
@@ -552,7 +638,7 @@ class ChromaticShiftAndDilate(ChromaticObject):
                           scale factor.  The fiducial GSObject is then dilated this amount when
                           evaluated at specified wavelengths.
         """
-        self.gsobj = gsobj
+        self.gsobj = gsobj.copy()
         self.separable = False
 
         # Default is no shifting
@@ -602,7 +688,7 @@ class ChromaticAtmosphere(ChromaticShiftAndDilate):
         @param **kwargs           Additional arguments are passed to dcr.get_refraction, and can
                                   include temperature, pressure, and H20_pressure.
         """
-        self.gsobj = base_obj
+        self.gsobj = base_obj.copy()
         self.separable = False
         self.dilate_fn = lambda w: (w/base_wavelength)**(alpha)
         base_refraction = galsim.dcr.get_refraction(base_wavelength, zenith_angle, **kwargs)
@@ -617,7 +703,7 @@ class ChromaticAtmosphere(ChromaticShiftAndDilate):
 
 class ChromaticDeconvolution(ChromaticObject):
     def __init__(self, obj, **kwargs):
-        self.obj = obj
+        self.obj = obj.copy()
         self.kwargs = kwargs
         self.separable = obj.separable
         if self.separable:
@@ -628,7 +714,7 @@ class ChromaticDeconvolution(ChromaticObject):
 
 class ChromaticAutoConvolution(ChromaticObject):
     def __init__(self, obj, **kwargs):
-        self.obj = obj
+        self.obj = obj.copy()
         self.kwargs = kwargs
         self.separable = obj.separable
         if self.separable:
@@ -639,7 +725,7 @@ class ChromaticAutoConvolution(ChromaticObject):
 
 class ChromaticAutoCorrelation(ChromaticObject):
     def __init__(self, obj, **kwargs):
-        self.obj = obj
+        self.obj = obj.copy()
         self.kwargs = kwargs
         self.separable = obj.separable
         if self.separable:
@@ -647,3 +733,33 @@ class ChromaticAutoCorrelation(ChromaticObject):
 
     def evaluateAtWavelength(self, wave):
         return galsim.AutoCorrelate(self.obj.evaluateAtWavelength(wave), **self.kwargs)
+
+class ChromaticAffineTransform(ChromaticObject):
+    def __init__(obj, abcd=None, dx=lambda w:0, dy=lambda w:0):
+        self.obj = obj.copy()
+        if abcd is None:
+            self.abcd = lambda w: numpy.matrix([[1,0],[0,1]], dtype=float)
+        self.dx = dx
+        self.dy = dy
+        self.separable = False
+
+    def evaluateAtWavelength(self, w):
+        abcd = self.abcd(w)
+        A = abcd[0,0]
+        B = abcd[0,1]
+        C = abcd[1,0]
+        D = abcd[1,1]
+        mu = numpy.sqrt(numpy.linalg.det(abcd))
+        theta = numpy.arctan2(C-B, A+D)
+        beta = numpy.arctan2(C+B, A-D)
+        if beta-theta == 0.0: # What happens when beta == theta ??
+            eta = 0.0
+        else:
+            eta = 2.0*numpy.arcsinh((B+C)/(2.0*mu*numpy.sin(beta-theta)))
+
+        tmpobj = self.obj.evaluateAtWavelength(w)
+        tmpobj.applyRotation(theta * galsim.radians)
+        tmpobj.applyShear(eta=eta, beta=beta * galsim.radians)
+        tmpobj.applyDilation(mu)
+        tmpobj.applyShift(self.dx(w), self.dy(w))
+        return tmpobj

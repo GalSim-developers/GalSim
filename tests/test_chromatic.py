@@ -42,7 +42,7 @@ R500 = galsim.dcr.get_refraction(500.0, zenith_angle) # normalize refraction to 
 
 # some profile parameters to test with
 bulge_n = 4.0
-bulge_hlr = 0.5
+bulge_hlr = 1.0
 bulge_e1 = 0.2
 bulge_e2 = 0.2
 
@@ -56,8 +56,8 @@ PSF_beta = 3.0
 PSF_e1 = 0.01
 PSF_e2 = 0.06
 
-shear_g1 = 0.01
-shear_g2 = 0.02
+shear_g1 = 0.1
+shear_g2 = 0.2
 
 # load a filter
 bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
@@ -210,6 +210,10 @@ def test_chromatic_add():
     bdgal = bulge + disk
     bdgal.applyShear(g1=shear_g1, g2=shear_g2)
 
+    # now shear the indiv profiles
+    bulge.applyShear(g1=shear_g1, g2=shear_g2)
+    disk.applyShear(g1=shear_g1, g2=shear_g2)
+
     # create PSF
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
     dilate_fn = lambda w:(w/500.0)**(-0.2)
@@ -232,6 +236,7 @@ def test_chromatic_add():
     disk_image = disk_part.draw(bandpass, image=disk_image)
 
     piecewise_image = bulge_image + disk_image
+    import ipdb; ipdb.set_trace()
     print 'bulge image flux: {}'.format(bulge_image.array.sum())
     print 'disk image flux: {}'.format(disk_image.array.sum())
     print 'piecewise image flux: {}'.format(piecewise_image.array.sum())
@@ -560,17 +565,177 @@ def test_ChromaticAutoCorrelation():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-if __name__ == "__main__":
+def test_ChromaticObject_applyDilation():
     import time
     t1 = time.time()
-    test_draw_add_commutativity()
-    test_ChromaticConvolution_InterpolatedImage()
-    test_chromatic_add()
-    test_dcr_moments()
-    test_chromatic_seeing_moments()
-    test_monochromatic_filter()
-    test_chromatic_flux()
-    test_double_ChromaticSum()
-    test_ChromaticConvolution_of_ChromaticConvolution()
-    test_ChromaticAutoConvolution()
-    test_ChromaticAutoCorrelation()
+    im1 = galsim.ImageD(32, 32, scale=0.2)
+    im2 = galsim.ImageD(32, 32, scale=0.2)
+    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0).createDilated(1.1), bulge_SED)
+    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED).createDilated(1.1)
+
+    a.draw(bandpass, image=im1)
+    b.draw(bandpass, image=im2)
+    printval(im1, im2)
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
+                                         "ChromaticObject.applyDilation not equal to "
+                                         "Chromatic.applyDilation")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_ChromaticObject_applyRotation():
+    import time
+    t1 = time.time()
+    im1 = galsim.ImageD(32, 32, scale=0.2)
+    im2 = galsim.ImageD(32, 32, scale=0.2)
+    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0)
+                         .createSheared(eta=0.1, beta=0 * galsim.degrees)
+                         .createRotated(1.1 * galsim.radians), bulge_SED)
+    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0)
+                         .createSheared(eta=0.1, beta=0 * galsim.degrees), bulge_SED
+                         ).createRotated(1.1 * galsim.radians)
+
+    a.draw(bandpass, image=im1)
+    b.draw(bandpass, image=im2)
+    printval(im1, im2)
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
+                                         "ChromaticObject.applyRotation not equal to "
+                                         "Chromatic.applyRotation")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_ChromaticObject_applyShear():
+    import time
+    t1 = time.time()
+    im1 = galsim.ImageD(32, 32, scale=0.2)
+    im2 = galsim.ImageD(32, 32, scale=0.2)
+    shear = galsim.Shear(g1=0.1, g2=0.1)
+    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0).createSheared(shear), bulge_SED)
+    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED).createSheared(shear)
+
+    a.draw(bandpass, image=im1)
+    b.draw(bandpass, image=im2)
+    printval(im1, im2)
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
+                                         "ChromaticObject.applyShear not equal to "
+                                         "Chromatic.applyShear")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def testme():
+    '''See how ChromaticSum handles references to summands.  Right now it seems like
+    '''
+    from pylab import *
+    stamp_size = 32
+    pixel_scale = 0.05
+
+    # create galaxy profiles
+    mono_bulge = galsim.Sersic(n=bulge_n, half_light_radius=bulge_hlr)
+    bulge = galsim.Chromatic(mono_bulge, bulge_SED)
+    bulge.applyShear(e1=bulge_e1, e2=bulge_e2)
+
+    mono_disk = galsim.Sersic(n=disk_n, half_light_radius=disk_hlr)
+    disk = galsim.Chromatic(mono_disk, disk_SED)
+    disk.applyShear(e1=disk_e1, e2=disk_e2)
+
+    bdgal = bulge+disk
+    bimage1 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    bdimage1 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    bdgal.draw(bandpass, image=bdimage1)
+    bulge.draw(bandpass, image=bimage1)
+
+    bdgal.applyShear(g1=0.1, g2=0.3)
+    bimage2 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    bdimage2 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    bdgal.draw(bandpass, image=bdimage2)
+    bulge.draw(bandpass, image=bimage2)
+
+    bulge.applyShear(g1=0.1, g2=0.3)
+    bimage3 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    bdimage3 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    bdgal.draw(bandpass, image=bdimage3)
+    bulge.draw(bandpass, image=bimage3)
+
+    figure()
+    subplot(231)
+    imshow(bdimage1.array)
+    title('initial')
+    subplot(232)
+    imshow(bdimage2.array)
+    title('after bd shear')
+    subplot(233)
+    imshow(bdimage3.array)
+    title('after b shear')
+    subplot(234)
+    imshow(bimage1.array)
+    subplot(235)
+    imshow(bimage2.array)
+    subplot(236)
+    imshow(bimage3.array)
+
+
+def testme2():
+    '''See how galsim.Sum handles references to summands.
+    '''
+    from pylab import *
+    stamp_size = 32
+    pixel_scale = 0.05
+
+    # create galaxy profiles
+    bulge = galsim.Sersic(n=bulge_n, half_light_radius=bulge_hlr)
+    bulge.applyShear(e1=bulge_e1, e2=bulge_e2)
+
+    disk = galsim.Sersic(n=disk_n, half_light_radius=disk_hlr)
+    disk.applyShear(e1=disk_e1, e2=disk_e2)
+
+    bdgal = bulge+disk
+    bimage1 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    bdimage1 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    bdgal.draw(image=bdimage1)
+    bulge.draw(image=bimage1)
+
+    bdgal.applyShear(g1=0.1, g2=0.3)
+    bimage2 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    bdimage2 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    bdgal.draw(image=bdimage2)
+    bulge.draw(image=bimage2)
+
+    bulge.applyShear(g1=0.1, g2=0.3)
+    bimage3 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    bdimage3 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    bdgal.draw(image=bdimage3)
+    bulge.draw(image=bimage3)
+
+    figure()
+    subplot(231)
+    imshow(bdimage1.array)
+    title('initial')
+    subplot(232)
+    imshow(bdimage2.array)
+    title('after bd shear')
+    subplot(233)
+    imshow(bdimage3.array)
+    title('after b shear')
+    subplot(234)
+    imshow(bimage1.array)
+    subplot(235)
+    imshow(bimage2.array)
+    subplot(236)
+    imshow(bimage3.array)
+
+
+
+if __name__ == "__main__":
+    # test_draw_add_commutativity()
+    # test_ChromaticConvolution_InterpolatedImage()
+    # test_chromatic_add()
+    # test_dcr_moments()
+    # test_chromatic_seeing_moments()
+    # test_monochromatic_filter()
+    # test_chromatic_flux()
+    # test_double_ChromaticSum()
+    # test_ChromaticConvolution_of_ChromaticConvolution()
+    # test_ChromaticAutoConvolution()
+    # test_ChromaticAutoCorrelation()
+    test_ChromaticObject_applyDilation()
+    test_ChromaticObject_applyRotation()
+    test_ChromaticObject_applyShear()
