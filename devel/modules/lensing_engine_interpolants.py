@@ -599,10 +599,10 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
             warnings.warn("Dithering converted to a value between 0-1: %f"%dithering)
         # Now, set up the dithered grid.  Will be (ngrid-1) x (ngrid-1) so as to not go off the
         # edge.
-        dither_x = x[0:ngrid-1,0:ngrid-1] + dithering*grid_spacing
-        dither_y = y[0:ngrid-1,0:ngrid-1] + dithering*grid_spacing
-        dither_x = list(dither_x.flatten())
-        dither_y = list(dither_y.flatten())
+        target_x = x[0:ngrid-1,0:ngrid-1] + dithering*grid_spacing
+        target_y = y[0:ngrid-1,0:ngrid-1] + dithering*grid_spacing
+        target_x = list(target_x.flatten())
+        target_y = list(target_y.flatten())
     else:
         # Just set up the uniform deviate.
         u = galsim.UniformDeviate()
@@ -646,10 +646,10 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
             # Set up the grid for interpolation for this realization, if we're using random
             # dithers.
             if dithering == 'random':
-                dither_x = x + u()*grid_spacing
-                dither_y = y + u()*grid_spacing
-                dither_x_list = list(dither_x.flatten())
-                dither_y_list = list(dither_y.flatten())
+                target_x = x + u()*grid_spacing
+                target_y = y + u()*grid_spacing
+                target_x_list = list(target_x.flatten())
+                target_y_list = list(target_y.flatten())
 
             # Basic sanity check: can comment out if unnecessary.
             #test_g1, test_g2 = ps.getShear(pos=(list(x.flatten()), list(y.flatten())),
@@ -661,7 +661,7 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
             # Interpolate shears on the offset grid, with periodic interpolation.
             # Note: setting 'reduced=False' here, so as to compare g1 and g2 from original grid with
             # the interpolated g1 and g2 rather than reduced shear.
-            interpolated_g1, interpolated_g2 = ps.getShear(pos=(dither_x_list,dither_y_list),
+            interpolated_g1, interpolated_g2 = ps.getShear(pos=(target_x_list,target_y_list),
                                                            units=galsim.degrees,
                                                            periodic=periodic, reduced=False)
             # And put back into the format that the PowerSpectrumEstimator will want.
@@ -702,16 +702,16 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
                 interpolated_g2 = interpolated_g2[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
                 x_use = x[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
                 y_use = y[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
-                dither_x_use = dither_x[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
-                dither_y_use = dither_y[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
+                target_x_use = target_x[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
+                target_y_use = target_y[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
             else:
                 # Just store the grid size and other quantities that we actually use.
                 ngrid_use = ngrid
                 grid_size_use = grid_size
                 x_use = x
                 y_use = y
-                dither_x_use = dither_x
-                dither_y_use = dither_y
+                target_x_use = target_x
+                target_y_use = target_y
 
             # Get statistics: PS, correlation function. 
             # Set up PowerSpectrumEstimator first, with the grid size and so on depending on whether
@@ -731,7 +731,7 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
                                           theory_func=ps_table)
             ell, ps_ee, ps_bb, ps_eb, ps_ee_theory = pse.estimate(g1, g2, theory_func=ps_table)
             int_th, interpolated_cfp, interpolated_cfm, cf_err = \
-                getCF(dither_x_use.flatten(), dither_y_use.flatten(),
+                getCF(target_x_use.flatten(), target_y_use.flatten(),
                       interpolated_g1.flatten(), interpolated_g2.flatten(),
                       grid_spacing, ngrid_use, n_output_bins)
             th, cfp, cfm, _ = \
