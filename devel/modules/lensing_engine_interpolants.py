@@ -812,7 +812,7 @@ if __name__ == "__main__":
     parser.add_option('--n', dest="n_realizations", type=int,
                       default=default_n,
                       help='Number of objects to run tests on (default: %i)'%default_n)
-    parser.add_option('--subsampling', dest='dithering', type=str,
+    parser.add_option('--dithering', dest='dithering', type=str,
                         help='Grid dithering to test (default: %s)'%default_dithering,
                         default=default_dithering)
     parser.add_option('--n_output_bins',
