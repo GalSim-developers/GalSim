@@ -155,6 +155,47 @@ class ChromaticObject(object):
         ret.applyShift(*args, **kwargs)
         return ret
 
+    def applyShift(self, *args, **kwargs):
+        if isinstance(self, ChromaticSum):
+            for obj in self.objlist:
+                obj.applyShift(*args, **kwargs)
+        else:
+            if len(args) == 0:
+                # Then dx,dy need to be kwargs
+                # If not, then python will raise an appropriate error.
+                dx = kwargs.pop('dx')
+                dy = kwargs.pop('dy')
+            elif len(args) == 1:
+                if isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
+                    dx = args[0].x
+                    dy = args[0].y
+                else:
+                    # Let python raise the appropriate exception if this isn't valid.
+                    dx = args[0][0]
+                    dy = args[0][1]
+            elif len(args) == 2:
+                dx = args[0]
+                dy = args[1]
+            else:
+                raise TypeError("Too many arguments supplied to applyShift ")
+            if kwargs:
+                raise TypeError("applyShift() got unexpected keyword arguments: %s",kwargs.keys())
+            if isinstance(self, ChromaticAffineTransform):
+                dx1 = self.dx
+                dy1 = self.dy
+                self.dx = lambda w:dx1(w)+dx
+                self.dy = lambda w:dy1(w)+dy
+            else:
+                self.obj = self.copy()
+                self.__class__ = ChromaticAffineTransform
+                self.abcd = lambda w: numpy.matrix(numpy.identity(2))
+                self.dx = lambda w:dx
+                self.dy = lambda w:dy
+                self.separable = self.obj.separable
+                if hasattr(self, 'gsobj'):
+                    del self.gsobj
+                # note, self.SED should already exist if this is a separable object
+
     def applyDilation(self, scale):
         if isinstance(self, ChromaticSum):
             for obj in self.objlist:
@@ -228,8 +269,10 @@ class ChromaticObject(object):
             if isinstance(self, ChromaticAffineTransform):
                 abcd = self.abcd
                 self.abcd = lambda w: S * abcd(w)
-                self.dx = lambda w:0 #this isn't right... fill me in later.
-                self.dy = lambda w:0
+                dx = self.dx
+                dy = self.dy
+                self.dx = lambda w: (ce2+c2b*se2)*dx(w) + s2b*se2*dy(w)
+                self.dy = lambda w: s2b*se2*dx(w) + (ce2-c2b*se2)*dy(w)
             else:
                 #transform self into a ChromaticAffineTransform
                 self.obj = self.copy()
@@ -307,8 +350,8 @@ class Chromatic(ChromaticObject):
 #    def applyDilation(self, scale):
 #        self.gsobj.applyDilation(scale)
 
-    def applyShift(self, *args, **kwargs):
-        self.gsobj.applyShift(*args, **kwargs)
+#    def applyShift(self, *args, **kwargs):
+#        self.gsobj.applyShift(*args, **kwargs)
 
     def applyExpansion(self, scale):
         self.gsobj.applyExpansion(scale)
@@ -406,9 +449,9 @@ class ChromaticSum(ChromaticObject):
     #     for obj in self.objlist:
     #         obj.applyDilation(scale)
 
-    def applyShift(self, *args, **kwargs):
-        for obj in self.objlist:
-            obj.applyShift(*args, **kwargs)
+    # def applyShift(self, *args, **kwargs):
+    #     for obj in self.objlist:
+    #         obj.applyShift(*args, **kwargs)
 
     def applyExpansion(self, scale):
         for obj in self.objlist:
@@ -757,7 +800,7 @@ class ChromaticAffineTransform(ChromaticObject):
         C = abcd[1,0]
         D = abcd[1,1]
         mu = numpy.sqrt(numpy.linalg.det(abcd))
-        theta = numpy.arctan2(C-B, A+D)
+        theta = numpy.arctan2(C-B, A+D) #need to worry about A+D == 0 ?
         if A-D == 0.0:
             eta = 0.0
             beta = 0.0
