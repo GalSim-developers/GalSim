@@ -528,8 +528,8 @@ def nCutoff(interpolant):
     except KeyError:
         raise RuntimeError("No cutoff scheme was defined for interpolant %s!"%interpolant)
 
-def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, cf_plot_prefix,
-         edge_cutoff=False, periodic=False):
+def main(n_realizations, dithering, random, n_output_bins, kmin_factor, ps_plot_prefix,
+         cf_plot_prefix, edge_cutoff=False, periodic=False):
     """Main routine to drive all tests.
 
     Arguments:
@@ -541,6 +541,9 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
                              'random' (default) then each realization has a random (x, y) sub-pixel
                              offset.  If a string that converts to a float, then that float is used
                              to determine the x, y offsets for each realization.
+
+        random ------------- Don't interpolate to an offset grid; instead, interpolate to random
+                             points.
 
         n_output_bins ------ Number of bins for calculation of 2-point functions.
 
@@ -587,8 +590,14 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
         np.arange(min,max+grid_spacing,grid_spacing),
         np.arange(min,max+grid_spacing,grid_spacing))
 
-    # Parse the input dithering
-    if dithering != 'random':
+    # Parse the target position information: either random positions, or grids that are dithered
+    # by some fixed amount, or randomly.
+    if random:
+        # Set up the uniform deviate and min/max values.
+        u = galsim.UniformDeviate()
+        random_min_val = np.min(x)
+        random_max_val = np.max(x)
+    elif dithering != 'random':
         try:
             dithering = float(dithering)
         except:
@@ -609,6 +618,10 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
 
     # Loop over interpolants.
     for interpolant in interpolant_list:
+        if random:
+            print "Test type: random target positions, correlation function only."
+        else:
+            print "Test type: offset/dithered grids, corr func and power spectrum."
         print "Beginning tests for interpolant %r:"%interpolant
         print "  Generating %d realizations..."%n_realizations
 
@@ -617,17 +630,19 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
             # If we are cutting off edge points, then all the functions we store will include that
             # cutoff.  However, we will save results for the original grids without the cutoffs just
             # in order to test what happens with / without a cutoff in the no-interpolation case.
-            mean_nocutoff_ps_ee = np.zeros(n_output_bins)
-            mean_nocutoff_ps_bb = np.zeros(n_output_bins)
-            mean_nocutoff_ps_eb = np.zeros(n_output_bins)
+            if not random:
+                mean_nocutoff_ps_ee = np.zeros(n_output_bins)
+                mean_nocutoff_ps_bb = np.zeros(n_output_bins)
+                mean_nocutoff_ps_eb = np.zeros(n_output_bins)
             mean_nocutoff_cfp = np.zeros(n_output_bins)
             mean_nocutoff_cfm = np.zeros(n_output_bins)
-        mean_interpolated_ps_ee = np.zeros(n_output_bins)
-        mean_ps_ee = np.zeros(n_output_bins)
-        mean_interpolated_ps_bb = np.zeros(n_output_bins)
-        mean_ps_bb = np.zeros(n_output_bins)
-        mean_interpolated_ps_eb = np.zeros(n_output_bins)
-        mean_ps_eb = np.zeros(n_output_bins)
+        if not random:
+            mean_interpolated_ps_ee = np.zeros(n_output_bins)
+            mean_ps_ee = np.zeros(n_output_bins)
+            mean_interpolated_ps_bb = np.zeros(n_output_bins)
+            mean_ps_bb = np.zeros(n_output_bins)
+            mean_interpolated_ps_eb = np.zeros(n_output_bins)
+            mean_ps_eb = np.zeros(n_output_bins)
         mean_interpolated_cfp = np.zeros(n_output_bins)
         mean_cfp = np.zeros(n_output_bins)
         mean_interpolated_cfm = np.zeros(n_output_bins)
@@ -643,9 +658,18 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
                                   interpolant = interpolant,
                                   kmin_factor = kmin_factor)
 
-            # Set up the grid for interpolation for this realization, if we're using random
-            # dithers.
-            if dithering == 'random':
+            # Set up the target positions for this interpolation, if we're using completely random
+            # positions or random grid dithers.
+            if random:
+                target_x = np.zeros_like(x)
+                target_y = np.zeros_like(y)
+                for ind_x in range(x.shape[0]):
+                    for ind_y in range(x.shape[1]):
+                        target_x[ind_x, ind_y] = random_min_val+(random_max_val-random_min_val)*u()
+                        target_y[ind_x, ind_y] = random_min_val+(random_max_val-random_min_val)*u()
+                target_x_list = list(target_x.flatten())
+                target_y_list = list(target_y.flatten())
+            elif dithering == 'random':
                 target_x = x + u()*grid_spacing
                 target_y = y + u()*grid_spacing
                 target_x_list = list(target_x.flatten())
@@ -658,9 +682,10 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
             #np.testing.assert_array_almost_equal(g1.flatten(), test_g1, decimal=13)
             #np.testing.assert_array_almost_equal(g2.flatten(), test_g2, decimal=13)
 
-            # Interpolate shears on the offset grid, with periodic interpolation.
+            # Interpolate shears to the target positions, with periodic interpolation if specified
+            # at the command-line.
             # Note: setting 'reduced=False' here, so as to compare g1 and g2 from original grid with
-            # the interpolated g1 and g2 rather than reduced shear.
+            # the interpolated g1 and g2 rather than the reduced shear.
             interpolated_g1, interpolated_g2 = ps.getShear(pos=(target_x_list,target_y_list),
                                                            units=galsim.degrees,
                                                            periodic=periodic, reduced=False)
@@ -670,16 +695,17 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
 
             # Now, we consider the question of whether we want cutoff grids.  If so, then we should
             # (a) store some results for the non-cutoff grids, and (b) cutoff the original and
-            # interpolated grids before doing any further calculations.  If not, then nothing else
+            # interpolated results before doing any further calculations.  If not, then nothing else
             # is really needed here.
             if edge_cutoff:
-                # Get the PS for non-cutoff grid, and store results.
-                nocutoff_pse = galsim.pse.PowerSpectrumEstimator(ngrid, grid_size, n_output_bins)
-                nocutoff_ell, tmp_ps_ee, tmp_ps_bb, tmp_ps_eb, nocutoff_ps_ee_theory = \
-                    nocutoff_pse.estimate(g1, g2, theory_func=ps_table)
-                mean_nocutoff_ps_ee += tmp_ps_ee
-                mean_nocutoff_ps_bb += tmp_ps_bb
-                mean_nocutoff_ps_eb += tmp_ps_eb
+                if not random:
+                    # Get the PS for non-cutoff grid, and store results.
+                    nocutoff_pse = galsim.pse.PowerSpectrumEstimator(ngrid, grid_size, n_output_bins)
+                    nocutoff_ell, tmp_ps_ee, tmp_ps_bb, tmp_ps_eb, nocutoff_ps_ee_theory = \
+                        nocutoff_pse.estimate(g1, g2, theory_func=ps_table)
+                    mean_nocutoff_ps_ee += tmp_ps_ee
+                    mean_nocutoff_ps_bb += tmp_ps_bb
+                    mean_nocutoff_ps_eb += tmp_ps_eb
 
                 # Get the corr func for non-cutoff grid, and store results.
                 nocutoff_th, tmp_cfp, tmp_cfm, _ = \
@@ -688,7 +714,7 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
                 mean_nocutoff_cfp += tmp_cfp
                 mean_nocutoff_cfm += tmp_cfm
 
-                # Cut off the original, interpolated grids before doing any more calculations.
+                # Cut off the original, interpolated set of positions before doing any more calculations.
                 # Store grid size that we actually use for everything else in future, post-cutoff.
                 n_cutoff = nCutoff(interpolant)
                 ngrid_use = ngrid - 2*n_cutoff
@@ -698,12 +724,26 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
                                        "Increase grid size or remove cutoff, or both.")
                 g1 = g1[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
                 g2 = g2[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
-                interpolated_g1 = interpolated_g1[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
-                interpolated_g2 = interpolated_g2[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
                 x_use = x[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
                 y_use = y[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
-                target_x_use = target_x[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
-                target_y_use = target_y[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
+                if random:
+                    cond = np.logical_and.reduce(
+                        [target_x >= np.min(x_use),
+                         target_x <= np.max(x_use),
+                         target_y >= np.min(y_use),
+                         target_y <= np.max(y_use)
+                         ])
+                    interpolated_g1 = interpolated_g1[cond]
+                    interpolated_g2 = interpolated_g2[cond]
+                    target_x_use = target_x[cond]
+                    target_y_use = target_y[cond]
+                else:
+                    interpolated_g1 = interpolated_g1[n_cutoff:ngrid-n_cutoff,
+                                                      n_cutoff:ngrid-n_cutoff]
+                    interpolated_g2 = interpolated_g2[n_cutoff:ngrid-n_cutoff,
+                                                      n_cutoff:ngrid-n_cutoff]
+                    target_x_use = target_x[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
+                    target_y_use = target_y[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
             else:
                 # Just store the grid size and other quantities that we actually use.
                 ngrid_use = ngrid
@@ -713,23 +753,25 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
                 target_x_use = target_x
                 target_y_use = target_y
 
-            # Get statistics: PS, correlation function. 
-            # Set up PowerSpectrumEstimator first, with the grid size and so on depending on whether
-            # we have cut off the edges using the edge_cutoff.  The block of code just above this
-            # one should have set all variables appropriately.
-            if i_real == 0:
-                interpolated_pse = galsim.pse.PowerSpectrumEstimator(ngrid_use,
-                                                                     grid_size_use,
-                                                                     n_output_bins)           
-                pse = galsim.pse.PowerSpectrumEstimator(ngrid_use,
-                                                        grid_size_use,
-                                                        n_output_bins)           
-            int_ell, interpolated_ps_ee, interpolated_ps_bb, interpolated_ps_eb, \
-                interpolated_ps_ee_theory = \
-                interpolated_pse.estimate(interpolated_g1,
-                                          interpolated_g2,
-                                          theory_func=ps_table)
-            ell, ps_ee, ps_bb, ps_eb, ps_ee_theory = pse.estimate(g1, g2, theory_func=ps_table)
+            # Get statistics: PS, correlation function.
+            if not random:
+                # Set up PowerSpectrumEstimator first, with the grid size and so on depending on
+                # whether we have cut off the edges using the edge_cutoff.  The block of code just
+                # above this one should have set all variables appropriately.
+                if i_real == 0:
+                    interpolated_pse = galsim.pse.PowerSpectrumEstimator(ngrid_use,
+                                                                         grid_size_use,
+                                                                         n_output_bins)           
+                    pse = galsim.pse.PowerSpectrumEstimator(ngrid_use,
+                                                            grid_size_use,
+                                                            n_output_bins)           
+                int_ell, interpolated_ps_ee, interpolated_ps_bb, interpolated_ps_eb, \
+                    interpolated_ps_ee_theory = \
+                    interpolated_pse.estimate(interpolated_g1,
+                                              interpolated_g2,
+                                              theory_func=ps_table)
+                ell, ps_ee, ps_bb, ps_eb, ps_ee_theory = pse.estimate(g1, g2,
+                                                                      theory_func=ps_table)
             int_th, interpolated_cfp, interpolated_cfm, cf_err = \
                 getCF(target_x_use.flatten(), target_y_use.flatten(),
                       interpolated_g1.flatten(), interpolated_g2.flatten(),
@@ -739,12 +781,13 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
                       grid_spacing, ngrid_use, n_output_bins)
 
             # Accumulate statistics.
-            mean_interpolated_ps_ee += interpolated_ps_ee
-            mean_ps_ee += ps_ee
-            mean_interpolated_ps_bb += interpolated_ps_bb
-            mean_ps_bb += ps_bb
-            mean_interpolated_ps_eb += interpolated_ps_eb
-            mean_ps_eb += ps_eb
+            if not random:
+                mean_interpolated_ps_ee += interpolated_ps_ee
+                mean_ps_ee += ps_ee
+                mean_interpolated_ps_bb += interpolated_ps_bb
+                mean_ps_bb += ps_bb
+                mean_interpolated_ps_eb += interpolated_ps_eb
+                mean_ps_eb += ps_eb
             mean_interpolated_cfp += interpolated_cfp
             mean_cfp += cfp
             mean_interpolated_cfm += interpolated_cfm
@@ -752,35 +795,38 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
 
         # Now get the average over all realizations
         print "Done generating realizations, now getting mean 2-point functions"
-        mean_interpolated_ps_ee /= n_realizations
-        mean_ps_ee /= n_realizations
-        mean_interpolated_ps_bb /= n_realizations
-        mean_ps_bb /= n_realizations
-        mean_interpolated_ps_eb /= n_realizations
-        mean_ps_eb /= n_realizations
+        if not random:
+            mean_interpolated_ps_ee /= n_realizations
+            mean_ps_ee /= n_realizations
+            mean_interpolated_ps_bb /= n_realizations
+            mean_ps_bb /= n_realizations
+            mean_interpolated_ps_eb /= n_realizations
+            mean_ps_eb /= n_realizations
         mean_interpolated_cfp /= n_realizations
         mean_cfp /= n_realizations
         mean_interpolated_cfm /= n_realizations
         mean_cfm /= n_realizations
         if edge_cutoff:
-            mean_nocutoff_ps_ee /= n_realizations
-            mean_nocutoff_ps_bb /= n_realizations
-            mean_nocutoff_ps_eb /= n_realizations
+            if not random:
+                mean_nocutoff_ps_ee /= n_realizations
+                mean_nocutoff_ps_bb /= n_realizations
+                mean_nocutoff_ps_eb /= n_realizations
             mean_nocutoff_cfp /= n_realizations
             mean_nocutoff_cfm /= n_realizations
 
         # Plot statistics, and ratios with vs. without interpolants.
         print "Running plotting routines for interpolant=%s..."%interpolant
-        if edge_cutoff:
-            generate_ps_cutoff_plots(ell, mean_ps_ee, ps_ee_theory,
-                                     nocutoff_ell, mean_nocutoff_ps_ee, nocutoff_ps_ee_theory,
-                                     interpolant, ps_plot_prefix, type='EE')
-        generate_ps_plots(ell, mean_ps_ee, mean_interpolated_ps_ee, interpolant, ps_plot_prefix,
-                          grid_spacing, type='EE')
-        generate_ps_plots(ell, mean_ps_bb, mean_interpolated_ps_bb, interpolant, ps_plot_prefix,
-                          grid_spacing, type='BB')
-        generate_ps_plots(ell, mean_ps_eb, mean_interpolated_ps_eb, interpolant, ps_plot_prefix,
-                          grid_spacing, type='EB')
+        if not random:
+            if edge_cutoff:
+                generate_ps_cutoff_plots(ell, mean_ps_ee, ps_ee_theory,
+                                         nocutoff_ell, mean_nocutoff_ps_ee, nocutoff_ps_ee_theory,
+                                         interpolant, ps_plot_prefix, type='EE')
+            generate_ps_plots(ell, mean_ps_ee, mean_interpolated_ps_ee, interpolant, ps_plot_prefix,
+                              grid_spacing, type='EE')
+            generate_ps_plots(ell, mean_ps_bb, mean_interpolated_ps_bb, interpolant, ps_plot_prefix,
+                              grid_spacing, type='BB')
+            generate_ps_plots(ell, mean_ps_eb, mean_interpolated_ps_eb, interpolant, ps_plot_prefix,
+                              grid_spacing, type='EB')
         if edge_cutoff:
             generate_cf_cutoff_plots(th, mean_cfp, 
                                      nocutoff_th, mean_nocutoff_cfp,
@@ -795,12 +841,13 @@ def main(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix, 
 
         # Output results.
         print "Outputting tables of results..."
-        write_ps_output(ell, mean_ps_ee, mean_interpolated_ps_ee, interpolant, ps_plot_prefix,
-                        type='EE')
-        write_ps_output(ell, mean_ps_bb, mean_interpolated_ps_bb, interpolant, ps_plot_prefix,
-                        type='BB')
-        write_ps_output(ell, mean_ps_eb, mean_interpolated_ps_eb, interpolant, ps_plot_prefix,
-                        type='EB')
+        if not random:
+            write_ps_output(ell, mean_ps_ee, mean_interpolated_ps_ee, interpolant, ps_plot_prefix,
+                            type='EE')
+            write_ps_output(ell, mean_ps_bb, mean_interpolated_ps_bb, interpolant, ps_plot_prefix,
+                            type='BB')
+            write_ps_output(ell, mean_ps_eb, mean_interpolated_ps_eb, interpolant, ps_plot_prefix,
+                            type='EB')
         write_cf_output(th, mean_cfp, mean_interpolated_cfp, interpolant, cf_plot_prefix, type='p')
         write_cf_output(th, mean_cfm, mean_interpolated_cfm, interpolant, cf_plot_prefix, type='m')
         print ""
@@ -815,6 +862,8 @@ if __name__ == "__main__":
     parser.add_option('--dithering', dest='dithering', type=str,
                         help='Grid dithering to test (default: %s)'%default_dithering,
                         default=default_dithering)
+    parser.add_option('--random', dest="random", action='store_true', default=False,
+                      help='Distribute points completely randomly?')
     parser.add_option('--n_output_bins',
                       help='Number of bins for calculating 2-point functions '
                       '(default: %i)'%default_n_output_bins,
@@ -838,7 +887,11 @@ if __name__ == "__main__":
                       help='Cut off edges of grid that are affected by interpolation')
     parser.add_option('--periodic', dest="periodic", action='store_true', default=False,
                       help='Do interpolation assuming a periodic grid')
+    v = optparse.Values()
     opts, args = parser.parse_args()
+    # Check for mutually inconsistent args
+    if 'random' in v.__dict__.keys() and 'dithering' in v.__dict__.keys():
+        raise RuntimeError("Either grid dithering or random points should be specified, not both!")
     # Make directories if necessary.
     dir = os.path.dirname(opts.ps_plot_prefix)
     if dir is not '':
@@ -849,6 +902,7 @@ if __name__ == "__main__":
 
     main(n_realizations=opts.n_realizations,
          dithering=opts.dithering,
+         random=opts.random,
          n_output_bins=opts.n_output_bins,
          kmin_factor=opts.kmin_factor,
          ps_plot_prefix=opts.ps_plot_prefix,
