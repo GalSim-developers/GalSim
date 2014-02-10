@@ -691,7 +691,7 @@ class EuclideanWCS(BaseWCS):
                 world_origin += self.world_origin - self._posToWorld(self.origin)
             return self._newOrigin(origin, world_origin)
 
-    # If the class doesn't define something else, then we can approximate the local jacobian
+    # If the class doesn't define something else, then we can approximate the local Jacobian
     # from finite differences for the derivatives.  This will be overridden by UniformWCS.
     def _local(self, image_pos, world_pos):
         if image_pos is None:
@@ -870,7 +870,7 @@ class CelestialWCS(BaseWCS):
         origin += self.origin
         return self._newOrigin(origin)
 
-    # If the class doesn't define something else, then we can approximate the local jacobian
+    # If the class doesn't define something else, then we can approximate the local Jacobian
     # from finite differences for the derivatives of ra and dec.  Very similar to the 
     # version for EuclideanWCS, but convert from dra, ddec to du, dv locallat at the given
     # position.
@@ -1223,7 +1223,7 @@ class ShearWCS(LocalWCS):
 
 
 class JacobianWCS(LocalWCS):
-    """This WCS is the most general local linear WCS implementing a 2x2 jacobian matrix.
+    """This WCS is the most general local linear WCS implementing a 2x2 Jacobian matrix.
 
     The conversion functions are:
 
@@ -1312,7 +1312,7 @@ class JacobianWCS(LocalWCS):
         return abs(self._det)
 
     def getMatrix(self):
-        """Get the jacobian as a numpy matrix:
+        """Get the Jacobian as a numpy matrix:
 
                 numpy.matrix( [[ dudx, dudy ],
                                [ dvdx, dvdy ]] )
@@ -1323,7 +1323,7 @@ class JacobianWCS(LocalWCS):
 
     def getDecomposition(self):
         """Get the equivalent expansion, shear, rotation and possible flip corresponding to 
-        this jacobian transformation.
+        this Jacobian transformation.
 
         A non-singular real matrix can always be decomposed into a symmetric positive definite 
         matrix times an orthogonal matrix:
