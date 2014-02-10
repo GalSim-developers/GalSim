@@ -1496,10 +1496,12 @@ class OffsetWCS(UniformWCS):
     @param scale          The pixel scale, typically in units of arcsec/pixel.
     @param origin         Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI.
-                          [ Default: `origin = None` ]
+                          [ Default: `origin = None`, which internally sets
+                          `origin = galsim.PositionD(0., 0.)` ]
     @param world_origin   Optional origin position for the world coordinate system.
                           If provided, it should be a PostionD.
-                          [ Default: `world_origin = None` ]
+                          [ Default: `world_origin = None`, which internally sets
+                          `world_origin = galsim.PositionD(0., 0.)` ]
     """
     _req_params = { "scale" : float }
     _opt_params = { "origin" : galsim.PositionD, "world_origin": galsim.PositionD }
