@@ -42,7 +42,7 @@ R500 = galsim.dcr.get_refraction(500.0, zenith_angle) # normalize refraction to 
 
 # some profile parameters to test with
 bulge_n = 4.0
-bulge_hlr = 1.0
+bulge_hlr = 0.5
 bulge_e1 = 0.2
 bulge_e2 = 0.2
 
@@ -56,8 +56,8 @@ PSF_beta = 3.0
 PSF_e1 = 0.01
 PSF_e2 = 0.06
 
-shear_g1 = 0.1
-shear_g2 = 0.2
+shear_g1 = 0.01
+shear_g2 = 0.02
 
 # load a filter
 bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
