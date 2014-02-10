@@ -122,7 +122,6 @@ class ChromaticObject(object):
                 ret.__dict__[k] = [o.copy() for o in v]
             else:
                 ret.__dict__[k] = copy.copy(v)
-        #ret.__dict__.update(self.__dict__)
         return ret
 
     # reminder to developers to add apply* methods to subclasses below
@@ -157,11 +156,15 @@ class ChromaticObject(object):
         return ret
 
     def applyDilation(self, scale):
-        if isinstance(self, ChromaticAffineTransform):
-            self.abcd = lambda w:self.abcd(w) * scale
-            self.A = lambda w:self.A(w) * scale
-            self.dx = lambda w:self.dx(w) * scale
-            self.dy = lambda w:self.dy(w) * scale
+        if isinstance(self, ChromaticSum):
+            for obj in self.objlist:
+                obj.applyDilation(*args, **kwargs)
+        elif isinstance(self, ChromaticAffineTransform):
+            self.abcd = lambda w:scale * self.abcd(w)
+            dx = self.dx
+            dy = self.dy
+            self.dx = lambda w:dx(w) * scale
+            self.dy = lambda w:dy(w) * scale
         else:
             #transform self into a ChromaticAffineTransform
             self.obj = self.copy()
@@ -175,64 +178,69 @@ class ChromaticObject(object):
             # note, self.SED should already exist if this is a separable object
 
     def applyRotation(self, theta):
-        cth = numpy.cos(theta.rad())
-        sth = numpy.sin(theta.rad())
-        R = numpy.matrix([[cth, -sth], [sth, cth]], dtype=float)
-        if isinstance(self, ChromaticAffineTransform):
-            abcd = self.abcd
-            def f(w):
-                return abcd(w) * R
-            self.abcd = f
-            self.dx = lambda w:cth*self.dx(w) - sth*self.dy(w)
-            self.dy = lambda w:sth*self.dx(w) + cth*self.dy(w)
+        if isinstance(self, ChromaticSum):
+            for obj in self.objlist:
+                obj.applyRotation(*args, **kwargs)
         else:
-            #transform self into a ChromaticAffineTransform
-            self.obj = self.copy()
-            self.__class__ = ChromaticAffineTransform
-            self.abcd = lambda w: R
-            self.dx = lambda w: 0
-            self.dy = lambda w: 0
-            self.separable = self.obj.separable
-            if hasattr(self, 'gsobj'):
-                del self.gsobj
-            # note, self.SED should already exist if this is a separable object
+            cth = numpy.cos(theta.rad())
+            sth = numpy.sin(theta.rad())
+            R = numpy.matrix([[cth, -sth], [sth, cth]], dtype=float)
+            if isinstance(self, ChromaticAffineTransform):
+                abcd = self.abcd
+                self.abcd = lambda w: R * abcd(w)
+                dx = self.dx
+                dy = self.dy
+                self.dx = lambda w:cth*dx(w) - sth*dy(w)
+                self.dy = lambda w:sth*dx(w) + cth*dy(w)
+            else:
+                #transform self into a ChromaticAffineTransform
+                self.obj = self.copy()
+                self.__class__ = ChromaticAffineTransform
+                self.abcd = lambda w: R
+                self.dx = lambda w: 0
+                self.dy = lambda w: 0
+                self.separable = self.obj.separable
+                if hasattr(self, 'gsobj'):
+                    del self.gsobj
+                # note, self.SED should already exist if this is a separable object
 
     def applyShear(self, *args, **kwargs):
-        if len(args) == 1:
-            if kwargs:
-                raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
-            if not isinstance(args[0], galsim.Shear):
-                raise TypeError("Error, unnamed argument to applyShear is not a Shear!")
-            shear = args[0]
-        elif len(args) > 1:
-            raise TypeError("Error, too many unnamed arguments to applyShear!")
+        if isinstance(self, ChromaticSum):
+            for obj in self.objlist:
+                obj.applyShear(*args, **kwargs)
         else:
-            shear = galsim.Shear(**kwargs)
-        cb = numpy.cos(shear.beta.rad())
-        sb = numpy.sin(shear.beta.rad())
-        ce2 = numpy.cosh(shear.eta/2.0)
-        se2 = numpy.sinh(shear.eta/2.0)
-        #Bernstein&Jarvis (2002) equation 2.9
-        S = numpy.matrix([[ce2+cb*se2, sb*se2], [sb*se2, ce2-cb*se2]], dtype=float)
-        if isinstance(self, ChromaticAffineTransform):
-            abcd = self.abcd
-            def f(w):
-                return abcd(w) * S
-            self.abcd = f
-            self.dx = lambda w:0 #this isn't right... fill me in later.
-            self.dy = lambda w:0
-        else:
-            #transform self into a ChromaticAffineTransform
-            newobj = self.copy()
-            self.__class__ = ChromaticAffineTransform
-            self.abcd = lambda w: S
-            self.dx = lambda w: 0
-            self.dy = lambda w: 0
-            self.separable = newobj.separable
-            self.obj = newobj
-            if hasattr(self, 'gsobj'):
-                del self.gsobj
-            # note, self.SED should already exist if this is a separable object
+            if len(args) == 1:
+                if kwargs:
+                    raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
+                if not isinstance(args[0], galsim.Shear):
+                    raise TypeError("Error, unnamed argument to applyShear is not a Shear!")
+                shear = args[0]
+            elif len(args) > 1:
+                raise TypeError("Error, too many unnamed arguments to applyShear!")
+            else:
+                shear = galsim.Shear(**kwargs)
+            c2b = numpy.cos(2.0 * shear.beta.rad())
+            s2b = numpy.sin(2.0 * shear.beta.rad())
+            ce2 = numpy.cosh(shear.eta/2.0)
+            se2 = numpy.sinh(shear.eta/2.0)
+            #Bernstein&Jarvis (2002) equation 2.9
+            S = numpy.matrix([[ce2+c2b*se2, s2b*se2], [s2b*se2, ce2-c2b*se2]], dtype=float)
+            if isinstance(self, ChromaticAffineTransform):
+                abcd = self.abcd
+                self.abcd = lambda w: S * abcd(w)
+                self.dx = lambda w:0 #this isn't right... fill me in later.
+                self.dy = lambda w:0
+            else:
+                #transform self into a ChromaticAffineTransform
+                self.obj = self.copy()
+                self.__class__ = ChromaticAffineTransform
+                self.abcd = lambda w: S
+                self.dx = lambda w: 0
+                self.dy = lambda w: 0
+                self.separable = self.obj.separable
+                if hasattr(self, 'gsobj'):
+                    del self.gsobj
+                # note, self.SED should already exist if this is a separable object
 
 
 class Chromatic(ChromaticObject):
@@ -510,15 +518,14 @@ class ChromaticConvolution(ChromaticObject):
             if isinstance(obj, ChromaticSum):
                 # say obj.objlist = [A,B,C], where obj is a ChromaticSum object
                 del objlist[i] # remove the add object from objlist
-                # collect remaining items to be convolved with each of A,B,C
-                tmplist = [o.copy() for o in objlist]
+                tmplist = list(objlist) # collect remaining items to be convolved with each of A,B,C
                 tmplist.append(obj.objlist[0]) # add A to this convolve list
                 tmpobj = ChromaticConvolution(tmplist) # draw image
                 image = tmpobj.draw(bandpass, image=image, gain=gain, wmult=wmult,
                                     add_to_image=add_to_image, use_true_center=use_true_center,
                                     offset=offset, integrator=integrator, iimult=iimult, **kwargs)
                 for summand in obj.objlist[1:]: # now do the same for B and C
-                    tmplist = [o.copy() for o in objlist]
+                    tmplist = list(objlist)
                     tmplist.append(summand)
                     tmpobj = ChromaticConvolution(tmplist)
                     # add to previously started image
@@ -743,7 +750,7 @@ class ChromaticAffineTransform(ChromaticObject):
         self.dy = dy
         self.separable = False
 
-    def evaluateAtWavelength(self, w):
+    def _getMuEtaBetaTheta(self, w):
         abcd = self.abcd(w)
         A = abcd[0,0]
         B = abcd[0,1]
@@ -751,15 +758,22 @@ class ChromaticAffineTransform(ChromaticObject):
         D = abcd[1,1]
         mu = numpy.sqrt(numpy.linalg.det(abcd))
         theta = numpy.arctan2(C-B, A+D)
-        beta = numpy.arctan2(C+B, A-D)
-        if beta-theta == 0.0: # What happens when beta == theta ??
+        if A-D == 0.0:
             eta = 0.0
+            beta = 0.0
         else:
-            eta = 2.0*numpy.arcsinh((B+C)/(2.0*mu*numpy.sin(beta-theta)))
+            beta = 0.5 * (numpy.arctan2(C+B, A-D) + theta)
+            eta = 2.0*numpy.arcsinh((A-D)/(2.0*mu*numpy.cos(2.0*beta-theta)))
+        if eta < 0.0:
+            eta = -eta
+            beta += numpy.pi
+        return mu, eta, beta, theta
 
+    def evaluateAtWavelength(self, w):
+        mu, eta, beta, theta = self._getMuEtaBetaTheta(w)
         tmpobj = self.obj.evaluateAtWavelength(w)
         tmpobj.applyRotation(theta * galsim.radians)
-        tmpobj.applyShear(eta=eta, beta=beta * galsim.radians)
+        tmpobj.applyShear(eta=eta, beta=beta*galsim.radians)
         tmpobj.applyDilation(mu)
         tmpobj.applyShift(self.dx(w), self.dy(w))
         return tmpobj
