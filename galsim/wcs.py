@@ -1415,7 +1415,7 @@ class JacobianWCS(LocalWCS):
         # NB: The unit tests test for the equivalence with the above formula.
         h1 = math.sqrt( (self._dudx + self._dvdy)**2 + (self._dudy - self._dvdx)**2 )
         h2 = math.sqrt( (self._dudx - self._dvdy)**2 + (self._dudy + self._dvdx)**2 )
-        return 0.5 * abs(h1 + h2)
+        return 0.5 * (h1 + h2)
 
     def _inverse(self):
         return JacobianWCS(self._dvdy/self._det, -self._dudy/self._det,
