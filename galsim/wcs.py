@@ -1111,6 +1111,9 @@ class ShearWCS(LocalWCS):
 
     @param scale          The pixel scale, typically in units of arcsec/pixel.
     @param shear          The shear, which should be a galsim.Shear instance.
+
+    The galsim.Shear transformation conserves object area, so if the input scale == 1. then the
+    transformation represented by the ShearWCS will conserve object area also.
     """
     _req_params = { "scale" : float, "shear" : galsim.Shear }
     _opt_params = {}
