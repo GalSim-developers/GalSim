@@ -99,7 +99,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
                  wcs=None, origin=None):
         import astropy.wcs
-        self._tag = None # Write something useful here.  (It is just used for the repr.)
+        self._tag = None # Write something useful here (see below). This is just used for the repr.
 
         # Read the file if given.
         if file_name is not None:
@@ -371,7 +371,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         import starlink.Ast, starlink.Atl
         # Note: For much of this class implementation, I've followed the example provided here:
         #       http://dsberry.github.io/starlink/node4.html
-        self._tag = None # Write something useful here for the repr.
+        self._tag = None # Write something useful here (see below). This is just used for the repr.
         hdu = None
 
         # Read the file if given.
