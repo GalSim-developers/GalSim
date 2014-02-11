@@ -170,9 +170,9 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         try:
             # Apparently, the returned values aren't _necessarily_ (ra, dec).  They could be
             # (dec, ra) instead!  But if you add ra_dec_order=True, then it will be (ra, dec).
-            # I can't imagnie why that isn't the default, but there you go.
+            # I can't imagine why that isn't the default, but there you go.
             # This currently fails with an AttributeError about astropy.wcs.Wcsprm.lattype
-            # c.f. https://github.com/astropy/astropy/pull/1463
+            # cf. https://github.com/astropy/astropy/pull/1463
             # Once they fix it, this is what we want.
             ra, dec = self._wcs.all_pix2world(x1, y1, 1, ra_dec_order=True)
         except:
