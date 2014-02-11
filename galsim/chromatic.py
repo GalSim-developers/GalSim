@@ -499,6 +499,7 @@ class ChromaticObject(object):
         ret.applyShift(*args, **kwargs)
         return ret
 
+
 class Chromatic(ChromaticObject):
     """Construct chromatic versions of galsim GSObjects.
 
@@ -549,6 +550,7 @@ class Chromatic(ChromaticObject):
         @returns     GSObject for profile at specified wavelength
         """
         return self.SED(wave) * self.gsobj
+
 
 class ChromaticSum(ChromaticObject):
     """Add ChromaticObjects and/or GSObjects together.  If a GSObject is part of a sum, then its
@@ -631,7 +633,7 @@ class ChromaticConvolution(ChromaticObject):
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, iimult=None, **kwargs):
         """ Optimized draw method for ChromaticConvolution.  Works by finding sums of profiles
-        which include separable portions, which can then be integrated without before doing any
+        which include separable portions, which can then be integrated before doing any
         convolutions, which are pushed to the end.
 
         @param bandpass           A galsim.Bandpass object representing the filter
@@ -834,8 +836,6 @@ class ChromaticShiftAndDilate(ChromaticObject):
     def scaleFlux(self, scale):
         self.gsobj.scaleFlux(scale)
 
-    # The apply* transforms don't commute with shifting and dilating, so cannot simply
-    # alter self.gsobj like above...
 
 class ChromaticAtmosphere(ChromaticShiftAndDilate):
     """Class implementing two atmospheric chromatic effects: differential chromatic refraction
@@ -869,6 +869,7 @@ class ChromaticAtmosphere(ChromaticShiftAndDilate):
             return shift
         self.shift_fn = shift_fn
 
+
 class ChromaticDeconvolution(ChromaticObject):
     def __init__(self, obj, **kwargs):
         self.obj = obj.copy()
@@ -879,6 +880,7 @@ class ChromaticDeconvolution(ChromaticObject):
 
     def evaluateAtWavelength(self, wave):
         return galsim.Deconvolve(self.obj.evaluateAtWavelength(wave), **self.kwargs)
+
 
 class ChromaticAutoConvolution(ChromaticObject):
     def __init__(self, obj, **kwargs):
@@ -891,6 +893,7 @@ class ChromaticAutoConvolution(ChromaticObject):
     def evaluateAtWavelength(self, wave):
         return galsim.AutoConvolve(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
+
 class ChromaticAutoCorrelation(ChromaticObject):
     def __init__(self, obj, **kwargs):
         self.obj = obj.copy()
@@ -901,6 +904,7 @@ class ChromaticAutoCorrelation(ChromaticObject):
 
     def evaluateAtWavelength(self, wave):
         return galsim.AutoCorrelate(self.obj.evaluateAtWavelength(wave), **self.kwargs)
+
 
 class ChromaticAffineTransform(ChromaticObject):
     def __init__(obj, A=None):
