@@ -871,6 +871,18 @@ class ChromaticAtmosphere(ChromaticShiftAndDilate):
 
 
 class ChromaticDeconvolution(ChromaticObject):
+    """A class for deconvolving a ChromaticObject.
+
+    The ChromaticDeconvolution class represents a wavelength-dependent deconvolution kernel.
+
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
+    (or None), then the ChromaticDeconvolution instance inherits the same GSParams as the object
+    being deconvolved.
+
+    @param obj        The object to deconvolve.
+    @param gsparams   Optional gsparams argument.
+    """
     def __init__(self, obj, **kwargs):
         self.obj = obj.copy()
         self.kwargs = kwargs
@@ -881,8 +893,21 @@ class ChromaticDeconvolution(ChromaticObject):
     def evaluateAtWavelength(self, wave):
         return galsim.Deconvolve(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
+    def scaleFlux(self, scale):
+        self.obj.scaleFlux(scale)
+
 
 class ChromaticAutoConvolution(ChromaticObject):
+    """A special class for convolving a ChromaticObject with itself.
+
+    It is equivalent in functionality to galsim.Convolve([obj,obj]), but takes advantage of
+    the fact that the two profiles are the same for some efficiency gains.
+
+    @param obj        The object to be convolved with itself.
+    @param real_space Whether to use real space convolution.  Default is to automatically select
+                      this according to whether the object has hard edges.
+    @param gsparams   Optional gsparams argument.
+    """
     def __init__(self, obj, **kwargs):
         self.obj = obj.copy()
         self.kwargs = kwargs
@@ -893,8 +918,22 @@ class ChromaticAutoConvolution(ChromaticObject):
     def evaluateAtWavelength(self, wave):
         return galsim.AutoConvolve(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
+    def scaleFlux(self, scale):
+        self.obj.scaleFlux(numpy.sqrt(scale))
+
 
 class ChromaticAutoCorrelation(ChromaticObject):
+    """A special class for correlating a ChromaticObject with itself.
+
+    It is equivalent in functionality to
+        galsim.Convolve([obj,obj.createRotated(180.*galsim.degrees)])
+    but takes advantage of the fact that the two profiles are the same for some efficiency gains.
+
+    @param obj        The object to be convolved with itself.
+    @param real_space Whether to use real space convolution.  Default is to automatically select
+                      this according to whether the object has hard edges.
+    @param gsparams   Optional gsparams argument.
+    """
     def __init__(self, obj, **kwargs):
         self.obj = obj.copy()
         self.kwargs = kwargs
@@ -905,6 +944,8 @@ class ChromaticAutoCorrelation(ChromaticObject):
     def evaluateAtWavelength(self, wave):
         return galsim.AutoCorrelate(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
+    def scaleFlux(self, scale):
+        self.obj.scaleFlux(numpy.sqrt(scale))
 
 class ChromaticAffineTransform(ChromaticObject):
     def __init__(obj, A=None):
