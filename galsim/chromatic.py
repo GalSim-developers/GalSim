@@ -806,3 +806,21 @@ class ChromaticAffineTransform(ChromaticObject):
         tmpobj.applyDilation(mu)
         tmpobj.applyShift(dx, dy)
         return tmpobj
+
+    def scaleFlux(self, scale):
+        self.obj.scaleFlux(scale)
+
+    # Make op* and op*= work to adjust the flux of the object
+    def __imul__(self, other):
+        self.obj.scaleFlux(other)
+        return self
+
+    def __mul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    def __rmul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
