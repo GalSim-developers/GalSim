@@ -525,7 +525,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
     """This WCS uses wcstools executables to perform the appropriate WCS transformations
     for a given FITS file.  It requires wcstools command line functions to be installed.
 
-    Note: It uses the wcstools executalbes xy2sky and sky2xy, so it can be quite a bit less
+    Note: It uses the wcstools executables xy2sky and sky2xy, so it can be quite a bit less
           efficient than other options that keep the WCS in memory.
 
     See their website for information on downloading and installing wcstools:
@@ -586,7 +586,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
         # if input is either scalar x,y or two arrays.
         xy = numpy.array([x, y]).transpose().flatten()
         
-        # The OS cannot handle arbitrarily long commad lines, so we may need to split up
+        # The OS cannot handle arbitrarily long command lines, so we may need to split up
         # the list into smaller chunks.
         import os
         if 'SC_ARG_MAX' in os.sysconf_names:
