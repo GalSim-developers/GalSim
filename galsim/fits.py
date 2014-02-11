@@ -175,7 +175,20 @@ class _ReadFile:
             file = os.path.join(dir,file)
 
         if not file_compress:
-            hdu_list = pyfits.open(file, 'readonly')
+            if pyfits_version < '3.0':
+                # Sometimes early versions of pyfits do weird things with the final hdu when 
+                # writing fits files with rice compression.  It seems to add a bunch of '\0'
+                # characters after then end of what should be the last hdu.  When reading this
+                # back in, it gets interpreted as the start of another hdu, which is then found 
+                # to be missing its END card in the header.  The easiest workaround is to just
+                # tell it to ignore any missing END problems on the read command.  Also ignore
+                # the warnings it emits along the way.
+                import warnings
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    hdu_list = pyfits.open(file, 'readonly', ignore_missing_end=True)
+            else:
+                hdu_list = pyfits.open(file, 'readonly')
             return hdu_list, None
         elif file_compress == 'gzip':
             while self.gz_index < len(self.gz_methods):
