@@ -34,8 +34,7 @@ import galsim.integ
 import galsim.dcr
 
 class ChromaticObject(object):
-    """Base class for defining wavelength dependent objects.
-    """
+    """Base class for defining wavelength dependent objects."""
     def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=galsim.integ.midpoint_int_image, **kwargs):
@@ -109,131 +108,137 @@ class ChromaticObject(object):
         image += integral
         return image
 
+    # Subclasses must define scaleFlux() and evaluateAtWavelength()
+    def scaleFlux(self, scale):
+        raise NotImplementedError
+
+    def evaluateAtWavelength(self, wave):
+        raise NotImplementedError
+
+    # Add together `ChromaticObject`s and/or `GSObject`s
     def __add__(self, other):
-        """Add together two ChromaticObjects, or a ChromaticObject and a GSObject.
-        """
         return galsim.ChromaticSum([self, other])
 
+    # Subtract `ChromaticObject`s and/or `GSObject`s
+    def __sub__(self, other):
+        return galsim.ChromaticSum([self, (-1. * other)])
+
+    # Make op* and op*= work to adjust the flux of the object
+    def __imul__(self, other):
+        self.gsobj.scaleFlux(other)
+        return self
+
+    def __mul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    def __rmul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    # Make a new copy of a `ChromaticObject`.
     def copy(self):
+        """Returns a copy of an object.  This preseved the original type of the object."""
         cls = self.__class__
         ret = cls.__new__(cls)
         for k, v in self.__dict__.iteritems():
             if k == 'objlist':
+                # explicity request that individual items of objlist are copied,
+                # not just the list itself
                 ret.__dict__[k] = [o.copy() for o in v]
             else:
                 ret.__dict__[k] = copy.copy(v)
         return ret
 
-    # reminder to developers to add apply* methods to subclasses below
-    def createDilated(self, scale):
-        ret = self.copy()
-        ret.applyDilation(scale)
-        return ret
+    # Following functions work to apply affine transformations to a ChromaticObject.
+    #
 
-    def createMagnified(self, mu):
-        ret = self.copy()
-        ret.applyMagnification(mu)
-        return ret
+    def applyExpansion(self, scale):
+        """Rescale the linear size of the profile by the given scale factor.
 
-    def createSheared(self, *args, **kwargs):
-        ret = self.copy()
-        ret.applyShear(*args, **kwargs)
-        return ret
+        This doesn't correspond to either of the normal operations one would typically want to
+        do to a galaxy.  See the functions applyDilation and applyMagnification for the more
+        typical usage.  But this function is conceptually simple.  It rescales the linear
+        dimension of the profile, while preserving surface brightness.  As a result, the flux
+        will necessarily change as well.
 
-    def createLensed(self, g1, g2, mu):
-        ret = self.copy()
-        ret.applyLensing(g1, g2, mu)
-        return ret
+        See applyDilation for a version that applies a linear scale factor in the size while
+        preserving flux.
 
-    def createRotated(self, theta):
-        ret = self.copy()
-        ret.applyRotation(theta)
-        return ret
+        See applyMagnification for a version that applies a scale factor to the area while
+        preserving surface brightness.
 
-    def createShifted(self, *args, **kwargs):
-        ret = self.copy()
-        ret.applyShift(*args, **kwargs)
-        return ret
+        After this call, the caller's type will be a ChromaticAffineTransform object.
 
-    def applyShift(self, *args, **kwargs):
+        @param scale The factor by which to scale the linear dimension of the object.
+        """
         if isinstance(self, ChromaticSum):
             for obj in self.objlist:
-                obj.applyShift(*args, **kwargs)
+                obj.applyExpansion(scale)
         else:
-            if len(args) == 0:
-                # Then dx,dy need to be kwargs
-                # If not, then python will raise an appropriate error.
-                dx = kwargs.pop('dx')
-                dy = kwargs.pop('dy')
-            elif len(args) == 1:
-                if isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
-                    dx = args[0].x
-                    dy = args[0].y
-                else:
-                    # Let python raise the appropriate exception if this isn't valid.
-                    dx = args[0][0]
-                    dy = args[0][1]
-            elif len(args) == 2:
-                dx = args[0]
-                dy = args[1]
-            else:
-                raise TypeError("Too many arguments supplied to applyShift ")
-            if kwargs:
-                raise TypeError("applyShift() got unexpected keyword arguments: %s",kwargs.keys())
-            shift = numpy.matrix([[1,0,dx],[0,1,dy],[0,0,1]], dtype=float)
+            M = numpy.matrix(numpy.diag([scale, scale, 1]))
             if isinstance(self, ChromaticAffineTransform):
                 A = self.A
-                self.A = lambda w: shift * A(w)
+                self.A = lambda w:M * A(w)
             else:
                 self.obj = self.copy()
                 self.__class__ = ChromaticAffineTransform
-                self.A = lambda w: shift
+                self.A = lambda w: M
                 self.separable = self.obj.separable
                 if hasattr(self, 'gsobj'):
                     del self.gsobj
                 # note, self.SED should already exist if this is a separable object
 
     def applyDilation(self, scale):
-        if isinstance(self, ChromaticSum):
-            for obj in self.objlist:
-                obj.applyDilation(*args, **kwargs)
-        elif isinstance(self, ChromaticAffineTransform):
-            A = self.A
-            self.A = lambda w:scale * A(w)
-        else:
-            #transform self into a ChromaticAffineTransform
-            self.obj = self.copy()
-            self.__class__ = ChromaticAffineTransform
-            self.A = lambda w: numpy.matrix(numpy.diag([scale,scale,1]))
-            self.separable = self.obj.separable
-            if hasattr(self, 'gsobj'):
-                del self.gsobj
-            # note, self.SED should already exist if this is a separable object
+        """Apply a dilation of the linear size by the given scale.
 
-    def applyRotation(self, theta):
-        if isinstance(self, ChromaticSum):
-            for obj in self.objlist:
-                obj.applyRotation(*args, **kwargs)
-        else:
-            cth = numpy.cos(theta.rad())
-            sth = numpy.sin(theta.rad())
-            R = numpy.matrix([[cth, -sth, 0],
-                              [sth, cth, 0],
-                              [0, 0, 1]], dtype=float)
-            if isinstance(self, ChromaticAffineTransform):
-                A = self.A
-                self.A = lambda w: R * A(w)
-            else:
-                #transform self into a ChromaticAffineTransform
-                self.obj = self.copy()
-                self.__class__ = ChromaticAffineTransform
-                self.A = lambda w: R
-                self.separable = self.obj.separable
-                if hasattr(self, 'gsobj'):
-                    del self.gsobj
-                # note, self.SED should already exist if this is a separable object
+        Scales the linear dimensions of the image by the factor scale.
+        e.g. `half_light_radius` <-- `half_light_radius * scale`
+
+        This operation preserves flux.
+        See applyMagnification() for a version that preserves surface brightness, and thus
+        changes the flux.
+
+        After this call, the caller's type will be a ChromaticAffineTransform.
+
+        @param scale The linear rescaling factor to apply.
+        """
+        self.applyExpansion(scale)
+        self.scaleFlux(1./scale**2) # conserve flux
+
+    def applyMagnification(self, mu):
+        """Apply a lensing magnification, scaling the area and flux by mu at fixed surface
+        brightness.
+
+        This process applies a lensing magnification mu, which scales the linear dimensions of the
+        image by the factor sqrt(mu), i.e., `half_light_radius` <-- `half_light_radius * sqrt(mu)`
+        while increasing the flux by a factor of mu.  Thus, applyMagnification preserves surface
+        brightness.
+
+        See applyDilation for a version that applies a linear scale factor in the size while
+        preserving flux.
+
+        After this call, the caller's type will be a ChromaticAffineTransform.
+
+        @param mu The lensing magnification to apply.
+        """
+        self.applyExpansion(numpy.sqrt(mu))
 
     def applyShear(self, *args, **kwargs):
+        """Apply an area-preserving shear to this object, where arguments are either a galsim.Shear,
+        or arguments that will be used to initialize one.
+
+        For more details about the allowed keyword arguments, see the documentation for galsim.Shear
+        (for doxygen documentation, see galsim.shear.Shear).
+
+        The applyShear() method precisely preserves the area.  To include a lensing distortion with
+        the appropriate change in area, either use applyShear() with applyMagnification(), or use
+        applyLensing() which combines both operations.
+
+        After this call, the caller's type will be a ChromaticAffineTransform.
+        """
         if isinstance(self, ChromaticSum):
             for obj in self.objlist:
                 obj.applyShear(*args, **kwargs)
@@ -269,6 +274,230 @@ class ChromaticObject(object):
                     del self.gsobj
                 # note, self.SED should already exist if this is a separable object
 
+    def applyLensing(self, g1, g2, mu):
+        """Apply a lensing shear and magnification to this object.
+
+        This ChromaticObject method applies a lensing (reduced) shear and magnification.  The shear
+        must be specified using the g1, g2 definition of shear (see galsim.Shear documentation for
+        more details).  This is the same definition as the outputs of the galsim.PowerSpectrum and
+        galsim.NFWHalo classes, which compute shears according to some lensing power spectrum or
+        lensing by an NFW dark matter halo.  The magnification determines the rescaling factor for
+        the object area and flux, preserving surface brightness.
+
+        After this call, the caller's type will be a ChromaticAffineTransform.
+
+        @param g1      First component of lensing (reduced) shear to apply to the object.
+        @param g2      Second component of lensing (reduced) shear to apply to the object.
+        @param mu      Lensing magnification to apply to the object.  This is the factor by which
+                       the solid angle subtended by the object is magnified, preserving surface
+                       brightness.
+        """
+        self.applyShear(g1=g1, g2=g2)
+        self.applyMagnification(mu)
+
+    def applyRotation(self, theta):
+        """Apply a rotation theta to this object.
+
+        After this call, the caller's type will be a ChromaticAffineTransform.
+
+        @param theta Rotation angle (Angle object, +ve anticlockwise).
+        """
+        if isinstance(self, ChromaticSum):
+            for obj in self.objlist:
+                obj.applyRotation(theta)
+        else:
+            cth = numpy.cos(theta.rad())
+            sth = numpy.sin(theta.rad())
+            R = numpy.matrix([[cth, -sth, 0],
+                              [sth, cth, 0],
+                              [0, 0, 1]], dtype=float)
+            if isinstance(self, ChromaticAffineTransform):
+                A = self.A
+                self.A = lambda w: R * A(w)
+            else:
+                #transform self into a ChromaticAffineTransform
+                self.obj = self.copy()
+                self.__class__ = ChromaticAffineTransform
+                self.A = lambda w: R
+                self.separable = self.obj.separable
+                if hasattr(self, 'gsobj'):
+                    del self.gsobj
+                # note, self.SED should already exist if this is a separable object
+
+    def applyShift(self, *args, **kwargs):
+        """Apply a (dx, dy) shift to this chromatic object.
+
+        After this call, the caller's type will be a ChromaticAffineTransform object.
+
+        @param dx Horizontal shift to apply (float).
+        @param dy Vertical shift to apply (float).
+
+        Note: you may supply dx,dy as either two arguments, as a tuple, or as a
+        galsim.PositionD or galsim.PositionI object.
+        """
+        if isinstance(self, ChromaticSum):     # Don't wrap `ChromaticSum`s, easier to just
+            for obj in self.objlist:           # wrap their arguments.
+                obj.applyShift(*args, **kwargs)
+        else:
+            # First unpack args/kwargs
+            if len(args) == 0:
+                # Then dx,dy need to be kwargs
+                # If not, then python will raise an appropriate error.
+                dx = kwargs.pop('dx')
+                dy = kwargs.pop('dy')
+            elif len(args) == 1:
+                if isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
+                    dx = args[0].x
+                    dy = args[0].y
+                else:
+                    # Let python raise the appropriate exception if this isn't valid.
+                    dx = args[0][0]
+                    dy = args[0][1]
+            elif len(args) == 2:
+                dx = args[0]
+                dy = args[1]
+            else:
+                raise TypeError("Too many arguments supplied to applyShift ")
+            if kwargs:
+                raise TypeError("applyShift() got unexpected keyword arguments: %s",kwargs.keys())
+            # Then create augmented affine transform matrix and multiply or set as necessary
+            shift = numpy.matrix([[1,0,dx],[0,1,dy],[0,0,1]], dtype=float)
+            if isinstance(self, ChromaticAffineTransform):
+                A = self.A
+                self.A = lambda w: shift * A(w)
+            else:
+                self.obj = self.copy()
+                self.__class__ = ChromaticAffineTransform
+                self.A = lambda w: shift
+                self.separable = self.obj.separable
+                if hasattr(self, 'gsobj'):
+                    del self.gsobj
+                # note, self.SED should already exist if this is a separable object
+
+    # Also add methods which create a new ChromaticAffineTransform with the transformations
+    # applied...
+    def createExpanded(self, scale):
+        """Returns a new ChromaticAffineTransform by applying an expansion of the linear size by the
+        given scale.
+
+        This doesn't correspond to either of the normal operations one would typically want to
+        do to a galaxy.  See the functions createDilated() and createMagnified() for the more
+        typical usage.  But this function is conceptually simple.  It rescales the linear
+        dimension of the profile, while preserving surface brightness.  As a result, the flux
+        will necessarily change as well.
+
+        See createDilated() for a version that applies a linear scale factor in the size while
+        preserving flux.
+
+        See createMagnified() for a version that applies a scale factor to the area while
+        preserving surface brightness.
+
+        @param scale The linear rescaling factor to apply.
+        @returns The rescaled ChromaticAffineTransform.
+        """
+        ret = self.copy()
+        ret.applyExpansion(scale)
+        return ret
+
+    def createDilated(self, scale):
+        """Returns a new ChromaticAffineTransform by applying a dilation of the linear size by the
+        given scale.
+
+        Scales the linear dimensions of the image by the factor scale.
+        e.g. `half_light_radius` <-- `half_light_radius * scale`
+
+        This operation preserves flux.
+        See createMagnified() for a version that preserves surface brightness, and thus
+        changes the flux.
+
+        @param scale The linear rescaling factor to apply.
+        @returns The rescaled ChromaticAffineTransform.
+        """
+        ret = self.copy()
+        ret.applyDilation(scale)
+        return ret
+
+    def createMagnified(self, mu):
+        """Returns a new ChromaticAffineTransform by applying a lensing magnification, scaling the
+        area and flux by mu at fixed surface brightness.
+
+        This process returns a new object with a lensing magnification mu, which scales the linear
+        dimensions of the image by the factor sqrt(mu), i.e., `half_light_radius` <--
+        `half_light_radius * sqrt(mu)` while increasing the flux by a factor of mu.  Thus, the new
+        object has the same surface brightness as the original, but different size and flux.
+
+        See createDilated() for a version that preserves flux.
+
+        @param mu The lensing magnification to apply.
+        @returns The rescaled ChromaticAffineTransform.
+        """
+        ret = self.copy()
+        ret.applyMagnification(mu)
+        return ret
+
+    def createSheared(self, *args, **kwargs):
+        """Returns a new ChromaticAffineTransform by applying an area-preserving shear, where
+        arguments are either a galsim.Shear or keyword arguments that can be used to create one.
+
+        For more details about the allowed keyword arguments, see the documentation of galsim.Shear
+        (for doxygen documentation, see galsim.shear.Shear).
+
+        The createSheared() method precisely preserves the area.  To include a lensing distortion
+        with the appropriate change in area, either use createSheared() with createMagnified(), or
+        use createLensed() which combines both operations.
+
+        @returns The sheared ChromaticAffineTransform.
+        """
+        ret = self.copy()
+        ret.applyShear(*args, **kwargs)
+        return ret
+
+    def createLensed(self, g1, g2, mu):
+        """Returns a new ChromaticAffineTransform by applying a lensing shear and magnification.
+
+        This method returns a new ChromaticAffineTransform to which the supplied lensing (reduced)
+        shear and magnification has been applied.  The shear must be specified using the g1, g2
+        definition of shear (see galsim.Shear documentation for more details).  This is the same
+        definition as the outputs of the galsim.PowerSpectrum and galsim.NFWHalo classes, which
+        compute shears according to some lensing power spectrum or lensing by an NFW dark matter
+        halo. The magnification determines the rescaling factor for the object area and flux,
+        preserving surface brightness.
+
+        @param g1      First component of lensing (reduced) shear to apply to the object.
+        @param g2      Second component of lensing (reduced) shear to apply to the object.
+        @param mu      Lensing magnification to apply to the object.  This is the factor by which
+                       the solid angle subtended by the object is magnified, preserving surface
+                       brightness.
+        @returns       The lensed ChromaticAffineTransform.
+        """
+        ret = self.copy()
+        ret.applyLensing(g1, g2, mu)
+        return ret
+
+    def createRotated(self, theta):
+        """Returns a new ChromaticAffineTransform by applying a rotation.
+
+        @param theta Rotation angle (Angle object, +ve anticlockwise).
+        @returns The rotated ChromaticAffineTransform.
+        """
+        ret = self.copy()
+        ret.applyRotation(theta)
+        return ret
+
+    def createShifted(self, *args, **kwargs):
+        """Returns a new ChromaticAffineTransform by applying a shift.
+
+        @param dx Horizontal shift to apply (float).
+        @param dy Vertical shift to apply (float).
+
+        Note: you may supply dx,dy as either two arguments, as a tuple, or as a
+        galsim.PositionD or galsim.PositionI object.
+
+        @returns The shifted ChromaticAffineTransform.
+        """
+        ret = self.copy()
+        ret.applyShift(*args, **kwargs)
+        return ret
 
 class Chromatic(ChromaticObject):
     """Construct chromatic versions of galsim GSObjects.
@@ -309,45 +538,9 @@ class Chromatic(ChromaticObject):
         # Chromaticized GSObjects are separable into spatial (x,y) and spectral (lambda) factors.
         self.separable = True
 
-    # Make op* and op*= work to adjust the flux of the object
-    def __imul__(self, other):
-        self.gsobj.scaleFlux(other)
-        return self
-
-    def __mul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
-
-    def __rmul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
-
     # Apply following transformations to the underlying GSObject
     def scaleFlux(self, scale):
         self.gsobj.scaleFlux(scale)
-
-#    def applyShear(self, *args, **kwargs):
-#        self.gsobj.applyShear(*args, **kwargs)
-
-#    def applyDilation(self, scale):
-#        self.gsobj.applyDilation(scale)
-
-#    def applyShift(self, *args, **kwargs):
-#        self.gsobj.applyShift(*args, **kwargs)
-
-    def applyExpansion(self, scale):
-        self.gsobj.applyExpansion(scale)
-
-    def applyMagnification(self, mu):
-        self.gsobj.applyMagnification(mu)
-
-    def applyLensing(self, g1, g2, mu):
-        self.gsobj.applyLensing(g1, g2, mu)
-
-    # def applyRotation(self, theta):
-    #     self.gsobj.applyRotation(theta)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate underlying GSObject scaled by self.SED(`wave`).
@@ -404,54 +597,11 @@ class ChromaticSum(ChromaticObject):
                              add_to_image=True, use_true_center=use_true_center,
                              offset=offset, integrator=integrator, **kwargs)
 
-    # Make op* and op*= work to adjust the flux of the object
-    def __imul__(self, other):
-        for obj in self.objlist:
-            obj.scaleFlux(other)
-        return self
-
-    def __mul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
-
-    def __rmul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
-
     # apply following transformations to all underlying summands
     def scaleFlux(self, scale):
         for obj in self.objlist:
             obj.scaleFlux(scale)
 
-    # def applyShear(self, *args, **kwargs):
-    #     for obj in self.objlist:
-    #         obj.applyShear(*args, **kwargs)
-
-    # def applyDilation(self, scale):
-    #     for obj in self.objlist:
-    #         obj.applyDilation(scale)
-
-    # def applyShift(self, *args, **kwargs):
-    #     for obj in self.objlist:
-    #         obj.applyShift(*args, **kwargs)
-
-    def applyExpansion(self, scale):
-        for obj in self.objlist:
-            obj.applyExpansion(scale)
-
-    def applyMagnification(self, mu):
-        for obj in self.objlist:
-            obj.applyMagnification(mu)
-
-    def applyLensing(self, g1, g2, mu):
-        for obj in self.objlist:
-            obj.applyLensing(g1, g2, mu)
-
-    # def applyRotation(self, theta):
-    #     for obj in self.objlist:
-    #         obj.applyRotation(theta)
 
 class ChromaticConvolution(ChromaticObject):
     """Convolve ChromaticObjects and/or GSObjects together.  GSObjects are treated as having flat
@@ -632,22 +782,6 @@ class ChromaticConvolution(ChromaticObject):
         return final_prof.draw(image=image, gain=gain, wmult=wmult, add_to_image=add_to_image,
                                use_true_center=use_true_center, offset=offset)
 
-    # Make op* and op*= work to adjust the flux of the object by altering flux of the
-    # first object in self.objlist
-    def __imul__(self, other):
-        self.objlist[0].scaleFlux(other)
-        return self
-
-    def __mul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
-
-    def __rmul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
-
     def scaleFlux(self, scale):
         self.objlist[0].scaleFlux(scale)
 
@@ -777,7 +911,7 @@ class ChromaticAffineTransform(ChromaticObject):
             self.A = A
         self.separable = False
 
-    def _getMuEtaBetaThetaDxDy(self, w):
+    def _getScaleEtaBetaThetaDxDy(self, w):
         A0 = self.A(w)
         A = A0[0,0]
         B = A0[0,1]
@@ -785,42 +919,27 @@ class ChromaticAffineTransform(ChromaticObject):
         D = A0[1,1]
         dx = A0[0,2]
         dy = A0[1,2]
-        mu = numpy.sqrt(numpy.linalg.det(A0))
+        scale = numpy.sqrt(numpy.linalg.det(A0))
         theta = numpy.arctan2(C-B, A+D) #need to worry about A+D == 0 ?
         if A-D == 0.0:
             eta = 0.0
             beta = 0.0
         else:
             beta = 0.5 * (numpy.arctan2(C+B, A-D) + theta)
-            eta = 2.0*numpy.arcsinh((A-D)/(2.0*mu*numpy.cos(2.0*beta-theta)))
+            eta = 2.0*numpy.arcsinh((A-D)/(2.0*scale*numpy.cos(2.0*beta-theta)))
         if eta < 0.0:
             eta = -eta
             beta += numpy.pi
-        return mu, eta, beta, theta, dx, dy
+        return scale, eta, beta, theta, dx, dy
 
     def evaluateAtWavelength(self, w):
-        mu, eta, beta, theta, dx, dy = self._getMuEtaBetaThetaDxDy(w)
+        scale, eta, beta, theta, dx, dy = self._getScaleEtaBetaThetaDxDy(w)
         tmpobj = self.obj.evaluateAtWavelength(w)
         tmpobj.applyRotation(theta * galsim.radians)
         tmpobj.applyShear(eta=eta, beta=beta*galsim.radians)
-        tmpobj.applyDilation(mu)
+        tmpobj.applyExpansion(scale)
         tmpobj.applyShift(dx, dy)
         return tmpobj
 
     def scaleFlux(self, scale):
         self.obj.scaleFlux(scale)
-
-    # Make op* and op*= work to adjust the flux of the object
-    def __imul__(self, other):
-        self.obj.scaleFlux(other)
-        return self
-
-    def __mul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
-
-    def __rmul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret

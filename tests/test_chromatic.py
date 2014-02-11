@@ -564,20 +564,20 @@ def test_ChromaticAutoCorrelation():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_ChromaticObject_applyDilation():
+def test_ChromaticObject_applyExpansion():
     import time
     t1 = time.time()
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
-    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0).createDilated(1.1), bulge_SED)
-    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED).createDilated(1.1)
+    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0).createExpanded(1.1), bulge_SED)
+    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED).createExpanded(1.1)
 
     a.draw(bandpass, image=im1)
     b.draw(bandpass, image=im2)
     printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
-                                         "ChromaticObject.applyDilation not equal to "
-                                         "Chromatic.applyDilation")
+                                         "ChromaticObject.applyExpansion not equal to "
+                                         "Chromatic.applyExpansion")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -652,30 +652,36 @@ def test_ChromaticObject_compound_affine_transformation():
     a = a.createSheared(shear)
     a = a.createShifted(shift)
     a = a.createRotated(theta)
+    a = a.createDilated(scale)
     a = a.createSheared(shear)
     a = a.createShifted(shift)
     a = a.createRotated(theta)
-    a = a.createSheared(shear)
+    a = a.createExpanded(scale)
+    a = a.createLensed(g1=0.1, g2=0.1, mu=1.1)
     a = a.createShifted(shift)
     a = a.createRotated(theta)
+    a = a.createMagnified(scale)
     a = galsim.Chromatic(a, bulge_SED)
 
     b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
     b = b.createSheared(shear)
     b = b.createShifted(shift)
     b = b.createRotated(theta)
+    b = b.createDilated(scale)
     b = b.createSheared(shear)
     b = b.createShifted(shift)
     b = b.createRotated(theta)
-    b = b.createSheared(shear)
+    b = b.createExpanded(scale)
+    b = b.createLensed(g1=0.1, g2=0.1, mu=1.1)
     b = b.createShifted(shift)
     b = b.createRotated(theta)
+    b = b.createMagnified(scale)
 
     a.draw(bandpass, image=im1)
     b.draw(bandpass, image=im2)
     printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
-                                         "ChromaticObject affine transformation  not equal to "
+                                         "ChromaticObject affine transformation not equal to "
                                          "GSObject affine transformation")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -692,7 +698,7 @@ if __name__ == "__main__":
     test_ChromaticConvolution_of_ChromaticConvolution()
     test_ChromaticAutoConvolution()
     test_ChromaticAutoCorrelation()
-    test_ChromaticObject_applyDilation()
+    test_ChromaticObject_applyExpansion()
     test_ChromaticObject_applyRotation()
     test_ChromaticObject_applyShear()
     test_ChromaticObject_applyShift()
