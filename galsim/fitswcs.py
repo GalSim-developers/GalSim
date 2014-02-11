@@ -124,6 +124,11 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
                 # warnings, since we don't much care if the input file is non-standard
                 # so long as we can make it work.
                 warnings.simplefilter("ignore")
+                # Some versions of astropy don't like to accept a galsim.FitsHeader object
+                # as the header attribute here, even though they claim that dict-like objects
+                # are ok.  So pull out the astropy.io.header object in this case.
+                if isinstance(header,galsim.fits.FitsHeader):
+                    header = header.header
                 wcs = astropy.wcs.WCS(header)
         if wcs is None:
             raise TypeError("Must provide one of file_name, header, or wcs")
