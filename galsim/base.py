@@ -471,6 +471,28 @@ class GSObject(object):
 
     # Also add methods which create a new GSObject with the transformations applied...
     #
+    def createExpanded(self, scale):
+        """Returns a new GSObject by applying an expansion of the linear size by the given scale.
+
+        This doesn't correspond to either of the normal operations one would typically want to
+        do to a galaxy.  See the functions createDilated() and createMagnified() for the more
+        typical usage.  But this function is conceptually simple.  It rescales the linear
+        dimension of the profile, while preserving surface brightness.  As a result, the flux
+        will necessarily change as well.
+
+        See createDilated() for a version that applies a linear scale factor in the size while
+        preserving flux.
+
+        See createMagnified() for a version that applies a scale factor to the area while
+        preserving surface brightness.
+
+        @param scale The linear rescaling factor to apply.
+        @returns The rescaled GSObject.
+        """
+        ret = self.copy()
+        ret.applyExpansion(scale)
+        return ret
+
     def createDilated(self, scale):
         """Returns a new GSObject by applying a dilation of the linear size by the given scale.
 
@@ -1532,7 +1554,6 @@ class Kolmogorov(GSObject):
         """Return the half light radius of this Kolmogorov profile.
         """
         return self.SBProfile.getLamOverR0() * Kolmogorov._hlr_factor
-
 
 
 class Pixel(GSObject):
