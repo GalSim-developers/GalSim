@@ -501,6 +501,18 @@ class BaseWCS(object):
         header, as it will also write GalSim-specific key words that should allow it to 
         reconstruct the WCS correctly.
 
+        Caveat: For UVFunction and RaDecFunction, if the functions are real python functions
+        (rather than a string that is converted to a function), then the mechanism we use to 
+        convert the function to a string that can be written to the header has a few limitations.
+        1. It apparently only works for cpython implementations.
+        2. It probably won't work to write from one version of python and read from another.
+           (At least for major version differences.)
+        3. If the function uses globals, you'll need to make sure the globals are present
+           when you read it back in as well, or it probably won't work.
+        4. It looks really ugly in the header.
+        5. We haven't thought much about the security implications of this, so beware using
+           GalSim to open FITS files from untrusted sources.
+
         @param header       A galsim.FitsHeader object to write the data to.
         @param bounds       The bounds of the image.
         """
@@ -545,6 +557,18 @@ def readFromFitsHeader(header):
     then this should always succeed in reading back in the original WCS.  It may not end up 
     as exactly the same class as the original, but the underlying world coordinate system
     transformation should be preserved.
+
+    Caveat: For UVFunction and RaDecFunction, if the functions that were written to the FITS 
+    header were real python functions (rather than a string that is converted to a function), 
+    then the mechanism we use to write to the header and read it back in has some limitations:
+    1. It apparently only works for cpython implementations.
+    2. It probably won't work to write from one version of python and read from another.
+       (At least for major version differences.)
+    3. If the function uses globals, you'll need to make sure the globals are present
+       when you read it back in as well, or it probably won't work.
+    4. It looks really ugly in the header.
+    5. We haven't thought much about the security implications of this, so beware using
+       GalSim to open FITS files from untrusted sources.
 
     If the file was not written by GalSim, then this code will do its best to read the 
     WCS information in the FITS header.  Depending on what kind of WCS is encoded in the 
