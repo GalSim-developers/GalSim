@@ -180,17 +180,14 @@ class ChromaticObject(object):
                 raise TypeError("Too many arguments supplied to applyShift ")
             if kwargs:
                 raise TypeError("applyShift() got unexpected keyword arguments: %s",kwargs.keys())
+            shift = numpy.matrix([[1,0,dx],[0,1,dy],[0,0,1]], dtype=float)
             if isinstance(self, ChromaticAffineTransform):
-                dx1 = self.dx
-                dy1 = self.dy
-                self.dx = lambda w:dx1(w)+dx
-                self.dy = lambda w:dy1(w)+dy
+                A = self.A
+                self.A = lambda w: shift * A(w)
             else:
                 self.obj = self.copy()
                 self.__class__ = ChromaticAffineTransform
-                self.abcd = lambda w: numpy.matrix(numpy.identity(2))
-                self.dx = lambda w:dx
-                self.dy = lambda w:dy
+                self.A = lambda w: shift
                 self.separable = self.obj.separable
                 if hasattr(self, 'gsobj'):
                     del self.gsobj
@@ -201,18 +198,13 @@ class ChromaticObject(object):
             for obj in self.objlist:
                 obj.applyDilation(*args, **kwargs)
         elif isinstance(self, ChromaticAffineTransform):
-            self.abcd = lambda w:scale * self.abcd(w)
-            dx = self.dx
-            dy = self.dy
-            self.dx = lambda w:dx(w) * scale
-            self.dy = lambda w:dy(w) * scale
+            A = self.A
+            self.A = lambda w:scale * A(w)
         else:
             #transform self into a ChromaticAffineTransform
             self.obj = self.copy()
             self.__class__ = ChromaticAffineTransform
-            self.abcd = lambda w: numpy.matrix(numpy.identity(2))*scale
-            self.dx = lambda w: 0
-            self.dy = lambda w: 0
+            self.A = lambda w: numpy.matrix(numpy.diag([scale,scale,1]))
             self.separable = self.obj.separable
             if hasattr(self, 'gsobj'):
                 del self.gsobj
@@ -225,21 +217,17 @@ class ChromaticObject(object):
         else:
             cth = numpy.cos(theta.rad())
             sth = numpy.sin(theta.rad())
-            R = numpy.matrix([[cth, -sth], [sth, cth]], dtype=float)
+            R = numpy.matrix([[cth, -sth, 0],
+                              [sth, cth, 0],
+                              [0, 0, 1]], dtype=float)
             if isinstance(self, ChromaticAffineTransform):
-                abcd = self.abcd
-                self.abcd = lambda w: R * abcd(w)
-                dx = self.dx
-                dy = self.dy
-                self.dx = lambda w:cth*dx(w) - sth*dy(w)
-                self.dy = lambda w:sth*dx(w) + cth*dy(w)
+                A = self.A
+                self.A = lambda w: R * A(w)
             else:
                 #transform self into a ChromaticAffineTransform
                 self.obj = self.copy()
                 self.__class__ = ChromaticAffineTransform
-                self.abcd = lambda w: R
-                self.dx = lambda w: 0
-                self.dy = lambda w: 0
+                self.A = lambda w: R
                 self.separable = self.obj.separable
                 if hasattr(self, 'gsobj'):
                     del self.gsobj
@@ -265,21 +253,17 @@ class ChromaticObject(object):
             ce2 = numpy.cosh(shear.eta/2.0)
             se2 = numpy.sinh(shear.eta/2.0)
             #Bernstein&Jarvis (2002) equation 2.9
-            S = numpy.matrix([[ce2+c2b*se2, s2b*se2], [s2b*se2, ce2-c2b*se2]], dtype=float)
+            S = numpy.matrix([[ce2+c2b*se2, s2b*se2, 0],
+                              [s2b*se2, ce2-c2b*se2, 0],
+                              [0, 0, 1]], dtype=float)
             if isinstance(self, ChromaticAffineTransform):
-                abcd = self.abcd
-                self.abcd = lambda w: S * abcd(w)
-                dx = self.dx
-                dy = self.dy
-                self.dx = lambda w: (ce2+c2b*se2)*dx(w) + s2b*se2*dy(w)
-                self.dy = lambda w: s2b*se2*dx(w) + (ce2-c2b*se2)*dy(w)
+                A = self.A
+                self.A = lambda w: S * A(w)
             else:
                 #transform self into a ChromaticAffineTransform
                 self.obj = self.copy()
                 self.__class__ = ChromaticAffineTransform
-                self.abcd = lambda w: S
-                self.dx = lambda w: 0
-                self.dy = lambda w: 0
+                self.A = lambda w: S
                 self.separable = self.obj.separable
                 if hasattr(self, 'gsobj'):
                     del self.gsobj
@@ -785,21 +769,23 @@ class ChromaticAutoCorrelation(ChromaticObject):
         return galsim.AutoCorrelate(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
 class ChromaticAffineTransform(ChromaticObject):
-    def __init__(obj, abcd=None, dx=lambda w:0, dy=lambda w:0):
+    def __init__(obj, A=None):
         self.obj = obj.copy()
-        if abcd is None:
-            self.abcd = lambda w: numpy.matrix([[1,0],[0,1]], dtype=float)
-        self.dx = dx
-        self.dy = dy
+        if A is None:
+            self.A = lambda w: numpy.matrix(numpy.identity(3), dtype=float)
+        else:
+            self.A = A
         self.separable = False
 
-    def _getMuEtaBetaTheta(self, w):
-        abcd = self.abcd(w)
-        A = abcd[0,0]
-        B = abcd[0,1]
-        C = abcd[1,0]
-        D = abcd[1,1]
-        mu = numpy.sqrt(numpy.linalg.det(abcd))
+    def _getMuEtaBetaThetaDxDy(self, w):
+        A0 = self.A(w)
+        A = A0[0,0]
+        B = A0[0,1]
+        C = A0[1,0]
+        D = A0[1,1]
+        dx = A0[0,2]
+        dy = A0[1,2]
+        mu = numpy.sqrt(numpy.linalg.det(A0))
         theta = numpy.arctan2(C-B, A+D) #need to worry about A+D == 0 ?
         if A-D == 0.0:
             eta = 0.0
@@ -810,13 +796,13 @@ class ChromaticAffineTransform(ChromaticObject):
         if eta < 0.0:
             eta = -eta
             beta += numpy.pi
-        return mu, eta, beta, theta
+        return mu, eta, beta, theta, dx, dy
 
     def evaluateAtWavelength(self, w):
-        mu, eta, beta, theta = self._getMuEtaBetaTheta(w)
+        mu, eta, beta, theta, dx, dy = self._getMuEtaBetaThetaDxDy(w)
         tmpobj = self.obj.evaluateAtWavelength(w)
         tmpobj.applyRotation(theta * galsim.radians)
         tmpobj.applyShear(eta=eta, beta=beta*galsim.radians)
         tmpobj.applyDilation(mu)
-        tmpobj.applyShift(self.dx(w), self.dy(w))
+        tmpobj.applyShift(dx, dy)
         return tmpobj
