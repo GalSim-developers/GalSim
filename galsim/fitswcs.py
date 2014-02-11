@@ -175,7 +175,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             # cf. https://github.com/astropy/astropy/pull/1463
             # Once they fix it, this is what we want.
             ra, dec = self._wcs.all_pix2world(x1, y1, 1, ra_dec_order=True)
-        except:
+        except AttributeError:
             # Until then, just assume that the returned values really are ra, dec.
             ra, dec = self._wcs.all_pix2world(x1, y1, 1)
 
