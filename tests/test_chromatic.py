@@ -210,6 +210,10 @@ def test_chromatic_add():
     bdgal = bulge + disk
     bdgal.applyShear(g1=shear_g1, g2=shear_g2)
 
+    # now shear the indiv profiles
+    bulge.applyShear(g1=shear_g1, g2=shear_g2)
+    disk.applyShear(g1=shear_g1, g2=shear_g2)
+
     # create PSF
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
     dilate_fn = lambda w:(w/500.0)**(-0.2)
@@ -560,9 +564,123 @@ def test_ChromaticAutoCorrelation():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-if __name__ == "__main__":
+def test_ChromaticObject_applyDilation():
     import time
     t1 = time.time()
+    im1 = galsim.ImageD(32, 32, scale=0.2)
+    im2 = galsim.ImageD(32, 32, scale=0.2)
+    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0).createDilated(1.1), bulge_SED)
+    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED).createDilated(1.1)
+
+    a.draw(bandpass, image=im1)
+    b.draw(bandpass, image=im2)
+    printval(im1, im2)
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
+                                         "ChromaticObject.applyDilation not equal to "
+                                         "Chromatic.applyDilation")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_ChromaticObject_applyRotation():
+    import time
+    t1 = time.time()
+    im1 = galsim.ImageD(32, 32, scale=0.2)
+    im2 = galsim.ImageD(32, 32, scale=0.2)
+    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0)
+                         .createSheared(eta=0.1, beta=0 * galsim.degrees)
+                         .createRotated(1.1 * galsim.radians), bulge_SED)
+    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0)
+                         .createSheared(eta=0.1, beta=0 * galsim.degrees), bulge_SED
+                         ).createRotated(1.1 * galsim.radians)
+
+    a.draw(bandpass, image=im1)
+    b.draw(bandpass, image=im2)
+    printval(im1, im2)
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
+                                         "ChromaticObject.applyRotation not equal to "
+                                         "Chromatic.applyRotation")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_ChromaticObject_applyShear():
+    import time
+    t1 = time.time()
+    im1 = galsim.ImageD(32, 32, scale=0.2)
+    im2 = galsim.ImageD(32, 32, scale=0.2)
+    shear = galsim.Shear(g1=0.1, g2=0.1)
+    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0).createSheared(shear), bulge_SED)
+    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED).createSheared(shear)
+
+    a.draw(bandpass, image=im1)
+    b.draw(bandpass, image=im2)
+    printval(im1, im2)
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
+                                         "ChromaticObject.applyShear not equal to "
+                                         "Chromatic.applyShear")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_ChromaticObject_applyShift():
+    import time
+    t1 = time.time()
+    im1 = galsim.ImageD(32, 32, scale=0.2)
+    im2 = galsim.ImageD(32, 32, scale=0.2)
+    shift = (0.1, 0.3)
+    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0).createShifted(shift), bulge_SED)
+    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED).createShifted(shift)
+
+    a.draw(bandpass, image=im1)
+    b.draw(bandpass, image=im2)
+    printval(im1, im2)
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
+                                         "ChromaticObject.applyShift not equal to "
+                                         "Chromatic.applyShift")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_ChromaticObject_compound_affine_transformation():
+    import time
+    t1 = time.time()
+    im1 = galsim.ImageD(32, 32, scale=0.2)
+    im2 = galsim.ImageD(32, 32, scale=0.2)
+    shear = galsim.Shear(eta=1.0, beta=0.3*galsim.radians)
+    scale = 1.1
+    theta = 0.1 * galsim.radians
+    shift = (0.1, 0.3)
+
+    a = galsim.Gaussian(fwhm=1.0)
+    a = a.createSheared(shear)
+    a = a.createShifted(shift)
+    a = a.createRotated(theta)
+    a = a.createSheared(shear)
+    a = a.createShifted(shift)
+    a = a.createRotated(theta)
+    a = a.createSheared(shear)
+    a = a.createShifted(shift)
+    a = a.createRotated(theta)
+    a = galsim.Chromatic(a, bulge_SED)
+
+    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
+    b = b.createSheared(shear)
+    b = b.createShifted(shift)
+    b = b.createRotated(theta)
+    b = b.createSheared(shear)
+    b = b.createShifted(shift)
+    b = b.createRotated(theta)
+    b = b.createSheared(shear)
+    b = b.createShifted(shift)
+    b = b.createRotated(theta)
+
+    a.draw(bandpass, image=im1)
+    b.draw(bandpass, image=im2)
+    printval(im1, im2)
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
+                                         "ChromaticObject affine transformation  not equal to "
+                                         "GSObject affine transformation")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+if __name__ == "__main__":
     test_draw_add_commutativity()
     test_ChromaticConvolution_InterpolatedImage()
     test_chromatic_add()
@@ -574,3 +692,8 @@ if __name__ == "__main__":
     test_ChromaticConvolution_of_ChromaticConvolution()
     test_ChromaticAutoConvolution()
     test_ChromaticAutoCorrelation()
+    test_ChromaticObject_applyDilation()
+    test_ChromaticObject_applyRotation()
+    test_ChromaticObject_applyShear()
+    test_ChromaticObject_applyShift()
+    test_ChromaticObject_compound_affine_transformation()
