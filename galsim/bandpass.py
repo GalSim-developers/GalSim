@@ -65,7 +65,8 @@ class Bandpass(object):
 
         The argument `wave_type` specifies the units to assume for wavelength and must be one of
         'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or 'Angstroms'. Text case here
-        is unimportant.
+        is unimportant.  If these wavelength options are insufficient, please submit an issue to
+        the GalSim github issues page: https://github.com/GalSim-developers/GalSim/issues
 
         Note that the `wave_type` parameter does not propagate into other methods of `Bandpass`.
         For instance, Bandpass.__call__ assumes its input argument is in nanometers.

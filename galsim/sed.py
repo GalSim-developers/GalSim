@@ -64,7 +64,8 @@ class SED(object):
 
         The argument `wave_type` specifies the units to assume for wavelength and must be one of
         'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or 'Angstroms'. Text case here
-        is unimportant.
+        is unimportant.  If these wavelength options are insufficient, please submit an issue to
+        the GalSim github issues page: https://github.com/GalSim-developers/GalSim/issues
 
         The argument `flux_type` specifies the type of spectral density and must be one of:
         1. 'flambda':  `spec` is proportional to erg/nm
