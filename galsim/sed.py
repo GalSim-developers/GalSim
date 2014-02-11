@@ -45,7 +45,7 @@ class SED(object):
     region where both of the operand SEDs are defined. `blue_limit` and `red_limit` will be reset
     accordingly.
     """
-    def __init__(self, spec, flux_type='flambda'):
+    def __init__(self, spec, wave_type='nm', flux_type='flambda'):
         """Simple SED object.  This object is callable, returning the flux in
         photons/nm as a function of wavelength in nm.
 
@@ -57,20 +57,37 @@ class SED(object):
            via `eval('lambda wave : '+spec)
            e.g. spec = '0.8 + 0.2 * (wave-800)`
 
-        The argument of the function will be the wavelength in nanometers, and the output should be
+        The argument of `spec` will be the wavelength in either nanometers (default) or
+        Angstroms depending on the value of `wave_type`.  The output should be
         the dimensionless throughput at that wavelength.  (Note we use wave rather than lambda,
         since lambda is a python reserved word.)
+
+        The argument `wave_type` specifies the units to assume for wavelength and must be one of
+        'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or 'Angstroms'. Text case here
+        is unimportant.
 
         The argument `flux_type` specifies the type of spectral density and must be one of:
         1. 'flambda':  `spec` is proportional to erg/nm
         2. 'fnu':      `spec` is proportional to erg/Hz
         3. 'fphotons': `spec` is proportional to photons/nm
 
+        Note that the `wave_type` and `flux_type` parameters do not propagate into other methods of
+        `SED`.  For instance, SED.__call__ assumes its input argument is in nanometers and returns
+        flux proportional to photons/nm.
+
         @param spec          Function defining the spectrum at each wavelength.  See above for
                              valid options for this parameter.
         @param flux_type     String specifying what type of spectral density `spec` represents.  See
                              above for valid options for this parameter.
+        @param wave_type     String specifying units for wavelength input to `spec`.
         """
+        if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
+            wave_factor = 1.0
+        elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
+            wave_factor = 10.0
+        else:
+            raise ValueError("Unknown wave_type `{}` in SED.__init__".format(wave_type))
+
         if isinstance(spec, (str, unicode)):
             import os
             if os.path.isfile(spec):
@@ -79,18 +96,18 @@ class SED(object):
                 spec = eval('lambda wave : ' + spec)
 
         if isinstance(spec, galsim.LookupTable):
-            self.blue_limit = spec.x_min
-            self.red_limit = spec.x_max
+            self.blue_limit = spec.x_min / wave_factor
+            self.red_limit = spec.x_max / wave_factor
         else:
             self.blue_limit = None
             self.red_limit = None
 
         if flux_type == 'flambda':
-            self.fphotons = lambda w: spec(w) * w
+            self.fphotons = lambda w: spec(numpy.array(w) * wave_factor) * w
         elif flux_type == 'fnu':
-            self.fphotons = lambda w: spec(w) / w
+            self.fphotons = lambda w: spec(numpy.array(w) * wave_factor) / w
         elif flux_type == 'fphotons':
-            self.fphotons = spec
+            self.fphotons = lambda w: spec(numpy.array(w) * wave_factor)
         else:
             raise ValueError("Unknown flux_type `{}` in SED.__init__".format(flux_type))
 
@@ -128,7 +145,7 @@ class SED(object):
         if self.blue_limit is not None:
             if wmin < self.blue_limit:
                 raise ValueError("Wavelength ({}) is bluer than SED blue limit ({})"
-                                 .format(wmin, self.blue_lim))
+                                 .format(wmin, self.blue_limit))
         if self.red_limit is not None:
             if wmax > self.red_limit:
                 raise ValueError("Wavelength ({}) redder than SED red limit ({})"

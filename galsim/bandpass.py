@@ -46,7 +46,7 @@ class Bandpass(object):
     A Bandpass.effective_wavelength will be computed upon construction.  We use throughput-weighted
     average wavelength (which is independent of any SED) as our definition for effective wavelength.
     """
-    def __init__(self, throughput, blue_limit=None, red_limit=None):
+    def __init__(self, throughput, wave_type='nm', blue_limit=None, red_limit=None):
         """Very simple Bandpass filter object.  This object is callable, returning dimensionless
         throughput as a function of wavelength in nanometers.
 
@@ -58,9 +58,17 @@ class Bandpass(object):
            via `eval('lambda wave : '+throughput)
            e.g. throughput = '0.8 + 0.2 * (wave-800)`
 
-        The argument of the function will be the wavelength in nanometers, and the output should be
-        the dimensionless throughput at that wavelength.  (Note we use wave rather than lambda,
-        since lambda is a python reserved word.)
+        The argument of `throughput` will be the wavelength in either nanometers (default) or
+        Angstroms depending on the value of `wave_type`.  The output should be the dimensionless
+        throughput at that wavelength.  (Note we use wave rather than lambda, since lambda is a
+        python reserved word.)
+
+        The argument `wave_type` specifies the units to assume for wavelength and must be one of
+        'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or 'Angstroms'. Text case here
+        is unimportant.
+
+        Note that the `wave_type` parameter does not propagate into other methods of `Bandpass`.
+        For instance, Bandpass.__call__ assumes its input argument is in nanometers.
 
         @param throughput    Function defining the throughput at each wavelength.  See above for
                              valid options for this parameter.
@@ -78,6 +86,12 @@ class Bandpass(object):
                 tp = galsim.LookupTable(file=tp)
             else:
                 tp = eval('lambda wave : ' + tp)
+        if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
+            wave_factor = 1.0
+        elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
+            wave_factor = 10.0
+        else:
+            raise ValueError("Unknown wave_type `{}` in SED.__init__".format(wave_type))
         if blue_limit is None:
             if not isinstance(tp, galsim.LookupTable):
                 raise AttributeError("blue_limit is required if throughput is not a LookupTable.")
@@ -87,14 +101,14 @@ class Bandpass(object):
                 raise AttributeError("red_limit is required if throughput is not a LookupTable.")
             red_limit = tp.x_max
         if isinstance(tp, galsim.LookupTable):
-            self.wave_list = tp.getArgs()
+            self.wave_list = [w/wave_factor for w in tp.getArgs()]
         else:
             self.wave_list = []
-        self.func = tp
-        self.blue_limit = blue_limit
-        self.red_limit = red_limit
+        self.func = lambda w: tp(numpy.array(w) * wave_factor)
+        self.blue_limit = blue_limit / wave_factor
+        self.red_limit = red_limit / wave_factor
         # We define bandpass effective wavelength as the throughput-weighted average wavelength,
-        # independent of any SED.
+        # independent of any SED.  Units are nanometers.
         self.effective_wavelength = (galsim.integ.int1d(lambda w: self.func(w) * w,
                                                         self.blue_limit, self.red_limit)
                                      / galsim.integ.int1d(self.func,
@@ -212,9 +226,10 @@ class Bandpass(object):
             blue_limit = self.blue_limit
         if red_limit is None:
             red_limit = self.red_limit
-        if isinstance(self.func, galsim.LookupTable):
-            tp = numpy.array(self.func.getVals())
-            wave = numpy.array(self.func.getArgs())
+#        if isinstance(self.func, galsim.LookupTable):
+        if hasattr(self, 'wave_list'):
+            wave = numpy.array(self.wave_list)
+            tp = self.func(wave)
             if relative_throughput is not None:
                 w = (tp >= tp.max()*relative_throughput).nonzero()
                 blue_limit = max([min(wave[w]), blue_limit])
@@ -237,10 +252,11 @@ class Bandpass(object):
                         arrays.
         @returns  The thinned Bandpass.
         """
-        if isinstance(self.func, galsim.LookupTable):
-            wave = self.func.getArgs()[::step]
-            throughput = self.func.getVals()[::step]
+        # if isinstance(self.func, galsim.LookupTable):
+        if hasattr(self, 'wave_list'):
+            wave = self.wave_list[::step]
             # maintain the same red_limit, even if it breaks the step size a bit.
-            if throughput[-1] != self.func.x_max:
-                throughput.append(self.func.x_max)
+            if wave[-1] != self.wave_list[-1]:
+                wave.append(self.wave_list[-1])
+            throughput = self.func(wave)
             return Bandpass(galsim.LookupTable(wave, throughput))

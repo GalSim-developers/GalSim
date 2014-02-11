@@ -125,7 +125,7 @@ class ChromaticObject(object):
 
     # Make op* and op*= work to adjust the flux of the object
     def __imul__(self, other):
-        self.gsobj.scaleFlux(other)
+        self.scaleFlux(other)
         return self
 
     def __mul__(self, other):

@@ -83,7 +83,7 @@ def main(argv):
         # differential chromatic refraction routines below, which assume wavelengths are in
         # nanometers. Without the DCR routines, then it's enough to just match the wavelength
         # units of the SED and the bandpass.
-        SED = galsim.SED(SED_filename)
+        SED = galsim.SED(SED_filename, wave_type='Ang')
         # The normalization of SEDs affects how many photons are eventually drawn into an image.
         # One way to control this normalization is to specify the flux density in photons per nm
         # at a particular wavelength.  For example, here we normalize such that photon density is

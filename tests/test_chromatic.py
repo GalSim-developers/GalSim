@@ -64,10 +64,10 @@ bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
 bandpass = bandpass.truncate(relative_throughput=0.01)
 
 # load some spectra
-bulge_SED = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'))
+bulge_SED = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
 bulge_SED = bulge_SED.setNormalization(base_wavelength=500.0, normalization=0.3)
 
-disk_SED = galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'))
+disk_SED = galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='ang')
 disk_SED = disk_SED.setNormalization(base_wavelength=500.0, normalization=0.3)
 
 def test_draw_add_commutativity():
