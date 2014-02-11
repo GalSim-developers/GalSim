@@ -107,7 +107,7 @@ many of these are free for non-commercial or academic use.
 One good example of such a package, which includes all of the Python
 dependencies required by GalSim (NumPy, PyFITS, PyYAML as well as SCons and
 nosetests; see Section 2 below) was the Enthought Python Distribution (EPD; see
-http://enthought.com/products/edudownload.php for the academic download
+https://enthought.com/products/canopy/academic/ for the academic download
 instructions).
 
 The new Enthought "Canopy" package, a successor to EPD, provides the same
