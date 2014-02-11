@@ -795,6 +795,8 @@ def test_pixelscale():
     y0 = 1
     origin = galsim.PositionD(x0,y0)
     wcs = galsim.OffsetWCS(scale, origin)
+    wcs2 = galsim.PixelScale(scale).setOrigin(origin)
+    assert wcs == wcs2, 'OffsetWCS is not == PixelScale.setOrigin(origin)'
 
     # Check basic copy and == , != for OffsetWCS:
     wcs2 = wcs.copy()
@@ -886,6 +888,8 @@ def test_shearwcs():
     y0 = 1
     origin = galsim.PositionD(x0,y0)
     wcs = galsim.OffsetShearWCS(scale, shear, origin)
+    wcs2 = galsim.ShearWCS(scale, shear).setOrigin(origin)
+    assert wcs == wcs2, 'OffsetShearWCS is not == ShearWCS.setOrigin(origin)'
 
     # Check basic copy and == , != for OffsetShearWCS:
     wcs2 = wcs.copy()
@@ -968,6 +972,8 @@ def test_affinetransform():
     y0 = 1
     origin = galsim.PositionD(x0,y0)
     wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin)
+    wcs2 = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy).setOrigin(origin)
+    assert wcs == wcs2, 'AffineTransform is not == JacobianWCS.setOrigin(origin)'
 
     # Check basic copy and == , != for AffineTransform:
     wcs2 = wcs.copy()
