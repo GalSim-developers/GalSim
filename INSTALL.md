@@ -19,8 +19,8 @@ Table of Contents:
 1. Software required before building GalSim
 ===========================================
 
-Please note: Mac users who want to use fink can skip down to Section 4.ii and use
-that to satisfy all dependencies before installing.
+Please note: Mac users who want to use fink can skip down to Section 4.ii and
+use that to satisfy all dependencies before installing.
 
 i) Python (2.6 or 2.7 series), with some additional modules installed
 ---------------------------------------------------------------------
@@ -106,9 +106,17 @@ many of these are free for non-commercial or academic use.
 
 One good example of such a package, which includes all of the Python
 dependencies required by GalSim (NumPy, PyFITS, PyYAML as well as SCons and
-nosetests; see Section 2 below) is the Enthought Python Distribution (EPD; see
-http://enthought.com/products/edudownload.php for the academic download
-instructions). Other re-packaged Python downloads can be found at
+nosetests; see Section 2 below) was the Enthought Python Distribution (EPD; see
+https://enthought.com/products/canopy/academic/ for the academic download
+instructions).
+
+The new Enthought "Canopy" package, a successor to EPD, provides the same
+functionality.  However, it has been found that Canopy on Mac OSX can give
+problems building against Boost.Python, another GalSim dependency.  A solution
+to these issues is described here:
+https://github.com/GalSim-developers/GalSim/wiki/Installation-FAQ#wiki-canopy
+
+Other re-packaged Python downloads can be found at
 http://www.python.org/getit/.
 
 ### Making sure you are using the right Python ###

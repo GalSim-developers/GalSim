@@ -190,7 +190,7 @@ class _ReadFile:
                 try:
                     return self.bz2(file)
                 except:
-                    self.bz2_method += 1
+                    self.bz2_index += 1
                     self.bz2 = self.bz2_methods[self.bz2_index]
             raise RuntimeError("None of the options for bunzipping were successful.")
         else:
@@ -205,7 +205,7 @@ class _WriteFile:
         root, ext = os.path.splitext(file)
         hdu_list.writeto(root, clobber=True)
         import subprocess
-        p = subprocess.Popen(["gzip", "-S", ext, root], close_fds=True)
+        p = subprocess.Popen(["gzip", "-S", ext, "-f", root], close_fds=True)
         p.communicate()
         assert p.returncode == 0 
 
@@ -253,11 +253,11 @@ class _WriteFile:
         hdu_list.writeto(root, clobber=True)
         import subprocess
         if ext == '.bz2':
-            p = subprocess.Popen(["bzip2", root], close_fds=True)
+            p = subprocess.Popen(["bzip2", "-f", root], close_fds=True)
             p.communicate()
             assert p.returncode == 0 
         else:
-            p = subprocess.Popen(["bzip2", file], close_fds=True)
+            p = subprocess.Popen(["bzip2", "-f", file], close_fds=True)
             p.communicate()
             assert p.returncode == 0 
             os.rename(file + '.bz2', file)
@@ -339,7 +339,7 @@ class _WriteFile:
                 try:
                     return self.bz2(hdu_list, file)
                 except:
-                    self.bz2_method += 1
+                    self.bz2_index += 1
                     self.bz2 = self.bz2_methods[self.bz2_index]
             raise RuntimeError("None of the options for bunzipping were successful.")
         else:
