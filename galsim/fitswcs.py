@@ -134,7 +134,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         # If astropy.wcs cannot parse the header, it won't notice from just doing the 
         # WCS(header) command.  It will silently move on, thinking things are fine until
         # later when if will fail (with `RuntimeError: NULL error object in wcslib`).
-        # We're rather get that to happen now rather than later.
+        # We'd rather get that to happen now rather than later.
         try:
             import warnings
             with warnings.catch_warnings():
