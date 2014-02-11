@@ -84,7 +84,10 @@ def main(argv):
         # nanometers. Without the DCR routines, then it's enough to just match the wavelength
         # units of the SED and the bandpass.
         SED = galsim.SED(SED_filename)
-        # Normalize such that photon density is 1 photon per nm at 500 nm
+        # The normalization of SEDs affects how many photons are eventually drawn into an image.
+        # One way to control this normalization is to specify the flux density in photons per nm
+        # at a particular wavelength.  For example, here we normalize such that photon density is
+        # 1 photon per nm at 500 nm.
         SEDs[SED_name] = SED.setNormalization(base_wavelength=500, normalization=1.0)
     logger.debug('Successfully read in SEDs')
 
@@ -102,15 +105,15 @@ def main(argv):
     pixel_scale = 0.2 # arcseconds
 
     #-----------------------------------------------------------------------------------------------
-    # Part A: chromatic Exponential galaxy
+    # Part A: chromatic de Vaucouleurs galaxy
 
-    # Here we create a chromatic version of an Exponential profile using the Chromatic class.
+    # Here we create a chromatic version of a de Vaucouleurs profile using the Chromatic class.
     # This class lets one create chromatic versions of any galsim GSObject class.  The first
     # argument is the GSObject instance to be chromaticized, and the second argument is the
     # profile's SED.
 
     logger.info('')
-    logger.info('Starting part A: chromatic Sersic galaxy')
+    logger.info('Starting part A: chromatic De Vaucouleurs galaxy')
     redshift = 0.8
     mono_gal = galsim.Exponential(half_light_radius=0.5)
     SED = SEDs['CWW_E_ext'].setRedshift(redshift)
@@ -164,6 +167,8 @@ def main(argv):
     # ... and then combine them.
     bdgal = 1.1 * (0.8*bulge+4*disk) # you can add and multiply ChromaticObjects just like GSObjects
     bdfinal = galsim.Convolve([bdgal, pix, PSF])
+    # Note that at this stage, our galaxy is chromatic but our PSF is still achromatic.  Part C)
+    # below will dive into chromatic PSFs.
     logger.debug('Created bulge+disk galaxy final profile')
 
     # draw profile through LSST filters
@@ -191,9 +196,14 @@ def main(argv):
     redshift = 0.0
     mono_gal = galsim.Exponential(half_light_radius=0.5)
     SED = SEDs['CWW_Im_ext'].setRedshift(redshift)
+    # Here's another way to set the normalization of the SED.  If we want 50 counts to be drawn
+    # when observing an object with this SED through the g-band, for instance, then we do:
+    SED = SED.setFlux(filters['g'], 50.0)
+    # The flux drawn through other bands, which sample different parts of the SED and have different
+    # throughputs, will, of course, be differ.
     gal = galsim.Chromatic(mono_gal, SED)
     gal.applyShear(g1=0.5, g2=0.3)
-    logger.debug('Created Chromatic')
+    logger.debug('Created `Chromatic` galaxy')
 
     # For a ground-based PSF, two chromatic effects are introduced by the atmosphere:
     # (i) differential chromatic refraction (DCR), and (ii) wavelength-dependent seeing.
