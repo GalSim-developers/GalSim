@@ -974,7 +974,7 @@ class ChromaticAffineTransform(ChromaticObject):
             eta = 2.0*numpy.arcsinh((A-D)/(2.0*scale*numpy.cos(2.0*beta-theta)))
         if eta < 0.0:
             eta = -eta
-            beta += numpy.pi
+            beta += numpy.pi/2.0
         return scale, eta, beta, theta, dx, dy
 
     def evaluateAtWavelength(self, w):
