@@ -106,9 +106,17 @@ many of these are free for non-commercial or academic use.
 
 One good example of such a package, which includes all of the Python
 dependencies required by GalSim (NumPy, PyFITS, PyYAML as well as SCons and
-nosetests; see Section 2 below) is the Enthought Python Distribution (EPD; see
+nosetests; see Section 2 below) was the Enthought Python Distribution (EPD; see
 http://enthought.com/products/edudownload.php for the academic download
-instructions). Other re-packaged Python downloads can be found at
+instructions).
+
+The new Enthought "Canopy" package, a successor to EPD, provides the same
+functionality.  However, it has been found that Canopy on Mac OSX can give
+problems building against Boost.Python, another GalSim dependency.  A solution
+to these issues is described here:
+https://github.com/GalSim-developers/GalSim/wiki/Installation-FAQ#wiki-canopy
+
+Other re-packaged Python downloads can be found at
 http://www.python.org/getit/.
 
 ### Making sure you are using the right Python ###
