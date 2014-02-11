@@ -1960,10 +1960,12 @@ class UVFunction(EuclideanWCS):
     @param yfunc          The function y(u,v) (optional)
     @param origin         Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI.
-                          [ Default: `origin = None` ]
+                          [ Default: `origin = None`, which internally sets
+                          `origin = galsim.PositionD(0., 0.)` ]
     @param world_origin   Optional origin position for the world coordinate system.
                           If provided, it should be a PostionD.
-                          [ Default: `world_origin = None` ]
+                          [ Default: `world_origin = None`, which internally sets
+                          `world_origin = galsim.PositionD(0., 0.)` ]
     """
     _req_params = { "ufunc" : str, "vfunc" : str }
     _opt_params = { "xfunc" : str, "yfunc" : str,
@@ -2128,7 +2130,8 @@ class RaDecFunction(CelestialWCS):
     @param radec_func     A function radec(x,y) returning (ra, dec) in radians.
     @param origin         Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI.
-                          [ Default: `origin = None` ]
+                          [ Default: `origin = None`, which internally sets
+                          `origin = galsim.PositionD(0., 0.)` ]
     """
     _req_params = { "radec_func" : str }
     _opt_params = { "origin" : galsim.PositionD }
