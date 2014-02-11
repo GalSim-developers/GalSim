@@ -216,10 +216,20 @@ class _WriteFile:
     # There are several methods available for each of gzip and bzip2.  Each is its own function.
     def gzip_call2(self, hdu_list, file):
         root, ext = os.path.splitext(file)
-        hdu_list.writeto(root, clobber=True)
         import subprocess
-        p = subprocess.Popen(["gzip", "-S", ext, "-f", root], close_fds=True)
-        p.communicate()
+        if os.path.isfile(root):
+            tmp = root + '.tmp'
+            # It would be pretty odd for this filename to already exist, but just in case...
+            while os.path.isfile(tmp):
+                tmp = tmp + '.tmp'
+            hdu_list.writeto(tmp)
+            p = subprocess.Popen(["gzip", tmp], close_fds=True)
+            p.communicate()
+            os.rename(tmp+".gz",file)
+        else:
+            hdu_list.writeto(root)
+            p = subprocess.Popen(["gzip", "-S", ext, root], close_fds=True)
+            p.communicate()
         assert p.returncode == 0 
 
     def gzip_call(self, hdu_list, file):
@@ -263,17 +273,21 @@ class _WriteFile:
 
     def bzip2_call2(self, hdu_list, file):
         root, ext = os.path.splitext(file)
-        hdu_list.writeto(root, clobber=True)
         import subprocess
-        if ext == '.bz2':
-            p = subprocess.Popen(["bzip2", "-f", root], close_fds=True)
+        if os.path.isfile(root) or ext != '.bz2':
+            tmp = root + '.tmp'
+            # It would be pretty odd for this filename to already exist, but just in case...
+            while os.path.isfile(tmp):
+                tmp = tmp + '.tmp'
+            hdu_list.writeto(tmp)
+            p = subprocess.Popen(["bzip2", tmp], close_fds=True)
             p.communicate()
-            assert p.returncode == 0 
+            os.rename(tmp+".bz2",file)
         else:
-            p = subprocess.Popen(["bzip2", "-f", file], close_fds=True)
+            hdu_list.writeto(root)
+            p = subprocess.Popen(["gzip", root], close_fds=True)
             p.communicate()
-            assert p.returncode == 0 
-            os.rename(file + '.bz2', file)
+        assert p.returncode == 0 
 
     def bzip2_call(self, hdu_list, file):
         import subprocess
