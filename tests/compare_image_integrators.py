@@ -95,7 +95,8 @@ def compare_image_integrators():
     t1 = time.time()
     print 'midpoint'
     for N in [10, 30, 100, 300, 1000, 3000]:
-        image = galsim.ChromaticObject.draw(final, bandpass, N=N, image=image)
+        #image = galsim.ChromaticObject.draw(final, bandpass, N=N, image=image)
+        image = final.draw(bandpass, N=N, image=image)
         mom = silentgetmoments(image)
         outstring = '   {:4d} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f}'
         print outstring.format(N, image.array.sum(), image.array.sum()-target, *mom)
@@ -104,8 +105,10 @@ def compare_image_integrators():
 
     print 'trapezoidal'
     for N in [10, 30, 100, 300, 1000, 3000]:
-        image = galsim.ChromaticObject.draw(final, bandpass, N=N, image=image,
-                                             integrator = galsim.integ.trapezoidal_int_image)
+        # image = galsim.ChromaticObject.draw(final, bandpass, N=N, image=image,
+        #                                      integrator = galsim.integ.trapezoidal_int_image)
+        image = final.draw(bandpass, N=N, image=image,
+                           integrator=galsim.integ.trapezoidal_int_image)
         mom = silentgetmoments(image)
         outstring = '   {:4d} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f}'
         print outstring.format(N, image.array.sum(), image.array.sum()-target, *mom)
@@ -114,8 +117,10 @@ def compare_image_integrators():
 
     print 'Simpson\'s'
     for N in [10, 30, 100, 300, 1000, 3000]:
-        image = galsim.ChromaticObject.draw(final, bandpass, N=N, image=image,
-                                             integrator = galsim.integ.simpsons_int_image)
+        # image = galsim.ChromaticObject.draw(final, bandpass, N=N, image=image,
+        #                                      integrator = galsim.integ.simpsons_int_image)
+        image = final.draw(bandpass, N=N, image=image,
+                           integrator=galsim.integ.simpsons_int_image)
         mom = silentgetmoments(image)
         outstring = '   {:4d} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f}'
         print outstring.format(N, image.array.sum(), image.array.sum()-target, *mom)
@@ -125,9 +130,12 @@ def compare_image_integrators():
     print 'Globally Adaptive Gauss-Kronrod'
     simpsons_image = np.array(image.array) #assume large N Simpson's is truth for comparison...
     for rel_err in [1.e-1, 1.e-2, 1.e-3, 1.e-4, 1.e-5, 1.e-6, 1.e-7, 1.e-8]:
-        image = galsim.ChromaticObject.draw(final, bandpass, image=image,
-                                            integrator = galsim.integ.globally_adaptive_GK_int_image,
-                                            rel_err=rel_err, verbose=True)
+        # image = galsim.ChromaticObject.draw(final, bandpass, image=image,
+        #                                     integrator = galsim.integ.globally_adaptive_GK_int_image,
+        #                                     rel_err=rel_err, verbose=True)
+        image = final.draw(bandpass, image=image,
+                           integrator = galsim.integ.globally_adaptive_GK_int_image,
+                           rel_err=rel_err, verbose=True)
         mom = silentgetmoments(image)
         outstring = '{:4.1e} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f}'
         print outstring.format(rel_err, image.array.sum(), image.array.sum()-target, *mom)
