@@ -39,7 +39,7 @@ from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
 from shapelet import Shapelet
 from interpolatedimage import InterpolatedImage
-from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
+from compound import *
 
 from shear import Shear
 from wcs import BaseWCS, PixelScale
