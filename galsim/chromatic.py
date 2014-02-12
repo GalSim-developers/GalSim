@@ -651,6 +651,12 @@ class ChromaticConvolution(ChromaticObject):
 
         @returns                  galsim.Image drawn through filter.
         """
+        # `ChromaticObject.draw()` can just as efficiently handle separable cases.
+        if self.separable:
+            return ChromaticObject.draw(self, bandpass, image=image, scale=scale, gain=gain,
+                                        wmult=wmult, add_to_image=add_to_image,
+                                        use_true_center=use_true_center, offset=offset,
+                                        integrator=integrator, **kwargs)
         if integrator is None:
             integrator = galsim.integ.midpoint_int_image
         # Only make temporary changes to objlist...
@@ -737,50 +743,26 @@ class ChromaticConvolution(ChromaticObject):
                     sep_SED.append(obj.SED) # The h(lambda)'s (see above)
             else:
                 insep_profs.append(obj) # The f(x,y,lambda)'s (see above)
+        # insep_profs should never be empty, since separable cases were farmed out to
+        # ChromaticObject.draw() above.
 
-        if insep_profs == []: # didn't find any inseparable profiles
-            def f(w):
-                term = bandpass(w)
-                for s in sep_SED:
-                    term *= s(w)
-                return term
-            multiplier = galsim.integ.int1d(f, bandpass.blue_limit, bandpass.red_limit)
-        else: # did find inseparable profiles
-            multiplier = 1.0
-            # setup output image (semi-arbitrarily using the bandpass effective wavelength)
-            mono_prof0 = galsim.Convolve([p.evaluateAtWavelength(bandpass.effective_wavelength)
-                                          for p in insep_profs])
-            mono_prof0 = mono_prof0._fix_center(image=None, scale=scale, offset=offset,
-                                                use_true_center=use_true_center, reverse=False)
-            mono_prof_image = mono_prof0._draw_setup_image(image=None, scale=scale, wmult=wmult,
-                                                           add_to_image=False)
-            # Modify image size/scale wrt requested oversampling
-            if iimult is not None:
-                mono_prof_image = galsim.ImageD(mono_prof_image.array.shape[0] * iimult,
-                                                mono_prof_image.array.shape[1] * iimult,
-                                                scale=(mono_prof_image.scale * 1.0/iimult))
-            # integrand for effective profile
-            def f_image(w):
-                mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
-                mono_prof *= bandpass(w)
-                for s in sep_SED:
-                    mono_prof *= s(w)
-                tmpimage = mono_prof_image.copy()
-                tmpimage.setZero()
-                mono_prof.draw(image=tmpimage, wmult=wmult)
-                return tmpimage
-            # wavelength integral
-            effective_prof_image = integrator(f_image, bandpass.blue_limit, bandpass.red_limit,
-                                              **kwargs)
-            # Image -> InterpolatedImage
-            # It could be useful to cache this result if drawing more than one object with the same
-            # PSF+SED combination.  This naturally happens in a ring test or when fitting the
-            # parameters of a galaxy profile to an image when the PSF is constant.
-            effective_prof = galsim.InterpolatedImage(effective_prof_image)
-            # append effective profile to separable profiles (which should all be GSObjects)
-            sep_profs.append(effective_prof)
+        # Collapse inseparable profiles into one effective profile
+        SED = lambda w: reduce(lambda x,y:x*y, [s(w) for s in sep_SED], 1)
+        insep_obj = galsim.Convolve(insep_profs)
+        scale = insep_obj.evaluateAtWavelength(bandpass.effective_wavelength).nyquistDx()
+        if iimult is not None:
+            scale /= iimult
+        effective_prof_image = ChromaticObject.draw(insep_obj, bandpass*SED, wmult=wmult, scale=scale)
+
+        # Image -> InterpolatedImage
+        # It could be useful to cache this result if drawing more than one object with the same
+        # PSF+SED combination.  This naturally happens in a ring test or when fitting the
+        # parameters of a galaxy profile to an image when the PSF is constant.
+        effective_prof = galsim.InterpolatedImage(effective_prof_image)
+        # append effective profile to separable profiles (which should all be GSObjects)
+        sep_profs.append(effective_prof)
         # finally, convolve and draw.
-        final_prof = multiplier * galsim.Convolve(sep_profs)
+        final_prof = galsim.Convolve(sep_profs)
         return final_prof.draw(image=image, gain=gain, wmult=wmult, add_to_image=add_to_image,
                                use_true_center=use_true_center, offset=offset)
 
