@@ -52,20 +52,15 @@ shear_g1 = 0.01
 shear_g2 = 0.02
 
 # load some spectra and a filter
-Egal_wave, Egal_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_E_ext.sed')).T
-Egal_wave /= 10 # Angstrom -> nm
-bulge_SED = galsim.SED(wave=Egal_wave, flambda=Egal_flambda)
-bulge_SED.setNormalization(base_wavelength=500.0, normalization=0.3)
+bulge_SED = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='A')
 
-Sbcgal_wave, Sbcgal_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_Sbc_ext.sed')).T
-Sbcgal_wave /= 10 # Angstrom -> nm
-disk_SED = galsim.SED(wave=Sbcgal_wave, flambda=Sbcgal_flambda)
-disk_SED.setNormalization(base_wavelength=500.0, normalization=0.3)
+disk_SED = galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='A')
 
-filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
-bandpass = galsim.Bandpass(filter_wave, filter_throughput)
+bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
 bandpass = bandpass.truncate(relative_throughput=0.001)
 
+bulge_SED = bulge_SED.setFlux(bandpass, 1.0)
+disk_SED = disk_SED.setFlux(bandpass, 1.0)
 def silentgetmoments(image1):
     xgrid, ygrid = np.meshgrid(np.arange(image1.array.shape[1]) + image1.getXMin(),
                                np.arange(image1.array.shape[0]) + image1.getYMin())
