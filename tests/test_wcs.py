@@ -1485,6 +1485,18 @@ def test_radecfunction():
 def do_ref(wcs, ref_list, name, approx=False, image=None):
     # Test that the given wcs object correctly converts the reference positions
 
+    # Normally, we check the agreement to 1.e-3 arcsec.
+    # However, we allow the caller to indicate the that inverse transform is only approximate.
+    # In this case, we only check to 1 digit.  Originally,  this was just for the reverse 
+    # transformation from world back to image coordinates, since some of the transformations 
+    # are not analytic, so some routines don't iterate to a very high accuracy.  But older 
+    # versions of wcstools are slightly (~0.01 arcsec) inaccurate even for the forward 
+    # transformation for TNX and ZPX.  So now we use digits2 for both toWorld and toImage checks.
+    if approx:
+        digits2 = 1
+    else:
+        digits2 = digits
+
     print 'Start reference testing for '+name
     for ref in ref_list:
         ra = galsim.HMS_Angle(ref[0])
@@ -1503,15 +1515,7 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
         #print 'delta(ra) = ',(ref_coord.ra - coord.ra)/galsim.arcsec
         #print 'delta(dec) = ',(ref_coord.dec - coord.dec)/galsim.arcsec
         #print 'dist = ',dist
-        np.testing.assert_almost_equal(dist, 0, digits, 'wcs.toWorld differed from expected value')
-
-        # Normally, we check the agreement to 1.e-3 arcsec.
-        # However, we allow the caller to indicate the that inverse transform is
-        # only approximate.  In this case, we only check to 1 digit.
-        if approx:
-            digits2 = 1
-        else:
-            digits2 = digits
+        np.testing.assert_almost_equal(dist, 0, digits2, 'wcs.toWorld differed from expected value')
 
         # Check world -> image
         pixel_scale = wcs.minLinearScale(galsim.PositionD(x,y))
@@ -1631,7 +1635,7 @@ def test_wcstools():
 
         # The wcstools implementation of the SIP and TPV types only gets the inverse 
         # transformations approximately correct.  So we need to be a bit looser in those checks.
-        approx = tag in [ 'SIP', 'TPV' ]
+        approx = tag in [ 'SIP', 'TPV', 'ZPX', 'TNX' ]
         do_ref(wcs, ref_list, 'WcsToolsWCS '+tag, approx)
 
         # Recenter (x,y) = (0,0) at the image center to avoid wcstools warnings about going
