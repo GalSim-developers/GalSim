@@ -528,6 +528,30 @@ def nCutoff(interpolant):
     except KeyError:
         raise RuntimeError("No cutoff scheme was defined for interpolant %s!"%interpolant)
 
+class xi_integrand:
+    def __init__(self, pk, r, n):
+        self.pk = pk
+        self.r = r
+        self.n = n
+    def __call__(self, k):
+        return k * self.pk(k) * jv(self.n, self.r*k)
+
+def calculate_xi(r, pk, n, k_min, k_max):
+    """Calculate xi+(r) or xi-(r) from a power spectrum.
+    """
+    #print 'Start calculate_xi'
+    # xi+/-(r) = 1/2pi int(dk k P(k) J0/4(kr), k=0..inf)
+
+    rrad = r * np.pi/180.  # Convert to radians
+
+    xi = np.zeros_like(r)
+    for i in range(len(r)):
+        integrand = xi_integrand(pk, rrad[i], n)
+        xi[i] = galsim.integ.int1d(integrand, k_min, k_max,
+                                   rel_err=1.e-6, abs_err=1.e-12)
+    xi /= 2. * np.pi
+    return xi
+
 def main(n_realizations, dithering, random, n_output_bins, kmin_factor, ps_plot_prefix,
          cf_plot_prefix, edge_cutoff=False, periodic=False):
     """Main routine to drive all tests.
@@ -547,7 +571,7 @@ def main(n_realizations, dithering, random, n_output_bins, kmin_factor, ps_plot_
 
         n_output_bins ------ Number of bins for calculation of 2-point functions.
 
-        kmin_factor -------- Factor by which to multiply the native kmin of the grid (as an argument
+        kmin_factor -------- Factor by which to divide the native kmin of the grid (as an argument
                              to the lensing engine).  Default: 3.
 
         ps_plot_prefix ----- Prefix to use for power-spectrum outputs.
@@ -577,7 +601,10 @@ def main(n_realizations, dithering, random, n_output_bins, kmin_factor, ps_plot_
     # defined in radians. So
     #    k_max = pi / (grid_spacing in radians) = pi / [2 pi (grid_spacing in degrees) / 180]
     #          = 90 / (grid spacing in degrees)
+    # Also find k_min, for correlation function prediction.
+    #    k_min = 2*pi / (total grid extent) = 180. / (grid extent)
     k_max = 90. / grid_spacing
+    k_min = 180. / (kmin_factor*grid_size)
     # Now define a power spectrum that is raw_ps below k_max and goes smoothly to zero above that.
     ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*cutoff_func(raw_ps_k/k_max),
                                   interpolant='linear')
