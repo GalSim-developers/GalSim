@@ -132,7 +132,7 @@ class BaseWCS(object):
       implemented.  If it is not implemented for a particular WCS class, a NotImplementedError
       will be raised.
 
-      The image_pos parameter should be a galsim.PositionD.  However, world_pos will
+      The `image_pos` parameter should be a galsim.PositionD.  However, `world_pos` will
       be a galsim.CelestialCoord if the transformation is in terms of celestial coordinates
       (if wcs.isCelestial() == True).  Otherwise, it will be a PositionD as well.
 
@@ -143,7 +143,7 @@ class BaseWCS(object):
                 world_profile = wcs.toWorld(image_profile)
 
       For non-uniform WCS types (for which wcs.isUniform() == False), these need either an
-      image_pos or world_pos parameter to say where this conversion should happen:
+      `image_pos` or `world_pos` parameter to say where this conversion should happen:
 
                 image_profile = wcs.toImage(world_profile, image_pos=image_pos)
 
@@ -153,17 +153,17 @@ class BaseWCS(object):
                 local_wcs = wcs.local(world_pos = world_pos)
 
       If wcs.toWorld(image_pos) is not implemented for a particular WCS class, then a
-      NotImplementedError will be raised if you pass in a world_pos argument.
+      NotImplementedError will be raised if you pass in a `world_pos` argument.
 
       The returned local_wcs is usually a JacobianWCS instance, but see the doc string for 
-      local for more details.
+      `wcs.local` for more details.
 
     - Construct a full affine approximation of a WCS at a given location:
 
                 affine_wcs = wcs.affine(image_pos = image_pos)
                 affine_wcs = wcs.affine(world_pos = world_pos)
 
-      This preserves the transformation near the location of image_pos, but it is linear, so
+      This preserves the transformation near the location of `image_pos`, but it is linear, so
       the transformed values may not agree as you get farther from the given point.
 
       The returned affine_wcs is always an AffineTransform instance.
@@ -177,7 +177,7 @@ class BaseWCS(object):
                 # Use jac.dudx, jac.dudy, jac.dvdx, jac.dvdy
 
       Non-uniform WCS types also have these functions, but for them, you must supply either
-      image_pos or world_pos.  So the following are equivalent:
+      `image_pos` or `world_pos`.  So the following are equivalent:
 
                 area = wcs.pixelArea(image_pos)
                 area = wcs.local(image_pos).pixelArea()
@@ -204,7 +204,7 @@ class BaseWCS(object):
         2. The second converts a surface brightness profile (a GSObject) from image
            coordinates to world coordinates, returning the profile in world coordinates
            as a new GSObject.  For non-uniform WCS transforms, you must provide either
-           image_pos or world_pos to say where the profile is located, so the right
+           `image_pos` or `world_pos` to say where the profile is located, so the right
            transformation can be performed.
 
                world_profile = wcs.toWorld(image_profile, image_pos=None, world_pos=None)
@@ -247,7 +247,7 @@ class BaseWCS(object):
         2. The second converts a surface brightness profile (a GSObject) from world
            coordinates to image coordinates, returning the profile in image coordinates
            as a new GSObject.  For non-uniform WCS transforms, you must provide either
-           image_pos or world_pos to say where the profile is located so the right
+           `image_pos` or `world_pos` to say where the profile is located so the right
            transformation can be performed.
 
                image_profile = wcs.toImage(world_profile, image_pos=None, world_pos=None)
@@ -281,7 +281,7 @@ class BaseWCS(object):
         """Return the area of a pixel in arcsec**2 (or in whatever units you are using for
         world coordinates if it is a EuclideanWCS).
 
-        For non-uniform WCS transforms, you must provide either image_pos or world_pos
+        For non-uniform WCS transforms, you must provide either `image_pos` or `world_pos`
         to say where the pixel is located.
 
         @param image_pos    The image coordinate position (for non-uniform WCS types)
@@ -297,7 +297,7 @@ class BaseWCS(object):
         linear scale size for some calculation.  This function returns the smallest
         scale in any direction.  The function maxLinearScale returns the largest.
 
-        For non-uniform WCS transforms, you must provide either image_pos or world_pos
+        For non-uniform WCS transforms, you must provide either `image_pos` or `world_pos`
         to say where the pixel is located.
 
         @param image_pos    The image coordinate position (for non-uniform WCS types)
@@ -313,7 +313,7 @@ class BaseWCS(object):
         linear scale size for some calculation.  This function returns the largest
         scale in any direction.  The function minLinearScale returns the smallest.
 
-        For non-uniform WCS transforms, you must provide either image_pos or world_pos
+        For non-uniform WCS transforms, you must provide either `image_pos` or `world_pos`
         to say where the pixel is located.
 
         @param image_pos    The image coordinate position (for non-uniform WCS types)
@@ -1680,10 +1680,10 @@ class OffsetShearWCS(UniformWCS):
 
 class AffineTransform(UniformWCS):
     """This WCS is the most general linear transformation.  It involves a 2x2 Jacobian
-    matrix and an offset.  You can provide the offset in terms of either the image_pos
-    (x0,y0) where (u,v) = (0,0), or the world_pos (u0,v0) where (x,y) = (0,0).
-    Or, in fact, you may provide both, in which case the image_pos (x0,y0) corresponds
-    to the world_pos (u0,v0).
+    matrix and an offset.  You can provide the offset in terms of either the `image_pos`
+    (x0,y0) where (u,v) = (0,0), or the `world_pos` (u0,v0) where (x,y) = (0,0).
+    Or, in fact, you may provide both, in which case the `image_pos` (x0,y0) corresponds
+    to the `world_pos` (u0,v0).
 
     The conversion functions are:
 
