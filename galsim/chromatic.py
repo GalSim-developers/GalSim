@@ -775,8 +775,13 @@ class ChromaticConvolution(ChromaticObject):
         iiscale = insep_obj.evaluateAtWavelength(bandpass.effective_wavelength).nyquistDx()
         if iimult is not None:
             iiscale /= iimult
-        effective_prof_image = ChromaticObject.draw(insep_obj, bandpass*SED, wmult=wmult,
-                                                    scale=iiscale, integrator=integrator, **kwargs)
+        if len(insep_profs) == 1:
+            effective_prof_image = insep_profs[0].draw(bandpass*SED, wmult=wmult, scale=iiscale,
+                                                       integrator=integrator, **kwargs)
+        else:
+            effective_prof_image = ChromaticObject.draw(insep_obj, bandpass*SED, wmult=wmult,
+                                                        scale=iiscale, integrator=integrator,
+                                                        **kwargs)
 
         # Image -> InterpolatedImage
         # It could be useful to cache this result if drawing more than one object with the same
