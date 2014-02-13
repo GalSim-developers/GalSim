@@ -140,13 +140,13 @@ Updates to config options:
   types: 'PixelScale', 'Shear', 'Jacobian', 'Affine', 'UVFunction',
   'RaDecFunction', 'Fits', and 'Tan'. (Issue #364)
 * Changed the name of `sky_pos` to `world_pos`. (Issue #364)
-* Remove pix top layer in config structure.  Add `draw_method=no_pixel` to 
+* Removed `pix` top layer in config structure.  Add `draw_method=no_pixel` to 
   do what `pix : None` used to do. (Issue #364)
-* Add `draw_method=real_space` to try to use real-space convolution.  This
+* Added `draw_method=real_space` to try to use real-space convolution.  This
   had been an option for the psf draw, but not the main draw.  This is only
-  possible if there is only one items being convolved with the pixel.
+  possible if there is only one item being convolved with the pixel.
   (Issue #364)
-* Add ability to index Sequences by any running index, rather than just the 
+* Added ability to index Sequences by any running index, rather than just the 
   default.  i.e. `obj_num`, `image_num`, or `file_num`. (Issue #364)
 * Added `Sum` type for value types for which it makes sense: float, int, angle,
   shear, position. (Issue #457)
