@@ -156,7 +156,8 @@ class ChromaticObject(object):
     #
 
     def applyExpansion(self, scale):
-        """Rescale the linear size of the profile by the given scale factor.
+        """Rescale the linear size of the profile by the given (possibly wavelength-dependent)
+        scale factor.
 
         This doesn't correspond to either of the normal operations one would typically want to
         do to a galaxy.  See the functions applyDilation and applyMagnification for the more
@@ -172,27 +173,32 @@ class ChromaticObject(object):
 
         After this call, the caller's type will be a ChromaticAffineTransform object.
 
-        @param scale The factor by which to scale the linear dimension of the object.
+        @param scale The factor by which to scale the linear dimension of the object.  `scale` may
+                     be callable, in which case the argument should be wavelength in nanometers and
+                     the return value the scale for that wavelength.
         """
         if isinstance(self, ChromaticSum):
             for obj in self.objlist:
                 obj.applyExpansion(scale)
         else:
-            M = numpy.matrix(numpy.diag([scale, scale, 1]))
+            if hasattr(scale, '__call__'):
+                M = lambda w: numpy.matrix(numpy.diag([scale(w), scale(w), 1]))
+            else:
+                M = lambda w: numpy.matrix(numpy.diag([scale, scale, 1]))
             if isinstance(self, ChromaticAffineTransform):
                 A = self.A
-                self.A = lambda w:M * A(w)
+                self.A = lambda w:M(w) * A(w)
             else:
                 self.obj = self.copy()
                 self.__class__ = ChromaticAffineTransform
-                self.A = lambda w: M
+                self.A = M
                 self.separable = self.obj.separable
                 if hasattr(self, 'gsobj'):
                     del self.gsobj
                 # note, self.SED should already exist if this is a separable object
 
     def applyDilation(self, scale):
-        """Apply a dilation of the linear size by the given scale.
+        """Apply a dilation of the linear size by the given (possibly wavelength-dependent) scale.
 
         Scales the linear dimensions of the image by the factor scale.
         e.g. `half_light_radius` <-- `half_light_radius * scale`
@@ -203,10 +209,16 @@ class ChromaticObject(object):
 
         After this call, the caller's type will be a ChromaticAffineTransform.
 
-        @param scale The linear rescaling factor to apply.
+        @param scale The linear rescaling factor to apply.  `scale` may be callable, in which case
+                     the argument should be wavelength in nanometers and the return value the scale
+                     for that wavelength.
         """
         self.applyExpansion(scale)
-        self.scaleFlux(1./scale**2) # conserve flux
+        # conserve flux
+        if hasattr(scale, '__call__'):
+            self.scaleFlux(lambda w: 1./scale(w)**2)
+        else:
+            self.scaleFlux(1./scale**2)
 
     def applyMagnification(self, mu):
         """Apply a lensing magnification, scaling the area and flux by mu at fixed surface
@@ -224,6 +236,7 @@ class ChromaticObject(object):
 
         @param mu The lensing magnification to apply.
         """
+
         self.applyExpansion(numpy.sqrt(mu))
 
     def applyShear(self, *args, **kwargs):
@@ -325,15 +338,18 @@ class ChromaticObject(object):
                 # note, self.SED should already exist if this is a separable object
 
     def applyShift(self, *args, **kwargs):
-        """Apply a (dx, dy) shift to this chromatic object.
+        """Apply a (possibly wavelength-dependent) (dx, dy) shift to this chromatic object.
 
         After this call, the caller's type will be a ChromaticAffineTransform object.
 
         @param dx Horizontal shift to apply (float).
         @param dy Vertical shift to apply (float).
 
-        Note: you may supply dx,dy as either two arguments, as a tuple, or as a
-        galsim.PositionD or galsim.PositionI object.
+        Note:
+        You may supply dx,dy as either two arguments, as a tuple, as a
+        galsim.PositionD or galsim.PositionI object, or finally, as a callable object that accepts
+        wavelength in nanometers as its argument and returns one of 2-tuple, galsim.PositionD, or
+        galsim.PositionI as its result representing a wavelength-dependent shift.
         """
         if isinstance(self, ChromaticSum):     # Don't wrap `ChromaticSum`s, easier to just
             for obj in self.objlist:           # wrap their arguments.
@@ -346,6 +362,17 @@ class ChromaticObject(object):
                 dx = kwargs.pop('dx')
                 dy = kwargs.pop('dy')
             elif len(args) == 1:
+                if hasattr(args[0], '__call__'):
+                    def dx(w):
+                        try:
+                            return args[0](w).x
+                        except:
+                            return args[0][0]
+                    def dy(w):
+                        try:
+                            return args[0](w).y
+                        except:
+                            return args[0][1]
                 if isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
                     dx = args[0].x
                     dy = args[0].y
@@ -361,14 +388,17 @@ class ChromaticObject(object):
             if kwargs:
                 raise TypeError("applyShift() got unexpected keyword arguments: %s",kwargs.keys())
             # Then create augmented affine transform matrix and multiply or set as necessary
-            shift = numpy.matrix([[1,0,dx],[0,1,dy],[0,0,1]], dtype=float)
+            if hasattr(dx, '__call__'):
+                shift = lambda w: numpy.matrix([[1,0,dx(w)],[0,1,dy(w)],[0,0,1]], dtype=float)
+            else:
+                shift = lambda w: numpy.matrix([[1,0,dx],[0,1,dy],[0,0,1]], dtype=float)
             if isinstance(self, ChromaticAffineTransform):
                 A = self.A
-                self.A = lambda w: shift * A(w)
+                self.A = lambda w: shift(w) * A(w)
             else:
                 self.obj = self.copy()
                 self.__class__ = ChromaticAffineTransform
-                self.A = lambda w: shift
+                self.A = shift
                 self.separable = self.obj.separable
                 if hasattr(self, 'gsobj'):
                     del self.gsobj
