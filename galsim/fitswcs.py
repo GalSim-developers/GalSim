@@ -594,6 +594,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
         #    [ x1, y1, x2, y2, ... ] 
         # if input is either scalar x,y or two arrays.
         xy = numpy.array([x, y]).transpose().flatten()
+        print 'xy = ',xy
         
         # The OS cannot handle arbitrarily long command lines, so we may need to split up
         # the list into smaller chunks.
@@ -602,16 +603,25 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             arg_max = os.sysconf('SC_ARG_MAX') 
         else:
             arg_max = 32768  # A conservative guess. My machines have 131072, 262144, and 2621440
+        print 'arg_max = ',arg_max
+
+        # Just in case something weird happened.
+        if arg_max < 256:
+            arg_max = 256
+            print 'arg_max => ',arg_max
 
         # This corresponds to the total number of characters in the line.  
         # Lets be conservative again and assume each argument is 20 characters
         nargs = (arg_max/40) * 2  # Make sure it is even!
+        print 'nargs = ',nargs
 
         xy_strs = [ str(z) for z in xy ]
+        print 'xy_strs = ',xy_strs
         ra = []
         dec = []
 
         for i in range(0,len(xy_strs),nargs):
+            print 'i = ',i
             xy1 = xy_strs[i:i+nargs]
             print 'xy1 = ',xy1
             import subprocess
