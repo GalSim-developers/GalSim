@@ -192,6 +192,7 @@ class ChromaticObject(object):
                 self.obj = self.copy()
                 self.__class__ = ChromaticAffineTransform
                 self.A = M
+                self.fluxFactor = lambda w: 1.0
                 self.separable = self.obj.separable
                 if hasattr(self, 'gsobj'):
                     del self.gsobj
@@ -282,6 +283,7 @@ class ChromaticObject(object):
                 self.obj = self.copy()
                 self.__class__ = ChromaticAffineTransform
                 self.A = lambda w: S
+                self.fluxFactor = lambda w: 1.0
                 self.separable = self.obj.separable
                 if hasattr(self, 'gsobj'):
                     del self.gsobj
@@ -332,6 +334,7 @@ class ChromaticObject(object):
                 self.obj = self.copy()
                 self.__class__ = ChromaticAffineTransform
                 self.A = lambda w: R
+                self.fluxFactor = lambda w: 1.0
                 self.separable = self.obj.separable
                 if hasattr(self, 'gsobj'):
                     del self.gsobj
@@ -367,13 +370,13 @@ class ChromaticObject(object):
                         try:
                             return args[0](w).x
                         except:
-                            return args[0][0]
+                            return args[0](w)[0]
                     def dy(w):
                         try:
                             return args[0](w).y
                         except:
-                            return args[0][1]
-                if isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
+                            return args[0](w)[1]
+                elif isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
                     dx = args[0].x
                     dy = args[0].y
                 else:
@@ -399,6 +402,7 @@ class ChromaticObject(object):
                 self.obj = self.copy()
                 self.__class__ = ChromaticAffineTransform
                 self.A = shift
+                self.fluxFactor = lambda w: 1.0
                 self.separable = self.obj.separable
                 if hasattr(self, 'gsobj'):
                     del self.gsobj
@@ -600,7 +604,7 @@ class ChromaticSum(ChromaticObject):
 
     def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
-             integrator=None, **kwargs):
+             integrator=galsim.integ.midpoint_int_image, **kwargs):
         """ Slightly optimized draw method for ChromaticSum's.  Draw each summand individually
         and add resulting images together.  This will waste time if both summands have the same
         associated SED, in which case the summands should be added together first and the
@@ -661,7 +665,7 @@ class ChromaticConvolution(ChromaticObject):
 
     def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
-             integrator=None, iimult=None, **kwargs):
+             integrator=galsim.integ.midpoint_int_image, iimult=None, **kwargs):
         """ Optimized draw method for ChromaticConvolution.  Works by finding sums of profiles
         which include separable portions, which can then be integrated before doing any
         convolutions, which are pushed to the end.
@@ -687,8 +691,6 @@ class ChromaticConvolution(ChromaticObject):
                                         wmult=wmult, add_to_image=add_to_image,
                                         use_true_center=use_true_center, offset=offset,
                                         integrator=integrator, **kwargs)
-        if integrator is None:
-            integrator = galsim.integ.midpoint_int_image
         # Only make temporary changes to objlist...
         objlist = [o.copy() for o in self.objlist]
 
@@ -779,10 +781,11 @@ class ChromaticConvolution(ChromaticObject):
         # Collapse inseparable profiles into one effective profile
         SED = lambda w: reduce(lambda x,y:x*y, [s(w) for s in sep_SED], 1)
         insep_obj = galsim.Convolve(insep_profs)
-        scale = insep_obj.evaluateAtWavelength(bandpass.effective_wavelength).nyquistDx()
+        iiscale = insep_obj.evaluateAtWavelength(bandpass.effective_wavelength).nyquistDx()
         if iimult is not None:
-            scale /= iimult
-        effective_prof_image = ChromaticObject.draw(insep_obj, bandpass*SED, wmult=wmult, scale=scale)
+            iiscale /= iimult
+        effective_prof_image = ChromaticObject.draw(insep_obj, bandpass*SED, wmult=wmult,
+                                                    scale=iiscale, integrator=integrator, **kwargs)
 
         # Image -> InterpolatedImage
         # It could be useful to cache this result if drawing more than one object with the same
@@ -798,88 +801,6 @@ class ChromaticConvolution(ChromaticObject):
 
     def scaleFlux(self, scale):
         self.objlist[0].scaleFlux(scale)
-
-
-class ChromaticShiftAndDilate(ChromaticObject):
-    """Class representing chromatic profiles whose wavelength dependence consists of shifting and
-    dilating a fiducial profile.
-
-    By simply shifting and dilating a fiducial PSF, a variety of physical wavelength dependencies can
-    be effected.  For instance, differential chromatic refraction is just shifting the PSF center as
-    a function of wavelength.  The wavelength-dependence of seeing, and the wavelength-dependence of
-    the diffraction limit are dilations.  This class can compactly represent all of these effects.
-    """
-    def __init__(self, gsobj, shift_fn=None, dilate_fn=None, SED=None):
-        """
-        @param gsobj      Fiducial GSObject profile to shift and dilate.
-        @param shift_fn   Function that takes wavelength in nanometers and returns a
-                          galsim.Position object, or parameters which can be transformed into a
-                          galsim.Position object (dx, dy).  The fiducial GSObject is then shifted
-                          this amount when evaluated at specified wavelengths.
-        @param dilate_fn  Function that takes wavelength in nanometers and returns a dilation
-                          scale factor.  The fiducial GSObject is then dilated this amount when
-                          evaluated at specified wavelengths.
-        """
-        self.gsobj = gsobj.copy()
-        self.separable = False
-
-        # Default is no shifting
-        if shift_fn is None:
-            self.shift_fn = lambda x: (0,0)
-        else:
-            self.shift_fn = shift_fn
-
-        # Default is no dilating
-        if dilate_fn is None:
-            self.dilate_fn = lambda x: 1.0
-        else:
-            self.dilate_fn = dilate_fn
-
-    def evaluateAtWavelength(self, wave):
-        """
-        @param wave  Wavelength in nanometers.
-        @returns     GSObject for profile at specified wavelength
-        """
-        profile = self.gsobj.copy()
-        profile.applyDilation(self.dilate_fn(wave))
-        profile.applyShift(self.shift_fn(wave))
-        return profile
-
-    def scaleFlux(self, scale):
-        self.gsobj.scaleFlux(scale)
-
-
-class ChromaticAtmosphere(ChromaticShiftAndDilate):
-    """Class implementing two atmospheric chromatic effects: differential chromatic refraction
-    (DCR) and wavelength-dependent seeing.
-    Due to DCR, blue photons land closer to the zenith than red photons.
-    Kolmogorov turbulence also predicts that blue photons get spread out more by the atmosphere
-    than red photons, specifically FWHM is proportional to wavelength^(-0.2).
-    """
-    def __init__(self, base_obj, base_wavelength, zenith_angle, alpha=-0.2,
-                 position_angle=0*galsim.radians, **kwargs):
-        """
-        @param base_obj           Fiducial PSF, equal to the monochromatic PSF at base_wavelength
-        @param base_wavelength    Wavelength represented by the fiducial PSF.
-        @param zenith_angle       Angle from object to zenith, expressed as a galsim.Angle
-        @param alpha              Power law index for wavelength-dependent seeing.  Default of -0.2
-                                  is the prediction for Kolmogorov turbulence.
-        @param position_angle     Angle pointing toward zenith, measured from "up" through "right".
-        @param **kwargs           Additional arguments are passed to dcr.get_refraction, and can
-                                  include temperature, pressure, and H20_pressure.
-        """
-        self.gsobj = base_obj.copy()
-        self.separable = False
-        self.dilate_fn = lambda w: (w/base_wavelength)**(alpha)
-        base_refraction = galsim.dcr.get_refraction(base_wavelength, zenith_angle, **kwargs)
-        def shift_fn(w):
-            shift_magnitude = galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
-            shift_magnitude -= base_refraction
-            shift_magnitude = shift_magnitude / galsim.arcsec
-            shift = (shift_magnitude*numpy.sin(position_angle.rad()),
-                     shift_magnitude*numpy.cos(position_angle.rad()))
-            return shift
-        self.shift_fn = shift_fn
 
 
 class ChromaticDeconvolution(ChromaticObject):
@@ -960,12 +881,16 @@ class ChromaticAutoCorrelation(ChromaticObject):
         self.obj.scaleFlux(numpy.sqrt(scale))
 
 class ChromaticAffineTransform(ChromaticObject):
-    def __init__(obj, A=None):
+    def __init__(self, obj, A=None, fluxFactor=None):
         self.obj = obj.copy()
         if A is None:
             self.A = lambda w: numpy.matrix(numpy.identity(3), dtype=float)
         else:
             self.A = A
+        if fluxFactor is None:
+            self.fluxFactor = lambda w: 1.0
+        else:
+            self.fluxFactor = fluxFactor
         self.separable = False
 
     def _getScaleEtaBetaThetaDxDy(self, w):
@@ -991,12 +916,52 @@ class ChromaticAffineTransform(ChromaticObject):
 
     def evaluateAtWavelength(self, w):
         scale, eta, beta, theta, dx, dy = self._getScaleEtaBetaThetaDxDy(w)
-        tmpobj = self.obj.evaluateAtWavelength(w)
+        tmpobj = self.obj.evaluateAtWavelength(w).copy()
         tmpobj.applyRotation(theta * galsim.radians)
         tmpobj.applyShear(eta=eta, beta=beta*galsim.radians)
         tmpobj.applyExpansion(scale)
         tmpobj.applyShift(dx, dy)
+        tmpobj.scaleFlux(self.fluxFactor(w))
         return tmpobj
 
     def scaleFlux(self, scale):
-        self.obj.scaleFlux(scale)
+        if hasattr(scale, '__call__'):
+            fluxFactor = self.fluxFactor
+            self.fluxFactor = lambda w: fluxFactor(w) * scale(w)
+        else:
+            self.obj.scaleFlux(scale)
+
+
+class ChromaticAtmosphere(ChromaticAffineTransform):
+    """Class implementing two atmospheric chromatic effects: differential chromatic refraction
+    (DCR) and wavelength-dependent seeing.
+    Due to DCR, blue photons land closer to the zenith than red photons.
+    Kolmogorov turbulence also predicts that blue photons get spread out more by the atmosphere
+    than red photons, specifically FWHM is proportional to wavelength^(-0.2).
+    """
+    def __init__(self, base_obj, base_wavelength, zenith_angle, alpha=-0.2,
+                 position_angle=0*galsim.radians, **kwargs):
+        """
+        @param base_obj           Fiducial PSF, equal to the monochromatic PSF at base_wavelength
+        @param base_wavelength    Wavelength represented by the fiducial PSF.
+        @param zenith_angle       Angle from object to zenith, expressed as a galsim.Angle
+        @param alpha              Power law index for wavelength-dependent seeing.  Default of -0.2
+                                  is the prediction for Kolmogorov turbulence.
+        @param position_angle     Angle pointing toward zenith, measured from "up" through "right".
+        @param **kwargs           Additional arguments are passed to dcr.get_refraction, and can
+                                  include temperature, pressure, and H20_pressure.
+        """
+        self.obj = base_obj.copy()
+        self.A = lambda w: numpy.matrix(numpy.identity(3), dtype=float)
+        self.fluxFactor = lambda w: 1.0
+        self.separable = False
+        self.applyDilation(lambda w: (w/base_wavelength)**(alpha))
+        base_refraction = galsim.dcr.get_refraction(base_wavelength, zenith_angle, **kwargs)
+        def shift_fn(w):
+            shift_magnitude = galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
+            shift_magnitude -= base_refraction
+            shift_magnitude = shift_magnitude / galsim.arcsec
+            shift = (shift_magnitude*numpy.sin(position_angle.rad()),
+                     shift_magnitude*numpy.cos(position_angle.rad()))
+            return shift
+        self.applyShift(shift_fn)

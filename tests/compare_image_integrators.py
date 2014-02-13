@@ -129,7 +129,7 @@ def compare_image_integrators():
 
     print 'Globally Adaptive Gauss-Kronrod'
     simpsons_image = np.array(image.array) #assume large N Simpson's is truth for comparison...
-    for rel_err in [1.e-1, 1.e-2, 1.e-3, 1.e-4, 1.e-5, 1.e-6, 1.e-7, 1.e-8]:
+    for rel_err in [1.e-1, 1.e-2, 1.e-3, 1.e-4, 1.e-5]:#, 1.e-6, 1.e-7, 1.e-8]:
         # image = galsim.ChromaticObject.draw(final, bandpass, image=image,
         #                                     integrator = galsim.integ.globally_adaptive_GK_int_image,
         #                                     rel_err=rel_err, verbose=True)
