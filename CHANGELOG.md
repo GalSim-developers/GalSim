@@ -174,14 +174,14 @@ Other new features:
   handy when dealing with RA or Dec. (Issue #364)
   * `angle.dms()` returns the angle as a string in the form +/-ddmmss.decimal.
   * `angle.hms()` returns the angle as a string in the form +/-hhmmss.decimal.
-  * `angle = DMS_Angle(str)` convert from a dms string to a `galsim.Angle`.
-  * `angle = HMS_Angle(str)` convert from an hms string to a `galsim.Angle`.
+  * `angle = DMS_Angle(str)` converts from a dms string to a `galsim.Angle`.
+  * `angle = HMS_Angle(str)` converts from an hms string to a `galsim.Angle`.
 * Added `profile.applyTransformation(dudx, dudy, dvdx, dvdy)` applies a general
   (linear) coordinate transformation to a GSObject profile.  It is a 
   generalization of `applyShear`, `applyRotation`, etc.  There is also the 
   corresponding `createTransformed` as well. (Issue #364)
-* Added `galsim.fits.readFile()` function reads a FITS file and returns the
-  hdu_list.  Normally, this is equivalent to `pyfits.open(file_name)`, but
+* Added `galsim.fits.readFile()` function, which reads a FITS file and returns
+  the hdu_list.  Normally, this is equivalent to `pyfits.open(file_name)`, but
   it has a `compression` option that works the same way `compression` works
   for the other `galsim.fits.read*` functions, so it may be convenient
   at times. (Issue #364)
