@@ -31,8 +31,8 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+# from pylab import *
 # def plotme(image):
-#     from pylab import *
 #     imshow(image.array)
 #     show()
 
@@ -62,6 +62,7 @@ shear_g2 = 0.02
 # load a filter
 bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
 bandpass = bandpass.truncate(relative_throughput=0.01)
+bandpass = bandpass.thin(10)
 
 # load some spectra
 bulge_SED = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
@@ -111,7 +112,10 @@ def test_draw_add_commutativity():
     pixel = galsim.Pixel(pixel_scale)
     final = galsim.Convolve([GS_gal, PSF, pixel])
     GS_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    t2 = time.time()
     GS_image = final.draw(image=GS_image)
+    t3 = time.time()
+    print 'GS_object.draw() took {} seconds.'.format(t3-t2)
     # plotme(GS_image)
 
     #------------------------------------------------------------------------------
@@ -137,7 +141,11 @@ def test_draw_add_commutativity():
     chromatic_final = galsim.Convolve([chromatic_gal, chromatic_PSF, pixel])
     chromatic_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     # use chromatic parent class to draw without ChromaticConvolution acceleration...
-    galsim.ChromaticObject.draw(chromatic_final, bandpass, image=chromatic_image)
+    t4 = time.time()
+    galsim.ChromaticObject.draw(chromatic_final, bandpass, image=chromatic_image,
+                                integrator=galsim.integ.midpt_continuous_integrator, N=250)
+    t5 = time.time()
+    print 'ChromaticObject.draw() took {} seconds.'.format(t5-t4)
     # plotme(chromatic_image)
 
     # comparison
@@ -150,8 +158,8 @@ def test_draw_add_commutativity():
         chromatic_image.array/peak1, GS_image.array/peak1, 6,
         err_msg="Directly computed chromatic image disagrees with image created using "
                 +"galsim.chromatic")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    t6 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t6-t1)
 
 def test_ChromaticConvolution_InterpolatedImage():
     import time

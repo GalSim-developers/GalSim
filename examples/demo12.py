@@ -47,6 +47,7 @@ New features introduced in this demo:
 - SED2 = SED.setRedshift(redshift)
 - bandpass = galsim.Bandpass(filename)
 - bandpass2 = bandpass.truncate(relative_throughput=X)
+- bandpass3 = bandpass2.thin(step)
 - gal = galsim.Chromatic(GSObject, wave, photons)
 - obj = galsim.Add([list of ChromaticObjects])
 - ChromaticObject.draw(bandpass)
@@ -100,6 +101,8 @@ def main(argv):
         filters[filter_name] = galsim.Bandpass(filter_filename)
         # don't waste time integrating where there's less than 1% relative throughput.
         filters[filter_name] = filters[filter_name].truncate(relative_throughput=0.01)
+        # and thin out the wavelength sampling by a factor of 10 to also improve speed.
+        filters[filter_name] = filters[filter_name].thin(10)
     logger.debug('Read in filters')
 
     pixel_scale = 0.2 # arcseconds

@@ -37,31 +37,24 @@ class ChromaticObject(object):
     """Base class for defining wavelength dependent objects."""
     def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
-             integrator=galsim.integ.midpoint_int_image, **kwargs):
-        """Base chromatic image draw function, for subclasses that don't choose to override it.
-        Since most galsim use cases will probably finish with a convolution,
-        ChromaticConvolution.draw() will often be the draw method used in practice.
+             integrator=None, **kwargs):
+        """Base chromatic image draw method.  Some subclasses may choose to override this for
+        specific efficiency gains.  For instance, most GalSim use cases will probably finish with
+        a convolution, in which case ChromaticConvolution.draw() will be used.
 
         The task of ChromaticObject.draw(bandpass) is to integrate a chromatic surface brightness
         profile multiplied by the throughput of `bandpass`, over the wavelength interval indicated
-        by `bandpass`.  To evaluate the integrand, this method creates a function that accepts a
-        single argument, a wavelength in nanometers, and returns an image of the surface brightness
-        profile at that wavelength using GSObject.draw().
-
-        The wavelength integration can be done using several different schemes, all defined in
-        integ.py.  The default, galsim.integ.midpoint_int_image, implements the midpoint rule,
-        i.e., it makes rectangular (in wavelength) approximations to the integral over equally
-        spaced subintervals.  Fancier available integrators include
-        galsim.integ.trapezoidal_int_image, galsim.integ.simpsons_int_image, and
-        galsim.integ.globally_adaptive_GK_int_image, which implements a globally adaptive
-        Gauss-Kronrod integration scheme.
-
-        Image integrators can receive additional keyword parameters through **kwargs.  For
-        instance, galsim.integ.midpoint_int_image can accept `N`, the number of subintervals into
-        which to divide the bandpass wavelength interval.  Likewise, `N` is also an option for
-        galsim.integ.trapezoidal_int_image and galsim.integ.simpsons_int_image.  For
-        galsim.integ.globally_adaptive_GK_int_image, a relative error tolerance `rel_err` can be
-        passed instead.
+        by `bandpass`.  Several integrators are available in galsim.integ to do this integration.
+        By default, galsim.integ.trapz_sample_integrator will be used if `bandpass.wave_list`
+        exists, and galsim.integ.trapz_continuous_integrator will be used otherwise.  Both of these
+        functions use the Trapezoidal rule.  The difference is that `trapz_sample_integrator`
+        evaluates the integrand at precisely the wavelengths defined by `bandpass.wave_list`, while
+        `trapz_continuous_integrator` evaluates the integrand at the midpoints of N equally sized
+        subintervals in the interval between `bandpass.blue_limit` and `bandpass.red_limit`.  In
+        the latter case, the number of subintervals N is an optional argument to
+        `ChromaticObject.draw`.  Other available integrators include `midpt_sample_integrator` and
+        `midpt_continuous_integrator`, which replace the Trapezoidal rule above with the midpoint
+        rule.
 
         @param bandpass           A galsim.Bandpass object representing the filter
                                   against which to integrate.
@@ -90,17 +83,15 @@ class ChromaticObject(object):
                        add_to_image=add_to_image, offset=offset)
             return image
 
-        # integrand returns an galsim.Image at each wavelength
-        def f_image(w):
-            prof = self.evaluateAtWavelength(w) * bandpass(w)
-            tmpimage = image.copy()
-            tmpimage.setZero()
-            prof.draw(image=tmpimage, gain=gain, wmult=wmult,
-                      add_to_image=False, use_true_center=use_true_center, offset=offset)
-            return tmpimage
+        # decide on integrator
+        if integrator is None:
+            if hasattr(bandpass, 'wave_list'):
+                integrator = galsim.integ.trapz_sample_integrator
+            else:
+                integrator = galsim.integ.trapz_continuous_integrator
 
-        # Do the wavelength integral
-        integral = integrator(f_image, bandpass.blue_limit, bandpass.red_limit, **kwargs)
+        integral = integrator(self.evaluateAtWavelength, bandpass, image, gain, wmult,
+                              use_true_center, offset, **kwargs)
 
         # Clear image if add_to_image is False
         if not add_to_image:
@@ -604,7 +595,7 @@ class ChromaticSum(ChromaticObject):
 
     def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
-             integrator=galsim.integ.midpoint_int_image, **kwargs):
+             integrator=None, **kwargs):
         """ Slightly optimized draw method for ChromaticSum's.  Draw each summand individually
         and add resulting images together.  This will waste time if both summands have the same
         associated SED, in which case the summands should be added together first and the
@@ -665,7 +656,7 @@ class ChromaticConvolution(ChromaticObject):
 
     def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
-             integrator=galsim.integ.midpoint_int_image, iimult=None, **kwargs):
+             integrator=None, iimult=None, **kwargs):
         """ Optimized draw method for ChromaticConvolution.  Works by finding sums of profiles
         which include separable portions, which can then be integrated before doing any
         convolutions, which are pushed to the end.
