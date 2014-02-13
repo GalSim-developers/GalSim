@@ -234,15 +234,15 @@ class Bandpass(object):
             return ret
         # option 2: a tuple
         elif isinstance(wave, tuple):
-            return tuple([self.func(w) if (w > self.blue_limit and w < self.red_limit) else 0.0
+            return tuple([self.func(w) if (w >= self.blue_limit and w <= self.red_limit) else 0.0
                           for w in wave])
         # option 3: a list
         elif isinstance(wave, list):
-            return [self.func(w) if (w > self.blue_limit and w < self.red_limit) else 0.0
+            return [self.func(w) if (w >= self.blue_limit and w <= self.red_limit) else 0.0
                     for w in wave]
         # option 4: a single value
         else:
-            return self.func(wave) if (wave > self.blue_limit and wave < self.red_limit) else 0.0
+            return self.func(wave) if (wave >= self.blue_limit and wave <= self.red_limit) else 0.0
 
     def truncate(self, relative_throughput=None, blue_limit=None, red_limit=None):
         """ Return a bandpass with its wavelength range truncated.
