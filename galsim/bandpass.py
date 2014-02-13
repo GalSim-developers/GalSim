@@ -43,7 +43,7 @@ class Bandpass(object):
     A Bandpass.effective_wavelength will be computed upon construction.  We use throughput-weighted
     average wavelength (which is independent of any SED) as our definition for effective wavelength.
     """
-    def __init__(self, throughput, wave_type='nm', blue_limit=None, red_limit=None):
+    def __init__(self, throughput, wave_type='nm', blue_limit=None, red_limit=None, _wave_list=None):
         """Very simple Bandpass filter object.  This object is callable, returning dimensionless
         throughput as a function of wavelength in nanometers.
 
@@ -84,12 +84,14 @@ class Bandpass(object):
                 tp = galsim.LookupTable(file=tp)
             else:
                 tp = eval('lambda wave : ' + tp)
+
         if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
             wave_factor = 1.0
         elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
             wave_factor = 10.0
         else:
             raise ValueError("Unknown wave_type `{}` in SED.__init__".format(wave_type))
+
         if blue_limit is None:
             if not isinstance(tp, galsim.LookupTable):
                 raise AttributeError("blue_limit is required if throughput is not a LookupTable.")
@@ -98,8 +100,10 @@ class Bandpass(object):
             if not isinstance(tp, galsim.LookupTable):
                 raise AttributeError("red_limit is required if throughput is not a LookupTable.")
             red_limit = tp.x_max
+
         self.blue_limit = blue_limit / wave_factor
         self.red_limit = red_limit / wave_factor
+
         if isinstance(tp, galsim.LookupTable):
             self.wave_list = [w/wave_factor for w in tp.getArgs()]
             # Make sure that blue_limit and red_limit are within LookupTable region of support.
@@ -116,31 +120,49 @@ class Bandpass(object):
                 self.wave_list.append(self.red_limit)
         else:
             self.wave_list = []
+
+        # Manual override!  Be careful!
+        if _wave_list is not None:
+            self.wave_list = _wave_list
+
         self.func = lambda w: tp(numpy.array(w) * wave_factor)
+
         # We define bandpass effective wavelength as the throughput-weighted average wavelength,
         # independent of any SED.  Units are nanometers.
-        self.effective_wavelength = (galsim.integ.int1d(lambda w: self.func(w) * w,
-                                                        self.blue_limit, self.red_limit)
-                                     / galsim.integ.int1d(self.func,
-                                                          self.blue_limit, self.red_limit))
+        if self.wave_list != []:
+            f = self.func(self.wave_list)
+            self.effective_wavelength = (numpy.trapz(f * self.wave_list, self.wave_list) /
+                                         numpy.trapz(f, self.wave_list))
+        else:
+            self.effective_wavelength = (galsim.integ.int1d(lambda w: self.func(w) * w,
+                                                            self.blue_limit, self.red_limit)
+                                         / galsim.integ.int1d(self.func,
+                                                              self.blue_limit, self.red_limit))
 
     def __mul__(self, other):
         blue_limit = self.blue_limit
         red_limit = self.red_limit
         wave_list = set(self.wave_list)
+
         if isinstance(other, galsim.Bandpass):
             blue_limit = max([self.blue_limit, other.blue_limit])
             red_limit = min([self.red_limit, other.red_limit])
             if other.wave_list != []:
                 wave_list = wave_list.union(other.wave_list)
-        if hasattr(other, '__call__'):
-            ret = Bandpass(lambda w: other(w)*self(w), blue_limit=blue_limit, red_limit=red_limit)
-        else:
-            ret = Bandpass(lambda w: other*self(w), blue_limit=blue_limit, red_limit=red_limit)
+
         wave_list = list(wave_list)
         wave_list = [w for w in wave_list if w >= blue_limit and w <= red_limit]
         wave_list.sort()
-        ret.wave_list = wave_list
+
+        if hasattr(other, '__call__'):
+            ret = Bandpass(lambda w: other(w)*self(w),
+                           blue_limit=blue_limit, red_limit=red_limit,
+                           _wave_list=wave_list)
+        else:
+            ret = Bandpass(lambda w: other*self(w),
+                           blue_limit=blue_limit, red_limit=red_limit,
+                           _wave_list=wave_list)
+
         return ret
 
     def __rmul__(self, other):
