@@ -585,6 +585,10 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
     def origin(self): return self._origin
 
     def _radec(self, x, y):
+        print 'start wcstools _radec'
+        print 'x = ',x
+        print 'y = ',y
+
         import numpy
         # Need this to look like 
         #    [ x1, y1, x2, y2, ... ] 
@@ -609,6 +613,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
 
         for i in range(0,len(xy_strs),nargs):
             xy1 = xy_strs[i:i+nargs]
+            print 'xy1 = ',xy1
             import subprocess
             # We'd like to get the output to 10 digits of accuracy.  This corresponds to
             # an accuracy of about 1.e-6 arcsec.  But sometimes xy2sky cannot handle it,
@@ -619,6 +624,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
                 p = subprocess.Popen(['xy2sky', '-d', '-n', str(digits), self._file_name] + xy1,
                                     stdout=subprocess.PIPE)
                 results = p.communicate()[0]
+                print 'results for digits = ',digits,' = ',results
                 p.stdout.close()
                 if len(results) == 0:
                     raise IOError('wcstools command xy2sky was unable to read '+ self._file_name)
@@ -626,6 +632,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             if results[0] == '*':
                 raise IOError('wcstools command xy2sky was unable to read '+self._file_name)
             lines = results.splitlines()
+            print 'lines = ',lines
 
             # Each line of output should looke like:
             #    x y J2000 ra dec
@@ -633,10 +640,13 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             #    Off map x y
             for line in lines:
                 vals = line.split()
+                print 'vals = ',vals
                 if len(vals) != 5:
                     raise RuntimeError('wcstools xy2sky returned invalid result near %f,%f'%(x0,y0))
                 ra.append(float(vals[0]))
                 dec.append(float(vals[1]))
+            print 'ra => ',ra
+            print 'dec => ',dec
 
         # wcstools reports ra, dec in degrees, so convert to radians
         factor = 1. * galsim.degrees / galsim.radians
