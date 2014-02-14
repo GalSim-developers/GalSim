@@ -1507,7 +1507,7 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
         import warnings
         warnings.warn("All the fits WCS types failed to read "+file_name+".  " +
                       "Using AffineTransform instead, which will not really be correct.")
-    wcs = AffineTransform._readHeader(header)
+    wcs = galsim.wcs.AffineTransform._readHeader(header)
     return wcs
 
 # Let this function work like a class in config.
