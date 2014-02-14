@@ -49,6 +49,7 @@ New features introduced in this demo:
 - bandpass2 = bandpass.truncate(relative_throughput=X)
 - bandpass3 = bandpass2.thin(step)
 - gal = galsim.Chromatic(GSObject, wave, photons)
+- gal = GSObject * SED
 - obj = galsim.Add([list of ChromaticObjects])
 - ChromaticObject.draw(bandpass)
 - PSF = galsim.ChromaticAtmosphere(GSObject, base_wavelength, zenith_angle)
@@ -158,13 +159,14 @@ def main(argv):
     # make a bulge ...
     mono_bulge = galsim.DeVaucouleurs(half_light_radius=0.5)
     bulge_SED = SEDs['CWW_E_ext'].setRedshift(redshift)
-    bulge = galsim.Chromatic(mono_bulge, bulge_SED)
+    # Here's a shortcut for creating a chromatic version of a GSObject:
+    bulge = mono_bulge * bulge_SED
     bulge.applyShear(g1=0.12, g2=0.07)
     logger.debug('Created bulge component')
     # ... and a disk ...
     mono_disk = galsim.Exponential(half_light_radius=2.0)
     disk_SED = SEDs['CWW_Im_ext'].setRedshift(redshift)
-    disk = galsim.Chromatic(mono_disk, disk_SED)
+    disk = mono_disk * disk_SED
     disk.applyShear(g1=0.4, g2=0.2)
     logger.debug('Created disk component')
     # ... and then combine them.
@@ -204,7 +206,7 @@ def main(argv):
     SED = SED.setFlux(filters['g'], 50.0)
     # The flux drawn through other bands, which sample different parts of the SED and have different
     # throughputs, will, of course, be differ.
-    gal = galsim.Chromatic(mono_gal, SED)
+    gal = mono_gal * SED
     gal.applyShear(g1=0.5, g2=0.3)
     logger.debug('Created `Chromatic` galaxy')
 
