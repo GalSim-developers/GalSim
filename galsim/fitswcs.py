@@ -587,16 +587,16 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
     def origin(self): return self._origin
 
     def _radec(self, x, y):
-        print 'start wcstools _radec'
-        print 'x = ',x
-        print 'y = ',y
+        #print 'start wcstools _radec'
+        #print 'x = ',x
+        #print 'y = ',y
 
         import numpy
         # Need this to look like 
         #    [ x1, y1, x2, y2, ... ] 
         # if input is either scalar x,y or two arrays.
         xy = numpy.array([x, y]).transpose().flatten()
-        print 'xy = ',xy
+        #print 'xy = ',xy
         
         # The OS cannot handle arbitrarily long command lines, so we may need to split up
         # the list into smaller chunks.
@@ -604,28 +604,29 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
         if 'SC_ARG_MAX' in os.sysconf_names:
             arg_max = os.sysconf('SC_ARG_MAX') 
         else:
-            arg_max = 32768  # A conservative guess. My machines have 131072, 262144, and 2621440
-        print 'arg_max = ',arg_max
+            # A conservative guess. My machines have 131072, 262144, and 2621440
+            arg_max = 32768  
+        #print 'arg_max = ',arg_max
 
         # Just in case something weird happened.
         if arg_max < 256:
             arg_max = 256
-            print 'arg_max => ',arg_max
+            #print 'arg_max => ',arg_max
 
         # This corresponds to the total number of characters in the line.  
         # Lets be conservative again and assume each argument is 20 characters
         nargs = (arg_max/40) * 2  # Make sure it is even!
-        print 'nargs = ',nargs
+        #print 'nargs = ',nargs
 
         xy_strs = [ str(z) for z in xy ]
-        print 'xy_strs = ',xy_strs
+        #print 'xy_strs = ',xy_strs
         ra = []
         dec = []
 
         for i in range(0,len(xy_strs),nargs):
-            print 'i = ',i
+            #print 'i = ',i
             xy1 = xy_strs[i:i+nargs]
-            print 'xy1 = ',xy1
+            #print 'xy1 = ',xy1
             import subprocess
             # We'd like to get the output to 10 digits of accuracy.  This corresponds to
             # an accuracy of about 1.e-6 arcsec.  But sometimes xy2sky cannot handle it,
@@ -636,7 +637,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
                 p = subprocess.Popen(['xy2sky', '-d', '-n', str(digits), self._file_name] + xy1,
                                     stdout=subprocess.PIPE)
                 results = p.communicate()[0]
-                print 'results for digits = ',digits,' = ',results
+                #print 'results for digits = ',digits,' = ',results
                 p.stdout.close()
                 if len(results) == 0:
                     raise IOError('wcstools command xy2sky was unable to read '+ self._file_name)
@@ -644,7 +645,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             if results[0] == '*':
                 raise IOError('wcstools command xy2sky was unable to read '+self._file_name)
             lines = results.splitlines()
-            print 'lines = ',lines
+            #print 'lines = ',lines
 
             # Each line of output should looke like:
             #    x y J2000 ra dec
@@ -652,13 +653,13 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             #    Off map x y
             for line in lines:
                 vals = line.split()
-                print 'vals = ',vals
+                #print 'vals = ',vals
                 if len(vals) != 5:
                     raise RuntimeError('wcstools xy2sky returned invalid result near %f,%f'%(x0,y0))
                 ra.append(float(vals[0]))
                 dec.append(float(vals[1]))
-            print 'ra => ',ra
-            print 'dec => ',dec
+            #print 'ra => ',ra
+            #print 'dec => ',dec
 
         # wcstools reports ra, dec in degrees, so convert to radians
         factor = 1. * galsim.degrees / galsim.radians
