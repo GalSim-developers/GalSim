@@ -608,14 +608,24 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             arg_max = 32768  
         #print 'arg_max = ',arg_max
 
-        # Just in case something weird happened.
-        if arg_max < 256:
-            arg_max = 256
+        # Sometimes SC_ARG_MAX is listed as -1.  I couldn't figure out what that means.
+        # Unlimited arg length?  Anyway, just go with the above conservative value in that case.
+        if arg_max <= 0:
+            arg_max = 32768
+            #print 'arg_max => ',arg_max
+
+        # Just in case something weird happened.  This should be _very_ conservative.
+        # It's the smallest value in this list of values for a bunch of systems:
+        # http://www.in-ulm.de/~mascheck/various/argmax/
+        if arg_max < 4096:
+            arg_max = 4096
             #print 'arg_max => ',arg_max
 
         # This corresponds to the total number of characters in the line.  
-        # Lets be conservative again and assume each argument is 20 characters
-        nargs = (arg_max/40) * 2  # Make sure it is even!
+        # But we really need to know how many arguments we are allowed to use in each call.
+        # Lets be conservative again and assume each argument is at most 20 characters.
+        # (We ignore the few characters at the start for the command name and such.)
+        nargs = int(arg_max / 40) * 2  # Make sure it is even!
         #print 'nargs = ',nargs
 
         xy_strs = [ str(z) for z in xy ]
