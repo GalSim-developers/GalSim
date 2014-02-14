@@ -60,10 +60,10 @@ Python layer API changes:
 
 New WCS classes: (Issue #364)
 
-* Every place in the code that used to need a pixel scale item (e.g. `Image`
-  constructor, `GSObject.draw()`, `InterpolatedImage`, etc.) now can take a 
-  `wcs` item.  The `scale` parameter is still an option, but now it is just 
-  shorthand for `wcs = PixelScale(scale)`.
+* Every place in the code that can take a `scale` parameter (e.g. the `Image` 
+  constructor,  `GSObject.draw()`, `InterpolatedImage`, etc.) can now take a 
+  `wcs` parameter.  The `scale` parameter is still an option, but now it is
+  just shorthand for `wcs = PixelScale(scale)`.
 * There are three LocalWCS classes that have a common origin for image and 
   world coordinates:
   * `PixelScale` describes a simple scale conversion from pixels to arcsec.

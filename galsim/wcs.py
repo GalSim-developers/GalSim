@@ -70,8 +70,7 @@ class BaseWCS(object):
        They implicitly have the origin in image coordinates correspond to the origin
        in world coordinates.  They are primarily designed to handle local transformations
        at the location of a single galaxy, where it should usually be a good approximation
-       to consider the pixel shape to be constant over the size of the galaxy.  We use the 
-       notation (u,v) for the world coordinates and (x,y) for the image coordinates.
+       to consider the pixel shape to be constant over the size of the galaxy.
 
        Currently we define the following LocalWCS classes:
 
