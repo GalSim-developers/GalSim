@@ -238,6 +238,9 @@ Currently, GalSim has the following capabilities:
   deconvolution (such as RealGalaxy objects) must be carried out using Fourier
   methods only.
 
+* Can handle wavelength-dependent profiles and integrate over filter
+  bandpasses appropriately.
+
 * Can apply shear, magnification, dilation, or rotation to a galaxy profile
   including lensing-based models from a power spectrum or NFW halo profile.
 

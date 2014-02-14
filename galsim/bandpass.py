@@ -36,12 +36,17 @@ class Bandpass(object):
     at initialization, or are inferred from the initializing galsim.LookupTable or 2-column file.
 
     Outside of the wavelength interval between `blue_limit` and `red_limit`, the throughput is
-    assumed to be zero.
+    returned as zero, regardless of the `throughput` input parameter.
 
     Bandpasses may be multiplied by other Bandpasses, functions, or scalars.
 
     A Bandpass.effective_wavelength will be computed upon construction.  We use throughput-weighted
     average wavelength (which is independent of any SED) as our definition for effective wavelength.
+
+    For Bandpasses defined using a LookupTable, a list of wavelengths, `wave_list`, defining the
+    table is maintained.  Bandpasses defined as products of two other Bandpasses will use define
+    their `wave_list` as the union of multiplicand `wave_list`s, although limited to the range
+    between the new product `blue_limit` and `red_limit`.
     """
     def __init__(self, throughput, wave_type='nm', blue_limit=None, red_limit=None, _wave_list=None):
         """Very simple Bandpass filter object.  This object is callable, returning dimensionless
@@ -77,6 +82,7 @@ class Bandpass(object):
                              throughput is a LookupTable or a file, but is required if the
                              throughput is a function.
         """
+        # Figure out input throughput type.
         tp = throughput  # For brevity within this function
         if isinstance(tp, (str, unicode)):
             import os
@@ -85,6 +91,7 @@ class Bandpass(object):
             else:
                 tp = eval('lambda wave : ' + tp)
 
+        # Figure out wavelength type
         if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
             wave_factor = 1.0
         elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
@@ -92,6 +99,7 @@ class Bandpass(object):
         else:
             raise ValueError("Unknown wave_type `{}` in SED.__init__".format(wave_type))
 
+        # Assign blue and red limits of bandpass
         if blue_limit is None:
             if not isinstance(tp, galsim.LookupTable):
                 raise AttributeError("blue_limit is required if throughput is not a LookupTable.")
@@ -100,10 +108,10 @@ class Bandpass(object):
             if not isinstance(tp, galsim.LookupTable):
                 raise AttributeError("red_limit is required if throughput is not a LookupTable.")
             red_limit = tp.x_max
-
         self.blue_limit = blue_limit / wave_factor
         self.red_limit = red_limit / wave_factor
 
+        # Sanity check blue/red limit and create self.wave_list
         if isinstance(tp, galsim.LookupTable):
             self.wave_list = [w/wave_factor for w in tp.getArgs()]
             # Make sure that blue_limit and red_limit are within LookupTable region of support.
@@ -127,8 +135,8 @@ class Bandpass(object):
 
         self.func = lambda w: tp(numpy.array(w) * wave_factor)
 
-        # We define bandpass effective wavelength as the throughput-weighted average wavelength,
-        # independent of any SED.  Units are nanometers.
+        # Evaluate and store bandpass effective wavelength, which we define as the
+        # throughput-weighted average wavelength, independent of any SED.  Units are nanometers.
         if self.wave_list != []:
             f = self.func(self.wave_list)
             self.effective_wavelength = (numpy.trapz(f * self.wave_list, self.wave_list) /
