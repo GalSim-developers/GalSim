@@ -154,6 +154,8 @@ class SED(object):
         return self.fphotons(wave)
 
     def __mul__(self, other):
+        if isinstance(other, galsim.GSObject):
+            return galsim.Chromatic(other, self)
         # SEDs can be multiplied by scalars or functions (callables)
         ret = self.copy()
         if hasattr(other, '__call__'):

@@ -126,7 +126,7 @@ def test_draw_add_commutativity():
 
     # make galaxy
     mono_gal = galsim.Sersic(n=bulge_n, half_light_radius=bulge_hlr)
-    chromatic_gal = galsim.Chromatic(mono_gal, bulge_SED)
+    chromatic_gal = mono_gal * bulge_SED
     chromatic_gal.applyShear(e1=bulge_e1, e2=bulge_e2)
     chromatic_gal.applyShear(g1=shear_g1, g2=shear_g2)
 
@@ -169,7 +169,7 @@ def test_ChromaticConvolution_InterpolatedImage():
     stamp_size = 32
 
     # stars are fundamentally delta-fns with an SED
-    star = galsim.Chromatic(galsim.Gaussian(fwhm=1.e-8), bulge_SED)
+    star = galsim.Gaussian(fwhm=1.e-8) * bulge_SED
     pix = galsim.Pixel(pixel_scale)
     mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
     PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500.0,
@@ -209,11 +209,11 @@ def test_chromatic_add():
 
     # create galaxy profiles
     mono_bulge = galsim.Sersic(n=bulge_n, half_light_radius=bulge_hlr)
-    bulge = galsim.Chromatic(mono_bulge, bulge_SED)
+    bulge = mono_bulge * bulge_SED
     bulge.applyShear(e1=bulge_e1, e2=bulge_e2)
 
     mono_disk = galsim.Sersic(n=disk_n, half_light_radius=disk_hlr)
-    disk = galsim.Chromatic(mono_disk, disk_SED)
+    disk = mono_disk * disk_SED
     disk.applyShear(e1=disk_e1, e2=disk_e2)
 
     # test `+` operator
@@ -270,8 +270,8 @@ def test_dcr_moments():
     pixel_scale = 0.025
 
     # stars are fundamentally delta-fns with an SED
-    star1 = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
-    star2 = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), disk_SED)
+    star1 = galsim.Gaussian(fwhm=1.e-8) * bulge_SED
+    star2 = galsim.Gaussian(fwhm=1.e-8) * disk_SED
 
     shift_fn = lambda w:(0, ((galsim.dcr.get_refraction(w, zenith_angle) - R500)
                              / galsim.arcsec))
@@ -345,8 +345,8 @@ def test_chromatic_seeing_moments():
     stamp_size = 1024
 
     # stars are fundamentally delta-fns with an SED
-    star1 = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
-    star2 = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), disk_SED)
+    star1 = galsim.Gaussian(fwhm=1e-8) * bulge_SED
+    star2 = galsim.Gaussian(fwhm=1e-8) * disk_SED
     pix = galsim.Pixel(pixel_scale)
 
     indices = [-0.2, 0.6, 1.0]
@@ -405,7 +405,7 @@ def test_monochromatic_filter():
     pixel_scale = 0.2
     stamp_size = 32
 
-    chromatic_gal = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
+    chromatic_gal = galsim.Gaussian(fwhm=1.0) * bulge_SED
     GS_gal = galsim.Gaussian(fwhm=1.0)
 
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
@@ -456,7 +456,7 @@ def test_chromatic_flux():
     stamp_size = 64
 
     # stars are fundamentally delta-fns with an SED
-    star = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED)
+    star = galsim.Gaussian(fwhm=1e-8) * bulge_SED
     pix = galsim.Pixel(pixel_scale)
     mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
     PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500,
@@ -487,7 +487,7 @@ def test_chromatic_flux():
     # try adjusting flux to something else.
     target_flux = 2.63
     bulge_SED2 = bulge_SED.setFlux(bandpass, target_flux)
-    star2 = galsim.Chromatic(galsim.Gaussian(fwhm=1e-8), bulge_SED2)
+    star2 = galsim.Gaussian(fwhm=1e-8) * bulge_SED2
     final = galsim.Convolve([star2, PSF, pix])
     final.draw(bandpass, image=image)
     np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
@@ -504,10 +504,10 @@ def test_double_ChromaticSum():
     import time
     t1 = time.time()
 
-    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
-    b = galsim.Chromatic(galsim.Gaussian(fwhm=2.0), bulge_SED)
-    c = galsim.Chromatic(galsim.Gaussian(fwhm=3.0), bulge_SED)
-    d = galsim.Chromatic(galsim.Gaussian(fwhm=4.0), bulge_SED)
+    a = galsim.Gaussian(fwhm=1.0) * bulge_SED
+    b = galsim.Gaussian(fwhm=2.0) * bulge_SED
+    c = galsim.Gaussian(fwhm=3.0) * bulge_SED
+    d = galsim.Gaussian(fwhm=4.0) * bulge_SED
 
     image = galsim.ImageD(16, 16, scale=0.2)
     obj = galsim.Convolve(a+b, c+d)
@@ -529,10 +529,10 @@ def test_double_ChromaticSum():
 def test_ChromaticConvolution_of_ChromaticConvolution():
     import time
     t1 = time.time()
-    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
-    b = galsim.Chromatic(galsim.Gaussian(fwhm=2.0), bulge_SED)
-    c = galsim.Chromatic(galsim.Gaussian(fwhm=3.0), bulge_SED)
-    d = galsim.Chromatic(galsim.Gaussian(fwhm=4.0), bulge_SED)
+    a = galsim.Gaussian(fwhm=1.0) * bulge_SED
+    b = galsim.Gaussian(fwhm=2.0) * bulge_SED
+    c = galsim.Gaussian(fwhm=3.0) * bulge_SED
+    d = galsim.Gaussian(fwhm=4.0) * bulge_SED
 
     e = galsim.Convolve(a, b)
     f = galsim.Convolve(c, d)
@@ -545,7 +545,7 @@ def test_ChromaticConvolution_of_ChromaticConvolution():
 def test_ChromaticAutoConvolution():
     import time
     t1 = time.time()
-    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
+    a = galsim.Gaussian(fwhm=1.0) * bulge_SED
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
     b = galsim.Convolve(a, a)
@@ -562,7 +562,7 @@ def test_ChromaticAutoConvolution():
 def test_ChromaticAutoCorrelation():
     import time
     t1 = time.time()
-    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
+    a = galsim.Gaussian(fwhm=1.0) * bulge_SED
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
     b = galsim.Convolve(a, a.createRotated(180.0 * galsim.degrees))
@@ -582,8 +582,8 @@ def test_ChromaticObject_applyExpansion():
     t1 = time.time()
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
-    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0).createExpanded(1.1), bulge_SED)
-    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED).createExpanded(1.1)
+    a = galsim.Gaussian(fwhm=1.0).createExpanded(1.1) * bulge_SED
+    b = (galsim.Gaussian(fwhm=1.0) * bulge_SED).createExpanded(1.1)
 
     a.draw(bandpass, image=im1)
     b.draw(bandpass, image=im2)
@@ -599,12 +599,12 @@ def test_ChromaticObject_applyRotation():
     t1 = time.time()
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
-    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0)
-                         .createSheared(eta=0.1, beta=0 * galsim.degrees)
-                         .createRotated(1.1 * galsim.radians), bulge_SED)
-    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0)
-                         .createSheared(eta=0.1, beta=0 * galsim.degrees), bulge_SED
-                         ).createRotated(1.1 * galsim.radians)
+    a = (galsim.Gaussian(fwhm=1.0)
+         .createSheared(eta=0.1, beta=0 * galsim.degrees)
+         .createRotated(1.1 * galsim.radians)) * bulge_SED
+    b = (((galsim.Gaussian(fwhm=1.0)
+           .createSheared(eta=0.1, beta=0 * galsim.degrees)) * bulge_SED)
+           .createRotated(1.1 * galsim.radians))
 
     a.draw(bandpass, image=im1)
     b.draw(bandpass, image=im2)
@@ -621,8 +621,8 @@ def test_ChromaticObject_applyShear():
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
     shear = galsim.Shear(g1=0.1, g2=0.1)
-    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0).createSheared(shear), bulge_SED)
-    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED).createSheared(shear)
+    a = galsim.Gaussian(fwhm=1.0).createSheared(shear) * bulge_SED
+    b = (galsim.Gaussian(fwhm=1.0) * bulge_SED).createSheared(shear)
 
     a.draw(bandpass, image=im1)
     b.draw(bandpass, image=im2)
@@ -639,8 +639,8 @@ def test_ChromaticObject_applyShift():
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
     shift = (0.1, 0.3)
-    a = galsim.Chromatic(galsim.Gaussian(fwhm=1.0).createShifted(shift), bulge_SED)
-    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED).createShifted(shift)
+    a = galsim.Gaussian(fwhm=1.0).createShifted(shift) * bulge_SED
+    b = (galsim.Gaussian(fwhm=1.0) * bulge_SED).createShifted(shift)
 
     a.draw(bandpass, image=im1)
     b.draw(bandpass, image=im2)
@@ -674,9 +674,9 @@ def test_ChromaticObject_compound_affine_transformation():
     a = a.createShifted(shift)
     a = a.createRotated(theta)
     a = a.createMagnified(scale)
-    a = galsim.Chromatic(a, bulge_SED)
+    a = a * bulge_SED
 
-    b = galsim.Chromatic(galsim.Gaussian(fwhm=1.0), bulge_SED)
+    b = galsim.Gaussian(fwhm=1.0) * bulge_SED
     b = b.createSheared(shear)
     b = b.createShifted(shift)
     b = b.createRotated(theta)

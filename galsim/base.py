@@ -134,6 +134,8 @@ class GSObject(object):
         return self
 
     def __mul__(self, other):
+        if isinstance(other, galsim.SED):
+            return galsim.Chromatic(self, other)
         ret = self.copy()
         ret *= other
         return ret
