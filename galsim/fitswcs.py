@@ -1439,13 +1439,10 @@ fits_wcs_types = [
     WcsToolsWCS,    # This requires the wcstool command line functions to be installed.
                     # It is very slow, so it should only be used as a last resort.
 
-    galsim.AffineTransform 
-                    # Finally, this one is really the last resort, since it only reads in
-                    # the linear part of the WCS.  It defaults to the equivalent of a 
-                    # pixel scale of 1.0 if even these are not present.
 ]
 
-def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto'):
+def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
+            suppress_warning=False):
     """This factory function will try to read the WCS from a FITS file and return a WCS that will 
     work.  It tries a number of different WCS classes until it finds one that succeeds in reading 
     the file.
@@ -1468,6 +1465,11 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto')
                           a galsim.FitsHeader object.  [ Default `header = None` ]
     @param compression    Which decompression scheme to use (if any). See galsim.fits.read
                           for the available options.  [ Default `compression = 'auto'` ]
+    @param suppress_warning Should a warning be emitted if none of the real FITS WCS classes
+                          are able to successfully read the file, and we have to reset to
+                          an AffineTransform instead?  [ Default `suppress_warning = False` ]  
+                          (Note: this is set to True when this function is implicitly called from 
+                          one of the galsim.fits.read* functions.)
     """
     if file_name is not None:
         if header is not None:
@@ -1479,14 +1481,21 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto')
     if header is None:
         raise TypeError("Must provide either file_name or header")
 
-    for type in fits_wcs_types:
+    for wcs_type in fits_wcs_types:
         try:
-            wcs = type._readHeader(header)
+            wcs = wcs_type._readHeader(header)
             return wcs
         except Exception as err:
             #print 'caught ',err
             pass
-    raise RuntimeError("All possible fits WCS types failed to read "+file_name)
+    # Finally, this one is really the last resort, since it only reads in the linear part of the 
+    # WCS.  It defaults to the equivalent of a pixel scale of 1.0 if even these are not present.
+    if not suppress_warning:
+        import warnings
+        warnings.warn("All the fits WCS types failed to read "+file_name+".  " +
+                      "Using AffineTransform instead, which will not really be correct.")
+    wcs = AffineTransform._readHeader(header)
+    return wcs
 
 # Let this function work like a class in config.
 FitsWCS._req_params = { "file_name" : str }

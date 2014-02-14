@@ -595,7 +595,7 @@ def readFromFitsHeader(header):
         wcs = wcs_type._readHeader(header)
     elif 'CTYPE1' in header:
         try:
-            wcs = galsim.FitsWCS(header=header)
+            wcs = galsim.FitsWCS(header=header, suppress_warning=True)
         except:
             # This shouldn't ever happen, but just in case...
             wcs = galsim.PixelScale(1.)

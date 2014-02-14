@@ -1742,7 +1742,7 @@ def test_fitswcs():
     for tag in test_tags:
         file_name, ref_list = references[tag]
         #print tag,' file_name = ',file_name
-        wcs = galsim.FitsWCS(file_name, dir=dir)
+        wcs = galsim.FitsWCS(file_name, dir=dir, suppress_warning=True)
         print 'FitsWCS is really ',type(wcs)
 
         if isinstance(wcs, galsim.AffineTransform):
