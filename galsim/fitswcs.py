@@ -99,6 +99,8 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
                  wcs=None, origin=None):
         import astropy.wcs
+        import scipy # We don't need this yet, but we want it to fail now if it's not available.
+
         self._tag = None # Write something useful here (see below). This is just used for the repr.
 
         # Read the file if given.
