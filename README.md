@@ -11,18 +11,18 @@ in python.  The impetus for the software package was a weak lensing community
 data challenge, called GREAT3:
 
     http://great3challenge.info/
-    
-However, the code has numerous additional capabilities beyond those needed for 
-the challenge, and has been useful for a number of projects that needed to 
-simulate high-fidelity galaxy images with accurate sizes and shears.  At the 
-end of this file, there is a list of the code capabilities and plans for future 
+
+However, the code has numerous additional capabilities beyond those needed for
+the challenge, and has been useful for a number of projects that needed to
+simulate high-fidelity galaxy images with accurate sizes and shears.  At the
+end of this file, there is a list of the code capabilities and plans for future
 development.
 
 
 Distribution
 ------------
 
-The current released version of GalSim is version 1.0.  To get the code, you 
+The current released version of GalSim is version 1.0.  To get the code, you
 can grab the tarball (or zip file) from
 
     https://github.com/GalSim-developers/GalSim/releases/tag/v1.0.0
@@ -43,7 +43,7 @@ See INSTALL.md for more information.
 Keeping up-to-date with GalSim
 ------------------------------
 
-There is a GalSim mailing list, organized through the Google Group 
+There is a GalSim mailing list, organized through the Google Group
 galsim-announce.  Members of the group will receive news and updates about the
 GalSim code, including notifications of major version releases, new features
 and bugfixes.
@@ -53,7 +53,7 @@ email to
 
     galsim-announce+subscribe@googlegroups.com
 
-If you receive a confirmation request (check junk mail filters!) simply reply 
+If you receive a confirmation request (check junk mail filters!) simply reply
 directly to that email, with anything, to confirm.  You may also click the link
 in the confirmation request, but you may be asked for a Google Account login.
 
@@ -72,8 +72,8 @@ StackOverflow:
 
     http://stackoverflow.com/
 
-Some of the GalSim developers have alerts set up to be automatically notified 
-about questions with the 'galsim' tag, so there is a good chance that your 
+Some of the GalSim developers have alerts set up to be automatically notified
+about questions with the 'galsim' tag, so there is a good chance that your
 question will be answered.
 
 If you find something that you think is a bug, or if you have a suggestion
@@ -86,10 +86,10 @@ Installation
 ------------
 
 For installation instructions, please see the file `INSTALL.md` in the main
-repository directory. 
+repository directory.
 
-There are tagged versions of the code corresponding to specific project 
-releases and development milestones. (For more info, see the "Tagged versions" 
+There are tagged versions of the code corresponding to specific project
+releases and development milestones. (For more info, see the "Tagged versions"
 section below, and `devel/git.txt`)
 
 
@@ -100,7 +100,7 @@ Getting started
 
 * Optional, but recommended whenever you try a new version of the code: run the
   unit tests to make sure that there are no errors.  You can do this by running
-  `scons tests`.  If there are any issues, please open an Issue on our GitHub 
+  `scons tests`.  If there are any issues, please open an Issue on our GitHub
   page.
 
 * Optional: run `doxygen` to generate documentation, using `Doxyfile` in the
@@ -114,7 +114,7 @@ Reference documentation
 -----------------------
 
 For an overview of GalSim workflow and python tools, please see
-`doc/GalSim_Quick_Reference.pdf` in the GalSim repository.  A guide to using 
+`doc/GalSim_Quick_Reference.pdf` in the GalSim repository.  A guide to using
 the configuration files to generate simulations, a FAQ for installation issues,
 and other useful references can be found on the GalSim wiki,
 
@@ -151,17 +151,17 @@ Demonstration scripts
 ---------------------
 
 There are a number of scripts in `examples/` that demonstrate how the code can
-be used.  These are called `demo1.py`...`demo11.py`.  You can run them by 
-typing (e.g.) `python demo1.py` while sitting in `examples/`, All demo scripts 
-are designed to be run in the `examples/` directory.  Some of them access 
-files in subdirectories of the `examples/` directory, so they would not work 
+be used.  These are called `demo1.py`...`demo11.py`.  You can run them by
+typing (e.g.) `python demo1.py` while sitting in `examples/`, All demo scripts
+are designed to be run in the `examples/` directory.  Some of them access
+files in subdirectories of the `examples/` directory, so they would not work
 correctly from other locations.
 
 A completely parallel sequence of configuration files, called `demo1.yaml`...
-`demo11.yaml`, demonstrates how to make the same set of simulations using 
-config files that are parsed by the executable `bin/galsim`.  
+`demo11.yaml`, demonstrates how to make the same set of simulations using
+config files that are parsed by the executable `bin/galsim`.
 
-As the project develops through further versions, and adds further 
+As the project develops through further versions, and adds further
 capabilities to the software, more demo scripts may be added to `examples/`
 to illustrate what GalSim can do.
 
@@ -170,7 +170,7 @@ Additional scripts
 ------------------
 
 There are some additional scripts in the `examples/` directory as well.
-These utilities take various command-line arguments, which are explained 
+These utilities take various command-line arguments, which are explained
 in comments at the top of each file.
 
 * `ShootInterpolated.py` is a script that takes as input a filename for a FITS
@@ -192,7 +192,7 @@ thing.
 Tagged versions
 ---------------
 
-Each GalSim release is tagged in git with the tag name `vX.X.X`.  You can see 
+Each GalSim release is tagged in git with the tag name `vX.X.X`.  You can see
 the available tags using the command
 
     git tag -l
@@ -206,8 +206,8 @@ GitHub webpage, or checked out from the repository using the tag name, e.g.:
 
     git checkout v1.0.0
 
-This will then update your directory tree to the snapshot of the code at the 
-milestone requested.  (You will also get a message about being in a "detached" 
+This will then update your directory tree to the snapshot of the code at the
+milestone requested.  (You will also get a message about being in a "detached"
 HEAD state.  That is normal.)
 
 For a version history and a description of how the current version of the code
@@ -223,19 +223,19 @@ Currently, GalSim has the following capabilities:
 
 * Can generate PSFs from a variety of simple parametric models such as Moffat,
   Kolmogorov, and Airy, as well as an optical PSF model that includes Zernike
-  aberrations up to spherical, and an optional central obscruration and 
+  aberrations up to spherical, and an optional central obscruration and
   struts.
 
 * Can simulate galaxies from a variety of simple parametric models as well as
-  from real HST data.  For information about downloading a suite of COSMOS 
+  from real HST data.  For information about downloading a suite of COSMOS
   images, see
 
       https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
 
-* Can make the images either via i) Fourier transform, ii) real-space 
-  convolution (real-space being occasionally faster than Fourier), or 
-  iii) photon-shooting.  The exception is that objects that include a 
-  deconvolution (such as RealGalaxy objects) must be carried out using Fourier 
+* Can make the images either via i) Fourier transform, ii) real-space
+  convolution (real-space being occasionally faster than Fourier), or
+  iii) photon-shooting.  The exception is that objects that include a
+  deconvolution (such as RealGalaxy objects) must be carried out using Fourier
   methods only.
 
 * Can apply shear, magnification, dilation, or rotation to a galaxy profile
@@ -254,9 +254,9 @@ Currently, GalSim has the following capabilities:
   cubes, or multi-extension FITS files.  It can also compress the output files
   using various compressions including gzip, bzip2, and rice.
 
-* Can carry out nearly any simulation that a user might want using two parallel 
-  methods: directly using python code, or by specifying the simulation 
-  properties in an input configuration script.  See the demo scripts in 
+* Can carry out nearly any simulation that a user might want using two parallel
+  methods: directly using python code, or by specifying the simulation
+  properties in an input configuration script.  See the demo scripts in
   the examples/ directory for examples of each.
 
 
@@ -271,17 +271,14 @@ GalSim:
 
 * PSFs from stochastic atmosphere models.  (cf. devel/modules/atmos_factfinding.pdf)
 
-* Simulating simple detector defects or image artifacts. 
+* Simulating simple detector defects or image artifacts.
 
 * Support for flexion.  (cf. Issue #361)
 
-* Support for chromatic effects.  (cf. Issue #467)
-
-There are many others as well.  Please see 
+There are many others as well.  Please see
 
     https://github.com/GalSim-developers/GalSim/issues
 
 for a list of the current open issues.  And feel free to add an issue if there
 is something useful that you think should be possible, but is not currently
 implemented.
-
