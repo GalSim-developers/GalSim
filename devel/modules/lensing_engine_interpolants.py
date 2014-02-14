@@ -13,6 +13,7 @@ import subprocess
 import pyfits
 import optparse
 import matplotlib.pyplot as plt
+from scipy.special import jv
 from matplotlib.font_manager import FontProperties
 
 # Set some important quantities up top:
@@ -312,7 +313,7 @@ def generate_cf_cutoff_plots(th, cf, nocutoff_th, nocutoff_cf, interpolant, cf_p
     print "Wrote correlation function (grid cutoff) plots to file %r"%outfile
 
 def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
-                      dth, type='p'):
+                      dth, type='p', theory_raw=None, theory_binned=None, theory_rand=None):
     """Routine to make correlation function plots and write them to file.
 
     This routine makes a two-panel plot, with the first panel showing the two correlation functions,
@@ -334,6 +335,12 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
 
       type ---------------- Type of correlation function?  Options are 'p' and 'm' for xi_+ and
                             xi_-.
+
+      theory_raw ---------- Theory prediction at bin centers (not averaged within bin).
+
+      theory_binned ------- Theory prediction averaged within bin, for gridded points.
+
+      theory_rand --------- Theory prediction averaged within bin, for random points
     """
     # Sanity checks on acceptable inputs
     assert th.shape == cf.shape
@@ -346,6 +353,12 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
     ax.plot(th, cf, color='b', label='Correlation function')
     ax.plot(th, interpolated_cf, color='r',
             label='Interpolated')
+    if theory_raw is not None:
+        ax.plot(th, theory_raw, color='g', label='Theory (unbinned)')
+    if theory_binned is not None:
+        ax.plot(th, theory_binned, color='k', label='Theory (binned from grid)')
+    if theory_rand is not None:
+        ax.plot(th, theory_rand, color='m', label='Theory (binned from random)')
     dth_x_markers = np.array((dth, dth))
     dth_y_markers = np.array(( min(np.min(cf[cf>0]),
                                    np.min(interpolated_cf[interpolated_cf>0])),
@@ -552,6 +565,51 @@ def calculate_xi(r, pk, n, k_min, k_max):
     xi /= 2. * np.pi
     return xi
 
+def simpleBinnedTheory(x, y, xi, dtheta, ngrid, n_output_bins):
+    """Utility to estimated binned theoretical correlation function.
+
+    Arguments:
+
+        x, y ------------- NumPy arrays containing the (x, y) positions for the points to be
+                           correlated.
+
+        xi --------------- Callable function containing the correlation function (presumably a
+                           GalSim.LookupTable).
+
+        ngrid ------------ Linear array size (i.e., number of points in each dimension).
+
+        dtheta ----------- Array spacing, in degrees.
+
+        n_output_bins ---- Number of bins for calculation of correlatio function.
+    """
+    # Do the brute-force pair-finding to get all possible separation values.
+    x_use = x.flatten()
+    y_use = y.flatten()
+    for ind in range(len(x_use)):
+        dx = x_use - x_use[ind]
+        dy = y_use - y_use[ind]
+        if ind==0:
+            r = np.sqrt(dx**2+dy**2)
+        else:
+            r = np.concatenate((r, dx**2+dy**2))            
+
+    # Calculate correlation function for those separations.
+    th_min = dtheta
+    th_max = ngrid*dtheta
+    cond = np.logical_and.reduce(
+        [r >= th_min,
+         r <= th_max])
+    r = list(r[cond])
+    theory_cf = []
+    for r_val in r:
+        theory_cf.append(xi(r_val))
+
+    # Now use the histogram function to get the mean correlation function within each bin.
+    bin_edges = np.logspace(np.log10(th_min), np.log10(th_max), n_output_bins+1)
+    mean_cf, _ = np.histogram(r, bin_edges, weights=theory_cf)
+    count, _ = np.histogram(r, bin_edges)
+    return mean_cf/count
+
 def main(n_realizations, dithering, random, n_output_bins, kmin_factor, ps_plot_prefix,
          cf_plot_prefix, edge_cutoff=False, periodic=False):
     """Main routine to drive all tests.
@@ -589,6 +647,7 @@ def main(n_realizations, dithering, random, n_output_bins, kmin_factor, ps_plot_
     # Get basic grid information
     grid_spacing = grid_size / ngrid
 
+    print "Doing initial PS / correlation function setup..."
     # Set up PowerSpectrum object.  We have to be careful to watch out for aliasing due to our
     # initial P(k) including power on scales above those that can be represented by our grid.  In
     # order to deal with that, we will define a power spectrum function that equals a cosmological
@@ -609,6 +668,15 @@ def main(n_realizations, dithering, random, n_output_bins, kmin_factor, ps_plot_
     ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*cutoff_func(raw_ps_k/k_max),
                                   interpolant='linear')
     ps = galsim.PowerSpectrum(ps_table, units = galsim.radians)
+    # Let's also get a theoretical correlation function for later use.  It should be pretty finely
+    # spaced, and put into a log-interpolated LookupTable:
+    theory_th_vals = np.logspace(np.log10(grid_spacing), np.log10(grid_size), 500)
+    theory_cfp_vals = np.zeros_like(theory_th_vals)
+    theory_cfm_vals = np.zeros_like(theory_th_vals)
+    theory_cfp_vals = calculate_xi(theory_th_vals, ps_table, 0, k_min, k_max)
+    theory_cfm_vals = calculate_xi(theory_th_vals, ps_table, 4, k_min, k_max)
+    cfp_table = galsim.LookupTable(theory_th_vals, theory_cfp_vals, interpolant='spline')
+    cfm_table = galsim.LookupTable(theory_th_vals, theory_cfm_vals, interpolant='spline')
 
     # Set up grid and the corresponding x, y lists.
     min = (-ngrid/2 + 0.5) * grid_spacing
@@ -674,6 +742,12 @@ def main(n_realizations, dithering, random, n_output_bins, kmin_factor, ps_plot_
         mean_cfp = np.zeros(n_output_bins)
         mean_interpolated_cfm = np.zeros(n_output_bins)
         mean_cfm = np.zeros(n_output_bins)
+        if random:
+            mean_cfp_theory_rand = np.zeros(n_output_bins)
+            mean_cfm_theory_rand = np.zeros(n_output_bins)
+        else:
+            mean_cfp_theory_rand = None
+            mean_cfm_theory_rand = None
 
         # Loop over realizations.
         for i_real in range(n_realizations):
@@ -753,6 +827,7 @@ def main(n_realizations, dithering, random, n_output_bins, kmin_factor, ps_plot_
                 g2 = g2[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
                 x_use = x[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
                 y_use = y[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
+
                 if random:
                     cond = np.logical_and.reduce(
                         [target_x >= np.min(x_use),
@@ -779,6 +854,22 @@ def main(n_realizations, dithering, random, n_output_bins, kmin_factor, ps_plot_
                 y_use = y
                 target_x_use = target_x
                 target_y_use = target_y
+                
+            # Get a theoretical binned correlation function on this grid.
+            if i_real==0:
+                grid_binned_cfp = simpleBinnedTheory(x_use, y_use, cfp_table,
+                                                     grid_spacing, ngrid_use, n_output_bins)
+                grid_binned_cfm = simpleBinnedTheory(x_use, y_use, cfm_table,
+                                                     grid_spacing, ngrid_use, n_output_bins)
+            if random:
+                random_binned_cfp = simpleBinnedTheory(target_x_use, target_y_use,
+                                                       cfp_table, grid_spacing, ngrid_use,
+                                                       n_output_bins)
+                random_binned_cfm = simpleBinnedTheory(target_x_use, target_y_use,
+                                                       cfm_table, grid_spacing, ngrid_use,
+                                                       n_output_bins)
+                mean_cfp_theory_rand += random_binned_cfp
+                mean_cfm_theory_rand += random_binned_cfm
 
             # Get statistics: PS, correlation function.
             if not random:
@@ -840,6 +931,9 @@ def main(n_realizations, dithering, random, n_output_bins, kmin_factor, ps_plot_
                 mean_nocutoff_ps_eb /= n_realizations
             mean_nocutoff_cfp /= n_realizations
             mean_nocutoff_cfm /= n_realizations
+        if random:
+            mean_cfp_theory_rand /= n_realizations
+            mean_cfm_theory_rand /= n_realizations
 
         # Plot statistics, and ratios with vs. without interpolants.
         print "Running plotting routines for interpolant=%s..."%interpolant
@@ -861,10 +955,15 @@ def main(n_realizations, dithering, random, n_output_bins, kmin_factor, ps_plot_
             generate_cf_cutoff_plots(th, mean_cfm, 
                                      nocutoff_th, mean_nocutoff_cfm,
                                      interpolant, cf_plot_prefix, type='m')
+        # get theory predictions before trying to plot
+        theory_xip = calculate_xi(th, ps_table, 0, k_min, k_max)
+        theory_xim = calculate_xi(th, ps_table, 4, k_min, k_max)
         generate_cf_plots(th, mean_cfp, mean_interpolated_cfp, interpolant, cf_plot_prefix,
-                          grid_spacing, type='p')
+                          grid_spacing, type='p', theory_raw=theory_xip,
+                          theory_binned=grid_binned_cfp, theory_rand=mean_cfp_theory_rand)
         generate_cf_plots(th, mean_cfm, mean_interpolated_cfm, interpolant, cf_plot_prefix,
-                          grid_spacing, type='m')
+                          grid_spacing, type='m', theory_raw=theory_xim,
+                          theory_binned=grid_binned_cfm, theory_rand=mean_cfm_theory_rand)
 
         # Output results.
         print "Outputting tables of results..."
