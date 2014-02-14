@@ -608,8 +608,8 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             arg_max = 32768  
         #print 'arg_max = ',arg_max
 
-        # Sometimes SC_ARG_MAX is listed as -1.  I couldn't figure out what that means.
-        # Unlimited arg length?  Anyway, just go with the above conservative value in that case.
+        # Sometimes SC_ARG_MAX is listed as -1.  Apparently that means "the configuration name
+        # is known, but the value is not defined." So, just go with the above conservative value.
         if arg_max <= 0:
             arg_max = 32768
             #print 'arg_max => ',arg_max
