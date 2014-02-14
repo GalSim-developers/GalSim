@@ -586,8 +586,8 @@ def simpleBinnedTheory(x, y, xi, dtheta, ngrid, n_output_bins):
     x_use = x.flatten()
     y_use = y.flatten()
     for ind in range(len(x_use)):
-        dx = x_use - x_use[ind]
-        dy = y_use - y_use[ind]
+        dx = x_use[ind+1:] - x_use[ind]
+        dy = y_use[ind+1:] - y_use[ind]
         if ind==0:
             r = np.sqrt(dx**2+dy**2)
         else:
