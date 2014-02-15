@@ -35,6 +35,27 @@ import galsim.dcr
 
 class ChromaticObject(object):
     """Base class for defining wavelength dependent objects."""
+    def __init__(self, gsobj):
+        """ Create the simplest type of ChromaticObject of all, which is just a wrapper around a
+        GSObject.  At this point, the newly created ChromaticObject will act just like the GSObject
+        it wraps.  The difference is that its methods: applyExpansion, applyDilation, and applyShift
+        can now accept functions of wavelength as arguments, as opposed to the simple scalars that
+        GSObjects are limited to.  These methods can be used to effect a variety of physical chromatic
+        effects, such as differential chromatic refraction, chromatic seeing, and diffraction-limited
+        seeing.
+
+        @param gsobj  The GSObject to be chromaticized.
+        @returns      The chromaticized GSObject as a ChromaticObject.
+        """
+        if not isinstance(gsobj, galsim.GSObject):
+            raise TypeError("Can only directly instantiate ChromaticObject with a GSObject "+
+                            "argument.")
+        self.obj = gsobj.copy()
+        self.A = lambda w: numpy.matrix(numpy.identity(3), dtype=float)
+        self.fluxFactor = lambda w: 1.0
+        self.separable = True
+        self.SED = lambda w: 1.0
+
     def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
@@ -99,12 +120,53 @@ class ChromaticObject(object):
         image += integral
         return image
 
-    # Subclasses must define scaleFlux() and evaluateAtWavelength()
-    def scaleFlux(self, scale):
-        raise NotImplementedError
+    def _getScaleEtaBetaThetaDxDy(self, w):
+        A0 = self.A(w)
+        A = A0[0,0]
+        B = A0[0,1]
+        C = A0[1,0]
+        D = A0[1,1]
+        dx = A0[0,2]
+        dy = A0[1,2]
+        scale = numpy.sqrt(numpy.linalg.det(A0))
+        theta = numpy.arctan2(C-B, A+D) #need to worry about A+D == 0 ?
+        if A-D == 0.0:
+            eta = 0.0
+            beta = 0.0
+        else:
+            beta = 0.5 * (numpy.arctan2(C+B, A-D) + theta)
+            eta = 2.0*numpy.arcsinh((A-D)/(2.0*scale*numpy.cos(2.0*beta-theta)))
+        if eta < 0.0:
+            eta = -eta
+            beta += numpy.pi/2.0
+        return scale, eta, beta, theta, dx, dy
 
-    def evaluateAtWavelength(self, wave):
-        raise NotImplementedError
+    def evaluateAtWavelength(self, w):
+        if not hasattr(self, 'A'):
+            raise AttributeError("Attempting to evaluate ChromaticObject before affine transform " +
+                                 "matrix has been created!")
+        scale, eta, beta, theta, dx, dy = self._getScaleEtaBetaThetaDxDy(w)
+        tmpobj = self.obj.evaluateAtWavelength(w).copy()
+        tmpobj.applyRotation(theta * galsim.radians)
+        tmpobj.applyShear(eta=eta, beta=beta*galsim.radians)
+        tmpobj.applyExpansion(scale)
+        tmpobj.applyShift(dx, dy)
+        tmpobj.scaleFlux(self.fluxFactor(w))
+        return tmpobj
+
+    def scaleFlux(self, scale):
+        if hasattr(scale, '__call__'):
+            fluxFactor = self.fluxFactor
+            self.fluxFactor = lambda w: fluxFactor(w) * scale(w)
+        else:
+            self.obj.scaleFlux(scale)
+
+    # Subclasses must override scaleFlux() and evaluateAtWavelength()
+    # def scaleFlux(self, scale):
+    #     raise NotImplementedError
+
+    # def evaluateAtWavelength(self, wave):
+    #     raise NotImplementedError
 
     # Add together `ChromaticObject`s and/or `GSObject`s
     def __add__(self, other):
@@ -162,7 +224,7 @@ class ChromaticObject(object):
         See applyMagnification for a version that applies a scale factor to the area while
         preserving surface brightness.
 
-        After this call, the caller's type will be a ChromaticAffineTransform object.
+        After this call, the caller's type will be a ChromaticObject.
 
         @param scale The factor by which to scale the linear dimension of the object.  `scale` may
                      be callable, in which case the argument should be wavelength in nanometers and
@@ -173,16 +235,17 @@ class ChromaticObject(object):
                 obj.applyExpansion(scale)
         else:
             if hasattr(scale, '__call__'):
-                M = lambda w: numpy.matrix(numpy.diag([scale(w), scale(w), 1]))
+                expand = lambda w: numpy.matrix(numpy.diag([scale(w), scale(w), 1]))
+                self.separable = False
             else:
-                M = lambda w: numpy.matrix(numpy.diag([scale, scale, 1]))
-            if isinstance(self, ChromaticAffineTransform):
+                expand = lambda w: numpy.matrix(numpy.diag([scale, scale, 1]))
+            if hasattr(self, 'A'):
                 A = self.A
-                self.A = lambda w:M(w) * A(w)
+                self.A = lambda w:expand(w) * A(w)
             else:
                 self.obj = self.copy()
-                self.__class__ = ChromaticAffineTransform
-                self.A = M
+                self.__class__ = ChromaticObject
+                self.A = expand
                 self.fluxFactor = lambda w: 1.0
                 self.separable = self.obj.separable
                 if hasattr(self, 'gsobj'):
@@ -199,7 +262,7 @@ class ChromaticObject(object):
         See applyMagnification() for a version that preserves surface brightness, and thus
         changes the flux.
 
-        After this call, the caller's type will be a ChromaticAffineTransform.
+        After this call, the caller's type will be a ChromaticObject.
 
         @param scale The linear rescaling factor to apply.  `scale` may be callable, in which case
                      the argument should be wavelength in nanometers and the return value the scale
@@ -224,7 +287,7 @@ class ChromaticObject(object):
         See applyDilation for a version that applies a linear scale factor in the size while
         preserving flux.
 
-        After this call, the caller's type will be a ChromaticAffineTransform.
+        After this call, the caller's type will be a ChromaticObject.
 
         @param mu The lensing magnification to apply.
         """
@@ -242,7 +305,7 @@ class ChromaticObject(object):
         the appropriate change in area, either use applyShear() with applyMagnification(), or use
         applyLensing() which combines both operations.
 
-        After this call, the caller's type will be a ChromaticAffineTransform.
+        After this call, the caller's type will be a ChromaticObject.
         """
         if isinstance(self, ChromaticSum):
             for obj in self.objlist:
@@ -266,13 +329,12 @@ class ChromaticObject(object):
             S = numpy.matrix([[ce2+c2b*se2, s2b*se2, 0],
                               [s2b*se2, ce2-c2b*se2, 0],
                               [0, 0, 1]], dtype=float)
-            if isinstance(self, ChromaticAffineTransform):
+            if hasattr(self, 'A'):
                 A = self.A
                 self.A = lambda w: S * A(w)
             else:
-                #transform self into a ChromaticAffineTransform
                 self.obj = self.copy()
-                self.__class__ = ChromaticAffineTransform
+                self.__class__ = ChromaticObject
                 self.A = lambda w: S
                 self.fluxFactor = lambda w: 1.0
                 self.separable = self.obj.separable
@@ -290,7 +352,7 @@ class ChromaticObject(object):
         lensing by an NFW dark matter halo.  The magnification determines the rescaling factor for
         the object area and flux, preserving surface brightness.
 
-        After this call, the caller's type will be a ChromaticAffineTransform.
+        After this call, the caller's type will be a ChromaticObject.
 
         @param g1      First component of lensing (reduced) shear to apply to the object.
         @param g2      Second component of lensing (reduced) shear to apply to the object.
@@ -304,7 +366,7 @@ class ChromaticObject(object):
     def applyRotation(self, theta):
         """Apply a rotation theta to this object.
 
-        After this call, the caller's type will be a ChromaticAffineTransform.
+        After this call, the caller's type will be a ChromaticObject.
 
         @param theta Rotation angle (Angle object, +ve anticlockwise).
         """
@@ -317,13 +379,12 @@ class ChromaticObject(object):
             R = numpy.matrix([[cth, -sth, 0],
                               [sth, cth, 0],
                               [0, 0, 1]], dtype=float)
-            if isinstance(self, ChromaticAffineTransform):
+            if hasattr(self, 'A'):
                 A = self.A
                 self.A = lambda w: R * A(w)
             else:
-                #transform self into a ChromaticAffineTransform
                 self.obj = self.copy()
-                self.__class__ = ChromaticAffineTransform
+                self.__class__ = ChromaticObject
                 self.A = lambda w: R
                 self.fluxFactor = lambda w: 1.0
                 self.separable = self.obj.separable
@@ -334,7 +395,7 @@ class ChromaticObject(object):
     def applyShift(self, *args, **kwargs):
         """Apply a (possibly wavelength-dependent) (dx, dy) shift to this chromatic object.
 
-        After this call, the caller's type will be a ChromaticAffineTransform object.
+        After this call, the caller's type will be a ChromaticObject.
 
         @param dx Horizontal shift to apply (float).
         @param dy Vertical shift to apply (float).
@@ -367,6 +428,7 @@ class ChromaticObject(object):
                             return args[0](w).y
                         except:
                             return args[0](w)[1]
+                    self.separable = False
                 elif isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
                     dx = args[0].x
                     dy = args[0].y
@@ -386,12 +448,12 @@ class ChromaticObject(object):
                 shift = lambda w: numpy.matrix([[1,0,dx(w)],[0,1,dy(w)],[0,0,1]], dtype=float)
             else:
                 shift = lambda w: numpy.matrix([[1,0,dx],[0,1,dy],[0,0,1]], dtype=float)
-            if isinstance(self, ChromaticAffineTransform):
+            if hasattr(self, 'A'):
                 A = self.A
                 self.A = lambda w: shift(w) * A(w)
             else:
                 self.obj = self.copy()
-                self.__class__ = ChromaticAffineTransform
+                self.__class__ = ChromaticObject
                 self.A = shift
                 self.fluxFactor = lambda w: 1.0
                 self.separable = self.obj.separable
@@ -399,10 +461,10 @@ class ChromaticObject(object):
                     del self.gsobj
                 # note, self.SED should already exist if this is a separable object
 
-    # Also add methods which create a new ChromaticAffineTransform with the transformations
+    # Also add methods which create a new ChromaticObject with the transformations
     # applied...
     def createExpanded(self, scale):
-        """Returns a new ChromaticAffineTransform by applying an expansion of the linear size by the
+        """Returns a new ChromaticObject by applying an expansion of the linear size by the
         given scale.
 
         This doesn't correspond to either of the normal operations one would typically want to
@@ -418,14 +480,14 @@ class ChromaticObject(object):
         preserving surface brightness.
 
         @param scale The linear rescaling factor to apply.
-        @returns The rescaled ChromaticAffineTransform.
+        @returns The rescaled ChromaticObject
         """
         ret = self.copy()
         ret.applyExpansion(scale)
         return ret
 
     def createDilated(self, scale):
-        """Returns a new ChromaticAffineTransform by applying a dilation of the linear size by the
+        """Returns a new ChromaticObject by applying a dilation of the linear size by the
         given scale.
 
         Scales the linear dimensions of the image by the factor scale.
@@ -436,15 +498,15 @@ class ChromaticObject(object):
         changes the flux.
 
         @param scale The linear rescaling factor to apply.
-        @returns The rescaled ChromaticAffineTransform.
+        @returns The rescaled ChromaticObject.
         """
         ret = self.copy()
         ret.applyDilation(scale)
         return ret
 
     def createMagnified(self, mu):
-        """Returns a new ChromaticAffineTransform by applying a lensing magnification, scaling the
-        area and flux by mu at fixed surface brightness.
+        """Returns a new ChromaticObject by applying a lensing magnification, scaling the area and
+        flux by mu at fixed surface brightness.
 
         This process returns a new object with a lensing magnification mu, which scales the linear
         dimensions of the image by the factor sqrt(mu), i.e., `half_light_radius` <--
@@ -454,15 +516,15 @@ class ChromaticObject(object):
         See createDilated() for a version that preserves flux.
 
         @param mu The lensing magnification to apply.
-        @returns The rescaled ChromaticAffineTransform.
+        @returns The rescaled ChromaticObject.
         """
         ret = self.copy()
         ret.applyMagnification(mu)
         return ret
 
     def createSheared(self, *args, **kwargs):
-        """Returns a new ChromaticAffineTransform by applying an area-preserving shear, where
-        arguments are either a galsim.Shear or keyword arguments that can be used to create one.
+        """Returns a new ChromaticObject by applying an area-preserving shear, where arguments are
+        either a galsim.Shear or keyword arguments that can be used to create one.
 
         For more details about the allowed keyword arguments, see the documentation of galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
@@ -471,46 +533,46 @@ class ChromaticObject(object):
         with the appropriate change in area, either use createSheared() with createMagnified(), or
         use createLensed() which combines both operations.
 
-        @returns The sheared ChromaticAffineTransform.
+        @returns The sheared ChromaticObject.
         """
         ret = self.copy()
         ret.applyShear(*args, **kwargs)
         return ret
 
     def createLensed(self, g1, g2, mu):
-        """Returns a new ChromaticAffineTransform by applying a lensing shear and magnification.
+        """Returns a new ChromaticObject by applying a lensing shear and magnification.
 
-        This method returns a new ChromaticAffineTransform to which the supplied lensing (reduced)
-        shear and magnification has been applied.  The shear must be specified using the g1, g2
-        definition of shear (see galsim.Shear documentation for more details).  This is the same
-        definition as the outputs of the galsim.PowerSpectrum and galsim.NFWHalo classes, which
-        compute shears according to some lensing power spectrum or lensing by an NFW dark matter
-        halo. The magnification determines the rescaling factor for the object area and flux,
-        preserving surface brightness.
+        This method returns a new ChromaticObject to which the supplied lensing (reduced) shear and
+        magnification has been applied.  The shear must be specified using the g1, g2 definition of
+        shear (see galsim.Shear documentation for more details).  This is the same definition as
+        the outputs of the galsim.PowerSpectrum and galsim.NFWHalo classes, which compute shears
+        according to some lensing power spectrum or lensing by an NFW dark matter halo. The
+        magnification determines the rescaling factor for the object area and flux, preserving
+        surface brightness.
 
         @param g1      First component of lensing (reduced) shear to apply to the object.
         @param g2      Second component of lensing (reduced) shear to apply to the object.
         @param mu      Lensing magnification to apply to the object.  This is the factor by which
                        the solid angle subtended by the object is magnified, preserving surface
                        brightness.
-        @returns       The lensed ChromaticAffineTransform.
+        @returns       The lensed ChromaticObject.
         """
         ret = self.copy()
         ret.applyLensing(g1, g2, mu)
         return ret
 
     def createRotated(self, theta):
-        """Returns a new ChromaticAffineTransform by applying a rotation.
+        """Returns a new ChromaticObject by applying a rotation.
 
         @param theta Rotation angle (Angle object, +ve anticlockwise).
-        @returns The rotated ChromaticAffineTransform.
+        @returns The rotated ChromaticObject.
         """
         ret = self.copy()
         ret.applyRotation(theta)
         return ret
 
     def createShifted(self, *args, **kwargs):
-        """Returns a new ChromaticAffineTransform by applying a shift.
+        """Returns a new ChromaticObject by applying a shift.
 
         @param dx Horizontal shift to apply (float).
         @param dy Vertical shift to apply (float).
@@ -518,7 +580,7 @@ class ChromaticObject(object):
         Note: you may supply dx,dy as either two arguments, as a tuple, or as a
         galsim.PositionD or galsim.PositionI object.
 
-        @returns The shifted ChromaticAffineTransform.
+        @returns The shifted ChromaticObject.
         """
         ret = self.copy()
         ret.applyShift(*args, **kwargs)
@@ -876,59 +938,8 @@ class ChromaticAutoCorrelation(ChromaticObject):
     def scaleFlux(self, scale):
         self.obj.scaleFlux(numpy.sqrt(scale))
 
-class ChromaticAffineTransform(ChromaticObject):
-    def __init__(self, obj, A=None, fluxFactor=None):
-        self.obj = obj.copy()
-        if A is None:
-            self.A = lambda w: numpy.matrix(numpy.identity(3), dtype=float)
-        else:
-            self.A = A
-        if fluxFactor is None:
-            self.fluxFactor = lambda w: 1.0
-        else:
-            self.fluxFactor = fluxFactor
-        self.separable = False
 
-    def _getScaleEtaBetaThetaDxDy(self, w):
-        A0 = self.A(w)
-        A = A0[0,0]
-        B = A0[0,1]
-        C = A0[1,0]
-        D = A0[1,1]
-        dx = A0[0,2]
-        dy = A0[1,2]
-        scale = numpy.sqrt(numpy.linalg.det(A0))
-        theta = numpy.arctan2(C-B, A+D) #need to worry about A+D == 0 ?
-        if A-D == 0.0:
-            eta = 0.0
-            beta = 0.0
-        else:
-            beta = 0.5 * (numpy.arctan2(C+B, A-D) + theta)
-            eta = 2.0*numpy.arcsinh((A-D)/(2.0*scale*numpy.cos(2.0*beta-theta)))
-        if eta < 0.0:
-            eta = -eta
-            beta += numpy.pi/2.0
-        return scale, eta, beta, theta, dx, dy
-
-    def evaluateAtWavelength(self, w):
-        scale, eta, beta, theta, dx, dy = self._getScaleEtaBetaThetaDxDy(w)
-        tmpobj = self.obj.evaluateAtWavelength(w).copy()
-        tmpobj.applyRotation(theta * galsim.radians)
-        tmpobj.applyShear(eta=eta, beta=beta*galsim.radians)
-        tmpobj.applyExpansion(scale)
-        tmpobj.applyShift(dx, dy)
-        tmpobj.scaleFlux(self.fluxFactor(w))
-        return tmpobj
-
-    def scaleFlux(self, scale):
-        if hasattr(scale, '__call__'):
-            fluxFactor = self.fluxFactor
-            self.fluxFactor = lambda w: fluxFactor(w) * scale(w)
-        else:
-            self.obj.scaleFlux(scale)
-
-
-class ChromaticAtmosphere(ChromaticAffineTransform):
+class ChromaticAtmosphere(ChromaticObject):
     """Class implementing two atmospheric chromatic effects: differential chromatic refraction
     (DCR) and wavelength-dependent seeing.
     Due to DCR, blue photons land closer to the zenith than red photons.

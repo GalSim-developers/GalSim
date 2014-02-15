@@ -95,7 +95,7 @@ def test_draw_add_commutativity():
 
     # make effective PSF with Riemann sum midpoint rule
     mPSFs = [] # list of flux-scaled monochromatic PSFs
-    N = 250
+    N = 50
     h = (bandpass.red_limit * 1.0 - bandpass.blue_limit) / N
     ws = [bandpass.blue_limit + h*(i+0.5) for i in range(N)]
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
@@ -133,7 +133,7 @@ def test_draw_add_commutativity():
     # make chromatic PSF
     mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
     mono_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
-    chromatic_PSF = galsim.ChromaticAffineTransform(mono_PSF)
+    chromatic_PSF = galsim.ChromaticObject(mono_PSF)
     chromatic_PSF.applyDilation(dilate_fn)
     chromatic_PSF.applyShift(shift_fn)
 
@@ -143,7 +143,7 @@ def test_draw_add_commutativity():
     # use chromatic parent class to draw without ChromaticConvolution acceleration...
     t4 = time.time()
     galsim.ChromaticObject.draw(chromatic_final, bandpass, image=chromatic_image,
-                                integrator=galsim.integ.midpt_continuous_integrator, N=250)
+                                integrator=galsim.integ.midpt_continuous_integrator, N=N)
     t5 = time.time()
     print 'ChromaticObject.draw() took {} seconds.'.format(t5-t4)
     # plotme(chromatic_image)
@@ -276,7 +276,7 @@ def test_dcr_moments():
     shift_fn = lambda w:(0, ((galsim.dcr.get_refraction(w, zenith_angle) - R500)
                              / galsim.arcsec))
     mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
-    PSF = galsim.ChromaticAffineTransform(mono_PSF)
+    PSF = galsim.ChromaticObject(mono_PSF)
     PSF.applyShift(shift_fn)
 
     pix = galsim.Pixel(pixel_scale)
@@ -353,7 +353,7 @@ def test_chromatic_seeing_moments():
     for index in indices:
 
         mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
-        PSF = galsim.ChromaticAffineTransform(mono_PSF)
+        PSF = galsim.ChromaticObject(mono_PSF)
         PSF.applyDilation(lambda w:(w/500.0)**index)
 
         final1 = galsim.Convolve([star1, PSF, pix])
@@ -412,7 +412,7 @@ def test_monochromatic_filter():
     dilate_fn = lambda wave: (wave/500.0)**(-0.2)
     mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
     mono_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
-    chromatic_PSF = galsim.ChromaticAffineTransform(mono_PSF)
+    chromatic_PSF = galsim.ChromaticObject(mono_PSF)
     chromatic_PSF.applyDilation(dilate_fn)
     chromatic_PSF.applyShift(shift_fn)
 
