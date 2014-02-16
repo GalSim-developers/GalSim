@@ -115,16 +115,20 @@ class SED(object):
         self.redshift = 0.0
 
     def _wavelength_intersection(self, other):
-        blue_limit = None
-        if self.blue_limit is not None:
-            blue_limit = self.blue_limit
-        if other.blue_limit is not None and blue_limit is not None:
-            blue_limit = max([blue_limit, other.blue_limit])
-        red_limit = None
-        if self.red_limit is not None:
-            red_limit = self.red_limit
-        if other.red_limit is not None and red_limit is not None:
-            red_limit = min([red_limit, other.red_limit])
+        blue_limit = self.blue_limit
+        if other.blue_limit is not None:
+            if blue_limit is None:
+                blue_limit = other.blue_limit
+            else:
+                blue_limit = max([blue_limit, other.blue_limit])
+
+        red_limit = self.red_limit
+        if other.red_limit is not None:
+            if red_limit is None:
+                red_limit = other.red_limit
+            else:
+                red_limit = min([red_limit, other.red_limit])
+
         return blue_limit, red_limit
 
     def __call__(self, wave):
