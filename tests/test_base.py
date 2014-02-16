@@ -41,6 +41,13 @@ test_scale = [1.8, 0.05, 0.002, 0.002]
 test_sersic_trunc = [0., 8.5]
 test_flux = 1.8
 
+if __name__ == "__main__":
+    # If doing a nosetests run, we don't actually need to do all 4 sersic n values.
+    # Two should be enough to notice if there is a problem, and the full list will be tested
+    # when running python test_base.py to try to diagnose the problem.
+    test_sersic_n = [1.5, -4]
+    test_scale = [1.8, 0.002]
+
 # These are the default GSParams used when unspecified.  We'll check that specifying 
 # these explicitly produces the same results.
 default_params = galsim.GSParams(
@@ -380,6 +387,7 @@ def test_exponential():
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -559,6 +567,7 @@ def test_sersic():
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -600,6 +609,7 @@ def test_sersic():
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1, trunc=10)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1_10.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -970,6 +980,7 @@ def test_airy():
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -1116,6 +1127,7 @@ def test_box():
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -1166,6 +1178,7 @@ def test_moffat():
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_2_5.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -1527,6 +1540,7 @@ def test_kolmogorov():
     #savedImg.write(os.path.join(imgdir, "kolmogorov.fits"))
     savedImg = galsim.fits.read(os.path.join(imgdir, "kolmogorov.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)

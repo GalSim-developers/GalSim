@@ -31,20 +31,6 @@ except ImportError:
     import galsim
 
 
-def gsobject_compare(obj1, obj2, conv=None):
-    """Helper function to check that two GSObjects are equivalent
-    """
-    if conv:
-        obj1 = galsim.Convolve([obj1,conv])
-        obj2 = galsim.Convolve([obj2,conv])
-
-    im1 = galsim.ImageD(16,16)
-    im2 = galsim.ImageD(16,16)
-    obj1.draw(scale=0.2, image=im1, normalization='sb')
-    obj2.draw(scale=0.2, image=im2, normalization='sb')
-    np.testing.assert_array_almost_equal(im1.array, im2.array, 10)
-
-
 def test_gaussian():
     """Test various ways to build a Gaussian
     """
@@ -751,10 +737,10 @@ def test_interpolated_image():
                    'noise_pad' : 0.001 
                  },
         'gal6' : { 'type' : 'InterpolatedImage', 'image' : file_name,
-                   'noise_pad' : 'blankimg.fits' 
+                   'noise_pad' : 'fits_files/blankimg.fits' 
                  },
         'gal7' : { 'type' : 'InterpolatedImage', 'image' : file_name,
-                   'pad_image' : 'blankimg.fits' 
+                   'pad_image' : 'fits_files/blankimg.fits' 
                  }
     }
     rng = galsim.UniformDeviate(1234)
@@ -787,11 +773,11 @@ def test_interpolated_image():
     gsobject_compare(gal5a, gal5b)
 
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
-    gal6b = galsim.InterpolatedImage(im, rng=rng, noise_pad='blankimg.fits')
+    gal6b = galsim.InterpolatedImage(im, rng=rng, noise_pad='fits_files/blankimg.fits')
     gsobject_compare(gal6a, gal6b)
 
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
-    gal7b = galsim.InterpolatedImage(im, pad_image = 'blankimg.fits')
+    gal7b = galsim.InterpolatedImage(im, pad_image = 'fits_files/blankimg.fits')
     gsobject_compare(gal7a, gal7b)
 
     t2 = time.time()

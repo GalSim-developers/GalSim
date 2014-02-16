@@ -59,6 +59,8 @@ The GalSim package also requires
       http://www.stsci.edu/institute/software_hardware/pyfits
   or as part of the astropy library:
       http://www.astropy.org/
+  The latter is preferred, since this is now where all future development of 
+  this package is happening.
 
 * Optional dependency: the Python YAML parser and emitter module PyYAML
   (http://pyyaml.org/wiki/PyYAML)
@@ -66,13 +68,34 @@ The GalSim package also requires
   functionality, and can be omitted if users are happy to use JSON-style
   config parsing or prefer to write python scripts directly.
 
+* Optional dependency: PyAst WCS package.  This is a really nice front end
+  for the Starlink AST astrometry code.  It seems to support pretty much 
+  every WCS encoding there is.  (At least every one we tried.)  Their 
+  preferred installation method is via pip:
+      pip install startlink-pyast
+  For more information, see their website:
+      https://pypi.python.org/pypi/starlink-pyast/
+  With this installed, you can use the galsim.PyAstWCS class, which in 
+  turn means that galsim.FitsWCS will pretty much always work.
+
+* Optional dependency: Astropy WCS package.  We already mentioned astropy
+  above for astropy.io.fits.  Another package we can use from astropy is 
+  their WCS package, astropy.wcs.  They cannot read all that many WCS types 
+  (compared to PyAst at least), but hopefully the functionality will include 
+  in time.  Unfortunately, this package has scipy as a dependency, which 
+  is kind of a gargantuan package.  But if you are willing to install that
+  too, then you can use the galsim.AstropyWCS class.
+  
+
 These should installed onto your Python system so that they can be imported by:
 
     >>> import numpy
-    >>> import astropy.io.fits  [ Either this... ]
-    >>> import pyfits           [ ... or this.   ]
-    >>> import yaml [ if using the galsim executable or otherwise plan to
-                      parse .yaml configuration files ]
+    >>> import astropy.io.fits  [ Either this (preferred)... ]
+    >>> import pyfits           [ ... or this.               ]
+    >>> import yaml             [ if using the galsim executable or otherwise
+                                  plan to parse .yaml configuration files ]
+    >>> import starlink.Ast     [ if planning to use PyAstWCS class ]
+    >>> import astropy.wcs      [ if planning to use AstropyWCS class ]
 
 within Python.  You can test this by loading up the Python interpreter for the
 version of Python you will be using with the GalSim toolkit. This is usually
@@ -97,6 +120,16 @@ then be installed.
 
 See http://packages.python.org/distribute/easy_install.html#using-easy-install
 for more details about the extremely useful `easy_install` feature.
+
+Another option for installing these packages is pip.  See pypi.python.org for 
+details about getting this installed if you do not already have it on your 
+system.  Then
+
+    pip install numpy
+    pip install astropy
+    pip install yaml
+    pip install starlink-pyast
+    pip install scipy
 
 ### Third party-maintained Python packages ###
 

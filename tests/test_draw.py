@@ -71,7 +71,7 @@ def test_draw():
     dx_nyq = obj.nyquistDx()
     np.testing.assert_almost_equal(im1.scale, dx_nyq, 9,
                                    "obj.draw() produced image with wrong scale")
-    print 'im1.bounds = ',im1.bounds
+    #print 'im1.bounds = ',im1.bounds
     assert im1.bounds == galsim.BoundsI(1,56,1,56),(
             "obj.draw() produced image with wrong bounds")
     np.testing.assert_almost_equal(CalculateScale(im1), 2, 1,
@@ -145,7 +145,7 @@ def test_draw():
                                    "obj2.draw(wmult) produced image with wrong flux")
     np.testing.assert_almost_equal(CalculateScale(im6), 2, 2,
                                    "Measured wrong scale after obj2.draw(wmult)")
-    print 'im6.bounds = ',im6.bounds
+    #print 'im6.bounds = ',im6.bounds
     assert im6.bounds == galsim.BoundsI(1,220,1,220),(
             "obj2.draw(wmult) produced image with wrong bounds")
 
@@ -179,7 +179,7 @@ def test_draw():
                                    "obj2.draw(dx) produced image with wrong flux")
     np.testing.assert_almost_equal(CalculateScale(im7), 2, 1,
                                    "Measured wrong scale after obj2.draw(dx)")
-    print 'im7.bounds = ',im7.bounds
+    #print 'im7.bounds = ',im7.bounds
     assert im7.bounds == galsim.BoundsI(1,68,1,68),(
             "obj2.draw(dx) produced image with wrong bounds")
 
@@ -194,7 +194,7 @@ def test_draw():
                                    "obj2.draw(dx,wmult) produced image with wrong flux")
     np.testing.assert_almost_equal(CalculateScale(im8), 2, 2,
                                    "Measured wrong scale after obj2.draw(dx,wmult)")
-    print 'im8.bounds = ',im8.bounds
+    #print 'im8.bounds = ',im8.bounds
     assert im8.bounds == galsim.BoundsI(1,270,1,270),(
             "obj2.draw(dx,wmult) produced image with wrong bounds")
 
@@ -299,12 +299,12 @@ def test_drawK():
             "obj.drawK() produced image with wrong bounds")
     dx_nyq = obj.nyquistDx()
     stepk = obj.stepK()
-    print 'dx_nyq = ',dx_nyq
-    print '2pi/(dx_nyq N) = ',2*np.pi/(dx_nyq*N)
-    print 'stepK = ',obj.stepK()
-    print 'maxK = ',obj.maxK()
-    print 'im1.scale = ',im1.scale
-    print 'im1.center = ',im1.bounds.center
+    #print 'dx_nyq = ',dx_nyq
+    #print '2pi/(dx_nyq N) = ',2*np.pi/(dx_nyq*N)
+    #print 'stepK = ',obj.stepK()
+    #print 'maxK = ',obj.maxK()
+    #print 'im1.scale = ',im1.scale
+    #print 'im1.center = ',im1.bounds.center
     np.testing.assert_almost_equal(re1.scale, stepk, 9,
                                    "obj.drawK() produced real image with wrong scale")
     np.testing.assert_almost_equal(im1.scale, stepk, 9,
@@ -383,7 +383,7 @@ def test_drawK():
                                    "obj.drawK(dx) produced non-zero imaginary image")
     np.testing.assert_almost_equal(CalculateScale(re7), 2, 1,
                                    "Measured wrong scale after obj.drawK(dx)")
-    assert im7.bounds == galsim.BoundsI(1,394,1,394),(
+    assert im7.bounds == galsim.BoundsI(1,N,1,N),(
             "obj.drawK(dx) produced image with wrong bounds")
 
     # Test if we provide an image with a defined scale.  It should:
@@ -611,12 +611,12 @@ def test_offset():
 
     # Make the images somewhat large so the moments are measured accurately.
     for nx,ny in shape_list:
-        print '\n\n\nnx,ny = ',nx,ny
+        #print '\n\n\nnx,ny = ',nx,ny
 
         # First check that the image agrees with our calculation of the center
         cenx = (nx+1.)/2.
         ceny = (ny+1.)/2.
-        print 'cen = ',cenx,ceny
+        #print 'cen = ',cenx,ceny
         im = galsim.ImageD(nx,ny, scale=scale)
         true_center = im.bounds.trueCenter()
         np.testing.assert_almost_equal(
@@ -629,7 +629,7 @@ def test_offset():
         # Check that the default draw command puts the centroid in the center of the image.
         obj.draw(im, normalization='sb')
         moments = getmoments(im)
-        print 'moments = ',moments
+        #print 'moments = ',moments
         np.testing.assert_almost_equal(
                 moments[0], cenx, 5,
                 "obj.draw(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
@@ -645,11 +645,11 @@ def test_offset():
         im2 = galsim.ImageD(nx,ny, scale=scale)
         gal.draw(im2, normalization='sb')
         for x,y in xy_list:
-            print 'x,y = ',x,y
-            print 'im(x,y) = ',im(x,y)
+            #print 'x,y = ',x,y
+            #print 'im(x,y) = ',im(x,y)
             u = (x-cenx) * scale
             v = (y-ceny) * scale
-            print 'xval(x-cenx,y-ceny) = ',obj.xValue(galsim.PositionD(u,v))
+            #print 'xval(x-cenx,y-ceny) = ',obj.xValue(galsim.PositionD(u,v))
             np.testing.assert_almost_equal(
                     im(x,y), obj.xValue(galsim.PositionD(u,v)), 2,
                     "im(%d,%d) does not match xValue(%f,%f)"%(x,y,u,v))
@@ -671,11 +671,11 @@ def test_offset():
             else:
                 decimal = 2
 
-            print 'offx,offy = ',offx,offy
+            #print 'offx,offy = ',offx,offy
             offset = galsim.PositionD(offx,offy)
             obj.draw(im, normalization='sb', offset=offset)
             moments = getmoments(im)
-            print 'moments = ',moments
+            #print 'moments = ',moments
             np.testing.assert_almost_equal(
                     moments[0], cenx+offx, decimal,
                     "obj.draw(im,offset) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
@@ -685,11 +685,11 @@ def test_offset():
             # Test that a few pixel values match xValue
             gal.draw(im2, normalization='sb', offset=offset)
             for x,y in xy_list:
-                print 'x,y = ',x,y
-                print 'im(x,y) = ',im(x,y)
+                #print 'x,y = ',x,y
+                #print 'im(x,y) = ',im(x,y)
                 u = (x-cenx-offx) * scale
                 v = (y-ceny-offy) * scale
-                print 'xval(x-cenx-offx,y-ceny-offy) = ',obj.xValue(galsim.PositionD(u,v))
+                #print 'xval(x-cenx-offx,y-ceny-offy) = ',obj.xValue(galsim.PositionD(u,v))
                 np.testing.assert_almost_equal(
                         im(x,y), obj.xValue(galsim.PositionD(u,v)), 2,
                         "im(%d,%d) does not match xValue(%f,%f)"%(x,y,u,v))
@@ -701,7 +701,7 @@ def test_offset():
             shifted_obj = obj.createShifted(offset * scale)
             shifted_obj.draw(im, normalization='sb')
             moments = getmoments(im)
-            print 'moments = ',moments
+            #print 'moments = ',moments
             np.testing.assert_almost_equal(
                     moments[0], cenx+offx, decimal,
                     "shifted_obj.draw(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
@@ -712,11 +712,11 @@ def test_offset():
             shifted_gal = gal.createShifted(offset * scale)
             shifted_gal.draw(im2, normalization='sb')
             for x,y in xy_list:
-                print 'x,y = ',x,y
-                print 'im(x,y) = ',im(x,y)
+                #print 'x,y = ',x,y
+                #print 'im(x,y) = ',im(x,y)
                 u = (x-cenx) * scale
                 v = (y-ceny) * scale
-                print 'shifted xval(x-cenx,y-ceny) = ',shifted_obj.xValue(galsim.PositionD(u,v))
+                #print 'shifted xval(x-cenx,y-ceny) = ',shifted_obj.xValue(galsim.PositionD(u,v))
                 np.testing.assert_almost_equal(
                         im(x,y), shifted_obj.xValue(galsim.PositionD(u,v)), 2,
                         "im(%d,%d) does not match shifted xValue(%f,%f)"%(x,y,x-cenx,y-ceny))
@@ -725,7 +725,7 @@ def test_offset():
                         "im2(%d,%d) does not match shifted xValue(%f,%f)"%(x,y,x-cenx,y-ceny))
                 u = (x-cenx-offx) * scale
                 v = (y-ceny-offy) * scale
-                print 'xval(x-cenx-offx,y-ceny-offy) = ',obj.xValue(galsim.PositionD(u,v))
+                #print 'xval(x-cenx-offx,y-ceny-offy) = ',obj.xValue(galsim.PositionD(u,v))
                 np.testing.assert_almost_equal(
                         im(x,y), obj.xValue(galsim.PositionD(u,v)), 2,
                         "im(%d,%d) does not match xValue(%f,%f)"%(x,y,u,v))
@@ -747,7 +747,7 @@ def test_offset():
         # Check that use_true_center = false is consistent with an offset by 0 or 0.5 pixels.
         obj.draw(im, normalization='sb', use_true_center=False)
         moments = getmoments(im)
-        print 'moments = ',moments
+        #print 'moments = ',moments
         np.testing.assert_almost_equal(
                 moments[0], nom_cenx, 4,
                 "obj.draw(im, use_true_center=False) not centered correctly for (nx,ny) = %d,%d"%(
@@ -757,11 +757,14 @@ def test_offset():
                 "obj.draw(im, use_true_center=False) not centered correctly for (nx,ny) = %d,%d"%(
                         nx,ny))
         cen_offset = galsim.PositionD(nom_cenx - cenx, nom_ceny - ceny)
-        print 'cen_offset = ',cen_offset
+        #print 'cen_offset = ',cen_offset
         obj.draw(im2, normalization='sb', offset=cen_offset)
         np.testing.assert_array_almost_equal(
                 im.array, im2.array, 6,
                 "obj.draw(im, offset=%f,%f) different from use_true_center=False")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_draw()

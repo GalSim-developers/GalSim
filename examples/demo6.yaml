@@ -80,7 +80,7 @@ psf :
 # Define some other information about the images 
 image :
     # The pixel size applies to both outputs, so put that here in the first document.
-    pixel_scale : 0.15  # arcsec / pixel
+    pixel_scale : 0.16  # arcsec / pixel
 
     # This time, we'll leave the size unspecified to let GalSim automatically choose 
     # an appropriate size.  So no image : size item.

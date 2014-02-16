@@ -264,8 +264,10 @@ namespace galsim {
                      (void (SBProfile::*)(CppShear))&SBProfile::applyShear,
                      (bp::arg("s")))
                 .def("applyRotation", &SBProfile::applyRotation, bp::args("theta"))
-                .def("applyShift", &SBProfile::applyShift, bp::args("dx", "dy"))
+                .def("applyShift", &SBProfile::applyShift, bp::args("delta"))
                 .def("applyExpansion", &SBProfile::applyExpansion, bp::args("scale"))
+                .def("applyTransformation", &SBProfile::applyTransformation,
+                     bp::args("dudx", "dudy", "dvdx", "dvdy"))
                 .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
                 ;
             wrapTemplates<float>(pySBProfile);
