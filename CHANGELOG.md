@@ -179,7 +179,7 @@ Other new features:
 * Added `profile.applyTransformation(dudx, dudy, dvdx, dvdy)` applies a general
   (linear) coordinate transformation to a GSObject profile.  It is a 
   generalization of `applyShear`, `applyRotation`, etc.  There is also the 
-  corresponding `createTransformed` as well. (Issue #364)
+  corresponding `createTransformed` for the images as well. (Issue #364)
 * Added `galsim.fits.readFile()` function, which reads a FITS file and returns
   the hdu_list.  Normally, this is equivalent to `pyfits.open(file_name)`, but
   it has a `compression` option that works the same way `compression` works
