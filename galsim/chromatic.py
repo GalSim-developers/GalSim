@@ -133,39 +133,18 @@ class ChromaticObject(object):
         image = prof._draw_setup_image(image, wcs, wmult, add_to_image)
         return image
 
-    def _getScaleEtaBetaThetaDxDy(self, w):
-        A0 = self.A(w)
-        A = A0[0,0]
-        B = A0[0,1]
-        C = A0[1,0]
-        D = A0[1,1]
-        dx = A0[0,2]
-        dy = A0[1,2]
-        scale = numpy.sqrt(numpy.linalg.det(A0))
-        theta = numpy.arctan2(C-B, A+D) #need to worry about A+D == 0 ?
-        if A-D == 0.0:
-            eta = 0.0
-            beta = 0.0
-        else:
-            beta = 0.5 * (numpy.arctan2(C+B, A-D) + theta)
-            eta = 2.0*numpy.arcsinh((A-D)/(2.0*scale*numpy.cos(2.0*beta-theta)))
-        if eta < 0.0:
-            eta = -eta
-            beta += numpy.pi/2.0
-        return scale, eta, beta, theta, dx, dy
-
     def evaluateAtWavelength(self, w):
         if self.__class__ != ChromaticObject:
-            raise NotImplementedError("Subclasses of ChromaticObject must override evaluateAtWavelength()")
+            raise NotImplementedError(
+                    "Subclasses of ChromaticObject must override evaluateAtWavelength()")
         if not hasattr(self, 'A'):
-            raise AttributeError("Attempting to evaluate ChromaticObject before affine transform " +
-                                 "matrix has been created!")
-        scale, eta, beta, theta, dx, dy = self._getScaleEtaBetaThetaDxDy(w)
+            raise AttributeError(
+                    "Attempting to evaluate ChromaticObject before affine transform " +
+                    "matrix has been created!")
         tmpobj = self.obj.evaluateAtWavelength(w).copy()
-        tmpobj.applyRotation(theta * galsim.radians)
-        tmpobj.applyShear(eta=eta, beta=beta*galsim.radians)
-        tmpobj.applyExpansion(scale)
-        tmpobj.applyShift(dx, dy)
+        A0 = self.A(w)
+        tmpobj.applyTransformation(A0[0,0], A0[0,1], A0[1,0], A0[1,1])
+        tmpobj.applyShift(A0[0,2], A0[1,2])
         tmpobj.scaleFlux(self.fluxFactor(w))
         return tmpobj
 
@@ -336,9 +315,9 @@ class ChromaticObject(object):
             ce2 = numpy.cosh(shear.eta/2.0)
             se2 = numpy.sinh(shear.eta/2.0)
             #Bernstein&Jarvis (2002) equation 2.9
-            S = numpy.matrix([[ce2+c2b*se2, s2b*se2, 0],
-                              [s2b*se2, ce2-c2b*se2, 0],
-                              [0, 0, 1]], dtype=float)
+            S = numpy.matrix([[ce2+c2b*se2,     s2b*se2, 0],
+                              [    s2b*se2, ce2-c2b*se2, 0],
+                              [          0,           0, 1]], dtype=float)
             if hasattr(self, 'A'):
                 A = self.A
                 self.A = lambda w: S * A(w)
@@ -387,8 +366,8 @@ class ChromaticObject(object):
             cth = numpy.cos(theta.rad())
             sth = numpy.sin(theta.rad())
             R = numpy.matrix([[cth, -sth, 0],
-                              [sth, cth, 0],
-                              [0, 0, 1]], dtype=float)
+                              [sth,  cth, 0],
+                              [  0,    0, 1]], dtype=float)
             if hasattr(self, 'A'):
                 A = self.A
                 self.A = lambda w: R * A(w)
@@ -396,6 +375,39 @@ class ChromaticObject(object):
                 self.obj = self.copy()
                 self.__class__ = ChromaticObject
                 self.A = lambda w: R
+                self.fluxFactor = lambda w: 1.0
+                self.separable = self.obj.separable
+                if hasattr(self, 'gsobj'):
+                    del self.gsobj
+                # note, self.SED should already exist if this is a separable object
+
+    def applyTransformation(self, dudx, dudy, dvdx, dvdy):
+        """Apply a transformation to this object defined by an arbitrary Jacobian matrix.
+
+        This works the same as GSObject.applyTransformation, so see that method's docstring
+        for more details.
+        
+        After this call, the caller's type will be a GSObject.
+
+        @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        """
+        if isinstance(self, ChromaticSum):
+            for obj in self.objlist:
+                obj.applyTransformation(dudx,dudy,dvdx,dvdy)
+        else:
+            J = numpy.matrix([[dudx, dudy, 0],
+                              [dvdx, dvdy, 0],
+                              [   0,    0, 1]], dtype=float)
+            if hasattr(self, 'A'):
+                A = self.A
+                self.A = lambda w: J * A(w)
+            else:
+                self.obj = self.copy()
+                self.__class__ = ChromaticObject
+                self.A = lambda w: J
                 self.fluxFactor = lambda w: 1.0
                 self.separable = self.obj.separable
                 if hasattr(self, 'gsobj'):
@@ -579,6 +591,21 @@ class ChromaticObject(object):
         """
         ret = self.copy()
         ret.applyRotation(theta)
+        return ret
+
+    def creatTransformed(self, dudx, dudy, dvdx, dvdy):
+        """Returns a new GSObject by applying a transformation given by a Jacobian matrix.
+
+        This works the same as GSObject.createTransformed, so see that method's docstring
+        for more details.
+        
+        @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        """
+        ret = self.copy()
+        ret.applyTransformation(dudx,dudy,dvdx,dvdy)
         return ret
 
     def createShifted(self, *args, **kwargs):
