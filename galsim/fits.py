@@ -175,7 +175,20 @@ class _ReadFile:
             file = os.path.join(dir,file)
 
         if not file_compress:
-            hdu_list = pyfits.open(file, 'readonly')
+            if pyfits_version < '3.0':
+                # Sometimes early versions of pyfits do weird things with the final hdu when 
+                # writing fits files with rice compression.  It seems to add a bunch of '\0'
+                # characters after then end of what should be the last hdu.  When reading this
+                # back in, it gets interpreted as the start of another hdu, which is then found 
+                # to be missing its END card in the header.  The easiest workaround is to just
+                # tell it to ignore any missing END problems on the read command.  Also ignore
+                # the warnings it emits along the way.
+                import warnings
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    hdu_list = pyfits.open(file, 'readonly', ignore_missing_end=True)
+            else:
+                hdu_list = pyfits.open(file, 'readonly')
             return hdu_list, None
         elif file_compress == 'gzip':
             while self.gz_index < len(self.gz_methods):
@@ -190,7 +203,7 @@ class _ReadFile:
                 try:
                     return self.bz2(file)
                 except:
-                    self.bz2_method += 1
+                    self.bz2_index += 1
                     self.bz2 = self.bz2_methods[self.bz2_index]
             raise RuntimeError("None of the options for bunzipping were successful.")
         else:
@@ -203,10 +216,20 @@ class _WriteFile:
     # There are several methods available for each of gzip and bzip2.  Each is its own function.
     def gzip_call2(self, hdu_list, file):
         root, ext = os.path.splitext(file)
-        hdu_list.writeto(root, clobber=True)
         import subprocess
-        p = subprocess.Popen(["gzip", "-S", ext, root], close_fds=True)
-        p.communicate()
+        if os.path.isfile(root):
+            tmp = root + '.tmp'
+            # It would be pretty odd for this filename to already exist, but just in case...
+            while os.path.isfile(tmp):
+                tmp = tmp + '.tmp'
+            hdu_list.writeto(tmp)
+            p = subprocess.Popen(["gzip", tmp], close_fds=True)
+            p.communicate()
+            os.rename(tmp+".gz",file)
+        else:
+            hdu_list.writeto(root)
+            p = subprocess.Popen(["gzip", "-S", ext, root], close_fds=True)
+            p.communicate()
         assert p.returncode == 0 
 
     def gzip_call(self, hdu_list, file):
@@ -250,17 +273,21 @@ class _WriteFile:
 
     def bzip2_call2(self, hdu_list, file):
         root, ext = os.path.splitext(file)
-        hdu_list.writeto(root, clobber=True)
         import subprocess
-        if ext == '.bz2':
-            p = subprocess.Popen(["bzip2", root], close_fds=True)
+        if os.path.isfile(root) or ext != '.bz2':
+            tmp = root + '.tmp'
+            # It would be pretty odd for this filename to already exist, but just in case...
+            while os.path.isfile(tmp):
+                tmp = tmp + '.tmp'
+            hdu_list.writeto(tmp)
+            p = subprocess.Popen(["bzip2", tmp], close_fds=True)
             p.communicate()
-            assert p.returncode == 0 
+            os.rename(tmp+".bz2",file)
         else:
-            p = subprocess.Popen(["bzip2", file], close_fds=True)
+            hdu_list.writeto(root)
+            p = subprocess.Popen(["gzip", root], close_fds=True)
             p.communicate()
-            assert p.returncode == 0 
-            os.rename(file + '.bz2', file)
+        assert p.returncode == 0 
 
     def bzip2_call(self, hdu_list, file):
         import subprocess
@@ -313,7 +340,11 @@ class _WriteFile:
         self.gz = self.gz_methods[0]
         self.bz2 = self.bz2_methods[0]
 
-    def __call__(self, file, hdu_list, clobber, file_compress, pyfits_compress):
+    def __call__(self, file, dir, hdu_list, clobber, file_compress, pyfits_compress):
+        import os
+        if dir:
+            file = os.path.join(dir,file)
+
         if os.path.isfile(file):
             if clobber:
                 os.remove(file)
@@ -335,7 +366,7 @@ class _WriteFile:
                 try:
                     return self.bz2(hdu_list, file)
                 except:
-                    self.bz2_method += 1
+                    self.bz2_index += 1
                     self.bz2 = self.bz2_methods[self.bz2_index]
             raise RuntimeError("None of the options for bunzipping were successful.")
         else:

@@ -795,6 +795,8 @@ def test_pixelscale():
     y0 = 1
     origin = galsim.PositionD(x0,y0)
     wcs = galsim.OffsetWCS(scale, origin)
+    wcs2 = galsim.PixelScale(scale).setOrigin(origin)
+    assert wcs == wcs2, 'OffsetWCS is not == PixelScale.setOrigin(origin)'
 
     # Check basic copy and == , != for OffsetWCS:
     wcs2 = wcs.copy()
@@ -886,6 +888,8 @@ def test_shearwcs():
     y0 = 1
     origin = galsim.PositionD(x0,y0)
     wcs = galsim.OffsetShearWCS(scale, shear, origin)
+    wcs2 = galsim.ShearWCS(scale, shear).setOrigin(origin)
+    assert wcs == wcs2, 'OffsetShearWCS is not == ShearWCS.setOrigin(origin)'
 
     # Check basic copy and == , != for OffsetShearWCS:
     wcs2 = wcs.copy()
@@ -968,6 +972,8 @@ def test_affinetransform():
     y0 = 1
     origin = galsim.PositionD(x0,y0)
     wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin)
+    wcs2 = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy).setOrigin(origin)
+    assert wcs == wcs2, 'AffineTransform is not == JacobianWCS.setOrigin(origin)'
 
     # Check basic copy and == , != for AffineTransform:
     wcs2 = wcs.copy()
@@ -1479,6 +1485,18 @@ def test_radecfunction():
 def do_ref(wcs, ref_list, name, approx=False, image=None):
     # Test that the given wcs object correctly converts the reference positions
 
+    # Normally, we check the agreement to 1.e-3 arcsec.
+    # However, we allow the caller to indicate the that inverse transform is only approximate.
+    # In this case, we only check to 1 digit.  Originally,  this was just for the reverse 
+    # transformation from world back to image coordinates, since some of the transformations 
+    # are not analytic, so some routines don't iterate to a very high accuracy.  But older 
+    # versions of wcstools are slightly (~0.01 arcsec) inaccurate even for the forward 
+    # transformation for TNX and ZPX.  So now we use digits2 for both toWorld and toImage checks.
+    if approx:
+        digits2 = 1
+    else:
+        digits2 = digits
+
     print 'Start reference testing for '+name
     for ref in ref_list:
         ra = galsim.HMS_Angle(ref[0])
@@ -1497,15 +1515,7 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
         #print 'delta(ra) = ',(ref_coord.ra - coord.ra)/galsim.arcsec
         #print 'delta(dec) = ',(ref_coord.dec - coord.dec)/galsim.arcsec
         #print 'dist = ',dist
-        np.testing.assert_almost_equal(dist, 0, digits, 'wcs.toWorld differed from expected value')
-
-        # Normally, we check the agreement to 1.e-3 arcsec.
-        # However, we allow the caller to indicate the that inverse transform is
-        # only approximate.  In this case, we only check to 1 digit.
-        if approx:
-            digits2 = 1
-        else:
-            digits2 = digits
+        np.testing.assert_almost_equal(dist, 0, digits2, 'wcs.toWorld differed from expected value')
 
         # Check world -> image
         pixel_scale = wcs.minLinearScale(galsim.PositionD(x,y))
@@ -1625,7 +1635,7 @@ def test_wcstools():
 
         # The wcstools implementation of the SIP and TPV types only gets the inverse 
         # transformations approximately correct.  So we need to be a bit looser in those checks.
-        approx = tag in [ 'SIP', 'TPV' ]
+        approx = tag in [ 'SIP', 'TPV', 'ZPX', 'TNX' ]
         do_ref(wcs, ref_list, 'WcsToolsWCS '+tag, approx)
 
         # Recenter (x,y) = (0,0) at the image center to avoid wcstools warnings about going
@@ -1732,7 +1742,7 @@ def test_fitswcs():
     for tag in test_tags:
         file_name, ref_list = references[tag]
         #print tag,' file_name = ',file_name
-        wcs = galsim.FitsWCS(file_name, dir=dir)
+        wcs = galsim.FitsWCS(file_name, dir=dir, suppress_warning=True)
         print 'FitsWCS is really ',type(wcs)
 
         if isinstance(wcs, galsim.AffineTransform):

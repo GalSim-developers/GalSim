@@ -99,7 +99,9 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
                  wcs=None, origin=None):
         import astropy.wcs
-        self._tag = None # Write something useful here.  (It is just used for the repr.)
+        import scipy # We don't need this yet, but we want it to fail now if it's not available.
+
+        self._tag = None # Write something useful here (see below). This is just used for the repr.
 
         # Read the file if given.
         if file_name is not None:
@@ -124,6 +126,11 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
                 # warnings, since we don't much care if the input file is non-standard
                 # so long as we can make it work.
                 warnings.simplefilter("ignore")
+                # Some versions of astropy don't like to accept a galsim.FitsHeader object
+                # as the header attribute here, even though they claim that dict-like objects
+                # are ok.  So pull out the astropy.io.header object in this case.
+                if isinstance(header,galsim.fits.FitsHeader):
+                    header = header.header
                 wcs = astropy.wcs.WCS(header)
         if wcs is None:
             raise TypeError("Must provide one of file_name, header, or wcs")
@@ -134,7 +141,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         # If astropy.wcs cannot parse the header, it won't notice from just doing the 
         # WCS(header) command.  It will silently move on, thinking things are fine until
         # later when if will fail (with `RuntimeError: NULL error object in wcslib`).
-        # We're rather get that to happen now rather than later.
+        # We'd rather get that to happen now rather than later.
         try:
             import warnings
             with warnings.catch_warnings():
@@ -170,12 +177,12 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         try:
             # Apparently, the returned values aren't _necessarily_ (ra, dec).  They could be
             # (dec, ra) instead!  But if you add ra_dec_order=True, then it will be (ra, dec).
-            # I can't imagnie why that isn't the default, but there you go.
+            # I can't imagine why that isn't the default, but there you go.
             # This currently fails with an AttributeError about astropy.wcs.Wcsprm.lattype
-            # c.f. https://github.com/astropy/astropy/pull/1463
+            # cf. https://github.com/astropy/astropy/pull/1463
             # Once they fix it, this is what we want.
             ra, dec = self._wcs.all_pix2world(x1, y1, 1, ra_dec_order=True)
-        except:
+        except AttributeError:
             # Until then, just assume that the returned values really are ra, dec.
             ra, dec = self._wcs.all_pix2world(x1, y1, 1)
 
@@ -366,7 +373,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         import starlink.Ast, starlink.Atl
         # Note: For much of this class implementation, I've followed the example provided here:
         #       http://dsberry.github.io/starlink/node4.html
-        self._tag = None # Write something useful here for the repr.
+        self._tag = None # Write something useful here (see below). This is just used for the repr.
         hdu = None
 
         # Read the file if given.
@@ -525,7 +532,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
     """This WCS uses wcstools executables to perform the appropriate WCS transformations
     for a given FITS file.  It requires wcstools command line functions to be installed.
 
-    Note: It uses the wcstools executalbes xy2sky and sky2xy, so it can be quite a bit less
+    Note: It uses the wcstools executables xy2sky and sky2xy, so it can be quite a bit less
           efficient than other options that keep the WCS in memory.
 
     See their website for information on downloading and installing wcstools:
@@ -580,30 +587,56 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
     def origin(self): return self._origin
 
     def _radec(self, x, y):
+        #print 'start wcstools _radec'
+        #print 'x = ',x
+        #print 'y = ',y
+
         import numpy
         # Need this to look like 
         #    [ x1, y1, x2, y2, ... ] 
         # if input is either scalar x,y or two arrays.
         xy = numpy.array([x, y]).transpose().flatten()
+        #print 'xy = ',xy
         
-        # The OS cannot handle arbitrarily long commad lines, so we may need to split up
+        # The OS cannot handle arbitrarily long command lines, so we may need to split up
         # the list into smaller chunks.
         import os
         if 'SC_ARG_MAX' in os.sysconf_names:
             arg_max = os.sysconf('SC_ARG_MAX') 
         else:
-            arg_max = 32768  # A conservative guess. My machines have 131072, 262144, and 2621440
+            # A conservative guess. My machines have 131072, 262144, and 2621440
+            arg_max = 32768  
+        #print 'arg_max = ',arg_max
+
+        # Sometimes SC_ARG_MAX is listed as -1.  Apparently that means "the configuration name
+        # is known, but the value is not defined." So, just go with the above conservative value.
+        if arg_max <= 0:
+            arg_max = 32768
+            #print 'arg_max => ',arg_max
+
+        # Just in case something weird happened.  This should be _very_ conservative.
+        # It's the smallest value in this list of values for a bunch of systems:
+        # http://www.in-ulm.de/~mascheck/various/argmax/
+        if arg_max < 4096:
+            arg_max = 4096
+            #print 'arg_max => ',arg_max
 
         # This corresponds to the total number of characters in the line.  
-        # Lets be conservative again and assume each argument is 20 characters
-        nargs = (arg_max/40) * 2  # Make sure it is even!
+        # But we really need to know how many arguments we are allowed to use in each call.
+        # Lets be conservative again and assume each argument is at most 20 characters.
+        # (We ignore the few characters at the start for the command name and such.)
+        nargs = int(arg_max / 40) * 2  # Make sure it is even!
+        #print 'nargs = ',nargs
 
         xy_strs = [ str(z) for z in xy ]
+        #print 'xy_strs = ',xy_strs
         ra = []
         dec = []
 
         for i in range(0,len(xy_strs),nargs):
+            #print 'i = ',i
             xy1 = xy_strs[i:i+nargs]
+            #print 'xy1 = ',xy1
             import subprocess
             # We'd like to get the output to 10 digits of accuracy.  This corresponds to
             # an accuracy of about 1.e-6 arcsec.  But sometimes xy2sky cannot handle it,
@@ -614,6 +647,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
                 p = subprocess.Popen(['xy2sky', '-d', '-n', str(digits), self._file_name] + xy1,
                                     stdout=subprocess.PIPE)
                 results = p.communicate()[0]
+                #print 'results for digits = ',digits,' = ',results
                 p.stdout.close()
                 if len(results) == 0:
                     raise IOError('wcstools command xy2sky was unable to read '+ self._file_name)
@@ -621,6 +655,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             if results[0] == '*':
                 raise IOError('wcstools command xy2sky was unable to read '+self._file_name)
             lines = results.splitlines()
+            #print 'lines = ',lines
 
             # Each line of output should looke like:
             #    x y J2000 ra dec
@@ -628,10 +663,13 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             #    Off map x y
             for line in lines:
                 vals = line.split()
+                #print 'vals = ',vals
                 if len(vals) != 5:
                     raise RuntimeError('wcstools xy2sky returned invalid result near %f,%f'%(x0,y0))
                 ra.append(float(vals[0]))
                 dec.append(float(vals[1]))
+            #print 'ra => ',ra
+            #print 'dec => ',dec
 
         # wcstools reports ra, dec in degrees, so convert to radians
         factor = 1. * galsim.degrees / galsim.radians
@@ -1414,13 +1452,10 @@ fits_wcs_types = [
     WcsToolsWCS,    # This requires the wcstool command line functions to be installed.
                     # It is very slow, so it should only be used as a last resort.
 
-    galsim.AffineTransform 
-                    # Finally, this one is really the last resort, since it only reads in
-                    # the linear part of the WCS.  It defaults to the equivalent of a 
-                    # pixel scale of 1.0 if even these are not present.
 ]
 
-def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto'):
+def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
+            suppress_warning=False):
     """This factory function will try to read the WCS from a FITS file and return a WCS that will 
     work.  It tries a number of different WCS classes until it finds one that succeeds in reading 
     the file.
@@ -1443,6 +1478,11 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto')
                           a galsim.FitsHeader object.  [ Default `header = None` ]
     @param compression    Which decompression scheme to use (if any). See galsim.fits.read
                           for the available options.  [ Default `compression = 'auto'` ]
+    @param suppress_warning Should a warning be emitted if none of the real FITS WCS classes
+                          are able to successfully read the file, and we have to reset to
+                          an AffineTransform instead?  [ Default `suppress_warning = False` ]  
+                          (Note: this is set to True when this function is implicitly called from 
+                          one of the galsim.fits.read* functions.)
     """
     if file_name is not None:
         if header is not None:
@@ -1454,14 +1494,21 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto')
     if header is None:
         raise TypeError("Must provide either file_name or header")
 
-    for type in fits_wcs_types:
+    for wcs_type in fits_wcs_types:
         try:
-            wcs = type._readHeader(header)
+            wcs = wcs_type._readHeader(header)
             return wcs
         except Exception as err:
             #print 'caught ',err
             pass
-    raise RuntimeError("All possible fits WCS types failed to read "+file_name)
+    # Finally, this one is really the last resort, since it only reads in the linear part of the 
+    # WCS.  It defaults to the equivalent of a pixel scale of 1.0 if even these are not present.
+    if not suppress_warning:
+        import warnings
+        warnings.warn("All the fits WCS types failed to read "+file_name+".  " +
+                      "Using AffineTransform instead, which will not really be correct.")
+    wcs = galsim.wcs.AffineTransform._readHeader(header)
+    return wcs
 
 # Let this function work like a class in config.
 FitsWCS._req_params = { "file_name" : str }
