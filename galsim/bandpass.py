@@ -97,7 +97,7 @@ class Bandpass(object):
         elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
             wave_factor = 10.0
         else:
-            raise ValueError("Unknown wave_type `{}` in SED.__init__".format(wave_type))
+            raise ValueError("Unknown wave_type `{0}` in SED.__init__".format(wave_type))
 
         # Assign blue and red limits of bandpass
         if blue_limit is None:
@@ -237,7 +237,7 @@ class Bandpass(object):
         # option 1: a Numpy array
         if isinstance(wave, numpy.ndarray):
             wgood = (wave >= self.blue_limit) & (wave <= self.red_limit)
-            ret = numpy.zeros_like(wave, dtype=numpy.float)
+            ret = numpy.zeros(wave.shape, dtype=numpy.float)
             numpy.place(ret, wgood, self.func(wave[wgood]))
             return ret
         # option 2: a tuple

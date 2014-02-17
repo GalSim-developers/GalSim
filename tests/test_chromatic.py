@@ -115,7 +115,7 @@ def test_draw_add_commutativity():
     t2 = time.time()
     GS_image = final.draw(image=GS_image)
     t3 = time.time()
-    print 'GS_object.draw() took {} seconds.'.format(t3-t2)
+    print 'GS_object.draw() took {0} seconds.'.format(t3-t2)
     # plotme(GS_image)
 
     #------------------------------------------------------------------------------
@@ -145,7 +145,7 @@ def test_draw_add_commutativity():
     galsim.ChromaticObject.draw(chromatic_final, bandpass, image=chromatic_image,
                                 integrator=galsim.integ.midpt_continuous_integrator, N=N)
     t5 = time.time()
-    print 'ChromaticObject.draw() took {} seconds.'.format(t5-t4)
+    print 'ChromaticObject.draw() took {0} seconds.'.format(t5-t4)
     # plotme(chromatic_image)
 
     # comparison
@@ -189,8 +189,8 @@ def test_ChromaticConvolution_InterpolatedImage():
     D_flux = D_image.array.sum()
 
     #compare
-    print 'Flux when integrating first, convolving second: {}'.format(II_flux)
-    print 'Flux when convolving first, integrating second: {}'.format(D_flux)
+    print 'Flux when integrating first, convolving second: {0}'.format(II_flux)
+    print 'Flux when convolving first, integrating second: {0}'.format(D_flux)
     printval(II_image, D_image)
     np.testing.assert_array_almost_equal(
         II_image.array, D_image.array, 5,
@@ -246,10 +246,10 @@ def test_chromatic_add():
     disk_image = disk_part.draw(bandpass, image=disk_image)
 
     piecewise_image = bulge_image + disk_image
-    print 'bulge image flux: {}'.format(bulge_image.array.sum())
-    print 'disk image flux: {}'.format(disk_image.array.sum())
-    print 'piecewise image flux: {}'.format(piecewise_image.array.sum())
-    print 'bdimage flux: {}'.format(image.array.sum())
+    print 'bulge image flux: {0}'.format(bulge_image.array.sum())
+    print 'disk image flux: {0}'.format(disk_image.array.sum())
+    print 'piecewise image flux: {0}'.format(piecewise_image.array.sum())
+    print 'bdimage flux: {0}'.format(image.array.sum())
     printval(image, piecewise_image)
     np.testing.assert_array_almost_equal(
             image.array, piecewise_image.array, 6,
@@ -321,10 +321,10 @@ def test_dcr_moments():
     V2 = numV2/den2
     dV_analytic = V1 - V2
 
-    print 'image delta R:    {}'.format(dR_image)
-    print 'analytic delta R: {}'.format(dR_analytic)
-    print 'image delta V:    {}'.format(dV_image)
-    print 'analytic delta V: {}'.format(dV_analytic)
+    print 'image delta R:    {0}'.format(dR_image)
+    print 'analytic delta R: {0}'.format(dR_analytic)
+    print 'image delta V:    {0}'.format(dV_image)
+    print 'analytic delta V: {0}'.format(dV_analytic)
     np.testing.assert_almost_equal(dR_image, dR_analytic, 5,
                                    err_msg="Moment Shift from DCR doesn't match analytic formula")
     np.testing.assert_almost_equal(dV_image, dV_analytic, 5,
@@ -388,8 +388,8 @@ def test_chromatic_seeing_moments():
                                        err_msg="Moment Shift from chromatic seeing doesn't"+
                                                " match analytic formula")
 
-        print 'image delta(r^2) / r^2:    {}'.format(dr2byr2_image)
-        print 'analytic delta(r^2) / r^2: {}'.format(dr2byr2_analytic)
+        print 'image delta(r^2) / r^2:    {0}'.format(dr2byr2_image)
+        print 'analytic delta(r^2) / r^2: {0}'.format(dr2byr2_analytic)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

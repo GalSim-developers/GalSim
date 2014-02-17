@@ -70,7 +70,8 @@ def getmoments(image1):
     mxx = np.sum(((xgrid-mx)**2) * image1.array) / np.sum(image1.array)
     myy = np.sum(((ygrid-my)**2) * image1.array) / np.sum(image1.array)
     mxy = np.sum((xgrid-mx) * (ygrid-my) * image1.array) / np.sum(image1.array)
-    print ('    '+'  {:<15.8g}'*5).format(mx-image1.getXMin(), my-image1.getYMin(), mxx, myy, mxy)
+    print '      {0:<15.8g}  {1:<15.8g}  {2:<15.8g}  {3:<15.8g}  {4:<15.8g}'.format(
+            mx-image1.getXMin(), my-image1.getYMin(), mxx, myy, mxy)
     return mx, my, mxx, myy, mxy
 
 def convertToShear(e1,e2):
