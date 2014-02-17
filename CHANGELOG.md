@@ -30,8 +30,8 @@ Python layer API changes:
   * `im = Image[type](...)` should now be `Image(..., dtype=type)`
   * `im = ImageView[type](numpy_array.astype(type))` should now be 
     `im = Image(numpy_array.astype(type))`.  i.e. the data type inherits
-     from the numpy_array argument when appropriate.  If it is already
-     the correct type, you do not need the `astype(type)` part.
+    from the numpy_array argument when appropriate.  If it is already
+    the correct type, you do not need the `astype(type)` part.
   * `im = ConstImageView[type](numpy_array.astype(type))` should now be 
     `im = Image(numpy_array.astype(type), make_const=True)`
 * Changed the handling of the `scale` and `init_value` parameters of the 
@@ -52,12 +52,13 @@ Python layer API changes:
   only). (Issue #364)
 * Changed DES_PSFEx class to take in the original image file to get the correct
   WCS information to convert from image coordinates to world coordinates.  If
-  unavailable, then the returned PSF profiles will be in image coordinates. If
-  available, the `scale` parameter in `psfex.getPSF` is obsolete since the 
-  information about the pixel size is contained in the original image file.
+  unavailable, then the returned PSF profiles will be in image coordinates.
+  The old `scale` parameter in `psfex.getPSF` is obsolete since it is not
+  really accurate.  The new behavior accurately converts the PSFEx profile 
+  between image and world coordinates.
   * `psfex = galsim.des.DES_PSFEx(psf_file)` `psf = psfex.getPSF(pos, scale)`
-     should become `psfex = galsim.des.DES_PSFEx(psf_file, image_file)`
-     `psf = psfex.getPSF(pos)`.
+    should become `psfex = galsim.des.DES_PSFEx(psf_file, image_file)`
+    `psf = psfex.getPSF(pos)`.
 
 
 New WCS classes: (Issue #364)

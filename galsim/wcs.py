@@ -37,7 +37,8 @@ There are two kinds of world coordinates that we use here:
   up into the sky, if north is up, then west is to the right.)
 
 The CelestialCoord class (in celestial.py) can convert between these two kinds of coordinates
-given a tangent point and projection type.  See the functions `project` and `deproject` for details.
+given a tangent point and projection type.  See the functions `project` and `deproject` for 
+details.
 
 The classes in this file convert between one of these kinds of world coordinates and positions
 on an image, which we call image coordinates.  We use the labels (x,y) for the image coordinates.
