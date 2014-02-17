@@ -153,6 +153,16 @@
 
     "pixel_scale" : { "type" : "Eval" , "str" : "pixel_scale" },
 
+    "wcs" : {
+        "#" : "This time, we only want to set the world coordinates to be (0,0) at the center",
+        "#" : "of the image.  So we again use the origin item in the wcs field.  This will",
+        "#" : "use the default wcs type 'PixelScale', but with the origin in the image coordinate",
+        "#" : "system offset from the normal (0,0).",
+        "#" : "The origin keyword is always available for any WCS type and always has the ",
+        "#" : "effect of defining where in the image coordinate system the origin should be.",
+        "origin" : "center"
+    },
+
     "noise" : {
         "sky_level" : 1e6 
     },

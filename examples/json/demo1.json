@@ -68,13 +68,6 @@
 },
 
 
-"#" : "There is an optional pix field as well, which can define the profile of the pixel.",
-"#" : "However, you will almost never need to specify one. The default is to use the same pixel",
-"#" : "shape as the image uses, namely a square pixel whose size is image.pixel_scale (see below).",
-"#" : "The config machinery will handle convolving by the pixel when necessary as was done ",
-"#" : "in demo1.py.  (It's not always necessary -- see demo7.py.)",
-
-
 "#" : "The image field specifies some other information about the image to be drawn.",
 "image" : {
     "#" : "If pixel_scale isn't specified, then pixel_scale = 1 is assumed.",

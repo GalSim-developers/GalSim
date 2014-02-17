@@ -41,7 +41,7 @@ def test_corr_padding_cf():
     import time
     t1 = time.time()
 
-    imgfile = 'blankimg.fits'
+    imgfile = 'fits_files/blankimg.fits'
     orig_nx = 147
     orig_ny = 124
     orig_seed = 151241
@@ -76,7 +76,7 @@ def test_corr_padding_im():
     import time
     t1 = time.time()
 
-    imgfile = 'blankimg.fits'
+    imgfile = 'fits_files/blankimg.fits'
     orig_nx = 147
     orig_ny = 124
     orig_seed = 151241
@@ -110,7 +110,7 @@ def test_corr_padding_imgfile():
     import time
     t1 = time.time()
 
-    imgfile = 'blankimg.fits'
+    imgfile = 'fits_files/blankimg.fits'
     orig_nx = 147
     orig_ny = 124
     orig_seed = 151241
@@ -141,7 +141,7 @@ def test_corr_nopadding():
     import time
     t1 = time.time()
 
-    imgfile = 'blankimg.fits'
+    imgfile = 'fits_files/blankimg.fits'
     orig_nx = 147
     orig_ny = 124
     orig_seed = 151241

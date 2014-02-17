@@ -35,14 +35,16 @@ import galsim.dcr
 
 class ChromaticObject(object):
     """Base class for defining wavelength dependent objects."""
+    # Note that subclasses *must* override scaleFlux() and evaluateAtWavelength()
+
     def __init__(self, gsobj):
         """ Create the simplest type of ChromaticObject of all, which is just a wrapper around a
         GSObject.  At this point, the newly created ChromaticObject will act just like the GSObject
         it wraps.  The difference is that its methods: applyExpansion, applyDilation, and applyShift
-        can now accept functions of wavelength as arguments, as opposed to the simple scalars that
-        GSObjects are limited to.  These methods can be used to effect a variety of physical chromatic
-        effects, such as differential chromatic refraction, chromatic seeing, and diffraction-limited
-        seeing.
+        can now accept functions of wavelength as arguments, as opposed to the constants that
+        GSObjects are limited to.  These methods can be used to effect a variety of physical
+        chromatic effects, such as differential chromatic refraction, chromatic seeing, and
+        diffraction-limited seeing.
 
         @param gsobj  The GSObject to be chromaticized.
         @returns      The chromaticized GSObject as a ChromaticObject.
@@ -56,7 +58,7 @@ class ChromaticObject(object):
         self.separable = True
         self.SED = lambda w: 1.0
 
-    def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
+    def draw(self, bandpass, image=None, scale=None, wcs=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
         """Base chromatic image draw method.  Some subclasses may choose to override this for
@@ -81,6 +83,7 @@ class ChromaticObject(object):
                                   against which to integrate.
         @param image              see GSObject.draw()
         @param scale              see GSObject.draw()
+        @param wcs                see GSObject.draw()
         @param gain               see GSObject.draw()
         @param wmult              see GSObject.draw()
         @param add_to_image       see GSObject.draw()
@@ -93,8 +96,7 @@ class ChromaticObject(object):
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
-        prof1 = prof0._fix_center(image, scale, offset, use_true_center, reverse=False)
-        image = prof1._draw_setup_image(image, scale, wmult, add_to_image)
+        image = self._draw_setup_image(prof0, image, scale, wcs, wmult, add_to_image, use_true_center, offset)
 
         if self.separable:
             multiplier = galsim.integ.int1d(lambda w: self.SED(w) * bandpass(w),
@@ -120,6 +122,34 @@ class ChromaticObject(object):
         image += integral
         return image
 
+    def _draw_setup_image(self, prof, image, scale, wcs, wmult, add_to_image, use_true_center, offset):
+        # Check for non-trivial wcs
+        if wcs is not None:
+            if scale is not None:
+                raise ValueError("Cannot provide both wcs and scale")
+            if not wcs.isUniform():
+                if image is None:
+                    raise ValueError("Cannot provide non-local wcs when image == None")
+                if not image.bounds.isDefined():
+                    raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
+            if not isinstance(wcs, galsim.BaseWCS):
+                raise TypeError("wcs must be a BaseWCS instance")
+        elif scale is not None:
+            wcs = galsim.PixelScale(scale)
+        # else leave wcs = None
+
+        # Make sure offset is a PositionD
+        offset = prof._parse_offset(offset)
+
+        # Apply the offset, and possibly fix the centering for even-sized images
+        # Note: We need to do this before we call _draw_setup_image, since the shift
+        # affects stepK (especially if the offset is rather large).
+        prof1 = prof._fix_center(image, wcs, offset, use_true_center, reverse=False)
+
+        # Make sure image is setup correctly
+        image = prof1._draw_setup_image(image, wcs, wmult, add_to_image)
+        return image
+
     def _getScaleEtaBetaThetaDxDy(self, w):
         A0 = self.A(w)
         A = A0[0,0]
@@ -142,6 +172,8 @@ class ChromaticObject(object):
         return scale, eta, beta, theta, dx, dy
 
     def evaluateAtWavelength(self, w):
+        if self.__class__ != ChromaticObject:
+            raise NotImplementedError("Subclasses of ChromaticObject must override evaluateAtWavelength()")
         if not hasattr(self, 'A'):
             raise AttributeError("Attempting to evaluate ChromaticObject before affine transform " +
                                  "matrix has been created!")
@@ -155,18 +187,13 @@ class ChromaticObject(object):
         return tmpobj
 
     def scaleFlux(self, scale):
+        if self.__class__ != ChromaticObject:
+            raise NotImplementedError("Subclasses of ChromaticObject must override scaleFlux()")
         if hasattr(scale, '__call__'):
             fluxFactor = self.fluxFactor
             self.fluxFactor = lambda w: fluxFactor(w) * scale(w)
         else:
             self.obj.scaleFlux(scale)
-
-    # Subclasses must override scaleFlux() and evaluateAtWavelength()
-    # def scaleFlux(self, scale):
-    #     raise NotImplementedError
-
-    # def evaluateAtWavelength(self, wave):
-    #     raise NotImplementedError
 
     # Add together `ChromaticObject`s and/or `GSObject`s
     def __add__(self, other):
@@ -587,6 +614,40 @@ class ChromaticObject(object):
         return ret
 
 
+def ChromaticAtmosphere(base_obj, base_wavelength, zenith_angle, alpha=-0.2,
+                        position_angle=0*galsim.radians, **kwargs):
+    """Return a ChromaticObject implementing two atmospheric chromatic effects: differential
+    chromatic refraction (DCR) and wavelength-dependent seeing.
+
+    Due to DCR, blue photons land closer to the zenith than red photons.  Kolmogorov turbulence
+    also predicts that blue photons get spread out more by the atmosphere than red photons,
+    specifically FWHM is proportional to wavelength^(-0.2).  Both of these effects can be
+    implemented by wavelength-dependent shifts and dilations.
+
+    @param base_obj           Fiducial PSF, equal to the monochromatic PSF at base_wavelength
+    @param base_wavelength    Wavelength represented by the fiducial PSF.
+    @param zenith_angle       Angle from object to zenith, expressed as a galsim.Angle
+    @param alpha              Power law index for wavelength-dependent seeing.  Default of -0.2
+                              is the prediction for Kolmogorov turbulence.
+    @param position_angle     Angle pointing toward zenith, measured from "up" through "right".
+    @param **kwargs           Additional arguments are passed to dcr.get_refraction, and can
+                              include temperature, pressure, and H20_pressure.
+    @returns  ChromaticObject representing a chromatic atmospheric PSF.
+    """
+    ret = ChromaticObject(base_obj)
+    ret.applyDilation(lambda w: (w/base_wavelength)**(alpha))
+    base_refraction = galsim.dcr.get_refraction(base_wavelength, zenith_angle, **kwargs)
+    def shift_fn(w):
+        shift_magnitude = galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
+        shift_magnitude -= base_refraction
+        shift_magnitude = shift_magnitude / galsim.arcsec
+        shift = (shift_magnitude*numpy.sin(position_angle.rad()),
+                 shift_magnitude*numpy.cos(position_angle.rad()))
+        return shift
+    ret.applyShift(shift_fn)
+    return ret
+
+
 class Chromatic(ChromaticObject):
     """Construct chromatic versions of galsim GSObjects.
 
@@ -655,7 +716,7 @@ class ChromaticSum(ChromaticObject):
         """
         return galsim.Add([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
-    def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
+    def draw(self, bandpass, image=None, scale=None, wcs=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
         """ Slightly optimized draw method for ChromaticSum's.  Draw each summand individually
@@ -669,6 +730,7 @@ class ChromaticSum(ChromaticObject):
                                   against which to integrate.
         @param image              see GSObject.draw()
         @param scale              see GSObject.draw()
+        @param wcs                see GSObject.draw()
         @param gain               see GSObject.draw()
         @param wmult              see GSObject.draw()
         @param add_to_image       see GSObject.draw()
@@ -678,11 +740,11 @@ class ChromaticSum(ChromaticObject):
 
         @returns                  galsim.Image drawn through filter.
         """
-        image = self.objlist[0].draw(bandpass, image=image, scale=scale, gain=gain, wmult=wmult,
+        image = self.objlist[0].draw(bandpass, image, scale, wcs, gain, wmult,
                                      add_to_image=add_to_image, use_true_center=use_true_center,
                                      offset=offset, integrator=integrator, **kwargs)
         for obj in self.objlist[1:]:
-            image = obj.draw(bandpass, image=image, scale=scale, gain=gain, wmult=wmult,
+            image = obj.draw(bandpass, image, scale, wcs, gain, wmult,
                              add_to_image=True, use_true_center=use_true_center,
                              offset=offset, integrator=integrator, **kwargs)
 
@@ -716,7 +778,7 @@ class ChromaticConvolution(ChromaticObject):
         """
         return galsim.Convolve([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
-    def draw(self, bandpass, image=None, scale=None, gain=1.0, wmult=1.0,
+    def draw(self, bandpass, image=None, scale=None, wcs=None, gain=1.0, wmult=1.0,
              add_to_image=False, use_true_center=True, offset=None,
              integrator=None, iimult=None, **kwargs):
         """ Optimized draw method for ChromaticConvolution.  Works by finding sums of profiles
@@ -740,10 +802,9 @@ class ChromaticConvolution(ChromaticObject):
         """
         # `ChromaticObject.draw()` can just as efficiently handle separable cases.
         if self.separable:
-            return ChromaticObject.draw(self, bandpass, image=image, scale=scale, gain=gain,
-                                        wmult=wmult, add_to_image=add_to_image,
-                                        use_true_center=use_true_center, offset=offset,
-                                        integrator=integrator, **kwargs)
+            return ChromaticObject.draw(self, bandpass, image, scale, wcs, gain, wmult,
+                                        add_to_image=add_to_image, use_true_center=use_true_center,
+                                        offset=offset, integrator=integrator, **kwargs)
         # Only make temporary changes to objlist...
         objlist = [o.copy() for o in self.objlist]
 
@@ -791,7 +852,7 @@ class ChromaticConvolution(ChromaticObject):
                 tmplist = list(objlist) # collect remaining items to be convolved with each of A,B,C
                 tmplist.append(obj.objlist[0]) # add A to this convolve list
                 tmpobj = ChromaticConvolution(tmplist) # draw image
-                image = tmpobj.draw(bandpass, image=image, gain=gain, wmult=wmult,
+                image = tmpobj.draw(bandpass, image, scale, wcs, gain, wmult,
                                     add_to_image=add_to_image, use_true_center=use_true_center,
                                     offset=offset, integrator=integrator, iimult=iimult, **kwargs)
                 for summand in obj.objlist[1:]: # now do the same for B and C
@@ -799,7 +860,7 @@ class ChromaticConvolution(ChromaticObject):
                     tmplist.append(summand)
                     tmpobj = ChromaticConvolution(tmplist)
                     # add to previously started image
-                    image = tmpobj.draw(bandpass, image=image, gain=gain, wmult=wmult,
+                    image = tmpobj.draw(bandpass, image, scale, wcs, gain, wmult,
                                         add_to_image=True, use_true_center=use_true_center,
                                         offset=offset, integrator=integrator, iimult=iimult,
                                         **kwargs)
@@ -810,8 +871,7 @@ class ChromaticConvolution(ChromaticObject):
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
-        prof0 = prof0._fix_center(image, scale, offset, use_true_center, reverse=False)
-        image = prof0._draw_setup_image(image, scale, wmult, add_to_image)
+        image = self._draw_setup_image(prof0, image, scale, wcs, wmult, add_to_image, use_true_center, offset)
 
         # Sort these atomic objects into separable and inseparable lists, and collect
         # the spectral parts of the separable profiles.
@@ -854,7 +914,7 @@ class ChromaticConvolution(ChromaticObject):
         sep_profs.append(effective_prof)
         # finally, convolve and draw.
         final_prof = galsim.Convolve(sep_profs)
-        return final_prof.draw(image=image, gain=gain, wmult=wmult, add_to_image=add_to_image,
+        return final_prof.draw(image, gain=gain, wmult=wmult, add_to_image=add_to_image,
                                use_true_center=use_true_center, offset=offset)
 
     def scaleFlux(self, scale):
@@ -937,38 +997,3 @@ class ChromaticAutoCorrelation(ChromaticObject):
 
     def scaleFlux(self, scale):
         self.obj.scaleFlux(numpy.sqrt(scale))
-
-
-class ChromaticAtmosphere(ChromaticObject):
-    """Class implementing two atmospheric chromatic effects: differential chromatic refraction
-    (DCR) and wavelength-dependent seeing.
-    Due to DCR, blue photons land closer to the zenith than red photons.
-    Kolmogorov turbulence also predicts that blue photons get spread out more by the atmosphere
-    than red photons, specifically FWHM is proportional to wavelength^(-0.2).
-    """
-    def __init__(self, base_obj, base_wavelength, zenith_angle, alpha=-0.2,
-                 position_angle=0*galsim.radians, **kwargs):
-        """
-        @param base_obj           Fiducial PSF, equal to the monochromatic PSF at base_wavelength
-        @param base_wavelength    Wavelength represented by the fiducial PSF.
-        @param zenith_angle       Angle from object to zenith, expressed as a galsim.Angle
-        @param alpha              Power law index for wavelength-dependent seeing.  Default of -0.2
-                                  is the prediction for Kolmogorov turbulence.
-        @param position_angle     Angle pointing toward zenith, measured from "up" through "right".
-        @param **kwargs           Additional arguments are passed to dcr.get_refraction, and can
-                                  include temperature, pressure, and H20_pressure.
-        """
-        self.obj = base_obj.copy()
-        self.A = lambda w: numpy.matrix(numpy.identity(3), dtype=float)
-        self.fluxFactor = lambda w: 1.0
-        self.separable = False
-        self.applyDilation(lambda w: (w/base_wavelength)**(alpha))
-        base_refraction = galsim.dcr.get_refraction(base_wavelength, zenith_angle, **kwargs)
-        def shift_fn(w):
-            shift_magnitude = galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
-            shift_magnitude -= base_refraction
-            shift_magnitude = shift_magnitude / galsim.arcsec
-            shift = (shift_magnitude*numpy.sin(position_angle.rad()),
-                     shift_magnitude*numpy.cos(position_angle.rad()))
-            return shift
-        self.applyShift(shift_fn)

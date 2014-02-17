@@ -393,6 +393,39 @@ def test_scaling():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
+def test_jacobian():
+    """Check that transformed correlated noise xValues() are correct for a correlated noise with
+    something in it.
+    """
+    t1 = time.time()
+    ud = galsim.UniformDeviate(rseed)
+    ynoise_small = make_ycorr_from_uncorr(setup_uncorrelated_noise(ud, smallim_size))
+    cn = galsim.CorrelatedNoise(ud, ynoise_small, scale=1.)
+    dudx = 0.241
+    dudy = 0.051
+    dvdx = -0.098
+    dvdy = -0.278
+    cn_test1 = cn.createTransformed(dudx,dudy,dvdx,dvdy)
+    cn_test2 = cn.copy()
+    cn_test2.applyTransformation(dudx,dudy,dvdx,dvdy)
+    for i in range(npos_test):
+        rpos = ud() * smallim_size
+        tpos = 2. * np.pi * ud()
+        pos_ref = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
+        pos_test = galsim.PositionD(pos_ref.x * dudx + pos_ref.y * dudy,
+                                    pos_ref.x * dvdx + pos_ref.y * dvdy)
+        np.testing.assert_almost_equal(
+            cn_test1._profile.xValue(pos_test), cn._profile.xValue(pos_ref),
+            decimal=decimal_precise,
+            err_msg="Noise correlated in the y direction failed createTransformed() test")
+        np.testing.assert_almost_equal(
+            cn_test2._profile.xValue(pos_test), cn._profile.xValue(pos_ref),
+            decimal=decimal_precise,
+            err_msg="Noise correlated in the y direction failed applyTransformation() test")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
+
+
 def test_draw():
     """Test that the CorrelatedNoise draw() method matches its internal, NumPy-derived estimate of
     the correlation function, and an independent calculation of the same thing.
@@ -874,6 +907,7 @@ if __name__ == "__main__":
     test_ycorr_noise_basics_symmetry_90degree_rotation()
     test_arbitrary_rotation()
     test_scaling()
+    test_jacobian()
     test_draw()
     test_output_generation_basic()
     test_output_generation_rotated()

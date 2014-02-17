@@ -75,6 +75,7 @@ def test_convolve():
     # Using an exact Maple calculation for the comparison.  Only accurate to 4 decimal places.
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     myConv.applyExpansion(1./dx)
     myConv.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -208,6 +209,7 @@ def test_shearconvolve():
     myConv = galsim.SBConvolve([mySBP,mySBP2])
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     myConv.applyExpansion(1./dx)
     myConv.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -282,6 +284,7 @@ def test_realspace_convolve():
     # Note: Using an image created from Maple "exact" calculations.
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
     img = galsim.ImageF(saved_img.bounds, scale=dx)
+    img.setCenter(0,0)
     conv.applyExpansion(1./dx)
     conv.draw(img.image.view())
     printval(img, saved_img)
@@ -357,12 +360,13 @@ def test_realspace_distorted_convolve():
     pixel = galsim.SBBox(dx, dx, flux=1.)
     pixel.applyShear(galsim.Shear(g1=0.2,g2=0.0)._shear)
     pixel.applyRotation(80 * galsim.degrees)
-    pixel.applyShift(0.13,0.27)
+    pixel.applyShift(galsim.PositionD(0.13,0.27))
     conv = galsim.SBConvolve([psf,pixel],real_space=True)
 
     # Note: Using an image created from Maple "exact" calculations.
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel_distorted.fits"))
     img = galsim.ImageF(saved_img.bounds, scale=dx)
+    img.setCenter(0,0)
     conv.applyExpansion(1./dx)
     conv.draw(img.image.view())
     printval(img, saved_img)
@@ -436,6 +440,7 @@ def test_realspace_shearconvolve():
     conv = galsim.SBConvolve([psf,pix],real_space=True)
     saved_img = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
     img = galsim.ImageF(saved_img.bounds, scale=dx)
+    img.setCenter(0,0)
     conv.applyExpansion(1./dx)
     conv.draw(img.image.view())
     printval(img, saved_img)
@@ -497,6 +502,7 @@ def test_add():
     savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     myAdd.applyExpansion(1./dx)
     myAdd.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -642,10 +648,12 @@ def test_autoconvolve():
     myConv = galsim.SBConvolve([mySBP,mySBP])
     dx = 0.4
     myImg1 = galsim.ImageF(80,80, scale=dx)
+    myImg1.setCenter(0,0)
     myConv.applyExpansion(1./dx)
     myConv.draw(myImg1.image.view())
     myAutoConv = galsim.SBAutoConvolve(mySBP)
     myImg2 = galsim.ImageF(80,80, scale=dx)
+    myImg2.setCenter(0,0)
     myAutoConv.applyExpansion(1./dx)
     myAutoConv.draw(myImg2.image.view())
     printval(myImg1, myImg2)
@@ -729,9 +737,9 @@ def test_autocorrelate():
     t1 = time.time()
     # Use a function that is NOT two-fold rotationally symmetric, e.g. two different flux Gaussians
     myGauss1 = galsim.SBGaussian(sigma=3., flux=4)
-    myGauss1.applyShift(-0.2, -0.4)
+    myGauss1.applyShift(galsim.PositionD(-0.2, -0.4))
     myGauss2 = (galsim.SBGaussian(sigma=6., flux=1.3))
-    myGauss2.applyShift(0.3, 0.3)
+    myGauss2.applyShift(galsim.PositionD(0.3, 0.3))
     mySBP1 = galsim.SBAdd([myGauss1, myGauss2])
     mySBP2 = galsim.SBAdd([myGauss1, myGauss2])
     # Here we rotate by 180 degrees to create mirror image
@@ -739,10 +747,12 @@ def test_autocorrelate():
     myConv = galsim.SBConvolve([mySBP1, mySBP2])
     dx = 0.7
     myImg1 = galsim.ImageF(80,80, scale=dx)
+    myImg1.setCenter(0,0)
     myConv.applyExpansion(1./dx)
     myConv.draw(myImg1.image.view())
     myAutoCorr = galsim.SBAutoCorrelate(mySBP1)
     myImg2 = galsim.ImageF(80,80, scale=dx)
+    myImg2.setCenter(0,0)
     myAutoCorr.applyExpansion(1./dx)
     myAutoCorr.draw(myImg2.image.view())
     printval(myImg1, myImg2)

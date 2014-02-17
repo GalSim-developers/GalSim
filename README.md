@@ -262,6 +262,11 @@ Currently, GalSim has the following capabilities:
   properties in an input configuration script.  See the demo scripts in
   the examples/ directory for examples of each.
 
+* Supports a variety of possible WCS options from a simple pixel scale factor
+  of arcsec/pixel to affine transforms to arbitrary functions of (x,y),
+  including a variety of common FITS WCS specifications.
+
+
 
 
 Summary of planned future development
@@ -270,9 +275,7 @@ Summary of planned future development
 We plan to add the following additional capabilities in future versions of
 GalSim:
 
-* Support for generic world coordinate systems (WCS).  (cf. Issue #364)
-
-* PSFs from stochastic atmosphere models.  (cf. devel/modules/atmos_factfinding.pdf)
+* PSFs from stochastic atmosphere models.  (cf. `devel/modules/atmos_factfinding.pdf`)
 
 * Simulating simple detector defects or image artifacts.
 

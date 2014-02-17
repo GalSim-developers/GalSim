@@ -42,7 +42,9 @@ from interpolatedimage import InterpolatedImage
 from compound import *
 
 from shear import Shear
-from wcs import BaseWCS, PixelScale
+from wcs import BaseWCS, PixelScale, ShearWCS, JacobianWCS
+from wcs import OffsetWCS, OffsetShearWCS, AffineTransform, UVFunction, RaDecFunction
+from fitswcs import AstropyWCS, PyAstWCS, WcsToolsWCS, GSFitsWCS, FitsWCS, TanWCS
 from lensing_ps import PowerSpectrum
 from nfw_halo import NFWHalo, Cosmology
 from catalog import Catalog, Dict
@@ -51,11 +53,12 @@ from random import DistDeviate
 from noise import VariableGaussianNoise
 from correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
 from fits import FitsHeader
+from angle import HMS_Angle, DMS_Angle
+from celestial import CelestialCoord
 
 # packages with docs and such, so nothing really to import by name.
 from . import position
 from . import bounds
-from . import angle
 from . import random
 
 # packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)

@@ -233,7 +233,10 @@ def main():
         key, value = v.split('=',1)
         # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
         chain = key.split('.')
-        d = all_config[0]
+        if base_config:
+            d = base_config
+        else:
+            d = all_config[0]
         while chain:
             k = chain.pop(0)
             try: k = int(k)

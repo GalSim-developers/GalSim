@@ -87,7 +87,7 @@ def main(argv):
 
     random_seed = 1512413
     sky_level = 1.e6        # ADU / arcsec^2
-    pixel_scale = 0.15      # arcsec
+    pixel_scale = 0.16      # arcsec
     gal_flux = 1.e5         # arbitrary choice, makes nice (not too) noisy images
     gal_g1 = -0.027         #
     gal_g2 = 0.031          #
