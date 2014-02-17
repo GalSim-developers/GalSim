@@ -31,7 +31,7 @@ except ImportError:
 # This file has some helper functions that are used by tests from multiple files to help
 # avoid code duplication.
 
-def gsobject_compare(obj1, obj2, conv=None):
+def gsobject_compare(obj1, obj2, conv=None, decimal=10):
     """Helper function to check that two GSObjects are equivalent
     """
     if conv:
@@ -42,7 +42,7 @@ def gsobject_compare(obj1, obj2, conv=None):
     im2 = galsim.ImageD(16,16)
     obj1.draw(scale=0.2, image=im1, normalization='sb')
     obj2.draw(scale=0.2, image=im2, normalization='sb')
-    np.testing.assert_array_almost_equal(im1.array, im2.array, 10)
+    np.testing.assert_array_almost_equal(im1.array, im2.array, decimal=decimal)
 
 
 def printval(image1, image2):

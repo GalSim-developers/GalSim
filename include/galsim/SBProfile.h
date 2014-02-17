@@ -280,12 +280,12 @@ namespace galsim {
         void applyRotation(const Angle& theta);
 
         /**
-         * @brief Apply a transformation given by an arbitrary jacobian matrix
+         * @brief Apply a transformation given by an arbitrary Jacobian matrix
          *
          * This transforms the object by the given transformation. As with scaleFlux, it does not 
          * invalidate any previous uses of this object.
          *
-         * The parameters are the four elements of the jacobian: dudx, dudy, dvdx, dvdy.
+         * The parameters are the four elements of the Jacobian: dudx, dudy, dvdx, dvdy.
          */
         void applyTransformation(double dudx, double dudy, double dvdx, double dvdy);
 

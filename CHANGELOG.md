@@ -60,10 +60,10 @@ Python layer API changes:
 
 New WCS classes: (Issue #364)
 
-* Every place in the code that used to need a pixel scale item (e.g. `Image`
-  constructor, `GSObject.draw()`, `InterpolatedImage`, etc.) now can take a 
-  `wcs` item.  The `scale` parameter is still an option, but now it is just 
-  shorthand for `wcs = PixelScale(scale)`.
+* Every place in the code that can take a `scale` parameter (e.g. the `Image` 
+  constructor,  `GSObject.draw()`, `InterpolatedImage`, etc.) can now take a 
+  `wcs` parameter.  The `scale` parameter is still an option, but now it is
+  just shorthand for `wcs = PixelScale(scale)`.
 * There are three LocalWCS classes that have a common origin for image and 
   world coordinates:
   * `PixelScale` describes a simple scale conversion from pixels to arcsec.
@@ -140,13 +140,13 @@ Updates to config options:
   types: 'PixelScale', 'Shear', 'Jacobian', 'Affine', 'UVFunction',
   'RaDecFunction', 'Fits', and 'Tan'. (Issue #364)
 * Changed the name of `sky_pos` to `world_pos`. (Issue #364)
-* Remove pix top layer in config structure.  Add `draw_method=no_pixel` to 
+* Removed `pix` top layer in config structure.  Add `draw_method=no_pixel` to 
   do what `pix : None` used to do. (Issue #364)
-* Add `draw_method=real_space` to try to use real-space convolution.  This
+* Added `draw_method=real_space` to try to use real-space convolution.  This
   had been an option for the psf draw, but not the main draw.  This is only
-  possible if there is only one items being convolved with the pixel.
+  possible if there is only one item being convolved with the pixel.
   (Issue #364)
-* Add ability to index Sequences by any running index, rather than just the 
+* Added ability to index Sequences by any running index, rather than just the 
   default.  i.e. `obj_num`, `image_num`, or `file_num`. (Issue #364)
 * Added `Sum` type for value types for which it makes sense: float, int, angle,
   shear, position. (Issue #457)
@@ -174,14 +174,14 @@ Other new features:
   handy when dealing with RA or Dec. (Issue #364)
   * `angle.dms()` returns the angle as a string in the form +/-ddmmss.decimal.
   * `angle.hms()` returns the angle as a string in the form +/-hhmmss.decimal.
-  * `angle = DMS_Angle(str)` convert from a dms string to a `galsim.Angle`.
-  * `angle = HMS_Angle(str)` convert from an hms string to a `galsim.Angle`.
+  * `angle = DMS_Angle(str)` converts from a dms string to a `galsim.Angle`.
+  * `angle = HMS_Angle(str)` converts from an hms string to a `galsim.Angle`.
 * Added `profile.applyTransformation(dudx, dudy, dvdx, dvdy)` applies a general
   (linear) coordinate transformation to a GSObject profile.  It is a 
   generalization of `applyShear`, `applyRotation`, etc.  There is also the 
   corresponding `createTransformed` as well. (Issue #364)
-* Added `galsim.fits.readFile()` function reads a FITS file and returns the
-  hdu_list.  Normally, this is equivalent to `pyfits.open(file_name)`, but
+* Added `galsim.fits.readFile()` function, which reads a FITS file and returns
+  the hdu_list.  Normally, this is equivalent to `pyfits.open(file_name)`, but
   it has a `compression` option that works the same way `compression` works
   for the other `galsim.fits.read*` functions, so it may be convenient
   at times. (Issue #364)
