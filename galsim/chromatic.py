@@ -96,7 +96,8 @@ class ChromaticObject(object):
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
-        image = self._draw_setup_image(prof0, image, scale, wcs, wmult, add_to_image, use_true_center, offset)
+        image = ChromaticObject._draw_setup_image(
+                prof0, image, scale, wcs, wmult, add_to_image, use_true_center, offset)
 
         if self.separable:
             multiplier = galsim.integ.int1d(lambda w: self.SED(w) * bandpass(w),
@@ -122,32 +123,13 @@ class ChromaticObject(object):
         image += integral
         return image
 
-    def _draw_setup_image(self, prof, image, scale, wcs, wmult, add_to_image, use_true_center, offset):
-        # Check for non-trivial wcs
-        if wcs is not None:
-            if scale is not None:
-                raise ValueError("Cannot provide both wcs and scale")
-            if not wcs.isUniform():
-                if image is None:
-                    raise ValueError("Cannot provide non-local wcs when image == None")
-                if not image.bounds.isDefined():
-                    raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
-            if not isinstance(wcs, galsim.BaseWCS):
-                raise TypeError("wcs must be a BaseWCS instance")
-        elif scale is not None:
-            wcs = galsim.PixelScale(scale)
-        # else leave wcs = None
-
-        # Make sure offset is a PositionD
+    @staticmethod
+    def _draw_setup_image(prof, image, scale, wcs, wmult, add_to_image, use_true_center, offset):
+        # Repeat the steps from GSObject.draw that we need to do here.
+        wcs = prof._check_wcs(scale, wcs, image)
         offset = prof._parse_offset(offset)
-
-        # Apply the offset, and possibly fix the centering for even-sized images
-        # Note: We need to do this before we call _draw_setup_image, since the shift
-        # affects stepK (especially if the offset is rather large).
-        prof1 = prof._fix_center(image, wcs, offset, use_true_center, reverse=False)
-
-        # Make sure image is setup correctly
-        image = prof1._draw_setup_image(image, wcs, wmult, add_to_image)
+        prof = prof._fix_center(image, wcs, offset, use_true_center, reverse=False)
+        image = prof._draw_setup_image(image, wcs, wmult, add_to_image)
         return image
 
     def _getScaleEtaBetaThetaDxDy(self, w):
@@ -871,7 +853,8 @@ class ChromaticConvolution(ChromaticObject):
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
-        image = self._draw_setup_image(prof0, image, scale, wcs, wmult, add_to_image, use_true_center, offset)
+        image = ChromaticObject._draw_setup_image(
+                prof0, image, scale, wcs, wmult, add_to_image, use_true_center, offset)
 
         # Sort these atomic objects into separable and inseparable lists, and collect
         # the spectral parts of the separable profiles.

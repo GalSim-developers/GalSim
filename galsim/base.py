@@ -811,7 +811,25 @@ class GSObject(object):
         else:
             return self.createShifted(wcs.toWorld(offset))
 
-
+    def _check_wcs(self, scale, wcs, image):
+        # Get the correct wcs given the input scale, wcs and image.
+        if wcs is not None:
+            if scale is not None:
+                raise ValueError("Cannot provide both wcs and scale")
+            if not wcs.isUniform():
+                if image is None:
+                    raise ValueError("Cannot provide non-local wcs when image == None")
+                if not image.bounds.isDefined():
+                    raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
+            if not isinstance(wcs, galsim.BaseWCS):
+                raise TypeError("wcs must be a BaseWCS instance")
+            return wcs
+        elif scale is not None:
+            return galsim.PixelScale(scale)
+        else:
+            # else leave wcs = None
+            return None
+ 
     def draw(self, image=None, scale=None, wcs=None, gain=1., wmult=1., normalization="flux",
              add_to_image=False, use_true_center=True, offset=None):
         """Draws an Image of the object, with bounds optionally set by an input Image.
@@ -940,19 +958,7 @@ class GSObject(object):
             raise ValueError("Invalid wmult <= 0 in draw command")
 
         # Check for non-trivial wcs
-        if wcs is not None:
-            if scale is not None:
-                raise ValueError("Cannot provide both wcs and scale")
-            if not wcs.isUniform():
-                if image is None:
-                    raise ValueError("Cannot provide non-local wcs when image == None")
-                if not image.bounds.isDefined():
-                    raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
-            if not isinstance(wcs, galsim.BaseWCS):
-                raise TypeError("wcs must be a BaseWCS instance")
-        elif scale is not None:
-            wcs = galsim.PixelScale(scale)
-        # else leave wcs = None
+        wcs = self._check_wcs(scale, wcs, image)
 
         # Make sure offset is a PositionD
         offset = self._parse_offset(offset)
@@ -1158,19 +1164,7 @@ class GSObject(object):
             warnings.warn(msg)
 
         # Check for non-trivial wcs
-        if wcs is not None:
-            if scale is not None:
-                raise ValueError("Cannot provide both wcs and scale")
-            if not wcs.isUniform():
-                if image is None:
-                    raise ValueError("Cannot provide non-local wcs when image == None")
-                if not image.bounds.isDefined():
-                    raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
-            if not isinstance(wcs, galsim.BaseWCS):
-                raise TypeError("wcs must be a BaseWCS instance")
-        elif scale is not None:
-            wcs = galsim.PixelScale(scale)
-        # else leave wcs = None
+        wcs = self._check_wcs(scale, wcs, image)
 
         # Make sure offset is a PositionD
         offset = self._parse_offset(offset)
