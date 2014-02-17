@@ -89,6 +89,7 @@ def test_sbinterpolatedimage():
         sbinterp = galsim.SBInterpolatedImage(image_in.image, lan3_2d, quint_2d)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
         image_out = galsim.Image(test_array, scale=1.0)
+        image_out.setCenter(0,0)
         sbinterp.draw(image_out.image.view())
         np.testing.assert_array_equal(
                 ref_array.astype(array_type),image_out.array,
@@ -265,6 +266,12 @@ def test_operations_simple():
     lam_over_diam *= 206265  # arcsec
     im_size = 512
 
+    # define subregion for comparison
+    comp_region=30 # compare the central region of this linear size
+    comp_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
+    comp_bounds = comp_bounds.shift(galsim.PositionI((im_size-comp_region)/2,
+                                                     (im_size-comp_region)/2))
+
     bulge = galsim.Sersic(4, half_light_radius=bulge_hlr)
     bulge.applyShear(e=bulge_e, beta=bulge_pos_angle)
     disk = galsim.Exponential(half_light_radius = disk_hlr)
@@ -283,7 +290,6 @@ def test_operations_simple():
     test_g1=-0.07
     test_g2=0.1
     test_decimal=2 # in % difference, i.e. 2 means 1% agreement
-    comp_region=30 # compare the central region of this linear size
     test_int_im = int_im.createSheared(g1=test_g1, g2=test_g2)
     ref_obj = obj.createSheared(g1=test_g1, g2=test_g2)
     # make large images
@@ -292,10 +298,8 @@ def test_operations_simple():
     test_int_im.draw(image=im, scale=pix_scale)
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
-    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
-    im_sub = im.subImage(new_bounds)
-    ref_im_sub = ref_im.subImage(new_bounds)
+    im_sub = im.subImage(comp_bounds)
+    ref_im_sub = ref_im.subImage(comp_bounds)
     diff_im=im_sub-ref_im_sub
     rel = diff_im/im_sub
     zeros_arr = np.zeros((comp_region, comp_region))
@@ -316,10 +320,8 @@ def test_operations_simple():
     test_int_im.draw(image=im, scale=pix_scale)
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
-    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
-    im_sub = im.subImage(new_bounds)
-    ref_im_sub = ref_im.subImage(new_bounds)
+    im_sub = im.subImage(comp_bounds)
+    ref_im_sub = ref_im.subImage(comp_bounds)
     diff_im=im_sub-ref_im_sub
     rel = diff_im/im_sub
     zeros_arr = np.zeros((comp_region, comp_region))
@@ -342,10 +344,8 @@ def test_operations_simple():
     test_int_im.draw(image=im, scale=pix_scale)
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
-    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
-    im_sub = im.subImage(new_bounds)
-    ref_im_sub = ref_im.subImage(new_bounds)
+    im_sub = im.subImage(comp_bounds)
+    ref_im_sub = ref_im.subImage(comp_bounds)
     diff_im=im_sub-ref_im_sub
     rel = diff_im/im_sub
     zeros_arr = np.zeros((comp_region, comp_region))
@@ -366,10 +366,8 @@ def test_operations_simple():
     test_int_im.draw(image=im, scale=pix_scale)
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
-    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
-    im_sub = im.subImage(new_bounds)
-    ref_im_sub = ref_im.subImage(new_bounds)
+    im_sub = im.subImage(comp_bounds)
+    ref_im_sub = ref_im.subImage(comp_bounds)
     diff_im=im_sub-ref_im_sub
     rel = diff_im/im_sub
     zeros_arr = np.zeros((comp_region, comp_region))
@@ -391,10 +389,8 @@ def test_operations_simple():
     test_int_im.draw(image=im, scale=pix_scale)
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
-    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
-    im_sub = im.subImage(new_bounds)
-    ref_im_sub = ref_im.subImage(new_bounds)
+    im_sub = im.subImage(comp_bounds)
+    ref_im_sub = ref_im.subImage(comp_bounds)
     diff_im=im_sub-ref_im_sub
     rel = diff_im/im_sub
     zeros_arr = np.zeros((comp_region, comp_region))
@@ -563,7 +559,7 @@ def test_pad_image():
 
     # Use a few different kinds of shapes for that padding. 
     for (pad_nx, pad_ny) in [ (160,160), (179,191), (256,256), (305, 307) ]:
-        print 'pad size = ',pad_nx, pad_ny
+        #print 'pad size = ',pad_nx, pad_ny
 
         # make the pad_image 
         pad_img = galsim.ImageF(pad_nx, pad_ny, scale=1.)
@@ -571,13 +567,10 @@ def test_pad_image():
         pad_img.setCenter(0,0)
 
         # make an interpolated image padded with the pad_image, and outside of that
-        orig_img.write('junk1.fits')
-        pad_img.write('junk2.fits')
         int_im = galsim.InterpolatedImage(orig_img, pad_image=pad_img, use_true_center=False)
 
         # draw into the larger image
         int_im.draw(big_img, use_true_center=False)
-        big_img.write('junk3.fits')
 
         # check that variance is diluted by expected amount 
         # Note -- we don't use np.var, since that computes the variance relative to the 
@@ -619,7 +612,7 @@ def test_corr_padding():
     # Set up some defaults for tests.
     decimal_precise=4
     decimal_coarse=2
-    imgfile = 'blankimg.fits'
+    imgfile = 'fits_files/blankimg.fits'
     orig_nx = 187
     orig_ny = 164
     big_nx = 319
@@ -679,7 +672,7 @@ def test_corr_padding():
         print 'The assert_raises tests require nose'
     # also, check that whether we give it a string, image, or cn, it gives the same noise field
     # (given the same random seed)
-    infile = 'blankimg.fits'
+    infile = 'fits_files/blankimg.fits'
     inimg = galsim.fits.read(infile)
     incf = galsim.CorrelatedNoise(galsim.GaussianDeviate(), inimg) # input RNG will be ignored below
     int_im2 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
@@ -724,8 +717,11 @@ def test_realspace_conv():
     psf1 = galsim.Gaussian(flux=1, half_light_radius=0.77)
     psf_im = psf1.draw(scale=raw_scale, image=galsim.ImageD(raw_size,raw_size))
 
-    #for interp in ['nearest', 'linear', 'cubic', 'quintic', 'lanczos3', 'lanczos5', 'lanczos7']:
-    for interp in ['linear', 'cubic', 'quintic']:
+    if __name__ == "__main__":
+        interp_list = ['linear', 'cubic', 'quintic', 'lanczos3', 'lanczos5', 'lanczos7']
+    else:
+        interp_list = ['linear', 'cubic', 'quintic']
+    for interp in interp_list:
         # Note 1: The Lanczos interpolants pass these tests just fine.  They just take a long 
         # time to run, even with the small images we are working with.  So skip them for regular 
         # unit testing.  Developers working on this should re-enable those while testing.

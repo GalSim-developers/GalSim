@@ -233,39 +233,48 @@ class GSObject(object):
         """
         return self.SBProfile.getFlux()
 
-    def xValue(self, position):
+    def xValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in real space.
         
-        xValue() is available if obj.isAnalyticX() == True.
-
-        This function assumes all are real-valued.  xValue() may not be implemented for derived 
-        classes (e.g. Convolve) that require a Discrete Fourier Transform to determine real space 
-        values.  In this case, an exception will be thrown at the C++ layer (raises a RuntimeError
-        in Python).  Users who wish to use the xValue() method for an object that is the 
-        convolution of other profiles can do so by drawing the convolved profile into an image,
-        using the image to initialize a new InterpolatedImage, and then using the xValue() method
-        for that new object.
+        This function returns the surface brightness of the object at a particular position
+        in real space.  The position argument may be provided as a PositionD or PositionI
+        argument, or it may be given as x,y (either as a tuple or as two arguments). 
         
-        @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in real
-                         space.
-        """
-        return self.SBProfile.xValue(position)
+        The object surface brightness profiles are typically defined in world coordinates, so
+        the position here should be in world coordinates as well.
 
-    def kValue(self, position):
+        Not all GSObject classes can use this method.  Classes like Convolve that require a 
+        Discrete Fourier Transform to determine the real space values will not do so for a 
+        single position.  Instead a RuntimeError will be raised.  The xValue(pos) method 
+        is available if and only if obj.isAnalyticX() == True.
+
+        Users who wish to use the xValue() method for an object that is the convolution of other 
+        profiles can do so by drawing the convolved profile into an image, using the image to 
+        initialize a new InterpolatedImage, and then using the xValue() method for that new object.
+        
+        @param position  The position at which you want the surface brightness of the object.
+        @returns xvalue  The surface brightness at that position.
+        """
+        pos = galsim.utilities.parse_pos_args(args,kwargs,'x','y')
+        return self.SBProfile.xValue(pos)
+
+    def kValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in k space.
 
-        kValue() is available if the given obj has obj.isAnalyticK() == True. 
+        This function returns the amplitude of the fourier transform of the surface brightness
+        profile at a given position in k space.  The position argument may be provided as a 
+        PositionD or PositionI argument, or it may be given as kx,ky (either as a tuple or as two 
+        arguments). 
 
-        kValue() can be used for all of our simple base classes.  However, if a Convolve object
-        representing the convolution of multiple objects uses real-space convolution rather than the
-        DFT approach, i.e., real_space=True (either by argument or if it decides on its own to do
-        so), then it is not analytic in k-space, so kValue() will raise an exception.  An exception
-        will be thrown at the C++ layer (raises a RuntimeError in Python).
+        Techinically, kValue() is available if and only if the given obj has obj.isAnalyticK() 
+        == True, but this is the case for all GSObjects currently, so that should never be an
+        issue (unlike for xValue).
 
-        @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in k 
-                         space.
+        @param position  The position in k space at which you want the fourier amplitude.
+        @returns kvalue  The amplitude of the fourier transform at that position.
         """
-        return self.SBProfile.kValue(position)
+        kpos = galsim.utilities.parse_pos_args(args,kwargs,'kx','ky')
+        return self.SBProfile.kValue(kpos)
 
     def scaleFlux(self, flux_ratio):
         """Multiply the flux of the object by flux_ratio
@@ -319,7 +328,6 @@ class GSObject(object):
 
         @param scale The factor by which to scale the linear dimension of the object.
         """
-        import numpy as np
         if hasattr(self,'noise'):
             self.noise.applyExpansion(scale)
         self.SBProfile.applyExpansion(scale)
@@ -439,6 +447,40 @@ class GSObject(object):
         self.SBProfile.applyRotation(theta)
         self.__class__ = GSObject
 
+    def applyTransformation(self, dudx, dudy, dvdx, dvdy):
+        """Apply a transformation to this object defined by an arbitrary Jacobian matrix.
+
+        This applies a Jacobian matrix to the coordinate system in which this object 
+        is defined.  It changes a profile defined in terms of (x,y) to one defined in 
+        terms of (u,v) where:
+
+            u = dudx x + dudy y
+            v = dvdx x + dvdy y
+
+        That is, an arbitrary affine transform, but without the translation (which is 
+        easily effected via applyShift).
+
+        Note that this function is similar to applyExpansion in that it preserves
+        surface brightness, not flux.  If you want to preserve flux, you should also do
+
+            prof.scaleFlux( 1. / abs(dudx*dvdy - dudy*dvdx) )
+
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
+
+        @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        """
+        if hasattr(self,'noise'):
+            self.noise.applyTransformation(dudx,dudy,dvdx,dvdy)
+        self.SBProfile.applyTransformation(dudx,dudy,dvdx,dvdy)
+        self.__class__ = GSObject
+ 
+
     def applyShift(self, *args, **kwargs):
         """Apply a (dx, dy) shift to this object.
            
@@ -453,28 +495,8 @@ class GSObject(object):
         Note: you may supply dx,dy as either two arguments, as a tuple, or as a 
         galsim.PositionD or galsim.PositionI object.
         """
-        if len(args) == 0:
-            # Then dx,dy need to be kwargs
-            # If not, then python will raise an appropriate error.
-            dx = kwargs.pop('dx')
-            dy = kwargs.pop('dy')
-        elif len(args) == 1:
-            if isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
-                dx = args[0].x
-                dy = args[0].y
-            else:
-                # Let python raise the appropriate exception if this isn't valid.
-                dx = args[0][0]
-                dy = args[0][1]
-        elif len(args) == 2:
-            dx = args[0]
-            dy = args[1]
-        else:
-            raise TypeError("Too many arguments supplied to applyShift ")
-        if kwargs:
-            raise TypeError("applyShift() got unexpected keyword arguments: %s",kwargs.keys())
-                
-        self.SBProfile.applyShift(dx,dy)
+        delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
+        self.SBProfile.applyShift(delta)
         self.__class__ = GSObject
 
     # Also add methods which create a new GSObject with the transformations applied...
@@ -565,6 +587,29 @@ class GSObject(object):
         ret.applyRotation(theta)
         return ret
         
+    def createTransformed(self, dudx, dudy, dvdx, dvdy):
+        """Returns a new GSObject by applying a transformation given by a Jacobian matrix.
+
+        This applies a Jacobian matrix to the coordinate system in which this object 
+        is defined.  It takes a profile defined in terms of (x,y) and returns the equivalent
+        profile defined in terms of (u,v) where:
+
+            u = dudx x + dudy y
+            v = dvdx x + dvdy y
+
+        That is, an arbitrary affine transform, but without the translation (which is 
+        easily effected via applyShift).
+
+        @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @returns        The transformed object.
+        """
+        ret = self.copy()
+        ret.applyTransformation(dudx,dudy,dvdx,dvdy)
+        return ret
+        
     def createShifted(self, *args, **kwargs):
         """Returns a new GSObject by applying a shift.
 
@@ -582,17 +627,19 @@ class GSObject(object):
 
     # Make sure the image is defined with the right size and wcs for the draw and
     # drawShoot commands.
-    def _draw_setup_image(self, image, scale, wmult, add_to_image, scale_is_dk=False):
+    def _draw_setup_image(self, image, wcs, wmult, add_to_image, scale_is_dk=False):
 
         # If image already exists, and its wcs is not a PixelScale, then we're all set.
-        # No need to run through the rest of this.  (And in fact, trying to access 
-        # image.scale would raise an exception.)
-        if (image is not None and image.wcs is not None and 
-                not isinstance(image.wcs, galsim.PixelScale)):
+        # No need to run through the rest of this.
+        if image is not None and image.wcs is not None and not image.wcs.isPixelScale():
             # Clear the image if we are not adding to it.
             if not add_to_image:
                 image.setZero()
             return image
+
+        scale = None
+        if wcs is not None:
+            scale = wcs.maxLinearScale()
 
         # Save the input value, since we'll need to make a new scale (in case image is None)
         if scale_is_dk: dk = scale
@@ -613,19 +660,20 @@ class GSObject(object):
                     dk = self.stepK()
         elif scale <= 0:
             scale = self.SBProfile.nyquistDx()
+            wcs = None # Mark that the input wcs should not be used.
             if scale_is_dk:
                 dk = self.stepK()
-        elif type(scale) != float:
-            if scale_is_dk:
-                dk = float(scale)
-                if image is not None:
-                    import numpy as np
-                    scale = 2.*np.pi/( np.max(image.array.shape) * dk )
-                else:
-                    scale = self.SBProfile.nyquistDx()
+        elif scale_is_dk:
+            dk = float(scale)
+            if image is not None:
+                import numpy as np
+                scale = 2.*np.pi/( np.max(image.array.shape) * dk )
             else:
-                scale = float(scale)
-        # At this point scale is really scale, not dk.
+                scale = self.SBProfile.nyquistDx()
+        elif type(scale) != float:
+            scale = float(scale)
+        # At this point scale is really scale, not dk.  So we can use it to determine
+        # the "GoodImageSize".
 
         # Make image if necessary
         if image is None:
@@ -651,22 +699,47 @@ class GSObject(object):
             if not add_to_image:
                 image.setZero()
 
-        # Set the image scale
+        # Set the image wcs
         if scale_is_dk:
             image.scale = dk
+        elif wcs is not None:
+            image.wcs = wcs
         else:
             image.scale = scale
 
         return image
 
-    def _fix_center(self, image, scale, offset, use_true_center, reverse):
+    def _obj_center(self, image, offset, use_true_center):
+        # This just encapsulates this calculation that we do in a few places.
+        if use_true_center:
+            obj_cen = image.bounds.trueCenter()
+        else:
+            obj_cen = image.bounds.center()
+            # Convert from PositionI to PositionD
+            obj_cen = galsim.PositionD(obj_cen.x, obj_cen.y)
+        if offset:
+            obj_cen += offset
+        return obj_cen
+
+    def _parse_offset(self, offset):
+        if offset is None:
+            return galsim.PositionD(0,0)
+        else:
+            if isinstance(offset, galsim.PositionD) or isinstance(offset, galsim.PositionI):
+                return galsim.PositionD(offset.x, offset.y)
+            else:
+                # Let python raise the appropriate exception if this isn't valid.
+                return galsim.PositionD(offset[0], offset[1])
+       
+
+    def _fix_center(self, image, wcs, offset, use_true_center, reverse):
         # This is a touch circular since we may not know the image shape or scale yet. 
         # So we need to repeat a little bit of what will be done again in _draw_setup_image
         #
         # - If the image is None, then it will be built with even sizes, and all fix_center
         #   cares about is the odd/even-ness of the shape, so juse use (0,0).
-        # - If scale is None, first try to get it from the image if given.
-        # - If scale is None, and image is None (or im.scale <= 0), then use the nyquist scale.
+        # - If wcs is None, first try to get it from the image if given.
+        # - If wcs is None, and image is None (or im.scale <= 0), then use the nyquist scale.
         #   Here is the really circular one, since the nyquist scale depends on stepK, which
         #   changes when we offset, but we need scale to know how much to offset.  So just 
         #   use the current nyquist scale and hope the offset isn't too large, so it won't
@@ -677,50 +750,45 @@ class GSObject(object):
         else:
             shape = image.array.shape
 
-        if scale is None:
-            if (image is not None and image.wcs is not None and 
-                    (not isinstance(image.wcs, galsim.PixelScale) or image.scale > 0.)):
-                if use_true_center:
-                    im_cen = image.bounds.trueCenter()
+        if wcs is None:
+            if image is not None and image.wcs is not None:
+                if image.wcs.isPixelScale():
+                    if image.scale <= 0:
+                        wcs = galsim.PixelScale(self.SBProfile.nyquistDx())
+                    else:
+                        wcs = image.wcs.local()
                 else:
-                    im_cen = image.bounds.center()
-                wcs = image.wcs.local(image_pos=im_cen)
+                    # Not a PixelScale.  Just make sure we are using a local wcs
+                    obj_cen = self._obj_center(image, offset, use_true_center)
+                    wcs = image.wcs.local(image_pos=obj_cen)
             else:
                 wcs = galsim.PixelScale(self.SBProfile.nyquistDx())
-        elif scale <= 0:
+        elif wcs.isPixelScale() and wcs.scale <= 0:
             wcs = galsim.PixelScale(self.SBProfile.nyquistDx())
         else:
-            wcs = galsim.PixelScale(float(scale))
-
-        if offset is None:
-            dx = 0.
-            dy = 0.
-        else:
-            if isinstance(offset, galsim.PositionD) or isinstance(offset, galsim.PositionI):
-                dx = offset.x
-                dy = offset.y
-            else:
-                # Let python raise the appropriate exception if this isn't valid.
-                dx = offset[0]
-                dy = offset[1]
+            # Should have already checked that wcs is uniform, so local() without an
+            # image_pos argument should be ok.
+            wcs = wcs.local()
  
         if use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the 
             # pixel just up and right of the real center.  So shift it back to make sure it really
             # draws in the center.
             # Also, remember that numpy's shape is ordered as [y,x]
+            dx = offset.x
+            dy = offset.y
             if shape[1] % 2 == 0: dx -= 0.5
             if shape[0] % 2 == 0: dy -= 0.5
+            offset = galsim.PositionD(dx,dy)
 
         # For InterpolatedImage offsets, we apply the offset in the opposite direction.
         if reverse: 
-            dx = -dx
-            dy = -dy
+            offset = -offset
 
-        if dx == 0. and dy == 0.:
+        if offset == galsim.PositionD(0,0):
             return self.copy()
         else:
-            return self.createShifted(wcs.toWorld(galsim.PositionD(dx,dy)))
+            return self.createShifted(wcs.toWorld(offset))
 
 
     def draw(self, image=None, scale=None, wcs=None, gain=1., wmult=1., normalization="flux",
@@ -854,36 +922,42 @@ class GSObject(object):
         if wcs is not None:
             if scale is not None:
                 raise ValueError("Cannot provide both wcs and scale")
-            if image is None:
-                raise ValueError("Cannot provide wcs when image == None")
-            if not image.bounds.isDefined():
-                raise ValueError("Cannot provide wcs when image has undefined bounds")
-            if not isinstance(wcs, galsim.BaseWCS()):
+            if not wcs.isUniform():
+                if image is None:
+                    raise ValueError("Cannot provide non-local wcs when image == None")
+                if not image.bounds.isDefined():
+                    raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
+            if not isinstance(wcs, galsim.BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
-            image.wcs = wcs
+        elif scale is not None:
+            wcs = galsim.PixelScale(scale)
+        # else leave wcs = None
+
+        # Make sure offset is a PositionD
+        offset = self._parse_offset(offset)
 
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note: We need to do this before we call _draw_setup_image, since the shift
         # affects stepK (especially if the offset is rather large).
-        prof = self._fix_center(image, scale, offset, use_true_center, reverse=False)
+        prof = self._fix_center(image, wcs, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
-        image = prof._draw_setup_image(image,scale,wmult,add_to_image)
+        image = prof._draw_setup_image(image, wcs, wmult, add_to_image)
 
-        if use_true_center:
-            im_cen = image.bounds.trueCenter()
-        else:
-            im_cen = image.bounds.center()
+        # Figure out the position of the center of the object
+        obj_cen = self._obj_center(image, offset, use_true_center)
 
         # Surface brightness normalization requires scaling the flux value of each pixel
         # by the area of the pixel.  We do this by changing the gain.
         if normalization.lower() in ['surface brightness','sb']:
-            gain *= image.wcs.pixelArea(image_pos=im_cen)
+            gain *= image.wcs.pixelArea(image_pos=obj_cen)
 
         # Convert the profile in world coordinates to the profile in image coordinates:
-        prof = image.wcs.toImage(prof, image_pos=im_cen)
+        prof = image.wcs.toImage(prof, image_pos=obj_cen)
 
-        image.added_flux = prof.SBProfile.draw(image.image.view(), gain, wmult)
+        imview = image.view()
+        imview.setCenter(0,0)
+        image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
 
         return image
 
@@ -1066,36 +1140,42 @@ class GSObject(object):
         if wcs is not None:
             if scale is not None:
                 raise ValueError("Cannot provide both wcs and scale")
-            if image is None:
-                raise ValueError("Cannot provide wcs when image == None")
-            if not image.bounds.isDefined():
-                raise ValueError("Cannot provide wcs when image has undefined bounds")
-            if not isinstance(wcs, galsim.BaseWCS()):
+            if not wcs.isUniform():
+                if image is None:
+                    raise ValueError("Cannot provide non-local wcs when image == None")
+                if not image.bounds.isDefined():
+                    raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
+            if not isinstance(wcs, galsim.BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
-            image.wcs = wcs
+        elif scale is not None:
+            wcs = galsim.PixelScale(scale)
+        # else leave wcs = None
+
+        # Make sure offset is a PositionD
+        offset = self._parse_offset(offset)
 
         # Apply the offset, and possibly fix the centering for even-sized images
-        prof = self._fix_center(image, scale, offset, use_true_center, reverse=False)
+        prof = self._fix_center(image, wcs, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
-        image = prof._draw_setup_image(image,scale,wmult,add_to_image)
+        image = prof._draw_setup_image(image, wcs, wmult, add_to_image)
 
-        if use_true_center:
-            im_cen = image.bounds.trueCenter()
-        else:
-            im_cen = image.bounds.center()
+        obj_cen = self._obj_center(image, offset, use_true_center)
 
         # Surface brightness normalization requires scaling the flux value of each pixel
         # by the area of the pixel.  We do this by changing the gain.
         if normalization.lower() in ['surface brightness','sb']:
-            gain *= image.wcs.pixelArea(image_pos=im_cen)
+            gain *= image.wcs.pixelArea(image_pos=obj_cen)
 
         # Convert the profile in world coordinates to the profile in chip coordinates:
-        prof = image.wcs.toImage(prof, image_pos=im_cen)
+        prof = image.wcs.toImage(prof, image_pos=obj_cen)
+
+        imview = image.view()
+        imview.setCenter(0,0)
 
         try:
             image.added_flux = prof.SBProfile.drawShoot(
-                image.image.view(), n_photons, uniform_deviate, gain, max_extra_noise,
+                imview.image, n_photons, uniform_deviate, gain, max_extra_noise,
                 poisson_flux, add_to_image)
         except RuntimeError:
             # Give some extra explanation as a warning, then raise the original exception
@@ -1174,8 +1254,9 @@ class GSObject(object):
                     raise ValueError("re and im do not have the same defined bounds")
 
         # Make sure images are setup correctly
-        re = self._draw_setup_image(re,scale,1.0,add_to_image,scale_is_dk=True)
-        im = self._draw_setup_image(im,scale,1.0,add_to_image,scale_is_dk=True)
+        wcs = galsim.PixelScale(scale)
+        re = self._draw_setup_image(re,wcs,1.0,add_to_image,scale_is_dk=True)
+        im = self._draw_setup_image(im,wcs,1.0,add_to_image,scale_is_dk=True)
 
         # Convert the profile in world coordinates to the profile in image coordinates:
         # The scale in the wcs objects is the dk scale, not dx.  So the conversion to 
@@ -1188,7 +1269,13 @@ class GSObject(object):
 
         # wmult isn't really used by drawK, but we need to provide it.
         wmult = 1.0
-        prof.SBProfile.drawK(re.image.view(), im.image.view(), gain, wmult)
+
+        review = re.view()
+        review.setCenter(0,0)
+        imview = im.view()
+        imview.setCenter(0,0)
+
+        prof.SBProfile.drawK(review.image, imview.image, gain, wmult)
 
         return re,im
 

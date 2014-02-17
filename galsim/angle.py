@@ -42,6 +42,47 @@ There are five built-in AngleUnits which are always available for use:
     galsim.arcsec    # = galsim.AngleUnit(pi / 180. / 3600.)
 """
 
+def AngleUnit_repr(self):
+    if self is galsim.radians:
+        return 'galsim.radians'
+    elif self is galsim.degrees:
+        return 'galsim.degrees'
+    elif self is galsim.hours:
+        return 'galsim.house'
+    elif self is galsim.arcmin:
+        return 'galsim.arcmin'
+    elif self is galsim.arcsec:
+        return 'galsim.arcsec'
+    else:
+        return 'galsim.AngleUnit(' + str(self.getValue()) + ')'
+galsim.AngleUnit.__repr__ = AngleUnit_repr
+
+# Enable pickling
+def AngleUnit_getinitargs(self):
+    return self.getValue()
+galsim.AngleUnit.__getinitargs__ = AngleUnit_getinitargs
+
+
+def get_angle_unit(unit):
+    """Convert a string into the corresponding AngleUnit
+    """
+    unit = unit.strip().lower()
+    if unit.startswith('rad') :
+        return galsim.radians
+    elif unit.startswith('deg') :
+        return galsim.degrees
+    elif unit.startswith('hour') :
+        return galsim.hours
+    elif unit.startswith('hr') :
+        return galsim.hours
+    elif unit.startswith('arcmin') :
+        return galsim.arcmin
+    elif unit.startswith('arcsec') :
+        return galsim.arcsec
+    else :
+        raise AttributeError("Unknown Angle unit: %s"%unit)
+
+
 
 galsim.Angle.__doc__ = """A class representing an Angle.
 
@@ -73,7 +114,7 @@ There are five built-in AngleUnits which are always available for use:
 Radian access method
 --------------------
 
-Since extracting the value in radians is extremely common, we have an accessor method to do this 
+Since extracting the value in radians is extremely common, we have an accessor method to do this
 quickly:
 
     >>> x = theta.rad()
@@ -114,9 +155,9 @@ Wrapping
 Depending on the context, theta = 2pi radians and theta = 0 radians are the same thing.
 If you want your angles to be wrapped to [-pi,pi) radians, you can do this by calling
 
-    >>> theta.wrap()
+    >>> theta = theta.wrap()
 
-This could be appropriate before testing for the equality of two angles for example, or 
+This could be appropriate before testing for the equality of two angles for example, or
 calculating the difference between them.
 
 """
@@ -132,26 +173,106 @@ def __repr__(self):
 def __neg__(self):
     return -1. * self
 
+def _make_dms_string(decimal, sep):
+    if decimal >= 0:
+        sign = '+'
+    else:
+        sign = '-'
+        decimal = -decimal
+    d = int(decimal)
+    decimal -= d
+    decimal *= 60.
+    m = int(decimal)
+    decimal -= m
+    decimal *= 60.
+    s = int(decimal)
+    decimal -= s
+    decimal *= 1.e8
+    return '%s%02d%s%02d%s%02d.%08d'%(sign,d,sep,m,sep,s,decimal)
+
+def hms(self, sep=":"):
+    """Return an HMS representation of the angle as a string: (+/-)hh:mm:ss.decimal.
+    An optional `sep` parameter can change the : to something else (e.g. a space or 
+    nothing at all).
+    """
+    # HMS convention is usually to have the hours between 0 and 24, not -12 and 12
+    h = self.wrap() / galsim.hours
+    if h < 0: h += 24.
+    return _make_dms_string(h,sep)
+
+def dms(self, sep=":"):
+    """Return a DMS representation of the angle as a string: (+/-)ddmmss.decimal
+    An optional `sep` parameter can change the : to something else (e.g. a space or 
+    nothing at all).
+    """
+    d = self.wrap() / galsim.degrees
+    return _make_dms_string(d,sep)
+
 galsim.Angle.__str__ = __str__
 galsim.Angle.__repr__ = __repr__
 galsim.Angle.__neg__ = __neg__
+galsim.Angle.hms = hms
+galsim.Angle.dms = dms
 
-def get_angle_unit(unit):
-    """Convert a string into the corresponding AngleUnit
+# Enable pickling
+def Angle_getstate(self):
+    return self.rad()
+def Angle_setstate(self, theta):
+    self.__init__(theta, galsim.radians)
+galsim.Angle.__getstate__ = Angle_getstate
+galsim.Angle.__setstate__ = Angle_setstate
+
+def parse_dms(s):
+    """Convert a string of the form dd:mm:ss.decimal into decimal degrees."""
+    sign = 1
+    k = 0
+    if s[0] == '-':
+        sign = -1
+        k = 1
+    elif s[0] == '+':
+        k = 1
+
+    d = int(s[k:k+2])
+    k = k+2
+    while not '0' <= s[k] < '9': k = k+1
+    m = int(s[k:k+2])
+    k = k+2
+    while not '0' <= s[k] < '9': k = k+1
+    s = float(s[k:])
+
+    return sign * (d + m/60. + s/3600.)
+
+def HMS_Angle(str):
+    """Convert a string of the form hh:mm:ss.decimal into an Angle.
+
+    There may be an initial + or - (or neither), then two digits for the hours, two for the
+    minutes, and two for the seconds.  Then there may be a decimal point followed by more
+    digits.  There may be a colon separating hh, mm, and ss, or whitespace, or nothing at all.
+    In fact, the code will ignore any non-digits between the hours, minutes, and seconds.
+
+    @returns the corresponding Angle instance
     """
-    unit = unit.strip().lower()
-    if unit.startswith('rad') :
-        return galsim.radians
-    elif unit.startswith('deg') :
-        return galsim.degrees
-    elif unit.startswith('hour') :
-        return galsim.hours
-    elif unit.startswith('hr') :
-        return galsim.hours
-    elif unit.startswith('arcmin') :
-        return galsim.arcmin
-    elif unit.startswith('arcsec') :
-        return galsim.arcsec
-    else :
-        raise AttributeError("Unknown Angle unit: %s"%unit)
- 
+    return parse_dms(str) * galsim.hours
+
+def DMS_Angle(str):
+    """Convert a string of the form dd:mm:ss.decimal into an Angle.
+
+    There may be an initial + or - (or neither), then two digits for the degrees, two for the
+    minutes, and two for the seconds.  Then there may be a decimal point followed by more
+    digits.  There may be a colon separating dd, mm, and ss, or whitespace, or nothing at all.
+    In fact, the code will ignore any non-digits between the degrees, minutes, and seconds.
+
+    @returns the corresponding Angle instance
+    """
+    return parse_dms(str) * galsim.degrees
+
+galsim.Angle.wrap.__func__.__doc__ = """Wrap Angle to lie in the range [-pi, pi) radians.
+
+Depending on the context, theta = 2pi radians and theta = 0 radians are the same thing.
+If you want your angles to be wrapped to [-pi, pi) radians, you can do this by calling
+
+    >>> theta = theta.wrap()
+
+This could be appropriate before testing for the equality of two angles for example, or
+calculating the difference between them.
+"""

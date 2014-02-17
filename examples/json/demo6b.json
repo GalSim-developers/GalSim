@@ -77,7 +77,7 @@
 
 "#" : "Define some other information about the images ",
 "image" : {
-    "pixel_scale" : 0.15,
+    "pixel_scale" : 0.16,
 
     "#" : "If we specify the sky_level as an image attribute, it will be used",
     "#" : "as a background level for the image.  (The background level per pixel is", 

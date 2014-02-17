@@ -311,17 +311,19 @@ class Image(object):
     @property
     def scale(self): 
         if self.wcs:
-            if not isinstance(self.wcs, galsim.PixelScale):
+            if self.wcs.isPixelScale():
+                return self.wcs.scale
+            else:
                 raise TypeError("image.wcs is not a simple PixelScale; scale is undefined.")
-            return self.wcs.scale
         else:
             return None
 
     @scale.setter
     def scale(self, value):
-        if self.wcs and not isinstance(self.wcs, galsim.PixelScale):
+        if self.wcs is not None and not self.wcs.isPixelScale():
             raise TypeError("image.wcs is not a simple PixelScale; scale is undefined.")
-        self.wcs = galsim.PixelScale(value)
+        else:
+            self.wcs = galsim.PixelScale(value)
 
     # Convenience functions
     @property
@@ -358,7 +360,9 @@ class Image(object):
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         subimage = self.image.subImage(bounds)
-        # TODO: Make sure new WCS is correct for the subImage.  Not trivial!
+        # NB. The wcs is still accurate, since the sub-image uses the same (x,y) values
+        # as the original image did for those pixels.  It's only once you recenter or 
+        # reorigin that you need to update the wcs.  So that's taken care of in im.shift.
         return Image(image=subimage, wcs=self.wcs)
 
     def __getitem__(self, bounds):
@@ -370,6 +374,11 @@ class Image(object):
         """Set a portion of the full image to the values in another image
         """
         self.subImage(bounds).image.copyFrom(rhs.image)
+
+    def copyFrom(self, rhs):
+        """Copy the contents of another image
+        """
+        self.image.copyFrom(rhs.image)
 
     def view(self, make_const=False):
         """Make a view of this image, which lets you change the scale, wcs, origin, etc.
@@ -389,27 +398,11 @@ class Image(object):
         The arguments here may be either (dx, dy) or a PositionI instance.
         Or you can provide dx, dy as named kwargs.
         """
-        if len(args) == 0:
-            # Then dx,dy need to be kwargs
-            # If not, then python will raise an appropriate error.
-            dx = kwargs.pop('dx')
-            dy = kwargs.pop('dy')
-        elif len(args) == 1:
-            if isinstance(args[0], galsim.PositionI):
-                dx = args[0].x
-                dy = args[0].y
-            else:
-                # Let python raise the appropriate exception if this isn't valid.
-                dx = args[0][0]
-                dy = args[0][1]
-        elif len(args) == 2:
-            dx = args[0]
-            dy = args[1]
-        else:
-            raise TypeError("Too many arguments supplied to shift ")
-        if kwargs:
-            raise TypeError("shift() got unexpected keyword arguments: %s",kwargs)
-        self.image.shift(int(dx),int(dy))
+        delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy', integer=True)
+        if delta.x != 0 or delta.y != 0:
+            self.image.shift(delta)
+            if self.wcs is not None:
+                self.wcs = self.wcs.setOrigin(delta)
 
     def setCenter(self, *args, **kwargs):
         """Set the center of the image to the given (integral) (xcen, ycen)
@@ -417,27 +410,8 @@ class Image(object):
         The arguments here may be either (xcen, ycen) or a PositionI instance.
         Or you can provide xcen, ycen as named kwargs.
         """
-        if len(args) == 0:
-            # Then xcen,ycen need to be kwargs
-            # If not, then python will raise an appropriate error.
-            xcen = kwargs.pop('xcen')
-            ycen = kwargs.pop('ycen')
-        elif len(args) == 1:
-            if isinstance(args[0], galsim.PositionI):
-                xcen = args[0].x
-                ycen = args[0].y
-            else:
-                # Let python raise the appropriate exception if this isn't valid.
-                xcen = args[0][0]
-                ycen = args[0][1]
-        elif len(args) == 2:
-            xcen = args[0]
-            ycen = args[1]
-        else:
-            raise TypeError("Too many arguments supplied to setCenter")
-        if kwargs:
-            raise TypeError("setCenter() got unexpected keyword arguments: %s",kwargs)
-        self.image.setCenter(int(xcen),int(ycen))
+        cen = galsim.utilities.parse_pos_args(args, kwargs, 'xcen', 'ycen', integer=True)
+        self.shift(cen - self.image.bounds.center())
 
     def setOrigin(self, *args, **kwargs):
         """Set the origin of the image to the given (integral) (x0, y0)
@@ -445,27 +419,32 @@ class Image(object):
         The arguments here may be either (x0, y0) or a PositionI instance.
         Or you can provide x0, y0 as named kwargs.
         """
-        if len(args) == 0:
-            # Then x0,y0 need to be kwargs
-            # If not, then python will raise an appropriate error.
-            x0 = kwargs.pop('x0')
-            y0 = kwargs.pop('y0')
-        elif len(args) == 1:
-            if isinstance(args[0], galsim.PositionI):
-                x0 = args[0].x
-                y0 = args[0].y
-            else:
-                # Let python raise the appropriate exception if this isn't valid.
-                x0 = args[0][0]
-                y0 = args[0][1]
-        elif len(args) == 2:
-            x0 = args[0]
-            y0 = args[1]
-        else:
-            raise TypeError("Too many arguments supplied to setOrigin")
-        if kwargs:
-            raise TypeError("setOrigin() got unexpected keyword arguments: %s",kwargs)
-        self.image.setOrigin(int(x0),int(y0))
+        origin = galsim.utilities.parse_pos_args(args, kwargs, 'x0', 'y0', integer=True)
+        self.shift(origin - self.image.bounds.origin())
+
+    def center(self):
+        """Return the current nominal center of the image.  This is a PositionI instance,
+        which means that for even-sized images, it won't quite be the true center, since
+        the true center is between two pixels.
+
+        e.g the nominal center of an image with bounds (1,32,1,32) will be (17, 17).
+        """
+        return self.bounds.center()
+
+    def trueCenter(self):
+        """Return the current true center of the image.  This is a PositionD instance,
+        and it may be half-way between two pixels.  
+        
+        e.g the true center of an image with bounds (1,32,1,32) will be (16.5, 16.5).
+        """
+        return self.bounds.trueCenter()
+
+    def origin(self):
+        """Return the origin of the image.  i.e. the position of the lower-left pixel.
+
+        e.g the origin of an image with bounds (1,32,1,32) will be (1, 1).
+        """
+        return self.bounds.origin()
 
     def __call__(self, *args, **kwargs):
         """Get the pixel value at given position 
@@ -473,28 +452,8 @@ class Image(object):
         The arguments here may be either (x, y) or a PositionI instance.
         Or you can provide x, y as named kwargs.
         """
-        if len(args) == 0:
-            # Then x,y need to be kwargs
-            # If not, then python will raise an appropriate error.
-            x = kwargs.pop('x')
-            y = kwargs.pop('y')
-        elif len(args) == 1:
-            if isinstance(args[0], galsim.PositionI):
-                x = args[0].x
-                y = args[0].y
-            else:
-                # Let python raise the appropriate exception if this isn't valid.
-                x = args[0][0]
-                y = args[0][1]
-        elif len(args) == 2:
-            x = args[0]
-            y = args[1]
-        else:
-            raise TypeError("Too many arguments supplied to image(x,y)")
-        if kwargs:
-            raise TypeError("image(x,y) got unexpected keyword arguments: %s",kwargs)
-        return self.image(int(x),int(y))
-
+        pos = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True)
+        return self.image(pos.x, pos.y)
 
     def setValue(self, *args, **kwargs):
         """Set the pixel value at given position 
@@ -502,39 +461,9 @@ class Image(object):
         The arguments here may be either (x, y, value) or (pos, value) where pos is a PositionI.
         Or you can provide x, y, value as named kwargs.
         """
-        if len(args) == 0:
-            # Then x,y,value need to be kwargs
-            # If not, then python will raise an appropriate error.
-            x = kwargs.pop('x')
-            y = kwargs.pop('y')
-            value = kwargs.pop('value')
-        elif len(args) == 1:
-            if isinstance(args[0], galsim.PositionI):
-                x = args[0].x
-                y = args[0].y
-            else:
-                # Let python raise the appropriate exception if this isn't valid.
-                x = args[0][0]
-                y = args[0][1]
-            value = kwargs.pop('value')
-        elif len(args) == 2:
-            if isinstance(args[0], galsim.PositionI):
-                x = args[0].x
-                y = args[0].y
-                value = args[1]
-            else:
-                x = args[0]
-                y = args[1]
-                value = kwargs.pop('value')
-        elif len(args) == 3:
-            x = args[0]
-            y = args[1]
-            value = args[2]
-        else:
-            raise TypeError("Too many arguments supplied to image(x,y)")
-        if kwargs:
-            raise TypeError("setValue() got unexpected keyword arguments: %s",kwargs)
-        self.image.setValue(int(x),int(y),value)
+        pos, value = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
+                                                     others=['value'])
+        self.image.setValue(pos.x, pos.y, value)
 
     def fill(self, value):
         """Set all pixel values to the given value
@@ -700,9 +629,6 @@ def check_image_consistency(im1, im2):
          type(im2) in _galsim.ConstImageView.values()):
         if im1.array.shape != im2.array.shape:
             raise ValueError("Image shapes are inconsistent")
-    if isinstance(im2, Image):
-        if im1.wcs != im2.wcs:
-            raise ValueError("Image wcs attributes are different")
 
 def Image_add(self, other):
     result = self.copy()

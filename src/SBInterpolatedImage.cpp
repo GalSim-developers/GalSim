@@ -116,8 +116,6 @@ namespace galsim {
                     xxdbg<<"value = "<<value<<", sums = "<<sum<<','<<sumx<<','<<sumy<<std::endl;
                 }
             }
-            if (sum == 0.) throw std::runtime_error(
-                "Trying to initialize InterpolatedImage with an empty image.");
 
             _pimpl->flux[i] = sum;
             _pimpl->xflux[i] = sumx;
@@ -173,8 +171,6 @@ namespace galsim {
                 sumy += value*y;
             }
         }
-        if (sum == 0.) throw std::runtime_error(
-            "Trying to initialize InterpolatedImage with an empty image.");
 
         _pimpl->flux[0] = sum;
         _pimpl->xflux[0] = sumx;
@@ -324,6 +320,7 @@ namespace galsim {
             y += _wts[i] * _multi.getYFlux(i);
         }
         double flux = getFlux();
+        if (flux == 0.) throw std::runtime_error("Flux == 0.  Centroid is undefined.");
         x /= flux;  y /= flux;
         return Position<double>(x,y);
     }

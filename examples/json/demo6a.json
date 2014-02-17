@@ -47,7 +47,7 @@
 
 "#" : "Define some other information about the images ",
 "image" : {
-    "pixel_scale" : 0.15,
+    "pixel_scale" : 0.16,
 
     "#" : "Define the initial random number seed",
     "random_seed" : 1512413,

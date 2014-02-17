@@ -256,7 +256,7 @@ namespace galsim {
         /**
          * @brief Apply an overall scale change to the profile, preserving surface brightness.
          *
-         * This transforms the object by the given transformation.  As with scaleFlux, it does not
+         * This expands the linear scale factor of the object. As with scaleFlux, it does not
          * invalidate any previous uses of this object.
          */
         void applyExpansion(double scale);
@@ -280,12 +280,22 @@ namespace galsim {
         void applyRotation(const Angle& theta);
 
         /**
+         * @brief Apply a transformation given by an arbitrary Jacobian matrix
+         *
+         * This transforms the object by the given transformation. As with scaleFlux, it does not 
+         * invalidate any previous uses of this object.
+         *
+         * The parameters are the four elements of the Jacobian: dudx, dudy, dvdx, dvdy.
+         */
+        void applyTransformation(double dudx, double dudy, double dvdx, double dvdy);
+
+        /**
          * @brief Apply a translation.
          *
          * This shifts the object by the given amount.  As with scaleFlux, it does not invalidate
          * any previous uses of this object.
          */
-        void applyShift(double dx, double dy);
+        void applyShift(const Position<double>& delta);
 
         /**
          * @brief Shoot photons through this SBProfile.

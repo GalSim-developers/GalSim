@@ -8,8 +8,9 @@
 "#" : "applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations ",
 "#" : "of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster",
 "#" : "has its own file, organized into 4 directories (one for each mass).  For each cluster, we",
-"#" : "draw 20 lensed galaxies at random positions on the image.  The PSF is appropriate for",
-"#" : "a space-like simulation.  (Some of the numbers used are the values for HST.)",
+"#" : "draw 20 lensed galaxies at random positions on the image.  The PSF is appropriate for a",
+"#" : "space-like simulation.  (Some of the numbers used are the values for HST.)  And we apply",
+"#" : "a cubic telescope distortion for the WCS.",
 
 "#" : "New features introduced in this demo:",
 
@@ -17,6 +18,7 @@
 "#" : "- shear_value : NFWHaloShear (redshift)",
 "#" : "- float_value : NFWHaloMagnification (redshift)",
 "#" : "- input : nfw_halo (mass, conc, redshift)",
+"#" : "- wcs type : UVFunction (ufunc, vfunc, xfunc, yfunc, origin)",
 "#" : "- shear_value : Eta1Eta2 (eta1, eta2)",
 "#" : "- image type : Scattered (size, nobjects)",
 "#" : "- str_value type : NumberedFile (root, num, ext, digits)",
@@ -170,8 +172,8 @@
     "#" : "There are two ways to specify the location of each postage stamp on the full image.",
     "#" : "You may specify:",
     "#" : "  image_pos = the position in pixels on the full image",
-    "#" : "  world_pos = the position in arcsec (or whatever sky units you are using) relative",
-    "#" : "              to the center of the image",
+    "#" : "  world_pos = the position in arcsec (or whatever sky units you are using) in world",
+    "#" : "              coordinates",
 
     "#" : "The difference between these and gal.shift is that gal.shift moves the object with ",
     "#" : "respect to the center of the postage stamp, while these set the position of the ",
@@ -186,7 +188,41 @@
         "inner_radius" : 3
     },
 
-    "pixel_scale" : 0.05,
+    "#" : "For the WCS, this time we use UVFunction, which lets you define arbitrary u(x,y)",
+    "#" : "and v(x,y) functions.  We use a simple cubic radial function to create a ",
+    "#" : "pincushion distortion.  This is a typical kind of telescope distortion, although",
+    "#" : "we exaggerate the magnitude of the effect to make it more apparent.",
+    "#" : "The pixel size in the center of the image is 0.05, but near the corners (r=362),",
+    "#" : "the pixel size is approximately 0.075, which is much more distortion than is ",
+    "#" : "normally present in typical telescopes.  But it makes the effect of the variable",
+    "#" : "pixel area obvious when you look at the weight image in the output files.",
+    "wcs" : {
+        "type" : "UVFunction",
+        "#" : "The functions will be evaluated as eval('lambda x,y : '+ufunc), and likewise",
+        "#" : "for vfunc.  ",
+        "ufunc" : "0.05 * x * (1. + 2.e-6 * (x**2 + y**2))",
+        "vfunc" : "0.05 * y * (1. + 2.e-6 * (x**2 + y**2))",
+
+        "#" : "It's not required to provide the inverse functions x(u,v) and y(u.v).  ",
+        "#" : "However, if we don't, then we would have to provide image_pos rather than ",
+        "#" : "world_pos above for the locations, since the WCS would not know how to translate",
+        "#" : "the world_pos into image coordinates to know where on the image to put the galaxy.",
+
+        "#" : "They are a bit complicated to express as lambda functions.  See the python script",
+        "#" : "for the derivation as well as a more intelligible (and equivalent) implementation ",
+        "#" : "using normal function calls.",
+        "#" : "Note: JSON does not allow multi-line strings. So this needs to all be on one line.",
+        "xfunc" : "( lambda w: ( 0 if w==0 else 100.*u/w*(( 5*(w**2 + 5.e3/27.)**0.5 + 5*w )**(1./3.) - ( 5*(w**2 + 5.e3/27.)**0.5 - 5*w )**(1./3.))))( (u**2+v**2)**0.5 )",
+        "yfunc" : "( lambda w: ( 0 if w==0 else 100.*v/w*(( 5*(w**2 + 5.e3/27.)**0.5 + 5*w )**(1./3.) - ( 5*(w**2 + 5.e3/27.)**0.5 - 5*w )**(1./3.))))( (u**2+v**2)**0.5 )",
+
+        "#" : "In order to get the world coordinates to be (0,0) at the center of the image, we ",
+        "#" : "need to tell it that we want the origin there.  The default origin for the world",
+        "#" : "coordinates is (x,y) = (0,0).",
+        "#" : "You can set a particular (x,y) position for the origin, or you can use this special",
+        "#" : "case that sets the origin to the image center.  This is probably the more typical",
+        "#" : "usage for the origin keyword.",
+        "origin" : "center"
+    },
 
     "noise" : {
         "sky_level" : 1.0e2

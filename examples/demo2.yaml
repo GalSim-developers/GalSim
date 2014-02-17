@@ -77,7 +77,7 @@ image :
         # object's flux, so you need to specify what the sky level should be.
         # Note: the final image will be "sky subtracted", so the mean background level
         # will be 0.  This just specifies the sky level to use for the noise.
-        sky_level : 2.5e4  # counts / arcsec^2
+        sky_level : 2.5e3  # counts / arcsec^2
 
     # If you want the random values to be deterministic, you can provide an initial seed.
     # If this isn't set, then it will use the current time to create an initial seed.

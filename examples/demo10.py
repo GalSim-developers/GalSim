@@ -33,6 +33,7 @@ test (Nakajima & Bernstein 2007) of 20 each.
 
 New features introduced in this demo:
 
+- im.wcs = galsim.OffsetWCS(scale, origin)
 - rng = galsim.BaseDeviate(seed)
 - obj = galsim.RealGalaxy(real_galaxy_catalog, id)
 - obj = galsim.Convolve([list], real_space)
@@ -144,10 +145,15 @@ def main(argv):
     rng = galsim.BaseDeviate(random_seed+nobj)
 
     # Setup the images:
-    gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles, scale=pixel_scale)
-    psf_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles, scale=pixel_scale)
+    gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
+    psf_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
 
+    # Update the image WCS to use the image center as the origin of the WCS. 
+    # The class that acts like a PixelScale except for this offset is called OffsetWCS.
     im_center = gal_image.bounds.trueCenter()
+    wcs = galsim.OffsetWCS(scale=pixel_scale, origin=im_center)
+    gal_image.wcs = wcs
+    psf_image.wcs = wcs
 
     # We will place the tiles in a random order.  To do this, we make two lists for the 
     # ix and iy values.  Then we apply a random permutation to the lists (in tandem).
@@ -185,8 +191,7 @@ def main(argv):
         sub_gal_image = gal_image[b]
         sub_psf_image = psf_image[b]
 
-        pos = b.trueCenter() - im_center
-        pos = galsim.PositionD(pos.x * pixel_scale , pos.y * pixel_scale)
+        pos = wcs.toWorld(b.trueCenter())
         # The image comes out as about 211 arcsec across, so we define our variable
         # parameters in terms of (r/100 arcsec), so roughly the scale size of the image.
         r = math.sqrt(pos.x**2 + pos.y**2) / 100
