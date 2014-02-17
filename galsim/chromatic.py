@@ -59,7 +59,7 @@ class ChromaticObject(object):
         self.SED = lambda w: 1.0
 
     def draw(self, bandpass, image=None, scale=None, wcs=None, gain=1.0, wmult=1.0,
-             add_to_image=False, use_true_center=True, offset=None,
+             normalization="flux", add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
         """Base chromatic image draw method.  Some subclasses may choose to override this for
         specific efficiency gains.  For instance, most GalSim use cases will probably finish with
@@ -86,6 +86,7 @@ class ChromaticObject(object):
         @param wcs                see GSObject.draw()
         @param gain               see GSObject.draw()
         @param wmult              see GSObject.draw()
+        @param normalization      see GSObject.draw()
         @param add_to_image       see GSObject.draw()
         @param use_true_center    see GSObject.draw()
         @param offset             see GSObject.draw()
@@ -103,7 +104,7 @@ class ChromaticObject(object):
             multiplier = galsim.integ.int1d(lambda w: self.SED(w) * bandpass(w),
                                             bandpass.blue_limit, bandpass.red_limit)
             prof0 *= multiplier/self.SED(bandpass.effective_wavelength)
-            prof0.draw(image=image, gain=gain, wmult=wmult,
+            prof0.draw(image=image, gain=gain, wmult=wmult, normalization=normalization,
                        add_to_image=add_to_image, offset=offset)
             return image
 
@@ -634,9 +635,9 @@ class Chromatic(ChromaticObject):
     """Construct chromatic versions of galsim GSObjects.
 
     This class attaches an SED to a galsim GSObject.  This is useful to consistently generate
-    the same galaxy observed through different filters, or, with the ChromaticSum class, to construct
-    multi-component galaxies, each with a different SED. For example, a bulge+disk galaxy could be
-    constructed:
+    the same galaxy observed through different filters, or, with the ChromaticSum class, to 
+    construct multi-component galaxies, each with a different SED. For example, a bulge+disk galaxy
+    could be constructed:
 
     >>> bulge_SED = user_function_to_get_bulge_spectrum()
     >>> disk_SED = user_function_to_get_disk_spectrum()
@@ -699,7 +700,7 @@ class ChromaticSum(ChromaticObject):
         return galsim.Add([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
     def draw(self, bandpass, image=None, scale=None, wcs=None, gain=1.0, wmult=1.0,
-             add_to_image=False, use_true_center=True, offset=None,
+             normalization="flux", add_to_image=False, use_true_center=True, offset=None,
              integrator=None, **kwargs):
         """ Slightly optimized draw method for ChromaticSum's.  Draw each summand individually
         and add resulting images together.  This will waste time if both summands have the same
@@ -715,6 +716,7 @@ class ChromaticSum(ChromaticObject):
         @param wcs                see GSObject.draw()
         @param gain               see GSObject.draw()
         @param wmult              see GSObject.draw()
+        @param normalization      see GSObject.draw()
         @param add_to_image       see GSObject.draw()
         @param use_true_center    see GSObject.draw()
         @param offset             see GSObject.draw()
@@ -722,13 +724,15 @@ class ChromaticSum(ChromaticObject):
 
         @returns                  galsim.Image drawn through filter.
         """
-        image = self.objlist[0].draw(bandpass, image, scale, wcs, gain, wmult,
-                                     add_to_image=add_to_image, use_true_center=use_true_center,
-                                     offset=offset, integrator=integrator, **kwargs)
+        image = self.objlist[0].draw(
+                bandpass, image, scale, wcs, gain, wmult, normalization,
+                add_to_image=add_to_image, use_true_center=use_true_center, offset=offset,
+                integrator=integrator, **kwargs)
         for obj in self.objlist[1:]:
-            image = obj.draw(bandpass, image, scale, wcs, gain, wmult,
-                             add_to_image=True, use_true_center=use_true_center,
-                             offset=offset, integrator=integrator, **kwargs)
+            image = obj.draw(
+                    bandpass, image, scale, wcs, gain, wmult, normalization,
+                    add_to_image=True, use_true_center=use_true_center, offset=offset,
+                    integrator=integrator, **kwargs)
 
     # apply following transformations to all underlying summands
     def scaleFlux(self, scale):
@@ -761,7 +765,7 @@ class ChromaticConvolution(ChromaticObject):
         return galsim.Convolve([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
     def draw(self, bandpass, image=None, scale=None, wcs=None, gain=1.0, wmult=1.0,
-             add_to_image=False, use_true_center=True, offset=None,
+             normalization="flux", add_to_image=False, use_true_center=True, offset=None,
              integrator=None, iimult=None, **kwargs):
         """ Optimized draw method for ChromaticConvolution.  Works by finding sums of profiles
         which include separable portions, which can then be integrated before doing any
@@ -771,8 +775,10 @@ class ChromaticConvolution(ChromaticObject):
                                   against which to integrate.
         @param image              see GSObject.draw()
         @param scale              see GSObject.draw()
+        @param wcs                see GSObject.draw()
         @param gain               see GSObject.draw()
         @param wmult              see GSObject.draw()
+        @param normalization      see GSObject.draw()
         @param add_to_image       see GSObject.draw()
         @param use_true_center    see GSObject.draw()
         @param offset             see GSObject.draw()
@@ -784,16 +790,17 @@ class ChromaticConvolution(ChromaticObject):
         """
         # `ChromaticObject.draw()` can just as efficiently handle separable cases.
         if self.separable:
-            return ChromaticObject.draw(self, bandpass, image, scale, wcs, gain, wmult,
-                                        add_to_image=add_to_image, use_true_center=use_true_center,
-                                        offset=offset, integrator=integrator, **kwargs)
+            return ChromaticObject.draw(
+                    self, bandpass, image, scale, wcs, gain, wmult, normalization,
+                    add_to_image=add_to_image, use_true_center=use_true_center, offset=offset,
+                    integrator=integrator, **kwargs)
         # Only make temporary changes to objlist...
         objlist = [o.copy() for o in self.objlist]
 
         # Now split up any `ChromaticSum`s:
         # This is the tricky part.  Some notation first:
-        #     int(f(x,y,lambda)) denotes the integral over wavelength of chromatic surface brightness
-        #         profile f(x,y,lambda).
+        #     int(f(x,y,lambda)) denotes the integral over wavelength of chromatic surface 
+        #         brightness profile f(x,y,lambda).
         #     (f1 * f2) denotes the convolution of surface brightness profiles f1 & f2.
         #     (f1 + f2) denotes the addition of surface brightness profiles f1 & f2.
         #
@@ -801,9 +808,9 @@ class ChromaticConvolution(ChromaticObject):
         # depending on whether they can be factored into spatial and spectral components or not.
         # Write separable profiles as g(x,y) * h(lambda), and leave inseparable profiles as
         # f(x,y,lambda).
-        # We will suppress the arguments `x`, `y`, `lambda`, hereforward, but generally an `f` refers
-        # to an inseparable profile, a `g` refers to the spatial part of a separable profile, and an
-        # `h` refers to the spectral part of a separable profile.
+        # We will suppress the arguments `x`, `y`, `lambda`, hereforward, but generally an `f` 
+        # refers to an inseparable profile, a `g` refers to the spatial part of a separable 
+        # profile, and an `h` refers to the spectral part of a separable profile.
         #
         # Now, analyze a typical scenario, a bulge+disk galaxy model (each of which is separable,
         # e.g., an SED times an exponential profile for the disk, and a different SED times a DeV
@@ -821,8 +828,8 @@ class ChromaticConvolution(ChromaticObject):
         #
         # The result is that the integral is now inside the convolution, meaning we only have to
         # compute two convolutions instead of a convolution for each wavelength at which we evaluate
-        # the integrand.  This technique, making an `effective` PSF profile for each of the bulge and
-        # disk, is a significant time savings in most cases.
+        # the integrand.  This technique, making an `effective` PSF profile for each of the bulge 
+        # and disk, is a significant time savings in most cases.
         # In general, we make effective profiles by splitting up `ChromaticSum`s and collecting the
         # inseparable terms on which to do integration first, and then finish with convolution last.
 
@@ -834,18 +841,19 @@ class ChromaticConvolution(ChromaticObject):
                 tmplist = list(objlist) # collect remaining items to be convolved with each of A,B,C
                 tmplist.append(obj.objlist[0]) # add A to this convolve list
                 tmpobj = ChromaticConvolution(tmplist) # draw image
-                image = tmpobj.draw(bandpass, image, scale, wcs, gain, wmult,
-                                    add_to_image=add_to_image, use_true_center=use_true_center,
-                                    offset=offset, integrator=integrator, iimult=iimult, **kwargs)
+                image = tmpobj.draw(
+                        bandpass, image, scale, wcs, gain, wmult, normalization,
+                        add_to_image=add_to_image, use_true_center=use_true_center, offset=offset,
+                        integrator=integrator, iimult=iimult, **kwargs)
                 for summand in obj.objlist[1:]: # now do the same for B and C
                     tmplist = list(objlist)
                     tmplist.append(summand)
                     tmpobj = ChromaticConvolution(tmplist)
                     # add to previously started image
-                    image = tmpobj.draw(bandpass, image, scale, wcs, gain, wmult,
-                                        add_to_image=True, use_true_center=use_true_center,
-                                        offset=offset, integrator=integrator, iimult=iimult,
-                                        **kwargs)
+                    tmpobj.draw(bandpass, image, scale, wcs, gain, wmult, normalization,
+                                add_to_image=True, use_true_center=use_true_center,
+                                offset=offset, integrator=integrator, iimult=iimult,
+                                **kwargs)
                 return image
 
         # If program gets this far, the objects in objlist should be atomic (non-ChromaticSum
@@ -881,12 +889,13 @@ class ChromaticConvolution(ChromaticObject):
         if iimult is not None:
             iiscale /= iimult
         if len(insep_profs) == 1:
-            effective_prof_image = insep_profs[0].draw(bandpass*SED, wmult=wmult, scale=iiscale,
-                                                       integrator=integrator, **kwargs)
+            effective_prof_image = insep_profs[0].draw(
+                    bandpass*SED, wmult=wmult, scale=iiscale, normalization="flux",
+                    integrator=integrator, **kwargs)
         else:
-            effective_prof_image = ChromaticObject.draw(insep_obj, bandpass*SED, wmult=wmult,
-                                                        scale=iiscale, integrator=integrator,
-                                                        **kwargs)
+            effective_prof_image = ChromaticObject.draw(
+                    insep_obj, bandpass*SED, wmult=wmult, scale=iiscale, normalization="flux",
+                    integrator=integrator, **kwargs)
 
         # Image -> InterpolatedImage
         # It could be useful to cache this result if drawing more than one object with the same
@@ -897,8 +906,9 @@ class ChromaticConvolution(ChromaticObject):
         sep_profs.append(effective_prof)
         # finally, convolve and draw.
         final_prof = galsim.Convolve(sep_profs)
-        return final_prof.draw(image, gain=gain, wmult=wmult, add_to_image=add_to_image,
-                               use_true_center=use_true_center, offset=offset)
+        return final_prof.draw(
+                image, gain=gain, wmult=wmult, normalization=normalization,
+                add_to_image=add_to_image, use_true_center=use_true_center, offset=offset)
 
     def scaleFlux(self, scale):
         self.objlist[0].scaleFlux(scale)
