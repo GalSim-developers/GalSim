@@ -961,7 +961,7 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     #          = 90 / (grid spacing in degrees)
     # Also find k_min, for correlation function prediction.
     #    k_min = 2*pi / (total grid extent) = 180. / (grid extent)
-    k_max = 90. / grid_spacing
+    k_max = 10*90. / grid_spacing # factor of 10 because we're actually going to use a finer grid
     k_min = 180. / (kmin_factor*grid_size)
     # Now define a power spectrum that is raw_ps below k_max and goes smoothly to zero above that.
     ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*cutoff_func(raw_ps_k/k_max),
@@ -978,16 +978,18 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     cfm_table = galsim.LookupTable(theory_th_vals, theory_cfm_vals, interpolant='spline')
 
     # Set up grid and the corresponding x, y lists.
-    min = (-ngrid/2 + 0.5) * grid_spacing
-    max = (ngrid/2 - 0.5) * grid_spacing
-    x, y = np.meshgrid(
-        np.arange(min,max+grid_spacing,grid_spacing),
-        np.arange(min,max+grid_spacing,grid_spacing))
+    ngrid_fine = 10*ngrid
+    grid_spacing_fine = grid_spacing/10.
+    min_fine = (-ngrid_fine/2 + 0.5) * grid_spacing_fine
+    max_fine = (ngrid_fine/2 - 0.5) * grid_spacing_fine
+    x_fine, y_fine = np.meshgrid(
+        np.arange(min_fine,max_fine+grid_spacing_fine,grid_spacing_fine),
+        np.arange(min_fine,max_fine+grid_spacing_fine,grid_spacing_fine))
 
     # Set up uniform deviate and min/max values for random positions
     u = galsim.UniformDeviate()
-    random_min_val = np.min(x)
-    random_max_val = np.max(x)
+    random_min_val = np.min(x_fine)
+    random_max_val = np.max(x_fine)
 
     # Loop over interpolants.
     print "Test type: random target positions, correlation function only."
@@ -1030,28 +1032,24 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
             # correlation functions, but really since we cut off the power above kmax for the
             # default grid, the effective kmax for the correlation function is the same in both
             # cases.
-            g1, g2 = ps.buildGrid(grid_spacing = grid_spacing,
-                                  ngrid = ngrid,
-                                  units = galsim.degrees,
-                                  interpolant = interpolant,
-                                  kmin_factor = kmin_factor)
-            # Interpolate shears to the target positions, with periodic interpolation if specified
-            # at the command-line.
-            # Note: setting 'reduced=False' here, so as to compare g1 and g2 from original grid with
-            # the interpolated g1 and g2 rather than the reduced shear.
-            interpolated_g1, interpolated_g2 = ps.getShear(pos=(target_x_list,target_y_list),
-                                                           units=galsim.degrees,
-                                                           periodic=periodic, reduced=False)
             g1_fine, g2_fine = ps.buildGrid(grid_spacing = grid_spacing/10.,
                                             ngrid = 10*ngrid,
                                             units = galsim.degrees,
                                             interpolant = interpolant,
                                             kmin_factor = kmin_factor)
+            # Interpolate shears to the target positions, with periodic interpolation if specified
+            # at the command-line.
+            # Note: setting 'reduced=False' here, so as to compare g1 and g2 from original grid with
+            # the interpolated g1 and g2 rather than the reduced shear.
             interpolated_g1_fine, interpolated_g2_fine = ps.getShear(pos=(target_x_list,
                                                                           target_y_list),
                                                                      units=galsim.degrees,
                                                                      periodic=periodic,
                                                                      reduced=False)
+            g1, g2 = ps.subsampleGrid(10)
+            interpolated_g1, interpolated_g2 = ps.getShear(pos=(target_x_list,target_y_list),
+                                                           units=galsim.degrees,
+                                                           periodic=periodic, reduced=False)
 
             # Now, we consider the question of whether we want cutoff grids.  If so, then we should
             # (a) store some results for the non-cutoff grids, and (b) cutoff the results before
