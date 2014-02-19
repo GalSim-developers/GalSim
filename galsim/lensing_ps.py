@@ -478,7 +478,7 @@ class PowerSpectrum(object):
         else:
             return self.grid_g1, self.grid_g2
 
-    def subsampleGrid(self, subsample_fac):
+    def subsampleGrid(self, subsample_fac, get_convergence=False):
         """Routine to use a regular subset of the grid points without a completely new call to
         buildGrid.
 
@@ -488,6 +488,9 @@ class PowerSpectrum(object):
 
         @param subsample_fac      Factor by which to subsample the gridded shear and convergence
                                   fields.  This is currently required to be a factor of ngrid.
+        @param get_convergence    Return the convergence in addition to the shear?  Regardless of the
+                                  value of `get_convergence`, the convergence will still be computed
+                                  and stored for future use. [Default: `get_convergence=False`]
         """
         # Check that buildGrid has already been called.
         if not hasattr(self, 'im_g1'):
@@ -510,6 +513,11 @@ class PowerSpectrum(object):
         if self.adjust_center:
             self.center += galsim.PositionD(0.5,0.5) * self.grid_spacing * (subsample_fac-1)
         self.grid_spacing *= subsample_fac
+
+        if get_convergence:
+            return self.grid_g1, self.grid_g2, self.grid_kappa
+        else:
+            return self.grid_g1, self.grid_g2
 
     def _convert_power_function(self, pf, pf_str):
         if pf is None: return None
