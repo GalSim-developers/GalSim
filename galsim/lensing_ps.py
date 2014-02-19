@@ -391,6 +391,9 @@ class PowerSpectrum(object):
         # to use xValue(0,0).
         if ngrid % 2 == 0:
             self.center += galsim.PositionD(0.5,0.5) * self.grid_spacing
+            self.adjust_center = True
+        else:
+            self.adjust_center = False
 
         # It is also convenient to store the bounds within which an input position is allowed.
         self.bounds = galsim.BoundsD( center.x - ngrid * grid_spacing / 2. ,
@@ -456,7 +459,7 @@ class PowerSpectrum(object):
                                     p_E, p_B)
         self.grid_g1, self.grid_g2, self.grid_kappa = psr(gd)
         if kmin_factor != 1 or kmax_factor != 1:
-            # Need to make sure the rows are continguous so we can use it in the constructor 
+            # Need to make sure the rows are contiguous so we can use it in the constructor 
             # of the ImageViewD objects below.  This requires a copy.
             s = slice(0,ngrid*kmax_factor,kmax_factor)
             self.grid_g1 = np.array(self.grid_g1[s,s], copy=True, order='C')
@@ -474,6 +477,39 @@ class PowerSpectrum(object):
             return self.grid_g1, self.grid_g2, self.grid_kappa
         else:
             return self.grid_g1, self.grid_g2
+
+    def subsampleGrid(self, subsample_fac):
+        """Routine to use a regular subset of the grid points without a completely new call to
+        buildGrid.
+
+        This routine can be used after buildGrid(), in order to use a subset of the grid points
+        corresponding to every Nth point along both dimensions.  All internal parameters such as the
+        shear and convergence values, the grid spacing, etc. get properly updated.
+
+        @param subsample_fac      Factor by which to subsample the gridded shear and convergence
+                                  fields.  This is currently required to be a factor of ngrid.
+        """
+        # Check that buildGrid has already been called.
+        if not hasattr(self, 'im_g1'):
+            raise RuntimeError("PowerSpectrum.buildGrid must be called before getShear")
+
+        # Check that subsample_fac is a factor of ngrid.
+        effective_ngrid = self.im_g1.array.shape[0]
+        if not isinstance(subsample_fac,int) or effective_ngrid%subsample_fac!=0 or subsample_fac<=1:
+            raise RuntimeError("Subsample factor must be an integer>1 that divides the grid size!")
+
+        # Make new array subsamples and turn them into ImageViews
+        self.im_g1 = galsim.ImageViewD(
+            np.ascontiguousarray(self.im_g1.array[::subsample_fac,::subsample_fac]))
+        self.im_g2 = galsim.ImageViewD(
+            np.ascontiguousarray(self.im_g2.array[::subsample_fac,::subsample_fac]))
+        self.im_kappa = galsim.ImageViewD(
+            np.ascontiguousarray(self.im_kappa.array[::subsample_fac,::subsample_fac]))
+
+        # Update internal parameters: grid_spacing, center, grid size.
+        if self.adjust_center:
+            self.center += galsim.PositionD(0.5,0.5) * self.grid_spacing * (subsample_fac-1)
+        self.grid_spacing *= subsample_fac
 
     def _convert_power_function(self, pf, pf_str):
         if pf is None: return None
