@@ -605,7 +605,7 @@ class PowerSpectrum(object):
                                                              im.bounds.ymax-b1, im.bounds.ymax)])
         return im_new
 
-    def getShear(self, pos, units=galsim.arcsec, reduced=True, periodic=False):
+    def getShear(self, pos, units=galsim.arcsec, reduced=True, periodic=False, interpolant=None):
         """
         This function can interpolate between grid positions to find the shear values for a given
         list of input positions (or just a single position).  Before calling this function, you must
@@ -615,10 +615,10 @@ class PowerSpectrum(object):
         return the non-reduced shear.
 
         Note that the interpolation (carried out using the interpolant that was specified when
-        building the gridded shears) modifies the effective power spectrum somewhat.  The user is
-        responsible for choosing a grid size that is small enough not to significantly modify the
-        power spectrum on the scales of interest.  Detailed tests of this functionality have not
-        been carried out.
+        building the gridded shears, if none is specified here) modifies the effective power
+        spectrum somewhat.  The user is responsible for choosing a grid size that is small enough
+        not to significantly modify the power spectrum on the scales of interest.  Detailed tests of
+        this functionality have not been carried out.
 
         Some examples of how to use getShear:
 
@@ -661,6 +661,11 @@ class PowerSpectrum(object):
                                 if they are outside the bounds of the original grid on which shears
                                 were defined.  If not, then shears are set to zero for positions
                                 outside the original grid.  [default=False]
+        @param interpolant      (Optional) Interpolant that will be used for interpolating the
+                                gridded shears.  By default, the one that was specified when
+                                building the grid was used.  Specifying an interpolant here does not
+                                change the one that is stored as part of this PowerSpectrum
+                                instance.
 
         @return g1,g2           If given a single position: the two shear components g_1 and g_2.
                                 If given a list of positions: each is a python list of values.
@@ -674,7 +679,10 @@ class PowerSpectrum(object):
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getShear')
 
         # Set the interpolant:
-        xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
+        if interpolant is not None:
+            xinterp = galsim.utilities.convert_interpolant_to_2d(interpolant)
+        else:
+            xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
         kinterp = galsim.InterpolantXY(galsim.Quintic())
 
         if reduced:
