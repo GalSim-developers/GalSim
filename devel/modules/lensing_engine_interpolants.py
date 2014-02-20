@@ -19,6 +19,7 @@ from matplotlib.font_manager import FontProperties
 # Set some important quantities up top:
 # Which interpolants do we want to test?
 interpolant_list = ['lanczos3','lanczos5','linear', 'cubic', 'quintic', 'nearest']
+n_interpolants = len(interpolant_list)
 # Define shear grid
 grid_size = 10. # degrees
 ngrid = 100 # grid points in nominal grid
@@ -993,158 +994,145 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     random_min_val = np.min(x_fine)
     random_max_val = np.max(x_fine)
 
-    # Loop over interpolants.
-    print "Test type: random target positions, correlation function only."
+    # Initialize arrays for two-point functions.
+    mean_interpolated_cfp = np.zeros((n_output_bins, n_interpolants))
+    mean_cfp = np.zeros((n_output_bins, n_interpolants))
+    mean_interpolated_cfm = np.zeros((n_output_bins, n_interpolants))
+    mean_cfm = np.zeros((n_output_bins, n_interpolants))
+
+    # Sort out number of realizations and so on
     if n_realizations > 20:
         n_points = int(float(n_realizations)/20*ngrid**2)
         n_realizations = 20
     else:
         n_points = ngrid**2
-    for interpolant in interpolant_list:
-        print "Beginning tests for interpolant %r:"%interpolant
-        print "  Generating %d realizations with %d points each..."%(n_realizations,n_points)
 
-        # Initialize arrays for two-point functions.
-        if edge_cutoff:
-            # If we are cutting off edge points, then all the functions we store will include that
-            # cutoff.  However, we will save results for the original grids without the cutoffs just
-            # in order to test what happens with / without a cutoff in the no-interpolation case.
-            mean_nocutoff_cfp = np.zeros(n_output_bins)
-            mean_nocutoff_cfm = np.zeros(n_output_bins)
-        mean_interpolated_cfp = np.zeros(n_output_bins)
-        mean_cfp = np.zeros(n_output_bins)
-        mean_interpolated_cfm = np.zeros(n_output_bins)
-        mean_cfm = np.zeros(n_output_bins)
+    print "Test type: random target positions, correlation function only."
+    print "Doing calculations for %d realizations with %d points each."%(n_realizations,n_points)
 
-        # Loop over realizations.
-        for i_real in range(n_realizations):
+    # Loop over realizations.
+    for i_real in range(n_realizations):
 
-            # Set up the target positions for this interpolation.
-            target_x = np.zeros(n_points)
-            target_y = np.zeros(n_points)
-            for ind in range(n_points):
-                target_x[ind] = random_min_val+(random_max_val-random_min_val)*u()
-                target_y[ind] = random_min_val+(random_max_val-random_min_val)*u()
-            target_x_list = list(target_x)
-            target_y_list = list(target_y)
+        # Set up the target positions for this interpolation.
+        target_x = np.zeros(n_points)
+        target_y = np.zeros(n_points)
+        for ind in range(n_points):
+            target_x[ind] = random_min_val+(random_max_val-random_min_val)*u()
+            target_y[ind] = random_min_val+(random_max_val-random_min_val)*u()
+        target_x_list = list(target_x)
+        target_y_list = list(target_y)
 
-            # Get shears on default grid and fine grid.  Interpolation from the former is going to
-            # be our test case, interpolation from the latter will be treated like ground truth.
-            # Note that these would nominally have different kmax, which would result in different
-            # correlation functions, but really since we cut off the power above kmax for the
-            # default grid, the effective kmax for the correlation function is the same in both
-            # cases.
-            g1_fine, g2_fine = ps.buildGrid(grid_spacing = grid_spacing/10.,
-                                            ngrid = 10*ngrid,
-                                            units = galsim.degrees,
-                                            interpolant = interpolant,
-                                            kmin_factor = kmin_factor)
+        # Get shears on default grid and fine grid.  Interpolation from the former is going to be
+        # our test case, interpolation from the latter will be treated like ground truth.  Note that
+        # these would nominally have different kmax, which would result in different correlation
+        # functions, but really since we cut off the power above kmax for the default grid, the
+        # effective kmax for the correlation function is the same in both cases.
+        g1_fine, g2_fine = ps.buildGrid(grid_spacing = grid_spacing/10.,
+                                        ngrid = 10*ngrid,
+                                        units = galsim.degrees,
+                                        kmin_factor = kmin_factor)
+        interpolated_g1_fine = np.zeros((len(target_x_list), n_interpolants))
+        interpolated_g2_fine = np.zeros((len(target_x_list), n_interpolants))
+        interpolated_g1 = np.zeros((len(target_x_list), n_interpolants))
+        interpolated_g2 = np.zeros((len(target_x_list), n_interpolants))
+        for i_int in range(n_interpolants):
             # Interpolate shears to the target positions, with periodic interpolation if specified
             # at the command-line.
             # Note: setting 'reduced=False' here, so as to compare g1 and g2 from original grid with
             # the interpolated g1 and g2 rather than the reduced shear.
-            interpolated_g1_fine, interpolated_g2_fine = ps.getShear(pos=(target_x_list,
-                                                                          target_y_list),
-                                                                     units=galsim.degrees,
-                                                                     periodic=periodic,
-                                                                     reduced=False)
-            g1, g2 = ps.subsampleGrid(10)
-            interpolated_g1, interpolated_g2 = ps.getShear(pos=(target_x_list,target_y_list),
-                                                           units=galsim.degrees,
-                                                           periodic=periodic, reduced=False)
+            interpolated_g1_fine[:,i_int], interpolated_g2_fine[:,i_int] = \
+                ps.getShear(pos=(target_x_list, target_y_list), units=galsim.degrees,
+                            periodic=periodic, reduced=False, interpolant=interpolant_list[i_int])
 
-            # Now, we consider the question of whether we want cutoff grids.  If so, then we should
-            # (a) store some results for the non-cutoff grids, and (b) cutoff the results before
-            # doing any further calculations.  If not, then nothing else is really needed here.
-            if edge_cutoff:
-                # Get the corr func for non-cutoff grid, and store results.
-                nocutoff_th, tmp_cfp, tmp_cfm, _ = \
-                    getCF(target_x, target_y, np.array(interpolated_g1_fine),
-                          np.array(interpolated_g2_fine),
-                          grid_spacing, ngrid, n_output_bins)
-                mean_nocutoff_cfp += tmp_cfp
-                mean_nocutoff_cfm += tmp_cfm
+        g1, g2 = ps.subsampleGrid(10)
+        for i_int in range(n_interpolants):
+            interpolated_g1[:,i_int], interpolated_g2[:,i_int] = \
+                ps.getShear(pos=(target_x_list,target_y_list), units=galsim.degrees,
+                            periodic=periodic, reduced=False, interpolant=interpolant_list[i_int])
 
-                # Cut off the original, interpolated set of positions before doing any more calculations.
-                # Store grid size that we actually use for everything else in future, post-cutoff.
-                n_cutoff = nCutoff(interpolant)
-                ngrid_use = ngrid - 2*n_cutoff
-                grid_size_use = grid_size * float(ngrid_use)/ngrid
-                if ngrid_use <= 2:
-                    raise RuntimeError("After applying edge cutoff, grid is too small!"
-                                       "Increase grid size or remove cutoff, or both.")
-                x_use = x_fine[10*n_cutoff:10*ngrid-10*n_cutoff, 10*n_cutoff:10*ngrid-10*n_cutoff]
-                y_use = y_fine[10*n_cutoff:10*ngrid-10*n_cutoff, 10*n_cutoff:10*ngrid-10*n_cutoff]
+        # Now, we consider the question of whether we want cutoff grids.  If so, then we should (a)
+        # store some results for the non-cutoff grids, and (b) cutoff the results before doing any
+        # further calculations.  If not, then nothing else is really needed here.
+        if edge_cutoff:
+            # Cut off the original, interpolated set of positions before doing any more calculations.
+            # Store grid size that we actually use for everything else in future, post-cutoff.  To
+            # be fair, just cut off all at the maximum required value over all interpolants.
+            n_cutoff = 0
+            for i_int in range(n_interpolants):
+                n_cutoff = max(n_cutoff, nCutoff(interpolant_list[i_int]))
+            ngrid_use = ngrid - 2*n_cutoff
+            grid_size_use = grid_size * float(ngrid_use)/ngrid
+            if ngrid_use <= 2:
+                raise RuntimeError("After applying edge cutoff, grid is too small!"
+                                   "Increase grid size or remove cutoff, or both.")
+            # Remember that x_fine, y_fine have 10x points compared to default grid.
+            x_use = x_fine[10*n_cutoff:10*ngrid-10*n_cutoff, 10*n_cutoff:10*ngrid-10*n_cutoff]
+            y_use = y_fine[10*n_cutoff:10*ngrid-10*n_cutoff, 10*n_cutoff:10*ngrid-10*n_cutoff]
 
-                targets_to_use = np.logical_and.reduce(
-                    [target_x >= np.min(x_use),
-                     target_x < np.max(x_use),
-                     target_y >= np.min(y_use),
-                     target_y < np.max(y_use)
-                     ])
-                target_x_use = target_x[targets_to_use]
-                target_y_use = target_y[targets_to_use]
-                interpolated_g1_use = np.array(interpolated_g1)[targets_to_use]
-                interpolated_g2_use = np.array(interpolated_g2)[targets_to_use]
-                interpolated_g1_fine_use = np.array(interpolated_g1_fine)[targets_to_use]
-                interpolated_g2_fine_use = np.array(interpolated_g2_fine)[targets_to_use]
-            else:
-                # Just store the quantities that we actually use, from before.
-                ngrid_use = ngrid
-                target_x_use = target_x
-                target_y_use = target_y
-                interpolated_g1_use = np.array(interpolated_g1)
-                interpolated_g2_use = np.array(interpolated_g2)
-                interpolated_g1_fine_use = np.array(interpolated_g1_fine)
-                interpolated_g2_fine_use = np.array(interpolated_g2_fine)
+            targets_to_use = np.logical_and.reduce(
+                [target_x >= np.min(x_use),
+                 target_x < np.max(x_use),
+                 target_y >= np.min(y_use),
+                 target_y < np.max(y_use)
+                 ])
+            target_x_use = target_x[targets_to_use]
+            target_y_use = target_y[targets_to_use]
+            interpolated_g1_use = interpolated_g1[targets_to_use,:]
+            interpolated_g2_use = interpolated_g2[targets_to_use,:]
+            interpolated_g1_fine_use = interpolated_g1_fine[targets_to_use,:]
+            interpolated_g2_fine_use = interpolated_g2_fine[targets_to_use,:]
+        else:
+            # Just store the quantities that we actually use, from before.
+            ngrid_use = ngrid
+            target_x_use = target_x
+            target_y_use = target_y
+            interpolated_g1_use = interpolated_g1
+            interpolated_g2_use = interpolated_g2
+            interpolated_g1_fine_use = interpolated_g1_fine
+            interpolated_g2_fine_use = interpolated_g2_fine
 
-            # Get statistics: correlation function.
+        # Get statistics: correlation function.  Do this for all sets of interpolated points.
+        for i_int in range(n_interpolants):
             int_th, interpolated_cfp, interpolated_cfm, cf_err = \
-                getCF(target_x_use, target_y_use,
-                      interpolated_g1_use, interpolated_g2_use,
+                getCF(target_x_use, target_y_use, interpolated_g1_use[:,i_int], interpolated_g2_use[:,i_int],
                       grid_spacing, ngrid_use, n_output_bins)
             th, cfp, cfm, _ = \
-                getCF(target_x_use, target_y_use,
-                      interpolated_g1_fine_use, interpolated_g2_fine_use,
+                getCF(target_x_use, target_y_use, interpolated_g1_fine_use[:,i_int], interpolated_g2_fine_use[:,i_int],
                       grid_spacing, ngrid_use, n_output_bins)
 
             # Accumulate statistics.
-            mean_interpolated_cfp += interpolated_cfp
-            mean_cfp += cfp
-            mean_interpolated_cfm += interpolated_cfm
-            mean_cfm += cfm
+            mean_interpolated_cfp[:,i_int] += interpolated_cfp
+            mean_cfp[:,i_int] += cfp
+            mean_interpolated_cfm[:,i_int] += interpolated_cfm
+            mean_cfm[:,i_int] += cfm
 
-        # Now get the average over all realizations
-        print "Done generating realizations, now getting mean 2-point functions"
-        mean_interpolated_cfp /= n_realizations
-        mean_cfp /= n_realizations
-        mean_interpolated_cfm /= n_realizations
-        mean_cfm /= n_realizations
-        if edge_cutoff:
-            mean_nocutoff_cfp /= n_realizations
-            mean_nocutoff_cfm /= n_realizations
+    # Now get the average over all realizations
+    print "Done generating realizations, now getting mean 2-point functions"
+    mean_interpolated_cfp /= n_realizations
+    mean_cfp /= n_realizations
+    mean_interpolated_cfm /= n_realizations
+    mean_cfm /= n_realizations
 
-        # Plot statistics, and ratios with vs. without interpolants.
+    # get theory predictions before trying to plot
+    theory_xip = calculate_xi(th, ps_table, 0, k_min, k_max)
+    theory_xim = calculate_xi(th, ps_table, 4, k_min, k_max)
+
+    # Plot statistics, and ratios with vs. without interpolants.
+    for i_int in range(n_interpolants):
+        interpolant = interpolant_list[i_int]
         print "Running plotting routines for interpolant=%s..."%interpolant
-        if edge_cutoff:
-            generate_cf_cutoff_plots(th, mean_cfp, 
-                                     nocutoff_th, mean_nocutoff_cfp,
-                                     interpolant, cf_plot_prefix, type='p')
-            generate_cf_cutoff_plots(th, mean_cfm, 
-                                     nocutoff_th, mean_nocutoff_cfm,
-                                     interpolant, cf_plot_prefix, type='m')
-        # get theory predictions before trying to plot
-        theory_xip = calculate_xi(th, ps_table, 0, k_min, k_max)
-        theory_xim = calculate_xi(th, ps_table, 4, k_min, k_max)
-        generate_cf_plots(th, mean_cfp, mean_interpolated_cfp, interpolant, cf_plot_prefix,
-                          grid_spacing, type='p', theory_raw=theory_xip)
-        generate_cf_plots(th, mean_cfm, mean_interpolated_cfm, interpolant, cf_plot_prefix,
-                          grid_spacing, type='m', theory_raw=theory_xim)
+
+        generate_cf_plots(th, mean_cfp[:,i_int], mean_interpolated_cfp[:,i_int], interpolant,
+                          cf_plot_prefix, grid_spacing, type='p', theory_raw=theory_xip)
+        generate_cf_plots(th, mean_cfm[:,i_int], mean_interpolated_cfm[:,i_int], interpolant,
+                          cf_plot_prefix, grid_spacing, type='m', theory_raw=theory_xim)
 
         # Output results.
         print "Outputting tables of results..."
-        write_cf_output(th, mean_cfp, mean_interpolated_cfp, interpolant, cf_plot_prefix, type='p')
-        write_cf_output(th, mean_cfm, mean_interpolated_cfm, interpolant, cf_plot_prefix, type='m')
+        write_cf_output(th, mean_cfp[:,i_int], mean_interpolated_cfp[:,i_int], interpolant,
+                        cf_plot_prefix, type='p')
+        write_cf_output(th, mean_cfm[:,i_int], mean_interpolated_cfm[:,i_int], interpolant,
+                        cf_plot_prefix, type='m')
         print ""
 
 if __name__ == "__main__":
