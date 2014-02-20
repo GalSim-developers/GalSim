@@ -18,7 +18,7 @@ from matplotlib.font_manager import FontProperties
 
 # Set some important quantities up top:
 # Which interpolants do we want to test?
-interpolant_list = ['linear', 'cubic', 'quintic', 'nearest']
+interpolant_list = ['lanczos3','lanczos5','linear', 'cubic', 'quintic', 'nearest']
 # Define shear grid
 grid_size = 10. # degrees
 ngrid = 100 # grid points in nominal grid
@@ -534,7 +534,9 @@ def nCutoff(interpolant):
     options = {"nearest" : 1,
                "linear" : 1,
                "cubic" : 2,
-               "quintic" : 3}
+               "quintic" : 3,
+               "lanczos3" : 3,
+               "lanczos5" : 5}
 
     try:
         return options[interpolant]
