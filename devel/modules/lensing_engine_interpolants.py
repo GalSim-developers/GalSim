@@ -1071,8 +1071,8 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
                 if ngrid_use <= 2:
                     raise RuntimeError("After applying edge cutoff, grid is too small!"
                                        "Increase grid size or remove cutoff, or both.")
-                x_use = x[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
-                y_use = y[n_cutoff:ngrid-n_cutoff, n_cutoff:ngrid-n_cutoff]
+                x_use = x_fine[10*n_cutoff:10*ngrid-10*n_cutoff, 10*n_cutoff:10*ngrid-10*n_cutoff]
+                y_use = y_fine[10*n_cutoff:10*ngrid-10*n_cutoff, 10*n_cutoff:10*ngrid-10*n_cutoff]
 
                 targets_to_use = np.logical_and.reduce(
                     [target_x >= np.min(x_use),
