@@ -1037,7 +1037,9 @@ class FitsHeader(object):
 
     @param header       A pyfits Header object.  One of `file_name`, `hdu_list` or `header`
                         is required.  The `header` parameter may be given without the keyword
-                        name.
+                        name.  Also, if `header` is a string, it is interpreted as a file name,
+                        so a file name may be passed as an arg like most other galsim.fits 
+                        read functions.
     @param file_name    The name of the file to read in.  One of `file_name`, `hdu_list` or 
                         `header` is required.
     @param dir          Optionally a directory name can be provided if the file_name does not 
@@ -1072,8 +1074,6 @@ class FitsHeader(object):
 
     def __init__(self, header=None, file_name=None, dir=None, hdu_list=None, hdu=None,
                  compression='auto'):
-    
-        file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
         if header and file_name:
             raise TypeError("Cannot provide both file_name and header to FitsHeader")
@@ -1083,6 +1083,13 @@ class FitsHeader(object):
             raise TypeError("Cannot provide both file_name and hdu_list to FitsHeader")
         if not (header or file_name or hdu_list):
             raise TypeError("Must provide one of header, file_name or hdu_list to FitsHeader")
+
+        # Interpret a string header as though it were passed as file_name.
+        if isinstance(header, basestring):
+            file_name = header
+            header = None
+    
+        file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
         if file_name:
             hdu_list, fin = _read_file(file_name, dir, file_compress)
