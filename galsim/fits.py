@@ -1100,10 +1100,12 @@ class FitsHeader(object):
             if text_file:
                 import os
                 if dir: file_name = os.path.join(dir,file_name)
-                header = pyfits.Header()
                 with open(file_name,"r") as fin:
-                    for text in fin:
-                        header.append(pyfits.Card.fromstring(text))
+                    # Later pyfits versions changed this to a class method, so you can write
+                    # pyfits.Card.fromstring(text).  But in older pyfits versions, it was
+                    # a regular method.  This syntax should work in both cases.
+                    cards = [ pyfits.Card().fromstring(text) for text in fin ]
+                header = pyfits.Header(cards)
             else:
                 hdu_list, fin = _read_file(file_name, dir, file_compress)
 
