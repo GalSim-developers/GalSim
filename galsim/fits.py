@@ -1044,10 +1044,6 @@ class FitsHeader(object):
                         `header` is required.
     @param dir          Optionally a directory name can be provided if the file_name does not 
                         already include it.
-    @param text_file    Normally a file is taken to be a fits file, but you can also give it a 
-                        text file with the header information (like the .head file output from 
-                        SCamp).  In this case you should set `text_file = True` to tell GalSim
-                        to parse the file this way.  [ Default `test_file = False` ]
     @param hdu_list     Either a `pyfits.HDUList`, a `pyfits.PrimaryHDU`, or `pyfits.ImageHDU`.
                         In the former case, the `hdu` in the list will be selected.  In the latter
                         two cases, the `hdu` parameter is ignored.  One of `file_name`, `hdu_list`
@@ -1070,6 +1066,10 @@ class FitsHeader(object):
                                    '*.gz' => 'gzip'
                                    '*.bz2' => 'bzip2'
                                    otherwise None
+    @param text_file    Normally a file is taken to be a fits file, but you can also give it a 
+                        text file with the header information (like the .head file output from 
+                        SCamp).  In this case you should set `text_file = True` to tell GalSim
+                        to parse the file this way.  [ Default `test_file = False` ]
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str , 'hdu' : int , 'compression' : str , 'text_file' : bool }

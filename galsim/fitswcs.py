@@ -1455,7 +1455,7 @@ fits_wcs_types = [
 ]
 
 def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
-            suppress_warning=False):
+            text_file=False, suppress_warning=False):
     """This factory function will try to read the WCS from a FITS file and return a WCS that will 
     work.  It tries a number of different WCS classes until it finds one that succeeds in reading 
     the file.
@@ -1478,6 +1478,10 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
                           a galsim.FitsHeader object.  [ Default `header = None` ]
     @param compression    Which decompression scheme to use (if any). See galsim.fits.read
                           for the available options.  [ Default `compression = 'auto'` ]
+    @param text_file      Normally a file is taken to be a fits file, but you can also give it a 
+                          text file with the header information (like the .head file output from 
+                          SCamp).  In this case you should set `text_file = True` to tell GalSim
+                          to parse the file this way.  [ Default `test_file = False` ]
     @param suppress_warning Should a warning be emitted if none of the real FITS WCS classes
                           are able to successfully read the file, and we have to reset to
                           an AffineTransform instead?  [ Default `suppress_warning = False` ]  
@@ -1487,8 +1491,8 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     if file_name is not None:
         if header is not None:
             raise TypeError("Cannot provide both file_name and pyfits header")
-        hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
-        header = hdu.header
+        header = galsim.FitsHeader(file_name=file_name, dir=dir, hdu=hdu, compression=compression,
+                                   text_file=text_file)
     else:
         file_name = 'header' # For sensible error messages below.
     if header is None:
@@ -1512,7 +1516,7 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
 
 # Let this function work like a class in config.
 FitsWCS._req_params = { "file_name" : str }
-FitsWCS._opt_params = { "dir" : str, "hdu" : int, "compression" : str }
+FitsWCS._opt_params = { "dir" : str, "hdu" : int, "compression" : str, 'text_file' : bool }
 FitsWCS._single_params = []
 FitsWCS._takes_rng = False
 FitsWCS._takes_logger = False
