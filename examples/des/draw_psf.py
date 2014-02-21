@@ -89,7 +89,7 @@ def main(argv):
         fitpsf_image_file = '%s_%02d_fitpsf_image.fits'%(root,chipnum)
     
         # Get some parameters about the image from the data image header information
-        image_header = galsim.FitsHeader(image_file, dir=data_dir)
+        image_header = galsim.FitsHeader(file_name=image_file, dir=data_dir)
         xsize = image_header[xsize_key]
         ysize = image_header[ysize_key]
         sky_sigma = image_header[sky_sigma_key]  # This is sqrt(variance) / pixel
