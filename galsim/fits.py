@@ -1077,8 +1077,8 @@ class FitsHeader(object):
     _takes_rng = False
     _takes_logger = False
 
-    def __init__(self, header=None, file_name=None, dir=None, text_file=False,
-                 hdu_list=None, hdu=None, compression='auto'):
+    def __init__(self, header=None, file_name=None, dir=None, hdu_list=None, hdu=None,
+                 compression='auto', text_file=False):
 
         if header and file_name:
             raise TypeError("Cannot provide both file_name and header to FitsHeader")
