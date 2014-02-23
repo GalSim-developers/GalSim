@@ -58,9 +58,9 @@ class SED(object):
            e.g. spec = '0.8 + 0.2 * (wave-800)`
 
         The argument of `spec` will be the wavelength in either nanometers (default) or
-        Angstroms depending on the value of `wave_type`.  The output should be
-        the dimensionless throughput at that wavelength.  (Note we use wave rather than lambda,
-        since lambda is a python reserved word.)
+        Angstroms depending on the value of `wave_type`.  The output should be the flux density at
+        that wavelength.  (Note we use wave rather than lambda, since lambda is a python reserved
+        word.)
 
         The argument `wave_type` specifies the units to assume for wavelength and must be one of
         'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or 'Angstroms'. Text case here
