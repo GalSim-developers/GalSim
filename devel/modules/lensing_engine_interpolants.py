@@ -90,39 +90,6 @@ def check_dir(dir):
             # There was a problem, so exist.
             raise
 
-def ft_interp(uvals, interpolant):
-    """Utility to calculate the Fourier transform of an interpolant.
-
-    The uvals are not the standard k or ell, but rather cycles per interpolation unit (i.e.,
-    pixel).
-
-    If we do not have a form available for a particular interpolant, this will raise a
-    NotImplementedError.
-
-    Arguments:
-
-      uvals --------- NumPy array of u values at which to get the FT of the interpolant.
-
-      interpolant --- String specifying the interpolant.
-
-    """
-    s = np.sinc(uvals)
-
-    if interpolant=='linear':
-        return s**2
-    elif interpolant=='nearest':
-        return s
-    elif interpolant=='cubic':
-        c = np.cos(np.pi*uvals)
-        return (s**3)*(3.*s-2.*c)
-    elif interpolant=='quintic':
-        piu = np.pi*uvals
-        c = np.cos(piu)
-        piusq = piu**2
-        return (s**5)*(s*(55.-19.*piusq) + 2.*c*(piusq-27.))
-    else:
-        raise NotImplementedError
-
 def generate_ps_cutoff_plots(ell, ps, theory_ps,
                              nocutoff_ell, nocutoff_ps, nocutoff_theory_ps,
                              interpolant, ps_plot_prefix, type='EE'):
@@ -251,14 +218,18 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
         ax.plot(ell, ratio, color='k')
         fine_ell = np.arange(20000.)
         fine_ell = fine_ell[(fine_ell > np.min(ell)) & (fine_ell < np.max(ell))]
-        u = fine_ell*dth*np.pi/180. # check factors of pi and so on; the dth is needed to
-        # convert from actual distances to cycles per pixel.  Since fine_ell is in 1/radians and dth
-        # is in degrees, I think this is right.
-        try:
-            theor_ratio = (ft_interp(u, interpolant))**2
-            ax.plot(fine_ell, theor_ratio, '--', color='g', label='|FT interpolant|^2')
-        except:
-            print "Could not get theoretical prediction for interpolant %s"%interpolant
+        u = fine_ell*dth*np.pi/180. # check factors of pi and so on; the dth is needed to convert
+        # from actual distances to cycles per pixel.  Since fine_ell is in 1/radians and dth is in
+        # degrees, I think this is right.  However, I'm not sure that the expression here is right
+        # in general; there was some discussion of FT(interp)^2 but I think it should be some
+        # average over the values of FT(interp(u, v))^2 in the regions of the (u, v) plane where we
+        # could get the right value for sqrt(u^2+v^2) to fall into this bin in ell.  What's below
+        # just uses some value assuming that u=v always, which must be wrong at some level.
+        tmp_interp = galsim.Interpolant2d(interpolant)
+        theor_ratio = np.zeros_like(u)
+        for indx in range(len(fine_ell)):
+            theor_ratio[indx] = (tmp_interp.uval(u[indx]/np.pi, u[indx]/np.pi))
+        ax.plot(fine_ell, theor_ratio, '--', color='g', label='|FT interpolant|^2')
         ax.plot(kmax_x_markers, np.array((np.min(ratio), np.max(ratio))), '--',
                 color='k')
         ax.plot(ell, np.ones_like(ell), '--', color='r')
