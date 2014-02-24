@@ -18,7 +18,7 @@ from matplotlib.font_manager import FontProperties
 
 # Set some important quantities up top:
 # Which interpolants do we want to test?
-interpolant_list = ['lanczos3','lanczos5','linear', 'cubic', 'quintic', 'nearest']
+interpolant_list = ['linear', 'cubic', 'quintic', 'nearest','lanczos3','lanczos5']
 n_interpolants = len(interpolant_list)
 # Define shear grid
 grid_size = 10. # degrees
@@ -93,7 +93,8 @@ def check_dir(dir):
 def ft_interp(uvals, interpolant):
     """Utility to calculate the Fourier transform of an interpolant.
 
-    The uvals are not the standard k or ell, but rather cycles per interpolation unit.
+    The uvals are not the standard k or ell, but rather cycles per interpolation unit (i.e.,
+    pixel).
 
     If we do not have a form available for a particular interpolant, this will raise a
     NotImplementedError.
@@ -250,8 +251,9 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
         ax.plot(ell, ratio, color='k')
         fine_ell = np.arange(20000.)
         fine_ell = fine_ell[(fine_ell > np.min(ell)) & (fine_ell < np.max(ell))]
-        u = fine_ell*dth/180./np.pi # check factors of pi and so on; the dth is needed to
-        # convert from actual distances to "interpolation units"
+        u = fine_ell*dth*np.pi/180. # check factors of pi and so on; the dth is needed to
+        # convert from actual distances to cycles per pixel.  Since fine_ell is in 1/radians and dth
+        # is in degrees, I think this is right.
         try:
             theor_ratio = (ft_interp(u, interpolant))**2
             ax.plot(fine_ell, theor_ratio, '--', color='g', label='|FT interpolant|^2')
@@ -678,8 +680,6 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
     theory_cfm_vals = np.zeros_like(theory_th_vals)
     theory_cfp_vals = calculate_xi(theory_th_vals, ps_table, 0, k_min, k_max)
     theory_cfm_vals = calculate_xi(theory_th_vals, ps_table, 4, k_min, k_max)
-    cfp_table = galsim.LookupTable(theory_th_vals, theory_cfp_vals, interpolant='spline')
-    cfm_table = galsim.LookupTable(theory_th_vals, theory_cfm_vals, interpolant='spline')
 
     # Set up grid and the corresponding x, y lists.
     min = (-ngrid/2 + 0.5) * grid_spacing
@@ -981,8 +981,6 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     theory_cfm_vals = np.zeros_like(theory_th_vals)
     theory_cfp_vals = calculate_xi(theory_th_vals, ps_table, 0, k_min, k_max)
     theory_cfm_vals = calculate_xi(theory_th_vals, ps_table, 4, k_min, k_max)
-    cfp_table = galsim.LookupTable(theory_th_vals, theory_cfp_vals, interpolant='spline')
-    cfm_table = galsim.LookupTable(theory_th_vals, theory_cfm_vals, interpolant='spline')
 
     # Set up grid and the corresponding x, y lists.
     ngrid_fine = random_upsample*ngrid
