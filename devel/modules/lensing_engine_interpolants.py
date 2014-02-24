@@ -23,6 +23,9 @@ n_interpolants = len(interpolant_list)
 # Define shear grid
 grid_size = 10. # degrees
 ngrid = 100 # grid points in nominal grid
+# Factor by which to upsample the grid in order to make a "reference" grid from which we interpolate
+# to the positions of random points.
+random_upsample = 10
 # Define shear power spectrum file
 pk_file = os.path.join('..','..','examples','data','cosmo-fid.zmed1.00_smoothed.out')
 # Define files for PS / corr func.
@@ -964,7 +967,8 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     #          = 90 / (grid spacing in degrees)
     # Also find k_min, for correlation function prediction.
     #    k_min = 2*pi / (total grid extent) = 180. / (grid extent)
-    k_max = 10*90. / grid_spacing # factor of 10 because we're actually going to use a finer grid
+    k_max = 90.*random_upsample / grid_spacing # factor of 10 because we're actually going to use a
+                                               # finer grid
     k_min = 180. / (kmin_factor*grid_size)
     # Now define a power spectrum that is raw_ps below k_max and goes smoothly to zero above that.
     ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*cutoff_func(raw_ps_k/k_max),
@@ -981,8 +985,8 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     cfm_table = galsim.LookupTable(theory_th_vals, theory_cfm_vals, interpolant='spline')
 
     # Set up grid and the corresponding x, y lists.
-    ngrid_fine = 10*ngrid
-    grid_spacing_fine = grid_spacing/10.
+    ngrid_fine = random_upsample*ngrid
+    grid_spacing_fine = grid_spacing/random_upsample
     min_fine = (-ngrid_fine/2 + 0.5) * grid_spacing_fine
     max_fine = (ngrid_fine/2 - 0.5) * grid_spacing_fine
     x_fine, y_fine = np.meshgrid(
@@ -1027,8 +1031,8 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
         # these would nominally have different kmax, which would result in different correlation
         # functions, but really since we cut off the power above kmax for the default grid, the
         # effective kmax for the correlation function is the same in both cases.
-        g1_fine, g2_fine = ps.buildGrid(grid_spacing = grid_spacing/10.,
-                                        ngrid = 10*ngrid,
+        g1_fine, g2_fine = ps.buildGrid(grid_spacing = grid_spacing/random_upsample,
+                                        ngrid = random_upsample*ngrid,
                                         units = galsim.degrees,
                                         kmin_factor = kmin_factor)
         interpolated_g1_fine = np.zeros((len(target_x_list), n_interpolants))
@@ -1044,7 +1048,7 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
                 ps.getShear(pos=(target_x_list, target_y_list), units=galsim.degrees,
                             periodic=periodic, reduced=False, interpolant=interpolant_list[i_int])
 
-        g1, g2 = ps.subsampleGrid(10)
+        g1, g2 = ps.subsampleGrid(random_upsample)
         for i_int in range(n_interpolants):
             interpolated_g1[:,i_int], interpolated_g2[:,i_int] = \
                 ps.getShear(pos=(target_x_list,target_y_list), units=galsim.degrees,
@@ -1065,9 +1069,11 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
             if ngrid_use <= 2:
                 raise RuntimeError("After applying edge cutoff, grid is too small!"
                                    "Increase grid size or remove cutoff, or both.")
-            # Remember that x_fine, y_fine have 10x points compared to default grid.
-            x_use = x_fine[10*n_cutoff:10*ngrid-10*n_cutoff, 10*n_cutoff:10*ngrid-10*n_cutoff]
-            y_use = y_fine[10*n_cutoff:10*ngrid-10*n_cutoff, 10*n_cutoff:10*ngrid-10*n_cutoff]
+            # Remember that x_fine, y_fine have more points compared to default grid.
+            min_val_fine = random_upsample*n_cutoff
+            max_val_fine = random_upsample*ngrid - random_upsample*n_cutoff
+            x_use = x_fine[min_val_fine:max_val_fine, min_val_fine:max_val_fine]
+            y_use = y_fine[min_val_fine:max_val_fine, min_val_fine:max_val_fine]
 
             targets_to_use = np.logical_and.reduce(
                 [target_x >= np.min(x_use),
