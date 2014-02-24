@@ -112,8 +112,6 @@ class SED(object):
         else:
             raise ValueError("Unknown flux_type `{}` in SED.__init__".format(flux_type))
 
-        self.redshift = 0.0
-
     def _wavelength_intersection(self, other):
         blue_limit = self.blue_limit
         if other.blue_limit is not None:
@@ -196,13 +194,10 @@ class SED(object):
         return self.__rdiv__(other)
 
     def __add__(self, other):
-        # Add together two SEDs, with caveats listed below:
+        # Add together two SEDs, with the caveat that the resulting SED will be defined on the
+        # wavelength range set by the overlap of the wavelength ranges of the two SED operands.
         #
-        # 1) The resulting SED will be defined on the wavelength range set by the overlap of
-        #    the (possibly redshifted!) wavelength ranges of the two SED operands.
-        # 2) The redshift of the resulting SED will be set to 0.0 regardless of the redshifts of the
-        #    SED operands.
-        # These ensure that SED addition is commutative.
+        # This ensures that SED addition is commutative.
 
         # Find overlapping wavelength interval
         blue_limit, red_limit = self._wavelength_intersection(other)
@@ -210,17 +205,11 @@ class SED(object):
         ret.blue_limit = blue_limit
         ret.red_limit = red_limit
         ret.fphotons = lambda w: self(w) + other(w)
-        ret.redshift = 0.0
         return ret
 
     def __sub__(self, other):
-        # Subtract two SEDs, with caveats listed below:
-        #
-        # 1) The resulting SED will be defined on the wavelength range set by the overlap of
-        #    the (possibly redshifted!) wavelength ranges of the two SED operands.
-        # 2) The redshift of the resulting SED will be set to 0.0 regardless of the redshifts of the
-        #    SED operands.
-        # These ensure that SED subtraction is anticommutative.
+        # Subtract two SEDs, with the caveat that the resulting SED will be defined on the
+        # wavelength range set by the overlap of the wavelength ranges of the two SED operands.
 
         # Find overlapping wavelength interval
         return self.__add__(-1.0 * other)
@@ -232,43 +221,44 @@ class SED(object):
             ret.__dict__[k] = copy.deepcopy(v) # need deepcopy for copying self.fphotons
         return ret
 
-    def setNormalization(self, base_wavelength, normalization):
-        """ Set photon density normalization at specified wavelength.  Note that this
-        normalization is *relative* to the flux of the chromaticized GSObject.
+    def createWithFluxDensity(self, wavelength, target_flux_density):
+        """ Return a new SED with flux density set to `target_flux_density` at wavelength
+        `wavelength`.  Note that this normalization is *relative* to the `flux` attribute of the
+        chromaticized GSObject.
 
-        @param base_wavelength    The wavelength, in nanometers, at which the normalization will
-                                  be set.
-        @param normalization      The target *relative* normalization in photons / nm.
+        @param wavelength   The wavelength, in nanometers, at which flux density will be set.
+        @param target_flux_density   The target *relative* normalization in photons / nm.
+        @returns   New normalized SED.
         """
-        current_fphotons = self(base_wavelength)
-        norm = normalization / current_fphotons
+        current_fphotons = self(wavelength)
+        factor = target_flux_density / current_fphotons
         ret = self.copy()
-        ret.fphotons = lambda w: self.fphotons(w) * norm
+        ret.fphotons = lambda w: self.fphotons(w) * factor
         return ret
 
-    def setFlux(self, bandpass, flux_norm):
-        """ Set flux of SED when observed through given bandpass.  Note that the final number
-        of counts drawn into an image is a function of both the SED and the chromaticized
-        GSObject's flux attribute.
+    def createWithFlux(self, bandpass, target_flux):
+        """ Return a new SED with flux through the Bandpass `bandpass` set to `target_flux`. Note
+        that this normalization is *relative* to the `flux` attribute of the chromaticized GSObject.
 
         @param bandpass   A galsim.Bandpass object defining a filter bandpass.
-        @param flux_norm  Desired *relative* flux contribution from the SED.
+        @param target_flux  Desired *relative* flux normalization of the SED.
+        @returns   New normalized SED.
         """
         current_flux = self.getFlux(bandpass)
-        norm = flux_norm/current_flux
+        norm = target_flux/current_flux
         ret = self.copy()
         ret.fphotons = lambda w: self.fphotons(w) * norm
         return ret
 
-    def setRedshift(self, redshift):
-        """ Scale the wavelength axis of the SED.
+    def createRedshifted(self, redshift):
+        """ Return a new SED with redshifted wavelengths.
 
         @param redshift
+        @returns Redshifted SED.
         """
         ret = self.copy()
-        wave_factor = (1.0 + redshift) / (1.0 + self.redshift)
+        wave_factor = (1.0 + redshift)
         ret.fphotons = lambda w: self.fphotons(w / wave_factor)
-        ret.redshift = redshift
         ret.blue_limit = self.blue_limit * wave_factor
         ret.red_limit = self.red_limit * wave_factor
         return ret

@@ -252,7 +252,7 @@ class Bandpass(object):
         else:
             return self.func(wave) if (wave >= self.blue_limit and wave <= self.red_limit) else 0.0
 
-    def truncate(self, relative_throughput=None, blue_limit=None, red_limit=None):
+    def createTruncated(self, relative_throughput=None, blue_limit=None, red_limit=None):
         """ Return a bandpass with its wavelength range truncated.
 
         @param blue_limit             Truncate blue side of bandpass here.
@@ -285,7 +285,7 @@ class Bandpass(object):
                                  +" a galsim.LookupTable")
             return Bandpass(self.func, blue_limit=blue_limit, red_limit=red_limit)
 
-    def thin(self, step):
+    def createThinned(self, step):
         """ If the bandpass was initialized with a galsim.LookupTable or from a file (which
         internally creates a galsim.LookupTable), then thin the tabulated wavelengths and
         throughput by keeping only every `step`th index.  Always keep the first and last index,
