@@ -48,8 +48,8 @@ fontP = FontProperties()
 fontP.set_size('small')
 
 # Utility functions go here, above main():
-def cutoff_func(k_ratio):
-    """Softening function for the power spectrum cutoff, instead of a hard cutoff.
+def softening_func(k_ratio):
+    """Softening function for the power spectrum band-limiting step, instead of a hard cut in k.
 
     The argument is the ratio of k to k_max for this grid.  We use an arctan function to go smoothly
     from 1 to 0 above k_max.
@@ -655,7 +655,7 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
     # initial P(k) including power on scales above those that can be represented by our grid.  In
     # order to deal with that, we will define a power spectrum function that equals a cosmological
     # one for k < k_max and is zero above that, with some smoothing function rather than a hard
-    # cutoff.
+    # cut.
     raw_ps_data = np.loadtxt(pk_file).transpose()
     raw_ps_k = raw_ps_data[0,:]
     raw_ps_p = raw_ps_data[1,:]
@@ -668,7 +668,7 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
     k_max = 90. / grid_spacing
     k_min = 180. / (kmin_factor*grid_size)
     # Now define a power spectrum that is raw_ps below k_max and goes smoothly to zero above that.
-    ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*cutoff_func(raw_ps_k/k_max),
+    ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*softening_func(raw_ps_k/k_max),
                                   interpolant='linear')
     ps = galsim.PowerSpectrum(ps_table, units = galsim.radians)
     # Let's also get a theoretical correlation function for later use.  It should be pretty finely
