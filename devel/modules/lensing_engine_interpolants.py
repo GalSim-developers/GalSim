@@ -643,7 +643,7 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
     # Now define a power spectrum that is raw_ps below k_max and goes smoothly to zero above that.
     ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*softening_func(raw_ps_k/k_max),
                                   interpolant='linear')
-    ps = galsim.PowerSpectrum(ps_table, units = galsim.radians)
+    ps = galsim.PowerSpectrum(pk_file, units = galsim.radians, bandlimit = 'soft')
     # Let's also get a theoretical correlation function for later use.  It should be pretty finely
     # spaced, and put into a log-interpolated LookupTable:
     theory_th_vals = np.logspace(np.log10(grid_spacing), np.log10(grid_size), 500)
@@ -944,7 +944,7 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     # Now define a power spectrum that is raw_ps below k_max and goes smoothly to zero above that.
     ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*cutoff_func(raw_ps_k/k_max),
                                   interpolant='linear')
-    ps = galsim.PowerSpectrum(ps_table, units = galsim.radians)
+    ps = galsim.PowerSpectrum(pk_file, units = galsim.radians, bandlimit = 'soft')
     # Let's also get a theoretical correlation function for later use.  It should be pretty finely
     # spaced, and put into a log-interpolated LookupTable:
     theory_th_vals = np.logspace(np.log10(grid_spacing), np.log10(grid_size), 500)
