@@ -204,7 +204,7 @@ class PowerSpectrum(object):
 
     def buildGrid(self, grid_spacing=None, ngrid=None, rng=None, interpolant=None,
                   center=galsim.PositionD(0,0), units=galsim.arcsec, get_convergence=False,
-                  kmax_factor=1, kmin_factor=1):
+                  kmax_factor=1, kmin_factor=1, bandlimit="hard"):
         """Generate a realization of the current power spectrum on the specified grid.
 
         This function will generate a Gaussian random realization of the specified E and B mode
@@ -257,6 +257,18 @@ class PowerSpectrum(object):
         Note: These are really just for convenience, since you could easily get the same effect
         by providing different values of ngrid and grid_spacing and then take a subset of them.
         The `kmin_factor` and `kmax_factor` just handle the scalings appropriately for you.
+
+        Also, if the user provides a power spectrum that does not include a cutoff at kmax, then our
+        method of generating shears will result in aliasing that will show up in both E- and
+        B-modes.  Thus the `buildGrid()` method accepts an optional keyword argument called
+        `bandlimit` that can tell the PowerSpectrum object to cut off power above kmax
+        automatically, where the relevant kmax comes from that set by the grid spacing times
+        `kmax_factor`.  The allowed values for `bandlimit` are None (i.e., do nothing), `hard` (set
+        power to zero above the band limit), or `soft` (use an arctan-based softening function to
+        make the power go gradually to zero above the band limit.  By default, `bandlimit=hard`.
+        Use of this keyword does nothing to the internal representation of the power spectrum, so if
+        the user calls the `buildGrid` method again, they will need to set `bandlimit` again (and if
+        their grid setup is different in a way that changes `kmax`, then that's fine).
 
         For more information on the effects of finite grid representation of the power spectrum 
         see `devel/modules/lensing_engine.pdf`.
@@ -331,6 +343,12 @@ class PowerSpectrum(object):
                                 larger than the default.  i.e. 
                                     kmax = pi / grid_spacing * kmax_factor
                                 [default `kmax_factor = 1`; must be an integer]
+        @param bandlimit        (Optional) Keyword determining how to handle power P(k) above the
+                                limiting k value, kmax.  The options None, 'hard', and soft
+                                correspond to doing nothing (i.e., allow P(>kmax) to be aliased to
+                                lower k values), cutting off all power above kmax, and applying a
+                                softening filter to gradually cut off power above kmax.  [default
+                                'bandlimit="hard"']
 
         @return g1,g2[,kappa]   2-d NumPy arrays for the shear components g_1, g_2 and (if
                                 `get_convergence=True`) convergence kappa.
@@ -424,6 +442,25 @@ class PowerSpectrum(object):
         e_power_function = self._convert_power_function(self.e_power_function,'e_power_function')
         b_power_function = self._convert_power_function(self.b_power_function,'b_power_function')
 
+        # Figure out how to apply band limit if requested.
+        # Start by calculating kmax in the appropriate units.
+        # Generally, it should be kmax_factor*pi/(grid spacing).  We have the grid spacing in
+        # the user-provided units, so applying that formula would give a number in units of
+        # 1/(input units), which needs to be multiplied by scale to get 1/(arcsec), i.e., the
+        # units that GalSim uses internally.
+        k_max = self.scale * kmax_factor * np.pi / grid_spacing
+        if bandlimit == 'hard':
+            def bandlimit_func(k, k_max):
+                return self._hard_cutoff(k, k_max)
+        elif bandlimit == 'soft':
+            def bandlimit_func(k, k_max):
+                return self._softening_function(k, k_max)
+        elif bandlimit == None:
+            def bandlimit_func(k, k_max):
+                return self._hard_cutoff(k, 1.e30)
+        else:
+            raise RuntimeError("Unrecognized option for band limit!")
+
         # If we actually have dimensionless Delta^2, then we must convert to power
         # P(k) = 2pi Delta^2 / k^2, 
         # which has dimensions of angle^2.
@@ -433,7 +470,8 @@ class PowerSpectrum(object):
             # Here we have to go from Delta^2 (dimensionless) to P = 2pi Delta^2 / k^2.  We want to
             # have P and therefore 1/k^2 in units of arcsec, so we won't rescale the k that goes in
             # the denominator.  This naturally gives P(k) in arcsec^2.
-            p_E = lambda k : (2.*np.pi) * e_power_function(self.scale*k)/(k**2)
+            p_E = lambda k : (2.*np.pi) * e_power_function(self.scale*k)/(k**2) * \
+                bandlimit_func(self.scale*k, k_max)
         elif self.scale != 1:
             # Here, the scale comes in two places:
             # The units of k have to be converted from 1/arcsec, which GalSim wants to use, into
@@ -441,18 +479,21 @@ class PowerSpectrum(object):
             # The units of power have to be converted from (input units)^2 as returned by the power
             # function, to Galsim's units of arcsec^2.
             # Recall that scale is (input units)/arcsec.
-            p_E = lambda k : e_power_function(self.scale*k)*(self.scale**2)
-        else: 
-            p_E = e_power_function
+            p_E = lambda k : e_power_function(self.scale*k)*(self.scale**2) * \
+                bandlimit_func(self.scale*k, k_max)
+        else:
+            p_E = e_power_function * bandlimit_func(k, k_max)
 
         if b_power_function is None:
             p_B = None
         elif self.delta2:
-            p_B = lambda k : (2.*np.pi) * b_power_function(self.scale*k)/(k**2)
+            p_B = lambda k : (2.*np.pi) * b_power_function(self.scale*k)/(k**2) * \
+                bandlimit_func(self.scale*k, k_max)
         elif self.scale != 1:
-            p_B = lambda k : b_power_function(self.scale*k)*(self.scale**2)
+            p_B = lambda k : b_power_function(self.scale*k)*(self.scale**2) * \
+                bandlimit_func(self.scale*k, k_max)
         else:
-            p_B = b_power_function
+            p_B = b_power_function * bandlimit_func(k, k_max)
 
         # Build the grid 
         psr = PowerSpectrumRealizer(ngrid*kmin_factor*kmax_factor, grid_spacing/kmax_factor,
@@ -543,6 +584,35 @@ class PowerSpectrum(object):
                 raise AttributeError(
                     "Power function MUST return a list/array same length as input")
         return pf
+
+    def _softening_function(self, k, k_max):
+        """Softening function for the power spectrum band-limiting step, instead of a hard cut in k.
+
+        We use an arctan function to go smoothly from 1 to 0 above k_max.
+        """
+        # The magic numbers in the code below come from the following:
+        # We define the function as
+        #     (arctan[A log(k/k_max) + B] + pi/2)/pi
+        # For our current purposes, we will define A and B by requiring that this function go to 0.95
+        # (0.05) for k/k_max = 0.95 (1).  This gives two equations:
+        #     0.95 = (arctan[log(0.95) A + B] + pi/2)/pi
+        #     0.05 = (arctan[B] + pi/2)/pi.
+        # We will solve the second equation:
+        #     -0.45 pi = arctan(B), or
+        #     B = tan(-0.45 pi).
+        b = np.tan(-0.45*np.pi)
+        # Then, we get A from the first equation:
+        #     0.45 pi = arctan[log(0.95) A + B]
+        #     tan(0.45 pi) = log(0.95) A  + B
+        a = (np.tan(0.45*np.pi)-b) / np.log(0.95)
+        return (np.arctan(a*np.log(k/k_max)+b) + np.pi/2.)/np.pi
+
+    def _hard_cutoff(self, k, k_max):
+        if isinstance(k, float):
+            return float(k < k_max)
+        elif isinstance(k, list) or isinstance(k, tuple):
+            return (np.array(k) < k_max).astype(float)
+        else: return (k < k_max).astype(float)
 
     def _wrap_image(self, im, border=5):
         """
