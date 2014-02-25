@@ -192,4 +192,6 @@ Other new features:
   as an alternative to specifying each one individually.  (The innards of 
   OpticalPSF were also rearranged to use arrays instead of individual values, 
   but this is not important for users, just developers.) (Issue #409)
+* Added option to FitsHeader and FitsWCS to read in SCamp-style text files with 
+  the header information using the parameter `text_file=True`. (Issue #508)
 

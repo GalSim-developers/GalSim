@@ -1037,7 +1037,9 @@ class FitsHeader(object):
 
     @param header       A pyfits Header object.  One of `file_name`, `hdu_list` or `header`
                         is required.  The `header` parameter may be given without the keyword
-                        name.
+                        name.  Also, if `header` is a string, it is interpreted as a file name,
+                        so a file name may be passed as an arg like most other galsim.fits 
+                        read functions.
     @param file_name    The name of the file to read in.  One of `file_name`, `hdu_list` or 
                         `header` is required.
     @param dir          Optionally a directory name can be provided if the file_name does not 
@@ -1046,9 +1048,10 @@ class FitsHeader(object):
                         In the former case, the `hdu` in the list will be selected.  In the latter
                         two cases, the `hdu` parameter is ignored.  One of `file_name`, `hdu_list`
                         or `header is required.
-    @param hdu          The number of the HDU to return.  The default is to return either the 
-                        primary or first extension as appropriate for the given compression.
-                        (e.g. for rice, the first extension is the one you normally want.)
+    @param hdu          The number of the HDU from which to read the header.  The default is to 
+                        use either the primary or first extension as appropriate for the given 
+                        compression.  (e.g. for rice, the first extension is the one you normally 
+                        want.)
     @param compression  Which decompression scheme to use (if any).  Options are:
                         - None or 'none' = no decompression
                         - 'rice' = use rice decompression in tiles
@@ -1063,17 +1066,19 @@ class FitsHeader(object):
                                    '*.gz' => 'gzip'
                                    '*.bz2' => 'bzip2'
                                    otherwise None
+    @param text_file    Normally a file is taken to be a fits file, but you can also give it a 
+                        text file with the header information (like the .head file output from 
+                        SCamp).  In this case you should set `text_file = True` to tell GalSim
+                        to parse the file this way.  [ Default `test_file = False` ]
     """
     _req_params = { 'file_name' : str }
-    _opt_params = { 'dir' : str , 'hdu' : int , 'compression' : str }
+    _opt_params = { 'dir' : str , 'hdu' : int , 'compression' : str , 'text_file' : bool }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
     def __init__(self, header=None, file_name=None, dir=None, hdu_list=None, hdu=None,
-                 compression='auto'):
-    
-        file_compress, pyfits_compress = _parse_compression(compression,file_name)
+                 compression='auto', text_file=False):
 
         if header and file_name:
             raise TypeError("Cannot provide both file_name and header to FitsHeader")
@@ -1084,14 +1089,31 @@ class FitsHeader(object):
         if not (header or file_name or hdu_list):
             raise TypeError("Must provide one of header, file_name or hdu_list to FitsHeader")
 
+        # Interpret a string header as though it were passed as file_name.
+        if isinstance(header, basestring):
+            file_name = header
+            header = None
+    
+        file_compress, pyfits_compress = _parse_compression(compression,file_name)
+
         if file_name:
-            hdu_list, fin = _read_file(file_name, dir, file_compress)
+            if text_file:
+                import os
+                if dir: file_name = os.path.join(dir,file_name)
+                with open(file_name,"r") as fin:
+                    # Later pyfits versions changed this to a class method, so you can write
+                    # pyfits.Card.fromstring(text).  But in older pyfits versions, it was
+                    # a regular method.  This syntax should work in both cases.
+                    cards = [ pyfits.Card().fromstring(text) for text in fin ]
+                header = pyfits.Header(cards)
+            else:
+                hdu_list, fin = _read_file(file_name, dir, file_compress)
 
         if hdu_list:
             hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
             header = hdu.header
 
-        if file_name:
+        if file_name and not text_file:
             # If we opened a file, don't forget to close it.
             # Also need to make a copy of the header to keep it available.
             # If we construct a FitsHeader from an hdu_list, then we don't want to do this,
