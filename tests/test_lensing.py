@@ -436,7 +436,9 @@ def test_shear_reference():
     # define power spectrum
     ps = galsim.PowerSpectrum(e_power_function=lambda k : k**0.5, b_power_function=lambda k : k)
     # get shears
-    g1, g2, kappa = ps.buildGrid(grid_spacing = dx, ngrid = n, rng=rng, get_convergence=True)
+    g1, g2, kappa = ps.buildGrid(grid_spacing = dx, ngrid = n, rng=rng, get_convergence=True,
+                                 bandlimit = None) # Switch off this default, since original set of
+                                 # shears were computed before the bandlimit option existed.
 
     # put in same format as data that got read in
     g1vec = g1.reshape(n*n)
