@@ -492,7 +492,7 @@ class PowerSpectrum(object):
             p_E = lambda k : e_power_function(self.scale*k)*(self.scale**2) * \
                 bandlimit_func(self.scale*k, self.scale*k_max)
         else:
-            p_E = e_power_function * bandlimit_func(k, k_max)
+            p_E = lambda k : e_power_function(k) * bandlimit_func(k, k_max)
 
         if b_power_function is None:
             p_B = None
@@ -503,7 +503,7 @@ class PowerSpectrum(object):
             p_B = lambda k : b_power_function(self.scale*k)*(self.scale**2) * \
                 bandlimit_func(self.scale*k, self.scale*k_max)
         else:
-            p_B = b_power_function * bandlimit_func(k, k_max)
+            p_B = lambda k : b_power_function(k) * bandlimit_func(k, k_max)
 
         # Build the grid 
         psr = PowerSpectrumRealizer(ngrid*kmin_factor*kmax_factor, grid_spacing/kmax_factor,
@@ -723,7 +723,7 @@ class PowerSpectrum(object):
             p_E = lambda k : e_power_function(self.scale*k)*(self.scale**2) * \
                 bandlimit_func(self.scale*k, self.scale*k_max)
         else:
-            p_E = e_power_function * bandlimit_func(k, k_max)
+            p_E = lambda k : e_power_function(k) * bandlimit_func(k, k_max)
 
         if b_power_function is None:
             p_B = None
@@ -734,7 +734,7 @@ class PowerSpectrum(object):
             p_B = lambda k : b_power_function(self.scale*k)*(self.scale**2) * \
                 bandlimit_func(self.scale*k, self.scale*k_max)
         else:
-            p_B = b_power_function * bandlimit_func(k, k_max)
+            p_B = lambda k : b_power_function(k) * bandlimit_func(k, k_max)
 
         # Get k_min, k_max values in arcsec:
         k_min = 2.*np.pi / (ngrid * grid_spacing * kmin_factor)
