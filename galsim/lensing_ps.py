@@ -923,6 +923,12 @@ class PowerSpectrum(object):
         modification of the shear correlation function before changing to use linear, cubic, or
         nearest.
 
+        Users who wish to ensure that the shear power spectrum is preserved post-interpolation
+        should consider using the `periodic` interpolation option, which assumes the shear field is
+        periodic (i.e., the sky is tiled with many copies of the given shear field).  Those who care
+        about the correlation function should not use this option, and for this reason it's not the
+        default.
+
         Some examples of how to use getShear:
 
         1. Get the shear for a particular point:
