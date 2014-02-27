@@ -13,7 +13,6 @@ import subprocess
 import pyfits
 import optparse
 import matplotlib.pyplot as plt
-from scipy.special import jv
 from matplotlib.font_manager import FontProperties
 
 # Set some important quantities up top:
@@ -313,7 +312,7 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
       type ---------------- Type of correlation function?  Options are 'p' and 'm' for xi_+ and
                             xi_-.
 
-      theory_raw ---------- Theory prediction at bin centers (not averaged within bin).
+      theory_raw ---------- Theory prediction at finely-spaced positions.
 
       theory_binned ------- Theory prediction averaged within bin, for gridded points.
 
@@ -331,7 +330,7 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
     ax.plot(th, interpolated_cf, color='r',
             label='Interpolated')
     if theory_raw is not None:
-        ax.plot(th, theory_raw, color='g', label='Theory (unbinned)')
+        ax.plot(theory_raw[0], theory_raw[1], color='g', label='Theory (unbinned)')
     if theory_binned is not None:
         ax.plot(th, theory_binned, color='k', label='Theory (binned from grid)')
     if theory_rand is not None:
@@ -520,30 +519,6 @@ def nCutoff(interpolant):
     except KeyError:
         raise RuntimeError("No cutoff scheme was defined for interpolant %s!"%interpolant)
 
-class xi_integrand:
-    def __init__(self, pk, r, n):
-        self.pk = pk
-        self.r = r
-        self.n = n
-    def __call__(self, k):
-        return k * self.pk(k) * jv(self.n, self.r*k)
-
-def calculate_xi(r, pk, n, k_min, k_max):
-    """Calculate xi+(r) or xi-(r) from a power spectrum.
-    """
-    #print 'Start calculate_xi'
-    # xi+/-(r) = 1/2pi int(dk k P(k) J0/4(kr), k=0..inf)
-
-    rrad = r * np.pi/180.  # Convert to radians
-
-    xi = np.zeros_like(r)
-    for i in range(len(r)):
-        integrand = xi_integrand(pk, rrad[i], n)
-        xi[i] = galsim.integ.int1d(integrand, k_min, k_max,
-                                   rel_err=1.e-6, abs_err=1.e-12)
-    xi /= 2. * np.pi
-    return xi
-
 def simpleBinnedTheory(x, y, xi, dtheta, ngrid, n_output_bins):
     """Utility to estimated binned theoretical correlation function.
 
@@ -644,13 +619,10 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
     ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*softening_func(raw_ps_k/k_max),
                                   interpolant='linear')
     ps = galsim.PowerSpectrum(pk_file, units = galsim.radians) # will use automatic band-limiting
-    # Let's also get a theoretical correlation function for later use.  It should be pretty finely
-    # spaced, and put into a log-interpolated LookupTable:
-    theory_th_vals = np.logspace(np.log10(grid_spacing), np.log10(grid_size), 500)
-    theory_cfp_vals = np.zeros_like(theory_th_vals)
-    theory_cfm_vals = np.zeros_like(theory_th_vals)
-    theory_cfp_vals = calculate_xi(theory_th_vals, ps_table, 0, k_min, k_max)
-    theory_cfm_vals = calculate_xi(theory_th_vals, ps_table, 4, k_min, k_max)
+    # Let's also get a theoretical correlation function for later use.
+    theory_th_vals, theory_cfp_vals, theory_cfm_vals = \
+        ps.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, units=galsim.degrees,
+                       bandlimit="soft", kmin_factor=kmin_factor, n_theta=100)
 
     # Set up grid and the corresponding x, y lists.
     min = (-ngrid/2 + 0.5) * grid_spacing
@@ -876,13 +848,10 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
             generate_cf_cutoff_plots(th, mean_cfm, 
                                      nocutoff_th, mean_nocutoff_cfm,
                                      interpolant, cf_plot_prefix, type='m')
-        # get theory predictions before trying to plot
-        theory_xip = calculate_xi(th, ps_table, 0, k_min, k_max)
-        theory_xim = calculate_xi(th, ps_table, 4, k_min, k_max)
         generate_cf_plots(th, mean_cfp, mean_interpolated_cfp, interpolant, cf_plot_prefix,
-                          grid_spacing, type='p', theory_raw=theory_xip)
+                          grid_spacing, type='p', theory_raw=(theory_th_vals, theory_cfp_vals))
         generate_cf_plots(th, mean_cfm, mean_interpolated_cfm, interpolant, cf_plot_prefix,
-                          grid_spacing, type='m', theory_raw=theory_xim)
+                          grid_spacing, type='m', theory_raw=(theory_th_vals, theory_cfm_vals))
 
         # Output results.
         print "Outputting tables of results..."
@@ -943,16 +912,14 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
                                                # finer grid
     k_min = 180. / (kmin_factor*grid_size)
     # Now define a power spectrum that is raw_ps below k_max and goes smoothly to zero above that.
-    ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*cutoff_func(raw_ps_k/k_max),
+    ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*softening_func(raw_ps_k/k_max),
                                   interpolant='linear')
     ps = galsim.PowerSpectrum(pk_file, units = galsim.radians)
-    # Let's also get a theoretical correlation function for later use.  It should be pretty finely
-    # spaced, and put into a log-interpolated LookupTable:
-    theory_th_vals = np.logspace(np.log10(grid_spacing), np.log10(grid_size), 500)
-    theory_cfp_vals = np.zeros_like(theory_th_vals)
-    theory_cfm_vals = np.zeros_like(theory_th_vals)
-    theory_cfp_vals = calculate_xi(theory_th_vals, ps_table, 0, k_min, k_max)
-    theory_cfm_vals = calculate_xi(theory_th_vals, ps_table, 4, k_min, k_max)
+    # Let's also get a theoretical correlation function for later use.
+    theory_th_vals, theory_cfp_vals, theory_cfm_vals = \
+        ps.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, units=galsim.degrees,
+                       bandlimit="soft", kmin_factor=kmin_factor, kmax_factor=random_upsample,
+                       n_theta=100)
 
     # Set up grid and the corresponding x, y lists.
     ngrid_fine = random_upsample*ngrid
@@ -1089,19 +1056,17 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     mean_interpolated_cfm /= n_realizations
     mean_cfm /= n_realizations
 
-    # get theory predictions before trying to plot
-    theory_xip = calculate_xi(th, ps_table, 0, k_min, k_max)
-    theory_xim = calculate_xi(th, ps_table, 4, k_min, k_max)
-
     # Plot statistics, and ratios with vs. without interpolants.
     for i_int in range(n_interpolants):
         interpolant = interpolant_list[i_int]
         print "Running plotting routines for interpolant=%s..."%interpolant
 
         generate_cf_plots(th, mean_cfp[:,i_int], mean_interpolated_cfp[:,i_int], interpolant,
-                          cf_plot_prefix, grid_spacing, type='p', theory_raw=theory_xip)
+                          cf_plot_prefix, grid_spacing, type='p',
+                          theory_raw=(theory_th_vals, theory_cfp_vals))
         generate_cf_plots(th, mean_cfm[:,i_int], mean_interpolated_cfm[:,i_int], interpolant,
-                          cf_plot_prefix, grid_spacing, type='m', theory_raw=theory_xim)
+                          cf_plot_prefix, grid_spacing, type='m',
+                          theory_raw=(theory_th_vals, theory_cfm_vals))
 
         # Output results.
         print "Outputting tables of results..."
