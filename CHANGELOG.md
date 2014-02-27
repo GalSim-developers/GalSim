@@ -29,14 +29,14 @@ Python layer API changes:
     `im = ImageF(..., make_const=True)` (again preserving the type letter).
   * `im = Image[type](...)` should now be `Image(..., dtype=type)`
   * `im = ImageView[type](numpy_array.astype(type))` should now be 
-     `im = Image(numpy_array.astype(type))`.  i.e. The data type inherits
-     from the numpy_array argument when appropriate.  If it is already
-     the correct type, you do not need the `astype(type)` part.
+    `im = Image(numpy_array.astype(type))`.  i.e. the data type inherits
+    from the numpy_array argument when appropriate.  If it is already
+    the correct type, you do not need the `astype(type)` part.
   * `im = ConstImageView[type](numpy_array.astype(type))` should now be 
     `im = Image(numpy_array.astype(type), make_const=True)`
 * Changed the handling of the `scale` and `init_value` parameters of the 
   `Image` constructor, so that now they have to be named keyword arguments
-  rather than a positional arguments. (Issue #364)
+  rather than positional arguments. (Issue #364)
   * `im = ImageF(nx, ny, scale, init_val)` should now be 
     `im = ImageF(nx, ny, scale=scale, init_value=init_val)`.
 * Removed the `im.at(x,y)` syntax.  This had been equivalent to `im(x,y)`, 
@@ -53,9 +53,12 @@ Python layer API changes:
 * Changed DES_PSFEx class to take in the original image file to get the correct
   WCS information to convert from image coordinates to world coordinates.  If
   unavailable, then the returned PSF profiles will be in image coordinates.
+  The old `scale` parameter in `psfex.getPSF` is obsolete since it is not
+  really accurate.  The new behavior accurately converts the PSFEx profile 
+  between image and world coordinates.
   * `psfex = galsim.des.DES_PSFEx(psf_file)` `psf = psfex.getPSF(pos, scale)`
-     should become `psfex = galsim.des.DES_PSFEx(psf_file, image_file)`
-     `psf = psfex.getPSF(pos)`.
+    should become `psfex = galsim.des.DES_PSFEx(psf_file, image_file)`
+    `psf = psfex.getPSF(pos)`.
 
 
 New WCS classes: (Issue #364)
@@ -80,7 +83,7 @@ New WCS classes: (Issue #364)
 * There is one non-uniform EuclideanWCS class that uses Euclidean coordinates 
   for the world coordinate system:
   * `UVFunction` is an arbitrary transformation from (x,y) coordinates to
-    Euclidean (u,v) coordinates.  It takes arbitrary function u(x,y) and
+    Euclidean (u,v) coordinates.  It takes arbitrary functions u(x,y) and
     v(x,y) as inputs.  (And optionally x(u,v) and y(u,v) for the inverse
     transformations.)
 * There are five CelestialWCS classes that use celestial coordinates for the 
@@ -146,7 +149,7 @@ Updates to config options:
   had been an option for the psf draw, but not the main draw.  This is only
   possible if there is only one item being convolved with the pixel.
   (Issue #364)
-* Added ability to index Sequences by any running index, rather than just the 
+* Added ability to index sequences by any running index, rather than just the 
   default.  i.e. `obj_num`, `image_num`, or `file_num`. (Issue #364)
 * Added `Sum` type for value types for which it makes sense: float, int, angle,
   shear, position. (Issue #457)
@@ -189,4 +192,6 @@ Other new features:
   as an alternative to specifying each one individually.  (The innards of 
   OpticalPSF were also rearranged to use arrays instead of individual values, 
   but this is not important for users, just developers.) (Issue #409)
+* Added option to FitsHeader and FitsWCS to read in SCamp-style text files with 
+  the header information using the parameter `text_file=True`. (Issue #508)
 
