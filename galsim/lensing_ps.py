@@ -1270,7 +1270,7 @@ class PowerSpectrum(object):
         else:
             return mu
 
-    def getLensing(self, pos, units=galsim.arcsec, periodic=False):
+    def getLensing(self, pos, units=galsim.arcsec, periodic=False, interpolant=None):
         """
         This function can interpolate between grid positions to find the lensing observable
         quantities (reduced shears g1 and g2, and magnification mu) for a given list of input
@@ -1361,9 +1361,9 @@ class PowerSpectrum(object):
             sbii_g2 = galsim.SBInteroplatedImage(im_g2_new.image, xInterp=xinterp, kInterp=kinterp)
             sbii_mu = galsim.SBInterpolatedImage(im_mu_new.image, xInterp=xinterp, kInterp=kinterp)
         else:
-            sbii_g1 = galsim.SBInterpolatedImage(im_g1_r.image, xInterp=xinterp, kInterp=kinterp)
-            sbii_g2 = galsim.SBInterpolatedImage(im_g2_r.image, xInterp=xinterp, kInterp=kinterp)
-            sbii_mu = galsim.SBInterpolatedImage(im_mu.image, xInterp=xinterp, kInterp=kinterp)
+            sbii_g1 = galsim.SBInterpolatedImage(im_g1_r, xInterp=xinterp, kInterp=kinterp)
+            sbii_g2 = galsim.SBInterpolatedImage(im_g2_r, xInterp=xinterp, kInterp=kinterp)
+            sbii_mu = galsim.SBInterpolatedImage(im_mu, xInterp=xinterp, kInterp=kinterp)
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.
