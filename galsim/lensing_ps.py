@@ -791,7 +791,7 @@ class PowerSpectrum(object):
             return (np.array(k) < k_max).astype(float)
         else: return (k < k_max).astype(float)
 
-    def _wrap_image(self, im, border=5):
+    def _wrap_image(self, im, border=7):
         """
         Utility function to wrap an image with some number of border pixels.
         """
@@ -943,7 +943,7 @@ class PowerSpectrum(object):
             # wrapped grid bits around the edges, because otherwise the interpolant will treat
             # everything off the edges as zero.
             if periodic:
-                # Make an expanded bounds.  We expand by 5 (default) to be safe, though most
+                # Make an expanded bounds.  We expand by 7 (default) to be safe, though most
                 # interpolants don't need that much.
                 g1_r_new = self._wrap_image(g1_r)
                 g2_r_new = self._wrap_image(g2_r)
@@ -1007,16 +1007,16 @@ class PowerSpectrum(object):
         else:
             return g1, g2
 
-    def getConvergence(self, pos, units=galsim.arcsec, periodic=False):
+    def getConvergence(self, pos, units=galsim.arcsec, periodic=False, interpolant=None):
         """
         This function can interpolate between grid positions to find the convergence values for a
         given list of input positions (or just a single position).  Before calling this function,
         you must call buildGrid first to define the grid of convergences on which to interpolate.
 
         Note that the interpolation (carried out using the interpolant that was specified when
-        building the gridded shears) modifies the effective power spectrum somewhat.  The user is
-        responsible for choosing a grid size that is small enough not to significantly modify the
-        power spectrum on the scales of interest.
+        building the gridded shears, if none is specified here) modifies the effective power
+        spectrum somewhat.  The user is responsible for choosing a grid size that is small enough
+        not to significantly modify the power spectrum on the scales of interest.
 
         The usage of getConvergence is the same as for getShear, except that it returns only a
         single number rather than a pair of numbers.  See documentation for getShear for some
@@ -1038,6 +1038,11 @@ class PowerSpectrum(object):
                                 if they are outside the bounds of the original grid on which shears
                                 and convergences were defined.  If not, then convergences are set to
                                 zero for positions outside the original grid.  [default = False]
+        @param interpolant      (Optional) Interpolant that will be used for interpolating the
+                                gridded shears.  By default, the one that was specified when
+                                building the grid was used.  Specifying an interpolant here does not
+                                change the one that is stored as part of this PowerSpectrum
+                                instance.
 
         @return kappa           If given a single position: the convergence kappa.
                                 If given a list of positions: a python list of values.
@@ -1051,12 +1056,25 @@ class PowerSpectrum(object):
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getConvergence')
 
         # Set the interpolant:
-        xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
+        if interpolant is not None:
+            xinterp = galsim.utilities.convert_interpolant_to_2d(interpolant)
+        else:
+            xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
         kinterp = galsim.InterpolantXY(galsim.Quintic())
 
-        # Make an SBInterpolatedImage, which will do the heavy lifting for the 
-        # interpolation.
-        sbii_kappa = galsim.SBInterpolatedImage(self.im_kappa, xInterp=xinterp, kInterp=kinterp)
+        # Make an SBInterpolatedImage, which will do the heavy lifting for the interpolation.
+        # However, if we are doing wrapped interpolation then we will want to manually stick the
+        # wrapped grid bits around the edges, because otherwise the interpolant will treat
+        # everything off the edges as zero.
+        if periodic:
+            # Make an expanded bounds.  We expand by 7 (default) to be safe, though most
+            # interpolants don't need that much.
+            kappa_new = self._wrap_image(galsim.ImageViewD(self.im_kappa))
+
+            # Then make the SBInterpolated image.
+            sbii_kappa = galsim.SBInterpolatedImage(kappa_new.image, xInterp=xinterp, kInterp=kinterp)
+        else:
+            sbii_kappa = galsim.SBInterpolatedImage(self.im_kappa, xInterp=xinterp, kInterp=kinterp)
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.
@@ -1095,7 +1113,7 @@ class PowerSpectrum(object):
         else:
             return kappa
 
-    def getMagnification(self, pos, units=galsim.arcsec, periodic=False):
+    def getMagnification(self, pos, units=galsim.arcsec, periodic=False, interpolant=None):
         """
         This function can interpolate between grid positions to find the lensing magnification (mu)
         values for a given list of input positions (or just a single position).  Before calling this
@@ -1103,9 +1121,9 @@ class PowerSpectrum(object):
         which to interpolate.
 
         Note that the interpolation (carried out using the interpolant that was specified when
-        building the gridded shears) modifies the effective power spectrum somewhat.  The user is
-        responsible for choosing a grid size that is small enough not to significantly modify the
-        power spectrum on the scales of interest.
+        building the gridded shears, if none is specified here) modifies the effective power
+        spectrum somewhat.  The user is responsible for choosing a grid size that is small enough
+        not to significantly modify the power spectrum on the scales of interest.
 
         The usage of getMagnification is the same as for getShear, except that it returns only a
         single number rather than a pair of numbers.  See documentation for getShear for some
@@ -1127,6 +1145,11 @@ class PowerSpectrum(object):
                                 if they are outside the bounds of the original grid on which shears
                                 and convergences were defined.  If not, then magnification is set to
                                 1 for positions outside the original grid.  [default = False]
+        @param interpolant      (Optional) Interpolant that will be used for interpolating the
+                                gridded shears.  By default, the one that was specified when
+                                building the grid was used.  Specifying an interpolant here does not
+                                change the one that is stored as part of this PowerSpectrum
+                                instance.
 
         @return mu              If given a single position: the magnification, mu.
                                 If given a list of positions: a python list of values.
@@ -1140,7 +1163,10 @@ class PowerSpectrum(object):
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getMagnification')
 
         # Set the interpolant:
-        xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
+        if interpolant is not None:
+            xinterp = galsim.utilities.convert_interpolant_to_2d(interpolant)
+        else:
+            xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
         kinterp = galsim.InterpolantXY(galsim.Quintic())
 
         # Calculate the magnification based on the convergence and shear
@@ -1149,9 +1175,19 @@ class PowerSpectrum(object):
         # Interpolate mu-1, so the zero values off the edge are appropriate.
         im_mu = galsim.ImageViewD(mu-1)
 
-        # Make an SBInterpolatedImage, which will do the heavy lifting for the 
-        # interpolation.
-        sbii_mu = galsim.SBInterpolatedImage(im_mu, xInterp=xinterp, kInterp=kinterp)
+        # Make an SBInterpolatedImage, which will do the heavy lifting for the interpolation.
+        # However, if we are doing wrapped interpolation then we will want to manually stick the
+        # wrapped grid bits around the edges, because otherwise the interpolant will treat
+        # everything off the edges as zero.
+        if periodic:
+            # Make an expanded bounds.  We expand by 7 (default) to be safe, though most
+            # interpolants don't need that much.
+            im_mu_new = self._wrap_image(im_mu)
+
+            # Then make the SBInterpolated image.
+            sbii_mu = galsim.SBInterpolatedImage(im_mu_new.image, xInterp=xinterp, kInterp=kinterp)
+        else:
+            sbii_mu = galsim.SBInterpolatedImage(im_mu, xInterp=xinterp, kInterp=kinterp)
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.
@@ -1199,9 +1235,9 @@ class PowerSpectrum(object):
         buildGrid first to define the grid of shears and convergences on which to interpolate.
 
         Note that the interpolation (carried out using the interpolant that was specified when
-        building the gridded shears) modifies the effective power spectrum somewhat.  The user is
-        responsible for choosing a grid size that is small enough not to significantly modify the
-        power spectrum on the scales of interest.
+        building the gridded shears, if none is specified here) modifies the effective power
+        spectrum somewhat.  The user is responsible for choosing a grid size that is small enough
+        not to significantly modify the power spectrum on the scales of interest.
 
         The usage of getLensing is the same as for getShear, except that it returns only a single
         number rather than a pair of numbers.  See documentation for getShear for some examples.
@@ -1223,6 +1259,11 @@ class PowerSpectrum(object):
                                 and convergences were defined.  If not, then shear is set to zero
                                 and magnification is set to 1 for positions outside the original
                                 grid.  [default = False]
+        @param interpolant      (Optional) Interpolant that will be used for interpolating the
+                                gridded shears.  By default, the one that was specified when
+                                building the grid was used.  Specifying an interpolant here does not
+                                change the one that is stored as part of this PowerSpectrum
+                                instance.
 
         @return g1,g2,mu        If given a single position: the reduced shears g1 and g2, and
                                 magnification mu.
@@ -1237,7 +1278,10 @@ class PowerSpectrum(object):
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getLensing')
 
         # Set the interpolant:
-        xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
+        if interpolant is not None:
+            xinterp = galsim.utilities.convert_interpolant_to_2d(interpolant)
+        else:
+            xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
         kinterp = galsim.InterpolantXY(galsim.Quintic())
 
         # Calculate the magnification based on the convergence and shear
@@ -1246,11 +1290,26 @@ class PowerSpectrum(object):
         im_g1_r = galsim.ImageViewD(g1_r)
         im_g2_r = galsim.ImageViewD(g2_r)
         im_mu = galsim.ImageViewD(mu-1)
-        # Make an SBInterpolatedImage, which will do the heavy lifting for the 
-        # interpolation.
-        sbii_g1 = galsim.SBInterpolatedImage(im_g1_r, xInterp=xinterp, kInterp=kinterp)
-        sbii_g2 = galsim.SBInterpolatedImage(im_g2_r, xInterp=xinterp, kInterp=kinterp)
-        sbii_mu = galsim.SBInterpolatedImage(im_mu, xInterp=xinterp, kInterp=kinterp)
+
+        # Make an SBInterpolatedImage, which will do the heavy lifting for the interpolation.
+        # However, if we are doing wrapped interpolation then we will want to manually stick the
+        # wrapped grid bits around the edges, because otherwise the interpolant will treat
+        # everything off the edges as zero.
+        if periodic:
+            # Make an expanded bounds.  We expand by 7 (default) to be safe, though most
+            # interpolants don't need that much.
+            im_mu_new = self._wrap_image(im_mu)
+            im_g1_new = self._wrap_image(im_g1_r)
+            im_g2_new = self._wrap_image(im_g2_r)
+
+            # Then make the SBInterpolated image.
+            sbii_g1 = galsim.SBInterpolatedImage(im_g1_new.image, xInterp=xinterp, kInterp=kinterp)
+            sbii_g2 = galsim.SBInteroplatedImage(im_g2_new.image, xInterp=xinterp, kInterp=kinterp)
+            sbii_mu = galsim.SBInterpolatedImage(im_mu_new.image, xInterp=xinterp, kInterp=kinterp)
+        else:
+            sbii_g1 = galsim.SBInterpolatedImage(im_g1_r.image, xInterp=xinterp, kInterp=kinterp)
+            sbii_g2 = galsim.SBInterpolatedImage(im_g2_r.image, xInterp=xinterp, kInterp=kinterp)
+            sbii_mu = galsim.SBInterpolatedImage(im_mu.image, xInterp=xinterp, kInterp=kinterp)
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.
