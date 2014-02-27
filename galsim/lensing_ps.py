@@ -444,11 +444,10 @@ class PowerSpectrum(object):
 
         # Figure out how to apply band limit if requested.
         # Start by calculating kmax in the appropriate units.
-        # Generally, it should be kmax_factor*pi/(grid spacing).  We have the grid spacing in
-        # the user-provided units, so applying that formula would give a number in units of
-        # 1/(input units), which needs to be multiplied by scale to get 1/(arcsec), i.e., the
-        # units that GalSim uses internally.
-        k_max = self.scale * kmax_factor * np.pi / grid_spacing
+        # Generally, it should be kmax_factor*pi/(grid spacing).  We have already converted the
+        # user-input grid spacing to arcsec, the units that the PowerSpectrum class uses
+        # internally.
+        k_max = kmax_factor * np.pi / grid_spacing
         if bandlimit == 'hard':
             def bandlimit_func(k, k_max):
                 return self._hard_cutoff(k, k_max)
@@ -471,7 +470,7 @@ class PowerSpectrum(object):
             # have P and therefore 1/k^2 in units of arcsec, so we won't rescale the k that goes in
             # the denominator.  This naturally gives P(k) in arcsec^2.
             p_E = lambda k : (2.*np.pi) * e_power_function(self.scale*k)/(k**2) * \
-                bandlimit_func(self.scale*k, k_max)
+                bandlimit_func(self.scale*k, self.scale*k_max)
         elif self.scale != 1:
             # Here, the scale comes in two places:
             # The units of k have to be converted from 1/arcsec, which GalSim wants to use, into
@@ -480,7 +479,7 @@ class PowerSpectrum(object):
             # function, to Galsim's units of arcsec^2.
             # Recall that scale is (input units)/arcsec.
             p_E = lambda k : e_power_function(self.scale*k)*(self.scale**2) * \
-                bandlimit_func(self.scale*k, k_max)
+                bandlimit_func(self.scale*k, self.scale*k_max)
         else:
             p_E = e_power_function * bandlimit_func(k, k_max)
 
@@ -488,10 +487,10 @@ class PowerSpectrum(object):
             p_B = None
         elif self.delta2:
             p_B = lambda k : (2.*np.pi) * b_power_function(self.scale*k)/(k**2) * \
-                bandlimit_func(self.scale*k, k_max)
+                bandlimit_func(self.scale*k, self.scale*k_max)
         elif self.scale != 1:
             p_B = lambda k : b_power_function(self.scale*k)*(self.scale**2) * \
-                bandlimit_func(self.scale*k, k_max)
+                bandlimit_func(self.scale*k, self.scale*k_max)
         else:
             p_B = b_power_function * bandlimit_func(k, k_max)
 
@@ -584,6 +583,184 @@ class PowerSpectrum(object):
                 raise AttributeError(
                     "Power function MUST return a list/array same length as input")
         return pf
+
+    def calculateXi(self, grid_spacing=None, ngrid=None, kmax_factor=1, kmin_factor=1, n_theta=100,
+                    units=galsim.arcsec, bandlimit="hard"):
+        """Calculate shear correlation functions for the current power spectrum on the specified grid.
+
+        This function will calculate the theoretical shear correlation functions, xi_+ and xi_-, for
+        this power spectrum and grid configuration, taking into account the minimum and maximum k
+        range implied by the grid parameters, kmin_factor, and kmax_factor.  Most theoretical
+        correlation function calculators assume an infinite k range, so this utility can be used to
+        check how close the chosen grid parameters (and the implied minimum and maximum k) come to
+        the "ideal" result.  This is particularly useful on large scales, since in practice the
+        finite grid spacing limits the maximum k value and therefore can result in reduced shear
+        correlations on large scales.  Note that the actual shear correlation function in the
+        generated shears will differ from the one calculated here due to differences between the
+        discrete and continuous Fourier transform.
+
+        The quantities that are returned are three NumPy arrays: separation theta (in the adopted
+        units), xi_+, and xi_-.  These are defined in terms of the E- and B-mode shear power
+        spectrum as in the document `devel/modules/lensing_engine.pdf`, equations 2 and 3.
+
+        This method requires SciPy.  It has been tested with reasonably cosmological shear power
+        spectra; users should check for sanity of outputs if attempting to use power spectra that
+        have very different scalings with k.
+
+        @param grid_spacing     Spacing for an evenly spaced grid of points, by default in arcsec
+                                for consistency with the natural length scale of images created
+                                using the draw or drawShoot methods.  Other units can be specified
+                                using the `units` keyword.
+        @param ngrid            Number of grid points in each dimension.  [Must be an integer]
+        @param units            The angular units used for the positions.  [default = arcsec]
+        @param kmin_factor      (Optional) Factor by which the grid spacing in fourier space is 
+                                smaller than the default.  i.e. 
+                                    kmin = 2. * pi / (ngrid * grid_spacing) / kmin_factor
+                                [default `kmin_factor = 1`; must be an integer]
+        @param kmax_factor      (Optional) Factor by which the overall grid in fourier space is 
+                                larger than the default.  i.e. 
+                                    kmax = pi / grid_spacing * kmax_factor
+                                [default `kmax_factor = 1`; must be an integer]
+        @param n_theta          (Optional) Number of logarithmically spaced bins in angular
+                                separation. [default `n_theta=100`]
+        @param bandlimit        (Optional) Keyword determining how to handle power P(k) above the
+                                limiting k value, kmax.  The options None, 'hard', and soft
+                                correspond to doing nothing (i.e., allow P(>kmax) to be aliased to
+                                lower k values), cutting off all power above kmax, and applying a
+                                softening filter to gradually cut off power above kmax.  [default
+                                'bandlimit="hard"']
+
+        @return theta, xi_+, xi_-   1-d NumPy arrays for the angular separation theta and the two
+                                    shear correlation functions.
+        """
+        # Check problem cases for regular grid of points
+        if grid_spacing is None or ngrid is None:
+            raise ValueError("Both a spacing and a size are required for calculateXi.")
+        # Check for validity of integer values
+        if not isinstance(ngrid, int):
+            if ngrid != int(ngrid):
+                raise ValueError("ngrid must be an integer")
+            ngrid = int(ngrid)
+        if not isinstance(kmin_factor, int):
+            if kmin_factor != int(kmin_factor):
+                raise ValueError("kmin_factor must be an integer")
+            kmin_factor = int(kmin_factor)
+        if not isinstance(kmax_factor, int):
+            if kmax_factor != int(kmax_factor):
+                raise ValueError("kmax_factor must be an integer")
+            kmax_factor = int(kmax_factor)
+        if not isinstance(n_theta, int):
+            if n_theta != int(n_theta):
+                raise ValueError("n_theta must be an integer")
+            n_theta = int(n_theta)
+
+        # Automatically convert units to arcsec at the outset, then forget about it.  This is
+        # because PowerSpectrum by default wants to work in arsec, and all power functions are
+        # automatically converted to do so, so we'll also do that here.
+        if isinstance(units, basestring):
+            # if the string is invalid, this raises a reasonable error message.
+            units = galsim.angle.get_angle_unit(units)
+        if not isinstance(units, galsim.AngleUnit):
+            raise ValueError("units must be either an AngleUnit or a string")
+        if units != galsim.arcsec:
+            scale_fac = (1.*units) / galsim.arcsec
+            grid_spacing *= scale_fac
+
+        # Decide on a grid of separation values.  Do this in arcsec, for consistency with the
+        # internals of the PowerSpectrum class.
+        min_sep = grid_spacing
+        max_sep = ngrid*grid_spacing
+        theta = np.logspace(np.log10(min_sep), np.log10(max_sep), n_theta)
+
+        # Set up the power spectrum to use for the calculations, just as in buildGrid.
+        # Convert power_functions into callables:
+        e_power_function = self._convert_power_function(self.e_power_function,'e_power_function')
+        b_power_function = self._convert_power_function(self.b_power_function,'b_power_function')
+
+        # Apply band limit if requested; see comments in 'buildGrid()' for more details.
+        k_max = kmax_factor * np.pi / grid_spacing
+        if bandlimit == 'hard':
+            def bandlimit_func(k, k_max):
+                return self._hard_cutoff(k, k_max)
+        elif bandlimit == 'soft':
+            def bandlimit_func(k, k_max):
+                return self._softening_function(k, k_max)
+        elif bandlimit == None:
+            def bandlimit_func(k, k_max):
+                return self._hard_cutoff(k, 1.e30)
+        else:
+            raise RuntimeError("Unrecognized option for band limit!")
+
+        # If we actually have dimensionless Delta^2, then we must convert to power
+        # P(k) = 2pi Delta^2 / k^2, 
+        # which has dimensions of angle^2.
+        if e_power_function is None:
+            p_E = None
+        elif self.delta2:
+            # Here we have to go from Delta^2 (dimensionless) to P = 2pi Delta^2 / k^2.  We want to
+            # have P and therefore 1/k^2 in units of arcsec, so we won't rescale the k that goes in
+            # the denominator.  This naturally gives P(k) in arcsec^2.
+            p_E = lambda k : (2.*np.pi) * e_power_function(self.scale*k)/(k**2) * \
+                bandlimit_func(self.scale*k, self.scale*k_max)
+        elif self.scale != 1:
+            # Here, the scale comes in two places:
+            # The units of k have to be converted from 1/arcsec, which GalSim wants to use, into
+            # whatever the power spectrum function was defined to use.
+            # The units of power have to be converted from (input units)^2 as returned by the power
+            # function, to Galsim's units of arcsec^2.
+            # Recall that scale is (input units)/arcsec.
+            p_E = lambda k : e_power_function(self.scale*k)*(self.scale**2) * \
+                bandlimit_func(self.scale*k, self.scale*k_max)
+        else:
+            p_E = e_power_function * bandlimit_func(k, k_max)
+
+        if b_power_function is None:
+            p_B = None
+        elif self.delta2:
+            p_B = lambda k : (2.*np.pi) * b_power_function(self.scale*k)/(k**2) * \
+                bandlimit_func(self.scale*k, self.scale*k_max)
+        elif self.scale != 1:
+            p_B = lambda k : b_power_function(self.scale*k)*(self.scale**2) * \
+                bandlimit_func(self.scale*k, self.scale*k_max)
+        else:
+            p_B = b_power_function * bandlimit_func(k, k_max)
+
+        # Get k_min, k_max values in arcsec:
+        k_min = 2.*np.pi / (ngrid * grid_spacing * kmin_factor)
+        k_max = np.pi * kmax_factor / grid_spacing
+
+        # Do the actual integration for each of the separation values, now that we have power
+        # spectrum functions.
+        xi_p = np.zeros(n_theta)
+        xi_m = np.zeros(n_theta)
+        for i_theta in range(n_theta):
+            # Usually theory calculations use radians.  However, our k and P are already set up to
+            # use arcsec, so we need theta to be in arcsec (which it already is) in order for the
+            # units to work out right.
+            # xi_p = (1/2pi) \int (P_E + P_B) J_0(k theta) k dk
+            # xi_m = (1/2pi) \int (P_E - P_B) J_4(k theta) k dk
+            if p_E is not None and p_B is not None:
+                integrand_p = xi_integrand(p_E + p_B, theta[i_theta], 0)
+                integrand_m = xi_integrand(p_E - p_B, theta[i_theta], 4)
+            elif p_E is not None:
+                integrand_p = xi_integrand(p_E, theta[i_theta], 0)
+                integrand_m = xi_integrand(p_E, theta[i_theta], 4)
+            else:
+                integrand_p = xi_integrand(p_B, theta[i_theta], 0)
+                integrand_m = xi_integrand(-p_B, theta[i_theta], 4)
+            xi_p[i_theta] = galsim.integ.int1d(integrand_p, k_min, k_max, rel_err=1.e-6,
+                                               abs_err=1.e-12)
+            xi_m[i_theta] = galsim.integ.int1d(integrand_m, k_min, k_max, rel_err=1.e-6,
+                                               abs_err=1.e-12)
+        xi_p /= (2.*np.pi)
+        xi_m /= (2.*np.pi)
+
+        # Now convert the array of separation values back to whatever units were used as inputs to
+        # this function.
+        theta /= scale_fac
+
+        # Return arrays with results.
+        return theta, xi_p, xi_m
 
     def _softening_function(self, k, k_max):
         """Softening function for the power spectrum band-limiting step, instead of a hard cut in k.
@@ -1380,4 +1557,16 @@ def kappaKaiserSquires(g1, g2):
     kappaB = np.imag(kz)
     return kappaE, kappaB
 
-
+class xi_integrand:
+    """Utility class to assist in calculating shear correlation functions from power spectra."""
+    def __init__(self, pk, r, n):
+        self.pk = pk
+        self.r = r
+        self.n = n
+    def __call__(self, k):
+        # I don't really want this import happening in here.
+        try:
+            from scipy.special import jv
+        except:
+            raise RuntimeError("calculateXi method requires scipy")
+        return k * self.pk(k) * jv(self.n, self.r*k)
