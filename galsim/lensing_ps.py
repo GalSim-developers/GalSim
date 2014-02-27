@@ -223,7 +223,9 @@ class PowerSpectrum(object):
         wishes to reproduce the shear correlation function accurately.  Ideally, the grid should be
         somewhat larger than the region in which shears at random points are needed, so that edge
         effects in the interpolation will not be important.  For this purpose, there should be >~5
-        grid points outside of the region in which interpolation will take place.
+        grid points outside of the region in which interpolation will take place.  Ignoring this
+        edge effect and using the grid for interpolation out to its edges can give ~2-3% suppression
+        of shear correlations for the random points on all scales.
 
         The quantities that are returned are the theoretical shears and convergences, usually
         denoted gamma and kappa, respectively.  Users who wish to obtain the more
@@ -874,10 +876,17 @@ class PowerSpectrum(object):
         return the non-reduced shear.
 
         Note that the interpolation (carried out using the interpolant that was specified when
-        building the gridded shears, if none is specified here) modifies the effective power
-        spectrum somewhat.  The user is responsible for choosing a grid size that is small enough
-        not to significantly modify the power spectrum on the scales of interest.  Detailed tests of
-        this functionality have not been carried out.
+        building the gridded shears, if none is specified here) modifies the effective shear power
+        spectrum and correlation function somewhat, though the effects can be limited by careful
+        choice of grid parameters (see buildGrid() docstring for details).  Assuming those
+        guidelines are followed, then the shear correlation function modifications due to use of the
+        quintic, Lanczos-3, and Lanczos-5 interpolants are below 5% on all scales, typically below
+        2%.  The linear, cubic, and nearest interpolants perform significantly more poorly, with
+        modifications of the correlation functions that can reach tens of percent on the scales
+        where the recommended interpolants perform well.  Thus, the default interpolant is
+        Lanczos-5, and users should think carefully about the acceptability of significant
+        modification of the shear correlation function before changing to use linear, cubic, or
+        nearest.
 
         Some examples of how to use getShear:
 
@@ -1028,9 +1037,18 @@ class PowerSpectrum(object):
         when building a grid that is to be later interpolated to random positions.
 
         Note that the interpolation (carried out using the interpolant that was specified when
-        building the gridded shears, if none is specified here) modifies the effective power
-        spectrum somewhat.  The user is responsible for choosing a grid size that is small enough
-        not to significantly modify the power spectrum on the scales of interest.
+        building the gridded shears, if none is specified here) modifies the effective shear power
+        spectrum and correlation function somewhat, though the effects can be limited by careful
+        choice of grid parameters (see buildGrid() docstring for details).  Assuming those
+        guidelines are followed, then the shear correlation function modifications due to use of the
+        quintic, Lanczos-3, and Lanczos-5 interpolants are below 5% on all scales, typically below
+        2%.  The linear, cubic, and nearest interpolants perform significantly more poorly, with
+        modifications of the correlation functions that can reach tens of percent on the scales
+        where the recommended interpolants perform well.  Thus, the default interpolant is
+        Lanczos-5, and users should think carefully about the acceptability of significant
+        modification of the shear correlation function before changing to use linear, cubic, or
+        nearest.  We expect that these results for shear correlations should carry over to
+        convergence correlations, as well.
 
         The usage of getConvergence is the same as for getShear, except that it returns only a
         single number rather than a pair of numbers.  See documentation for getShear for some
@@ -1137,9 +1155,18 @@ class PowerSpectrum(object):
         positions.
 
         Note that the interpolation (carried out using the interpolant that was specified when
-        building the gridded shears, if none is specified here) modifies the effective power
-        spectrum somewhat.  The user is responsible for choosing a grid size that is small enough
-        not to significantly modify the power spectrum on the scales of interest.
+        building the gridded shears, if none is specified here) modifies the effective shear power
+        spectrum and correlation function somewhat, though the effects can be limited by careful
+        choice of grid parameters (see buildGrid() docstring for details).  Assuming those
+        guidelines are followed, then the shear correlation function modifications due to use of the
+        quintic, Lanczos-3, and Lanczos-5 interpolants are below 5% on all scales, typically below
+        2%.  The linear, cubic, and nearest interpolants perform significantly more poorly, with
+        modifications of the correlation functions that can reach tens of percent on the scales
+        where the recommended interpolants perform well.  Thus, the default interpolant is
+        Lanczos-5, and users should think carefully about the acceptability of significant
+        modification of the shear correlation function before changing to use linear, cubic, or
+        nearest.  We expect that these results for shear correlations should carry over to
+        magnification correlations, as well.
 
         The usage of getMagnification is the same as for getShear, except that it returns only a
         single number rather than a pair of numbers.  See documentation for getShear for some
@@ -1248,12 +1275,23 @@ class PowerSpectrum(object):
         This function can interpolate between grid positions to find the lensing observable
         quantities (reduced shears g1 and g2, and magnification mu) for a given list of input
         positions (or just a single position).  Before calling this function, you must call
-        buildGrid first to define the grid of shears and convergences on which to interpolate.
+        buildGrid first to define the grid of shears and convergences on which to interpolate. The
+        docstring for buildGrid provides some guidance on appropriate grid configurations to use
+        when building a grid that is to be later interpolated to random positions.
 
         Note that the interpolation (carried out using the interpolant that was specified when
-        building the gridded shears, if none is specified here) modifies the effective power
-        spectrum somewhat.  The user is responsible for choosing a grid size that is small enough
-        not to significantly modify the power spectrum on the scales of interest.
+        building the gridded shears, if none is specified here) modifies the effective shear power
+        spectrum and correlation function somewhat, though the effects can be limited by careful
+        choice of grid parameters (see buildGrid() docstring for details).  Assuming those
+        guidelines are followed, then the shear correlation function modifications due to use of the
+        quintic, Lanczos-3, and Lanczos-5 interpolants are below 5% on all scales, typically below
+        2%.  The linear, cubic, and nearest interpolants perform significantly more poorly, with
+        modifications of the correlation functions that can reach tens of percent on the scales
+        where the recommended interpolants perform well.  Thus, the default interpolant is
+        Lanczos-5, and users should think carefully about the acceptability of significant
+        modification of the shear correlation function before changing to use linear, cubic, or
+        nearest.  We expect that these results for shear correlations should carry over to
+        magnification correlations, as well.
 
         The usage of getLensing is the same as for getShear, except that it returns only a single
         number rather than a pair of numbers.  See documentation for getShear for some examples.
