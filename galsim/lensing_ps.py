@@ -74,12 +74,46 @@ def theoryToObserved(gamma1, gamma2, kappa):
 class PowerSpectrum(object):
     """Class to represent a lensing shear field according to some power spectrum P(k)
 
+    General considerations
+    ----------------------
+
     A PowerSpectrum represents some (flat-sky) shear power spectrum, either for gridded points or at
     arbitary positions.  This class is originally initialized with a power spectrum from which we
     would like to generate g1 and g2 (and, optionally, convergence kappa) values.  It generates
     shears on a grid, and if necessary, when getShear (or another `get` method) is called, it will
     interpolate to the requested positions.  For detail on how these processes are carried out,
     please see the document in the GalSim repository, devel/modules/lensing_engine.pdf.
+
+    This class generates the shears according to the input power spectrum using a DFT approach,
+    which means that we implicitly assume our discrete representation of P(k) on a grid is one
+    complete cell in an infinite periodic series.  We are making assumptions about what P(k) is
+    doing outside of our minimum and maximum k range, and those must be kept in mind when comparing
+    with theoretical expectations.  Specifically, since the power spectrum is realized on only a
+    finite grid it has been been effectively bandpass filtered between a minimum and maximum k value
+    in each of the k1, k2 directions.  See the buildGrid method for more information.
+
+    As a result, the shear generation currently does not include sample variance due to coverage of
+    a finite patch.  We explicitly enforce `P(k=0)=0`, which is true for the full sky in a
+    reasonable cosmological model, but it ignores the fact that our little patch of sky might
+    reasonably live in some special region with respect to shear correlations.  Our `P(k=0)=0` is
+    essentially setting the integrated power below our minimum k value to zero.  The implications of
+    the discrete representation, and the `P(k=0)=0` choice, are discussed in more detail in
+    devel/modules/lensing_engine.pdf.
+
+    The effective shear correlation function for the gridded points will be modified both because of
+    the DFT approach to representing shears according to a power spectrum, and because of the power
+    cutoff below and above the minimum k values.  The latter effect can be particularly important on
+    large scales, and so the buildGrid() method has some keywords that can be used to reduce the
+    impact of the minimum k set by the grid extent.  The calculateXi() method can be used to
+    calculate the expected shear correlation functions given the minimum and maximum k for some grid
+    (but ignoring the discrete vs. continuous Fourier transform effects), for comparison with some
+    ideal theoretical value given an infinite k range.
+
+    When interpolating the shears to non-gridded points, the shear correlation function and power
+    spectrum are modified; see the getShear and other `get` method docstrings for more details.
+
+    The power spectra to be used
+    ----------------------------
 
     When creating a PowerSpectrum instance, you must specify at least one of the E or B mode 
     power spectra, which is normally given as a function P(k).  The typical thing is to just 
@@ -96,29 +130,6 @@ class PowerSpectrum(object):
     quantity is Delta^2 = k^2 P(k)/2pi.  By default, the PowerSpectrum object assumes it is getting
     P(k), but it is possible to instead give it Delta^2 by setting the optional keyword `delta2 =
     True` in the constructor.
-
-    Also note that we generate the shears according to the input power spectrum using a DFT
-    approach, which means that we implicitly assume our discrete representation of P(k) on a grid is
-    one complete cell in an infinite periodic series.  We are making assumptions about what P(k) is
-    doing outside of our minimum and maximum k range, and those must be kept in mind when comparing
-    with theoretical expectations.
-
-    Specifically, since the power spectrum is realized on only a finite grid it has been been
-    effectively bandpass filtered between a minimum and maximum k value in each of the k1, k2
-    directions.  This filter is hard: beyond the minimum and maximum k range the P(k) is set to
-    zero.  See the buildGrid method for more information.
-
-    Therefore, the shear generation currently does not include sample variance due to coverage of a
-    finite patch.  We explicitly enforce `P(k=0)=0`, which is true for the full sky in a reasonable
-    cosmological model, but it ignores the fact that our little patch of sky might reasonably live
-    in some special region with respect to shear correlations.  Our `P(k=0)=0` is essentially 
-    setting the integrated power below our minimum k value to zero (i.e., it's implicitly a
-    statement about power in a k range, not just at `k=0` itself).  The implications of the discrete
-    representation, and the `P(k=0)=0` choice, are discussed in more detail in 
-    devel/modules/lensing_engine.pdf.
-
-    Therefore, since the power spectrum is realized on a finite grid, it has been been effectively
-    bandpass filtered between a minimum and maximum k value in each of the k1, k2 directions.
 
     The power functions must return a list/array that is the same size as what it was given, e.g.,
     in the case of no power or constant power, a function that just returns a float would not be
