@@ -77,11 +77,11 @@ class PowerSpectrum(object):
     A PowerSpectrum represents some (flat-sky) shear power spectrum, either for gridded points or at
     arbitary positions.  This class is originally initialized with a power spectrum from which we
     would like to generate g1 and g2 (and, optionally, convergence kappa) values.  It generates
-    shears on a grid, and if necessary, when getShear is called, it will interpolate to the
-    requested positions.  For detail on how these processes are carried out, please see the document
-    in the GalSim repository, devel/modules/lensing_engine.pdf.
+    shears on a grid, and if necessary, when getShear (or another `get` method) is called, it will
+    interpolate to the requested positions.  For detail on how these processes are carried out,
+    please see the document in the GalSim repository, devel/modules/lensing_engine.pdf.
 
-    When creating a PowerSpectrum instance, you need to specify at least one of the E or B mode 
+    When creating a PowerSpectrum instance, you must specify at least one of the E or B mode 
     power spectra, which is normally given as a function P(k).  The typical thing is to just 
     use a lambda function in Python (i.e., a function that is not associated with a name); 
     for example, to define P(k)=k^2, one would use `lambda k : k**2`.  But they can also be more 
@@ -216,6 +216,15 @@ class PowerSpectrum(object):
         with shape distortion due to shear, the default is to return only the shear components; the
         `get_convergence` keyword can be used to also return the convergence.
 
+        If the grid is being created for the purpose of later interpolating to random positions, the
+        following findings should be kept in mind: since the interpolant modifies the effective
+        shear correlation function on scales comparable to <~3x the grid spacing, the grid spacing
+        should be chosen to be at least 3 times smaller than the minimum scales on which the user
+        wishes to reproduce the shear correlation function accurately.  Ideally, the grid should be
+        somewhat larger than the region in which shears at random points are needed, so that edge
+        effects in the interpolation will not be important.  For this purpose, there should be >~5
+        grid points outside of the region in which interpolation will take place.
+
         The quantities that are returned are the theoretical shears and convergences, usually
         denoted gamma and kappa, respectively.  Users who wish to obtain the more
         observationally-relevant reduced shear and magnification (that describe real lensing
@@ -258,7 +267,7 @@ class PowerSpectrum(object):
         by providing different values of ngrid and grid_spacing and then take a subset of them.
         The `kmin_factor` and `kmax_factor` just handle the scalings appropriately for you.
 
-        Also, if the user provides a power spectrum that does not include a cutoff at kmax, then our
+        If the user provides a power spectrum that does not include a cutoff at kmax, then our
         method of generating shears will result in aliasing that will show up in both E- and
         B-modes.  Thus the `buildGrid()` method accepts an optional keyword argument called
         `bandlimit` that can tell the PowerSpectrum object to cut off power above kmax
@@ -327,7 +336,7 @@ class PowerSpectrum(object):
                                 [default `rng = None`]
         @param interpolant      (Optional) Interpolant that will be used for interpolating the
                                 gridded shears by methods like getShear(), getConvergence(), etc. if
-                                they are later called. [default `interpolant = galsim.Linear()`]
+                                they are later called. [default `interpolant = galsim.Lanczos(5)`]
         @param center           (Optional) If setting up a new grid, define what position you
                                 want to consider the center of that grid.  Units must be consistent
                                 with those for `grid_spacing`.  [default `center = (0,0)`]
@@ -433,7 +442,7 @@ class PowerSpectrum(object):
         # Check that the interpolant is valid.  (Don't save the result though in case it is
         # a string -- we don't want to mess up picklability.)
         if interpolant is None:
-            self.interpolant = 'linear'
+            self.interpolant = 'lanczos5'
         else:
             self.interpolant = interpolant
             galsim.utilities.convert_interpolant_to_2d(interpolant)
@@ -857,6 +866,9 @@ class PowerSpectrum(object):
         This function can interpolate between grid positions to find the shear values for a given
         list of input positions (or just a single position).  Before calling this function, you must
         call buildGrid first to define the grid of shears and convergences on which to interpolate.
+        The docstring for buildGrid provides some guidance on appropriate grid configurations to use
+        when building a grid that is to be later interpolated to random positions.
+
         By default, this method returns the reduced shear, which is defined in terms of shear and
         convergence as reduced shear `g=gamma/(1-kappa)`; the `reduced` keyword can be used to
         return the non-reduced shear.
@@ -1012,6 +1024,8 @@ class PowerSpectrum(object):
         This function can interpolate between grid positions to find the convergence values for a
         given list of input positions (or just a single position).  Before calling this function,
         you must call buildGrid first to define the grid of convergences on which to interpolate.
+        The docstring for buildGrid provides some guidance on appropriate grid configurations to use
+        when building a grid that is to be later interpolated to random positions.
 
         Note that the interpolation (carried out using the interpolant that was specified when
         building the gridded shears, if none is specified here) modifies the effective power
@@ -1118,7 +1132,9 @@ class PowerSpectrum(object):
         This function can interpolate between grid positions to find the lensing magnification (mu)
         values for a given list of input positions (or just a single position).  Before calling this
         function, you must call buildGrid first to define the grid of shears and convergences on
-        which to interpolate.
+        which to interpolate.  The docstring for buildGrid provides some guidance on appropriate
+        grid configurations to use when building a grid that is to be later interpolated to random
+        positions.
 
         Note that the interpolation (carried out using the interpolant that was specified when
         building the gridded shears, if none is specified here) modifies the effective power
