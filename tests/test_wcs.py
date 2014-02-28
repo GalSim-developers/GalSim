@@ -1771,6 +1771,33 @@ def test_fitswcs():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_scamp():
+    """Test that we can read in a SCamp .head file correctly
+    """
+    import time
+    t1 = time.time()
+
+    dir = 'fits_files'
+    file_name = 'scamp.head'
+
+    wcs = galsim.FitsWCS(file_name, dir=dir, text_file=True)
+    print 'SCamp FitsWCS is really ',type(wcs)
+
+    # These are just random points that I checked on one machine with this file.
+    # For this test, we don't care much about an independent accuracy test, since that should
+    # be covered by the other tests.  We are mostly testing that the above syntax works 
+    # correctly, and that different machines (with different pyfits versions perhaps) end
+    # up reading in the same GSFitsWCS object.
+    ref_list = [ ('01:04:44.197307', '-03:39:07.588000', 123, 567, 0),
+                 ('01:04:36.022067', '-03:39:33.900586', 789, 432, 0) ]
+    # This also checks that the dms parser works with : separators, which I'm not sure if 
+    # I test anywhere else...
+
+    do_ref(wcs, ref_list, 'Scamp FitsWCS')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 if __name__ == "__main__":
     test_pixelscale()
@@ -1783,3 +1810,4 @@ if __name__ == "__main__":
     test_wcstools()
     test_gsfitswcs()
     test_fitswcs()
+    test_scamp()
