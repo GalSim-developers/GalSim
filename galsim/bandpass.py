@@ -47,8 +47,8 @@ class Bandpass(object):
     A Bandpass.effective_wavelength will be computed upon construction.  We use throughput-weighted
     average wavelength (which is independent of any SED) as our definition for effective wavelength.
 
-    For Bandpasses defined using a LookupTable, a list of wavelengths, `wave_list`, defining the
-    table is maintained.  Bandpasses defined as products of two other Bandpasses will define
+    For Bandpasses defined using a LookupTable, a numpy.array of wavelengths, `wave_list`, defining
+    the table is maintained.  Bandpasses defined as products of two other Bandpasses will define
     their `wave_list` as the union of multiplicand `wave_list`s, although limited to the range
     between the new product `blue_limit` and `red_limit`.  (This implementation detail may affect
     the choice of integrator used to draw `ChromaticObject`s.)
@@ -119,7 +119,7 @@ class Bandpass(object):
 
         # Sanity check blue/red limit and create self.wave_list
         if isinstance(tp, galsim.LookupTable):
-            self.wave_list = [w/wave_factor for w in tp.getArgs()]
+            self.wave_list = numpy.array(tp.getArgs())/wave_factor
             # Make sure that blue_limit and red_limit are within LookupTable region of support.
             if self.blue_limit < (tp.x_min/wave_factor):
                 raise ValueError("Cannot set Bandpass `blue_limit` to be less than"
@@ -129,11 +129,11 @@ class Bandpass(object):
                                  + "`LookupTable.x_max`")
             # Make sure that blue_limit and red_limit are part of wave_list.
             if self.blue_limit not in self.wave_list:
-                self.wave_list.insert(0, self.blue_limit)
+                numpy.insert(self.wave_list, 0, self.blue_limit)
             if self.red_limit not in self.wave_list:
-                self.wave_list.append(self.red_limit)
+                numpy.insert(self.wave_list, -1, self.red_limit)
         else:
-            self.wave_list = []
+            self.wave_list = numpy.empty(shape=(0,), dtype=numpy.float)
 
         # Manual override!  Be careful!
         if _wave_list is not None:
@@ -143,7 +143,7 @@ class Bandpass(object):
 
         # Evaluate and store bandpass effective wavelength, which we define as the
         # throughput-weighted average wavelength, independent of any SED.  Units are nanometers.
-        if self.wave_list != []:
+        if len(self.wave_list) > 0:
             f = self.func(self.wave_list)
             self.effective_wavelength = (numpy.trapz(f * self.wave_list, self.wave_list) /
                                          numpy.trapz(f, self.wave_list))
@@ -156,17 +156,14 @@ class Bandpass(object):
     def __mul__(self, other):
         blue_limit = self.blue_limit
         red_limit = self.red_limit
-        wave_list = set(self.wave_list)
+        wave_list = self.wave_list
 
         if isinstance(other, galsim.Bandpass):
+            if len(other.wave_list) > 0:
+                wave_list = numpy.union1d(wave_list, other.wave_list)
             blue_limit = max([self.blue_limit, other.blue_limit])
             red_limit = min([self.red_limit, other.red_limit])
-            if other.wave_list != []:
-                wave_list = wave_list.union(other.wave_list)
-
-        wave_list = list(wave_list)
-        wave_list = [w for w in wave_list if w >= blue_limit and w <= red_limit]
-        wave_list.sort()
+            wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
 
         if hasattr(other, '__call__'):
             ret = Bandpass(lambda w: other(w)*self(w),
@@ -186,40 +183,48 @@ class Bandpass(object):
     def __div__(self, other):
         blue_limit = self.blue_limit
         red_limit = self.red_limit
-        wave_list = set(self.wave_list)
+        wave_list = self.wave_list
+
         if isinstance(other, galsim.Bandpass):
+            if len(other.wave_list) > 0:
+                wave_list = numpy.union1d(wave_list, other.wave_list)
             blue_limit = max([self.blue_limit, other.blue_limit])
             red_limit = min([self.red_limit, other.red_limit])
-            if other.wave_list != []:
-                wave_list = wave_list.union(other.wave_list)
+            wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
+
         if hasattr(other, '__call__'):
-            ret = Bandpass(lambda w: self(w)/other(w), blue_limit=blue_limit, red_limit=red_limit)
+            ret = Bandpass(lambda w: self(w)/other(w),
+                           blue_limit=blue_limit, red_limit=red_limit,
+                           _wave_list=wave_list)
         else:
-            ret = Bandpass(lambda w: self(w)/other, blue_limit=blue_limit, red_limit=red_limit)
-        wave_list = list(wave_list)
-        wave_list = [w for w in wave_list if w >= blue_limit and w <= red_limit]
-        wave_list.sort()
-        ret.wave_list = wave_list
+            ret = Bandpass(lambda w: self(w)/other,
+                           blue_limit=blue_limit, red_limit=red_limit,
+                           _wave_list=wave_list)
+
         return ret
 
     # Doesn't check for divide by zero, so be careful.
     def __rdiv__(self, other):
         blue_limit = self.blue_limit
         red_limit = self.red_limit
-        wave_list = set(self.wave_list)
+        wave_list = self.wave_list
+
         if isinstance(other, galsim.Bandpass):
+            if len(other.wave_list) > 0:
+                wave_list = numpy.union1d(wave_list, other.wave_list)
             blue_limit = max([self.blue_limit, other.blue_limit])
             red_limit = min([self.red_limit, other.red_limit])
-            if other.wave_list != []:
-                wave_list = wave_list.union(other.wave_list)
+            wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
+
         if hasattr(other, '__call__'):
-            ret = Bandpass(lambda w: other(w)/self(w), blue_limit=blue_limit, red_limit=red_limit)
+            ret = Bandpass(lambda w: other(w)/self(w),
+                           blue_limit=blue_limit, red_limit=red_limit,
+                           _wave_list=wave_list)
         else:
-            ret = Bandpass(lambda w: other/self(w), blue_limit=blue_limit, red_limit=red_limit)
-        wave_list = list(wave_list)
-        wave_list = [w for w in wave_list if w >= blue_limit and w <= red_limit]
-        wave_list.sort()
-        ret.wave_list = wave_list
+            ret = Bandpass(lambda w: other/self(w),
+                           blue_limit=blue_limit, red_limit=red_limit,
+                           _wave_list=wave_list)
+
         return ret
 
     # Doesn't check for divide by zero, so be careful.
@@ -306,6 +311,6 @@ class Bandpass(object):
             wave = self.wave_list[::step]
             # maintain the same red_limit, even if it breaks the step size a bit.
             if wave[-1] != self.wave_list[-1]:
-                wave.append(self.wave_list[-1])
+                numpy.append(wave, self.wave_list[-1])
             throughput = self.func(wave)
             return Bandpass(galsim.LookupTable(wave, throughput))
