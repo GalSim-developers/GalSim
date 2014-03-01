@@ -25,7 +25,11 @@ import numpy
 import galsim
 
 class Bandpass(object):
-    """Simple bandpass object.
+    """Simple bandpass object, which models the transmission fraction of incident light as a
+    function of wavelength, for either an entire optical path (e.g., atmosphere, reflecting and
+    refracting optics, filters, CCD quantum efficiency), or some intermediate piece thereof.
+    Bandpasses representing individual components may be combined through the `*` operator to form
+    a new Bandpass object representing the complete optical path.
 
     Bandpasses are callable, returning dimensionless throughput as a function of wavelength in nm.
 
@@ -44,44 +48,46 @@ class Bandpass(object):
     average wavelength (which is independent of any SED) as our definition for effective wavelength.
 
     For Bandpasses defined using a LookupTable, a list of wavelengths, `wave_list`, defining the
-    table is maintained.  Bandpasses defined as products of two other Bandpasses will use define
+    table is maintained.  Bandpasses defined as products of two other Bandpasses will define
     their `wave_list` as the union of multiplicand `wave_list`s, although limited to the range
-    between the new product `blue_limit` and `red_limit`.
+    between the new product `blue_limit` and `red_limit`.  (This implementation detail may affect
+    the choice of integrator used to draw `ChromaticObject`s.)
+
+    The input parameter, throughput, may be one of several possible forms:
+    1. a regular python function (or an object that acts like a function)
+    2. a galsim.LookupTable
+    3. a file from which a LookupTable can be read in
+    4. a string which can be evaluated into a function of `wave`
+       via `eval('lambda wave : '+throughput)`
+       e.g. throughput = '0.8 + 0.2 * (wave-800)'
+
+    The argument of `throughput` will be the wavelength in either nanometers (default) or
+    Angstroms depending on the value of `wave_type`.  The output should be the dimensionless
+    throughput at that wavelength.  (Note we use wave rather than lambda, since lambda is a
+    python reserved word.)
+
+    The argument `wave_type` specifies the units to assume for wavelength and must be one of
+    'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or 'Angstroms'. Text case here
+    is unimportant.  If these wavelength options are insufficient, please submit an issue to
+    the GalSim github issues page: https://github.com/GalSim-developers/GalSim/issues
+
+    Note that the `wave_type` parameter does not propagate into other methods of `Bandpass`.
+    For instance, Bandpass.__call__ assumes its input argument is in nanometers.
+
+    @param throughput    Function defining the throughput at each wavelength.  See above for
+                         valid options for this parameter.
+    @param blue_limit    Hard cut off of bandpass on the blue side.  This is optional if the
+                         throughput is a LookupTable or a file, but is required if the
+                         throughput is a function.
+    @param red_limit     Hard cut off of bandpass on the red side.  This is optional if the
+                         throughput is a LookupTable or a file, but is required if the
+                         throughput is a function.
+
     """
     def __init__(self, throughput, wave_type='nm', blue_limit=None, red_limit=None, _wave_list=None):
-        """Very simple Bandpass filter object.  This object is callable, returning dimensionless
-        throughput as a function of wavelength in nanometers.
+        # Note that _wave_list acts a private construction variable that overrides the way that
+        # `wave_list` is normally constructed (see Bandpass.__mul__ below)
 
-        The input parameter, throughput, may be one of several possible forms:
-        1. a regular python function (or an object that acts like a function)
-        2. a galsim.LookupTable
-        3. a file from which a LookupTable can be read in
-        4. a string which can be evaluated into a function of `wave`
-           via `eval('lambda wave : '+throughput)
-           e.g. throughput = '0.8 + 0.2 * (wave-800)`
-
-        The argument of `throughput` will be the wavelength in either nanometers (default) or
-        Angstroms depending on the value of `wave_type`.  The output should be the dimensionless
-        throughput at that wavelength.  (Note we use wave rather than lambda, since lambda is a
-        python reserved word.)
-
-        The argument `wave_type` specifies the units to assume for wavelength and must be one of
-        'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or 'Angstroms'. Text case here
-        is unimportant.  If these wavelength options are insufficient, please submit an issue to
-        the GalSim github issues page: https://github.com/GalSim-developers/GalSim/issues
-
-        Note that the `wave_type` parameter does not propagate into other methods of `Bandpass`.
-        For instance, Bandpass.__call__ assumes its input argument is in nanometers.
-
-        @param throughput    Function defining the throughput at each wavelength.  See above for
-                             valid options for this parameter.
-        @param blue_limit    Hard cut off of bandpass on the blue side.  This is optional if the
-                             throughput is a LookupTable or a file, but is required if the
-                             throughput is a function.
-        @param red_limit     Hard cut off of bandpass on the red side.  This is optional if the
-                             throughput is a LookupTable or a file, but is required if the
-                             throughput is a function.
-        """
         # Figure out input throughput type.
         tp = throughput  # For brevity within this function
         if isinstance(tp, (str, unicode)):
