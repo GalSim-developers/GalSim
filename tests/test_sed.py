@@ -35,6 +35,10 @@ def test_SED_add():
                                    err_msg="Found wrong red limit in SED.__add__")
     np.testing.assert_almost_equal(c(3.0), 3.3 + 3.33, 10,
                                    err_msg="Wrong sum in SED.__add__")
+    np.testing.assert_almost_equal(c(1.1), a(1.1)+1.11, 10,
+                                   err_msg="Wrong sum in SED.__add__")
+    np.testing.assert_almost_equal(c(5.0), 5.5+b(5.0), 10,
+                                   err_msg="Wrong sum in SED.__add__")
 
 def test_SED_sub():
     """Check that SEDs subtract like I think they should...
@@ -50,6 +54,10 @@ def test_SED_sub():
                                    err_msg="Found wrong red limit in SED.__add__")
     np.testing.assert_almost_equal(c(3.0), 3.3 - 3.33, 10,
                                    err_msg="Wrong sum in SED.__sub__")
+    np.testing.assert_almost_equal(c(1.1), a(1.1)-1.11, 10,
+                                   err_msg="Wrong sum in SED.__add__")
+    np.testing.assert_almost_equal(c(5.0), 5.5-b(5.0), 10,
+                                   err_msg="Wrong sum in SED.__add__")
 
 def test_SED_mul():
     """Check that SEDs multiply like I think they should...
@@ -57,18 +65,22 @@ def test_SED_mul():
     a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
                    flux_type='fphotons')
     b = lambda w: w**2
+    # SED multiplied by function
     c = a*b
     np.testing.assert_almost_equal(c(3.0), 3.3 * 3**2, 10,
-                                   err_msg="Found value in SED.__mul__")
+                                   err_msg="Found wrong value in SED.__mul__")
+    # function multiplied by SED
     c = b*a
     np.testing.assert_almost_equal(c(3.0), 3.3 * 3**2, 10,
-                                   err_msg="Found value in SED.__rmul__")
+                                   err_msg="Found wrong value in SED.__rmul__")
+    # SED multiplied by scalar
     d = c*4.2
     np.testing.assert_almost_equal(d(3.0), 3.3 * 3**2 * 4.2, 10,
-                                   err_msg="Found value in SED.__mul__")
+                                   err_msg="Found wrong value in SED.__mul__")
+    # assignment multiplication
     d *= 2
     np.testing.assert_almost_equal(d(3.0), 3.3 * 3**2 * 4.2 * 2, 10,
-                                   err_msg="Found value in SED.__mul__")
+                                   err_msg="Found wrong value in SED.__mul__")
 
 def test_SED_div():
     """Check that SEDs divide like I think they should...
@@ -79,19 +91,19 @@ def test_SED_div():
     # SED divided by function
     c = a/b
     np.testing.assert_almost_equal(c(3.0), 3.3 / 3**2, 10,
-                                   err_msg="Found value in SED.__div__")
+                                   err_msg="Found wrong value in SED.__div__")
     # function divided by SED
     c = b/a
     np.testing.assert_almost_equal(c(3.0), 3**2 / 3.3, 10,
-                                   err_msg="Found value in SED.__rdiv__")
+                                   err_msg="Found wrong value in SED.__rdiv__")
     # SED divided by scalar
     d = c/4.2
     np.testing.assert_almost_equal(d(3.0), 3**2 / 3.3 / 4.2, 10,
-                                   err_msg="Found value in SED.__div__")
+                                   err_msg="Found wrong value in SED.__div__")
     # assignment division
     d /= 2
     np.testing.assert_almost_equal(d(3.0), 3**2 / 3.3 / 4.2 / 2, 10,
-                                   err_msg="Found value in SED.__div__")
+                                   err_msg="Found wrong value in SED.__div__")
 
 if __name__ == "__main__":
     test_SED_add()
