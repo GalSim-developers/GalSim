@@ -315,6 +315,14 @@ class Convolution(GSObject):
 
 
 def Deconvolve(obj, gsparams=None):
+    """A function for deconvolving by either a GSObject or ChromaticObject.
+
+    This function will inspect its input argument to decide if a galsim.Deconvolution object or a
+    galsim.ChromaticDeconvolution object is required to represent the deconvolution by a surface
+    brightness profile.
+
+    @returns galsim.Deconvolution or galsim.ChromaticDeconvolution as appropriate.
+    """
     if isinstance(obj, galsim.ChromaticObject):
         return galsim.ChromaticDeconvolution(obj, gsparams=gsparams)
     elif isinstance(obj, galsim.GSObject):
@@ -349,6 +357,14 @@ class Deconvolution(GSObject):
 
 
 def AutoConvolve(obj, real_space=None, gsparams=None):
+    """A function for autoconvolving either a GSObject or ChromaticObject.
+
+    This function will inspect its input argument to decide if a galsim.AutoConvolution object or a
+    galsim.ChromaticAutoConvolution object is required to represent the convolution of a surface
+    brightness profile with itself.
+
+    @returns galsim.AutoConvolution or galsim.ChromaticAutoConvolution as appropriate.
+    """
     if isinstance(obj, galsim.ChromaticObject):
         return galsim.ChromaticAutoConvolution(obj, real_space=real_space, gsparams=gsparams)
     elif isinstance(obj, galsim.GSObject):
@@ -407,6 +423,14 @@ class AutoConvolution(GSObject):
 
 
 def AutoCorrelate(obj, real_space=None, gsparams=None):
+    """A function for autocorrelating either a GSObject or ChromaticObject.
+
+    This function will inspect its input argument to decide if a galsim.AutoCorrelation object or a
+    galsim.ChromaticAutoCorrelation object is required to represent the correlation of a surface
+    brightness profile with itself.
+
+    @returns galsim.AutoCorrelation or galsim.ChromaticAutoCorrelation as appropriate.
+    """
     if isinstance(obj, galsim.ChromaticObject):
         return galsim.ChromaticAutoCorrelation(obj, real_space=real_space, gsparams=gsparams)
     elif isinstance(obj, galsim.GSObject):
