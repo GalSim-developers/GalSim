@@ -225,8 +225,6 @@ def test_chromatic_add():
     disk.applyShear(g1=shear_g1, g2=shear_g2)
 
     # create PSF
-    shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
-    dilate_fn = lambda w:(w/500.0)**(-0.2)
     mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
     mono_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
     chromatic_PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500.0,
