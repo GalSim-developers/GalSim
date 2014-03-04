@@ -27,7 +27,7 @@ import numpy
 import galsim
 
 class SED(object):
-    """Simple SED object.
+    """Simple SED object to represent the spectral energy distributions of stars and galaxies.
 
     SEDs are callable, returning the flux in photons/nm as a function of wavelength in nm.
 
@@ -44,44 +44,43 @@ class SED(object):
     SEDs may be added together.  The resulting SED will only be defined on the wavelength
     region where both of the operand SEDs are defined. `blue_limit` and `red_limit` will be reset
     accordingly.
+
+    The input parameter, spec, may be one of several possible forms:
+    1. a regular python function (or an object that acts like a function)
+    2. a galsim.LookupTable
+    3. a file from which a LookupTable can be read in
+    4. a string which can be evaluated into a function of `wave`
+       via `eval('lambda wave : '+spec)
+       e.g. spec = '0.8 + 0.2 * (wave-800)`
+
+    The argument of `spec` will be the wavelength in either nanometers (default) or
+    Angstroms depending on the value of `wave_type`.  The output should be the flux density at
+    that wavelength.  (Note we use wave rather than lambda, since lambda is a python reserved
+    word.)
+
+    The argument `wave_type` specifies the units to assume for wavelength and must be one of
+    'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or 'Angstroms'. Text case here
+    is unimportant.  If these wavelength options are insufficient, please submit an issue to
+    the GalSim github issues page: https://github.com/GalSim-developers/GalSim/issues
+
+    The argument `flux_type` specifies the type of spectral density and must be one of:
+    1. 'flambda':  `spec` is proportional to erg/nm
+    2. 'fnu':      `spec` is proportional to erg/Hz
+    3. 'fphotons': `spec` is proportional to photons/nm
+
+    Note that the `wave_type` and `flux_type` parameters do not propagate into other methods of
+    `SED`.  For instance, SED.__call__ assumes its input argument is in nanometers and returns
+    flux proportional to photons/nm.
+
+
+    @param spec          Function defining the spectrum at each wavelength.  See above for
+                         valid options for this parameter.
+    @param flux_type     String specifying what type of spectral density `spec` represents.  See
+                         above for valid options for this parameter.
+    @param wave_type     String specifying units for wavelength input to `spec`.
+
     """
     def __init__(self, spec, wave_type='nm', flux_type='flambda'):
-        """Simple SED object.  This object is callable, returning the flux in
-        photons/nm as a function of wavelength in nm.
-
-        The input parameter, spec, may be one of several possible forms:
-        1. a regular python function (or an object that acts like a function)
-        2. a galsim.LookupTable
-        3. a file from which a LookupTable can be read in
-        4. a string which can be evaluated into a function of `wave`
-           via `eval('lambda wave : '+spec)
-           e.g. spec = '0.8 + 0.2 * (wave-800)`
-
-        The argument of `spec` will be the wavelength in either nanometers (default) or
-        Angstroms depending on the value of `wave_type`.  The output should be the flux density at
-        that wavelength.  (Note we use wave rather than lambda, since lambda is a python reserved
-        word.)
-
-        The argument `wave_type` specifies the units to assume for wavelength and must be one of
-        'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or 'Angstroms'. Text case here
-        is unimportant.  If these wavelength options are insufficient, please submit an issue to
-        the GalSim github issues page: https://github.com/GalSim-developers/GalSim/issues
-
-        The argument `flux_type` specifies the type of spectral density and must be one of:
-        1. 'flambda':  `spec` is proportional to erg/nm
-        2. 'fnu':      `spec` is proportional to erg/Hz
-        3. 'fphotons': `spec` is proportional to photons/nm
-
-        Note that the `wave_type` and `flux_type` parameters do not propagate into other methods of
-        `SED`.  For instance, SED.__call__ assumes its input argument is in nanometers and returns
-        flux proportional to photons/nm.
-
-        @param spec          Function defining the spectrum at each wavelength.  See above for
-                             valid options for this parameter.
-        @param flux_type     String specifying what type of spectral density `spec` represents.  See
-                             above for valid options for this parameter.
-        @param wave_type     String specifying units for wavelength input to `spec`.
-        """
         if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
             wave_factor = 1.0
         elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
@@ -136,7 +135,7 @@ class SED(object):
         attributes, the SED is considered undefined, and this method will raise an exception if a
         flux at a wavelength outside the defined range is requested.
 
-        @param   wave  Wavelength at which to evaluate the SED.
+        @param   wave  Wavelength in nanometers at which to evaluate the SED.
         @returns       Photon density, Units proportional to photons/nm
         """
         if hasattr(wave, '__iter__'): # Only iterables respond to min(), max()
@@ -147,11 +146,11 @@ class SED(object):
             wmax = wave
         if self.blue_limit is not None:
             if wmin < self.blue_limit:
-                raise ValueError("Wavelength ({}) is bluer than SED blue limit ({})"
+                raise ValueError("Wavelength ({0}) is bluer than SED blue limit ({1})"
                                  .format(wmin, self.blue_limit))
         if self.red_limit is not None:
             if wmax > self.red_limit:
-                raise ValueError("Wavelength ({}) redder than SED red limit ({})"
+                raise ValueError("Wavelength ({0}) redder than SED red limit ({1})"
                                  .format(wmax, self.red_limit))
         return self.fphotons(wave)
 
@@ -221,13 +220,13 @@ class SED(object):
             ret.__dict__[k] = copy.deepcopy(v) # need deepcopy for copying self.fphotons
         return ret
 
-    def createWithFluxDensity(self, wavelength, target_flux_density):
+    def withFluxDensity(self, target_flux_density, wavelength):
         """ Return a new SED with flux density set to `target_flux_density` at wavelength
         `wavelength`.  Note that this normalization is *relative* to the `flux` attribute of the
         chromaticized GSObject.
 
-        @param wavelength   The wavelength, in nanometers, at which flux density will be set.
         @param target_flux_density   The target *relative* normalization in photons / nm.
+        @param wavelength   The wavelength, in nanometers, at which flux density will be set.
         @returns   New normalized SED.
         """
         current_fphotons = self(wavelength)
@@ -236,21 +235,21 @@ class SED(object):
         ret.fphotons = lambda w: self.fphotons(w) * factor
         return ret
 
-    def createWithFlux(self, bandpass, target_flux):
+    def withFlux(self, target_flux, bandpass):
         """ Return a new SED with flux through the Bandpass `bandpass` set to `target_flux`. Note
         that this normalization is *relative* to the `flux` attribute of the chromaticized GSObject.
 
-        @param bandpass   A galsim.Bandpass object defining a filter bandpass.
         @param target_flux  Desired *relative* flux normalization of the SED.
+        @param bandpass   A galsim.Bandpass object defining a filter bandpass.
         @returns   New normalized SED.
         """
-        current_flux = self.getFlux(bandpass)
+        current_flux = self.calculateFlux(bandpass)
         norm = target_flux/current_flux
         ret = self.copy()
         ret.fphotons = lambda w: self.fphotons(w) * norm
         return ret
 
-    def createRedshifted(self, redshift):
+    def atRedshift(self, redshift):
         """ Return a new SED with redshifted wavelengths.
 
         @param redshift
@@ -263,7 +262,7 @@ class SED(object):
         ret.red_limit = self.red_limit * wave_factor
         return ret
 
-    def getFlux(self, bandpass):
+    def calculateFlux(self, bandpass):
         """ Return the SED flux through a bandpass.
 
         @param bandpass   galsim.Bandpass object representing a filter, or None for bolometric

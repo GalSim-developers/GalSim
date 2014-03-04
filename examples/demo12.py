@@ -44,7 +44,7 @@ For all cases, suggested parameters for viewing in ds9 are also included.
 New features introduced in this demo:
 
 - SED = galsim.SED(wave, flambda)
-- SED2 = SED.setRedshift(redshift)
+- SED2 = SED.atRedshift(redshift)
 - bandpass = galsim.Bandpass(filename)
 - bandpass2 = bandpass.truncate(relative_throughput=X)
 - bandpass3 = bandpass2.thin(step)
@@ -90,7 +90,7 @@ def main(argv):
         # One way to control this normalization is to specify the flux density in photons per nm
         # at a particular wavelength.  For example, here we normalize such that photon density is
         # 1 photon per nm at 500 nm.
-        SEDs[SED_name] = SED.createWithFluxDensity(wavelength=500, target_flux_density=1.0)
+        SEDs[SED_name] = SED.withFluxDensity(target_flux_density=1.0, wavelength=500)
     logger.debug('Successfully read in SEDs')
 
     # read in the LSST filters
@@ -101,9 +101,9 @@ def main(argv):
         # Columns required to be 1) Wavelength in nm, 2) Dimensionless throughput
         filters[filter_name] = galsim.Bandpass(filter_filename)
         # don't waste time integrating where there's less than 1% relative throughput.
-        filters[filter_name] = filters[filter_name].createTruncated(relative_throughput=0.01)
+        filters[filter_name] = filters[filter_name].truncate(relative_throughput=0.01)
         # and thin out the wavelength sampling by a factor of 10 to also improve speed.
-        filters[filter_name] = filters[filter_name].createThinned(10)
+        filters[filter_name] = filters[filter_name].thin(10)
     logger.debug('Read in filters')
 
     pixel_scale = 0.2 # arcseconds
@@ -120,7 +120,7 @@ def main(argv):
     logger.info('Starting part A: chromatic De Vaucouleurs galaxy')
     redshift = 0.8
     mono_gal = galsim.Exponential(half_light_radius=0.5)
-    SED = SEDs['CWW_E_ext'].createRedshifted(redshift)
+    SED = SEDs['CWW_E_ext'].atRedshift(redshift)
     gal = galsim.Chromatic(mono_gal, SED)
 
     # You can still shear, shift, and dilate the resulting chromatic object.
@@ -158,14 +158,14 @@ def main(argv):
     redshift = 0.8
     # make a bulge ...
     mono_bulge = galsim.DeVaucouleurs(half_light_radius=0.5)
-    bulge_SED = SEDs['CWW_E_ext'].createRedshifted(redshift)
+    bulge_SED = SEDs['CWW_E_ext'].atRedshift(redshift)
     # Here's a shortcut for creating a chromatic version of a GSObject:
     bulge = mono_bulge * bulge_SED
     bulge.applyShear(g1=0.12, g2=0.07)
     logger.debug('Created bulge component')
     # ... and a disk ...
     mono_disk = galsim.Exponential(half_light_radius=2.0)
-    disk_SED = SEDs['CWW_Im_ext'].createRedshifted(redshift)
+    disk_SED = SEDs['CWW_Im_ext'].atRedshift(redshift)
     disk = mono_disk * disk_SED
     disk.applyShear(g1=0.4, g2=0.2)
     logger.debug('Created disk component')
@@ -200,10 +200,10 @@ def main(argv):
     logger.info('Starting part C: chromatic PSF')
     redshift = 0.0
     mono_gal = galsim.Exponential(half_light_radius=0.5)
-    SED = SEDs['CWW_Im_ext'].createRedshifted(redshift)
+    SED = SEDs['CWW_Im_ext'].atRedshift(redshift)
     # Here's another way to set the normalization of the SED.  If we want 50 counts to be drawn
     # when observing an object with this SED through the g-band, for instance, then we do:
-    SED = SED.createWithFlux(filters['g'], 50.0)
+    SED = SED.withFlux(50.0, filters['g'])
     # The flux drawn through other bands, which sample different parts of the SED and have different
     # throughputs, will, of course, be differ.
     gal = mono_gal * SED
