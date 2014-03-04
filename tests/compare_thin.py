@@ -79,25 +79,25 @@ def compare_thin():
                     SED_name, redshift, bandname)
                 dDCR = dDCR_moments(SED1, SED, band)
                 dseeing = dseeing_moments(SED1, SED, band)
-                dflux = SED1.calculateFlux(band) - SED.calculateFlux(band)
+                flux = SED.calculateFlux(band)
                 hdr = '{0:8s} {1:>8s} {2:>8s} {3:>8s} {4:>8s} {5:>8s} {6:>8s} {7:>8s} {8:>8s}'
                 print hdr.format(
-                    'rel_err', 'dRbar', 'dV', 'dseeing', 'dflux',
-                    'd(dRbar)', 'd(dV)', 'd(dseeing)', 'd(dflux)')
+                    'rel_err', 'dRbar', 'dV', 'dseeing', 'flux',
+                    'd(dRbar)', 'd(dV)', 'd(dseeing)', 'd(flux)/flux')
                 out = '{0:8} {1:8.5f} {2:8.5f} {3:8.5f} {4:8.5f}'
-                print out.format('full', dDCR[0], dDCR[1], dseeing, dflux)
+                print out.format('full', dDCR[0], dDCR[1], dseeing, flux)
                 for rel_err in rel_errs:
                     band1 = band.thin(rel_err=rel_err)
                     dDCR_thinned = dDCR_moments(SED1, SED, band1)
                     dseeing_thinned = dseeing_moments(SED1, SED, band1)
-                    dflux_thinned = SED1.calculateFlux(band1) - SED.calculateFlux(band1)
+                    flux_thinned = SED.calculateFlux(band1)
                     out = ('{0:8s} {1:8.5f} {2:8.5f} {3:8.5f} {4:8.5f}'
                            +' {5:8.5f} {6:8.5f} {7:8.5f} {8:8.5f}')
                     print out.format(
                         str(rel_err), dDCR_thinned[0], dDCR_thinned[1],
-                        dseeing_thinned, dflux_thinned,
+                        dseeing_thinned, flux_thinned,
                         dDCR[0] - dDCR_thinned[0], dDCR[1] - dDCR_thinned[1],
-                        dseeing - dseeing_thinned, dflux - dflux_thinned)
+                        dseeing - dseeing_thinned, (flux - flux_thinned)/flux)
                 print
 
 if __name__ == '__main__':
