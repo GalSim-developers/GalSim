@@ -47,7 +47,7 @@ def Add(*args, **kwargs):
         raise ValueError("Sum must be initialized with at least one ChromaticObject or GSObject.")
     elif len(args) == 1:
         # 1 argument.  Should be either a GSObject or a list of GSObjects
-        if isinstance(args[0], GSObject) or isinstance(args[0], ChromaticObject):
+        if isinstance(args[0], (GSObject, ChromaticObject)):
             args = [args[0]]
         elif isinstance(args[0], list):
             args = args[0]
@@ -57,7 +57,7 @@ def Add(*args, **kwargs):
     # else args is already the list of objects
 
     if any([isinstance(a, ChromaticObject) for a in args]):
-        return galsim.ChromaticSum(args, **kwargs)
+        return galsim.ChromaticSum(*args, **kwargs)
     else:
         return Sum(*args, **kwargs)
 
@@ -144,7 +144,7 @@ def Convolve(*args, **kwargs):
         raise ValueError("Convolution must be initialized with at least one GSObject "
                          + "or ChromaticObject.")
     elif len(args) == 1:
-        if isinstance(args[0], GSObject) or isinstance(args[0], ChromaticObject):
+        if isinstance(args[0], (GSObject, ChromaticObject)):
             args = [args[0]]
         elif isinstance(args[0], list):
             args = args[0]
@@ -154,7 +154,7 @@ def Convolve(*args, **kwargs):
     # else args is already the list of objects
 
     if any([isinstance(a, ChromaticObject) for a in args]):
-        return galsim.ChromaticConvolution(args, **kwargs)
+        return galsim.ChromaticConvolution(*args, **kwargs)
     else:
         return Convolution(*args, **kwargs)
 
