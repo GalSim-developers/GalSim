@@ -61,8 +61,8 @@ shear_g2 = 0.02
 
 # load a filter
 bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
-bandpass = bandpass.createTruncated(relative_throughput=0.01)
-bandpass = bandpass.createThinned(10)
+bandpass = bandpass.truncate(relative_throughput=0.01)
+bandpass = bandpass.thin(10)
 
 # load some spectra
 bulge_SED = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')

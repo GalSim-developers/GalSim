@@ -29,7 +29,7 @@ class Bandpass(object):
     function of wavelength, for either an entire optical path (e.g., atmosphere, reflecting and
     refracting optics, filters, CCD quantum efficiency), or some intermediate piece thereof.
     Bandpasses representing individual components may be combined through the `*` operator to form
-    a new Bandpass object representing the complete optical path.
+    a new Bandpass object representing the composite optical path.
 
     Bandpasses are callable, returning dimensionless throughput as a function of wavelength in nm.
 
@@ -85,8 +85,8 @@ class Bandpass(object):
 
     """
     def __init__(self, throughput, wave_type='nm', blue_limit=None, red_limit=None, _wave_list=None):
-        # Note that _wave_list acts a private construction variable that overrides the way that
-        # `wave_list` is normally constructed (see Bandpass.__mul__ below)
+        # Note that `_wave_list` acts a private construction variable that overrides the way that
+        # `wave_list` is normally constructed (see `Bandpass.__mul__` below)
 
         # Figure out input throughput type.
         tp = throughput  # For brevity within this function
@@ -263,7 +263,7 @@ class Bandpass(object):
         else:
             return self.func(wave) if (wave >= self.blue_limit and wave <= self.red_limit) else 0.0
 
-    def createTruncated(self, relative_throughput=None, blue_limit=None, red_limit=None):
+    def truncate(self, relative_throughput=None, blue_limit=None, red_limit=None):
         """ Return a bandpass with its wavelength range truncated.
 
         @param blue_limit             Truncate blue side of bandpass here.
@@ -296,7 +296,7 @@ class Bandpass(object):
                                  +" a galsim.LookupTable")
             return Bandpass(self.func, blue_limit=blue_limit, red_limit=red_limit)
 
-    def createThinned(self, step):
+    def thin(self, step):
         """ If the bandpass was initialized with a galsim.LookupTable or from a file (which
         internally creates a galsim.LookupTable), then thin the tabulated wavelengths and
         throughput by keeping only every `step`th index.  Always keep the first and last index,
@@ -306,7 +306,6 @@ class Bandpass(object):
                         arrays.
         @returns  The thinned Bandpass.
         """
-        # if isinstance(self.func, galsim.LookupTable):
         if hasattr(self, 'wave_list'):
             wave = self.wave_list[::step]
             # maintain the same red_limit, even if it breaks the step size a bit.
