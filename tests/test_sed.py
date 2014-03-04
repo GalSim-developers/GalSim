@@ -17,9 +17,14 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import os
+
 import numpy as np
 
 import galsim
+
+path, filename = os.path.split(__file__)
+datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
 
 def test_SED_add():
     """Check that SEDs add like I think they should...
@@ -105,8 +110,25 @@ def test_SED_div():
     np.testing.assert_almost_equal(d(3.0), 3**2 / 3.3 / 4.2 / 2, 10,
                                    err_msg="Found wrong value in SED.__div__")
 
+def test_SED_atRedshift():
+    """Check that SEDs redshift correctly.
+    """
+    a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'))
+    for z1, z2 in zip([0.5, 1.0, 1.4], [1.0, 1.0, 1.0]):
+        b = a.atRedshift(z1)
+        c = b.atRedshift(z1) # same redshift, so should be no change
+        d = c.atRedshift(z2) # do a relative redshifting from z1 to z2
+        for w in [350, 500, 650]:
+            np.testing.assert_almost_equal(a(w), b(w*(1.0+z1)), 10,
+                                           err_msg="error redshifting SED")
+            np.testing.assert_almost_equal(a(w), c(w*(1.0+z1)), 10,
+                                           err_msg="error redshifting SED")
+            np.testing.assert_almost_equal(a(w), d(w*(1.0+z2)), 10,
+                                           err_msg="error redshifting SED")
+
 if __name__ == "__main__":
     test_SED_add()
     test_SED_sub()
     test_SED_mul()
     test_SED_div()
+    test_SED_atRedshift()

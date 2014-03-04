@@ -23,6 +23,7 @@ Very simple implementation of a filter bandpass.  Used by galsim.chromatic.
 import numpy
 
 import galsim
+import utilities
 
 class Bandpass(object):
     """Simple bandpass object, which models the transmission fraction of incident light as a
@@ -296,20 +297,22 @@ class Bandpass(object):
                                  +" a galsim.LookupTable")
             return Bandpass(self.func, blue_limit=blue_limit, red_limit=red_limit)
 
-    def thin(self, step):
+    def thin(self, rel_err=1.e-4, preserve_range=False):
         """ If the bandpass was initialized with a galsim.LookupTable or from a file (which
-        internally creates a galsim.LookupTable), then thin the tabulated wavelengths and
-        throughput by keeping only every `step`th index.  Always keep the first and last index,
-        however, to maintain the same blue_limit and red_limit.
+        internally creates a galsim.LookupTable), then remove tabulated values while keeping
+        the integral over the over the set of tabulated values still accurate to `rel_err`.
 
-        @param step     Factor by which to thin the tabulated Bandpass wavelength and throughput
-                        arrays.
+        @param rel_err            The relative error allowed in the integral over the throughput
+                                  function. (default: 1.e-4)
+        @param preserve_range     Should the original range (`blue_limit` and `red_limit`) of the
+                                  Bandpass be preserved? (True) Or should the ends be trimmed to
+                                  include only the region where the integral is significant? (False)
+                                  (default: False)
         @returns  The thinned Bandpass.
         """
         if hasattr(self, 'wave_list'):
-            wave = self.wave_list[::step]
-            # maintain the same red_limit, even if it breaks the step size a bit.
-            if wave[-1] != self.wave_list[-1]:
-                numpy.append(wave, self.wave_list[-1])
-            throughput = self.func(wave)
-            return Bandpass(galsim.LookupTable(wave, throughput))
+            x = self.wave_list
+            f = self(x)
+            newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
+                                                         preserve_range=preserve_range)
+            return Bandpass(galsim.LookupTable(newx, newf))

@@ -141,6 +141,9 @@ def midpt_sample_integrator(evaluateAtWavelength, bandpass, image, gain=1.0, wmu
     @returns                     result of integral as a galsim.Image
     """
     images = []
+    if not hasattr(bandpass, 'wave_list'):
+        raise AttributeError("Bandpass does not have attribute `wave_list` needed by " +
+                             "midpt_sample_integrator.")
     for w in bandpass.wave_list:
         prof = evaluateAtWavelength(w) * bandpass(w)
         tmpimage = image.copy()

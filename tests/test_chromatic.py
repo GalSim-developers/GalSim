@@ -60,9 +60,7 @@ shear_g1 = 0.01
 shear_g2 = 0.02
 
 # load a filter
-bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
-bandpass = bandpass.truncate(relative_throughput=0.01)
-bandpass = bandpass.thin(10)
+bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat')).thin()
 
 # load some spectra
 bulge_SED = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
@@ -148,9 +146,6 @@ def test_draw_add_commutativity():
     print 'ChromaticObject.draw() took {0} seconds.'.format(t5-t4)
     # plotme(chromatic_image)
 
-    # comparison
-    analytic_flux = galsim.integ.int1d(lambda w: bulge_SED(w) * bandpass(w),
-                                       bandpass.blue_limit, bandpass.red_limit)
     peak1 = chromatic_image.array.max()
 
     printval(GS_image, chromatic_image)
@@ -295,14 +290,11 @@ def test_dcr_moments():
 
     # analytic first moment differences
     R = lambda w:(galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec
-    numR1 = galsim.integ.int1d(lambda w: R(w) * bandpass(w) * bulge_SED(w),
-                               bandpass.blue_limit, bandpass.red_limit)
-    numR2 = galsim.integ.int1d(lambda w: R(w) * bandpass(w) * disk_SED(w),
-                               bandpass.blue_limit, bandpass.red_limit)
-    den1 = galsim.integ.int1d((lambda w:bandpass(w) * bulge_SED(w)),
-                              bandpass.blue_limit, bandpass.red_limit)
-    den2 = galsim.integ.int1d((lambda w:bandpass(w) * disk_SED(w)),
-                              bandpass.blue_limit, bandpass.red_limit)
+    x = bandpass.wave_list
+    numR1 = np.trapz(R(x) * bandpass(x) * bulge_SED(x), x)
+    numR2 = np.trapz(R(x) * bandpass(x) * disk_SED(x), x)
+    den1 = bulge_SED.calculateFlux(bandpass)
+    den2 = disk_SED.calculateFlux(bandpass)
 
     R1 = numR1/den1
     R2 = numR2/den2
@@ -311,10 +303,9 @@ def test_dcr_moments():
     # analytic second moment differences
     V1_kernel = lambda w:(R(w) - R1)**2
     V2_kernel = lambda w:(R(w) - R2)**2
-    numV1 = galsim.integ.int1d(lambda w:V1_kernel(w) * bandpass(w) * bulge_SED(w),
-                               bandpass.blue_limit, bandpass.red_limit)
-    numV2 = galsim.integ.int1d(lambda w:V2_kernel(w) * bandpass(w) * disk_SED(w),
-                               bandpass.blue_limit, bandpass.red_limit)
+    numV1 = np.trapz(V1_kernel(x) * bandpass(x) * bulge_SED(x), x)
+    numV2 = np.trapz(V2_kernel(x) * bandpass(x) * disk_SED(x), x)
+
     V1 = numV1/den1
     V2 = numV2/den2
     dV_analytic = V1 - V2
@@ -324,9 +315,9 @@ def test_dcr_moments():
     print 'image delta V:    {0}'.format(dV_image)
     print 'analytic delta V: {0}'.format(dV_analytic)
     np.testing.assert_almost_equal(dR_image, dR_analytic, 5,
-                                   err_msg="Moment Shift from DCR doesn't match analytic formula")
+                                   err_msg="dRbar Shift from DCR doesn't match analytic formula")
     np.testing.assert_almost_equal(dV_image, dV_analytic, 5,
-                                   err_msg="Moment Shift from DCR doesn't match analytic formula")
+                                   err_msg="dV Shift from DCR doesn't match analytic formula")
 
 
     t2 = time.time()
@@ -368,14 +359,11 @@ def test_chromatic_seeing_moments():
         dr2byr2_image = ((mom1[2]+mom1[3]) - (mom2[2]+mom2[3])) / (mom1[2]+mom1[3])
 
         # analytic moment differences
-        num1 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * bandpass(w) * bulge_SED(w),
-                                  bandpass.blue_limit, bandpass.red_limit)
-        num2 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * bandpass(w) * disk_SED(w),
-                                  bandpass.blue_limit, bandpass.red_limit)
-        den1 = galsim.integ.int1d(lambda w:bandpass(w) * bulge_SED(w),
-                                  bandpass.blue_limit, bandpass.red_limit)
-        den2 = galsim.integ.int1d(lambda w:bandpass(w) * disk_SED(w),
-                                  bandpass.blue_limit, bandpass.red_limit)
+        x = bandpass.wave_list
+        num1 = np.trapz((x/500)**(2*index) * bandpass(x) * bulge_SED(x), x)
+        num2 = np.trapz((x/500)**(2*index) * bandpass(x) * disk_SED(x), x)
+        den1 = bulge_SED.calculateFlux(bandpass)
+        den2 = disk_SED.calculateFlux(bandpass)
 
         r2_1 = num1/den1
         r2_2 = num2/den2
@@ -471,8 +459,7 @@ def test_chromatic_flux():
     ChromaticObject_flux = image2.array.sum()
 
     # analytic integral...
-    analytic_flux = galsim.integ.int1d(lambda w: bulge_SED(w) * bandpass(w),
-                                       bandpass.blue_limit, bandpass.red_limit)
+    analytic_flux = bulge_SED.calculateFlux(bandpass)
 
     printval(image, image2)
     np.testing.assert_almost_equal(ChromaticObject_flux/analytic_flux, 1.0, 4,

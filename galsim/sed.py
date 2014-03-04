@@ -22,7 +22,7 @@ Simple spectral energy distribution class.  Used by galsim/chromatic.py
 
 import copy
 
-import numpy
+import numpy as np
 
 import galsim
 
@@ -103,13 +103,14 @@ class SED(object):
             self.red_limit = None
 
         if flux_type == 'flambda':
-            self.fphotons = lambda w: spec(numpy.array(w) * wave_factor) * w
+            self.fphotons = lambda w: spec(np.array(w) * wave_factor) * w
         elif flux_type == 'fnu':
-            self.fphotons = lambda w: spec(numpy.array(w) * wave_factor) / w
+            self.fphotons = lambda w: spec(np.array(w) * wave_factor) / w
         elif flux_type == 'fphotons':
-            self.fphotons = lambda w: spec(numpy.array(w) * wave_factor)
+            self.fphotons = lambda w: spec(np.array(w) * wave_factor)
         else:
             raise ValueError("Unknown flux_type `{}` in SED.__init__".format(flux_type))
+        self.redshift = 0
 
     def _wavelength_intersection(self, other):
         blue_limit = self.blue_limit
@@ -193,9 +194,10 @@ class SED(object):
         return self.__rdiv__(other)
 
     def __add__(self, other):
-        # Add together two SEDs, with the caveat that the resulting SED will be defined on the
-        # wavelength range set by the overlap of the wavelength ranges of the two SED operands.
-        #
+        # Add together two SEDs, with the following two caveats:
+        # 1) The resulting SED will be defined on the wavelength range set by the overlap of the
+        #    wavelength ranges of the two SED operands.
+        # 2) The SED `redshift` attribute will be reset to zero.
         # This ensures that SED addition is commutative.
 
         # Find overlapping wavelength interval
@@ -204,6 +206,7 @@ class SED(object):
         ret.blue_limit = blue_limit
         ret.red_limit = red_limit
         ret.fphotons = lambda w: self(w) + other(w)
+        ret.redshift = 0
         return ret
 
     def __sub__(self, other):
@@ -256,10 +259,11 @@ class SED(object):
         @returns Redshifted SED.
         """
         ret = self.copy()
-        wave_factor = (1.0 + redshift)
+        wave_factor = (1.0 + redshift) / (1.0 + self.redshift)
         ret.fphotons = lambda w: self.fphotons(w / wave_factor)
         ret.blue_limit = self.blue_limit * wave_factor
         ret.red_limit = self.red_limit * wave_factor
+        ret.redshift = redshift
         return ret
 
     def calculateFlux(self, bandpass):
@@ -269,7 +273,7 @@ class SED(object):
                           flux (over defined wavelengths).
         @returns   Flux through bandpass.
         """
-        if bandpass is None:
+        if bandpass is None: # do bolometric flux
             if self.blue_limit is None:
                 blue_limit = 0.0
             else:
@@ -279,6 +283,10 @@ class SED(object):
             else:
                 red_limit = self.red_limit
             return galsim.integ.int1d(self.fphotons, blue_limit, red_limit)
-        else:
-            return galsim.integ.int1d(lambda w: bandpass(w)*self.fphotons(w),
-                                      bandpass.blue_limit, bandpass.red_limit)
+        else: # do flux through bandpass
+            if hasattr(bandpass, 'wave_list'):
+                x = bandpass.wave_list
+                return np.trapz(bandpass(x) * self.fphotons(x), x)
+            else:
+                return galsim.integ.int1d(lambda w: bandpass(w)*self.fphotons(w),
+                                          bandpass.blue_limit, bandpass.red_limit)
