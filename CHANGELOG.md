@@ -28,16 +28,16 @@ Python layer API changes:
   * `im = ConstImageViewF(...)` and similar should now be
     `im = ImageF(..., make_const=True)` (again preserving the type letter).
   * `im = Image[type](...)` should now be `Image(..., dtype=type)`
-  * `im = ImageView[type](numpy_array.astype(type))` should now be 
+  * `im = ImageView[type](numpy_array.astype(type))` should now be
     `im = Image(numpy_array.astype(type))`.  i.e. the data type inherits
     from the numpy_array argument when appropriate.  If it is already
     the correct type, you do not need the `astype(type)` part.
-  * `im = ConstImageView[type](numpy_array.astype(type))` should now be 
+  * `im = ConstImageView[type](numpy_array.astype(type))` should now be
     `im = Image(numpy_array.astype(type), make_const=True)`
 * Changed the handling of the `scale` and `init_value` parameters of the
   `Image` constructor, so that now they have to be named keyword arguments
   rather than positional arguments. (Issue #364)
-  * `im = ImageF(nx, ny, scale, init_val)` should now be 
+  * `im = ImageF(nx, ny, scale, init_val)` should now be
     `im = ImageF(nx, ny, scale=scale, init_value=init_val)`.
 * Removed the `im.at(x,y)` syntax.  This had been equivalent to `im(x,y)`,
   so any such code should now be switched to that. (Issue #364)
@@ -54,7 +54,7 @@ Python layer API changes:
   WCS information to convert from image coordinates to world coordinates.  If
   unavailable, then the returned PSF profiles will be in image coordinates.
   The old `scale` parameter in `psfex.getPSF` is obsolete since it is not
-  really accurate.  The new behavior accurately converts the PSFEx profile 
+  really accurate.  The new behavior accurately converts the PSFEx profile
   between image and world coordinates.
   * `psfex = galsim.des.DES_PSFEx(psf_file)` `psf = psfex.getPSF(pos, scale)`
     should become `psfex = galsim.des.DES_PSFEx(psf_file, image_file)`
@@ -139,10 +139,44 @@ New `CelestialCoord` class: (Issue #364)
 
 New chromatic functionality: (Issue #467)
 
-* Added `ChromaticObject` and dependencies `SED` and `Bandpass` to implement
-  wavelength dependence. (Issue #467)
+* New `SED` class to represent stellar and galactic spectra.  These can be
+  initialized from 2-column ascii files, python functions, `eval()` string
+  expressions or `galsim.LookupTable`s.
+  * normalize these using `sed.withFluxDensity(flux_density, wavelength)` or
+    with `sed.withFlux(flux, bandpass)`.
+  * `sed.atRedshift(z)` will redshift the wavelength axis by (1+z)
+* New `Bandpass` class to represent throughput functions, which can either be
+  for a complete imaging system, or for individual components thereof, such as
+  the atmophsere, mirrors, lenses, filters, detector quantum efficiency, etc.
+  These can be initialized from 2-column ascii files, python functions,
+  `eval()` string expressions, or `galsim.LookupTable`s.
+  * `Bandpass.truncate` and `Bandpass.thin` are available to help remove
+    superfluous throughput evaluation wavelengths and improve speed.
+* New `ChromaticObject` class to represent wavelength-dependent surface
+  brightness profiles:
+  * `Chromatic(GSObject, SED)` subclass creates a separable wavelength-dependent
+    surface brightness profile: I.e. one that takes the form
+    f(x, y, \lambda) = g(x, y) * h(\lambda)
+  * `GSObject * SED` is a shortcut for `Chromatic(GSObject, SED)`.
+  * Galaxies with color gradients can be created as sums of separable chromatic
+    profiles.
+    E.g.: `gal = bulge_prof * bulge_sed + disk_prof * disk_sed`.
+  * `ChromaticObject.applyDilation()`, `.applyExpansion()`, and `.applyShift()`,
+    can take function(s) of wavelength in nanometers as their argument(s), which
+    can be used to effect a variety of chromatic surface brightness profiles.
+  * A wavelength-dependent diffraction-limited PSF can be created like:
+    `fiducial_PSF = galsim.ChromaticObject(galsim.Airy(lam_over_diam))
+     fiducial_PSF.applyDilation(lambda w:w/fiducial_wavelength)`
+  * `ChromaticAtmosphere(fiducial_PSF, fiducial_wave, zenith_angle)` will modify
+    the monochromatic GSObject PSF `fiducial_PSF` defined at wavelength
+    `fiducial_wave` to account for atmospheric differential chromatic refraction
+    and Kolmogorov chromatic seeing for an observation at `zenith_angle`.
+  * `ChromaticObject`s are drawn with almost identical syntax to `GSObjects`.
+    The one difference is that `ChromaticObject`s require an additional argument,
+    (given first in line) which is the `Bandpass` throughput function against
+    which to integrate over wavelength.
+    E.g., `image = chroma_obj.draw(bandpass)`
 * Added demo12.py for wavelength dependence examples.
-
 
 Updates to config options:
 
@@ -156,7 +190,7 @@ Updates to config options:
   had been an option for the psf draw, but not the main draw.  This is only
   possible if there is only one item being convolved with the pixel.
   (Issue #364)
-* Added ability to index `Sequence` types by any running index, rather than 
+* Added ability to index `Sequence` types by any running index, rather than
   just the default.  i.e. `obj_num`, `image_num`, or `file_num`. (Issue #364)
 * Added `Sum` type for value types for which it makes sense: float, int, angle,
   shear, position. (Issue #457)
@@ -199,6 +233,5 @@ Other new features:
   as an alternative to specifying each one individually.  (The innards of
   OpticalPSF were also rearranged to use arrays instead of individual values,
   but this is not important for users, just developers.) (Issue #409)
-* Added option to FitsHeader and FitsWCS to read in SCamp-style text files with 
+* Added option to FitsHeader and FitsWCS to read in SCamp-style text files with
   the header information using the parameter `text_file=True`. (Issue #508)
-
