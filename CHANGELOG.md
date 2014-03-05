@@ -139,25 +139,34 @@ New `CelestialCoord` class: (Issue #364)
 
 New chromatic functionality: (Issue #467)
 
+* New `Bandpass` class to represent throughput functions, which can either
+  represent a complete imaging system, or the individual components thereof,
+  such as the atmosphere, mirrors, lenses, filters, detector quantum
+  efficiency, etc.
+  These can be initialized from 2-column ascii files, python functions,
+  `eval()` string expressions, or `galsim.LookupTable`s.
+  * Two methods are available to reduce the samples used to evaluate integrals
+    over wavelength, and hence reduce the time to draw `ChromaticObject`s:
+    * `Bandpass.truncate(blue_limit, red_limit)` returns a truncated Bandpass.
+    * `Bandpass.thin(rel_err)` Returns a thinned Bandpass that nonetheless still
+      integrates to the unthinned result within `rel_err` relative error.
+  * Bandpasses can be multiplied and divided by other Bandpasses.
 * New `SED` class to represent stellar and galactic spectra.  These can be
   initialized from 2-column ascii files, python functions, `eval()` string
   expressions or `galsim.LookupTable`s.
-  * normalize these using `sed.withFluxDensity(flux_density, wavelength)` or
-    with `sed.withFlux(flux, bandpass)`.
-  * `sed.atRedshift(z)` will redshift the wavelength axis by (1+z)
-* New `Bandpass` class to represent throughput functions, which can either be
-  for a complete imaging system, or for individual components thereof, such as
-  the atmophsere, mirrors, lenses, filters, detector quantum efficiency, etc.
-  These can be initialized from 2-column ascii files, python functions,
-  `eval()` string expressions, or `galsim.LookupTable`s.
-  * `Bandpass.truncate` and `Bandpass.thin` are available to help remove
-    superfluous throughput evaluation wavelengths and improve speed.
+  * `sed.withFluxDensity(flux_density, wavelength) returns an SED normalized to
+    have `flux_density` (photons/nm) at `wavelength`.
+  * `sed.withFlux(flux, bandpass)` returns an SED normalized to have `flux`
+    (photons) through `bandpass`.
+  * `sed.atRedshift(z)` will return a new SED with redshift set to `z`.
+  * SEDs can be added and subtracted from each other, and multiplied and divided
+    by constants and functions of wavelength.
 * New `ChromaticObject` class to represent wavelength-dependent surface
   brightness profiles:
-  * `Chromatic(GSObject, SED)` subclass creates a separable wavelength-dependent
+  * `Chromatic(gsobj, sed)` subclass creates a separable wavelength-dependent
     surface brightness profile: I.e. one that takes the form
     f(x, y, \lambda) = g(x, y) * h(\lambda)
-  * `GSObject * SED` is a shortcut for `Chromatic(GSObject, SED)`.
+  * `gsobj * sed` is a shortcut for `Chromatic(gsobj, sed)`.
   * Galaxies with color gradients can be created as sums of separable chromatic
     profiles.
     E.g.: `gal = bulge_prof * bulge_sed + disk_prof * disk_sed`.
@@ -173,8 +182,8 @@ New chromatic functionality: (Issue #467)
     and Kolmogorov chromatic seeing for an observation at `zenith_angle`.
   * `ChromaticObject`s are drawn with almost identical syntax to `GSObjects`.
     The one difference is that `ChromaticObject`s require an additional argument,
-    (given first in line) which is the `Bandpass` throughput function against
-    which to integrate over wavelength.
+    (given first) which is the `Bandpass` throughput function against which to
+    integrate over wavelength.
     E.g., `image = chroma_obj.draw(bandpass)`
 * Added demo12.py for wavelength dependence examples.
 
