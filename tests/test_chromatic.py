@@ -140,8 +140,11 @@ def test_draw_add_commutativity():
     chromatic_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     # use chromatic parent class to draw without ChromaticConvolution acceleration...
     t4 = time.time()
+    # galsim.ChromaticObject.draw(chromatic_final, bandpass, image=chromatic_image,
+    #                             integrator=galsim.integ.midpt_continuous_integrator, N=N)
+    integrator = galsim.integ.ContinuousIntegrator(galsim.integ.midpt, N=N, use_endpoints=False)
     galsim.ChromaticObject.draw(chromatic_final, bandpass, image=chromatic_image,
-                                integrator=galsim.integ.midpt_continuous_integrator, N=N)
+                                integrator=integrator)
     t5 = time.time()
     print 'ChromaticObject.draw() took {0} seconds.'.format(t5-t4)
     # plotme(chromatic_image)
@@ -290,9 +293,12 @@ def test_dcr_moments():
 
     # analytic first moment differences
     R = lambda w:(galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec
-    x = bandpass.wave_list
-    numR1 = np.trapz(R(x) * bandpass(x) * bulge_SED(x), x)
-    numR2 = np.trapz(R(x) * bandpass(x) * disk_SED(x), x)
+    x1 = np.union1d(bandpass.wave_list, bulge_SED.wave_list)
+    x1 = x1[(x1 >= bandpass.blue_limit) & (x1 <= bandpass.red_limit)]
+    x2 = np.union1d(bandpass.wave_list, disk_SED.wave_list)
+    x2 = x2[(x2 >= bandpass.blue_limit) & (x2 <= bandpass.red_limit)]
+    numR1 = np.trapz(R(x1) * bandpass(x1) * bulge_SED(x1), x1)
+    numR2 = np.trapz(R(x2) * bandpass(x2) * disk_SED(x2), x2)
     den1 = bulge_SED.calculateFlux(bandpass)
     den2 = disk_SED.calculateFlux(bandpass)
 
@@ -303,8 +309,8 @@ def test_dcr_moments():
     # analytic second moment differences
     V1_kernel = lambda w:(R(w) - R1)**2
     V2_kernel = lambda w:(R(w) - R2)**2
-    numV1 = np.trapz(V1_kernel(x) * bandpass(x) * bulge_SED(x), x)
-    numV2 = np.trapz(V2_kernel(x) * bandpass(x) * disk_SED(x), x)
+    numV1 = np.trapz(V1_kernel(x1) * bandpass(x1) * bulge_SED(x1), x1)
+    numV2 = np.trapz(V2_kernel(x2) * bandpass(x2) * disk_SED(x2), x2)
 
     V1 = numV1/den1
     V2 = numV2/den2
@@ -359,9 +365,12 @@ def test_chromatic_seeing_moments():
         dr2byr2_image = ((mom1[2]+mom1[3]) - (mom2[2]+mom2[3])) / (mom1[2]+mom1[3])
 
         # analytic moment differences
-        x = bandpass.wave_list
-        num1 = np.trapz((x/500)**(2*index) * bandpass(x) * bulge_SED(x), x)
-        num2 = np.trapz((x/500)**(2*index) * bandpass(x) * disk_SED(x), x)
+        x1 = np.union1d(bandpass.wave_list, bulge_SED.wave_list)
+        x1 = x1[(x1 <= bandpass.red_limit) & (x1 >= bandpass.blue_limit)]
+        x2 = np.union1d(bandpass.wave_list, disk_SED.wave_list)
+        x2 = x2[(x2 <= bandpass.red_limit) & (x2 >= bandpass.blue_limit)]
+        num1 = np.trapz((x1/500)**(2*index) * bandpass(x1) * bulge_SED(x1), x1)
+        num2 = np.trapz((x2/500)**(2*index) * bandpass(x2) * disk_SED(x2), x2)
         den1 = bulge_SED.calculateFlux(bandpass)
         den2 = disk_SED.calculateFlux(bandpass)
 
@@ -409,7 +418,8 @@ def test_monochromatic_filter():
     for fw in fws:
         chromatic_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
         narrow_filter = galsim.Bandpass(galsim.LookupTable([fw-0.01, fw, fw+0.01],
-                                                           [1.0, 1.0, 1.0]))
+                                                           [1.0, 1.0, 1.0],
+                                                           interpolant='linear'))
         chromatic_image = chromatic_final.draw(narrow_filter, image=chromatic_image)
         # take out normalization
         chromatic_image /= 0.02
@@ -684,6 +694,52 @@ def test_ChromaticObject_compound_affine_transformation():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_analytic_integrator():
+    pix = galsim.Pixel(0.2)
+    psf = galsim.Moffat(fwhm=1.0, beta=2.7)
+
+    # pure analytic
+    band1 = galsim.Bandpass('1', blue_limit=500, red_limit=750)
+    sed1 = galsim.SED('wave**1.1', flux_type='fphotons').withFluxDensity(1.0, 500)
+    gal1 = galsim.Gaussian(fwhm=1.0) * sed1
+    final1 = galsim.Convolve(gal1, psf, pix)
+    image1 = galsim.ImageD(32, 32, scale=0.2)
+    assert len(band1.wave_list) == 0
+    assert len(sed1.wave_list) == 0
+    final1.draw(band1, image=image1)
+
+    # try making the SED sampled
+    band2 = band1
+    N = 250 # default N for ContinuousIntegrator
+    h = (band2.red_limit*1.0 - band2.blue_limit)/N
+    x = [band2.blue_limit + h * i for i in range(N+1)]
+    # make a sampled SED
+    sed2 = galsim.SED(galsim.LookupTable(x, sed1(x), interpolant='linear'),
+                      flux_type='fphotons')
+    gal2 = galsim.Gaussian(fwhm=1.0) * sed2
+    final2 = galsim.Convolve(gal2, psf, pix)
+    image2 = galsim.ImageD(32, 32, scale=0.2)
+    assert len(band2.wave_list) == 0
+    assert len(sed2.wave_list) != 0
+    final2.draw(band1, image=image2)
+
+    # try making the Bandpass sampled
+    sed3 = sed1
+    band3 = galsim.Bandpass(galsim.LookupTable(x, band1(x), interpolant='linear'))
+    gal3 = galsim.Gaussian(fwhm=1.0) * sed3
+    final3 = galsim.Convolve(gal3, psf, pix)
+    image3 = galsim.ImageD(32, 32, scale=0.2)
+    assert len(band3.wave_list) != 0
+    assert len(sed3.wave_list) == 0
+    final3.draw(band3, image=image3)
+
+    printval(image1, image2)
+    np.testing.assert_array_almost_equal(image1.array, image2.array, 5,
+                                         "Analytic integrator doesn't match sample integrator")
+    printval(image1, image3)
+    np.testing.assert_array_almost_equal(image1.array, image3.array, 5,
+                                         "Analytic integrator doesn't match sample integrator")
+
 if __name__ == "__main__":
     test_draw_add_commutativity()
     test_ChromaticConvolution_InterpolatedImage()
@@ -701,3 +757,4 @@ if __name__ == "__main__":
     test_ChromaticObject_applyShear()
     test_ChromaticObject_applyShift()
     test_ChromaticObject_compound_affine_transformation()
+    test_analytic_integrator()

@@ -59,8 +59,8 @@ disk_SED = galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='A')
 bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
 bandpass = bandpass.truncate(relative_throughput=0.001)
 
-bulge_SED = bulge_SED.setFlux(bandpass, 1.0)
-disk_SED = disk_SED.setFlux(bandpass, 1.0)
+bulge_SED = bulge_SED.withFlux(1.0, bandpass)
+disk_SED = disk_SED.withFlux(1.0, bandpass)
 def silentgetmoments(image1):
     xgrid, ygrid = np.meshgrid(np.arange(image1.array.shape[1]) + image1.getXMin(),
                                np.arange(image1.array.shape[0]) + image1.getYMin())
@@ -87,16 +87,18 @@ def compare_image_integrators():
     image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
     # truth flux
-    target = galsim.integ.int1d(lambda w:disk_SED(w) * bandpass(w),
-                                bandpass.blue_limit, bandpass.red_limit)
+    x = np.union1d(disk_SED.wave_list, bandpass.wave_list)
+    x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
+    target = np.trapz(disk_SED(x) * bandpass(x), x)
     print 'target'
     print '        {:14.11f}'.format(target)
 
     t1 = time.time()
     print 'midpoint'
     for N in [10, 30, 100, 300, 1000, 3000]:
-        #image = galsim.ChromaticObject.draw(final, bandpass, N=N, image=image)
-        image = final.draw(bandpass, N=N, image=image)
+        image = final.draw(
+            bandpass, image=image,
+            integrator=galsim.integ.ContinuousIntegrator(rule=galsim.integ.midpt, N=N))
         mom = silentgetmoments(image)
         outstring = '   {:4d} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f}'
         print outstring.format(N, image.array.sum(), image.array.sum()-target, *mom)
@@ -105,47 +107,14 @@ def compare_image_integrators():
 
     print 'trapezoidal'
     for N in [10, 30, 100, 300, 1000, 3000]:
-        # image = galsim.ChromaticObject.draw(final, bandpass, N=N, image=image,
-        #                                      integrator = galsim.integ.trapezoidal_int_image)
-        image = final.draw(bandpass, N=N, image=image,
-                           integrator=galsim.integ.trapezoidal_int_image)
+        image = final.draw(
+            bandpass, image=image,
+            integrator=galsim.integ.ContinuousIntegrator(rule=np.trapz, N=N))
         mom = silentgetmoments(image)
         outstring = '   {:4d} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f}'
         print outstring.format(N, image.array.sum(), image.array.sum()-target, *mom)
     t3 = time.time()
     print 'time for trapezoidal = %.2f'%(t3-t2)
-
-    print 'Simpson\'s'
-    for N in [10, 30, 100, 300, 1000, 3000]:
-        # image = galsim.ChromaticObject.draw(final, bandpass, N=N, image=image,
-        #                                      integrator = galsim.integ.simpsons_int_image)
-        image = final.draw(bandpass, N=N, image=image,
-                           integrator=galsim.integ.simpsons_int_image)
-        mom = silentgetmoments(image)
-        outstring = '   {:4d} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f}'
-        print outstring.format(N, image.array.sum(), image.array.sum()-target, *mom)
-    t4 = time.time()
-    print 'time for simpsons = %.2f'%(t4-t3)
-
-    print 'Globally Adaptive Gauss-Kronrod'
-    simpsons_image = np.array(image.array) #assume large N Simpson's is truth for comparison...
-    for rel_err in [1.e-1, 1.e-2, 1.e-3, 1.e-4, 1.e-5]:#, 1.e-6, 1.e-7, 1.e-8]:
-        # image = galsim.ChromaticObject.draw(final, bandpass, image=image,
-        #                                     integrator = galsim.integ.globally_adaptive_GK_int_image,
-        #                                     rel_err=rel_err, verbose=True)
-        image = final.draw(bandpass, image=image,
-                           integrator = galsim.integ.globally_adaptive_GK_int_image,
-                           rel_err=rel_err, verbose=True)
-        mom = silentgetmoments(image)
-        outstring = '{:4.1e} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f}'
-        print outstring.format(rel_err, image.array.sum(), image.array.sum()-target, *mom)
-        rel_err = (np.sqrt(np.mean((image.array - simpsons_image)**2))
-                   / np.abs(image.array).sum())
-        print 'relative error: {}'.format(rel_err)
-
-    t5 = time.time()
-    print 'time for Globally Adaptive Gauss-Kronrod = %.2f'%(t5-t4)
-
 
 if __name__ == '__main__':
     compare_image_integrators()

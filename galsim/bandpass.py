@@ -86,15 +86,15 @@ class Bandpass(object):
 
     """
     def __init__(self, throughput, wave_type='nm', blue_limit=None, red_limit=None, _wave_list=None):
-        # Note that `_wave_list` acts a private construction variable that overrides the way that
+        # Note that `_wave_list` acts as a private construction variable that overrides the way that
         # `wave_list` is normally constructed (see `Bandpass.__mul__` below)
 
         # Figure out input throughput type.
         tp = throughput  # For brevity within this function
-        if isinstance(tp, (str, unicode)):
+        if isinstance(tp, basestring):
             import os
             if os.path.isfile(tp):
-                tp = galsim.LookupTable(file=tp)
+                tp = galsim.LookupTable(file=tp, interpolant='linear')
             else:
                 tp = eval('lambda wave : ' + tp)
 
@@ -134,7 +134,7 @@ class Bandpass(object):
             if self.red_limit not in self.wave_list:
                 numpy.insert(self.wave_list, -1, self.red_limit)
         else:
-            self.wave_list = numpy.empty(shape=(0,), dtype=numpy.float)
+            self.wave_list = numpy.array([], dtype=numpy.float)
 
         # Manual override!  Be careful!
         if _wave_list is not None:
@@ -159,7 +159,7 @@ class Bandpass(object):
         red_limit = self.red_limit
         wave_list = self.wave_list
 
-        if isinstance(other, galsim.Bandpass):
+        if isinstance(other, (Bandpass, galsim.SED)):
             if len(other.wave_list) > 0:
                 wave_list = numpy.union1d(wave_list, other.wave_list)
             blue_limit = max([self.blue_limit, other.blue_limit])
@@ -282,7 +282,7 @@ class Bandpass(object):
             blue_limit = self.blue_limit
         if red_limit is None:
             red_limit = self.red_limit
-        if hasattr(self, 'wave_list'):
+        if len(self.wave_list) > 0:
             wave = numpy.array(self.wave_list)
             tp = self.func(wave)
             if relative_throughput is not None:
@@ -290,7 +290,7 @@ class Bandpass(object):
                 blue_limit = max([min(wave[w]), blue_limit])
                 red_limit = min([max(wave[w]), red_limit])
             w = (wave >= blue_limit) & (wave <= red_limit)
-            return Bandpass(galsim.LookupTable(wave[w], tp[w]))
+            return Bandpass(galsim.LookupTable(wave[w], tp[w], interpolant='linear'))
         else:
             if relative_throughput is not None:
                 raise ValueError("relative_throughput only available if Bandpass is specified as"
@@ -310,9 +310,9 @@ class Bandpass(object):
                                   (default: False)
         @returns  The thinned Bandpass.
         """
-        if hasattr(self, 'wave_list'):
+        if len(self.wave_list) > 0:
             x = self.wave_list
             f = self(x)
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
                                                          preserve_range=preserve_range)
-            return Bandpass(galsim.LookupTable(newx, newf))
+            return Bandpass(galsim.LookupTable(newx, newf, interpolant='linear'))

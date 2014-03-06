@@ -47,7 +47,7 @@ New features introduced in this demo:
 - SED2 = SED.atRedshift(redshift)
 - bandpass = galsim.Bandpass(filename)
 - bandpass2 = bandpass.truncate(relative_throughput=X)
-- bandpass3 = bandpass2.thin(step)
+- bandpass3 = bandpass2.thin(rel_err)
 - gal = galsim.Chromatic(GSObject, wave, photons)
 - gal = GSObject * SED
 - obj = galsim.Add([list of ChromaticObjects])
@@ -100,10 +100,11 @@ def main(argv):
         filter_filename = os.path.join(datapath, 'LSST_{}.dat'.format(filter_name))
         # Columns required to be 1) Wavelength in nm, 2) Dimensionless throughput
         filters[filter_name] = galsim.Bandpass(filter_filename)
-        # don't waste time integrating where there's less than 1% relative throughput.
-        filters[filter_name] = filters[filter_name].truncate(relative_throughput=0.01)
-        # and thin out the wavelength sampling by a factor of 10 to also improve speed.
-        filters[filter_name] = filters[filter_name].thin(10)
+        # and thin out the wavelength sampling
+        # rel_err here specifies the relative error when integrating over just the filter
+        # (however, this is not necessarily the relative error when integrating over the
+        #  filter times an SED)
+        filters[filter_name] = filters[filter_name].thin(rel_err=1e-4)
     logger.debug('Read in filters')
 
     pixel_scale = 0.2 # arcseconds

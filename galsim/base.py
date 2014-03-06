@@ -37,7 +37,9 @@ Image is acceptable.
 """
 
 import os
-import collections
+
+import numpy as np
+
 import galsim
 import utilities
 
@@ -118,6 +120,7 @@ class GSObject(object):
             raise TypeError("GSObject must be initialized with an SBProfile or another GSObject!")
         # a couple of definitions for using GSObjects as duck-typed ChromaticObjects
         self.SED = lambda w: 1.0 # flat spectrum in photons/nanometer
+        self.wave_list = np.array([], dtype=float)
         self.separable = True
 
     # Make op+ of two GSObjects work to return an Add object
@@ -229,23 +232,23 @@ class GSObject(object):
 
     def xValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in real space.
-        
+
         This function returns the surface brightness of the object at a particular position
         in real space.  The position argument may be provided as a PositionD or PositionI
-        argument, or it may be given as x,y (either as a tuple or as two arguments). 
-        
+        argument, or it may be given as x,y (either as a tuple or as two arguments).
+
         The object surface brightness profiles are typically defined in world coordinates, so
         the position here should be in world coordinates as well.
 
-        Not all GSObject classes can use this method.  Classes like Convolve that require a 
-        Discrete Fourier Transform to determine the real space values will not do so for a 
-        single position.  Instead a RuntimeError will be raised.  The xValue(pos) method 
+        Not all GSObject classes can use this method.  Classes like Convolve that require a
+        Discrete Fourier Transform to determine the real space values will not do so for a
+        single position.  Instead a RuntimeError will be raised.  The xValue(pos) method
         is available if and only if obj.isAnalyticX() == True.
 
-        Users who wish to use the xValue() method for an object that is the convolution of other 
-        profiles can do so by drawing the convolved profile into an image, using the image to 
+        Users who wish to use the xValue() method for an object that is the convolution of other
+        profiles can do so by drawing the convolved profile into an image, using the image to
         initialize a new InterpolatedImage, and then using the xValue() method for that new object.
-        
+
         @param position  The position at which you want the surface brightness of the object.
         @returns xvalue  The surface brightness at that position.
         """
@@ -256,11 +259,11 @@ class GSObject(object):
         """Returns the value of the object at a chosen 2D position in k space.
 
         This function returns the amplitude of the fourier transform of the surface brightness
-        profile at a given position in k space.  The position argument may be provided as a 
-        PositionD or PositionI argument, or it may be given as kx,ky (either as a tuple or as two 
-        arguments). 
+        profile at a given position in k space.  The position argument may be provided as a
+        PositionD or PositionI argument, or it may be given as kx,ky (either as a tuple or as two
+        arguments).
 
-        Techinically, kValue() is available if and only if the given obj has obj.isAnalyticK() 
+        Techinically, kValue() is available if and only if the given obj has obj.isAnalyticK()
         == True, but this is the case for all GSObjects currently, so that should never be an
         issue (unlike for xValue).
 
@@ -366,7 +369,6 @@ class GSObject(object):
 
         @param mu The lensing magnification to apply.
         """
-        import numpy as np
         self.applyExpansion(np.sqrt(mu))
 
     def applyShear(self, *args, **kwargs):
@@ -444,14 +446,14 @@ class GSObject(object):
     def applyTransformation(self, dudx, dudy, dvdx, dvdy):
         """Apply a transformation to this object defined by an arbitrary Jacobian matrix.
 
-        This applies a Jacobian matrix to the coordinate system in which this object 
-        is defined.  It changes a profile defined in terms of (x,y) to one defined in 
+        This applies a Jacobian matrix to the coordinate system in which this object
+        is defined.  It changes a profile defined in terms of (x,y) to one defined in
         terms of (u,v) where:
 
             u = dudx x + dudy y
             v = dvdx x + dvdy y
 
-        That is, an arbitrary affine transform, but without the translation (which is 
+        That is, an arbitrary affine transform, but without the translation (which is
         easily effected via applyShift).
 
         Note that this function is similar to applyExpansion in that it preserves
@@ -473,7 +475,7 @@ class GSObject(object):
             self.noise.applyTransformation(dudx,dudy,dvdx,dvdy)
         self.SBProfile.applyTransformation(dudx,dudy,dvdx,dvdy)
         self.__class__ = GSObject
- 
+
 
     def applyShift(self, *args, **kwargs):
         """Apply a (dx, dy) shift to this object.
@@ -602,18 +604,18 @@ class GSObject(object):
         ret = self.copy()
         ret.applyRotation(theta)
         return ret
-        
+
     def createTransformed(self, dudx, dudy, dvdx, dvdy):
         """Returns a new GSObject by applying a transformation given by a Jacobian matrix.
 
-        This applies a Jacobian matrix to the coordinate system in which this object 
+        This applies a Jacobian matrix to the coordinate system in which this object
         is defined.  It takes a profile defined in terms of (x,y) and returns the equivalent
         profile defined in terms of (u,v) where:
 
             u = dudx x + dudy y
             v = dvdx x + dvdy y
 
-        That is, an arbitrary affine transform, but without the translation (which is 
+        That is, an arbitrary affine transform, but without the translation (which is
         easily effected via applyShift).
 
         @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
@@ -625,7 +627,7 @@ class GSObject(object):
         ret = self.copy()
         ret.applyTransformation(dudx,dudy,dvdx,dvdy)
         return ret
-        
+
     def createShifted(self, *args, **kwargs):
         """Returns a new GSObject by applying a shift.
 
@@ -671,7 +673,6 @@ class GSObject(object):
                 if scale_is_dk:
                     # scale = 2pi / (N*dk)
                     dk = image.scale
-                    import numpy as np
                     scale = 2.*np.pi/( np.max(image.array.shape) * image.scale )
                 else:
                     scale = image.scale
@@ -687,7 +688,6 @@ class GSObject(object):
         elif scale_is_dk:
             dk = float(scale)
             if image is not None:
-                import numpy as np
                 scale = 2.*np.pi/( np.max(image.array.shape) * dk )
             else:
                 scale = self.SBProfile.nyquistDx()
@@ -751,10 +751,10 @@ class GSObject(object):
             else:
                 # Let python raise the appropriate exception if this isn't valid.
                 return galsim.PositionD(offset[0], offset[1])
-       
+
 
     def _fix_center(self, image, wcs, offset, use_true_center, reverse):
-        # This is a touch circular since we may not know the image shape or scale yet. 
+        # This is a touch circular since we may not know the image shape or scale yet.
         # So we need to repeat a little bit of what will be done again in _draw_setup_image
         #
         # - If the image is None, then it will be built with even sizes, and all fix_center
@@ -790,7 +790,7 @@ class GSObject(object):
             # Should have already checked that wcs is uniform, so local() without an
             # image_pos argument should be ok.
             wcs = wcs.local()
- 
+
         if use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the
             # pixel just up and right of the real center.  So shift it back to make sure it really
@@ -803,7 +803,7 @@ class GSObject(object):
             offset = galsim.PositionD(dx,dy)
 
         # For InterpolatedImage offsets, we apply the offset in the opposite direction.
-        if reverse: 
+        if reverse:
             offset = -offset
 
         if offset == galsim.PositionD(0,0):
@@ -829,7 +829,7 @@ class GSObject(object):
         else:
             # else leave wcs = None
             return None
- 
+
     def draw(self, image=None, scale=None, wcs=None, gain=1., wmult=1., normalization="flux",
              add_to_image=False, use_true_center=True, offset=None):
         """Draws an Image of the object, with bounds optionally set by an input Image.

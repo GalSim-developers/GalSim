@@ -25,6 +25,7 @@ import copy
 import numpy as np
 
 import galsim
+import utilities
 
 class SED(object):
     """Simple SED object to represent the spectral energy distributions of stars and galaxies.
@@ -81,6 +82,7 @@ class SED(object):
 
     """
     def __init__(self, spec, wave_type='nm', flux_type='flambda'):
+        # Figure out input wavelength type
         if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
             wave_factor = 1.0
         elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
@@ -88,19 +90,22 @@ class SED(object):
         else:
             raise ValueError("Unknown wave_type `{}` in SED.__init__".format(wave_type))
 
-        if isinstance(spec, (str, unicode)):
+        # Figure out input flux density type
+        if isinstance(spec, basestring):
             import os
             if os.path.isfile(spec):
-                spec = galsim.LookupTable(file=spec)
+                spec = galsim.LookupTable(file=spec, interpolant='linear')
             else:
                 spec = eval('lambda wave : ' + spec)
 
         if isinstance(spec, galsim.LookupTable):
             self.blue_limit = spec.x_min / wave_factor
             self.red_limit = spec.x_max / wave_factor
+            self.wave_list = np.array(spec.getArgs())/wave_factor
         else:
             self.blue_limit = None
             self.red_limit = None
+            self.wave_list = np.array([], dtype=float)
 
         if flux_type == 'flambda':
             self.fphotons = lambda w: spec(np.array(w) * wave_factor) * w
@@ -194,10 +199,12 @@ class SED(object):
         return self.__rdiv__(other)
 
     def __add__(self, other):
-        # Add together two SEDs, with the following two caveats:
+        # Add together two SEDs, with the following caveats:
         # 1) The resulting SED will be defined on the wavelength range set by the overlap of the
         #    wavelength ranges of the two SED operands.
-        # 2) The SED `redshift` attribute will be reset to zero.
+        # 2) If both SEDs maintain a `wave_list` attribute, then the new `wave_list` will be
+        #    the union of the old `wave_list`s in the intersecting region.
+        # 3) The resulting SED `redshift` attribute will be set to zero.
         # This ensures that SED addition is commutative.
 
         # Find overlapping wavelength interval
@@ -207,6 +214,11 @@ class SED(object):
         ret.red_limit = red_limit
         ret.fphotons = lambda w: self(w) + other(w)
         ret.redshift = 0
+        if len(self.wave_list) > 0 and len(other.wave_list) > 0:
+            wave_list = np.union1d(self.wave_list, other.wave_list)
+            wave_list = wave_list[wave_list <= red_limit]
+            wave_list = wave_list[wave_list >= blue_limit]
+            ret.wave_list = wave_list
         return ret
 
     def __sub__(self, other):
@@ -284,9 +296,31 @@ class SED(object):
                 red_limit = self.red_limit
             return galsim.integ.int1d(self.fphotons, blue_limit, red_limit)
         else: # do flux through bandpass
-            if hasattr(bandpass, 'wave_list'):
-                x = bandpass.wave_list
+            if len(bandpass.wave_list) > 0:
+                x = np.union1d(bandpass.wave_list, self.wave_list)
+                x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
                 return np.trapz(bandpass(x) * self.fphotons(x), x)
             else:
                 return galsim.integ.int1d(lambda w: bandpass(w)*self.fphotons(w),
                                           bandpass.blue_limit, bandpass.red_limit)
+
+    def thin(self, rel_err=1.e-4, preserve_range=False):
+        """ If the SED was initialized with a galsim.LookupTable or from a file (which
+        internally creates a galsim.LookupTable), then remove tabulated values while keeping
+        the integral over the over the set of tabulated values still accurate to `rel_err`.
+
+        @param rel_err            The relative error allowed in the integral over the SED
+                                  (default: 1.e-4)
+        @param preserve_range     Should the original range (`blue_limit` and `red_limit`) of the
+                                  SED be preserved? (True) Or should the ends be trimmed to
+                                  include only the region where the integral is significant? (False)
+                                  (default: False)
+        @returns  The thinned SED.
+        """
+        if len(self.wave_list) > 0:
+            x = self.wave_list
+            f = self(x)
+            newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
+                                                         preserve_range=preserve_range)
+            return SED(galsim.LookupTable(newx, newf, interpolant='linear'),
+                       flux_type='fphotons')

@@ -1,4 +1,5 @@
 import os
+import time
 
 import numpy as np
 
@@ -13,14 +14,15 @@ def dDCR_moments(SED1, SED2, bandpass):
 
     # analytic first moment differences
     R = lambda w:(galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec
-    numR1 = galsim.integ.int1d(lambda w: R(w) * bandpass(w) * SED1(w),
-                               bandpass.blue_limit, bandpass.red_limit)
-    numR2 = galsim.integ.int1d(lambda w: R(w) * bandpass(w) * SED2(w),
-                               bandpass.blue_limit, bandpass.red_limit)
-    den1 = galsim.integ.int1d(lambda w:bandpass(w) * SED1(w),
-                              bandpass.blue_limit, bandpass.red_limit)
-    den2 = galsim.integ.int1d(lambda w:bandpass(w) * SED2(w),
-                              bandpass.blue_limit, bandpass.red_limit)
+    x1 = np.union1d(bandpass.wave_list, SED1.wave_list)
+    x1 = x1[(x1 >= bandpass.blue_limit) & (x1 <= bandpass.red_limit)]
+    x2 = np.union1d(bandpass.wave_list, SED2.wave_list)
+    x2 = x2[(x2 >= bandpass.blue_limit) & (x2 <= bandpass.red_limit)]
+    numR1 = np.trapz(R(x1) * bandpass(x1) * SED1(x1), x1)
+    numR2 = np.trapz(R(x2) * bandpass(x2) * SED2(x2), x2)
+    den1 = SED1.calculateFlux(bandpass)
+    den2 = SED2.calculateFlux(bandpass)
+
     R1 = numR1/den1
     R2 = numR2/den2
     dR_analytic = R1 - R2
@@ -28,27 +30,25 @@ def dDCR_moments(SED1, SED2, bandpass):
     # analytic second moment differences
     V1_kernel = lambda w:(R(w) - R1)**2
     V2_kernel = lambda w:(R(w) - R2)**2
-    numV1 = galsim.integ.int1d(lambda w:V1_kernel(w) * bandpass(w) * SED1(w),
-                               bandpass.blue_limit, bandpass.red_limit)
-    numV2 = galsim.integ.int1d(lambda w:V2_kernel(w) * bandpass(w) * SED2(w),
-                               bandpass.blue_limit, bandpass.red_limit)
+    numV1 = np.trapz(V1_kernel(x1) * bandpass(x1) * SED1(x1), x1)
+    numV2 = np.trapz(V2_kernel(x2) * bandpass(x2) * SED2(x2), x2)
     V1 = numV1/den1
     V2 = numV2/den2
     dV_analytic = V1 - V2
 
-    return dR_analytic, dV_analytic
+    return dR_analytic, dV_analytic, len(x2)
 
 def dseeing_moments(SED1, SED2, bandpass):
     index = -0.2
     # analytic moment differences
-    num1 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * bandpass(w) * SED1(w),
-                              bandpass.blue_limit, bandpass.red_limit)
-    num2 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * bandpass(w) * SED2(w),
-                              bandpass.blue_limit, bandpass.red_limit)
-    den1 = galsim.integ.int1d(lambda w:bandpass(w) * SED1(w),
-                              bandpass.blue_limit, bandpass.red_limit)
-    den2 = galsim.integ.int1d(lambda w:bandpass(w) * SED2(w),
-                              bandpass.blue_limit, bandpass.red_limit)
+    x1 = np.union1d(bandpass.wave_list, SED1.wave_list)
+    x1 = x1[(x1 <= bandpass.red_limit) & (x1 >= bandpass.blue_limit)]
+    x2 = np.union1d(bandpass.wave_list, SED2.wave_list)
+    x2 = x2[(x2 <= bandpass.red_limit) & (x2 >= bandpass.blue_limit)]
+    num1 = np.trapz((x1/500)**(2*index) * bandpass(x1) * SED1(x1), x1)
+    num2 = np.trapz((x2/500)**(2*index) * bandpass(x2) * SED2(x2), x2)
+    den1 = SED1.calculateFlux(bandpass)
+    den2 = SED2.calculateFlux(bandpass)
 
     r2_1 = num1/den1
     r2_2 = num2/den2
@@ -96,9 +96,28 @@ def compare_thin():
                     print out.format(
                         str(rel_err), dDCR_thinned[0], dDCR_thinned[1],
                         dseeing_thinned, flux_thinned,
-                        dDCR[0] - dDCR_thinned[0], dDCR[1] - dDCR_thinned[1],
-                        dseeing - dseeing_thinned, (flux - flux_thinned)/flux)
+                        dDCR_thinned[0] - dDCR[0], dDCR_thinned[1] - dDCR[1],
+                        dseeing_thinned - dseeing, (flux_thinned - flux)/flux)
                 print
+
+    print '{0:8s} {1:>8s} {2:>8s}'.format('rel_err', 'time', 'Neval')
+    t0 = time.time()
+    for i in range(20):
+        dDCR_thinned = dDCR_moments(SED1, SED, band)
+        dseeing_thinned = dseeing_moments(SED1, SED, band)
+        flux_thinned = SED.calculateFlux(band)
+    t1 = time.time()
+    print '{0:8s} {1:8.5f} {2:8d}'.format('full', t1-t0, dDCR_thinned[2])
+
+    for rel_err in rel_errs:
+        band1 = band.thin(rel_err=rel_err)
+        t0 = time.time()
+        for i in range(20):
+            dDCR_thinned = dDCR_moments(SED1, SED, band1)
+            dseeing_thinned = dseeing_moments(SED1, SED, band1)
+            flux_thinned = SED.calculateFlux(band1)
+        t1 = time.time()
+        print '{0:8s} {1:8.5f} {2:8d}'.format(str(rel_err), t1-t0, dDCR_thinned[2])
 
 if __name__ == '__main__':
     compare_thin()
