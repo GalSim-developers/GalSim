@@ -21,6 +21,14 @@
 
 import galsim
 import numpy as np
+# We are going to try to import the Bessel function routine jv from scipy.special, so that if we
+# have it, then we can use it for correlation function calculations without importing it during each
+# iteration.  However, people who don't want to use the calculateXi method don't care about failure,
+# so for now we do nothing if this import statement fails.  We can raise an exception when that method is called.
+try:
+    from scipy.special import jv
+except:
+    pass
 
 def theoryToObserved(gamma1, gamma2, kappa):
     """Helper function to convert theoretical lensing quantities to observed ones.
@@ -103,11 +111,11 @@ class PowerSpectrum(object):
     The effective shear correlation function for the gridded points will be modified both because of
     the DFT approach to representing shears according to a power spectrum, and because of the power
     cutoff below and above the minimum k values.  The latter effect can be particularly important on
-    large scales, and so the buildGrid() method has some keywords that can be used to reduce the
+    large scales, so the buildGrid() method has some keywords that can be used to reduce the
     impact of the minimum k set by the grid extent.  The calculateXi() method can be used to
     calculate the expected shear correlation functions given the minimum and maximum k for some grid
     (but ignoring the discrete vs. continuous Fourier transform effects), for comparison with some
-    ideal theoretical value given an infinite k range.
+    ideal theoretical correlation function given an infinite k range.
 
     When interpolating the shears to non-gridded points, the shear correlation function and power
     spectrum are modified; see the getShear and other `get` method docstrings for more details.
@@ -115,13 +123,13 @@ class PowerSpectrum(object):
     The power spectra to be used
     ----------------------------
 
-    When creating a PowerSpectrum instance, you must specify at least one of the E or B mode 
-    power spectra, which is normally given as a function P(k).  The typical thing is to just 
-    use a lambda function in Python (i.e., a function that is not associated with a name); 
-    for example, to define P(k)=k^2, one would use `lambda k : k**2`.  But they can also be more 
-    complicated user-defined functions that take a single argument k and return the power at that 
-    k value, or they can be instances of the LookupTable class for power spectra that are known 
-    at particular k values but for which there is not a simple analytic form.
+    When creating a PowerSpectrum instance, you must specify at least one of the E or B mode power
+    spectra, which is normally given as a function P(k).  The typical thing is to just use a lambda
+    function in Python (i.e., a function that is not associated with a name); for example, to define
+    P(k)=k^2, one would use `lambda k : k**2`.  But the power spectra can also be more complicated
+    user-defined functions that take a single argument k and return the power at that k value, or
+    they can be instances of the LookupTable class for power spectra that are known at particular k
+    values but for which there is not a simple analytic form.
     
     Cosmologists often express the power spectra in terms of an expansion in spherical harmonics
     (ell), i.e., the C_ell values.  In the flat-sky limit, we can replace ell with k and C_ell with
@@ -131,7 +139,7 @@ class PowerSpectrum(object):
     P(k), but it is possible to instead give it Delta^2 by setting the optional keyword `delta2 =
     True` in the constructor.
 
-    The power functions must return a list/array that is the same size as what it was given, e.g.,
+    The power functions must return a list/array that is the same size as what they are given, e.g.,
     in the case of no power or constant power, a function that just returns a float would not be
     permitted; it would have to return an array of floats all with the same value.
 
@@ -139,7 +147,7 @@ class PowerSpectrum(object):
     should use the same units for k and P(k), i.e., if k is in inverse radians then P(k) should be
     in radians^2 (as is natural for outputs from a cosmological shear power spectrum calculator).
     However, when we actually draw images, there is a natural scale that defines the pitch of the
-    image (dx), which is typically taken to be arcsec.  This definition of a specific length scale
+    image, which is typically taken to be arcsec.  This definition of a specific length scale
     means that by default we assume all quantities to the PowerSpectrum are in arcsec, and those are
     the units used for internal calculations, but the `units` keyword can be used to specify
     different input units for P(k) (again, within the constraint that k and P(k) must be
@@ -390,11 +398,13 @@ class PowerSpectrum(object):
                                     kmax = pi / grid_spacing * kmax_factor
                                 [default `kmax_factor = 1`; must be an integer]
         @param bandlimit        (Optional) Keyword determining how to handle power P(k) above the
-                                limiting k value, kmax.  The options None, 'hard', and soft
+                                limiting k value, kmax.  The options None, 'hard', and 'soft'
                                 correspond to doing nothing (i.e., allow P(>kmax) to be aliased to
                                 lower k values), cutting off all power above kmax, and applying a
-                                softening filter to gradually cut off power above kmax.  [default
-                                'bandlimit="hard"']
+                                softening filter to gradually cut off power above kmax.  Use of this
+                                keyword does not modify the internally-stored power spectrum, just
+                                the shears generated for this particular call to
+                                `buildGrid`. [default `bandlimit="hard"`]
 
         @return g1,g2[,kappa]   2-d NumPy arrays for the shear components g_1, g_2 and (if
                                 `get_convergence=True`) convergence kappa.
@@ -489,11 +499,12 @@ class PowerSpectrum(object):
         b_power_function = self._convert_power_function(self.b_power_function,'b_power_function')
 
         # Figure out how to apply band limit if requested.
-        # Start by calculating kmax in the appropriate units.
-        # Generally, it should be kmax_factor*pi/(grid spacing).  We have already converted the
-        # user-input grid spacing to arcsec, the units that the PowerSpectrum class uses
-        # internally.
-        k_max = kmax_factor * np.pi / grid_spacing
+        # Start by calculating kmax in the appropriate units:
+        # Generally, it should be kmax_factor*pi/(input grid spacing).  We have already converted
+        # the user-input grid spacing to arcsec, the units that the PowerSpectrum class uses
+        # internally, and divided it by kmax_factor to get self.grid_spacing, so here we just use
+        # pi/self.grid_spacing.
+        k_max = np.pi / self.grid_spacing
         if bandlimit == 'hard':
             def bandlimit_func(k, k_max):
                 return self._hard_cutoff(k, k_max)
@@ -569,8 +580,8 @@ class PowerSpectrum(object):
         buildGrid.
 
         This routine can be used after buildGrid(), in order to use a subset of the grid points
-        corresponding to every Nth point along both dimensions.  All internal parameters such as the
-        shear and convergence values, the grid spacing, etc. get properly updated.
+        corresponding to every Nth point along both dimensions.  All internally-stored parameters
+        such as the shear and convergence values, the grid spacing, etc. get properly updated.
 
         @param subsample_fac      Factor by which to subsample the gridded shear and convergence
                                   fields.  This is currently required to be a factor of ngrid.
@@ -580,7 +591,7 @@ class PowerSpectrum(object):
         """
         # Check that buildGrid has already been called.
         if not hasattr(self, 'im_g1'):
-            raise RuntimeError("PowerSpectrum.buildGrid must be called before getShear")
+            raise RuntimeError("PowerSpectrum.buildGrid must be called before subsampleGrid")
 
         # Check that subsample_fac is a factor of ngrid.
         effective_ngrid = self.im_g1.array.shape[0]
@@ -595,7 +606,7 @@ class PowerSpectrum(object):
         self.im_kappa = galsim.ImageViewD(
             np.ascontiguousarray(self.im_kappa.array[::subsample_fac,::subsample_fac]))
 
-        # Update internal parameters: grid_spacing, center, grid size.
+        # Update internal parameters: grid_spacing, center.
         if self.adjust_center:
             self.center += galsim.PositionD(0.5,0.5) * self.grid_spacing * (subsample_fac-1)
         self.grid_spacing *= subsample_fac
@@ -630,26 +641,26 @@ class PowerSpectrum(object):
                     "Power function MUST return a list/array same length as input")
         return pf
 
-    def calculateXi(self, grid_spacing=None, ngrid=None, kmax_factor=1, kmin_factor=1, n_theta=100,
+    def calculateXi(self, grid_spacing, ngrid, kmax_factor=1, kmin_factor=1, n_theta=100,
                     units=galsim.arcsec, bandlimit="hard"):
         """Calculate shear correlation functions for the current power spectrum on the specified grid.
 
         This function will calculate the theoretical shear correlation functions, xi_+ and xi_-, for
-        this power spectrum and grid configuration, taking into account the minimum and maximum k
-        range implied by the grid parameters, kmin_factor, and kmax_factor.  Most theoretical
-        correlation function calculators assume an infinite k range, so this utility can be used to
-        check how close the chosen grid parameters (and the implied minimum and maximum k) come to
-        the "ideal" result.  This is particularly useful on large scales, since in practice the
-        finite grid spacing limits the maximum k value and therefore can result in reduced shear
-        correlations on large scales.  Note that the actual shear correlation function in the
-        generated shears will differ from the one calculated here due to differences between the
-        discrete and continuous Fourier transform.
+        this power spectrum and the grid configuration specified using keyword arguments, taking
+        into account the minimum and maximum k range implied by the grid parameters, kmin_factor,
+        and kmax_factor.  Most theoretical correlation function calculators assume an infinite k
+        range, so this utility can be used to check how close the chosen grid parameters (and the
+        implied minimum and maximum k) come to the "ideal" result.  This is particularly useful on
+        large scales, since in practice the finite grid extent limits the minimum k value and
+        therefore can suppress shear correlations on large scales.  Note that the actual shear
+        correlation function in the generated shears will still differ from the one calculated here
+        due to differences between the discrete and continuous Fourier transform.
 
         The quantities that are returned are three NumPy arrays: separation theta (in the adopted
         units), xi_+, and xi_-.  These are defined in terms of the E- and B-mode shear power
         spectrum as in the document `devel/modules/lensing_engine.pdf`, equations 2 and 3.
 
-        This method requires SciPy.  It has been tested with reasonably cosmological shear power
+        Use of this method requires SciPy.  It has been tested with cosmological shear power
         spectra; users should check for sanity of outputs if attempting to use power spectra that
         have very different scalings with k.
 
@@ -670,18 +681,23 @@ class PowerSpectrum(object):
         @param n_theta          (Optional) Number of logarithmically spaced bins in angular
                                 separation. [default `n_theta=100`]
         @param bandlimit        (Optional) Keyword determining how to handle power P(k) above the
-                                limiting k value, kmax.  The options None, 'hard', and soft
+                                limiting k value, kmax.  The options None, 'hard', and 'soft'
                                 correspond to doing nothing (i.e., allow P(>kmax) to be aliased to
                                 lower k values), cutting off all power above kmax, and applying a
-                                softening filter to gradually cut off power above kmax.  [default
-                                'bandlimit="hard"']
+                                softening filter to gradually cut off power above kmax.  Use of this
+                                keyword does not modify the internally-stored power spectrum, just
+                                the result generated by this particular call to `calculateXi`.
+                                [default `bandlimit="hard"`]
 
         @return theta, xi_+, xi_-   1-d NumPy arrays for the angular separation theta and the two
                                     shear correlation functions.
         """
-        # Check problem cases for regular grid of points
-        if grid_spacing is None or ngrid is None:
-            raise ValueError("Both a spacing and a size are required for calculateXi.")
+        # Make sure we have scipy, which is needed for the Bessel functions.
+        try:
+            import scipy
+        except:
+            raise RuntimeError("calculateXi method requires SciPy!")
+
         # Check for validity of integer values
         if not isinstance(ngrid, int):
             if ngrid != int(ngrid):
@@ -771,12 +787,11 @@ class PowerSpectrum(object):
         else:
             p_B = lambda k : b_power_function(k) * bandlimit_func(k, k_max)
 
-        # Get k_min, k_max values in arcsec:
+        # Get k_min value in arcsec:
         k_min = 2.*np.pi / (ngrid * grid_spacing * kmin_factor)
-        k_max = np.pi * kmax_factor / grid_spacing
 
         # Do the actual integration for each of the separation values, now that we have power
-        # spectrum functions.
+        # spectrum functions p_E and p_B.
         xi_p = np.zeros(n_theta)
         xi_m = np.zeros(n_theta)
         for i_theta in range(n_theta):
@@ -811,7 +826,11 @@ class PowerSpectrum(object):
     def _softening_function(self, k, k_max):
         """Softening function for the power spectrum band-limiting step, instead of a hard cut in k.
 
-        We use an arctan function to go smoothly from 1 to 0 above k_max.
+        We use an arctan function to go smoothly from 1 to 0 above k_max.  The input k values can be
+        in any units, as long as the choice of units for `k` and `k_max` is the same.
+
+        @param k       Fourier wavenumber k.
+        @param k_max   Fourier wavenumber for the maximum k value.
         """
         # The magic numbers in the code below come from the following:
         # We define the function as
@@ -839,7 +858,11 @@ class PowerSpectrum(object):
 
     def _wrap_image(self, im, border=7):
         """
-        Utility function to wrap an image with some number of border pixels.
+        Utility function to wrap an input image with some number of border pixels.  By default, the
+        number of border pixels is 7, but this function works as long as it's less than the size of
+        the input image itself.  This function is used for periodic interpolation by the
+        `getShear()` and other methods, but eventually if we make a 2d LookupTable-type class, this
+        should become a method of that class.
         """
         # We should throw an exception if the image is smaller than 'border', since at this point
         # this process doesn't make sense.
@@ -851,10 +874,10 @@ class PowerSpectrum(object):
         im_new = galsim.ImageD(expanded_bounds)
         # Make the central subarray equal to what we want.
         im_new[im.bounds] = galsim.Image(im)
-        # Set the strips around the center properly.  There are four strips around the edge, and 4
-        # corner squares that need to be filled in.  Consider turning this into some method at the
-        # C++ layer, but for now, we write it allllll out here.  Surely there must be a smarter
-        # python-y way of doing this, but I'm not clever enough to figure it out.
+        # Set the empty bits around the center properly.  There are four strips around the edge, and
+        # 4 corner squares that need to be filled in.  Surely there must be a smarter python-y way
+        # of doing this, but I'm not clever enough to figure it out.  This is basically the grossest
+        # code I've ever written, but it works properly.  Anyone who wants is welcome to fix it.
         ## Strip along left-hand side
         b1 = border-1
         im_new[galsim.BoundsI(expanded_bounds.xmin, im.bounds.xmin-1,
@@ -915,13 +938,13 @@ class PowerSpectrum(object):
         spectrum and correlation function somewhat, though the effects can be limited by careful
         choice of grid parameters (see buildGrid() docstring for details).  Assuming those
         guidelines are followed, then the shear correlation function modifications due to use of the
-        quintic, Lanczos-3, and Lanczos-5 interpolants are below 5% on all scales, typically below
-        2%.  The linear, cubic, and nearest interpolants perform significantly more poorly, with
-        modifications of the correlation functions that can reach tens of percent on the scales
-        where the recommended interpolants perform well.  Thus, the default interpolant is
-        Lanczos-5, and users should think carefully about the acceptability of significant
-        modification of the shear correlation function before changing to use linear, cubic, or
-        nearest.
+        quintic, Lanczos-3, and Lanczos-5 interpolants are below 5% on all scales from the grid
+        spacing to the total grid extent, typically below 2%.  The linear, cubic, and nearest
+        interpolants perform significantly more poorly, with modifications of the correlation
+        functions that can reach tens of percent on the scales where the recommended interpolants
+        perform well.  Thus, the default interpolant is Lanczos-5, and users should think carefully
+        about the acceptability of significant modification of the shear correlation function before
+        changing to use linear, cubic, or nearest.
 
         Users who wish to ensure that the shear power spectrum is preserved post-interpolation
         should consider using the `periodic` interpolation option, which assumes the shear field is
@@ -1005,8 +1028,11 @@ class PowerSpectrum(object):
             # wrapped grid bits around the edges, because otherwise the interpolant will treat
             # everything off the edges as zero.
             if periodic:
-                # Make an expanded bounds.  We expand by 7 (default) to be safe, though most
-                # interpolants don't need that much.
+                # Make an expanded image.  We expand by 7 (default) to be safe, though most
+                # interpolants don't need that much.  Note that we do NOT overwrite the stored data
+                # in the PowerSpectrum instance with anything that is done here, so what's being
+                # done here must be redone in subsequent calls to getShear with periodic
+                # interpolation.
                 g1_r_new = self._wrap_image(g1_r)
                 g2_r_new = self._wrap_image(g2_r)
 
@@ -1082,18 +1108,18 @@ class PowerSpectrum(object):
         spectrum and correlation function somewhat, though the effects can be limited by careful
         choice of grid parameters (see buildGrid() docstring for details).  Assuming those
         guidelines are followed, then the shear correlation function modifications due to use of the
-        quintic, Lanczos-3, and Lanczos-5 interpolants are below 5% on all scales, typically below
-        2%.  The linear, cubic, and nearest interpolants perform significantly more poorly, with
-        modifications of the correlation functions that can reach tens of percent on the scales
-        where the recommended interpolants perform well.  Thus, the default interpolant is
-        Lanczos-5, and users should think carefully about the acceptability of significant
-        modification of the shear correlation function before changing to use linear, cubic, or
-        nearest.  We expect that these results for shear correlations should carry over to
-        convergence correlations, as well.
+        quintic, Lanczos-3, and Lanczos-5 interpolants are below 5% on all scales from the grid
+        spacing to the total grid extent, typically below 2%.  The linear, cubic, and nearest
+        interpolants perform significantly more poorly, with modifications of the correlation
+        functions that can reach tens of percent on the scales where the recommended interpolants
+        perform well.  Thus, the default interpolant is Lanczos-5, and users should think carefully
+        about the acceptability of significant modification of the shear correlation function before
+        changing to use linear, cubic, or nearest.  We expect that these results for shear
+        correlations should carry over to convergence correlations, as well.
 
         The usage of getConvergence is the same as for getShear, except that it returns only a
-        single number rather than a pair of numbers.  See documentation for getShear for some
-        examples.
+        single quantity (convergence value or array of convergence values) rather than two
+        quantities.  See documentation for getShear for some examples.
 
         @param pos              Position(s) of the source(s), assumed to be post-lensing!
                                 Valid ways to input this:
@@ -1200,18 +1226,18 @@ class PowerSpectrum(object):
         spectrum and correlation function somewhat, though the effects can be limited by careful
         choice of grid parameters (see buildGrid() docstring for details).  Assuming those
         guidelines are followed, then the shear correlation function modifications due to use of the
-        quintic, Lanczos-3, and Lanczos-5 interpolants are below 5% on all scales, typically below
-        2%.  The linear, cubic, and nearest interpolants perform significantly more poorly, with
-        modifications of the correlation functions that can reach tens of percent on the scales
-        where the recommended interpolants perform well.  Thus, the default interpolant is
-        Lanczos-5, and users should think carefully about the acceptability of significant
-        modification of the shear correlation function before changing to use linear, cubic, or
-        nearest.  We expect that these results for shear correlations should carry over to
-        magnification correlations, as well.
+        quintic, Lanczos-3, and Lanczos-5 interpolants are below 5% on all scales from the grid
+        spacing to the total grid extent, typically below 2%.  The linear, cubic, and nearest
+        interpolants perform significantly more poorly, with modifications of the correlation
+        functions that can reach tens of percent on the scales where the recommended interpolants
+        perform well.  Thus, the default interpolant is Lanczos-5, and users should think carefully
+        about the acceptability of significant modification of the shear correlation function before
+        changing to use linear, cubic, or nearest.  We expect that these results for shear
+        correlations should carry over to magnification correlations, as well.
 
         The usage of getMagnification is the same as for getShear, except that it returns only a
-        single number rather than a pair of numbers.  See documentation for getShear for some
-        examples.
+        single quantity (a magnification value or array of magnification values) rather than a pair
+        of quantities.  See documentation for getShear for some examples.
 
         @param pos              Position(s) of the source(s), assumed to be post-lensing!
                                 Valid ways to input this:
@@ -1325,17 +1351,18 @@ class PowerSpectrum(object):
         spectrum and correlation function somewhat, though the effects can be limited by careful
         choice of grid parameters (see buildGrid() docstring for details).  Assuming those
         guidelines are followed, then the shear correlation function modifications due to use of the
-        quintic, Lanczos-3, and Lanczos-5 interpolants are below 5% on all scales, typically below
-        2%.  The linear, cubic, and nearest interpolants perform significantly more poorly, with
-        modifications of the correlation functions that can reach tens of percent on the scales
-        where the recommended interpolants perform well.  Thus, the default interpolant is
-        Lanczos-5, and users should think carefully about the acceptability of significant
-        modification of the shear correlation function before changing to use linear, cubic, or
-        nearest.  We expect that these results for shear correlations should carry over to
-        magnification correlations, as well.
+        quintic, Lanczos-3, and Lanczos-5 interpolants are below 5% on all scales from the grid
+        spacing to the total grid extent, typically below 2%.  The linear, cubic, and nearest
+        interpolants perform significantly more poorly, with modifications of the correlation
+        functions that can reach tens of percent on the scales where the recommended interpolants
+        perform well.  Thus, the default interpolant is Lanczos-5, and users should think carefully
+        about the acceptability of significant modification of the shear correlation function before
+        changing to use linear, cubic, or nearest.  We expect that these results for shear
+        correlations should carry over to magnification correlations, as well.
 
-        The usage of getLensing is the same as for getShear, except that it returns only a single
-        number rather than a pair of numbers.  See documentation for getShear for some examples.
+        The usage of getLensing is the same as for getShear, except that it returns three quantities
+        (two reduced shear components and magnification) rather than one.  See documentation for
+        getShear for some examples.
 
         @param pos              Position(s) of the source(s), assumed to be post-lensing!
                                 Valid ways to input this:
@@ -1718,9 +1745,4 @@ class xi_integrand:
         self.r = r
         self.n = n
     def __call__(self, k):
-        # I don't really want this import happening in here.
-        try:
-            from scipy.special import jv
-        except:
-            raise RuntimeError("calculateXi method requires scipy")
         return k * self.pk(k) * jv(self.n, self.r*k)
