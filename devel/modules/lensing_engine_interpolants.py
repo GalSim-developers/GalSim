@@ -1,9 +1,45 @@
 #!/usr/bin/env python
+# Copyright 2012-2014 The GalSim developers:
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+#
+# GalSim is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GalSim is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+#
 """
 A script for checking the effects of interpolating gridded shears on the output correlation function
 / power spectrum.  In terms of the power spectrum, we expect behavior that is effectively
 multiplying by the square of the Fourier transform of the interpolant, but we check this directly,
 and also check the impact on the correlation function.
+
+This script includes an implementation of two different tests of interpolation of lensing shears:
+
+(1) A test that uses gridded points only, in interpolant_test_grid().  We set up some initial grid
+of shear values, and interpolate to a grid that has the same spacing and number of points, but is
+offset by some fraction of a grid unit.  While this setup is somewhat artificial, the benefit of
+this test is that our power spectrum estimator (which works only for gridded points) can be used to
+estimate the effect of interpolation on the shear power spectrum.  It also calls corr2 to check the
+effects on the shear correlation function.
+
+(2) A test of interpolation to random positions, in interpolant_test_random().  We set up some
+fiducial grid that is used to interpolate to random positions, and compare with what we get if we
+interpolate from a grid that has 10x smaller grid spacing (for which interpolant effects should be
+minimal.  Since we interpolate to random positions, we cannot check the output power spectrum, only
+the correlation function.
+
+Any given call to this script will result in only one of the above functions being called, depending
+on the user-supplied test parameters.
 """
 
 import galsim
@@ -15,36 +51,40 @@ import optparse
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 
-# Set some important quantities up top:
+############################### Set some important quantities up top: ###########################
+######## These are some hard-coded parameters (user cannot change from the command-line) ########
 # Which interpolants do we want to test?
 interpolant_list = ['linear', 'cubic', 'quintic', 'nearest','lanczos3','lanczos5']
 n_interpolants = len(interpolant_list)
-# Define shear grid
-grid_size = 10. # degrees
-ngrid = 100 # grid points in nominal grid
+# Define the default grid for all tests.
+grid_size = 10. # Total grid extent, in degrees
+ngrid = 100 # Number of grid points per dimension
 # Factor by which to upsample the grid in order to make a "reference" grid from which we interpolate
 # to the positions of random points.
 random_upsample = 10
-# Define shear power spectrum file
+# File containing the tabulated shear power spectrum to use for the tests.
 pk_file = os.path.join('..','..','examples','data','cosmo-fid.zmed1.00_smoothed.out')
-# Define files for PS / corr func.
+# Define a temporary file for correlation function outputs from corr2
 tmp_cf_file = 'tmp.cf.dat'
-# Set defaults for command-line arguments
-default_kmin_factor = 3 # factor by which to have the lensing engine internally expand the grid, to
-                        # get large-scale shear correlations.
-## grid offsets: 'random' (i.e., random sub-pixel amounts) or a specific fraction of a pixel
-default_dithering = 'random'
-## number of realizations to run.
-default_n = 100
-## number of bins for output PS / corrfunc
-default_n_output_bins = 12
-## output prefix for power spectrum, correlation function plots
-default_ps_plot_prefix = "plots/interpolated_ps_"
-default_cf_plot_prefix = "plots/interpolated_cf_"
-
-# make small fonts possible in legend
+# Make small fonts possible in legend, so they don't take up the whole plot.
 fontP = FontProperties()
 fontP.set_size('small')
+
+######################### Set defaults for command-line arguments ################################
+############### The user can change these easily from the command-line ###########################
+# Factor by which to have the lensing engine internally expand the grid, to get large-scale shear
+# correlations right.
+default_kmin_factor = 3
+# Grid offsets, for the tests that use a grid: 'random' (i.e., random sub-pixel amounts) or a
+# specific fraction of a pixel.
+default_dithering = 'random'
+# Number of realizations to run.
+default_n = 100
+# Number of bins for calculating the power spectrum or correlation function.
+default_n_output_bins = 12
+# Prefix for filenames into which we will put the power spectrum, correlation function plots.
+default_ps_plot_prefix = "plots/interpolated_ps_"
+default_cf_plot_prefix = "plots/interpolated_cf_"
 
 # Utility functions go here, above main():
 def softening_func(k_ratio):
