@@ -86,30 +86,7 @@ default_n_output_bins = 12
 default_ps_plot_prefix = "plots/interpolated_ps_"
 default_cf_plot_prefix = "plots/interpolated_cf_"
 
-# Utility functions go here, above main():
-def softening_func(k_ratio):
-    """Softening function for the power spectrum band-limiting step, instead of a hard cut in k.
-
-    The argument is the ratio of k to k_max for this grid.  We use an arctan function to go smoothly
-    from 1 to 0 above k_max.
-    """
-    # The magic numbers in the code below come from the following:
-    # We define the function as
-    #     (arctan[A log(k/k_max) + B] + pi/2)/pi
-    # For our current purposes, we will define A and B by requiring that this function go to 0.95
-    # (0.05) for k/k_max = 0.95 (1).  This gives two equations:
-    #     0.95 = (arctan[log(0.95) A + B] + pi/2)/pi
-    #     0.05 = (arctan[B] + pi/2)/pi.
-    # We will solve the second equation:
-    #     -0.45 pi = arctan(B), or
-    #     B = tan(-0.45 pi).
-    b = np.tan(-0.45*np.pi)
-    # Then, we get A from the first equation:
-    #     0.45 pi = arctan[log(0.95) A + B]
-    #     tan(0.45 pi) = log(0.95) A  + B
-    a = (np.tan(0.45*np.pi)-b) / np.log(0.95)
-    return (np.arctan(a*np.log(k_ratio)+b) + np.pi/2.)/np.pi
-
+############### Utility function #############
 def check_dir(dir):
     """Utility to make an output directory if necessary.
 
@@ -126,13 +103,14 @@ def check_dir(dir):
             # It was already a directory.
             pass
         else:
-            # There was a problem, so exist.
+            # There was a problem, so exit.
             raise
 
+######################### Routines to make plots of results ##############################
 def generate_ps_cutoff_plots(ell, ps, theory_ps,
                              nocutoff_ell, nocutoff_ps, nocutoff_theory_ps,
                              interpolant, ps_plot_prefix, type='EE'):
-    """Routine to make power spectrum plots for edge cutoff vs. not (in both cases, without
+    """Routine to make power spectrum plots for grid edge cutoff vs. not (in both cases, without
        interpolation) and write them to file.
 
     Arguments:
@@ -185,7 +163,8 @@ def generate_ps_cutoff_plots(ell, ps, theory_ps,
 
 def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
                       dth, type='EE'):
-    """Routine to make power spectrum plots and write them to file.
+    """Routine to make power spectrum plots for gridded points before and after interpolation, and
+       write them to file.
 
     This routine makes a two-panel plot, with the first panel showing the two power spectra,
     and the second showing their ratio.
@@ -330,7 +309,7 @@ def generate_cf_cutoff_plots(th, cf, nocutoff_th, nocutoff_cf, interpolant, cf_p
 
 def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
                       dth, type='p', theory_raw=None, theory_binned=None, theory_rand=None):
-    """Routine to make correlation function plots and write them to file.
+    """Routine to make correlation function plots for interpolation tests and write them to file.
 
     This routine makes a two-panel plot, with the first panel showing the two correlation functions,
     and the second showing their ratio.
@@ -486,7 +465,7 @@ def getCF(x, y, g1, g2, dtheta, ngrid, n_output_bins):
 
     This routine takes information about positions and shears, and writes to temporary FITS files
     before calling the corr2 executable to get the shear correlation functions.  We read the results
-    back in and return them.
+    back in and return them as a set of NumPy arrays.
 
     Arguments:
 
@@ -545,7 +524,7 @@ def nCutoff(interpolant):
     Arguments:
 
         interpolant ------- String indicating which interpolant to use.  Options are "nearest",
-                            "linear", "cubic", "quintic".
+                            "linear", "cubic", "quintic", "lanczos3", "lanczos5".
     """
     options = {"nearest" : 1,
                "linear" : 1,
@@ -559,50 +538,9 @@ def nCutoff(interpolant):
     except KeyError:
         raise RuntimeError("No cutoff scheme was defined for interpolant %s!"%interpolant)
 
-def simpleBinnedTheory(x, y, xi, dtheta, ngrid, n_output_bins):
-    """Utility to estimated binned theoretical correlation function.
 
-    Arguments:
-
-        x, y ------------- NumPy arrays containing the (x, y) positions for the points to be
-                           correlated.
-
-        xi --------------- Callable function containing the correlation function (presumably a
-                           GalSim.LookupTable).
-
-        ngrid ------------ Linear array size (i.e., number of points in each dimension).
-
-        dtheta ----------- Array spacing, in degrees.
-
-        n_output_bins ---- Number of bins for calculation of correlatio function.
-    """
-    # Do the brute-force pair-finding to get all possible separation values.
-    x_use = x.flatten()
-    y_use = y.flatten()
-    for ind in range(len(x_use)):
-        dx = x_use[ind+1:] - x_use[ind]
-        dy = y_use[ind+1:] - y_use[ind]
-        if ind==0:
-            r = np.sqrt(dx**2+dy**2)
-        else:
-            r = np.concatenate((r, dx**2+dy**2))            
-
-    # Calculate correlation function for those separations.
-    th_min = dtheta
-    th_max = ngrid*dtheta
-    cond = np.logical_and.reduce(
-        [r >= th_min,
-         r <= th_max])
-    r = list(r[cond])
-    theory_cf = []
-    for r_val in r:
-        theory_cf.append(xi(r_val))
-
-    # Now use the histogram function to get the mean correlation function within each bin.
-    bin_edges = np.logspace(np.log10(th_min), np.log10(th_max), n_output_bins+1)
-    mean_cf, _ = np.histogram(r, bin_edges, weights=theory_cf)
-    count, _ = np.histogram(r, bin_edges)
-    return mean_cf/count
+################### Below are the two core functions for interpolant tests ######################
+############################## using gridded and random points ##################################
 
 def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor, ps_plot_prefix,
                           cf_plot_prefix, edge_cutoff=False, periodic=False):
@@ -642,23 +580,9 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
     # Set up PowerSpectrum object.  We have to be careful to watch out for aliasing due to our
     # initial P(k) including power on scales above those that can be represented by our grid.  In
     # order to deal with that, we will define a power spectrum function that equals a cosmological
-    # one for k < k_max and is zero above that, with some smoothing function rather than a hard
-    # cut.
-    raw_ps_data = np.loadtxt(pk_file).transpose()
-    raw_ps_k = raw_ps_data[0,:]
-    raw_ps_p = raw_ps_data[1,:]
-    # Find k_max, taking into account that grid spacing is in degrees and our power spectrum is
-    # defined in radians. So
-    #    k_max = pi / (grid_spacing in radians) = pi / [2 pi (grid_spacing in degrees) / 180]
-    #          = 90 / (grid spacing in degrees)
-    # Also find k_min, for correlation function prediction.
-    #    k_min = 2*pi / (total grid extent) = 180. / (grid extent)
-    k_max = 90. / grid_spacing
-    k_min = 180. / (kmin_factor*grid_size)
-    # Now define a power spectrum that is raw_ps below k_max and goes smoothly to zero above that.
-    ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*softening_func(raw_ps_k/k_max),
-                                  interpolant='linear')
-    ps = galsim.PowerSpectrum(pk_file, units = galsim.radians) # will use automatic band-limiting
+    # one.  Later, when getting the shears, we will use a keyword to ensure that it is
+    # band-limited.
+    ps = galsim.PowerSpectrum(pk_file, units = galsim.radians)
     # Let's also get a theoretical correlation function for later use.
     theory_th_vals, theory_cfp_vals, theory_cfm_vals = \
         ps.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, units=galsim.degrees,
@@ -693,7 +617,7 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
         u = galsim.UniformDeviate()
 
     # Loop over interpolants.
-    print "Test type: offset/dithered grids, corr func and power spectrum."
+    print "Test type: offset/dithered grids, correlation function and power spectrum."
     for interpolant in interpolant_list:
         print "Beginning tests for interpolant %r:"%interpolant
         print "  Generating %d realizations..."%n_realizations
@@ -738,17 +662,11 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
                 target_x_list = list(target_x.flatten())
                 target_y_list = list(target_y.flatten())
 
-            # Basic sanity check: can comment out if unnecessary.
-            #test_g1, test_g2 = ps.getShear(pos=(list(x.flatten()), list(y.flatten())),
-            #                               units = galsim.degrees,
-            #                               periodic=periodic, reduced=False)
-            #np.testing.assert_array_almost_equal(g1.flatten(), test_g1, decimal=13)
-            #np.testing.assert_array_almost_equal(g2.flatten(), test_g2, decimal=13)
-
             # Interpolate shears to the target positions, with periodic interpolation if specified
             # at the command-line.
             # Note: setting 'reduced=False' here, so as to compare g1 and g2 from original grid with
-            # the interpolated g1 and g2 rather than the reduced shear.
+            # the interpolated g1 and g2 rather than with the reduced shear, which is what getShear
+            # returns by default.
             interpolated_g1, interpolated_g2 = ps.getShear(pos=(target_x_list,target_y_list),
                                                            units=galsim.degrees,
                                                            periodic=periodic, reduced=False)
@@ -804,14 +722,6 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
                 target_x_use = target_x
                 target_y_use = target_y
                 
-            # Get a theoretical binned correlation function on this grid.
-            # This code is too slow; commenting out.
-            #if i_real==0:
-            #    grid_binned_cfp = simpleBinnedTheory(x_use, y_use, cfp_table,
-            #                                         grid_spacing, ngrid_use, n_output_bins)
-            #    grid_binned_cfm = simpleBinnedTheory(x_use, y_use, cfm_table,
-            #                                         grid_spacing, ngrid_use, n_output_bins)
-
             # Get statistics: PS, correlation function.
             # Set up PowerSpectrumEstimator first, with the grid size and so on depending on
             # whether we have cut off the edges using the edge_cutoff.  The block of code just
@@ -951,9 +861,9 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     k_max = 90.*random_upsample / grid_spacing # factor of 10 because we're actually going to use a
                                                # finer grid
     k_min = 180. / (kmin_factor*grid_size)
-    # Now define a power spectrum that is raw_ps below k_max and goes smoothly to zero above that.
-    ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*softening_func(raw_ps_k/k_max),
-                                  interpolant='linear')
+    # Now define a power spectrum that is raw_ps.  All softening / cutting off above k_max will
+    # happen internally in the galsim.PowerSpectrum class.
+    ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p, interpolant='linear')
     ps = galsim.PowerSpectrum(pk_file, units = galsim.radians)
     # Let's also get a theoretical correlation function for later use.
     theory_th_vals, theory_cfp_vals, theory_cfm_vals = \
