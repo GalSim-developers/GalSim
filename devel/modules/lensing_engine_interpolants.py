@@ -35,7 +35,7 @@ effects on the shear correlation function.
 (2) A test of interpolation to random positions, in interpolant_test_random().  We set up some
 fiducial grid that is used to interpolate to random positions, and compare with what we get if we
 interpolate from a grid that has 10x smaller grid spacing (for which interpolant effects should be
-minimal.  Since we interpolate to random positions, we cannot check the output power spectrum, only
+minimal).  Since we interpolate to random positions, we cannot check the output power spectrum, only
 the correlation function.
 
 Any given call to this script will result in only one of the above functions being called, depending
@@ -847,8 +847,10 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     # Set up PowerSpectrum object.  We have to be careful to watch out for aliasing due to our
     # initial P(k) including power on scales above those that can be represented by our grid.  In
     # order to deal with that, we will define a power spectrum function that equals a cosmological
-    # one for k < k_max and is zero above that, with some smoothing function rather than a hard
-    # cutoff.
+    # one.  Unlike for the previous function, in this case we have to explicitly include the cutoff
+    # in the power.  The reason for this is that we want the cutoff to be the same for the default
+    # and the subsampled grid, and the only way to make this happen is to cut it off and hand in the
+    # same power spectrum in both cases.
     raw_ps_data = np.loadtxt(pk_file).transpose()
     raw_ps_k = raw_ps_data[0,:]
     raw_ps_p = raw_ps_data[1,:]
@@ -863,13 +865,14 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     k_min = 180. / (kmin_factor*grid_size)
     # Now define a power spectrum that is raw_ps.  All softening / cutting off above k_max will
     # happen internally in the galsim.PowerSpectrum class.
-    ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p, interpolant='linear')
-    ps = galsim.PowerSpectrum(pk_file, units = galsim.radians)
+    ps_table = galsim.LookupTable(raw_ps_k, raw_ps_p*(raw_ps_k<k_max).astype(float),
+                                  interpolant='linear')
+
+    ps = galsim.PowerSpectrum(ps_table, units = galsim.radians)
     # Let's also get a theoretical correlation function for later use.
     theory_th_vals, theory_cfp_vals, theory_cfm_vals = \
         ps.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, units=galsim.degrees,
-                       bandlimit="soft", kmin_factor=kmin_factor, kmax_factor=random_upsample,
-                       n_theta=100)
+                       bandlimit="soft", kmin_factor=kmin_factor, n_theta=100)
 
     # Set up grid and the corresponding x, y lists.
     ngrid_fine = random_upsample*ngrid
@@ -891,7 +894,9 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     mean_interpolated_cfm = np.zeros((n_output_bins, n_interpolants))
     mean_cfm = np.zeros((n_output_bins, n_interpolants))
 
-    # Sort out number of realizations and so on
+    # Sort out number of realizations:
+    # We make a maximum of 20 realizations here.  If more are requested, then we simply increase the
+    # number density of random points within each realizations.
     if n_realizations > 20:
         n_points = int(float(n_realizations)/20*ngrid**2)
         n_realizations = 20
@@ -916,8 +921,8 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
         # Get shears on default grid and fine grid.  Interpolation from the former is going to be
         # our test case, interpolation from the latter will be treated like ground truth.  Note that
         # these would nominally have different kmax, which would result in different correlation
-        # functions, but really since we cut off the power above kmax for the default grid, the
-        # effective kmax for the correlation function is the same in both cases.
+        # functions, but really since we cut off the power above kmax for the default grid already,
+        # the effective kmax for the correlation function is the same in both cases.
         g1_fine, g2_fine = ps.buildGrid(grid_spacing = grid_spacing/random_upsample,
                                         ngrid = random_upsample*ngrid,
                                         units = galsim.degrees,
