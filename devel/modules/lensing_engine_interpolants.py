@@ -628,15 +628,15 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
         mean_nocutoff_cfp = np.zeros(n_output_bins)
         mean_nocutoff_cfm = np.zeros(n_output_bins)
     mean_interpolated_ps_ee = np.zeros((n_output_bins, n_interpolants))
-    mean_ps_ee = np.zeros((n_output_bins, n_interpolants))
+    mean_ps_ee = np.zeros(n_output_bins)
     mean_interpolated_ps_bb = np.zeros((n_output_bins, n_interpolants))
-    mean_ps_bb = np.zeros((n_output_bins, n_interpolants))
+    mean_ps_bb = np.zeros(n_output_bins)
     mean_interpolated_ps_eb = np.zeros((n_output_bins, n_interpolants))
-    mean_ps_eb = np.zeros((n_output_bins, n_interpolants))
+    mean_ps_eb = np.zeros(n_output_bins)
     mean_interpolated_cfp = np.zeros((n_output_bins, n_interpolants))
-    mean_cfp = np.zeros((n_output_bins, n_interpolants))
+    mean_cfp = np.zeros(n_output_bins)
     mean_interpolated_cfm = np.zeros((n_output_bins, n_interpolants))
-    mean_cfm = np.zeros((n_output_bins, n_interpolants))
+    mean_cfm = np.zeros(n_output_bins)
 
     print "Test type: offset/dithered grids, correlation function and power spectrum."
     print "Doing calculations for %d realizations"%n_realizations
@@ -726,31 +726,34 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
             interpolated_pse = galsim.pse.PowerSpectrumEstimator(ngrid_use, grid_size_use,
                                                                  n_output_bins)
             pse = galsim.pse.PowerSpectrumEstimator(ngrid_use, grid_size_use, n_output_bins)           
+
+        # First do the estimation and store results for the original grid.
+        ell, ps_ee, ps_bb, ps_eb, ps_ee_theory = pse.estimate(g1, g2, theory_func=ps_table)
+        th, cfp, cfm, _ = \
+            getCF(x_use.flatten(), y_use.flatten(), g1.flatten(), g2.flatten(),
+                  grid_spacing, ngrid_use, n_output_bins)
+        mean_ps_ee += ps_ee
+        mean_ps_bb += ps_bb
+        mean_ps_eb += ps_eb
+        mean_cfp += cfp
+        mean_cfm += cfm
+        # Now do this for each set of interpolated results.
         for i_int in range(n_interpolants):
             int_ell, interpolated_ps_ee, interpolated_ps_bb, interpolated_ps_eb, \
                 interpolated_ps_ee_theory = \
                 interpolated_pse.estimate(interpolated_g1[:,:,i_int], interpolated_g2[:,:,i_int],
                                           theory_func=ps_table)
-            ell, ps_ee, ps_bb, ps_eb, ps_ee_theory = pse.estimate(g1, g2, theory_func=ps_table)
             int_th, interpolated_cfp, interpolated_cfm, cf_err = \
                 getCF(target_x_use.flatten(), target_y_use.flatten(),
                       interpolated_g1[:,:,i_int].flatten(), interpolated_g2[:,:,i_int].flatten(),
                       grid_spacing, ngrid_use, n_output_bins)
-            th, cfp, cfm, _ = \
-                getCF(x_use.flatten(), y_use.flatten(), g1.flatten(), g2.flatten(),
-                      grid_spacing, ngrid_use, n_output_bins)
 
             # Accumulate statistics.
             mean_interpolated_ps_ee[:,i_int] += interpolated_ps_ee
-            mean_ps_ee[:,i_int] += ps_ee
             mean_interpolated_ps_bb[:,i_int] += interpolated_ps_bb
-            mean_ps_bb[:,i_int] += ps_bb
             mean_interpolated_ps_eb[:,i_int] += interpolated_ps_eb
-            mean_ps_eb[:,i_int] += ps_eb
             mean_interpolated_cfp[:,i_int] += interpolated_cfp
-            mean_cfp[:,i_int] += cfp
             mean_interpolated_cfm[:,i_int] += interpolated_cfm
-            mean_cfm[:,i_int] += cfm
 
     # Now get the average over all realizations
     print "Done generating realizations, now getting mean 2-point functions"
@@ -764,52 +767,51 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
     mean_cfp /= n_realizations
     mean_interpolated_cfm /= n_realizations
     mean_cfm /= n_realizations
+
+    # Plot statistics, and ratios with vs. without interpolants.
     if edge_cutoff:
         mean_nocutoff_ps_ee /= n_realizations
         mean_nocutoff_ps_bb /= n_realizations
         mean_nocutoff_ps_eb /= n_realizations
         mean_nocutoff_cfp /= n_realizations
         mean_nocutoff_cfm /= n_realizations
-
-    # Plot statistics, and ratios with vs. without interpolants.
-    if edge_cutoff:
         generate_ps_cutoff_plots(ell, mean_ps_ee, ps_ee_theory,
                                  nocutoff_ell, mean_nocutoff_ps_ee, nocutoff_ps_ee_theory,
                                  interpolant, ps_plot_prefix, type='EE')
-    if edge_cutoff:
         generate_cf_cutoff_plots(th, mean_cfp, 
                                  nocutoff_th, mean_nocutoff_cfp,
                                  interpolant, cf_plot_prefix, type='p')
         generate_cf_cutoff_plots(th, mean_cfm, 
                                  nocutoff_th, mean_nocutoff_cfm,
                                  interpolant, cf_plot_prefix, type='m')
+
     for i_int in range(n_interpolants):
         interpolant = interpolant_list[i_int]
         print "Running plotting routines for interpolant=%s..."%interpolant
-        generate_ps_plots(ell, mean_ps_ee[:,i_int], mean_interpolated_ps_ee[:,i_int], interpolant,
+        generate_ps_plots(ell, mean_ps_ee, mean_interpolated_ps_ee[:,i_int], interpolant,
                           ps_plot_prefix, grid_spacing, type='EE')
-        generate_ps_plots(ell, mean_ps_bb[:,i_int], mean_interpolated_ps_bb[:,i_int], interpolant,
+        generate_ps_plots(ell, mean_ps_bb, mean_interpolated_ps_bb[:,i_int], interpolant,
                           ps_plot_prefix, grid_spacing, type='BB')
-        generate_ps_plots(ell, mean_ps_eb[:,i_int], mean_interpolated_ps_eb[:,i_int], interpolant,
+        generate_ps_plots(ell, mean_ps_eb, mean_interpolated_ps_eb[:,i_int], interpolant,
                           ps_plot_prefix, grid_spacing, type='EB')
-        generate_cf_plots(th, mean_cfp[:,i_int], mean_interpolated_cfp[:,i_int], interpolant,
+        generate_cf_plots(th, mean_cfp, mean_interpolated_cfp[:,i_int], interpolant,
                           cf_plot_prefix, grid_spacing, type='p',
                           theory_raw=(theory_th_vals, theory_cfp_vals))
-        generate_cf_plots(th, mean_cfm[:,i_int], mean_interpolated_cfm[:,i_int], interpolant,
+        generate_cf_plots(th, mean_cfm, mean_interpolated_cfm[:,i_int], interpolant,
                           cf_plot_prefix, grid_spacing, type='m',
                           theory_raw=(theory_th_vals, theory_cfm_vals))
 
         # Output results.
         print "Outputting tables of results..."
-        write_ps_output(ell, mean_ps_ee[:,i_int], mean_interpolated_ps_ee[:,i_int],
+        write_ps_output(ell, mean_ps_ee, mean_interpolated_ps_ee[:,i_int],
                         interpolant, ps_plot_prefix, type='EE')
-        write_ps_output(ell, mean_ps_bb[:,i_int], mean_interpolated_ps_bb[:,i_int],
+        write_ps_output(ell, mean_ps_bb, mean_interpolated_ps_bb[:,i_int],
                         interpolant, ps_plot_prefix, type='BB')
-        write_ps_output(ell, mean_ps_eb[:,i_int], mean_interpolated_ps_eb[:,i_int],
+        write_ps_output(ell, mean_ps_eb, mean_interpolated_ps_eb[:,i_int],
                         interpolant, ps_plot_prefix, type='EB')
-        write_cf_output(th, mean_cfp[:,i_int], mean_interpolated_cfp[:,i_int], interpolant,
+        write_cf_output(th, mean_cfp, mean_interpolated_cfp[:,i_int], interpolant,
                         cf_plot_prefix, type='p')
-        write_cf_output(th, mean_cfm[:,i_int], mean_interpolated_cfm[:,i_int], interpolant,
+        write_cf_output(th, mean_cfm, mean_interpolated_cfm[:,i_int], interpolant,
                         cf_plot_prefix, type='m')
         print ""
 
