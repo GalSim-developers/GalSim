@@ -659,7 +659,9 @@ class PowerSpectrum(object):
 
         The quantities that are returned are three NumPy arrays: separation theta (in the adopted
         units), xi_+, and xi_-.  These are defined in terms of the E- and B-mode shear power
-        spectrum as in the document `devel/modules/lensing_engine.pdf`, equations 2 and 3.
+        spectrum as in the document `devel/modules/lensing_engine.pdf`, equations 2 and 3.  The
+        values that are returned are for a particular theta value, not an average over a range of
+        theta values in some bin of finite width.
 
         Use of this method requires SciPy.  It has been tested with cosmological shear power
         spectra; users should check for sanity of outputs if attempting to use power spectra that
