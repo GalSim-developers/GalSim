@@ -386,6 +386,37 @@ def test_shear_variance():
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with kmin_factor=2"
 
+    # Now check the variances post-interpolation to random (off-grid) points.  Ideally, our default
+    # interpolant should not alter the power spectrum very much from kmin to kmax, so the shear
+    # variance should also not be significantly altered.  To test this, we take the g1, g2 from the
+    # previous buildGrid() call, interpolate to some random positions that are not too near the
+    # edges (since near the edges there are known artifacts), and check the variances.
+    grid_spacing = grid_size/ngrid
+    min = (-ngrid/2 + 0.5) * grid_spacing
+    max = (ngrid/2 + 0.5) * grid_spacing
+    # Now chop the outer ~25% off just to be conservative.  Since min and max are negative and
+    # positive, respectively, we'll just multiply them by 0.75 to make the grid smaller.
+    min *= 0.75
+    max *= 0.75
+    # Generate a bunch of random points:
+    n_rand = 10000
+    x = np.zeros(n_rand)
+    y = np.zeros(n_rand)
+    ud = galsim.UniformDeviate(12345)
+    for i in range(n_rand):
+        x[i] = min + (max-min)*ud()
+        y[i] = min + (max-min)*ud()
+    # Get the shears at those points
+    g1, g2 = test_ps.getShear(pos=(x,y), units=galsim.degrees, reduced=False)
+    var1 = np.var(g1)
+    var2 = np.var(g2)
+    # Use the predicted variance from before
+    print 'predicted variance = ',predicted_variance
+    print 'actual variance = ',var1+var2
+    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
+            "Incorrect shear variance post-interpolation"
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -823,7 +854,7 @@ def test_corr_func():
     # We want to compare the integration that is done by galsim.PowerSpectrum.calculateXi() is
     # accurate.  Ideally this would be done by comparison with some power spectrum for which the
     # conversion to a correlation function is analytic.  Given that the conversion to correlation
-    # function xi_+ involves integration by a Bessel function, there are not many options for
+    # function involves integration by a Bessel function, there are not many options for
     # power spectra for which there is a closed-form expression for the integral.  For this test I
     # will use the following relations:
     #   \int x^n J_{n-1}(x) dx = x^n J_n(x) + C
@@ -837,7 +868,8 @@ def test_corr_func():
     #
     # Testing with these functions means that our shear power spectra are not cosmological-looking,
     # but I couldn't find an analytic expression that involved something that looked like a real
-    # shear power spectrum, so I think we're stuck with these.
+    # shear power spectrum, so I think we're stuck with these.  At least they are non-trivially
+    # interesting/challenging tests.
 
     # First, however, just check whether there is scipy on this system, and import the Bessel
     # function module.  If this doesn't work, then the user cannot use the shear correlation
