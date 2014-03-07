@@ -108,7 +108,7 @@ class GSObject(object):
                 }
     def __init__(self, obj):
         # This guarantees that all GSObjects have an SBProfile
-        if isinstance(obj, galsim.GSObject):
+        if isinstance(obj, GSObject):
             self.SBProfile = obj.SBProfile
             if hasattr(obj,'noise'):
                 self.noise = obj.noise
@@ -167,7 +167,7 @@ class GSObject(object):
         sbp = self.SBProfile.__class__(self.SBProfile)
         ret = GSObject(sbp)
         ret.__class__ = self.__class__
-        if hasattr(self,'noise'): ret.noise = self.noise.copy()
+        if hasattr(self,'noise'): ret.noise = self.noise
         return ret
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
@@ -282,12 +282,14 @@ class GSObject(object):
         """This is an obsolete method that is roughly equivalent to obj = obj.withFlux(flux)"""
         new_obj = self.withFlux(flux)
         self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
         self.__class__ = new_obj.__class__
 
     def scaleFlux(self, flux_ratio):
         """This is an obsolete method that is roughly equivalent to obj = obj * flux_ratio"""
         new_obj = self * flux_ratio
         self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
         self.__class__ = new_obj.__class__
 
     def expand(self, scale):
@@ -322,6 +324,7 @@ class GSObject(object):
         """This is an obsolete method that is roughly equivalent to obj = obj.expand(scale)."""
         new_obj = self.expand(scale)
         self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
         self.__class__ = new_obj.__class__
 
     def dilate(self, scale):
@@ -346,6 +349,7 @@ class GSObject(object):
         """This is an obsolete method that is roughly equivalent to obj = obj.dilate(scale)."""
         new_obj = self.dilate(scale)
         self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
         self.__class__ = new_obj.__class__
 
     def magnify(self, mu):
@@ -373,6 +377,7 @@ class GSObject(object):
         """This is an obsolete method that is roughly equivalent to obj = obj.magnify(mu)"""
         new_obj = self.magnify(mu)
         self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
         self.__class__ = new_obj.__class__
 
     def shear(self, *args, **kwargs):
@@ -414,6 +419,7 @@ class GSObject(object):
         """This is an obsolete method that is roughly equivalent to obj = obj.shear(shear)"""
         new_obj = self.shear(*args, **kwargs)
         self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
         self.__class__ = new_obj.__class__
 
     def lens(self, g1, g2, mu):
@@ -443,6 +449,7 @@ class GSObject(object):
         """This is an obsolete method that is roughly equivalent to obj = obj.len(g1,g2,mu)"""
         new_obj = self.lens(g1,g2,mu)
         self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
         self.__class__ = new_obj.__class__
 
     def rotate(self, theta):
@@ -466,6 +473,7 @@ class GSObject(object):
         """This is an obsolete method that is roughly equivalent to obj = obj.rotate(theta)"""
         new_obj = self.rotate(theta)
         self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
         self.__class__ = new_obj.__class__
 
     def transform(self, dudx, dudy, dvdx, dvdy):
@@ -492,7 +500,7 @@ class GSObject(object):
         @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
         @returns        The transformed object
         """
-        new_obj = galsim.GSObject(self.SBProfile.transform(dudx,dudy,dvdx,dvdy))
+        new_obj = GSObject(self.SBProfile.transform(dudx,dudy,dvdx,dvdy))
         if hasattr(self,'noise'):
             new_obj.noise = self.noise.transform(dudx,dudy,dvdx,dvdy)
         return new_obj
@@ -505,6 +513,7 @@ class GSObject(object):
         """This is an obsolete method that is roughly equivalent to obj = obj.transform(...)"""
         new_obj = self.transform(dudx,dudy,dvdx,dvdy)
         self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
         self.__class__ = new_obj.__class__
   
     def shift(self, *args, **kwargs):
@@ -524,7 +533,10 @@ class GSObject(object):
 
         """
         delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
-        return GSObject(self.SBProfile.shift(delta))
+        new_obj = GSObject(self.SBProfile.shift(delta))
+        if hasattr(self,'noise'):
+            new_obj.noise = self.noise
+        return new_obj
 
     def createShifted(self, *args, **kwargs):
         """This is an obsolete synonym for shift(dx,dy)"""
@@ -534,6 +546,7 @@ class GSObject(object):
         """This is an obsolete method that is roughly equivalent to obj = obj.shift(dx,dy)"""
         new_obj = self.shift(*args,**kwargs)
         self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
         self.__class__ = new_obj.__class__
  
 
