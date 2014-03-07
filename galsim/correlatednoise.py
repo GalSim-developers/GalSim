@@ -69,53 +69,34 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
     def __add__(self, other):
-        ret = self.copy()
-        ret += other
-        return ret
-
-    def __iadd__(self, other):
-        self._profile += other._profile
-        return _BaseCorrelatedNoise(self.getRNG(), self._profile)
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile + other._profile)
 
     def __sub__(self, other):
-        ret = self.copy()
-        ret -= other
-        return ret
-
-    def __isub__(self, other):
-        self._profile -= other._profile
-        return _BaseCorrelatedNoise(self.getRNG(), self._profile)
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile - other._profile)
 
     # Make op* and op*= work to adjust the overall variance of an object
-    def __imul__(self, other):
-        self._profile.scaleVariance(other)
-        return self
+    def __mul__(self, variance_ratio):
+        """Multiply the variance of the noise field by variance_ratio.
 
-    def __mul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
+        @param variance_ratio   The factor by which to scale the variance of the correlation 
+                                function profile.
+        @returns                A CorrelatedNoise object whose variance has been scaled by 
+                                the given amount.
+        """
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile * variance_ratio)
 
-    def __rmul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
+    def __rmul__(self, variance_ratio):
+        """Equivalent to self * variance_ratio"""
+        return self.__mult__(variance_ratio)
 
-    # Likewise for op/ and op/=
-    def __idiv__(self, other):
-        self.scaleVariance(1. / other)
-        return self
+    # Likewise for op/
+    def __div__(self, variance_ratio):
+        """Equivalent to self * (1/variance_ratio)"""
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile / variance_ratio)
 
-    def __div__(self, other):
-        ret = self.copy()
-        ret /= other
-        return ret
-
-    def __itruediv__(self, other):
-        return __idiv__(self, other)
-
-    def __truediv__(self, other):
-        return __div__(self, other)
+    def __truediv__(self, variance_ratio):
+        """Equivalent to self * (1/variance_ratio)"""
+        return self.__div__(variance_ratio)
 
     def copy(self):
         """Returns a copy of the correlated noise model.
@@ -281,72 +262,157 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Return the variance to the interested user
         return variance
 
-    def applyExpansion(self, scale):
+    def expand(self, scale):
         """Scale the linear scale of correlations in this noise model by scale.  
         
         Scales the linear dimensions of the image by the factor scale, e.g.
         `half_light_radius` <-- `half_light_radius * scale`.
 
-        @param scale The linear rescaling factor to apply.
+        @param scale    The linear rescaling factor to apply.
+        @returns        A new CorrelatedNoise object with the specified expansion.
         """
-        self._profile.applyExpansion(scale)
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile.expand(scale))
 
-    def applyDilation(self, scale):
+    def createExpanded(self, scale):
+        """This is an obsolete synonym for expand(scale)"""
+        return self.expand(scale)
+
+    def applyExpansion(self, scale):
+        """This is an obsolete method that is roughly equivalent to obj = obj.expand(scale)"""
+        new_obj = self.expand(scale)
+        self._profile = new_obj._profile
+        self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
+        self.__class__ = new_obj.__class__
+
+    def dilate(self, scale):
         """Apply the appropriate changes to the scale and variance for when the object has
         an applied dilation.
         
-        @param scale The linear dilation scale factor.
+        @param scale    The linear dilation scale factor.
+        @returns        A new CorrelatedNoise object with the specified dilation.
         """
-        self.applyExpansion(scale)
         # Expansion changes the flux by scale**2, applyDilation reverses that to conserve flux,
         # so the variance needs to change by scale**-4.
-        self.scaleVariance(1./(scale**4))
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile.expand(scale) * (1./scale**4))
 
-    def applyMagnification(self, mu):
+    def createDilated(self, scale):
+        """This is an obsolete synonym for dilate(scale)"""
+        return self.dilate(scale)
+
+    def applyDilation(self, scale):
+        """This is an obsolete method that is roughly equivalent to obj = obj.dilate(scale)"""
+        new_obj = self.dilate(scale)
+        self._profile = new_obj._profile
+        self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
+        self.__class__ = new_obj.__class__
+
+    def magnify(self, mu):
         """Apply the appropriate changes to the scale and variance for when the object has
         an applied magnification.
 
-        @param mu The lensing magnification
+        @param mu       The lensing magnification
+        @returns        A new CorrelatedNoise object with the specified magnification.
         """
-        self.applyExpansion(np.sqrt(mu))
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile.magnify(mu))
 
-    def applyLensing(self, g1, g2, mu):
+    def createMagnified(self, mu):
+        """This is an obsolete synonym for magnify(mu)"""
+        return self.magnify(mu)
+
+    def applyMagnification(self, mu):
+        """This is an obsolete method that is roughly equivalent to obj = obj.magnify(mu)"""
+        new_obj = self.magnify(mu)
+        self._profile = new_obj._profile
+        self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
+        self.__class__ = new_obj.__class__
+
+    def lens(self, g1, g2, mu):
         """Apply the appropriate changes for when the object has an applied shear and magnification.
 
-        @param g1   First component of lensing (reduced) shear to apply to the object.
-        @param g2   Second component of lensing (reduced) shear to apply to the object.
-        @param mu   Lensing magnification to apply to the object.
+        @param g1       First component of lensing (reduced) shear to apply to the object.
+        @param g2       Second component of lensing (reduced) shear to apply to the object.
+        @param mu       Lensing magnification to apply to the object.
+        @returns        A new CorrelatedNoise object with the specified shear and magnification.
         """
-        self.applyShear(g1=g1,g2=g2)
-        self.applyMagnification(mu)
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile.lens(g1,g2,mu))
 
-    def applyRotation(self, theta):
+    def createLensed(self, g1, g2, mu):
+        """This is an obsolete synonym for lens(g1,g2,mu)"""
+        return self.lens(g1,g2,mu)
+
+    def applyLensing(self, g1, g2, mu):
+        """This is an obsolete method that is roughly equivalent to obj = obj.lens(g1,g2,mu)"""
+        new_obj = self.lens(g1,g2,mu)
+        self._profile = new_obj._profile
+        self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
+        self.__class__ = new_obj.__class__
+
+    def rotate(self, theta):
         """Apply a rotation theta to this correlated noise model.
            
-        @param theta Rotation angle (Angle object, +ve anticlockwise).
+        @param theta    Rotation angle (Angle object, positive means anticlockwise).
+        @returns        A new CorrelatedNoise object with the specified rotation.
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
-        self._profile.applyRotation(theta)
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile.rotate(theta))
 
-    def applyShear(self, *args, **kwargs):
+    def createRotated(self, theta):
+        """This is an obsolete synonym for rotate(theta)"""
+        return self.rotate(theta)
+
+    def applyRotation(self, theta):
+        """This is an obsolete method that is roughly equivalent to obj = obj.rotate(theta)"""
+        new_obj = self.rotate(theta)
+        self._profile = new_obj._profile
+        self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
+        self.__class__ = new_obj.__class__
+
+    def shear(self, *args, **kwargs):
         """Apply a shear to this correlated noise model, where arguments are either a galsim.Shear,
         or arguments that will be used to initialize one.
 
         For more details about the allowed keyword arguments, see the documentation for galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
-        """
-        self._profile.applyShear(*args, **kwargs)
 
-    def applyTransformation(self, dudx, dudy, dvdx, dvdy):
+        @param shear    The shear to be applied. Or, as described above, you may instead supply
+                        parameters do construct a shear directly.  eg. `corr.shear(g1=g1,g2=g2)`.
+        @returns        A new CorrelatedNoise object with the specified shear.
+        """
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile.shear(*args,**kwargs))
+
+    def createSheared(self, *args, **kwargs):
+        """This is an obsolete synonym for shear(shear)"""
+        return self.shear(*args,**kwargs)
+
+    def applyShear(self, *args, **kwargs):
+        """This is an obsolete method that is roughly equivalent to obj = obj.shear(shear)"""
+        new_obj = self.shear(*args, **kwargs)
+        self._profile = new_obj._profile
+        self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
+        self.__class__ = new_obj.__class__
+
+    def transform(self, dudx, dudy, dvdx, dvdy):
         """Apply an arbitrary jacobian transformation to this correlated noise model.
          
         @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @returns        A new CorrelatedNoise object with the specified transformation.
         """
-        self._profile.applyTransformation(dudx,dudy,dvdx,dvdy)
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile.transform(dudx,dudy,dvdx,dvdy))
+
+    def createTransformed(self, dudx, dudy, dvdx, dvdy):
+        """This is an obsolete synonym for transform(dudx,dudy,dvdx,dvdy)"""
+        return self.transform(dudx,dudy,dvdx,dvdy)
+
+    def applyTransformation(self, dudx, dudy, dvdx, dvdy):
+        """This is an obsolete method that is roughly equivalent to obj = obj.transform(...)"""
+        new_obj = self.transform(dudx,dudy,dvdx,dvdy)
+        self._profile = new_obj._profile
+        self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
+        self.__class__ = new_obj.__class__
 
     # Also add methods which create a new _BaseCorrelatedNoise with the transformations applied...
     #
@@ -445,23 +511,31 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 self._variance_stored = variance # Store variance for next time 
         return variance
 
-    def scaleVariance(self, variance_ratio):
-        """Multiply the variance of the noise field by variance_ratio.
-
-        @param variance_ratio The factor by which to scale the variance of the correlation function
-                              profile.
-        """
-        self._profile.SBProfile.scaleFlux(variance_ratio)
-        self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
-
-    def setVariance(self, variance):
+    def withVariance(self, variance):
         """Set the point variance of the noise field, equal to its correlation function value at
         zero distance, to an input variance.
 
-        @param variance  The desired point variance in the noise.
+        @param variance The desired point variance in the noise.
+        @returns        A CorrelatedNoise object with teh new variance.
         """
         variance_ratio = variance / self.getVariance()
-        self.scaleVariance(variance_ratio)
+        return self * variance_ratio
+
+    def setVariance(self, variance):
+        """This is an obsolete method that is rougly equivalent to 
+        corr = corr.withVariance(variance)
+        """
+        new_obj = self.withVariance(variance)
+        self._profile = new_obj._profile
+        self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
+        self.__class__ = new_obj.__class__
+
+    def scaleVariance(self, variance_ratio):
+        """This is an obsolete method that is rougly equivalent to corr = corr * variance_ratio"""
+        new_obj = self * variance_ratio
+        self._profile = new_obj._profile
+        self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
+        self.__class__ = new_obj.__class__
 
     def convolveWith(self, gsobject, gsparams=None):
         """Convolve the correlated noise model with an input GSObject.

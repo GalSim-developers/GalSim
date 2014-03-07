@@ -61,6 +61,8 @@ namespace galsim {
 
     //! @endcond
 
+    class SBTransform;
+
     /** 
      * @brief A base class representing all of the 2D surface brightness profiles that we know how
      * to draw.
@@ -82,33 +84,31 @@ namespace galsim {
      * model the surface brightness of the object, so the xValue routine returns the value of the 
      * surface brightness at a given point.  Usually we define this as flux/arcsec^2.
      *
-     * However, when drawing an SBProfile, any distance measures used to define the SBProfile will be 
-     * taken to be in units of pixels.  Thus the image, which is nominally a **surface brightness** 
-     * image is also a **flux** image.  The flux in each pixel is the flux/pixel^2.  The python layer 
-     * takes care of the typical case of defining an SBProfile in terms of arcsec, then converting the 
-     * image to pixels (scaling the size and flux appropriately), so that the draw command here has the 
-     * correct flux.  
+     * However, when drawing an SBProfile, any distance measures used to define the SBProfile will 
+     * be taken to be in units of pixels.  Thus the image, which is nominally a **surface 
+     * brightness** image is also a **flux** image.  The flux in each pixel is the flux/pixel^2.
+     * The python layer takes care of the typical case of defining an SBProfile in terms of arcsec,
+     * then converting the image to pixels (scaling the size and flux appropriately), so that the
+     * draw command here has the correct flux.  
      *
-     * This isn't an abstract base class.  An SBProfile is a concrete object
-     * which internally has a pointer to the implementation details (which _is_ an abstract
-     * base class).  Furthermore, all SBProfiles are immutable objects.  Any changes
-     * are made through modifiers that return a new object.  (e.g. setFlux,
-     * shear, shift, etc.)  This means that we can safely make SBProfiles use shallow
-     * copies, since that will never be confusing, which in turn means that SBProfiles
-     * can be safely returned by value, used in containers (e.g. list<SBProfile>), etc.
+     * This isn't an abstract base class.  An SBProfile is a concrete object which internally has 
+     * a pointer to the implementation details (which _is_ an abstract base class).  Furthermore,
+     * all SBProfiles are immutable objects.  Any changes are made through modifiers that return a
+     * new object.  (e.g. setFlux, shear, shift, etc.)  This means that we can safely make 
+     * SBProfiles use shallow copies, since that will never be confusing, which in turn means that
+     * SBProfiles can be safely returned by value, used in containers (e.g. list<SBProfile>), etc.
      *
-     * The only constructor for SBProfile is the copy constructor.  All SBProfiles need
-     * to be created as one of the derived types that have real constructors.
+     * The only constructor for SBProfile is the copy constructor.  All SBProfiles need to be 
+     * created as one of the derived types that have real constructors.
      *
-     * Well, technically, there is also a default constructor to make it easier to use
-     * containers of SBProfiles.  However, it is an error to use an SBProfile that
-     * has been default constructed for any purpose. 
+     * Well, technically, there is also a default constructor to make it easier to use containers 
+     * of SBProfiles.  However, it is an error to use an SBProfile that has been default 
+     * constructed for any purpose. 
      *
-     * The assignment operator does a shallow copy, replacing the current contents of
-     * the SBProfile with that of the rhs profile.  
+     * The assignment operator does a shallow copy, replacing the current contents of the SBProfile
+     * with that of the rhs profile.  
      *
      */
-
     class SBProfile
     {
     public:
@@ -237,65 +237,33 @@ namespace galsim {
 
         /**
          * @brief Multiply the flux by fluxRatio
-         *
-         * This resets the internal pointer to a new SBProfile that wraps the old one with a scaled
-         * flux.  This does not change any previous uses of the SBProfile, so if it had been used in
-         * some other context (e.g. in SBAdd or SBConvolve), that object will be unchanged and still
-         * valid.
          */
-        void scaleFlux(double fluxRatio);
-
-        /**
-         * @brief Set the flux to a new value
-         *
-         * This sets the flux to a new value.  As with scaleFlux, it does not invalidate any
-         * previous uses of this object.
-         */
-        void setFlux(double flux);
+        SBTransform scaleFlux(double fluxRatio) const;
 
         /**
          * @brief Apply an overall scale change to the profile, preserving surface brightness.
-         *
-         * This expands the linear scale factor of the object. As with scaleFlux, it does not
-         * invalidate any previous uses of this object.
          */
-        void applyExpansion(double scale);
+        SBTransform expand(double scale) const;
 
         /**
          * @brief Apply a given shear.
-         *
-         * @param[in] s CppShear object by which to shear the SBProfile.
-         * This shears the object by the given shear (see class description for CppShear for more
-         * information about shearing conventions).  As with scaleFlux, it does not invalidate any
-         * previous uses of this object.
          */
-        void applyShear(CppShear s);
+        SBTransform shear(CppShear s) const;
 
         /**
          * @brief Apply a given rotation.
-         *
-         * This rotates the object by the given angle.  As with scaleFlux, it does not invalidate
-         * any previous uses of this object.
          */
-        void applyRotation(const Angle& theta);
+        SBTransform rotate(const Angle& theta) const;
 
         /**
          * @brief Apply a transformation given by an arbitrary Jacobian matrix
-         *
-         * This transforms the object by the given transformation. As with scaleFlux, it does not 
-         * invalidate any previous uses of this object.
-         *
-         * The parameters are the four elements of the Jacobian: dudx, dudy, dvdx, dvdy.
          */
-        void applyTransformation(double dudx, double dudy, double dvdx, double dvdy);
+        SBTransform transform(double dudx, double dudy, double dvdx, double dvdy) const;
 
         /**
          * @brief Apply a translation.
-         *
-         * This shifts the object by the given amount.  As with scaleFlux, it does not invalidate
-         * any previous uses of this object.
          */
-        void applyShift(const Position<double>& delta);
+        SBTransform shift(const Position<double>& delta) const;
 
         /**
          * @brief Shoot photons through this SBProfile.

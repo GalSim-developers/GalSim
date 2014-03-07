@@ -170,33 +170,20 @@ namespace galsim {
     SBProfile::SBProfileImpl* SBProfile::GetImpl(const SBProfile& rhs) 
     { return rhs._pimpl.get(); }
 
-    void SBProfile::scaleFlux(double fluxRatio)
-    { 
-        SBTransform d(*this,1.,0.,0.,1.,Position<double>(0.,0.),fluxRatio); 
-        _pimpl = d._pimpl;
-    }
+    SBTransform SBProfile::scaleFlux(double fluxRatio) const
+    { return SBTransform(*this,1.,0.,0.,1.,Position<double>(0.,0.),fluxRatio); }
 
-    void SBProfile::setFlux(double flux)
-    { 
-        SBTransform d(*this,1.,0.,0.,1.,Position<double>(0.,0.),flux/getFlux());
-        _pimpl = d._pimpl;
-    }
+    SBTransform SBProfile::expand(double scale) const
+    { return SBTransform(*this,scale,0.,0.,scale); }
 
-    void SBProfile::applyExpansion(double scale)
-    {
-        SBTransform d(*this,scale,0.,0.,scale);
-        _pimpl = d._pimpl;
-    }
-
-    void SBProfile::applyShear(CppShear s)
+    SBTransform SBProfile::shear(CppShear s) const
     {
         double a, b, c;
         s.getMatrix(a,b,c);
-        SBTransform d(*this,a,c,c,b);
-        _pimpl = d._pimpl;
+        return SBTransform(*this,a,c,c,b);
     }
 
-    void SBProfile::applyRotation(const Angle& theta)
+    SBTransform SBProfile::rotate(const Angle& theta) const
     {
 #ifdef _GLIBCXX_HAVE_SINCOS
         // Most optimizing compilers will do this automatically, but just in case...
@@ -206,21 +193,14 @@ namespace galsim {
         double cost = std::cos(theta.rad());
         double sint = std::sin(theta.rad());
 #endif
-        SBTransform d(*this,cost,-sint,sint,cost);
-        _pimpl = d._pimpl;
+        return SBTransform(*this,cost,-sint,sint,cost);
     }
 
-    void SBProfile::applyTransformation(double dudx, double dudy, double dvdx, double dvdy)
-    {
-        SBTransform d(*this, dudx, dudy, dvdx, dvdy);
-        _pimpl = d._pimpl;
-    }
+    SBTransform SBProfile::transform(double dudx, double dudy, double dvdx, double dvdy) const
+    { return SBTransform(*this, dudx, dudy, dvdx, dvdy); }
 
-    void SBProfile::applyShift(const Position<double>& delta)
-    { 
-        SBTransform d(*this,1.,0.,0.,1., delta);
-        _pimpl = d._pimpl;
-    }
+    SBTransform SBProfile::shift(const Position<double>& delta) const
+    { return SBTransform(*this,1.,0.,0.,1., delta); }
 
     //
     // Common methods of Base Class "SBProfile"

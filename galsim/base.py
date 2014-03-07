@@ -118,54 +118,41 @@ class GSObject(object):
             raise TypeError("GSObject must be initialized with an SBProfile or another GSObject!")
     
     # Make op+ of two GSObjects work to return an Add object
+    # Note: we don't define __iadd__ and similar.  Let python handle this automatically
+    # to make obj += obj2 be equivalent to obj = obj + obj2.
     def __add__(self, other):
         return galsim.Add([self, other])
-
-    # op+= converts this into the equivalent of an Add object
-    def __iadd__(self, other):
-        GSObject.__init__(self, galsim.Add([self, other]))
-        self.__class__ = galsim.Add
-        return self
 
     # op- is unusual, but allowed.  It subtracts off one profile from another.
     def __sub__(self, other):
         return galsim.Add([self, (-1. * other)])
 
-    def __isub__(self, other):
-        GSObject.__init__(self, galsim.Add([self, (-1. * other)]))
-        self.__class__ = galsim.Add
-        return self
+    # Make op* work to adjust the flux of an object
+    def __mul__(self, flux_ratio):
+        """Scale the flux of the object by the given flux ratio.
 
-    # Make op* and op*= work to adjust the flux of an object
-    def __imul__(self, other):
-        self.scaleFlux(other)
-        return self
+        obj = obj * flux_ratio is equivalent to obj.setFlux(obj.getFlux() * flux_ratio)
 
-    def __mul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
+        It creates a new object that has the same profile as the original, but with the 
+        surface brightness at every location scale by the given amount.
+        """
+        new_obj = GSObject(self.SBProfile.scaleFlux(flux_ratio))
+        if hasattr(self,'noise'):
+            new_obj.noise = self.noise * flux_ratio**2
+        return new_obj
 
-    def __rmul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
+    def __rmul__(self, flux_ratio):
+        """Equivalent to obj * (1/flux_ratio)"""
+        return self.__mul__(flux_ratio)
 
-    # Likewise for op/ and op/=
-    def __idiv__(self, other):
-        self.scaleFlux(1. / other)
-        return self
+    # Likewise for op/
+    def __div__(self, flux_ratio):
+        """Equivalent to obj * (1/flux_ratio)"""
+        return self * (1. / flux_ratio)
 
-    def __div__(self, other):
-        ret = self.copy()
-        ret /= other
-        return ret
-
-    def __itruediv__(self, other):
-        return __idiv__(self, other)
-
-    def __truediv__(self, other):
-        return __div__(self, other)
+    def __truediv__(self, flux_ratio):
+        """Equivalent to obj * (1/flux_ratio)"""
+        return __div__(self, flux_ratio)
 
     # Make a copy of an object
     def copy(self):
@@ -276,84 +263,92 @@ class GSObject(object):
         kpos = galsim.utilities.parse_pos_args(args,kwargs,'kx','ky')
         return self.SBProfile.kValue(kpos)
 
-    def scaleFlux(self, flux_ratio):
-        """Multiply the flux of the object by flux_ratio
-           
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
-        are no longer available.
+    def withFlux(self, flux):
+        """Create a version of the current object with a different flux.
 
-        @param flux_ratio The factor by which to scale the flux.
+        This function is equivalent to obj * (flux/obj.getFlux()).
+
+        It creates a new object that has the same profile as the original, but with the 
+        surface brightness at every location rescaled such that the total flux will be 
+        the given value.
+           
+        @param flux     The new flux for the object.
+        @returns        The object with the new flux
         """
-        if hasattr(self,'noise'):
-            self.noise.scaleVariance( flux_ratio**2 )
-        self.SBProfile.scaleFlux(flux_ratio)
-        self.__class__ = GSObject
+        flux_ratio = flux / self.getFlux()
+        return self * flux_ratio
 
     def setFlux(self, flux):
-        """Set the flux of the object.
-           
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
-        are no longer available.
+        """This is an obsolete method that is roughly equivalent to obj = obj.withFlux(flux)"""
+        new_obj = self.withFlux(flux)
+        self.SBProfile = new_obj.SBProfile
+        self.__class__ = new_obj.__class__
 
-        @param flux The new flux for the object.
-        """
-        if hasattr(self,'noise'):
-            self.noise.scaleVariance( (flux / self.getFlux())**2 )
-        self.SBProfile.setFlux(flux)
-        self.__class__ = GSObject
+    def scaleFlux(self, flux_ratio):
+        """This is an obsolete method that is roughly equivalent to obj = obj * flux_ratio"""
+        new_obj = self * flux_ratio
+        self.SBProfile = new_obj.SBProfile
+        self.__class__ = new_obj.__class__
 
-    def applyExpansion(self, scale):
-        """Rescale the linear size of the profile by the given scale factor.
+    def expand(self, scale):
+        """Expand the linear size of the profile by the given scale factor, while preserving
+        surface brightness.
 
-        This doesn't correspond to either of the normal operations one would typically want to
-        do to a galaxy.  See the functions applyDilation and applyMagnification for the more 
-        typical usage.  But this function is conceptually simple.  It rescales the linear 
-        dimension of the profile, while preserving surface brightness.  As a result, the flux
-        will necessarily change as well.
-        
-        See applyDilation for a version that applies a linear scale factor in the size while
-        preserving flux.
-
-        See applyMagnification for a version that applies a scale factor to the area while 
-        preserving surface brightness.
-
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
-        are no longer available.
-
-        @param scale The factor by which to scale the linear dimension of the object.
-        """
-        if hasattr(self,'noise'):
-            self.noise.applyExpansion(scale)
-        self.SBProfile.applyExpansion(scale)
-        self.__class__ = GSObject
- 
-    def applyDilation(self, scale):
-        """Apply a dilation of the linear size by the given scale.
-
-        Scales the linear dimensions of the image by the factor scale.
         e.g. `half_light_radius` <-- `half_light_radius * scale`
 
-        This operation preserves flux.
-        See applyMagnification() for a version that preserves surface brightness, and thus 
+        This doesn't correspond to either of the normal operations one would typically want to
+        do to a galaxy.  The functions dilate and magnify are the more typical usage.  But this 
+        function is conceptually simple.  It rescales the linear dimension of the profile, while 
+        preserving surface brightness.  As a result, the flux will necessarily change as well.
+        
+        See dilatie for a version that applies a linear scale factor while preserving flux.
+
+        See magnify for a version that applies a scale factor to the area while preserving surface 
+        brightness.
+
+        @param scale    The factor by which to scale the linear dimension of the object.
+        @returns        The expanded object.
+        """
+        new_obj = GSObject(self.SBProfile.expand(scale))
+        if hasattr(self,'noise'):
+            new_obj.noise = self.noise.expand(scale)
+        return new_obj
+
+    def createExpanded(self, scale):
+        """This is an obsolete synonym for expand(scale)"""
+        return self.expand(scale)
+
+    def applyExpansion(self, scale):
+        """This is an obsolete method that is roughly equivalent to obj = obj.expand(scale)."""
+        new_obj = self.expand(scale)
+        self.SBProfile = new_obj.SBProfile
+        self.__class__ = new_obj.__class__
+
+    def dilate(self, scale):
+        """Dilate the linear size of the profile by the given scale factor, while preserving
+        flux.
+
+        e.g. `half_light_radius` <-- `half_light_radius * scale`
+
+        See expand() and magnify() for versions that preserves surface brightness, and thus 
         changes the flux.
 
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
-        are no longer available.
-
-        @param scale The linear rescaling factor to apply.
+        @param scale    The linear rescaling factor to apply.
+        @returns        The dilated object.
         """
-        self.applyExpansion(scale)
-        self.scaleFlux(1./scale**2) # conserve flux
+        return self.expand(scale) * (1./scale**2)  # conserve flux
 
-    def applyMagnification(self, mu):
+    def createDilated(self, scale):
+        """This is an obsolete synonym for dilate(scale)"""
+        return self.dilate(scale)
+
+    def applyDilation(self, scale):
+        """This is an obsolete method that is roughly equivalent to obj = obj.dilate(scale)."""
+        new_obj = self.dilate(scale)
+        self.SBProfile = new_obj.SBProfile
+        self.__class__ = new_obj.__class__
+
+    def magnify(self, mu):
         """Apply a lensing magnification, scaling the area and flux by mu at fixed surface
         brightness.
         
@@ -362,34 +357,38 @@ class GSObject(object):
         while increasing the flux by a factor of mu.  Thus, applyMagnification preserves surface
         brightness.
 
-        See applyDilation for a version that applies a linear scale factor in the size while
-        preserving flux.
+        See dilate() for a version that applies a linear scale factor while preserving flux.
 
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
-        are no longer available.
-
-        @param mu The lensing magnification to apply.
+        @param mu   The lensing magnification to apply.
+        @returns    The magnified object.
         """
-        import numpy as np
-        self.applyExpansion(np.sqrt(mu))
-       
-    def applyShear(self, *args, **kwargs):
+        import math
+        return self.expand(math.sqrt(mu))
+
+    def createMagnified(self, mu):
+        """This is an obsolete synonym for magnify(mu)"""
+        return self.magnify(mu)
+
+    def applyMagnification(self, mu):
+        """This is an obsolete method that is roughly equivalent to obj = obj.magnify(mu)"""
+        new_obj = self.magnify(mu)
+        self.SBProfile = new_obj.SBProfile
+        self.__class__ = new_obj.__class__
+
+    def shear(self, *args, **kwargs):
         """Apply an area-preserving shear to this object, where arguments are either a galsim.Shear,
         or arguments that will be used to initialize one.
 
         For more details about the allowed keyword arguments, see the documentation for galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
 
-        The applyShear() method precisely preserves the area.  To include a lensing distortion with
-        the appropriate change in area, either use applyShear() with applyMagnification(), or use
-        applyLensing() which combines both operations.
+        The shear() method precisely preserves the area.  To include a lensing distortion with
+        the appropriate change in area, either use shear() with magnify(), or use lens(), which 
+        combines both operations.
 
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
-        are no longer available.
+        @param shear    The shear to be applied. Or, as described above, you may instead supply
+                        parameters do construct a shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
+        @returns        The sheared object.
         """
         if len(args) == 1:
             if kwargs:
@@ -401,12 +400,23 @@ class GSObject(object):
             raise TypeError("Error, too many unnamed arguments to applyShear!")
         else:
             shear = galsim.Shear(**kwargs)
-        if hasattr(self,'noise'):
-            self.noise.applyShear(shear)
-        self.SBProfile.applyShear(shear._shear)
-        self.__class__ = GSObject
 
-    def applyLensing(self, g1, g2, mu):
+        new_obj = GSObject(self.SBProfile.shear(shear._shear))
+        if hasattr(self,'noise'):
+            new_obj.noise = self.noise.shear(shear)
+        return new_obj
+
+    def createSheared(self, *args, **kwargs):
+        """This is an obsolete synonym for shear(shear)"""
+        return self.shear(*args, **kwargs)
+
+    def applyShear(self, *args, **kwargs):
+        """This is an obsolete method that is roughly equivalent to obj = obj.shear(shear)"""
+        new_obj = self.shear(*args, **kwargs)
+        self.SBProfile = new_obj.SBProfile
+        self.__class__ = new_obj.__class__
+
+    def lens(self, g1, g2, mu):
         """Apply a lensing shear and magnification to this object.
 
         This GSObject method applies a lensing (reduced) shear and magnification.  The shear must be
@@ -416,38 +426,49 @@ class GSObject(object):
         lensing by an NFW dark matter halo.  The magnification determines the rescaling factor for
         the object area and flux, preserving surface brightness.
 
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
-        are no longer available.
-
-        @param g1      First component of lensing (reduced) shear to apply to the object.
-        @param g2      Second component of lensing (reduced) shear to apply to the object.
-        @param mu      Lensing magnification to apply to the object.  This is the factor by which
-                       the solid angle subtended by the object is magnified, preserving surface
-                       brightness.
+        @param g1       First component of lensing (reduced) shear to apply to the object.
+        @param g2       Second component of lensing (reduced) shear to apply to the object.
+        @param mu       Lensing magnification to apply to the object.  This is the factor by which
+                        the solid angle subtended by the object is magnified, preserving surface
+                        brightness.
+        @returns        The lensed object.
         """
-        self.applyShear(g1=g1, g2=g2)
-        self.applyMagnification(mu)
+        return self.shear(g1=g1,g2=g2).magnify(mu)
 
-    def applyRotation(self, theta):
+    def createLensed(self, g1, g2, mu):
+        """This is an obsolete synonym for lens(g1,g2,mu)"""
+        return self.lens(g1,g2,mu)
+
+    def applyLensing(self, g1, g2, mu):
+        """This is an obsolete method that is roughly equivalent to obj = obj.len(g1,g2,mu)"""
+        new_obj = self.lens(g1,g2,mu)
+        self.SBProfile = new_obj.SBProfile
+        self.__class__ = new_obj.__class__
+
+    def rotate(self, theta):
         """Apply a rotation theta to this object.
            
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
-        are no longer available.
-
-        @param theta Rotation angle (Angle object, +ve anticlockwise).
+        @param theta    Rotation angle (Angle object, +ve anticlockwise).
+        @returns        The rotated object.
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
+        new_obj = GSObject(self.SBProfile.rotate(theta))
         if hasattr(self,'noise'):
-            self.noise.applyRotation(theta)
-        self.SBProfile.applyRotation(theta)
-        self.__class__ = GSObject
+            new_obj.noise = self.noise.rotate(theta)
+        return new_obj
 
-    def applyTransformation(self, dudx, dudy, dvdx, dvdy):
+    def createRotated(self, theta):
+        """This is an obsolete synonym for rotate(theta)"""
+        return self.rotate(theta)
+
+    def applyRotation(self, theta):
+        """This is an obsolete method that is roughly equivalent to obj = obj.rotate(theta)"""
+        new_obj = self.rotate(theta)
+        self.SBProfile = new_obj.SBProfile
+        self.__class__ = new_obj.__class__
+
+    def transform(self, dudx, dudy, dvdx, dvdy):
         """Apply a transformation to this object defined by an arbitrary Jacobian matrix.
 
         This applies a Jacobian matrix to the coordinate system in which this object 
@@ -458,30 +479,35 @@ class GSObject(object):
             v = dvdx x + dvdy y
 
         That is, an arbitrary affine transform, but without the translation (which is 
-        easily effected via applyShift).
+        easily effected via shift).
 
-        Note that this function is similar to applyExpansion in that it preserves
-        surface brightness, not flux.  If you want to preserve flux, you should also do
+        Note that this function is similar to expand in that it preserves surface brightness,
+        not flux.  If you want to preserve flux, you should also do
 
-            prof.scaleFlux( 1. / abs(dudx*dvdy - dudy*dvdx) )
-
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
-        are no longer available.
+            prof *= 1./abs(dudx*dvdy - dudy*dvdx)
 
         @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @returns        The transformed object
         """
+        new_obj = galsim.GSObject(self.SBProfile.transform(dudx,dudy,dvdx,dvdy))
         if hasattr(self,'noise'):
-            self.noise.applyTransformation(dudx,dudy,dvdx,dvdy)
-        self.SBProfile.applyTransformation(dudx,dudy,dvdx,dvdy)
-        self.__class__ = GSObject
+            new_obj.noise = self.noise.transform(dudx,dudy,dvdx,dvdy)
+        return new_obj
  
-
-    def applyShift(self, *args, **kwargs):
+    def createTransformed(self, dudx, dudy, dvdx, dvdy):
+        """This is an obsolete sysnonym for transform()"""
+        return self.transform(dudx,dudy,dvdx,dvdy)
+        
+    def applyTransformation(self, dudx, dudy, dvdx, dvdy):
+        """This is an obsolete method that is roughly equivalent to obj = obj.transform(...)"""
+        new_obj = self.transform(dudx,dudy,dvdx,dvdy)
+        self.SBProfile = new_obj.SBProfile
+        self.__class__ = new_obj.__class__
+  
+    def shift(self, *args, **kwargs):
         """Apply a (dx, dy) shift to this object.
            
         After this call, the caller's type will be a GSObject.
@@ -489,141 +515,27 @@ class GSObject(object):
         those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
         are no longer available.
 
-        @param dx Horizontal shift to apply (float).
-        @param dy Vertical shift to apply (float).
+        Note: in addition to the dx,dy parameter names, you may also supply dx,dy as a tuple, 
+        or as a galsim.PositionD or galsim.PositionI object.
 
-        Note: you may supply dx,dy as either two arguments, as a tuple, or as a 
-        galsim.PositionD or galsim.PositionI object.
+        @param dx       Horizontal shift to apply.
+        @param dy       Vertical shift to apply.
+        @returns        The shifted object.
+
         """
         delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
-        self.SBProfile.applyShift(delta)
-        self.__class__ = GSObject
+        return GSObject(self.SBProfile.shift(delta))
 
-    # Also add methods which create a new GSObject with the transformations applied...
-    #
-    def createDilated(self, scale):
-        """Returns a new GSObject by applying a dilation of the linear size by the given scale.
-        
-        Scales the linear dimensions of the image by the factor scale.
-        e.g. `half_light_radius` <-- `half_light_radius * scale`
-
-        This operation preserves flux.
-        See createMagnified() for a version that preserves surface brightness, and thus 
-        changes the flux.
-
-        @param scale The linear rescaling factor to apply.
-        @returns The rescaled GSObject.
-        """
-        ret = self.copy()
-        ret.applyDilation(scale)
-        return ret
-
-    def createMagnified(self, mu):
-        """Returns a new GSObject by applying a lensing magnification, scaling the area and flux by
-        mu at fixed surface brightness.
-
-        This process returns a new object with a lensing magnification mu, which scales the linear
-        dimensions of the image by the factor sqrt(mu), i.e., `half_light_radius` <--
-        `half_light_radius * sqrt(mu)` while increasing the flux by a factor of mu.  Thus, the new
-        object has the same surface brightness as the original, but different size and flux.
-
-        See createDilated() for a version that preserves flux.
-
-        @param mu The lensing magnification to apply.
-        @returns The rescaled GSObject.
-        """
-        ret = self.copy()
-        ret.applyMagnification(mu)
-        return ret
-
-    def createSheared(self, *args, **kwargs):
-        """Returns a new GSObject by applying an area-preserving shear, where arguments are either a
-        galsim.Shear or keyword arguments that can be used to create one.
-
-        For more details about the allowed keyword arguments, see the documentation of galsim.Shear
-        (for doxygen documentation, see galsim.shear.Shear).
-
-        The createSheared() method precisely preserves the area.  To include a lensing distortion
-        with the appropriate change in area, either use createSheared() with createMagnified(), or
-        use createLensed() which combines both operations.
-
-        @returns The sheared GSObject.
-        """
-        ret = self.copy()
-        ret.applyShear(*args, **kwargs)
-        return ret
-
-    def createLensed(self, g1, g2, mu):
-        """Returns a new GSObject by applying a lensing shear and magnification.
-
-        This method returns a new GSObject to which the supplied lensing (reduced) shear and
-        magnification has been applied.  The shear must be specified using the g1, g2 definition of
-        shear (see galsim.Shear documentation for more details).  This is the same definition as the
-        outputs of the galsim.PowerSpectrum and galsim.NFWHalo classes, which compute shears
-        according to some lensing power spectrum or lensing by an NFW dark matter halo. The
-        magnification determines the rescaling factor for the object area and flux, preserving
-        surface brightness.
-
-        @param g1      First component of lensing (reduced) shear to apply to the object.
-        @param g2      Second component of lensing (reduced) shear to apply to the object.
-        @param mu      Lensing magnification to apply to the object.  This is the factor by which
-                       the solid angle subtended by the object is magnified, preserving surface
-                       brightness.
-        @returns       The lensed GSObject.
-        """
-        ret = self.copy()
-        ret.applyLensing(g1, g2, mu)
-        return ret
-
-    def createRotated(self, theta):
-        """Returns a new GSObject by applying a rotation.
-
-        @param theta Rotation angle (Angle object, +ve anticlockwise).
-        @returns The rotated GSObject.
-        """
-        if not isinstance(theta, galsim.Angle):
-            raise TypeError("Input theta should be an Angle")
-        ret = self.copy()
-        ret.applyRotation(theta)
-        return ret
-        
-    def createTransformed(self, dudx, dudy, dvdx, dvdy):
-        """Returns a new GSObject by applying a transformation given by a Jacobian matrix.
-
-        This applies a Jacobian matrix to the coordinate system in which this object 
-        is defined.  It takes a profile defined in terms of (x,y) and returns the equivalent
-        profile defined in terms of (u,v) where:
-
-            u = dudx x + dudy y
-            v = dvdx x + dvdy y
-
-        That is, an arbitrary affine transform, but without the translation (which is 
-        easily effected via applyShift).
-
-        @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
-        @returns        The transformed object.
-        """
-        ret = self.copy()
-        ret.applyTransformation(dudx,dudy,dvdx,dvdy)
-        return ret
-        
     def createShifted(self, *args, **kwargs):
-        """Returns a new GSObject by applying a shift.
+        """This is an obsolete synonym for shift(dx,dy)"""
+        return self.shift(*args,**kwargs)
 
-        @param dx Horizontal shift to apply (float).
-        @param dy Vertical shift to apply (float).
-
-        Note: you may supply dx,dy as either two arguments, as a tuple, or as a 
-        galsim.PositionD or galsim.PositionI object.
-
-        @returns The shifted GSObject.
-        """
-        ret = self.copy()
-        ret.applyShift(*args, **kwargs)
-        return ret
+    def applyShift(self, *args, **kwargs):
+        """This is an obsolete method that is roughly equivalent to obj = obj.shift(dx,dy)"""
+        new_obj = self.shift(*args,**kwargs)
+        self.SBProfile = new_obj.SBProfile
+        self.__class__ = new_obj.__class__
+ 
 
     # Make sure the image is defined with the right size and wcs for the draw and
     # drawShoot commands.
@@ -788,7 +700,7 @@ class GSObject(object):
         if offset == galsim.PositionD(0,0):
             return self.copy()
         else:
-            return self.createShifted(wcs.toWorld(offset))
+            return self.shift(wcs.toWorld(offset))
 
 
     def draw(self, image=None, scale=None, wcs=None, gain=1., wmult=1., normalization="flux",
@@ -1264,8 +1176,8 @@ class GSObject(object):
         # The following are all equivalent ways to do this:
         #    re.wcs.toWorld(prof)
         #    galsim.PixelScale(1./re.scale).toImage(prof)
-        #    prof.createDilated(re.scale)
-        prof = self.createDilated(re.scale)
+        #    prof.dilate(re.scale)
+        prof = self.dilate(re.scale)
 
         # wmult isn't really used by drawK, but we need to provide it.
         wmult = 1.0
@@ -1323,7 +1235,7 @@ class Gaussian(GSObject):
     Methods
     -------
     The Gaussian is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+    shear() etc.) and operator bindings.
     """
     
     # Initialization parameters of the object, with type information, to indicate
@@ -1404,7 +1316,7 @@ class Moffat(GSObject):
     Methods
     -------
     The Moffat is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+    shear() etc.) and operator bindings.
     """
 
     # Initialization parameters of the object, with type information
@@ -1470,7 +1382,7 @@ class Airy(GSObject):
     Methods
     -------
     The Airy is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
-    applyShear() etc.) and operator bindings.
+    shear() etc.) and operator bindings.
     """
     
     # Initialization parameters of the object, with type information
@@ -1565,7 +1477,7 @@ class Kolmogorov(GSObject):
     Methods
     -------
     The Kolmogorov is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
-    applyShear() etc.) and operator bindings.
+    shear() etc.) and operator bindings.
 
     """
     
@@ -1644,7 +1556,7 @@ class Pixel(GSObject):
     Methods
     -------
     The Pixel is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
-    applyShear() etc.) and operator bindings.
+    shear() etc.) and operator bindings.
 
     Note: We have not implemented drawing a sheared or rotated Pixel in real space.  It's a 
           bit tricky to get right at the edges where fractional fluxes are required.  
@@ -1687,7 +1599,7 @@ class Box(GSObject):
     Methods
     -------
     The Box is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
-    applyShear() etc.) and operator bindings.
+    shear() etc.) and operator bindings.
 
     Note: We have not implemented drawing a sheared or rotated Box in real space.  It's a 
           bit tricky to get right at the edges where fractional fluxes are required.  
@@ -1880,7 +1792,7 @@ class Sersic(GSObject):
     Methods
     -------
     The Sersic is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+    shear() etc.) and operator bindings.
     """
 
     # Initialization parameters of the object, with type information
@@ -1948,7 +1860,7 @@ class Exponential(GSObject):
     Methods
     -------
     The Exponential is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+    shear() etc.) and operator bindings.
     """
 
     # Initialization parameters of the object, with type information
@@ -2007,7 +1919,7 @@ class DeVaucouleurs(GSObject):
     Methods
     -------
     The DeVaucouleurs is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+    shear() etc.) and operator bindings.
     """
 
     # Initialization parameters of the object, with type information
