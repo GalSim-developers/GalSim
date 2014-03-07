@@ -913,8 +913,14 @@ def test_corr_func():
         theory_val = kmax*jv(1,t*kmax) - kmin*jv(1,t*kmin)
         theory_val /= (2.*np.pi*t)
         # Finally, make sure they are equal to 10^{-5}
-        np.testing.assert_allclose(test_xip, theory_val, rtol=1.e-5,
-                                   err_msg='Integrated xi+ differs from reference values')
+        try:
+            np.testing.assert_allclose(test_xip, theory_val, rtol=1.e-5,
+                                       err_msg='Integrated xi+ differs from reference values')
+        except AttributeError:
+            # Older NumPy versions don't have assert_allclose, so use this instead.
+            np.testing.assert_array_almost_equal(
+                test_xip, theory_val, decimal=10,
+                err_msg='Integrated xi+ differs from reference values')
 
         # Now, do the test for xi-.  We again have to rearrange equations, starting with the lensing
         # engine output:
@@ -942,8 +948,89 @@ def test_corr_func():
         theory_val = jv(3,t*kmin)/kmin**3 - jv(3,t*kmax)/kmax**3
         theory_val /= (2.*np.pi*t)
         # Finally, make sure they are equal to 10^{-5}
-        np.testing.assert_allclose(test_xim, theory_val, rtol=1.e-5,
-                                   err_msg='Integrated xi+ differs from reference values')
+        try:
+            np.testing.assert_allclose(test_xim, theory_val, rtol=1.e-5,
+                                       err_msg='Integrated xi+ differs from reference values')
+        except AttributeError:
+            # Older NumPy versions don't have assert_allclose, so use this instead.
+            np.testing.assert_array_almost_equal(
+                test_xim, theory_val, decimal=10,
+                err_msg='Integrated xi+ differs from reference values')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_periodic():
+    """Test that the periodic interpolation option is working properly.
+    """
+    import time
+    t1 = time.time()
+
+    # Periodic interpolation is an option in the lensing power spectrum module primarily because,
+    # with our shear grids being implicitly periodic, it will give the right shear power spectrum
+    # within kmin<k<kmax if we do interpolation in some periodic way.
+    #
+    # We will test this functionality by generating shear on a grid, then using periodic
+    # interpolation with the nearest-neighbor interpolant for some grid that has the same ngrid and
+    # spacing but some large offset from the original grid coordinates.  The lensing engine should
+    # tile the sky with periodic grids, and if we use NN interpolation then we should just get a
+    # (wrapped/shifted) copy of the original grid.  Thus the shear power spectrum should be
+    # precisely preserved by this operation.
+
+    # Set up a cosmological shear power spectrum.
+    tab_ps = galsim.LookupTable(
+        file='../examples/data/cosmo-fid.zmed1.00_smoothed.out', interpolant='linear')
+    ps = galsim.PowerSpectrum(tab_ps, units=galsim.radians)
+
+    # Set up a grid.  Make it GREAT10/GREAT3-like.
+    ngrid = 100
+    grid_spacing = 0.1 # degrees
+
+    # Make shears on the grid.
+    g1, g2 = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                          rng=galsim.UniformDeviate(314159), interpolant='nearest', kmin_factor=3)
+
+    # Set up a new set of x, y.  Make a grid and then shift it coherently:
+    min = (-ngrid/2 + 0.5) * grid_spacing
+    max = (ngrid/2 - 0.5) * grid_spacing
+    x, y = np.meshgrid(np.arange(min,max+grid_spacing,grid_spacing),
+                       np.arange(min,max+grid_spacing,grid_spacing))
+    x += 17.40 # degrees
+    y -= 0.617 # degrees
+
+    # Get shears at those positions using periodic interpolation.
+    g1_shift, g2_shift = ps.getShear(pos=(x.flatten(),y.flatten()), units=galsim.degrees,
+                                     reduced=False, periodic=True)
+    g1_shift = g1_shift.reshape((ngrid,ngrid))
+    g2_shift = g2_shift.reshape((ngrid,ngrid))
+    # Compute shear power spectra for the original grid and the new grid.  We can use all the
+    # default settings for the power spectrum estimator.
+    pse = galsim.pse.PowerSpectrumEstimator()
+    k, pe, pb, peb = pse.estimate(g1, g2)
+    _, pe_shift, pb_shift, peb_shift = pse.estimate(g1_shift, g2_shift)
+
+    # Check that they are identical.
+    try:
+        np.testing.assert_allclose(
+            pe_shift, pe, rtol=1e-10,
+            err_msg="E power altered by NN periodic interpolation.")
+        np.testing.assert_allclose(
+            pb_shift, pb, rtol=1e-10,
+            err_msg="B power altered by NN periodic interpolation.")
+        np.testing.assert_allclose(
+            peb_shift, peb, rtol=1e-10,
+            err_msg="EB power altered by NN periodic interpolation.")
+    except AttributeError:
+        # Older numpy versions don't have assert_allclose, so use this instead:
+        np.testing.assert_array_almost_equal(
+            pe_shift, pe, decimal=9,
+            err_msg="E power altered by NN periodic interpolation.")
+        np.testing.assert_array_almost_equal(
+            pb_shift, pb, decimal=9,
+            err_msg="B power altered by NN periodic interpolation.")
+        np.testing.assert_array_almost_equal(
+            peb_shift, peb, decimal=9,
+            err_msg="EB power altered by NN periodic interpolation.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -959,3 +1046,4 @@ if __name__ == "__main__":
     test_kappa_gauss()
     test_power_spectrum_with_kappa()
     test_corr_func()
+    test_periodic()
