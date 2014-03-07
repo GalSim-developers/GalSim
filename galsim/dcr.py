@@ -77,3 +77,27 @@ def get_refraction(wave, zenith_angle, **kwargs):
     # r0 = (n_squared - 1.0) / (2.0 * n_squared)
     r0 = nm1 * (nm1+2) / 2.0 / (nm1**2 + 2*nm1 + 1)
     return r0 * numpy.tan(zenith_angle.rad()) * galsim.radians
+
+def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=None):
+    """Compute the zenith angle and parallactic angle of a celestial coordinate, given either
+    the celestial coordinate of the zenith, or equivalently, the hour angle of the coordinate and
+    the latitude of the observer.  This is useful for the function ChromaticAtmosphere in the
+    galsim.chromatic module.
+
+    @param obj_coord     A `galsim.CelestialCoord` object for which the zenith and parallactic
+                         angles will be computed.
+    @param zenith_coord  A `galsim.CelestialCoord` indicating the coordinates of the zenith.
+    @param HA            The hour angle (as a `galsim.Angle`) of the coordinate for which the
+                         zenith and parallactic angles will be computed.
+    @param latitude      The observer's latitude, as a `galsim.Angle`.
+    @returns zenith_angle, parallactic_angle as `galsim.Angle`s.
+    """
+    if zenith_coord is None:
+        if HA is None or latitude is None:
+            raise ValueError("Need to provide either zenith_coord or (HA, latitude) to"
+                             +"zenith_parallactic_angles()")
+        zenith_coord = galsim.CelestialCoord(HA + obj_coord.ra, latitude)
+    zenith_angle = obj_coord.distanceTo(zenith_coord)
+    NCP = galsim.CelestialCoord(0.0*galsim.degrees, 90*galsim.degrees)
+    parallactic_angle = obj_coord.angleBetween(zenith_coord, NCP)
+    return zenith_angle, parallactic_angle

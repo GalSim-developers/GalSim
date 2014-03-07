@@ -642,7 +642,7 @@ class ChromaticObject(object):
 
 
 def ChromaticAtmosphere(base_obj, base_wavelength, zenith_angle, alpha=-0.2,
-                        position_angle=0*galsim.radians, **kwargs):
+                        parallactic_angle=0*galsim.radians, **kwargs):
     """Return a ChromaticObject implementing two atmospheric chromatic effects: differential
     chromatic refraction (DCR) and wavelength-dependent seeing.
 
@@ -655,16 +655,22 @@ def ChromaticAtmosphere(base_obj, base_wavelength, zenith_angle, alpha=-0.2,
     appropriate for LSST at Cerro Pachon, Chile, but they are broadly reasonable for most
     observatories.
 
+    Note that this function implicitly assumes that lengths are in arcseconds.  Thus, to use this
+    function, you should specify properties like FWHM, half_light_radius, and pixel scales in arcsec.
+    This is unlike the rest of GalSim, in which Position units only need to be internally
+    consistent.
+
     @param base_obj           Fiducial PSF, equal to the monochromatic PSF at base_wavelength
     @param base_wavelength    Wavelength represented by the fiducial PSF.
     @param zenith_angle       Angle from object to zenith, expressed as a galsim.Angle
+    @param parallactic_angle  Parallactic angle, i.e. the position angle of the zenith, measured
+                              from North through East.  (default: 0)
     @param alpha              Power law index for wavelength-dependent seeing.  Default of -0.2
                               is the prediction for Kolmogorov turbulence.
-    @param position_angle     Angle pointing toward zenith, measured from "up" through "right".
     @param pressure           Air pressure in kiloPascals.  (default 69.328 kPa)
     @param temperature        Temperature in Kelvins.  (default: 293.15 K)
     @param H2O_pressure       Water vapor pressure in kiloPascals.  (default: 1.067 kPa)
-    @returns  ChromaticObject representing a chromatic atmospheric PSF.
+    @returns ChromaticObject  representing a chromatic atmospheric PSF.
     """
     ret = ChromaticObject(base_obj)
     ret.applyDilation(lambda w: (w/base_wavelength)**(alpha))
@@ -673,8 +679,8 @@ def ChromaticAtmosphere(base_obj, base_wavelength, zenith_angle, alpha=-0.2,
         shift_magnitude = galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
         shift_magnitude -= base_refraction
         shift_magnitude = shift_magnitude / galsim.arcsec
-        shift = (shift_magnitude*numpy.sin(position_angle.rad()),
-                 shift_magnitude*numpy.cos(position_angle.rad()))
+        shift = (-shift_magnitude*numpy.sin(parallactic_angle.rad()),
+                 shift_magnitude*numpy.cos(parallactic_angle.rad()))
         return shift
     ret.applyShift(shift_fn)
     return ret

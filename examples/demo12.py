@@ -228,13 +228,26 @@ def main(argv):
     PSF_500 = galsim.Moffat(beta=2.5, fwhm=0.5)
     # Then we use ChromaticAtmosphere to manipulate this fiducial PSF as a function of wavelength.
     # We also specify the wavelength of our fiducial PSF, and the zenith_angle of the observation
-    # so that the DCR can be computed.  We can also optionally specify the position angle that
-    # points to zenith.  The default of 0.0 implies that zenith is "up".  A position angle of 90
-    # degrees indicates a zenith directly to the right.
-    PSF = galsim.ChromaticAtmosphere(PSF_500, 500.0, zenith_angle=30.0 * galsim.degrees,
-                                     position_angle=0.0 * galsim.degrees)
+    # so that the DCR can be computed.  We can also optionally specify the parallactic angle, which
+    # is the position angle of the zenith (measured from North through East).  A parallactic angle
+    # of 0.0 implies that the zenith is North (up), and a parallactic angle of 90 degrees indicates
+    # that the zenith is to the East (left).
 
-    # convolve with pixel and PSF to create final profile
+    # We can use dcr.zenith_parallactic_angles to compute these angles for an object at a given
+    # celestial coordinate and hour angle, and an observer at a particular latitude.  For example,
+    # the coordinates of M101 are:
+    ra = galsim.HMS_Angle("14:03:13") # hours : minutes : seconds
+    dec = galsim.DMS_Angle("54:20:57") # degrees : minutes : seconds
+    m101 = galsim.CelestialCoord(ra, dec)
+    latitude = 19.8207 * galsim.degrees
+    # Let's say we observed this position an hour before it transits, i.e. hour angle = -1 hr.
+    HA = -1.0 * galsim.hours
+    # Then we can compute the zenith angle and parallactic angle of this observation:
+    za, pa = galsim.dcr.zenith_parallactic_angles(m101, HA=HA, latitude=latitude)
+    # And then finally, create the chromatic PSF
+    PSF = galsim.ChromaticAtmosphere(PSF_500, 500.0, zenith_angle=za, parallactic_angle=pa)
+
+    # convolve with galaxy and pixel to create final profile
     pix = galsim.Pixel(pixel_scale)
     final = galsim.Convolve([gal, pix, PSF])
     logger.debug('Created chromatic PSF finale profile')
