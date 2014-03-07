@@ -627,7 +627,7 @@ def test_tabulated():
         ## exception should be raised)
         t = galsim.LookupTable((0.99,1.,1.01),(0.99,1.,1.01))
         ps = galsim.PowerSpectrum(t)
-        np.testing.assert_raises(ValueError, ps.buildGrid, grid_spacing=1.7, ngrid=100)
+        np.testing.assert_raises(RuntimeError, ps.buildGrid, grid_spacing=1.7, ngrid=100)
         ## try to interpolate in log, but with zero values included
         np.testing.assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.),
                                  x_log=True)
