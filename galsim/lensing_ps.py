@@ -730,6 +730,8 @@ class PowerSpectrum(object):
         if units != galsim.arcsec:
             scale_fac = (1.*units) / galsim.arcsec
             grid_spacing *= scale_fac
+        else:
+            scale_fac = 1.
 
         # Decide on a grid of separation values.  Do this in arcsec, for consistency with the
         # internals of the PowerSpectrum class.
