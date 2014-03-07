@@ -160,6 +160,10 @@ def test_draw_add_commutativity():
     print 'time for %s = %.2f'%(funcname(),t6-t1)
 
 def test_ChromaticConvolution_InterpolatedImage():
+    """Check that we can interchange the order of integrating over wavelength and convolving for
+    separable ChromaticObjects.  This involves storing the results of integrating first in an
+    InterpolatedImage.
+    """
     import time
     t1 = time.time()
 
@@ -445,6 +449,8 @@ def test_monochromatic_filter():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_chromatic_flux():
+    """Test that the total drawn flux is equal to the integral of bandpass * sed over wavelength.
+    """
     import time
     t1 = time.time()
 
@@ -522,6 +528,9 @@ def test_double_ChromaticSum():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_ChromaticConvolution_of_ChromaticConvolution():
+    """Check that the __init__ of ChromaticConvolution properly expands arguments that are already
+    ChromaticConvolutions.
+    """
     import time
     t1 = time.time()
     a = galsim.Gaussian(fwhm=1.0) * bulge_SED
@@ -647,6 +656,9 @@ def test_ChromaticObject_applyShift():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_ChromaticObject_compound_affine_transformation():
+    """ Check that making a (separable) object chromatic before a bunch of transformations is
+    equivalent to making it chromatic after a bunch of transformations.
+    """
     import time
     t1 = time.time()
     im1 = galsim.ImageD(32, 32, scale=0.2)
@@ -695,6 +707,11 @@ def test_ChromaticObject_compound_affine_transformation():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_analytic_integrator():
+    """Test that the analytic (i.e., not sampled) versions of SEDs and Bandpasses produce the
+    same results as the sampled versions.
+    """
+    import time
+    t1 = time.time()
     pix = galsim.Pixel(0.2)
     psf = galsim.Moffat(fwhm=1.0, beta=2.7)
 
@@ -739,6 +756,26 @@ def test_analytic_integrator():
     printval(image1, image3)
     np.testing.assert_array_almost_equal(image1.array, image3.array, 5,
                                          "Analytic integrator doesn't match sample integrator")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_gsparam():
+    """Check that gsparams actually gets processed by ChromaticObjects.
+    """
+    import time
+    t1 = time.time()
+    gal = galsim.ChromaticObject(galsim.Gaussian(fwhm=1))
+    pix = galsim.Pixel(0.2)
+    gsparams = galsim.GSParams()
+
+    # Setting maximum_fft_size this low causes an exception to be raised for GSObjects, so
+    # make sure it does for ChromaticObjects too, thereby assuring that gsparams is really
+    # getting properly forwarded through the internals of ChromaticObjects.
+    gsparams.maximum_fft_size = 16
+    final = galsim.Convolve(gal, pix, gsparams=gsparams)
+    np.testing.assert_raises(RuntimeError, final.draw, bandpass)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_draw_add_commutativity()
@@ -758,3 +795,4 @@ if __name__ == "__main__":
     test_ChromaticObject_applyShift()
     test_ChromaticObject_compound_affine_transformation()
     test_analytic_integrator()
+    test_gsparam()
