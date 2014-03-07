@@ -690,7 +690,9 @@ def writeFile(file_name, hdu_list, dir=None, clobber=True, compression='auto'):
                         it must be applied when writing each hdu.
     """
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
-    if pyfits_compress:
+    if pyfits_compress and compression != 'auto':
+        # If compression is auto and it determined that it should use rice, then we
+        # should presume that the hdus were already rice compressed, so we can ignore it here.
         raise ValueError("Compression %s is invalid for writeFile"%compression)
     _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
  
