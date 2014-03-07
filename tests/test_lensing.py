@@ -1035,6 +1035,35 @@ def test_periodic():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_bandlimit():
+    """Test that the band-limiting of the power spectrum is working properly.
+    """
+    import time
+    t1 = time.time()
+
+    # If we do not impose a band limit on the power spectrum, then it's going to lead to aliasing in
+    # both the E and B modes, which gives spurious power within kmin<k<kmax.   In practice this is
+    # typically a 5-10% effect.  We are just going to test that the shear variance is suitably
+    # elevated rather than testing the entire power spectrum.
+
+    # Start with a cosmological power spectrum that is not band-limited.
+    ps_tab = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00.out')
+    ps = galsim.PowerSpectrum(ps_tab, units=galsim.radians)
+
+    # Generate shears without and with band-limiting
+    g1, g2 = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                          rng=galsim.UniformDeviate(123), bandlimit=None)
+    g1b, g2b = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                            rng=galsim.UniformDeviate(123), bandlimit='hard')
+
+    # Check the shear variances for a >5% excess when there's no band limit.
+    var = np.var(g1)+np.var(g2)
+    varb = np.var(g1b)+np.var(g2b)
+    assert var>1.05*varb,"Comparison of shear variances without/with band-limiting is not as expected"
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_nfwhalo()
     test_shear_variance()
@@ -1047,3 +1076,4 @@ if __name__ == "__main__":
     test_power_spectrum_with_kappa()
     test_corr_func()
     test_periodic()
+    test_bandlimit()
