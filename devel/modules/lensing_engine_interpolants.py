@@ -590,11 +590,11 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
                        bandlimit="soft", kmin_factor=kmin_factor, n_theta=100)
 
     # Set up grid and the corresponding x, y lists.
-    min = (-ngrid/2 + 0.5) * grid_spacing
-    max = (ngrid/2 - 0.5) * grid_spacing
+    min_val = (-ngrid/2 + 0.5) * grid_spacing
+    max_val = (ngrid/2 - 0.5) * grid_spacing
     x, y = np.meshgrid(
-        np.arange(min,max+grid_spacing,grid_spacing),
-        np.arange(min,max+grid_spacing,grid_spacing))
+        np.arange(min_val,max_val+grid_spacing,grid_spacing),
+        np.arange(min_val,max_val+grid_spacing,grid_spacing))
 
     # Parse the target position information: grids that are dithered by some fixed amount, or
     # randomly.
@@ -622,11 +622,11 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
         # If we are cutting off edge points, then all the functions we store will include that
         # cutoff.  However, we will save results for the original grids without the cutoffs just in
         # order to test what happens with / without a cutoff in the no-interpolation case.
-        mean_nocutoff_ps_ee = np.zeros((n_output_bins, n_interpolants))
-        mean_nocutoff_ps_bb = np.zeros((n_output_bins, n_interpolants))
-        mean_nocutoff_ps_eb = np.zeros((n_output_bins, n_interpolants))
-        mean_nocutoff_cfp = np.zeros((n_output_bins, n_interpolants))
-        mean_nocutoff_cfm = np.zeros((n_output_bins, n_interpolants))
+        mean_nocutoff_ps_ee = np.zeros(n_output_bins)
+        mean_nocutoff_ps_bb = np.zeros(n_output_bins)
+        mean_nocutoff_ps_eb = np.zeros(n_output_bins)
+        mean_nocutoff_cfp = np.zeros(n_output_bins)
+        mean_nocutoff_cfm = np.zeros(n_output_bins)
     mean_interpolated_ps_ee = np.zeros((n_output_bins, n_interpolants))
     mean_ps_ee = np.zeros((n_output_bins, n_interpolants))
     mean_interpolated_ps_bb = np.zeros((n_output_bins, n_interpolants))
@@ -691,7 +691,10 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
 
             # Cut off the original, interpolated set of positions before doing any more calculations.
             # Store grid size that we actually use for everything else in future, post-cutoff.
-            n_cutoff = nCutoff(interpolant)
+            # We will conservatively cut off the maximum required for our most tricky interpolant.
+            n_cutoff = 0
+            for interpolant in interpolant_list:
+                n_cutoff = max(n_cutoff, nCutoff(interpolant))
             ngrid_use = ngrid - 2*n_cutoff
             grid_size_use = grid_size * float(ngrid_use)/ngrid
             if ngrid_use <= 2:
