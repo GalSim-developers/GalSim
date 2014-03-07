@@ -24,7 +24,8 @@ import numpy as np
 # We are going to try to import the Bessel function routine jv from scipy.special, so that if we
 # have it, then we can use it for correlation function calculations without importing it during each
 # iteration.  However, people who don't want to use the calculateXi method don't care about failure,
-# so for now we do nothing if this import statement fails.  We can raise an exception when that method is called.
+# so for now we do nothing if this import statement fails.  We can raise an exception when that
+# method is called.
 try:
     from scipy.special import jv
 except:
