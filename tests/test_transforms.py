@@ -73,17 +73,8 @@ def test_smallshear():
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
-    mySBP = galsim.SBGaussian(flux=1, sigma=1)
-    mySBP.applyShear(myShear._shear)
     myImg.setCenter(0,0)
-    mySBP.applyExpansion(1./dx)
-    mySBP.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Small-shear Gaussian profile disagrees with expected result")
 
-    # Repeat with the GSObject version of this:
     gauss = galsim.Gaussian(flux=1, sigma=1)
     gauss.applyShear(myShear)
     gauss.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
@@ -134,16 +125,8 @@ def test_largeshear():
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_largeshear.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
-    mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
-    mySBP.applyShear(myShear._shear)
     myImg.setCenter(0,0)
-    mySBP.applyExpansion(1./dx)
-    mySBP.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Large-shear DeVaucouleurs profile disagrees with expected result")
 
-    # Repeat with the GSObject version of this:
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
     devauc.applyShear(myShear)
     devauc.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
@@ -193,22 +176,12 @@ def test_rotate():
     """
     import time
     t1 = time.time()
-    mySBP = galsim.SBSersic(n=2.5, flux=1, half_light_radius=1)
     myShear = galsim.Shear(e1=0.2, e2=0.0)
-    mySBP.applyShear(myShear._shear)
-    mySBP.applyRotation(45.0 * galsim.degrees)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_ellip_rotated.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
-    mySBP.applyExpansion(1./dx)
-    mySBP.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="45-degree rotated elliptical Gaussian disagrees with expected result")
 
-    # Repeat with the GSObject version of this:
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1)
     gal.applyShear(myShear)
     gal.applyRotation(45.0 * galsim.degrees)
@@ -253,20 +226,11 @@ def test_mag():
     t1 = time.time()
     re = 1.0
     r0 = re/1.67839
-    mySBP = galsim.SBExponential(flux=1, scale_radius=r0)
-    mySBP.applyExpansion(1.5)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_mag.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
-    mySBP.applyExpansion(1./dx)
-    mySBP.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Magnification (x1.5) of exponential SBProfile disagrees with expected result")
 
-    # Use applyDilation
     gal = galsim.Exponential(flux=1, scale_radius=r0)
     gal.applyDilation(1.5)
     gal.scaleFlux(1.5**2) # Apply the flux magnification.
@@ -386,19 +350,10 @@ def test_shift():
     import time
     t1 = time.time()
     dx = 0.2
-    mySBP = galsim.SBBox(dx, dx, flux=1)
-    mySBP.applyShift(galsim.PositionD(dx, -dx))
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_shift.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
-    mySBP.applyExpansion(1./dx)
-    mySBP.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Shifted box profile disagrees with expected result")
 
-    # Repeat with the GSObject version of this:
     pixel = galsim.Pixel(scale=dx)
     pixel.applyShift(dx, -dx)
     pixel.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
@@ -439,20 +394,11 @@ def test_rescale():
     """
     import time
     t1 = time.time()
-    mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
-    mySBP.setFlux(2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_doubleflux.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
-    mySBP.applyExpansion(1./dx)
-    mySBP.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Flux-rescale sersic profile disagrees with expected result")
 
-    # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic.setFlux(2)
     sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
