@@ -869,7 +869,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             self.crpix += [ origin.x, origin.y ]
 
     # The origin is a required attribute/property, since it is used by some functions like
-    # setOrigin to get the current origin value.  We don't use it in this class, though, so
+    # withOrigin to get the current origin value.  We don't use it in this class, though, so
     # just make origin a dummy property that returns 0,0.
     @property
     def origin(self): return galsim.PositionD(0.,0.)

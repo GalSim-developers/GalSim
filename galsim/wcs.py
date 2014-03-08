@@ -82,7 +82,7 @@ class BaseWCS(object):
     2. UniformWCS classes have a constant pixel size and shape, but they have an arbitrary origin 
        in both image coordinates and world coordinates.  A LocalWCS class can be turned into a 
        non-local UniformWCS class when an image has its bounds changed (e.g. by the commands 
-       `setCenter`, `setOrigin` or `shift`.
+       `withCenter`, `withOrigin` or `shift`.
        
        Currently we define the following non-local, UniformWCS classes:
 
@@ -403,13 +403,13 @@ class BaseWCS(object):
         `wcs.toWorld(image_pos)`.  In fact, `wcs.affine(image_pos)` is really just
         shorthand for:
         
-                wcs.jacobian(image_pos).setOrigin(image_pos, wcs.toWorld(image_pos))
+                wcs.jacobian(image_pos).withOrigin(image_pos, wcs.toWorld(image_pos))
 
         For celestial coordinate systems, there is no well-defined choice for the 
         origin of the Euclidean world coordinate system.  So we just take (u,v) = (0,0)
         at the given position.  So, `wcs.affine(image_pos)` is equivalent to:
 
-                wcs.jacobian(image_pos).setOrigin(image_pos)
+                wcs.jacobian(image_pos).withOrigin(image_pos)
 
         You can use the returned AffineTransform to access the relevant values of the 2x2 
         Jacobian matrix and the origins directly:
@@ -436,13 +436,13 @@ class BaseWCS(object):
             image_pos = galsim.PositionD(0,0)
 
         if self.isCelestial():
-            return jac.setOrigin(image_pos)
+            return jac.withOrigin(image_pos)
         else:
             if world_pos is None:
                 world_pos = self.toWorld(image_pos)
-            return jac.setOrigin(image_pos, world_pos)
+            return jac.withOrigin(image_pos, world_pos)
 
-    def setOrigin(self, origin, world_origin=None):
+    def withOrigin(self, origin, world_origin=None):
         """Recenter the current WCS function at a new origin location, returning the new WCS.
 
         This function creates a new WCS instance (always a non-local WCS) that treats
@@ -453,7 +453,7 @@ class BaseWCS(object):
         So, for example, to set a WCS that has a constant pixel size with the world coordinates
         centered at the center of an image, you could write:
 
-                wcs = galsim.PixelScale(scale).setOrigin(im.center())
+                wcs = galsim.PixelScale(scale).withOrigin(im.center())
 
         This is equivalent to the following:
 
@@ -464,7 +464,7 @@ class BaseWCS(object):
         example should work regardless of what kind of WCS this is:
 
                 world_pos1 = wcs.toWorld(PositionD(0,0))
-                wcs2 = wcs.setOrigin(new_origin)
+                wcs2 = wcs.withOrigin(new_origin)
                 world_pos2 = wcs2.toWorld(new_origin)
                 # world_pos1 should be equal to world_pos2
 
@@ -472,7 +472,7 @@ class BaseWCS(object):
         also provide a world_origin argument which defines what (u,v) position you want to 
         correspond to the new origin.  Continuing the previous example:
 
-                wcs3 = wcs.setOrigin(new_origin, new_world_origin)
+                wcs3 = wcs.withOrigin(new_origin, new_world_origin)
                 world_pos3 = wcs3.toWorld(new_origin)
                 # world_pos3 should be equal to new_world_origin
 
@@ -485,7 +485,7 @@ class BaseWCS(object):
             origin = galsim.PositionD(origin.x, origin.y)
         elif not isinstance(origin, galsim.PositionD):
             raise TypeError("origin must be a PositionD or PositionI argument")
-        return self._setOrigin(origin, world_origin)
+        return self._withOrigin(origin, world_origin)
 
     def writeToFitsHeader(self, header, bounds):
         """Write this WCS function to a FITS header.
@@ -529,7 +529,7 @@ class BaseWCS(object):
             # in if necessary.
             delta = galsim.PositionI(1-bounds.xmin, 1-bounds.ymin)
             bounds = bounds.shift(delta)
-            wcs = self.setOrigin(delta)
+            wcs = self.withOrigin(delta)
         else:
             wcs = self
 
@@ -607,7 +607,7 @@ def readFromFitsHeader(header):
         # ds9 always assumes the image has an origin at (1,1), so convert back to actual
         # xmin, ymin if necessary.
         delta = galsim.PositionI(xmin-1, ymin-1)
-        wcs = wcs.setOrigin(delta)
+        wcs = wcs.withOrigin(delta)
 
     return wcs, origin
 
@@ -660,8 +660,8 @@ class EuclideanWCS(BaseWCS):
 
     # Each subclass has a function _newOrigin, which just calls the constructor with new
     # values for origin and world_origin.  This function figures out what those values 
-    # should be to match the desired behavior of setOrigin.
-    def _setOrigin(self, origin, world_origin):
+    # should be to match the desired behavior of withOrigin.
+    def _withOrigin(self, origin, world_origin):
         # Current u,v are:
         #     u = ufunc(x-x0, y-y0) + u0
         #     v = vfunc(x-x0, y-y0) + v0
@@ -878,7 +878,7 @@ class CelestialWCS(BaseWCS):
     def y0(self): return self.origin.y
 
     # This is a bit simpler than the EuclideanWCS version, since there is no world_origin.
-    def _setOrigin(self, origin, world_origin):
+    def _withOrigin(self, origin, world_origin):
         # We want the new wcs to have wcs.toWorld(x2,y2) match the current wcs.toWorld(0,0).
         # So,
         #
