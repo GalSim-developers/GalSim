@@ -70,7 +70,7 @@ def compare_thin():
     del SEDs['CWW_E_ext.sed']
     bands = dict([(os.path.basename(bp_file), galsim.Bandpass(bp_file)) for bp_file in bp_files])
     redshifts = [0.0, 0.5, 1.0]
-    rel_errs = [1.e-6, 1.e-5, 1.e-4, 1.e-3]
+    rel_errs = [1.e-4, 1.e-3]
     for SED_name, SED0 in SEDs.iteritems():
         for redshift in redshifts:
             SED = SED0.atRedshift(redshift).withFluxDensity(0.01, 500.0)

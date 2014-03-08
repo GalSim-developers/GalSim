@@ -142,6 +142,12 @@ class Bandpass(object):
 
         self.func = lambda w: tp(numpy.array(w) * wave_factor)
 
+        # Hack to avoid (LookupTable.x_max * 10) / 10.0 > LookupTable.x_max due to roundoff
+        # error.
+        if len(self.wave_list) > 0.0:
+            self.wave_list[0] = self.wave_list[0] + 0.0000001
+            self.wave_list[-1] = self.wave_list[-1] - 0.0000001
+
         # Evaluate and store bandpass effective wavelength, which we define as the
         # throughput-weighted average wavelength, independent of any SED.  Units are nanometers.
         if len(self.wave_list) > 0:
