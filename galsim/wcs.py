@@ -1069,10 +1069,10 @@ class PixelScale(LocalWCS):
         return v / self._scale
 
     def _profileToWorld(self, image_profile):
-        return image_profile.createDilated(self._scale)
+        return image_profile.dilate(self._scale)
 
     def _profileToImage(self, world_profile):
-        return world_profile.createDilated(1./self._scale)
+        return world_profile.dilate(1./self._scale)
 
     def _pixelArea(self):
         return self._scale**2
@@ -1186,14 +1186,10 @@ class ShearWCS(LocalWCS):
         return y;
 
     def _profileToWorld(self, image_profile):
-        world_profile = image_profile.createDilated(self._scale)
-        world_profile.applyShear(-self.shear)
-        return world_profile
+        return image_profile.dilate(self._scale).shear(-self.shear)
 
     def _profileToImage(self, world_profile):
-        image_profile = world_profile.createDilated(1./self._scale)
-        image_profile.applyShear(self.shear)
-        return image_profile
+        return world_profile.dilate(1./self._scale).shear(self.shear)
 
     def _pixelArea(self):
         return self._scale**2
@@ -1322,14 +1318,14 @@ class JacobianWCS(LocalWCS):
         return (-self._dvdx * u + self._dudx * v)/self._det
 
     def _profileToWorld(self, image_profile):
-        ret = image_profile.createTransformed(self._dudx, self._dudy, self._dvdx, self._dvdy)
-        ret.scaleFlux(1./self._pixelArea())
+        ret = image_profile.transform(self._dudx, self._dudy, self._dvdx, self._dvdy)
+        ret /= self._pixelArea()
         return ret
 
     def _profileToImage(self, world_profile):
-        ret = world_profile.createTransformed(self._dvdy/self._det, -self._dudy/self._det,
-                                              -self._dvdx/self._det, self._dudx/self._det)
-        ret.scaleFlux(self._pixelArea())
+        ret = world_profile.transform(self._dvdy/self._det, -self._dudy/self._det,
+                                      -self._dvdx/self._det, self._dudx/self._det)
+        ret *= self._pixelArea()
         return ret
 
     def _pixelArea(self):
@@ -1365,13 +1361,11 @@ class JacobianWCS(LocalWCS):
 
         If there is no flip, then this means that the effect of 
         
-                prof.applyTransformation(dudx, dudy, dvdx, dvdy)
+                prof.transform(dudx, dudy, dvdx, dvdy)
 
         is equivalent to 
 
-                prof.applyRotation(theta)
-                prof.applyShear(shear)
-                prof.applyExpansion(scale)
+                prof.rotate(theta).shear(shear).expand(scale)
 
         in that order.  (Rotation and shear do not commute.)
 

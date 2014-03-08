@@ -30,10 +30,10 @@ class InterpolatedImage(GSObject):
     interpolated for the purpose of carrying out transformations.
 
     The InterpolatedImage class is useful if you have a non-parametric description of an object as 
-    an Image, that you wish to manipulate / transform using GSObject methods such as applyShear(),
-    applyMagnification(), applyShift(), etc.  Note that when convolving an InterpolatedImage, the 
-    use of real-space convolution is not recommended, since it is typically a great deal slower 
-    than Fourier-space convolution for this kind of object.
+    an Image, that you wish to manipulate / transform using GSObject methods such as shear(),
+    magnify(), shift(), etc.  Note that when convolving an InterpolatedImage, the use of real-space
+    convolution is not recommended, since it is typically a great deal slower than Fourier-space 
+    convolution for this kind of object.
 
     The constructor needs to know how the Image was drawn: is it an Image of flux or of surface
     brightness?  Since our default for drawing Images using draw() and drawShoot() is that
@@ -216,7 +216,7 @@ class InterpolatedImage(GSObject):
     Methods
     -------
     The InterpolatedImage is a GSObject, and inherits all of the GSObject methods (draw(),
-    drawShoot(), applyShear() etc.) and operator bindings.
+    drawShoot(), shear() etc.) and operator bindings.
     """
 
     # Initialization parameters of the object, with type information
@@ -414,15 +414,14 @@ class InterpolatedImage(GSObject):
 
         # Bring the profile from image coordinates into world coordinates
         prof = self.image.wcs.toWorld(self, image_pos=im_cen)
-        GSObject.__init__(self, prof)
 
         # If the user specified a flux, then set to that flux value.
         if flux != None:
-            self.setFlux(float(flux))
+            prof = prof.withFlux(float(flux))
         # If the user specified a surface brightness normalization for the input Image, then
         # need to rescale flux by the pixel area to get proper normalization.
         elif normalization.lower() in ['surface brightness','sb']:
-            self.scaleFlux(self.image.wcs.pixelArea(image_pos=im_cen))
+            prof *= self.image.wcs.pixelArea(image_pos=im_cen)
 
         # Make sure offset is a PositionD
         offset = self._parse_offset(offset)
@@ -430,7 +429,7 @@ class InterpolatedImage(GSObject):
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note reverse=True, since we want to fix the center in the opposite sense of what the 
         # draw function does.
-        prof = self._fix_center(self.image, None, offset, use_true_center, reverse=True)
+        prof = prof._fix_center(self.image, None, offset, use_true_center, reverse=True)
         GSObject.__init__(self, prof)
 
 

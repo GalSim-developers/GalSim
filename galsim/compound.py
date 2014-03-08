@@ -49,7 +49,7 @@ class Add(GSObject):
     Methods
     -------
     The Add is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+    shear() etc.) and operator bindings.
     """
     
     # --- Public Class methods ---

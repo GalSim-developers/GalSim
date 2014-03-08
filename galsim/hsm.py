@@ -245,8 +245,8 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
     Typical application to a single object:
 
         >>> galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
-        >>> galaxy.applyShear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the 
-                                                # |g| = (a - b)/(a + b) definition
+        >>> galaxy = galaxy.shear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the 
+        >>>                                         # |g| = (a - b)/(a + b) definition
         >>> psf = galsim.Kolmogorov(flux = 1.0, fwhm = 0.7)
         >>> pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
         >>> final = galsim.Convolve([galaxy, psf, pixel])

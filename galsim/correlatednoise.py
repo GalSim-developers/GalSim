@@ -291,7 +291,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         @param scale    The linear dilation scale factor.
         @returns        A new CorrelatedNoise object with the specified dilation.
         """
-        # Expansion changes the flux by scale**2, applyDilation reverses that to conserve flux,
+        # Expansion changes the flux by scale**2, dilate reverses that to conserve flux,
         # so the variance needs to change by scale**-4.
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.expand(scale) * (1./scale**4))
 
@@ -413,74 +413,6 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile = new_obj._profile
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
         self.__class__ = new_obj.__class__
-
-    # Also add methods which create a new _BaseCorrelatedNoise with the transformations applied...
-    #
-    def createExpanded(self, scale):
-        """Returns a new correlated noise model by applying an Expansion by the given scale,
-        scaling the linear size by scale.
-
-        The new instance will share the galsim.BaseDeviate random number generator with the parent.
-        Use the .setRNG() method after this operation if you wish to use a different random number
-        sequence.
-
-        Scales the linear dimensions of the image by the factor scale.
-        e.g. `half_light_radius` <-- `half_light_radius * scale`
- 
-        @param scale The linear rescaling factor to apply.
-        @returns The rescaled object.
-        """
-        ret = self.copy()
-        ret.applyExpansion(scale)
-        return ret
-
-    def createRotated(self, theta):
-        """Returns a new correlated noise model by applying a rotation.
-
-        The new instance will share the galsim.BaseDeviate random number generator with the parent.
-        Use the .setRNG() method after this operation if you wish to use a different random number
-        sequence.
-
-        @param theta Rotation angle (Angle object, +ve anticlockwise).
-        @returns The rotated object.
-        """
-        if not isinstance(theta, galsim.Angle):
-            raise TypeError("Input theta should be an Angle")
-        ret = self.copy()
-        ret.applyRotation(theta)
-        return ret
-
-    def createSheared(self, *args, **kwargs):
-        """Returns a new correlated noise model by applying a shear, where arguments are either a
-        galsim.Shear or keyword arguments that can be used to create one.
-
-        The new instance will share the galsim.BaseDeviate random number generator with the parent.
-        Use the .setRNG() method after this operation if you wish to use a different random number
-        sequence.
-
-        For more details about the allowed keyword arguments, see the documentation of galsim.Shear
-        (for doxygen documentation, see galsim.shear.Shear).
-        """
-        ret = self.copy()
-        ret.applyShear(*args, **kwargs)
-        return ret
-
-    def createTransformed(self, dudx, dudy, dvdx, dvdy):
-        """Returns a new correlated noise model by applying a jacobian transformation.
-
-        The new instance will share the galsim.BaseDeviate random number generator with the parent.
-        Use the .setRNG() method after this operation if you wish to use a different random number
-        sequence.
-
-        @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
-        @returns The transformed object.
-        """
-        ret = self.copy()
-        ret.applyTransformation(dudx,dudy,dvdx,dvdy)
-        return ret
 
     def getVariance(self):
         """Return the point variance of this noise field, equal to its correlation function value at
@@ -786,7 +718,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
           in the `image` used to instantiate `cn` as shown above.
       ii) If the CorrelatedNoise instance `cn` was instantiated with an image of scale comparable
           to that in the final output, and `cn` has been rotated or otherwise transformed (e.g.
-          via the `.applyRotation()`, `.applyShear()` methods, see below).
+          via the `.rotate()`, `.shear()` methods, see below).
 
     Conversely, the approximation will work best in the case where the correlated noise used to
     instantiate the `cn` is taken from an input image for which `image.scale` is smaller than that
@@ -859,18 +791,13 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     `cn` methods, so that the following commands are all legal:
 
         >>> cn.draw(im, scale, wmult=4)
-        >>> cn.createSheared(s)
-        >>> cn.createExpanded(m)
-        >>> cn.createRotated(theta * galsim.degrees)
-        >>> cn.createTransformed(ellipse)
-        >>> cn.applyShear(s)
-        >>> cn.applyExpansion(scale)  # Behaves similarly to applyMagnification
-        >>> cn.applyRotation(theta * galsim.degrees)
-        >>> cn.applyTransformation(ellipse)
+        >>> cn.shear(s)
+        >>> cn.expand(m)
+        >>> cn.rotate(theta * galsim.degrees)
+        >>> cn.transform(dudx, dudy, dvdx, dvdy)
 
-    See the individual method docstrings for more details.  The .applyShift() and .createShifted()
-    methods are not available since a correlation function must always be centred and peaked at the
-    origin.
+    See the individual method docstrings for more details.  The .shift() method is not available 
+    since a correlation function must always be centred and peaked at the origin.
 
     The BaseNoise methods
 
@@ -1086,7 +1013,7 @@ def getCOSMOSNoise(rng, file_name, cosmos_scale=0.03, variance=0., x_interpolant
           in the `image` used to instantiate `cn` as shown above.
       ii) If the CorrelatedNoise instance `cn` was instantiated with an image of scale comparable
           to that in the final output, and `cn` has been rotated or otherwise transformed (e.g.
-          via the `.applyRotation()`, `.applyShear()` methods, see below).
+          via the `.rotate()`, `.shear()` methods, see below).
 
     Conversely, the approximation will work best in the case where the correlated noise used to
     instantiate the `cn` is taken from an input image for which `image.scale` is smaller than that
@@ -1167,7 +1094,7 @@ def getCOSMOSNoise(rng, file_name, cosmos_scale=0.03, variance=0., x_interpolant
 
 class UncorrelatedNoise(_BaseCorrelatedNoise):
     """A class that represents 2D correlated noise fields that are actually (at least initially)
-    uncorrelated.  Subsequent applications of things like applyShear or convolveWith will induce 
+    uncorrelated.  Subsequent applications of things like shear or convolveWith will induce 
     correlations.
 
     Initialization

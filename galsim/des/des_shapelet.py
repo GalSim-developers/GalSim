@@ -272,7 +272,7 @@ def BuildDES_Shapelet(config, key, base, ignore, gsparams, logger):
         raise galsim.config.gsobject.SkipThisObject(message)
 
     if 'flux' in kwargs:
-        psf.setFlux(kwargs['flux'])
+        psf = psf.withFlux(kwargs['flux'])
 
     # The second item here is "safe", a boolean that declares whether the returned value is 
     # safe to save and use again for later objects.  In this case, we wouldn't want to do 

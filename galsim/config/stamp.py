@@ -760,7 +760,7 @@ def DrawPSFStamp(psf, config, bounds, offset, no_pixel, real_space):
         gal_shift = galsim.config.GetCurrentValue(config['gal'],'shift')
         if False:
             logger.debug('obj %d: psf shift (1): %s',config['obj_num'],str(gal_shift))
-        psf.applyShift(gal_shift)
+        psf = psf.shift(gal_shift)
 
     wcs = config['wcs'].local(config['image_pos'])
     if not no_pixel:

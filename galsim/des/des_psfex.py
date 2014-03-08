@@ -331,7 +331,7 @@ def BuildDES_PSFEx(config, key, base, ignore, gsparams, logger):
     psf = des_psfex.getLocalWCS(image_pos).toWorld(psf)
 
     if 'flux' in kwargs:
-        psf.setFlux(kwargs['flux'])
+        psf = psf.withFlux(kwargs['flux'])
 
     # The second item here is "safe", a boolean that declares whether the returned value is 
     # safe to save and use again for later objects.  In this case, we wouldn't want to do 

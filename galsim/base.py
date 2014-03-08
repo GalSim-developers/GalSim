@@ -111,7 +111,7 @@ class GSObject(object):
         if isinstance(obj, GSObject):
             self.SBProfile = obj.SBProfile
             if hasattr(obj,'noise'):
-                self.noise = obj.noise
+                self.noise = obj.noise.copy()
         elif isinstance(obj, galsim.SBProfile):
             self.SBProfile = obj
         else:
@@ -131,7 +131,7 @@ class GSObject(object):
     def __mul__(self, flux_ratio):
         """Scale the flux of the object by the given flux ratio.
 
-        obj = obj * flux_ratio is equivalent to obj.setFlux(obj.getFlux() * flux_ratio)
+        obj * flux_ratio is equivalent to obj.withFlux(obj.getFlux() * flux_ratio)
 
         It creates a new object that has the same profile as the original, but with the 
         surface brightness at every location scale by the given amount.
@@ -167,7 +167,7 @@ class GSObject(object):
         sbp = self.SBProfile.__class__(self.SBProfile)
         ret = GSObject(sbp)
         ret.__class__ = self.__class__
-        if hasattr(self,'noise'): ret.noise = self.noise
+        if hasattr(self,'noise'): ret.noise = self.noise.copy()
         return ret
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
@@ -358,8 +358,7 @@ class GSObject(object):
         
         This process applies a lensing magnification mu, which scales the linear dimensions of the
         image by the factor sqrt(mu), i.e., `half_light_radius` <-- `half_light_radius * sqrt(mu)`
-        while increasing the flux by a factor of mu.  Thus, applyMagnification preserves surface
-        brightness.
+        while increasing the flux by a factor of mu.  Thus, magnify preserves surface brightness.
 
         See dilate() for a version that applies a linear scale factor while preserving flux.
 
@@ -397,12 +396,12 @@ class GSObject(object):
         """
         if len(args) == 1:
             if kwargs:
-                raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
+                raise TypeError("Error, gave both unnamed and named arguments to GSObject.shear!")
             if not isinstance(args[0], galsim.Shear):
-                raise TypeError("Error, unnamed argument to applyShear is not a Shear!")
+                raise TypeError("Error, unnamed argument to GSObject.shear is not a Shear!")
             shear = args[0]
         elif len(args) > 1:
-            raise TypeError("Error, too many unnamed arguments to applyShear!")
+            raise TypeError("Error, too many unnamed arguments to GSObject.shear!")
         else:
             shear = galsim.Shear(**kwargs)
 
@@ -535,7 +534,7 @@ class GSObject(object):
         delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
         new_obj = GSObject(self.SBProfile.shift(delta))
         if hasattr(self,'noise'):
-            new_obj.noise = self.noise
+            new_obj.noise = self.noise.copy()
         return new_obj
 
     def createShifted(self, *args, **kwargs):

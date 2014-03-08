@@ -258,7 +258,7 @@ def _BuildAdd(config, key, base, ignore, gsparams, logger):
                 warnings.warn(
                     "Automatically scaling the last item in Sum to make the total flux\n" +
                     "equal 1 requires the last item to have negative flux = %f"%f)
-            gsobjects[-1].setFlux(f)
+            gsobjects[-1] = gsobjects[-1].withFlux(f)
         if gsparams: gsparams = galsim.GSParams(**gsparams)
         else: gsparams = None
         gsobject = galsim.Add(gsobjects,gsparams=gsparams)
@@ -267,7 +267,7 @@ def _BuildAdd(config, key, base, ignore, gsparams, logger):
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
         if logger:
             logger.debug('obj %d: flux == %f',base['obj_num'],flux)
-        gsobject.setFlux(flux)
+        gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
 
     return gsobject, safe
@@ -303,7 +303,7 @@ def _BuildConvolve(config, key, base, ignore, gsparams, logger):
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
         if logger:
             logger.debug('obj %d: flux == %f',base['obj_num'],flux)
-        gsobject.setFlux(flux)
+        gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
 
     return gsobject, safe
@@ -333,7 +333,7 @@ def _BuildList(config, key, base, ignore, gsparams, logger):
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
         if logger:
             logger.debug('obj %d: flux == %f',base['obj_num'],flux)
-        gsobject.setFlux(flux)
+        gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
 
     return gsobject, safe
@@ -367,7 +367,7 @@ def _BuildRing(config, key, base, ignore, gsparams, logger):
     else:
         if not isinstance(config['first'],dict) or 'current_val' not in config['first']:
             raise RuntimeError("Building Ring after the first item, but no current_val stored.")
-        gsobject = config['first']['current_val'].createRotated(k*dtheta)
+        gsobject = config['first']['current_val'].rotate(k*dtheta)
 
     return gsobject, False
 
@@ -561,7 +561,7 @@ def _EllipObject(gsobject, config, key, base, logger):
     shear, safe = galsim.config.ParseValue(config, key, base, galsim.Shear)
     if logger:
         logger.debug('obj %d: shear = %f,%f',base['obj_num'],shear.g1,shear.g2)
-    gsobject = gsobject.createSheared(shear)
+    gsobject = gsobject.shear(shear)
     return gsobject, safe
 
 def _RotateObject(gsobject, config, key, base, logger):
@@ -572,7 +572,7 @@ def _RotateObject(gsobject, config, key, base, logger):
     theta, safe = galsim.config.ParseValue(config, key, base, galsim.Angle)
     if logger:
         logger.debug('obj %d: theta = %f rad',base['obj_num'],theta.rad())
-    gsobject = gsobject.createRotated(theta)
+    gsobject = gsobject.rotate(theta)
     return gsobject, safe
 
 def _ScaleFluxObject(gsobject, config, key, base, logger):
@@ -583,8 +583,7 @@ def _ScaleFluxObject(gsobject, config, key, base, logger):
     flux_ratio, safe = galsim.config.ParseValue(config, key, base, float)
     if logger:
         logger.debug('obj %d: flux_ratio  = %f',base['obj_num'],flux_ratio)
-    gsobject = gsobject.copy()
-    gsobject.scaleFlux(flux_ratio)
+    gsobject = gsobject * flux_ratio
     return gsobject, safe
 
 def _DilateObject(gsobject, config, key, base, logger):
@@ -595,7 +594,7 @@ def _DilateObject(gsobject, config, key, base, logger):
     scale, safe = galsim.config.ParseValue(config, key, base, float)
     if logger:
         logger.debug('obj %d: scale  = %f',base['obj_num'],scale)
-    gsobject = gsobject.createDilated(scale)
+    gsobject = gsobject.dilate(scale)
     return gsobject, safe
 
 def _MagnifyObject(gsobject, config, key, base, logger):
@@ -606,7 +605,7 @@ def _MagnifyObject(gsobject, config, key, base, logger):
     mu, safe = galsim.config.ParseValue(config, key, base, float)
     if logger:
         logger.debug('obj %d: mu  = %f',base['obj_num'],mu)
-    gsobject = gsobject.createMagnified(mu)
+    gsobject = gsobject.magnify(mu)
     return gsobject, safe
 
 def _ShiftObject(gsobject, config, key, base, logger):
@@ -617,6 +616,6 @@ def _ShiftObject(gsobject, config, key, base, logger):
     shift, safe = galsim.config.ParseValue(config, key, base, galsim.PositionD)
     if logger:
         logger.debug('obj %d: shift  = %f,%f',base['obj_num'],shift.x,shift.y)
-    gsobject = gsobject.createShifted(shift.x,shift.y)
+    gsobject = gsobject.shift(shift.x,shift.y)
     return gsobject, safe
 

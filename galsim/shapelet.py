@@ -84,7 +84,7 @@ class Shapelet(GSObject):
     Methods
     -------
 
-    The Shapelet is a GSObject, and inherits most of the GSObject methods (draw(), applyShear(),
+    The Shapelet is a GSObject, and inherits most of the GSObject methods (draw(), shear(),
     etc.) and operator bindings.  The exception is drawShoot, which is not yet implemented for 
     Shapelet instances.
     
@@ -192,24 +192,24 @@ class Shapelet(GSObject):
         bvec = self.SBProfile.getBVec() * fluxRatio
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
 
-    def applyRotation(self, theta):
+    def rotate(self, theta):
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         sigma = self.SBProfile.getSigma()
         bvec = self.SBProfile.getBVec().copy()
         bvec.rotate(theta)
-        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+        return Shapelet(sigma, self.getOrder(), bvec.array)
 
-    def applyDilation(self, scale):
+    def dilate(self, scale):
         sigma = self.SBProfile.getSigma() * scale
         bvec = self.SBProfile.getBVec()
-        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+        return Shapelet(sigma, self.getOrder(), bvec.array)
 
-    def applyMagnification(self, mu):
+    def magnify(self, mu):
         import numpy
         sigma = self.SBProfile.getSigma() * numpy.sqrt(mu)
         bvec = self.SBProfile.getBVec() * mu
-        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+        return Shapelet(sigma, self.getOrder(), bvec.array)
 
     def fitImage(self, image, center=None, normalization='flux'):
         """Fit for a shapelet decomposition of a given image

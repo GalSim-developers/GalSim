@@ -115,7 +115,7 @@ class RealGalaxy(GSObject):
 
     Methods
     -------
-    The RealGalaxy is a GSObject, and inherits all of the GSObject methods (draw(), applyShear(), 
+    The RealGalaxy is a GSObject, and inherits all of the GSObject methods (draw(), shear(), 
     etc. except drawShoot() which is unavailable), and operator bindings.
     """
 
@@ -225,7 +225,7 @@ class RealGalaxy(GSObject):
 
         # If flux is None, leave flux as given by original image
         if flux != None:
-            self.original_image.setFlux(flux)
+            self.original_image = self.original_image.withFlux(flux)
 
         # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.Deconvolve(self.original_psf, gsparams=gsparams)
@@ -634,13 +634,11 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
         raise RuntimeError("Error: requested shear is >1!")
 
     # make sure target PSF is normalized
-    target_PSF.setFlux(1.0)
-
-    real_galaxy_copy = real_galaxy.copy()
+    target_PSF = target_PSF.withFlux(1.0)
 
     # rotate
     if rotation_angle != None:
-        real_galaxy_copy.applyRotation(rotation_angle)
+        real_galaxy = real_galaxy.rotate(rotation_angle)
     elif rotation_angle == None and rand_rotate == True:
         if rng == None:
             uniform_deviate = galsim.UniformDeviate()
@@ -649,17 +647,17 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
         else:
             raise TypeError("The rng provided to drawShoot is not a BaseDeviate")
         rand_angle = galsim.Angle(math.pi*uniform_deviate(), galsim.radians)
-        real_galaxy_copy.applyRotation(rand_angle)
+        real_galaxy = real_galaxy.rotate(rand_angle)
 
     # set fluxes
-    real_galaxy_copy.setFlux(target_flux)
+    real_galaxy = real_galaxy.withFlux(target_flux)
 
     # shear
     if (g1 != 0.0 or g2 != 0.0):
-        real_galaxy_copy.applyShear(g1=g1, g2=g2)
+        real_galaxy = real_galaxy.shear(g1=g1, g2=g2)
 
     # convolve, resample
-    out_gal = galsim.Convolve([real_galaxy_copy, target_PSF])
+    out_gal = galsim.Convolve([real_galaxy, target_PSF])
     image = out_gal.draw(image=image, scale = target_pixel_scale)
 
     # return simulated image

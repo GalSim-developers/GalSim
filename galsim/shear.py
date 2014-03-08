@@ -72,11 +72,11 @@ class Shear(object):
     sheared by some (gamma_1, gamma_2), and then sheared by (-gamma_1, -gamma_2), it will in the end
     return to its original shape, but will have changed in area due to the magnification, mu =
     1/((1.-kappa)**2 - (gamma_1**2 + gamma_2**2)), which is not equal to one for non-zero shear even
-    for convergence kappa=0.  Application of a galsim.Shear using the applyShear method does not
+    for convergence kappa=0.  Application of a galsim.Shear using the GSObject.shear method does not
     include this area change.  To properly incorporate the effective change in area due to shear, it
-    is necessary to either (a) define the galsim.Shear object, use the applyShear() method, and
-    separately use the applyMagnification method(), or (b) use the applyLensing() method that
-    simultaneously magnifies and shears.
+    is necessary to either (a) define the galsim.Shear object, use the shear() method, and
+    separately use the magnify method(), or (b) use the lens() method that simultaneously 
+    magnifies and shears.
     """
     def __init__(self, *args, **kwargs):
         import numpy as np
