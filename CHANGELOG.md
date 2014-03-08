@@ -43,7 +43,7 @@ change does not affect the most common uses of the function.
   document and use in exmaples are imported into the `galsim` namespace.
   The rest are considered implementation details, and are not guaranteed
   to maintain backward compatibility of syntax and/or functionality in future 
-  versions.
+  versions. (Issue #511)
   * e.g. `galsim.SBGaussian` should now be `galsim._galsim.SBGaussian`.
   * Or better, switch to using the documented `galsim.Gaussian` class instead.
   * Similarly for other `SB*` classes along with a few other undocumented 
@@ -86,7 +86,8 @@ removed.
 * Changed the methods createSheared, createRotated, etc. to more succinct
   names.  The applyShear, applyRotation, etc. methods are also discouraged
   and will eventually be deprecated.  All such usage should be changed to the 
-  version the returns a new object, rather than modify the object in place.
+  version the returns a new object, rather than modify the object in place. 
+  (Issue #511)
   * `gal = gal.createSheared(shear)` or `gal.applyShear(shear)` should
     now be `gal = gal.shear(shear)`.
   * `gal = gal.createRotated(theta)` or `gal.applyRotation(theta)` should
@@ -103,13 +104,13 @@ removed.
     now be `gal = gal.transform(...)`.
   * `gal = gal.createLensed(g1,g2,mu)` or `gal.applyLensing(g1,g2,mu)` should
     now be `gal = gal.lens(g1,g2,mu)`.
-* Changed the setFlux and scaleFlux methods to versions that return new 
-  objects, rather than change the object in place.
+* Changed the `setFlux` and `scaleFlux` methods to versions that return new 
+  objects, rather than change the object in place.  (Issue #511)
   * `gal.setFlux(flux)` should now be `gal = gal.withFlux(flux)`
   * `gal.scaleFlux(flux_ratio)` should now be `gal = gal * flux_ratio`
   * `gal *= flux_ratio` is fine, since python converts it to the above behind
     the scenes.
-* Changed the corresponding methods of CorrelatedNoise similarly.
+* Changed the corresponding methods of CorrelatedNoise similarly. (Issue #511)
   * `cn = cn.createSheared(shear)` or `cn.applyShear(shear)` should
     now be `cn = cn.shear(shear)`.
   * `cn = cn.createRotated(theta)` or `cn.applyRotation(theta)` should
@@ -127,24 +128,24 @@ removed.
   * `cn = cn.createLensed(g1,g2,mu)` or `cn.applyLensing(g1,g2,mu)` should
     now be `cn = cn.lens(g1,g2,mu)`.
 * Changed how to set the variance of the various `Noise` methods (including
-  `CorrelatedNoise` and all other subclasses of `BaseNoise`):
+  `CorrelatedNoise` and all other subclasses of `BaseNoise`). (Issue #511)
   * `n.setVariance(flux)` should now be `n = n.withVariance(variance)`
   * `n.scaleVariance(flux_ratio)` should now be `n = n * variance_ratio`
 * Changed the `CorrelatedNoise.convolveWith` method to `convolvedWith`,
-  which returns a new object corresponding to the convolvution.
+  which returns a new object corresponding to the convolvution. (Issue #511)
   * `cn.convolveWith(obj)` should now be `cn = cn.convolvedWith(obj)`.
 * Changed the Shapelet.fitImage method to a factory function named
   `FitShapelet` that constructs a new Shapelet object rather than modify 
   an existing object in place.
   * `shapelet = galsim.Shapelet(sigma,order); shapelet.fitImage(image)` should 
     now be `shapelet = galsim.FitShapelet(sigma, order, image)`
-* Changed the name of LVectorSize to ShapeletSize.
+* Changed the name of LVectorSize to ShapeletSize. (Issue #511)
 * In general, moved as many classes as possible toward an immutable design.
   The bulk of these changes are the ones listed above, but we also now
   discourage use of setters in various classes that had them.  These methods
   will eventually be deprecated.  The classes are all "light" classes,
   that have trivial constructors, so the preferred syntax is now to create a
-  new instance, rather than modifiy an existing instance.
+  new instance, rather than modifiy an existing instance. (Issue #511)
   * `GaussianNoise.setSigma`
   * `PoissonNoise.setSkyLevel`
   * `CCDNoise`: `setSkyLevel`, `setGain`, `setReadNoise`
