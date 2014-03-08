@@ -188,7 +188,8 @@ def test_shapelet_fit():
         im1 = conv.draw(scale=scale, normalization=norm)
 
         sigma = 1.2  # Match half-light-radius as a decent first approximation.
-        shapelet = galsim.Shapelet(sigma=sigma, order=10).fitImage(im1, normalization=norm)
+        shapelet = galsim.Shapelet(sigma=sigma, order=10)
+        shapelet.fitImage(im1, normalization=norm)
         #print 'fitted shapelet coefficients = ',shapelet.getBVec()
 
         # Check flux
@@ -212,7 +213,8 @@ def test_shapelet_fit():
         assert np.sum((im1.array-im2.array)**2) < 1.e-3 * np.sum(im1.array**2)
 
         # Remeasure -- should now be very close to the same.
-        shapelet2 = shapelet.fitImage(im2, normalization=norm)
+        shapelet2 = shapelet.copy()
+        shapelet2.fitImage(im2, normalization=norm)
         np.testing.assert_equal(shapelet.getSigma(), shapelet2.getSigma(),
                 err_msg="Second fitted shapelet has the wrong sigma")
         np.testing.assert_equal(shapelet.getOrder(), shapelet2.getOrder(),

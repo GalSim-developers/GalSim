@@ -41,7 +41,7 @@ from image import ConstImageView, ConstImageViewS, ConstImageViewI, ConstImageVi
 from base import *
 from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
-from shapelet import Shapelet
+from shapelet import Shapelet, ShapeletSize, FitShapelet, LVectorSize
 from interpolatedimage import InterpolatedImage
 from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
 
