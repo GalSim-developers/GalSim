@@ -81,6 +81,12 @@ class Shapelet(GSObject):
     @param bvec           The initial vector of coefficients.  (Default: all zeros)
 
 
+    Attributes
+    ----------
+
+    After construction, the sigma, order, and bvec are available as attributes.
+
+
     Methods
     -------
 
@@ -90,18 +96,8 @@ class Shapelet(GSObject):
     
     In addition, Shapelet has the following methods:
 
-    getSigma()         Get the sigma value.
-    getOrder()         Get the order, the maximum N=p+q used by the decomposition.
-    getBVec()          Get the vector of coefficients, returned as a numpy array.
     getPQ(p,q)         Get b_pq.  Returned as tuple (re, im) (even if p==q).
     getNM(N,m)         Get b_Nm.  Returned as tuple (re, im) (even if m=0).
-
-    setSigma(sigma)    Set the sigma value.
-    setOrder(order)    Set the order.
-    setBVec(bvec)      Set the vector of coefficients.
-    setPQ(p,q,re,im=0) Set b_pq.
-    setNM(N,m,re,im=0) Set b_Nm.
-
     fitImage(image)    Fit for a shapelet decomposition of the given image.
     """
 
@@ -130,12 +126,24 @@ class Shapelet(GSObject):
 
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec, gsparams))
 
-    def getSigma(self):
+    @property
+    def sigma(self): 
         return self.SBProfile.getSigma()
-    def getOrder(self):
+    @property
+    def order(self): 
         return self.SBProfile.getBVec().order
-    def getBVec(self):
+    @property
+    def bvec(self): 
         return self.SBProfile.getBVec().array
+
+    # For backwards compatibility only.  Obsolete.
+    def getSigma(self):
+        return self.sigma
+    def getOrder(self):
+        return self.order
+    def getBVec(self):
+        return self.bvec
+
     def getPQ(self,p,q):
         return self.SBProfile.getBVec().getPQ(p,q)
     def getNM(self,N,m):
@@ -147,69 +155,47 @@ class Shapelet(GSObject):
     # presumably anyone who cares about efficiency would not be using these functions.
     # They would create the Shapelet with the right bvec from the start.
     def setSigma(self,sigma):
-        bvec = self.SBProfile.getBVec()
-        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+        """This method is discouraged and will be deprecated."""
+        GSObject.__init__(self, galsim.SBShapelet(sigma, self.SBProfile.getBVec()))
     def setOrder(self,order):
-        curr_bvec = self.SBProfile.getBVec()
-        curr_order = curr_bvec.order
-        if curr_order == order: return
+        """This method is discouraged and will be deprecated."""
+        if self.order == order: return
         # Preserve the existing values as much as possible.
-        sigma = self.SBProfile.getSigma()
-        if curr_order > order:
-            bvec = galsim.LVector(order, curr_bvec.array[0:galsim.LVectorSize(order)])
+        if self.order > order:
+            bvec = galsim.LVector(order, self.bvec[0:galsim.LVectorSize(order)])
         else:
             import numpy
             a = numpy.zeros(galsim.LVectorSize(order))
-            a[0:len(curr_bvec.array)] = curr_bvec.array
+            a[0:len(self.bvec)] = self.bvec
             bvec = galsim.LVector(order,a)
-        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+        GSObject.__init__(self, galsim.SBShapelet(self.sigma, bvec))
     def setBVec(self,bvec):
-        sigma = self.SBProfile.getSigma()
-        order = self.SBProfile.getBVec().order
-        bvec_size = galsim.LVectorSize(order)
+        """This method is discouraged and will be deprecated."""
+        bvec_size = galsim.LVectorSize(self.order)
         if len(bvec) != bvec_size:
             raise ValueError("bvec is the wrong size for the Shapelet order")
         import numpy
-        bvec = galsim.LVector(order,numpy.array(bvec))
-        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+        bvec = galsim.LVector(self.order,numpy.array(bvec))
+        GSObject.__init__(self, galsim.SBShapelet(self.sigma, bvec))
     def setPQ(self,p,q,re,im=0.):
-        sigma = self.SBProfile.getSigma()
+        """This method is discouraged and will be deprecated."""
         bvec = self.SBProfile.getBVec().copy()
         bvec.setPQ(p,q,re,im)
-        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+        GSObject.__init__(self, galsim.SBShapelet(self.sigma, bvec))
     def setNM(self,N,m,re,im=0.):
+        """This method is discouraged and will be deprecated."""
         self.setPQ((N+m)/2,(N-m)/2,re,im)
-
-    def setFlux(self, flux):
-        # More efficient to change the bvector rather than add a transformation layer above 
-        # the SBShapelet, which is what the normal setFlux method does.
-        self.scaleFlux(flux/self.getFlux())
-
-    def scaleFlux(self, fluxRatio):
-        # More efficient to change the bvector rather than add a transformation layer above 
-        # the SBShapelet, which is what the normal setFlux method does.
-        sigma = self.SBProfile.getSigma()
-        bvec = self.SBProfile.getBVec() * fluxRatio
-        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
 
     def rotate(self, theta):
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
-        sigma = self.SBProfile.getSigma()
         bvec = self.SBProfile.getBVec().copy()
         bvec.rotate(theta)
-        return Shapelet(sigma, self.getOrder(), bvec.array)
+        return Shapelet(self.sigma, self.order, bvec.array)
 
-    def dilate(self, scale):
-        sigma = self.SBProfile.getSigma() * scale
-        bvec = self.SBProfile.getBVec()
-        return Shapelet(sigma, self.getOrder(), bvec.array)
-
-    def magnify(self, mu):
-        import numpy
-        sigma = self.SBProfile.getSigma() * numpy.sqrt(mu)
-        bvec = self.SBProfile.getBVec() * mu
-        return Shapelet(sigma, self.getOrder(), bvec.array)
+    def expand(self, scale):
+        sigma = self.sigma * scale
+        return Shapelet(sigma, self.order, self.bvec)
 
     def fitImage(self, image, center=None, normalization='flux'):
         """Fit for a shapelet decomposition of a given image
@@ -222,7 +208,7 @@ class Shapelet(GSObject):
 
             image = ...
             shapelet = galsim.Shapelet(sigma, order)
-            shapelet.fitImage(image,normalization='sb')
+            shapelet = shapelet.fitImage(image,normalization='sb')
             shapelet.draw(image=image2, dx=image.scale, normalization='sb')
 
         Then image2 and image should be as close to the same as possible for the given
@@ -230,11 +216,12 @@ class Shapelet(GSObject):
         the natural scale size of the image.  However, it should be noted that some images
         are not well fit by a shapelet for any (reasonable) order.
 
-        @param image          The Image for which to fit the shapelet decomposition
-        @param center         The position in pixels to use for the center of the decomposition.
-                              [Default: use the image center (`image.bounds.trueCenter()`)]
-        @param normalization  The normalization to assume for the image. 
-                              (Default `normalization = "flux"`)
+        @param image            The Image for which to fit the shapelet decomposition
+        @param center           The position in pixels to use for the center of the decomposition.
+                                [Default: use the image center (`image.bounds.trueCenter()`)]
+        @param normalization    The normalization to assume for the image. 
+                                (Default `normalization = "flux"`)
+        @returns                The fitted Shapelet profile
         """
         if not center:
             center = image.bounds.trueCenter()
@@ -245,22 +232,19 @@ class Shapelet(GSObject):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
                               "'f', 'surface brightness' or 'sb'.") % normalization)
 
-        sigma = self.SBProfile.getSigma()
-        bvec = self.SBProfile.getBVec().copy()
+        bvec = galsim.LVector(self.order)
 
         if image.wcs != None and not image.wcs.isPixelScale():
             # TODO: Add ability for ShapeletFitImage to take jacobian matrix.
             raise NotImplementedError("Sorry, cannot (yet) fit a shapelet model to an image "+
                                       "with a non-trivial WCS.")
 
-        galsim.ShapeletFitImage(sigma, bvec, image.image, image.scale, center)
+        galsim.ShapeletFitImage(self.sigma, bvec, image.image, image.scale, center)
 
         if normalization.lower() == "flux" or normalization.lower() == "f":
             bvec /= image.scale**2
 
         # SBShapelet, like all SBProfiles, is immutable, so we need to reinitialize with a 
         # new Shapelet object.
-        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
-
-
+        return Shapelet(self.sigma, self.order, bvec.array)
 
