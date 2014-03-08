@@ -223,7 +223,7 @@ Currently, GalSim has the following capabilities:
 
 * Can generate PSFs from a variety of simple parametric models such as Moffat,
   Kolmogorov, and Airy, as well as an optical PSF model that includes Zernike
-  aberrations up to spherical, and an optional central obscruration and
+  aberrations up to spherical, and an optional central obscuration and
   struts.
 
 * Can simulate galaxies from a variety of simple parametric models as well as
