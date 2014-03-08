@@ -202,7 +202,7 @@ def GaussianNoise_applyTo(self, image):
 _galsim.GaussianNoise.applyTo = GaussianNoise_applyTo
 
 _galsim.GaussianNoise.getSigma.__func__.__doc__ = "Get sigma in current noise model."
-_galsim.GaussianNoise.setSigma.__func__.__doc__ = "Set sigma in current noise model."
+_galsim.GaussianNoise.setSigma.__func__.__doc__ = "Set sigma in current noise model. Discouraged."
 
 def GaussianNoise_copy(self):
     return _galsim.GaussianNoise(self.getRNG(),self.getSigma())
@@ -256,7 +256,7 @@ def PoissonNoise_applyTo(self, image):
 _galsim.PoissonNoise.applyTo = PoissonNoise_applyTo
 
 _galsim.PoissonNoise.getSkyLevel.__func__.__doc__ = "Get sky level in current noise model."
-_galsim.PoissonNoise.setSkyLevel.__func__.__doc__ = "Set sky level in current noise model."
+_galsim.PoissonNoise.setSkyLevel.__func__.__doc__ = "Set sky level in current noise model. Discouraged."
 
 def PoissonNoise_copy(self):
     return _galsim.PoissonNoise(self.getRNG(),self.getSkyLevel())
@@ -317,9 +317,9 @@ _galsim.CCDNoise.applyTo = CCDNoise_applyTo
 _galsim.CCDNoise.getSkyLevel.__func__.__doc__ = "Get sky level in current noise model."
 _galsim.CCDNoise.getGain.__func__.__doc__ = "Get gain in current noise model."
 _galsim.CCDNoise.getReadNoise.__func__.__doc__ = "Get read noise in current noise model."
-_galsim.CCDNoise.setSkyLevel.__func__.__doc__ = "Set sky level in current noise model."
-_galsim.CCDNoise.setGain.__func__.__doc__ = "Set gain in current noise model."
-_galsim.CCDNoise.setReadNoise.__func__.__doc__ = "Set read noise in current noise model."
+_galsim.CCDNoise.setSkyLevel.__func__.__doc__ = "Set sky level in current noise model. Discouraged."
+_galsim.CCDNoise.setGain.__func__.__doc__ = "Set gain in current noise model. Discouraged."
+_galsim.CCDNoise.setReadNoise.__func__.__doc__ = "Set read noise in current noise model. Discouraged."
 
 def CCDNoise_copy(self):
     return _galsim.CCDNoise(self.getRNG(),self.getSkyLevel(),self.getGain(),self.getReadNoise())

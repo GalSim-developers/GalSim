@@ -520,15 +520,12 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
 
     sigma = kwargs['sigma']
 
-    if 'gd' in base:
+    if 'gd' in base and base['current_gdsigma'] == sigma:
         # Minor subtlety here.  GaussianDeviate requires two random numbers to 
         # generate a single Gaussian deviate.  But then it gets a second 
         # deviate for free.  So it's more efficient to store gd than to make
         # a new one each time.  So check if we did that.
         gd = base['gd']
-        if base['current_gdsigma'] != sigma:
-            gd.setSigma(sigma)
-            base['current_gdsigma'] = sigma
     else:
         # Otherwise, just go ahead and make a new one.
         gd = galsim.GaussianDeviate(rng,sigma=sigma)
