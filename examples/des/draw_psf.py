@@ -144,9 +144,8 @@ def main(argv):
             # First do the PSFEx image:
             if True:
                 # Define the PSF profile
-                psf = psfex.getPSF(image_pos)
+                psf = psfex.getPSF(image_pos).withFlux(flux)
                 #print '    psfex psf = ',psf
-                psf.setFlux(flux)
 
                 # Draw the postage stamp image
                 stamp = psf.draw(wcs=wcs.local(image_pos), offset=offset)
@@ -164,9 +163,8 @@ def main(argv):
             # raise an exception telling us to skip this object.  Easier to check here.
             if fitpsf.bounds.includes(image_pos):
                 # Define the PSF profile
-                psf = fitpsf.getPSF(image_pos)
+                psf = fitpsf.getPSF(image_pos).withFlux(flux)
                 #print '    fitpsf psf = ',psf
-                psf.setFlux(flux)
 
                 # Draw the postage stamp image
                 stamp = psf.draw(wcs=wcs.local(image_pos), offset=offset)
