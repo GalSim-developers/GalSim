@@ -1,11 +1,12 @@
 Changes from v1.0 to v1.1:
 --------------------------
 
-Python layer API changes:
+Non-backward-compatible API changes:
 
-* Changed the name of the `dx` parameter in the `draw`, `drawShoot`, `drawK`
-  methods of `GSObject` and the constructors of `InterpolatedImage` and
-  `CorrelatedNoise` to the name `scale`. (Issue #364)
+We believe that these changes will not impose much hardship on the majority
+of GalSim users.  The funtions are either expected to be rarely used, or the 
+change does not affect the most common uses of the function.
+
 * Changed the `xw` and `yw` parameters of the `Pixel` constructor to a
   single `scale` parameter. (Issue #364)
   * `pix = Pixel(xw=scale)` should now be either `pix = Pixel(scale=scale)`
@@ -14,6 +15,46 @@ Python layer API changes:
   with unequal values of `xw` and `yw`. (Issue #364)
   * `box = Pixel(xw=width, yw=height)` should now be either
     `box = Box(width=width, height=height)` or `box = Box(width, height)`.
+* Changed the handling of the `scale` and `init_value` parameters of the 
+  `Image` constructor, so that now they have to be named keyword arguments
+  rather than positional arguments. (Issue #364)
+  * `im = ImageF(nx, ny, scale, init_val)` should now be 
+    `im = ImageF(nx, ny, scale=scale, init_value=init_val)`.
+* Changed `Angle.wrap()` to return the wrapped angle rather than modifying the 
+  original. (Issue #364)
+  * `angle.wrap()` should now be `angle = angle.wrap()`.
+* Removed the previously deprecated `Ellipse` and `AtmosphericPSF` classes.
+  Also removed `PhotonArray` from the python layer, since it is only used
+  by the C++ layer. (Issue #364)
+* Changed Bounds methods `addBorder`, `shift`, and `expand` to return new
+  Bounds objects rather than changing the original (in the python layer 
+  only). (Issue #364)
+* Changed DES_PSFEx class to take in the original image file to get the correct
+  WCS information to convert from image coordinates to world coordinates.  If
+  unavailable, then the returned PSF profiles will be in image coordinates.
+  The old `scale` parameter in `psfex.getPSF` is obsolete since it is not
+  really accurate.  The new behavior accurately converts the PSFEx profile 
+  between image and world coordinates. (Issue #364)
+  * `psfex = galsim.des.DES_PSFEx(psf_file)` `psf = psfex.getPSF(pos, scale)`
+    should become `psfex = galsim.des.DES_PSFEx(psf_file, image_file)`
+    `psf = psfex.getPSF(pos)`.
+* Changed the Shapelet.fitImage method to return a new ShapeletObject
+  rather than modify the existing object in place.
+
+
+Other chages to the API
+
+For these chages, we are currently still allowing the old syntax for ease of 
+transition, but that syntax is now discouraged.  It is usually marked in the 
+code as being obsolete.  At some point (probably version 1.2) use of the old
+syntax will raise a DeprecationWarning, and with version 2.0, it will be 
+removed.
+
+* Removed the `im.at(x,y)` syntax.  This had been equivalent to `im(x,y)`, 
+  so any such code should now be switched to that. (Issue #364)
+* Changed the name of the `dx` parameter in the `draw`, `drawShoot`, `drawK`
+  methods of `GSObject` and the constructors of `InterpolatedImage` and
+  `CorrelatedNoise` to the name `scale`. (Issue #364)
 * Changed the `dx_cosmos` parameter of `getCOSMOSNoise` to `cosmos_scale`.
   (Issue #364)
 * Combined the old `Image`, `ImageView` and `ConstImageView` arrays of class 
@@ -34,31 +75,68 @@ Python layer API changes:
     the correct type, you do not need the `astype(type)` part.
   * `im = ConstImageView[type](numpy_array.astype(type))` should now be 
     `im = Image(numpy_array.astype(type), make_const=True)`
-* Changed the handling of the `scale` and `init_value` parameters of the 
-  `Image` constructor, so that now they have to be named keyword arguments
-  rather than positional arguments. (Issue #364)
-  * `im = ImageF(nx, ny, scale, init_val)` should now be 
-    `im = ImageF(nx, ny, scale=scale, init_value=init_val)`.
-* Removed the `im.at(x,y)` syntax.  This had been equivalent to `im(x,y)`, 
-  so any such code should now be switched to that. (Issue #364)
-* Changed `Angle.wrap()` to return the wrapped angle rather than modifying the 
-  original. (Issue #364)
-  * `angle.wrap()` should now be `angle = angle.wrap()`.
-* Removed the previously deprecated `Ellipse` and `AtmosphericPSF` classes.
-  Also removed `PhotonArray` from the python layer, since it is only used
-  by the C++ layer. (Issue #364)
-* Changed Bounds methods `addBorder`, `shift`, and `expand` to return new
-  Bounds objects rather than changing the original (in the python layer 
-  only). (Issue #364)
-* Changed DES_PSFEx class to take in the original image file to get the correct
-  WCS information to convert from image coordinates to world coordinates.  If
-  unavailable, then the returned PSF profiles will be in image coordinates.
-  The old `scale` parameter in `psfex.getPSF` is obsolete since it is not
-  really accurate.  The new behavior accurately converts the PSFEx profile 
-  between image and world coordinates.
-  * `psfex = galsim.des.DES_PSFEx(psf_file)` `psf = psfex.getPSF(pos, scale)`
-    should become `psfex = galsim.des.DES_PSFEx(psf_file, image_file)`
-    `psf = psfex.getPSF(pos)`.
+* Changed the methods createSheared, createRotated, etc. to more succinct
+  names.  The applyShear, applyRotation, etc. methods are also discouraged
+  and will eventually be deprecated.  All such usage should be changed to the 
+  version the returns a new object, rather than modify the object in place.
+  * `gal = gal.createSheared(shear)` or `gal.applyShear(shear)` should
+    now be `gal = gal.shear(shear)`.
+  * `gal = gal.createRotated(theta)` or `gal.applyRotation(theta)` should
+    now be `gal = gal.rotate(theta)`.
+  * `gal = gal.createDilated(scale)` or `gal.applyDilation(scale)` should
+    now be `gal = gal.dilate(scale)`.
+  * `gal = gal.createExpanded(scale)` or `gal.applyExpansion(scale)` should
+    now be `gal = gal.expand(scale)`.
+  * `gal = gal.createMagnified(mu)` or `gal.applyMagnification(mu)` should
+    now be `gal = gal.magnify(mu)`.
+  * `gal = gal.createShifted(shift)` or `gal.applyShift(shift)` should
+    now be `gal = gal.shift(shift)`.
+  * `gal = gal.createTransformed(...)` or `gal.applyTransformation(...)` should
+    now be `gal = gal.transform(...)`.
+  * `gal = gal.createLensed(g1,g2,mu)` or `gal.applyLensing(g1,g2,mu)` should
+    now be `gal = gal.lens(g1,g2,mu)`.
+* Changed the setFlux and scaleFlux methods to versions that return new 
+  objects, rather than change the object in place.
+  * `gal.setFlux(flux)` should now be `gal = gal.withFlux(flux)`
+  * `gal.scaleFlux(flux_ratio)` should now be `gal = gal * flux_ratio`
+  * `gal *= flux_ratio` is fine, since python converts it to the above behind
+    the scenes.
+* Changed the corresponding methods of CorrelatedNoise similarly.
+  * `cn = cn.createSheared(shear)` or `cn.applyShear(shear)` should
+    now be `cn = cn.shear(shear)`.
+  * `cn = cn.createRotated(theta)` or `cn.applyRotation(theta)` should
+    now be `cn = cn.rotate(theta)`.
+  * `cn = cn.createDilated(scale)` or `cn.applyDilation(scale)` should
+    now be `cn = cn.dilate(scale)`.
+  * `cn = cn.createExpanded(scale)` or `cn.applyExpansion(scale)` should
+    now be `cn = cn.expand(scale)`.
+  * `cn = cn.createMagnified(mu)` or `cn.applyMagnification(mu)` should
+    now be `cn = cn.magnify(mu)`.
+  * `cn = cn.createShifted(shift)` or `cn.applyShift(shift)` should
+    now be `cn = cn.shift(shift)`.
+  * `cn = cn.createTransformed(...)` or `cn.applyTransformation(...)` should
+    now be `cn = cn.transform(...)`.
+  * `cn = cn.createLensed(g1,g2,mu)` or `cn.applyLensing(g1,g2,mu)` should
+    now be `cn = cn.lens(g1,g2,mu)`.
+* Changed how to set the variance of the various `Noise` methods (including
+  `CorrelatedNoise` and all other subclasses of `BaseNoise`):
+  * `n.setVariance(flux)` should now be `n = n.withVariance(variance)`
+  * `n.scaleVariance(flux_ratio)` should now be `n = n * variance_ratio`
+* Changed the `CorrelatedNoise.convolveWith` method to `convolvedWith`,
+  which returns a new object corresponding to the convolvution.
+  * `cn.convolveWith(obj)` should now be `cn = cn.convolvedWith(obj)`.
+* In general, moved as many classes as possible toward an immutable design.
+  The bulk of these changes are the ones listed above, but we also now
+  discourage use of setters in various classes that had them.  These methods
+  will eventually be deprecated.  The classes are all "light" classes,
+  that have trivial constructors, so the preferred syntax is now to create a
+  new instance, rather than modifiy an existing instance.
+  * `GaussianNoise.setSigma`
+  * `PoissonNoise.setSkyLevel`
+  * `CCDNoise`: `setSkyLevel`, `setGain`, `setReadNoise`
+  * `BaseDeviate` subclasses: all `set*` methods.
+  * `Shear`: `setG1G2`, `setE1E2`, `setEBeta`, `setEta1Eta2`, `setEtaBeta`
+  * `Shapelet`: `setSigma`, `setOrder`, `setBVec`, `setNM`, `setPQ`
 
 
 New WCS classes: (Issue #364)
@@ -138,6 +216,10 @@ New `CelestialCoord` class: (Issue #364)
 
 
 Updates to config options:
+
+Some of these changes are not backwards compatible, but we believe only
+in rarely used functionality, so we do not expect most users to have to
+change their yaml files.
 
 * Changed the previous behavior of the `image.wcs` field to allow several WCS
   types: 'PixelScale', 'Shear', 'Jacobian', 'Affine', 'UVFunction',
