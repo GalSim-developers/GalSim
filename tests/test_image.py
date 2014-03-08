@@ -200,6 +200,113 @@ def test_Image_basic():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_Image_obsolete():
+    """Test that the old obsolete syntax still works (for now)
+    """
+    # This is the old version of the test_Image_basic function from version 1.0
+    import time
+    t1 = time.time()
+    for i in xrange(ntypes):
+
+        # Check basic constructor from ncol, nrow
+        array_type = types[i]
+        im1 = galsim.Image[array_type](ncol,nrow)
+        bounds = galsim.BoundsI(1,ncol,1,nrow)
+
+        assert im1.getXMin() == 1
+        assert im1.getXMax() == ncol
+        assert im1.getYMin() == 1
+        assert im1.getYMax() == nrow
+        assert im1.getBounds() == bounds
+        assert im1.bounds == bounds
+
+        # Check basic constructor from ncol, nrow
+        # Also test alternate name of image type: ImageD, ImageF, etc.
+        image_type = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD
+        im2 = image_type(bounds)
+        im2_view = im2.view()
+
+        assert im2_view.getXMin() == 1
+        assert im2_view.getXMax() == ncol
+        assert im2_view.getYMin() == 1
+        assert im2_view.getYMax() == nrow
+        assert im2_view.bounds == bounds
+
+        # Check various ways to set and get values
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                im1.setValue(x,y, 100 + 10*x + y)
+                im2_view.setValue(x,y, 100 + 10*x + y)
+
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                assert im1.at(x,y) == 100+10*x+y
+                assert im1.view().at(x,y) == 100+10*x+y
+                assert im2.at(x,y) == 100+10*x+y
+                assert im2_view.at(x,y) == 100+10*x+y
+                im1.setValue(x,y, 10*x + y)
+                im2_view.setValue(x,y, 10*x + y)
+                assert im1(x,y) == 10*x+y
+                assert im1.view()(x,y) == 10*x+y
+                assert im2(x,y) == 10*x+y
+                assert im2_view(x,y) == 10*x+y
+
+        # Setting or getting the value outside the bounds should throw an exception.
+        try:
+            np.testing.assert_raises(RuntimeError,im1.setValue,0,0,1)
+            np.testing.assert_raises(RuntimeError,im1.at,0,0)
+            np.testing.assert_raises(RuntimeError,im1.view().setValue,0,0,1)
+            np.testing.assert_raises(RuntimeError,im1.view().at,0,0)
+
+            np.testing.assert_raises(RuntimeError,im1.setValue,ncol+1,0,1)
+            np.testing.assert_raises(RuntimeError,im1.at,ncol+1,0)
+            np.testing.assert_raises(RuntimeError,im1.view().setValue,ncol+1,0,1)
+            np.testing.assert_raises(RuntimeError,im1.view().at,ncol+1,0)
+
+            np.testing.assert_raises(RuntimeError,im1.setValue,0,nrow+1,1)
+            np.testing.assert_raises(RuntimeError,im1.at,0,nrow+1)
+            np.testing.assert_raises(RuntimeError,im1.view().setValue,0,nrow+1,1)
+            np.testing.assert_raises(RuntimeError,im1.view().at,0,nrow+1)
+
+            np.testing.assert_raises(RuntimeError,im1.setValue,ncol+1,nrow+1,1)
+            np.testing.assert_raises(RuntimeError,im1.at,ncol+1,nrow+1)
+            np.testing.assert_raises(RuntimeError,im1.view().setValue,ncol+1,nrow+1,1)
+            np.testing.assert_raises(RuntimeError,im1.view().at,ncol+1,nrow+1)
+        except ImportError:
+            print 'The assert_raises tests require nose'
+
+        # Check view of given data
+        im3_view = galsim.ImageView[array_type](ref_array.astype(array_type))
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                assert im3_view(x,y) == 10*x+y
+
+        # Check shift ops
+        im1_view = im1.view() # View with old bounds
+        dx = 31
+        dy = 16
+        im1.shift(dx,dy)
+        im2_view.setOrigin( 1+dx , 1+dy )
+        im3_view.setCenter( (ncol+1)/2+dx , (nrow+1)/2+dy )
+        shifted_bounds = galsim.BoundsI(1+dx, ncol+dx, 1+dy, nrow+dy)
+
+        assert im1.bounds == shifted_bounds
+        assert im2_view.bounds == shifted_bounds
+        assert im3_view.bounds == shifted_bounds
+        # Others shouldn't have changed
+        assert im1_view.bounds == bounds
+        assert im2.bounds == bounds
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                assert im1(x+dx,y+dy) == 10*x+y
+                assert im1_view(x,y) == 10*x+y
+                assert im2(x,y) == 10*x+y
+                assert im2_view(x+dx,y+dy) == 10*x+y
+                assert im3_view(x+dx,y+dy) == 10*x+y
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 def test_Image_FITS_IO():
     """Test that all four FITS reference images are correctly read in by both PyFITS and our Image 
     wrappers.
@@ -1528,6 +1635,7 @@ def test_ConstImage_array_constness():
 
 if __name__ == "__main__":
     test_Image_basic()
+    test_Image_obsolete()
     test_Image_FITS_IO()
     test_Image_MultiFITS_IO()
     test_Image_CubeFITS_IO()

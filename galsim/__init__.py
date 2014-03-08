@@ -30,7 +30,14 @@ except:
 
 # Import things from other files we want to be in the galsim namespace
 from ._galsim import *
+
 from image import Image, ImageS, ImageI, ImageF, ImageD
+
+# These are obsolete, but we currently still suppert them.  They will be deprecated and 
+# removed eventually.
+from image import ImageView, ImageViewS, ImageViewI, ImageViewF, ImageViewD
+from image import ConstImageView, ConstImageViewS, ConstImageViewI, ConstImageViewF, ConstImageViewD
+
 from base import *
 from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
