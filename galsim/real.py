@@ -236,7 +236,7 @@ class RealGalaxy(GSObject):
             logger.debug('RealGalaxy %d: Made gsobject',use_index)
 
         # Save the noise in the image as an accessible attribute
-        self.noise.convolveWith(psf_inv, gsparams)
+        self.noise = self.noise.convolvedWith(psf_inv, gsparams)
         if logger:
             logger.debug('RealGalaxy %d: Finished building RealGalaxy',use_index)
 

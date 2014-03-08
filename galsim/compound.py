@@ -240,9 +240,9 @@ class Convolve(GSObject):
                 others = [ obj2 for obj2 in args if obj2 is not obj ]
                 assert len(others) > 0
                 if len(others) == 1: 
-                    noise.convolveWith(others[0])
+                    noise = noise.convolvedWith(others[0])
                 else: 
-                    noise.convolveWith(galsim.Convolve(others))
+                    noise = noise.convolvedWith(galsim.Convolve(others))
 
         # Then finally initialize the SBProfile using the objects' SBProfiles.
         SBList = [ obj.SBProfile for obj in args ]

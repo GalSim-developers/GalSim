@@ -469,7 +469,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
         self.__class__ = new_obj.__class__
 
-    def convolveWith(self, gsobject, gsparams=None):
+    def convolvedWith(self, gsobject, gsparams=None):
         """Convolve the correlated noise model with an input GSObject.
 
         The resulting correlated noise model will then give a statistical description of the noise
@@ -485,17 +485,17 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         Examples
         --------
-        The following command simply applies a galsim.Moffat PSF with slope parameter `beta`=3. and
+        The following command simply applies a galsim.Moffat PSF with slope parameter beta=3. and
         FWHM=0.7:
 
-            >>> correlated_noise.convolveWith(galsim.Moffat(beta=3., fwhm=0.7))
+            >>> cn = cn.convolvedWith(galsim.Moffat(beta=3., fwhm=0.7))
 
         Often we will want to convolve with more than one function.  For example, if we wanted to
         simulate how a noise field would look if convolved with a ground-based PSF (such as the 
         Moffat above) and then rendered onto a new (typically larger) pixel grid, the following
         example command demonstrates the syntax: 
 
-            >>> correlated_noise.convolveWith(
+            >>> cn = cn.convolvedWith(
             ...    galsim.Convolve([galsim.Deconvolve(galsim.Pixel(0.03)),
             ...                     galsim.Pixel(0.2), galsim.Moffat(3., fwhm=0.7),
 
@@ -503,9 +503,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         image from which the `correlated_noise` was made.  This command above is functionally 
         equivalent to
 
-            >>> correlated_noise.convolveWith(galsim.Deconvolve(galsim.Pixel(0.03)))
-            >>> correlated_noise.convolveWith(galsim.Pixel(0.2))
-            >>> correlated_noise.convolveWith(galsim.Moffat(beta=3., fwhm=0.7))
+            >>> cn = cn.convolvedWith(galsim.Deconvolve(galsim.Pixel(0.03)))
+            >>> cn = cn.convolvedWith(galsim.Pixel(0.2))
+            >>> cn = cn.convolvedWith(galsim.Moffat(beta=3., fwhm=0.7))
 
         as is demanded for a linear operation such as convolution.
 
@@ -513,9 +513,19 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                          which the user wants to convolve the correlated noise model.
         @param gsparams  You may also specify a gsparams argument.  See the docstring for 
                          GSObject for more information about this option.
+        @returns         The new CorrelatedNoise of the convolved profile.
         """
-        self._profile = galsim.Convolve(
-            [self._profile, galsim.AutoCorrelate(gsobject)], gsparams=gsparams)
+        conv = galsim.Convolve([self._profile, galsim.AutoCorrelate(gsobject)], gsparams=gsparams)
+        return _BaseCorrelatedNoise(self.getRNG(), conv)
+
+    def convolveWith(self, gsobject, gsparams=None):
+        """This is an obsolete method that is rougly equivalent to 
+        corr = corr.convolvedWith(gsobject,gsparams)
+        """
+        new_obj = self.convolvedWith(gsobject,gsparams)
+        self._profile = new_obj._profile
+        self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
+        self.__class__ = new_obj.__class__
 
     def draw(self, image=None, scale=None, wmult=1., add_to_image=False):
         """The draw method for profiles storing correlation functions.
@@ -1094,7 +1104,7 @@ def getCOSMOSNoise(rng, file_name, cosmos_scale=0.03, variance=0., x_interpolant
 
 class UncorrelatedNoise(_BaseCorrelatedNoise):
     """A class that represents 2D correlated noise fields that are actually (at least initially)
-    uncorrelated.  Subsequent applications of things like shear or convolveWith will induce 
+    uncorrelated.  Subsequent applications of things like shear or convolvedWith will induce 
     correlations.
 
     Initialization
