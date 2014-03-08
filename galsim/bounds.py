@@ -21,6 +21,7 @@ A few adjustments to the Bounds class at the Python layer.
 """
 
 from . import _galsim
+from ._galsim import BoundsI, BoundsD
 
 def Bounds_repr(self):
     return (self.__class__.__name__+"(xmin="+str(self.xmin)+", xmax="+str(self.xmax)+

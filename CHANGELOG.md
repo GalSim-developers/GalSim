@@ -38,6 +38,16 @@ change does not affect the most common uses of the function.
   * `psfex = galsim.des.DES_PSFEx(psf_file)` `psf = psfex.getPSF(pos, scale)`
     should become `psfex = galsim.des.DES_PSFEx(psf_file, image_file)`
     `psf = psfex.getPSF(pos)`.
+* Stopped importing everything from the `galsim._galsim` namespace into the 
+  main `galsim` namespace.  Now only the classes and functions which we 
+  document and use in exmaples are imported into the `galsim` namespace.
+  The rest are considered implementation details, and are not guaranteed
+  to maintain backward compatibility of syntax and/or functionality in future 
+  versions.
+  * e.g. `galsim.SBGaussian` should now be `galsim._galsim.SBGaussian`.
+  * Or better, switch to using the documented `galsim.Gaussian` class instead.
+  * Similarly for other `SB*` classes along with a few other undocumented 
+    classes and functions.
 
 
 Other chages to the API

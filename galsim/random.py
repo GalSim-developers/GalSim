@@ -23,7 +23,8 @@ DistDeviate class.
 
 
 from . import _galsim
-
+from ._galsim import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate
+from ._galsim import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate
 
 def permute(rng, *args):
     """Randomly permute one or more lists.

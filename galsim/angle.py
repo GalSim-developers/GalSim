@@ -21,8 +21,9 @@ A few adjustments to the Angle class at the Python layer.
 """
 
 import galsim
+from ._galsim import Angle, AngleUnit, radians, degrees, hours, arcmin, arcsec
 
-galsim.AngleUnit.__doc__ = """A class for defining angular units in galsim.Angle objects.
+AngleUnit.__doc__ = """A class for defining angular units in galsim.Angle objects.
 
 Initialization
 --------------
@@ -55,12 +56,12 @@ def AngleUnit_repr(self):
         return 'galsim.arcsec'
     else:
         return 'galsim.AngleUnit(' + str(self.getValue()) + ')'
-galsim.AngleUnit.__repr__ = AngleUnit_repr
+AngleUnit.__repr__ = AngleUnit_repr
 
 # Enable pickling
 def AngleUnit_getinitargs(self):
     return self.getValue()
-galsim.AngleUnit.__getinitargs__ = AngleUnit_getinitargs
+AngleUnit.__getinitargs__ = AngleUnit_getinitargs
 
 
 def get_angle_unit(unit):
@@ -84,7 +85,7 @@ def get_angle_unit(unit):
 
 
 
-galsim.Angle.__doc__ = """A class representing an Angle.
+Angle.__doc__ = """A class representing an Angle.
 
 Initialization
 --------------
@@ -208,19 +209,19 @@ def dms(self, sep=":"):
     d = self.wrap() / galsim.degrees
     return _make_dms_string(d,sep)
 
-galsim.Angle.__str__ = __str__
-galsim.Angle.__repr__ = __repr__
-galsim.Angle.__neg__ = __neg__
-galsim.Angle.hms = hms
-galsim.Angle.dms = dms
+Angle.__str__ = __str__
+Angle.__repr__ = __repr__
+Angle.__neg__ = __neg__
+Angle.hms = hms
+Angle.dms = dms
 
 # Enable pickling
 def Angle_getstate(self):
     return self.rad()
 def Angle_setstate(self, theta):
     self.__init__(theta, galsim.radians)
-galsim.Angle.__getstate__ = Angle_getstate
-galsim.Angle.__setstate__ = Angle_setstate
+Angle.__getstate__ = Angle_getstate
+Angle.__setstate__ = Angle_setstate
 
 def parse_dms(s):
     """Convert a string of the form dd:mm:ss.decimal into decimal degrees."""
@@ -266,7 +267,7 @@ def DMS_Angle(str):
     """
     return parse_dms(str) * galsim.degrees
 
-galsim.Angle.wrap.__func__.__doc__ = """Wrap Angle to lie in the range [-pi, pi) radians.
+Angle.wrap.__func__.__doc__ = """Wrap Angle to lie in the range [-pi, pi) radians.
 
 Depending on the context, theta = 2pi radians and theta = 0 radians are the same thing.
 If you want your angles to be wrapped to [-pi, pi) radians, you can do this by calling

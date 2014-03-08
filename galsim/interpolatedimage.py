@@ -22,8 +22,10 @@ InterpolatedImage is a class that allows one to treat an image as a profile.
 """
 
 import galsim
-from galsim import GSObject, goodFFTSize
-
+from galsim import GSObject
+from . import _galsim
+from ._galsim import Interpolant, Interpolant2d, InterpolantXY
+from ._galsim import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 
 class InterpolatedImage(GSObject):
     """A class describing non-parametric profiles specified using an Image, which can be 
@@ -349,7 +351,7 @@ class InterpolatedImage(GSObject):
             scale = self.image.wcs.minLinearScale(image_pos=im_cen)
             noise_pad_size = int(math.ceil(noise_pad_size / scale))
             # Round up to a good size for doing FFTs
-            noise_pad_size = goodFFTSize(noise_pad_size)
+            noise_pad_size = galsim._galsim.goodFFTSize(noise_pad_size)
             if noise_pad_size <= min(self.image.array.shape):
                 # Don't need any noise padding in this case.
                 noise_pad_size = 0
@@ -393,7 +395,7 @@ class InterpolatedImage(GSObject):
             pad_image = self.image
 
         # Make the SBInterpolatedImage out of the image.
-        sbinterpolatedimage = galsim.SBInterpolatedImage(
+        sbinterpolatedimage = galsim._galsim.SBInterpolatedImage(
                 pad_image.image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
                 pad_factor=pad_factor, gsparams=gsparams)
 

@@ -28,6 +28,7 @@ AutoCorrelate = convolution of a profile by its reflection
 
 import galsim
 from galsim import GSObject
+from . import _galsim
 
 #
 # --- Compound GSObject classes: Add, Convolve, AutoConvolve, and AutoCorrelate ---
@@ -93,7 +94,7 @@ class Add(GSObject):
                     else: 
                         noise += obj.noise
             SBList = [obj.SBProfile for obj in args]
-            GSObject.__init__(self, galsim.SBAdd(SBList, gsparams=gsparams))
+            GSObject.__init__(self, galsim._galsim.SBAdd(SBList, gsparams=gsparams))
             if noise is not None: 
                 self.noise = noise
 
@@ -246,8 +247,8 @@ class Convolve(GSObject):
 
         # Then finally initialize the SBProfile using the objects' SBProfiles.
         SBList = [ obj.SBProfile for obj in args ]
-        GSObject.__init__(self, galsim.SBConvolve(SBList, real_space=real_space,
-                                                  gsparams=gsparams))
+        GSObject.__init__(self, galsim._galsim.SBConvolve(SBList, real_space=real_space,
+                                                          gsparams=gsparams))
         if noise is not None: 
             self.noise = noise
 
@@ -271,7 +272,7 @@ class Deconvolve(GSObject):
     def __init__(self, obj, gsparams=None):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to Deconvolve must be a GSObject.")
-        GSObject.__init__(self, galsim.SBDeconvolve(obj.SBProfile, gsparams=gsparams))
+        GSObject.__init__(self, galsim._galsim.SBDeconvolve(obj.SBProfile, gsparams=gsparams))
         if hasattr(obj,'noise'):
             import warnings
             warnings.warn("Unable to propagate noise in galsim.Deconvolve")
@@ -319,8 +320,8 @@ class AutoConvolve(GSObject):
             warnings.warn(msg)
             real_space = False
 
-        GSObject.__init__(self, galsim.SBAutoConvolve(obj.SBProfile, real_space=real_space,
-                                                      gsparams=gsparams))
+        GSObject.__init__(self, galsim._galsim.SBAutoConvolve(obj.SBProfile, real_space=real_space,
+                                                              gsparams=gsparams))
         if hasattr(obj,'noise'):
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoConvolve")
@@ -372,8 +373,8 @@ class AutoCorrelate(GSObject):
             warnings.warn(msg)
             real_space = False
 
-        GSObject.__init__(self, galsim.SBAutoCorrelate(obj.SBProfile, real_space=real_space,
-                                                       gsparams=gsparams))
+        GSObject.__init__(self, galsim._galsim.SBAutoCorrelate(obj.SBProfile, real_space=real_space,
+                                                               gsparams=gsparams))
 
         if hasattr(obj,'noise'):
             import warnings

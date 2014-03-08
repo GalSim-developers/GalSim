@@ -574,13 +574,16 @@ class PowerSpectrum(object):
                                                                self.im_kappa.array)
             g1_r = galsim.ImageD(g1_r)
             g2_r = galsim.ImageD(g2_r)
-            # Make an SBInterpolatedImage, which will do the heavy lifting for the
-            # interpolation.
-            sbii_g1 = galsim.SBInterpolatedImage(g1_r.image, xInterp=xinterp, kInterp=kinterp)
-            sbii_g2 = galsim.SBInterpolatedImage(g2_r.image, xInterp=xinterp, kInterp=kinterp)
+            # Make an SBInterpolatedImage, which will do the heavy lifting for the interpolation.
+            sbii_g1 = galsim._galsim.SBInterpolatedImage(g1_r.image, xInterp=xinterp,
+                                                         kInterp=kinterp)
+            sbii_g2 = galsim._galsim.SBInterpolatedImage(g2_r.image, xInterp=xinterp,
+                                                         kInterp=kinterp)
         else:
-            sbii_g1 = galsim.SBInterpolatedImage(self.im_g1.image, xInterp=xinterp, kInterp=kinterp)
-            sbii_g2 = galsim.SBInterpolatedImage(self.im_g2.image, xInterp=xinterp, kInterp=kinterp)
+            sbii_g1 = galsim._galsim.SBInterpolatedImage(self.im_g1.image, xInterp=xinterp,
+                                                         kInterp=kinterp)
+            sbii_g2 = galsim._galsim.SBInterpolatedImage(self.im_g2.image, xInterp=xinterp,
+                                                         kInterp=kinterp)
 
         # interpolate if necessary
         g1,g2 = [], []
@@ -651,8 +654,8 @@ class PowerSpectrum(object):
 
         # Make an SBInterpolatedImage, which will do the heavy lifting for the 
         # interpolation.
-        sbii_kappa = galsim.SBInterpolatedImage(self.im_kappa.image, xInterp=xinterp,
-                                                kInterp=kinterp)
+        sbii_kappa = galsim._galsim.SBInterpolatedImage(self.im_kappa.image, xInterp=xinterp,
+                                                        kInterp=kinterp)
 
         # interpolate if necessary
         kappa = []
@@ -728,7 +731,7 @@ class PowerSpectrum(object):
 
         # Make an SBInterpolatedImage, which will do the heavy lifting for the 
         # interpolation.
-        sbii_mu = galsim.SBInterpolatedImage(im_mu.image, xInterp=xinterp, kInterp=kinterp)
+        sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu.image, xInterp=xinterp, kInterp=kinterp)
 
         # interpolate if necessary
         mu = []
@@ -804,9 +807,11 @@ class PowerSpectrum(object):
         im_mu = galsim.ImageD(mu-1)
         # Make an SBInterpolatedImage, which will do the heavy lifting for the 
         # interpolation.
-        sbii_g1 = galsim.SBInterpolatedImage(im_g1_r.image, xInterp=xinterp, kInterp=kinterp)
-        sbii_g2 = galsim.SBInterpolatedImage(im_g2_r.image, xInterp=xinterp, kInterp=kinterp)
-        sbii_mu = galsim.SBInterpolatedImage(im_mu.image, xInterp=xinterp, kInterp=kinterp)
+        sbii_g1 = galsim._galsim.SBInterpolatedImage(im_g1_r.image, xInterp=xinterp,
+                                                     kInterp=kinterp)
+        sbii_g2 = galsim._galsim.SBInterpolatedImage(im_g2_r.image, xInterp=xinterp,
+                                                     kInterp=kinterp)
+        sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu.image, xInterp=xinterp, kInterp=kinterp)
 
         # interpolate if necessary
         g1, g2, mu = [], [], []

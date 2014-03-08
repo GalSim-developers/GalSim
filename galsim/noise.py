@@ -21,8 +21,10 @@ Module which adds the addNoise and addNoiseSNR methods to the galsim.Image class
 layer.
 """
 
-from . import _galsim
 import galsim
+from . import _galsim
+from ._galsim import BaseNoise, GaussianNoise, PoissonNoise, CCDNoise
+from ._galsim import DeviateNoise, VarGaussianNoise
 
 def addNoise(image, noise):
     """Noise addition Image method, adding noise according to a supplied noise model.

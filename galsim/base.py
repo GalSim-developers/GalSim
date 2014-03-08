@@ -41,6 +41,10 @@ import collections
 import galsim
 import utilities
 
+from . import _galsim
+from ._galsim import GSParams
+
+
 version = '1.1'
 
 class GSObject(object):
@@ -112,7 +116,7 @@ class GSObject(object):
             self.SBProfile = obj.SBProfile
             if hasattr(obj,'noise'):
                 self.noise = obj.noise.copy()
-        elif isinstance(obj, galsim.SBProfile):
+        elif isinstance(obj, galsim._galsim.SBProfile):
             self.SBProfile = obj
         else:
             raise TypeError("GSObject must be initialized with an SBProfile or another GSObject!")
@@ -1275,7 +1279,7 @@ class Gaussian(GSObject):
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1., gsparams=None):
         # Initialize the SBProfile
         GSObject.__init__(
-            self, galsim.SBGaussian(
+            self, galsim._galsim.SBGaussian(
                 sigma=sigma, half_light_radius=half_light_radius, fwhm=fwhm, flux=flux, 
                 gsparams=gsparams))
  
@@ -1350,7 +1354,7 @@ class Moffat(GSObject):
     def __init__(self, beta, scale_radius=None, half_light_radius=None, fwhm=None, trunc=0.,
                  flux=1., gsparams=None):
         GSObject.__init__(
-            self, galsim.SBMoffat(
+            self, galsim._galsim.SBMoffat(
                 beta, scale_radius=scale_radius, half_light_radius=half_light_radius, fwhm=fwhm,
                 trunc=trunc, flux=flux, gsparams=gsparams))
 
@@ -1415,8 +1419,8 @@ class Airy(GSObject):
     # --- Public Class methods ---
     def __init__(self, lam_over_diam, obscuration=0., flux=1., gsparams=None):
         GSObject.__init__(
-            self, galsim.SBAiry(lam_over_diam=lam_over_diam, obscuration=obscuration, flux=flux,
-                                gsparams=gsparams))
+            self, galsim._galsim.SBAiry(lam_over_diam=lam_over_diam, obscuration=obscuration,
+                                        flux=flux, gsparams=gsparams))
 
     def getHalfLightRadius(self):
         """Return the half light radius of this Airy profile (only supported for 
@@ -1537,8 +1541,8 @@ class Kolmogorov(GSObject):
                         "One of lam_over_r0, fwhm, or half_light_radius must be " +
                         "specified for Kolmogorov")
 
-        GSObject.__init__(self, galsim.SBKolmogorov(lam_over_r0=lam_over_r0, flux=flux,
-                                                    gsparams=gsparams))
+        GSObject.__init__(self, galsim._galsim.SBKolmogorov(lam_over_r0=lam_over_r0, flux=flux,
+                                                            gsparams=gsparams))
 
     def getLamOverR0(self):
         """Return the `lam_over_r0` parameter of this Kolmogorov profile.
@@ -1596,7 +1600,7 @@ class Pixel(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, scale, flux=1., gsparams=None):
-        GSObject.__init__(self, galsim.SBBox(scale, scale, flux=flux, gsparams=gsparams))
+        GSObject.__init__(self, galsim._galsim.SBBox(scale, scale, flux=flux, gsparams=gsparams))
 
     def getScale(self):
         """Return the pixel scale
@@ -1641,7 +1645,7 @@ class Box(GSObject):
     def __init__(self, width, height, flux=1., gsparams=None):
         width = float(width)
         height = float(height)
-        GSObject.__init__(self, galsim.SBBox(width, height, flux=flux, gsparams=gsparams))
+        GSObject.__init__(self, galsim._galsim.SBBox(width, height, flux=flux, gsparams=gsparams))
 
     def getWidth(self):
         """Return the width of the box in the x dimension.
@@ -1826,9 +1830,10 @@ class Sersic(GSObject):
     def __init__(self, n, half_light_radius=None, scale_radius=None,
                  flux=1., trunc=0., flux_untruncated=False, gsparams=None):
         GSObject.__init__(
-            self, galsim.SBSersic(n, half_light_radius=half_light_radius, scale_radius=scale_radius,
-                                  flux=flux, trunc=trunc, flux_untruncated=flux_untruncated,
-                                  gsparams=gsparams))
+            self, galsim._galsim.SBSersic(n, half_light_radius=half_light_radius,
+                                          scale_radius=scale_radius, flux=flux,
+                                          trunc=trunc, flux_untruncated=flux_untruncated,
+                                          gsparams=gsparams))
 
     def getN(self):
         """Return the Sersic index `n` for this profile.
@@ -1893,7 +1898,7 @@ class Exponential(GSObject):
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., gsparams=None):
         GSObject.__init__(
-            self, galsim.SBExponential(
+            self, galsim._galsim.SBExponential(
                 half_light_radius=half_light_radius, scale_radius=scale_radius, flux=flux,
                 gsparams=gsparams))
 
@@ -1953,10 +1958,10 @@ class DeVaucouleurs(GSObject):
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., trunc=0.,
                  flux_untruncated=False, gsparams=None):
         GSObject.__init__(
-            self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius,
-                                         scale_radius=scale_radius, flux=flux, trunc=trunc,
-                                         flux_untruncated=flux_untruncated,
-                                         gsparams=gsparams))
+            self, galsim._galsim.SBDeVaucouleurs(half_light_radius=half_light_radius,
+                                                 scale_radius=scale_radius, flux=flux, trunc=trunc,
+                                                 flux_untruncated=flux_untruncated,
+                                                 gsparams=gsparams))
 
     def getHalfLightRadius(self):
         """Return the half light radius for this DeVaucouleurs profile.
