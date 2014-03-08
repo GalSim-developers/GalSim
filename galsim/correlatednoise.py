@@ -842,7 +842,9 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     not affected by these scaling operations.
     """
     def __init__(self, rng, image, scale=0., x_interpolant=None, correct_periodicity=True,
-        subtract_mean=False, gsparams=None):
+        subtract_mean=False, gsparams=None, dx=None):
+        # Check for obsolete dx parameter
+        if dx is not None and scale==0.: scale = dx
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
         if not isinstance(image, galsim.Image):
@@ -964,7 +966,7 @@ galsim.Image.getCorrelatedNoise = _Image_getCorrelatedNoise
 
 # Free function for returning a COSMOS noise field correlation function
 def getCOSMOSNoise(rng, file_name, cosmos_scale=0.03, variance=0., x_interpolant=None,
-                   gsparams=None):
+                   gsparams=None, dx_cosmos=None):
     """Returns a representation of correlated noise in the HST COSMOS F814W unrotated science coadd
     images.
 
@@ -996,7 +998,7 @@ def getCOSMOSNoise(rng, file_name, cosmos_scale=0.03, variance=0., x_interpolant
                           instance or an Interpolant instance (from which an InterpolantXY will be
                           automatically generated).  Defaults to use of the bilinear interpolant
                           `galsim.InterpolantXY(galsim.Linear(tol=1.e-4))`, see below.
-     @param gsparams      You may also specify a gsparams argument.  See the docstring for 
+    @param gsparams       You may also specify a gsparams argument.  See the docstring for 
                           GSObject for more information about this option.
 
     @return A _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.
@@ -1056,6 +1058,9 @@ def getCOSMOSNoise(rng, file_name, cosmos_scale=0.03, variance=0., x_interpolant
 
     The FITS file `out.fits` should then contain an image of randomly-generated, COSMOS-like noise.
     """
+    # Check for obsolete dx_cosmos parameter
+    if dx_cosmos is not None and cosmos_scale==0.03: cosmos_scale = dx_cosmos
+
     # First try to read in the image of the COSMOS correlation function stored in the repository
     import os
     if not os.path.isfile(file_name):

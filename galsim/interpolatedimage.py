@@ -245,7 +245,10 @@ class InterpolatedImage(GSObject):
                  scale = None, wcs = None, flux = None, pad_factor = 4.,
                  noise_pad_size=0, noise_pad = 0.,
                  rng = None, pad_image = None, calculate_stepk=True, calculate_maxk=True,
-                 use_cache=True, use_true_center=True, offset=None, gsparams=None):
+                 use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None):
+        # Check for obsolete dx parameter
+        if dx is not None and scale is None: scale = dx
+
         import numpy
 
         # first try to read the image as a file.  If it's not either a string or a valid

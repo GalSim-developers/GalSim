@@ -716,7 +716,7 @@ class GSObject(object):
 
 
     def draw(self, image=None, scale=None, wcs=None, gain=1., wmult=1., normalization="flux",
-             add_to_image=False, use_true_center=True, offset=None):
+             add_to_image=False, use_true_center=True, offset=None, dx=None):
         """Draws an Image of the object, with bounds optionally set by an input Image.
 
         The draw method is used to draw an Image of the GSObject, typically using Fourier space
@@ -825,6 +825,9 @@ class GSObject(object):
 
         @returns      The drawn image.
         """
+        # Check for obsolete dx parameter
+        if dx is not None and scale is None: scale = dx
+
         # Raise an exception immediately if the normalization type is not recognized
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
@@ -887,7 +890,7 @@ class GSObject(object):
 
     def drawShoot(self, image=None, scale=None, wcs=None, gain=1., wmult=1., normalization="flux",
                   add_to_image=False, use_true_center=True, offset=None,
-                  n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None):
+                  n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None, dx=None):
         """Draw an image of the object by shooting individual photons drawn from the surface 
         brightness profile of the object.
 
@@ -1013,6 +1016,8 @@ class GSObject(object):
 
         @returns      The drawn image.
         """
+        # Check for obsolete dx parameter
+        if dx is not None and scale is None: scale = dx
 
         # Raise an exception immediately if the normalization type is not recognized
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
@@ -1112,7 +1117,7 @@ class GSObject(object):
 
         return image
 
-    def drawK(self, re=None, im=None, scale=None, gain=1., add_to_image=False):
+    def drawK(self, re=None, im=None, scale=None, gain=1., add_to_image=False, dk=None):
         """Draws the k-space Images (real and imaginary parts) of the object, with bounds
         optionally set by input Images.
 
@@ -1158,6 +1163,9 @@ class GSObject(object):
 
         @returns      (re, im)  (created if necessary)
         """
+        # Check for obsolete dk parameter
+        if dk is not None and scale is None: scale = dk
+
         # Make sure the type of gain is correct and has a valid value:
         if type(gain) != float:
             gain = float(gain)

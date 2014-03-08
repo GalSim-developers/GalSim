@@ -455,6 +455,10 @@ class Image(object):
         pos = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True)
         return self.image(pos.x, pos.y)
 
+    def at(self, *args, **kwargs):
+        """This method is an obsolete synonym for im(x,y)"""
+        return self(*args,**kwargs)
+
     def setValue(self, *args, **kwargs):
         """Set the pixel value at given position 
 
