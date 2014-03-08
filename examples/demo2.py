@@ -32,7 +32,7 @@ New features introduced in this demo:
 - obj = galsim.Exponential(flux, scale_radius)
 - obj = galsim.Moffat(beta, flux, half_light_radius)
 - obj = galsim.Pixel(scale)
-- obj.applyShear(g1, g2)  -- with explanation of other ways to specify shear
+- obj = obj.shear(g1, g2)  -- with explanation of other ways to specify shear
 - rng = galsim.BaseDeviate(seed)
 - noise = galsim.PoissonNoise(rng, sky_level)
 - galsim.hsm.EstimateShear(image, image_epsf)
@@ -92,7 +92,7 @@ def main(argv):
     # e1,e2        Ellipticity components: e1 = e cos(2 beta), e2 = e sin(2 beta)
     # g1,g2        ("Reduced") shear components: g1 = g cos(2 beta), g2 = g sin(2 beta)
     # eta1,eta2    Conformal shear components: eta1 = eta cos(2 beta), eta2 = eta sin(2 beta)
-    gal.applyShear(g1=g1, g2=g2)
+    gal = gal.shear(g1=g1, g2=g2)
     logger.debug('Made galaxy profile')
 
     # Define the PSF profile.

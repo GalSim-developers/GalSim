@@ -28,6 +28,9 @@ except:
     import pyfits
     pyfits_version = pyfits.__version__
 
+# Define the current code version
+version = '1.1'
+
 # Import things from other files we want to be in the galsim namespace
 
 # First some basic building blocks that don't usually depend on anything else

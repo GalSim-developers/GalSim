@@ -45,8 +45,6 @@ from . import _galsim
 from ._galsim import GSParams
 
 
-version = '1.1'
-
 class GSObject(object):
     """Base class for defining the interface with which all GalSim Objects access their shared 
     methods and attributes, particularly those from the C++ SBProfile classes.

@@ -118,8 +118,7 @@ def main(argv):
     gal_list = [ galsim.RealGalaxy(real_galaxy_catalog, id=id) for id in id_list ]
 
     # Make the galaxies a bit larger than their original observed size.
-    for gal in gal_list:
-        gal.applyDilation(gal_dilation) 
+    gal_list = [ gal.dilate(gal_dilation) for gal in gal_list ]
 
     # Setup the PowerSpectrum object we'll be using:
     ps = galsim.PowerSpectrum(lambda k : k**1.8)
@@ -201,7 +200,7 @@ def main(argv):
 
         # Define the PSF profile
         psf = galsim.Gaussian(fwhm=psf_fwhm)
-        psf.applyShear(e=psf_e, beta=psf_beta)
+        psf = psf.shear(e=psf_e, beta=psf_beta)
 
         # Define the pixel
         pix = galsim.Pixel(pixel_scale)
@@ -219,7 +218,7 @@ def main(argv):
         gal = gal_list[index]
 
         # This makes a new copy so we're not changing the object in the gal_list.
-        gal = gal.createRotated(theta)
+        gal = gal.rotate(theta)
 
         # Apply the shear from the power spectrum.  We should either turn the gridded shears
         # grid_g1[iy, ix] and grid_g2[iy, ix] into gridded reduced shears using a utility called
@@ -228,7 +227,7 @@ def main(argv):
         # are not on the original grid, as long as they are contained within the bounds of the full
         # grid. So in this example we'll use ps.getShear().
         alt_g1,alt_g2 = ps.getShear(pos)
-        gal.applyShear(g1=alt_g1, g2=alt_g2)
+        gal = gal.shear(g1=alt_g1, g2=alt_g2)
 
         # Apply half-pixel shift in a random direction.
         shift_r = pixel_scale * 0.5
@@ -236,7 +235,7 @@ def main(argv):
         theta = ud() * 2. * math.pi
         dx = shift_r * math.cos(theta)
         dy = shift_r * math.sin(theta)
-        gal.applyShift(dx,dy)
+        gal = gal.shift(dx,dy)
 
         # Make the final image, convolving with psf and pix
         final = galsim.Convolve([psf,pix,gal])
@@ -258,7 +257,7 @@ def main(argv):
         final_psf = galsim.Convolve([psf,pix], real_space=True)
 
         # For the PSF image, we also shift the PSF by the same amount.
-        final_psf.applyShift(dx,dy)
+        final_psf = final_psf.shift(dx,dy)
 
         # Draw the PSF image
         final_psf.draw(sub_psf_image)
