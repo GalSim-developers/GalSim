@@ -188,7 +188,7 @@ class RealGalaxy(GSObject):
                                           calculate_stepk=False, calculate_maxk=False,
                                           x_interpolant='linear', gsparams=gsparams)
             self.noise = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii)
-            self.noise.setVariance(var)
+            self.noise = self.noise.withVariance(var)
         if logger:
             logger.debug('RealGalaxy %d: Finished building noise',use_index)
 
@@ -573,7 +573,7 @@ class RealGalaxyCatalog(object):
                                           calculate_stepk=False, calculate_maxk=False,
                                           x_interpolant='linear', gsparams=gsparams)
             cf = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii)
-            cf.setVariance(var)
+            cf = cf.withVariance(var)
         return cf
 
 

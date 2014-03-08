@@ -76,9 +76,8 @@ def addNoiseSNR(image, noise, snr, preserve_flux=False):
     noise_var = noise.getVariance()
     if preserve_flux:
         new_noise_var = numpy.sum(image.array**2)/snr/snr
-        noise.setVariance(new_noise_var)
+        noise = noise.withVariance(new_noise_var)
         image.addNoise(noise)
-        noise.setVariance(noise_var)  # Revert to condition on input.
     else:
         sn_meas = numpy.sqrt( numpy.sum(image.array**2)/noise_var )
         flux = snr/sn_meas
@@ -98,30 +97,66 @@ _galsim.BaseNoise.setRNG.__func__.__doc__ = """
 Set the galsim.BaseDeviate used to generate random numbers for the current noise model.
 """
 _galsim.BaseNoise.getVariance.__func__.__doc__ = "Get variance in current noise model."
-_galsim.BaseNoise.setVariance.__func__.__doc__ = "Set variance in current noise model."
-_galsim.BaseNoise.scaleVariance.__func__.__doc__ = "Scale variance in current noise model."
+
+def Noise_setVariance(self, variance):
+    """This is an obsolete method that is rougly equivalent to noise = noise.withVariance(variance).
+    """
+    self._setVariance(variance)
+
+def Noise_scaleVariance(self, variance_ratio):
+    """This is an obsolete method that is rougly equivalent to noise = noise * variance_ratio
+    """
+    self._scaleVariance(variance_ratio)
+
+def Noise_withVariance(self, variance):
+    """Return a new noise object (of the same type as the current one) with the specified variance.
+
+    @param variance     The desired variance in the noise.
+    @returns            A new Noise object with the given variance.
+    """
+    ret = self.copy()
+    ret._setVariance(variance)
+    return ret
+
+def Noise_rescaleVariance(self, variance_ratio):
+    # We don't technically need this method, since it is equivalent to multiplication.
+    # However, I'm not sure if the multiplication syntax is clear enough for Noise objects, so it 
+    # seemed worthwhile to have a method that did the same thing but was more explicit about what 
+    # it was doing.
+    """Return a new noise object with the variance scaled up by the specified factor.
+
+    This is equivalent to noise * variance_ratio.
+
+    @param variance_ratio   The factor by which to scale the variance of the correlation 
+                            function profile.
+    @returns                A new Noise object whose variance has been scaled by 
+                            the given amount.
+    """
+    ret = self.copy()
+    ret._scaleVariance(variance_ratio)
+    return ret
+
+_galsim.BaseNoise.setVariance = Noise_setVariance
+_galsim.BaseNoise.scaleVariance = Noise_scaleVariance
+_galsim.BaseNoise.withVariance = Noise_withVariance
+_galsim.BaseNoise.rescaleVariance = Noise_rescaleVariance
 
 # Make op* and op*= work to adjust the overall variance of a BaseNoise object
-def Noise_imul(self, other):
-    self.scaleVariance(other)
-    return self
+def Noise_mul(self, variance_ratio):
+    """Multiply the variance of the noise by variance_ratio.
 
-def Noise_mul(self, other):
-    ret = self.copy()
-    Noise_imul(ret, other)
-    return ret
+    @param variance_ratio   The factor by which to scale the variance of the correlation 
+                            function profile.
+    @returns                A new Noise object whose variance has been scaled by 
+                            the given amount.
+    """
+    return self.rescaleVariance(variance_ratio)
 
-# Likewise for op/ and op/=
-def Noise_idiv(self, other):
-    self.scaleVariance(1. / other)
-    return self
+# Likewise for op/
+def Noise_div(self, variance_ratio):
+    """Equivalent to self * (1/variance_ratio)"""
+    return self.rescaleVariance(1./variance_ratio)
 
-def Noise_div(self, other):
-    ret = self.copy()
-    Noise_idiv(ret, other)
-    return ret
-
-_galsim.BaseNoise.__imul__ = Noise_imul
 _galsim.BaseNoise.__mul__ = Noise_mul
 _galsim.BaseNoise.__rmul__ = Noise_mul
 _galsim.BaseNoise.__div__ = Noise_div
@@ -397,6 +432,14 @@ class VariableGaussianNoise(_galsim.BaseNoise):
 
     def getVariance(self):
         raise RuntimeError("No single variance value for VariableGaussianNoise")
+
+    def withVariance(self, variance):
+        raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
+
+    def rescaleVariance(self, variance):
+        # This one isn't undefined like withVariance, but it's inefficient.  Better to 
+        # scale the values in the image before constructing VariableGaussianNoise.
+        raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
 
     def setVariance(self, variance):
         raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")

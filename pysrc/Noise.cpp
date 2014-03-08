@@ -54,7 +54,7 @@ namespace galsim {
 
         void setVariance(double variance)
         {
-            if (bp::override py_func = this->get_override("setVariance"))
+            if (bp::override py_func = this->get_override("_setVariance"))
                 py_func(variance);
             else
                 throw std::runtime_error("Cannot call setVariance from a pure BaseNoise instance");
@@ -62,7 +62,7 @@ namespace galsim {
 
         void scaleVariance(double variance_ratio)
         {
-            if (bp::override py_func = this->get_override("scaleVariance"))
+            if (bp::override py_func = this->get_override("_scaleVariance"))
                 py_func(variance_ratio);
             else
                 throw std::runtime_error("Cannot call scaleVariance from a pure BaseNoise instance");
@@ -107,8 +107,8 @@ namespace galsim {
                 .def("getRNG", &BaseNoise::getRNG, "")
                 .def("setRNG", &BaseNoise::setRNG, "")
                 .def("getVariance", &BaseNoise::getVariance, "")
-                .def("setVariance", &BaseNoise::setVariance, "")
-                .def("scaleVariance", &BaseNoise::scaleVariance, "")
+                .def("_setVariance", &BaseNoise::setVariance, "")
+                .def("_scaleVariance", &BaseNoise::scaleVariance, "")
                 ;
             wrapTemplates<double>(pyBaseNoise);
             wrapTemplates<float>(pyBaseNoise);
