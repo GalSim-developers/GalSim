@@ -109,10 +109,10 @@ class Image(object):
                     be something other than (1,1).  You can also optionally force the image to
                     be read-only with `make_const=True`.
 
-        Image(image)
+        Image(image, dtype=dtype)
                     
-                    Cast a C++-layer image object (an ImageArray, ImageView or ConstImageView)
-                    as an Image.
+                    Create a copy of an image, possibly changing the type.  e.g.
+                    image_double = Image(image_float, dtype=numpy.float64)
 
     You can specify the `ncol`, `nrow`, `bounds`, `array`, or `image`  parameters by keyword 
     argument if you want, or you can pass them as simple args, and the constructor will figure out 
