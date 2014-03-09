@@ -235,12 +235,6 @@ input :
         # locations to the actual position of each galaxy.
         grid_spacing : 90 # arcsec
 
-        # You can also specify the interpolation scheme to use.  The default is lanczos5 for 5th
-        # order Lanczos interpolation.  This choice is based on detailed tests of which
-        # interpolation scheme is optimal for preserving the shear correlation function and power
-        # spectrum compared to the input one.
-        interpolant : lanczos5
-
 # Define the names and format of the output files
 output :
 
