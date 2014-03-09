@@ -319,8 +319,9 @@ class PowerSpectrum(object):
         somewhat larger than the region in which shears at random points are needed, so that edge
         effects in the interpolation will not be important.  For this purpose, there should be >~5
         grid points outside of the region in which interpolation will take place.  Ignoring this
-        edge effect and using the grid for interpolation out to its edges can give ~2-3% suppression
-        of shear correlations for the random points on all scales.
+        edge effect and using the grid for interpolation out to its edges can suppress shear
+        correlations on all scales by an amount that depends on the grid size; for a 100x100 grid,
+        the suppression is ~2-3%.
 
         Sign conventions and other info
         -------------------------------
