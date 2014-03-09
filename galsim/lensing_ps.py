@@ -514,7 +514,7 @@ class PowerSpectrum(object):
                 return self._softening_function(k, k_max)
         elif bandlimit == None:
             def bandlimit_func(k, k_max):
-                return self._hard_cutoff(k, 1.e30)
+                return 1.0
         else:
             raise RuntimeError("Unrecognized option for band limit!")
 
