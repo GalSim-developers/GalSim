@@ -306,7 +306,7 @@ class Bandpass(object):
     def thin(self, rel_err=1.e-4, preserve_range=False):
         """ If the bandpass was initialized with a galsim.LookupTable or from a file (which
         internally creates a galsim.LookupTable), then remove tabulated values while keeping
-        the integral over the over the set of tabulated values still accurate to `rel_err`.
+        the integral over the set of tabulated values still accurate to `rel_err`.
 
         @param rel_err            The relative error allowed in the integral over the throughput
                                   function. (default: 1.e-4)
