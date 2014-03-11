@@ -97,6 +97,13 @@ class Bandpass(object):
                 tp = galsim.LookupTable(file=tp, interpolant='linear')
             else:
                 tp = eval('lambda wave : ' + tp)
+                # Just evaluate the function somewhere to make sure it is valid before continuing on.
+                if red_limit is not None:
+                    tp(red_limit)
+                elif blue_limit is not None:
+                    tp(blue_limit)
+                else:
+                    tp(700)
 
         # Figure out wavelength type
         if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
