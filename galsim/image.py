@@ -413,6 +413,11 @@ class Image(object):
         Or you can provide dx, dy as named kwargs.
         """
         delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy', integer=True)
+        self._shift(delta)
+       
+    def _shift(self, delta):
+        # The parse_pos_args function is a bit slow, so go directly to this point when we
+        # call shift from setCenter or setOrigin.
         if delta.x != 0 or delta.y != 0:
             self.image.shift(delta)
             if self.wcs is not None:
@@ -425,7 +430,7 @@ class Image(object):
         Or you can provide xcen, ycen as named kwargs.
         """
         cen = galsim.utilities.parse_pos_args(args, kwargs, 'xcen', 'ycen', integer=True)
-        self.shift(cen - self.image.bounds.center())
+        self._shift(cen - self.image.bounds.center())
 
     def setOrigin(self, *args, **kwargs):
         """Set the origin of the image to the given (integral) (x0, y0)
@@ -434,7 +439,7 @@ class Image(object):
         Or you can provide x0, y0 as named kwargs.
         """
         origin = galsim.utilities.parse_pos_args(args, kwargs, 'x0', 'y0', integer=True)
-        self.shift(origin - self.image.bounds.origin())
+        self._shift(origin - self.image.bounds.origin())
 
     def center(self):
         """Return the current nominal center of the image.  This is a PositionI instance,
@@ -469,9 +474,12 @@ class Image(object):
         pos = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True)
         return self.image(pos.x, pos.y)
 
-    def at(self, *args, **kwargs):
-        """This method is an obsolete synonym for im(x,y)"""
-        return self(*args,**kwargs)
+    def at(self, x, y):
+        """This method is a synonym for im(x,y).  It is a bit faster than im(x,y), since GalSim 
+        does not have to parse the different options available for __call__.  (i.e. im(x,y) or 
+        im(pos) or im(x=x,y=y))
+        """
+        return self.image(x,y)
 
     def setValue(self, *args, **kwargs):
         """Set the pixel value at given position 

@@ -58,8 +58,6 @@ code as being obsolete.  At some point (probably version 1.2) use of the old
 syntax will raise a DeprecationWarning, and with version 2.0, it will be 
 removed.
 
-* Removed the `im.at(x,y)` syntax.  This had been equivalent to `im(x,y)`, 
-  so any such code should now be switched to that. (Issue #364)
 * Changed the name of the `dx` parameter in the `draw`, `drawShoot`, `drawK`
   methods of `GSObject` and the constructors of `InterpolatedImage` and
   `CorrelatedNoise` to the name `scale`. (Issue #364)
