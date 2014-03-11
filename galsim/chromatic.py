@@ -746,8 +746,8 @@ class Chromatic(ChromaticObject):
     >>> disk = galsim.Chromatic(disk_mono, disk_SED)
     >>> gal = bulge + disk
 
-    Some syntactic sugar for creating `Chromatic`s is to simply multiply GSObjects by SEDs.  Thus
-    the last three lines above are equivalent to:
+    Some syntactic sugar available for creating `Chromatic` instances is simply to multiply
+    a `GSObject` instance by an `SED` instance.  Thus the last three lines above are equivalent to:
 
     >>> gal = bulge_mono * bulge_SED + disk_mono * disk_SED
 
