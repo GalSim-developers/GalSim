@@ -650,9 +650,9 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     specifically FWHM is proportional to wavelength^(-0.2).  Both of these effects can be
     implemented by wavelength-dependent shifts and dilations.
 
-    Since the DCR depends on the zenith angle and the parallactic angle (which is the position angle
-    measured from North through East of the zenith) of the object being drawn, these must be
-    specified as keywords.  There are four ways to specify these values:
+    Since DCR depends on the zenith angle and the parallactic angle (which is the position angle of
+    the zenith measured from North through East) of the object being drawn, these must be specified
+    via keywords.  There are four ways to specify these values:
       1) explicitly provide `zenith_angle = ...` as a keyword of type galsim.Angle, and
          parallactic_angle will be assumed to be 0 by default.
       2) explicitly provide both `zenith_angle = ...` and `parallactic_angle = ...` as
