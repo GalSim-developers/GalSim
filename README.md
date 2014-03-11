@@ -275,7 +275,8 @@ Summary of planned future development
 We plan to add the following additional capabilities in future versions of
 GalSim:
 
-* PSFs from stochastic atmosphere models.  (cf. `devel/modules/atmos_factfinding.pdf`)
+* PSFs from stochastic atmosphere models.
+  (cf. `devel/modules/atmos_factfinding.pdf`)
 
 * Simulating simple detector defects or image artifacts.
 
