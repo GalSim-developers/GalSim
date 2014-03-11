@@ -172,10 +172,8 @@ New chromatic functionality: (Issue #467)
     E.g.: `gal = bulge_prof * bulge_sed + disk_prof * disk_sed`.
   * `ChromaticObject.applyDilation()`, `.applyExpansion()`, and `.applyShift()`,
     can take function(s) of wavelength in nanometers as their argument(s), which
-    can be used to effect a variety of chromatic surface brightness profiles.
-  * A wavelength-dependent diffraction-limited PSF can be created like:
-    `fiducial_PSF = galsim.ChromaticObject(galsim.Airy(lam_over_diam))
-     fiducial_PSF.applyDilation(lambda w:w/fiducial_wavelength)`
+    can be used to create a variety of chromatic effects, for instance, a
+    wavelength-dependent diffraction limit.
   * `ChromaticAtmosphere(fiducial_PSF, fiducial_wave, zenith_angle)` will modify
     the monochromatic GSObject PSF `fiducial_PSF` defined at wavelength
     `fiducial_wave` to account for atmospheric differential chromatic refraction
@@ -184,7 +182,7 @@ New chromatic functionality: (Issue #467)
     The one difference is that `ChromaticObject`s require an additional argument,
     (given first) which is the `Bandpass` throughput function against which to
     integrate over wavelength.
-    E.g., `image = chroma_obj.draw(bandpass)`
+    E.g., `image = chroma_obj.draw(bandpass, ...)`
 * Added demo12.py for wavelength dependence examples.
 
 Updates to config options:
