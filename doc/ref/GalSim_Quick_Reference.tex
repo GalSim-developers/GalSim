@@ -77,7 +77,7 @@ be something like the following:
   {\tt SED} class instances and {\tt Bandpass} class instances.
 \item Apply transformations such as shears, shifts or magnification
   using the methods of the \texttt{GSObject} or \texttt{ChromaticObject} --- see
-  Section~\ref{sect:gsobjectmethods}.
+  Sections~\ref{sect:gsobjectmethods}~\&~\ref{sect:chromaticity}.
 \item Draw the object into a GalSim \texttt{Image}, representing a postage
   stamp image of your astronomical object.  This can be done using the
   \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{draw}}\texttt{(\dots)}
@@ -243,8 +243,8 @@ multiple \texttt{GSObject}s.}
 Note that the last two objects, \texttt{Sum} and \texttt{Convolution}, are usually created by
 invoking the \texttt{galsim.Add} and \texttt{galsim.Convolve} functions.  These functions will
 automatically create \texttt{ChromaticSum} and \texttt{ChromaticConvolution} objects instead if
-any of their arguments are \texttt{ChromaticObject}s instead of \texttt{GSObects} (see Section
-\ref{sect:chromaticity}.
+any of their arguments are \texttt{ChromaticObject}s instead of
+\texttt{GSObects} (see Section~\ref{sect:chromaticity}).
 
 Also note that all of the \texttt{GSObject}s except for \texttt{RealGalaxy}, \texttt{Add}, and
 \texttt{Convolve} {\em require} the specification of one radius size
@@ -460,10 +460,11 @@ for many of the \texttt{GSObject}s.
 
 \section{Chromaticity}\label{sect:chromaticity}
 
-Wavelength-dependent surface brightness profiles are represented in GalSim as
-\texttt{galsim.ChromaticObject}s.  These objects generally require an \texttt{galsim.SED} to be
-created, and always require a \texttt{galsim.Bandpass} object in order to draw.  Thus we will go
-over SEDs and Bandpasses first.
+Wavelength-dependent surface brightness profiles are represented as
+\texttt{galsim.ChromaticObject} instances in GalSim.
+These objects generally require an \texttt{galsim.SED} to be created,
+and always require a \texttt{galsim.Bandpass} object in order to draw.
+Thus we will go over SEDs and Bandpasses first.
 
 \subsection{Bandpasses}
 
@@ -473,18 +474,19 @@ filters, lenses and the atmosphere, quantum efficiency of detectors), or individ
 \texttt{Bandpass}es, together with spectral energy distributions (SEDs; below) are necessary to
 compute the relative contribution of each wavelength of a \texttt{ChromaticObject} to a drawn image.
 
-\texttt{Bandpass}es may be constructed in several ways:
+\texttt{Bandpass} instances may be initialized in several ways:
 \begin{itemize}
 \item[$\circ$] {\tt galsim.Bandpass(filename)} \newline where \texttt{filename} points to a
   text file with two columns, the first for wavelength and the second for dimensionless throughput.
 \item[$\circ$] {\tt galsim.Bandpass(function, red\_limit=red\_limit, blue\_limit=blue\_limit)}
   \newline where \texttt{function} is a python function that accepts wavelength and returns
-  dimensionless throughput.  \texttt{red\_limit} and \texttt{blue\_limit} are required in this case
+  dimensionless throughput.  The keywords \texttt{red\_limit} and \texttt{blue\_limit} are required in this case
   to specify the integration limits of the bandpass.
 \item[$\circ$] {\tt galsim.Bandpass(expression, red\_limit=red\_limit, blue\_limit=blue\_limit)}
   \newline where \texttt{expression} is a string that can be evaluated into a python function via
   \newline {\tt eval('lambda wave : '+expression)},
-  \newline e.g. {\tt expression = '0.8 + 0.2 * (wave-800)'}. In this case, \texttt{red\_limit} and
+  \newline e.g.\ {\tt expression = '0.8 + 0.2 * (wave-800)'}. In this
+  case the keywords \texttt{red\_limit} and
   \texttt{blue\_limit} are required to specify the integration limits of the bandpass.
 \end{itemize}
 
