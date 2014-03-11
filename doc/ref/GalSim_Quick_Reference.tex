@@ -482,7 +482,9 @@ compute the relative contribution of each wavelength of a \texttt{ChromaticObjec
   \newline where \texttt{function} is a python function that accepts wavelength and returns
   dimensionless throughput.  The keywords \texttt{red\_limit} and \texttt{blue\_limit} are required in this case
   to specify the integration limits of the bandpass.
-\item[$\circ$] {\tt galsim.Bandpass(expression, red\_limit=red\_limit, blue\_limit=blue\_limit)}
+\item[$\circ$] {\tt galsim.Bandpass(expression,
+    red\_limit=red\_limit,\\
+ \phantom{galsim.Bandpass(}blue\_limit=blue\_limit)}
   \newline where \texttt{expression} is a string that can be evaluated into a python function via
   \newline {\tt eval('lambda wave : '+expression)},
   \newline e.g.\ {\tt expression = '0.8 + 0.2 * (wave-800)'}. In this
@@ -499,16 +501,18 @@ reduce the number of samples used for integrations (and hence reduce the time it
 a \texttt{ChromaticObject}).
 \begin{itemize}
 \item {\tt bandpass.truncate(blue\_limit=blue\_limit, red\_limit=red\_limit, \newline
-                             relative\_throughput=relative\_throughput)}
+                             \phantom{bandpass.truncate(}relative\_throughput=relative\_throughput)}\newline
   Clip the wavelength range to be between \texttt{blue\_limit} and \texttt{red\_limit}.
   Additionally clip any leading or trailing wavelengths for which the throughput is less than
   the fraction \texttt{relative\_throughput} of the peak throughput.
-\item {\tt bandpass.thin(rel\_err)}  Remove samples defining the bandpass while retaining the
+\item {\tt bandpass.thin(rel\_err)}\newline
+Remove samples defining the bandpass while retaining the
 accuracy of the integral over the bandpass to the stated relative error \texttt{rel\_err}.
 \end{itemize}
 
-Finally, note that \texttt{Bandpass}es may be multiplied together and are callable, returning
-dimensionless throughput as a function of wavelength in nanometers.
+Finally, note that \texttt{Bandpass} instances may be multiplied
+together and are callable, returning dimensionless throughput as a
+function of wavelength in nanometers.
 
 \subsection{SEDs}
 Spectral energy distributions may be constructed in several ways, similarly to bandpasses:
@@ -520,7 +524,7 @@ Spectral energy distributions may be constructed in several ways, similarly to b
   function that accepts wavelength in nanometers and returns flux density.
 \item[$\circ$] {\tt galsim.SED(expression)} \newline where \texttt{expression} is a string
   that can be evaluated into a python function via \newline {\tt eval('lambda wave : '+expression)},
-  \newline e.g. {\tt expression = '0.8 + 0.2 * (wave-800)'}.
+  \newline e.g.\ {\tt expression = '0.8 + 0.2 * (wave-800)'}.
 \end{itemize}
 
 The units for wavelength in the above constructions can be set to Angstroms by supplying the keyword
@@ -531,21 +535,23 @@ proportional to ergs/nm, but can be overridden to be proportional to ergs/Hz by 
 
 Important methods for \texttt{SED} objects include:
 \begin{itemize}
-\item {\tt SED.withFluxDensity(target\_flux\_density, base\_wavelength)} \newline Return a new
-  \texttt{SED} with flux density (in units proportional to ergs/nm) at wavelength
-  \texttt{base\_wavelength} set to \texttt{target\_flux\_density}.  Note that \texttt{SED} objects
-   are immutable, so the original \texttt{SED} is unchanged.
-\item {\tt calculateFlux(bandpass)} Calculate and return the flux transmitted through a
-  \texttt{Bandpass} in photons.
-\item {\tt withFlux(target\_flux, bandpass)} Return a new \texttt{SED} with transmitted flux
-  through \texttt{Bandpass} equal to \texttt{flux\_norm}.
-\item {\tt atRedshift(z)} Return a new \texttt{SED} with wavelength shifted be at redshift $z$.
-  Note that \texttt{SED}s remember their redshifts (except when created as sums and differences of
+\item {\tt SED.withFluxDensity(target\_flux\_density,
+    base\_wavelength)} \newline Return a new \texttt{SED} with flux
+  density (in units proportional to ergs/nm) at the reference
+  wavelength \texttt{base\_wavelength} set to
+  \texttt{target\_flux\_density}.  Note that \texttt{SED} objects are
+  immutable, so the original \texttt{SED} is unchanged.
+\item {\tt calculateFlux(bandpass)}\newline Calculate and return the flux transmitted through a
+  \texttt{bandpass} in photons.
+\item {\tt withFlux(target\_flux, bandpass)}\newline Return a new \texttt{SED}
+  for which the flux transmitted through the input \texttt{bandpass} is \texttt{target\_flux}.
+\item {\tt atRedshift(z)}\newline Return a new \texttt{SED} instance with wavelength shifted be at redshift $z$.
+  Note that \texttt{SED} instances remember their redshifts (except when created as sums and differences of
   other SEDs), so applying this method a second twice with the same argument $z$ is equivalent to
   applying it just once.
 \end{itemize}
 
-Finally, note that \texttt{SED}s can be added together, multiplied by scalars or functions (of
+Finally, note that \texttt{SED} instances can be added together, multiplied by scalars or functions (of
 wavelength in nanometers), and are callable, returning flux density in photons/nm.
 
 \subsection{ChromaticObjects}
@@ -553,9 +559,10 @@ wavelength in nanometers), and are callable, returning flux density in photons/n
 Chromatic surface brightness profiles are generally constructed by modifying an existing
 \texttt{GSObject}.  The simplest possible \texttt{ChromaticObject} can be formed by passing a
 \texttt{GSObject} to the \texttt{ChromaticObject} constructor:
-\newline
+
 {\tt >>> obj = galsim.Gaussian(fwhm=1.0)}\newline
-{\tt >>> chromatic\_obj = galsim.ChromaticObject(obj)}\newline
+{\tt >>> chromatic\_obj = galsim.ChromaticObject(obj)}
+
 At this stage, \texttt{chromatic\_obj} essentially represents the same profile as \texttt{obj}, but
 now has access to \texttt{ChromaticObject} methods.
 
@@ -569,19 +576,23 @@ an \texttt{SED}.  This creates a separable wavelength-dependent surface brightne
 {\tt >>> SED = galsim.SED('wave**1.1')} \# Power-law spectrum. \newline
 {\tt >>> chromatic\_gal = gal*SED}\newline
 \newline
-\texttt{ChromaticObject}s may be combined and transformed similarly to \texttt{GSObjects}, using the
-functions and methods \texttt{Add}, \texttt{Convolve}, \texttt{scaleFlux}, \texttt{applyExpansion}, \texttt{applyDilation}, \texttt{applyMagnification}, \texttt{applyShear}, \texttt{applyLensing}, \texttt{applyRotation}, \texttt{applyShift}, and all the \texttt{create*} methods as well.
+\texttt{ChromaticObject}s may be combined and transformed similarly to
+\texttt{GSObjects}, using the functions, methods and compound classes \texttt{Add}, \texttt{Convolve}, \texttt{scaleFlux}, \texttt{applyExpansion}, \texttt{applyDilation}, \texttt{applyMagnification}, \texttt{applyShear}, \texttt{applyLensing}, \texttt{applyRotation}, \texttt{applyShift}, and all the \texttt{create*} methods as well.
 
 The \texttt{applyDilation}, \texttt{applyExpansion}, and \texttt{applyShift} methods of
 \texttt{ChromaticObject}s can also accept as an argument a function of wavelength (in nanometers)
 that returns a wavelength-dependent dilation, expansion, or shift.  These can be used to implement
-chromatic PSFs.  For example, a diffraction limited PSF might look like: \newline
+chromatic PSFs.  For example, a diffraction limited PSF might look
+like:
+
 {\tt >>> psf500 = galsim.Airy(lam\_over\_diam=2.0)}\newline
 {\tt >>> chromatic\_psf = ChromaticObject(psf500)}\newline
-{\tt >>> chromatic\_psf.applyDilation(lambda w:(w/500.0)**(1.0))}\newline
-\newline
+{\tt >>> chromatic\_psf.applyDilation(lambda w:(w/500.0)**(1.0))}
+
 The draw method of a \texttt{ChromaticObject} is similar to the draw method of a \texttt{GSObject},
-except that it requires a \texttt{Bandpass} object as its first argument.\newline
+except that it requires a \texttt{Bandpass} object as its first
+argument.
+
 {\tt >>> gband = galsim.Bandpass(lambda w:1.0, blue\_limit=410, red\_limit=550)} \newline
 {\tt >>> pix = galsim.Pixel(0.2)}\newline
 {\tt >>> final = galsim.Convolve(chromatic\_gal, chromatic\_psf, pix)}\newline
@@ -592,15 +603,16 @@ refraction and Kolmogorov chromatic seeing ($\mathrm{FWHM} \propto \lambda^{-0.2
 following function:
 \begin{itemize}
 \item[$\circ$] \texttt{ChromaticAtmosphere(base\_obj, base\_wavelength, zenith\_angle, \newline
-  position\_angle=position\_angle)}:\newline
-  Here \texttt{base\_obj} is the fiducial PSF at wavelength \texttt{base\_wavelength}.  Differential
+  \phantom{ChromaticAtmosphere(}position\_angle=position\_angle)}\newline
+  where \texttt{base\_obj} is the fiducial PSF at wavelength \texttt{base\_wavelength}.  Differential
 chromatic refraction is calculated for a telescope pointed at \texttt{zenith\_angle}, where the
 zenith lies in the direction \texttt{position\_angle} measured from ``up'' through ``right''.
 \end{itemize}
 For example:
-\newline
+
 {\tt >>> psf500 = galsim.Kolmogorov(fwhm=0.67)}\newline
-{\tt >>> psf = galsim.ChromaticAtmosphere(psf500, 500, zenith\_angle=30*galsim.degrees)}\newline
+{\tt >>> psf = galsim.ChromaticAtmosphere(psf500, 500,\newline
+\phantom{>>> psf = galsim.ChromaticAtmosphere(}zenith\_angle=30*galsim.degrees)}\newline
 
 \section{Random deviates}\label{sect:random}
 \subsection{Random deviate classes and when to use them}
