@@ -214,7 +214,9 @@ def radial_integrate(prof, minr, maxr, dr):
     r = minr
     sum = 0.
     while r < maxr:
-        sum += r * prof.xValue(galsim.PositionD(r,0)) 
+        # In this tight loop, it is worth optimizing away the parse_pos_args step.
+        # It makes a rather significant difference in the running time of this function.
+        sum += r * prof.SBProfile.xValue(galsim.PositionD(r,0)) 
         r += dr
     sum *= 2. * math.pi * dr
     return sum
