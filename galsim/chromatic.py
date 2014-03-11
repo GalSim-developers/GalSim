@@ -641,8 +641,7 @@ class ChromaticObject(object):
         return ret
 
 
-def ChromaticAtmosphere(base_obj, base_wavelength, zenith_angle, alpha=-0.2,
-                        parallactic_angle=0*galsim.radians, **kwargs):
+def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     """Return a ChromaticObject implementing two atmospheric chromatic effects: differential
     chromatic refraction (DCR) and wavelength-dependent seeing.
 
@@ -651,9 +650,22 @@ def ChromaticAtmosphere(base_obj, base_wavelength, zenith_angle, alpha=-0.2,
     specifically FWHM is proportional to wavelength^(-0.2).  Both of these effects can be
     implemented by wavelength-dependent shifts and dilations.
 
-    The default values for temperature, pressure and water vapor pressure are expected to be
-    appropriate for LSST at Cerro Pachon, Chile, but they are broadly reasonable for most
-    observatories.
+    Since the DCR depends on the zenith angle and the parallactic angle (which is the position angle
+    measured from North through East of the zenith) of the object being drawn, these must be
+    specified as keywords.  There are four ways to specify these values:
+      1) explicitly provide `zenith_angle = ...` as a keyword of type galsim.Angle, and
+         parallactic_angle will be assumed to be 0 by default.
+      2) explicitly provide both `zenith_angle = ...` and `parallactic_angle = ...` as
+         keywords of type galsim.Angle.
+      3) provide the coordinates of the object `obj_coord = ...` and the coordinates of the zenith
+         `zenith_coord = ...` as keywords of type galsim.CelestialCoord.
+      4) provide the coordinates of the object `obj_coord = ...` as a galsim.CelestialCoord, the hour
+         angle of the object `HA = ...` as a galsim.Angle, and the latitude of the observer
+         `latitude = ...` as a galsim.Angle.
+
+    DCR also depends on temperature, pressure and water vapor pressure of the atmosphere.  The
+    default values for these are expected to be appropriate for LSST at Cerro Pachon, Chile, but
+    they are broadly reasonable for most observatories.
 
     Note that this function implicitly assumes that lengths are in arcseconds.  Thus, to use this
     function, you should specify properties like FWHM, half_light_radius, and pixel scales in arcsec.
@@ -662,16 +674,47 @@ def ChromaticAtmosphere(base_obj, base_wavelength, zenith_angle, alpha=-0.2,
 
     @param base_obj           Fiducial PSF, equal to the monochromatic PSF at base_wavelength
     @param base_wavelength    Wavelength represented by the fiducial PSF.
+    @param alpha              Power law index for wavelength-dependent seeing.  Default of -0.2
+                              is the prediction for Kolmogorov turbulence.
     @param zenith_angle       Angle from object to zenith, expressed as a galsim.Angle
     @param parallactic_angle  Parallactic angle, i.e. the position angle of the zenith, measured
                               from North through East.  (default: 0)
-    @param alpha              Power law index for wavelength-dependent seeing.  Default of -0.2
-                              is the prediction for Kolmogorov turbulence.
+    @param obj_coord          Celestial coordinates of the object being drawn as a
+                              galsim.CelestialCoord
+    @param zenith_coord       Celestial coordinates of the zenith as a galsim.CelestialCoord
+    @param HA                 Hour angle of the object as a galsim.Angle
+    @param latitude           Latitude of the observer as a galsim.Angle
     @param pressure           Air pressure in kiloPascals.  (default 69.328 kPa)
     @param temperature        Temperature in Kelvins.  (default: 293.15 K)
     @param H2O_pressure       Water vapor pressure in kiloPascals.  (default: 1.067 kPa)
     @returns ChromaticObject  representing a chromatic atmospheric PSF.
     """
+    alpha = kwargs.pop('alpha', -0.2)
+    if 'zenith_angle' in kwargs:
+        zenith_angle = kwargs.pop('zenith_angle')
+        parallactic_angle = kwargs.pop('parallactic_angle', 0.0*galsim.degrees)
+    elif 'obj_coord' in kwargs:
+        obj_coord = kwargs.pop('obj_coord')
+        if 'zenith_coord' in kwargs:
+            zenith_coord = kwargs.pop('zenith_coord')
+            zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
+                obj_coord=obj_coord, zenith_coord=zenith_coord)
+        else:
+            if 'HA' not in kwargs or 'latitude' not in kwargs:
+                raise TypeError("ChromaticAtmosphere requires either zenith_coord or (HA, "
+                                +"latitude) when obj_coord is specified!")
+            HA = kwargs.pop('HA')
+            latitude = kwargs.pop('latitude')
+            zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
+                obj_coord=obj_coord, HA=HA, latitude=latitude)
+    else:
+        raise TypeError("Need to specify zenith_angle and parallactic_angle in ChromaticAtmosphere!")
+    # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
+    # Check that they're valid
+    for kw in kwargs.keys():
+        if kw not in ['temperature', 'pressure', 'H2O_pressure']:
+            raise TypeError("Got unexpected keyword in ChromaticAtmosphere: {0}".format(kw))
+
     ret = ChromaticObject(base_obj)
     ret.applyDilation(lambda w: (w/base_wavelength)**(alpha))
     base_refraction = galsim.dcr.get_refraction(base_wavelength, zenith_angle, **kwargs)
