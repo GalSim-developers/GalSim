@@ -16,11 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
-
 import os
-
 import numpy as np
-
 import galsim
 
 path, filename = os.path.split(__file__)

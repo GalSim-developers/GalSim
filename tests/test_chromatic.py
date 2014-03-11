@@ -17,14 +17,10 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 import os
-
 import numpy as np
-
 from galsim_test_helpers import *
-
 path, filename = os.path.split(__file__)
 datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
-
 try:
     import galsim
 except ImportError:
