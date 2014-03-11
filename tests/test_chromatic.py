@@ -38,7 +38,7 @@ except ImportError:
 
 # liberal use of globals here...
 zenith_angle = 20 * galsim.degrees
-R500 = galsim.dcr.get_refraction(500.0, zenith_angle) # normalize refraction to 610nm
+R500 = galsim.dcr.get_refraction(500.0, zenith_angle) # normalize refraction to 500nm
 
 # some profile parameters to test with
 bulge_n = 4.0
@@ -296,7 +296,7 @@ def test_dcr_moments():
     dV_image = (mom1[3] - mom2[3]) * (pixel_scale)**2
 
     # analytic first moment differences
-    R = lambda w:(galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec
+    R = lambda w:((galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec).astype(float)
     x1 = np.union1d(bandpass.wave_list, bulge_SED.wave_list)
     x1 = x1[(x1 >= bandpass.blue_limit) & (x1 <= bandpass.red_limit)]
     x2 = np.union1d(bandpass.wave_list, disk_SED.wave_list)
