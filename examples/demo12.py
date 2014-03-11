@@ -206,7 +206,7 @@ def main(argv):
     # when observing an object with this SED through the g-band, for instance, then we do:
     SED = SED.withFlux(50.0, filters['g'])
     # The flux drawn through other bands, which sample different parts of the SED and have different
-    # throughputs, will, of course, be differ.
+    # throughputs, will, of course, be different.
     gal = mono_gal * SED
     gal.applyShear(g1=0.5, g2=0.3)
     logger.debug('Created `Chromatic` galaxy')

@@ -151,14 +151,14 @@ Demonstration scripts
 ---------------------
 
 There are a number of scripts in `examples/` that demonstrate how the code can
-be used.  These are called `demo1.py`...`demo11.py`.  You can run them by
+be used.  These are called `demo1.py`...`demo12.py`.  You can run them by
 typing (e.g.) `python demo1.py` while sitting in `examples/`, All demo scripts
 are designed to be run in the `examples/` directory.  Some of them access
 files in subdirectories of the `examples/` directory, so they would not work
 correctly from other locations.
 
 A completely parallel sequence of configuration files, called `demo1.yaml`...
-`demo11.yaml`, demonstrates how to make the same set of simulations using
+`demo12.yaml`, demonstrates how to make the same set of simulations using
 config files that are parsed by the executable `bin/galsim`.
 
 As the project develops through further versions, and adds further
@@ -223,7 +223,7 @@ Currently, GalSim has the following capabilities:
 
 * Can generate PSFs from a variety of simple parametric models such as Moffat,
   Kolmogorov, and Airy, as well as an optical PSF model that includes Zernike
-  aberrations up to spherical, and an optional central obscruration and
+  aberrations up to spherical, and an optional central obscuration and
   struts.
 
 * Can simulate galaxies from a variety of simple parametric models as well as

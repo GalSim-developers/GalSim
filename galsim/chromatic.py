@@ -213,7 +213,7 @@ class ChromaticObject(object):
 
     # Make a new copy of a `ChromaticObject`.
     def copy(self):
-        """Returns a copy of an object.  This preseved the original type of the object."""
+        """Returns a copy of an object.  This preserves the original type of the object."""
         cls = self.__class__
         ret = cls.__new__(cls)
         for k, v in self.__dict__.iteritems():
@@ -313,7 +313,7 @@ class ChromaticObject(object):
         brightness.
 
         Note that, in contrast to applyDilation, applyExpansion, and applyShift, this method cannot
-        accept a function of wavelength as its argument (lensing is achromatic, afterall!)  If you
+        accept a function of wavelength as its argument (lensing is achromatic, after all!)  If you
         find a use case for this, however, please submit an issue to
         https://github.com/GalSim-developers/GalSim/issues
 
@@ -332,7 +332,7 @@ class ChromaticObject(object):
         or arguments that will be used to initialize one.
 
         Note that, in contrast to applyDilation, applyExpansion, and applyShift, this method cannot
-        accept a function of wavelength as its argument (lensing is achromatic, afterall!)  If you
+        accept a function of wavelength as its argument (lensing is achromatic, after all!)  If you
         find a use case for this, however, please submit an issue to
         https://github.com/GalSim-developers/GalSim/issues
 
@@ -374,7 +374,7 @@ class ChromaticObject(object):
         the object area and flux, preserving surface brightness.
 
         Note that, in contrast to applyDilation, applyExpansion, and applyShift, this method cannot
-        accept a function of wavelength as its argument (lensing is achromatic, afterall!)  If you
+        accept a function of wavelength as its argument (lensing is achromatic, after all!)  If you
         find a use case for this, however, please submit an issue to
         https://github.com/GalSim-developers/GalSim/issues
 
