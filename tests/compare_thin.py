@@ -1,8 +1,6 @@
 import os
 import time
-
 import numpy as np
-
 import galsim
 
 path, filename = os.path.split(__file__)
