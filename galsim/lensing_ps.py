@@ -867,7 +867,7 @@ class PowerSpectrum(object):
         Utility function to wrap an input image with some number of border pixels.  By default, the
         number of border pixels is 7, but this function works as long as it's less than the size of
         the input image itself.  This function is used for periodic interpolation by the
-        `getShear()` and other methods, but eventually if we make a 2d LookupTable-type class, this
+        getShear() and other methods, but eventually if we make a 2d LookupTable-type class, this
         should become a method of that class.
         """
         # We should throw an exception if the image is smaller than 'border', since at this point
