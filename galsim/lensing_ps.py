@@ -91,7 +91,7 @@ class PowerSpectrum(object):
     would like to generate g1 and g2 (and, optionally, convergence kappa) values.  It generates
     shears on a grid, and if necessary, when getShear (or another `get` method) is called, it will
     interpolate to the requested positions.  For detail on how these processes are carried out,
-    please see the document in the GalSim repository, devel/modules/lensing_engine.pdf.
+    please see the document in the GalSim repository, `devel/modules/lensing_engine.pdf`.
 
     This class generates the shears according to the input power spectrum using a DFT approach,
     which means that we implicitly assume our discrete representation of P(k) on a grid is one
@@ -99,15 +99,15 @@ class PowerSpectrum(object):
     doing outside of our minimum and maximum k range, and those must be kept in mind when comparing
     with theoretical expectations.  Specifically, since the power spectrum is realized on only a
     finite grid it has been been effectively bandpass filtered between a minimum and maximum k value
-    in each of the k1, k2 directions.  See the buildGrid method for more information.
+    in each of the k1, k2 directions.  See the buildGrid() method for more information.
 
     As a result, the shear generation currently does not include sample variance due to coverage of
-    a finite patch.  We explicitly enforce `P(k=0)=0`, which is true for the full sky in a
+    a finite patch.  We explicitly enforce P(k=0)=0, which is true for the full sky in a
     reasonable cosmological model, but it ignores the fact that our little patch of sky might
-    reasonably live in some special region with respect to shear correlations.  Our `P(k=0)=0` is
+    reasonably live in some special region with respect to shear correlations.  Our P(k=0)=0 is
     essentially setting the integrated power below our minimum k value to zero.  The implications of
-    the discrete representation, and the `P(k=0)=0` choice, are discussed in more detail in
-    devel/modules/lensing_engine.pdf.
+    the discrete representation, and the P(k=0)=0 choice, are discussed in more detail in
+    `devel/modules/lensing_engine.pdf`.
 
     The effective shear correlation function for the gridded points will be modified both because of
     the DFT approach to representing shears according to a power spectrum, and because of the power
@@ -161,7 +161,7 @@ class PowerSpectrum(object):
                             (gradient) mode of the image.  Set to None (default) for there to be no
                             E-mode power.
                             It may also be a string that can be converted to a function using
-                            eval('lambda k : ' + e_power_function), a LookupTable, or file_name from
+                            `eval('lambda k : '+e_power_function)`, a LookupTable, or file_name from
                             which to read in a LookupTable.  If a file_name is given, the resulting
                             LookupTable uses the defaults for the LookupTable class, namely spline
                             interpolation in P(k).  Users who wish to deviate from those defaults
@@ -174,7 +174,7 @@ class PowerSpectrum(object):
                             (curl) mode of the image.  Set to None (default) for there to be no
                             B-mode power.
                             It may also be a string that can be converted to a function using
-                            eval('lambda k : ' + b_power_function), a LookupTable, or file_name from
+                            `eval('lambda k : '+b_power_function)`, a LookupTable, or file_name from
                             which to read in a LookupTable.
     @param delta2           Is the power actually given as dimensionless Delta^2, which requires us
                             to multiply by 2pi / k^2 to get the shear power P(k) in units of
@@ -243,8 +243,8 @@ class PowerSpectrum(object):
         denoted gamma and kappa, respectively.  Users who wish to obtain the more
         observationally-relevant reduced shear and magnification (that describe real lensing
         distortions) can either use the getShear(), getMagnification(), or getLensing() methods
-        after buildGrid, or can use the convenience function galsim.lensing_ps.theoryToObserved() to
-        convert from theoretical to observed quantities.
+        after buildGrid(), or can use the convenience function galsim.lensing_ps.theoryToObserved()
+        to convert from theoretical to observed quantities.
 
         Effects of DFT approach, and keywords that can be used to ameliorate them
         -------------------------------------------------------------------------
@@ -291,21 +291,21 @@ class PowerSpectrum(object):
         necessarily for the smaller ones that get returned to the user.  However, for accurate
         representation of cosmological shear correlation functions, use of `kmin_factor` larger than
         one can be helpful in getting the shear correlations closer to the ideal theoretical ones
-        (see devel/module/lensing_engine.pdf for details).
+        (see `devel/module/lensing_engine.pdf` for details).
 
         Aliasing
         --------
 
         If the user provides a power spectrum that does not include a cutoff at kmax, then our
         method of generating shears will result in aliasing that will show up in both E- and
-        B-modes.  Thus the `buildGrid()` method accepts an optional keyword argument called
+        B-modes.  Thus the buildGrid() method accepts an optional keyword argument called
         `bandlimit` that can tell the PowerSpectrum object to cut off power above kmax
         automatically, where the relevant kmax comes from that set by the grid spacing times
         `kmax_factor`.  The allowed values for `bandlimit` are None (i.e., do nothing), `hard` (set
         power to zero above the band limit), or `soft` (use an arctan-based softening function to
         make the power go gradually to zero above the band limit.  By default, `bandlimit=hard`.
         Use of this keyword does nothing to the internal representation of the power spectrum, so if
-        the user calls the `buildGrid` method again, they will need to set `bandlimit` again (and if
+        the user calls the buildGrid() method again, they will need to set `bandlimit` again (and if
         their grid setup is different in a way that changes `kmax`, then that's fine).
 
         Interpolation
@@ -406,7 +406,7 @@ class PowerSpectrum(object):
                                 softening filter to gradually cut off power above kmax.  Use of this
                                 keyword does not modify the internally-stored power spectrum, just
                                 the shears generated for this particular call to
-                                `buildGrid`. [default `bandlimit="hard"`]
+                                buildGrid(). [default `bandlimit="hard"`]
 
         @return g1,g2[,kappa]   2-d NumPy arrays for the shear components g_1, g_2 and (if
                                 `get_convergence=True`) convergence kappa.
