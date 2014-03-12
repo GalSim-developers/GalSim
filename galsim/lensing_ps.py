@@ -264,8 +264,8 @@ class PowerSpectrum(object):
             kmax = pi / grid_spacing
 
         and where we have adopted the convention that grid points at a given `k` represent the
-        interval between `k - Delta k` and `k + Delta k` (noting that the grid spacing `Delta k` in
-        k space is equivalent to `kmin`).
+        interval between `k - (Delta k)/2` and `k + (Delta k)/2` (noting that the grid spacing
+        `Delta k` in k space is equivalent to `kmin`).
 
         It is worth remembering that this bandpass filter will *not* look like a circular annulus
         in 2D k space, but is rather more like a thick-sided picture frame, having a small square
