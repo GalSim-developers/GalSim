@@ -300,10 +300,10 @@ class PowerSpectrum(object):
         method of generating shears will result in aliasing that will show up in both E- and
         B-modes.  Thus the buildGrid() method accepts an optional keyword argument called
         `bandlimit` that can tell the PowerSpectrum object to cut off power above kmax
-        automatically, where the relevant kmax comes from that set by the grid spacing times
-        `kmax_factor`.  The allowed values for `bandlimit` are None (i.e., do nothing), `hard` (set
-        power to zero above the band limit), or `soft` (use an arctan-based softening function to
-        make the power go gradually to zero above the band limit.  By default, `bandlimit=hard`.
+        automatically, where the relevant kmax is larger than the grid Nyquist frequency by a factor
+        of `kmax_factor`.  The allowed values for `bandlimit` are None (i.e., do nothing), `hard`
+        (set power to zero above the band limit), or `soft` (use an arctan-based softening function
+        to make the power go gradually to zero above the band limit.  By default, `bandlimit=hard`.
         Use of this keyword does nothing to the internal representation of the power spectrum, so if
         the user calls the buildGrid() method again, they will need to set `bandlimit` again (and if
         their grid setup is different in a way that changes `kmax`, then that's fine).
