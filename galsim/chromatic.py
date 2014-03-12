@@ -657,8 +657,8 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
          keywords of type galsim.Angle.
       3) provide the coordinates of the object `obj_coord = ...` and the coordinates of the zenith
          `zenith_coord = ...` as keywords of type galsim.CelestialCoord.
-      4) provide the coordinates of the object `obj_coord = ...` as a galsim.CelestialCoord, the hour
-         angle of the object `HA = ...` as a galsim.Angle, and the latitude of the observer
+      4) provide the coordinates of the object `obj_coord = ...` as a galsim.CelestialCoord, the
+         hour angle of the object `HA = ...` as a galsim.Angle, and the latitude of the observer
          `latitude = ...` as a galsim.Angle.
 
     DCR also depends on temperature, pressure and water vapor pressure of the atmosphere.  The
@@ -666,8 +666,8 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     they are broadly reasonable for most observatories.
 
     Note that this function implicitly assumes that lengths are in arcseconds.  Thus, to use this
-    function, you should specify properties like FWHM, half_light_radius, and pixel scales in arcsec.
-    This is unlike the rest of GalSim, in which Position units only need to be internally
+    function, you should specify properties like FWHM, half_light_radius, and pixel scales in
+    arcsec.  This is unlike the rest of GalSim, in which Position units only need to be internally
     consistent.
 
     @param base_obj           Fiducial PSF, equal to the monochromatic PSF at base_wavelength
@@ -706,7 +706,8 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
             zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
                 obj_coord=obj_coord, HA=HA, latitude=latitude)
     else:
-        raise TypeError("Need to specify zenith_angle and parallactic_angle in ChromaticAtmosphere!")
+        raise TypeError(
+            "Need to specify zenith_angle and parallactic_angle in ChromaticAtmosphere!")
     # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
     # Check that they're valid
     for kw in kwargs.keys():
@@ -743,8 +744,8 @@ class Chromatic(ChromaticObject):
     >>> disk = galsim.Chromatic(disk_mono, disk_SED)
     >>> gal = bulge + disk
 
-    Some syntactic sugar for creating `Chromatic`s is to simply multiply GSObjects by SEDs.  Thus
-    the last three lines above are equivalent to:
+    Some syntactic sugar available for creating `Chromatic` instances is simply to multiply
+    a `GSObject` instance by an `SED` instance.  Thus the last three lines above are equivalent to:
 
     >>> gal = bulge_mono * bulge_SED + disk_mono * disk_SED
 
@@ -753,8 +754,8 @@ class Chromatic(ChromaticObject):
 
     Typically, the SED describes the flux in photons per nanometer of an object with a particular
     magnitude, possibly normalized with the method `sed.withFlux` (see the docstrings in the SED
-    class for details about this and other normalization options).  Then the `flux` attribute of the
-    GSObject should just be the _relative_ flux scaling of the current object compared to that
+    class for details about this and other normalization options).  Then the `flux` attribute of
+    the GSObject should just be the _relative_ flux scaling of the current object compared to that
     normalization.  This implies (at least) two possible conventions.
     1. You can normalize the SED to have unit flux with `sed = sed.withFlux(bandpass, 1.0)`. Then
     the `flux` of each GSObject would be the actual flux in photons when observed in the given
