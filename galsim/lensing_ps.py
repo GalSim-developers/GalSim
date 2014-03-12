@@ -321,7 +321,9 @@ class PowerSpectrum(object):
         grid points outside of the region in which interpolation will take place.  Ignoring this
         edge effect and using the grid for interpolation out to its edges can suppress shear
         correlations on all scales by an amount that depends on the grid size; for a 100x100 grid,
-        the suppression is ~2-3%.
+        the suppression is ~2-3%.  Note that the above numbers came from tests that use a
+        cosmological shear power spectrum; precise figures for this suppression can also depend on
+        the shear correlation function itself.
 
         Sign conventions and other info
         -------------------------------
@@ -755,7 +757,7 @@ class PowerSpectrum(object):
                 return self._softening_function(k, k_max)
         elif bandlimit == None:
             def bandlimit_func(k, k_max):
-                return self._hard_cutoff(k, 1.e30)
+                return 1.0
         else:
             raise RuntimeError("Unrecognized option for band limit!")
 
