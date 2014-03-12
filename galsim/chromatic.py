@@ -30,8 +30,6 @@ import numpy
 import copy
 
 import galsim
-import galsim.integ
-import galsim.dcr
 
 class ChromaticObject(object):
     """Base class for defining wavelength dependent objects.
@@ -754,15 +752,15 @@ class Chromatic(ChromaticObject):
     spectral density in photons/nanometer as a function of wavelength in nanometers should work.
 
     Typically, the SED describes the flux in photons per nanometer of an object with a particular
-    magnitude, possibly normalized with the method `sed.createWithFlux` (see the docstrings in
-    the SED class for details about this and other normalization options).  Then the `flux` attribute
-    of the GSObject should just be the _relative_ flux scaling of the current object compared to
-    that normalization.  This implies (at least) two possible conventions.
-    1. You can normalize the SED to have unit flux with `sed = sed.createWithFlux(bandpass, 1.0)`.
-    Then the `flux` of each GSObject would be the actual flux in photons when observed in the given
+    magnitude, possibly normalized with the method `sed.withFlux` (see the docstrings in the SED
+    class for details about this and other normalization options).  Then the `flux` attribute of the
+    GSObject should just be the _relative_ flux scaling of the current object compared to that
+    normalization.  This implies (at least) two possible conventions.
+    1. You can normalize the SED to have unit flux with `sed = sed.withFlux(bandpass, 1.0)`. Then
+    the `flux` of each GSObject would be the actual flux in photons when observed in the given
     bandpass.
     2. You can leave the object flux as 1 (the default for most types when you construct them) and
-    set the flux in the SED with `sed = sed.createWithFlux(bandpass, flux)`.  Then if the object had
+    set the flux in the SED with `sed = sed.withFlux(bandpass, flux)`.  Then if the object had
     `flux` attribute different from 1, it would just refer to the factor by which that particular
     object is brighter than the value given in the normalization command.
 
@@ -820,8 +818,38 @@ class ChromaticSum(ChromaticObject):
                                 +" or list of them.")
         # else args is already the list of objects
 
-        self.objlist = [o.copy() for o in args]
-        self.separable = False
+        # check for separability
+        self.separable = False # assume not separable, then test for the opposite
+        if all([obj.separable for obj in args]): # needed to assure that obj.SED is always defined.
+            SED1 = args[0].SED
+            # sum is separable if all summands have the same SED.
+            if all([obj.SED == SED1 for obj in args[1:]]):
+                self.separable = True
+                self.SED = SED1
+                self.objlist = [o.copy() for o in args]
+        # if not all the same SED, try to identify groups of summands with the same SED.
+        if not self.separable:
+            # Dictionary of: SED -> List of objs with that SED.
+            SED_dict = {}
+            # Fill in objlist as we go.
+            self.objlist = []
+            for obj in args:
+                # if separable, then add to one of the dictionary lists
+                if obj.separable:
+                    if obj.SED not in SED_dict:
+                        SED_dict[obj.SED] = []
+                    SED_dict[obj.SED].append(obj)
+                # otherwise, just add to self.objlist
+                else:
+                    self.objlist.append(obj.copy())
+            # go back and populate self.objlist with separable items, grouping objs with the
+            # same SED.
+            for v in SED_dict.values():
+                if len(v) == 1:
+                    self.objlist.append(v[0].copy())
+                else:
+                    self.objlist.append(ChromaticSum(v))
+        # finish up by constructing self.wave_list
         self.wave_list = numpy.array([], dtype=float)
         for obj in self.objlist:
             self.wave_list = numpy.union1d(self.wave_list, obj.wave_list)
@@ -839,11 +867,12 @@ class ChromaticSum(ChromaticObject):
              normalization="flux", add_to_image=False, use_true_center=True, offset=None,
              integrator=None):
         """ Slightly optimized draw method for ChromaticSum's.  Draw each summand individually
-        and add resulting images together.  This will waste time if both summands have the same
-        associated SED, in which case the summands should be added together first and the
-        resulting galsim.Sum object can then be chromaticized.  In general, however, drawing
-        individual sums independently can help with speed by identifying chromatic profiles that
-        are separable into spectral and spatial factors.
+        and add resulting images together.  This might waste time if two or more summands are
+        separable and have the same SED, and another summand with a different SED is also added,
+        in which case the summands should be added together first and the resulting galsim.Sum
+        object can then be chromaticized.  In general, however, drawing individual sums
+        independently can help with speed by identifying chromatic profiles that are separable into
+        spectral and spatial factors.
 
         @param bandpass           A galsim.Bandpass object representing the filter
                                   against which to integrate.

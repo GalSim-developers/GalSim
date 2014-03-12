@@ -777,6 +777,50 @@ def test_gsparam():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_separable_ChromaticSum():
+    """ Test that ChromaticSum separable profile grouping.
+    """
+    import time
+    t1 = time.time()
+    psf = galsim.Gaussian(fwhm=1)
+    pix = galsim.Pixel(0.2)
+    gal1 = galsim.Gaussian(fwhm=1)
+    gal2 = galsim.Gaussian(fwhm=1.1)
+    gal3 = galsim.Gaussian(fwhm=1.2)
+
+    # check that 2 summands with same SED make a separable sum.
+    gal = gal1 * bulge_SED + gal2 * bulge_SED
+    img1 = galsim.ImageD(32, 32, scale=0.2)
+    if not gal.separable:
+        raise AssertionError("failed to identify separable ChromaticSum")
+    # check that 3 summands, 2 with the same SED, 1 with a different SED, make an
+    # inseparable sum.
+    gal = galsim.Add(gal1 * bulge_SED, gal2 * bulge_SED, gal3 * disk_SED)
+    if gal.separable:
+        raise AssertionError("failed to identify inseparable ChromaticSum")
+    # check that its objlist contains a separable Chromatic and a separable ChromaticSum
+    types = dict((o.__class__, o) for o in gal.objlist)
+    if galsim.Chromatic not in types or galsim.ChromaticSum not in types:
+        raise AssertionError("failed to process list of objects with repeated SED")
+
+    # check that drawing the profile works as expected
+    final = galsim.Convolve(gal, pix, psf)
+    final.draw(bandpass, image=img1)
+
+    img2 = galsim.ImageD(32, 32, scale=0.2)
+    component1 = galsim.Convolve(gal1*bulge_SED, pix, psf)
+    component1.draw(bandpass, image=img2)
+    component2 = galsim.Convolve(gal2*bulge_SED, pix, psf)
+    component2.draw(bandpass, image=img2, add_to_image=True)
+    component3 = galsim.Convolve(gal3*disk_SED, pix, psf)
+    component3.draw(bandpass, image=img2, add_to_image=True)
+
+    np.testing.assert_array_almost_equal(img1.array, img2.array, 5,
+                                         "separable ChromaticSum not correctly drawn")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_draw_add_commutativity()
     test_ChromaticConvolution_InterpolatedImage()
@@ -796,3 +840,4 @@ if __name__ == "__main__":
     test_ChromaticObject_compound_affine_transformation()
     test_analytic_integrator()
     test_gsparam()
+    test_separable_ChromaticSum()
