@@ -931,9 +931,10 @@ class PowerSpectrum(object):
         """
         This function can interpolate between grid positions to find the shear values for a given
         list of input positions (or just a single position).  Before calling this function, you must
-        call buildGrid first to define the grid of shears and convergences on which to interpolate.
-        The docstring for buildGrid provides some guidance on appropriate grid configurations to use
-        when building a grid that is to be later interpolated to random positions.
+        call buildGrid() first to define the grid of shears and convergences on which to
+        interpolate.  The docstring for buildGrid provides some guidance on appropriate grid
+        configurations to use when building a grid that is to be later interpolated to random
+        positions.
 
         By default, this method returns the reduced shear, which is defined in terms of shear and
         convergence as reduced shear `g=gamma/(1-kappa)`; the `reduced` keyword can be used to
