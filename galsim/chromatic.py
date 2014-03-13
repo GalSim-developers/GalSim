@@ -42,35 +42,40 @@ class ChromaticObject(object):
     effects, such as differential chromatic refraction, chromatic seeing, and diffraction-limited
     wavelength-dependence.
 
-    This class also serves as the base class for chromatic subclasses.  In general,
-    `ChromaticObject` and subclasses should provide the following interface:
-    1) Define an `evaluateAtWavelength` method, which returns a GSObject representing the
-       profile at a particular wavelength.
-    2) Define a `scaleFlux` method, which scales the flux at all wavelengths by a fixed multiplier.
-    3) Initialize a `separable` attribute.  This marks whether (`separable = True`) or not
-       (`separable = False`) the given chromatic profile can be factored into a spatial profile and
-       a spectral profile.  Separable profiles can be drawn quickly by evaluating at a single
-       wavelength and adjusting the flux via a (fast) 1D integral over the spectral profile.
-       Inseparable profiles, on the other hand, need to be evaluated at multiple wavelengths
-       in order to draw (slow).
-    4) Separable objects must initialize an `SED` attribute, which is a callable object (often a
-       `galsim.SED` instance) that returns the _relative_ flux of the profile at a given
-       wavelength. (The _absolute_ flux is controlled by both the `SED` and the `.flux` attribute
-       of the underlying chromaticized GSObject(s).  See `galsim.Chromatic` docstring.)
-    5) Initialize a `wave_list` attribute, which specifies wavelengths at which the profile (or
-       the SED in the case of separable profiles) will be evaluated when drawing a ChromaticObject.
-       The type of `wave_list` should be a numpy array, and may be empty, in which case either the
-       Bandpass object being drawn against, or the integrator being used will determine at which
-       wavelengths to evaluate.
-
-    Additionally, instances of `ChromaticObject` and subclasses will usually have either an `obj`
-    attribute representing a manipulated `GSObject` or `ChromaticObject`, or an `objlist`
-    attribute in the case of compound classes like `ChromaticSum` and `ChromaticConvolution`.
+    This class also serves as the base class for chromatic subclasses, including Chromatic,
+    ChromaticSum, and ChromaticConvolution.  The ChromaticAtmosphere function also creates a
+    ChromaticObject.  The basic methods that all ChromaticObjects possess are `.draw()`, which
+    draws the object as observed through a particular bandpass, and `.evaluateAtWavelength()`,
+    which returns a GSObject representing the monochromatic profile at a given wavelength. See the
+    docstrings for the draw and evaluateAtWavelength methods for more details.
 
     @param gsobj  The GSObject to be chromaticized.
     """
 
-    # Note that subclasses *must* override scaleFlux() and evaluateAtWavelength()
+    # In general, `ChromaticObject` and subclasses should provide the following interface:
+    # 1) Define an `evaluateAtWavelength` method, which returns a GSObject representing the
+    #    profile at a particular wavelength.
+    # 2) Define a `scaleFlux` method, which scales the flux at all wavelengths by a fixed multiplier.
+    # 3) Initialize a `separable` attribute.  This marks whether (`separable = True`) or not
+    #    (`separable = False`) the given chromatic profile can be factored into a spatial profile and
+    #    a spectral profile.  Separable profiles can be drawn quickly by evaluating at a single
+    #    wavelength and adjusting the flux via a (fast) 1D integral over the spectral component.
+    #    Inseparable profiles, on the other hand, need to be evaluated at multiple wavelengths
+    #    in order to draw (slow).
+    # 4) Separable objects must initialize an `SED` attribute, which is a callable object (often a
+    #    `galsim.SED` instance) that returns the _relative_ flux of the profile at a given
+    #    wavelength. (The _absolute_ flux is controlled by both the `SED` and the `.flux` attribute
+    #    of the underlying chromaticized GSObject(s).  See `galsim.Chromatic` docstring for details
+    #    concerning normalization.)
+    # 5) Initialize a `wave_list` attribute, which specifies wavelengths at which the profile (or
+    #    the SED in the case of separable profiles) will be evaluated when drawing a ChromaticObject.
+    #    The type of `wave_list` should be a numpy array, and may be empty, in which case either the
+    #    Bandpass object being drawn against, or the integrator being used will determine at which
+    #    wavelengths to evaluate.
+
+    # Additionally, instances of `ChromaticObject` and subclasses will usually have either an `obj`
+    # attribute representing a manipulated `GSObject` or `ChromaticObject`, or an `objlist`
+    # attribute in the case of compound classes like `ChromaticSum` and `ChromaticConvolution`.
 
     def __init__(self, gsobj):
         if not isinstance(gsobj, galsim.GSObject):
@@ -195,7 +200,12 @@ class ChromaticObject(object):
         image = prof._draw_setup_image(image, wcs, wmult, add_to_image)
         return image
 
-    def evaluateAtWavelength(self, w):
+    def evaluateAtWavelength(self, wave):
+        """ Evaluate this chromatic object at a particular wavelength.
+
+        @param wave  Wavelength in nanometers.
+        @returns     GSObject
+        """
         if self.__class__ != ChromaticObject:
             raise NotImplementedError(
                     "Subclasses of ChromaticObject must override evaluateAtWavelength()")
@@ -203,14 +213,18 @@ class ChromaticObject(object):
             raise AttributeError(
                     "Attempting to evaluate ChromaticObject before affine transform " +
                     "matrix has been created!")
-        tmpobj = self.obj.evaluateAtWavelength(w).copy()
-        A0 = self._A(w)
+        tmpobj = self.obj.evaluateAtWavelength(wave).copy()
+        A0 = self._A(wave)
         tmpobj.applyTransformation(A0[0,0], A0[0,1], A0[1,0], A0[1,1])
         tmpobj.applyShift(A0[0,2], A0[1,2])
-        tmpobj.scaleFlux(self._fluxFactor(w))
+        tmpobj.scaleFlux(self._fluxFactor(wave))
         return tmpobj
 
     def scaleFlux(self, scale):
+        """Multiply the flux of the object by flux_ratio
+
+        @param flux_ratio The factor by which to scale the flux.
+        """
         if self.__class__ != ChromaticObject:
             raise NotImplementedError("Subclasses of ChromaticObject must override scaleFlux()")
         if hasattr(scale, '__call__'):
@@ -828,13 +842,17 @@ class Chromatic(ChromaticObject):
 
     # Apply following transformations to the underlying GSObject
     def scaleFlux(self, scale):
+        """Multiply the flux of the object by flux_ratio
+
+        @param flux_ratio The factor by which to scale the flux.
+        """
         self.obj.scaleFlux(scale)
 
     def evaluateAtWavelength(self, wave):
-        """Evaluate underlying GSObject scaled by self.SED(`wave`).
+        """ Evaluate this chromatic object at a particular wavelength.
 
         @param wave  Wavelength in nanometers.
-        @returns     GSObject for profile at specified wavelength
+        @returns     GSObject
         """
         return self.SED(wave) * self.obj
 
@@ -905,10 +923,10 @@ class ChromaticSum(ChromaticObject):
             self.wave_list = numpy.union1d(self.wave_list, obj.wave_list)
 
     def evaluateAtWavelength(self, wave):
-        """Evaluate underlying GSObjects scaled by their attached SEDs evaluated at `wave`.
+        """ Evaluate this chromatic object at a particular wavelength.
 
         @param wave  Wavelength in nanometers.
-        @returns     galsim.Sum GSObject for profile at specified wavelength.
+        @returns     GSObject
         """
         return galsim.Add([obj.evaluateAtWavelength(wave) for obj in self.objlist],
                           gsparams=self.gsparams)
@@ -950,6 +968,10 @@ class ChromaticSum(ChromaticObject):
                     integrator=integrator)
 
     def scaleFlux(self, scale):
+        """Multiply the flux of the object by flux_ratio
+
+        @param flux_ratio The factor by which to scale the flux.
+        """
         for obj in self.objlist:
             obj.scaleFlux(scale)
 
@@ -1010,9 +1032,10 @@ class ChromaticConvolution(ChromaticObject):
             self.wave_list = numpy.union1d(self.wave_list, obj.wave_list)
 
     def evaluateAtWavelength(self, wave):
-        """
+        """ Evaluate this chromatic object at a particular wavelength.
+
         @param wave  Wavelength in nanometers.
-        @returns     GSObject for profile at specified wavelength
+        @returns     GSObject
         """
         return galsim.Convolve([obj.evaluateAtWavelength(wave) for obj in self.objlist],
                                gsparams=self.gsparams)
@@ -1175,6 +1198,10 @@ class ChromaticConvolution(ChromaticObject):
                 add_to_image=add_to_image, use_true_center=use_true_center, offset=offset)
 
     def scaleFlux(self, scale):
+        """Multiply the flux of the object by flux_ratio
+
+        @param flux_ratio The factor by which to scale the flux.
+        """
         self.objlist[0].scaleFlux(scale)
 
 
@@ -1200,9 +1227,18 @@ class ChromaticDeconvolution(ChromaticObject):
         self.wave_list = obj.wave_list
 
     def evaluateAtWavelength(self, wave):
+        """ Evaluate this chromatic object at a particular wavelength.
+
+        @param wave  Wavelength in nanometers.
+        @returns     GSObject
+        """
         return galsim.Deconvolve(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
     def scaleFlux(self, scale):
+        """Multiply the flux of the object by flux_ratio
+
+        @param flux_ratio The factor by which to scale the flux.
+        """
         self.obj.scaleFlux(scale)
 
 
@@ -1226,9 +1262,18 @@ class ChromaticAutoConvolution(ChromaticObject):
         self.wave_list = obj.wave_list
 
     def evaluateAtWavelength(self, wave):
+        """ Evaluate this chromatic object at a particular wavelength.
+
+        @param wave  Wavelength in nanometers.
+        @returns     GSObject
+        """
         return galsim.AutoConvolve(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
     def scaleFlux(self, scale):
+        """Multiply the flux of the object by flux_ratio
+
+        @param flux_ratio The factor by which to scale the flux.
+        """
         self.obj.scaleFlux(numpy.sqrt(scale))
 
 
@@ -1253,7 +1298,16 @@ class ChromaticAutoCorrelation(ChromaticObject):
         self.wave_list = obj.wave_list
 
     def evaluateAtWavelength(self, wave):
+        """ Evaluate this chromatic object at a particular wavelength.
+
+        @param wave  Wavelength in nanometers.
+        @returns     GSObject
+        """
         return galsim.AutoCorrelate(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
     def scaleFlux(self, scale):
+        """Multiply the flux of the object by flux_ratio
+
+        @param flux_ratio The factor by which to scale the flux.
+        """
         self.obj.scaleFlux(numpy.sqrt(scale))
