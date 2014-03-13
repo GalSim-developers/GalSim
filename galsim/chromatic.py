@@ -42,6 +42,31 @@ class ChromaticObject(object):
     effects, such as differential chromatic refraction, chromatic seeing, and diffraction-limited
     wavelength-dependence.
 
+    This class also serves as the base class for chromatic subclasses.  In general,
+    `ChromaticObject` and subclasses should provide the following interface:
+    1) Define an `evaluateAtWavelength` method, which returns a GSObject representing the
+       profile at a particular wavelength.
+    2) Define a `scaleFlux` method, which scales the flux at all wavelengths by a fixed multiplier.
+    3) Initialize a `separable` attribute.  This marks whether (`separable = True`) or not
+       (`separable = False`) the given chromatic profile can be factored into a spatial profile and
+       a spectral profile.  Separable profiles can be drawn quickly by evaluating at a single
+       wavelength and adjusting the flux via a (fast) 1D integral over the spectral profile.
+       Inseparable profiles, on the other hand, need to be evaluated at multiple wavelengths
+       in order to draw (slow).
+    4) Separable objects must initialize an `SED` attribute, which is a callable object (often a
+       `galsim.SED` instance) that returns the _relative_ flux of the profile at a given
+       wavelength. (The _absolute_ flux is controlled by both the `SED` and the `.flux` attribute
+       of the underlying chromaticized GSObject(s).  See `galsim.Chromatic` docstring.)
+    5) Initialize a `wave_list` attribute, which specifies wavelengths at which the profile (or
+       the SED in the case of separable profiles) will be evaluated when drawing a ChromaticObject.
+       The type of `wave_list` should be a numpy array, and may be empty, in which case either the
+       Bandpass object being drawn against, or the integrator being used will determine at which
+       wavelengths to evaluate.
+
+    Additionally, instances of `ChromaticObject` and subclasses will usually have either an `obj`
+    attribute representing a manipulated `GSObject` or `ChromaticObject`, or an `objlist`
+    attribute in the case of compound classes like `ChromaticSum` and `ChromaticConvolution`.
+
     @param gsobj  The GSObject to be chromaticized.
     """
 
@@ -52,11 +77,18 @@ class ChromaticObject(object):
             raise TypeError("Can only directly instantiate ChromaticObject with a GSObject "+
                             "argument.")
         self.obj = gsobj.copy()
-        self.A = lambda w: numpy.matrix(numpy.identity(3), dtype=float)
-        self.fluxFactor = lambda w: 1.0
         self.separable = True
         self.SED = lambda w: 1.0
         self.wave_list = numpy.array([], dtype=float)
+        # Some private attributes to handle affine transformations
+        # _A is a 3x3 augmented affine transformation matrix that holds both translation and
+        # shear/rotate/dilate specifications.
+        # (see http://en.wikipedia.org/wiki/Affine_transformation#Augmented_matrix)
+        self._A = lambda w: numpy.matrix(numpy.identity(3), dtype=float)
+        # _fluxFactor holds a wavelength-dependent flux rescaling.  This is only needed because
+        # a wavelength-dependent applyDilation(f(w)) is implemented as a combination of a
+        # wavelength-dependent expansion and wavelength-dependent flux rescaling.
+        self._fluxFactor = lambda w: 1.0
 
     def draw(self, bandpass, image=None, scale=None, wcs=None, gain=1.0, wmult=1.0,
              normalization="flux", add_to_image=False, use_true_center=True, offset=None,
@@ -129,7 +161,8 @@ class ChromaticObject(object):
                 integrator = galsim.integ.SampleIntegrator(numpy.trapz)
             else:
                 integrator = galsim.integ.ContinuousIntegrator(numpy.trapz)
-        # some sanity checks
+        # To help developers debug extensions to ChromaticObject, check that ChromaticObject has
+        # the expected attributes
         if self.separable: assert hasattr(self, 'SED')
         assert hasattr(self, 'wave_list')
 
@@ -166,23 +199,23 @@ class ChromaticObject(object):
         if self.__class__ != ChromaticObject:
             raise NotImplementedError(
                     "Subclasses of ChromaticObject must override evaluateAtWavelength()")
-        if not hasattr(self, 'A'):
+        if not hasattr(self, '_A'):
             raise AttributeError(
                     "Attempting to evaluate ChromaticObject before affine transform " +
                     "matrix has been created!")
         tmpobj = self.obj.evaluateAtWavelength(w).copy()
-        A0 = self.A(w)
+        A0 = self._A(w)
         tmpobj.applyTransformation(A0[0,0], A0[0,1], A0[1,0], A0[1,1])
         tmpobj.applyShift(A0[0,2], A0[1,2])
-        tmpobj.scaleFlux(self.fluxFactor(w))
+        tmpobj.scaleFlux(self._fluxFactor(w))
         return tmpobj
 
     def scaleFlux(self, scale):
         if self.__class__ != ChromaticObject:
             raise NotImplementedError("Subclasses of ChromaticObject must override scaleFlux()")
         if hasattr(scale, '__call__'):
-            fluxFactor = self.fluxFactor
-            self.fluxFactor = lambda w: fluxFactor(w) * scale(w)
+            fluxFactor = self._fluxFactor
+            self._fluxFactor = lambda w: fluxFactor(w) * scale(w)
         else:
             self.obj.scaleFlux(scale)
 
@@ -209,6 +242,22 @@ class ChromaticObject(object):
         ret *= other
         return ret
 
+    # Likewise for op/ and op/=
+    def __idiv__(self, other):
+        self.scaleFlux(1. / other)
+        return self
+
+    def __div__(self, other):
+        ret = self.copy()
+        ret /= other
+        return ret
+
+    def __itruediv__(self, other):
+        return __idiv__(self, other)
+
+    def __truediv__(self, other):
+        return __div__(self, other)
+
     # Make a new copy of a `ChromaticObject`.
     def copy(self):
         """Returns a copy of an object.  This preserves the original type of the object."""
@@ -229,20 +278,18 @@ class ChromaticObject(object):
     # Helper function
     def _applyMatrix(self, J):
         # apply the Jacobian matrix J to the ChromaticObject.
-        if hasattr(self, 'A'):
-            A = self.A
-            self.A = lambda w:J(w) * A(w)
+        if hasattr(self, '_A'):
+            A = self._A
+            self._A = lambda w:J(w) * A(w)
         else:
             self.obj = self.copy()
             self.__class__ = ChromaticObject
-            self.A = J
-            self.fluxFactor = lambda w: 1.0
+            self._A = J
+            self._fluxFactor = lambda w: 1.0
             self.separable = self.obj.separable
-            if hasattr(self, 'gsobj'):
-                del self.gsobj
-            # self.SED should already exist if this is a separable object
+            # To help developers debug extensions to ChromaticObject, check that this object
+            # already has a few expected attributes
             if self.separable: assert hasattr(self, 'SED')
-            # and self.wave_list should already exist
             assert hasattr(self, 'wave_list')
 
     def applyExpansion(self, scale):
@@ -495,7 +542,9 @@ class ChromaticObject(object):
                 tmpdy = dy
                 dy = lambda w: tmpdy
             # Then create augmented affine transform matrix and multiply or set as necessary
-            shift = lambda w: numpy.matrix([[1,0,dx(w)],[0,1,dy(w)],[0,0,1]], dtype=float)
+            shift = lambda w: numpy.matrix([[1, 0, dx(w)],
+                                            [0, 1, dy(w)],
+                                            [0, 0,     1]], dtype=float)
             self._applyMatrix(shift)
 
     # Also add methods which create a new ChromaticObject with the transformations
@@ -773,13 +822,13 @@ class Chromatic(ChromaticObject):
     def __init__(self, gsobj, SED):
         self.SED = SED
         self.wave_list = SED.wave_list
-        self.gsobj = gsobj.copy()
+        self.obj = gsobj.copy()
         # Chromaticized GSObjects are separable into spatial (x,y) and spectral (lambda) factors.
         self.separable = True
 
     # Apply following transformations to the underlying GSObject
     def scaleFlux(self, scale):
-        self.gsobj.scaleFlux(scale)
+        self.obj.scaleFlux(scale)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate underlying GSObject scaled by self.SED(`wave`).
@@ -787,7 +836,7 @@ class Chromatic(ChromaticObject):
         @param wave  Wavelength in nanometers.
         @returns     GSObject for profile at specified wavelength
         """
-        return self.SED(wave) * self.gsobj
+        return self.SED(wave) * self.obj
 
 
 class ChromaticSum(ChromaticObject):
@@ -900,7 +949,6 @@ class ChromaticSum(ChromaticObject):
                     add_to_image=True, use_true_center=use_true_center, offset=offset,
                     integrator=integrator)
 
-    # apply following transformations to all underlying summands
     def scaleFlux(self, scale):
         for obj in self.objlist:
             obj.scaleFlux(scale)

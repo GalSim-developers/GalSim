@@ -119,9 +119,15 @@ class GSObject(object):
         else:
             raise TypeError("GSObject must be initialized with an SBProfile or another GSObject!")
         # a couple of definitions for using GSObjects as duck-typed ChromaticObjects
+        self.separable = True
         self.SED = lambda w: 1.0 # flat spectrum in photons/nanometer
         self.wave_list = np.array([], dtype=float)
-        self.separable = True
+
+    # Also need this method to duck-type as a ChromaticObject
+    def evaluateAtWavelength(self, wave):
+        """Return profile at a given wavelength.  For `GSObject` instances, this is just `self`.
+        This allows `GSObject` instances to be duck-typed as `ChromaticObject` instances."""
+        return self
 
     # Make op+ of two GSObjects work to return an Add object
     def __add__(self, other):
@@ -642,11 +648,6 @@ class GSObject(object):
         ret = self.copy()
         ret.applyShift(*args, **kwargs)
         return ret
-
-    def evaluateAtWavelength(self, wave):
-        """Return profile at a given wavelength.  For `GSObject`, this is just `self`.  This allows
-        `GSObject`s to be duck-typed as `ChromaticObject`s."""
-        return self
 
     # Make sure the image is defined with the right size and wcs for the draw and
     # drawShoot commands.
