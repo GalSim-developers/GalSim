@@ -70,7 +70,8 @@ def getmoments(image1):
     mxx = np.sum(((xgrid-mx)**2) * image1.array) / np.sum(image1.array)
     myy = np.sum(((ygrid-my)**2) * image1.array) / np.sum(image1.array)
     mxy = np.sum((xgrid-mx) * (ygrid-my) * image1.array) / np.sum(image1.array)
-    print "    ", mx-image1.getXMin(), my-image1.getYMin(), mxx, myy, mxy
+    print '      {0:<15.8g}  {1:<15.8g}  {2:<15.8g}  {3:<15.8g}  {4:<15.8g}'.format(
+            mx-image1.getXMin(), my-image1.getYMin(), mxx, myy, mxy)
     return mx, my, mxx, myy, mxy
 
 def convertToShear(e1,e2):
@@ -97,8 +98,8 @@ def do_shoot(prof, img, name):
     test_flux = 1.8
 
     print 'Start do_shoot'
-    # Test photon shooting for a particular profile (given as prof). 
-    # Since shooting implicitly convolves with the pixel, we need to compare it to 
+    # Test photon shooting for a particular profile (given as prof).
+    # Since shooting implicitly convolves with the pixel, we need to compare it to
     # the given profile convolved with a pixel.
     pix = galsim.Pixel(scale=img.scale)
     compar = galsim.Convolve(prof,pix)
@@ -110,8 +111,8 @@ def do_shoot(prof, img, name):
     flux_tot = img.array.sum()
     print 'flux_tot = ',flux_tot
     if flux_max > 1.:
-        # Since the number of photons required for a given accuracy level (in terms of 
-        # number of decimal places), we rescale the comparison by the flux of the 
+        # Since the number of photons required for a given accuracy level (in terms of
+        # number of decimal places), we rescale the comparison by the flux of the
         # brightest pixel.
         compar /= flux_max
         img /= flux_max
@@ -186,7 +187,7 @@ def do_shoot(prof, img, name):
 
 
 def do_kvalue(prof, name):
-    """Test that the k-space values are consistent with the real-space values by drawing the 
+    """Test that the k-space values are consistent with the real-space values by drawing the
     profile directly (without any convolution, so using fillXValues) and convolved by a tiny
     Gaussian (effectively a delta function).
     """
@@ -201,7 +202,7 @@ def do_kvalue(prof, name):
     printval(im1,im2)
     np.testing.assert_array_almost_equal(
             im2.array, im1.array, 3,
-            err_msg = name + 
+            err_msg = name +
             " convolved with a delta function is inconsistent with real-space image.")
 
 
@@ -214,12 +215,11 @@ def radial_integrate(prof, minr, maxr, dr):
     r = minr
     sum = 0.
     while r < maxr:
-        sum += r * prof.xValue(galsim.PositionD(r,0)) 
+        sum += r * prof.xValue(galsim.PositionD(r,0))
         r += dr
     sum *= 2. * math.pi * dr
     return sum
- 
+
 def funcname():
     import inspect
     return inspect.stack()[1][3]
-
