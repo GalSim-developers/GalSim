@@ -244,12 +244,23 @@ class ChromaticObject(object):
                             wavelength.
         @returns            A new object with the flux scaled appropriately.
         """
-        ret = self.copy()
         if hasattr(flux_ratio, '__call__'):
+            ret = self.copy()
             ret._fluxFactor = lambda w: self._fluxFactor(w) * flux_ratio(w)
+            return ret
         else:
-            ret.obj *= flux_ratio
+            return self.withScaledFlux(flux_ratio)
+
+    def withScaledFlux(self, flux_ratio):
+        """Multiply the flux of the object by flux_ratio
+
+        @param flux_ratio   The factor by which to scale the flux.
+        @returns            The object with the new flux.
+        """
+        ret = self.copy()
+        ret.obj = self.obj.withScaledFlux(flux_ratio)
         return ret
+
 
     # Add together `ChromaticObject`s and/or `GSObject`s
     def __add__(self, other):
@@ -261,14 +272,14 @@ class ChromaticObject(object):
 
     # Make op* and op*= work to adjust the flux of the object
     def __rmul__(self, other):
-        return __mul__(self, other)
+        return self.__mul__(other)
 
     # Likewise for op/ and op/=
     def __div__(self, other):
-        return __mul__(self, 1./other)
+        return self.__mul__(1./other)
 
     def __truediv__(self, other):
-        return __div__(self, other)
+        return self.__div__(other)
 
     # Make a new copy of a `ChromaticObject`.
     def copy(self):
