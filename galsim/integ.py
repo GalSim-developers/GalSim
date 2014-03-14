@@ -17,10 +17,12 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file integ.py
-A Python layer version of the C++ int1d function in galim::integ
+Includes a Python layer version of the C++ int1d function in galim::integ,
+and python image integrators for use in galsim.chromatic
 """
 
 from . import _galsim
+import numpy as np
 
 def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     """Integrate a 1-dimensional function from min to max.
@@ -52,3 +54,118 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
         return result
     else:
         raise RuntimeError(result)
+
+def midpt(fvals, x):
+    """Midpoint rule for integration.
+
+    @param fvals  Samples of the integrand
+    @param x      Locations at which the integrand was sampled.
+    @returns      Midpoint rule approximation of the integral.
+    """
+    x = np.array(x)
+    dx = [x[1]-x[0]]
+    dx.extend(0.5*(x[2:]-x[0:-2]))
+    dx.append(x[-1]-x[-2])
+    weighted_fvals = [w*f for w,f in zip(dx, fvals)]
+    return reduce(lambda y,z:y+z, weighted_fvals)
+
+class ImageIntegrator(object):
+    def __init__(self):
+        raise NotImplementedError("Must instantiate subclass of ImageIntegrator")
+    # subclasses must define
+    # 1) a method `.calculateWaves(bandpass)` which will return the wavelengths at which to
+    #    evaluate the integrand
+    # 2) an function attribute `.rule` which takes a list of integrand evaluations as its first
+    #    argument, and a list of evaluation wavelengths as its second argument, and returns
+    #    an approximation to the integral.  (E.g., the function midpt above, or numpy.trapz)
+    def __call__(self, evaluateAtWavelength, bandpass, image, gain=1.0, wmult=1.0,
+                 use_true_center=True, offset=None):
+        images = []
+        waves = self.calculateWaves(bandpass)
+        self.last_n_eval = len(waves)
+        for w in waves:
+            prof = evaluateAtWavelength(w) * bandpass(w)
+            tmpimage = image.copy()
+            tmpimage.setZero()
+            prof.draw(image=tmpimage, gain=gain, wmult=wmult,
+                      use_true_center=use_true_center, offset=offset)
+            images.append(tmpimage)
+        return self.rule(images, waves)
+
+class SampleIntegrator(ImageIntegrator):
+    """Create a chromatic surface brightness profile integrator, which will integrate over
+    wavelength using a `galsim.Bandpass` as a weight function.
+
+    This integrator will evaluate the integrand only at the wavelengths in `bandpass.wave_list`.
+    See `ContinuousIntegrator` for an integrator that evaluates the integrand at a given number of
+    points equally spaced apart.
+
+    __init__ parameters:
+    @param rule   What integration rule to apply to the wavelength and monochromatic surface
+                  brightness samples.  Options include:
+                     galsim.integ.midpt  --  Use the midpoint integration rule
+                     numpy.trapz         --  Use the trapezoidal integration rule
+
+    __call__ parameters:
+    @param evaluateAtWavelength  Function that returns a monochromatic surface brightness profile as
+                                 a function of wavelength.
+    @param bandpass              galsim.Bandpass object representing the filter being imaged through.
+    @param image                 galsim.Image used to set size and scale of output
+    @param gain                  See GSObject.draw()
+    @param wmult                 See GSObject.draw()
+    @param use_true_center       See GSObject.draw()
+    @param offset                See GSObject.draw()
+    @returns                     result of integral as a galsim.Image
+    """
+    def __init__(self, rule):
+        self.rule = rule
+    def calculateWaves(self, bandpass):
+        if len(bandpass.wave_list) < 0:
+            raise AttributeError("Bandpass does not have attribute `wave_list` needed by " +
+                                 "midpt_sample_integrator.")
+        return bandpass.wave_list
+
+class ContinuousIntegrator(ImageIntegrator):
+    """Create a chromatic surface brightness profile integrator, which will integrate over
+    wavelength using a `galsim.Bandpass` as a weight function.
+
+    This integrator will evaluate the integrand only at the wavelengths in `bandpass.wave_list`.
+    See `ContinuousIntegrator` for an integrator that evaluates the integrand at a given number of
+    points equally spaced apart.
+
+    __init__ parameters:
+    @parma rule            What integration rule to apply to the wavelength and monochromatic
+                           surface brightness samples.  Options include:
+                               galsim.integ.midpt  --  Use the midpoint integration rule
+                               numpy.trapz         --  Use the trapezoidal integration rule
+    @parma N               Number of equally-wavelength-spaced monochromatic surface brightness
+                           samples to evaluate. (default: 250)
+    @param use_endpoints   Whether to sample the endpoints `bandpass.blue_limit` and
+                           `bandpass.red_limit`.  This should probably be True for a rule like
+                           numpy.trapz, which explicitly samples the integration limits.  For a
+                           rule like the midpoint rule, however, the integration limits are not
+                           generally sampled, (only the midpoint between each integration limit and
+                           its nearest interior point is sampled), thus `use_endpoints` should be
+                           set to False in this case.  (default: True)
+
+    __call__ parameters:
+    @param evaluateAtWavelength  Function that returns a monochromatic surface brightness profile as
+                                 a function of wavelength.
+    @param bandpass              galsim.Bandpass object representing the filter being imaged through.
+    @param image                 galsim.Image used to set size and scale of output
+    @param gain                  See GSObject.draw()
+    @param wmult                 See GSObject.draw()
+    @param use_true_center       See GSObject.draw()
+    @param offset                See GSObject.draw()
+    @returns                     result of integral as a galsim.Image
+    """
+    def __init__(self, rule, N=250, use_endpoints=True):
+        self.N = N
+        self.rule = rule
+        self.use_endpoints = use_endpoints
+    def calculateWaves(self, bandpass):
+        h = (bandpass.red_limit*1.0 - bandpass.blue_limit)/self.N
+        if self.use_endpoints:
+            return [bandpass.blue_limit + h * i for i in range(self.N+1)]
+        else:
+            return [bandpass.blue_limit + h * (i+0.5) for i in range(self.N)]

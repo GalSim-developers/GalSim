@@ -64,7 +64,15 @@ from shapelet import Shapelet, ShapeletSize, FitShapelet, LVectorSize
 from interpolatedimage import Interpolant, Interpolant2d, InterpolantXY
 from interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 from interpolatedimage import InterpolatedImage
-from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
+from compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution,
+from compount import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
+
+# Chromatic
+from chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum
+from chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
+from chromatic import ChromaticAutoCorrelation
+from sed import SED
+from bandpass import Bandpass
 
 # WCS
 from fits import FitsHeader
@@ -84,3 +92,4 @@ from . import integ
 from . import pse
 from . import hsm
 from . import deprecated
+from . import dcr

@@ -127,12 +127,14 @@ class DES_PSFEx(object):
 
         # These are the names of the two axes.  Should be X_IMAGE, Y_IMAGE.
         # If they aren't, then the way we use the interpolation will be wrong.
+        # Well, really they can also be XWIN_IMAGE, etc.  So just check that it 
+        # starts with X and ends with IMAGE.
         pol_name1 = hdu.header['POLNAME1']
-        if pol_name1 != 'X_IMAGE':
-            raise IOError("PSFEx: Expected POLNAME1 == X_IMAGE, got %s"%pol_name1)
+        if not (pol_name1.startswith('X') and pol_name1.endswith('IMAGE')):
+            raise IOError("PSFEx: Expected POLNAME1 == X*_IMAGE, got %s"%pol_name1)
         pol_name2 = hdu.header['POLNAME2']
-        if pol_name2 != 'Y_IMAGE':
-            raise IOError("PSFEx: Expected POLNAME2 == Y_IMAGE, got %s"%pol_name2)
+        if not (pol_name2.startswith('Y') and pol_name2.endswith('IMAGE')):
+            raise IOError("PSFEx: Expected POLNAME2 == Y*_IMAGE, got %s"%pol_name2)
 
         # Zero points and scale.  Interpolation is in terms of (x-x0)/xscale, (y-y0)/yscale
         pol_zero1 = hdu.header['POLZERO1']
@@ -232,11 +234,14 @@ class DES_PSFEx(object):
         else:
             return None
 
-    def getPSF(self, image_pos, gsparams=None):
+    def getPSF(self, image_pos, pixel_scale=None, gsparams=None):
         """Returns the PSF at position image_pos
 
         @param image_pos    The position in image coordinates at which to build the PSF.
         @param gsparams     (Optional) A GSParams instance to pass to the constructed GSObject.
+        @param pixel_scale  An obsolete parameter that is only present for backwards compatibility.
+                            If the constructor did not provide an image file or wcs, then 
+                            this will use the pixel scale for an approximate wcs.
 
         @returns the PSF as a GSObject
         """
@@ -250,6 +255,8 @@ class DES_PSFEx(object):
         # This brings if from image coordinates to world coordinates.
         if self.wcs:
             psf = self.wcs.toWorld(psf, image_pos=image_pos)
+        elif pixel_scale:
+            psf = galsim.PixelScale(pixel_scale).toWorld(psf)
 
         return psf
 
