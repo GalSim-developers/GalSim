@@ -1013,4 +1013,95 @@ def _convertPositions(pos, units, func):
 
     return pos
 
+def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
+    """
+    Remove items from a set of tabulated f(x) values so that the error in the integral is still 
+    accurate to a given relative accuracy.
+
+    The input x,f values can be lists, numpy arrays, or really anything that can be converted
+    to a numpy array.  The new lists will be output as python lists.
+
+    @param x                The x values in the f(x) tabulation.
+    @param f                The f values in the f(x) tabulation.
+    @param rel_err          The maximum relative error to allow in the integral from the removal.
+                            (default: 1.e-4)
+    @param preserve_range   Should the original range of x be preserved? (True) Or should the ends
+                            be trimmed to include only the region where the integral is 
+                            significant? (False)  (default: False)
+
+    @returns x_new, f_new   Lists with the thinned tabulation.
+    """
+    import numpy
+    x = numpy.array(x)
+    f = numpy.array(f)
+
+    # Check for valid inputs
+    if len(x) != len(f):
+        raise ValueError("len(x) != len(f)")
+    if rel_err <= 0 or rel_err >= 1:
+        raise ValueError("rel_err must be between 0 and 1")
+    if not (numpy.diff(x) >= 0).all():
+        raise ValueError("input x is not sorted.")
+
+    # Check for trivial noop.
+    if len(x) <= 2:
+        # Nothing to do
+        return
+
+    # Start by calculating the complete integral of |f|
+    total_integ = numpy.trapz(abs(f),x)
+    if total_integ == 0:
+        return numpy.array([ x[0], x[-1] ]), numpy.array([ f[0], f[-1] ])
+    thresh = rel_err * total_integ
+
+    if not preserve_range:
+        # Remove values from the front that integrate to less than thresh.
+        integ = 0.5 * (abs(f[0]) + abs(f[1])) * (x[1] - x[0])
+        k0 = 0
+        while k0 < len(x)-2 and integ < thresh:
+            k0 = k0+1
+            integ += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
+        # Now the integral from 0 to k0+1 (inclusive) is a bit too large.
+        # That means k0 is the largest value we can use that will work as the staring value.
+
+        # Remove values from the back that integrate to less than thresh.
+        k1 = len(x)-1
+        integ = 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+        while k1 > k0 and integ < thresh:
+            k1 = k1-1
+            integ += 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+        # Now the integral from k1-1 to len(x)-1 (inclusive) is a bit too large.
+        # That means k1 is the smallest value we can use that will work as the ending value.
+
+        x = x[k0:k1+1]  # +1 since end of range is given as one-past-the-end.
+        f = f[k0:k1+1]
+
+    # Start a new list with just the first item so far
+    newx = [ x[0] ]
+    newf = [ f[0] ]
+
+    k0 = 0  # The last item currently in the new array
+    k1 = 1  # The current item we are considering to skip or include
+    while k1 < len(x)-1:
+        # We are considering replacing all the true values between k0 and k1+1 (non-inclusive)
+        # with a linear approxmation based on the points at k0 and k1+1.
+        lin_f = f[k0] + (f[k1+1]-f[k0])/(x[k1+1]-x[k0]) * (x[k0:k1+2] - x[k0])
+        # Integrate | f(x) - lin_f(x) | from k0 to k1+1, inclusive.
+        integ = numpy.trapz(abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
+        # If the integral of the difference is < thresh, we can skip this item.
+        if integ < thresh:
+            # OK to skip item k1
+            k1 = k1 + 1
+        else:
+            # Have to include this one.
+            newx.append(x[k1])
+            newf.append(f[k1])
+            k0 = k1
+            k1 = k1 + 1
+
+    # Always include the last item
+    newx.append(x[-1])
+    newf.append(f[-1])
+
+    return newx, newf
 
