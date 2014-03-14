@@ -84,8 +84,8 @@ def test_draw_add_commutativity():
 
     # make galaxy
     GS_gal = galsim.Sersic(n=bulge_n, half_light_radius=bulge_hlr)
-    GS_gal.applyShear(e1=bulge_e1, e2=bulge_e2)
-    GS_gal.applyShear(g1=shear_g1, g2=shear_g2)
+    GS_gal = GS_gal.shear(e1=bulge_e1, e2=bulge_e2)
+    GS_gal = GS_gal.shear(g1=shear_g1, g2=shear_g2)
 
     # make effective PSF with Riemann sum midpoint rule
     mPSFs = [] # list of flux-scaled monochromatic PSFs
@@ -97,8 +97,8 @@ def test_draw_add_commutativity():
     for w in ws:
         flux = bulge_SED(w) * bandpass(w) * h
         mPSF = galsim.Moffat(flux=flux, beta=PSF_beta, half_light_radius=PSF_hlr*dilate_fn(w))
-        mPSF.applyShear(e1=PSF_e1, e2=PSF_e2)
-        mPSF.applyShift(shift_fn(w))
+        mPSF = mPSF.shear(e1=PSF_e1, e2=PSF_e2)
+        mPSF = mPSF.shift(shift_fn(w))
         mPSFs.append(mPSF)
     PSF = galsim.Add(mPSFs)
 
@@ -121,15 +121,15 @@ def test_draw_add_commutativity():
     # make galaxy
     mono_gal = galsim.Sersic(n=bulge_n, half_light_radius=bulge_hlr)
     chromatic_gal = mono_gal * bulge_SED
-    chromatic_gal.applyShear(e1=bulge_e1, e2=bulge_e2)
-    chromatic_gal.applyShear(g1=shear_g1, g2=shear_g2)
+    chromatic_gal = chromatic_gal.shear(e1=bulge_e1, e2=bulge_e2)
+    chromatic_gal = chromatic_gal.shear(g1=shear_g1, g2=shear_g2)
 
     # make chromatic PSF
     mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
-    mono_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
+    mono_PSF = mono_PSF.shear(e1=PSF_e1, e2=PSF_e2)
     chromatic_PSF = galsim.ChromaticObject(mono_PSF)
-    chromatic_PSF.applyDilation(dilate_fn)
-    chromatic_PSF.applyShift(shift_fn)
+    chromatic_PSF = chromatic_PSF.dilate(dilate_fn)
+    chromatic_PSF = chromatic_PSF.shift(shift_fn)
 
     # final profile
     chromatic_final = galsim.Convolve([chromatic_gal, chromatic_PSF, pixel])
@@ -208,23 +208,23 @@ def test_chromatic_add():
     # create galaxy profiles
     mono_bulge = galsim.Sersic(n=bulge_n, half_light_radius=bulge_hlr)
     bulge = mono_bulge * bulge_SED
-    bulge.applyShear(e1=bulge_e1, e2=bulge_e2)
+    bulge = bulge.shear(e1=bulge_e1, e2=bulge_e2)
 
     mono_disk = galsim.Sersic(n=disk_n, half_light_radius=disk_hlr)
     disk = mono_disk * disk_SED
-    disk.applyShear(e1=disk_e1, e2=disk_e2)
+    disk = disk.shear(e1=disk_e1, e2=disk_e2)
 
     # test `+` operator
     bdgal = bulge + disk
-    bdgal.applyShear(g1=shear_g1, g2=shear_g2)
+    bdgal = bdgal.shear(g1=shear_g1, g2=shear_g2)
 
     # now shear the indiv profiles
-    bulge.applyShear(g1=shear_g1, g2=shear_g2)
-    disk.applyShear(g1=shear_g1, g2=shear_g2)
+    bulge = bulge.shear(g1=shear_g1, g2=shear_g2)
+    disk = disk.shear(g1=shear_g1, g2=shear_g2)
 
     # create PSF
     mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
-    mono_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
+    mono_PSF = mono_PSF.shear(e1=PSF_e1, e2=PSF_e2)
     chromatic_PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500.0,
                                                zenith_angle=zenith_angle)
 
@@ -273,7 +273,7 @@ def test_dcr_moments():
                              / galsim.arcsec))
     mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
     PSF = galsim.ChromaticObject(mono_PSF)
-    PSF.applyShift(shift_fn)
+    PSF = PSF.shift(shift_fn)
 
     pix = galsim.Pixel(pixel_scale)
     final1 = galsim.Convolve([star1, PSF, pix])
@@ -349,7 +349,7 @@ def test_chromatic_seeing_moments():
 
         mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
         PSF = galsim.ChromaticObject(mono_PSF)
-        PSF.applyDilation(lambda w:(w/500.0)**index)
+        PSF = PSF.dilate(lambda w:(w/500.0)**index)
 
         final1 = galsim.Convolve([star1, PSF, pix])
         final2 = galsim.Convolve([star2, PSF, pix])
@@ -406,10 +406,10 @@ def test_monochromatic_filter():
     shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
     dilate_fn = lambda wave: (wave/500.0)**(-0.2)
     mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
-    mono_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
+    mono_PSF = mono_PSF.shear(e1=PSF_e1, e2=PSF_e2)
     chromatic_PSF = galsim.ChromaticObject(mono_PSF)
-    chromatic_PSF.applyDilation(dilate_fn)
-    chromatic_PSF.applyShift(shift_fn)
+    chromatic_PSF = chromatic_PSF.dilate(dilate_fn)
+    chromatic_PSF = chromatic_PSF.shift(shift_fn)
 
     pix = galsim.Pixel(pixel_scale)
     chromatic_final = galsim.Convolve([chromatic_gal, chromatic_PSF, pix])
@@ -427,9 +427,9 @@ def test_monochromatic_filter():
 
         # now do non-chromatic version
         GS_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
-        GS_PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
-        GS_PSF.applyDilation(dilate_fn(fw))
-        GS_PSF.applyShift(shift_fn(fw))
+        GS_PSF = GS_PSF.shear(e1=PSF_e1, e2=PSF_e2)
+        GS_PSF = GS_PSF.dilate(dilate_fn(fw))
+        GS_PSF = GS_PSF.shift(shift_fn(fw))
         GS_final = galsim.Convolve([GS_gal, GS_PSF, pix])
         GS_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
         GS_final.draw(image=GS_image)
@@ -565,89 +565,84 @@ def test_ChromaticAutoCorrelation():
     a = galsim.Gaussian(fwhm=1.0) * bulge_SED
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
-    b = galsim.Convolve(a, a.createRotated(180.0 * galsim.degrees))
+    b = galsim.Convolve(a, a.rotate(180.0 * galsim.degrees))
     b.draw(bandpass, image=im1)
     c = galsim.AutoCorrelate(a)
     c.draw(bandpass, image=im2)
     printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticAutoCorrelate(a) not equal to "
-                                         "ChromaticConvolution(a,a.createRotated("
-                                         "180.0*galsim.degrees)")
+                                         "ChromaticConvolution(a,a.rotate(180.0*galsim.degrees)")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_ChromaticObject_applyExpansion():
+def test_ChromaticObject_expand():
     import time
     t1 = time.time()
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
-    a = galsim.Gaussian(fwhm=1.0).createExpanded(1.1) * bulge_SED
-    b = (galsim.Gaussian(fwhm=1.0) * bulge_SED).createExpanded(1.1)
+    a = galsim.Gaussian(fwhm=1.0).expand(1.1) * bulge_SED
+    b = (galsim.Gaussian(fwhm=1.0) * bulge_SED).expand(1.1)
 
     a.draw(bandpass, image=im1)
     b.draw(bandpass, image=im2)
     printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
-                                         "ChromaticObject.applyExpansion not equal to "
-                                         "Chromatic.applyExpansion")
+                                         "ChromaticObject.expand not equal to Chromatic.expand")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_ChromaticObject_applyRotation():
+def test_ChromaticObject_rotate():
     import time
     t1 = time.time()
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
     a = (galsim.Gaussian(fwhm=1.0)
-         .createSheared(eta=0.1, beta=0 * galsim.degrees)
-         .createRotated(1.1 * galsim.radians)) * bulge_SED
+         .shear(eta=0.1, beta=0 * galsim.degrees)
+         .rotate(1.1 * galsim.radians)) * bulge_SED
     b = (((galsim.Gaussian(fwhm=1.0)
-           .createSheared(eta=0.1, beta=0 * galsim.degrees)) * bulge_SED)
-           .createRotated(1.1 * galsim.radians))
+           .shear(eta=0.1, beta=0 * galsim.degrees)) * bulge_SED)
+           .rotate(1.1 * galsim.radians))
 
     a.draw(bandpass, image=im1)
     b.draw(bandpass, image=im2)
     printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
-                                         "ChromaticObject.applyRotation not equal to "
-                                         "Chromatic.applyRotation")
+                                         "ChromaticObject.rotate not equal to Chromatic.rotate")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_ChromaticObject_applyShear():
+def test_ChromaticObject_shear():
     import time
     t1 = time.time()
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
     shear = galsim.Shear(g1=0.1, g2=0.1)
-    a = galsim.Gaussian(fwhm=1.0).createSheared(shear) * bulge_SED
-    b = (galsim.Gaussian(fwhm=1.0) * bulge_SED).createSheared(shear)
+    a = galsim.Gaussian(fwhm=1.0).shear(shear) * bulge_SED
+    b = (galsim.Gaussian(fwhm=1.0) * bulge_SED).shear(shear)
 
     a.draw(bandpass, image=im1)
     b.draw(bandpass, image=im2)
     printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
-                                         "ChromaticObject.applyShear not equal to "
-                                         "Chromatic.applyShear")
+                                         "ChromaticObject.shear not equal to Chromatic.shear")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_ChromaticObject_applyShift():
+def test_ChromaticObject_shift():
     import time
     t1 = time.time()
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
     shift = (0.1, 0.3)
-    a = galsim.Gaussian(fwhm=1.0).createShifted(shift) * bulge_SED
-    b = (galsim.Gaussian(fwhm=1.0) * bulge_SED).createShifted(shift)
+    a = galsim.Gaussian(fwhm=1.0).shift(shift) * bulge_SED
+    b = (galsim.Gaussian(fwhm=1.0) * bulge_SED).shift(shift)
 
     a.draw(bandpass, image=im1)
     b.draw(bandpass, image=im2)
     printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
-                                         "ChromaticObject.applyShift not equal to "
-                                         "Chromatic.applyShift")
+                                         "ChromaticObject.shift not equal to Chromatic.shift")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -665,33 +660,15 @@ def test_ChromaticObject_compound_affine_transformation():
     shift = (0.1, 0.3)
 
     a = galsim.Gaussian(fwhm=1.0)
-    a = a.createSheared(shear)
-    a = a.createShifted(shift)
-    a = a.createRotated(theta)
-    a = a.createDilated(scale)
-    a = a.createSheared(shear)
-    a = a.createShifted(shift)
-    a = a.createRotated(theta)
-    a = a.createExpanded(scale)
-    a = a.createLensed(g1=0.1, g2=0.1, mu=1.1)
-    a = a.createShifted(shift)
-    a = a.createRotated(theta)
-    a = a.createMagnified(scale)
+    a = a.shear(shear).shift(shift).rotate(theta).dilate(scale)
+    a = a.shear(shear).shift(shift).rotate(theta).expand(scale)
+    a = a.lens(g1=0.1, g2=0.1, mu=1.1).shift(shift).rotate(theta).magnify(scale)
     a = a * bulge_SED
 
     b = galsim.Gaussian(fwhm=1.0) * bulge_SED
-    b = b.createSheared(shear)
-    b = b.createShifted(shift)
-    b = b.createRotated(theta)
-    b = b.createDilated(scale)
-    b = b.createSheared(shear)
-    b = b.createShifted(shift)
-    b = b.createRotated(theta)
-    b = b.createExpanded(scale)
-    b = b.createLensed(g1=0.1, g2=0.1, mu=1.1)
-    b = b.createShifted(shift)
-    b = b.createRotated(theta)
-    b = b.createMagnified(scale)
+    b = b.shear(shear).shift(shift).rotate(theta).dilate(scale)
+    b = b.shear(shear).shift(shift).rotate(theta).expand(scale)
+    b = b.lens(g1=0.1, g2=0.1, mu=1.1).shift(shift).rotate(theta).magnify(scale)
 
     a.draw(bandpass, image=im1)
     b.draw(bandpass, image=im2)
@@ -829,10 +806,10 @@ if __name__ == "__main__":
     test_ChromaticConvolution_of_ChromaticConvolution()
     test_ChromaticAutoConvolution()
     test_ChromaticAutoCorrelation()
-    test_ChromaticObject_applyExpansion()
-    test_ChromaticObject_applyRotation()
-    test_ChromaticObject_applyShear()
-    test_ChromaticObject_applyShift()
+    test_ChromaticObject_expand()
+    test_ChromaticObject_rotate()
+    test_ChromaticObject_shear()
+    test_ChromaticObject_shift()
     test_ChromaticObject_compound_affine_transformation()
     test_analytic_integrator()
     test_gsparam()

@@ -36,10 +36,10 @@ class ChromaticObject(object):
 
     If instantiated directly, creates the simplest type of ChromaticObject of all, which is just a
     wrapper around a GSObject.  At this point, the newly created ChromaticObject will act just like
-    the GSObject it wraps.  The difference is that its methods: applyExpansion, applyDilation, and
-    applyShift can now accept functions of wavelength as arguments, as opposed to the constants that
-    GSObjects are limited to.  These methods can be used to effect a variety of physical chromatic
-    effects, such as differential chromatic refraction, chromatic seeing, and diffraction-limited
+    the GSObject it wraps.  The difference is that its methods: expand, dilate, and shift can now
+    accept functions of wavelength as arguments, as opposed to the constants that GSObjects are
+    limited to.  These methods can be used to effect a variety of physical chromatic effects,
+    such as differential chromatic refraction, chromatic seeing, and diffraction-limited
     wavelength-dependence.
 
     This class also serves as the base class for chromatic subclasses, including Chromatic,
@@ -55,10 +55,11 @@ class ChromaticObject(object):
     # In general, `ChromaticObject` and subclasses should provide the following interface:
     # 1) Define an `evaluateAtWavelength` method, which returns a GSObject representing the
     #    profile at a particular wavelength.
-    # 2) Define a `scaleFlux` method, which scales the flux at all wavelengths by a fixed multiplier.
+    # 2) Define a `withScaledFlux` method, which scales the flux at all wavelengths by a fixed 
+    #    multiplier.
     # 3) Initialize a `separable` attribute.  This marks whether (`separable = True`) or not
-    #    (`separable = False`) the given chromatic profile can be factored into a spatial profile and
-    #    a spectral profile.  Separable profiles can be drawn quickly by evaluating at a single
+    #    (`separable = False`) the given chromatic profile can be factored into a spatial profile
+    #    and a spectral profile.  Separable profiles can be drawn quickly by evaluating at a single
     #    wavelength and adjusting the flux via a (fast) 1D integral over the spectral component.
     #    Inseparable profiles, on the other hand, need to be evaluated at multiple wavelengths
     #    in order to draw (slow).
@@ -68,30 +69,39 @@ class ChromaticObject(object):
     #    of the underlying chromaticized GSObject(s).  See `galsim.Chromatic` docstring for details
     #    concerning normalization.)
     # 5) Initialize a `wave_list` attribute, which specifies wavelengths at which the profile (or
-    #    the SED in the case of separable profiles) will be evaluated when drawing a ChromaticObject.
-    #    The type of `wave_list` should be a numpy array, and may be empty, in which case either the
-    #    Bandpass object being drawn against, or the integrator being used will determine at which
-    #    wavelengths to evaluate.
+    #    the SED in the case of separable profiles) will be evaluated when drawing a 
+    #    ChromaticObject.  The type of `wave_list` should be a numpy array, and may be empty, in 
+    #    which case either the Bandpass object being drawn against, or the integrator being used 
+    #    will determine at which wavelengths to evaluate.
 
     # Additionally, instances of `ChromaticObject` and subclasses will usually have either an `obj`
     # attribute representing a manipulated `GSObject` or `ChromaticObject`, or an `objlist`
     # attribute in the case of compound classes like `ChromaticSum` and `ChromaticConvolution`.
 
-    def __init__(self, gsobj):
-        if not isinstance(gsobj, galsim.GSObject):
+    def __init__(self, obj):
+        if not isinstance(obj, (galsim.GSObject, ChromaticObject)):
             raise TypeError("Can only directly instantiate ChromaticObject with a GSObject "+
-                            "argument.")
-        self.obj = gsobj.copy()
-        self.separable = True
-        self.SED = lambda w: 1.0
-        self.wave_list = numpy.array([], dtype=float)
+                            "or ChromaticObject argument.")
+        self.obj = obj.copy()
+        if isinstance(obj, galsim.GSObject):
+            self.separable = True
+            self.SED = lambda w: 1.0
+            self.wave_list = numpy.array([], dtype=float)
+        elif obj.separable:
+            self.separable = True
+            self.SED = obj.SED
+            self.wave_list = obj.wave_list
+        else:
+            self.separable = False
+            self.SED = lambda w: 1.0
+            self.wave_list = numpy.array([], dtype=float)
         # Some private attributes to handle affine transformations
         # _A is a 3x3 augmented affine transformation matrix that holds both translation and
         # shear/rotate/dilate specifications.
         # (see http://en.wikipedia.org/wiki/Affine_transformation#Augmented_matrix)
         self._A = lambda w: numpy.matrix(numpy.identity(3), dtype=float)
         # _fluxFactor holds a wavelength-dependent flux rescaling.  This is only needed because
-        # a wavelength-dependent applyDilation(f(w)) is implemented as a combination of a
+        # a wavelength-dependent dilate(f(w)) is implemented as a combination of a
         # wavelength-dependent expansion and wavelength-dependent flux rescaling.
         self._fluxFactor = lambda w: 1.0
 
@@ -137,6 +147,10 @@ class ChromaticObject(object):
 
         @returns                  galsim.Image drawn through filter.
         """
+        # To help developers debug extensions to ChromaticObject, check that ChromaticObject has
+        # the expected attributes
+        if self.separable: assert hasattr(self, 'SED')
+        assert hasattr(self, 'wave_list')
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
@@ -166,10 +180,6 @@ class ChromaticObject(object):
                 integrator = galsim.integ.SampleIntegrator(numpy.trapz)
             else:
                 integrator = galsim.integ.ContinuousIntegrator(numpy.trapz)
-        # To help developers debug extensions to ChromaticObject, check that ChromaticObject has
-        # the expected attributes
-        if self.separable: assert hasattr(self, 'SED')
-        assert hasattr(self, 'wave_list')
 
         # merge self.wave_list into bandpass.wave_list if using a sampling integrator
         if isinstance(integrator, galsim.integ.SampleIntegrator):
@@ -213,25 +223,33 @@ class ChromaticObject(object):
             raise AttributeError(
                     "Attempting to evaluate ChromaticObject before affine transform " +
                     "matrix has been created!")
-        tmpobj = self.obj.evaluateAtWavelength(wave).copy()
+        ret = self.obj.evaluateAtWavelength(wave).copy()
         A0 = self._A(wave)
-        tmpobj.applyTransformation(A0[0,0], A0[0,1], A0[1,0], A0[1,1])
-        tmpobj.applyShift(A0[0,2], A0[1,2])
-        tmpobj.scaleFlux(self._fluxFactor(wave))
-        return tmpobj
+        ret = ret.transform(A0[0,0], A0[0,1], A0[1,0], A0[1,1])
+        ret = ret.shift(A0[0,2], A0[1,2])
+        ret = ret * self._fluxFactor(wave)
+        return ret
 
-    def scaleFlux(self, scale):
-        """Multiply the flux of the object by flux_ratio
+    def __mul__(self, flux_ratio):
+        """Scale the flux of the object by the given flux ratio.
 
-        @param flux_ratio The factor by which to scale the flux.
+        obj * flux_ratio is equivalent to obj.withFlux(obj.getFlux() * flux_ratio)
+
+        It creates a new object that has the same profile as the original, but with the
+        surface brightness at every location scaled by the given amount.
+
+        @param flux_ratio   The factor by which to scale the linear dimension of the object.  
+                            `flux_ratio` may be callable, in which case the argument should be 
+                            wavelength in nanometers and the return value the scale for that 
+                            wavelength.
+        @returns            A new object with the flux scaled appropriately.
         """
-        if self.__class__ != ChromaticObject:
-            raise NotImplementedError("Subclasses of ChromaticObject must override scaleFlux()")
-        if hasattr(scale, '__call__'):
-            fluxFactor = self._fluxFactor
-            self._fluxFactor = lambda w: fluxFactor(w) * scale(w)
+        ret = self.copy()
+        if hasattr(flux_ratio, '__call__'):
+            ret._fluxFactor = lambda w: self._fluxFactor(w) * flux_ratio(w)
         else:
-            self.obj.scaleFlux(scale)
+            ret.obj *= flux_ratio
+        return ret
 
     # Add together `ChromaticObject`s and/or `GSObject`s
     def __add__(self, other):
@@ -242,32 +260,12 @@ class ChromaticObject(object):
         return galsim.ChromaticSum([self, (-1. * other)])
 
     # Make op* and op*= work to adjust the flux of the object
-    def __imul__(self, other):
-        self.scaleFlux(other)
-        return self
-
-    def __mul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
-
     def __rmul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
+        return __mul__(self, other)
 
     # Likewise for op/ and op/=
-    def __idiv__(self, other):
-        self.scaleFlux(1. / other)
-        return self
-
     def __div__(self, other):
-        ret = self.copy()
-        ret /= other
-        return ret
-
-    def __itruediv__(self, other):
-        return __idiv__(self, other)
+        return __mul__(self, 1./other)
 
     def __truediv__(self, other):
         return __div__(self, other)
@@ -291,138 +289,135 @@ class ChromaticObject(object):
 
     # Helper function
     def _applyMatrix(self, J):
-        # apply the Jacobian matrix J to the ChromaticObject.
+        # return a copy with the Jacobian matrix J applied to the ChromaticObject.
         if hasattr(self, '_A'):
-            A = self._A
-            self._A = lambda w:J(w) * A(w)
+            ret = self.copy()
+            if hasattr(J, '__call__'):
+                ret._A = lambda w: J(w) * self._A(w)
+                ret.separable = False
+            else:
+                ret._A = lambda w: J * self._A(w)
         else:
-            self.obj = self.copy()
-            self.__class__ = ChromaticObject
-            self._A = J
-            self._fluxFactor = lambda w: 1.0
-            self.separable = self.obj.separable
-            # To help developers debug extensions to ChromaticObject, check that this object
-            # already has a few expected attributes
-            if self.separable: assert hasattr(self, 'SED')
-            assert hasattr(self, 'wave_list')
+            ret = ChromaticObject(self)
+            if hasattr(J, '__call__'):
+                ret._A = J
+                ret.separable = False
+            else:
+                ret._A = lambda w: J
+        # To help developers debug extensions to ChromaticObject, check that this object
+        # already has a few expected attributes
+        if ret.separable: assert hasattr(ret, 'SED')
+        assert hasattr(ret, 'wave_list')
+        return ret
 
-    def applyExpansion(self, scale):
-        """Rescale the linear size of the profile by the given (possibly wavelength-dependent)
-        scale factor.
+    def expand(self, scale):
+        """Expand the linear size of the profile by the given (possibly wavelength-dependent)
+        scale factor, while preserving surface brightness.
 
         This doesn't correspond to either of the normal operations one would typically want to
-        do to a galaxy.  See the functions applyDilation and applyMagnification for the more
-        typical usage.  But this function is conceptually simple.  It rescales the linear
-        dimension of the profile, while preserving surface brightness.  As a result, the flux
-        will necessarily change as well.
+        do to a galaxy.  The functions dilate and magnify are the more typical usage.  But this 
+        function is conceptually simple.  It rescales the linear dimension of the profile, while 
+        preserving surface brightness.  As a result, the flux will necessarily change as well.
 
-        See applyDilation for a version that applies a linear scale factor in the size while
-        preserving flux.
+        See dilate for a version that applies a linear scale factor while preserving flux.
 
-        See applyMagnification for a version that applies a scale factor to the area while
-        preserving surface brightness.
+        See magnify for a version that applies a scale factor to the area while preserving surface
+        brightness.
 
-        After this call, the caller's type will be a ChromaticObject.
-
-        @param scale The factor by which to scale the linear dimension of the object.  `scale` may
-                     be callable, in which case the argument should be wavelength in nanometers and
-                     the return value the scale for that wavelength.
+        @param scale    The factor by which to scale the linear dimension of the object.  `scale` 
+                        may be callable, in which case the argument should be wavelength in 
+                        nanometers and the return value the scale for that wavelength.
+        @returns        The expanded object
         """
         if isinstance(self, ChromaticSum):
-            for obj in self.objlist:
-                obj.applyExpansion(scale)
+            return ChromaticSum([ obj.expand(scale) for obj in self.objlist ])
         else:
             if hasattr(scale, '__call__'):
-                expand = lambda w: numpy.matrix(numpy.diag([scale(w), scale(w), 1]))
-                self.separable = False
+                E = lambda w: numpy.matrix(numpy.diag([scale(w), scale(w), 1]))
             else:
-                expand = lambda w: numpy.matrix(numpy.diag([scale, scale, 1]))
-            self._applyMatrix(expand)
+                E = numpy.diag([scale, scale, 1])
+            return self._applyMatrix(E)
 
-    def applyDilation(self, scale):
-        """Apply a dilation of the linear size by the given (possibly wavelength-dependent) scale.
+    def dilate(self, scale):
+        """Dilate the linear size of the profile by the given (possibly wavelength-dependent) 
+        scale, while preserving flux.
 
-        Scales the linear dimensions of the image by the factor scale.
         e.g. `half_light_radius` <-- `half_light_radius * scale`
 
-        This operation preserves flux.
-        See applyMagnification() for a version that preserves surface brightness, and thus
-        changes the flux.
+        See expand() and magnify() for versions that preserve surface brightness, and thus
+        change the flux.
 
-        After this call, the caller's type will be a ChromaticObject.
-
-        @param scale The linear rescaling factor to apply.  `scale` may be callable, in which case
-                     the argument should be wavelength in nanometers and the return value the scale
-                     for that wavelength.
+        @param scale    The linear rescaling factor to apply.  `scale` may be callable, in which
+                        case the argument should be wavelength in nanometers and the return value
+                        the scale for that wavelength.
+        @returns        The dilated object.
         """
-        self.applyExpansion(scale)
-        # conserve flux
         if hasattr(scale, '__call__'):
-            self.scaleFlux(lambda w: 1./scale(w)**2)
+            return self.expand(scale) * (lambda w: 1./scale(w)**2)
         else:
-            self.scaleFlux(1./scale**2)
+            return self.expand(scale) * (1./scale**2)  # conserve flux
 
-    def applyMagnification(self, mu):
+    def magnify(self, mu):
         """Apply a lensing magnification, scaling the area and flux by mu at fixed surface
         brightness.
 
         This process applies a lensing magnification mu, which scales the linear dimensions of the
         image by the factor sqrt(mu), i.e., `half_light_radius` <-- `half_light_radius * sqrt(mu)`
-        while increasing the flux by a factor of mu.  Thus, applyMagnification preserves surface
-        brightness.
+        while increasing the flux by a factor of mu.  Thus, magnify preserves surface brightness.
 
-        Note that, in contrast to applyDilation, applyExpansion, and applyShift, this method cannot
-        accept a function of wavelength as its argument (lensing is achromatic, after all!)  If you
-        find a use case for this, however, please submit an issue to
-        https://github.com/GalSim-developers/GalSim/issues
+        Note that, in contrast to dilate, expand, and shift, this method cannot accept a function
+        of wavelength as its argument (lensing is achromatic, after all!)  If you find a use case
+        for this, however, please submit an issue to 
+        
+            https://github.com/GalSim-developers/GalSim/issues
 
-        See applyDilation for a version that applies a linear scale factor in the size while
-        preserving flux.
+        See dilate for a version that applies a linear scale factor while preserving flux.
 
-        After this call, the caller's type will be a ChromaticObject.
-
-        @param mu The lensing magnification to apply.
+        @param mu   The lensing magnification to apply.
+        @returns    The magnified object.
         """
+        import math
+        return self.expand(math.sqrt(mu))
 
-        self.applyExpansion(numpy.sqrt(mu))
-
-    def applyShear(self, *args, **kwargs):
+    def shear(self, *args, **kwargs):
         """Apply an area-preserving shear to this object, where arguments are either a galsim.Shear,
         or arguments that will be used to initialize one.
 
-        Note that, in contrast to applyDilation, applyExpansion, and applyShift, this method cannot
-        accept a function of wavelength as its argument (lensing is achromatic, after all!)  If you
-        find a use case for this, however, please submit an issue to
-        https://github.com/GalSim-developers/GalSim/issues
+        Note that, in contrast to dilate, expand, and shift, this method cannot accept a function 
+        of wavelength as its argument (lensing is achromatic, after all!)  If you find a use case 
+        for this, however, please submit an issue to
+
+            https://github.com/GalSim-developers/GalSim/issues
 
         For more details about the allowed keyword arguments, see the documentation for galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
 
-        The applyShear() method precisely preserves the area.  To include a lensing distortion with
-        the appropriate change in area, either use applyShear() with applyMagnification(), or use
-        applyLensing() which combines both operations.
+        The shear() method precisely preserves the area.  To include a lensing distortion with
+        the appropriate change in area, either use shear() with magnify(), or use lens(), which 
+        combines both operations.
 
-        After this call, the caller's type will be a ChromaticObject.
+        @param shear    The shear to be applied. Or, as described above, you may instead supply
+                        parameters do construct a shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
+        @returns        The sheared object.
         """
         if isinstance(self, ChromaticSum):
-            for obj in self.objlist:
-                obj.applyShear(*args, **kwargs)
+            return ChromaticSum([ obj.shear(*args, **kwargs) for obj in self.objlist ])
         else:
             if len(args) == 1:
                 if kwargs:
-                    raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
+                    raise TypeError("Error, gave both unnamed and named arguments to shear()!")
                 if not isinstance(args[0], galsim.Shear):
-                    raise TypeError("Error, unnamed argument to applyShear is not a Shear!")
+                    raise TypeError("Error, unnamed argument to shear() is not a Shear!")
                 shear = args[0]
             elif len(args) > 1:
-                raise TypeError("Error, too many unnamed arguments to applyShear!")
+                raise TypeError("Error, too many unnamed arguments to shear()!")
             else:
                 shear = galsim.Shear(**kwargs)
             S = numpy.matrix(numpy.identity(3), dtype=float)
             S[0:2,0:2] = shear._shear.getMatrix()
-            self._applyMatrix(lambda w:S)
+            return self._applyMatrix(S)
 
-    def applyLensing(self, g1, g2, mu):
+    def lens(self, g1, g2, mu):
         """Apply a lensing shear and magnification to this object.
 
         This ChromaticObject method applies a lensing (reduced) shear and magnification.  The shear
@@ -432,77 +427,70 @@ class ChromaticObject(object):
         lensing by an NFW dark matter halo.  The magnification determines the rescaling factor for
         the object area and flux, preserving surface brightness.
 
-        Note that, in contrast to applyDilation, applyExpansion, and applyShift, this method cannot
-        accept a function of wavelength as its argument (lensing is achromatic, after all!)  If you
-        find a use case for this, however, please submit an issue to
-        https://github.com/GalSim-developers/GalSim/issues
+        Note that, in contrast to dilate, expand, and shift, this method cannot accept a function
+        of wavelength as its argument (lensing is achromatic, after all!)  If you find a use case
+        for this, however, please submit an issue to
 
-        After this call, the caller's type will be a ChromaticObject.
+            https://github.com/GalSim-developers/GalSim/issues
 
-        @param g1      First component of lensing (reduced) shear to apply to the object.
-        @param g2      Second component of lensing (reduced) shear to apply to the object.
-        @param mu      Lensing magnification to apply to the object.  This is the factor by which
-                       the solid angle subtended by the object is magnified, preserving surface
-                       brightness.
+        @param g1       First component of lensing (reduced) shear to apply to the object.
+        @param g2       Second component of lensing (reduced) shear to apply to the object.
+        @param mu       Lensing magnification to apply to the object.  This is the factor by which
+                        the solid angle subtended by the object is magnified, preserving surface
+                        brightness.
+        @returns        The lensed object.
         """
-        self.applyShear(g1=g1, g2=g2)
-        self.applyMagnification(mu)
+        return self.shear(g1=g1,g2=g2).magnify(mu)
 
-    def applyRotation(self, theta):
-        """Apply a rotation theta to this object.
+    def rotate(self, theta):
+        """Rotate this object by an Angle theta.
 
-        Note that, in contrast to applyDilation, applyExpansion, and applyShift, this method cannot
-        accept a function of wavelength as its argument. If you find a use case for this, however,
-        please submit an issue to https://github.com/GalSim-developers/GalSim/issues
+        Note that, in contrast to dilate, expand, and shift, this method cannot accept a function
+        of wavelength as its argument. If you find a use case for this, however, please submit an
+        issue to 
+        
+            https://github.com/GalSim-developers/GalSim/issues
 
-        After this call, the caller's type will be a ChromaticObject.
-
-        @param theta Rotation angle (Angle object, +ve anticlockwise).
+        @param theta    Rotation angle (Angle object, +ve anticlockwise).
+        @returns        The rotated object.
         """
         if isinstance(self, ChromaticSum):
-            for obj in self.objlist:
-                obj.applyRotation(theta)
+            return ChromaticSum([ obj.rotate(theta) for obj in self.objlist ])
         else:
             cth = numpy.cos(theta.rad())
             sth = numpy.sin(theta.rad())
             R = numpy.matrix([[cth, -sth, 0],
                               [sth,  cth, 0],
                               [  0,    0, 1]], dtype=float)
-            self._applyMatrix(lambda w:R)
+            return self._applyMatrix(R)
 
-    def applyTransformation(self, dudx, dudy, dvdx, dvdy):
+    def transform(self, dudx, dudy, dvdx, dvdy):
         """Apply a transformation to this object defined by an arbitrary Jacobian matrix.
 
-        This works the same as GSObject.applyTransformation, so see that method's docstring
-        for more details.
+        This works the same as GSObject.transform, so see that method's docstring for more details.
 
-        Note that, in contrast to applyDilation, applyExpansion, and applyShift, this method cannot
-        accept a function of wavelength as its argument.  If you find a use case for this, however,
-        please submit an issue to https://github.com/GalSim-developers/GalSim/issues
+        Note that, in contrast to dilate, expand, and shift, this method cannot accept a function
+        of wavelength as its argument.  If you find a use case for this, however, please submit an
+        issue to 
 
-        After this call, the caller's type will be a ChromaticObject.
+            https://github.com/GalSim-developers/GalSim/issues
 
         @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @returns        The transformed object.
         """
         if isinstance(self, ChromaticSum):
-            for obj in self.objlist:
-                obj.applyTransformation(dudx,dudy,dvdx,dvdy)
+            return ChromaticSum([ obj.transform(dudx,dudy,dvdx,dvdy) for obj in self.objlist ])
         else:
             J = numpy.matrix([[dudx, dudy, 0],
                               [dvdx, dvdy, 0],
                               [   0,    0, 1]], dtype=float)
-            self._applyMatrix(lambda w:J)
+            return self._applyMatrix(J)
 
-    def applyShift(self, *args, **kwargs):
+    def shift(self, *args, **kwargs):
         """Apply a (possibly wavelength-dependent) (dx, dy) shift to this chromatic object.
-
-        After this call, the caller's type will be a ChromaticObject.
-
-        @param dx Horizontal shift to apply (float or function).
-        @param dy Vertical shift to apply (float or function).
 
         For a wavelength-independent shift, you may supply dx,dy as either two arguments, as a
         tuple, or as a galsim.PositionD or galsim.PositionI object.
@@ -510,11 +498,18 @@ class ChromaticObject(object):
         For a wavelength-dependent shift, you may supply two functions of wavelength in nanometers
         which will be interpretted as dx(wave) and dy(wave), or a single function of wavelength in
         nanometers that returns either a 2-tuple, galsim.PositionD, or galsim.PositionI.
+
+        @param dx   Horizontal shift to apply (float or function).
+        @param dy   Vertical shift to apply (float or function).
+        @returns    The shifted object.
+
         """
-        if isinstance(self, ChromaticSum):     # Don't wrap `ChromaticSum`s, easier to just
-            for obj in self.objlist:           # wrap their arguments.
-                obj.applyShift(*args, **kwargs)
+        if isinstance(self, ChromaticSum):
+            # Don't wrap `ChromaticSum`s, easier to just wrap their arguments.
+            return ChromaticSum([ obj.shift(*args,**kwargs) for obj in self.objlist ])
         else:
+            # This follows along the galsim.utilities.pos_args fucntion, but has some
+            # extra bits to account for the possibility of dx,dy being functions.
             # First unpack args/kwargs
             if len(args) == 0:
                 # Then dx,dy need to be kwargs
@@ -533,7 +528,6 @@ class ChromaticObject(object):
                             return args[0](w).y
                         except:
                             return args[0](w)[1]
-                    self.separable = False
                 elif isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
                     dx = args[0].x
                     dy = args[0].y
@@ -545,161 +539,25 @@ class ChromaticObject(object):
                 dx = args[0]
                 dy = args[1]
             else:
-                raise TypeError("Too many arguments supplied to applyShift ")
+                raise TypeError("Too many arguments supplied to shift()")
             if kwargs:
-                raise TypeError("applyShift() got unexpected keyword arguments: %s",kwargs.keys())
-            # Functionalize dx, dy as needed.
-            if not hasattr(dx, '__call__'):
-                tmpdx = dx
-                dx = lambda w: tmpdx
-            if not hasattr(dy, '__call__'):
-                tmpdy = dy
-                dy = lambda w: tmpdy
-            # Then create augmented affine transform matrix and multiply or set as necessary
-            shift = lambda w: numpy.matrix([[1, 0, dx(w)],
+                raise TypeError("shift() got unexpected keyword arguments: %s",kwargs.keys())
+            # Create augmented affine transform matrix and multiply or set as necessary
+            if hasattr(dx, '__call__') or hasattr(dy, '__call__'):
+                if not hasattr(dx, '__call__'):
+                    tmpdx = dx
+                    dx = lambda w: tmpdx
+                if not hasattr(dy, '__call__'):
+                    tmpdy = dy
+                    dy = lambda w: tmpdy
+                S = lambda w: numpy.matrix([[1, 0, dx(w)],
                                             [0, 1, dy(w)],
                                             [0, 0,     1]], dtype=float)
-            self._applyMatrix(shift)
-
-    # Also add methods which create a new ChromaticObject with the transformations
-    # applied...
-    def createExpanded(self, scale):
-        """Returns a new ChromaticObject by applying an expansion of the linear size by the
-        given scale.
-
-        This doesn't correspond to either of the normal operations one would typically want to
-        do to a galaxy.  See the functions createDilated() and createMagnified() for the more
-        typical usage.  But this function is conceptually simple.  It rescales the linear
-        dimension of the profile, while preserving surface brightness.  As a result, the flux
-        will necessarily change as well.
-
-        See createDilated() for a version that applies a linear scale factor in the size while
-        preserving flux.
-
-        See createMagnified() for a version that applies a scale factor to the area while
-        preserving surface brightness.
-
-        @param scale The linear rescaling factor to apply.
-        @returns The rescaled ChromaticObject
-        """
-        ret = self.copy()
-        ret.applyExpansion(scale)
-        return ret
-
-    def createDilated(self, scale):
-        """Returns a new ChromaticObject by applying a dilation of the linear size by the
-        given scale.
-
-        Scales the linear dimensions of the image by the factor scale.
-        e.g. `half_light_radius` <-- `half_light_radius * scale`
-
-        This operation preserves flux.
-        See createMagnified() for a version that preserves surface brightness, and thus
-        changes the flux.
-
-        @param scale The linear rescaling factor to apply.
-        @returns The rescaled ChromaticObject.
-        """
-        ret = self.copy()
-        ret.applyDilation(scale)
-        return ret
-
-    def createMagnified(self, mu):
-        """Returns a new ChromaticObject by applying a lensing magnification, scaling the area and
-        flux by mu at fixed surface brightness.
-
-        This process returns a new object with a lensing magnification mu, which scales the linear
-        dimensions of the image by the factor sqrt(mu), i.e., `half_light_radius` <--
-        `half_light_radius * sqrt(mu)` while increasing the flux by a factor of mu.  Thus, the new
-        object has the same surface brightness as the original, but different size and flux.
-
-        See createDilated() for a version that preserves flux.
-
-        @param mu The lensing magnification to apply.
-        @returns The rescaled ChromaticObject.
-        """
-        ret = self.copy()
-        ret.applyMagnification(mu)
-        return ret
-
-    def createSheared(self, *args, **kwargs):
-        """Returns a new ChromaticObject by applying an area-preserving shear, where arguments are
-        either a galsim.Shear or keyword arguments that can be used to create one.
-
-        For more details about the allowed keyword arguments, see the documentation of galsim.Shear
-        (for doxygen documentation, see galsim.shear.Shear).
-
-        The createSheared() method precisely preserves the area.  To include a lensing distortion
-        with the appropriate change in area, either use createSheared() with createMagnified(), or
-        use createLensed() which combines both operations.
-
-        @returns The sheared ChromaticObject.
-        """
-        ret = self.copy()
-        ret.applyShear(*args, **kwargs)
-        return ret
-
-    def createLensed(self, g1, g2, mu):
-        """Returns a new ChromaticObject by applying a lensing shear and magnification.
-
-        This method returns a new ChromaticObject to which the supplied lensing (reduced) shear and
-        magnification has been applied.  The shear must be specified using the g1, g2 definition of
-        shear (see galsim.Shear documentation for more details).  This is the same definition as
-        the outputs of the galsim.PowerSpectrum and galsim.NFWHalo classes, which compute shears
-        according to some lensing power spectrum or lensing by an NFW dark matter halo. The
-        magnification determines the rescaling factor for the object area and flux, preserving
-        surface brightness.
-
-        @param g1      First component of lensing (reduced) shear to apply to the object.
-        @param g2      Second component of lensing (reduced) shear to apply to the object.
-        @param mu      Lensing magnification to apply to the object.  This is the factor by which
-                       the solid angle subtended by the object is magnified, preserving surface
-                       brightness.
-        @returns       The lensed ChromaticObject.
-        """
-        ret = self.copy()
-        ret.applyLensing(g1, g2, mu)
-        return ret
-
-    def createRotated(self, theta):
-        """Returns a new ChromaticObject by applying a rotation.
-
-        @param theta Rotation angle (Angle object, +ve anticlockwise).
-        @returns The rotated ChromaticObject.
-        """
-        ret = self.copy()
-        ret.applyRotation(theta)
-        return ret
-
-    def createTransformed(self, dudx, dudy, dvdx, dvdy):
-        """Returns a new GSObject by applying a transformation given by a Jacobian matrix.
-
-        This works the same as GSObject.createTransformed, so see that method's docstring
-        for more details.
-
-        @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
-        @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
-        """
-        ret = self.copy()
-        ret.applyTransformation(dudx,dudy,dvdx,dvdy)
-        return ret
-
-    def createShifted(self, *args, **kwargs):
-        """Returns a new ChromaticObject by applying a shift.
-
-        @param dx Horizontal shift to apply (float).
-        @param dy Vertical shift to apply (float).
-
-        Note: you may supply dx,dy as either two arguments, as a tuple, or as a
-        galsim.PositionD or galsim.PositionI object.
-
-        @returns The shifted ChromaticObject.
-        """
-        ret = self.copy()
-        ret.applyShift(*args, **kwargs)
-        return ret
+            else:
+                S = numpy.matrix([[1, 0, dx],
+                                  [0, 1, dy],
+                                  [0, 0,  1]], dtype=float)
+            return self._applyMatrix(S)
 
 
 def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
@@ -778,7 +636,7 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
             raise TypeError("Got unexpected keyword in ChromaticAtmosphere: {0}".format(kw))
 
     ret = ChromaticObject(base_obj)
-    ret.applyDilation(lambda w: (w/base_wavelength)**(alpha))
+    ret = ret.dilate(lambda w: (w/base_wavelength)**(alpha))
     base_refraction = galsim.dcr.get_refraction(base_wavelength, zenith_angle, **kwargs)
     def shift_fn(w):
         shift_magnitude = galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
@@ -787,7 +645,7 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
         shift = (-shift_magnitude*numpy.sin(parallactic_angle.rad()),
                  shift_magnitude*numpy.cos(parallactic_angle.rad()))
         return shift
-    ret.applyShift(shift_fn)
+    ret = ret.shift(shift_fn)
     return ret
 
 
@@ -828,7 +686,7 @@ class Chromatic(ChromaticObject):
     `flux` attribute different from 1, it would just refer to the factor by which that particular
     object is brighter than the value given in the normalization command.
 
-    @param gsobj    An GSObject instance to be chromaticized.
+    @param gsobj    A GSObject instance to be chromaticized.
     @param SED      Typically a galsim.SED object, though any callable that returns
                     spectral density in photons/nanometer as a function of wavelength
                     in nanometers should work.
@@ -841,12 +699,13 @@ class Chromatic(ChromaticObject):
         self.separable = True
 
     # Apply following transformations to the underlying GSObject
-    def scaleFlux(self, scale):
+    def withScaledFlux(self, flux_ratio):
         """Multiply the flux of the object by flux_ratio
 
-        @param flux_ratio The factor by which to scale the flux.
+        @param flux_ratio   The factor by which to scale the flux.
+        @returns            The object with the new flux.
         """
-        self.obj.scaleFlux(scale)
+        return Chromatic(self.obj.withScaledFlux(flux_ratio), self.SED)
 
     def evaluateAtWavelength(self, wave):
         """ Evaluate this chromatic object at a particular wavelength.
@@ -967,13 +826,13 @@ class ChromaticSum(ChromaticObject):
                     add_to_image=True, use_true_center=use_true_center, offset=offset,
                     integrator=integrator)
 
-    def scaleFlux(self, scale):
+    def withScaledFlux(self, flux_ratio):
         """Multiply the flux of the object by flux_ratio
 
-        @param flux_ratio The factor by which to scale the flux.
+        @param flux_ratio   The factor by which to scale the flux.
+        @returns            The object with the new flux.
         """
-        for obj in self.objlist:
-            obj.scaleFlux(scale)
+        return ChromaticSum([ obj.withScaledFlux(flux_ratio) for obj in self.objlist ])
 
 
 class ChromaticConvolution(ChromaticObject):
@@ -1197,12 +1056,15 @@ class ChromaticConvolution(ChromaticObject):
                 image, gain=gain, wmult=wmult, normalization=normalization,
                 add_to_image=add_to_image, use_true_center=use_true_center, offset=offset)
 
-    def scaleFlux(self, scale):
+    def withScaledFlux(self, flux_ratio):
         """Multiply the flux of the object by flux_ratio
 
-        @param flux_ratio The factor by which to scale the flux.
+        @param flux_ratio   The factor by which to scale the flux.
+        @returns            The object with the new flux.
         """
-        self.objlist[0].scaleFlux(scale)
+        ret = self.copy()
+        ret.objlist[0] *= flux_ratio
+        return ret
 
 
 class ChromaticDeconvolution(ChromaticObject):
@@ -1223,7 +1085,7 @@ class ChromaticDeconvolution(ChromaticObject):
         self.kwargs = kwargs
         self.separable = obj.separable
         if self.separable:
-            self.SED = obj.SED
+            self.SED = lambda w: 1./obj.SED(w)
         self.wave_list = obj.wave_list
 
     def evaluateAtWavelength(self, wave):
@@ -1234,12 +1096,13 @@ class ChromaticDeconvolution(ChromaticObject):
         """
         return galsim.Deconvolve(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
-    def scaleFlux(self, scale):
+    def withScaledFlux(self, flux_ratio):
         """Multiply the flux of the object by flux_ratio
 
-        @param flux_ratio The factor by which to scale the flux.
+        @param flux_ratio   The factor by which to scale the flux.
+        @returns            The object with the new flux.
         """
-        self.obj.scaleFlux(scale)
+        return ChromaticDeconvolution(self.obj / flux_ratio, **self.kwargs)
 
 
 class ChromaticAutoConvolution(ChromaticObject):
@@ -1269,19 +1132,24 @@ class ChromaticAutoConvolution(ChromaticObject):
         """
         return galsim.AutoConvolve(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
-    def scaleFlux(self, scale):
+    def withScaledFlux(self, flux_ratio):
         """Multiply the flux of the object by flux_ratio
 
-        @param flux_ratio The factor by which to scale the flux.
+        @param flux_ratio   The factor by which to scale the flux.
+        @returns            The object with the new flux.
         """
-        self.obj.scaleFlux(numpy.sqrt(scale))
+        import math
+        if flux_ration >= 0.:
+            return ChromaticAutoConvolution( self.obj * math.sqrt(flux_ratio), **self.kwargs )
+        else:
+            return ChromaticObject(self).withScaledFlux(flux_ratio)
 
 
 class ChromaticAutoCorrelation(ChromaticObject):
     """A special class for correlating a ChromaticObject with itself.
 
     It is equivalent in functionality to
-        galsim.Convolve([obj,obj.createRotated(180.*galsim.degrees)])
+        galsim.Convolve([obj,obj.rotate(180.*galsim.degrees)])
     but takes advantage of the fact that the two profiles are the same for some efficiency gains.
 
     @param obj        The object to be convolved with itself.
@@ -1305,9 +1173,15 @@ class ChromaticAutoCorrelation(ChromaticObject):
         """
         return galsim.AutoCorrelate(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
-    def scaleFlux(self, scale):
+    def withScaledFlux(self, flux_ratio):
         """Multiply the flux of the object by flux_ratio
 
-        @param flux_ratio The factor by which to scale the flux.
+        @param flux_ratio   The factor by which to scale the flux.
+        @returns            The object with the new flux.
         """
-        self.obj.scaleFlux(numpy.sqrt(scale))
+        import math
+        if flux_ration >= 0.:
+            return ChromaticAutoCorrelation( self.obj * math.sqrt(flux_ratio), **self.kwargs )
+        else:
+            return ChromaticObject(self).withScaledFlux(flux_ratio)
+

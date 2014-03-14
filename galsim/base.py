@@ -142,37 +142,36 @@ class GSObject(object):
         return galsim.Add([self, (-1. * other)])
 
     # Make op* work to adjust the flux of an object
-    def __mul__(self, flux_ratio):
-        """Scale the flux of the object by the given flux ratio.
+    def __mul__(self, other):
+        """Scale the flux of the object by the given factor.
 
-        obj * flux_ratio is equivalent to obj.withFlux(obj.getFlux() * flux_ratio)
+        obj * flux_ratio is equivalent to obj.withScaledFlux(flux_ratio)
 
         It creates a new object that has the same profile as the original, but with the 
         surface brightness at every location scaled by the given amount.
 
         You can also multiply by an SED, which will create a ChromaticObject where the SED
         acts like a wavelength-dependent flux_ratio.
-        """
-        if isinstance(flux_ratio, galsim.SED):
-            return galsim.Chromatic(self, flux_ratio)
-        else:
-            new_obj = GSObject(self.SBProfile.scaleFlux(flux_ratio))
-            if hasattr(self,'noise'):
-                new_obj.noise = self.noise * flux_ratio**2
-            return new_obj
 
-    def __rmul__(self, flux_ratio):
-        """Equivalent to obj * flux_ratio"""
-        return self.__mul__(flux_ratio)
+        obj * sed is equivalend to galsim.Chromatic(obj, sed)
+        """
+        if isinstance(other, galsim.SED):
+            return galsim.Chromatic(self, other)
+        else:
+            return self.withScaledFlux(other)
+
+    def __rmul__(self, other):
+        """Equivalent to obj * other"""
+        return self.__mul__(other)
 
     # Likewise for op/
-    def __div__(self, flux_ratio):
-        """Equivalent to obj * (1/flux_ratio)"""
-        return self * (1. / flux_ratio)
+    def __div__(self, other):
+        """Equivalent to obj * (1/other)"""
+        return self * (1. / other)
 
-    def __truediv__(self, flux_ratio):
-        """Equivalent to obj * (1/flux_ratio)"""
-        return __div__(self, flux_ratio)
+    def __truediv__(self, other):
+        """Equivalent to obj * (1/other)"""
+        return __div__(self, other)
 
     # Make a copy of an object
     def copy(self):
@@ -286,17 +285,34 @@ class GSObject(object):
     def withFlux(self, flux):
         """Create a version of the current object with a different flux.
 
-        This function is equivalent to obj * (flux/obj.getFlux()).
+        This function is equivalent to obj.withScaledFlux(flux / obj.getFlux())
 
         It creates a new object that has the same profile as the original, but with the 
         surface brightness at every location rescaled such that the total flux will be 
         the given value.
-           
+
         @param flux     The new flux for the object.
         @returns        The object with the new flux
         """
-        flux_ratio = flux / self.getFlux()
-        return self * flux_ratio
+        return self.withScaledFlux(flux / self.getFlux())
+
+    def withScaledFlux(self, flux_ratio):
+        """Create a version of the current object with the flux scaled by the given flux ratio.
+
+        This function is equivalent to obj.withFlux(flux_ratio * obj.getFlux()).  However, this
+        function is the more efficient one, since it doesn't actually require the call to 
+        obj.getFlux().  Indeed, withFlux() is implemented in terms of this one and getFlux().
+
+        It creates a new object that has the same profile as the original, but with the 
+        surface brightness at every location scaled by the given amount.
+
+        @param flux_ratio   The new flux for the object.
+        @returns            The object with the new flux.
+        """
+        new_obj = GSObject(self.SBProfile.scaleFlux(flux_ratio))
+        if hasattr(self,'noise'):
+            new_obj.noise = self.noise * flux_ratio**2
+        return new_obj
 
     def setFlux(self, flux):
         """This is an obsolete method that is roughly equivalent to obj = obj.withFlux(flux)"""
@@ -353,7 +369,7 @@ class GSObject(object):
 
         e.g. `half_light_radius` <-- `half_light_radius * scale`
 
-        See expand() and magnify() for versions that preserves surface brightness, and thus 
+        See expand() and magnify() for versions that preserve surface brightness, and thus 
         changes the flux.
 
         @param scale    The linear rescaling factor to apply.
@@ -472,8 +488,8 @@ class GSObject(object):
         self.__class__ = new_obj.__class__
 
     def rotate(self, theta):
-        """Apply a rotation theta to this object.
-           
+        """Rotate this object by an Angle theta.
+
         @param theta    Rotation angle (Angle object, +ve anticlockwise).
         @returns        The rotated object.
         """
@@ -549,7 +565,6 @@ class GSObject(object):
         @param dx       Horizontal shift to apply.
         @param dy       Vertical shift to apply.
         @returns        The shifted object.
-
         """
         delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
         new_obj = GSObject(self.SBProfile.shift(delta))

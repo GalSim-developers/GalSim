@@ -64,8 +64,8 @@ from shapelet import Shapelet, ShapeletSize, FitShapelet, LVectorSize
 from interpolatedimage import Interpolant, Interpolant2d, InterpolantXY
 from interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 from interpolatedimage import InterpolatedImage
-from compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution,
-from compount import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
+from compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
+from compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
 
 # Chromatic
 from chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum
