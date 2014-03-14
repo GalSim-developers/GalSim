@@ -43,7 +43,7 @@ from table import LookupTable
 
 # Image 
 from image import Image, ImageS, ImageI, ImageF, ImageD
-# These are obsolete, but we currently still suppert them.  They will be deprecated and 
+# These are obsolete, but we currently still support them.  They will be deprecated and 
 # removed eventually.
 from image import ImageView, ImageViewS, ImageViewI, ImageViewF, ImageViewD
 from image import ConstImageView, ConstImageViewS, ConstImageViewI, ConstImageViewF, ConstImageViewD

@@ -136,7 +136,7 @@ class GSObject(object):
         obj * flux_ratio is equivalent to obj.withFlux(obj.getFlux() * flux_ratio)
 
         It creates a new object that has the same profile as the original, but with the 
-        surface brightness at every location scale by the given amount.
+        surface brightness at every location scaled by the given amount.
         """
         new_obj = GSObject(self.SBProfile.scaleFlux(flux_ratio))
         if hasattr(self,'noise'):
@@ -305,7 +305,7 @@ class GSObject(object):
         function is conceptually simple.  It rescales the linear dimension of the profile, while 
         preserving surface brightness.  As a result, the flux will necessarily change as well.
         
-        See dilatie for a version that applies a linear scale factor while preserving flux.
+        See dilate for a version that applies a linear scale factor while preserving flux.
 
         See magnify for a version that applies a scale factor to the area while preserving surface 
         brightness.
@@ -447,7 +447,7 @@ class GSObject(object):
         return self.lens(g1,g2,mu)
 
     def applyLensing(self, g1, g2, mu):
-        """This is an obsolete method that is roughly equivalent to obj = obj.len(g1,g2,mu)"""
+        """This is an obsolete method that is roughly equivalent to obj = obj.lens(g1,g2,mu)"""
         new_obj = self.lens(g1,g2,mu)
         self.SBProfile = new_obj.SBProfile
         if hasattr(self,'noise'): self.noise = new_obj.noise

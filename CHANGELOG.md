@@ -50,9 +50,9 @@ change does not affect the most common uses of the function.
     classes and functions.
 
 
-Other chages to the API
+Other changes to the API
 
-For these chages, we are currently still allowing the old syntax for ease of 
+For these changes, we are currently still allowing the old syntax for ease of 
 transition, but that syntax is now discouraged.  It is usually marked in the 
 code as being obsolete.  At some point (probably version 1.2) use of the old
 syntax will raise a DeprecationWarning, and with version 2.0, it will be 
@@ -230,8 +230,8 @@ New `CelestialCoord` class: (Issue #364)
 
 Updates to config options:
 
-Some of these changes are not backwards compatible, but we believe only
-in rarely used functionality, so we do not expect most users to have to
+Some of these changes are not backwards compatible, but we believe they are
+only in rarely used functionality, so we do not expect most users to have to
 change their yaml files.
 
 * Changed the previous behavior of the `image.wcs` field to allow several WCS
