@@ -60,7 +60,7 @@ default_cxx = 'c++'
 opts = Variables(config_file)
 
 # Now set up options for the command line
-opts.Add('CXX','Name of c++ compiler')
+opts.Add('CXX','Name of c++ compiler','g++')
 opts.Add('FLAGS','Compiler flags to send to use instead of the automatic ones','')
 opts.Add('EXTRA_FLAGS','Extra compiler flags to use in addition to automatic ones','')
 opts.Add('LINKFLAGS','Additional flags to use when linking','')
@@ -481,7 +481,8 @@ def GetCompilerVersion(env):
             if 'clang' in lines[0]:
                 print 'Detected clang++ masquerading as g++'
                 compilertype = 'clang++'
-            # Any others I should look for?
+                # When it is masquerading, the line with the version is the second line.
+                linenum=1
 
         # Check if c++ is a symlink for something else:
         if compilertype is 'c++':
@@ -1635,12 +1636,15 @@ if unknown and not env['USE_UNKNOWN_VARS']:
     print 'then you can override this check with USE_UNKNOWN_VARS=true'
     ErrorExit()
 
-print 'Using the following (non-default) scons options:'
-for opt in opts.options:
-    if (opt.default != env[opt.key]):
-        print '   %s = %s'%(opt.key,env[opt.key])
-print 'These can be edited directly in the file %s.'%config_file
-print 'Type scons -h for a full list of available options.'
+if any(opt.default != env[opt.key] for opt in opts.options):
+    print 'Using the following (non-default) scons options:'
+    for opt in opts.options:
+        if (opt.default != env[opt.key]):
+            print '   %s = %s'%(opt.key,env[opt.key])
+    print 'These can be edited directly in the file %s.'%config_file
+    print 'Type scons -h for a full list of available options.'
+else:
+    print 'Using the default scons options'
 
 opts.Save(config_file,env)
 Help(opts.GenerateHelpText(env))
