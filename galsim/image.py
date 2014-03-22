@@ -277,7 +277,7 @@ class Image(object):
                         # Allow dtype to force a retyping of the provided image
                         # e.g. im = ImageF(...)
                         #      im2 = ImageD(im)
-                        self.image = _galsim.ImageAlloc(image)
+                        self.image = _galsim.ImageAlloc[dtype](image)
                     else:
                         self.image = image
                     break
