@@ -1368,7 +1368,7 @@ class Gaussian(GSObject):
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, sigma=None, fwhm=None, half_light_radius=None, flux=1., gsparams=None):
+    def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1., gsparams=None):
         # Initialize the SBProfile
         GSObject.__init__(
             self, galsim._galsim.SBGaussian(
