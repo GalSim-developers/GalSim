@@ -51,7 +51,6 @@ def Add(*args, **kwargs):
         >>> disk = galsim.Exponential(half_light_radius=1.4) * galsim.SED(sed_file)
         >>> gal = bulge + disk
 
-
     @param args             Unnamed args should be a list of objects to add.
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
@@ -86,6 +85,10 @@ class Sum(galsim.GSObject):
     to represent a multiple-component galaxy as the sum of an Exponential and a DeVaucouleurs, or to
     represent a PSF as the sum of multiple Gaussians.
 
+
+    Initialization
+    --------------
+
     Typically, you do not need to construct a `Sum` object explicitly.  Normally, you would just
     use the + operator, which returns a Sum:
 
@@ -94,8 +97,10 @@ class Sum(galsim.GSObject):
         >>> gal = bulge + disk
         >>> psf = galsim.Gaussian(sigma=0.3, flux=0.3) + galsim.Gaussian(sigma=0.8, flux=0.7)
 
-    Initialization
-    --------------
+    You can also use the `Add` factory function, which returns a `Sum` object if none of the
+    individual objects are chromatic:
+
+        >>> gal = galsim.Add([bulge,disk])
 
     @param args             Unnamed args should be a list of objects to add.
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
@@ -201,14 +206,6 @@ def Convolve(*args, **kwargs):
 class Convolution(galsim.GSObject):
     """A class for convolving 2 or more GSObjects.
 
-    Initialization
-    --------------
-
-    The objects to be convolved may be provided either as multiple unnamed arguments (e.g.
-    `Convolve(psf, gal, pix)`) or as a list (e.g. `Convolve([psf, gal, pix])`).  Any number of
-    objects may be provided using either syntax.  (Even 0 or 1, although that doesn't really make
-    much sense.)
-
     The convolution will normally be done using discrete Fourier transforms of each of the component
     profiles, multiplying them together, and then transforming back to real space.
 
@@ -226,6 +223,22 @@ class Convolution(galsim.GSObject):
     If you do not specify either `real_space = True` or `False` explicitly, then we check if there
     are 2 profiles, both of which have hard edges.  In this case, we automatically use real-space
     convolution.  In all other cases, the default is not to use real-space convolution.
+
+
+    Initialization
+    --------------
+
+    The normal way to use this class is to use the `Convolve` factory function:
+
+        >>> gal = galsim.Sersic(n, half_light_radius)
+        >>> psf = galsim.Gaussian(sigma)
+        >>> pix = galsim.Pixel(scale)
+        >>> final = galsim.Convolve([gal, psf, pix])
+
+    The objects to be convolved may be provided either as multiple unnamed arguments (e.g.
+    `Convolve(psf, gal, pix)`) or as a list (e.g. `Convolve([psf, gal, pix])`).  Any number of
+    objects may be provided using either syntax.  (Even 0 or 1, although that doesn't really make
+    much sense.)
 
     @param args             Unnamed args should be a list of objects to convolve.
     @param real_space       Whether to use real space convolution.  [default: None, which means
@@ -395,6 +408,15 @@ class Deconvolution(galsim.GSObject):
     (or None), then the Deconvolution instance inherits the same GSParams as the object being
     deconvolved.
 
+
+    Initialization
+    --------------
+
+    The normal way to use this class is to use the `Deconvolve` factory function:
+
+        >>> inv_psf = galsim.Deconvolve(psf)
+        >>> deconv_gal = galsim.Convolve(inv_psf, gal)
+
     @param obj              The object to deconvolve.
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
@@ -445,6 +467,14 @@ class AutoConvolution(galsim.GSObject):
 
     It is equivalent in functionality to galsim.Convolve([obj,obj]), but takes advantage of
     the fact that the two profiles are the same for some efficiency gains.
+
+
+    Initialization
+    --------------
+
+    The normal way to use this class is to use the `AutoConvolve` factory function:
+
+        >>> psf_sq = galsim.AutoConvolve(psf)
 
     @param obj              The object to be convolved with itself.
     @param real_space       Whether to use real space convolution.  [default: None, which means
@@ -531,6 +561,14 @@ class AutoCorrelation(galsim.GSObject):
 
     This class is primarily targeted for use by the galsim.CorrelatedNoise models when convolving
     with a GSObject.
+
+
+    Initialization
+    --------------
+
+    The normal way to use this class is to use the `AutoCorrelate` factory function:
+
+        >>> psf_sq = galsim.AutoCorrelate(psf)
 
     @param obj              The object to be convolved with itself.
     @param real_space       Whether to use real space convolution.  [default: None, which means

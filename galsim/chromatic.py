@@ -737,6 +737,10 @@ class Chromatic(ChromaticObject):
     `flux` attribute different from 1, it would just refer to the factor by which that particular
     object is brighter than the value given in the normalization command.
 
+
+    Initialization
+    --------------
+
     @param gsobj    A GSObject instance to be chromaticized.
     @param SED      Typically a galsim.SED object, though any callable that returns
                     spectral density in photons/nanometer as a function of wavelength
@@ -775,6 +779,10 @@ class ChromaticSum(ChromaticObject):
 
     This is the type returned from `galsim.Add(objects)` if any of the objects are a 
     ChromaticObject.
+
+
+    Initialization
+    --------------
 
     @param args             The objects to be added together.
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
@@ -903,6 +911,10 @@ class ChromaticConvolution(ChromaticObject):
 
     This is the type returned from `galsim.Convolve(objects)` if any of the objects are a 
     ChromaticObject.
+
+
+    Initialization
+    --------------
 
     @param args             The objects to be convolved together.
     @param real_space       Whether to use real space convolution.  [default: None, which means
@@ -1151,6 +1163,10 @@ class ChromaticDeconvolution(ChromaticObject):
     (or None), then the ChromaticDeconvolution instance inherits the same GSParams as the object
     being deconvolved.
 
+
+    Initialization
+    --------------
+
     @param obj              The object to deconvolve.
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
@@ -1187,6 +1203,10 @@ class ChromaticAutoConvolution(ChromaticObject):
 
     It is equivalent in functionality to galsim.Convolve([obj,obj]), but takes advantage of
     the fact that the two profiles are the same for some efficiency gains.
+
+
+    Initialization
+    --------------
 
     @param obj              The object to be convolved with itself.
     @param real_space       Whether to use real space convolution.  [default: None, which means
@@ -1232,6 +1252,10 @@ class ChromaticAutoCorrelation(ChromaticObject):
     It is equivalent in functionality to
         galsim.Convolve([obj,obj.rotate(180.*galsim.degrees)])
     but takes advantage of the fact that the two profiles are the same for some efficiency gains.
+
+
+    Initialization
+    --------------
 
     @param obj              The object to be convolved with itself.
     @param real_space       Whether to use real space convolution.  [default: None, which means
