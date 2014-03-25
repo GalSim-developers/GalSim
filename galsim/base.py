@@ -1411,9 +1411,9 @@ class Moffat(GSObject):
     @param beta             The beta parameter of the profile.
     @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
                             [One of scale_radius, fwhm, or half_light_radius is required.]
-    @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
-                            [One of scale_radius, fwhm, or half_light_radius is required.]
     @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of scale_radius, fwhm, or half_light_radius is required.]
+    @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
                             [One of scale_radius, fwhm, or half_light_radius is required.]
     @param trunc            An optional truncation radius at which the profile is made to drop to 
                             zero.  [default: 0, indicating no truncation]
@@ -1440,7 +1440,7 @@ class Moffat(GSObject):
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, beta, scale_radius=None, fwhm=None, half_light_radius=None, trunc=0.,
+    def __init__(self, beta, scale_radius=None, half_light_radius=None, fwhm=None, trunc=0.,
                  flux=1., gsparams=None):
         GSObject.__init__(
             self, galsim._galsim.SBMoffat(
@@ -1802,9 +1802,9 @@ class Sersic(GSObject):
     `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
 
     @param n                The Sersic index, n.
-    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
-                            [One of scale_radius or half_light_radius is required.]
     @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of scale_radius or half_light_radius is required.]
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
                             [One of scale_radius or half_light_radius is required.]
     @param flux             The flux (in photons) of the profile. [default: 1]
     @param trunc            An optional truncation radius at which the profile is made to drop to 
@@ -1936,7 +1936,7 @@ class Sersic(GSObject):
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, n, scale_radius=None, half_light_radius=None,
+    def __init__(self, n, half_light_radius=None, scale_radius=None,
                  flux=1., trunc=0., flux_untruncated=False, gsparams=None):
         GSObject.__init__(
             self, galsim._galsim.SBSersic(n, half_light_radius=half_light_radius,
@@ -1973,9 +1973,9 @@ class Exponential(GSObject):
     An Exponential can be initialized using one (and only one) of two possible size parameters:
     `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
 
-    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
-                            [One of scale_radius or half_light_radius is required.]
     @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of scale_radius or half_light_radius is required.]
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
                             [One of scale_radius or half_light_radius is required.]
     @param flux             The flux (in photons) of the profile. [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
@@ -1998,7 +1998,7 @@ class Exponential(GSObject):
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, scale_radius=None, half_light_radius=None, flux=1., gsparams=None):
+    def __init__(self, half_light_radius=None, scale_radius=None, flux=1., gsparams=None):
         GSObject.__init__(
             self, galsim._galsim.SBExponential(
                 half_light_radius=half_light_radius, scale_radius=scale_radius, flux=flux,
@@ -2064,7 +2064,7 @@ class DeVaucouleurs(GSObject):
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, scale_radius=None, half_light_radius=None, flux=1., trunc=0.,
+    def __init__(self, half_light_radius=None, scale_radius=None, flux=1., trunc=0.,
                  flux_untruncated=False, gsparams=None):
         GSObject.__init__(
             self, galsim._galsim.SBDeVaucouleurs(half_light_radius=half_light_radius,
