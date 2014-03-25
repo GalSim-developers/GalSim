@@ -478,7 +478,8 @@ class BaseWCS(object):
 
         @param origin        The image coordinate position to use as the origin.
         @param world_origin  The world coordinate position to use as the origin.  Only valid if
-                             wcs.isCelestial() == False. [ Default `world_origin=None` ]
+                             wcs.isCelestial() == False. [default: None]
+
         @returns wcs         The new recentered WCS
         """
         if isinstance(origin, galsim.PositionI):
@@ -1513,13 +1514,11 @@ class OffsetWCS(UniformWCS):
 
     @param scale          The pixel scale, typically in units of arcsec/pixel.
     @param origin         Optional origin position for the image coordinate system.
-                          If provided, it should be a PostionD or PositionI.
-                          [ Default: `origin = None`, which internally sets
-                          `origin = galsim.PositionD(0., 0.)` ]
+                          If provided, it should be a PostionD or PositionI. 
+                          [default: galsim.PositionD(0., 0.)]
     @param world_origin   Optional origin position for the world coordinate system.
-                          If provided, it should be a PostionD.
-                          [ Default: `world_origin = None`, which internally sets
-                          `world_origin = galsim.PositionD(0., 0.)` ]
+                          If provided, it should be a PostionD. 
+                          [default: galsim.PositionD(0., 0.)]
     """
     _req_params = { "scale" : float }
     _opt_params = { "origin" : galsim.PositionD, "world_origin": galsim.PositionD }
@@ -1600,12 +1599,10 @@ class OffsetShearWCS(UniformWCS):
     @param shear          The shear, which should be a galsim.Shear instance.
     @param origin         Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI.
-                          [ Default: `origin = None`, which internally sets
-                          `origin = galsim.PositionD(0., 0.)` ]
+                          [default: galsim.PositionD(0., 0.)]
     @param world_origin   Optional origin position for the world coordinate system.
                           If provided, it should be a PostionD.
-                          [ Default: `world_origin = None`, which internally sets
-                          `world_origin = galsim.PositionD(0., 0.)` ]
+                          [default: galsim.PositionD(0., 0.)]
     """
     _req_params = { "scale" : float, "shear" : galsim.Shear }
     _opt_params = { "origin" : galsim.PositionD, "world_origin": galsim.PositionD }
@@ -1699,12 +1696,10 @@ class AffineTransform(UniformWCS):
     @param dvdy           dv/dy
     @param origin         Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI.
-                          [ Default: `origin = None`, which internally sets
-                          `origin = galsim.PositionD(0., 0.)` ]
+                          [default: galsim.PositionD(0., 0.)]
     @param world_origin   Optional origin position for the world coordinate system.
                           If provided, it should be a PostionD.
-                          [ Default: `world_origin = None`, which internally sets
-                          `world_origin = galsim.PositionD(0., 0.)` ]
+                          [default: galsim.PositionD(0., 0.)]
     """
     _req_params = { "dudx" : float, "dudy" : float, "dvdx" : float, "dvdy" : float }
     _opt_params = { "origin" : galsim.PositionD, "world_origin": galsim.PositionD }
@@ -1978,12 +1973,10 @@ class UVFunction(EuclideanWCS):
     @param yfunc          The function y(u,v) (optional)
     @param origin         Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI.
-                          [ Default: `origin = None`, which internally sets
-                          `origin = galsim.PositionD(0., 0.)` ]
+                          [default: galsim.PositionD(0., 0.)]
     @param world_origin   Optional origin position for the world coordinate system.
                           If provided, it should be a PostionD.
-                          [ Default: `world_origin = None`, which internally sets
-                          `world_origin = galsim.PositionD(0., 0.)` ]
+                          [default: galsim.PositionD(0., 0.)]
     """
     _req_params = { "ufunc" : str, "vfunc" : str }
     _opt_params = { "xfunc" : str, "yfunc" : str,
@@ -2148,8 +2141,7 @@ class RaDecFunction(CelestialWCS):
     @param radec_func     A function radec(x,y) returning (ra, dec) in radians.
     @param origin         Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI.
-                          [ Default: `origin = None`, which internally sets
-                          `origin = galsim.PositionD(0., 0.)` ]
+                          [default: galsim.PositionD(0., 0.)]
     """
     _req_params = { "radec_func" : str }
     _opt_params = { "origin" : galsim.PositionD }

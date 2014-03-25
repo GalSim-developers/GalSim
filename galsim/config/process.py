@@ -65,10 +65,13 @@ valid_output_types = {
 def RemoveCurrent(config, keep_safe=False, type=None):
     """
     Remove any "current values" stored in the config dict at any level.
-    If keep_safe = True (default = False), then any current values that are marked
-    as safe will be preserved.
-    If type is provided, it will only clear the current value of objects that use
-    this particular type.  If type = None, it remove current values of all types.
+
+    @param config       The config dict to process.
+    @param keep_safe    Should current values that are marked as safe be preserved? 
+                        [default: False]
+    @param type         If provided, only clear the current value of objects that use this 
+                        particular type.  [default: None, which means to remove current values
+                        of all types.]
     """
     # End recursion if this is not a dict.
     if not isinstance(config,dict): return
@@ -764,18 +767,20 @@ def BuildFits(file_name, config, logger=None,
     """
     Build a regular fits file as specified in config.
     
-    @param file_name         The name of the output file.
-    @param config            A configuration dict.
-    @param logger            If given, a logger object to log progress.
-    @param file_num          If given, the current file_num (default = 0)
-    @param image_num         If given, the current image_num (default = 0)
-    @param obj_num           If given, the current obj_num (default = 0)
-    @param psf_file_name     If given, write a psf image to this file
-    @param psf_hdu           If given, write a psf image to this hdu in file_name
-    @param weight_file_name  If given, write a weight image to this file
-    @param weight_hdu        If given, write a weight image to this hdu in file_name
-    @param badpix_file_name  If given, write a badpix image to this file
-    @param badpix_hdu        If given, write a badpix image to this hdu in file_name
+    @param file_name        The name of the output file.
+    @param config           A configuration dict.
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param file_num         If given, the current file_num. [default: 0]
+    @param image_num        If given, the current image_num. [default: 0]
+    @param obj_num          If given, the current obj_num. [default: 0]
+    @param psf_file_name    If given, write a psf image to this file. [default: None]
+    @param psf_hdu          If given, write a psf image to this hdu in file_name. [default: None]
+    @param weight_file_name If given, write a weight image to this file. [default: None]
+    @param weight_hdu       If given, write a weight image to this hdu in file_name.  [default: 
+                            None]
+    @param badpix_file_name If given, write a badpix image to this file. [default: None]
+    @param badpix_hdu       If given, write a badpix image to this hdu in file_name. [default:
+                            None]
 
     @return time      Time taken to build file
     """
@@ -891,16 +896,16 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     """
     Build a multi-extension fits file as specified in config.
     
-    @param file_name         The name of the output file.
-    @param config            A configuration dict.
-    @param nproc             How many processes to use.
-    @param logger            If given, a logger object to log progress.
-    @param file_num          If given, the current file_num (default = 0)
-    @param image_num         If given, the current image_num (default = 0)
-    @param obj_num           If given, the current obj_num (default = 0)
-    @param psf_file_name     If given, write a psf image to this file
-    @param weight_file_name  If given, write a weight image to this file
-    @param badpix_file_name  If given, write a badpix image to this file
+    @param file_name        The name of the output file.
+    @param config           A configuration dict.
+    @param nproc            How many processes to use. [default: 1]
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param file_num         If given, the current file_num. [default: 0]
+    @param image_num        If given, the current image_num. [default: 0]
+    @param obj_num          If given, the current obj_num. [default: 0]
+    @param psf_file_name    If given, write a psf image to this file. [default: None]
+    @param weight_file_name If given, write a weight image to this file. [default: None]
+    @param badpix_file_name If given, write a badpix image to this file. [default: None]
 
     @return time      Time taken to build file
     """
@@ -1007,14 +1012,14 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     
     @param file_name         The name of the output file.
     @param config            A configuration dict.
-    @param nproc             How many processes to use.
-    @param logger            If given, a logger object to log progress.
-    @param file_num          If given, the current file_num (default = 0)
-    @param image_num         If given, the current image_num (default = 0)
-    @param obj_num           If given, the current obj_num (default = 0)
-    @param psf_file_name     If given, write a psf image to this file
-    @param weight_file_name  If given, write a weight image to this file
-    @param badpix_file_name  If given, write a badpix image to this file
+    @param nproc             How many processes to use. [default: 1]
+    @param logger            If given, a logger object to log progress. [default: None]
+    @param file_num          If given, the current file_num. [default: 0]
+    @param image_num         If given, the current image_num. [default: 0]
+    @param obj_num           If given, the current obj_num. [default: 0]
+    @param psf_file_name     If given, write a psf image to this file. [default: None]
+    @param weight_file_name  If given, write a weight image to this file. [default: None]
+    @param badpix_file_name  If given, write a badpix image to this file. [default: None]
 
     @return time      Time taken to build file
     """

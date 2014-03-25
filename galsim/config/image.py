@@ -37,13 +37,13 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
 
     @param nimages             How many images to build.
     @param config              A configuration dict.
-    @param nproc               How many processes to use.
-    @param logger              If given, a logger object to log progress.
-    @param image_num           If given, the current image_num (default = 0)
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param nproc               How many processes to use. [default: 1]
+    @param logger              If given, a logger object to log progress. [default: None]
+    @param image_num           If given, the current image_num [default: 0]
+    @param obj_num             If given, the current obj_num [default: 0]
+    @param make_psf_image      Whether to make psf_image. [default: False]
+    @param make_weight_image   Whether to make weight_image. [default: False]
+    @param make_badpix_image   Whether to make badpix_image. [default: False]
 
     @return (images, psf_images, weight_images, badpix_images)  (All in tuple are lists)
     """
@@ -272,12 +272,12 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     Build an image according to the information in config.
 
     @param config              A configuration dict.
-    @param logger              If given, a logger object to log progress.
-    @param image_num           If given, the current image_num (default = 0)
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param logger              If given, a logger object to log progress. [default: None]
+    @param image_num           If given, the current image_num [default: 0]
+    @param obj_num             If given, the current obj_num [default: 0]
+    @param make_psf_image      Whether to make psf_image. [default: False]
+    @param make_weight_image   Whether to make weight_image. [default: False]
+    @param make_badpix_image   Whether to make badpix_image. [default: False]
 
     @return (image, psf_image, weight_image, badpix_image)  
 
@@ -343,12 +343,12 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     Build an image consisting of a single stamp
 
     @param config              A configuration dict.
-    @param logger              If given, a logger object to log progress.
-    @param image_num           If given, the current image_num (default = 0)
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param logger              If given, a logger object to log progress. [default: None]
+    @param image_num           If given, the current image_num [default: 0]
+    @param obj_num             If given, the current obj_num [default: 0]
+    @param make_psf_image      Whether to make psf_image. [default: False]
+    @param make_weight_image   Whether to make weight_image. [default: False]
+    @param make_badpix_image   Whether to make badpix_image. [default: False]
 
     @return (image, psf_image, weight_image, badpix_image)  
 
@@ -414,12 +414,12 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     Build an image consisting of a tiled array of postage stamps
 
     @param config              A configuration dict.
-    @param logger              If given, a logger object to log progress.
-    @param image_num           If given, the current image_num (default = 0)
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param logger              If given, a logger object to log progress. [default: None]
+    @param image_num           If given, the current image_num. [default: 0]
+    @param obj_num             If given, the current obj_num. [default: 0]
+    @param make_psf_image      Whether to make psf_image. [default: False]
+    @param make_weight_image   Whether to make weight_image. [default: False]
+    @param make_badpix_image   Whether to make badpix_image. [default: False]
 
     @return (image, psf_image, weight_image, badpix_image)  
 
@@ -661,12 +661,12 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     Build an image containing multiple objects placed at arbitrary locations.
 
     @param config              A configuration dict.
-    @param logger              If given, a logger object to log progress.
-    @param image_num           If given, the current image_num (default = 0)
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param logger              If given, a logger object to log progress. [default None]
+    @param image_num           If given, the current image_num [default: 0]
+    @param obj_num             If given, the current obj_num [default: 0]
+    @param make_psf_image      Whether to make psf_image. [default: False]
+    @param make_weight_image   Whether to make weight_image. [default: False]
+    @param make_badpix_image   Whether to make badpix_image. [default: False]
 
     @return (image, psf_image, weight_image, badpix_image)  
 

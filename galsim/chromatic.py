@@ -157,18 +157,19 @@ class ChromaticObject(object):
         >>> integrator = galsim.ContinuousIntegrator(rule=galsim.integ.midpt, N=100)
         >>> image = chromatic_obj.draw(bandpass, integrator=integrator)
 
-        @param bandpass           A galsim.Bandpass object representing the filter
-                                  against which to integrate.
-        @param image              see GSObject.draw()
-        @param scale              see GSObject.draw()
-        @param wcs                see GSObject.draw()
-        @param gain               see GSObject.draw()
-        @param wmult              see GSObject.draw()
-        @param normalization      see GSObject.draw()
-        @param add_to_image       see GSObject.draw()
-        @param use_true_center    see GSObject.draw()
-        @param offset             see GSObject.draw()
-        @param integrator         One of the image integrators from galsim.integ
+        @param bandpass         A galsim.Bandpass object representing the filter against which to
+                                integrate.
+        @param image            See GSObject.draw()
+        @param scale            See GSObject.draw()
+        @param wcs              See GSObject.draw()
+        @param gain             See GSObject.draw()
+        @param wmult            See GSObject.draw()
+        @param normalization    See GSObject.draw()
+        @param add_to_image     See GSObject.draw()
+        @param use_true_center  See GSObject.draw()
+        @param offset           See GSObject.draw()
+        @param integrator       One of the image integrators from galsim.integ [default: None,
+                                which will try to select an appropriate integrator automatically.]
 
         @returns                  galsim.Image drawn through filter.
         """
@@ -627,21 +628,24 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     arcsec.  This is unlike the rest of GalSim, in which Position units only need to be internally
     consistent.
 
-    @param base_obj           Fiducial PSF, equal to the monochromatic PSF at base_wavelength
-    @param base_wavelength    Wavelength represented by the fiducial PSF.
-    @param alpha              Power law index for wavelength-dependent seeing.  Default of -0.2
-                              is the prediction for Kolmogorov turbulence.
-    @param zenith_angle       Angle from object to zenith, expressed as a galsim.Angle
-    @param parallactic_angle  Parallactic angle, i.e. the position angle of the zenith, measured
-                              from North through East.  (default: 0)
-    @param obj_coord          Celestial coordinates of the object being drawn as a
-                              galsim.CelestialCoord
-    @param zenith_coord       Celestial coordinates of the zenith as a galsim.CelestialCoord
-    @param HA                 Hour angle of the object as a galsim.Angle
-    @param latitude           Latitude of the observer as a galsim.Angle
-    @param pressure           Air pressure in kiloPascals.  (default 69.328 kPa)
-    @param temperature        Temperature in Kelvins.  (default: 293.15 K)
-    @param H2O_pressure       Water vapor pressure in kiloPascals.  (default: 1.067 kPa)
+    @param base_obj             Fiducial PSF, equal to the monochromatic PSF at base_wavelength
+    @param base_wavelength      Wavelength represented by the fiducial PSF.
+    @param alpha                Power law index for wavelength-dependent seeing.  [default: -0.2,
+                                the prediction for Kolmogorov turbulence]
+    @param zenith_angle         Angle from object to zenith, expressed as a galsim.Angle
+                                [default: 0]
+    @param parallactic_angle    Parallactic angle, i.e. the position angle of the zenith, measured
+                                from North through East.  [default: 0]
+    @param obj_coord            Celestial coordinates of the object being drawn as a
+                                galsim.CelestialCoord. [default: None]
+    @param zenith_coord         Celestial coordinates of the zenith as a galsim.CelestialCoord.
+                                [default: None]
+    @param HA                   Hour angle of the object as a galsim.Angle. [default: None]
+    @param latitude             Latitude of the observer as a galsim.Angle. [default: None]
+    @param pressure             Air pressure in kiloPascals.  [default: 69.328 kPa]
+    @param temperature          Temperature in Kelvins.  [default: 293.15 K]
+    @param H2O_pressure         Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
+
     @returns ChromaticObject  representing a chromatic atmospheric PSF.
     """
     alpha = kwargs.pop('alpha', -0.2)
@@ -755,6 +759,13 @@ class Chromatic(ChromaticObject):
 class ChromaticSum(ChromaticObject):
     """Add ChromaticObjects and/or GSObjects together.  If a GSObject is part of a sum, then its
     SED is assumed to be flat with spectral density of 1 photon per nanometer.
+
+    This is the type returned from `galsim.Add(objects)` if any of the objects are a 
+    ChromaticObject.
+
+    @param args             The objects to be added together.
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
     """
     def __init__(self, *args, **kwargs):
         # Check kwargs first:
@@ -837,18 +848,18 @@ class ChromaticSum(ChromaticObject):
         independently can help with speed by identifying chromatic profiles that are separable into
         spectral and spatial factors.
 
-        @param bandpass           A galsim.Bandpass object representing the filter
-                                  against which to integrate.
-        @param image              see GSObject.draw()
-        @param scale              see GSObject.draw()
-        @param wcs                see GSObject.draw()
-        @param gain               see GSObject.draw()
-        @param wmult              see GSObject.draw()
-        @param normalization      see GSObject.draw()
-        @param add_to_image       see GSObject.draw()
-        @param use_true_center    see GSObject.draw()
-        @param offset             see GSObject.draw()
-        @param integrator         One of the image integrators from galsim.integ
+        @param bandpass         A galsim.Bandpass object representing the filter against which to
+                                integrate.
+        @param image            See GSObject.draw()
+        @param scale            See GSObject.draw()
+        @param wcs              See GSObject.draw()
+        @param gain             See GSObject.draw()
+        @param wmult            See GSObject.draw()
+        @param normalization    See GSObject.draw()
+        @param add_to_image     See GSObject.draw()
+        @param use_true_center  See GSObject.draw()
+        @param offset           See GSObject.draw()
+        @param integrator       One of the image integrators from galsim.integ
 
         @returns                  galsim.Image drawn through filter.
         """
@@ -874,6 +885,16 @@ class ChromaticSum(ChromaticObject):
 class ChromaticConvolution(ChromaticObject):
     """Convolve ChromaticObjects and/or GSObjects together.  GSObjects are treated as having flat
     spectra.
+
+    This is the type returned from `galsim.Convolve(objects)` if any of the objects are a 
+    ChromaticObject.
+
+    @param args             The objects to be convolved together.
+    @param real_space       Whether to use real space convolution.  [default: None, which means
+                            to automatically decide this according to whether the objects have hard
+                            edges.]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
     """
     def __init__(self, *args, **kwargs):
         # First check for number of arguments != 0
@@ -1113,8 +1134,9 @@ class ChromaticDeconvolution(ChromaticObject):
     (or None), then the ChromaticDeconvolution instance inherits the same GSParams as the object
     being deconvolved.
 
-    @param obj        The object to deconvolve.
-    @param gsparams   Optional gsparams argument.
+    @param obj              The object to deconvolve.
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
     """
     def __init__(self, obj, **kwargs):
         self.obj = obj.copy()
@@ -1147,10 +1169,12 @@ class ChromaticAutoConvolution(ChromaticObject):
     It is equivalent in functionality to galsim.Convolve([obj,obj]), but takes advantage of
     the fact that the two profiles are the same for some efficiency gains.
 
-    @param obj        The object to be convolved with itself.
-    @param real_space Whether to use real space convolution.  Default is to automatically select
-                      this according to whether the object has hard edges.
-    @param gsparams   Optional gsparams argument.
+    @param obj              The object to be convolved with itself.
+    @param real_space       Whether to use real space convolution.  [default: None, which means
+                            to automatically decide this according to whether the objects have hard
+                            edges.]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
     """
     def __init__(self, obj, **kwargs):
         self.obj = obj.copy()
@@ -1188,10 +1212,12 @@ class ChromaticAutoCorrelation(ChromaticObject):
         galsim.Convolve([obj,obj.rotate(180.*galsim.degrees)])
     but takes advantage of the fact that the two profiles are the same for some efficiency gains.
 
-    @param obj        The object to be convolved with itself.
-    @param real_space Whether to use real space convolution.  Default is to automatically select
-                      this according to whether the object has hard edges.
-    @param gsparams   Optional gsparams argument.
+    @param obj              The object to be convolved with itself.
+    @param real_space       Whether to use real space convolution.  [default: None, which means
+                            to automatically decide this according to whether the objects have hard
+                            edges.]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
     """
     def __init__(self, obj, **kwargs):
         self.obj = obj.copy()

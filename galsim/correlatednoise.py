@@ -501,10 +501,11 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         as is demanded for a linear operation such as convolution.
 
-        @param gsobject  A galsim.GSObject or derived class instance representing the function with
-                         which the user wants to convolve the correlated noise model.
-        @param gsparams  You may also specify a gsparams argument.  See the docstring for 
-                         GSObject for more information about this option.
+        @param gsobject     A galsim.GSObject or derived class instance representing the function 
+                            with which the user wants to convolve the correlated noise model.
+        @param gsparams     An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
+
         @returns         The new CorrelatedNoise of the convolved profile.
         """
         conv = galsim.Convolve([self._profile, galsim.AutoCorrelate(gsobject)], gsparams=gsparams)
@@ -982,24 +983,23 @@ def getCOSMOSNoise(rng, file_name, cosmos_scale=0.03, variance=0., x_interpolant
 
         /YOUR/REPO/PATH/GalSim/examples/data/acs_I_unrot_sci_20_cf.fits
 
-    @param rng            Must be a galsim.BaseDeviate or derived class instance, provides the
-                          random number generator used by the returned _BaseCorrelatedNoise
-                          instance.
-    @param file_name      String containing the path and filename above but modified to match the
-                          location of the GalSim repository on your system.
-    @param cosmos_scale   COSMOS ACS F814W coadd image pixel scale in the units you are using to
-                          describe GSObjects and image scales in GalSim: defaults to 0.03 arcsec,
-                          see below for more information.
-    @param variance       Scales the correlation function so that its point variance, equivalent to
-                          its value at zero separation distance, matches this value.  The default
-                          `variance = 0.` uses the variance in the original COSMOS noise fields.
-    @param x_interpolant  Forces use of a non-default interpolant for interpolation of the internal
-                          lookup table in real space.  Supplied kwarg must be an InterpolantXY
-                          instance or an Interpolant instance (from which an InterpolantXY will be
-                          automatically generated).  Defaults to use of the bilinear interpolant
-                          `galsim.InterpolantXY(galsim.Linear(tol=1.e-4))`, see below.
-    @param gsparams       You may also specify a gsparams argument.  See the docstring for 
-                          GSObject for more information about this option.
+    @param rng              Must be a galsim.BaseDeviate or derived class instance, provides the
+                            random number generator used by the returned _BaseCorrelatedNoise
+                            instance.
+    @param file_name        String containing the path and filename above but modified to match the
+                            location of the GalSim repository on your system.
+    @param cosmos_scale     COSMOS ACS F814W coadd image pixel scale in the units you are using to
+                            describe GSObjects and image scales in GalSim: defaults to 0.03 arcsec,
+                            see below for more information.
+    @param variance         Scales the correlation function so that its point variance, equivalent 
+                            to its value at zero separation distance, matches this value.  The 
+                            default `variance = 0.` uses the variance in the original COSMOS noise 
+                            fields.
+    @param x_interpolant    Forces use of a non-default interpolant for interpolation of the 
+                            internal lookup table in real space.  See below for more details.  
+                            [default: galsim.Linear(tol=1.e-4)]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
 
     @return A _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.
 

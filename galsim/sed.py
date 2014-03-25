@@ -76,9 +76,9 @@ class SED(object):
 
     @param spec          Function defining the spectrum at each wavelength.  See above for
                          valid options for this parameter.
+    @param wave_type     String specifying units for wavelength input to `spec`. [default: 'nm']
     @param flux_type     String specifying what type of spectral density `spec` represents.  See
-                         above for valid options for this parameter.
-    @param wave_type     String specifying units for wavelength input to `spec`.
+                         above for valid options for this parameter. [default: 'flambda']
 
     """
     def __init__(self, spec, wave_type='nm', flux_type='flambda'):
@@ -240,8 +240,9 @@ class SED(object):
         `wavelength`.  Note that this normalization is *relative* to the `flux` attribute of the
         chromaticized GSObject.
 
-        @param target_flux_density   The target *relative* normalization in photons / nm.
-        @param wavelength   The wavelength, in nanometers, at which flux density will be set.
+        @param target_flux_density  The target *relative* normalization in photons / nm.
+        @param wavelength           The wavelength, in nm, at which flux density will be set.
+
         @returns   New normalized SED.
         """
         current_fphotons = self(wavelength)
@@ -254,8 +255,9 @@ class SED(object):
         """ Return a new SED with flux through the Bandpass `bandpass` set to `target_flux`. Note
         that this normalization is *relative* to the `flux` attribute of the chromaticized GSObject.
 
-        @param target_flux  Desired *relative* flux normalization of the SED.
-        @param bandpass   A galsim.Bandpass object defining a filter bandpass.
+        @param target_flux  The desired *relative* flux normalization of the SED.
+        @param bandpass     A galsim.Bandpass object defining a filter bandpass.
+
         @returns   New normalized SED.
         """
         current_flux = self.calculateFlux(bandpass)
@@ -281,7 +283,7 @@ class SED(object):
     def calculateFlux(self, bandpass):
         """ Return the SED flux through a bandpass.
 
-        @param bandpass   galsim.Bandpass object representing a filter, or None for bolometric
+        @param bandpass   A galsim.Bandpass object representing a filter, or None for bolometric
                           flux (over defined wavelengths).
         @returns   Flux through bandpass.
         """
@@ -310,11 +312,12 @@ class SED(object):
         the integral over the over the set of tabulated values still accurate to `rel_err`.
 
         @param rel_err            The relative error allowed in the integral over the SED
-                                  (default: 1.e-4)
+                                  [default: 1.e-4]
         @param preserve_range     Should the original range (`blue_limit` and `red_limit`) of the
                                   SED be preserved? (True) Or should the ends be trimmed to
                                   include only the region where the integral is significant? (False)
-                                  (default: False)
+                                  [default: False]
+
         @returns  The thinned SED.
         """
         if len(self.wave_list) > 0:

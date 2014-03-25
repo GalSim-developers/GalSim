@@ -50,18 +50,20 @@ class SkipThisObject(Exception):
 def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     """Build a GSObject using config dict for key=key.
 
-    @param config     A dict with the configuration information.
-    @param key        The key name in config indicating which object to build.
-    @param base       A dict which stores potentially useful things like
-                      base['rng'] = random number generator
-                      base['catalog'] = input catalog for InputCat items
-                      base['real_catalog'] = real galaxy catalog for RealGalaxy objects
-                      Typically on the initial call to BuildGSObject, this will be 
-                      the same as config, hence the name base.
-    @param gsparams   Optionally, provide non-default gsparams items.  Any gsparams specified
-                      at this level will be added to the list.  This should be a dict with
-                      whatever kwargs should be used in constructing the GSParams object.
-    @param logger     Optionally, provide a logger for logging debug statements.
+    @param config       A dict with the configuration information.
+    @param key          The key name in config indicating which object to build.
+    @param base         A dict which stores potentially useful things like
+                        base['rng'] = random number generator
+                        base['catalog'] = input catalog for InputCat items
+                        base['real_catalog'] = real galaxy catalog for RealGalaxy objects
+                        Typically on the initial call to BuildGSObject, this will be 
+                        the same as config, hence the name base. [default: None]
+    @param gsparams     Optionally, provide non-default gsparams items.  Any gsparams specified
+                        at this level will be added to the list.  This should be a dict with
+                        whatever kwargs should be used in constructing the GSParams object.
+                        [default: {}]
+    @param logger       Optionally, provide a logger for logging debug statements.
+                        [default: None]
 
     @returns gsobject, safe 
         gsobject is the built object 

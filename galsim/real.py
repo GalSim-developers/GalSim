@@ -76,42 +76,42 @@ class RealGalaxy(GSObject):
     comments.
 
     @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
-                                find the data, etc.
-    @param index                Index of the desired galaxy in the catalog.
-    @param id                   Object ID for the desired galaxy in the catalog.
-    @param random               If true, then just select a completely random galaxy from the
-                                catalog.
-    @param rng                  A random number generator to use for selecting a random galaxy 
-                                (may be any kind of BaseDeviate or None) and to use in generating
-                                any noise field when padding.  This user-input random number
-                                generator takes precedence over any stored within a user-input
-                                CorrelatedNoise instance (see `noise_pad` param below).
-    @param x_interpolant        Either an Interpolant2d (or Interpolant) instance or a string 
-                                indicating which real-space interpolant should be used.  Options 
-                                are 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
-                                where N should be the integer order to use. [default 
-                                `x_interpolant = galsim.Quintic()'].
-    @param k_interpolant        Either an Interpolant2d (or Interpolant) instance or a string 
-                                indicating which k-space interpolant should be used.  Options are 
-                                'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
-                                where N should be the integer order to use.  We strongly recommend
-                                leaving this parameter at its default value; see text above for
-                                details.  [default `k_interpolant = galsim.Quintic()'].
-    @param flux                 Total flux, if None then original flux in galaxy is adopted without
-                                change [default `flux = None`].
-    @param pad_factor           Factor by which to pad the Image when creating the
-                                InterpolatedImage.  We strongly recommend leaving this parameter
-                                at its default value; see text above for details.
-                                [Default `pad_factor = 4`.]
-    @param noise_pad_size       If provided, the image will be padded out to this size (in arcsec)
-                                with the noise specified in the real galaxy catalog. This is 
-                                important if you are planning to whiten the resulting image.  You 
-                                want to make sure that the padded image is larger than the postage 
-                                stamp onto which you are drawing this object.  
-                                [Default `noise_pad_size = None`.]
-    @param gsparams             You may also specify a gsparams argument.  See the docstring for
-                                galsim.GSParams using help(galsim.GSParams) for more information
-                                about this option.
+                            find the data, etc.
+    @param index            Index of the desired galaxy in the catalog. [One of index, id, or
+                            random is required.]
+    @param id               Object ID for the desired galaxy in the catalog. [One of index, id, or
+                            random is required.]
+    @param random           If True, then just select a completely random galaxy from the catalog.
+                            [One of index, id, or random is required.]
+    @param rng              A random number generator to use for selecting a random galaxy
+                            (may be any kind of BaseDeviate or None) and to use in generating
+                            any noise field when padding.  This user-input random number
+                            generator takes precedence over any stored within a user-input
+                            CorrelatedNoise instance (see `noise_pad` param below).
+                            [default: None]
+    @param x_interpolant    Either an Interpolant2d (or Interpolant) instance or a string
+                            indicating which real-space interpolant should be used.  Options
+                            are 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN'
+                            where N should be the integer order to use. [default: galsim.Quintic()]
+    @param k_interpolant    Either an Interpolant2d (or Interpolant) instance or a string
+                            indicating which k-space interpolant should be used.  Options are
+                            'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN'
+                            where N should be the integer order to use.  We strongly recommend
+                            leaving this parameter at its default value; see text above for
+                            details.  [default: galsim.Quintic()]
+    @param flux             Total flux, if None then original flux in galaxy is adopted without
+                            change. [default: None]
+    @param pad_factor       Factor by which to pad the Image when creating the
+                            InterpolatedImage.  We strongly recommend leaving this parameter
+                            at its default value; see text above for details.  [default: 4]
+    @param noise_pad_size   If provided, the image will be padded out to this size (in arcsec)
+                            with the noise specified in the real galaxy catalog. This is
+                            important if you are planning to whiten the resulting image.  You
+                            want to make sure that the padded image is larger than the postage
+                            stamp onto which you are drawing this object.
+                            [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
 
     Methods
     -------
@@ -312,15 +312,15 @@ class RealGalaxyCatalog(object):
     @param image_dir  If a string containing no `/`, it is the relative path from the location of
                       the catalog file to the directory containing the galaxy/PDF images.
                       If a path (a string containing `/`), it is the full path to the directory
-                      containing the galaxy/PDF images.
-    @param dir        The directory of catalog file (optional).
+                      containing the galaxy/PDF images. [default: None]
+    @param dir        The directory of catalog file. [default: None]
     @param preload    Whether to preload the header information.  If preload=True, the bulk of 
                       the I/O time is in the constructor.  If preload=False, there is approximately
                       the same total I/O time (assuming you eventually use most of the image
                       files referenced in the catalog), but it is spread over the various calls to 
-                      getGal and getPSF.  [Default `preload = False`]
+                      getGal and getPSF.  [default: False]
     @param noise_dir  The directory of the noise files if different from the directory of the 
-                      image files.  [Default `noise_dir = image_dir`]
+                      image files.  [default: image_dir]
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'image_dir' : str , 'dir' : str, 'preload' : bool, 'noise_dir' : str }
@@ -594,25 +594,24 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     Optionally, the user can specify a shear (default 0).  Finally, they can specify a flux 
     normalization for the final image, default 1000.
 
-    @param real_galaxy         The RealGalaxy object to use, not modified in generating the
-                               simulated image.
-    @param target_PSF          The target PSF, either one of our base classes or an Image.
+    @param real_galaxy      The RealGalaxy object to use, not modified in generating the
+                            simulated image.
+    @param target_PSF       The target PSF, either one of our base classes or an Image.
     @param target_pixel_scale  The pixel scale for the final image, in arcsec.
-    @param g1                  First component of shear to impose (components defined with respect
-                               to pixel coordinates), [Default `g1 = 0.`]
-    @param g2                  Second component of shear to impose, [Default `g2 = 0.`]
-    @param rotation_angle      Angle by which to rotate the galaxy (must be a galsim.Angle 
-                               instance).
-    @param rand_rotate         If `rand_rotate = True` (default) then impose a random rotation on 
-                               the training galaxy; this is ignored if `rotation_angle` is set.
-    @param rng                 A random number generator to use for selection of the random 
-                               rotation angle. (optional, may be any kind of galsim.BaseDeviate 
-                               or None)
-    @param target_flux         The target flux in the output galaxy image, [Default 
-                               `target_flux = 1000.`]
-    @param image               As with the GSObject.draw() function, if an image is provided,
-                               then it will be used and returned.
-                               If `image=None`, then an appropriately sized image will be created.
+    @param g1               First component of shear to impose (components defined with respect
+                            to pixel coordinates), [default: 0]
+    @param g2               Second component of shear to impose, [default: 0]
+    @param rotation_angle   Angle by which to rotate the galaxy (must be a galsim.Angle
+                            instance). [default: None]
+    @param rand_rotate      Should the galaxy be rotated by some random angle?  [default: True;
+                            unless rotation_angle is set, then False]
+    @param rng              A BaseDeviate instance to use for the random selection or rotation
+                            angle. [default: None]
+    @param target_flux      The target flux in the output galaxy image, [default: 1000.]
+    @param image            As with the GSObject.draw() function, if an image is provided,
+                            then it will be used and returned.  [default: None, which means an
+                            appropriately-sized image will be created.]
+
     @return A simulated galaxy image.  The input RealGalaxy is unmodified. 
     """
     # do some checking of arguments

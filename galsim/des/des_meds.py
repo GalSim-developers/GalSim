@@ -47,21 +47,28 @@ class MultiExposureObject(object):
     """
     A class containing exposures for single object, along with other information.
 
-    Available fields:
-        self.images             list of images of the object (GalSim Images)
-        self.weights            list of weight maps (GalSim Images)
-        self.segs               list of segmentation masks (GalSim Images)
-        self.wcs                list of WCS transformations (GalSim AffineTransforms)
-        self.n_cutouts          number of exposures
-        self.box_size           size of each exposure image
+    Initialization
+    --------------
 
-    Constructor parameters:
-    @param images               list of images of the object (GalSim Images)
-    @param weights              list of weight maps (GalSim Images)
-    @param badpix               list of bad pixel masks (GalSim Images)
-    @param segs                 list of segmentation maps (GalSim Images)
-    @param wcs                  list of WCS transformations (GalSim AffineTransforms)
-    @param id                   galaxy id
+    @param images       List of images of the object (GalSim Images).
+    @param weights      List of weight maps (GalSim Images). [default: None]
+    @param badpix       List of bad pixel masks (GalSim Images). [default: None]
+    @param segs         List of segmentation maps (GalSim Images). [default: None]
+    @param wcs          List of WCS transformations (GalSim AffineTransforms). [default: None]
+    @param id           Galaxy id. [default: 0]
+
+    Attributes
+    ----------
+
+    self.images         List of images of the object (GalSim Images).
+    self.weights        List of weight maps (GalSim Images).
+    self.segs           List of segmentation masks (GalSim Images).
+    self.wcs            List of WCS transformations (GalSim AffineTransforms).
+    self.n_cutouts      Number of exposures.
+    self.box_size       Size of each exposure image.
+
+    Module level variables
+    ----------------------
 
     Images, weights and segs have to be square numpy arrays with size in
     BOX_SIZES = [32,48,64,96,128,196,256].
@@ -375,11 +382,11 @@ def BuildMEDS(file_name, config, nproc=1, logger=None, file_num=0, image_num=0, 
 
     @param file_name         The name of the output file.
     @param config            A configuration dict.
-    @param nproc             How many processes to use.
-    @param logger            If given, a logger object to log progress.
-    @param file_num          If given, the current file_num (default = 0)
-    @param image_num         If given, the current image_num (default = 0)
-    @param obj_num           If given, the current obj_num (default = 0)
+    @param nproc             How many processes to use. [default: 1]
+    @param logger            If given, a logger object to log progress. [default: None]
+    @param file_num          If given, the current file_num. [default: 0]
+    @param image_num         If given, the current image_num. [default: 0]
+    @param obj_num           If given, the current obj_num. [default: 0]
 
     @return time      Time taken to build file
     """

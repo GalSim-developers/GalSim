@@ -25,21 +25,22 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     """
     Build a number of postage stamp images as specified by the config dict.
 
-    @param nobjects            How many postage stamps to build.
-    @param config              A configuration dict.
-    @param nproc               How many processes to use.
-    @param logger              If given, a logger object to log progress.
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param xsize               The size of a single stamp in the x direction.
-                               (If 0, look for config.image.stamp_xsize, and if that's
-                                not there, use automatic sizing.)
-    @param ysize               The size of a single stamp in the y direction.
-                               (If 0, look for config.image.stamp_ysize, and if that's
-                                not there, use automatic sizing.)
-    @param do_noise            Whether to add noise to the image (according to config['noise']).
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param nobjects         How many postage stamps to build.
+    @param config           A configuration dict.
+    @param nproc            How many processes to use. [default: 1]
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param obj_num          If given, the current obj_num. [default: 0]
+    @param xsize            The size of a single stamp in the x direction. [default: 0,
+                            which means to look for config.image.stamp_xsize, and if that's
+                            not there, use automatic sizing.]
+    @param ysize            The size of a single stamp in the y direction. [default: 0,
+                            which means to look for config.image.stamp_xsize, and if that's
+                            not there, use automatic sizing.]
+    @param do_noise         Whether to add noise to the image (according to config['noise']).
+                            [default: True]
+    @param make_psf_image   Whether to make psf_image. [default: False]
+    @param make_weight_image  Whether to make weight_image. [default: False]
+    @param make_badpix_image  Whether to make badpix_image. [default: False]
 
     @return (images, psf_images, weight_images, badpix_images, current_vars) 
     (All in tuple are lists)
@@ -282,15 +283,16 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     """
     Build a single image using the given config file
 
-    @param config              A configuration dict.
-    @param xsize               The xsize of the image to build (if known).
-    @param ysize               The ysize of the image to build (if known).
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param do_noise            Whether to add noise to the image (according to config['noise']).
-    @param logger              If given, a logger object to log progress.
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param config           A configuration dict.
+    @param xsize            The xsize of the image to build (if known). [default: 0]
+    @param ysize            The ysize of the image to build (if known). [default: 0]
+    @param obj_num          If given, the current obj_num [default: 0]
+    @param do_noise         Whether to add noise to the image (according to config['noise']).
+                            [default: True]
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param make_psf_image   Whether to make psf_image. [default: False]
+    @param make_weight_image  Whether to make weight_image. [default: False]
+    @param make_badpix_image  Whether to make badpix_image. [default: False]
 
     @return image, psf_image, weight_image, badpix_image, current_var, time
     """

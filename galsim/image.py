@@ -74,15 +74,14 @@ class Image(object):
     ImageView.  The former allocates its own memory, and the latter views memory allocated by some
     other object (typically an ImageAlloc or a numpy array).
 
-    The Image class contains an `image` attribute, which holds the appropriate C++ ImageAlloc or
-    ImageView object.  Most operations that act on the pixel values will just pass the command to
-    the C++ layer.
-
     There are 4 data types that the image object can use for the data values.  These are
-    numpy.int16, numpy.int32, numpy.float32, and numpy.float64.  If you are constructing a new Image
-    from scratch, the default is numpy.float32, but you can specify one of the other data types.  If
-    you construct an Image from an existing allocation such as a numpy array, then the dtype must be
-    one of these or you will get an error.
+    numpy.int16, numpy.int32, numpy.float32, and numpy.float64.  If you are constructing a new
+    Image from scratch, the default is numpy.float32, but you can specify one of the other data
+    types.  If you construct an Image from an existing allocation such as a numpy array, then the
+    dtype must be one of these or you will get an error.
+
+    Initialization
+    --------------
 
     There are several ways to construct an Image:
 
@@ -134,6 +133,10 @@ class Image(object):
                     When drawing onto such an image, a suitable pixel scale will be automatically
                     set according to the Nyquist scale of the object being drawn.
 
+
+    Attributes
+    ----------
+
     After construction, you can set or change the scale or wcs with 
 
         im.scale = new_scale
@@ -152,7 +155,9 @@ class Image(object):
     in the array attribute are accessed as im.array[y,x], matching the standard numpy convention,
     while the Image class's own accessor uses (x,y).
 
-    Methods:
+
+    Methods
+    -------
 
         view        Return a view of the image.
         subImage    Return a view of a portion of the full image.

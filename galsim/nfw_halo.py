@@ -108,10 +108,10 @@ class NFWHalo(object):
                       of the universe, in units of M_solar/h.
     @param conc       Concentration parameter, i.e., ratio of virial radius to NFW scale radius.
     @param redshift   Redshift of the halo.
-    @param halo_pos   Position of halo center (in arcsec). [default=PositionD(0,0)]
-    @param omega_m    Omega_matter to pass to Cosmology constructor. [default=None]
-    @param omega_lam  Omega_lambda to pass to Cosmology constructor. [default=None]
-    @param cosmo      A Cosmology instance. [default=None]
+    @param halo_pos   Position of halo center (in arcsec). [default: PositionD(0,0)]
+    @param omega_m    Omega_matter to pass to Cosmology constructor. [default: None]
+    @param omega_lam  Omega_lambda to pass to Cosmology constructor. [default: None]
+    @param cosmo      A Cosmology instance. [default: None]
     """
     _req_params = { 'mass' : float , 'conc' : float , 'redshift' : float }
     _opt_params = { 'halo_pos' : galsim.PositionD , 'omega_m' : float , 'omega_lam' : float }
@@ -291,8 +291,8 @@ class NFWHalo(object):
                            - Multidimensional NumPy array, as long as array[0] contains
                              x-positions and array[1] contains y-positions
         @param z_s       Source redshift(s).
-        @param units     Angular units of coordinates. [default = arcsec]
-        @param reduced   Whether returned shear(s) should be reduced shears. [default=True]
+        @param units     Angular units of coordinates. [default: arcsec]
+        @param reduced   Whether returned shear(s) should be reduced shears. [default: True]
 
         @return (g1,g2)   [g1 and g2 are each a list if input was a list]
         """
@@ -349,7 +349,7 @@ class NFWHalo(object):
                          - Multidimensional NumPy array, as long as array[0] contains
                            x-positions and array[1] contains y-positions
         @param z_s     Source redshift(s).
-        @param units   Angular units of coordinates. [default = arcsec]
+        @param units   Angular units of coordinates. [default: arcsec]
 
         @return kappa or list of kappa values.
         """

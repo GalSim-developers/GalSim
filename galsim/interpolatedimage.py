@@ -106,43 +106,43 @@ class InterpolatedImage(GSObject):
     similar to the one in the real data leads to a more reasonable appearance for the result when
     re-drawn at a different size.
 
-    @param image           The Image from which to construct the object.
-                           This may be either an Image instance or a string indicating a fits 
-                           file from which to read the image.
-    @param x_interpolant   Either an Interpolant2d (or Interpolant) instance or a string indicating
-                           which real-space interpolant should be used.  Options are 'nearest',
-                           'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
-                           integer order to use. (Default `x_interpolant = galsim.Quintic()`)
-    @param k_interpolant   Either an Interpolant2d (or Interpolant) instance or a string indicating
-                           which k-space interpolant should be used.  Options are 'nearest', 'sinc',
-                           'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the integer
-                           order to use.  We strongly recommend leaving this parameter at its
-                           default value; see text above for details.  (Default `k_interpolant =
-                           galsim.Quintic()`)
-    @param normalization   Two options for specifying the normalization of the input Image:
+    @param image            The Image from which to construct the object.
+                            This may be either an Image instance or a string indicating a fits
+                            file from which to read the image.
+    @param x_interpolant    Either an Interpolant2d (or Interpolant) instance or a string indicating
+                            which real-space interpolant should be used.  Options are 'nearest',
+                            'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be
+                            the integer order to use. [default: galsim.Quintic()]
+    @param k_interpolant    Either an Interpolant2d (or Interpolant) instance or a string indicating
+                            which k-space interpolant should be used.  Options are 'nearest',
+                            'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be
+                            the integer order to use.  We strongly recommend leaving this parameter
+                            at its default value; see text above for details.  [default:
+                            galsim.Quintic()]
+    @param normalization    Two options for specifying the normalization of the input Image:
                               "flux" or "f" means that the sum of the pixels is normalized
                                   to be equal to the total flux.
                               "surface brightness" or "sb" means that the pixels sample
                                   the surface brightness distribution at each location.
-                              (Default `normalization = "flux"`)
-    @param scale           If provided, use this as the pixel scale for the Image; this will
-                           override the pixel scale stored by the provided Image, in any.  
-                           If `scale` is `None`, then take the provided image's pixel scale.
-                           (Default `scale = None`.)
-    @param wcs             If provided, use this as the wcs for the image.  At most one of scale or 
-                           wcs may be provided. (Default `wcs - None`.)
-    @param flux            Optionally specify a total flux for the object, which overrides the
-                           implied flux normalization from the Image itself.
-    @param pad_factor      Factor by which to pad the Image with zeros.  We strongly recommend 
-                           leaving this parameter at its default value; see text above for details. 
-                           (Default `pad_factor = 4`)
-    @param noise_pad_size  If provided, the image will be padded out to this size (in arcsec) with 
-                           the noise specified by `noise_pad`. This is important if you are 
-                           planning to whiten the resulting image.  You want to make sure that the 
-                           noise-padded image is larger than the postage stamp onto which you are 
-                           drawing this object.  [Default `noise_pad_size = None`.]
-    @param noise_pad       Noise properties to use when padding the original image with
-                           noise.  This can be specified in several ways:
+                            [default: "flux"]
+    @param scale            If provided, use this as the pixel scale for the Image; this will
+                            override the pixel scale stored by the provided Image, in any.
+                            If `scale` is `None`, then take the provided image's pixel scale.
+                            [default: None]
+    @param wcs              If provided, use this as the wcs for the image.  At most one of scale
+                            or wcs may be provided. [default: None]
+    @param flux             Optionally specify a total flux for the object, which overrides the
+                            implied flux normalization from the Image itself.
+    @param pad_factor       Factor by which to pad the Image with zeros.  We strongly recommend
+                            leaving this parameter at its default value; see text above for
+                            details.  [default: 4]
+    @param noise_pad_size   If provided, the image will be padded out to this size (in arcsec) with
+                            the noise specified by `noise_pad`. This is important if you are
+                            planning to whiten the resulting image.  You want to make sure that the
+                            noise-padded image is larger than the postage stamp onto which you are
+                            drawing this object.  [default: None]
+    @param noise_pad        Noise properties to use when padding the original image with
+                            noise.  This can be specified in several ways:
                                (a) as a float, which is interpreted as being a variance to use when
                                    padding with uncorrelated Gaussian noise; 
                                (b) as a galsim.CorrelatedNoise, which contains information about the
@@ -153,67 +153,66 @@ class InterpolatedImage(GSObject):
                                    the desired noise power spectrum; or
                                (d) as a string which is interpreted as a filename containing an
                                    example noise field with the proper noise power spectrum.
-                           It is important to keep in mind that the calculation of the correlation
-                           function that is internally stored within a galsim.CorrelatedNoise is a 
-                           non-negligible amount of overhead, so the recommended means of specifying
-                           a correlated noise field for padding are (b) or (d).  In the case of (d),
-                           if the same file is used repeatedly, then the `use_cache` keyword (see 
-                           below) can be used to prevent the need for repeated 
-                           galsim.CorrelatedNoise initializations.
-                           (Default `noise_pad = 0.`, i.e., pad with zeros.)
-    @param use_cache       Specify whether to cache noise_pad read in from a file to save having
-                           to build a CorrelatedNoise object repeatedly from the same image.
-                           (Default `use_cache = True`)
-    @param rng             If padding by noise, the user can optionally supply the random noise
-                           generator to use for drawing random numbers as `rng` (may be any kind of
-                           `galsim.BaseDeviate` object).  Such a user-input random number generator
-                           takes precedence over any stored within a user-input CorrelatedNoise 
-                           instance (see the `noise_pad` param).
-                           If `rng=None`, one will be automatically created, using the time as a
-                           seed. (Default `rng = None`)
-    @param pad_image       Image to be used for deterministically padding the original image.  This
-                           can be specified in two ways:
+                            It is important to keep in mind that the calculation of the correlation
+                            function that is internally stored within a galsim.CorrelatedNoise is a
+                            non-negligible amount of overhead, so the recommended means of
+                            specifying a correlated noise field for padding are (b) or (d).  In the
+                            case of (d), if the same file is used repeatedly, then the `use_cache`
+                            keyword (see below) can be used to prevent the need for repeated
+                            galsim.CorrelatedNoise initializations.
+                            [default: 0, i.e., pad with zeros]
+    @param use_cache        Specify whether to cache noise_pad read in from a file to save having
+                            to build a CorrelatedNoise object repeatedly from the same image.
+                            [default: True]
+    @param rng              If padding by noise, the user can optionally supply the random noise
+                            generator to use for drawing random numbers as `rng` (may be any kind of
+                            `galsim.BaseDeviate` object).  Such a user-input random number generator
+                            takes precedence over any stored within a user-input CorrelatedNoise
+                            instance (see the `noise_pad` param).
+                            If `rng=None`, one will be automatically created, using the time as a
+                            seed. [default: None]
+    @param pad_image        Image to be used for deterministically padding the original image.  This
+                            can be specified in two ways:
                                (a) as a galsim.Image; or
                                (b) as a string which is interpreted as a filename containing an
                                    image to use.
-                           The `pad_image` scale or wcs is ignored.  It uses the same scale or
-                           wcs for both the `image` and the `pad_image`.
-                           The user should be careful to ensure that the image used for padding has 
-                           roughly zero mean.  The purpose of this keyword is to allow for a more 
-                           flexible representation of some noise field around an object; if the 
-                           user wishes to represent the sky level around an object, they should do 
-                           that after they have drawn the final image instead.  
-                           (Default `pad_image = None`.)
-    @param calculate_stepk Specify whether to perform an internal determination of the extent of 
-                           the object being represented by the InterpolatedImage; often this is 
-                           useful in choosing an optimal value for the stepsize in the Fourier 
-                           space lookup table.  
-                           If you know a priori an appropriate maximum value for stepk, then 
-                           you may also supply that here instead of a bool value, in which case
-                           the stepk value is still calculated, but will not go above the
-                           provided value. 
-                           (Default `calculate_stepk = True`)
-    @param calculate_maxk  Specify whether to perform an internal determination of the highest 
-                           spatial frequency needed to accurately render the object being 
-                           represented by the InterpolatedImage; often this is useful in choosing 
-                           an optimal value for the extent of the Fourier space lookup table.
-                           If you know a priori an appropriate maximum value for maxk, then 
-                           you may also supply that here instead of a bool value, in which case
-                           the maxk value is still calculated, but will not go above the
-                           provided value. 
-                           (Default `calculate_maxk = True`)
-    @param use_true_center Similar to the same parameter in the GSObject.draw function, this
-                           sets whether to use the true center of the provided image as the 
-                           center of the profile (if `use_true_center=True`) or the nominal
-                           center returned by `image.bounds.center()` (if `use_true_center=False`)
-                           [Default `use_true_center = True`]
-    @param offset          The location in the input image to use as the center of the profile.
-                           This should be specified relative to the center of the input image 
-                           (either the true center if use_true_center=True, or the nominal center 
-                           if use_true_center=False).  [Default `offset = None`]
-    @param gsparams        You may also specify a gsparams argument.  See the docstring for
-                           galsim.GSParams using help(galsim.GSParams) for more information about
-                           this option.
+                            The `pad_image` scale or wcs is ignored.  It uses the same scale or
+                            wcs for both the `image` and the `pad_image`.
+                            The user should be careful to ensure that the image used for padding
+                            has roughly zero mean.  The purpose of this keyword is to allow for a
+                            more flexible representation of some noise field around an object; if
+                            the user wishes to represent the sky level around an object, they
+                            should do that after they have drawn the final image instead.
+                            [default: None]
+    @param calculate_stepk  Specify whether to perform an internal determination of the extent of
+                            the object being represented by the InterpolatedImage; often this is
+                            useful in choosing an optimal value for the stepsize in the Fourier
+                            space lookup table.
+                            If you know a priori an appropriate maximum value for stepk, then
+                            you may also supply that here instead of a bool value, in which case
+                            the stepk value is still calculated, but will not go above the
+                            provided value.
+                            [default: True]
+    @param calculate_maxk   Specify whether to perform an internal determination of the highest
+                            spatial frequency needed to accurately render the object being
+                            represented by the InterpolatedImage; often this is useful in choosing
+                            an optimal value for the extent of the Fourier space lookup table.
+                            If you know a priori an appropriate maximum value for maxk, then
+                            you may also supply that here instead of a bool value, in which case
+                            the maxk value is still calculated, but will not go above the
+                            provided value.
+                            [default: True]
+    @param use_true_center  Similar to the same parameter in the GSObject.draw function, this
+                            sets whether to use the true center of the provided image as the
+                            center of the profile (if `use_true_center=True`) or the nominal
+                            center returned by `image.bounds.center()` (if `use_true_center=False`)
+                            [default: True]
+    @param offset           The location in the input image to use as the center of the profile.
+                            This should be specified relative to the center of the input image
+                            (either the true center if use_true_center=True, or the nominal center
+                            if use_true_center=False).  [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
 
     Methods
     -------

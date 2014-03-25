@@ -31,11 +31,11 @@ def theoryToObserved(gamma1, gamma2, kappa):
     method directly to the outputs in order to get the values of reduced shear and magnification on
     the output grid.
 
-    @param gamma1        The first shear component, which must be the NON-reduced shear.  This and
-                         all other inputs should be supplied either as individual floating point
-                         numbers, tuples, lists, or Numpy arrays.
-    @param gamma2        The second (x) shear component, which must be the NON-reduced shear.
-    @param kappa         The convergence.
+    @param gamma1       The first shear component, which must be the NON-reduced shear.  This and
+                        all other inputs should be supplied either as individual floating point
+                        numbers, tuples, lists, or Numpy arrays.
+    @param gamma2       The second (x) shear component, which must be the NON-reduced shear.
+    @param kappa        The convergence.
 
     @return g1, g2, mu   The reduced shear and magnification, in the same form as the input gamma1,
                          gamma2, and kappa.
@@ -138,8 +138,7 @@ class PowerSpectrum(object):
     @param e_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the E-mode power spectrum P_E(|k|) in an array of the same
                             shape.  The function should return the power spectrum desired in the E
-                            (gradient) mode of the image.  Set to None (default) for there to be no
-                            E-mode power.
+                            (gradient) mode of the image.
                             It may also be a string that can be converted to a function using
                             eval('lambda k : ' + e_power_function), a LookupTable, or file_name from
                             which to read in a LookupTable.  If a file_name is given, the resulting
@@ -148,20 +147,21 @@ class PowerSpectrum(object):
                             (for example, to interpolate in log(P) and log(k), as might be more
                             natural for power-law functions) should instead read in the file to
                             create a LookupTable using the necessary non-default settings.
+                            [default: None, which means no E-mode power.]
     @param b_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the B-mode power spectrum P_B(|k|) in an array of the same
                             shape.  The function should return the power spectrum desired in the B
-                            (curl) mode of the image.  Set to None (default) for there to be no
-                            B-mode power.
+                            (curl) mode of the image.
                             It may also be a string that can be converted to a function using
                             eval('lambda k : ' + b_power_function), a LookupTable, or file_name from
                             which to read in a LookupTable.
+                            [default: None, which means no B-mode power.]
     @param delta2           Is the power actually given as dimensionless Delta^2, which requires us
                             to multiply by 2pi / k^2 to get the shear power P(k) in units of
-                            angle^2?  [default = False]
+                            angle^2?  [default: False]
     @param units            The angular units used for the power spectrum (i.e. the units of 
                             k^-1 and sqrt(P)). This should be either a galsim.AngleUnit instance
-                            (e.g. galsim.radians) or a string (e.g. 'radians'). [default = arcsec]
+                            (e.g. galsim.radians) or a string (e.g. 'radians'). [default: arcsec]
     """
     _req_params = {}
     _opt_params = { 'e_power_function' : str, 'b_power_function' : str,
@@ -310,27 +310,26 @@ class PowerSpectrum(object):
                                 using the draw or drawShoot methods.  Other units can be specified
                                 using the `units` keyword.
         @param ngrid            Number of grid points in each dimension.  [Must be an integer]
-        @param rng              (Optional) A galsim.GaussianDeviate object for drawing the random
-                                numbers.  (Alternatively, any BaseDeviate can be used.)
-                                [default `rng = None`]
-        @param interpolant      (Optional) Interpolant that will be used for interpolating the
-                                gridded shears by methods like getShear(), getConvergence(), etc. if
-                                they are later called. [default `interpolant = galsim.Linear()`]
-        @param center           (Optional) If setting up a new grid, define what position you
-                                want to consider the center of that grid.  Units must be consistent
-                                with those for `grid_spacing`.  [default `center = (0,0)`]
-        @param units            The angular units used for the positions.  [default = arcsec]
+        @param rng              A galsim.GaussianDeviate object for drawing the random numbers.
+                                (Alternatively, any BaseDeviate can be used.) [default: None]
+        @param interpolant      Interpolant that will be used for interpolating the gridded shears
+                                by methods like getShear(), getConvergence(), etc. if they are
+                                later called. [default: galsim.Linear()]
+        @param center           If setting up a new grid, define what position you want to consider
+                                the center of that grid.  Units must be consistent with those for
+                                `grid_spacing`.  [default: galsim.PositionD(0,0)]
+        @param units            The angular units used for the positions.  [default; arcsec]
         @param get_convergence  Return the convergence in addition to the shear?  Regardless of the
                                 value of `get_convergence`, the convergence will still be computed
-                                and stored for future use. [Default: `get_convergence=False`]
-        @param kmin_factor      (Optional) Factor by which the grid spacing in fourier space is 
-                                smaller than the default.  i.e. 
+                                and stored for future use. [default: False]
+        @param kmin_factor      Factor by which the grid spacing in fourier space is smaller than
+                                the default.  i.e.
                                     kmin = 2. * pi / (ngrid * grid_spacing) / kmin_factor
-                                [default `kmin_factor = 1`; must be an integer]
-        @param kmax_factor      (Optional) Factor by which the overall grid in fourier space is 
-                                larger than the default.  i.e. 
+                                [default: 1; must be an integer]
+        @param kmax_factor      Factor by which the overall grid in fourier space is larger than
+                                the default.  i.e.
                                     kmax = pi / grid_spacing * kmax_factor
-                                [default `kmax_factor = 1`; must be an integer]
+                                [default: 1; must be an integer]
 
         @return g1,g2[,kappa]   2-d NumPy arrays for the shear components g_1, g_2 and (if
                                 `get_convergence=True`) convergence kappa.
@@ -540,22 +539,19 @@ class PowerSpectrum(object):
            Both calls do the same thing.  The returned g1, g2 this time are lists of g1, g2 values.
            The lists are the same length as the number of input positions.
 
-        @param pos              Position(s) of the source(s), assumed to be post-lensing!
-                                Valid ways to input this:
-                                  - Single galsim.PositionD (or PositionI) instance
-                                  - tuple of floats: (x,y)
-                                  - list of galsim.PositionD (or PositionI) instances
-                                  - tuple of lists: ( xlist, ylist )
-                                  - NumPy array of galsim.PositionD (or PositionI) instances
-                                  - tuple of NumPy arrays: ( xarray, yarray )
-                                  - Multidimensional NumPy array, as long as array[0] contains
-                                    x-positions and array[1] contains y-positions
-        @param units            The angular units used for the positions.  [default = arcsec]
-        @param reduced          Whether returned shear(s) should be reduced shears. [default=True]
+        @param pos          Position(s) of the source(s), assumed to be post-lensing!
+                            Valid ways to input this:
+                                - Single galsim.PositionD (or PositionI) instance
+                                - tuple of floats: (x,y)
+                                - list of galsim.PositionD (or PositionI) instances
+                                - tuple of lists: ( xlist, ylist )
+                                - NumPy array of galsim.PositionD (or PositionI) instances
+                                - tuple of NumPy arrays: ( xarray, yarray )
+                                - Multidimensional NumPy array, as long as array[0] contains
+                                  x-positions and array[1] contains y-positions
+        @param units        The angular units used for the positions.  [default: arcsec]
+        @param reduced      Whether returned shear(s) should be reduced shears. [default: True]
 
-        @return g1,g2           If given a single position: the two shear components g_1 and g_2.
-                                If given a list of positions: each is a python list of values.
-                                If given a NumPy array of positions: each is a NumPy array.
         """
 
         if not hasattr(self, 'im_g1'):
@@ -625,21 +621,18 @@ class PowerSpectrum(object):
         single number rather than a pair of numbers.  See documentation for getShear for some
         examples.
 
-        @param pos              Position(s) of the source(s), assumed to be post-lensing!
-                                Valid ways to input this:
-                                  - Single galsim.PositionD (or PositionI) instance
-                                  - tuple of floats: (x,y)
-                                  - list of galsim.PositionD (or PositionI) instances
-                                  - tuple of lists: ( xlist, ylist )
-                                  - NumPy array of galsim.PositionD (or PositionI) instances
-                                  - tuple of NumPy arrays: ( xarray, yarray )
-                                  - Multidimensional NumPy array, as long as array[0] contains
-                                    x-positions and array[1] contains y-positions
-        @param units            The angular units used for the positions.  [default = arcsec]
+        @param pos          Position(s) of the source(s), assumed to be post-lensing!
+                            Valid ways to input this:
+                                - Single galsim.PositionD (or PositionI) instance
+                                - tuple of floats: (x,y)
+                                - list of galsim.PositionD (or PositionI) instances
+                                - tuple of lists: ( xlist, ylist )
+                                - NumPy array of galsim.PositionD (or PositionI) instances
+                                - tuple of NumPy arrays: ( xarray, yarray )
+                                - Multidimensional NumPy array, as long as array[0] contains
+                                  x-positions and array[1] contains y-positions
+        @param units        The angular units used for the positions.  [default: arcsec]
 
-        @return kappa           If given a single position: the convergence kappa.
-                                If given a list of positions: a python list of values.
-                                If given a NumPy array of positions: a NumPy array of values.
         """
 
         if not hasattr(self, 'im_kappa'):
@@ -706,7 +699,7 @@ class PowerSpectrum(object):
                                   - tuple of NumPy arrays: ( xarray, yarray )
                                   - Multidimensional NumPy array, as long as array[0] contains
                                     x-positions and array[1] contains y-positions
-        @param units            The angular units used for the positions.  [default = arcsec]
+        @param units            The angular units used for the positions.  [default: arcsec]
 
         @return mu              If given a single position: the magnification, mu.
                                 If given a list of positions: a python list of values.
@@ -781,7 +774,7 @@ class PowerSpectrum(object):
                                   - tuple of NumPy arrays: ( xarray, yarray )
                                   - Multidimensional NumPy array, as long as array[0] contains
                                     x-positions and array[1] contains y-positions
-        @param units            The angular units used for the positions.  [default = arcsec]
+        @param units            The angular units used for the positions.  [default: arcsec]
 
         @return g1,g2,mu        If given a single position: the reduced shears g1 and g2, and
                                 magnification mu.

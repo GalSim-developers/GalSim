@@ -26,36 +26,21 @@ from . import _galsim
 from ._galsim import BaseNoise, GaussianNoise, PoissonNoise, CCDNoise
 from ._galsim import DeviateNoise, VarGaussianNoise
 
-def addNoise(image, noise):
-    """Noise addition Image method, adding noise according to a supplied noise model.
+def addNoise(self, noise):
+    # This will be inserted into the Image class as a method.  So self = image.
+    """Add noise to the image adding noise according to a supplied noise model.
 
-    >>> Image.addNoise(noise)
-
-    Noise following supplied model will be added to the image.
-
-    @param  image  The image on which to add the noise.
-    @param  noise  Instantiated noise model (currently CCDNoise, UniformDeviate, BinomialDeviate,
-                   GaussianDeviate and PoissonDeviate are supported).
-
-    If the supplied noise model object does not have an applyTo() method, then this will raise an
-    AttributeError exception.
+    @param noise        The noise (galsim.BaseNoise) model to use.
     """
-    noise.applyTo(image)
+    noise.applyTo(self)
 
-def addNoiseSNR(image, noise, snr, preserve_flux=False):
-    """Adds CCDNoise to an image in a way that achieves the specified signal-to-noise ratio.
-    
-    >>> Image.addNoiseSNR(noise, snr, preserve_flux)  
-                                                   
-    Noise following the supplied model will be added to the image modifying either the flux of the
-    object (if `preserve_flux=True`) or the variance of the noise (if `preserve_flux=False`) such
-    that the given signal-to-noise ratio, `snr`, is reached.
+def addNoiseSNR(self, noise, snr, preserve_flux=False):
+    # This will be inserted into the Image class as a method.  So self = image.
+    """Adds noise to the image in a way that achieves the specified signal-to-noise ratio.
 
-    If `preserve_flux=False` (the default), the flux of the input image will be rescaled to achieve
-    the desired signal-to-noise ratio (useful if adding noise separately to multiple galaxies with
-    the same sky_level).
-    
-    If `preserve_flux=True`, then the variance of the noise model is modified.
+    The given SNR can be achieved either by scaling the flux of the object while keeping
+    the noise level fixed, or the flux can be preserved and the noise variance changed.
+    This is set using the parameter `preserve_flux`.
 
     The definition of SNR is equivalent to the one used by Great08.  Taking a weighted integral 
     of the flux:
@@ -73,6 +58,11 @@ def addNoiseSNR(image, noise, snr, preserve_flux=False):
     is only approximate, since the flux of the object adds to the Poisson noise in those pixels.
     Thus, the real S/N on the final image will be slightly lower than the target `snr` value, 
     and this effect will be larger for brighter objects.
+
+    @param noise        The noise (galsim.BaseNoise) model to use.
+    @param snr          The desired signal-to-noise after the noise is applied.
+    @param preserve_flux  Whether to preserve the flux of the object (True) or the variance of
+                        the nosie model (False) to achieve the desired SNR. [default: False]
     """
     import numpy
     noise_var = noise.getVariance()
@@ -174,12 +164,8 @@ given sigma.
 Initialization
 --------------
 
-    >>> gaussian_noise = galsim.GaussianNoise(rng, sigma=1.)
-
-Parameters:
-
-    rng       A BaseDeviate instance to use for generating the random numbers.
-    sigma     The rms noise on each pixel [default `sigma = 1.`].
+@param rng          A BaseDeviate instance to use for generating the random numbers.
+@param sigma        The rms noise on each pixel. [default: 1.]
 
 Methods
 -------
@@ -231,9 +217,9 @@ Initialization
 
 Parameters:
 
-    rng         A BaseDeviate instance to use for generating the random numbers.
-    sky_level   The sky level in electrons per pixel that was originally in the input image, 
-                but which is taken to have already been subtracted off [default `sky_level = 0.`].
+@param rng          A BaseDeviate instance to use for generating the random numbers.
+@param sky_level    The sky level in electrons per pixel that was originally in the input image, 
+                    but which is taken to have already been subtracted off. [default: 0.]
 
 Methods
 -------
@@ -285,14 +271,15 @@ Initialization
 
 Parameters:
 
-    rng         A BaseDeviate instance to use for generating the random numbers.
-    sky_level   The sky level in electrons per pixel that was originally in the input image, 
-                but which is taken to have already been subtracted off [default `sky_level = 0.`].
-    gain        The gain for each pixel in electrons per ADU; setting gain<=0 will shut off the
-                Poisson noise, and the Gaussian rms will take the value read_noise as being in 
-                units of ADU rather than electrons [default `gain = 1.`].
-    read_noise  The read noise on each pixel in electrons (gain > 0.) or ADU (gain <= 0.)
-                setting read_noise=0. will shut off the Gaussian noise [default `read_noise = 0.`].
+@param rng          A BaseDeviate instance to use for generating the random numbers.
+@param sky_level    The sky level in electrons per pixel that was originally in the input
+                    image, but which is taken to have already been subtracted off.
+                    [default: 0.]
+@param gain         The gain for each pixel in electrons per ADU; setting gain<=0 will shut off
+                    the Poisson noise, and the Gaussian rms will take the value read_noise as
+                    being in units of ADU rather than electrons. [default: 1.]
+@param read_noise   The read noise on each pixel in electrons (gain > 0.) or ADU (gain <= 0.)
+                    setting read_noise=0. will shut off the Gaussian noise. [default: 0.]
 
 Methods
 -------
@@ -342,7 +329,7 @@ Initialization
 
 Parameters:
 
-    dev         A BaseDeviate subclass to use as the noise deviate for each pixel.
+@param dev         A BaseDeviate subclass to use as the noise deviate for each pixel.
 
 Methods
 -------
@@ -385,8 +372,8 @@ class VariableGaussianNoise(_galsim.BaseNoise):
 
     Parameters:
 
-        rng         A BaseDeviate instance to use for generating the random numbers.
-        var_image   The variance of the noise to apply to each pixel.  This image must be the 
+    @param rng         A BaseDeviate instance to use for generating the random numbers.
+    @param var_image   The variance of the noise to apply to each pixel.  This image must be the 
                     same shape as the image for which you eventually call addNoise.
 
     Methods

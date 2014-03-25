@@ -160,7 +160,7 @@ class CelestialCoord(object):
         There are currently three options for the projection, which you can specify with the
         optional `projection` keyword argument:
 
-            'lambert' (the default) uses a Lambert azimuthal projection, which preserves
+            'lambert' [default] uses a Lambert azimuthal projection, which preserves
                     area, but not angles.  For more information, see
                     http://mathworld.wolfram.com/LambertAzimuthalEqual-AreaProjection.html
             'stereographic' uses a stereographic proejection, which preserves angles, but

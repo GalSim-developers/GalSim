@@ -85,7 +85,8 @@ class Shapelet(GSObject):
     @param sigma        The scale size in the standard units (usually arcsec).
     @param order        The order of the shapelet decomposition.  This is the maximum
                         N=p+q included in the decomposition.
-    @param bvec         The initial vector of coefficients.  (Default: all zeros)
+    @param bvec         The initial vector of coefficients.  [default: None, which means to use
+                        all zeros]
     @param gsparams     You may also specify a gsparams argument.  See the docstring for
                         galsim.GSParams using help(galsim.GSParams) for more information about
                         this option.
@@ -246,12 +247,12 @@ def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams
                             N=p+q included in the decomposition.
     @param image            The Image for which to fit the shapelet decomposition
     @param center           The position in pixels to use for the center of the decomposition.
-                            [Default: use the image center (`image.bounds.trueCenter()`)]
+                            [default: image.bounds.trueCenter()]
     @param normalization    The normalization to assume for the image. 
-                            (Default `normalization = "flux"`)
-    @param gsparams         You may also specify a gsparams argument for the constructed 
-                            Shapelet object.  See the docstring for galsim.GSParams using 
-                            help(galsim.GSParams) for more information about this option.
+                            [default: "flux"]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
+
     @returns                The fitted Shapelet profile
     """
     if not center:

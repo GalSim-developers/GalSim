@@ -316,11 +316,11 @@ class Bandpass(object):
         the integral over the set of tabulated values still accurate to `rel_err`.
 
         @param rel_err            The relative error allowed in the integral over the throughput
-                                  function. (default: 1.e-4)
+                                  function. [default: 1.e-4]
         @param preserve_range     Should the original range (`blue_limit` and `red_limit`) of the
                                   Bandpass be preserved? (True) Or should the ends be trimmed to
                                   include only the region where the integral is significant? (False)
-                                  (default: False)
+                                  [default: False]
         @returns  The thinned Bandpass.
         """
         if len(self.wave_list) > 0:
