@@ -612,7 +612,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
                             then it will be used and returned.  [default: None, which means an
                             appropriately-sized image will be created.]
 
-    @return A simulated galaxy image.  The input RealGalaxy is unmodified. 
+    @return a simulated galaxy image.
     """
     # do some checking of arguments
     if not isinstance(real_galaxy, galsim.RealGalaxy):

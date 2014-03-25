@@ -313,7 +313,7 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
                             EstimateShear when estimating shears; see HSMParams documentation
                             using help(galsim.hsm.HSMParams) for more information. [default: None]
 
-    @return                  A ShapeData object containing the results of shape measurement.
+    @returns a ShapeData object containing the results of shape measurement.
     """
     # prepare inputs to C++ routines: ImageView for galaxy, PSF, and weight map
     gal_image_view = gal_image.image.view()
@@ -425,7 +425,7 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
                             FindAdaptiveMom when estimating moments; see HSMParams documentation
                             using help(galsim.hsm.HSMParams) for more information. [default: None]
 
-    @return                  A ShapeData object containing the results of moment measurement.
+    @returns a ShapeData object containing the results of moment measurement.
     """
     # prepare inputs to C++ routines: ImageView for the object being measured and the weight map.
     object_image_view = object_image.image.view()

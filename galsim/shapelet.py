@@ -253,7 +253,7 @@ def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
 
-    @returns                The fitted Shapelet profile
+    @returns the fitted Shapelet profile
     """
     if not center:
         center = image.bounds.trueCenter()

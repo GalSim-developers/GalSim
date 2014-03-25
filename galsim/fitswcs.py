@@ -1394,7 +1394,7 @@ def TanWCS(affine, world_origin, units=galsim.arcsec):
     @param units         The angular units of the (u,v) intermediate coordinate system.
                          [default: galsim.arcsec]
 
-    @returns A GSFitsWCS describing this WCS.
+    @returns a GSFitsWCS describing this WCS.
     """
     import numpy, numpy.linalg
     # These will raise the appropriate errors if affine is not the right type.

@@ -171,7 +171,7 @@ class ChromaticObject(object):
         @param integrator       One of the image integrators from galsim.integ [default: None,
                                 which will try to select an appropriate integrator automatically.]
 
-        @returns                  galsim.Image drawn through filter.
+        @returns the drawn image.
         """
         # To help developers debug extensions to ChromaticObject, check that ChromaticObject has
         # the expected attributes
@@ -239,8 +239,9 @@ class ChromaticObject(object):
     def evaluateAtWavelength(self, wave):
         """ Evaluate this chromatic object at a particular wavelength.
 
-        @param wave  Wavelength in nanometers.
-        @returns     GSObject
+        @param wave     Wavelength in nanometers.
+
+        @returns the monochromatic object at the given wavelength.
         """
         if self.__class__ != ChromaticObject:
             raise NotImplementedError(
@@ -268,7 +269,8 @@ class ChromaticObject(object):
                             `flux_ratio` may be callable, in which case the argument should be 
                             wavelength in nanometers and the return value the scale for that 
                             wavelength.
-        @returns            A new object with the flux scaled appropriately.
+
+        @returns a new object with the flux scaled appropriately.
         """
         if hasattr(flux_ratio, '__call__'):
             ret = self.copy()
@@ -281,7 +283,8 @@ class ChromaticObject(object):
         """Multiply the flux of the object by flux_ratio
 
         @param flux_ratio   The factor by which to scale the flux.
-        @returns            The object with the new flux.
+
+        @returns the object with the new flux.
         """
         ret = self.copy()
         ret.obj = self.obj.withScaledFlux(flux_ratio)
@@ -364,7 +367,8 @@ class ChromaticObject(object):
         @param scale    The factor by which to scale the linear dimension of the object.  `scale` 
                         may be callable, in which case the argument should be wavelength in 
                         nanometers and the return value the scale for that wavelength.
-        @returns        The expanded object
+
+        @returns the expanded object
         """
         if isinstance(self, ChromaticSum):
             return ChromaticSum([ obj.expand(scale) for obj in self.objlist ])
@@ -387,7 +391,8 @@ class ChromaticObject(object):
         @param scale    The linear rescaling factor to apply.  `scale` may be callable, in which
                         case the argument should be wavelength in nanometers and the return value
                         the scale for that wavelength.
-        @returns        The dilated object.
+
+        @returns the dilated object.
         """
         if hasattr(scale, '__call__'):
             return self.expand(scale) * (lambda w: 1./scale(w)**2)
@@ -411,7 +416,8 @@ class ChromaticObject(object):
         See dilate for a version that applies a linear scale factor while preserving flux.
 
         @param mu   The lensing magnification to apply.
-        @returns    The magnified object.
+
+        @returns the magnified object.
         """
         import math
         return self.expand(math.sqrt(mu))
@@ -435,7 +441,8 @@ class ChromaticObject(object):
 
         @param shear    The shear to be applied. Or, as described above, you may instead supply
                         parameters do construct a shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
-        @returns        The sheared object.
+
+        @returns the sheared object.
         """
         if isinstance(self, ChromaticSum):
             return ChromaticSum([ obj.shear(*args, **kwargs) for obj in self.objlist ])
@@ -475,7 +482,8 @@ class ChromaticObject(object):
         @param mu       Lensing magnification to apply to the object.  This is the factor by which
                         the solid angle subtended by the object is magnified, preserving surface
                         brightness.
-        @returns        The lensed object.
+
+        @returns the lensed object.
         """
         return self.shear(g1=g1,g2=g2).magnify(mu)
 
@@ -489,7 +497,8 @@ class ChromaticObject(object):
             https://github.com/GalSim-developers/GalSim/issues
 
         @param theta    Rotation angle (Angle object, +ve anticlockwise).
-        @returns        The rotated object.
+
+        @returns the rotated object.
         """
         if isinstance(self, ChromaticSum):
             return ChromaticSum([ obj.rotate(theta) for obj in self.objlist ])
@@ -516,7 +525,8 @@ class ChromaticObject(object):
         @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
-        @returns        The transformed object.
+
+        @returns the transformed object.
         """
         if isinstance(self, ChromaticSum):
             return ChromaticSum([ obj.transform(dudx,dudy,dvdx,dvdy) for obj in self.objlist ])
@@ -538,7 +548,8 @@ class ChromaticObject(object):
 
         @param dx   Horizontal shift to apply (float or function).
         @param dy   Vertical shift to apply (float or function).
-        @returns    The shifted object.
+
+        @returns the shifted object.
 
         """
         if isinstance(self, ChromaticSum):
@@ -646,7 +657,7 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     @param temperature          Temperature in Kelvins.  [default: 293.15 K]
     @param H2O_pressure         Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
 
-    @returns ChromaticObject  representing a chromatic atmospheric PSF.
+    @returns a ChromaticObject representing a chromatic atmospheric PSF.
     """
     alpha = kwargs.pop('alpha', -0.2)
     if 'zenith_angle' in kwargs:
@@ -743,7 +754,8 @@ class Chromatic(ChromaticObject):
         """Multiply the flux of the object by flux_ratio
 
         @param flux_ratio   The factor by which to scale the flux.
-        @returns            The object with the new flux.
+
+        @returns the object with the new flux.
         """
         return Chromatic(self.obj.withScaledFlux(flux_ratio), self.SED)
 
@@ -751,7 +763,8 @@ class Chromatic(ChromaticObject):
         """ Evaluate this chromatic object at a particular wavelength.
 
         @param wave  Wavelength in nanometers.
-        @returns     GSObject
+
+        @returns the monochromatic object at the given wavelength.
         """
         return self.SED(wave) * self.obj
 
@@ -832,7 +845,8 @@ class ChromaticSum(ChromaticObject):
         """ Evaluate this chromatic object at a particular wavelength.
 
         @param wave  Wavelength in nanometers.
-        @returns     GSObject
+
+        @returns the monochromatic object at the given wavelength.
         """
         return galsim.Add([obj.evaluateAtWavelength(wave) for obj in self.objlist],
                           gsparams=self.gsparams)
@@ -861,7 +875,7 @@ class ChromaticSum(ChromaticObject):
         @param offset           See GSObject.draw()
         @param integrator       One of the image integrators from galsim.integ
 
-        @returns                  galsim.Image drawn through filter.
+        @returns the drawn image.
         """
         image = self.objlist[0].draw(
                 bandpass, image, scale, wcs, gain, wmult, normalization,
@@ -877,7 +891,8 @@ class ChromaticSum(ChromaticObject):
         """Multiply the flux of the object by flux_ratio
 
         @param flux_ratio   The factor by which to scale the flux.
-        @returns            The object with the new flux.
+
+        @returns the object with the new flux.
         """
         return ChromaticSum([ obj.withScaledFlux(flux_ratio) for obj in self.objlist ])
 
@@ -951,7 +966,8 @@ class ChromaticConvolution(ChromaticObject):
         """ Evaluate this chromatic object at a particular wavelength.
 
         @param wave  Wavelength in nanometers.
-        @returns     GSObject
+
+        @returns the monochromatic object at the given wavelength.
         """
         return galsim.Convolve([obj.evaluateAtWavelength(wave) for obj in self.objlist],
                                gsparams=self.gsparams)
@@ -978,7 +994,7 @@ class ChromaticConvolution(ChromaticObject):
         @param iimult             Oversample any intermediate InterpolatedImages created to hold
                                   effective profiles by this amount.
 
-        @returns                  galsim.Image drawn through filter.
+        @returns the drawn image.
         """
         # `ChromaticObject.draw()` can just as efficiently handle separable cases.
         if self.separable:
@@ -1117,7 +1133,8 @@ class ChromaticConvolution(ChromaticObject):
         """Multiply the flux of the object by flux_ratio
 
         @param flux_ratio   The factor by which to scale the flux.
-        @returns            The object with the new flux.
+
+        @returns the object with the new flux.
         """
         ret = self.copy()
         ret.objlist[0] *= flux_ratio
@@ -1150,7 +1167,8 @@ class ChromaticDeconvolution(ChromaticObject):
         """ Evaluate this chromatic object at a particular wavelength.
 
         @param wave  Wavelength in nanometers.
-        @returns     GSObject
+
+        @returns the monochromatic object at the given wavelength.
         """
         return galsim.Deconvolve(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
@@ -1158,7 +1176,8 @@ class ChromaticDeconvolution(ChromaticObject):
         """Multiply the flux of the object by flux_ratio
 
         @param flux_ratio   The factor by which to scale the flux.
-        @returns            The object with the new flux.
+
+        @returns the object with the new flux.
         """
         return ChromaticDeconvolution(self.obj / flux_ratio, **self.kwargs)
 
@@ -1188,7 +1207,8 @@ class ChromaticAutoConvolution(ChromaticObject):
         """ Evaluate this chromatic object at a particular wavelength.
 
         @param wave  Wavelength in nanometers.
-        @returns     GSObject
+
+        @returns the monochromatic object at the given wavelength.
         """
         return galsim.AutoConvolve(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
@@ -1196,7 +1216,8 @@ class ChromaticAutoConvolution(ChromaticObject):
         """Multiply the flux of the object by flux_ratio
 
         @param flux_ratio   The factor by which to scale the flux.
-        @returns            The object with the new flux.
+
+        @returns the object with the new flux.
         """
         import math
         if flux_ration >= 0.:
@@ -1231,7 +1252,8 @@ class ChromaticAutoCorrelation(ChromaticObject):
         """ Evaluate this chromatic object at a particular wavelength.
 
         @param wave  Wavelength in nanometers.
-        @returns     GSObject
+
+        @returns the monochromatic object at the given wavelength.
         """
         return galsim.AutoCorrelate(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
@@ -1239,7 +1261,8 @@ class ChromaticAutoCorrelation(ChromaticObject):
         """Multiply the flux of the object by flux_ratio
 
         @param flux_ratio   The factor by which to scale the flux.
-        @returns            The object with the new flux.
+
+        @returns the object with the new flux.
         """
         import math
         if flux_ration >= 0.:

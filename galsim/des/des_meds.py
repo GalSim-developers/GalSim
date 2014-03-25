@@ -388,7 +388,7 @@ def BuildMEDS(file_name, config, nproc=1, logger=None, file_num=0, image_num=0, 
     @param image_num         If given, the current image_num. [default: 0]
     @param obj_num           If given, the current obj_num. [default: 0]
 
-    @return time      Time taken to build file
+    @returns the time taken to build file
     """
     import time
     t1 = time.time()

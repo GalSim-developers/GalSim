@@ -45,7 +45,8 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
     @param make_weight_image   Whether to make weight_image. [default: False]
     @param make_badpix_image   Whether to make badpix_image. [default: False]
 
-    @return (images, psf_images, weight_images, badpix_images)  (All in tuple are lists)
+    @returns the tuple (images, psf_images, weight_images, badpix_images).
+             All in tuple are lists.
     """
     if logger:
         logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
@@ -279,7 +280,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     @param make_weight_image   Whether to make weight_image. [default: False]
     @param make_badpix_image   Whether to make badpix_image. [default: False]
 
-    @return (image, psf_image, weight_image, badpix_image)  
+    @returns the tuple (image, psf_image, weight_image, badpix_image).
 
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.
@@ -350,7 +351,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     @param make_weight_image   Whether to make weight_image. [default: False]
     @param make_badpix_image   Whether to make badpix_image. [default: False]
 
-    @return (image, psf_image, weight_image, badpix_image)  
+    @returns the tuple (image, psf_image, weight_image, badpix_image).
 
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
@@ -421,7 +422,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     @param make_weight_image   Whether to make weight_image. [default: False]
     @param make_badpix_image   Whether to make badpix_image. [default: False]
 
-    @return (image, psf_image, weight_image, badpix_image)  
+    @returns the tuple (image, psf_image, weight_image, badpix_image).
 
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
@@ -668,7 +669,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     @param make_weight_image   Whether to make weight_image. [default: False]
     @param make_badpix_image   Whether to make badpix_image. [default: False]
 
-    @return (image, psf_image, weight_image, badpix_image)  
+    @returns the tuple (image, psf_image, weight_image, badpix_image).
 
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    

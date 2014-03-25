@@ -37,8 +37,8 @@ def theoryToObserved(gamma1, gamma2, kappa):
     @param gamma2       The second (x) shear component, which must be the NON-reduced shear.
     @param kappa        The convergence.
 
-    @return g1, g2, mu   The reduced shear and magnification, in the same form as the input gamma1,
-                         gamma2, and kappa.
+    @returns the reduced shear and magnification as a tuple (g1, g2, mu) where each item has the
+             same form as the input gamma1, gamma2, and kappa.
     """
     # check nature of inputs to make sure they are appropriate
     if type(gamma1) != type(gamma2):
@@ -331,8 +331,8 @@ class PowerSpectrum(object):
                                     kmax = pi / grid_spacing * kmax_factor
                                 [default: 1; must be an integer]
 
-        @return g1,g2[,kappa]   2-d NumPy arrays for the shear components g_1, g_2 and (if
-                                `get_convergence=True`) convergence kappa.
+        @returns the tuple (g1,g2[,kappa]), where each is a 2-d NumPy array and kappa is included
+                 iff `get_convergence` is set to True.
         """
         # Check problem cases for regular grid of points
         if grid_spacing is None or ngrid is None:
@@ -552,6 +552,11 @@ class PowerSpectrum(object):
         @param units        The angular units used for the positions.  [default: arcsec]
         @param reduced      Whether returned shear(s) should be reduced shears. [default: True]
 
+        @returns the shear as a tuple, (g1,g2)
+
+        If the input `pos` is given a single position, (g1,g2) are the  two shear components.
+        If the input `pos` is given a list of positions, they are each a python list of values.
+        If the input `pos` is given a NumPy array of positions, they are NumPy arrays.
         """
 
         if not hasattr(self, 'im_g1'):
@@ -633,6 +638,11 @@ class PowerSpectrum(object):
                                   x-positions and array[1] contains y-positions
         @param units        The angular units used for the positions.  [default: arcsec]
 
+        @returns the convergence, kappa.
+
+        If the input `pos` is given a single position, kappa is the convergence value.
+        If the input `pos` is given a list of positions, kappa is a python list of values.
+        If the input `pos` is given a NumPy array of positions, kappa is a NumPy array.
         """
 
         if not hasattr(self, 'im_kappa'):
@@ -701,9 +711,11 @@ class PowerSpectrum(object):
                                     x-positions and array[1] contains y-positions
         @param units            The angular units used for the positions.  [default: arcsec]
 
-        @return mu              If given a single position: the magnification, mu.
-                                If given a list of positions: a python list of values.
-                                If given a NumPy array of positions: a NumPy array of values.
+        @returns the magnification, mu.
+
+        If the input `pos` is given a single position, mu is the magnification value.
+        If the input `pos` is given a list of positions, mu is a python list of values.
+        If the input `pos` is given a NumPy array of positions, mu is a NumPy array.
         """
 
         if not hasattr(self, 'im_kappa'):
@@ -776,10 +788,11 @@ class PowerSpectrum(object):
                                     x-positions and array[1] contains y-positions
         @param units            The angular units used for the positions.  [default: arcsec]
 
-        @return g1,g2,mu        If given a single position: the reduced shears g1 and g2, and
-                                magnification mu.
-                                If given a list of positions: python lists of values.
-                                If given a NumPy array of positions: NumPy arrays of values.
+        @returns shear and magnification as a tuple (g1,g2,mu).
+
+        If the input `pos` is given a single position, they are the shear and magnification values.
+        If the input `pos` is given a list of positions, they are python lists of values.
+        If the input `pos` is given a NumPy array of positions, they are NumPy arrays.
         """
 
         if not hasattr(self, 'im_kappa'):
@@ -897,8 +910,8 @@ class PowerSpectrumRealizer(object):
         """Generate a realization of the current power spectrum.
         
         @param gd               A Gaussian deviate to use when generating the shear fields.
-        @return g1,g2,kappa     NumPy arrays for the shear components g_1, g_2 and convergence
-                                kappa.
+
+        @return a tuple of NumPy arrays (g1,g2,kappa) for the shear and convergence.
         """
         ISQRT2 = np.sqrt(1.0/2.0)
 
@@ -1042,10 +1055,11 @@ def kappaKaiserSquires(g1, g2):
     @param g1  Square galsim.Image or NumPy array containing the first component of shear.
     @param g2  Square galsim.Image or NumPy array containing the second component of shear.
 
-    @return kappa_E, kappa_B  The first element of this tuple represents the convergence field
-                              underlying the input shears; the second element is the convergence
-                              field generated were all shears rotated by 45 degrees prior to input.
-                              Both are NumPy arrays.
+    @returns the tuple (kappa_E, kappa_B), as NumPy arrays.
+
+    The returned kappa_E represents the convergence field underlying the input shears
+    The returned kappa_B is the convergence field generated were all shears rotated by 45 degrees
+    prior to input. 
     """
     # Checks on inputs
     import galsim.utilities

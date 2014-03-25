@@ -42,8 +42,8 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     @param make_weight_image  Whether to make weight_image. [default: False]
     @param make_badpix_image  Whether to make badpix_image. [default: False]
 
-    @return (images, psf_images, weight_images, badpix_images, current_vars) 
-    (All in tuple are lists)
+    @returns the tuple (images, psf_images, weight_images, badpix_images, current_vars).
+             All in tuple are lists.
     """
     def worker(input, output):
         proc = current_process().name
@@ -294,7 +294,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     @param make_weight_image  Whether to make weight_image. [default: False]
     @param make_badpix_image  Whether to make badpix_image. [default: False]
 
-    @return image, psf_image, weight_image, badpix_image, current_var, time
+    @returns the tuple (image, psf_image, weight_image, badpix_image, current_var, time)
     """
     import time
     t1 = time.time()
@@ -593,7 +593,7 @@ def DrawStampFFT(psf, gal, config, xsize, ysize, offset, no_pixel, real_space):
     Draw an image using the given psf, pix and gal profiles (which may be None)
     using the FFT method for doing the convolution.
 
-    @return the resulting image.
+    @returns the resulting image.
     """
 
     # The real_space parameter being False really means let Convolve decide.
@@ -671,7 +671,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, offset):
     Draw an image using the given psf and gal profiles (which may be None)
     using the photon shooting method for doing the convolution.
 
-    @return the resulting image.
+    @returns the resulting image.
     """
 
     phot_list = [ prof for prof in (psf,gal) if prof is not None ]
@@ -741,7 +741,7 @@ def DrawPSFStamp(psf, config, bounds, offset, no_pixel, real_space):
     """
     Draw an image using the given psf profile.
 
-    @return the resulting image.
+    @returns the resulting image.
     """
 
     if not psf:

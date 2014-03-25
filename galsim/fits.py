@@ -516,7 +516,7 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
                                    '*.gz' => 'gzip'
                                    '*.bz2' => 'bzip2'
                                    otherwise None
-                        [default: None]
+                        [default: 'auto']
     """
   
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
@@ -753,7 +753,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
                                    otherwise None
                         [default: 'auto']
 
-    @returns An Image
+    @returns the image as a galsim.Image instance.
     """
     
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
@@ -839,7 +839,7 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
                                    otherwise None
                         [default: 'auto']
 
-    @returns A Python list of Images
+    @returns a Python list of galsim.Images
     """
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
@@ -910,7 +910,7 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
                                    otherwise None
                         [default: 'auto']
 
-    @returns A Python list of Images
+    @returns a Python list of galsim.Images.
     """
   
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
@@ -1004,7 +1004,7 @@ def readFile(file_name, dir=None, hdu=None, compression='auto'):
                                    otherwise None
                         [default: 'auto']
 
-    @returns A tuple with three items: (hdu, hdu_list, fin)
+    @returns a tuple with three items: (hdu, hdu_list, fin).
     """
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
     hdu_list, fin = _read_file(file_name, dir, file_compress)

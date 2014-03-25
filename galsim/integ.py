@@ -44,6 +44,8 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
                     infinity).
     @param rel_err  The desired relative error [default: 1.e-6]
     @param abs_err  The desired absolute error [default: 1.e-12]
+
+    @returns the value of the integral.
     """
     min = float(min)
     max = float(max)
@@ -60,7 +62,8 @@ def midpt(fvals, x):
 
     @param fvals  Samples of the integrand
     @param x      Locations at which the integrand was sampled.
-    @returns      Midpoint rule approximation of the integral.
+
+    @returns midpoint rule approximation of the integral.
     """
     x = np.array(x)
     dx = [x[1]-x[0]]
@@ -115,7 +118,8 @@ class SampleIntegrator(ImageIntegrator):
     @param wmult                 See GSObject.draw()
     @param use_true_center       See GSObject.draw()
     @param offset                See GSObject.draw()
-    @returns                     result of integral as a galsim.Image
+
+    @returns the result of integral as a galsim.Image
     """
     def __init__(self, rule):
         self.rule = rule
@@ -158,7 +162,7 @@ class ContinuousIntegrator(ImageIntegrator):
     @param use_true_center      See GSObject.draw()
     @param offset               See GSObject.draw()
 
-    @returns                     result of integral as a galsim.Image
+    @returns the result of integral as a galsim.Image
     """
     def __init__(self, rule, N=250, use_endpoints=True):
         self.N = N

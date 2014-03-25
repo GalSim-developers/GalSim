@@ -104,7 +104,8 @@ def Noise_withVariance(self, variance):
     """Return a new noise object (of the same type as the current one) with the specified variance.
 
     @param variance     The desired variance in the noise.
-    @returns            A new Noise object with the given variance.
+
+    @returns a new Noise object with the given variance.
     """
     ret = self.copy()
     ret._setVariance(variance)
@@ -121,8 +122,8 @@ def Noise_rescaleVariance(self, variance_ratio):
 
     @param variance_ratio   The factor by which to scale the variance of the correlation 
                             function profile.
-    @returns                A new Noise object whose variance has been scaled by 
-                            the given amount.
+
+    @returns a new Noise object whose variance has been scaled by the given amount.
     """
     ret = self.copy()
     ret._scaleVariance(variance_ratio)
@@ -139,8 +140,8 @@ def Noise_mul(self, variance_ratio):
 
     @param variance_ratio   The factor by which to scale the variance of the correlation 
                             function profile.
-    @returns                A new Noise object whose variance has been scaled by 
-                            the given amount.
+
+    @returns a new Noise object whose variance has been scaled by the given amount.
     """
     return self.rescaleVariance(variance_ratio)
 

@@ -141,8 +141,9 @@ class SED(object):
         attributes, the SED is considered undefined, and this method will raise an exception if a
         flux at a wavelength outside the defined range is requested.
 
-        @param   wave  Wavelength in nanometers at which to evaluate the SED.
-        @returns       Photon density, Units proportional to photons/nm
+        @param wave     Wavelength in nanometers at which to evaluate the SED.
+
+        @returns the photon density in units of photons/nm
         """
         if hasattr(wave, '__iter__'): # Only iterables respond to min(), max()
             wmin = min(wave)
@@ -243,7 +244,7 @@ class SED(object):
         @param target_flux_density  The target *relative* normalization in photons / nm.
         @param wavelength           The wavelength, in nm, at which flux density will be set.
 
-        @returns   New normalized SED.
+        @returns the new normalized SED.
         """
         current_fphotons = self(wavelength)
         factor = target_flux_density / current_fphotons
@@ -258,7 +259,7 @@ class SED(object):
         @param target_flux  The desired *relative* flux normalization of the SED.
         @param bandpass     A galsim.Bandpass object defining a filter bandpass.
 
-        @returns   New normalized SED.
+        @returns the new normalized SED.
         """
         current_flux = self.calculateFlux(bandpass)
         norm = target_flux/current_flux
@@ -270,7 +271,8 @@ class SED(object):
         """ Return a new SED with redshifted wavelengths.
 
         @param redshift
-        @returns Redshifted SED.
+
+        @returns the redshifted SED.
         """
         ret = self.copy()
         wave_factor = (1.0 + redshift) / (1.0 + self.redshift)
@@ -285,7 +287,8 @@ class SED(object):
 
         @param bandpass   A galsim.Bandpass object representing a filter, or None for bolometric
                           flux (over defined wavelengths).
-        @returns   Flux through bandpass.
+
+        @returns the flux through the bandpass.
         """
         if bandpass is None: # do bolometric flux
             if self.blue_limit is None:
@@ -318,7 +321,7 @@ class SED(object):
                                   include only the region where the integral is significant? (False)
                                   [default: False]
 
-        @returns  The thinned SED.
+        @returns the thinned SED.
         """
         if len(self.wave_list) > 0:
             x = self.wave_list

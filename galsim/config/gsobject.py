@@ -65,9 +65,8 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     @param logger       Optionally, provide a logger for logging debug statements.
                         [default: None]
 
-    @returns gsobject, safe 
-        gsobject is the built object 
-        safe is a bool that says whether it is safe to use this object again next time
+    @returns the tuple (gsobject, safe), where gsobject is the built object, and safe is
+             a bool that says whether it is safe to use this object again next time.
     """
     # I'd like to be able to have base=config be the default value, but python doesn't
     # allow that.  So None is the default, and if it's None, we set it to config.

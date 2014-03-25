@@ -286,7 +286,8 @@ class BaseWCS(object):
 
         @param image_pos    The image coordinate position (for non-uniform WCS types)
         @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @returns            The pixel area in arcsec**2
+
+        @returns the pixel area in arcsec**2.
         """
         return self.local(image_pos, world_pos)._pixelArea()
 
@@ -302,7 +303,8 @@ class BaseWCS(object):
 
         @param image_pos    The image coordinate position (for non-uniform WCS types)
         @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @returns            The minimum pixel area in any direction in arcsec
+
+        @returns the minimum pixel area in any direction in arcsec.
         """
         return self.local(image_pos, world_pos)._minScale()
 
@@ -318,7 +320,8 @@ class BaseWCS(object):
 
         @param image_pos    The image coordinate position (for non-uniform WCS types)
         @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @returns            The maximum pixel area in any direction in arcsec
+
+        @returns the maximum pixel area in any direction in arcsec.
         """
         return self.local(image_pos, world_pos)._maxScale()
 
@@ -360,7 +363,8 @@ class BaseWCS(object):
 
         @param image_pos    The image coordinate position (for non-uniform WCS types)
         @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @returns local_wcs  A LocalWCS
+
+        @returns a LocalWCS instance.
         """
         if image_pos and world_pos:
             raise TypeError("Only one of image_pos or world_pos may be provided")
@@ -384,7 +388,8 @@ class BaseWCS(object):
 
         @param image_pos    The image coordinate position (for non-uniform WCS types)
         @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @returns local_wcs  A JacobianWCS
+
+        @returns a JacobianWCS instance.
         """
         return self.local(image_pos, world_pos)._toJacobian()
 
@@ -425,7 +430,8 @@ class BaseWCS(object):
 
         @param image_pos        The image coordinate position (for non-uniform WCS types)
         @param world_pos        The world coordinate position (for non-uniform WCS types)
-        @returns affine_wcs     An AffineTransform
+
+        @returns an AffineTransform instance
         """
         jac = self.jacobian(image_pos, world_pos)
         # That call checked that only one of image_pos or world_pos is provided.
@@ -480,7 +486,7 @@ class BaseWCS(object):
         @param world_origin  The world coordinate position to use as the origin.  Only valid if
                              wcs.isCelestial() == False. [default: None]
 
-        @returns wcs         The new recentered WCS
+        @returns the new recentered WCS
         """
         if isinstance(origin, galsim.PositionI):
             origin = galsim.PositionD(origin.x, origin.y)
@@ -584,7 +590,7 @@ def readFromFitsHeader(header):
 
     @param header           The fits header to write the data to.
 
-    @returns wcs, origin    The wcs and the image origin.
+    @returns a tuple (wcs, origin) of the wcs from the header and the image origin.
     """
     if not isinstance(header, galsim.fits.FitsHeader):
         header = galsim.fits.FitsHeader(header)

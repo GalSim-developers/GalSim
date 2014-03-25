@@ -294,7 +294,7 @@ class NFWHalo(object):
         @param units     Angular units of coordinates. [default: arcsec]
         @param reduced   Whether returned shear(s) should be reduced shears. [default: True]
 
-        @return (g1,g2)   [g1 and g2 are each a list if input was a list]
+        @returns the reduced shears as a tuple (g1,g2), which match the format of the input `pos`.
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getShear')
@@ -351,7 +351,7 @@ class NFWHalo(object):
         @param z_s     Source redshift(s).
         @param units   Angular units of coordinates. [default: arcsec]
 
-        @return kappa or list of kappa values.
+        @returns the convergence, kappa, which matches the format of the input `pos`.
         """
 
         # Convert to numpy arrays for internal usage:
@@ -392,7 +392,8 @@ class NFWHalo(object):
                            x-positions and array[1] contains y-positions
         @param z_s     Source redshift(s).
         @param units   Angular units of coordinates (only arcsec implemented so far).
-        @return mu     Numpy array containing the magnification at the specified position(s).
+
+        @returns the magnification mu, which matches the format of the input `pos`.
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getMagnification')
@@ -435,7 +436,9 @@ class NFWHalo(object):
                                x-positions and array[1] contains y-positions
         @param z_s         Source redshift(s).
         @param units       Angular units of coordinates (only arcsec implemented so far).
-        @return g1,g2,mu   Reduced shears and magnifications.
+
+        @returns the reduced shears and magnifications as a tuple (g1,g2,mu), which match the
+                 format of the input `pos`.
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getLensing')

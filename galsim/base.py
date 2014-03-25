@@ -345,7 +345,8 @@ class GSObject(object):
         initialize a new InterpolatedImage, and then using the xValue() method for that new object.
 
         @param position  The position at which you want the surface brightness of the object.
-        @returns xvalue  The surface brightness at that position.
+
+        @returns the surface brightness at that position.
         """
         pos = galsim.utilities.parse_pos_args(args,kwargs,'x','y')
         return self.SBProfile.xValue(pos)
@@ -363,7 +364,8 @@ class GSObject(object):
         issue (unlike for xValue).
 
         @param position  The position in k space at which you want the fourier amplitude.
-        @returns kvalue  The amplitude of the fourier transform at that position.
+
+        @returns the amplitude of the fourier transform at that position.
         """
         kpos = galsim.utilities.parse_pos_args(args,kwargs,'kx','ky')
         return self.SBProfile.kValue(kpos)
@@ -378,7 +380,8 @@ class GSObject(object):
         the given value.
 
         @param flux     The new flux for the object.
-        @returns        The object with the new flux
+
+        @returns the object with the new flux
         """
         return self.withScaledFlux(flux / self.getFlux())
 
@@ -397,7 +400,8 @@ class GSObject(object):
             obj = obj * flux_ratio
 
         @param flux_ratio   The new flux for the object.
-        @returns            The object with the new flux.
+
+        @returns the object with the new flux.
         """
         new_obj = GSObject(self.SBProfile.scaleFlux(flux_ratio))
         if hasattr(self,'noise'):
@@ -435,7 +439,8 @@ class GSObject(object):
         brightness.
 
         @param scale    The factor by which to scale the linear dimension of the object.
-        @returns        The expanded object.
+
+        @returns the expanded object.
         """
         new_obj = GSObject(self.SBProfile.expand(scale))
         if hasattr(self,'noise'):
@@ -463,7 +468,8 @@ class GSObject(object):
         changes the flux.
 
         @param scale    The linear rescaling factor to apply.
-        @returns        The dilated object.
+
+        @returns the dilated object.
         """
         return self.expand(scale) * (1./scale**2)  # conserve flux
 
@@ -492,7 +498,8 @@ class GSObject(object):
         brightness.
 
         @param mu   The lensing magnification to apply.
-        @returns    The magnified object.
+
+        @returns the magnified object.
         """
         import math
         return self.expand(math.sqrt(mu))
@@ -522,7 +529,8 @@ class GSObject(object):
 
         @param shear    The shear to be applied. Or, as described above, you may instead supply
                         parameters do construct a shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
-        @returns        The sheared object.
+
+        @returns the sheared object.
         """
         if len(args) == 1:
             if kwargs:
@@ -567,7 +575,8 @@ class GSObject(object):
         @param mu       Lensing magnification to apply to the object.  This is the factor by which
                         the solid angle subtended by the object is magnified, preserving surface
                         brightness.
-        @returns        The lensed object.
+
+        @returns the lensed object.
         """
         return self.shear(g1=g1,g2=g2).magnify(mu)
 
@@ -586,7 +595,8 @@ class GSObject(object):
         """Rotate this object by an Angle theta.
 
         @param theta    Rotation angle (Angle object, +ve anticlockwise).
-        @returns        The rotated object.
+
+        @returns the rotated object.
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
@@ -629,7 +639,8 @@ class GSObject(object):
         @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
-        @returns        The transformed object
+
+        @returns the transformed object
         """
         new_obj = GSObject(self.SBProfile.transform(dudx,dudy,dvdx,dvdy))
         if hasattr(self,'noise'):
@@ -660,7 +671,8 @@ class GSObject(object):
 
         @param dx       Horizontal shift to apply.
         @param dy       Vertical shift to apply.
-        @returns        The shifted object.
+
+        @returns the shifted object.
         """
         delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
         new_obj = GSObject(self.SBProfile.shift(delta))
@@ -960,7 +972,7 @@ class GSObject(object):
                             center of the image (either the true center if use_true_center=True,
                             or the nominal center if use_true_center=False). [default: None]
 
-        @returns      The drawn image.
+        @returns the drawn image.
         """
         # Check for obsolete dx parameter
         if dx is not None and scale is None: scale = dx
@@ -1122,7 +1134,7 @@ class GSObject(object):
                             Poisson statistics for `n_photons` samples. [default: True,
                             unless n_photons is given, in which case the default is False]
 
-        @returns      The drawn image.
+        @returns the drawn image.
         """
         # Check for obsolete dx parameter
         if dx is not None and scale is None: scale = dx
@@ -1250,7 +1262,7 @@ class GSObject(object):
                             Note: This requires that images be provided (i.e. `re`, `im` are
                             not `None`) and that they have defined bounds. [default: False]
 
-        @returns      (re, im)  (created if necessary)
+        @returns the tuple of images, (re, im) (created if necessary)
         """
         # Check for obsolete dk parameter
         if dk is not None and scale is None: scale = dk

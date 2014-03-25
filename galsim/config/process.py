@@ -782,7 +782,7 @@ def BuildFits(file_name, config, logger=None,
     @param badpix_hdu       If given, write a badpix image to this hdu in file_name. [default:
                             None]
 
-    @return time      Time taken to build file
+    @returns the time taken to build file.
     """
     import time
     t1 = time.time()
@@ -907,7 +907,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     @param weight_file_name If given, write a weight image to this file. [default: None]
     @param badpix_file_name If given, write a badpix image to this file. [default: None]
 
-    @return time      Time taken to build file
+    @returns the time taken to build file.
     """
     import time
     t1 = time.time()
@@ -1010,18 +1010,18 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     """
     Build a multi-image fits data cube as specified in config.
     
-    @param file_name         The name of the output file.
-    @param config            A configuration dict.
-    @param nproc             How many processes to use. [default: 1]
-    @param logger            If given, a logger object to log progress. [default: None]
-    @param file_num          If given, the current file_num. [default: 0]
-    @param image_num         If given, the current image_num. [default: 0]
-    @param obj_num           If given, the current obj_num. [default: 0]
-    @param psf_file_name     If given, write a psf image to this file. [default: None]
-    @param weight_file_name  If given, write a weight image to this file. [default: None]
-    @param badpix_file_name  If given, write a badpix image to this file. [default: None]
+    @param file_name        The name of the output file.
+    @param config           A configuration dict.
+    @param nproc            How many processes to use. [default: 1]
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param file_num         If given, the current file_num. [default: 0]
+    @param image_num        If given, the current image_num. [default: 0]
+    @param obj_num          If given, the current obj_num. [default: 0]
+    @param psf_file_name    If given, write a psf image to this file. [default: None]
+    @param weight_file_name If given, write a weight image to this file. [default: None]
+    @param badpix_file_name If given, write a badpix image to this file. [default: None]
 
-    @return time      Time taken to build file
+    @returns the time taken to build file.
     """
     import time
     t1 = time.time()

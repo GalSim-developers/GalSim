@@ -64,7 +64,7 @@ def g1g2_to_e1e2(g1, g2):
     @param g1   First reduced shear component (along pixel axes)
     @param g2   Second reduced shear component (at 45 degrees with respect to image axes)
 
-    @returns The corresponding distortions, e1 and e2.
+    @returns the corresponding distortions, e1 and e2.
     """
     # Conversion:
     # e = (a^2-b^2) / (a^2+b^2)
@@ -92,7 +92,7 @@ def rotate_xy(x, y, theta):
     @param y        NumPy array of input y coordinates
     @param theta    Rotation angle (+ve counter clockwise) as a galsim.Angle instance
 
-    @return x_rot, yrot  Coordinates rotated by `theta` around the origin
+    @return the rotated coordinates (x_rot,y_rot).
     """
     if not isinstance(theta, galsim.Angle):
         raise TypeError("Input rotation angle theta must be a galsim.Angle instance.")
@@ -225,7 +225,7 @@ def rand_arr(shape, deviate):
     @param deviate      Any GalSim deviate (see random.py) such as UniformDeviate, GaussianDeviate,
                         etc. to be used to generate random numbers
 
-    @returns A Numpy array of the desired dimensions with random numbers generated using the
+    @returns a Numpy array of the desired dimensions with random numbers generated using the
     supplied deviate.
     """
     if len(shape) is not 2:
@@ -1008,7 +1008,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
                             be trimmed to include only the region where the integral is 
                             significant? (False)  (default: False)
 
-    @returns x_new, f_new   Lists with the thinned tabulation.
+    @returns a tuple of lists (x_new, y_new) with the thinned tabulation.
     """
     import numpy
     x = numpy.array(x)

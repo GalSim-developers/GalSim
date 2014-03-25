@@ -56,7 +56,7 @@ def Add(*args, **kwargs):
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
 
-    @returns galsim.Sum or galsim.ChromaticSum as appropriate.
+    @returns a galsim.Sum or galsim.ChromaticSum instance as appropriate.
     """
     if len(args) == 0:
         # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
@@ -174,7 +174,7 @@ def Convolve(*args, **kwargs):
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
 
-    @returns galsim.Convolution or galsim.ChromaticConvolution as appropriate.
+    @returns a galsim.Convolution or galsim.ChromaticConvolution instance as appropriate.
     """
     # First check for number of arguments != 0
     if len(args) == 0:
@@ -373,7 +373,7 @@ def Deconvolve(obj, gsparams=None):
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
 
-    @returns galsim.Deconvolution or galsim.ChromaticDeconvolution as appropriate.
+    @returns a galsim.Deconvolution or galsim.ChromaticDeconvolution instance as appropriate.
     """
     if isinstance(obj, galsim.ChromaticObject):
         return galsim.ChromaticDeconvolution(obj, gsparams=gsparams)
@@ -430,7 +430,7 @@ def AutoConvolve(obj, real_space=None, gsparams=None):
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
 
-    @returns galsim.AutoConvolution or galsim.ChromaticAutoConvolution as appropriate.
+    @returns a galsim.AutoConvolution or galsim.ChromaticAutoConvolution instance as appropriate.
     """
     if isinstance(obj, galsim.ChromaticObject):
         return galsim.ChromaticAutoConvolution(obj, real_space=real_space, gsparams=gsparams)
@@ -512,7 +512,7 @@ def AutoCorrelate(obj, real_space=None, gsparams=None):
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
 
-    @returns galsim.AutoCorrelation or galsim.ChromaticAutoCorrelation as appropriate.
+    @returns a galsim.AutoCorrelation or galsim.ChromaticAutoCorrelation instance as appropriate.
     """
     if isinstance(obj, galsim.ChromaticObject):
         return galsim.ChromaticAutoCorrelation(obj, real_space=real_space, gsparams=gsparams)

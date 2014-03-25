@@ -205,8 +205,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @param image The input Image object.
 
-        @return variance  A float containing the theoretically calculated variance of the combined
-                          noise fields in the updated image.
+        @returns the theoretically calculated variance of the combined noise fields in the
+                 updated image.
         """
         # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate
         # noise according to the correlation function represented by this instance.  An alternative
@@ -248,7 +248,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         `half_light_radius` <-- `half_light_radius * scale`.
 
         @param scale    The linear rescaling factor to apply.
-        @returns        A new CorrelatedNoise object with the specified expansion.
+
+        @returns a new CorrelatedNoise object with the specified expansion.
         """
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.expand(scale))
 
@@ -268,7 +269,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         an applied dilation.
         
         @param scale    The linear dilation scale factor.
-        @returns        A new CorrelatedNoise object with the specified dilation.
+
+        @returns a new CorrelatedNoise object with the specified dilation.
         """
         # Expansion changes the flux by scale**2, dilate reverses that to conserve flux,
         # so the variance needs to change by scale**-4.
@@ -290,7 +292,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         an applied magnification.
 
         @param mu       The lensing magnification
-        @returns        A new CorrelatedNoise object with the specified magnification.
+
+        @returns a new CorrelatedNoise object with the specified magnification.
         """
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.magnify(mu))
 
@@ -311,7 +314,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         @param g1       First component of lensing (reduced) shear to apply to the object.
         @param g2       Second component of lensing (reduced) shear to apply to the object.
         @param mu       Lensing magnification to apply to the object.
-        @returns        A new CorrelatedNoise object with the specified shear and magnification.
+
+        @returns a new CorrelatedNoise object with the specified shear and magnification.
         """
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.lens(g1,g2,mu))
 
@@ -330,7 +334,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """Apply a rotation theta to this correlated noise model.
            
         @param theta    Rotation angle (Angle object, positive means anticlockwise).
-        @returns        A new CorrelatedNoise object with the specified rotation.
+
+        @returns a new CorrelatedNoise object with the specified rotation.
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
@@ -356,7 +361,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @param shear    The shear to be applied. Or, as described above, you may instead supply
                         parameters do construct a shear directly.  eg. `corr.shear(g1=g1,g2=g2)`.
-        @returns        A new CorrelatedNoise object with the specified shear.
+
+        @returns a new CorrelatedNoise object with the specified shear.
         """
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.shear(*args,**kwargs))
 
@@ -378,7 +384,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
-        @returns        A new CorrelatedNoise object with the specified transformation.
+
+        @returns a new CorrelatedNoise object with the specified transformation.
         """
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.transform(dudx,dudy,dvdx,dvdy))
 
@@ -428,7 +435,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         proportionally.
 
         @param variance     The desired point variance in the noise.
-        @returns            A CorrelatedNoise object with teh new variance.
+
+        @returns a CorrelatedNoise object with teh new variance.
         """
         variance_ratio = variance / self.getVariance()
         return self * variance_ratio
@@ -440,8 +448,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @param variance_ratio   The factor by which to scale the variance of the correlation
                                 function profile.
-        @returns                A CorrelatedNoise object whose variance and covariances have 
-                                been scaled up by the given factor.
+
+        @returns a CorrelatedNoise object whose variance and covariances have been scaled up by
+                 the given factor.
         """
         return _BaseCorrelatedNoise(self.getRNG(), self._profile * variance_ratio)
 
@@ -506,7 +515,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         @param gsparams     An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
 
-        @returns         The new CorrelatedNoise of the convolved profile.
+        @returns the new CorrelatedNoise of the convolved profile.
         """
         conv = galsim.Convolve([self._profile, galsim.AutoCorrelate(gsobject)], gsparams=gsparams)
         return _BaseCorrelatedNoise(self.getRNG(), conv)
@@ -528,6 +537,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         `gain` kwarg is automatically set to unity.
 
         See the general GSObject draw() method for more information the input parameters.
+
+        @returns an image of the correlation function.
         """
         return self._profile.draw(
             image=image, scale=scale, gain=1., wmult=wmult, normalization="surface brightness",
@@ -545,7 +556,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                        matrix is required.
         @param  scale  Pixel scale of the image for which a covariance matrix is required.
 
-        @return The covariance matrix (as an ImageD)
+        @returns the covariance matrix (as an ImageD).
         """
         # TODO: Allow this to take a JacobianWCS, rather than just a scale.
         return galsim._galsim._calculateCovarianceMatrix(self._profile.SBProfile, bounds, scale)
@@ -596,7 +607,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """Internal utility function for querying the rootps_whitening cache, used by the
         applyWhiteningTo method, and calculate & update it if not present.
 
-        @return rootps_whitening, variance
+        @returns rootps_whitening, variance
         """ 
         # First check whether we can just use a stored whitening power spectrum
         use_stored = False
@@ -643,7 +654,7 @@ def _generate_noise_from_rootps(rng, rootps):
     @param rng    galsim.BaseDeviate instance to provide the random number generation
     @param rootps a NumPy array containing the square root of the discrete Power Spectrum ordered
                   in two dimensions according to the usual DFT pattern (see np.fft.fftfreq)
-    @return A NumPy array (contiguous) of the same shape as rootps, filled with the noise field.
+    @returns a NumPy array (contiguous) of the same shape as rootps, filled with the noise field.
     """
     # I believe it is cheaper to make two random vectors than to make a single one (for a phase)
     # and then apply cos(), sin() to it...
@@ -1001,7 +1012,7 @@ def getCOSMOSNoise(rng, file_name, cosmos_scale=0.03, variance=0., x_interpolant
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
 
-    @return A _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.
+    @returns a _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.
 
     The default x_interpolant is a galsim.InterpolantXY(galsim.Linear(tol=1.e-4)), which uses
     bilinear interpolation.  The use of this interpolant is an approximation that gives good
