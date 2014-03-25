@@ -135,8 +135,8 @@ class OpticalPSF(GSObject):
 
     Methods
     -------
-    The OpticalPSF is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
-    shear() etc.) and operator bindings.
+
+    There are no additional methods for OpticalPSF beyond the usual GSObject methods.
     """
 
     # Initialization parameters of the object, with type information

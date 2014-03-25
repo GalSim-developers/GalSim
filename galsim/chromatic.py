@@ -34,22 +34,47 @@ import galsim
 class ChromaticObject(object):
     """Base class for defining wavelength dependent objects.
 
-    If instantiated directly, creates the simplest type of ChromaticObject of all, which is just a
-    wrapper around a GSObject.  At this point, the newly created ChromaticObject will act just like
-    the GSObject it wraps.  The difference is that its methods: expand, dilate, and shift can now
-    accept functions of wavelength as arguments, as opposed to the constants that GSObjects are
-    limited to.  These methods can be used to effect a variety of physical chromatic effects,
-    such as differential chromatic refraction, chromatic seeing, and diffraction-limited
-    wavelength-dependence.
+    This class primarily serves as the base class for chromatic subclasses, including Chromatic,
+    ChromaticSum, and ChromaticConvolution.  See the docstrings for these classes for more details.
+    The ChromaticAtmosphere function also creates a ChromaticObject.
 
-    This class also serves as the base class for chromatic subclasses, including Chromatic,
-    ChromaticSum, and ChromaticConvolution.  The ChromaticAtmosphere function also creates a
-    ChromaticObject.  The basic methods that all ChromaticObjects possess are `.draw()`, which
-    draws the object as observed through a particular bandpass, and `.evaluateAtWavelength()`,
-    which returns a GSObject representing the monochromatic profile at a given wavelength. See the
-    docstrings for the draw and evaluateAtWavelength methods for more details.
 
+    Initialization
+    --------------
+
+    A ChromaticObject can also be instantiated directly from an existing GSObject.
+    In this case, the newly created ChromaticObject will act nearly the same way the original
+    GSObject works, except that it has access to the ChromaticObject methods described below;
+    especially expand, dilate and shift.
+    
     @param gsobj  The GSObject to be chromaticized.
+
+
+    Methods
+    -------
+
+    gsobj = chrom_obj.evaluateAtWavelength(lambda) returns the monochromatic surface brightness
+    profile (as a GSObject) ad a given wavelength (in nanometers).
+
+    Also, ChromaticObject has most of the same methods as GSObjects with the following exceptions:
+
+    The GSObject access methods (e.g. `xValue`, `maxK`, etc.) are not available.  Instead,
+    you would need to evaluate the profile at a particular wavelength and access what you want
+    from that.
+
+    There is no `withFlux` method, since this is in general undefined for a chromatic object.
+    See the `SED` class for how to set a chromatic flux density function.
+
+    The methods `expand`, `dilate`, and `shift` can now accept functions of wavelength as
+    arguments, as opposed to the constants that GSObjects are limited to.  These methods can be
+    used to effect a variety of physical chromatic effects, such as differential chromatic
+    refraction, chromatic seeing, and diffraction-limited wavelength-dependence.
+
+    The `draw` method draws the object as observed through a particular bandpass, so the 
+    function parameters are somewhat different.  See the docstring for `ChromaticObject.draw`
+    for more details.
+
+    The `drawShoot` and `drawK` methods are not yet implemented.
     """
 
     # In general, `ChromaticObject` and subclasses should provide the following interface:

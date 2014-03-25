@@ -91,10 +91,14 @@ class Shapelet(GSObject):
                         this option.
 
 
+    Fitting an Image
+    ----------------
+
     There is also a factory function that measures the shapelet decomposition of a given
     image
 
         shapelet = galsim.FitShapelet(sigma, order, image)
+
 
     Attributes
     ----------
@@ -105,14 +109,13 @@ class Shapelet(GSObject):
     Methods
     -------
 
-    The Shapelet is a GSObject, and inherits most of the GSObject methods (draw(), shear(),
-    etc.) and operator bindings.  The exception is drawShoot, which is not yet implemented for 
-    Shapelet instances.
-    
-    In addition, Shapelet has the following methods:
+    In addition to the usual GSObject methods, Shapelet has the following access methods:
 
-    getPQ(p,q)         Get b_pq.  Returned as tuple (re, im) (even if p==q).
-    getNM(N,m)         Get b_Nm.  Returned as tuple (re, im) (even if m=0).
+        b_pq = getPQ(p,q)         # Get b_pq.  Returned as tuple (re, im) (even if p==q).
+        b_Nm = getNM(N,m)         # Get b_Nm.  Returned as tuple (re, im) (even if m=0).
+
+    Furthermore, there are specializations of the `rotate` and `expand` methods that let
+    them be performed more efficiently than the usual GSObject implementation.
     """
 
     # Initialization parameters of the object, with type information

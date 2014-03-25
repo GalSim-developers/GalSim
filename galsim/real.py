@@ -115,8 +115,8 @@ class RealGalaxy(GSObject):
 
     Methods
     -------
-    The RealGalaxy is a GSObject, and inherits all of the GSObject methods (draw(), shear(), 
-    etc. except drawShoot() which is unavailable), and operator bindings.
+
+    There are no additional methods for RealGalaxy beyond the usual GSObject methods.
     """
 
     # Initialization parameters of the object, with type information

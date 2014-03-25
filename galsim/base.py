@@ -1352,33 +1352,28 @@ class Gaussian(GSObject):
 
     Initialization
     --------------
-    A Gaussian can be initialized using one (and only one) of three possible size parameters
 
-        half_light_radius
-        sigma
-        fwhm
+    A Gaussian can be initialized using one (and only one) of three possible size parameters:
+    `sigma`, `fwhm`, or `half_light_radius`.  Exactly one of these three is required.
 
-    and an optional `flux` parameter [default `flux = 1`].
-
-    Example:
-
-        >>> gauss_obj = galsim.Gaussian(flux=3., sigma=1.)
-        >>> gauss_obj.getHalfLightRadius()
-        1.1774100225154747
-        >>> gauss_obj = galsim.Gaussian(flux=3, half_light_radius=1.)
-        >>> gauss_obj.getSigma()
-        0.8493218002880191
-
-    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
-    TypeError exception.
-
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
+    @param sigma            The value of sigma of the profile.  Typically given in arcsec.
+                            [ one of sigma, fwhm, or half_light_radius is required ]
+    @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
+                            [ one of sigma, fwhm, or half_light_radius is required ]
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [ one of sigma, fwhm, or half_light_radius is required ]
+    @param flux             The flux (in photons) of the profile. [ default: 1 ]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [ default: None ]
 
     Methods
     -------
-    The Gaussian is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    shear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Gaussian has the following access methods:
+
+        sigma = gauss.getSigma()
+        fwhm = gauss.getFWHM()
+        hlr = gauss.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information, to indicate
@@ -1395,7 +1390,7 @@ class Gaussian(GSObject):
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1., gsparams=None):
+    def __init__(self, sigma=None, fwhm=None, half_light_radius=None, flux=1., gsparams=None):
         # Initialize the SBProfile
         GSObject.__init__(
             self, galsim._galsim.SBGaussian(
@@ -1421,7 +1416,7 @@ class Gaussian(GSObject):
 class Moffat(GSObject):
     """A class describing a Moffat surface brightness profile.
 
-    The Moffat surface brightness profile is I(R) propto [1 + (r/r_scale)^2]^(-beta).  The
+    The Moffat surface brightness profile is I(R) propto [1 + (r/scale_radius)^2]^(-beta).  The
     SBProfile representation of a Moffat profile also includes an optional truncation beyond a
     given radius.
 
@@ -1431,35 +1426,32 @@ class Moffat(GSObject):
 
     Initialization
     --------------
-    A Moffat is initialized with a slope parameter beta, one (and only one) of three possible size
-    parameters
 
-        scale_radius
-        half_light_radius
-        fwhm
+    A Moffat can be initialized using one (and only one) of three possible size parameters:
+    `scale_radius`, `fwhm`, or `half_light_radius`.  Exactly one of these three is required.
 
-    an optional truncation radius parameter `trunc` [default `trunc = 0.`, indicating no truncation]
-    and a `flux` parameter [default `flux = 1`].
-
-    Example:
-
-        >>> moffat_obj = galsim.Moffat(beta=3., scale_radius=3., flux=0.5)
-        >>> moffat_obj.getHalfLightRadius()
-        1.9307827587167474
-        >>> moffat_obj = galsim.Moffat(beta=3., half_light_radius=1., flux=0.5)
-        >>> moffat_obj.getScaleRadius()
-        1.5537739740300376
-
-    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
-    TypeError exception.
-
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
-
+    @param beta             The beta parameter of the profile.  [ required ]
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
+                            [ one of scale_radius, fwhm, or half_light_radius is required ]
+    @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
+                            [ one of scale_radius, fwhm, or half_light_radius is required ]
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [ one of scale_radius, fwhm, or half_light_radius is required ]
+    @param trunc            An optional truncation radius at which the profile is made to drop to 
+                            zero.  [ default: 0, indicating no truncation ]
+    @param flux             The flux (in photons) of the profile. [ default: 1 ]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [ default: None ]
+ 
     Methods
     -------
-    The Moffat is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    shear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Moffat has the following access methods:
+
+        beta = moffat_obj.getBeta()
+        rD = moffat_obj.getScaleRadius()
+        fwhm = moffat_obj.getFWHM()
+        hlr = moffat_obj.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information
@@ -1470,7 +1462,7 @@ class Moffat(GSObject):
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, beta, scale_radius=None, half_light_radius=None, fwhm=None, trunc=0.,
+    def __init__(self, beta, scale_radius=None, fwhm=None, half_light_radius=None, trunc=0.,
                  flux=1., gsparams=None):
         GSObject.__init__(
             self, galsim._galsim.SBMoffat(
@@ -1500,7 +1492,7 @@ class Moffat(GSObject):
 
 class Airy(GSObject):
     """A class describing the surface brightness profile for an Airy disk (perfect
-    diffraction-limited PSF for a * circular aperture), with an optional central obscuration.
+    diffraction-limited PSF for a circular aperture), with an optional central obscuration.
 
     For more information, refer to
 
@@ -1508,24 +1500,36 @@ class Airy(GSObject):
 
     Initialization
     --------------
-    An Airy can be initialized using one size parameter `lam_over_diam`, an optional `obscuration`
-    parameter [default `obscuration=0.`] and an optional flux parameter [default `flux = 1.`].  The
-    half light radius or FWHM can subsequently be calculated using the getHalfLightRadius() method
-    or getFWHM(), respectively, if `obscuration = 0.`
 
-    Example:
+    The Airy profile is defined in terms of the diffraction angle, which is a function of the
+    ratio lambda / D, where lambda is the wavelength of the light (say in the middle of the
+    bandpass you are using) and D is the diameter of the telescope.  This ratio is the input
+    parameter to pass to the Airy constructor, but as it is naturally in radians, you would 
+    typically convert to arcsec.  e.g.
 
-        >>> airy_obj = galsim.Airy(flux=3., lam_over_diam=2.)
-        >>> airy_obj.getHalfLightRadius()
-        1.0696642954485294
+        >>> lam = 700  # nm
+        >>> diam = 4.0    # meters
+        >>> lam_over_diam = (lambda * 1.e-9) / diam  # radians
+        >>> lam_over_diam *= 206265  # Convert to arcsec
 
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
-
+    @param lam_over_diam    The parameter that governs the scale size of the profile.
+                            See above for details about calculating it.  [ required ]
+    @param obscuration      The linear dimension of a central obscuration as a fraction of the 
+                            pupil dimension.  [ default: 0 ]
+    @param flux             The flux (in photons) of the profile. [ default: 1 ]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [ default: None ]
+ 
     Methods
     -------
-    The Airy is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    shear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Airy has the following access methods:
+
+        lam_over_diam = airy_obj.getLamOverD()
+        fwhm = airy_obj.getFWHM()
+        hlr = airy_obj.getHalfLightRadius()
+
+    The latter two are only available if the obscuration is 0.
     """
 
     # Initialization parameters of the object, with type information
@@ -1587,40 +1591,43 @@ class Kolmogorov(GSObject):
     Initialization
     --------------
 
-    A Kolmogorov is initialized with one (and only one) of three possible size parameters
+    The Kolmogorov profile is normally defined in terms of the ratio lambda / D, where lambda is
+    the wavelength of the light (say in the middle of the bandpass you are using) and r0 is the 
+    Fried parameter.  Typical values for the Fried parameter are on the order of 10cm for
+    most observatories and up to 20cm for excellent sites. The values are usually quoted at 
+    lambda = 500nm and r0 depends on wavelength as [r0 ~ lambda^(-6/5)].
 
-        lam_over_r0
-        half_light_radius
-        fwhm
+    This ratio is naturally in radians, so you would typically convert to arcsec.  e.g.
 
-    and an optional `flux` parameter [default `flux = 1`].
+        >>> lam = 700  # nm
+        >>> r0 = 0.15 * (lam/500)**(-1.2)  # meters
+        >>> lam_over_r0 = (lam * 1.e-9) / r0  # radians
+        >>> lam_over_r0 *= 206265  # Convert to arcsec
 
-    Example:
+    The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
 
-        >>> psf = galsim.Kolmogorov(lam_over_r0=3., flux=1.)
+    A Kolmogorov can be initialized using one (and only one) of three possible size parameters:
+    `lam_over_r0`, `fwhm`, or `half_light_radius`.  Exactly one of these three is required.
 
-    Initializes psf as a galsim.Kolmogorov() instance.
-
-    @param lam_over_r0        lambda / r0 in the physical units adopted (user responsible for
-                              consistency), where r0 is the Fried parameter. The FWHM of the
-                              Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
-                              Typical values for the Fried parameter are on the order of 10cm for
-                              most observatories and up to 20cm for excellent sites. The values are
-                              usually quoted at lambda = 500nm and r0 depends on wavelength as
-                              [r0 ~ lambda^(-6/5)].
-    @param fwhm               FWHM of the Kolmogorov PSF.
-    @param half_light_radius  Half-light radius of the Kolmogorov PSF.
-                              One of `lam_over_r0`, `fwhm` and `half_light_radius` (and only one)
-                              must be specified.
-    @param flux               Optional flux value [Default `flux = 1.`].
-    @param gsparams           You may also specify a gsparams argument.  See the docstring for
-                              galsim.GSParams using help(galsim.GSParams) for more information about
-                              this option.
-
+    @param lam_over_r0      The parameter that governs the scale size of the profile.
+                            See above for details about calculating it.  [ one of lam_over_r0,
+                            fwhm, or half_light_radius is required ]
+    @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
+                            [ one of lam_over_r0, fwhm, or half_light_radius is required ]
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [ one of sigma, fwhm, or half_light_radius is required ]
+    @param flux             The flux (in photons) of the profile. [ default: 1 ]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [ default: None ]
+ 
     Methods
     -------
-    The Kolmogorov is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    shear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Kolmogorov has the following access methods:
+
+        lam_over_r0 = kolm.getLamOverR0()
+        fwhm = kolm.getFWHM()
+        hlr = kolm.getHalfLightRadius()
     """
 
     # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
@@ -1687,24 +1694,30 @@ class Pixel(GSObject):
 
     Initialization
     --------------
-    A Pixel is initialized with a `scale` parameter, that represents the pixel scale, the size
-    of the box in both the x and y dimensions.  There is also an optional flux parameter
-    [default `flux = 1.`].
 
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
+    A Gaussian can be initialized using one (and only one) of three possible size parameters:
+    `half_light_radius`, `sigma`, or `fwhm`.  Exactly one of these three is required.
 
+    @param scale            The linear scale size of the pixel.  Typically given in arcsec.
+                            [ required ]
+    @param flux             The flux (in photons) of the profile.  This should almost certainly
+                            be left at the default value of 1. [ default: 1 ]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [ default: None ]
+ 
     Methods
     -------
-    The Pixel is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    shear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Pixel has the following access method:
+
+        scale = pixel.getScale()
 
     Note: We have not implemented drawing a sheared or rotated Pixel in real space.  It's a
           bit tricky to get right at the edges where fractional fluxes are required.
           Fortunately, this is almost never needed.  Pixels are almost always convolved by
           something else rather than drawn by themselves, in which case either the fourier
           space method is used, or photon shooting.  Both of these are implemented in GalSim.
-          If need to draw sheared or rotated Pixels in real space, please file an issue, and
+          If you need to draw sheared or rotated Pixels in real space, please file an issue, and
           maybe we'll implement that function.  Until then, you will get an exception if you try.
     """
 
@@ -1731,23 +1744,30 @@ class Box(GSObject):
 
     Initialization
     --------------
-    A Box is initialized with an x dimension `width`, a y dimension `height`, and an optional
-    flux parameter [default `flux = 1.`].
 
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
+    A Gaussian can be initialized using one (and only one) of three possible size parameters:
+    `half_light_radius`, `sigma`, or `fwhm`.  Exactly one of these three is required.
 
+    @param width            The width of the Box.  [ required ]
+    @param height           The height of the Box.  [ required ]
+    @param flux             The flux (in photons) of the profile. [ default: 1 ]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [ default: None ]
+ 
     Methods
     -------
-    The Box is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    shear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Box has the following access methods:
+
+        width = box.getWidth()
+        height = box.getHeight()
 
     Note: We have not implemented drawing a sheared or rotated Box in real space.  It's a
           bit tricky to get right at the edges where fractional fluxes are required.
           Fortunately, this is almost never needed.  Box profiles are almost always convolved
           by something else rather than drawn by themselves, in which case either the fourier
           space method is used, or photon shooting.  Both of these are implemented in GalSim.
-          If need to draw sheared or rotated Boxes in real space, please file an issue, and
+          If you need to draw sheared or rotated Boxes in real space, please file an issue, and
           maybe we'll implement that function.  Until then, you will get an exception if you try.
     """
 
@@ -1791,50 +1811,43 @@ class Sersic(GSObject):
     Initialization
     --------------
 
-    A Sersic is initialized with `n`, the Sersic index of the profile, and using one (and only
-    one) of two possible size parameters
+    The allowed range of values for the `n` parameter is 0.3 <= n <= 6.2.  An exception will be 
+    thrown if you provide a value outside that range.  Below n=0.3, there are severe numerical 
+    problems.  Above n=6.2, we found that the code begins to be inaccurate when sheared or 
+    magnified (at the level of upcoming shear surveys), so we do not recommend extending beyond 
+    this.  See Issues #325 and #450 for more details.
 
-        half_light_radius
-        scale_radius
+    Note that if you are building many Sersic profiles using truncation, the code will be more 
+    efficient if the truncation is always the same multiple of `scale_radius`, since it caches 
+    many calculations that depend on the ratio `trunc/scale_radius`.
 
-    The code is limited to 0.3 <= n <= 6.2, with an exception thrown for values outside that range.
-    Below n=0.3, there are severe numerical problems.  Above n=6.2, we found that the code begins
-    to be inaccurate when sheared or magnified (at the level of upcoming shear surveys), so
-    we do not recommend extending beyond this.  See Issues #325 and #450 for more details.
+    A Sersic can be initialized using one (and only one) of two possible size parameters:
+    `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
 
-    Several optional parameters are available:  Truncation radius `trunc` [default `trunc = 0.`,
-    indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc` is set to
-    a non-zero value, then it is assumed to be in the same system of units as `half_light_radius`
-    or `scale_radius`.
+    @param n                The Sersic index, n.  [ required ]
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
+                            [ one of scale_radius or half_light_radius is required ]
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [ one of scale_radius or half_light_radius is required ]
+    @param flux             The flux (in photons) of the profile. [ default: 1 ]
+    @param trunc            An optional truncation radius at which the profile is made to drop to 
+                            zero.  [ default: 0, indicating no truncation ]
+    @param flux_untruncated Should the provided flux and half_light_radius refer to the 
+                            untruncated profile?  [ default: False ]  See below for more details.
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [ default: None ]
+ 
 
-    Note that the code will be more efficient if the truncation is always the same multiple of
-    `scale_radius`, since it caches many calculations that depend on the ratio `trunc/scale_radius`.
-    The `scale_radius` is always calculated internally for a `half_light_radius` input, and vice
-    versa.  Internal calculations are based on the `scale_radius`.
+    Flux of a truncated profile
+    ---------------------------
 
-    Example:
+    If you are truncating the profile, the optional parameter, `flux_untruncated`, specifies 
+    whether the `flux` and `half_light_radius` specifications correspond to the untruncated 
+    profile (`True`) or to the truncated profile (`False`, default).  The impact of this parameter
+    is a little be subtle, so we'll go through a few examples to show how it works.
 
-        >>> sersic_obj = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40.)
-        >>> sersic_obj.getHalfLightRadius()
-        2.5
-        >>> sersic_obj.getScaleRadius()
-        0.003262738739834598
-        >>> sersic_obj.getN()
-        3.5
-
-        >>> sersic_obj = galsim.Sersic(n=1.5, scale_radius=0.5, flux=40.)
-        >>> sersic_obj.getHalfLightRadius()
-        2.1863858209414166
-        >>> sersic_obj.getScaleRadius()
-        0.5
-        >>> sersic_obj.getN()
-        1.5
-
-    Another optional parameter, `flux_untruncated`, specifies whether the `flux` and
-    `half_light_radius` specification correspond to the untruncated profile or the truncated
-    profile.  (The example here is specifically for the case where the truncated Sersic is
-    specified by the `half_light_radius`.  For the case when it is specified by the `scale_radius`,
-    see below.)  If `flux_untruncated` is True (and `trunc > 0`), then the profile will be identical
+    First, let's examine the case where we specify the size according to the half-light radius.
+    If `flux_untruncated` is True (and `trunc > 0`), then the profile will be identical
     to the version without truncation up to the truncation radius, beyond which it drops to 0.
     In this case, the actual half-light radius will be different from the specified half-light
     radius.  The getHalfLightRadius() method will return the true half-light radius.  Similarly,
@@ -1884,7 +1897,7 @@ class Sersic(GSObject):
         0.003262738739834598  # the scale radius is still identical to the untruncated case
 
     When the truncated Sersic scale is specified with `scale_radius`, the behavior between the
-    three cases (untruncated, `flux_untruncated=true` and `flux_untruncated=false`) will be
+    three cases (untruncated, `flux_untruncated=True` and `flux_untruncated=False`) will be
     somewhat different from above.  Since it is the scale radius that is being specified, and since
     truncation does not change the scale radius the way it can change the half-light radius, the
     scale radius will remain unchanged in all cases.  This also results in the half-light radius
@@ -1927,13 +1940,15 @@ class Sersic(GSObject):
         >>> sersic_obj3.getScaleRadius()
         0.05
 
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
-    The Sersic is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    shear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Sersic has the following access methods:
+
+        n = sersic_obj.getN()
+        r0 = sersic_obj.getScaleRadius()
+        hlr = sersic_obj.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information
@@ -1944,7 +1959,7 @@ class Sersic(GSObject):
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, n, half_light_radius=None, scale_radius=None,
+    def __init__(self, n, scale_radius=None, half_light_radius=None,
                  flux=1., trunc=0., flux_untruncated=False, gsparams=None):
         GSObject.__init__(
             self, galsim._galsim.SBSersic(n, half_light_radius=half_light_radius,
@@ -1977,32 +1992,25 @@ class Exponential(GSObject):
 
     Initialization
     --------------
-    An Exponential can be initialized using one (and only one) of two possible size parameters
 
-        half_light_radius
-        scale_radius
+    An Exponential can be initialized using one (and only one) of two possible size parameters:
+    `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
 
-    and an optional `flux` parameter [default `flux = 1.`].
-
-    Example:
-
-        >>> exp_obj = galsim.Exponential(flux=3., scale_radius=5.)
-        >>> exp_obj.getHalfLightRadius()
-        8.391734950083302
-        >>> exp_obj = galsim.Exponential(flux=3., half_light_radius=1.)
-        >>> exp_obj.getScaleRadius()
-        0.5958243473776976
-
-    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
-    TypeError exception.
-
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
-
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
+                            [ one of scale_radius or half_light_radius is required ]
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [ one of scale_radius or half_light_radius is required ]
+    @param flux             The flux (in photons) of the profile. [ default: 1 ]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [ default: None ]
+ 
     Methods
     -------
-    The Exponential is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    shear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Exponential has the following access methods:
+
+        r0 = exp_obj.getScaleRadius()
+        hlr = exp_obj.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information
@@ -2013,7 +2021,7 @@ class Exponential(GSObject):
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, half_light_radius=None, scale_radius=None, flux=1., gsparams=None):
+    def __init__(self, scale_radius=None, half_light_radius=None, flux=1., gsparams=None):
         GSObject.__init__(
             self, galsim._galsim.SBExponential(
                 half_light_radius=half_light_radius, scale_radius=scale_radius, flux=flux,
@@ -2042,26 +2050,33 @@ class DeVaucouleurs(GSObject):
 
         http://en.wikipedia.org/wiki/De_Vaucouleurs'_law
 
+
     Initialization
     --------------
 
-    A DeVaucouleurs is initialized with a `flux` and  one (and only one) of two possible size
-    parameters
+    A DeVaucouleurs can be initialized using one (and only one) of two possible size parameters:
+    `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
 
-        half_light_radius
-        scale_radius
-
-    The optional truncation works the same way as for a Sersic object using the optional
-    parameters `trunc` and `flux_untruncated`.  See the documentation there for more details
-    about these parameters.
-
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
-
+    @param scale_radius     The value of sigma of the profile.  Typically given in arcsec.
+                            [ one of scale_radius or half_light_radius is required ]
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [ one of scale_radius or half_light_radius is required ]
+    @param flux             The flux (in photons) of the profile. [ default: 1 ]
+    @param trunc            An optional truncation radius at which the profile is made to drop to 
+                            zero.  [ default: 0, indicating no truncation ]
+    @param flux_untruncated Should the provided flux and half_light_radius refer to the 
+                            untruncated profile?  [ default: False ]  See the docstring for 
+                            Sersic for more details.
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [ default: None ]
+ 
     Methods
     -------
-    The DeVaucouleurs is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    shear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, DeVaucouleurs has the following access methods:
+
+        r0 = devauc_obj.getScaleRadius()
+        hlr = devauc_obj.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information
@@ -2072,7 +2087,7 @@ class DeVaucouleurs(GSObject):
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, half_light_radius=None, scale_radius=None, flux=1., trunc=0.,
+    def __init__(self, scale_radius=None, half_light_radius=None, flux=1., trunc=0.,
                  flux_untruncated=False, gsparams=None):
         GSObject.__init__(
             self, galsim._galsim.SBDeVaucouleurs(half_light_radius=half_light_radius,
