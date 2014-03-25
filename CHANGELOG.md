@@ -39,6 +39,10 @@ change does not affect the most common uses of the function.
   * Or better, switch to using the documented `galsim.Gaussian` class instead.
   * Similarly for other `SB*` classes along with a few other undocumented 
     classes and functions.
+* Changed the name of the parameter used to seed various Deviate objects
+  from `lseed` to `seed`.  The documentation described it as an unnamed arg,
+  rather than a named kwarg, so probably no one was using it by name.
+  But if you were, just change `lseed` to `seed`.
 
 
 Other changes to the API
