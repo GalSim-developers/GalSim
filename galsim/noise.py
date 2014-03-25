@@ -67,14 +67,14 @@ def addNoiseSNR(self, noise, snr, preserve_flux=False):
     import numpy
     noise_var = noise.getVariance()
     if preserve_flux:
-        new_noise_var = numpy.sum(image.array**2)/snr/snr
+        new_noise_var = numpy.sum(self.array**2)/snr/snr
         noise = noise.withVariance(new_noise_var)
-        image.addNoise(noise)
+        self.addNoise(noise)
     else:
-        sn_meas = numpy.sqrt( numpy.sum(image.array**2)/noise_var )
+        sn_meas = numpy.sqrt( numpy.sum(self.array**2)/noise_var )
         flux = snr/sn_meas
-        image *= flux
-        image.addNoise(noise)
+        self *= flux
+        self.addNoise(noise)
 
 galsim.Image.addNoise = addNoise
 galsim.Image.addNoiseSNR = addNoiseSNR
