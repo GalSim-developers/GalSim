@@ -48,8 +48,93 @@ from ._galsim import GSParams
 
 
 class GSObject(object):
-    """Base class for defining the interface with which all GalSim Objects access their shared
-    methods and attributes, particularly those from the C++ SBProfile classes.
+    """Base class for all GalSim classes that represent some kind of surface brightness profile.
+
+    A GSObject is not intended to be constructed directly.  Normally, you would use whatever
+    derived class is appropriate for the surface brightness function you want:
+
+        gal = galsim.Sersic(n=4, half_light_radius=4.3)
+        psf = galsim.Moffat(beta=3, fwhm=2.85)
+        pix = galsim.Pixel(scale=0.2)
+        conv = galsim.Convolve([gal,psf,pix])
+
+    All of these classes are subclasses of GSObject, so you should see those doc strings for
+    more details about how to construct the various profiles.
+
+    Note that most GSObjects have some kind of size specification.  Typically, these would be
+    given in terms of arcsec, with the connection to the pixel size being given in the `Pixel`
+    class (0.2 arcsec/pixel in the above example).  However, you can have a more complicated
+    relationship between pixel and sky coordinates.  See `BaseWCS` for more details about
+    how to specify various kinds of world coordinate systems.
+
+
+    Transforming Methods
+    --------------------
+
+    The GSObject class uses an "immutable" design[1], so all methods that would potentially modify
+    the object actually return a new object instead.  This uses pointers and such behind the
+    scenes, so it all happens efficiently, but it makes using the objects a bit simpler, since
+    you don't need to worry about some function changing your object behind your back.
+
+    In all cases below, we just give an example usage.  See the docstrings for the methods for
+    more details about how to use them.
+
+        obj = obj.shear(shear)      # Apply a shear to the object.
+        obj = obj.dilate(scale)     # Apply a flux-preserving dilation.
+        obj = obj.magnify(mu)       # Apply a surface-brightness-preserving magnification.
+        obj = obj.rotate(theta)     # Apply a rotation.
+        obj = obj.shift(dx,dy)      # Shft the object in real space.
+        obj = obj.transform(dudx,dudy,dvdx,dvdy)    # Apply a general jacobian transformation.
+        obj = obj.lens(g1,g2,mu)    # Apply both a lensing shear and magnification.
+        obj = obj.withFlux(flux)    # Set a new flux value.
+        obj = obj * ratio           # Scale the surface brightness profile by some factor.
+
+    [1]: Technically, there are some methods that do modify the object directly.  However, these
+    methods are only present for backwards compatibitility with previous versions of GalSim,
+    and they are currently discouraged.  They will be deprecated in a future version and 
+    removed entirely in version 2.0.
+
+    Access Methods
+    --------------
+
+    There are some access methods that are available for all GSObjects.  Again, see the docstrings
+    for each method for more details.
+
+        flux = obj.getFlux()
+        centroid = obj.centroid()
+        f_xy = obj.xValue(x,y)
+        fk_xy = obj.kValue(kx,ky)
+        nyq = obj.nyquistScale()
+        stepk = obj.stepK()
+        maxk = obj.maxK()
+        hard = obj.hasHardEdges()
+        axisym = obj.isAxisymmetric()
+        analytic = obj.isAnalyticX()
+
+    Most subclasses have additional methods that are available for values that are particular to
+    that specific surface brightness profile.  e.g. `sigma = gauss.getSigma()`.  However, note
+    that class-specific methods are not available after performing one of the above transforming
+    operations.
+
+        gal = galsim.Gaussian(sigma=5)
+        gal = gal.shear(g1=0.2, g2=0.05)
+        sigma = gal.getSigma()              # This will raise an exception.
+
+
+    Drawing Methods
+    ---------------
+
+    The main thing to do with a GSObject once you have built it is to draw it onto an image.
+    There are three methods that do this.  In all cases, there are lots of optional parameters.
+    See the docstrings for these methods for more details.
+
+        image = obj.draw()
+        image = obj.drawShoot()
+        kimage_r, kimage_i = obj.drawK()
+
+
+    GSParams
+    --------
 
     All GSObject classes take an optional `gsparams` argument so we document that feature here.
     For all documentation about the specific derived classes, please see the docstring for each
@@ -59,30 +144,27 @@ class GSObject(object):
     accuracy and speed for the calculations made in drawing a GSObject.  The numbers are
     encapsulated in a class called GSParams, and the user should make careful choices whenever they
     opt to deviate from the defaults.  For more details about the parameters and their default
-    values, use `help(galsim.GSParams)`.
+    values, please see the docstring of the GSParams class (e.g. type `help(galsim.GSParams)`).
 
-    Example usage:
-
-    Let's say you want to do something that requires an FFT larger than 4096 x 4096 (and you have
-    enough memory to handle it!).  Then you can create a new GSParams object with a larger
-    maximum_fft_size and pass that to your GSObject on construction:
+    For example, let's say you want to do something that requires an FFT larger than 4096 x 4096
+    (and you have enough memory to handle it!).  Then you can create a new GSParams object with a
+    larger maximum_fft_size and pass that to your GSObject on construction:
 
         >>> gal = galsim.Sersic(n=4, half_light_radius=4.3)
         >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
-        >>> pix = galsim.Pixel(0.05)                       # Note the very small pixel scale!
+        >>> pix = galsim.Pixel(scale=0.05)                  # Note the very small pixel scale!
         >>> conv = galsim.Convolve([gal,psf,pix])
-        >>> im = galsim.Image(1000,1000, scale=0.05)       # Use the same pixel scale on the image.
-        >>> conv.draw(im,normalization='sb')               # This uses the default GSParams.
+        >>> im = galsim.Image(1000,1000, scale=0.05)        # Use the same pixel scale on the image.
+        >>> im = conv.draw(image=im)                        # This uses the default GSParams.
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
           File "galsim/base.py", line 885, in draw
-            image.added_flux = prof.SBProfile.draw(image.view(), gain, wmult)
+            image.added_flux = prof.SBProfile.draw(image.image, gain, wmult)
         RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
         If you can handle the large FFT, you may update gsparams.maximum_fft_size.
-        >>> big_fft_params = galsim.GSParams(maximum_fft_size = 10240)
+        >>> big_fft_params = galsim.GSParams(maximum_fft_size=10240)
         >>> conv = galsim.Convolve([gal,psf,pix],gsparams=big_fft_params)
-        >>> conv.draw(im,normalization='sb')               # Now it works (but is slow!)
-        <galsim.image.Image object at 0x101ea8e50>
+        >>> im = conv.draw(image=im)                        # Now it works (but is slow!)
         >>> im.write('high_res_sersic.fits')
 
     Note that for compound objects like Convolve or Add, not all gsparams can be changed when the
@@ -147,7 +229,7 @@ class GSObject(object):
 
         obj * flux_ratio is equivalent to obj.withScaledFlux(flux_ratio)
 
-        It creates a new object that has the same profile as the original, but with the 
+        It creates a new object that has the same profile as the original, but with the
         surface brightness at every location scaled by the given amount.
 
         You can also multiply by an SED, which will create a ChromaticObject where the SED
@@ -287,8 +369,8 @@ class GSObject(object):
 
         This function is equivalent to obj.withScaledFlux(flux / obj.getFlux())
 
-        It creates a new object that has the same profile as the original, but with the 
-        surface brightness at every location rescaled such that the total flux will be 
+        It creates a new object that has the same profile as the original, but with the
+        surface brightness at every location rescaled such that the total flux will be
         the given value.
 
         @param flux     The new flux for the object.
@@ -300,11 +382,15 @@ class GSObject(object):
         """Create a version of the current object with the flux scaled by the given flux ratio.
 
         This function is equivalent to obj.withFlux(flux_ratio * obj.getFlux()).  However, this
-        function is the more efficient one, since it doesn't actually require the call to 
+        function is the more efficient one, since it doesn't actually require the call to
         obj.getFlux().  Indeed, withFlux() is implemented in terms of this one and getFlux().
 
-        It creates a new object that has the same profile as the original, but with the 
+        It creates a new object that has the same profile as the original, but with the
         surface brightness at every location scaled by the given amount.
+
+        An equivalent, and usually simpler, way to effect this scaling is
+
+            obj = obj * flux_ratio
 
         @param flux_ratio   The new flux for the object.
         @returns            The object with the new flux.
@@ -335,13 +421,13 @@ class GSObject(object):
         e.g. `half_light_radius` <-- `half_light_radius * scale`
 
         This doesn't correspond to either of the normal operations one would typically want to
-        do to a galaxy.  The functions dilate and magnify are the more typical usage.  But this 
-        function is conceptually simple.  It rescales the linear dimension of the profile, while 
+        do to a galaxy.  The functions dilate and magnify are the more typical usage.  But this
+        function is conceptually simple.  It rescales the linear dimension of the profile, while
         preserving surface brightness.  As a result, the flux will necessarily change as well.
-        
+
         See dilate for a version that applies a linear scale factor while preserving flux.
 
-        See magnify for a version that applies a scale factor to the area while preserving surface 
+        See magnify for a version that applies a scale factor to the area while preserving surface
         brightness.
 
         @param scale    The factor by which to scale the linear dimension of the object.
@@ -369,7 +455,7 @@ class GSObject(object):
 
         e.g. `half_light_radius` <-- `half_light_radius * scale`
 
-        See expand() and magnify() for versions that preserve surface brightness, and thus 
+        See expand() and magnify() for versions that preserve surface brightness, and thus
         changes the flux.
 
         @param scale    The linear rescaling factor to apply.
@@ -389,14 +475,17 @@ class GSObject(object):
         self.__class__ = new_obj.__class__
 
     def magnify(self, mu):
-        """Apply a lensing magnification, scaling the area and flux by mu at fixed surface
-        brightness.
+        """Create a version of the current object with a lensing magnification applied to it,
+        scaling the area and flux by mu at fixed surface brightness.
 
         This process applies a lensing magnification mu, which scales the linear dimensions of the
         image by the factor sqrt(mu), i.e., `half_light_radius` <-- `half_light_radius * sqrt(mu)`
         while increasing the flux by a factor of mu.  Thus, magnify preserves surface brightness.
 
         See dilate() for a version that applies a linear scale factor while preserving flux.
+
+        See expand() for a version that applies a linear scale factor while preserving surface
+        brightness.
 
         @param mu   The lensing magnification to apply.
         @returns    The magnified object.
@@ -416,14 +505,15 @@ class GSObject(object):
         self.__class__ = new_obj.__class__
 
     def shear(self, *args, **kwargs):
-        """Apply an area-preserving shear to this object, where arguments are either a galsim.Shear,
-        or arguments that will be used to initialize one.
+        """Create a version of the current object with an area-preserving shear applied to it.
+
+        The arguments may be either a galsim.Shear or arguments to be used to initialize one.
 
         For more details about the allowed keyword arguments, see the documentation for galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
 
         The shear() method precisely preserves the area.  To include a lensing distortion with
-        the appropriate change in area, either use shear() with magnify(), or use lens(), which 
+        the appropriate change in area, either use shear() with magnify(), or use lens(), which
         combines both operations.
 
         @param shear    The shear to be applied. Or, as described above, you may instead supply
@@ -458,7 +548,8 @@ class GSObject(object):
         self.__class__ = new_obj.__class__
 
     def lens(self, g1, g2, mu):
-        """Apply a lensing shear and magnification to this object.
+        """Create a version of the current object with both a lensing shear and magnification
+        applied to it.
 
         This GSObject method applies a lensing (reduced) shear and magnification.  The shear must be
         specified using the g1, g2 definition of shear (see galsim.Shear documentation for more
@@ -512,7 +603,8 @@ class GSObject(object):
         self.__class__ = new_obj.__class__
 
     def transform(self, dudx, dudy, dvdx, dvdy):
-        """Apply a transformation to this object defined by an arbitrary Jacobian matrix.
+        """Create a version of the current object with an aribtrary Jacobian matrix transformation
+        applied to it.
 
         This applies a Jacobian matrix to the coordinate system in which this object
         is defined.  It changes a profile defined in terms of (x,y) to one defined in
@@ -539,27 +631,27 @@ class GSObject(object):
         if hasattr(self,'noise'):
             new_obj.noise = self.noise.transform(dudx,dudy,dvdx,dvdy)
         return new_obj
- 
+
     def createTransformed(self, dudx, dudy, dvdx, dvdy):
         """This is an obsolete sysnonym for transform()"""
         return self.transform(dudx,dudy,dvdx,dvdy)
-        
+
     def applyTransformation(self, dudx, dudy, dvdx, dvdy):
         """This is an obsolete method that is roughly equivalent to obj = obj.transform(...)"""
         new_obj = self.transform(dudx,dudy,dvdx,dvdy)
         self.SBProfile = new_obj.SBProfile
         if hasattr(self,'noise'): self.noise = new_obj.noise
         self.__class__ = new_obj.__class__
-  
+
     def shift(self, *args, **kwargs):
-        """Apply a (dx, dy) shift to this object.
+        """Create a version of the current object shifted by some amount in real space.
 
         After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
         are no longer available.
 
-        Note: in addition to the dx,dy parameter names, you may also supply dx,dy as a tuple, 
+        Note: in addition to the dx,dy parameter names, you may also supply dx,dy as a tuple,
         or as a galsim.PositionD or galsim.PositionI object.
 
         @param dx       Horizontal shift to apply.
@@ -582,7 +674,7 @@ class GSObject(object):
         self.SBProfile = new_obj.SBProfile
         if hasattr(self,'noise'): self.noise = new_obj.noise
         self.__class__ = new_obj.__class__
- 
+
 
     # Make sure the image is defined with the right size and wcs for the draw and
     # drawShoot commands.
@@ -830,10 +922,10 @@ class GSObject(object):
                       (Default `scale = None`.)
 
         @param wcs    If provided, use this as the wcs for the image.  At most one of scale or
-                      wcs may be provided. (Default `wcs - None`.)
+                      wcs may be provided. (Default `wcs = None`.)
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the
-                      numbers output from a CCD).  (Default `gain =  1.`)
+                      numbers output from a CCD).  (Default `gain = 1.`)
 
         @param wmult  A multiplicative factor by which to enlarge (in each direction) the default
                       automatically calculated FFT grid size used for any intermediate calculations
@@ -984,10 +1076,10 @@ class GSObject(object):
                       (Default `scale = None`.)
 
         @param wcs    If provided, use this as the wcs for the image.  At most one of scale or
-                      wcs may be provided. (Default `wcs - None`.)
+                      wcs may be provided. (Default `wcs = None`.)
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the
-                      numbers output from a CCD).  (Default `gain =  1.`)
+                      numbers output from a CCD).  (Default `gain = 1.`)
 
         @param wmult  A factor by which to make an automatically-sized image larger than
                       it would normally be made. (Default `wmult = 1.`)
@@ -1180,7 +1272,7 @@ class GSObject(object):
                       (Default `scale = None`.)
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the
-                      numbers output from a CCD).  (Default `gain =  1.`)
+                      numbers output from a CCD).  (Default `gain = 1.`)
 
         @param add_to_image  Whether to add to the existing images rather than clear out
                              anything in the image before drawing.
