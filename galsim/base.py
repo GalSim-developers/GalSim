@@ -278,10 +278,14 @@ class GSObject(object):
         """
         return self.SBProfile.maxK()
 
-    def nyquistDx(self):
+    def nyquistScale(self):
         """Returns Image pixel spacing that does not alias maxK.
         """
         return self.SBProfile.nyquistDx()
+
+    def nyquistDx(self):
+        """An obsolete synonym for nyquistScale()"""
+        return self.nyquistScale()
 
     def stepK(self):
         """Returns sampling in k space necessary to avoid folding of image in x space.
@@ -705,11 +709,11 @@ class GSObject(object):
                 else:
                     scale = image.scale
             else:
-                scale = self.SBProfile.nyquistDx()
+                scale = self.nyquistScale()
                 if scale_is_dk:
                     dk = self.stepK()
         elif scale <= 0:
-            scale = self.SBProfile.nyquistDx()
+            scale = self.nyquistScale()
             wcs = None # Mark that the input wcs should not be used.
             if scale_is_dk:
                 dk = self.stepK()
@@ -718,7 +722,7 @@ class GSObject(object):
             if image is not None:
                 scale = 2.*np.pi/( np.max(image.array.shape) * dk )
             else:
-                scale = self.SBProfile.nyquistDx()
+                scale = self.nyquistScale()
         elif type(scale) != float:
             scale = float(scale)
         # At this point scale is really scale, not dk.  So we can use it to determine
@@ -803,7 +807,7 @@ class GSObject(object):
             if image is not None and image.wcs is not None:
                 if image.wcs.isPixelScale():
                     if image.scale <= 0:
-                        wcs = galsim.PixelScale(self.SBProfile.nyquistDx())
+                        wcs = galsim.PixelScale(self.nyquistScale())
                     else:
                         wcs = image.wcs.local()
                 else:
@@ -811,9 +815,9 @@ class GSObject(object):
                     obj_cen = self._obj_center(image, offset, use_true_center)
                     wcs = image.wcs.local(image_pos=obj_cen)
             else:
-                wcs = galsim.PixelScale(self.SBProfile.nyquistDx())
+                wcs = galsim.PixelScale(self.nyquistScale())
         elif wcs.isPixelScale() and wcs.scale <= 0:
-            wcs = galsim.PixelScale(self.SBProfile.nyquistDx())
+            wcs = galsim.PixelScale(self.nyquistScale())
         else:
             # Should have already checked that wcs is uniform, so local() without an
             # image_pos argument should be ok.

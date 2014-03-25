@@ -138,6 +138,7 @@ removed.
   * `shapelet = galsim.Shapelet(sigma,order); shapelet.fitImage(image)` should 
     now be `shapelet = galsim.FitShapelet(sigma, order, image)`
 * Changed the name of LVectorSize to ShapeletSize. (Issue #511)
+* Changed the `nyquistDx` method to `nyquistScale`.  (Issue #511)
 * In general, moved as many classes as possible toward an immutable design.
   The bulk of these changes are the ones listed above, but we also now
   discourage use of setters in various classes that had them.  These methods

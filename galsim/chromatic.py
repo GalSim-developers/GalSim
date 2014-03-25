@@ -1033,7 +1033,7 @@ class ChromaticConvolution(ChromaticObject):
         SED = lambda w: reduce(lambda x,y:x*y, [s(w) for s in sep_SED], 1)
         insep_obj = galsim.Convolve(insep_profs, gsparams=self.gsparams)
         # Find scale at which to draw effective profile
-        iiscale = insep_obj.evaluateAtWavelength(bandpass.effective_wavelength).nyquistDx()
+        iiscale = insep_obj.evaluateAtWavelength(bandpass.effective_wavelength).nyquistScale()
         if iimult is not None:
             iiscale /= iimult
         # Create the effective bandpass.
