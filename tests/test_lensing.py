@@ -871,91 +871,85 @@ def test_corr_func():
     # shear power spectrum, so I think we're stuck with these.  At least they are non-trivially
     # interesting/challenging tests.
 
-    # First, however, just check whether there is scipy on this system, and import the Bessel
-    # function module.  If this doesn't work, then the user cannot use the shear correlation
-    # function calculator, so this test should just pass.
+    # First we will test xi+ calculations.  So, to put the equations above into the proper form,
+    # we should keep in mind that what gets returned from the lensing engine is
+    #   xi+(r) = (1/2pi) \int_{kmin}^{kmax} P(k) J_0(kr) k dk
+    # Let's substitute x = kr to get the integral into a format that can be compared with the
+    # expression above.
+    #   xi+(r) = (1/2pi) (1/r)^2 \int_{r*kmin}^{r*kmax} P(x) J_0(x) x dx
+    # We want the integrand to be x J_0(x), which leads me to conclude that we should set
+    # P=1 (i.e., use a power function of lambda k : np.ones_like(k)).  In that case we should
+    # find
+    #   xi+(r) = (1/2pi) (1/r)^2 \int_{r*kmin}^{r*kmax} x J_0(x) dx
+    #          = (1/2pi) (1/r)^2 [r kmax J_1(r*kmax) - r kmin J_1(r*kmin)]
+    #          = (1/2pi) (1/r) [kmax J_1(r*kmax) - kmin J_1(r*kmin)]
+    # Let's only check this at 10 values of theta so the test isn't painfully slow.
+    n_theta = 10
+    # Also, we're going to just work in arcsec, which is the natural set of units for the
+    # lensing engine.  Other unit tests already ensure that the units are working out properly
+    # so we will not test that here.
+    ps = galsim.PowerSpectrum(lambda k : np.ones_like(k))
+    # Set up a grid, with the expectation that we'll use kmin_factor=kmax_factor=1 in our test:
+    ngrid = 100
+    grid_spacing = 360. # arcsec, i.e., 0.1 degrees
+    # Get test values for xi+; ignore xi- since we don't have an analytic expression for it:
+    t, test_xip, _ = ps.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, n_theta=n_theta,
+                                    bandlimit='hard')
+    # Now we have to calculate the theoretical values.  First, we need kmin and kmax in
+    # 1/arcsec:
+    kmin = 2.*np.pi/(ngrid*grid_spacing)
+    kmax = np.pi/grid_spacing
+    theory_val = np.zeros_like(t)
+    for ind in range(len(theory_val)):
+        theory_val[ind] = kmax*galsim.besselj(1.,t[ind]*kmax) - kmin*galsim.besselj(1.,t[ind]*kmin)
+    theory_val /= (2.*np.pi*t)
+    # Finally, make sure they are equal to 10^{-5}
     try:
-        from scipy.special import jv
-        do_test = True
-    except ImportError:
-        print 'Test trivially passes since there is no SciPy on this system.'
-        do_test = False
+        np.testing.assert_allclose(test_xip, theory_val, rtol=1.e-5,
+                                   err_msg='Integrated xi+ differs from reference values')
+    except AttributeError:
+        # Older NumPy versions don't have assert_allclose, so use this instead.
+        np.testing.assert_array_almost_equal(
+            test_xip, theory_val, decimal=10,
+            err_msg='Integrated xi+ differs from reference values')
 
-    if do_test:
-        # First we will test xi+ calculations.  So, to put the equations above into the proper form,
-        # we should keep in mind that what gets returned from the lensing engine is
-        #   xi+(r) = (1/2pi) \int_{kmin}^{kmax} P(k) J_0(kr) k dk
-        # Let's substitute x = kr to get the integral into a format that can be compared with the
-        # expression above.
-        #   xi+(r) = (1/2pi) (1/r)^2 \int_{r*kmin}^{r*kmax} P(x) J_0(x) x dx
-        # We want the integrand to be x J_0(x), which leads me to conclude that we should set
-        # P=1 (i.e., use a power function of lambda k : np.ones_like(k)).  In that case we should
-        # find
-        #   xi+(r) = (1/2pi) (1/r)^2 \int_{r*kmin}^{r*kmax} x J_0(x) dx
-        #          = (1/2pi) (1/r)^2 [r kmax J_1(r*kmax) - r kmin J_1(r*kmin)]
-        #          = (1/2pi) (1/r) [kmax J_1(r*kmax) - kmin J_1(r*kmin)]
-        # Let's only check this at 10 values of theta so the test isn't painfully slow.
-        n_theta = 10
-        # Also, we're going to just work in arcsec, which is the natural set of units for the
-        # lensing engine.  Other unit tests already ensure that the units are working out properly
-        # so we will not test that here.
-        ps = galsim.PowerSpectrum(lambda k : np.ones_like(k))
-        # Set up a grid, with the expectation that we'll use kmin_factor=kmax_factor=1 in our test:
-        ngrid = 100
-        grid_spacing = 360. # arcsec, i.e., 0.1 degrees
-        # Get test values for xi+; ignore xi- since we don't have an analytic expression for it:
-        t, test_xip, _ = ps.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, n_theta=n_theta,
-                                        bandlimit='hard')
-        # Now we have to calculate the theoretical values.  First, we need kmin and kmax in
-        # 1/arcsec:
-        kmin = 2.*np.pi/(ngrid*grid_spacing)
-        kmax = np.pi/grid_spacing
-        theory_val = kmax*jv(1,t*kmax) - kmin*jv(1,t*kmin)
-        theory_val /= (2.*np.pi*t)
-        # Finally, make sure they are equal to 10^{-5}
-        try:
-            np.testing.assert_allclose(test_xip, theory_val, rtol=1.e-5,
-                                       err_msg='Integrated xi+ differs from reference values')
-        except AttributeError:
-            # Older NumPy versions don't have assert_allclose, so use this instead.
-            np.testing.assert_array_almost_equal(
-                test_xip, theory_val, decimal=10,
-                err_msg='Integrated xi+ differs from reference values')
-
-        # Now, do the test for xi-.  We again have to rearrange equations, starting with the lensing
-        # engine output:
-        #    xi-(r) = (1/2pi) \int_{kmin}^{kmax} P(k) J_4(kr) k dk
-        # Substituting x = kr,
-        #    xi-(r) = (1/2pi) (1/r)^2 \int_{r*kmin}^{r*kmax} P(x) J_4(x) x dx
-        # We want the integrand to be x^{-3} J_4(x), which suggests P(x) = x^{-4}.
-        # But we have to tell the lensing engine P(k), not P(kr).  So we'll tell it that P(k)=k^{-4}
-        # and we'll put the r^{-4} part into the result ourselves.
-        # In other words, our theory calculation will be:
-        #    xi-(r) = (1/2pi) (1/r)^2 [-(r*kmax)^{-3} J_3(r*kmax) + (r*kmin)^{-3} J_3(r*kmin)]
-        #           = [kmin^{-3} J_3(r*kmin) - kmax^{-3} J_3(r*kmax)] / (2pi * r^5)
-        # and we will compare it with
-        #    (lensing engine output for xi-)/r^4
-        #
-        # Alternatively and more cleanly, we can compare the lensing engine output for xi- with
-        # the theory prediction for r^4 xi-(r), which is
-        #    [kmin^{-3} J_3(r*kmin) - kmax^{-3} J_3(r*kmax)] / (2pi * r)
-        # We begin by slightly fudging the power function to avoid a RuntimeWarning for division by
-        # zero: (k+1e-12)^{-4} instead of k^{-4}
-        ps = galsim.PowerSpectrum(lambda k : (k+1.e-12)**(-4))
-        t, _, test_xim = ps.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, n_theta=n_theta,
-                                        bandlimit='hard')
-        # Now we have to calculate the theoretical values.
-        theory_val = jv(3,t*kmin)/kmin**3 - jv(3,t*kmax)/kmax**3
-        theory_val /= (2.*np.pi*t)
-        # Finally, make sure they are equal to 10^{-5}
-        try:
-            np.testing.assert_allclose(test_xim, theory_val, rtol=1.e-5,
-                                       err_msg='Integrated xi+ differs from reference values')
-        except AttributeError:
-            # Older NumPy versions don't have assert_allclose, so use this instead.
-            np.testing.assert_array_almost_equal(
-                test_xim, theory_val, decimal=10,
-                err_msg='Integrated xi+ differs from reference values')
+    # Now, do the test for xi-.  We again have to rearrange equations, starting with the lensing
+    # engine output:
+    #    xi-(r) = (1/2pi) \int_{kmin}^{kmax} P(k) J_4(kr) k dk
+    # Substituting x = kr,
+    #    xi-(r) = (1/2pi) (1/r)^2 \int_{r*kmin}^{r*kmax} P(x) J_4(x) x dx
+    # We want the integrand to be x^{-3} J_4(x), which suggests P(x) = x^{-4}.
+    # But we have to tell the lensing engine P(k), not P(kr).  So we'll tell it that P(k)=k^{-4}
+    # and we'll put the r^{-4} part into the result ourselves.
+    # In other words, our theory calculation will be:
+    #    xi-(r) = (1/2pi) (1/r)^2 [-(r*kmax)^{-3} J_3(r*kmax) + (r*kmin)^{-3} J_3(r*kmin)]
+    #           = [kmin^{-3} J_3(r*kmin) - kmax^{-3} J_3(r*kmax)] / (2pi * r^5)
+    # and we will compare it with
+    #    (lensing engine output for xi-)/r^4
+    #
+    # Alternatively and more cleanly, we can compare the lensing engine output for xi- with
+    # the theory prediction for r^4 xi-(r), which is
+    #    [kmin^{-3} J_3(r*kmin) - kmax^{-3} J_3(r*kmax)] / (2pi * r)
+    # We begin by slightly fudging the power function to avoid a RuntimeWarning for division by
+    # zero: (k+1e-12)^{-4} instead of k^{-4}
+    ps = galsim.PowerSpectrum(lambda k : (k+1.e-12)**(-4))
+    t, _, test_xim = ps.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, n_theta=n_theta,
+                                    bandlimit='hard')
+    # Now we have to calculate the theoretical values.
+    theory_val = np.zeros_like(t)
+    for ind in range(len(theory_val)):
+        theory_val[ind] = \
+            galsim.besselj(3.,t[ind]*kmin)/kmin**3 - galsim.besselj(3.,t[ind]*kmax)/kmax**3
+    theory_val /= (2.*np.pi*t)
+    # Finally, make sure they are equal to 10^{-5}
+    try:
+        np.testing.assert_allclose(test_xim, theory_val, rtol=1.e-5,
+                                   err_msg='Integrated xi+ differs from reference values')
+    except AttributeError:
+        # Older NumPy versions don't have assert_allclose, so use this instead.
+        np.testing.assert_array_almost_equal(
+            test_xim, theory_val, decimal=10,
+            err_msg='Integrated xi+ differs from reference values')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

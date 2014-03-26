@@ -21,15 +21,6 @@
 
 import galsim
 import numpy as np
-# We are going to try to import the Bessel function routine jv from scipy.special, so that if we
-# have it, then we can use it for correlation function calculations without importing it during each
-# iteration.  However, people who don't want to use the calculateXi method don't care about failure,
-# so for now we do nothing if this import statement fails.  We can raise an exception when that
-# method is called.
-try:
-    from scipy.special import jv
-except:
-    pass
 
 def theoryToObserved(gamma1, gamma2, kappa):
     """Helper function to convert theoretical lensing quantities to observed ones.
@@ -666,9 +657,9 @@ class PowerSpectrum(object):
         values that are returned are for a particular theta value, not an average over a range of
         theta values in some bin of finite width.
 
-        Use of this method requires SciPy.  It has been tested with cosmological shear power
-        spectra; users should check for sanity of outputs if attempting to use power spectra that
-        have very different scalings with k.
+        This method has been tested with cosmological shear power spectra; users should check for
+        sanity of outputs if attempting to use power spectra that have very different scalings with
+        k.
 
         @param grid_spacing     Spacing for an evenly spaced grid of points, by default in arcsec
                                 for consistency with the natural length scale of images created
@@ -698,12 +689,6 @@ class PowerSpectrum(object):
         @return theta, xi_+, xi_-   1-d NumPy arrays for the angular separation theta and the two
                                     shear correlation functions.
         """
-        # Make sure we have scipy, which is needed for the Bessel functions.
-        try:
-            import scipy
-        except:
-            raise RuntimeError("calculateXi method requires SciPy!")
-
         # Check for validity of integer values
         if not isinstance(ngrid, int):
             if ngrid != int(ngrid):
@@ -1754,4 +1739,4 @@ class xi_integrand:
         self.r = r
         self.n = n
     def __call__(self, k):
-        return k * self.pk(k) * jv(self.n, self.r*k)
+        return k * self.pk(k) * galsim.besselj(self.n, self.r*k)
