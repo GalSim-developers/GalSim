@@ -794,14 +794,14 @@ class PowerSpectrum(object):
             # xi_p = (1/2pi) \int (P_E + P_B) J_0(k theta) k dk
             # xi_m = (1/2pi) \int (P_E - P_B) J_4(k theta) k dk
             if p_E is not None and p_B is not None:
-                integrand_p = xi_integrand(p_E + p_B, theta[i_theta], 0)
-                integrand_m = xi_integrand(p_E - p_B, theta[i_theta], 4)
+                integrand_p = xip_integrand(p_E + p_B, theta[i_theta])
+                integrand_m = xim_integrand(p_E - p_B, theta[i_theta])
             elif p_E is not None:
-                integrand_p = xi_integrand(p_E, theta[i_theta], 0)
-                integrand_m = xi_integrand(p_E, theta[i_theta], 4)
+                integrand_p = xip_integrand(p_E, theta[i_theta])
+                integrand_m = xim_integrand(p_E, theta[i_theta])
             else:
-                integrand_p = xi_integrand(p_B, theta[i_theta], 0)
-                integrand_m = xi_integrand(-p_B, theta[i_theta], 4)
+                integrand_p = xip_integrand(p_B, theta[i_theta])
+                integrand_m = xim_integrand(-p_B, theta[i_theta])
             xi_p[i_theta] = galsim.integ.int1d(integrand_p, k_min, k_max, rel_err=1.e-6,
                                                abs_err=1.e-12)
             xi_m[i_theta] = galsim.integ.int1d(integrand_m, k_min, k_max, rel_err=1.e-6,
@@ -1732,13 +1732,18 @@ def kappaKaiserSquires(g1, g2):
     kappaB = np.imag(kz)
     return kappaE, kappaB
 
-class xi_integrand:
-    """Utility class to assist in calculating shear correlation functions from power spectra."""
-    def __init__(self, pk, r, n):
+class xip_integrand:
+    """Utility class to assist in calculating the xi_+ shear correlation function from power spectra."""
+    def __init__(self, pk, r):
         self.pk = pk
         self.r = r
-        self.n = n
     def __call__(self, k):
-        # Note: This could be made a bit faster by having two versions, one for n=0, and one for
-        #       n=4. Then the n=0 version could call galsim.bessel.j0() instead, which is faster.
-        return k * self.pk(k) * galsim.bessel.jn(self.n, self.r*k)
+        return k * self.pk(k) * galsim.bessel.j0(self.r*k)
+
+class xim_integrand:
+    """Utility class to assist in calculating the xi_- shear correlation function from power spectra."""
+    def __init__(self, pk, r):
+        self.pk = pk
+        self.r = r
+    def __call__(self, k):
+        return k * self.pk(k) * galsim.bessel.jn(4,self.r*k)
