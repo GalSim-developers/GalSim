@@ -75,9 +75,8 @@ namespace galsim {
             // Fourier transform of the interpolant can be useful for some purposes (e.g.,
             // modifications of power spectra of objects that have been interpolated).
             bp::class_<Interpolant,boost::noncopyable>("Interpolant", bp::no_init)
-                .def("__init__", bp::make_constructor(&ConstructInterpolant,
-                                                      bp::default_call_policies(),
-                                                      bp::arg("str")))
+                .def("__init__", bp::make_constructor(
+                        &ConstructInterpolant, bp::default_call_policies(), bp::arg("str")))
                 .def("uval", &Interpolant::uval, (bp::arg("uval")=0));
             bp::class_<Interpolant2d,boost::noncopyable>("Interpolant2d", bp::no_init)
                 .def("__init__", bp::make_constructor(
