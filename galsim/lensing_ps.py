@@ -871,6 +871,15 @@ class PowerSpectrum(object):
         # 4 corner squares that need to be filled in.  Surely there must be a smarter python-y way
         # of doing this, but I'm not clever enough to figure it out.  This is basically the grossest
         # code I've ever written, but it works properly.  Anyone who wants is welcome to fix it.
+        #
+        # Mike suggested a way to optimize it slightly, if we find that speed is an issue later on:
+        # We can make just 4 copies, corresponding to
+        # * Strip along left side.
+        # * Upper left and strip along top can be done together.
+        # * Lower left and strip along bottom can be done together.
+        # * Upper right, strip along right, and lower right can be done together.
+        # The code will also be a bit neater this way.
+        #
         ## Strip along left-hand side
         b1 = border-1
         im_new[galsim.BoundsI(expanded_bounds.xmin, im.bounds.xmin-1,
