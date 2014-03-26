@@ -25,23 +25,47 @@
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-#include "boost/math/special_functions/bessel.hpp"
-
-#include <iostream>
+#include "bessel/Roots.h"
+#include <boost/math/special_functions/bessel.hpp>
 
 namespace bp = boost::python;
 
 namespace galsim {
-    namespace {
-        float besselj(double v, double x)
-        {
-            return boost::math::cyl_bessel_j(v,x);
-        }
+namespace bessel {
+
+    // The boost versions are templated.  Make them concrete here so they are 
+    // easier to wrap.
+    inline double BesselJv(double v, double x) 
+    { return boost::math::cyl_bessel_j(v,x); }
+
+    inline double BesselJn(int n, double x) 
+    { return boost::math::cyl_bessel_j(n,x); }
+
+    inline double BesselKv(double v, double x) 
+    { return boost::math::cyl_bessel_k(v,x); }
+
+    inline double BesselKn(int n, double x) 
+    { return boost::math::cyl_bessel_k(n,x); }
+
+    void pyExportBessel() {
+
+        bp::def("j0_root", &getBesselRoot0, bp::args("s"),
+                "Get the sth root of the n=0 Bessel function, J_0(x)");
+        bp::def("j0", &j0, bp::args("x"),
+                "Calculate the n=0 cylindrical Bessel function, J_0(x)");
+        bp::def("j1", &j1, bp::args("x"),
+                "Calculate the n=1 cylindrical Bessel function, J_1(x)");
+        bp::def("jn", &BesselJn, bp::args("n","x"),
+                "Calculate the arbitrary n cylindrical Bessel function, J_n(x)");
+        bp::def("jv", &BesselJv, bp::args("v","x"),
+                "Calculate the arbitrary v cylindrical Bessel function, J_v(x)");
+        bp::def("kn", &BesselKn, bp::args("n","x"),
+                "Calculate the modified cylindrical Bessel function, K_n(x)");
+        bp::def("kv", &BesselKv, bp::args("v","x"),
+                "Calculate the arbitrary v modified cylindrical Bessel function, K_v(x)");
+
     }
 
-    void pyExportBesselJ() {
-        bp::def("besselj",
-                &besselj, bp::args("v","x"),
-                "Return the value of Bessel J_v(x).");
-    }
+} // namespace bessel
 } // namespace galsim
+

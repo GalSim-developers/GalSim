@@ -901,7 +901,7 @@ def test_corr_func():
     kmax = np.pi/grid_spacing
     theory_val = np.zeros_like(t)
     for ind in range(len(theory_val)):
-        theory_val[ind] = kmax*galsim.besselj(1.,t[ind]*kmax) - kmin*galsim.besselj(1.,t[ind]*kmin)
+        theory_val[ind] = kmax*galsim.bessel.j1(t[ind]*kmax) - kmin*galsim.bessel.j1(t[ind]*kmin)
     theory_val /= (2.*np.pi*t)
     # Finally, make sure they are equal to 10^{-5}
     try:
@@ -939,7 +939,7 @@ def test_corr_func():
     theory_val = np.zeros_like(t)
     for ind in range(len(theory_val)):
         theory_val[ind] = \
-            galsim.besselj(3.,t[ind]*kmin)/kmin**3 - galsim.besselj(3.,t[ind]*kmax)/kmax**3
+            galsim.bessel.jn(3,t[ind]*kmin)/kmin**3 - galsim.bessel.jn(3,t[ind]*kmax)/kmax**3
     theory_val /= (2.*np.pi*t)
     # Finally, make sure they are equal to 10^{-5}
     try:

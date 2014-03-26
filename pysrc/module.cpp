@@ -56,7 +56,6 @@ namespace galsim {
     void pyExportTable();
     void pyExportInterpolant();
     void pyExportCorrelationFunction();
-    void pyExportBesselJ();
 
     namespace hsm {
         void pyExportHSM();
@@ -64,6 +63,10 @@ namespace galsim {
 
     namespace integ {
         void pyExportInteg();
+    } // namespace integ
+
+    namespace bessel {
+        void pyExportBessel();
     } // namespace integ
 
 } // namespace galsim
@@ -95,5 +98,5 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::hsm::pyExportHSM();
     galsim::integ::pyExportInteg();
     galsim::pyExportTable();
-    galsim::pyExportBesselJ();
+    galsim::bessel::pyExportBessel();
 }

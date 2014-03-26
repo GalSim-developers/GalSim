@@ -1739,4 +1739,6 @@ class xi_integrand:
         self.r = r
         self.n = n
     def __call__(self, k):
-        return k * self.pk(k) * galsim.besselj(self.n, self.r*k)
+        # Note: This could be made a bit faster by having two versions, one for n=0, and one for
+        #       n=4. Then the n=0 version could call galsim.bessel.j0() instead, which is faster.
+        return k * self.pk(k) * galsim.bessel.jn(self.n, self.r*k)
