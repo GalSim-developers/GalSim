@@ -31,13 +31,19 @@ except:
 # Import things from other files we want to be in the galsim namespace
 from ._galsim import *
 from image import Image, ImageS, ImageI, ImageF, ImageD
-from base import *
+from base import GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, Sersic
+from base import Exponential, DeVaucouleurs
+from chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum
+from chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
+from chromatic import ChromaticAutoCorrelation
+from sed import SED
+from bandpass import Bandpass
 from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
 from shapelet import Shapelet
 from interpolatedimage import InterpolatedImage
-from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
-
+from compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution, AutoConvolve
+from compound import AutoConvolution, AutoCorrelate, AutoCorrelation
 from shear import Shear
 from wcs import BaseWCS, PixelScale, ShearWCS, JacobianWCS
 from wcs import OffsetWCS, OffsetShearWCS, AffineTransform, UVFunction, RaDecFunction
@@ -65,3 +71,4 @@ from . import integ
 from . import pse
 from . import hsm
 from . import deprecated
+from . import dcr
