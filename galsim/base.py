@@ -120,6 +120,10 @@ class GSObject(object):
         gal = gal.shear(g1=0.2, g2=0.05)
         sigma = gal.getSigma()              # This will raise an exception.
 
+    It is however possible to access the original object that was transformed via the 
+    `original` attribute.  
+
+        sigma = gal.original.getSigma()     # This works.
 
     Drawing Methods
     ---------------
@@ -132,6 +136,21 @@ class GSObject(object):
         image = obj.drawShoot()
         kimage_r, kimage_i = obj.drawK()
 
+
+    Attributes
+    ----------
+
+    There two attributes that may be available for a GSObject.
+
+        original    This was mentioned above as a way to access the original object that has
+                    been transformed by one of the transforming methods.
+
+        noise       Some types, like RealGalaxy, set this attribute to be the intrinsic noise
+                    that is already inherent in the profile and will thus be present when you
+                    draw the object.  The noise is propagated correctly through the various
+                    transforming methods, as well as convolutions and flux rescalings.
+                    The typical use for this attribute is to use it to whiten the noise in
+                    the image after drawing.  See CorrelatedNoise for more details.
 
     GSParams
     --------
@@ -404,6 +423,11 @@ class GSObject(object):
         @returns the object with the new flux.
         """
         new_obj = GSObject(self.SBProfile.scaleFlux(flux_ratio))
+        if hasattr(self,'original'): 
+            new_obj.original = self.original
+        else:
+            new_obj.original = self
+
         if hasattr(self,'noise'):
             new_obj.noise = self.noise * flux_ratio**2
         return new_obj
@@ -443,6 +467,11 @@ class GSObject(object):
         @returns the expanded object.
         """
         new_obj = GSObject(self.SBProfile.expand(scale))
+        if hasattr(self,'original'): 
+            new_obj.original = self.original
+        else:
+            new_obj.original = self
+
         if hasattr(self,'noise'):
             new_obj.noise = self.noise.expand(scale)
         return new_obj
@@ -544,6 +573,11 @@ class GSObject(object):
             shear = galsim.Shear(**kwargs)
 
         new_obj = GSObject(self.SBProfile.shear(shear._shear))
+        if hasattr(self,'original'): 
+            new_obj.original = self.original
+        else:
+            new_obj.original = self
+
         if hasattr(self,'noise'):
             new_obj.noise = self.noise.shear(shear)
         return new_obj
@@ -601,6 +635,11 @@ class GSObject(object):
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         new_obj = GSObject(self.SBProfile.rotate(theta))
+        if hasattr(self,'original'): 
+            new_obj.original = self.original
+        else:
+            new_obj.original = self
+
         if hasattr(self,'noise'):
             new_obj.noise = self.noise.rotate(theta)
         return new_obj
@@ -643,6 +682,11 @@ class GSObject(object):
         @returns the transformed object
         """
         new_obj = GSObject(self.SBProfile.transform(dudx,dudy,dvdx,dvdy))
+        if hasattr(self,'original'): 
+            new_obj.original = self.original
+        else:
+            new_obj.original = self
+
         if hasattr(self,'noise'):
             new_obj.noise = self.noise.transform(dudx,dudy,dvdx,dvdy)
         return new_obj
@@ -676,6 +720,11 @@ class GSObject(object):
         """
         delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
         new_obj = GSObject(self.SBProfile.shift(delta))
+        if hasattr(self,'original'): 
+            new_obj.original = self.original
+        else:
+            new_obj.original = self
+
         if hasattr(self,'noise'):
             new_obj.noise = self.noise.copy()
         return new_obj

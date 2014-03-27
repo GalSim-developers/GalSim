@@ -107,6 +107,9 @@ class ChromaticObject(object):
         if not isinstance(obj, (galsim.GSObject, ChromaticObject)):
             raise TypeError("Can only directly instantiate ChromaticObject with a GSObject "+
                             "or ChromaticObject argument.")
+        # TODO: Once we convert to a fully immutable style (when the mutating methods are 
+        #       eventually removed), we can get rid of this copy() call.  Probably lots of others
+        #       as well...
         self.obj = obj.copy()
         if isinstance(obj, galsim.GSObject):
             self.separable = True
