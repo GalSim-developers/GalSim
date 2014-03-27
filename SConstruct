@@ -474,7 +474,8 @@ def GetCompilerVersion(env):
 
     if compilertype != 'unknown':
         cmd = compiler + ' ' + versionflag + ' 2>&1'
-        lines = os.popen(cmd).readlines()
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+        lines = p.stdout.readlines()
     
         # Check if g++ is a symlink for something else:
         if compilertype is 'g++':
@@ -1457,21 +1458,23 @@ def DoCppChecks(config):
 
     if sys.platform.find('darwin') != -1:
         # The Mac BLAS library is notoriously sketchy.  In particular, we have discovered that it
-        # is thread-unsafe for Mac OS 10.7.  Try to give an appropriate warning if we can tell that 
-        # this is what the TMV library is using.
-        # Update: This is still a problem with 10.9.
+        # is thread-unsafe for Mac OS 10.7+ prior to XCode 5.1.  Try to give an appropriate warning
+        # if we can tell that this is what the TMV library is using.
         import platform
-        print 'Mac version is ',platform.mac_ver()[0]
-        if (platform.mac_ver()[0] >= '10.7' and '-latlas' not in tmv_link and
-            ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
+        import subprocess
+        print 'Mac version is',platform.mac_ver()[0]
+        p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
+        xcode_version = p.stdout.readlines()[0].split()[1]
+        print 'XCode version is',xcode_version
+        if (platform.mac_ver()[0] >= '10.7' and xcode_version < '5.1' and 
+            '-latlas' not in tmv_link and ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
             print 'WARNING: The Apple BLAS library has been found not to be thread safe on'
-            print '         Mac OS versions 10.7 - 10.9 (and possibly higher), even across'
-            print '         multiple processes (i.e. not just multiple threads in the same'
-            print '         process.)  The symptom is that `scons tests` will hang when '
-            print '         running nosetests using multiple processes.'
-            print '         If this occurs, the solution is to compile TMV either with a '
-            print '         different BLAS library (e.g. ATLAS) or with no BLAS library at '
-            print '         all (using WITH_BLAS=false).'
+            print '         Mac OS versions 10.7+, even across multiple processes (i.e. not'
+            print '         just multiple threads in the same process.)  The symptom is that'
+            print '         `scons tests` will hang when running nosetests using multiple'
+            print '         processes.'
+            print '         This seems to have been fixed with XCode 5.1, so we recommend'
+            print '         upgrading to the latest XCode version.'
             env['BAD_BLAS'] = True
 
     # ParseFlags doesn't know about -fopenmp being a LINKFLAG, so it
@@ -1513,7 +1516,9 @@ def GetNCPU():
             if isinstance(ncpus, int) and ncpus > 0:
                 return ncpus
         else: # OSX:
-            return int(os.popen2('sysctl -n hw.ncpu')[1].read())
+            import subprocess
+            p = subprocess.Popen(['sysctl','-n','hw.ncpu'],stdout=subprocess.PIPE,shell=True)
+            return int(p.stdout.read().strip())
     # Windows:
     if os.environ.has_key('NUMBER_OF_PROCESSORS'):
         ncpus = int(os.environ['NUMBER_OF_PROCESSORS'])
