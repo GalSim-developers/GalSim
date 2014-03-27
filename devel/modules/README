@@ -12,6 +12,9 @@ using as images InterpolatedImages constructed from parametric Sersics instead.
 
 plot_test_interpolants.py: makes readable graphs from the output of the previous two scripts.
 
+lensing_engine_interpolants.py: a script to check the effect of using interpolants for gridded
+shears.
+
 ---Correlation functions---
 
 corrfuncs/test_cf_interpolant.py: makes upsampled plots of correlation functions to see how their

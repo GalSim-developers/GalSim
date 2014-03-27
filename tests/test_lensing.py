@@ -33,7 +33,8 @@ except ImportError:
 refdir = os.path.join(".", "lensing_reference_data") # Directory containing the reference
 
 klim_test = 0.00175 # Value of klim for flat (up to klim, then zero beyond) power spectrum test
-
+tolerance_var = 0.03 # fractional error allowed in the variance of shear - calculation is not exact
+                     # so do not be too stringent
 
 # for simple demonstration purposes, a few very simple power-law power spectra that don't crash and
 # burn at k=0
@@ -180,7 +181,7 @@ def test_shear_variance():
     print 'predicted variance = ',predicted_variance
     print 'actual variance = ',var1+var2
     print 'fractional diff = ',((var1+var2)/predicted_variance-1)
-    assert np.abs((var1+var2) - predicted_variance) < 0.015 * predicted_variance, \
+    assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat power spectrum!"
         
     # check: are g1, g2 uncorrelated with each other?
@@ -204,7 +205,7 @@ def test_shear_variance():
     print 'predicted variance = ',predicted_variance
     print 'actual variance = ',var1+var2
     print 'fractional diff = ',((var1+var2)/predicted_variance-1)
-    assert np.abs((var1+var2) - predicted_variance) < 0.015 * predicted_variance, \
+    assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat E-mode power spectrum!"
 
     # check: are g1, g2 uncorrelated with each other?
@@ -233,7 +234,7 @@ def test_shear_variance():
     print 'predicted variance = ',predicted_variance
     print 'actual variance = ',var1+var2
     print 'fractional diff = ',((var1+var2)/predicted_variance-1)
-    assert np.abs((var1+var2) - predicted_variance) < 0.015 * predicted_variance, \
+    assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat power spectrum with smaller grid_size"
 
     # check for proper scaling with number of grid points, for fixed grid spacing
@@ -253,7 +254,7 @@ def test_shear_variance():
     print 'predicted variance = ',predicted_variance
     print 'actual variance = ',var1+var2
     print 'fractional diff = ',((var1+var2)/predicted_variance-1)
-    assert np.abs((var1+var2) - predicted_variance) < 0.015 * predicted_variance, \
+    assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat power spectrum with smaller ngrid"
 
     # Test one other theoretical PS: the Gaussian P(k).
@@ -290,7 +291,7 @@ def test_shear_variance():
     print 'predicted variance = ',predicted_variance
     print 'actual variance = ',var1+var2
     print 'fractional diff = ',((var1+var2)/predicted_variance-1)
-    assert np.abs((var1+var2) - predicted_variance) < 0.015 * predicted_variance, \
+    assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum"
 
     # check for proper scaling with grid spacing, for fixed number of grid points
@@ -312,7 +313,7 @@ def test_shear_variance():
     print 'predicted variance = ',predicted_variance
     print 'actual variance = ',var1+var2
     print 'fractional diff = ',((var1+var2)/predicted_variance-1)
-    assert np.abs((var1+var2) - predicted_variance) < 0.015 * predicted_variance, \
+    assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with smaller grid_size"
 
     # check for proper scaling with number of grid points, for fixed grid spacing
@@ -334,7 +335,7 @@ def test_shear_variance():
     print 'predicted variance = ',predicted_variance
     print 'actual variance = ',var1+var2
     print 'fractional diff = ',((var1+var2)/predicted_variance-1)
-    assert np.abs((var1+var2) - predicted_variance) < 0.015 * predicted_variance, \
+    assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with smaller ngrid"
 
     # change grid spacing implicitly via kmax_factor
@@ -359,7 +360,7 @@ def test_shear_variance():
     print 'predicted variance = ',predicted_variance
     print 'actual variance = ',var1+var2
     print 'fractional diff = ',((var1+var2)/predicted_variance-1)
-    assert np.abs((var1+var2) - predicted_variance) < 0.005 * predicted_variance, \
+    assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with kmax_factor=2"
 
     # change ngrid implicitly with kmin_factor
@@ -382,8 +383,39 @@ def test_shear_variance():
     print 'predicted variance = ',predicted_variance
     print 'actual variance = ',var1+var2
     print 'fractional diff = ',((var1+var2)/predicted_variance-1)
-    assert np.abs((var1+var2) - predicted_variance) < 0.005 * predicted_variance, \
+    assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with kmin_factor=2"
+
+    # Now check the variances post-interpolation to random (off-grid) points.  Ideally, our default
+    # interpolant should not alter the power spectrum very much from kmin to kmax, so the shear
+    # variance should also not be significantly altered.  To test this, we take the g1, g2 from the
+    # previous buildGrid() call, interpolate to some random positions that are not too near the
+    # edges (since near the edges there are known artifacts), and check the variances.
+    grid_spacing = grid_size/ngrid
+    min = (-ngrid/2 + 0.5) * grid_spacing
+    max = (ngrid/2 + 0.5) * grid_spacing
+    # Now chop the outer ~25% off just to be conservative.  Since min and max are negative and
+    # positive, respectively, we'll just multiply them by 0.75 to make the grid smaller.
+    min *= 0.75
+    max *= 0.75
+    # Generate a bunch of random points:
+    n_rand = 10000
+    x = np.zeros(n_rand)
+    y = np.zeros(n_rand)
+    ud = galsim.UniformDeviate(12345)
+    for i in range(n_rand):
+        x[i] = min + (max-min)*ud()
+        y[i] = min + (max-min)*ud()
+    # Get the shears at those points
+    g1, g2 = test_ps.getShear(pos=(x,y), units=galsim.degrees, reduced=False)
+    var1 = np.var(g1)
+    var2 = np.var(g2)
+    # Use the predicted variance from before
+    print 'predicted variance = ',predicted_variance
+    print 'actual variance = ',var1+var2
+    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
+            "Incorrect shear variance post-interpolation"
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -436,7 +468,9 @@ def test_shear_reference():
     # define power spectrum
     ps = galsim.PowerSpectrum(e_power_function=lambda k : k**0.5, b_power_function=lambda k : k)
     # get shears
-    g1, g2, kappa = ps.buildGrid(grid_spacing = dx, ngrid = n, rng=rng, get_convergence=True)
+    g1, g2, kappa = ps.buildGrid(grid_spacing = dx, ngrid = n, rng=rng, get_convergence=True,
+                                 bandlimit = None) # Switch off this default, since original set of
+                                 # shears were computed before the bandlimit option existed.
 
     # put in same format as data that got read in
     g1vec = g1.reshape(n*n)
@@ -625,7 +659,7 @@ def test_tabulated():
         ## exception should be raised)
         t = galsim.LookupTable((0.99,1.,1.01),(0.99,1.,1.01))
         ps = galsim.PowerSpectrum(t)
-        np.testing.assert_raises(ValueError, ps.buildGrid, grid_spacing=1.7, ngrid=100)
+        np.testing.assert_raises(RuntimeError, ps.buildGrid, grid_spacing=1.7, ngrid=100)
         ## try to interpolate in log, but with zero values included
         np.testing.assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.),
                                  x_log=True)
@@ -811,6 +845,219 @@ def test_power_spectrum_with_kappa():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_corr_func():
+    """Test that the correlation function calculation in calculateXi() works properly.
+    """
+    import time
+    t1 = time.time()
+
+    # We want to compare the integration that is done by galsim.PowerSpectrum.calculateXi() is
+    # accurate.  Ideally this would be done by comparison with some power spectrum for which the
+    # conversion to a correlation function is analytic.  Given that the conversion to correlation
+    # function involves integration by a Bessel function, there are not many options for
+    # power spectra for which there is a closed-form expression for the integral.  For this test I
+    # will use the following relations:
+    #   \int x^n J_{n-1}(x) dx = x^n J_n(x) + C
+    #   \int x^(-n) J_{n+1}(x) dx = -x^{-n} J_n(x) + C
+    # The first one is helpful for the case of n=1, i.e.,
+    #   \int x J_0(x) dx = x J_1(x) + C
+    # which provides a test of xi_+.
+    # The second expression is helpful if we use n=3, i.e.,
+    #   \int x^(-3) J_4(x) dx = -x^{-3} J_3(x) + C
+    # which provides a test of xi_-.
+    #
+    # Testing with these functions means that our shear power spectra are not cosmological-looking,
+    # but I couldn't find an analytic expression that involved something that looked like a real
+    # shear power spectrum, so I think we're stuck with these.  At least they are non-trivially
+    # interesting/challenging tests.
+
+    # First we will test xi+ calculations.  So, to put the equations above into the proper form,
+    # we should keep in mind that what gets returned from the lensing engine is
+    #   xi+(r) = (1/2pi) \int_{kmin}^{kmax} P(k) J_0(kr) k dk
+    # Let's substitute x = kr to get the integral into a format that can be compared with the
+    # expression above.
+    #   xi+(r) = (1/2pi) (1/r)^2 \int_{r*kmin}^{r*kmax} P(x) J_0(x) x dx
+    # We want the integrand to be x J_0(x), which leads me to conclude that we should set
+    # P=1 (i.e., use a power function of lambda k : np.ones_like(k)).  In that case we should
+    # find
+    #   xi+(r) = (1/2pi) (1/r)^2 \int_{r*kmin}^{r*kmax} x J_0(x) dx
+    #          = (1/2pi) (1/r)^2 [r kmax J_1(r*kmax) - r kmin J_1(r*kmin)]
+    #          = (1/2pi) (1/r) [kmax J_1(r*kmax) - kmin J_1(r*kmin)]
+    # Let's only check this at 10 values of theta so the test isn't painfully slow.
+    n_theta = 10
+    # Also, we're going to just work in arcsec, which is the natural set of units for the
+    # lensing engine.  Other unit tests already ensure that the units are working out properly
+    # so we will not test that here.
+    ps = galsim.PowerSpectrum(lambda k : np.ones_like(k))
+    # Set up a grid, with the expectation that we'll use kmin_factor=kmax_factor=1 in our test:
+    ngrid = 100
+    grid_spacing = 360. # arcsec, i.e., 0.1 degrees
+    # Get test values for xi+; ignore xi- since we don't have an analytic expression for it:
+    t, test_xip, _ = ps.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, n_theta=n_theta,
+                                    bandlimit='hard')
+    # Now we have to calculate the theoretical values.  First, we need kmin and kmax in
+    # 1/arcsec:
+    kmin = 2.*np.pi/(ngrid*grid_spacing)
+    kmax = np.pi/grid_spacing
+    theory_val = np.zeros_like(t)
+    for ind in range(len(theory_val)):
+        theory_val[ind] = kmax*galsim.bessel.j1(t[ind]*kmax) - kmin*galsim.bessel.j1(t[ind]*kmin)
+    theory_val /= (2.*np.pi*t)
+    # Finally, make sure they are equal to 10^{-5}
+    try:
+        np.testing.assert_allclose(test_xip, theory_val, rtol=1.e-5,
+                                   err_msg='Integrated xi+ differs from reference values')
+    except AttributeError:
+        # Older NumPy versions don't have assert_allclose, so use this instead.
+        np.testing.assert_array_almost_equal(
+            test_xip, theory_val, decimal=10,
+            err_msg='Integrated xi+ differs from reference values')
+
+    # Now, do the test for xi-.  We again have to rearrange equations, starting with the lensing
+    # engine output:
+    #    xi-(r) = (1/2pi) \int_{kmin}^{kmax} P(k) J_4(kr) k dk
+    # Substituting x = kr,
+    #    xi-(r) = (1/2pi) (1/r)^2 \int_{r*kmin}^{r*kmax} P(x) J_4(x) x dx
+    # We want the integrand to be x^{-3} J_4(x), which suggests P(x) = x^{-4}.
+    # But we have to tell the lensing engine P(k), not P(kr).  So we'll tell it that P(k)=k^{-4}
+    # and we'll put the r^{-4} part into the result ourselves.
+    # In other words, our theory calculation will be:
+    #    xi-(r) = (1/2pi) (1/r)^2 [-(r*kmax)^{-3} J_3(r*kmax) + (r*kmin)^{-3} J_3(r*kmin)]
+    #           = [kmin^{-3} J_3(r*kmin) - kmax^{-3} J_3(r*kmax)] / (2pi * r^5)
+    # and we will compare it with
+    #    (lensing engine output for xi-)/r^4
+    #
+    # Alternatively and more cleanly, we can compare the lensing engine output for xi- with
+    # the theory prediction for r^4 xi-(r), which is
+    #    [kmin^{-3} J_3(r*kmin) - kmax^{-3} J_3(r*kmax)] / (2pi * r)
+    # We begin by slightly fudging the power function to avoid a RuntimeWarning for division by
+    # zero: (k+1e-12)^{-4} instead of k^{-4}
+    ps = galsim.PowerSpectrum(lambda k : (k+1.e-12)**(-4))
+    t, _, test_xim = ps.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, n_theta=n_theta,
+                                    bandlimit='hard')
+    # Now we have to calculate the theoretical values.
+    theory_val = np.zeros_like(t)
+    for ind in range(len(theory_val)):
+        theory_val[ind] = \
+            galsim.bessel.jn(3,t[ind]*kmin)/kmin**3 - galsim.bessel.jn(3,t[ind]*kmax)/kmax**3
+    theory_val /= (2.*np.pi*t)
+    # Finally, make sure they are equal to 10^{-5}
+    try:
+        np.testing.assert_allclose(test_xim, theory_val, rtol=1.e-5,
+                                   err_msg='Integrated xi+ differs from reference values')
+    except AttributeError:
+        # Older NumPy versions don't have assert_allclose, so use this instead.
+        np.testing.assert_array_almost_equal(
+            test_xim, theory_val, decimal=10,
+            err_msg='Integrated xi+ differs from reference values')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_periodic():
+    """Test that the periodic interpolation option is working properly.
+    """
+    import time
+    t1 = time.time()
+
+    # Periodic interpolation is an option in the lensing power spectrum module primarily because,
+    # with our shear grids being implicitly periodic, it will give the right shear power spectrum
+    # within kmin<k<kmax if we do interpolation in some periodic way.
+    #
+    # We will test this functionality by generating shear on a grid, then using periodic
+    # interpolation with the nearest-neighbor interpolant for some grid that has the same ngrid and
+    # spacing but some large offset from the original grid coordinates.  The lensing engine should
+    # tile the sky with periodic grids, and if we use NN interpolation then we should just get a
+    # (wrapped/shifted) copy of the original grid.  Thus the shear power spectrum should be
+    # precisely preserved by this operation.
+
+    # Set up a cosmological shear power spectrum.
+    tab_ps = galsim.LookupTable(
+        file='../examples/data/cosmo-fid.zmed1.00_smoothed.out', interpolant='linear')
+    ps = galsim.PowerSpectrum(tab_ps, units=galsim.radians)
+
+    # Set up a grid.  Make it GREAT10/GREAT3-like.
+    ngrid = 100
+    grid_spacing = 0.1 # degrees
+
+    # Make shears on the grid.
+    g1, g2 = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                          rng=galsim.UniformDeviate(314159), interpolant='nearest', kmin_factor=3)
+
+    # Set up a new set of x, y.  Make a grid and then shift it coherently:
+    min = (-ngrid/2 + 0.5) * grid_spacing
+    max = (ngrid/2 - 0.5) * grid_spacing
+    x, y = np.meshgrid(np.arange(min,max+grid_spacing,grid_spacing),
+                       np.arange(min,max+grid_spacing,grid_spacing))
+    x += 17.40 # degrees
+    y -= 0.617 # degrees
+
+    # Get shears at those positions using periodic interpolation.
+    g1_shift, g2_shift = ps.getShear(pos=(x.flatten(),y.flatten()), units=galsim.degrees,
+                                     reduced=False, periodic=True)
+    g1_shift = g1_shift.reshape((ngrid,ngrid))
+    g2_shift = g2_shift.reshape((ngrid,ngrid))
+    # Compute shear power spectra for the original grid and the new grid.  We can use all the
+    # default settings for the power spectrum estimator.
+    pse = galsim.pse.PowerSpectrumEstimator()
+    k, pe, pb, peb = pse.estimate(g1, g2)
+    _, pe_shift, pb_shift, peb_shift = pse.estimate(g1_shift, g2_shift)
+
+    # Check that they are identical.
+    try:
+        np.testing.assert_allclose(
+            pe_shift, pe, rtol=1e-10,
+            err_msg="E power altered by NN periodic interpolation.")
+        np.testing.assert_allclose(
+            pb_shift, pb, rtol=1e-10,
+            err_msg="B power altered by NN periodic interpolation.")
+        np.testing.assert_allclose(
+            peb_shift, peb, rtol=1e-10,
+            err_msg="EB power altered by NN periodic interpolation.")
+    except AttributeError:
+        # Older numpy versions don't have assert_allclose, so use this instead:
+        np.testing.assert_array_almost_equal(
+            pe_shift, pe, decimal=9,
+            err_msg="E power altered by NN periodic interpolation.")
+        np.testing.assert_array_almost_equal(
+            pb_shift, pb, decimal=9,
+            err_msg="B power altered by NN periodic interpolation.")
+        np.testing.assert_array_almost_equal(
+            peb_shift, peb, decimal=9,
+            err_msg="EB power altered by NN periodic interpolation.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_bandlimit():
+    """Test that the band-limiting of the power spectrum is working properly.
+    """
+    import time
+    t1 = time.time()
+
+    # If we do not impose a band limit on the power spectrum, then it's going to lead to aliasing in
+    # both the E and B modes, which gives spurious power within kmin<k<kmax.   In practice this is
+    # typically a 5-10% effect.  We are just going to test that the shear variance is suitably
+    # elevated rather than testing the entire power spectrum.
+
+    # Start with a cosmological power spectrum that is not band-limited.
+    ps_tab = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00.out')
+    ps = galsim.PowerSpectrum(ps_tab, units=galsim.radians)
+
+    # Generate shears without and with band-limiting
+    g1, g2 = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                          rng=galsim.UniformDeviate(123), bandlimit=None)
+    g1b, g2b = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                            rng=galsim.UniformDeviate(123), bandlimit='hard')
+
+    # Check the shear variances for a >5% excess when there's no band limit.
+    var = np.var(g1)+np.var(g2)
+    varb = np.var(g1b)+np.var(g2b)
+    assert var>1.05*varb,"Comparison of shear variances without/with band-limiting is not as expected"
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_nfwhalo()
     test_shear_variance()
@@ -821,3 +1068,6 @@ if __name__ == "__main__":
     test_tabulated()
     test_kappa_gauss()
     test_power_spectrum_with_kappa()
+    test_corr_func()
+    test_periodic()
+    test_bandlimit()

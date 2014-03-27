@@ -81,7 +81,8 @@ namespace bessel {
 
     inline double getBesselRoot0(int s)
     {
-        assert(s > 0);
+        if (s <= 0)
+            throw std::runtime_error("s must be > 0");
         if (s <= n_roots_j0) return root_j0[s-1];
         else {
             // Above this value, the asymptotic formula from Abramowitz and Stegun 9.5.12

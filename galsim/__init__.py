@@ -89,6 +89,7 @@ from nfw_halo import NFWHalo, Cosmology
 from . import fits
 from . import config
 from . import integ
+from . import bessel
 from . import pse
 from . import hsm
 from . import deprecated

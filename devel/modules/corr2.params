@@ -1,0 +1,17 @@
+
+file_name = temp.fits
+
+x_col = x
+y_col = y
+g1_col = g1
+g2_col = g2
+x_units = degrees
+y_units = degrees
+
+verbose = 0
+
+# These currently get changed in the python script
+#min_sep = 0.01
+#max_sep = 10.
+#nbins = 50
+sep_units = deg

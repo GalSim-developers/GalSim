@@ -24,7 +24,7 @@
 % packages for symbols
 \usepackage{latexsym,amssymb,hyperref}
 % AMS-LaTeX package for e.g. subequations
-\usepackage{amsmath}
+\usepackage{amsmath,color}
 
 
 \usepackage[OT2,T1]{fontenc}
@@ -62,7 +62,12 @@ shears randomly according to a user-specified shear power spectrum.
 It includes a brief description of the theory behind shear power
 spectra, the connection between the usual continuous description of
 the theory versus our representation in terms of the discrete Fourier
-transform, and a validation of the outputs for several test cases.
+transform, and a validation of the outputs for several test
+cases. {\Large \textcolor{red}{Note that this document does not
+    include information on some lensing engine tests focusing on the
+    issue of interpolation of gridded shears.  For information on that
+  topic, see the (forthcoming) GalSim paper and, for now, a summary in
+the docstrings in galsim/lensing\_ps.py.}} 
 \end{abstract}
 
 \tableofcontents

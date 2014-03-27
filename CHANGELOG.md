@@ -336,6 +336,8 @@ Other new features:
   it has a `compression` option that works the same way `compression` works
   for the other `galsim.fits.read*` functions, so it may be convenient
   at times. (Issue #364)
+* Added some additional options and changed default interpolant for the lensing
+  engine.  (Issue #387)
 * Permit users to initialize `OpticalPSF` with a list or array of aberrations,
   as an alternative to specifying each one individually.  (The innards of
   OpticalPSF were also rearranged to use arrays instead of individual values,
