@@ -29,6 +29,9 @@
 
 namespace pyconv = boost::python::converter;
 
+namespace galsim {
+namespace {
+
 template <typename T>
 class array_scalar_converter {
 public:
@@ -69,3 +72,7 @@ public:
   }
 
 };
+
+} // anonymous
+
+} // namespace galsim
