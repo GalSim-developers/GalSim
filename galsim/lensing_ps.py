@@ -580,9 +580,9 @@ class PowerSpectrum(object):
 
         @param subsample_fac      Factor by which to subsample the gridded shear and convergence
                                   fields.  This is currently required to be a factor of ngrid.
-        @param get_convergence    Return the convergence in addition to the shear?  Regardless of the
-                                  value of `get_convergence`, the convergence will still be computed
-                                  and stored for future use. [Default: `get_convergence=False`]
+        @param get_convergence    Return the convergence in addition to the shear?  Regardless of
+                                  the value of `get_convergence`, the convergence will still be
+                                  computed and stored for future use. [default: `False`]
         """
         # Check that buildGrid has already been called.
         if not hasattr(self, 'im_g1'):
@@ -638,7 +638,8 @@ class PowerSpectrum(object):
 
     def calculateXi(self, grid_spacing, ngrid, kmax_factor=1, kmin_factor=1, n_theta=100,
                     units=galsim.arcsec, bandlimit="hard"):
-        """Calculate shear correlation functions for the current power spectrum on the specified grid.
+        """Calculate shear correlation functions for the current power spectrum on the specified
+        grid.
 
         This function will calculate the theoretical shear correlation functions, xi_+ and xi_-, for
         this power spectrum and the grid configuration specified using keyword arguments, taking
@@ -828,8 +829,8 @@ class PowerSpectrum(object):
         # The magic numbers in the code below come from the following:
         # We define the function as
         #     (arctan[A log(k/k_max) + B] + pi/2)/pi
-        # For our current purposes, we will define A and B by requiring that this function go to 0.95
-        # (0.05) for k/k_max = 0.95 (1).  This gives two equations:
+        # For our current purposes, we will define A and B by requiring that this function go to
+        # 0.95 (0.05) for k/k_max = 0.95 (1).  This gives two equations:
         #     0.95 = (arctan[log(0.95) A + B] + pi/2)/pi
         #     0.05 = (arctan[B] + pi/2)/pi.
         # We will solve the second equation:
@@ -1040,18 +1041,24 @@ class PowerSpectrum(object):
                 g2_r_new = self._wrap_image(g2_r)
 
                 # Then make the SBInterpolated image.
-                sbii_g1 = galsim.SBInterpolatedImage(g1_r_new.image, xInterp=xinterp, kInterp=kinterp)
-                sbii_g2 = galsim.SBInterpolatedImage(g2_r_new.image, xInterp=xinterp, kInterp=kinterp)
+                sbii_g1 = galsim.SBInterpolatedImage(
+                    g1_r_new.image, xInterp=xinterp, kInterp=kinterp)
+                sbii_g2 = galsim.SBInterpolatedImage(
+                    g2_r_new.image, xInterp=xinterp, kInterp=kinterp)
             else:
-                sbii_g1 = galsim.SBInterpolatedImage(g1_r, xInterp=xinterp, kInterp=kinterp)
-                sbii_g2 = galsim.SBInterpolatedImage(g2_r, xInterp=xinterp, kInterp=kinterp)
+                sbii_g1 = galsim.SBInterpolatedImage(
+                    g1_r, xInterp=xinterp, kInterp=kinterp)
+                sbii_g2 = galsim.SBInterpolatedImage(
+                    g2_r, xInterp=xinterp, kInterp=kinterp)
         else:
             if periodic:
                 # Need to expand array here, as well.
                 g1_r_new = self._wrap_image(self.im_g1)
                 g2_r_new = self._wrap_image(self.im_g2)
-                sbii_g1 = galsim.SBInterpolatedImage(g1_r_new.image, xInterp=xinterp, kInterp=kinterp)
-                sbii_g2 = galsim.SBInterpolatedImage(g2_r_new.image, xInterp=xinterp, kInterp=kinterp)
+                sbii_g1 = galsim.SBInterpolatedImage(
+                    g1_r_new.image, xInterp=xinterp, kInterp=kinterp)
+                sbii_g2 = galsim.SBInterpolatedImage(
+                    g2_r_new.image, xInterp=xinterp, kInterp=kinterp)
             else:
                 sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp=xinterp, kInterp=kinterp)
                 sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp=xinterp, kInterp=kinterp)
@@ -1166,9 +1173,11 @@ class PowerSpectrum(object):
             kappa_new = self._wrap_image(galsim.ImageViewD(self.im_kappa))
 
             # Then make the SBInterpolated image.
-            sbii_kappa = galsim.SBInterpolatedImage(kappa_new.image, xInterp=xinterp, kInterp=kinterp)
+            sbii_kappa = galsim.SBInterpolatedImage(
+                kappa_new.image, xInterp=xinterp, kInterp=kinterp)
         else:
-            sbii_kappa = galsim.SBInterpolatedImage(self.im_kappa, xInterp=xinterp, kInterp=kinterp)
+            sbii_kappa = galsim.SBInterpolatedImage(
+                self.im_kappa, xInterp=xinterp, kInterp=kinterp)
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.
