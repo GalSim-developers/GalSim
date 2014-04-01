@@ -67,7 +67,6 @@ class GSObject(object):
     relationship between pixel and sky coordinates.  See `BaseWCS` for more details about
     how to specify various kinds of world coordinate systems.
 
-
     Transforming Methods
     --------------------
 
@@ -135,7 +134,6 @@ class GSObject(object):
         image = obj.draw()
         image = obj.drawShoot()
         kimage_r, kimage_i = obj.drawK()
-
 
     Attributes
     ----------

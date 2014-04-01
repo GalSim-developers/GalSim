@@ -60,7 +60,6 @@ class Shapelet(GSObject):
     I(r,theta) be purely real, which implies that b_pq = b_qp* (where * means complex conjugate).
     This further implies that b_pp (i.e. b_pq with p==q) is real. 
 
-
     Initialization
     --------------
     
@@ -91,7 +90,6 @@ class Shapelet(GSObject):
                         galsim.GSParams using help(galsim.GSParams) for more information about
                         this option.
 
-
     Fitting an Image
     ----------------
 
@@ -100,12 +98,10 @@ class Shapelet(GSObject):
 
         shapelet = galsim.FitShapelet(sigma, order, image)
 
-
     Attributes
     ----------
 
     After construction, the sigma, order, and bvec are available as attributes.
-
 
     Methods
     -------

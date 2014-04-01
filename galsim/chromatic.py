@@ -38,7 +38,6 @@ class ChromaticObject(object):
     ChromaticSum, and ChromaticConvolution.  See the docstrings for these classes for more details.
     The ChromaticAtmosphere function also creates a ChromaticObject.
 
-
     Initialization
     --------------
 
@@ -48,7 +47,6 @@ class ChromaticObject(object):
     especially expand, dilate and shift.
     
     @param gsobj  The GSObject to be chromaticized.
-
 
     Methods
     -------
@@ -740,7 +738,6 @@ class Chromatic(ChromaticObject):
     `flux` attribute different from 1, it would just refer to the factor by which that particular
     object is brighter than the value given in the normalization command.
 
-
     Initialization
     --------------
 
@@ -783,11 +780,22 @@ class ChromaticSum(ChromaticObject):
     This is the type returned from `galsim.Add(objects)` if any of the objects are a 
     ChromaticObject.
 
-
     Initialization
     --------------
 
-    @param args             The objects to be added together.
+    Typically, you do not need to construct a `ChromaticSum` object explicitly.  Normally, you 
+    would just use the + operator, which returns a `ChromaticSum` when used with chromatic objects:
+
+        >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8) * bulge_sed
+        >>> disk = galsim.Exponential(half_light_radius=1.4) * disk_sed
+        >>> gal = bulge + disk
+
+    You can also use the `Add` factory function, which returns a `ChromaticSum` object if any of
+    the individual objects are chromatic:
+
+        >>> gal = galsim.Add([bulge,disk])
+
+    @param args             Unnamed args should be a list of objects to add.
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
     """
@@ -915,11 +923,21 @@ class ChromaticConvolution(ChromaticObject):
     This is the type returned from `galsim.Convolve(objects)` if any of the objects are a 
     ChromaticObject.
 
-
     Initialization
     --------------
 
-    @param args             The objects to be convolved together.
+    The normal way to use this class is to use the `Convolve` factory function:
+
+        >>> gal = galsim.Sersic(n, half_light_radius) * galsim.SED(sed_file)
+        >>> psf = galsim.ChromaticAtmosphere(...)
+        >>> pix = galsim.Pixel(scale)
+        >>> final = galsim.Convolve([gal, psf, pix])
+ 
+    The objects to be convolved may be provided either as multiple unnamed arguments (e.g.
+    `Convolve(psf, gal, pix)`) or as a list (e.g. `Convolve([psf, gal, pix])`).  Any number of
+    objects may be provided using either syntax.  (Well, the list has to include at least 1 item.)
+
+    @param args             Unnamed args should be a list of objects to convolve.
     @param real_space       Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
@@ -1166,7 +1184,6 @@ class ChromaticDeconvolution(ChromaticObject):
     (or None), then the ChromaticDeconvolution instance inherits the same GSParams as the object
     being deconvolved.
 
-
     Initialization
     --------------
 
@@ -1206,7 +1223,6 @@ class ChromaticAutoConvolution(ChromaticObject):
 
     It is equivalent in functionality to galsim.Convolve([obj,obj]), but takes advantage of
     the fact that the two profiles are the same for some efficiency gains.
-
 
     Initialization
     --------------
@@ -1255,7 +1271,6 @@ class ChromaticAutoCorrelation(ChromaticObject):
     It is equivalent in functionality to
         galsim.Convolve([obj,obj.rotate(180.*galsim.degrees)])
     but takes advantage of the fact that the two profiles are the same for some efficiency gains.
-
 
     Initialization
     --------------

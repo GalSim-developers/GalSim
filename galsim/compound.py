@@ -39,14 +39,14 @@ def Add(*args, **kwargs):
     galsim.ChromaticSum object is required to represent the sum of surface brightness profiles.
 
     Typically, you do not need to call a `Add` explicitly.  Normally, you would just use the + 
-    operator, which returns a Sum:
+    operator, which returns a `Sum`:
 
         >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8)
         >>> disk = galsim.Exponential(half_light_radius=1.4)
         >>> gal = bulge + disk
         >>> psf = galsim.Gaussian(sigma=0.3, flux=0.3) + galsim.Gaussian(sigma=0.8, flux=0.7)
 
-    If one of the items is Chromatic, it will return a ChromaticSum
+    If one of the items is chromatic, it will return a `ChromaticSum`
 
         >>> disk = galsim.Exponential(half_light_radius=1.4) * galsim.SED(sed_file)
         >>> gal = bulge + disk
@@ -85,12 +85,11 @@ class Sum(galsim.GSObject):
     to represent a multiple-component galaxy as the sum of an Exponential and a DeVaucouleurs, or to
     represent a PSF as the sum of multiple Gaussians.
 
-
     Initialization
     --------------
 
     Typically, you do not need to construct a `Sum` object explicitly.  Normally, you would just
-    use the + operator, which returns a Sum:
+    use the + operator, which returns a `Sum`:
 
         >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8)
         >>> disk = galsim.Exponential(half_light_radius=1.4)
@@ -111,7 +110,6 @@ class Sum(galsim.GSObject):
     calculations must be set when initializing the individual GSObjects that go into the Sum, NOT
     when creating the Sum (at which point the accuracy and threshold parameters will simply be
     ignored).
-
 
     Methods
     -------
@@ -223,7 +221,6 @@ class Convolution(galsim.GSObject):
     If you do not specify either `real_space = True` or `False` explicitly, then we check if there
     are 2 profiles, both of which have hard edges.  In this case, we automatically use real-space
     convolution.  In all other cases, the default is not to use real-space convolution.
-
 
     Initialization
     --------------
@@ -407,7 +404,6 @@ class Deconvolution(galsim.GSObject):
     (or None), then the Deconvolution instance inherits the same GSParams as the object being
     deconvolved.
 
-
     Initialization
     --------------
 
@@ -419,7 +415,6 @@ class Deconvolution(galsim.GSObject):
     @param obj              The object to deconvolve.
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
-
 
     Methods
     -------
@@ -467,7 +462,6 @@ class AutoConvolution(galsim.GSObject):
     It is equivalent in functionality to galsim.Convolve([obj,obj]), but takes advantage of
     the fact that the two profiles are the same for some efficiency gains.
 
-
     Initialization
     --------------
 
@@ -481,7 +475,6 @@ class AutoConvolution(galsim.GSObject):
                             edges.]
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
-
 
     Methods
     -------
@@ -561,7 +554,6 @@ class AutoCorrelation(galsim.GSObject):
     This class is primarily targeted for use by the galsim.CorrelatedNoise models when convolving
     with a GSObject.
 
-
     Initialization
     --------------
 
@@ -575,7 +567,6 @@ class AutoCorrelation(galsim.GSObject):
                             edges.]
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
-
 
     Methods
     -------
