@@ -1863,7 +1863,7 @@ class Sersic(GSObject):
     If you are truncating the profile, the optional parameter, `flux_untruncated`, specifies
     whether the `flux` and `half_light_radius` specifications correspond to the untruncated
     profile (`True`) or to the truncated profile (`False`, default).  The impact of this parameter
-    is a little be subtle, so we'll go through a few examples to show how it works.
+    is a little subtle, so we'll go through a few examples to show how it works.
 
     First, let's examine the case where we specify the size according to the half-light radius.
     If `flux_untruncated` is True (and `trunc > 0`), then the profile will be identical
