@@ -237,8 +237,7 @@ class Convolution(galsim.GSObject):
 
     The objects to be convolved may be provided either as multiple unnamed arguments (e.g.
     `Convolve(psf, gal, pix)`) or as a list (e.g. `Convolve([psf, gal, pix])`).  Any number of
-    objects may be provided using either syntax.  (Even 0 or 1, although that doesn't really make
-    much sense.)
+    objects may be provided using either syntax.  (Well, the list has to include at least 1 item.)
 
     @param args             Unnamed args should be a list of objects to convolve.
     @param real_space       Whether to use real space convolution.  [default: None, which means
