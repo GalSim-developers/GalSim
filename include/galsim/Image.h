@@ -260,6 +260,14 @@ namespace galsim {
          *  @brief BaseImage's assignTo just uses the normal copyFrom method.
          */
         void assignTo(const ImageView<T>& rhs) const { rhs.copyFrom(*this); }
+        
+        /**
+	 *  @brief Return a copy of the image to which the Antilogus+2014 charge deflection model has been applied.
+	 * 
+	 *  a is a pointer to the 4 (2dmax+1)x(2dmax+1) 'a' matrices as a contiguous piece of memory 
+	 *  ordered a_L(dx=-dmax,dy=-dmax),a_L(dx=-dmax+1,dy=-dmax),...,a_R,a_B,a_T(dx=+dmax,dy=+dmax)
+	 */
+	ImageAlloc<T> applyCD(const double *a, const unsigned int dmax) const;
 
     protected:
 
