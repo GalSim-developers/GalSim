@@ -18,6 +18,8 @@
 #
 
 import numpy as np
+import galsim
+
 
 class BaseCDModel(object):
     """Base class for the most generic, i.e. no with symmetries or distance scaling relationships
