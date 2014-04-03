@@ -879,67 +879,57 @@ class GSObject(object):
         `gsparams` keyword that has a lower-than-default value for `alias_threshold`; see
         help(galsim.GSParams) for more information.
 
-        @param image  If provided, this will be the image on which to draw the profile.
-                      If `image = None`, then an automatically-sized image will be created.
-                      If `image != None`, but its bounds are undefined (e.g. if it was
-                        constructed with `image = galsim.Image()`), then it will be resized
-                        appropriately based on the profile's size (Default `image = None`).
-
-        @param scale  If provided, use this as the pixel scale for the image.
-                      If `scale` is `None` and `image != None`, then take the provided image's
-                        pixel scale.
-                      If `scale` is `None` and `image == None`, then use the Nyquist scale
-                        `= pi/maxK()`.
-                      If `scale <= 0` (regardless of image), then use the Nyquist scale
-                        `= pi/maxK()`.
-                      (Default `scale = None`.)
-
-        @param wcs    If provided, use this as the wcs for the image.  At most one of scale or
-                      wcs may be provided. (Default `wcs - None`.)
-
-        @param gain   The number of photons per ADU ("analog to digital units", the units of the
-                      numbers output from a CCD).  (Default `gain =  1.`)
-
-        @param wmult  A multiplicative factor by which to enlarge (in each direction) the default
-                      automatically calculated FFT grid size used for any intermediate calculations
-                      in Fourier space.  The size of the intermediate images is normally
-                      automatically chosen to reach some preset accuracy targets [see
-                      help(galsim.GSParams())]; however, if you see strange artifacts in the image,
-                      you might try using `wmult > 1`.  This will take longer of course, but it will
-                      produce more accurate images, since they will have less "folding" in Fourier
-                      space. If the image size is not specified, then the output real-space image
-                      will be enlarged by a factor of `wmult`.  If the image size is specified by
-                      the user, rather than automatically-sized, use of `wmult>1` will still affect
-                      the size of the images used for the Fourier-space calculations and hence can
-                      reduce image artifacts, even though the image that is returned will be the
-                      size that was requested. (Default `wmult = 1.`)
-
+        @param image        If provided, this will be the image on which to draw the profile.
+                            If `image = None`, then an automatically-sized image will be created.
+                            If `image != None`, but its bounds are undefined (e.g. if it was
+                            constructed with `image = galsim.Image()`), then it will be resized
+                            appropriately based on the profile's size [default: None].
+        @param scale        If provided, use this as the pixel scale for the image.
+                            If `scale` is `None` and `image != None`, then take the provided
+                            image's pixel scale.
+                            If `scale` is `None` and `image == None`, then use the Nyquist scale.
+                            If `scale <= 0` (regardless of image), then use the Nyquist scale.
+                            [default: None]
+        @param wcs          If provided, use this as the wcs for the image.  At most one of scale
+                            or wcs may be provided. [default: None]
+        @param gain         The number of photons per ADU ("analog to digital units", the units of
+                            the numbers output from a CCD).  [default: 1]
+        @param wmult        A multiplicative factor by which to enlarge (in each direction) the
+                            default automatically calculated FFT grid size used for any
+                            intermediate calculations in Fourier space.  The size of the
+                            intermediate images is normally automatically chosen to reach some
+                            preset accuracy targets [cf. galsim.GSParams()]; however, if you see
+                            strange artifacts in the image, you might try using `wmult > 1`.  This
+                            will take longer of course, but it will produce more accurate images,
+                            since they will have less "folding" in Fourier space. If the image size
+                            is not specified, then the output real-space image will be enlarged by
+                            a factor of `wmult`.  If the image size is specified by the user,
+                            rather than automatically-sized, use of `wmult>1` will still affect the
+                            size of the images used for the Fourier-space calculations and hence
+                            can reduce image artifacts, even though the image that is returned will
+                            be the size that was requested. [default: 1]
         @param normalization  Two options for the normalization:
-                              "flux" or "f" means that the sum of the output pixels is normalized
-                                  to be equal to the total flux.  (Modulo any flux that falls off
-                                  the edge of the image of course, and note the caveat in the draw
-                                  method documentation regarding the need to convolve with a pixel
-                                  response.)
-                              "surface brightness" or "sb" means that the output pixels sample
-                                  the surface brightness distribution at each location.
-                              (Default `normalization = "flux"`)
-
-        @param add_to_image  Whether to add flux to the existing image rather than clear out
-                             anything in the image before drawing.
-                             Note: This requires that image be provided (i.e. `image` is not `None`)
-                             and that it have defined bounds (Default `add_to_image = False`).
-
+                            "flux" or "f" means that the sum of the output pixels is normalized
+                               to be equal to the total flux.  (Modulo any flux that falls off
+                               the edge of the image of course, and note the caveat in the draw
+                               method documentation regarding the need to convolve with a pixel
+                               response.)
+                            "surface brightness" or "sb" means that the output pixels sample
+                               the surface brightness distribution at each location.
+                            [default: "flux"]
+        @param add_to_image Whether to add flux to the existing image rather than clear out
+                            anything in the image before drawing.
+                            Note: This requires that image be provided and that it have defined
+                            bounds. [default: False]
         @param use_true_center  Normally, the profile is drawn to be centered at the true center
-                                of the image (using the function `image.bounds.trueCenter()`).
-                                If you would rather use the integer center (given by
-                                `image.bounds.center()`), set this to `False`.
-                                (Default `use_true_center = True`)
+                            of the image (using the function `image.bounds.trueCenter()`).
+                            If you would rather use the integer center (given by
+                            `image.bounds.center()`), set this to `False`.  [default: True]
+        @param offset       The location at which to center the profile being drawn relative to the
+                            center of the image (either the true center if use_true_center=True,
+                            or the nominal center if use_true_center=False). [default: None]
 
-        @param offset The location at which to center the profile being drawn relative to the
-                      center of the image (either the true center if use_true_center=True,
-                      or the nominal center if use_true_center=False). (Default `offset = None`)
-
-        @returns      The drawn image.
+        @returns the drawn image.
         """
         # Raise an exception immediately if the normalization type is not recognized
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
@@ -1029,93 +1019,76 @@ class GSObject(object):
         of profile the object has, how big your image is relative to the size of your object,
         whether you are keeping `poisson_flux = True`, etc.
 
-        @param image  If provided, this will be the image on which to draw the profile.
-                      If `image = None`, then an automatically-sized image will be created.
-                      If `image != None`, but its bounds are undefined (e.g. if it was constructed
-                        with `image = galsim.Image()`), then it will be resized appropriately based
-                        on the profile's size.
-                      (Default `image = None`.)
-
-        @param scale  If provided, use this as the pixel scale for the image.
-                      If `scale` is `None` and `image != None`, then take the provided image's
-                        pixel scale (or wcs).
-                      If `scale` is `None` and `image == None`, then use the Nyquist scale
-                        `= pi/maxK()`.
-                      If `scale <= 0` (regardless of image), then use the Nyquist scale
-                        `= pi/maxK()`.
-                      (Default `scale = None`.)
-
-        @param wcs    If provided, use this as the wcs for the image.  At most one of scale or
-                      wcs may be provided. (Default `wcs - None`.)
-
-        @param gain   The number of photons per ADU ("analog to digital units", the units of the
-                      numbers output from a CCD).  (Default `gain =  1.`)
-
-        @param wmult  A factor by which to make an automatically-sized image larger than
-                      it would normally be made. (Default `wmult = 1.`)
-
-        @param normalization    Two options for the normalization:
-                                 "flux" or "f" means that the sum of the output pixels is normalized
-                                   to be equal to the total flux.  (Modulo any flux that falls off
-                                   the edge of the image of course.)
-                                 "surface brightness" or "sb" means that the output pixels sample
-                                   the surface brightness distribution at each location.
-                                (Default `normalization = "flux"`)
-
-        @param add_to_image     Whether to add flux to the existing image rather than clear out
-                                anything in the image before drawing.
-                                Note: This requires that image be provided (i.e. `image != None`)
-                                and that it have defined bounds (Default `add_to_image = False`).
-
+        @param image        If provided, this will be the image on which to draw the profile.
+                            If `image = None`, then an automatically-sized image will be created.
+                            If `image != None`, but its bounds are undefined (e.g. if it was
+                            constructed with `image = galsim.Image()`), then it will be resized
+                            appropriately based on the profile's size [default: None].
+        @param scale        If provided, use this as the pixel scale for the image.
+                            If `scale` is `None` and `image != None`, then take the provided
+                            image's pixel scale.
+                            If `scale` is `None` and `image == None`, then use the Nyquist scale.
+                            If `scale <= 0` (regardless of image), then use the Nyquist scale.
+                            [default: None]
+        @param wcs          If provided, use this as the wcs for the image.  At most one of scale
+                            or wcs may be provided. [default: None]
+        @param gain         The number of photons per ADU ("analog to digital units", the units of
+                            the numbers output from a CCD).  [default: 1]
+        @param wmult        A factor by which to make an automatically-sized image larger than
+                            it would normally be made. [default: 1]
+        @param normalization  Two options for the normalization:
+                            "flux" or "f" means that the sum of the output pixels is normalized
+                               to be equal to the total flux.  (Modulo any flux that falls off
+                               the edge of the image of course, and note the caveat in the draw
+                               method documentation regarding the need to convolve with a pixel
+                               response.)
+                            "surface brightness" or "sb" means that the output pixels sample
+                               the surface brightness distribution at each location.
+                            [default: "flux"]
+        @param add_to_image Whether to add flux to the existing image rather than clear out
+                            anything in the image before drawing.
+                            Note: This requires that image be provided and that it have defined
+                            bounds. [default: False]
         @param use_true_center  Normally, the profile is drawn to be centered at the true center
-                                of the image (using the function `image.bounds.trueCenter()`).
-                                If you would rather use the integer center (given by
-                                `image.bounds.center()`), set this to `False`.
-                                (Default `use_true_center = True`)
-
-        @param offset The location at which to center the profile being drawn relative to the
-                      center of the image (either the true center if user_true_center=True,
-                      or the nominal center if use_true_center=False). (Default `offset = None`)
-
-        @param n_photons        If provided, the number of photons to use.
-                                If not provided (i.e. `n_photons = 0`), use as many photons as
-                                  necessary to result in an image with the correct Poisson shot
-                                  noise for the object's flux.  For positive definite profiles, this
-                                  is equivalent to `n_photons = flux`.  However, some profiles need
-                                  more than this because some of the shot photons are negative
-                                  (usually due to interpolants).
-                                (Default `n_photons = 0`).
-
-        @param rng              If provided, a random number generator to use for photon shooting.
-                                  (may be any kind of `galsim.BaseDeviate` object)
-                                If `rng=None`, one will be automatically created, using the time
-                                  as a seed.
-                                (Default `rng = None`)
-
+                            of the image (using the function `image.bounds.trueCenter()`).
+                            If you would rather use the integer center (given by
+                            `image.bounds.center()`), set this to `False`.  [default: True]
+        @param offset       The location at which to center the profile being drawn relative to the
+                            center of the image (either the true center if use_true_center=True,
+                            or the nominal center if use_true_center=False). [default: None]
+        @param n_photons    If provided, the number of photons to use.
+                            If not provided (i.e. `n_photons = 0`), use as many photons as
+                            necessary to result in an image with the correct Poisson shot
+                            noise for the object's flux.  For positive definite profiles, this
+                            is equivalent to `n_photons = flux`.  However, some profiles need
+                            more than this because some of the shot photons are negative
+                            (usually due to interpolants).
+                            [default: 0]
+        @param rng          If provided, a random number generator to use for photon shooting.
+                            (may be any kind of `galsim.BaseDeviate` object)
+                            If `rng=None`, one will be automatically created, using the time
+                            as a seed.  [default: None]
         @param max_extra_noise  If provided, the allowed extra noise in each pixel.
-                                  This is only relevant if `n_photons=0`, so the number of photons
-                                  is being automatically calculated.  In that case, if the image
-                                  noise is dominated by the sky background, you can get away with
-                                  using fewer shot photons than the full `n_photons = flux`.
-                                  Essentially each shot photon can have a `flux > 1`, which
-                                  increases the noise in each pixel.  The `max_extra_noise`
-                                  parameter specifies how much extra noise per pixel is allowed
-                                  because of this approximation.  A typical value for this might be
-                                  `max_extra_noise = sky_level / 100` where `sky_level` is the flux
-                                  per pixel due to the sky.  If the natural number of photons
-                                  produces less noise than this value for all pixels, we lower the
-                                  number of photons to bring the resultant noise up to this value.
-                                  If the natural value produces more noise than this, we accept it
-                                  and just use the natural value.  Note that this uses a "variance"
-                                  definition of noise, not a "sigma" definition.
-                                (Default `max_extra_noise = 0.`)
+                            This is only relevant if `n_photons=0`, so the number of photons
+                            is being automatically calculated.  In that case, if the image
+                            noise is dominated by the sky background, you can get away with
+                            using fewer shot photons than the full `n_photons = flux`.
+                            Essentially each shot photon can have a `flux > 1`, which
+                            increases the noise in each pixel.  The `max_extra_noise`
+                            parameter specifies how much extra noise per pixel is allowed
+                            because of this approximation.  A typical value for this might be
+                            `max_extra_noise = sky_level / 100` where `sky_level` is the flux
+                            per pixel due to the sky.  If the natural number of photons
+                            produces less noise than this value for all pixels, we lower the
+                            number of photons to bring the resultant noise up to this value.
+                            If the natural value produces more noise than this, we accept it
+                            and just use the natural value.  Note that this uses a "variance"
+                            definition of noise, not a "sigma" definition.  [default: 0.]
+        @param poisson_flux Whether to allow total object flux scaling to vary according to
+                            Poisson statistics for `n_photons` samples. [default: True,
+                            unless n_photons is given, in which case the default is False]
 
-        @param poisson_flux     Whether to allow total object flux scaling to vary according to
-                                Poisson statistics for `n_photons` samples (Default
-                                `poisson_flux = True` unless n_photons is given, in which case
-                                the default is `poisson_flux = False`).
-
-        @returns      The drawn image.
+        @returns the drawn image.
         """
 
         # Raise an exception immediately if the normalization type is not recognized
@@ -1217,38 +1190,31 @@ class GSObject(object):
         is not allowed.  There is no wcs parameter here, and if the images have a non-trivial
         wcs (and you don't override it with the scale parameter), a TypeError will be raised.
 
-        @param re     If provided, this will be the real part of the k-space image.
-                      If `re = None`, then an automatically-sized image will be created.
-                      If `re != None`, but its bounds are undefined (e.g. if it was
-                        constructed with `re = galsim.Image()`), then it will be resized
-                        appropriately based on the profile's size (Default `re = None`).
+        @param re           If provided, this will be the real part of the k-space image.
+                            If `re = None`, then an automatically-sized image will be created.
+                            If `re != None`, but its bounds are undefined (e.g. if it was
+                            constructed with `re = galsim.Image()`), then it will be resized
+                            appropriately based on the profile's size. [default: None]
+        @param im           If provided, this will be the imaginary part of the k-space image.
+                            A provided im must match the size and scale of re.
+                            If `im = None`, then an automatically-sized image will be created.
+                            If `im != None`, but its bounds are undefined (e.g. if it was
+                            constructed with `im = galsim.Image()`), then it will be resized
+                            appropriately based on the profile's size. [default: None]
+        @param scale        If provided, use this as the pixel scale for the images.
+                            If `scale` is `None` and `re, im != None`, then take the provided
+                            images' pixel scale (which must be equal).
+                            If `scale` is `None` and `re, im == None`, then use the Nyquist scale.
+                            If `scale <= 0` (regardless of image), then use the Nyquist scale.
+                            [default: None]
+        @param gain         The number of photons per ADU ("analog to digital units", the units of
+                            the numbers output from a CCD).  [default: 1.]
+        @param add_to_image Whether to add to the existing images rather than clear out
+                            anything in the image before drawing.
+                            Note: This requires that images be provided (i.e. `re`, `im` are
+                            not `None`) and that they have defined bounds. [default: False]
 
-        @param im     If provided, this will be the imaginary part of the k-space image.
-                      A provided im must match the size and scale of re.
-                      If `im = None`, then an automatically-sized image will be created.
-                      If `im != None`, but its bounds are undefined (e.g. if it was
-                        constructed with `im = galsim.Image()`), then it will be resized
-                        appropriately based on the profile's size (Default `im = None`).
-
-        @param scale  If provided, use this as the pixel scale for the images.
-                      If `scale` is `None` and `re, im != None`, then take the provided images'
-                        pixel scale (which must be equal).
-                      If `scale` is `None` and `re, im == None`, then use the Nyquist scale
-                        `= pi/maxK()`.
-                      If `scale <= 0` (regardless of image), then use the Nyquist scale
-                         `= pi/maxK()`.
-                      (Default `scale = None`.)
-
-        @param gain   The number of photons per ADU ("analog to digital units", the units of the
-                      numbers output from a CCD).  (Default `gain =  1.`)
-
-        @param add_to_image  Whether to add to the existing images rather than clear out
-                             anything in the image before drawing.
-                             Note: This requires that images be provided (i.e. `re`, `im` are
-                             not `None`) and that they have defined bounds (Default
-                             `add_to_image = False`).
-
-        @returns      (re, im)  (created if necessary)
+        @returns the tuple of images, (re, im) (created if necessary)
         """
         # Make sure the type of gain is correct and has a valid value:
         if type(gain) != float:
@@ -1313,33 +1279,28 @@ class Gaussian(GSObject):
 
     Initialization
     --------------
-    A Gaussian can be initialized using one (and only one) of three possible size parameters
 
-        half_light_radius
-        sigma
-        fwhm
+    A Gaussian can be initialized using one (and only one) of three possible size parameters:
+    `sigma`, `fwhm`, or `half_light_radius`.  Exactly one of these three is required.
 
-    and an optional `flux` parameter [default `flux = 1`].
-
-    Example:
-
-        >>> gauss_obj = galsim.Gaussian(flux=3., sigma=1.)
-        >>> gauss_obj.getHalfLightRadius()
-        1.1774100225154747
-        >>> gauss_obj = galsim.Gaussian(flux=3, half_light_radius=1.)
-        >>> gauss_obj.getSigma()
-        0.8493218002880191
-
-    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
-    TypeError exception.
-
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
+    @param sigma            The value of sigma of the profile.  Typically given in arcsec.
+                            [One of sigma, fwhm, or half_light_radius is required.]
+    @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
+                            [One of sigma, fwhm, or half_light_radius is required.]
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of sigma, fwhm, or half_light_radius is required.]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
 
     Methods
     -------
-    The Gaussian is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Gaussian has the following access methods:
+
+        sigma = gauss.getSigma()
+        fwhm = gauss.getFWHM()
+        hlr = gauss.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information, to indicate
@@ -1382,7 +1343,7 @@ class Gaussian(GSObject):
 class Moffat(GSObject):
     """A class describing a Moffat surface brightness profile.
 
-    The Moffat surface brightness profile is I(R) propto [1 + (r/r_scale)^2]^(-beta).  The
+    The Moffat surface brightness profile is I(R) propto [1 + (r/scale_radius)^2]^(-beta).  The
     SBProfile representation of a Moffat profile also includes an optional truncation beyond a
     given radius.
 
@@ -1392,35 +1353,32 @@ class Moffat(GSObject):
 
     Initialization
     --------------
-    A Moffat is initialized with a slope parameter beta, one (and only one) of three possible size
-    parameters
 
-        scale_radius
-        half_light_radius
-        fwhm
+    A Moffat can be initialized using one (and only one) of three possible size parameters:
+    `scale_radius`, `fwhm`, or `half_light_radius`.  Exactly one of these three is required.
 
-    an optional truncation radius parameter `trunc` [default `trunc = 0.`, indicating no truncation]
-    and a `flux` parameter [default `flux = 1`].
-
-    Example:
-
-        >>> moffat_obj = galsim.Moffat(beta=3., scale_radius=3., flux=0.5)
-        >>> moffat_obj.getHalfLightRadius()
-        1.9307827587167474
-        >>> moffat_obj = galsim.Moffat(beta=3., half_light_radius=1., flux=0.5)
-        >>> moffat_obj.getScaleRadius()
-        1.5537739740300376
-
-    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
-    TypeError exception.
-
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
+    @param beta             The beta parameter of the profile.
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
+                            [One of scale_radius, fwhm, or half_light_radius is required.]
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of scale_radius, fwhm, or half_light_radius is required.]
+    @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
+                            [One of scale_radius, fwhm, or half_light_radius is required.]
+    @param trunc            An optional truncation radius at which the profile is made to drop to
+                            zero.  [default: 0, indicating no truncation]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
 
     Methods
     -------
-    The Moffat is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Moffat has the following access methods:
+
+        beta = moffat_obj.getBeta()
+        rD = moffat_obj.getScaleRadius()
+        fwhm = moffat_obj.getFWHM()
+        hlr = moffat_obj.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information
@@ -1461,7 +1419,7 @@ class Moffat(GSObject):
 
 class Airy(GSObject):
     """A class describing the surface brightness profile for an Airy disk (perfect
-    diffraction-limited PSF for a * circular aperture), with an optional central obscuration.
+    diffraction-limited PSF for a circular aperture), with an optional central obscuration.
 
     For more information, refer to
 
@@ -1469,24 +1427,36 @@ class Airy(GSObject):
 
     Initialization
     --------------
-    An Airy can be initialized using one size parameter `lam_over_diam`, an optional `obscuration`
-    parameter [default `obscuration=0.`] and an optional flux parameter [default `flux = 1.`].  The
-    half light radius or FWHM can subsequently be calculated using the getHalfLightRadius() method
-    or getFWHM(), respectively, if `obscuration = 0.`
 
-    Example:
+    The Airy profile is defined in terms of the diffraction angle, which is a function of the
+    ratio lambda / D, where lambda is the wavelength of the light (say in the middle of the
+    bandpass you are using) and D is the diameter of the telescope.  This ratio is the input
+    parameter to pass to the Airy constructor, but as it is naturally in radians, you would
+    typically convert to arcsec.  e.g.
 
-        >>> airy_obj = galsim.Airy(flux=3., lam_over_diam=2.)
-        >>> airy_obj.getHalfLightRadius()
-        1.0696642954485294
+        >>> lam = 700  # nm
+        >>> diam = 4.0    # meters
+        >>> lam_over_diam = (lambda * 1.e-9) / diam  # radians
+        >>> lam_over_diam *= 206265  # Convert to arcsec
 
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
+    @param lam_over_diam    The parameter that governs the scale size of the profile.
+                            See above for details about calculating it.
+    @param obscuration      The linear dimension of a central obscuration as a fraction of the
+                            pupil dimension.  [default: 0]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
 
     Methods
     -------
-    The Airy is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Airy has the following access methods:
+
+        lam_over_diam = airy_obj.getLamOverD()
+        fwhm = airy_obj.getFWHM()
+        hlr = airy_obj.getHalfLightRadius()
+
+    The latter two are only available if the obscuration is 0.
     """
 
     # Initialization parameters of the object, with type information
@@ -1548,41 +1518,43 @@ class Kolmogorov(GSObject):
     Initialization
     --------------
 
-    A Kolmogorov is initialized with one (and only one) of three possible size parameters
+    The Kolmogorov profile is normally defined in terms of the ratio lambda / D, where lambda is
+    the wavelength of the light (say in the middle of the bandpass you are using) and r0 is the
+    Fried parameter.  Typical values for the Fried parameter are on the order of 10cm for
+    most observatories and up to 20cm for excellent sites. The values are usually quoted at
+    lambda = 500nm and r0 depends on wavelength as [r0 ~ lambda^(-6/5)].
 
-        lam_over_r0
-        half_light_radius
-        fwhm
+    This ratio is naturally in radians, so you would typically convert to arcsec.  e.g.
 
-    and an optional `flux` parameter [default `flux = 1`].
+        >>> lam = 700  # nm
+        >>> r0 = 0.15 * (lam/500)**(-1.2)  # meters
+        >>> lam_over_r0 = (lam * 1.e-9) / r0  # radians
+        >>> lam_over_r0 *= 206265  # Convert to arcsec
 
-    Example:
+    The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
 
-        >>> psf = galsim.Kolmogorov(lam_over_r0=3., flux=1.)
+    A Kolmogorov can be initialized using one (and only one) of three possible size parameters:
+    `lam_over_r0`, `fwhm`, or `half_light_radius`.  Exactly one of these three is required.
 
-    Initializes psf as a galsim.Kolmogorov() instance.
-
-    @param lam_over_r0        lambda / r0 in the physical units adopted (user responsible for
-                              consistency), where r0 is the Fried parameter. The FWHM of the
-                              Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
-                              Typical values for the Fried parameter are on the order of 10cm for
-                              most observatories and up to 20cm for excellent sites. The values are
-                              usually quoted at lambda = 500nm and r0 depends on wavelength as
-                              [r0 ~ lambda^(-6/5)].
-    @param fwhm               FWHM of the Kolmogorov PSF.
-    @param half_light_radius  Half-light radius of the Kolmogorov PSF.
-                              One of `lam_over_r0`, `fwhm` and `half_light_radius` (and only one)
-                              must be specified.
-    @param flux               Optional flux value [Default `flux = 1.`].
-    @param gsparams           You may also specify a gsparams argument.  See the docstring for
-                              galsim.GSParams using help(galsim.GSParams) for more information about
-                              this option.
+    @param lam_over_r0      The parameter that governs the scale size of the profile.
+                            See above for details about calculating it.  [One of lam_over_r0,
+                            fwhm, or half_light_radius is required.]
+    @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
+                            [One of lam_over_r0, fwhm, or half_light_radius is required.]
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of sigma, fwhm, or half_light_radius is required.]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
 
     Methods
     -------
-    The Kolmogorov is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
 
+    In addition to the usual GSObject methods, Kolmogorov has the following access methods:
+
+        lam_over_r0 = kolm.getLamOverR0()
+        fwhm = kolm.getFWHM()
+        hlr = kolm.getHalfLightRadius()
     """
 
     # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
@@ -1649,24 +1621,26 @@ class Pixel(GSObject):
 
     Initialization
     --------------
-    A Pixel is initialized with a `scale` parameter, that represents the pixel scale, the size
-    of the box in both the x and y dimensions.  There is also an optional flux parameter
-    [default `flux = 1.`].
 
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
+    @param scale            The linear scale size of the pixel.  Typically given in arcsec.
+    @param flux             The flux (in photons) of the profile.  This should almost certainly
+                            be left at the default value of 1. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
 
     Methods
     -------
-    The Pixel is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Pixel has the following access method:
+
+        scale = pixel.getScale()
 
     Note: We have not implemented drawing a sheared or rotated Pixel in real space.  It's a
           bit tricky to get right at the edges where fractional fluxes are required.
           Fortunately, this is almost never needed.  Pixels are almost always convolved by
           something else rather than drawn by themselves, in which case either the fourier
           space method is used, or photon shooting.  Both of these are implemented in GalSim.
-          If need to draw sheared or rotated Pixels in real space, please file an issue, and
+          If you need to draw sheared or rotated Pixels in real space, please file an issue, and
           maybe we'll implement that function.  Until then, you will get an exception if you try.
     """
 
@@ -1693,23 +1667,27 @@ class Box(GSObject):
 
     Initialization
     --------------
-    A Box is initialized with an x dimension `width`, a y dimension `height`, and an optional
-    flux parameter [default `flux = 1.`].
 
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
+    @param width            The width of the Box.
+    @param height           The height of the Box.
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
 
     Methods
     -------
-    The Box is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Box has the following access methods:
+
+        width = box.getWidth()
+        height = box.getHeight()
 
     Note: We have not implemented drawing a sheared or rotated Box in real space.  It's a
           bit tricky to get right at the edges where fractional fluxes are required.
           Fortunately, this is almost never needed.  Box profiles are almost always convolved
           by something else rather than drawn by themselves, in which case either the fourier
           space method is used, or photon shooting.  Both of these are implemented in GalSim.
-          If need to draw sheared or rotated Boxes in real space, please file an issue, and
+          If you need to draw sheared or rotated Boxes in real space, please file an issue, and
           maybe we'll implement that function.  Until then, you will get an exception if you try.
     """
 
@@ -1753,50 +1731,42 @@ class Sersic(GSObject):
     Initialization
     --------------
 
-    A Sersic is initialized with `n`, the Sersic index of the profile, and using one (and only
-    one) of two possible size parameters
+    The allowed range of values for the `n` parameter is 0.3 <= n <= 6.2.  An exception will be
+    thrown if you provide a value outside that range.  Below n=0.3, there are severe numerical
+    problems.  Above n=6.2, we found that the code begins to be inaccurate when sheared or
+    magnified (at the level of upcoming shear surveys), so we do not recommend extending beyond
+    this.  See Issues #325 and #450 for more details.
 
-        half_light_radius
-        scale_radius
+    Note that if you are building many Sersic profiles using truncation, the code will be more
+    efficient if the truncation is always the same multiple of `scale_radius`, since it caches
+    many calculations that depend on the ratio `trunc/scale_radius`.
 
-    The code is limited to 0.3 <= n <= 6.2, with an exception thrown for values outside that range.
-    Below n=0.3, there are severe numerical problems.  Above n=6.2, we found that the code begins
-    to be inaccurate when sheared or magnified (at the level of upcoming shear surveys), so
-    we do not recommend extending beyond this.  See Issues #325 and #450 for more details.
+    A Sersic can be initialized using one (and only one) of two possible size parameters:
+    `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
 
-    Several optional parameters are available:  Truncation radius `trunc` [default `trunc = 0.`,
-    indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc` is set to
-    a non-zero value, then it is assumed to be in the same system of units as `half_light_radius`
-    or `scale_radius`.
+    @param n                The Sersic index, n.
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of scale_radius or half_light_radius is required.]
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
+                            [One of scale_radius or half_light_radius is required.]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param trunc            An optional truncation radius at which the profile is made to drop to
+                            zero.  [default: 0, indicating no truncation]
+    @param flux_untruncated Should the provided flux and half_light_radius refer to the
+                            untruncated profile? See below for more details. [default: False]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
 
-    Note that the code will be more efficient if the truncation is always the same multiple of
-    `scale_radius`, since it caches many calculations that depend on the ratio `trunc/scale_radius`.
-    The `scale_radius` is always calculated internally for a `half_light_radius` input, and vice
-    versa.  Internal calculations are based on the `scale_radius`.
+    Flux of a truncated profile
+    ---------------------------
 
-    Example:
+    If you are truncating the profile, the optional parameter, `flux_untruncated`, specifies
+    whether the `flux` and `half_light_radius` specifications correspond to the untruncated
+    profile (`True`) or to the truncated profile (`False`, default).  The impact of this parameter
+    is a little subtle, so we'll go through a few examples to show how it works.
 
-        >>> sersic_obj = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40.)
-        >>> sersic_obj.getHalfLightRadius()
-        2.5
-        >>> sersic_obj.getScaleRadius()
-        0.003262738739834598
-        >>> sersic_obj.getN()
-        3.5
-
-        >>> sersic_obj = galsim.Sersic(n=1.5, scale_radius=0.5, flux=40.)
-        >>> sersic_obj.getHalfLightRadius()
-        2.1863858209414166
-        >>> sersic_obj.getScaleRadius()
-        0.5
-        >>> sersic_obj.getN()
-        1.5
-
-    Another optional parameter, `flux_untruncated`, specifies whether the `flux` and
-    `half_light_radius` specification correspond to the untruncated profile or the truncated
-    profile.  (The example here is specifically for the case where the truncated Sersic is
-    specified by the `half_light_radius`.  For the case when it is specified by the `scale_radius`,
-    see below.)  If `flux_untruncated` is True (and `trunc > 0`), then the profile will be identical
+    First, let's examine the case where we specify the size according to the half-light radius.
+    If `flux_untruncated` is True (and `trunc > 0`), then the profile will be identical
     to the version without truncation up to the truncation radius, beyond which it drops to 0.
     In this case, the actual half-light radius will be different from the specified half-light
     radius.  The getHalfLightRadius() method will return the true half-light radius.  Similarly,
@@ -1846,7 +1816,7 @@ class Sersic(GSObject):
         0.003262738739834598  # the scale radius is still identical to the untruncated case
 
     When the truncated Sersic scale is specified with `scale_radius`, the behavior between the
-    three cases (untruncated, `flux_untruncated=true` and `flux_untruncated=false`) will be
+    three cases (untruncated, `flux_untruncated=True` and `flux_untruncated=False`) will be
     somewhat different from above.  Since it is the scale radius that is being specified, and since
     truncation does not change the scale radius the way it can change the half-light radius, the
     scale radius will remain unchanged in all cases.  This also results in the half-light radius
@@ -1889,13 +1859,14 @@ class Sersic(GSObject):
         >>> sersic_obj3.getScaleRadius()
         0.05
 
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
-
     Methods
     -------
-    The Sersic is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Sersic has the following access methods:
+
+        n = sersic_obj.getN()
+        r0 = sersic_obj.getScaleRadius()
+        hlr = sersic_obj.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information
@@ -1938,32 +1909,25 @@ class Exponential(GSObject):
 
     Initialization
     --------------
-    An Exponential can be initialized using one (and only one) of two possible size parameters
 
-        half_light_radius
-        scale_radius
+    An Exponential can be initialized using one (and only one) of two possible size parameters:
+    `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
 
-    and an optional `flux` parameter [default `flux = 1.`].
-
-    Example:
-
-        >>> exp_obj = galsim.Exponential(flux=3., scale_radius=5.)
-        >>> exp_obj.getHalfLightRadius()
-        8.391734950083302
-        >>> exp_obj = galsim.Exponential(flux=3., half_light_radius=1.)
-        >>> exp_obj.getScaleRadius()
-        0.5958243473776976
-
-    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
-    TypeError exception.
-
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of scale_radius or half_light_radius is required.]
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
+                            [One of scale_radius or half_light_radius is required.]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
 
     Methods
     -------
-    The Exponential is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, Exponential has the following access methods:
+
+        r0 = exp_obj.getScaleRadius()
+        hlr = exp_obj.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information
@@ -2006,23 +1970,29 @@ class DeVaucouleurs(GSObject):
     Initialization
     --------------
 
-    A DeVaucouleurs is initialized with a `flux` and  one (and only one) of two possible size
-    parameters
+    A DeVaucouleurs can be initialized using one (and only one) of two possible size parameters:
+    `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
 
-        half_light_radius
-        scale_radius
-
-    The optional truncation works the same way as for a Sersic object using the optional
-    parameters `trunc` and `flux_untruncated`.  See the documentation there for more details
-    about these parameters.
-
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.
+    @param scale_radius     The value of sigma of the profile.  Typically given in arcsec.
+                            [One of scale_radius or half_light_radius is required.]
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of scale_radius or half_light_radius is required.]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param trunc            An optional truncation radius at which the profile is made to drop to
+                            zero.  [default: 0, indicating no truncation]
+    @param flux_untruncated Should the provided flux and half_light_radius refer to the
+                            untruncated profile? See the docstring for Sersic for more details.
+                            [default: False]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
 
     Methods
     -------
-    The DeVaucouleurs is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+
+    In addition to the usual GSObject methods, DeVaucouleurs has the following access methods:
+
+        r0 = devauc_obj.getScaleRadius()
+        hlr = devauc_obj.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information

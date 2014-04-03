@@ -71,12 +71,17 @@ namespace galsim {
         {
             // We wrap Interpolant classes as opaque, construct-only objects; we just
             // need to be able to make them from Python and pass them to C++.
+            // The only exception is that we make the 'uval' method accessible in python, since the
+            // Fourier transform of the interpolant can be useful for some purposes (e.g.,
+            // modifications of power spectra of objects that have been interpolated).
             bp::class_<Interpolant,boost::noncopyable>("Interpolant", bp::no_init)
                 .def("__init__", bp::make_constructor(
-                        &ConstructInterpolant, bp::default_call_policies(), bp::arg("str")));
+                        &ConstructInterpolant, bp::default_call_policies(), bp::arg("str")))
+                .def("uval", &Interpolant::uval, (bp::arg("uval")=0));
             bp::class_<Interpolant2d,boost::noncopyable>("Interpolant2d", bp::no_init)
                 .def("__init__", bp::make_constructor(
-                        &ConstructInterpolant2d, bp::default_call_policies(), bp::arg("str")));
+                        &ConstructInterpolant2d, bp::default_call_policies(), bp::arg("str")))
+                .def("uval", &Interpolant2d::uval, (bp::arg("u")=0,bp::arg("v")=0));
             bp::class_<InterpolantXY,bp::bases<Interpolant2d>,boost::noncopyable>(
                 "InterpolantXY",
                 bp::init<boost::shared_ptr<Interpolant> >(bp::arg("i1d"))
