@@ -123,9 +123,22 @@ def test_SED_atRedshift():
             np.testing.assert_almost_equal(a(w), d(w*(1.0+z2)), 10,
                                            err_msg="error redshifting SED")
 
+    # Follow lines effectively test whether SED.wave_list responds to redshifting (Issue #520).
+    a = a.atRedshift(0.1)
+    a = a.thin(rel_err=1e-5)
+
+def test_SED_roundoff_guard():
+    """Check that SED.__init__ roundoff error guard works. (Issue #520).
+    """
+    a = galsim.SED(os.path.join(datapath, 'CWW_Scd_ext.sed'))
+    for z in np.arange(0.0, 0.5, 0.001):
+        a = a.atRedshift(z)
+        a(a.wave_list[0])
+
 if __name__ == "__main__":
     test_SED_add()
     test_SED_sub()
     test_SED_mul()
     test_SED_div()
     test_SED_atRedshift()
+    test_SED_roundoff_guard()
