@@ -111,10 +111,13 @@ def test_SED_atRedshift():
     """Check that SEDs redshift correctly.
     """
     a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'))
+    bolo_flux = a.calculateFlux(bandpass=None)
     for z1, z2 in zip([0.5, 1.0, 1.4], [1.0, 1.0, 1.0]):
         b = a.atRedshift(z1)
         c = b.atRedshift(z1) # same redshift, so should be no change
         d = c.atRedshift(z2) # do a relative redshifting from z1 to z2
+        e = b.thin(rel_err=1.e-5)  # effectively tests that wave_list is handled correctly.
+                                   # (Issue #520)
         for w in [350, 500, 650]:
             np.testing.assert_almost_equal(a(w), b(w*(1.0+z1)), 10,
                                            err_msg="error redshifting SED")
@@ -122,18 +125,21 @@ def test_SED_atRedshift():
                                            err_msg="error redshifting SED")
             np.testing.assert_almost_equal(a(w), d(w*(1.0+z2)), 10,
                                            err_msg="error redshifting SED")
-
-    # Follow lines effectively test whether SED.wave_list responds to redshifting (Issue #520).
-    a = a.atRedshift(0.1)
-    a = a.thin(rel_err=1e-5)
+            np.testing.assert_almost_equal((a(w)-e(w*(1.0+z1)))/bolo_flux, 0., 5,
+                                           err_msg="error redshifting and thinning SED")
 
 def test_SED_roundoff_guard():
     """Check that SED.__init__ roundoff error guard works. (Issue #520).
     """
     a = galsim.SED(os.path.join(datapath, 'CWW_Scd_ext.sed'))
     for z in np.arange(0.0, 0.5, 0.001):
-        a = a.atRedshift(z)
-        a(a.wave_list[0])
+        b = a.atRedshift(z)
+        w1 = b.wave_list[0]
+        w2 = b.wave_list[-1]
+        np.testing.assert_almost_equal(a(w1/(1.0+z)), b(w1), 10,
+                                        err_msg="error using wave_list limits in redshifted SED")
+        np.testing.assert_almost_equal(a(w2/(1.0+z)), b(w2), 10,
+                                        err_msg="error using wave_list limits in redshifted SED")
 
 if __name__ == "__main__":
     test_SED_add()
