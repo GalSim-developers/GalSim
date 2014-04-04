@@ -217,15 +217,18 @@ ConstImageView<T> BaseImage<T>::subImage(const Bounds<int>& bounds) const
 }
 
 template <typename T>
-ImageAlloc<T> BaseImage<T>::applyCD(const double* a, const unsigned int dmax) const
+ImageAlloc<T> BaseImage<T>::applyCD(const double* a, const int dmax) const
 {
+    if(dmax<0) throw ImageError("Attempt to apply CD model with invalid extent");
+  
     const int arraydim=(2*dmax+1)*(2*dmax+1);
     const double *aL=a;
     const double *aR=aL+arraydim;
     const double *aB=aR+arraydim;
     const double *aT=aT+arraydim;
     
-    ImageAlloc<T> output(getXMax()-getXMin()+1,getYMax()-getYMin()+1);  // working version of image, which we later return
+    ImageAlloc<T> output(getXMax()-getXMin()+1,getYMax()-getYMin()+1);  
+    // working version of image, which we later return
     
     for(int x=getXMin(); x<=getXMax(); x++)
     {
