@@ -33,10 +33,10 @@ class BaseCDModel(object):
         from doing so.  Each of the input a_l, a_r, a_b & a_t matrices must have the same shape and
         be odd-dimensioned.
 
-        @param a_l  Array containing matrix of leftward deflection coefficients
-        @param a_r  Array containing matrix of rightward deflection coefficients
-        @param a_b  Array containing matrix of downward deflection coefficients
-        @param a_t  Array containing matrix of upward deflection coefficients
+        @param a_l  Array containing matrix of deflection coefficients of left pixel border
+        @param a_r  Array containing matrix of deflection coefficients of right pixel border
+        @param a_b  Array containing matrix of deflection coefficients of bottom pixel border
+        @param a_t  Array containing matrix of deflection coefficients of top pixel border
         """
         # Some basic sanity checking
         if (a_l.shape[0] % 2 != 1):
@@ -58,22 +58,22 @@ class BaseCDModel(object):
     def applyForward(self, image):
         """Apply the charge deflection model in the forward direction
         """
-        return image.applyCD(self.n, self._a_lrbt)
+        return image.applyCD(self._a_lrbt, self.n)
 
     def applyBackward(self, image):
         """Apply the charge deflection model in the backward direction (to linear order)
         """
-        return image.applyCD(self.n, -self._a_lrbt)
+        return image.applyCD(-self._a_lrbt, self.n)
 
 
     class PowerLawCD(BaseCDModel):
         """Class for parametrizing charge deflection coefficient strengths as a power law in
-        distance from charged
+        distance from affected pixel border
         """
 
         @staticmethod
         def _modelShiftCoeffR(x, y, r0, t0, rx, tx, r, t, alpha):
-            """Calculate the rightward model shift coeff as a function of int pixel position x, y
+            """Calculate the model shift coeff of right pixel border as a function of int pixel position x, y
             """
             if not isinstance(x, (int, long)):
                 raise ValueError("Input x coordinate must be an int or long")
@@ -94,19 +94,61 @@ class BaseCDModel(object):
 
         @staticmethod
         def _modelShiftCoeffL(x, y, r0, t0, rx, tx, r, t, alpha):
-            """Calculate the leftward model shift coeff as a function of int pixel position x, y
+            """Calculate the model shift coeff of left pixel border as a function of int pixel position x, y
 
-            Equal to -_modelShiftCoeffR(*args)
+            Equal to -_modelShiftCoeffR(x+1, y, *args)
             """
-            return -_modelShiftCoeffR(x, y, r0, t0, rx, tx, r, t, alpha)
+            return -_modelShiftCoeffR(x+1, y, r0, t0, rx, tx, r, t, alpha)
+
+
+        @staticmethod
+        def _modelShiftCoeffT(x, y, r0, t0, rx, tx, r, t, alpha):
+            """Calculate the model shift coeff of top pixel border as a function of int pixel position x, y
+            """
+            if not isinstance(x, (int, long)):
+                raise ValueError("Input x coordinate must be an int or long")
+            if not isinstance(y, (int, long)):
+                raise ValueError("Input x coordinate must be an int or long")
+            # Invoke symmetry
+            if x < 0: return _modelShiftCoeffR(-x, y, r0, t0, rx, tx, r, t, alpha)
+            if y < 0: return -_modelShiftCoeffR(x, 1 - y, r0, t0, rx, tx, r, t, alpha)
+            # Invoke special immediate neighbour cases
+            if x == 0 and y == 0: return -t0
+            if x == 0 and y == 1: return +t0
+            if x == 1 and y == 0: return -tx
+            if x == 1 and y == 1: return +tx
+            # Then, for remainder, apply power law model
+            rr = np.sqrt((float(y) - .5)**2 + float(x)**2)
+            cc = (y - 0.5) / rr # projection onto relevant axis
+            return cc * t * rr**(-alpha)
+
+        @staticmethod
+        def _modelShiftCoeffB(x, y, r0, t0, rx, tx, r, t, alpha):
+            """Calculate the model shift coeff of bottom pixel border as a function of int pixel position x, y
+
+            Equal to -_modelShiftCoeffT(x, y+1, *args)
+            """
+            return -_modelShiftCoeffT(x, y+1, r0, t0, rx, tx, r, t, alpha)
+
 
         def __init__(self, n, r0, t0, rx, tx, r, t, alpha):
             """Initialize a power-law charge deflection model.
             """
             # First define x and y coordinates in a square grid of shape (2n + 1) * (2n + 1)
             x, y = np.meshgrid(np.arange(2 * n + 1) - n, np.arange(2 * n + 1) - n)
-            # Do special cases first
-
-
-
-
+            
+            # prepare a_* matrices
+            a_l = numpy.zeros((2*n+1,2*n+1))            
+            a_r = numpy.zeros((2*n+1,2*n+1))            
+            a_b = numpy.zeros((2*n+1,2*n+1))            
+            a_t = numpy.zeros((2*n+1,2*n+1))
+            
+            # fill with power law model
+            for ix in arange(-n,n+1):
+             for iy in arange(-n,n+1):
+	       a_l[iy,ix] = _modelShiftCoeffL(ix, iy, r0, t0, rx, tx, r, t, alpha)
+	       a_r[iy,ix] = _modelShiftCoeffR(ix, iy, r0, t0, rx, tx, r, t, alpha)
+	       a_b[iy,ix] = _modelShiftCoeffB(ix, iy, r0, t0, rx, tx, r, t, alpha)
+	       a_t[iy,ix] = _modelShiftCoeffT(ix, iy, r0, t0, rx, tx, r, t, alpha)
+            
+            BaseCDModel.__init__(self, a_l, a_r, a_b, a_t)
