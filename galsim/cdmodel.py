@@ -67,6 +67,9 @@ class BaseCDModel(object):
 
 
     class PowerLawCD(BaseCDModel):
+        """Class for parametrizing charge deflection coefficient strengths as a power law in
+        distance from charged
+        """
 
         @staticmethod
         def _modelShiftCoeffR(x, y, r0, t0, rx, tx, r, t, alpha):
