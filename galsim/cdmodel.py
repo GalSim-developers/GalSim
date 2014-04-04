@@ -58,12 +58,12 @@ class BaseCDModel(object):
     def applyForward(self, image):
         """Apply the charge deflection model in the forward direction
         """
-        return image.applyCD(self.n, self._a_lrbt)
+        return image.applyCD(self._a_lrbt, self.n)
 
     def applyBackward(self, image):
         """Apply the charge deflection model in the backward direction (to linear order)
         """
-        return image.applyCD(self.n, -self._a_lrbt)
+        return image.applyCD(-self._a_lrbt, self.n)
 
 
     class PowerLawCD(BaseCDModel):
