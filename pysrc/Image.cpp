@@ -167,6 +167,7 @@ struct PyImage {
             .add_property("array", &GetConstArray)
             .def("getBounds", getBounds)
             .add_property("bounds", getBounds)
+            .def("applyCD", &ImageAlloc<T>::applyCD, bp::args("a", "dmax"))
             ;
         ADD_CORNER(pyBaseImage, getXMin, xmin);
         ADD_CORNER(pyBaseImage, getYMin, ymin);
