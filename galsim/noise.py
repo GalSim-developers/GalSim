@@ -111,11 +111,7 @@ def Noise_withVariance(self, variance):
     ret._setVariance(variance)
     return ret
 
-def Noise_rescaleVariance(self, variance_ratio):
-    # We don't technically need this method, since it is equivalent to multiplication.
-    # However, I'm not sure if the multiplication syntax is clear enough for Noise objects, so it 
-    # seemed worthwhile to have a method that did the same thing but was more explicit about what 
-    # it was doing.
+def Noise_withScaledVariance(self, variance_ratio):
     """Return a new noise object with the variance scaled up by the specified factor.
 
     This is equivalent to noise * variance_ratio.
@@ -132,7 +128,7 @@ def Noise_rescaleVariance(self, variance_ratio):
 _galsim.BaseNoise.setVariance = Noise_setVariance
 _galsim.BaseNoise.scaleVariance = Noise_scaleVariance
 _galsim.BaseNoise.withVariance = Noise_withVariance
-_galsim.BaseNoise.rescaleVariance = Noise_rescaleVariance
+_galsim.BaseNoise.withScaledVariance = Noise_withScaledVariance
 
 # Make op* and op*= work to adjust the overall variance of a BaseNoise object
 def Noise_mul(self, variance_ratio):
@@ -143,12 +139,12 @@ def Noise_mul(self, variance_ratio):
 
     @returns a new Noise object whose variance has been scaled by the given amount.
     """
-    return self.rescaleVariance(variance_ratio)
+    return self.withScaledVariance(variance_ratio)
 
 # Likewise for op/
 def Noise_div(self, variance_ratio):
     """Equivalent to self * (1/variance_ratio)"""
-    return self.rescaleVariance(1./variance_ratio)
+    return self.withScaledVariance(1./variance_ratio)
 
 _galsim.BaseNoise.__mul__ = Noise_mul
 _galsim.BaseNoise.__rmul__ = Noise_mul
@@ -426,7 +422,7 @@ class VariableGaussianNoise(_galsim.BaseNoise):
     def withVariance(self, variance):
         raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
 
-    def rescaleVariance(self, variance):
+    def withScaledVariance(self, variance):
         # This one isn't undefined like withVariance, but it's inefficient.  Better to 
         # scale the values in the image before constructing VariableGaussianNoise.
         raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
