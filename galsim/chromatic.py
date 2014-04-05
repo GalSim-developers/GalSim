@@ -203,7 +203,7 @@ class ChromaticObject(object):
 
         # decide on integrator
         if integrator is None:
-            if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
+            if len(wave_list) > 0:
                 integrator = galsim.integ.SampleIntegrator(numpy.trapz)
             else:
                 integrator = galsim.integ.ContinuousIntegrator(numpy.trapz)
@@ -330,26 +330,30 @@ class ChromaticObject(object):
 
     # Helper function
     def _applyMatrix(self, J):
-        # return a copy with the Jacobian matrix J applied to the ChromaticObject.
-        if hasattr(self, '_A'):
-            ret = self.copy()
-            if hasattr(J, '__call__'):
-                ret._A = lambda w: J(w) * self._A(w)
-                ret.separable = False
-            else:
-                ret._A = lambda w: J * self._A(w)
+        if isinstance(self, ChromaticSum):     
+            # Don't wrap ChromaticSum object, easier to just wrap its arguments.
+            return ChromaticSum([ obj._applyMatrix(J) for obj in self.objlist ])
         else:
-            ret = ChromaticObject(self)
-            if hasattr(J, '__call__'):
-                ret._A = J
-                ret.separable = False
+            # return a copy with the Jacobian matrix J applied to the ChromaticObject.
+            if hasattr(self, '_A'):
+                ret = self.copy()
+                if hasattr(J, '__call__'):
+                    ret._A = lambda w: J(w) * self._A(w)
+                    ret.separable = False
+                else:
+                    ret._A = lambda w: J * self._A(w)
             else:
-                ret._A = lambda w: J
-        # To help developers debug extensions to ChromaticObject, check that this object
-        # already has a few expected attributes
-        if ret.separable: assert hasattr(ret, 'SED')
-        assert hasattr(ret, 'wave_list')
-        return ret
+                ret = ChromaticObject(self)
+                if hasattr(J, '__call__'):
+                    ret._A = J
+                    ret.separable = False
+                else:
+                    ret._A = lambda w: J
+            # To help developers debug extensions to ChromaticObject, check that this object
+            # already has a few expected attributes
+            if ret.separable: assert hasattr(ret, 'SED')
+            assert hasattr(ret, 'wave_list')
+            return ret
 
     def expand(self, scale):
         """Expand the linear size of the profile by the given (possibly wavelength-dependent)
@@ -371,14 +375,11 @@ class ChromaticObject(object):
 
         @returns the expanded object
         """
-        if isinstance(self, ChromaticSum):
-            return ChromaticSum([ obj.expand(scale) for obj in self.objlist ])
+        if hasattr(scale, '__call__'):
+            E = lambda w: numpy.matrix(numpy.diag([scale(w), scale(w), 1]))
         else:
-            if hasattr(scale, '__call__'):
-                E = lambda w: numpy.matrix(numpy.diag([scale(w), scale(w), 1]))
-            else:
-                E = numpy.diag([scale, scale, 1])
-            return self._applyMatrix(E)
+            E = numpy.diag([scale, scale, 1])
+        return self._applyMatrix(E)
 
     def dilate(self, scale):
         """Dilate the linear size of the profile by the given (possibly wavelength-dependent) 
@@ -445,22 +446,19 @@ class ChromaticObject(object):
 
         @returns the sheared object.
         """
-        if isinstance(self, ChromaticSum):
-            return ChromaticSum([ obj.shear(*args, **kwargs) for obj in self.objlist ])
+        if len(args) == 1:
+            if kwargs:
+                raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
+            if not isinstance(args[0], galsim.Shear):
+                raise TypeError("Error, unnamed argument to applyShear is not a Shear!")
+            shear = args[0]
+        elif len(args) > 1:
+            raise TypeError("Error, too many unnamed arguments to applyShear!")
         else:
-            if len(args) == 1:
-                if kwargs:
-                    raise TypeError("Error, gave both unnamed and named arguments to shear()!")
-                if not isinstance(args[0], galsim.Shear):
-                    raise TypeError("Error, unnamed argument to shear() is not a Shear!")
-                shear = args[0]
-            elif len(args) > 1:
-                raise TypeError("Error, too many unnamed arguments to shear()!")
-            else:
-                shear = galsim.Shear(**kwargs)
-            S = numpy.matrix(numpy.identity(3), dtype=float)
-            S[0:2,0:2] = shear._shear.getMatrix()
-            return self._applyMatrix(S)
+            shear = galsim.Shear(**kwargs)
+        S = numpy.matrix(numpy.identity(3), dtype=float)
+        S[0:2,0:2] = shear._shear.getMatrix()
+        return self._applyMatrix(S)
 
     def lens(self, g1, g2, mu):
         """Apply a lensing shear and magnification to this object.
@@ -501,15 +499,12 @@ class ChromaticObject(object):
 
         @returns the rotated object.
         """
-        if isinstance(self, ChromaticSum):
-            return ChromaticSum([ obj.rotate(theta) for obj in self.objlist ])
-        else:
-            cth = numpy.cos(theta.rad())
-            sth = numpy.sin(theta.rad())
-            R = numpy.matrix([[cth, -sth, 0],
-                              [sth,  cth, 0],
-                              [  0,    0, 1]], dtype=float)
-            return self._applyMatrix(R)
+        cth = numpy.cos(theta.rad())
+        sth = numpy.sin(theta.rad())
+        R = numpy.matrix([[cth, -sth, 0],
+                          [sth,  cth, 0],
+                          [  0,    0, 1]], dtype=float)
+        return self._applyMatrix(R)
 
     def transform(self, dudx, dudy, dvdx, dvdy):
         """Apply a transformation to this object defined by an arbitrary Jacobian matrix.
@@ -529,13 +524,10 @@ class ChromaticObject(object):
 
         @returns the transformed object.
         """
-        if isinstance(self, ChromaticSum):
-            return ChromaticSum([ obj.transform(dudx,dudy,dvdx,dvdy) for obj in self.objlist ])
-        else:
-            J = numpy.matrix([[dudx, dudy, 0],
-                              [dvdx, dvdy, 0],
-                              [   0,    0, 1]], dtype=float)
-            return self._applyMatrix(J)
+        J = numpy.matrix([[dudx, dudy, 0],
+                          [dvdx, dvdy, 0],
+                          [   0,    0, 1]], dtype=float)
+        return self._applyMatrix(J)
 
     def shift(self, *args, **kwargs):
         """Apply a (possibly wavelength-dependent) (dx, dy) shift to this chromatic object.
@@ -553,61 +545,57 @@ class ChromaticObject(object):
         @returns the shifted object.
 
         """
-        if isinstance(self, ChromaticSum):
-            # Don't wrap `ChromaticSum`s, easier to just wrap their arguments.
-            return ChromaticSum([ obj.shift(*args,**kwargs) for obj in self.objlist ])
+        # This follows along the galsim.utilities.pos_args fucntion, but has some
+        # extra bits to account for the possibility of dx,dy being functions.
+        # First unpack args/kwargs
+        if len(args) == 0:
+            # Then dx,dy need to be kwargs
+            # If not, then python will raise an appropriate error.
+            dx = kwargs.pop('dx')
+            dy = kwargs.pop('dy')
+        elif len(args) == 1:
+            if hasattr(args[0], '__call__'):
+                def dx(w):
+                    try:
+                        return args[0](w).x
+                    except:
+                        return args[0](w)[0]
+                def dy(w):
+                    try:
+                        return args[0](w).y
+                    except:
+                        return args[0](w)[1]
+            elif isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
+                dx = args[0].x
+                dy = args[0].y
+            else:
+                # Let python raise the appropriate exception if this isn't valid.
+                dx = args[0][0]
+                dy = args[0][1]
+        elif len(args) == 2:
+            dx = args[0]
+            dy = args[1]
         else:
-            # This follows along the galsim.utilities.pos_args fucntion, but has some
-            # extra bits to account for the possibility of dx,dy being functions.
-            # First unpack args/kwargs
-            if len(args) == 0:
-                # Then dx,dy need to be kwargs
-                # If not, then python will raise an appropriate error.
-                dx = kwargs.pop('dx')
-                dy = kwargs.pop('dy')
-            elif len(args) == 1:
-                if hasattr(args[0], '__call__'):
-                    def dx(w):
-                        try:
-                            return args[0](w).x
-                        except:
-                            return args[0](w)[0]
-                    def dy(w):
-                        try:
-                            return args[0](w).y
-                        except:
-                            return args[0](w)[1]
-                elif isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
-                    dx = args[0].x
-                    dy = args[0].y
-                else:
-                    # Let python raise the appropriate exception if this isn't valid.
-                    dx = args[0][0]
-                    dy = args[0][1]
-            elif len(args) == 2:
-                dx = args[0]
-                dy = args[1]
-            else:
-                raise TypeError("Too many arguments supplied to shift()")
-            if kwargs:
-                raise TypeError("shift() got unexpected keyword arguments: %s",kwargs.keys())
-            # Create augmented affine transform matrix and multiply or set as necessary
-            if hasattr(dx, '__call__') or hasattr(dy, '__call__'):
-                if not hasattr(dx, '__call__'):
-                    tmpdx = dx
-                    dx = lambda w: tmpdx
-                if not hasattr(dy, '__call__'):
-                    tmpdy = dy
-                    dy = lambda w: tmpdy
-                S = lambda w: numpy.matrix([[1, 0, dx(w)],
-                                            [0, 1, dy(w)],
-                                            [0, 0,     1]], dtype=float)
-            else:
-                S = numpy.matrix([[1, 0, dx],
-                                  [0, 1, dy],
-                                  [0, 0,  1]], dtype=float)
-            return self._applyMatrix(S)
-
+            raise TypeError("Too many arguments supplied to applyShift ")
+        if kwargs:
+            raise TypeError("shift() got unexpected keyword arguments: %s",kwargs.keys())
+        if hasattr(dx, '__call__') or hasattr(dy, '__call__'):
+            # Functionalize dx, dy as needed.
+            if not hasattr(dx, '__call__'):
+                tmpdx = dx
+                dx = lambda w: tmpdx
+            if not hasattr(dy, '__call__'):
+                tmpdy = dy
+                dy = lambda w: tmpdy
+            # Then create augmented affine transform matrix and multiply or set as necessary
+            T = lambda w: numpy.matrix([[1, 0, dx(w)],
+                                        [0, 1, dy(w)],
+                                        [0, 0,     1]], dtype=float)
+        else:
+            T = numpy.matrix([[1, 0, dx],
+                              [0, 1, dy],
+                              [0, 0,  1]], dtype=float)
+        return self._applyMatrix(T)
 
 def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     """Return a ChromaticObject implementing two atmospheric chromatic effects: differential

@@ -117,6 +117,12 @@ class SED(object):
             raise ValueError("Unknown flux_type `{}` in SED.__init__".format(flux_type))
         self.redshift = 0
 
+        # Hack to avoid (LookupTable.x_max * 10) / 10.0 > LookupTable.x_max due to roundoff
+        # error.
+        if len(self.wave_list) > 0.0:
+            self.wave_list[0] = self.wave_list[0] + 0.0000001
+            self.wave_list[-1] = self.wave_list[-1] - 0.0000001
+
     def _wavelength_intersection(self, other):
         blue_limit = self.blue_limit
         if other.blue_limit is not None:
@@ -277,8 +283,11 @@ class SED(object):
         ret = self.copy()
         wave_factor = (1.0 + redshift) / (1.0 + self.redshift)
         ret.fphotons = lambda w: self.fphotons(w / wave_factor)
-        ret.blue_limit = self.blue_limit * wave_factor
-        ret.red_limit = self.red_limit * wave_factor
+        ret.wave_list = self.wave_list * wave_factor
+        if ret.blue_limit is not None:
+            ret.blue_limit = self.blue_limit * wave_factor
+        if ret.red_limit is not None:
+            ret.red_limit = self.red_limit * wave_factor
         ret.redshift = redshift
         return ret
 
