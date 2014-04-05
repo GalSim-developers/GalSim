@@ -441,7 +441,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         variance_ratio = variance / self.getVariance()
         return self * variance_ratio
 
-    def rescaleVariance(self, variance_ratio):
+    def withScaledVariance(self, variance_ratio):
         """Scale the entire correlated noise field by the given factor.
 
         This is equivalent to cn * variance_ratio.
@@ -465,7 +465,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
     def scaleVariance(self, variance_ratio):
         """This is an obsolete method that is rougly equivalent to corr = corr * variance_ratio"""
-        new_obj = self.rescaleVariance(variance_ratio)
+        new_obj = self.withScaledVariance(variance_ratio)
         self._profile = new_obj._profile
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
         self.__class__ = new_obj.__class__
@@ -817,12 +817,12 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         >>> cn.getVariance()
         >>> cn = cn.withVariance(variance)
-        >>> cn = cn.rescaleVariance(variance_ratio)
+        >>> cn = cn.withScaledVariance(variance_ratio)
  
     can be used to get and set the point variance of the correlated noise, equivalent to the zero
     separation distance correlation function value.  The `withVariance` method scales the whole 
     internal correlation function so that its point variance matches `variance`.  Similarly,
-    `rescaleVariance` scales the entire function by the given factor.
+    `withScaledVariance` scales the entire function by the given factor.
 
     Arithmetic Operators
     --------------------
