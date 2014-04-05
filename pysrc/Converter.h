@@ -57,11 +57,11 @@
     };                                                                  \
     template dtype get_complex_dtype< bits >()
 
-namespace boost { namespace python { namespace converter {
+namespace galsim {
 NUMPY_OBJECT_MANAGER_TRAITS_IMPL(PyArrayDescr_Type, numpy::dtype)
-}}} // namespace boost::python::converter
+}}} // namespace galsim
 
-namespace boost { namespace numpy {
+namespace galsim {
 
 namespace detail {
 
@@ -186,5 +186,6 @@ void dtype::register_scalar_converters() {
 #endif
 }
 
-} // namespace boost::numpy
-} // namespace boost
+} // namespace galsim
+
+#endif
