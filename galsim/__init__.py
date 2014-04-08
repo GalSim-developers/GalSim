@@ -31,7 +31,7 @@ except:
 # Import things from other files we want to be in the galsim namespace
 from ._galsim import *
 from image import Image, ImageS, ImageI, ImageF, ImageD
-from base import GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, Sersic
+from base import version, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, Sersic
 from base import Exponential, DeVaucouleurs
 from chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum
 from chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
