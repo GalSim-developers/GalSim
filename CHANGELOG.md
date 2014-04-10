@@ -131,8 +131,8 @@ removed.
     now be `cn = cn.lens(g1,g2,mu)`.
 * Changed how to set the variance of the various `Noise` methods (including
   `CorrelatedNoise` and all other subclasses of `BaseNoise`). (Issue #511)
-  * `n.setVariance(flux)` should now be `n = n.withVariance(variance)`
-  * `n.scaleVariance(flux_ratio)` should now be `n = n * variance_ratio`
+  * `n.setVariance(variance)` should now be `n = n.withVariance(variance)`
+  * `n.scaleVariance(variance_ratio)` should now be `n = n * variance_ratio`
 * Changed the `CorrelatedNoise.convolveWith` method to `convolvedWith`,
   which returns a new object corresponding to the convolvution. (Issue #511)
   * `cn.convolveWith(obj)` should now be `cn = cn.convolvedWith(obj)`.
