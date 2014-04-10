@@ -1575,7 +1575,9 @@ class PowerSpectrumRealizer(object):
         # So this implies that the minus sign in 2.1.12 should not be there.
         gamma_k = self.exp2ipsi * kappa_k
 
-        # And go to real space to get the real-space shear and convergence fields
+        # And go to real space to get the real-space shear and convergence fields.
+        # Note the multiplication by N is needed because the np.fft.ifft2 implicitly includes a
+        # 1/N^2, and for proper normalization we need a factor of 1/N.
         gamma = self.nx * np.fft.ifft2(gamma_k)
         # Make them contiguous, since we need to use them in an Image, which requires it.
         g1 = np.ascontiguousarray(np.real(gamma))
