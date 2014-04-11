@@ -46,17 +46,17 @@ class SED(object):
     region where both of the operand SEDs are defined. `blue_limit` and `red_limit` will be reset
     accordingly.
 
-    The input parameter, spec, may be one of several possible forms:
+    The input parameter, `spec`, may be one of several possible forms:
     1. a regular python function (or an object that acts like a function)
-    2. a galsim.LookupTable
+    2. a LookupTable
     3. a file from which a LookupTable can be read in
     4. a string which can be evaluated into a function of `wave`
        via `eval('lambda wave : '+spec)
        e.g. spec = '0.8 + 0.2 * (wave-800)`
 
-    The argument of `spec` will be the wavelength in either nanometers (default) or
-    Angstroms depending on the value of `wave_type`.  The output should be the flux density at
-    that wavelength.  (Note we use wave rather than lambda, since lambda is a python reserved
+    The argument of `spec` will be the wavelength in either nanometers (default) or Angstroms
+    depending on the value of `wave_type`.  The output should be the flux density at that
+    wavelength.  (Note we use `wave` rather than `lambda`, since `lambda` is a python reserved
     word.)
 
     The argument `wave_type` specifies the units to assume for wavelength and must be one of
@@ -263,7 +263,7 @@ class SED(object):
         that this normalization is *relative* to the `flux` attribute of the chromaticized GSObject.
 
         @param target_flux  The desired *relative* flux normalization of the SED.
-        @param bandpass     A galsim.Bandpass object defining a filter bandpass.
+        @param bandpass     A Bandpass object defining a filter bandpass.
 
         @returns the new normalized SED.
         """
@@ -292,9 +292,9 @@ class SED(object):
         return ret
 
     def calculateFlux(self, bandpass):
-        """ Return the SED flux through a bandpass.
+        """ Return the SED flux through a Bandpass `bandpass`.
 
-        @param bandpass   A galsim.Bandpass object representing a filter, or None for bolometric
+        @param bandpass   A Bandpass object representing a filter, or None for bolometric
                           flux (over defined wavelengths).
 
         @returns the flux through the bandpass.
@@ -319,9 +319,9 @@ class SED(object):
                                           bandpass.blue_limit, bandpass.red_limit)
 
     def thin(self, rel_err=1.e-4, preserve_range=False):
-        """ If the SED was initialized with a galsim.LookupTable or from a file (which
-        internally creates a galsim.LookupTable), then remove tabulated values while keeping
-        the integral over the over the set of tabulated values still accurate to `rel_err`.
+        """ If the SED was initialized with a LookupTable or from a file (which internally creates a
+        LookupTable), then remove tabulated values while keeping the integral over the set of
+        tabulated values still accurate to `rel_err`.
 
         @param rel_err            The relative error allowed in the integral over the SED
                                   [default: 1.e-4]
