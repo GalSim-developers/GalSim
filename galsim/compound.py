@@ -38,7 +38,7 @@ def Add(*args, **kwargs):
     This function will inspect its input arguments to decide if a galsim.Sum object or a
     galsim.ChromaticSum object is required to represent the sum of surface brightness profiles.
 
-    Typically, you do not need to call a `Add` explicitly.  Normally, you would just use the + 
+    Typically, you do not need to call `Add` explicitly.  Normally, you would just use the + 
     operator, which returns a `Sum`:
 
         >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8)
@@ -441,7 +441,7 @@ def AutoConvolve(obj, real_space=None, gsparams=None):
 
     @param obj              The object to be convolved with itself.
     @param real_space       Whether to use real space convolution.  [default: None, which means
-                            to automatically decide this according to whether the objects have hard
+                            to automatically decide this according to whether the object has hard
                             edges.]
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
@@ -471,7 +471,7 @@ class AutoConvolution(galsim.GSObject):
 
     @param obj              The object to be convolved with itself.
     @param real_space       Whether to use real space convolution.  [default: None, which means
-                            to automatically decide this according to whether the objects have hard
+                            to automatically decide this according to whether the object has hard
                             edges.]
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
