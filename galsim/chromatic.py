@@ -1247,7 +1247,7 @@ class ChromaticAutoConvolution(ChromaticObject):
         @returns the object with the new flux.
         """
         import math
-        if flux_ration >= 0.:
+        if flux_ratio >= 0.:
             return ChromaticAutoConvolution( self.obj * math.sqrt(flux_ratio), **self.kwargs )
         else:
             return ChromaticObject(self).withScaledFlux(flux_ratio)
@@ -1295,7 +1295,7 @@ class ChromaticAutoCorrelation(ChromaticObject):
         @returns the object with the new flux.
         """
         import math
-        if flux_ration >= 0.:
+        if flux_ratio >= 0.:
             return ChromaticAutoCorrelation( self.obj * math.sqrt(flux_ratio), **self.kwargs )
         else:
             return ChromaticObject(self).withScaledFlux(flux_ratio)
