@@ -17,7 +17,7 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file catalog.py
-Routines for controlling catalog Input/Output with GalSim. 
+Routines for controlling catalog input/output with GalSim. 
 """
 
 import galsim
@@ -37,9 +37,9 @@ class Catalog(object):
 
 
     @param file_name     Filename of the input catalog. (Required)
-    @param dir           Optionally a directory name can be provided if the file_name does not 
+    @param dir           Optionally a directory name can be provided if `file_name` does not 
                          already include it.
-    @param file_type     Either 'ASCII' or 'FITS'.  If None, infer from the file name ending.
+    @param file_type     Either 'ASCII' or 'FITS'.  If None, infer from `file_name` ending.
                          [default: None]
     @param comments      The character used to indicate the start of a comment in an
                          ASCII catalog.  [default: '#']
@@ -136,10 +136,10 @@ class Catalog(object):
         self.isfits = True
 
     def get(self, index, col):
-        """Return the data for the given index and col in its native type.
+        """Return the data for the given `index` and `col` in its native type.
 
-        For ASCII catalogs, col is the column number.  
-        For FITS catalogs, col is a string giving the name of the column in the FITS table.
+        For ASCII catalogs, `col` is the column number.  
+        For FITS catalogs, `col` is a string giving the name of the column in the FITS table.
 
         Also, for ASCII catalogs, the "native type" is always str.  For FITS catalogs, it is 
         whatever type is specified for each field in the binary table.
@@ -161,22 +161,22 @@ class Catalog(object):
             return self.data[index, icol]
 
     def getFloat(self, index, col):
-        """Return the data for the given index and col as a float if possible
+        """Return the data for the given `index` and `col` as a float if possible
         """
         return float(self.get(index,col))
 
     def getInt(self, index, col):
-        """Return the data for the given index and col as an int if possible
+        """Return the data for the given `index` and `col` as an int if possible
         """
         return int(self.get(index,col))
 
 
 class Dict(object):
-    """A class that reads a python dict from a file
+    """A class that reads a python dict from a file.
 
     After construction, it behaves like a regular python dict, with one exception.
     In order to facilitate getting values in a hierarchy of fields, we allow the '.'
-    character to chain keys together for the get method.  So,
+    character to chain keys together for the get() method.  So,
 
         d.get('noise.properties.variance')
 
@@ -201,10 +201,10 @@ class Dict(object):
 
 
     @param file_name     Filename storing the dict. (Required)
-    @param dir           Optionally a directory name can be provided if the file_name does not 
+    @param dir           Optionally a directory name can be provided if `file_name` does not 
                          already include it.
     @param file_type     Options are 'Pickle', 'YAML', or 'JSON' or None.  If None, infer from 
-                         the file name extension ('.p*', '.y*', '.j*' respectively).
+                         `file_name` extension ('.p*', '.y*', '.j*' respectively).
                          [default: None]
     @param key_split     The character (or string) to use to split chained keys.  (c.f. the 
                          description of this feature above.)  [default: '.']
