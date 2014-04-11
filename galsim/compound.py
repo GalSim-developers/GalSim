@@ -529,7 +529,7 @@ def AutoCorrelate(obj, real_space=None, gsparams=None):
 
     @param obj              The object to be convolved with itself.
     @param real_space       Whether to use real space convolution.  [default: None, which means
-                            to automatically decide this according to whether the objects have hard
+                            to automatically decide this according to whether the object has hard
                             edges.]
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
@@ -563,7 +563,7 @@ class AutoCorrelation(galsim.GSObject):
 
     @param obj              The object to be convolved with itself.
     @param real_space       Whether to use real space convolution.  [default: None, which means
-                            to automatically decide this according to whether the objects have hard
+                            to automatically decide this according to whether the object has hard
                             edges.]
     @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
                             for details. [default: None]
