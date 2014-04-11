@@ -17,7 +17,7 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file integ.py
-Includes a Python layer version of the C++ int1d function in galim::integ,
+Includes a Python layer version of the C++ int1d() function in galim::integ,
 and python image integrators for use in galsim.chromatic
 """
 
@@ -97,10 +97,10 @@ class ImageIntegrator(object):
 
 class SampleIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over
-    wavelength using a `galsim.Bandpass` as a weight function.
+    wavelength using a Bandpass as a weight function.
 
     This integrator will evaluate the integrand only at the wavelengths in `bandpass.wave_list`.
-    See `ContinuousIntegrator` for an integrator that evaluates the integrand at a given number of
+    See ContinuousIntegrator for an integrator that evaluates the integrand at a given number of
     points equally spaced apart.
 
     __init__ parameters:
@@ -112,14 +112,14 @@ class SampleIntegrator(ImageIntegrator):
     __call__ parameters:
     @param evaluateAtWavelength  Function that returns a monochromatic surface brightness profile as
                                  a function of wavelength.
-    @param bandpass              galsim.Bandpass object representing the filter being imaged through.
-    @param image                 galsim.Image used to set size and scale of output
+    @param bandpass              Bandpass object representing the filter being imaged through.
+    @param image                 Image used to set size and scale of output
     @param gain                  See GSObject.draw()
     @param wmult                 See GSObject.draw()
     @param use_true_center       See GSObject.draw()
     @param offset                See GSObject.draw()
 
-    @returns the result of integral as a galsim.Image
+    @returns the result of integral as an Image
     """
     def __init__(self, rule):
         self.rule = rule
@@ -131,10 +131,10 @@ class SampleIntegrator(ImageIntegrator):
 
 class ContinuousIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over
-    wavelength using a `galsim.Bandpass` as a weight function.
+    wavelength using a Bandpass as a weight function.
 
     This integrator will evaluate the integrand only at the wavelengths in `bandpass.wave_list`.
-    See `ContinuousIntegrator` for an integrator that evaluates the integrand at a given number of
+    See ContinuousIntegrator for an integrator that evaluates the integrand at a given number of
     points equally spaced apart.
 
     __init__ parameters:
@@ -162,7 +162,7 @@ class ContinuousIntegrator(ImageIntegrator):
     @param use_true_center      See GSObject.draw()
     @param offset               See GSObject.draw()
 
-    @returns the result of integral as a galsim.Image
+    @returns the result of integral as an Image
     """
     def __init__(self, rule, N=250, use_endpoints=True):
         self.N = N
