@@ -178,7 +178,7 @@ def test_ChromaticConvolution_InterpolatedImage():
 
     # draw image using speed tricks in ChromaticConvolution.draw
     # For this particular test, need to set iimult=4 in order to pass.
-    II_image = galsim.ChromaticConvolution.draw(final, bandpass, image=image, iimult=4)
+    II_image = final.draw(bandpass, image=image, iimult=4)
     II_flux = II_image.array.sum()
 
     image2 = image.copy()
@@ -192,7 +192,14 @@ def test_ChromaticConvolution_InterpolatedImage():
     printval(II_image, D_image)
     np.testing.assert_array_almost_equal(
         II_image.array, D_image.array, 5,
-        err_msg="draw not equivalent to draw")
+        err_msg="ChromaticConvolution draw not equivalent to regular draw")
+
+    # Check flux scaling
+    II_image2 = (final * 2.).draw(bandpass, image=image, iimult=4)
+    II_flux2 = II_image2.array.sum()
+    np.testing.assert_array_almost_equal(
+        II_flux2, 2.*II_flux, 5,
+        err_msg="ChromaticConvolution * 2 resulted in wrong flux.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -250,6 +257,23 @@ def test_chromatic_add():
     np.testing.assert_array_almost_equal(
             image.array, piecewise_image.array, 6,
             err_msg="`+` operator doesn't match manual image addition")
+
+    # Check flux scaling
+    flux = image.array.sum()
+    image = (final * 2.).draw(bandpass, image=image)
+    flux2 = image.array.sum()
+    np.testing.assert_array_almost_equal(
+        flux2, 2.*flux, 5,
+        err_msg="ChromaticConvolution with sum * 2 resulted in wrong flux.")
+
+    # apply flux scaling to ChromaticSum
+    final2 = galsim.Convolve(bdgal*2, chromatic_PSF, pixel)
+    image = final2.draw(bandpass, image=image)
+    flux2 = image.array.sum()
+    np.testing.assert_array_almost_equal(
+        flux2, 2.*flux, 5,
+        err_msg="ChromaticSum * 2 resulted in wrong flux.")
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -481,7 +505,7 @@ def test_chromatic_flux():
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "analytic prediction")
 
-    # try adjusting flux to something else.
+    # Try adjusting flux to something else.
     target_flux = 2.63
     bulge_SED2 = bulge_SED.withFlux(target_flux, bandpass)
     star2 = galsim.Gaussian(fwhm=1e-8) * bulge_SED2
@@ -489,7 +513,50 @@ def test_chromatic_flux():
     final.draw(bandpass, image=image)
     np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
-                                   "SED.withFlux()")
+                                   "using SED.withFlux()")
+
+    # Use flux_ratio instead.
+    flux_ratio = target_flux / analytic_flux
+    bulge_SED3 = bulge_SED * flux_ratio
+    star3 = galsim.Gaussian(fwhm=1e-8) * bulge_SED3
+    final = galsim.Convolve([star3, PSF, pix])
+    final.draw(bandpass, image=image)
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
+                                   err_msg="Drawn ChromaticConvolve flux doesn't match " +
+                                   "using SED * flux_ratio")
+
+    # This should be equivalent.
+    bulge_SED3 = flux_ratio * bulge_SED
+    star3 = galsim.Gaussian(fwhm=1e-8) * bulge_SED3
+    final = galsim.Convolve([star3, PSF, pix])
+    final.draw(bandpass, image=image)
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
+                                   err_msg="Drawn ChromaticConvolve flux doesn't match " +
+                                   "using flux_ratio * SED")
+
+    # Use flux_ratio on the chromatic object instead.
+    star4 = star * flux_ratio
+    final = galsim.Convolve([star4, PSF, pix])
+    final.draw(bandpass, image=image)
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
+                                   err_msg="Drawn ChromaticConvolve flux doesn't match " +
+                                   "using ChromaticObject * flux_ratio")
+
+    # This should be equivalent.
+    star4 = flux_ratio * star
+    final = galsim.Convolve([star4, PSF, pix])
+    final.draw(bandpass, image=image)
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
+                                   err_msg="Drawn ChromaticConvolve flux doesn't match " +
+                                   "using flux_ratio * ChromaticObject")
+
+    # As should this.
+    star4 = star.withScaledFlux(flux_ratio)
+    final = galsim.Convolve([star4, PSF, pix])
+    final.draw(bandpass, image=image)
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
+                                   err_msg="Drawn ChromaticConvolve flux doesn't match " +
+                                   "using ChromaticObject.withScaledFlux(flux_ratio)")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -556,6 +623,15 @@ def test_ChromaticAutoConvolution():
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticAutoConvolution(a) not equal to "
                                          "ChromaticConvolution(a,a)")
+
+    # Check flux scaling
+    flux = im2.array.sum()
+    im2 = (c * 2.).draw(bandpass, image=im2)
+    flux2 = im2.array.sum()
+    np.testing.assert_array_almost_equal(
+        flux2, 2.*flux, 5,
+        err_msg="ChromaticAutoConvolution * 2 resulted in wrong flux.")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -573,6 +649,15 @@ def test_ChromaticAutoCorrelation():
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticAutoCorrelate(a) not equal to "
                                          "ChromaticConvolution(a,a.rotate(180.0*galsim.degrees)")
+
+    # Check flux scaling
+    flux = im2.array.sum()
+    im2 = (c * 2.).draw(bandpass, image=im2)
+    flux2 = im2.array.sum()
+    np.testing.assert_array_almost_equal(
+        flux2, 2.*flux, 5,
+        err_msg="ChromaticAutoCorrelation * 2 resulted in wrong flux.")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -589,6 +674,15 @@ def test_ChromaticObject_expand():
     printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticObject.expand not equal to Chromatic.expand")
+
+    # Check flux scaling
+    flux = im2.array.sum()
+    im2 = (b * 2.).draw(bandpass, image=im2)
+    flux2 = im2.array.sum()
+    np.testing.assert_array_almost_equal(
+        flux2, 2.*flux, 5,
+        err_msg="expanded ChromaticObject * 2 resulted in wrong flux.")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -609,6 +703,15 @@ def test_ChromaticObject_rotate():
     printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticObject.rotate not equal to Chromatic.rotate")
+
+    # Check flux scaling
+    flux = im2.array.sum()
+    im2 = (b * 2.).draw(bandpass, image=im2)
+    flux2 = im2.array.sum()
+    np.testing.assert_array_almost_equal(
+        flux2, 2.*flux, 5,
+        err_msg="rotated ChromaticObject * 2 resulted in wrong flux.")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -626,6 +729,15 @@ def test_ChromaticObject_shear():
     printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticObject.shear not equal to Chromatic.shear")
+
+    # Check flux scaling
+    flux = im2.array.sum()
+    im2 = (b * 2.).draw(bandpass, image=im2)
+    flux2 = im2.array.sum()
+    np.testing.assert_array_almost_equal(
+        flux2, 2.*flux, 5,
+        err_msg="rotated ChromaticObject * 2 resulted in wrong flux.")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -643,6 +755,15 @@ def test_ChromaticObject_shift():
     printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticObject.shift not equal to Chromatic.shift")
+
+    # Check flux scaling
+    flux = im2.array.sum()
+    im2 = (b * 2.).draw(bandpass, image=im2)
+    flux2 = im2.array.sum()
+    np.testing.assert_array_almost_equal(
+        flux2, 2.*flux, 5,
+        err_msg="rotated ChromaticObject * 2 resulted in wrong flux.")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -676,6 +797,15 @@ def test_ChromaticObject_compound_affine_transformation():
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticObject affine transformation not equal to "
                                          "GSObject affine transformation")
+
+    # Check flux scaling
+    flux = im2.array.sum()
+    im2 = (b * 2.).draw(bandpass, image=im2)
+    flux2 = im2.array.sum()
+    np.testing.assert_array_almost_equal(
+        flux2, 2.*flux, 5,
+        err_msg="transformed ChromaticObject * 2 resulted in wrong flux.")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -766,6 +896,36 @@ def test_separable_ChromaticSum():
     img1 = galsim.ImageD(32, 32, scale=0.2)
     if not gal.separable:
         raise AssertionError("failed to identify separable ChromaticSum")
+
+    # check that drawing the profile works as expected
+    final = galsim.Convolve(gal, pix, psf)
+    final.draw(bandpass, image=img1)
+
+    img2 = galsim.ImageD(32, 32, scale=0.2)
+    component1 = galsim.Convolve(gal1*bulge_SED, pix, psf)
+    component1.draw(bandpass, image=img2)
+    component2 = galsim.Convolve(gal2*bulge_SED, pix, psf)
+    component2.draw(bandpass, image=img2, add_to_image=True)
+
+    np.testing.assert_array_almost_equal(img1.array, img2.array, 5,
+                                         "separable ChromaticSum not correctly drawn")
+
+    # Check flux scaling
+    img3 = galsim.ImageD(32, 32, scale=0.2)
+    flux = img1.array.sum()
+    img3 = (final * 2).draw(bandpass, image=img3)
+    flux2 = img3.array.sum()
+    np.testing.assert_array_almost_equal(
+        flux2, 2.*flux, 5,
+        err_msg="ChromaticConvolution conataing separable ChromaticSum * 2 resulted in wrong flux.")
+
+    final2 = galsim.Convolve(gal * 2, pix, psf)
+    img3 = final2.draw(bandpass, image=img3)
+    flux2 = img3.array.sum()
+    np.testing.assert_array_almost_equal(
+        flux2, 2.*flux, 5,
+        err_msg="separable ChromaticSum * 2 resulted in wrong flux.")
+
     # check that 3 summands, 2 with the same SED, 1 with a different SED, make an
     # inseparable sum.
     gal = galsim.Add(gal1 * bulge_SED, gal2 * bulge_SED, gal3 * disk_SED)
@@ -780,16 +940,11 @@ def test_separable_ChromaticSum():
     final = galsim.Convolve(gal, pix, psf)
     final.draw(bandpass, image=img1)
 
-    img2 = galsim.ImageD(32, 32, scale=0.2)
-    component1 = galsim.Convolve(gal1*bulge_SED, pix, psf)
-    component1.draw(bandpass, image=img2)
-    component2 = galsim.Convolve(gal2*bulge_SED, pix, psf)
-    component2.draw(bandpass, image=img2, add_to_image=True)
     component3 = galsim.Convolve(gal3*disk_SED, pix, psf)
     component3.draw(bandpass, image=img2, add_to_image=True)
 
     np.testing.assert_array_almost_equal(img1.array, img2.array, 5,
-                                         "separable ChromaticSum not correctly drawn")
+                                         "inseparable ChromaticSum not correctly drawn")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
