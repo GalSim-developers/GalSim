@@ -42,7 +42,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
     """
     def __init__(self, rng, gsobject):
 
-        if not isinstance(rng, galsim.BaseDeviate):
+        if rng is not None and not isinstance(rng, galsim.BaseDeviate):
             raise TypeError(
                 "Supplied rng argument not a galsim.BaseDeviate or derived class instance.")
         if not isinstance(gsobject, base.GSObject):
