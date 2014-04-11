@@ -43,15 +43,15 @@ subdirs=['src', 'pysrc', 'bin', 'galsim']
 # have to be sent more than once
 config_file = 'gs_scons.conf'
 
-# Default directory for installation.  
+# Default directory for installation.
 # This is the only UNIX specific things I am aware
 # of in the script.  On the other hand, these are not required for the
 # script to work since prefix can be set on the command line and the
-# extra paths are not needed, but I wish I knew how to get the default 
+# extra paths are not needed, but I wish I knew how to get the default
 # prefix for the system so I didn't have to set this.
 
 # MJ: Is there a python function that might return this in a more platform-independent way?
-default_prefix = '/usr/local'  
+default_prefix = '/usr/local'
 
 default_python = '/usr/bin/env python'
 default_cxx = 'c++'
@@ -132,14 +132,14 @@ def RunUninstall(env, targets, subdir):
     # delete from $prefix/bin/
     files = []
     for t in targets:
-        ifile = os.path.join(install_dir, os.path.basename(str(t))) 
+        ifile = os.path.join(install_dir, os.path.basename(str(t)))
         files.append(ifile)
 
     for f in files:
         env.Alias('uninstall', env.Command(f, None, deltarget))
 
 def ClearCache():
-    """ 
+    """
     Clear the SCons cache files
     """
     if os.path.exists(".sconsign.dblite"):
@@ -152,13 +152,13 @@ def ErrorExit(*args, **kwargs):
     """
     Whenever we get an error in the initial setup checking for the various
     libraries, compiler, etc., we don't want to cache the result.
-    On the other hand, if we delete the .scon* files now, then they aren't 
+    On the other hand, if we delete the .scon* files now, then they aren't
     available to diagnose any problems.
     So we write a file called gs.error that
     a) includes some relevant information to diagnose the problem.
     b) indicates that we should clear the cache the next time we run scons.
     """
-    
+
     import shutil
 
     out = open("gs.error","wb")
@@ -193,7 +193,7 @@ def ErrorExit(*args, **kwargs):
     shutil.copyfileobj(open("config.log","rb"),out)
     out.write('==================\n\n')
 
-    # It is sometimes helpful to see the output of the scons executables.  
+    # It is sometimes helpful to see the output of the scons executables.
     # SCons just uses >, not >&, so we'll repeat those runs here and get both.
     try:
         import subprocess
@@ -250,7 +250,7 @@ def BasicCCFlags(env):
         if compiler == 'g++':
             env.Replace(CCFLAGS=['-O2'])
             env.Append(CCFLAGS=['-fno-strict-aliasing'])
-            # Unfortunately this next flag requires strict-aliasing, but allowing that 
+            # Unfortunately this next flag requires strict-aliasing, but allowing that
             # opens up a Pandora's box of bugs and warnings, so I don't want to do that.
             #env.Append(CCFLAGS=['-ftree-vectorize'])
             if env['WITH_PROF']:
@@ -260,7 +260,7 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['-Wall','-Werror'])
             if env['EXTRA_DEBUG']:
                 env.Append(CCFLAGS=['-g3'])
-    
+
         elif compiler == 'clang++':
             env.Replace(CCFLAGS=['-O2'])
             if env['WITH_PROF']:
@@ -270,7 +270,7 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['-Wall','-Werror'])
             if env['EXTRA_DEBUG']:
                 env.Append(CCFLAGS=['-g3'])
-    
+
         elif compiler == 'icpc':
             env.Replace(CCFLAGS=['-O2','-msse2'])
             if version >= 10:
@@ -338,13 +338,13 @@ def AddOpenMPFlag(env):
     icpc uses -openmp
     pgCC uses -mp
     CC uses -xopenmp
-    
+
     Other compilers?
     """
     compiler = env['CXXTYPE']
     version = env['CXXVERSION_NUMERICAL']
     if compiler == 'g++':
-        if version < openmp_mingcc_vers: 
+        if version < openmp_mingcc_vers:
             print 'No OpenMP support for g++ versions before ',openmp_mingcc_vers
             env['WITH_OPENMP'] = False
             return
@@ -385,7 +385,7 @@ def AddOpenMPFlag(env):
         #xlib = []
         # The Express edition, which is the one I have, doesn't come with
         # the file omp.h, which we need.  So I am unable to test TMV's
-        # OpenMP with cl.  
+        # OpenMP with cl.
         # I believe the Professional edition has full OpenMP support,
         # so if you have that, the above lines might work for you.
         # Just uncomment those, and commend the below three lines.
@@ -436,7 +436,7 @@ def GetCompilerVersion(env):
 
     compiler_real = os.path.realpath(compiler)
     compiler_base = os.path.basename(compiler)
-    # Get the compiler type without suffix or path.  
+    # Get the compiler type without suffix or path.
     # e.g. /sw/bin/g++-4 -> g++
     if 'icpc' in compiler_base :
         compilertype = 'icpc'
@@ -474,9 +474,10 @@ def GetCompilerVersion(env):
 
     if compilertype != 'unknown':
         cmd = compiler + ' ' + versionflag + ' 2>&1'
+        import subprocess
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
         lines = p.stdout.readlines()
-    
+
         # Check if g++ is a symlink for something else:
         if compilertype is 'g++':
             if 'clang' in lines[0]:
@@ -503,7 +504,7 @@ def GetCompilerVersion(env):
         line = lines[linenum]
         import re
         match = re.search(r'[0-9]+(\.[0-9]+)+', line)
-    
+
         if match:
             version = match.group(0)
             # Get the version up to the first decimal
@@ -585,10 +586,10 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
 def AddExtraPaths(env):
     """
     Add some include and library paths.
-    Also merge in $PATH, $C_INCLUDE_PATH and $LIBRARY_PATH/$LD_LIBRARY_PATH 
+    Also merge in $PATH, $C_INCLUDE_PATH and $LIBRARY_PATH/$LD_LIBRARY_PATH
     environment variables if requested.
-    
-    The set itself is created in order of appearance here, but then this 
+
+    The set itself is created in order of appearance here, but then this
     whole set is prepended.  The order within this list is:
 
         local lib and include paths
@@ -634,7 +635,7 @@ def AddExtraPaths(env):
             AddPath(bin_paths, os.path.join(env['PREFIX'], 'bin'))
             AddPath(lib_paths, os.path.join(env['PREFIX'], 'lib'))
             AddPath(cpp_paths, os.path.join(env['PREFIX'], 'include'))
-    
+
     # Paths found in environment paths
     if env['IMPORT_PATHS'] and os.environ.has_key('PATH'):
         paths=os.environ['PATH']
@@ -681,17 +682,17 @@ def ReadFileList(fname):
 
 
 def TryRunResult(config,text,name):
-    # Check if a particular program (given as text) is compilable, runs, and returns the 
+    # Check if a particular program (given as text) is compilable, runs, and returns the
     # right value.
-    
-    config.sconf.pspawn = config.sconf.env['PSPAWN'] 
-    save_spawn = config.sconf.env['SPAWN'] 
-    config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper 
+
+    config.sconf.pspawn = config.sconf.env['PSPAWN']
+    save_spawn = config.sconf.env['SPAWN']
+    config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper
 
     # First use the normal TryRun command
     ok, out = config.TryRun(text,'.cpp')
 
-    config.sconf.env['SPAWN'] = save_spawn 
+    config.sconf.env['SPAWN'] = save_spawn
 
     # We have an arbitrary requirement that the executable output the answer 23.
     # So if we didn't get this answer, then something must have gone wrong.
@@ -716,10 +717,10 @@ def CheckLibsSimple(config,try_libs,source_file,prepend=True):
     if not result :
         config.env.Replace(LIBS=init_libs)
     return result
- 
+
 
 def AddRPATH(env, rpath, prepend=False):
-    """ 
+    """
     Add rpath to the scons environment.
     This is really  a workaround for SCons bug.  The normal command should just be:
         config.env.AppendUnique(RPATH=rpath)
@@ -762,7 +763,7 @@ def CheckLibsFull(config,try_libs,source_file,prepend=True):
         for rpath in config.env['LIBPATH']:
             AddRPATH(config.env,rpath,prepend)
             result = TryRunResult(config,source_file,'.cpp')
-            if result: 
+            if result:
                 break
             else:
                 config.env.Replace(RPATH=init_rpath)
@@ -783,7 +784,7 @@ def CheckLibsFull(config,try_libs,source_file,prepend=True):
         for rpath in library_path:
             AddRPATH(config.env,rpath,prepend)
             result = TryRunResult(config,source_file,'.cpp')
-            if result: 
+            if result:
                 break
             else:
                 config.env.Replace(RPATH=init_rpath)
@@ -801,7 +802,7 @@ def CheckLibsFull(config,try_libs,source_file,prepend=True):
     if not result :
         config.env.Replace(LIBS=init_libs)
     return result
- 
+
 
 def CheckFFTW(config):
     fftw_source_file = """
@@ -831,7 +832,7 @@ int main()
     if not result:
         ErrorExit(
             'Error: fftw file failed to link correctly',
-            'Check that the correct location is specified for FFTW_DIR') 
+            'Check that the correct location is specified for FFTW_DIR')
 
     config.Result(1)
     return 1
@@ -887,14 +888,14 @@ int main()
     if not result:
         ErrorExit(
             'Error: TMV file failed to link correctly',
-            'Check that the correct location is specified for TMV_DIR') 
+            'Check that the correct location is specified for TMV_DIR')
 
     config.Result(1)
     return 1
 
 
 def TryScript(config,text,executable):
-    # Check if a particular script (given as text) is runnable with the 
+    # Check if a particular script (given as text) is runnable with the
     # executable (given as executable).
     #
     # I couldn't find a way to do this using the existing SCons functions, so this
@@ -905,9 +906,9 @@ def TryScript(config,text,executable):
     f = "conftest_" + str(SCons.SConf._ac_build_counter)
     SCons.SConf._ac_build_counter = SCons.SConf._ac_build_counter + 1
 
-    config.sconf.pspawn = config.sconf.env['PSPAWN'] 
-    save_spawn = config.sconf.env['SPAWN'] 
-    config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper 
+    config.sconf.pspawn = config.sconf.env['PSPAWN']
+    save_spawn = config.sconf.env['SPAWN']
+    config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper
 
     # Build a file containg the given text
     textFile = config.sconf.confdir.File(f)
@@ -921,7 +922,7 @@ def TryScript(config,text,executable):
     node = config.env.Command(output, source, executable + " < $SOURCE > $TARGET")
     ok = config.sconf.BuildNodes(node)
 
-    config.sconf.env['SPAWN'] = save_spawn 
+    config.sconf.env['SPAWN'] = save_spawn
 
     if ok:
         # For successful execution, also return the output contents
@@ -932,10 +933,10 @@ def TryScript(config,text,executable):
 
 def TryModule(config,text,name,pyscript=""):
     # Check if a particular program (given as text) is compilable as a python module.
-    
-    config.sconf.pspawn = config.sconf.env['PSPAWN'] 
-    save_spawn = config.sconf.env['SPAWN'] 
-    config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper 
+
+    config.sconf.pspawn = config.sconf.env['PSPAWN']
+    save_spawn = config.sconf.env['SPAWN']
+    config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper
 
     # First try to build the code as a SharedObject:
     ok = config.TryBuild(config.env.SharedObject,text,'.cpp')
@@ -959,7 +960,7 @@ def TryModule(config,text,name,pyscript=""):
         pyscript = "import sys\nsys.path.append('%s')\n"%dir + pyscript
     ok, out = TryScript(config,pyscript,python)
 
-    config.sconf.env['SPAWN'] = save_spawn 
+    config.sconf.env['SPAWN'] = save_spawn
 
     # We have an arbitrary requirement that the run() command output the answer 23.
     # So if we didn't get this answer, then something must have gone wrong.
@@ -993,7 +994,7 @@ def CheckModuleLibs(config,try_libs,source_file,name,prepend=True):
             else:
                 config.env.AppendUnique(RPATH=rpath)
             result = TryModule(config,source_file,name)
-            if result: 
+            if result:
                 break
             else:
                 config.env.Replace(RPATH=init_rpath)
@@ -1012,7 +1013,7 @@ def CheckModuleLibs(config,try_libs,source_file,name,prepend=True):
     if not result :
         config.env.Replace(LIBS=init_libs)
     return result
-     
+
 
 def CheckPython(config):
     python_source_file = """
@@ -1041,7 +1042,7 @@ PyMODINIT_FUNC initcheck_python(void)
     if not config.TryCompile(python_source_file,'.cpp'):
         ErrorExit('Unable to compile a file with #include "Python.h" using the include path:',
                   '%s'%py_inc)
-    
+
     # Now see if we can build it as a LoadableModule and run in from python.
     # Sometimes (e.g. most linux systems), we don't need the python library to do this.
     # So the first attempt below with [''] for the libs will work.
@@ -1056,7 +1057,7 @@ PyMODINIT_FUNC initcheck_python(void)
     if not result:
         ErrorExit('Unable to get python library name using python executable:\n%s'%python)
     py_lib = os.path.splitext(py_libfile)[0]
-    if py_lib.startswith('lib'): 
+    if py_lib.startswith('lib'):
         py_lib = py_lib[3:]
 
     # We might want to use the version number in some of the below stuff, so see if we
@@ -1139,7 +1140,7 @@ def CheckPyTMV(config):
     tmv_source_file = """
 #include "Python.h"
 #include "TMV_Sym.h"
- 
+
 static void useTMV() {
     tmv::SymMatrix<double> S(10,4.);
     //tmv::Matrix<double> S(10,10,4.);
@@ -1149,9 +1150,9 @@ static void useTMV() {
 }
 
 static PyObject* run(PyObject* self, PyObject* args)
-{ 
+{
     useTMV();
-    return Py_BuildValue("i", 23); 
+    return Py_BuildValue("i", 23);
 }
 
 static PyMethodDef Methods[] = {
@@ -1181,7 +1182,7 @@ PyMODINIT_FUNC initcheck_tmv(void)
         CheckModuleLibs(config,['mkl_mc','mkl_def'],tmv_source_file,'check_tmv'),False)
     if not result:
         ErrorExit('Unable to build a python loadable module that uses tmv')
-   
+
     config.Result(1)
     return 1
 
@@ -1191,13 +1192,13 @@ def CheckNumPy(config):
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "Python.h"
 #include "numpy/arrayobject.h"
- 
+
 static void doImport() {
     import_array();
 }
 
 static PyObject* run(PyObject* self, PyObject* args)
-{ 
+{
     doImport();
     int result = 1;
     if (!PyErr_Occurred()) {
@@ -1205,10 +1206,10 @@ static PyObject* run(PyObject* self, PyObject* args)
         PyObject* a = PyArray_SimpleNew(1, &dims, NPY_INT);
         if (a) {
             Py_DECREF(a);
-            result = 23; 
+            result = 23;
         }
     }
-    return Py_BuildValue("i", result); 
+    return Py_BuildValue("i", result);
 }
 
 static PyMethodDef Methods[] = {
@@ -1233,7 +1234,7 @@ PyMODINIT_FUNC initcheck_numpy(void)
     result = TryModule(config,numpy_source_file,'check_numpy')
     if not result:
         ErrorExit('Unable to build a python loadable module that uses numpy')
-   
+
     config.Result(1)
     return 1
 
@@ -1327,7 +1328,7 @@ WARNING: There seems to be a mismatch between this C++ compiler and the one
          that was used to build python.
          This should not affect normal usage of GalSim.  However, exceptions
          thrown in the C++ layer are not being correctly propagated to the
-         python layer, so the error text for C++ run-time errors  will not 
+         python layer, so the error text for C++ run-time errors  will not
          be very informative.
 """)
 
@@ -1378,8 +1379,8 @@ def FindTmvLinkFile(config):
             return tmv_link
 
     # If TMV_DIR is not given explicitly, it still probably found TMV.h somewhere,
-    # And we want to make sure we use the tmv-link file that correspond with that TMV.h 
-    # file, since there could be multiple installations of TMV on the machine, and 
+    # And we want to make sure we use the tmv-link file that correspond with that TMV.h
+    # file, since there could be multiple installations of TMV on the machine, and
     # we want to use the one that corresponds to the header file we found.
     for dir in config.env['CPPPATH']:
         h_file = os.path.join(ExpandPath(dir),'TMV.h')
@@ -1466,7 +1467,7 @@ def DoCppChecks(config):
         p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
         xcode_version = p.stdout.readlines()[0].split()[1]
         print 'XCode version is',xcode_version
-        if (platform.mac_ver()[0] >= '10.7' and xcode_version < '5.1' and 
+        if (platform.mac_ver()[0] >= '10.7' and xcode_version < '5.1' and
             '-latlas' not in tmv_link and ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
             print 'WARNING: The Apple BLAS library has been found not to be thread safe on'
             print '         Mac OS versions 10.7+, even across multiple processes (i.e. not'
@@ -1485,7 +1486,7 @@ def DoCppChecks(config):
     config.env.AppendUnique(LINKFLAGS=tmv_link_dict['LINKFLAGS'])
     config.env.AppendUnique(LINKFLAGS=tmv_link_dict['CCFLAGS'])
     config.env.AppendUnique(LIBPATH=tmv_link_dict['LIBPATH'])
-    
+
     if compiler == 'g++' and '-openmp' in config.env['LINKFLAGS']:
         config.env['LINKFLAGS'].remove('-openmp')
         config.env.AppendUnique(LINKFLAGS='-fopenmp')
@@ -1499,7 +1500,7 @@ def DoPyChecks(config):
     config.CheckPython()
     config.CheckPyTMV()
     config.CheckNumPy()
-    config.CheckPyFITS() 
+    config.CheckPyFITS()
     config.CheckBoostPython()
     config.CheckPythonExcept()
 
@@ -1532,7 +1533,7 @@ def DoConfig(env):
     Configure the system
     """
 
-    # Add some extra paths 
+    # Add some extra paths
     AddExtraPaths(env)
 
     # Figure out what kind of compiler we are dealing with
@@ -1567,7 +1568,7 @@ def DoConfig(env):
     if not env.GetOption('clean'):
         # Sometimes when you are changing around things in other directories, SCons doesn't notice.
         # e.g. You hadn't installed fftw3, so you go and do that.  Now you want SCons to redo
-        # the check for it, rather than use the cached result.  
+        # the check for it, rather than use the cached result.
         # To do that set CACHE_LIB=false
         if not env['CACHE_LIB']:
             SCons.SConf.SetCacheMode('force')
@@ -1608,10 +1609,10 @@ def DoConfig(env):
     if env['MEM_TEST']:
         env.AppendUnique(CPPDEFINES=['MEM_TEST'])
 
-# In both bin and examplex, we will need a builder that can take a .py file, 
+# In both bin and examples, we will need a builder that can take a .py file,
 # and add the correct shebang to the top of it, and also make it executable.
 # Rather than put this funciton in both SConscript files, we put it here and
-# add it as a builder to env. 
+# add it as a builder to env.
 def BuildExecutableScript(target, source, env):
     for i in range(len(source)):
         f = open(str(target[i]), "w")
@@ -1691,7 +1692,7 @@ if not GetOption('help'):
             env['PYPREFIX'] = p.stdout.read().strip()
             print 'Using PYPREFIX generated from PREFIX = ',env['PYPREFIX']
         else:
-            # On Macs, the regular python lib is usually writable, so it works fine for 
+            # On Macs, the regular python lib is usually writable, so it works fine for
             # installing the python modules.
             cmd = "%s -c \"import distutils.sysconfig; "%(python)
             cmd += "print distutils.sysconfig.get_python_lib()\""
