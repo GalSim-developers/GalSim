@@ -34,17 +34,17 @@ def roll2d(image, (iroll, jroll)):
     return np.roll(np.roll(image, jroll, axis=1), iroll, axis=0)
 
 def kxky(array_shape=(256, 256)):
-    """Return the tuple kx, ky corresponding to the DFT of a unit integer-sampled array of input
+    """Return the tuple `(kx, ky)` corresponding to the DFT of a unit integer-sampled array of input
     shape.
     
-    Uses the SBProfile conventions for Fourier space, so k varies in approximate range (-pi, pi].
+    Uses the SBProfile conventions for Fourier space, so `k` varies in approximate range (-pi, pi].
     Uses the most common DFT element ordering conventions (and those of FFTW), so that `(0, 0)`
     array element corresponds to `(kx, ky) = (0, 0)`.
 
     See also the docstring for np.fftfreq, which uses the same DFT convention, and is called here,
     but misses a factor of pi.
     
-    Adopts Numpy array index ordering so that the trailing axis corresponds to kx, rather than the
+    Adopts Numpy array index ordering so that the trailing axis corresponds to `kx`, rather than the
     leading axis as would be expected in IDL/Fortran.  See docstring for numpy.meshgrid which also
     uses this convention.
 
@@ -56,13 +56,14 @@ def kxky(array_shape=(256, 256)):
     return np.meshgrid(k_xaxis, k_yaxis)
 
 def g1g2_to_e1e2(g1, g2):
-    """Convenience function for going from (g1, g2) -> (e1, e2).
+    """Convenience function for going from `(g1, g2)` -> `(e1, e2)`.
 
-    Here g1 and g2 are reduced shears, and e1 and e2 are distortions - see shear.py for definitions
-    of reduced shear and distortion in terms of axis ratios or other ways of specifying ellipses.
+    Here `g1` and `g2` are reduced shears, and `e1` and `e2` are distortions - see shear.py for
+    definitions of reduced shear and distortion in terms of axis ratios or other ways of specifying
+    ellipses.
 
     @param g1   First reduced shear component (along pixel axes)
-    @param g2   Second reduced shear component (at 45 degrees with respect to image axes)
+    @param g2   Second reduced shear component (at 45 degrees with respect to pixel axes)
 
     @returns the corresponding distortions, e1 and e2.
     """
@@ -85,14 +86,14 @@ def g1g2_to_e1e2(g1, g2):
         raise ValueError("Input |g|^2 < 0, cannot convert.")
 
 def rotate_xy(x, y, theta):
-    """Rotates points in the xy-Cartesian plane counter-clockwise through an angle theta about the
+    """Rotates points in the xy-Cartesian plane counter-clockwise through an angle `theta` about the
     origin of the Cartesian coordinate system.
 
-    @param x        NumPy array of input x coordinates
-    @param y        NumPy array of input y coordinates
-    @param theta    Rotation angle (+ve counter clockwise) as a galsim.Angle instance
+    @param x        NumPy array of input `x` coordinates
+    @param y        NumPy array of input `y` coordinates
+    @param theta    Rotation angle (+ve counter clockwise) as an Angle instance
 
-    @return the rotated coordinates (x_rot,y_rot).
+    @return the rotated coordinates `(x_rot,y_rot)`.
     """
     if not isinstance(theta, galsim.Angle):
         raise TypeError("Input rotation angle theta must be a galsim.Angle instance.")
@@ -253,45 +254,47 @@ class ComparisonShapeData(object):
     """A class to contain the outputs of a comparison between photon shooting and DFT rendering of
     GSObjects, as measured by the HSM module's FindAdaptiveMom or (in future) EstimateShear.
 
-    Currently this class contains the following attributes (see also the galsim.hsm.ShapeData
-    documentation for a more detailed description of, e.g., observed_shape, moments_sigma)
+    Currently this class contains the following attributes (see also the ShapeData
+    documentation for a more detailed description of, e.g., `observed_shape`, `moments_sigma`)
     describing the results of the comparison:
 
-    - g1obs_draw: observed_shape.g1 from adaptive moments on a GSObject image rendered using .draw()
-
-    - g2obs_draw: observed_shape.g2 from adaptive moments on a GSObject image rendered using .draw()
-
-    - g1hsm_draw: corrected_shape.g1 from adaptive moments on a GSObject image rendered using
+    - g1obs_draw: `observed_shape.g1` from adaptive moments on a GSObject image rendered using
       .draw()
 
-    - g2hsm_draw: corrected_shape.g2 from adaptive moments on a GSObject image rendered using
+    - g2obs_draw: `observed_shape.g2` from adaptive moments on a GSObject image rendered using
       .draw()
 
-    - sigma_draw: moments_sigma from adaptive moments on a GSObject image rendered using .draw()
+    - g1hsm_draw: `corrected_shape.g1` from adaptive moments on a GSObject image rendered using
+      .draw()
 
-    - sighs_draw: moments_sigma from HSM PSF corr. on a GSObject image rendered using .draw()
+    - g2hsm_draw: `corrected_shape.g2` from adaptive moments on a GSObject image rendered using
+      .draw()
 
-    - delta_g1obs: estimated mean difference between i) observed_shape.g1 from images of the same
+    - sigma_draw: `moments_sigma` from adaptive moments on a GSObject image rendered using .draw()
+
+    - sighs_draw: `moments_sigma` from HSM PSF correction on a GSObject image rendered using .draw()
+
+    - delta_g1obs: estimated mean difference between i) `observed_shape.g1` from images of the same
       GSObject rendered with .drawShoot(), and ii) `g1obs_draw`.
       Defined `delta_g1obs = g1obs_draw - g1obs_shoot`.
 
-    - delta_g2obs: estimated mean difference between i) observed_shape.g2 from images of the same
+    - delta_g2obs: estimated mean difference between i) `observed_shape.g2` from images of the same
       GSObject rendered with .drawShoot(), and ii) `g1obs_draw`.
       Defined `delta_g2obs = g2obs_draw - g2obs_shoot`.
 
-    - delta_g1hsm: estimated mean difference between i) hsmerved_shape.g1 from images of the same
+    - delta_g1hsm: estimated mean difference between i) `observed_shape.g1` from images of the same
       GSObject rendered with .drawShoot(), and ii) `g1hsm_draw`.
       Defined `delta_g1hsm = g1hsm_draw - g1hsm_shoot`.
 
-    - delta_g2hsm: estimated mean difference between i) hsmerved_shape.g2 from images of the same
+    - delta_g2hsm: estimated mean difference between i) `observed_shape.g2` from images of the same
       GSObject rendered with .drawShoot(), and ii) `g1hsm_draw`.
       Defined `delta_g2hsm = g2hsm_draw - g2hsm_shoot`.
 
-    - delta_sigma: estimated mean difference between i) moments_sigma from images of the same
+    - delta_sigma: estimated mean difference between i) `moments_sigma` from images of the same
       GSObject rendered with .drawShoot(), and ii) `sigma_draw`.
       Defined `delta_sigma = sigma_draw - sigma_shoot`.
 
-    - delta_sighs: estimated mean difference between i) moments_sigma from images of the same
+    - delta_sighs: estimated mean difference between i) `moments_sigma` from images of the same
       GSObject rendered with .drawShoot(), and ii) `sigma_draw`. 
       Defined `delta_sigma = sigma_draw - sigma_shoot`. Moments calculated using HSM PSF corr.
 
@@ -334,19 +337,19 @@ class ComparisonShapeData(object):
 
     Note this is really only a simple storage container for the results above.  All of the
     non trivial calculation is completed before a ComparisonShapeData instance is initialized,
-    typically in the function compare_object_dft_vs_photon.
+    typically in the function compare_object_dft_vs_photon().
 
-    - gsobject: optional galsim.GSObject for which this test was performed (prior to PSF convolution
+    - gsobject: optional GSObject for which this test was performed (prior to PSF convolution
       if a PSF was also supplied).
 
     - psf_object: the optional additional PSF supplied by the user for tests of convolved objects,
       will be `None` if not used.
 
-    - config: optional config object describing the gsobject and PSF if the config comparison script
+    - config: optional config object describing the GSObject and PSF if the config comparison script
       was used rather than the (single core only) direct object script.
 
-    Either config, or gsobject, or gsobject and psf_object, must be set when a ComparisonShapeData
-    instance is created or an Exception is raised.
+    Either `config`, or `gsobject`, or `gsobject` and `psf_object`, must be set when a
+    ComparisonShapeData instance is created, or an Exception is raised.
     """
     def __init__(self, g1obs_draw, g2obs_draw, g1hsm_draw, g2hsm_draw, sigma_draw, sighs_draw , 
                 g1obs_shoot, g2obs_shoot, g1hsm_shoot, g2hsm_shoot, sigma_shoot, sighs_shoot ,
@@ -354,7 +357,7 @@ class ComparisonShapeData(object):
                 wmult, n_iterations, n_trials_per_iter, n_photons_per_trial, time, 
                 gsobject=None, psf_object=None, config=None):
        """In general use you should not need to instantiate a ComparisonShapeData instance,
-       as this is done within the `compare_dft_vs_photon_config`/`object` functions. 
+       as this is done within the compare_dft_vs_photon_config() or other such functions. 
        """
 
        self.g1hsm_draw = g1hsm_draw
@@ -436,9 +439,9 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
     """Take an input object (with optional PSF) and render it in two ways comparing results at high
     precision.
 
-    Using both photon shooting (via drawShoot) and Discrete Fourier Transform (via draw) to render
-    images, we compare the numerical values of adaptive moments estimates of size and ellipticity to
-    check consistency.
+    Using both photon shooting (via drawShoot()) and Discrete Fourier Transform (via draw()) to
+    render images, we compare the numerical values of adaptive moments estimates of size and
+    ellipticity to check consistency.
 
     This function takes actual GSObjects as its input, but because these are not yet picklable this
     means that the internals cannot be parallelized using the Python multiprocessing module.  For
@@ -455,18 +458,18 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
     biases on adaptive moments due to noise itself, a generic feature in this work.  This can be
     verified with a convergence test.
 
-    @param gsobject         The galsim.GSObject for which this test is to be performed (prior
+    @param gsobject         The GSObject for which this test is to be performed (prior
                             to PSF convolution if a PSF is also supplied via `psf_object`).
                             Note that this function will automatically handle integration over
-                            a galsim.Pixel of width `pixel_scale`, so a galsim.Pixel should 
+                            a Pixel of width `pixel_scale`, so a Pixel should 
                             not be included in the supplied `gsobject` (unless you really mean
                             to include it, which will be very rare in normal usage).
     @param psf_object       Optional additional PSF for tests of convolved objects, also a
-                            galsim.GSObject.  Note that this function will automatically 
-                            handle integration over a galsim.Pixel of width `pixel_scale`,
+                            GSObject.  Note that this function will automatically 
+                            handle integration over a Pixel of width `pixel_scale`,
                             so this should not be included in the supplied `psf_object`.
                             [default: None]
-    @param rng              A galsim.BaseDeviate or derived deviate class instance to provide
+    @param rng              A BaseDeviate or derived deviate class instance to provide
                             the pseudo random numbers for the photon shooting.  [default: None]
     @param pixel_scale      The pixel scale to use in the test images. [default: 1]
     @param size             The size of the images in the rendering tests - all test images
@@ -516,9 +519,9 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
         return np.std(np.asarray(array_like)) / np.sqrt(len(array_like))
 
     def _shoot_trials_single(gsobject, ntrials, dx, imsize, rng, n_photons):
-        """Convenience function to run ntrials and collect the results, uses only a single core.
+        """Convenience function to run `ntrials` and collect the results, uses only a single core.
 
-        Uses a Python for loop but this is very unlikely to be a rate determining factor provided
+        Uses a Python `for` loop but this is very unlikely to be a rate determining factor provided
         n_photons is suitably large (>1e6).
         """
         g1obslist = []
@@ -611,7 +614,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     results at high precision. 
 
     The config dictionary can contain either: (i) one single object, (ii) a collection of objects, 
-    each one of them repeated in a Sequence n_trials_per_iter times. The image type should be 
+    each one of them repeated in a Sequence `n_trials_per_iter` times. The image type should be 
     'Single'. Example config fragment:
 
         &n_trials_per_iter 32 
@@ -633,7 +636,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     For an example of defining a config dictionary of the sort suitable for input to this function,
     see examples/demo8.py in the GalSim repository.
 
-    Using both photon shooting (via drawShoot) and Discrete Fourier Transform (via shoot) to render
+    Using both photon shooting (via drawShoot()) and Discrete Fourier Transform (via draw()) to render
     images, we compare the numerical values of adaptive moments estimates of ellipticity and size 
     to check consistency.
 
@@ -650,7 +653,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     @param config           GalSim config dictionary describing the GSObject we wish to test
                             (see e.g. examples/demo8.py).
     @param gal_num          Number for the galaxy in the config dictionary, which will be 
-                            passed to the config system. It related to obj_num in the config
+                            passed to the config system. It relates to `obj_num` in the config
                             system by obj_num = gal_num * n_trials_per_iter (assuming the
                             config is created correctly as explained in the example above)
                             [default: 0]
@@ -669,25 +672,25 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     @param abs_tol_ellip    The test will keep iterating, adding ever greater numbers of
                             trials, until estimates of the 1-sigma standard error on mean 
                             ellipticity moments from photon-shot images are smaller than this
-                            param value. If moments=False, then using the measurements 
+                            param value. If `moments=False`, then using the measurements 
                             from HSM. [default: 1.e-5]
     @param abs_tol_size     The test will keep iterating, adding ever greater numbers of
                             trials, until estimates of the 1-sigma standard error on mean 
                             size moments from photon-shot images are smaller than this param
-                            value. If moments=False, then using the measurements 
+                            value. If `moments=False`, then using the measurements 
                             from HSM. [default: 1.e-5]
     @param n_trials_per_iter  Number of trial images used to estimate (or successively
                             re-estimate) the standard error on the delta quantities above for
                             each iteration of the tests. [default: 32]
     @param n_max_iter       Maximum number of iterations. After reaching it, the current
                             uncertainty on shape measurement is reported, even if
-                            abs_tol_ellip and abs_tol_size was not reported. If a negative
-                            number is supplied, then there is no limit of number of 
+                            `abs_tol_ellip` and `abs_tol_size` was not reached. If a negative
+                            number is supplied, then there is no limit on number of 
                             iterations. [default: -1]
     @param n_photons_per_trial  Number of photons shot in drawShoot() for each trial.  This should
                             be large enough that any noise bias (a.k.a. noise rectification
                             bias) on moments estimates is small. [default: 1e7]
-    @param moments          Set True to compare rendered images using AdaptiveMoments
+    @param moments          Set True to compare rendered images using FindAdaptiveMoment()
                             estimates of simple observed estimates. [default: True]
     @param hsm              Should the rendered images be compared using HSM shear estimates?
                             (i.e. including a PSF correction for shears) [default: False]
@@ -944,10 +947,10 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
 
 # A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
 def _convertPositions(pos, units, func):
-    """Convert pos from the valid ways to input positions to two numpy arrays
+    """Convert `pos` from the valid ways to input positions to two numpy arrays
 
-       This is used by the functions getShear, getConvergence, getMagnification, and getLensing for
-       both PowerSpectrum and NFWHalo.
+       This is used by the functions getShear(), getConvergence(), getMagnification(), and
+       getLensing() for both PowerSpectrum and NFWHalo.
     """
     # Check for PositionD or PositionI:
     if isinstance(pos,galsim.PositionD) or isinstance(pos,galsim.PositionI):
@@ -997,18 +1000,18 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     Remove items from a set of tabulated f(x) values so that the error in the integral is still 
     accurate to a given relative accuracy.
 
-    The input x,f values can be lists, numpy arrays, or really anything that can be converted
+    The input `x,f` values can be lists, numpy arrays, or really anything that can be converted
     to a numpy array.  The new lists will be output as python lists.
 
-    @param x                The x values in the f(x) tabulation.
-    @param f                The f values in the f(x) tabulation.
+    @param x                The `x` values in the f(x) tabulation.
+    @param f                The `f` values in the f(x) tabulation.
     @param rel_err          The maximum relative error to allow in the integral from the removal.
-                            (default: 1.e-4)
-    @param preserve_range   Should the original range of x be preserved? (True) Or should the ends
+                            [default: 1.e-4]
+    @param preserve_range   Should the original range of `x` be preserved? (True) Or should the ends
                             be trimmed to include only the region where the integral is 
-                            significant? (False)  (default: False)
+                            significant? (False)  [default: False]
 
-    @returns a tuple of lists (x_new, y_new) with the thinned tabulation.
+    @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
     """
     import numpy
     x = numpy.array(x)
