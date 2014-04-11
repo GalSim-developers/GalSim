@@ -927,7 +927,7 @@ class GSObject(object):
              add_to_image=False, use_true_center=True, offset=None, dx=None):
         """Draws an Image of the object, with bounds optionally set by an input Image.
 
-        The draw method is used to draw an Image of the GSObject, typically using Fourier space
+        The draw() method is used to draw an Image of the GSObject, typically using Fourier space
         convolution (or, for certain GSObjects that have hard edges, real-space convolution may be
         used), and using interpolation to carry out image transformations such as shearing.  This
         method can create a new Image or can draw into an existing one, depending on the choice of
@@ -948,10 +948,10 @@ class GSObject(object):
         not necessarily the case that a drawn image with 'normalization=flux' will have the sum of
         pixel values equal to flux.  That condition is guaranteed to be satisfied only if the
         profile has been convolved with a pixel response. If there was no convolution by a pixel
-        response, then the draw method is effectively sampling the surface brightness profile of the
-        GSObject at pixel centers without integrating over the flux within pixels, so for profiles
-        that are poorly sampled and/or varying rapidly (e.g., high n Sersic profiles), the sum of
-        pixel values might differ significantly from the GSObject flux.
+        response, then the draw() method is effectively sampling the surface brightness profile of
+        the GSObject at pixel centers without integrating over the flux within pixels, so for
+        profiles that are poorly sampled and/or varying rapidly (e.g., high n Sersic profiles), the
+        sum of pixel values might differ significantly from the GSObject flux.
 
         On return, the image will have a member `added_flux`, which will be set to be the total
         flux added to the image.  This may be useful as a sanity check that you have provided a
@@ -1278,8 +1278,8 @@ class GSObject(object):
         """Draws the k-space Images (real and imaginary parts) of the object, with bounds
         optionally set by input Images.
 
-        Normalization is always such that re(0,0) = flux.  Unlike the real-space draw and
-        drawShoot functions, the (0,0) point will always be one of the actual pixel values.
+        Normalization is always such that re(0,0) = flux.  Unlike the real-space draw() and
+        drawShoot() functions, the (0,0) point will always be one of the actual pixel values.
         For even-sized images, it will be 1/2 pixel above and to the right of the true
         center of the image.
 
@@ -1716,8 +1716,8 @@ class Pixel(GSObject):
     """A class describing a pixel profile.  This is just a 2-d square top-hat function.
 
     This class is typically used to represent a Pixel response function, and therefore is only
-    needed when drawing images using Fourier transform or real-space convolution (with the draw
-    method), not when using photon-shooting (with the drawShoot method).
+    needed when drawing images using Fourier transform or real-space convolution (with the draw()
+    method), not when using photon-shooting (with the drawShoot() method).
 
     Initialization
     --------------
