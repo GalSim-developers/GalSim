@@ -971,6 +971,7 @@ def _cf_periodicity_dilution_correction(cf_shape):
 # Make a function for returning Noise correlations
 def _Image_getCorrelatedNoise(image):
     """Returns a CorrelatedNoise instance by calculating the correlation function of image pixels.
+    This function is discouraged and will be deprecated in a future version.
     """
     return CorrelatedNoise(image)
 
