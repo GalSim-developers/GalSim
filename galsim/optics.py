@@ -22,9 +22,10 @@ Module containing the optical PSF generation routines.
 Most of the contents of this file are just functions; they are used to generate galsim.OpticalPSF()
 class instances (one of the GSObjects, also in this file).
 
-Mostly they are solely of use to developers for generating arrays that may be useful in defining 
-GSObjects with an optical component.  They will not therefore be used in a typical image simulation
-workflow: users will find most of what they need simply using the OpticalPSF() class.
+Most methods in this file (except for the OpticalPSF class itself) are solely of use to developers
+for generating arrays that may be useful in defining GSObjects with an optical component.  They will
+not therefore be used in a typical image simulation workflow: users will find most of what they need
+simply using the OpticalPSF class.
 
 Glossary of key terms used in function names:
 
@@ -72,9 +73,9 @@ class OpticalPSF(GSObject):
                                             max_size=None, nstruts=0, strut_thick=0.05,
                                             strut_angle=0.*galsim.degrees)
 
-    Initializes optical_psf as a galsim.OpticalPSF() instance.
+    Initializes `optical_psf` as an OpticalPSF instance.
 
-    @param lam_over_diam    Lambda / telescope diameter in the physical units adopted for scale 
+    @param lam_over_diam    Lambda / telescope diameter in the physical units adopted for `scale`
                             (user responsible for consistency).
     @param defocus          Defocus in units of incident light wavelength. [default: 0]
     @param astig1           Astigmatism (like e2) in units of incident light wavelength. 
@@ -93,11 +94,11 @@ class OpticalPSF(GSObject):
                             aberrations in units of incident light wavelength (ordered according to
                             the Noll convention), rather than passing in individual values for each
                             individual aberration.  Currently GalSim supports aberrations from
-                            defocus through third-order spherical ('spher'), which are aberrations
-                            4-11 in the Noll convention, and hence 'aberrations' should be an
+                            defocus through third-order spherical (`spher`), which are aberrations
+                            4-11 in the Noll convention, and hence `aberrations` should be an
                             object of length 12, with the first four numbers being ignored, the 5th
                             (index 4) being defocus, and so on through index 11 corresponding to
-                            'spher'. [default: None]
+                            `spher`. [default: None]
     @param circular_pupil   Adopt a circular pupil?  [default: True]
     @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
                             dimension, [0., 1.). [default: 0]
@@ -106,22 +107,22 @@ class OpticalPSF(GSObject):
                             'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
                             integer order to use. [default: galsim.Quintic()]
     @param oversampling     Optional oversampling factor for the InterpolatedImage. Setting 
-                            oversampling < 1 will produce aliasing in the PSF (not good).
-                            Usually oversampling should be somewhat larger than 1.  1.5 is 
+                            `oversampling < 1` will produce aliasing in the PSF (not good).
+                            Usually `oversampling` should be somewhat larger than 1.  1.5 is 
                             usually a safe choice.  [default: 1.5]
     @param pad_factor       Additional multiple by which to zero-pad the PSF image to avoid folding
-                            compared to what would be employed for a simple galsim.Airy.  Note that
+                            compared to what would be employed for a simple Airy.  Note that
                             `pad_factor` may need to be increased for stronger aberrations, i.e.
                             those larger than order unity.  [default: 1.5]  
-    @param suppress_warning If pad_factor is too small, the code will emit a warning telling you
+    @param suppress_warning If `pad_factor` is too small, the code will emit a warning telling you
                             its best guess about how high you might want to raise it.  However,
-                            you can suppress this warning by using suppress_warning=True.
+                            you can suppress this warning by using `suppress_warning=True`.
                             [default: False]
     @param max_size         Set a maximum size of the internal image for the optical PSF profile
                             in arcsec.  Sometimes the code calculates a rather large image size
                             to describe the optical PSF profile.  If you will eventually be 
                             drawing onto a smallish postage stamp, you might want to save some
-                            CPU time by setting max_size to be the size of your postage stamp.
+                            CPU time by setting `max_size` to be the size of your postage stamp.
                             [default: None]
     @param flux             Total flux of the profile. [default: 1.]
     @param nstruts          Number of radial support struts to add to the central obscuration.
@@ -129,9 +130,9 @@ class OpticalPSF(GSObject):
     @param strut_thick      Thickness of support struts as a fraction of pupil diameter.
                             [default:`0.05]
     @param strut_angle      Angle made between the vertical and the strut starting closest to it,
-                            defined to be positive in the counter-clockwise direction; must be a
-                            galsim.Angle instance. [default: 0. * galsim.degrees]
-    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            defined to be positive in the counter-clockwise direction; must be an
+                            Angle instance. [default: 0. * galsim.degrees]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
                             for details. [default: None]
 
     Methods
@@ -269,7 +270,7 @@ def generate_pupil_plane(array_shape=(256, 256), scale=1., lam_over_diam=2., cir
 
     @param array_shape     The NumPy array shape desired for the output array.
     @param scale           Grid spacing of PSF in real space units.
-    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for scale 
+    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale`
                            (user responsible for consistency).
     @param circular_pupil  Adopt a circular pupil? [default: 0]
     @param obscuration     Linear dimension of central obscuration as fraction of pupil linear
@@ -279,14 +280,14 @@ def generate_pupil_plane(array_shape=(256, 256), scale=1., lam_over_diam=2., cir
     @param strut_thick     Thickness of support struts as a fraction of pupil diameter.
                            [default: 0.05]
     @param strut_angle     Angle made between the vertical and the strut starting closest to it,
-                           defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance. [default: 0. * galsim.degrees]
+                           defined to be positive in the counter-clockwise direction; must be an
+                           Angle instance. [default: 0. * galsim.degrees]
  
-    Returns a tuple (rho, in_pupil), the first of which is the coordinates of the pupil
+    Returns a tuple `(rho, in_pupil)`, the first of which is the coordinate of the pupil
     in unit disc-scaled coordinates for use by Zernike polynomials (as a complex number)
-    for describing the wavefront across the pupil plane.  The array in_pupil is a vector of 
-    Bools used to specify where in the pupil plane described by rho is illuminated.  See also 
-    wavefront(). 
+    for describing the wavefront across the pupil plane.  The array `in_pupil` is a vector of 
+    Bools used to specify where in the pupil plane described by `rho` is illuminated.  See also 
+    wavefront().
     """
     kmax_internal = scale * 2. * np.pi / lam_over_diam # INTERNAL kmax in units of array grid spacing
     # Build kx, ky coords
@@ -338,15 +339,15 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
               strut_angle=0.*galsim.degrees):
     """Return a complex, aberrated wavefront across a circular (default) or square pupil.
     
-    Outputs a complex image (shape=array_shape) of a circular pupil wavefront of unit amplitude
-    that can be easily transformed to produce an optical PSF with lambda/D = lam_over_diam on an
-    output grid of spacing scale.  This routine would need to be modified in order to include higher
-    order aberrations than spher (order 11 in Noll convention).
+    Outputs a complex image (shape=`array_shape`) of a circular pupil wavefront of unit amplitude
+    that can be easily transformed to produce an optical PSF with `lambda/D = lam_over_diam` on an
+    output grid of spacing `scale`.  This routine would need to be modified in order to include
+    higher order aberrations than `spher` (order 11 in Noll convention).
 
-    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
+    To ensure properly Nyquist sampled output any user should set `lam_over_diam >= 2. * scale`.
     
     The pupil sample locations are arranged in standard DFT element ordering format, so that
-    (kx, ky) = (0, 0) is the [0, 0] array element.
+    `(kx, ky) = (0, 0)` is the [0, 0] array element.
 
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the Zernike polynomials in the Noll convention defined in
@@ -355,12 +356,12 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
 
     @param array_shape     The NumPy array shape desired for the output array.
     @param scale           Grid spacing of PSF in real space units
-    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for scale 
+    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale` 
                            (user responsible for consistency).
     @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
                            astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
-                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           aberrations 4-11 in the Noll convention, `aberrations` should have length
                            12, with defocus corresponding to index 4 and so on.  The first four
                            numbers in this array will be ignored.
     @param circular_pupil  Adopt a circular pupil? [default: True]
@@ -371,10 +372,10 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
     @param strut_thick     Thickness of support struts as a fraction of pupil diameter.
                            [default: 0.05]
     @param strut_angle     Angle made between the vertical and the strut starting closest to it,
-                           defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance. [default: 0. * galsim.degrees]
+                           defined to be positive in the counter-clockwise direction; must be an
+                           Angle instance. [default: 0. * galsim.degrees]
 
-    Outputs the wavefront for kx, ky locations corresponding to kxky(array_shape).
+    Outputs the wavefront for `kx, ky` locations corresponding to `kxky(array_shape)`.
     """
     # Define the pupil coordinates and non-zero regions based on input kwargs
     rho_all, in_pupil = generate_pupil_plane(
@@ -443,16 +444,16 @@ def wavefront_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrati
     array.
 
     Outputs a circular pupil wavefront of unit amplitude that can be easily transformed to produce
-    an optical PSF with lambda/diam = lam_over_diam on an output grid of spacing scale.
+    an optical PSF with `lambda/diam = lam_over_diam` on an output grid of spacing `scale`.
 
     The Image output can be used to directly instantiate an InterpolatedImage, and its 
-    scale will reflect the spacing of the output grid in the system of units adopted for 
-    lam_over_diam.
+    `scale` will reflect the spacing of the output grid in the system of units adopted for 
+    `lam_over_diam`.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
+    To ensure properly Nyquist sampled output any user should set `lam_over_diam >= 2. * scale`.
     
     The pupil sample locations are arranged in standard DFT element ordering format, so that
-    (kx, ky) = (0, 0) is the [0, 0] array element.  The scale of the output Image is correct in
+    `(kx, ky) = (0, 0)` is the [0, 0] array element.  The `scale` of the output Image is correct in
     k space units.
 
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
@@ -462,12 +463,12 @@ def wavefront_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrati
 
     @param array_shape     The NumPy array shape desired for the output array.
     @param scale           Grid spacing of PSF in real space units
-    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for scale 
+    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale`
                            (user responsible for consistency).
     @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
                            astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
-                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           aberrations 4-11 in the Noll convention, `aberrations` should have length
                            12, with defocus corresponding to index 4 and so on.  The first four
                            numbers in this array will be ignored.
     @param circular_pupil  Adopt a circular pupil? [default: True]
@@ -478,8 +479,8 @@ def wavefront_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrati
     @param strut_thick     Thickness of support struts as a fraction of pupil diameter.
                            [default: 0.05]
     @param strut_angle     Angle made between the vertical and the strut starting closest to it,
-                           defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance. [default: 0. * galsim.degrees]
+                           defined to be positive in the counter-clockwise direction; must be an
+                           Angle instance. [default: 0. * galsim.degrees]
     """
     array = wavefront(
         array_shape=array_shape, scale=scale, lam_over_diam=lam_over_diam, aberrations=aberrations,
@@ -501,21 +502,21 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
     """Return NumPy array containing circular (default) or square pupil PSF with low-order 
     aberrations.
 
-    The PSF is centred on the array[array_shape[0] / 2, array_shape[1] / 2] pixel by default, and
+    The PSF is centred on the `array[array_shape[0] / 2, array_shape[1] / 2]` pixel by default, and
     uses surface brightness rather than flux units for pixel values, matching SBProfile.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
+    To ensure properly Nyquist sampled output any user should set `lam_over_diam >= 2. * scale`.
 
     Ouput NumPy array is C-contiguous.
 
     @param array_shape     The NumPy array shape desired for the output array.
     @param scale           Grid spacing of PSF in real space units
-    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for scale 
+    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale`
                            (user responsible for consistency).
     @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
                            astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
-                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           aberrations 4-11 in the Noll convention, `aberrations` should have length
                            12, with defocus corresponding to index 4 and so on.  The first four
                            numbers in this array will be ignored.
     @param circular_pupil  Adopt a circular pupil? [default: True]
@@ -526,8 +527,8 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
     @param strut_thick     Thickness of support struts as a fraction of pupil diameter.
                            [default: 0.05]
     @param strut_angle     Angle made between the vertical and the strut starting closest to it,
-                           defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance. [default: 0. * galsim.degrees]
+                           defined to be positive in the counter-clockwise direction; must be an
+                           Angle instance. [default: 0. * galsim.degrees]
     @param flux            Total flux of the profile. [default: 1.]
     """
     wf = wavefront(
@@ -559,23 +560,23 @@ def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
               strut_angle=0.*galsim.degrees, flux=1.):
     """Return circular (default) or square pupil PSF with low-order aberrations as an Image.
 
-    The PSF is centred on the array[array_shape[0] / 2, array_shape[1] / 2] pixel by default, and
+    The PSF is centred on the `array[array_shape[0] / 2, array_shape[1] / 2] pixel` by default, and
     uses surface brightness rather than flux units for pixel values, matching SBProfile.
 
     The Image output can be used to directly instantiate an InterpolatedImage, and its 
-    scale will reflect the spacing of the output grid in the system of units adopted for 
-    lam_over_diam.
+    `scale` will reflect the spacing of the output grid in the system of units adopted for 
+    `lam_over_diam`.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
+    To ensure properly Nyquist sampled output any user should set `lam_over_diam >= 2. * scale`.
 
     @param array_shape     The NumPy array shape desired for the array view of the Image.
     @param scale           Grid spacing of PSF in real space units
-    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for scale 
+    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale`
                            (user responsible for consistency).
     @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
                            astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
-                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           aberrations 4-11 in the Noll convention, `aberrations` should have length
                            12, with defocus corresponding to index 4 and so on.  The first four
                            numbers in this array will be ignored.
     @param circular_pupil  Adopt a circular pupil? [default: True]
@@ -586,8 +587,8 @@ def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
     @param strut_thick     Thickness of support struts as a fraction of pupil diameter.
                            [default: 0.05]
     @param strut_angle     Angle made between the vertical and the strut starting closest to it,
-                           defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance. [default: 0. * galsim.degrees]
+                           defined to be positive in the counter-clockwise direction; must be an
+                           Angle instance. [default: 0. * galsim.degrees]
     @param flux            Total flux of the profile. [default flux=1.]
     """
     array = psf(
@@ -603,21 +604,21 @@ def otf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
     """Return the complex OTF of a circular (default) or square pupil with low-order aberrations as
     a NumPy array.
 
-    OTF array element ordering follows the DFT standard of kxky(array_shape), and has
-    otf[0, 0] = 1+0j by default.
+    OTF array element ordering follows the DFT standard of `kxky(array_shape)`, and has
+    `otf[0, 0] = 1+0j` by default.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
+    To ensure properly Nyquist sampled output any user should set `lam_over_diam >= 2. * scale`.
 
     Output complex NumPy array is C-contiguous.
     
     @param array_shape     The NumPy array shape desired for the output array.
     @param scale           Grid spacing of PSF in real space units
-    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for scale 
+    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale`
                            (user responsible for consistency).
     @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
                            astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
-                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           aberrations 4-11 in the Noll convention, `aberrations` should have length
                            12, with defocus corresponding to index 4 and so on.  The first four
                            numbers in this array will be ignored.
     @param circular_pupil  Adopt a circular pupil? [default: True]
@@ -628,8 +629,8 @@ def otf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
     @param strut_thick     Thickness of support struts as a fraction of pupil diameter.
                            [default: 0.05]
     @param strut_angle     Angle made between the vertical and the strut starting closest to it,
-                           defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance. [default: 0. * galsim.degrees]
+                           defined to be positive in the counter-clockwise direction; must be an
+                           Angle instance. [default: 0. * galsim.degrees]
     """
     wf = wavefront(
         array_shape=array_shape, scale=scale, lam_over_diam=lam_over_diam, aberrations=aberrations, 
@@ -646,23 +647,23 @@ def otf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
     """Return the complex OTF of a circular (default) or square pupil with low-order aberrations as 
     a (real, imag) tuple of Image objects, rather than a complex NumPy array.
 
-    OTF array element ordering follows the DFT standard of kxky(array_shape), and has
-    otf[0, 0] = 1+0j by default.  The scale of the output Image is correct in k space units.
+    OTF array element ordering follows the DFT standard of `kxky(array_shape)`, and has
+    `otf[0, 0] = 1+0j` by default.  The `scale` of the output Image is correct in k space units.
 
     The Image output can be used to directly instantiate an InterpolatedImage, and its 
-    scale will reflect the spacing of the output grid in the system of units adopted for 
-    lam_over_diam.
+    `scale` will reflect the spacing of the output grid in the system of units adopted for 
+    `lam_over_diam`.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
+    To ensure properly Nyquist sampled output any user should set `lam_over_diam >= 2. * scale`.
     
     @param array_shape     The NumPy array shape desired for array views of Image tuple.
     @param scale           Grid spacing of PSF in real space units
-    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for scale 
+    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale`
                            (user responsible for consistency).
     @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
                            astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
-                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           aberrations 4-11 in the Noll convention, `aberrations` should have length
                            12, with defocus corresponding to index 4 and so on.  The first four
                            numbers in this array will be ignored.
     @param circular_pupil  Adopt a circular pupil? [default: True]
@@ -673,8 +674,8 @@ def otf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
     @param strut_thick     Thickness of support struts as a fraction of pupil diameter.
                            [default: 0.05]
     @param strut_angle     Angle made between the vertical and the strut starting closest to it,
-                           defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance. [default: 0. * galsim.degrees]
+                           defined to be positive in the counter-clockwise direction; must be an
+                           Angle instance. [default: 0. * galsim.degrees]
     """
     array = otf(
         array_shape=array_shape, scale=scale, lam_over_diam=lam_over_diam, aberrations=aberrations,
@@ -696,21 +697,21 @@ def mtf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
     """Return NumPy array containing the MTF of a circular (default) or square pupil with low-order
     aberrations.
 
-    MTF array element ordering follows the DFT standard of kxky(array_shape), and has
-    mtf[0, 0] = 1 by default.
+    MTF array element ordering follows the DFT standard of `kxky(array_shape)`, and has
+    `mtf[0, 0] = 1` by default.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
+    To ensure properly Nyquist sampled output any user should set `lam_over_diam >= 2. * scale`.
 
     Output double NumPy array is C-contiguous.
 
     @param array_shape     The NumPy array shape desired for the output array.
     @param scale           Grid spacing of PSF in real space units
-    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for scale 
+    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale`
                            (user responsible for consistency).
     @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
                            astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
-                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           aberrations 4-11 in the Noll convention, `aberrations` should have length
                            12, with defocus corresponding to index 4 and so on.  The first four
                            numbers in this array will be ignored.
     @param circular_pupil  Adopt a circular pupil? [default: True]
@@ -721,8 +722,8 @@ def mtf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
     @param strut_thick     Thickness of support struts as a fraction of pupil diameter.
                            [default: 0.05]
     @param strut_angle     Angle made between the vertical and the strut starting closest to it,
-                           defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance. [default: 0. * galsim.degrees]
+                           defined to be positive in the counter-clockwise direction; must be an
+                           Angle instance. [default: 0. * galsim.degrees]
     """
     return np.abs(otf(
         array_shape=array_shape, scale=scale, lam_over_diam=lam_over_diam, aberrations=aberrations,
@@ -735,35 +736,35 @@ def mtf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
     """Return the MTF of a circular (default) or square pupil with low-order aberrations as an 
     Image.
 
-    MTF array element ordering follows the DFT standard of kxky(array_shape), and has
-    mtf[0, 0] = 1 by default.  The scale of the output Image is correct in k space units.
+    MTF array element ordering follows the DFT standard of `kxky(array_shape)`, and has
+    `mtf[0, 0] = 1` by default.  The `scale` of the output Image is correct in k space units.
 
     The Image output can be used to directly instantiate an InterpolatedImage, and its 
-    scale will reflect the spacing of the output grid in the system of units adopted for 
-    lam_over_diam.
+    `scale` will reflect the spacing of the output grid in the system of units adopted for 
+    `lam_over_diam`.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
+    To ensure properly Nyquist sampled output any user should set `lam_over_diam >= 2. * scale`.
 
     @param array_shape     The NumPy array shape desired for the array view of the Image.
     @param scale           Grid spacing of PSF in real space units
-    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for scale 
+    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale`
                            (user responsible for consistency).
     @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
                            astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
-                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           aberrations 4-11 in the Noll convention, `aberrations` should have length
                            12, with defocus corresponding to index 4 and so on.  The first four
                            numbers in this array will be ignored.
     @param circular_pupil  Adopt a circular pupil? [default: True]
     @param obscuration     Linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.). [default: 0]
     @param nstruts         Number of radial support struts to add to the central obscuration.
-                           [default: 0`]
+                           [default: 0]
     @param strut_thick     Thickness of support struts as a fraction of pupil diameter.
                            [default: 0.05]
     @param strut_angle     Angle made between the vertical and the strut starting closest to it,
-                           defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance. [default: 0. * galsim.degrees]
+                           defined to be positive in the counter-clockwise direction; must be an
+                           Angle instance. [default: 0. * galsim.degrees]
     """
     array = mtf(
         array_shape=array_shape, scale=scale, lam_over_diam=lam_over_diam, aberrations=aberrations,
@@ -783,21 +784,21 @@ def ptf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
     """Return NumPy array containing the PTF [radians] of a circular (default) or square pupil with
     low-order aberrations.
 
-    PTF array element ordering follows the DFT standard of kxky(array_shape), and has
-    ptf[0, 0] = 0. by default.
+    PTF array element ordering follows the DFT standard of `kxky(array_shape)`, and has
+    `ptf[0, 0] = 0`. by default.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
+    To ensure properly Nyquist sampled output any user should set `lam_over_diam >= 2. * scale`.
 
     Output double NumPy array is C-contiguous.
 
     @param array_shape     The NumPy array shape desired for the output array.
     @param scale           Grid spacing of PSF in real space units
-    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for scale 
+    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale` 
                            (user responsible for consistency).
     @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
                            astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
-                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           aberrations 4-11 in the Noll convention, `aberrations` should have length
                            12, with defocus corresponding to index 4 and so on.  The first four
                            numbers in this array will be ignored.
     @param circular_pupil  Adopt a circular pupil? [default: True]
@@ -808,8 +809,8 @@ def ptf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
     @param strut_thick     Thickness of support struts as a fraction of pupil diameter.
                            [default: 0.05]
     @param strut_angle     Angle made between the vertical and the strut starting closest to it,
-                           defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance. [default: 0. * galsim.degrees]
+                           defined to be positive in the counter-clockwise direction; must be an
+                           Angle instance. [default: 0. * galsim.degrees]
     """
     kx, ky = utilities.kxky(array_shape)
     k2 = (kx**2 + ky**2)
@@ -831,23 +832,23 @@ def ptf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
     """Return the PTF [radians] of a circular (default) or square pupil with low-order aberrations
     as an Image.
 
-    PTF array element ordering follows the DFT standard of kxky(array_shape), and has
-    ptf[0, 0] = 0. by default.  The scale of the output Image is correct in k space units.
+    PTF array element ordering follows the DFT standard of `kxky(array_shape)`, and has
+    `ptf[0, 0] = 0.` by default.  The `scale` of the output Image is correct in k space units.
 
     The Image output can be used to directly instantiate an InterpolatedImage, and its 
-    scale will reflect the spacing of the output grid in the system of units adopted for 
-    lam_over_diam.
+    `scale` will reflect the spacing of the output grid in the system of units adopted for 
+    `lam_over_diam`.
 
-    To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
+    To ensure properly Nyquist sampled output any user should set `lam_over_diam >= 2. * scale`.
 
     @param array_shape     The NumPy array shape desired for the array view of the Image.
     @param scale           Grid spacing of PSF in real space units
-    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for scale 
+    @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale` 
                            (user responsible for consistency).
     @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
                            astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
-                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           aberrations 4-11 in the Noll convention, `aberrations` should have length
                            12, with defocus corresponding to index 4 and so on.  The first four
                            numbers in this array will be ignored.
     @param circular_pupil  Adopt a circular pupil? [default: True]
@@ -858,8 +859,8 @@ def ptf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
     @param strut_thick     Thickness of support struts as a fraction of pupil diameter.
                            [default: 0.05]
     @param strut_angle     Angle made between the vertical and the strut starting closest to it,
-                           defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance. [default: 0. * galsim.degrees]
+                           defined to be positive in the counter-clockwise direction; must be an
+                           Angle instance. [default: 0. * galsim.degrees]
     """
     array = ptf(
         array_shape=array_shape, scale=scale, lam_over_diam=lam_over_diam, aberrations=aberrations,
