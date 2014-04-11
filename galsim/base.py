@@ -450,14 +450,14 @@ class GSObject(object):
 
         e.g. `half_light_radius` <-- `half_light_radius * scale`
 
-        This doesn't correspond to either of the normal operations one would typically want to
-        do to a galaxy.  The functions dilate and magnify are the more typical usage.  But this
+        This doesn't correspond to either of the normal operations one would typically want to do to
+        a galaxy.  The functions dilate() and magnify() are the more typical usage.  But this
         function is conceptually simple.  It rescales the linear dimension of the profile, while
         preserving surface brightness.  As a result, the flux will necessarily change as well.
 
-        See dilate for a version that applies a linear scale factor while preserving flux.
+        See dilate() for a version that applies a linear scale factor while preserving flux.
 
-        See magnify for a version that applies a scale factor to the area while preserving surface
+        See magnify() for a version that applies a scale factor to the area while preserving surface
         brightness.
 
         @param scale    The factor by which to scale the linear dimension of the object.
@@ -517,7 +517,7 @@ class GSObject(object):
 
         This process applies a lensing magnification mu, which scales the linear dimensions of the
         image by the factor sqrt(mu), i.e., `half_light_radius` <-- `half_light_radius * sqrt(mu)`
-        while increasing the flux by a factor of mu.  Thus, magnify preserves surface brightness.
+        while increasing the flux by a factor of mu.  Thus, magnify() preserves surface brightness.
 
         See dilate() for a version that applies a linear scale factor while preserving flux.
 
@@ -654,7 +654,7 @@ class GSObject(object):
         self.__class__ = new_obj.__class__
 
     def transform(self, dudx, dudy, dvdx, dvdy):
-        """Create a version of the current object with an aribtrary Jacobian matrix transformation
+        """Create a version of the current object with an arbitrary Jacobian matrix transformation
         applied to it.
 
         This applies a Jacobian matrix to the coordinate system in which this object
@@ -665,7 +665,7 @@ class GSObject(object):
             v = dvdx x + dvdy y
 
         That is, an arbitrary affine transform, but without the translation (which is
-        easily effected via shift).
+        easily effected via the shift() method).
 
         Note that this function is similar to expand in that it preserves surface brightness,
         not flux.  If you want to preserve flux, you should also do
