@@ -75,7 +75,7 @@ class Shear(object):
     for convergence kappa=0.  Application of a galsim.Shear using the GSObject.shear method does not
     include this area change.  To properly incorporate the effective change in area due to shear, it
     is necessary to either (a) define the galsim.Shear object, use the shear() method, and
-    separately use the magnify method(), or (b) use the lens() method that simultaneously 
+    separately use the magnify() method, or (b) use the lens() method that simultaneously 
     magnifies and shears.
     """
     def __init__(self, *args, **kwargs):
