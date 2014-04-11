@@ -453,7 +453,7 @@ class InterpolatedImage(GSObject):
             if rng: # Let a user supplied RNG take precedence over that in user CN
                 noise.setRNG(rng)
         elif isinstance(noise_pad,galsim.Image):
-            noise = galsim.CorrelatedNoise(rng, noise_pad)
+            noise = galsim.CorrelatedNoise(noise_pad, rng)
         elif self.use_cache and noise_pad in InterpolatedImage._cache_noise_pad:
             noise = InterpolatedImage._cache_noise_pad[noise_pad]
             if rng:
@@ -461,7 +461,7 @@ class InterpolatedImage(GSObject):
                 # CorrelatedNoise instance, otherwise preserve the cached RNG
                 noise.setRNG(rng)
         elif isinstance(noise_pad, str):
-            noise = galsim.CorrelatedNoise(rng, galsim.fits.read(noise_pad))
+            noise = galsim.CorrelatedNoise(galsim.fits.read(noise_pad), rng)
             if self.use_cache: 
                 InterpolatedImage._cache_noise_pad[noise_pad] = noise
         else:
