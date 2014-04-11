@@ -898,6 +898,59 @@ def test_convolve_cosmos():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
+def test_uncorrelated_noise_tracking():
+    """Test that we can track various processes that convert uncorrelated noise to correlated noise.
+    """
+    t1 = time.time()
+
+    # Start with an UncorrelatedNoise instance that we attach to an InterpolatedImage GSObject as a
+    # 'noise' attribute
+    gal_sigma = 1.
+    noise_var = 1.
+    seed = 1234
+    pix_scale = 0.1
+    orig_object = galsim.Gaussian(sigma=gal_sigma)
+    orig_ucn = galsim.UncorrelatedNoise(galsim.BaseDeviate(seed), galsim.PixelScale(pix_scale),
+                                        noise_var)
+    im = orig_object.draw(scale=pix_scale)
+    int_im = galsim.InterpolatedImage(im)
+    # Note, I'm including the noise attribute without actually adding noise.  It doesn't matter
+    # here, we just want to check the ability of GalSim to track what happens to `noise'
+    # attributes.
+    int_im.noise = orig_ucn
+
+    # Manipulate the object in various non-trivial ways: shear, magnify, rotate, convolve
+    test_shear = 0.15
+    test_mag = 0.92
+    rot_ang = 21. # degrees
+    new_int_im = int_im.shear(g1=test_shear)
+    new_int_im = new_int_im.magnify(test_mag)
+    new_int_im = new_int_im.rotate(rot_ang*galsim.degrees)
+    new_int_im = galsim.Convolve(new_int_im, orig_object)
+    final_noise = new_int_im.noise
+
+    # Now, make a correlated noise object directly based on a realization of the original
+    # uncorrelated noise object.
+    test_im = galsim.Image(512,512)
+    orig_ucn.applyTo(test_im)
+    cn = galsim.CorrelatedNoise(galsim.BaseDeviate(seed), test_im, scale=pix_scale)
+
+    # Run it through the same operations.
+    new_cn = cn.shear(g1=test_shear)
+    new_cn = new_cn.magnify(test_mag)
+    new_cn = new_cn.rotate(rot_ang*galsim.degrees)
+    new_cn = new_cn.convolvedWith(orig_object)
+
+    # Make sure that it's basically the same as the manipulated 'noise' object from the first case,
+    # i.e., compare final_noise with new_cn.
+    # Allow for some error due to inferring the CorrelatedNoise object 'cn' from a single
+    # realization.  For now we'll do the simplest possible comparison of just the variance.  This is
+    # probably not adequate but it's a start.
+    np.testing.assert_almost_equal(final_noise.getVariance(), new_cn.getVariance(), decimal=3,
+                                   err_msg='Failure in tracking noise properties through operations')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 if __name__ == "__main__":
     test_uncorrelated_noise_zero_lag()
@@ -915,3 +968,5 @@ if __name__ == "__main__":
     test_copy()
     test_cosmos_and_whitening()
     test_convolve_cosmos()
+    test_uncorrelated_noise_tracking()
+
