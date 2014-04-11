@@ -952,6 +952,36 @@ def test_uncorrelated_noise_tracking():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
+def test_variance_changes():
+    """Test that we can change and check the variance for CorrelatedNoise objects.
+    """
+    t1 = time.time()
+
+    # Make an UncorrelatedNoise object.
+    noise_var = 1.24
+    seed = 1234
+    pix_scale = 0.1
+    orig_ucn = galsim.UncorrelatedNoise(galsim.BaseDeviate(seed), galsim.PixelScale(pix_scale),
+                                        noise_var)
+    # Reset variance to something else.
+    new_var = 1.07
+    orig_ucn.setVariance(new_var)
+    np.testing.assert_equal(orig_ucn.getVariance(), new_var,
+                            err_msg='Failure to reset and then get variance for UncorrelatedNoise')
+
+    # Now do this for a CorrelatedNoise object.
+    gd = galsim.GaussianDeviate()
+    cosmos_scale=0.03
+    cn = galsim.getCOSMOSNoise(
+        gd, '../examples/data/acs_I_unrot_sci_20_cf.fits', cosmos_scale=cosmos_scale)
+    cn.setVariance(new_var)
+    np.testing.assert_equal(cn.getVariance(), new_var,
+                            err_msg='Failure to reset and then get variance for CorrelatedNoise')
+
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
+
 if __name__ == "__main__":
     test_uncorrelated_noise_zero_lag()
     test_uncorrelated_noise_nonzero_lag()
@@ -969,4 +999,5 @@ if __name__ == "__main__":
     test_cosmos_and_whitening()
     test_convolve_cosmos()
     test_uncorrelated_noise_tracking()
+    test_variance_changes()
 
