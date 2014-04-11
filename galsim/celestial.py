@@ -23,13 +23,13 @@ The CelestialCoord class describing coordinates on the celestial sphere.
 import galsim
 
 class CelestialCoord(object):
-    """This is class defines a position on the celestial sphere, normally given by
-    two angles, ra and dec.
+    """This class defines a position on the celestial sphere, normally given by
+    two angles, `ra` and `dec`.
 
     Mostly this class exists to enforce the units when a position is really a location on
     the celestial sphere rather than using PositionD as we normally do for positions.
-    In that role, it can be considered a lightweight wrapper around two angles, ra and dec.
-    They are accessible as coord.ra and coord.dec.
+    In that role, it can be considered a lightweight wrapper around two angles, `ra` and `dec`.
+    They are accessible as `coord.ra` and `coord.dec`.
 
     However, there are a few useful functions that we provide.
 
@@ -42,7 +42,7 @@ class CelestialCoord(object):
         - a stereographic projection, which preserves angles
         - a gnomonic projection, which makes all great circles straight lines
         - a Postel projection, which preserves distances from the tangent point
-    See the project and deproject functions for details.
+    See the project() and deproject() functions for details.
 
     You can also precess a coordinate from one epoch to another and get galactic coordinates
     with, e.g.
@@ -59,8 +59,8 @@ class CelestialCoord(object):
 
         coord = galsim.CelestialCoord(ra, dec)
 
-    @param ra       The right ascension.  Must be a galsim.Angle object.
-    @param dec      The declination.  Must be a galsim.Angle object.
+    @param ra       The right ascension.  Must be an Angle object.
+    @param dec      The declination.  Must be an Angle object.
     """
     def __init__(self, ra, dec):
         if not isinstance(ra, galsim.Angle):
@@ -91,7 +91,7 @@ class CelestialCoord(object):
 
     def distanceTo(self, other):
         """Returns the great circle distance between this coord and another one.
-        The return value is a galsim.Angle object
+        The return value is an Angle object
         """
         # The easiest way to do this in a way that is stable for small separations
         # is to calculate the (x,y,z) position on the unit sphere corresponding to each
@@ -119,7 +119,7 @@ class CelestialCoord(object):
         return theta * galsim.radians
 
     def angleBetween(self, coord1, coord2):
-        """Find the open angle at the location of the current coord between coord1 and coord2."""
+        """Find the open angle at the location of the current coord between `coord1` and `coord2`."""
         # Call A = coord1, B = coord2, C = self
         # Then we are looking for the angle ACB.
         # If we treat each coord as a (x,y,z) vector, then we can use the following spherical
@@ -150,7 +150,7 @@ class CelestialCoord(object):
 
     def project(self, other, projection='lambert'):
         """Use the currect coord as the center point of a tangent plane projection to project
-        the other coordinate onto that plane.
+        the `other` coordinate onto that plane.
 
         This function return the position (u,v) in the Euclidean coordinate system defined by
         a tangent plane projection around the current coordinate, with +v pointing north and
@@ -241,13 +241,13 @@ class CelestialCoord(object):
         return u, v
 
     def project_rad(self, ra, dec, projection):
-        """This is basically identical to the project function except that the input ra, dec are 
-        given in radians rather than packaged as a CelestialCoord object.
+        """This is basically identical to the project() function except that the input `ra`, `dec`
+        are given in radians rather than packaged as a CelestialCoord object.
 
         Also, the output is returned as a tuple (x,y), rather than packaged as a PositionD object.
 
-        The main advantage to this is that it will work if ra and dec are numpy arrays, in which 
-        case the output x, y will also be numpy arrays.
+        The main advantage to this is that it will work if `ra` and `dec` are numpy arrays, in which
+        case the output `x`, `y` will also be numpy arrays.
         """
         if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
             raise ValueError('Unknown projection ' + projection)
@@ -263,7 +263,7 @@ class CelestialCoord(object):
         return self._project_core(cosra, sinra, cosdec, sindec, projection)
 
     def deproject(self, pos, projection='lambert'):
-        """Do the reverse process from the project function.
+        """Do the reverse process from the project() function.
 
         i.e. This takes in a position (u,v) as a PositionD object and returns the
         corresponding celestial coordinate, using the current coordinate as the center
@@ -343,14 +343,14 @@ class CelestialCoord(object):
         return ra, dec
 
     def deproject_rad(self, u, v, projection='lambert'):
-        """This is basically identical to the deproject function except that the output ra, dec 
-        are returned as a tuple (ra, dec) in radians rather than packaged as a CelestialCoord 
+        """This is basically identical to the deproject() function except that the output `ra`,
+        `dec` are returned as a tuple (ra, dec) in radians rather than packaged as a CelestialCoord
         object.
 
         Also, the input is taken as a tuple (u,v), rather than packaged as a PositionD object.
 
-        The main advantage to this is that it will work if u and v are numpy arrays, in which 
-        case the output ra, dec will also be numpy arrays.
+        The main advantage to this is that it will work if `u` and `v` are numpy arrays, in which 
+        case the output `ra`, `dec` will also be numpy arrays.
         """
         if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
             raise ValueError('Unknown projection ' + projection)
@@ -360,7 +360,7 @@ class CelestialCoord(object):
     def deproject_jac(self, u, v, projection='lambert'):
         """Return the jacobian of the deprojection.
 
-        i.e. if the input position is (u,v) (in arcsec) then return the matrix is
+        i.e. if the input position is (u,v) (in arcsec) then the return matrix is
 
         J = ( dra/du cos(dec)  dra/dv cos(dec) )
             (    ddec/du          ddec/dv      )
@@ -444,7 +444,7 @@ class CelestialCoord(object):
     def precess(self, from_epoch, to_epoch):
         """This function precesses equatorial ra and dec from one epoch to another.
            It is adapted from a set of fortran subroutines found in precess.f,
-           which  were based on (a) pages 30-34 fo the Explanatory Supplement
+           which were based on (a) pages 30-34 of the Explanatory Supplement
            to the AE, (b) Lieske, et al. (1977) A&A 58, 1-16, and
            (c) Lieske (1979) A&A 73, 282-284.
         """
@@ -501,7 +501,7 @@ class CelestialCoord(object):
         precess from the current epoch to 1950.  The current epoch is assumed to be 2000
         by default, but you may also specify a different value with the epoch parameter.
 
-        @returns the longitude and latitude as a tuple (el, b), given as galsim.Angle instances.
+        @returns the longitude and latitude as a tuple (el, b), given as Angle instances.
         """
         # cos(b) cos(el-33) = cos(dec) cos(ra-282.25)
         # cos(b) sin(el-33) = sin(dec) sin(62.6) + cos(dec) sin(ra-282.25) cos(62.6)
