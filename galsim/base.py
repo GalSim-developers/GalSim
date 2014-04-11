@@ -1003,7 +1003,7 @@ class GSObject(object):
         @param normalization  Two options for the normalization:
                             "flux" or "f" means that the sum of the output pixels is normalized
                                to be equal to the total flux.  (Modulo any flux that falls off
-                               the edge of the image of course, and note the caveat in the draw
+                               the edge of the image of course, and note the caveat in the draw()
                                method documentation regarding the need to convolve with a pixel
                                response.)
                             "surface brightness" or "sb" means that the output pixels sample
@@ -1100,7 +1100,7 @@ class GSObject(object):
         n_photons) as draw() produces when the same object is convolved with `Pixel(scale=scale)`
         when drawing onto an image with pixel scale `scale`.
 
-        Note that the drawShoot method is unavailable for Deconvolve objects or compound objects
+        Note that the drawShoot() method is unavailable for Deconvolve objects or compound objects
         (e.g. Add, Convolve) that include a Deconvolve.
 
         On return, the image will have a member `added_flux`, which will be set to be the total
@@ -1134,7 +1134,7 @@ class GSObject(object):
         @param normalization  Two options for the normalization:
                             "flux" or "f" means that the sum of the output pixels is normalized
                                to be equal to the total flux.  (Modulo any flux that falls off
-                               the edge of the image of course, and note the caveat in the draw
+                               the edge of the image of course, and note the caveat in the draw()
                                method documentation regarding the need to convolve with a pixel
                                response.)
                             "surface brightness" or "sb" means that the output pixels sample
