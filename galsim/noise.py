@@ -62,7 +62,7 @@ def addNoiseSNR(self, noise, snr, preserve_flux=False):
     @param noise        The noise (galsim.BaseNoise) model to use.
     @param snr          The desired signal-to-noise after the noise is applied.
     @param preserve_flux  Whether to preserve the flux of the object (True) or the variance of
-                        the nosie model (False) to achieve the desired SNR. [default: False]
+                        the noise model (False) to achieve the desired SNR. [default: False]
     """
     import numpy
     noise_var = noise.getVariance()
