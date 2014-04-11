@@ -138,11 +138,11 @@ class ContinuousIntegrator(ImageIntegrator):
     points equally spaced apart.
 
     __init__ parameters:
-    @parma rule            What integration rule to apply to the wavelength and monochromatic
+    @param rule            What integration rule to apply to the wavelength and monochromatic
                            surface brightness samples.  Options include:
                                galsim.integ.midpt  --  Use the midpoint integration rule
                                numpy.trapz         --  Use the trapezoidal integration rule
-    @parma N               Number of equally-wavelength-spaced monochromatic surface brightness
+    @param N               Number of equally-wavelength-spaced monochromatic surface brightness
                            samples to evaluate. [default: 250]
     @param use_endpoints   Whether to sample the endpoints `bandpass.blue_limit` and
                            `bandpass.red_limit`.  This should probably be True for a rule like
