@@ -65,7 +65,7 @@ AngleUnit.__getinitargs__ = AngleUnit_getinitargs
 
 
 def get_angle_unit(unit):
-    """Convert a string into the corresponding AngleUnit
+    """Convert a string into the corresponding AngleUnit.
     """
     unit = unit.strip().lower()
     if unit.startswith('rad') :
@@ -132,7 +132,7 @@ Operations
 ----------
 
 Allowed arithmetic with Angles include the following:
-(In the list below, x is a double, unit is a galsim.AngleUnit, and theta is a galsim.Angle)
+(In the list below, `x` is a double, `unit` is a galsim.AngleUnit, and `theta` is a galsim.Angle)
 
     >>> theta = x * unit
     >>> x = theta / unit
