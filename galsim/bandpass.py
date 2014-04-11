@@ -52,7 +52,7 @@ class Bandpass(object):
     the table is maintained.  Bandpasses defined as products of two other Bandpasses will define
     their `wave_list` as the union of multiplicand `wave_list`s, although limited to the range
     between the new product `blue_limit` and `red_limit`.  (This implementation detail may affect
-    the choice of integrator used to draw `ChromaticObject`s.)
+    the choice of integrator used to draw ChromaticObjects.)
 
     The input parameter, throughput, may be one of several possible forms:
     1. a regular python function (or an object that acts like a function)
@@ -64,7 +64,7 @@ class Bandpass(object):
 
     The argument of `throughput` will be the wavelength in either nanometers (default) or
     Angstroms depending on the value of `wave_type`.  The output should be the dimensionless
-    throughput at that wavelength.  (Note we use wave rather than lambda, since lambda is a
+    throughput at that wavelength.  (Note we use `wave` rather than `lambda`, since `lambda` is a
     python reserved word.)
 
     The argument `wave_type` specifies the units to assume for wavelength and must be one of
