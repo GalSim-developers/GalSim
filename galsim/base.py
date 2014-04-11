@@ -252,7 +252,7 @@ class GSObject(object):
         You can also multiply by an SED, which will create a ChromaticObject where the SED
         acts like a wavelength-dependent flux_ratio.
 
-        obj * sed is equivalend to galsim.Chromatic(obj, sed)
+        obj * sed is equivalent to galsim.Chromatic(obj, sed)
         """
         if isinstance(other, galsim.SED):
             return galsim.Chromatic(self, other)
