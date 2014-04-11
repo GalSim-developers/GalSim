@@ -124,6 +124,9 @@ class GSObject(object):
 
         sigma = gal.original.getSigma()     # This works.
 
+    No matter how many transformations are performed, the `original` attribute will contain the
+    _original_ object (not necessarily the most recent ancestor).
+
     Drawing Methods
     ---------------
 
