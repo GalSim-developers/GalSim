@@ -968,6 +968,15 @@ def _cf_periodicity_dilution_correction(cf_shape):
     return correction
 
 
+# Make a function for returning Noise correlations
+def _Image_getCorrelatedNoise(image):
+    """Returns a CorrelatedNoise instance by calculating the correlation function of image pixels.
+    """
+    return CorrelatedNoise(image)
+
+# Then add this Image method to the Image class
+galsim.Image.getCorrelatedNoise = _Image_getCorrelatedNoise
+
 # Free function for returning a COSMOS noise field correlation function
 def getCOSMOSNoise(file_name, rng=None, cosmos_scale=0.03, variance=0., x_interpolant=None,
                    gsparams=None, dx_cosmos=None):
