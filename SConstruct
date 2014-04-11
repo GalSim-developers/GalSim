@@ -1609,7 +1609,7 @@ def DoConfig(env):
     if env['MEM_TEST']:
         env.AppendUnique(CPPDEFINES=['MEM_TEST'])
 
-# In both bin and examplex, we will need a builder that can take a .py file,
+# In both bin and examples, we will need a builder that can take a .py file,
 # and add the correct shebang to the top of it, and also make it executable.
 # Rather than put this funciton in both SConscript files, we put it here and
 # add it as a builder to env.
