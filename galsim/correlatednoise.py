@@ -549,7 +549,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         use_stored = False
         for rootps_array, saved_wcs in self._rootps_store:
             if shape == rootps_array.shape:
-                if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.sacle == 1.) or 
+                if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or 
                      wcs == saved_wcs ):
                     use_stored = True
                     rootps = rootps_array
@@ -593,7 +593,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         use_stored = False
         for rootps_whitening_array, saved_wcs, var in self._rootps_whitening_store:
             if shape == rootps_whitening_array.shape:
-                if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.sacle == 1.) or 
+                if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or 
                      wcs == saved_wcs ):
                     use_stored = True
                     rootps_whitening = rootps_whitening_array
