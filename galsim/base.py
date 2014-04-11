@@ -147,8 +147,10 @@ class GSObject(object):
                     that is already inherent in the profile and will thus be present when you
                     draw the object.  The noise is propagated correctly through the various
                     transforming methods, as well as convolutions and flux rescalings.
-                    The typical use for this attribute is to use it to whiten the noise in
-                    the image after drawing.  See CorrelatedNoise for more details.
+                    Note that the `noise` attribute can be set directly by users even for GSObjects
+                    that do not naturally have one. The typical use for this attribute is to use it
+                    to whiten the noise in the image after drawing.  See CorrelatedNoise for more
+                    details.
 
     GSParams
     --------
