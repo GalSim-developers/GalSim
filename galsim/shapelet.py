@@ -41,8 +41,8 @@ class Shapelet(GSObject):
     information about this kind of decomposition.  For this class, we follow the notation of 
     Bernstein & Jarvis.
 
-    The decomposition is described by an overall scale length, sigma, and a vector of 
-    coefficients, b.  The b vector is indexed by two values, which can be either (p,q) or (N,m).
+    The decomposition is described by an overall scale length, `sigma`, and a vector of 
+    coefficients, `b`.  The `b` vector is indexed by two values, which can be either (p,q) or (N,m).
     In terms of the quantum solution of the 2-d harmonic oscillator, p and q are the number of 
     quanta with positive and negative angular momentum (respectively).  Then, N=p+q, m=p-q.
 
@@ -73,7 +73,7 @@ class Shapelet(GSObject):
         bvec = [ 1, 0, 0, 0.2, 0.3, -0.1 ]
         shapelet = galsim.Shapelet(sigma, order, bvec)
 
-    We use the following order for the coeffiecients, where the subscripts are in terms of p,q.
+    We use the following order for the coefficients, where the subscripts are in terms of p,q.
 
     [ b00  Re(b10)  Im(b10)  Re(b20)  Im(b20)  b11  Re(b30)  Im(b30)  Re(b21)  Im(b21) ... ]
 
@@ -86,8 +86,8 @@ class Shapelet(GSObject):
                         N=p+q included in the decomposition.
     @param bvec         The initial vector of coefficients.  [default: None, which means to use
                         all zeros]
-    @param gsparams     You may also specify a gsparams argument.  See the docstring for
-                        galsim.GSParams using help(galsim.GSParams) for more information about
+    @param gsparams     You may also specify a `gsparams` argument.  See the docstring for
+                        GSParams using help(galsim.GSParams) for more information about
                         this option.
 
     Fitting an Image
@@ -101,7 +101,7 @@ class Shapelet(GSObject):
     Attributes
     ----------
 
-    After construction, the sigma, order, and bvec are available as attributes.
+    After construction, the `sigma`, `order`, and `bvec` are available as attributes.
 
     Methods
     -------
@@ -111,7 +111,7 @@ class Shapelet(GSObject):
         b_pq = getPQ(p,q)         # Get b_pq.  Returned as tuple (re, im) (even if p==q).
         b_Nm = getNM(N,m)         # Get b_Nm.  Returned as tuple (re, im) (even if m=0).
 
-    Furthermore, there are specializations of the `rotate` and `expand` methods that let
+    Furthermore, there are specializations of the rotate() and expand() methods that let
     them be performed more efficiently than the usual GSObject implementation.
     """
 
@@ -221,22 +221,22 @@ class Shapelet(GSObject):
 
 
 def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams=None):
-    """Fit for a shapelet decomposition of a given image
+    """Fit for a shapelet decomposition of a given image.
 
-    The optional normalization parameter mirrors the parameter in the GSObject `draw` method.
-    If the fitted shapelet is drawn with the same normalization value as was used when it 
-    was fit, then the resulting image should be an approximate match to the original image.
+    The optional `normalization` parameter mirrors the parameter in the GSObject draw() method.  If
+    the fitted shapelet is drawn with the same `normalization` value as was used when it was fit,
+    then the resulting image should be an approximate match to the original image.
 
     For example:
 
         image = ...
         shapelet = galsim.FitShapelet(sigma, order, image, normalization='sb')
-        shapelet.draw(image=image2, dx=image.scale, normalization='sb')
+        shapelet.draw(image=image2, scale=image.scale, normalization='sb')
 
-    Then image2 and image should be as close to the same as possible for the given
-    sigma and order.  Increasing the order can improve the fit, as can having sigma match
-    the natural scale size of the image.  However, it should be noted that some images
-    are not well fit by a shapelet for any (reasonable) order.
+    Then `image2` and `image` should be as close to the same as possible for the given `sigma` and
+    `order`.  Increasing the order can improve the fit, as can having `sigma` match the natural
+    scale size of the image.  However, it should be noted that some images are not well fit by a
+    shapelet for any (reasonable) order.
 
     @param sigma            The scale size in the standard units (usually arcsec).
     @param order            The order of the shapelet decomposition.  This is the maximum
@@ -246,7 +246,7 @@ def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams
                             [default: image.bounds.trueCenter()]
     @param normalization    The normalization to assume for the image. 
                             [default: "flux"]
-    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
                             for details. [default: None]
 
     @returns the fitted Shapelet profile
