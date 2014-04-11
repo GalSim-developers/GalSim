@@ -45,7 +45,7 @@ class ChromaticObject(object):
     In this case, the newly created ChromaticObject will act nearly the same way the original
     GSObject works, except that it has access to the ChromaticObject methods described below;
     especially expand(), dilate() and shift().
-    
+
     @param gsobj  The GSObject to be chromaticized.
 
     Methods
@@ -68,7 +68,7 @@ class ChromaticObject(object):
     used to effect a variety of physical chromatic effects, such as differential chromatic
     refraction, chromatic seeing, and diffraction-limited wavelength-dependence.
 
-    The `draw` method draws the object as observed through a particular bandpass, so the 
+    The `draw` method draws the object as observed through a particular bandpass, so the
     function parameters are somewhat different.  See the docstring for `ChromaticObject.draw`
     for more details.
 
@@ -78,7 +78,7 @@ class ChromaticObject(object):
     # In general, `ChromaticObject` and subclasses should provide the following interface:
     # 1) Define an `evaluateAtWavelength` method, which returns a GSObject representing the
     #    profile at a particular wavelength.
-    # 2) Define a `withScaledFlux` method, which scales the flux at all wavelengths by a fixed 
+    # 2) Define a `withScaledFlux` method, which scales the flux at all wavelengths by a fixed
     #    multiplier.
     # 3) Initialize a `separable` attribute.  This marks whether (`separable = True`) or not
     #    (`separable = False`) the given chromatic profile can be factored into a spatial profile
@@ -92,9 +92,9 @@ class ChromaticObject(object):
     #    of the underlying chromaticized GSObject(s).  See `galsim.Chromatic` docstring for details
     #    concerning normalization.)
     # 5) Initialize a `wave_list` attribute, which specifies wavelengths at which the profile (or
-    #    the SED in the case of separable profiles) will be evaluated when drawing a 
-    #    ChromaticObject.  The type of `wave_list` should be a numpy array, and may be empty, in 
-    #    which case either the Bandpass object being drawn against, or the integrator being used 
+    #    the SED in the case of separable profiles) will be evaluated when drawing a
+    #    ChromaticObject.  The type of `wave_list` should be a numpy array, and may be empty, in
+    #    which case either the Bandpass object being drawn against, or the integrator being used
     #    will determine at which wavelengths to evaluate.
 
     # Additionally, instances of `ChromaticObject` and subclasses will usually have either an `obj`
@@ -105,7 +105,7 @@ class ChromaticObject(object):
         if not isinstance(obj, (galsim.GSObject, ChromaticObject)):
             raise TypeError("Can only directly instantiate ChromaticObject with a GSObject "+
                             "or ChromaticObject argument.")
-        # TODO: Once we convert to a fully immutable style (when the mutating methods are 
+        # TODO: Once we convert to a fully immutable style (when the mutating methods are
         #       eventually removed), we can get rid of this copy() call.  Probably lots of others
         #       as well...
         self.obj = obj.copy()
@@ -266,9 +266,9 @@ class ChromaticObject(object):
         It creates a new object that has the same profile as the original, but with the
         surface brightness at every location scaled by the given amount.
 
-        @param flux_ratio   The factor by which to scale the linear dimension of the object.  
-                            `flux_ratio` may be callable, in which case the argument should be 
-                            wavelength in nanometers and the return value the scale for that 
+        @param flux_ratio   The factor by which to scale the linear dimension of the object.
+                            `flux_ratio` may be callable, in which case the argument should be
+                            wavelength in nanometers and the return value the scale for that
                             wavelength.
 
         @returns a new object with the flux scaled appropriately.
@@ -330,7 +330,7 @@ class ChromaticObject(object):
 
     # Helper function
     def _applyMatrix(self, J):
-        if isinstance(self, ChromaticSum):     
+        if isinstance(self, ChromaticSum):
             # Don't wrap ChromaticSum object, easier to just wrap its arguments.
             return ChromaticSum([ obj._applyMatrix(J) for obj in self.objlist ])
         else:
@@ -360,8 +360,8 @@ class ChromaticObject(object):
         scale factor, while preserving surface brightness.
 
         This doesn't correspond to either of the normal operations one would typically want to
-        do to a galaxy.  The functions dilate() and magnify() are the more typical usage.  But this 
-        function is conceptually simple.  It rescales the linear dimension of the profile, while 
+        do to a galaxy.  The functions dilate() and magnify() are the more typical usage.  But this
+        function is conceptually simple.  It rescales the linear dimension of the profile, while
         preserving surface brightness.  As a result, the flux will necessarily change as well.
 
         See dilate() for a version that applies a linear scale factor while preserving flux.
@@ -369,8 +369,8 @@ class ChromaticObject(object):
         See magnify() for a version that applies a scale factor to the area while preserving surface
         brightness.
 
-        @param scale    The factor by which to scale the linear dimension of the object.  `scale` 
-                        may be callable, in which case the argument should be wavelength in 
+        @param scale    The factor by which to scale the linear dimension of the object.  `scale`
+                        may be callable, in which case the argument should be wavelength in
                         nanometers and the return value the scale for that wavelength.
 
         @returns the expanded object
@@ -382,7 +382,7 @@ class ChromaticObject(object):
         return self._applyMatrix(E)
 
     def dilate(self, scale):
-        """Dilate the linear size of the profile by the given (possibly wavelength-dependent) 
+        """Dilate the linear size of the profile by the given (possibly wavelength-dependent)
         scale, while preserving flux.
 
         e.g. `half_light_radius` <-- `half_light_radius * scale`
@@ -412,7 +412,7 @@ class ChromaticObject(object):
         Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
         function of wavelength as its argument (lensing is achromatic, after all!)  If you find a
         use case for this, however, please submit an issue to
-        
+
             https://github.com/GalSim-developers/GalSim/issues
 
         See dilate() for a version that applies a linear scale factor while preserving flux.
@@ -438,7 +438,7 @@ class ChromaticObject(object):
         (for doxygen documentation, see galsim.shear.Shear).
 
         The shear() method precisely preserves the area.  To include a lensing distortion with
-        the appropriate change in area, either use shear() with magnify(), or use lens(), which 
+        the appropriate change in area, either use shear() with magnify(), or use lens(), which
         combines both operations.
 
         @param shear    The shear to be applied. Or, as described above, you may instead supply
@@ -492,7 +492,7 @@ class ChromaticObject(object):
         Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
         function of wavelength as its argument. If you find a use case for this, however, please
         submit an issue to
-        
+
             https://github.com/GalSim-developers/GalSim/issues
 
         @param theta    Rotation angle (Angle object, +ve anticlockwise).
@@ -545,7 +545,7 @@ class ChromaticObject(object):
         @returns the shifted object.
 
         """
-        # This follows along the galsim.utilities.pos_args fucntion, but has some
+        # This follows along the galsim.utilities.pos_args function, but has some
         # extra bits to account for the possibility of dx,dy being functions.
         # First unpack args/kwargs
         if len(args) == 0:
@@ -765,13 +765,13 @@ class ChromaticSum(ChromaticObject):
     """Add ChromaticObjects and/or GSObjects together.  If a GSObject is part of a sum, then its
     SED is assumed to be flat with spectral density of 1 photon per nanometer.
 
-    This is the type returned from `galsim.Add(objects)` if any of the objects are a 
+    This is the type returned from `galsim.Add(objects)` if any of the objects are a
     ChromaticObject.
 
     Initialization
     --------------
 
-    Typically, you do not need to construct a `ChromaticSum` object explicitly.  Normally, you 
+    Typically, you do not need to construct a `ChromaticSum` object explicitly.  Normally, you
     would just use the + operator, which returns a `ChromaticSum` when used with chromatic objects:
 
         >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8) * bulge_sed
@@ -908,7 +908,7 @@ class ChromaticConvolution(ChromaticObject):
     """Convolve ChromaticObjects and/or GSObjects together.  GSObjects are treated as having flat
     spectra.
 
-    This is the type returned from `galsim.Convolve(objects)` if any of the objects are a 
+    This is the type returned from `galsim.Convolve(objects)` if any of the objects are a
     ChromaticObject.
 
     Initialization
@@ -920,7 +920,7 @@ class ChromaticConvolution(ChromaticObject):
         >>> psf = galsim.ChromaticAtmosphere(...)
         >>> pix = galsim.Pixel(scale)
         >>> final = galsim.Convolve([gal, psf, pix])
- 
+
     The objects to be convolved may be provided either as multiple unnamed arguments (e.g.
     `Convolve(psf, gal, pix)`) or as a list (e.g. `Convolve([psf, gal, pix])`).  Any number of
     objects may be provided using either syntax.  (Well, the list has to include at least 1 item.)
@@ -1299,4 +1299,3 @@ class ChromaticAutoCorrelation(ChromaticObject):
             return ChromaticAutoCorrelation( self.obj * math.sqrt(flux_ratio), **self.kwargs )
         else:
             return ChromaticObject(self).withScaledFlux(flux_ratio)
-

@@ -917,7 +917,7 @@ def test_separable_ChromaticSum():
     flux2 = img3.array.sum()
     np.testing.assert_array_almost_equal(
         flux2, 2.*flux, 5,
-        err_msg="ChromaticConvolution conataing separable ChromaticSum * 2 resulted in wrong flux.")
+        err_msg="ChromaticConvolution containing separable ChromaticSum * 2 resulted in wrong flux.")
 
     final2 = galsim.Convolve(gal * 2, pix, psf)
     img3 = final2.draw(bandpass, image=img3)
