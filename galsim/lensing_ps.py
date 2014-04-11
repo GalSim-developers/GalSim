@@ -1420,7 +1420,7 @@ class PowerSpectrum(object):
             # Then make the SBInterpolated image.
             sbii_g1 = galsim._galsim.SBInterpolatedImage(im_g1_new.image, xInterp=xinterp,
                                                          kInterp=kinterp)
-            sbii_g2 = galsim._galsim.SBInteroplatedImage(im_g2_new.image, xInterp=xinterp,
+            sbii_g2 = galsim._galsim.SBInterpolatedImage(im_g2_new.image, xInterp=xinterp,
                                                          kInterp=kinterp)
             sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu_new.image, xInterp=xinterp,
                                                          kInterp=kinterp)
@@ -1689,7 +1689,7 @@ def kappaKaiserSquires(g1, g2):
 
     @returns the tuple (kappa_E, kappa_B), as NumPy arrays.
 
-    The returned kappa_E represents the convergence field underlying the input shears
+    The returned kappa_E represents the convergence field underlying the input shears.
     The returned kappa_B is the convergence field generated were all shears rotated by 45 degrees
     prior to input. 
     """

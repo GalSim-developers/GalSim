@@ -31,7 +31,7 @@ change does not affect the most common uses of the function.
   only). (Issue #364)
 * Stopped importing everything from the `galsim._galsim` namespace into the 
   main `galsim` namespace.  Now only the classes and functions which we 
-  document and use in exmaples are imported into the `galsim` namespace.
+  document and use in examples are imported into the `galsim` namespace.
   The rest are considered implementation details, and are not guaranteed
   to maintain backward compatibility of syntax and/or functionality in future 
   versions. (Issue #511)

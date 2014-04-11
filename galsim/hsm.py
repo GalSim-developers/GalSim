@@ -293,7 +293,7 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
                             an unweighted sum over unmasked pixels), or 'FIT' (for
                             recomputation using the Gaussian + quartic fit). [default: 'FIT']
     @param guess_sig_gal    Optional argument with an initial guess for the Gaussian sigma of the
-                            galaxy (in pixels). [default: 5]
+                            galaxy (in pixels). [default: 5.]
     @param guess_sig_PSF    Optional argument with an initial guess for the Gaussian sigma of the
                             PSF (in pixels). [default: 3.]
     @param precision        The convergence criterion for the moments. [default: 1e-6]

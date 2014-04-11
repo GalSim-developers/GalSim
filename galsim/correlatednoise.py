@@ -436,7 +436,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @param variance     The desired point variance in the noise.
 
-        @returns a CorrelatedNoise object with teh new variance.
+        @returns a CorrelatedNoise object with the new variance.
         """
         variance_ratio = variance / self.getVariance()
         return self * variance_ratio

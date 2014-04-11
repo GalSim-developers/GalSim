@@ -510,7 +510,7 @@ class Image(object):
         """Set all pixel values to their inverse: x -> 1/x.
         """
         self.image.invertSelf()
-    
+
 
 # These are essentially aliases for the regular Image with the correct dtype
 def ImageS(*args, **kwargs):

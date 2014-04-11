@@ -147,8 +147,10 @@ class GSObject(object):
                     that is already inherent in the profile and will thus be present when you
                     draw the object.  The noise is propagated correctly through the various
                     transforming methods, as well as convolutions and flux rescalings.
-                    The typical use for this attribute is to use it to whiten the noise in
-                    the image after drawing.  See CorrelatedNoise for more details.
+                    Note that the `noise` attribute can be set directly by users even for GSObjects
+                    that do not naturally have one. The typical use for this attribute is to use it
+                    to whiten the noise in the image after drawing.  See CorrelatedNoise for more
+                    details.
 
     GSParams
     --------
@@ -252,7 +254,7 @@ class GSObject(object):
         You can also multiply by an SED, which will create a ChromaticObject where the SED
         acts like a wavelength-dependent flux_ratio.
 
-        obj * sed is equivalend to galsim.Chromatic(obj, sed)
+        obj * sed is equivalent to galsim.Chromatic(obj, sed)
         """
         if isinstance(other, galsim.SED):
             return galsim.Chromatic(self, other)
@@ -450,14 +452,14 @@ class GSObject(object):
 
         e.g. `half_light_radius` <-- `half_light_radius * scale`
 
-        This doesn't correspond to either of the normal operations one would typically want to
-        do to a galaxy.  The functions dilate and magnify are the more typical usage.  But this
+        This doesn't correspond to either of the normal operations one would typically want to do to
+        a galaxy.  The functions dilate() and magnify() are the more typical usage.  But this
         function is conceptually simple.  It rescales the linear dimension of the profile, while
         preserving surface brightness.  As a result, the flux will necessarily change as well.
 
-        See dilate for a version that applies a linear scale factor while preserving flux.
+        See dilate() for a version that applies a linear scale factor while preserving flux.
 
-        See magnify for a version that applies a scale factor to the area while preserving surface
+        See magnify() for a version that applies a scale factor to the area while preserving surface
         brightness.
 
         @param scale    The factor by which to scale the linear dimension of the object.
@@ -517,7 +519,7 @@ class GSObject(object):
 
         This process applies a lensing magnification mu, which scales the linear dimensions of the
         image by the factor sqrt(mu), i.e., `half_light_radius` <-- `half_light_radius * sqrt(mu)`
-        while increasing the flux by a factor of mu.  Thus, magnify preserves surface brightness.
+        while increasing the flux by a factor of mu.  Thus, magnify() preserves surface brightness.
 
         See dilate() for a version that applies a linear scale factor while preserving flux.
 
@@ -654,7 +656,7 @@ class GSObject(object):
         self.__class__ = new_obj.__class__
 
     def transform(self, dudx, dudy, dvdx, dvdy):
-        """Create a version of the current object with an aribtrary Jacobian matrix transformation
+        """Create a version of the current object with an arbitrary Jacobian matrix transformation
         applied to it.
 
         This applies a Jacobian matrix to the coordinate system in which this object
@@ -665,7 +667,7 @@ class GSObject(object):
             v = dvdx x + dvdy y
 
         That is, an arbitrary affine transform, but without the translation (which is
-        easily effected via shift).
+        easily effected via the shift() method).
 
         Note that this function is similar to expand in that it preserves surface brightness,
         not flux.  If you want to preserve flux, you should also do
@@ -925,7 +927,7 @@ class GSObject(object):
              add_to_image=False, use_true_center=True, offset=None, dx=None):
         """Draws an Image of the object, with bounds optionally set by an input Image.
 
-        The draw method is used to draw an Image of the GSObject, typically using Fourier space
+        The draw() method is used to draw an Image of the GSObject, typically using Fourier space
         convolution (or, for certain GSObjects that have hard edges, real-space convolution may be
         used), and using interpolation to carry out image transformations such as shearing.  This
         method can create a new Image or can draw into an existing one, depending on the choice of
@@ -946,10 +948,10 @@ class GSObject(object):
         not necessarily the case that a drawn image with 'normalization=flux' will have the sum of
         pixel values equal to flux.  That condition is guaranteed to be satisfied only if the
         profile has been convolved with a pixel response. If there was no convolution by a pixel
-        response, then the draw method is effectively sampling the surface brightness profile of the
-        GSObject at pixel centers without integrating over the flux within pixels, so for profiles
-        that are poorly sampled and/or varying rapidly (e.g., high n Sersic profiles), the sum of
-        pixel values might differ significantly from the GSObject flux.
+        response, then the draw() method is effectively sampling the surface brightness profile of
+        the GSObject at pixel centers without integrating over the flux within pixels, so for
+        profiles that are poorly sampled and/or varying rapidly (e.g., high n Sersic profiles), the
+        sum of pixel values might differ significantly from the GSObject flux.
 
         On return, the image will have a member `added_flux`, which will be set to be the total
         flux added to the image.  This may be useful as a sanity check that you have provided a
@@ -1001,7 +1003,7 @@ class GSObject(object):
         @param normalization  Two options for the normalization:
                             "flux" or "f" means that the sum of the output pixels is normalized
                                to be equal to the total flux.  (Modulo any flux that falls off
-                               the edge of the image of course, and note the caveat in the draw
+                               the edge of the image of course, and note the caveat in the draw()
                                method documentation regarding the need to convolve with a pixel
                                response.)
                             "surface brightness" or "sb" means that the output pixels sample
@@ -1098,7 +1100,7 @@ class GSObject(object):
         n_photons) as draw() produces when the same object is convolved with `Pixel(scale=scale)`
         when drawing onto an image with pixel scale `scale`.
 
-        Note that the drawShoot method is unavailable for Deconvolve objects or compound objects
+        Note that the drawShoot() method is unavailable for Deconvolve objects or compound objects
         (e.g. Add, Convolve) that include a Deconvolve.
 
         On return, the image will have a member `added_flux`, which will be set to be the total
@@ -1132,7 +1134,7 @@ class GSObject(object):
         @param normalization  Two options for the normalization:
                             "flux" or "f" means that the sum of the output pixels is normalized
                                to be equal to the total flux.  (Modulo any flux that falls off
-                               the edge of the image of course, and note the caveat in the draw
+                               the edge of the image of course, and note the caveat in the draw()
                                method documentation regarding the need to convolve with a pixel
                                response.)
                             "surface brightness" or "sb" means that the output pixels sample
@@ -1276,8 +1278,8 @@ class GSObject(object):
         """Draws the k-space Images (real and imaginary parts) of the object, with bounds
         optionally set by input Images.
 
-        Normalization is always such that re(0,0) = flux.  Unlike the real-space draw and
-        drawShoot functions, the (0,0) point will always be one of the actual pixel values.
+        Normalization is always such that re(0,0) = flux.  Unlike the real-space draw() and
+        drawShoot() functions, the (0,0) point will always be one of the actual pixel values.
         For even-sized images, it will be 1/2 pixel above and to the right of the true
         center of the image.
 
@@ -1714,8 +1716,8 @@ class Pixel(GSObject):
     """A class describing a pixel profile.  This is just a 2-d square top-hat function.
 
     This class is typically used to represent a Pixel response function, and therefore is only
-    needed when drawing images using Fourier transform or real-space convolution (with the draw
-    method), not when using photon-shooting (with the drawShoot method).
+    needed when drawing images using Fourier transform or real-space convolution (with the draw()
+    method), not when using photon-shooting (with the drawShoot() method).
 
     Initialization
     --------------

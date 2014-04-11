@@ -44,7 +44,7 @@ class ChromaticObject(object):
     A ChromaticObject can also be instantiated directly from an existing GSObject.
     In this case, the newly created ChromaticObject will act nearly the same way the original
     GSObject works, except that it has access to the ChromaticObject methods described below;
-    especially expand, dilate and shift.
+    especially expand(), dilate() and shift().
     
     @param gsobj  The GSObject to be chromaticized.
 
@@ -360,13 +360,13 @@ class ChromaticObject(object):
         scale factor, while preserving surface brightness.
 
         This doesn't correspond to either of the normal operations one would typically want to
-        do to a galaxy.  The functions dilate and magnify are the more typical usage.  But this 
+        do to a galaxy.  The functions dilate() and magnify() are the more typical usage.  But this 
         function is conceptually simple.  It rescales the linear dimension of the profile, while 
         preserving surface brightness.  As a result, the flux will necessarily change as well.
 
-        See dilate for a version that applies a linear scale factor while preserving flux.
+        See dilate() for a version that applies a linear scale factor while preserving flux.
 
-        See magnify for a version that applies a scale factor to the area while preserving surface
+        See magnify() for a version that applies a scale factor to the area while preserving surface
         brightness.
 
         @param scale    The factor by which to scale the linear dimension of the object.  `scale` 
@@ -409,13 +409,13 @@ class ChromaticObject(object):
         image by the factor sqrt(mu), i.e., `half_light_radius` <-- `half_light_radius * sqrt(mu)`
         while increasing the flux by a factor of mu.  Thus, magnify preserves surface brightness.
 
-        Note that, in contrast to dilate, expand, and shift, this method cannot accept a function
-        of wavelength as its argument (lensing is achromatic, after all!)  If you find a use case
-        for this, however, please submit an issue to 
+        Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
+        function of wavelength as its argument (lensing is achromatic, after all!)  If you find a
+        use case for this, however, please submit an issue to
         
             https://github.com/GalSim-developers/GalSim/issues
 
-        See dilate for a version that applies a linear scale factor while preserving flux.
+        See dilate() for a version that applies a linear scale factor while preserving flux.
 
         @param mu   The lensing magnification to apply.
 
@@ -428,9 +428,9 @@ class ChromaticObject(object):
         """Apply an area-preserving shear to this object, where arguments are either a galsim.Shear,
         or arguments that will be used to initialize one.
 
-        Note that, in contrast to dilate, expand, and shift, this method cannot accept a function 
-        of wavelength as its argument (lensing is achromatic, after all!)  If you find a use case 
-        for this, however, please submit an issue to
+        Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
+        function of wavelength as its argument (lensing is achromatic, after all!)  If you find a
+        use case for this, however, please submit an issue to
 
             https://github.com/GalSim-developers/GalSim/issues
 
@@ -470,9 +470,9 @@ class ChromaticObject(object):
         lensing by an NFW dark matter halo.  The magnification determines the rescaling factor for
         the object area and flux, preserving surface brightness.
 
-        Note that, in contrast to dilate, expand, and shift, this method cannot accept a function
-        of wavelength as its argument (lensing is achromatic, after all!)  If you find a use case
-        for this, however, please submit an issue to
+        Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
+        function of wavelength as its argument (lensing is achromatic, after all!)  If you find a
+        use case for this, however, please submit an issue to
 
             https://github.com/GalSim-developers/GalSim/issues
 
@@ -489,9 +489,9 @@ class ChromaticObject(object):
     def rotate(self, theta):
         """Rotate this object by an Angle theta.
 
-        Note that, in contrast to dilate, expand, and shift, this method cannot accept a function
-        of wavelength as its argument. If you find a use case for this, however, please submit an
-        issue to 
+        Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
+        function of wavelength as its argument. If you find a use case for this, however, please
+        submit an issue to
         
             https://github.com/GalSim-developers/GalSim/issues
 
@@ -511,9 +511,9 @@ class ChromaticObject(object):
 
         This works the same as GSObject.transform, so see that method's docstring for more details.
 
-        Note that, in contrast to dilate, expand, and shift, this method cannot accept a function
-        of wavelength as its argument.  If you find a use case for this, however, please submit an
-        issue to 
+        Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
+        function of wavelength as its argument.  If you find a use case for this, however, please
+        submit an issue to
 
             https://github.com/GalSim-developers/GalSim/issues
 
@@ -1247,7 +1247,7 @@ class ChromaticAutoConvolution(ChromaticObject):
         @returns the object with the new flux.
         """
         import math
-        if flux_ration >= 0.:
+        if flux_ratio >= 0.:
             return ChromaticAutoConvolution( self.obj * math.sqrt(flux_ratio), **self.kwargs )
         else:
             return ChromaticObject(self).withScaledFlux(flux_ratio)
@@ -1295,7 +1295,7 @@ class ChromaticAutoCorrelation(ChromaticObject):
         @returns the object with the new flux.
         """
         import math
-        if flux_ration >= 0.:
+        if flux_ratio >= 0.:
             return ChromaticAutoCorrelation( self.obj * math.sqrt(flux_ratio), **self.kwargs )
         else:
             return ChromaticObject(self).withScaledFlux(flux_ratio)
