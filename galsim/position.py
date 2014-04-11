@@ -44,12 +44,12 @@ for Class in (_galsim.PositionD, _galsim.PositionI):
     Initialization
     --------------
 
-    For the float-valued position class, example inits include:
+    For the float-valued position class, example initializations include:
 
         >>> pos = galsim.PositionD(x=0.5, y=-0.5)
         >>> pos = galsim.PositionD(0.5, -0.5)
 
-    And for the integer-valued position class, example inits include:
+    And for the integer-valued position class, example initializations include:
 
         >>> pos = galsim.PositionI(x=45, y=13)
         >>> pos = galsim.PositionI(45, 13)
