@@ -416,7 +416,11 @@ namespace galsim {
         {
             if (!(variance >= 0.)) 
                 throw std::runtime_error("Cannot setVariance to < 0");
-            scaleVariance(variance / getVariance());
+            double var = getVariance();
+            if (var > 0.)
+                scaleVariance(variance / getVariance());
+            else
+                _sky_level = variance;
         }
 
         /**
