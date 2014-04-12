@@ -100,6 +100,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
                  wcs=None, origin=None):
         import astropy.wcs
         import scipy # We don't need this yet, but we want it to fail now if it's not available.
+        import scipy.optimize # Check this too, since it's actually what we need from scipy.
 
         self._tag = None # Write something useful here (see below). This is just used for the repr.
 
