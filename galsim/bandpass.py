@@ -85,7 +85,8 @@ class Bandpass(object):
                          throughput is a function.
 
     """
-    def __init__(self, throughput, wave_type='nm', blue_limit=None, red_limit=None, _wave_list=None):
+    def __init__(self, throughput, wave_type='nm',
+                 blue_limit=None, red_limit=None, _wave_list=None):
         # Note that `_wave_list` acts as a private construction variable that overrides the way that
         # `wave_list` is normally constructed (see `Bandpass.__mul__` below)
 
@@ -97,13 +98,20 @@ class Bandpass(object):
                 tp = galsim.LookupTable(file=tp, interpolant='linear')
             else:
                 tp = eval('lambda wave : ' + tp)
-                # Just evaluate the function somewhere to make sure it is valid before continuing on.
+                # Evaluate the function somewhere to make sure it is valid before continuing on.
                 if red_limit is not None:
                     tp(red_limit)
                 elif blue_limit is not None:
                     tp(blue_limit)
                 else:
-                    tp(700)
+                    # If neither `blue_limit` nor `red_limit` is defined, then the Bandpass should
+                    # be able to be evaluated at any wavelength, so check.
+                    try:
+                        tp(700)
+                    except:
+                        raise ValueError(
+                            "Bandpass throughput string initialization '{0}' failed."
+                            .format(throughput))
 
         # Figure out wavelength type
         if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
@@ -111,17 +119,21 @@ class Bandpass(object):
         elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
             wave_factor = 10.0
         else:
-            raise ValueError("Unknown wave_type `{0}` in SED.__init__".format(wave_type))
+            raise ValueError("Unknown wave_type '{0}' in Bandpass.__init__".format(wave_type))
 
         # Assign blue and red limits of bandpass
         if blue_limit is None:
             if not isinstance(tp, galsim.LookupTable):
-                raise AttributeError("blue_limit is required if throughput is not a LookupTable.")
+                raise AttributeError(
+                    "Bandpass.blue_limit is required if Bandpass.throughput is not a LookupTable.")
             blue_limit = tp.x_min
         if red_limit is None:
             if not isinstance(tp, galsim.LookupTable):
-                raise AttributeError("red_limit is required if throughput is not a LookupTable.")
+                raise AttributeError(
+                    "Bandpass red_limit is required if Bandpass.throughput is not a LookupTable.")
             red_limit = tp.x_max
+        if blue_limit > red_limit:
+            raise ValueError("Bandpass.blue_limit must be less than Bandpass.red_limit")
         self.blue_limit = blue_limit / wave_factor
         self.red_limit = red_limit / wave_factor
 
@@ -130,11 +142,11 @@ class Bandpass(object):
             self.wave_list = numpy.array(tp.getArgs())/wave_factor
             # Make sure that blue_limit and red_limit are within LookupTable region of support.
             if self.blue_limit < (tp.x_min/wave_factor):
-                raise ValueError("Cannot set Bandpass `blue_limit` to be less than"
-                                 + "`LookupTable.x_min`")
+                raise ValueError("Cannot set Bandpass.blue_limit to be less than throughput "
+                                 + "LookupTable.x_min")
             if self.red_limit > (tp.x_max/wave_factor):
-                raise ValueError("Cannot set Bandpass `red_limit` to be greater than"
-                                 + "`LookupTable.x_max`")
+                raise ValueError("Cannot set Bandpass.red_limit to be greater than throughput "
+                                 + "LookupTable.x_max")
             # Make sure that blue_limit and red_limit are part of wave_list.
             if self.blue_limit not in self.wave_list:
                 numpy.insert(self.wave_list, 0, self.blue_limit)
@@ -308,8 +320,9 @@ class Bandpass(object):
             return Bandpass(galsim.LookupTable(wave[w], tp[w], interpolant='linear'))
         else:
             if relative_throughput is not None:
-                raise ValueError("relative_throughput only available if Bandpass is specified as"
-                                 +" a galsim.LookupTable")
+                raise ValueError(
+                    "Can only truncate with `relative_throughput` if Bandpass.throughput is "
+                    + "a LookupTable")
             return Bandpass(self.func, blue_limit=blue_limit, red_limit=red_limit)
 
     def thin(self, rel_err=1.e-4, preserve_range=False):
