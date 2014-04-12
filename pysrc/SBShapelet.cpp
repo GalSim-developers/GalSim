@@ -101,8 +101,8 @@ namespace galsim {
                 .enable_pickling()
                 ;
 
-            bp::def("LVectorSize", &PQIndex::size, bp::arg("order"), 
-                    "Calculate the size of a bvec for a given order");
+            bp::def("ShapeletSize", &PQIndex::size, bp::arg("order"), 
+                    "Calculate the size of a shapelet vector for a given order");
 
         }
     };

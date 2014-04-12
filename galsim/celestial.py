@@ -91,7 +91,6 @@ class CelestialCoord(object):
 
     def distanceTo(self, other):
         """Returns the great circle distance between this coord and another one.
-
         The return value is a galsim.Angle object
         """
         # The easiest way to do this in a way that is stable for small separations
@@ -160,7 +159,7 @@ class CelestialCoord(object):
         There are currently three options for the projection, which you can specify with the
         optional `projection` keyword argument:
 
-            'lambert' (the default) uses a Lambert azimuthal projection, which preserves
+            'lambert' [default] uses a Lambert azimuthal projection, which preserves
                     area, but not angles.  For more information, see
                     http://mathworld.wolfram.com/LambertAzimuthalEqual-AreaProjection.html
             'stereographic' uses a stereographic proejection, which preserves angles, but
@@ -176,7 +175,7 @@ class CelestialCoord(object):
 
         The distance or angle errors increase with distance from the projection point of course.
 
-        Returns (u,v) in arcsec as a PositionD object.
+        @returns (u,v) in arcsec as a PositionD object.
         """
         if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
             raise ValueError('Unknown projection ' + projection)
@@ -366,7 +365,7 @@ class CelestialCoord(object):
         J = ( dra/du cos(dec)  dra/dv cos(dec) )
             (    ddec/du          ddec/dv      )
 
-        The matrix is returned as a tuple (J00, J01, J10, J11)
+        @returns the matrix as a tuple (J00, J01, J10, J11)
         """
         if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
             raise ValueError('Unknown projection ' + projection)
@@ -498,12 +497,11 @@ class CelestialCoord(object):
     def galactic(self, epoch=2000.):
         """Get the longitude and latitude in galactic coordinates corresponding to this position.
 
-        It returns the longitude and latitude as a tuple (el, b).  They are each given as 
-        galsim.Angle instances.
-
         The formulae are implemented in terms of the 1950 coordinates, so we need to
         precess from the current epoch to 1950.  The current epoch is assumed to be 2000
         by default, but you may also specify a different value with the epoch parameter.
+
+        @returns the longitude and latitude as a tuple (el, b), given as galsim.Angle instances.
         """
         # cos(b) cos(el-33) = cos(dec) cos(ra-282.25)
         # cos(b) sin(el-33) = sin(dec) sin(62.6) + cos(dec) sin(ra-282.25) cos(62.6)

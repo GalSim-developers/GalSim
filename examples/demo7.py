@@ -38,7 +38,7 @@ New features introduced in this demo:
 - obj = galsim.Sersic(n, half_light_radius, trunc)
 - psf = galsim.OpticalPSF(..., aberrations=aberrations, ...)
 - obj2 = obj.copy()
-- obj.applyDilation(scale)
+- obj = obj.dilate(scale)
 - image.scale = pixel_scale
 - obj.draw(image)  -- i.e. taking the scale from the image rather than a scale= argument
 - obj.drawShoot(image, max_extra_noise, rng)
@@ -220,15 +220,15 @@ def main(argv):
 
                 # Generate random variates:
                 flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
-                gal1.setFlux(flux)
+                gal1 = gal1.withFlux(flux)
 
                 hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
-                gal1.applyDilation(hlr)
+                gal1 = gal1.dilate(hlr)
 
                 beta_ellip = rng() * 2*math.pi * galsim.radians
                 ellip = rng() * (gal_e_max-gal_e_min) + gal_e_min
                 gal_shape = galsim.Shear(e=ellip, beta=beta_ellip)
-                gal1.applyShear(gal_shape)
+                gal1 = gal1.shear(gal_shape)
 
                 # Build the final object by convolving the galaxy, PSF and pixel response.
                 final = galsim.Convolve([psf, pix, gal1])

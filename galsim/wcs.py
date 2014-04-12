@@ -82,7 +82,7 @@ class BaseWCS(object):
     2. UniformWCS classes have a constant pixel size and shape, but they have an arbitrary origin 
        in both image coordinates and world coordinates.  A LocalWCS class can be turned into a 
        non-local UniformWCS class when an image has its bounds changed (e.g. by the commands 
-       `setCenter`, `setOrigin` or `shift`.
+       `withCenter`, `withOrigin` or `shift`.
        
        Currently we define the following non-local, UniformWCS classes:
 
@@ -286,7 +286,8 @@ class BaseWCS(object):
 
         @param image_pos    The image coordinate position (for non-uniform WCS types)
         @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @returns            The pixel area in arcsec**2
+
+        @returns the pixel area in arcsec**2.
         """
         return self.local(image_pos, world_pos)._pixelArea()
 
@@ -302,7 +303,8 @@ class BaseWCS(object):
 
         @param image_pos    The image coordinate position (for non-uniform WCS types)
         @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @returns            The minimum pixel area in any direction in arcsec
+
+        @returns the minimum pixel area in any direction in arcsec.
         """
         return self.local(image_pos, world_pos)._minScale()
 
@@ -318,7 +320,8 @@ class BaseWCS(object):
 
         @param image_pos    The image coordinate position (for non-uniform WCS types)
         @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @returns            The maximum pixel area in any direction in arcsec
+
+        @returns the maximum pixel area in any direction in arcsec.
         """
         return self.local(image_pos, world_pos)._maxScale()
 
@@ -360,7 +363,8 @@ class BaseWCS(object):
 
         @param image_pos    The image coordinate position (for non-uniform WCS types)
         @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @returns local_wcs  A LocalWCS
+
+        @returns a LocalWCS instance.
         """
         if image_pos and world_pos:
             raise TypeError("Only one of image_pos or world_pos may be provided")
@@ -384,7 +388,8 @@ class BaseWCS(object):
 
         @param image_pos    The image coordinate position (for non-uniform WCS types)
         @param world_pos    The world coordinate position (for non-uniform WCS types)
-        @returns local_wcs  A JacobianWCS
+
+        @returns a JacobianWCS instance.
         """
         return self.local(image_pos, world_pos)._toJacobian()
 
@@ -403,13 +408,13 @@ class BaseWCS(object):
         `wcs.toWorld(image_pos)`.  In fact, `wcs.affine(image_pos)` is really just
         shorthand for:
         
-                wcs.jacobian(image_pos).setOrigin(image_pos, wcs.toWorld(image_pos))
+                wcs.jacobian(image_pos).withOrigin(image_pos, wcs.toWorld(image_pos))
 
         For celestial coordinate systems, there is no well-defined choice for the 
         origin of the Euclidean world coordinate system.  So we just take (u,v) = (0,0)
         at the given position.  So, `wcs.affine(image_pos)` is equivalent to:
 
-                wcs.jacobian(image_pos).setOrigin(image_pos)
+                wcs.jacobian(image_pos).withOrigin(image_pos)
 
         You can use the returned AffineTransform to access the relevant values of the 2x2 
         Jacobian matrix and the origins directly:
@@ -425,7 +430,8 @@ class BaseWCS(object):
 
         @param image_pos        The image coordinate position (for non-uniform WCS types)
         @param world_pos        The world coordinate position (for non-uniform WCS types)
-        @returns affine_wcs     An AffineTransform
+
+        @returns an AffineTransform instance
         """
         jac = self.jacobian(image_pos, world_pos)
         # That call checked that only one of image_pos or world_pos is provided.
@@ -436,13 +442,13 @@ class BaseWCS(object):
             image_pos = galsim.PositionD(0,0)
 
         if self.isCelestial():
-            return jac.setOrigin(image_pos)
+            return jac.withOrigin(image_pos)
         else:
             if world_pos is None:
                 world_pos = self.toWorld(image_pos)
-            return jac.setOrigin(image_pos, world_pos)
+            return jac.withOrigin(image_pos, world_pos)
 
-    def setOrigin(self, origin, world_origin=None):
+    def withOrigin(self, origin, world_origin=None):
         """Recenter the current WCS function at a new origin location, returning the new WCS.
 
         This function creates a new WCS instance (always a non-local WCS) that treats
@@ -453,7 +459,7 @@ class BaseWCS(object):
         So, for example, to set a WCS that has a constant pixel size with the world coordinates
         centered at the center of an image, you could write:
 
-                wcs = galsim.PixelScale(scale).setOrigin(im.center())
+                wcs = galsim.PixelScale(scale).withOrigin(im.center())
 
         This is equivalent to the following:
 
@@ -464,7 +470,7 @@ class BaseWCS(object):
         example should work regardless of what kind of WCS this is:
 
                 world_pos1 = wcs.toWorld(PositionD(0,0))
-                wcs2 = wcs.setOrigin(new_origin)
+                wcs2 = wcs.withOrigin(new_origin)
                 world_pos2 = wcs2.toWorld(new_origin)
                 # world_pos1 should be equal to world_pos2
 
@@ -472,20 +478,21 @@ class BaseWCS(object):
         also provide a world_origin argument which defines what (u,v) position you want to 
         correspond to the new origin.  Continuing the previous example:
 
-                wcs3 = wcs.setOrigin(new_origin, new_world_origin)
+                wcs3 = wcs.withOrigin(new_origin, new_world_origin)
                 world_pos3 = wcs3.toWorld(new_origin)
                 # world_pos3 should be equal to new_world_origin
 
         @param origin        The image coordinate position to use as the origin.
         @param world_origin  The world coordinate position to use as the origin.  Only valid if
-                             wcs.isCelestial() == False. [ Default `world_origin=None` ]
-        @returns wcs         The new recentered WCS
+                             wcs.isCelestial() == False. [default: None]
+
+        @returns the new recentered WCS
         """
         if isinstance(origin, galsim.PositionI):
             origin = galsim.PositionD(origin.x, origin.y)
         elif not isinstance(origin, galsim.PositionD):
             raise TypeError("origin must be a PositionD or PositionI argument")
-        return self._setOrigin(origin, world_origin)
+        return self._withOrigin(origin, world_origin)
 
     def writeToFitsHeader(self, header, bounds):
         """Write this WCS function to a FITS header.
@@ -529,7 +536,7 @@ class BaseWCS(object):
             # in if necessary.
             delta = galsim.PositionI(1-bounds.xmin, 1-bounds.ymin)
             bounds = bounds.shift(delta)
-            wcs = self.setOrigin(delta)
+            wcs = self.withOrigin(delta)
         else:
             wcs = self
 
@@ -583,7 +590,7 @@ def readFromFitsHeader(header):
 
     @param header           The fits header to write the data to.
 
-    @returns wcs, origin    The wcs and the image origin.
+    @returns a tuple (wcs, origin) of the wcs from the header and the image origin.
     """
     if not isinstance(header, galsim.fits.FitsHeader):
         header = galsim.fits.FitsHeader(header)
@@ -607,7 +614,7 @@ def readFromFitsHeader(header):
         # ds9 always assumes the image has an origin at (1,1), so convert back to actual
         # xmin, ymin if necessary.
         delta = galsim.PositionI(xmin-1, ymin-1)
-        wcs = wcs.setOrigin(delta)
+        wcs = wcs.withOrigin(delta)
 
     return wcs, origin
 
@@ -660,8 +667,8 @@ class EuclideanWCS(BaseWCS):
 
     # Each subclass has a function _newOrigin, which just calls the constructor with new
     # values for origin and world_origin.  This function figures out what those values 
-    # should be to match the desired behavior of setOrigin.
-    def _setOrigin(self, origin, world_origin):
+    # should be to match the desired behavior of withOrigin.
+    def _withOrigin(self, origin, world_origin):
         # Current u,v are:
         #     u = ufunc(x-x0, y-y0) + u0
         #     v = vfunc(x-x0, y-y0) + v0
@@ -878,7 +885,7 @@ class CelestialWCS(BaseWCS):
     def y0(self): return self.origin.y
 
     # This is a bit simpler than the EuclideanWCS version, since there is no world_origin.
-    def _setOrigin(self, origin, world_origin):
+    def _withOrigin(self, origin, world_origin):
         # We want the new wcs to have wcs.toWorld(x2,y2) match the current wcs.toWorld(0,0).
         # So,
         #
@@ -1069,10 +1076,10 @@ class PixelScale(LocalWCS):
         return v / self._scale
 
     def _profileToWorld(self, image_profile):
-        return image_profile.createDilated(self._scale)
+        return image_profile.dilate(self._scale)
 
     def _profileToImage(self, world_profile):
-        return world_profile.createDilated(1./self._scale)
+        return world_profile.dilate(1./self._scale)
 
     def _pixelArea(self):
         return self._scale**2
@@ -1186,14 +1193,10 @@ class ShearWCS(LocalWCS):
         return y;
 
     def _profileToWorld(self, image_profile):
-        world_profile = image_profile.createDilated(self._scale)
-        world_profile.applyShear(-self.shear)
-        return world_profile
+        return image_profile.dilate(self._scale).shear(-self.shear)
 
     def _profileToImage(self, world_profile):
-        image_profile = world_profile.createDilated(1./self._scale)
-        image_profile.applyShear(self.shear)
-        return image_profile
+        return world_profile.dilate(1./self._scale).shear(self.shear)
 
     def _pixelArea(self):
         return self._scale**2
@@ -1322,14 +1325,14 @@ class JacobianWCS(LocalWCS):
         return (-self._dvdx * u + self._dudx * v)/self._det
 
     def _profileToWorld(self, image_profile):
-        ret = image_profile.createTransformed(self._dudx, self._dudy, self._dvdx, self._dvdy)
-        ret.scaleFlux(1./self._pixelArea())
+        ret = image_profile.transform(self._dudx, self._dudy, self._dvdx, self._dvdy)
+        ret /= self._pixelArea()
         return ret
 
     def _profileToImage(self, world_profile):
-        ret = world_profile.createTransformed(self._dvdy/self._det, -self._dudy/self._det,
-                                              -self._dvdx/self._det, self._dudx/self._det)
-        ret.scaleFlux(self._pixelArea())
+        ret = world_profile.transform(self._dvdy/self._det, -self._dudy/self._det,
+                                      -self._dvdx/self._det, self._dudx/self._det)
+        ret *= self._pixelArea()
         return ret
 
     def _pixelArea(self):
@@ -1365,13 +1368,11 @@ class JacobianWCS(LocalWCS):
 
         If there is no flip, then this means that the effect of 
         
-                prof.applyTransformation(dudx, dudy, dvdx, dvdy)
+                prof.transform(dudx, dudy, dvdx, dvdy)
 
         is equivalent to 
 
-                prof.applyRotation(theta)
-                prof.applyShear(shear)
-                prof.applyExpansion(scale)
+                prof.rotate(theta).shear(shear).expand(scale)
 
         in that order.  (Rotation and shear do not commute.)
 
@@ -1519,13 +1520,11 @@ class OffsetWCS(UniformWCS):
 
     @param scale          The pixel scale, typically in units of arcsec/pixel.
     @param origin         Optional origin position for the image coordinate system.
-                          If provided, it should be a PostionD or PositionI.
-                          [ Default: `origin = None`, which internally sets
-                          `origin = galsim.PositionD(0., 0.)` ]
+                          If provided, it should be a PostionD or PositionI. 
+                          [default: galsim.PositionD(0., 0.)]
     @param world_origin   Optional origin position for the world coordinate system.
-                          If provided, it should be a PostionD.
-                          [ Default: `world_origin = None`, which internally sets
-                          `world_origin = galsim.PositionD(0., 0.)` ]
+                          If provided, it should be a PostionD. 
+                          [default: galsim.PositionD(0., 0.)]
     """
     _req_params = { "scale" : float }
     _opt_params = { "origin" : galsim.PositionD, "world_origin": galsim.PositionD }
@@ -1606,12 +1605,10 @@ class OffsetShearWCS(UniformWCS):
     @param shear          The shear, which should be a galsim.Shear instance.
     @param origin         Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI.
-                          [ Default: `origin = None`, which internally sets
-                          `origin = galsim.PositionD(0., 0.)` ]
+                          [default: galsim.PositionD(0., 0.)]
     @param world_origin   Optional origin position for the world coordinate system.
                           If provided, it should be a PostionD.
-                          [ Default: `world_origin = None`, which internally sets
-                          `world_origin = galsim.PositionD(0., 0.)` ]
+                          [default: galsim.PositionD(0., 0.)]
     """
     _req_params = { "scale" : float, "shear" : galsim.Shear }
     _opt_params = { "origin" : galsim.PositionD, "world_origin": galsim.PositionD }
@@ -1705,12 +1702,10 @@ class AffineTransform(UniformWCS):
     @param dvdy           dv/dy
     @param origin         Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI.
-                          [ Default: `origin = None`, which internally sets
-                          `origin = galsim.PositionD(0., 0.)` ]
+                          [default: galsim.PositionD(0., 0.)]
     @param world_origin   Optional origin position for the world coordinate system.
                           If provided, it should be a PostionD.
-                          [ Default: `world_origin = None`, which internally sets
-                          `world_origin = galsim.PositionD(0., 0.)` ]
+                          [default: galsim.PositionD(0., 0.)]
     """
     _req_params = { "dudx" : float, "dudy" : float, "dvdx" : float, "dvdy" : float }
     _opt_params = { "origin" : galsim.PositionD, "world_origin": galsim.PositionD }
@@ -1984,12 +1979,10 @@ class UVFunction(EuclideanWCS):
     @param yfunc          The function y(u,v) (optional)
     @param origin         Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI.
-                          [ Default: `origin = None`, which internally sets
-                          `origin = galsim.PositionD(0., 0.)` ]
+                          [default: galsim.PositionD(0., 0.)]
     @param world_origin   Optional origin position for the world coordinate system.
                           If provided, it should be a PostionD.
-                          [ Default: `world_origin = None`, which internally sets
-                          `world_origin = galsim.PositionD(0., 0.)` ]
+                          [default: galsim.PositionD(0., 0.)]
     """
     _req_params = { "ufunc" : str, "vfunc" : str }
     _opt_params = { "xfunc" : str, "yfunc" : str,
@@ -2154,8 +2147,7 @@ class RaDecFunction(CelestialWCS):
     @param radec_func     A function radec(x,y) returning (ra, dec) in radians.
     @param origin         Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI.
-                          [ Default: `origin = None`, which internally sets
-                          `origin = galsim.PositionD(0., 0.)` ]
+                          [default: galsim.PositionD(0., 0.)]
     """
     _req_params = { "radec_func" : str }
     _opt_params = { "origin" : galsim.PositionD }

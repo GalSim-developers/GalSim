@@ -25,6 +25,14 @@
 \usepackage{latexsym,amssymb,hyperref}
 % AMS-LaTeX package for e.g. subequations
 \usepackage{amsmath}
+\usepackage{color}
+\usepackage{tocloft}
+
+% cf. http://tex.stackexchange.com/questions/13423/how-to-change-the-color-of-href-links-for-real
+\hypersetup{colorlinks,linkcolor=,urlcolor=blue}
+
+% Make the TOC take up a bit less space than the default (approx double spacing)
+\setlength\cftparskip{0pt}
 
 %=====================================================================
 % FRONT MATTER
@@ -54,8 +62,8 @@
 
 The GalSim package provides a number of Python classes and methods for
 simulating astronomical images.  We assume GalSim is installed; see the
-\href{https://github.com/GalSim-developers/GalSim/wiki}{\emph{GalSim
-    Wiki}} or the file \texttt{INSTALL.md} in the base directory \texttt{/your/path/to/GalSim/}
+\href{https://github.com/GalSim-developers/GalSim/wiki}{GalSim
+    Wiki}\footnote{Note: links to various web pages are colored blue in this document to help you find more information.} or the file \texttt{INSTALL.md} in the base directory \texttt{/your/path/to/GalSim/}
 for instructions.  The package is imported into Python with
 
 \texttt{>>> import galsim}
@@ -226,9 +234,7 @@ Requires one of the
   An example catalog of 100 real galaxies is in the repository itself; a set of $\sim$26\,000 real galaxy
   images, with original PSFs, can be downloaded from the
   \emph{RealGalaxy Data Download Page} on the
-  \emph{GalSim Wiki}: \newline
-  \href{https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy\%20Data\%20Download\%20Page}{\emph{https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy\%20Data\%20Download\%20Page}}. \newline
-For information
+  \href{https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy\%20Data\%20Download\%20Page}{GalSim Wiki}. For information
     about other optional parameters, see the documentation for this object.}
 \item[$\circ$]
   \texttt{galsim.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_add.html}{\texttt{Sum}}\texttt{( [ list of objects ] )}
@@ -288,15 +294,6 @@ example,
 
 {\tt >>> obj = galsim.Sersic(n=3.5, half\_light\_radius=1.743)}.
 
-One important fact about \texttt{GSObject}s is that all of the
-methods which change the properties of the astronomical object
-represented by the instance (e.g., \texttt{setFlux()},
-  \texttt{applyShear()} etc.) also make fundamental changes to the
-  instance itself.  In most cases this will mean that special methods
-  available to individual classes described in Section
-  \ref{sect:gsobjectclasses}, such as \texttt{getFWHM()} for the
-  \texttt{Moffat}, will be unavailable.
-
 Once again, for more information regarding each \texttt{galsim.GSObject}~method,
 the Python docstring is available
 
@@ -320,57 +317,52 @@ instance are:
   \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a662d8ce421ecd90080bdcaaf6890aed8}{\texttt{getFlux}}\texttt{()}
   \newline {get the flux of the \texttt{GSObject}.}
 \item[$\circ$]
-  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#af4193645a9af52e7d54a044cafec8ab9}{\texttt{scaleFlux}}\texttt{(flux\_ratio)}
-  \newline {multiply the flux of the \texttt{GSObject}~by \texttt{flux\_ratio}.}
+  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#af4193645a9af52e7d54a044cafec8ab9}{\texttt{withScaledFlux}}\texttt{(flux\_ratio)}
+  \newline {return a version of the \texttt{GSObject} with the flux scaled by \texttt{flux\_ratio}.}
 \item[$\circ$]
-  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a1993652591ddc802b734186391b28894}{\texttt{setFlux}}\texttt{(flux)}
-    \newline {set the flux of the \texttt{GSObject}~to \texttt{flux}.}
+  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a1993652591ddc802b734186391b28894}{\texttt{withFlux}}\texttt{(flux)}
+    \newline {return a version of the \texttt{GSObject} with the flux set to \texttt{flux}.}
 \item[$\circ$]
-  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ad491a1276fda07b148c6466d5dbd07b1}{\texttt{applyTransformation}}\texttt{(ellipse)}
-\newline {apply an \texttt{Ellipse} transformation represented by
-  \texttt{ellipse} to the \texttt{GSObject} (see \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1ellipse_1_1_ellipse.html}{\texttt{Ellipse}}; Section~\ref{sect:shears}).}
-\item[$\circ$]
-  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a4301c73bbc1491ebb170e64c509cadd5}{\texttt{applyDilation}}\texttt{(scale)}
-  \newline {change of the linear size of the \texttt{GSObject}~by a
+  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a4301c73bbc1491ebb170e64c509cadd5}{\texttt{dilate}}\texttt{(scale)}
+  \newline {return a version of this \texttt{GSObject} with the linear size dilated by a
     factor \texttt{scale}, conserving flux.}
 \item[$\circ$]
-  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a9d13b0238057f6d5d01f2681d91c09b0}{\texttt{applyMagnification}}\texttt{(scale)}
-  \newline {dilate linear size by \texttt{scale} and multiply total flux by
-  \texttt{scale}$^2$, conserving surface brightness.}
+  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a9d13b0238057f6d5d01f2681d91c09b0}{\texttt{magnify}}\texttt{(mu)}
+  \newline {return a version of this \texttt{GSObject} with the area magnified by a
+    factor \texttt{mu}, conserving surface brightness.}
 \item[$\circ$]
-  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a85cc0094dcf470cfbff93d9830ab80bd}{\texttt{applyShear}}\texttt{(\dots)}
-  \newline {apply a shear to the \texttt{GSObject}, handling a number of different
-  input conventions (see also
+  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a85cc0094dcf470cfbff93d9830ab80bd}{\texttt{shear}}\texttt{(\dots)}
+  \newline {return a version of this \texttt{GSObject} that has been sheared by some amount.  This method can handle a number of different
+  input conventions for the shear (see also
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1shear_1_1_shear.html}{\texttt{Shear}};
   Section~\ref{sect:shears}).  Commonly-used input conventions
   (supplied as keyword arguments, default values zero):
    \begin{itemize}
-  \item \texttt{obj.applyShear(g1=g1, g2=g2)} \\
+  \item \texttt{obj.shear(g1=g1, g2=g2)} \\
     apply the first (\texttt{g1}) and second (\texttt{g2}) component
     of a shear defined so that $|g| = (a - b) / (a + b)$ where $a$ and
     $b$ are the semi-major and semi-minor axes of an ellipse.
-   \item \texttt{obj.applyShear(e1=e1, e2=e2)} \\
+   \item \texttt{obj.shear(e1=e1, e2=e2)} \\
    apply the first (\texttt{e1}) and second (\texttt{e2}) component
     of a shear defined so that $|e| = (a^2 - b^2) / (a^2 + b^2)$ where $a$ and
     $b$ are the semi-major and semi-minor axes of an ellipse.
-   \item \texttt{obj.applyShear(g=g, beta=beta)} \\
+   \item \texttt{obj.shear(g=g, beta=beta)} \\
    apply magnitude (\texttt{g}) and polar angle (\texttt{beta}) of a
    shear defined using the $|g|$ definition above. %so that $|g| = (a - b) / (a + b)$ where $a$ and
     %$b$ are the semi-major and semi-minor axes of an ellipse.
-   \item \texttt{obj.applyShear(e=e, beta=beta)} \\
+   \item \texttt{obj.shear(e=e, beta=beta)} \\
     apply magnitude (\texttt{e}) and polar angle (\texttt{beta}) of a
    shear defined using the $|e|$ definition above.%so that $|e| = (a^2 - b^2) / (a^2 + b^2)$ where $a$ and
     %$b$ are the semi-major and semi-minor axes of an ellipse.
    \end{itemize}}
 \item[$\circ$]
-  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ad6236e3153f23f1201396369dd67f1c7}{\texttt{applyRotation}}\texttt{(theta)}
-  \newline {apply a rotation of \texttt{theta} (positive direction
-  anti-clockwise) to the \texttt{GSObject}, where \texttt{theta} is an
+  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ad6236e3153f23f1201396369dd67f1c7}{\texttt{rotate}}\texttt{(theta)}
+  \newline {return a version of the \texttt{GSObject} that has been rotated by an angle \texttt{theta} (positive direction
+  anti-clockwise), where \texttt{theta} is an
   \texttt{Angle} instance (see Section~\ref{sect:angles}).}
 \item[$\circ$]
-  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a6b547741eeec4086de9abe227dae9325}{\texttt{applyShift}}\texttt{(dx, dy)}
-  \newline {apply a $(dx, dy)$ position shift to the
-    \texttt{GSObject} centroid.}
+  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a6b547741eeec4086de9abe227dae9325}{\texttt{shift}}\texttt{(dx, dy)}
+  \newline {return a version of the \texttt{GSObject} with its centroid position shifted by $(dx, dy)$.}
 \item[$\circ$]
   \texttt{image = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{draw}}\texttt{(image=None, scale=None, wcs=None, \\
   \phantom{image = obj.draw(}add\_to\_image=False, \dots)}
@@ -502,11 +494,11 @@ a \texttt{ChromaticObject}).
 \begin{itemize}
 \item {\tt bandpass.truncate(blue\_limit=blue\_limit, red\_limit=red\_limit, \newline
                              \phantom{bandpass.truncate(}relative\_throughput=relative\_throughput)}\newline
-  Clip the wavelength range to be between \texttt{blue\_limit} and \texttt{red\_limit}.
-  Additionally clip any leading or trailing wavelengths for which the throughput is less than
+  Return a new bandpass truncated to only include wavelengths between \texttt{blue\_limit} and \texttt{red\_limit}.
+  Additionally, it clips any leading or trailing wavelengths for which the throughput is less than
   the fraction \texttt{relative\_throughput} of the peak throughput.
 \item {\tt bandpass.thin(rel\_err)}\newline
-Remove samples defining the bandpass while retaining the
+ Return a thinner version of the bandpass by removing sample values (locations where $F(\lambda)$ is defined) while retaining the
 accuracy of the integral over the bandpass to the stated relative error \texttt{rel\_err}.
 \end{itemize}
 
@@ -535,17 +527,17 @@ proportional to ergs/nm, but can be overridden to be proportional to ergs/Hz by 
 
 Important methods for \texttt{SED} objects include:
 \begin{itemize}
-\item {\tt SED.withFluxDensity(target\_flux\_density,
+\item {\tt sed.withFluxDensity(target\_flux\_density,
     base\_wavelength)} \newline Return a new \texttt{SED} with flux
   density (in units proportional to ergs/nm) at the reference
   wavelength \texttt{base\_wavelength} set to
   \texttt{target\_flux\_density}.  Note that \texttt{SED} objects are
   immutable, so the original \texttt{SED} is unchanged.
-\item {\tt calculateFlux(bandpass)}\newline Calculate and return the flux transmitted through a
+\item {\tt sed.calculateFlux(bandpass)}\newline Calculate and return the flux transmitted through a
   \texttt{bandpass} in photons.
-\item {\tt withFlux(target\_flux, bandpass)}\newline Return a new \texttt{SED}
+\item {\tt sed.withFlux(target\_flux, bandpass)}\newline Return a new \texttt{SED}
   for which the flux transmitted through the input \texttt{bandpass} is \texttt{target\_flux}.
-\item {\tt atRedshift(z)}\newline Return a new \texttt{SED} instance with wavelength shifted be at redshift $z$.
+\item {\tt sed.atRedshift(z)}\newline Return a new \texttt{SED} instance with wavelength shifted be at redshift $z$.
   Note that \texttt{SED} instances remember their redshifts (except when created as sums and differences of
   other SEDs), so applying this method a second twice with the same argument $z$ is equivalent to
   applying it just once.
@@ -569,25 +561,25 @@ now has access to \texttt{ChromaticObject} methods.
 The simplest way to construct a non-trivial chromatic object is to multiply a \texttt{GSObject} by
 an \texttt{SED}.  This creates a separable wavelength-dependent surface brightness profile:
 \begin{equation}
-  \mathrm{ChromaticObject}(x, y, \lambda) = \mathrm{GSObject}(x, y) \mathrm{SED}(\lambda)
+  \mathrm{I}(x, y, \lambda) = \mathrm{I}_0(x, y) \mathrm{f}(\lambda)
 \end{equation}
 \newline
 {\tt >>> gal = galsim.Sersic(n=2.5, half\_light\_radius=1.1)}\newline
-{\tt >>> SED = galsim.SED('wave**1.1')} \# Power-law spectrum. \newline
-{\tt >>> chromatic\_gal = gal*SED}\newline
+{\tt >>> sed = galsim.SED('wave**1.1')} \# Power-law spectrum. \newline
+{\tt >>> chromatic\_gal = gal*sed}\newline
 \newline
 \texttt{ChromaticObject}s may be combined and transformed similarly to
-\texttt{GSObjects}, using the functions, methods and compound classes \texttt{Add}, \texttt{Convolve}, \texttt{scaleFlux}, \texttt{applyExpansion}, \texttt{applyDilation}, \texttt{applyMagnification}, \texttt{applyShear}, \texttt{applyLensing}, \texttt{applyRotation}, \texttt{applyShift}, and all the \texttt{create*} methods as well.
+\texttt{GSObjects}, using the functions, methods and compound classes \texttt{Add}, \texttt{Convolve}, \texttt{withScaledFlux}, \texttt{dilate}, \texttt{magnify}, \texttt{shear}, \texttt{rotate}, and \texttt{shift}.
 
-The \texttt{applyDilation}, \texttt{applyExpansion}, and \texttt{applyShift} methods of
+The \texttt{dilate} and \texttt{shift} methods of
 \texttt{ChromaticObject}s can also accept as an argument a function of wavelength (in nanometers)
-that returns a wavelength-dependent dilation, expansion, or shift.  These can be used to implement
+that returns a wavelength-dependent dilation or shift.  These can be used to implement
 chromatic PSFs.  For example, a diffraction limited PSF might look
 like:
 
 {\tt >>> psf500 = galsim.Airy(lam\_over\_diam=2.0)}\newline
 {\tt >>> chromatic\_psf = ChromaticObject(psf500)}\newline
-{\tt >>> chromatic\_psf.applyDilation(lambda w:(w/500.0)**(1.0))}
+{\tt >>> chromatic\_psf.dilate(lambda w:(w/500.0)**(1.0))}
 
 The draw method of a \texttt{ChromaticObject} is similar to the draw method of a \texttt{GSObject},
 except that it requires a \texttt{Bandpass} object as its first
@@ -772,7 +764,8 @@ other types for the data using a suffix letter after \texttt{Image}:
 
 \item[$\circ$] \texttt{galsim.ImageD(nx, ny)} {for double precision (64 bit) floats.}
 \end{itemize}
-Other ways to construct an \texttt{Image} can be found in the docstrings.
+Other ways to construct an \texttt{Image} can be found in the
+docstrings, including via an input NumPy array.
 
 To access the data as a NumPy array, simply use the \texttt{image.array}
 attribute, where \texttt{image} is an instance of one of these
@@ -807,7 +800,7 @@ methods for such an instance are:
 
 \item[$\circ$] \texttt{image.bounds} \newline {get the bounding box of the data.}
 
-\item[$\circ$] \texttt{image.wcs} \newline {get the WCS function to convert between
+\item[$\circ$] \texttt{image.wcs} \newline {get or set the WCS function to convert between
     image coordinates and world coordinates.}
 
 \item[$\circ$] \texttt{image.scale} \newline {get or set the pixel
@@ -902,7 +895,7 @@ integer and double-precision floating point representations.
 
 \end{itemize}
 
-\subsection{Shear and Ellipse transformations}\label{sect:shears}
+\subsection{Shears}\label{sect:shears}
 
 \begin{itemize}
 
@@ -928,13 +921,6 @@ integer and double-precision floating point representations.
     set via magnitude (\texttt{e}) and polar angle (\texttt{beta}) of a
    shear defined according to the $|e|$ definition above.
    \end{itemize}}
-
-\item[$\circ$]
-  \texttt{galsim.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1ellipse_1_1_ellipse.html}{\texttt{Ellipse}}\texttt{(\dots)}
-  \newline {class to represent ellipses and thus ellipse-type
-    transformations, specifically shears, shifts, and dilations.  The class can be initialized using a variety of
-    different parameter conventions (see, e.g., \texttt{galsim/ellipse.py}),
-    including being initialized with a Shear instance.}
 
 \end{itemize}
 

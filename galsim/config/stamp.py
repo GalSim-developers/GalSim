@@ -25,24 +25,25 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     """
     Build a number of postage stamp images as specified by the config dict.
 
-    @param nobjects            How many postage stamps to build.
-    @param config              A configuration dict.
-    @param nproc               How many processes to use.
-    @param logger              If given, a logger object to log progress.
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param xsize               The size of a single stamp in the x direction.
-                               (If 0, look for config.image.stamp_xsize, and if that's
-                                not there, use automatic sizing.)
-    @param ysize               The size of a single stamp in the y direction.
-                               (If 0, look for config.image.stamp_ysize, and if that's
-                                not there, use automatic sizing.)
-    @param do_noise            Whether to add noise to the image (according to config['noise']).
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param nobjects         How many postage stamps to build.
+    @param config           A configuration dict.
+    @param nproc            How many processes to use. [default: 1]
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param obj_num          If given, the current obj_num. [default: 0]
+    @param xsize            The size of a single stamp in the x direction. [default: 0,
+                            which means to look for config.image.stamp_xsize, and if that's
+                            not there, use automatic sizing.]
+    @param ysize            The size of a single stamp in the y direction. [default: 0,
+                            which means to look for config.image.stamp_xsize, and if that's
+                            not there, use automatic sizing.]
+    @param do_noise         Whether to add noise to the image (according to config['noise']).
+                            [default: True]
+    @param make_psf_image   Whether to make psf_image. [default: False]
+    @param make_weight_image  Whether to make weight_image. [default: False]
+    @param make_badpix_image  Whether to make badpix_image. [default: False]
 
-    @return (images, psf_images, weight_images, badpix_images, current_vars) 
-    (All in tuple are lists)
+    @returns the tuple (images, psf_images, weight_images, badpix_images, current_vars).
+             All in tuple are lists.
     """
     def worker(input, output):
         proc = current_process().name
@@ -252,47 +253,24 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     return images, psf_images, weight_images, badpix_images, current_vars
  
 
-def RemoveCurrent(config, keep_safe=False):
-    """
-    Remove any "current values" stored in the config dict at any level.
-    If keep_safe = True (default = False), then any current values that are marked
-    as safe will be preserved.
-    """
-    # End recursion if this is not a dict.
-    if not isinstance(config,dict): return
-
-    # Delete the current_val at this level, if any
-    if 'current_val' in config:
-        if not (keep_safe and config['current_safe']):
-            del config['current_val']
-            del config['current_safe']
-
-    # Recurse to lower levels, if any
-    for key in config:
-        if isinstance(config[key],list):
-            for item in config[key]:
-                RemoveCurrent(item, keep_safe)
-        else:
-            RemoveCurrent(config[key], keep_safe)
-
-
 def BuildSingleStamp(config, xsize=0, ysize=0,
                      obj_num=0, do_noise=True, logger=None,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build a single image using the given config file
 
-    @param config              A configuration dict.
-    @param xsize               The xsize of the image to build (if known).
-    @param ysize               The ysize of the image to build (if known).
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param do_noise            Whether to add noise to the image (according to config['noise']).
-    @param logger              If given, a logger object to log progress.
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param config           A configuration dict.
+    @param xsize            The xsize of the image to build (if known). [default: 0]
+    @param ysize            The ysize of the image to build (if known). [default: 0]
+    @param obj_num          If given, the current obj_num [default: 0]
+    @param do_noise         Whether to add noise to the image (according to config['noise']).
+                            [default: True]
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param make_psf_image   Whether to make psf_image. [default: False]
+    @param make_weight_image  Whether to make weight_image. [default: False]
+    @param make_badpix_image  Whether to make badpix_image. [default: False]
 
-    @return image, psf_image, weight_image, badpix_image, current_var, time
+    @returns the tuple (image, psf_image, weight_image, badpix_image, current_var, time)
     """
     import time
     t1 = time.time()
@@ -543,7 +521,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     logger.info('This is try %d/%d, so trying again.',itry+1,ntries)
                 # Need to remove the "current_val"s from the config dict.  Otherwise,
                 # the value generators will do a quick return with the cached value.
-                RemoveCurrent(config, keep_safe=True)
+                galsim.config.process.RemoveCurrent(config, keep_safe=True)
                 continue
 
         else:
@@ -591,7 +569,7 @@ def DrawStampFFT(psf, gal, config, xsize, ysize, offset, no_pixel, real_space):
     Draw an image using the given psf, pix and gal profiles (which may be None)
     using the FFT method for doing the convolution.
 
-    @return the resulting image.
+    @returns the resulting image.
     """
 
     # The real_space parameter being False really means let Convolve decide.
@@ -669,7 +647,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, offset):
     Draw an image using the given psf and gal profiles (which may be None)
     using the photon shooting method for doing the convolution.
 
-    @return the resulting image.
+    @returns the resulting image.
     """
 
     phot_list = [ prof for prof in (psf,gal) if prof is not None ]
@@ -739,7 +717,7 @@ def DrawPSFStamp(psf, config, bounds, offset, no_pixel, real_space):
     """
     Draw an image using the given psf profile.
 
-    @return the resulting image.
+    @returns the resulting image.
     """
 
     if not psf:
@@ -760,7 +738,7 @@ def DrawPSFStamp(psf, config, bounds, offset, no_pixel, real_space):
         gal_shift = galsim.config.GetCurrentValue(config['gal'],'shift')
         if False:
             logger.debug('obj %d: psf shift (1): %s',config['obj_num'],str(gal_shift))
-        psf.applyShift(gal_shift)
+        psf = psf.shift(gal_shift)
 
     wcs = config['wcs'].local(config['image_pos'])
     if not no_pixel:

@@ -245,8 +245,8 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
     Typical application to a single object:
 
         >>> galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
-        >>> galaxy.applyShear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the 
-                                                # |g| = (a - b)/(a + b) definition
+        >>> galaxy = galaxy.shear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the 
+        >>>                                         # |g| = (a - b)/(a + b) definition
         >>> psf = galsim.Kolmogorov(flux = 1.0, fwhm = 0.7)
         >>> pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
         >>> final = galsim.Convolve([galaxy, psf, pixel])
@@ -273,47 +273,47 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
                 n_fail += 1
         print "Number of failures: ", n_fail
 
-    @param gal_image         The Image of the galaxy being measured.
-    @param PSF_image         The Image for the PSF.
-    @param weight            The optional weight image for the galaxy being measured.  Can be an int
-                             or a float array.  Currently, GalSim does not account for the variation
-                             in non-zero weights, i.e., a weight map is converted to an image with 0
-                             and 1 for pixels that are not and are used.  Full use of spatial
-                             variation in non-zero weights will be included in a future version of
-                             the code.
-    @param badpix            The optional bad pixel mask for the image being used.  Zero should be
-                             used for pixels that are good, and any nonzero value indicates a bad
-                             pixel.
-    @param sky_var           The variance of the sky level, used for estimating uncertainty on the
-                             measured shape; default `sky_var = 0.`.
-    @param shear_est         A string indicating the desired method of PSF correction: REGAUSS,
-                             LINEAR, BJ, or KSB; default `shear_est = "REGAUSS"`.
-    @param recompute_flux    A string indicating whether to recompute the object flux, which
-                             should be NONE (for no recomputation), SUM (for recomputation via
-                             an unweighted sum over unmasked pixels), or FIT (for
-                             recomputation using the Gaussian + quartic fit); default
-                             `recompute_flux = FIT`.
-    @param guess_sig_gal     Optional argument with an initial guess for the Gaussian sigma of the
-                             galaxy, default `guess_sig_gal = 5.` (pixels).
-    @param guess_sig_PSF     Optional argument with an initial guess for the Gaussian sigma of the
-                             PSF, default `guess_sig_PSF = 3.` (pixels).
-    @param precision         The convergence criterion for the moments; default `precision = 1e-6`.
+    @param gal_image        The Image of the galaxy being measured.
+    @param PSF_image        The Image for the PSF.
+    @param weight           The optional weight image for the galaxy being measured.  Can be an int
+                            or a float array.  Currently, GalSim does not account for the variation
+                            in non-zero weights, i.e., a weight map is converted to an image with 0
+                            and 1 for pixels that are not and are used.  Full use of spatial
+                            variation in non-zero weights will be included in a future version of
+                            the code.
+    @param badpix           The optional bad pixel mask for the image being used.  Zero should be
+                            used for pixels that are good, and any nonzero value indicates a bad
+                            pixel.
+    @param sky_var          The variance of the sky level, used for estimating uncertainty on the
+                            measured shape. [default: 0.]
+    @param shear_est        A string indicating the desired method of PSF correction: 'REGAUSS',
+                            'LINEAR', 'BJ', or 'KSB'. [default: 'REGAUSS']
+    @param recompute_flux   A string indicating whether to recompute the object flux, which
+                            should be 'NONE' (for no recomputation), 'SUM' (for recomputation via
+                            an unweighted sum over unmasked pixels), or 'FIT' (for
+                            recomputation using the Gaussian + quartic fit). [default: 'FIT']
+    @param guess_sig_gal    Optional argument with an initial guess for the Gaussian sigma of the
+                            galaxy (in pixels). [default: 5.]
+    @param guess_sig_PSF    Optional argument with an initial guess for the Gaussian sigma of the
+                            PSF (in pixels). [default: 3.]
+    @param precision        The convergence criterion for the moments. [default: 1e-6]
     @param guess_x_centroid  An initial guess for the x component of the object centroid (useful in
-                             case it is not located at the center, which is the default
-                             assumption).  The convention for centroids is such that the center of
-                             the lower-left pixel is (0,0).
+                            case it is not located at the center, which is the default
+                            assumption).  The convention for centroids is such that the center of
+                            the lower-left pixel is (0,0). [default: gal_image.trueCenter().x]
     @param guess_y_centroid  An initial guess for the y component of the object centroid (useful in
-                             case it is not located at the center, which is the default
-                             assumption).  The convention for centroids is such that the center of
-                             the lower-left pixel is (0,0).
-    @param strict            If `strict = True` (default), then there will be a `RuntimeError` 
-                             exception if shear estimation fails.  If set to `False`, then 
-                             information about failures will be silently stored in the output 
-                             ShapeData object.
-    @param hsmparams         The hsmparams keyword can be used to change the settings used by
-                             EstimateShear when estimating shears; see HSMParams documentation
-                             using help(galsim.hsm.HSMParams) for more information.
-    @return                  A ShapeData object containing the results of shape measurement.
+                            case it is not located at the center, which is the default
+                            assumption).  The convention for centroids is such that the center of
+                            the lower-left pixel is (0,0). [default: gal_image.trueCenter().y]
+    @param strict           Whether to require success. If `strict = True`, then there will be a 
+                            `RuntimeError` exception if shear estimation fails.  If set to `False`,
+                            then information about failures will be silently stored in the output 
+                            ShapeData object. [default: True]
+    @param hsmparams        The hsmparams keyword can be used to change the settings used by
+                            EstimateShear when estimating shears; see HSMParams documentation
+                            using help(galsim.hsm.HSMParams) for more information. [default: None]
+
+    @returns a ShapeData object containing the results of shape measurement.
     """
     # prepare inputs to C++ routines: ImageView for galaxy, PSF, and weight map
     gal_image_view = gal_image.image.view()
@@ -396,35 +396,36 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
         >>> new_params = galsim.hsm.HSMParams(max_amoment=5.0e5)
         >>> my_moments = my_gaussian_image.FindAdaptiveMom(hsmparams = new_params)
 
-    @param object_image      The Image for the object being measured.
-    @param weight            The optional weight image for the object being measured.  Can be an int
-                             or a float array.  Currently, GalSim does not account for the variation
-                             in non-zero weights, i.e., a weight map is converted to an image with 0
-                             and 1 for pixels that are not and are used.  Full use of spatial
-                             variation in non-zero weights will be included in a future version of
-                             the code.
-    @param badpix            The optional bad pixel mask for the image being used.  Zero should be
-                             used for pixels that are good, and any nonzero value indicates a bad
-                             pixel.
-    @param guess_sig         Optional argument with an initial guess for the Gaussian sigma of the
-                             object, default `guess_sig = 5.0` (pixels).
-    @param precision         The convergence criterion for the moments; default `precision = 1e-6`.
+    @param object_image     The Image for the object being measured.
+    @param weight           The optional weight image for the object being measured.  Can be an int
+                            or a float array.  Currently, GalSim does not account for the variation
+                            in non-zero weights, i.e., a weight map is converted to an image with 0
+                            and 1 for pixels that are not and are used.  Full use of spatial
+                            variation in non-zero weights will be included in a future version of
+                            the code. [default: None]
+    @param badpix           The optional bad pixel mask for the image being used.  Zero should be
+                            used for pixels that are good, and any nonzero value indicates a bad
+                            pixel. [default: None]
+    @param guess_sig        Optional argument with an initial guess for the Gaussian sigma of the
+                            object (in pixels). [default: 5.0]
+    @param precision        The convergence criterion for the moments. [default: 1e-6]
     @param guess_x_centroid  An initial guess for the x component of the object centroid (useful in
-                             case it is not located at the center, which is the default
-                             assumption).  The convention for centroids is such that the center of
-                             the lower-left pixel is (0,0).
+                            case it is not located at the center, which is the default
+                            assumption).  The convention for centroids is such that the center of
+                            the lower-left pixel is (0,0). [default: gal_image.trueCenter().x]
     @param guess_y_centroid  An initial guess for the y component of the object centroid (useful in
-                             case it is not located at the center, which is the default
-                             assumption).  The convention for centroids is such that the center of
-                             the lower-left pixel is (0,0).
-    @param strict            If `strict = True` (default), then there will be a `RuntimeError`
-                             exception when moment measurement fails.  If set to `False`, then 
-                             information about failures will be silently stored in the output 
-                             ShapeData object.
-    @param hsmparams         The hsmparams keyword can be used to change the settings used by
-                             FindAdaptiveMom when estimating moments; see HSMParams documentation
-                             using help(galsim.hsm.HSMParams) for more information.
-    @return                  A ShapeData object containing the results of moment measurement.
+                            case it is not located at the center, which is the default
+                            assumption).  The convention for centroids is such that the center of
+                            the lower-left pixel is (0,0). [default: gal_image.trueCenter().y]
+    @param strict           Whether to require success. If `strict = True`, then there will be a 
+                            `RuntimeError` exception if shear estimation fails.  If set to `False`,
+                            then information about failures will be silently stored in the output 
+                            ShapeData object. [default: True]
+    @param hsmparams        The hsmparams keyword can be used to change the settings used by
+                            FindAdaptiveMom when estimating moments; see HSMParams documentation
+                            using help(galsim.hsm.HSMParams) for more information. [default: None]
+
+    @returns a ShapeData object containing the results of moment measurement.
     """
     # prepare inputs to C++ routines: ImageView for the object being measured and the weight map.
     object_image_view = object_image.image.view()

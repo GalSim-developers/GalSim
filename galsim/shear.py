@@ -72,11 +72,11 @@ class Shear(object):
     sheared by some (gamma_1, gamma_2), and then sheared by (-gamma_1, -gamma_2), it will in the end
     return to its original shape, but will have changed in area due to the magnification, mu =
     1/((1.-kappa)**2 - (gamma_1**2 + gamma_2**2)), which is not equal to one for non-zero shear even
-    for convergence kappa=0.  Application of a galsim.Shear using the applyShear method does not
+    for convergence kappa=0.  Application of a galsim.Shear using the GSObject.shear method does not
     include this area change.  To properly incorporate the effective change in area due to shear, it
-    is necessary to either (a) define the galsim.Shear object, use the applyShear() method, and
-    separately use the applyMagnification method(), or (b) use the applyLensing() method that
-    simultaneously magnifies and shears.
+    is necessary to either (a) define the galsim.Shear object, use the shear() method, and
+    separately use the magnify() method, or (b) use the lens() method that simultaneously 
+    magnifies and shears.
     """
     def __init__(self, *args, **kwargs):
         import numpy as np
@@ -194,11 +194,22 @@ class Shear(object):
     # below, we propagate through all the methods from C++
 
     # define all the methods for setting shear values
-    def setE1E2(self, e1=0.0, e2=0.0): self._shear.setE1E2(e1, e2)
-    def setEBeta(self, e=0.0, beta=None): self._shear.setEBeta(e, beta)
-    def setEta1Eta2(self, eta1=0.0, eta2=0.0): self._shear.setEta1Eta2(eta1, eta2)
-    def setEtaBeta(self, eta=0.0, beta=None): self._shear.setEtaBeta(eta, beta)
-    def setG1G2(self, g1=0.0, g2=0.0): self._shear.setG1G2(g1, g2)
+    def setE1E2(self, e1=0.0, e2=0.0):
+        """Discouraged method that will be deprecated eventually."""
+        self._shear.setE1E2(e1, e2)
+    def setEBeta(self, e=0.0, beta=None): 
+        """Discouraged method that will be deprecated eventually."""
+        self._shear.setEBeta(e, beta)
+    def setEta1Eta2(self, eta1=0.0, eta2=0.0): 
+        """Discouraged method that will be deprecated eventually."""
+        self._shear.setEta1Eta2(eta1, eta2)
+    def setEtaBeta(self, eta=0.0, beta=None): 
+        """Discouraged method that will be deprecated eventually."""
+        self._shear.setEtaBeta(eta, beta)
+    def setG1G2(self, g1=0.0, g2=0.0): 
+        """Discouraged method that will be deprecated eventually."""
+        self._shear.setG1G2(g1, g2)
+
     # define all the methods to get shear values
     def getE1(self): return self._shear.getE1()
     def getE2(self): return self._shear.getE2()

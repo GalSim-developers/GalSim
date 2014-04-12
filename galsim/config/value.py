@@ -69,7 +69,7 @@ standard_ignore = [
 def ParseValue(config, param_name, base, value_type):
     """@brief Read or generate a parameter value from config.
 
-    @return value, safe
+    @returns the tuple (value, safe).
     """
     param = config[param_name]
     #print 'ParseValue for param_name = ',param_name,', value_type = ',str(value_type)
@@ -203,7 +203,7 @@ def _GetBoolValue(param, param_name):
 def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
     """@brief Check that the parameters for a particular item are all valid
     
-    @return a dict, get, with get[key] = value_type for all keys to get
+    @returns a dict, get, with get[key] = value_type for all keys to get.
     """
     get = {}
     valid_keys = req.keys() + opt.keys()
@@ -253,7 +253,7 @@ def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
 def GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
     """@brief Check and get all the parameters for a particular item
 
-    @return kwargs, safe
+    @returns the tuple (kwargs, safe).
     """
     get = CheckAllParams(param,param_name,req,opt,single,ignore)
     kwargs = {}
@@ -520,15 +520,12 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
 
     sigma = kwargs['sigma']
 
-    if 'gd' in base:
+    if 'gd' in base and base['current_gdsigma'] == sigma:
         # Minor subtlety here.  GaussianDeviate requires two random numbers to 
         # generate a single Gaussian deviate.  But then it gets a second 
         # deviate for free.  So it's more efficient to store gd than to make
         # a new one each time.  So check if we did that.
         gd = base['gd']
-        if base['current_gdsigma'] != sigma:
-            gd.setSigma(sigma)
-            base['current_gdsigma'] = sigma
     else:
         # Otherwise, just go ahead and make a new one.
         gd = galsim.GaussianDeviate(rng,sigma=sigma)

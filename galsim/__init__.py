@@ -28,43 +28,64 @@ except:
     import pyfits
     pyfits_version = pyfits.__version__
 
+# Define the current code version
+version = '1.1'
+
 # Import things from other files we want to be in the galsim namespace
-from ._galsim import *
+
+# First some basic building blocks that don't usually depend on anything else
+from position import PositionI, PositionD
+from bounds import BoundsI, BoundsD
+from shear import Shear
+from angle import Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec, HMS_Angle, DMS_Angle
+from catalog import Catalog, Dict
+from table import LookupTable
+
+# Image 
 from image import Image, ImageS, ImageI, ImageF, ImageD
-from base import version, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, Sersic
-from base import Exponential, DeVaucouleurs
+# These are obsolete, but we currently still support them.  They will be deprecated and 
+# removed eventually.
+from image import ImageView, ImageViewS, ImageViewI, ImageViewF, ImageViewD
+from image import ConstImageView, ConstImageViewS, ConstImageViewI, ConstImageViewF, ConstImageViewD
+
+# Noise
+from random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate, DistDeviate
+from random import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate
+from noise import BaseNoise, GaussianNoise, PoissonNoise, CCDNoise
+from noise import DeviateNoise, VariableGaussianNoise
+from correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
+
+# GSObject
+from base import GSParams, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box
+from base import Exponential, Sersic, DeVaucouleurs
+from real import RealGalaxy, RealGalaxyCatalog, simReal
+from optics import OpticalPSF
+from shapelet import Shapelet, ShapeletSize, FitShapelet, LVectorSize
+from interpolatedimage import Interpolant, Interpolant2d, InterpolantXY
+from interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
+from interpolatedimage import InterpolatedImage
+from compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
+from compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
+
+# Chromatic
 from chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum
 from chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
 from chromatic import ChromaticAutoCorrelation
 from sed import SED
 from bandpass import Bandpass
-from real import RealGalaxy, RealGalaxyCatalog, simReal
-from optics import OpticalPSF
-from shapelet import Shapelet
-from interpolatedimage import InterpolatedImage
-from compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution, AutoConvolve
-from compound import AutoConvolution, AutoCorrelate, AutoCorrelation
-from shear import Shear
+
+# WCS
+from fits import FitsHeader
+from celestial import CelestialCoord
 from wcs import BaseWCS, PixelScale, ShearWCS, JacobianWCS
 from wcs import OffsetWCS, OffsetShearWCS, AffineTransform, UVFunction, RaDecFunction
 from fitswcs import AstropyWCS, PyAstWCS, WcsToolsWCS, GSFitsWCS, FitsWCS, TanWCS
+
+# Lensing stuff
 from lensing_ps import PowerSpectrum
 from nfw_halo import NFWHalo, Cosmology
-from catalog import Catalog, Dict
-from table import LookupTable
-from random import DistDeviate
-from noise import VariableGaussianNoise
-from correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
-from fits import FitsHeader
-from angle import HMS_Angle, DMS_Angle
-from celestial import CelestialCoord
 
-# packages with docs and such, so nothing really to import by name.
-from . import position
-from . import bounds
-from . import random
-
-# packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)
+# Packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)
 from . import fits
 from . import config
 from . import integ

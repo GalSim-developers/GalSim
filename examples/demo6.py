@@ -41,8 +41,8 @@ New features introduced in this demo:
 - real_cat = galsim.RealGalaxyCatalog(file_name, dir)
 - obj = galsim.Gaussian(fwhm, flux)
 - obj = galsim.RealGalaxy(real_cat, index)
-- obj.applyRotation(theta)
-- obj.applyMagnification(mu)
+- obj = obj.rotate(theta)
+- obj = obj.magnify(mu)
 - image += background
 - noise = galsim.PoissonNoise()  # with no sky_level given
 - obj.draw(..., offset)
@@ -142,28 +142,28 @@ def main(argv):
         t2 = time.time()
 
         # Set the flux
-        gal.setFlux(gal_flux)
+        gal = gal.withFlux(gal_flux)
 
         # Rotate by a random angle
         theta = 2.*math.pi * rng() * galsim.radians
-        gal.applyRotation(theta)
+        gal = gal.rotate(theta)
 
         # Apply the desired shear
-        gal.applyShear(g1=gal_g1, g2=gal_g2)
+        gal = gal.shear(g1=gal_g1, g2=gal_g2)
 
         # Also apply a magnification mu = ( (1-kappa)^2 - |gamma|^2 )^-1
         # This conserves surface brightness, so it scales both the area and flux.
-        gal.applyMagnification(gal_mu)
+        gal = gal.magnify(gal_mu)
         
         # Make the combined profile
         final = galsim.Convolve([psf, pix, gal])
 
         # Offset by up to 1/2 pixel in each direction
-        # We had previously (in demo4 and demo5) used applyShift(dx,dy) as a way to shift the 
-        # center of the image.  Since that is applied to the galaxy, the units are arcsec (since 
-        # the galaxy profile itself doesn't know about the pixel scale).  Here, the offset applies 
-        # to the drawn image, which does know about the pixel scale, so the units of offset are 
-        # pixels, not arcsec.  Here, we apply an offset of up to half a pixel in each direction.
+        # We had previously (in demo4 and demo5) used shift(dx,dy) as a way to shift the center of 
+        # the image.  Since that is applied to the galaxy, the units are arcsec (since the galaxy 
+        # profile itself doesn't know about the pixel scale).  Here, the offset applies to the 
+        # drawn image, which does know about the pixel scale, so the units of offset are pixels, 
+        # not arcsec.  Here, we apply an offset of up to half a pixel in each direction.
         dx = rng() - 0.5
         dy = rng() - 0.5
 

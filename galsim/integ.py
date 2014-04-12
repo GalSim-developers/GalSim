@@ -42,8 +42,10 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
                     negative infinity).
     @param max      The upper end of the integration bounds (anything > 1.e10 is treated as positive
                     infinity).
-    @param rel_err  The desired relative error (default `rel_err = 1.e-6`)
-    @param abs_err  The desired absolute error (default `abs_err = 1.e-12`)
+    @param rel_err  The desired relative error [default: 1.e-6]
+    @param abs_err  The desired absolute error [default: 1.e-12]
+
+    @returns the value of the integral.
     """
     min = float(min)
     max = float(max)
@@ -60,7 +62,8 @@ def midpt(fvals, x):
 
     @param fvals  Samples of the integrand
     @param x      Locations at which the integrand was sampled.
-    @returns      Midpoint rule approximation of the integral.
+
+    @returns midpoint rule approximation of the integral.
     """
     x = np.array(x)
     dx = [x[1]-x[0]]
@@ -115,7 +118,8 @@ class SampleIntegrator(ImageIntegrator):
     @param wmult                 See GSObject.draw()
     @param use_true_center       See GSObject.draw()
     @param offset                See GSObject.draw()
-    @returns                     result of integral as a galsim.Image
+
+    @returns the result of integral as a galsim.Image
     """
     def __init__(self, rule):
         self.rule = rule
@@ -139,25 +143,26 @@ class ContinuousIntegrator(ImageIntegrator):
                                galsim.integ.midpt  --  Use the midpoint integration rule
                                numpy.trapz         --  Use the trapezoidal integration rule
     @parma N               Number of equally-wavelength-spaced monochromatic surface brightness
-                           samples to evaluate. (default: 250)
+                           samples to evaluate. [default: 250]
     @param use_endpoints   Whether to sample the endpoints `bandpass.blue_limit` and
                            `bandpass.red_limit`.  This should probably be True for a rule like
                            numpy.trapz, which explicitly samples the integration limits.  For a
                            rule like the midpoint rule, however, the integration limits are not
                            generally sampled, (only the midpoint between each integration limit and
                            its nearest interior point is sampled), thus `use_endpoints` should be
-                           set to False in this case.  (default: True)
+                           set to False in this case.  [default: True]
 
     __call__ parameters:
     @param evaluateAtWavelength  Function that returns a monochromatic surface brightness profile as
-                                 a function of wavelength.
-    @param bandpass              galsim.Bandpass object representing the filter being imaged through.
-    @param image                 galsim.Image used to set size and scale of output
-    @param gain                  See GSObject.draw()
-    @param wmult                 See GSObject.draw()
-    @param use_true_center       See GSObject.draw()
-    @param offset                See GSObject.draw()
-    @returns                     result of integral as a galsim.Image
+                                a function of wavelength.
+    @param bandpass             A Bandpass object representing the filter being imaged through.
+    @param image                An Image used to set size and scale of output
+    @param gain                 See GSObject.draw()
+    @param wmult                See GSObject.draw()
+    @param use_true_center      See GSObject.draw()
+    @param offset               See GSObject.draw()
+
+    @returns the result of integral as a galsim.Image
     """
     def __init__(self, rule, N=250, use_endpoints=True):
         self.N = N

@@ -65,20 +65,22 @@ class LookupTable(object):
 
     @param x             The list, tuple, or Numpy array of x values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
+                         [Either x and f or file is required.]
     @param f             The list, tuple, or Numpy array of f(x) values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
+                         [Either x and f or file is required.]
+    @param file          A file from which to read the (x,f) pairs. [Either x and f, or file
+                         is required]
     @param interpolant   The interpolant to use, with the options being 'floor', 'ceil', 
-                         'linear' and 'spline'. [Default `interpolant = 'spline'`]
-    @param file          A file from which to read the (x,f) pairs.
+                         'linear' and 'spline'. [default: 'spline']
     @param x_log         Set to True if you wish to interpolate using log(x) rather than x.  Note
                          that all inputs / outputs will still be x, it's just a question of how the
-                         interpolation is done. [Default `x_log = False`]
+                         interpolation is done. [default: False]
     @param f_log         Set to True if you wish to interpolate using log(f) rather than f.  Note
                          that all inputs / outputs will still be f, it's just a question of how the
-                         interpolation is done. [Default `f_log = False`]
+                         interpolation is done. [default: False]
     """
-    def __init__(self, x = None, f = None, interpolant = None, file = None,
-                 x_log = False, f_log = False):
+    def __init__(self, x=None, f=None, file=None, interpolant=None, x_log=False, f_log=False):
         import numpy as np
         self.x_log = x_log
         self.f_log = f_log
@@ -143,7 +145,8 @@ class LookupTable(object):
         @param x       The x value(s) for which f(x) should be calculated via interpolation on
                        the original (x, f) lookup table.  x can be a single float/double, or a
                        tuple, list, or arbitrarily shaped Numpy array.
-        @returns The interpolated f(x) value(s)
+
+        @returns the interpolated f(x) value(s).
         """
         import numpy as np
         # first, keep track of whether interpolation was done in x or log(x)

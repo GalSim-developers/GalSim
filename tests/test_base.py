@@ -69,32 +69,12 @@ def test_gaussian():
     """
     import time
     t1 = time.time()
-    mySBP = galsim.SBGaussian(flux=1, sigma=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
     savedImg.setCenter(0,0)
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
-    # Here in the test suite, we use applyExpansion, rather than what we do in the
-    # python draw command: applyDilation(1/dx) with gain = 1/dx**2.  The latter is more
-    # correct, but when we don't care about getting the added_flux return value correct,
-    # this does the same thing.  For drawShoot, where getting the flux correct is more 
-    # important, since we need to get the number of photons correct, this version with 
-    # applyExpansion does not work.
-    mySBP.applyExpansion(1./dx)
-    tot = mySBP.draw(myImg.image.view())
-    tot *= dx**2  # This is the only place we test the added_flux output, so here we need
-                  # to correct for the fact that applyExpansion isn't quite accurate in 
-                  # this respect.
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Gaussian profile disagrees with expected result")
-    np.testing.assert_almost_equal(
-            myImg.array.sum() *dx**2, tot, 5,
-            err_msg="Gaussian profile SBProfile::draw returned wrong tot")
 
-    # Repeat with the GSObject version of this:
     gauss = galsim.Gaussian(flux=1, sigma=1)
     # Reference images were made with old centering, which is equivalent to use_true_center=False.
     myImg = gauss.draw(myImg, scale=dx, normalization="surface brightness", use_true_center=False)
@@ -383,19 +363,11 @@ def test_exponential():
     # The value of this test for regression purposes is not harmed by retaining the old scaling, it
     # just means that the half light radius chosen for the test is not really 1, but 0.999974...
     r0 = re/1.67839
-    mySBP = galsim.SBExponential(flux=1., scale_radius=r0)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
-    mySBP.applyExpansion(1./dx)
-    mySBP.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Exponential profile disagrees with expected result") 
 
-    # Repeat with the GSObject version of this:
     expon = galsim.Exponential(flux=1., scale_radius=r0)
     expon.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
@@ -562,20 +534,12 @@ def test_sersic():
     import time
     t1 = time.time()
 
-    # Test SBSersic
-    mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
+    # Test Sersic
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
-    mySBP.applyExpansion(1./dx)
-    mySBP.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Sersic profile disagrees with expected result")
 
-    # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
@@ -605,19 +569,11 @@ def test_sersic():
 
     # Now repeat everything using a truncation.  (Above had no truncation.)
 
-    # Test Truncated SBSersic
-    mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1, trunc=10)
+    # Test Truncated Sersic
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1_10.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
-    mySBP.applyExpansion(1./dx)
-    mySBP.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Truncated Sersic profile disagrees with expected result")
 
-    # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, trunc=10)
     sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
@@ -976,19 +932,11 @@ def test_airy():
     """
     import time
     t1 = time.time()
-    mySBP = galsim.SBAiry(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
-    mySBP.applyExpansion(1./dx)
-    mySBP.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Airy profile disagrees with expected result") 
 
-    # Repeat with the GSObject version of this:
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
     airy.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
@@ -1123,19 +1071,11 @@ def test_box():
     """
     import time
     t1 = time.time()
-    mySBP = galsim.SBBox(1, 1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
-    mySBP.applyExpansion(1./dx)
-    mySBP.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Box profile disagrees with expected result") 
 
-    # Repeat with the GSObject version of this:
     pixel = galsim.Pixel(scale=1, flux=1)
     pixel.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
@@ -1166,27 +1106,19 @@ def test_moffat():
     """
     import time
     t1 = time.time()
+    savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_2_5.fits"))
+    dx = 0.2
+    myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
+
     # Code was formerly:
-    # mySBP = galsim.SBMoffat(beta=2, truncationFWHM=5, flux=1, half_light_radius=1)
+    # moffat = galsim.Moffat(beta=2, truncationFWHM=5, flux=1, half_light_radius=1)
     #
     # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
     # physical units.  However, the same profile can be constructed using 
     # fwhm=1.3178976627539716
     # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.3178976627539716
-    mySBP = galsim.SBMoffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1)
-    savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_2_5.fits"))
-    dx = 0.2
-    myImg = galsim.ImageF(savedImg.bounds, scale=dx)
-    myImg.setCenter(0,0)
-    mySBP.applyExpansion(1./dx)
-    mySBP.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Moffat profile disagrees with expected result") 
-
-    # Repeat with the GSObject version of this:
     moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1)
     moffat.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
@@ -1231,7 +1163,7 @@ def test_moffat_properties():
     import time
     t1 = time.time()
     # Code was formerly:
-    # mySBP = galsim.Moffat(beta=2.0, truncationFWHM=2, flux=test_flux, half_light_radius=1)
+    # psf = galsim.Moffat(beta=2.0, truncationFWHM=2, flux=test_flux, half_light_radius=1)
     #
     # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
     # physical units.  However, the same profile can be constructed using 
@@ -1530,25 +1462,18 @@ def test_kolmogorov():
     """
     import time
     t1 = time.time()
-    mySBP = galsim.SBKolmogorov(lam_over_r0=1.5, flux=test_flux)
     dx = 0.2
     # This savedImg was created from the SBKolmogorov implementation in
     # commit c8efd74d1930157b1b1ffc0bfcfb5e1bf6fe3201
     # It would be nice to get an independent calculation here...
+    #mySBP = galsim.SBKolmogorov(lam_over_r0=1.5, flux=test_flux)
     #savedImg = galsim.ImageF(128,128)
     #mySBP.draw(image=savedImg, dx=dx)
     #savedImg.write(os.path.join(imgdir, "kolmogorov.fits"))
     savedImg = galsim.fits.read(os.path.join(imgdir, "kolmogorov.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
-    mySBP.applyExpansion(1./dx)
-    mySBP.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Kolmogorov profile disagrees with expected result") 
 
-    # Repeat with the GSObject version of this:
     kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=test_flux)
     kolm.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(

@@ -42,8 +42,6 @@ New features introduced in this demo:
 - pos = bounds.center()
 - pos.x, pos.y
 - sub_image = image[bounds]
-- obj2 = obj.createSheared(e, beta)
-- obj2 = obj.createShifted(dx, dy)
 
 - Build a single large image, and access sub-images within it.
 - Set the galaxy size based on the PSF size and a resolution factor.
@@ -141,7 +139,7 @@ def main(argv):
     # We'll use this later to set the galaxy's half-light radius in terms of a resolution.
     psf_re = psf.getHalfLightRadius()
 
-    psf.applyShear(e1=psf_e1,e2=psf_e2)
+    psf = psf.shear(e1=psf_e1,e2=psf_e2)
     logger.debug('Made PSF profile')
 
     pix = galsim.Pixel(pixel_scale)
@@ -223,10 +221,10 @@ def main(argv):
 
             # Make a new copy of the galaxy with an applied e1/e2-type distortion 
             # by specifying the ellipticity and a real-space position angle
-            this_gal = gal.createSheared(e=ellip, beta=beta)
+            this_gal = gal.shear(e=ellip, beta=beta)
 
             # Apply the gravitational reduced shear by specifying g1/g2
-            this_gal.applyShear(g1=gal_g1, g2=gal_g2)
+            this_gal = this_gal.shear(g1=gal_g1, g2=gal_g2)
 
             # Apply a random shift_radius:
             rsq = 2 * shift_radius_sq
@@ -235,8 +233,8 @@ def main(argv):
                 dy = (2*ud()-1) * shift_radius
                 rsq = dx**2 + dy**2
 
-            this_gal.applyShift(dx,dy)
-            this_psf = final_psf.createShifted(dx,dy)
+            this_gal = this_gal.shift(dx,dy)
+            this_psf = final_psf.shift(dx,dy)
 
             # Make the final image, convolving with psf and pix
             final_gal = galsim.Convolve([psf,pix,this_gal])

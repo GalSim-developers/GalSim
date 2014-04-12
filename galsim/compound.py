@@ -27,8 +27,7 @@ AutoCorrelate = convolution of a profile by its reflection
 """
 
 import galsim
-from galsim import GSObject
-from galsim import ChromaticObject
+from . import _galsim
 
 #
 # --- Compound GSObject classes: Sum, Convolution, AutoConvolve, and AutoCorrelate ---
@@ -39,7 +38,24 @@ def Add(*args, **kwargs):
     This function will inspect its input arguments to decide if a galsim.Sum object or a
     galsim.ChromaticSum object is required to represent the sum of surface brightness profiles.
 
-    @returns galsim.Sum or galsim.ChromaticSum as appropriate.
+    Typically, you do not need to call `Add` explicitly.  Normally, you would just use the + 
+    operator, which returns a `Sum`:
+
+        >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8)
+        >>> disk = galsim.Exponential(half_light_radius=1.4)
+        >>> gal = bulge + disk
+        >>> psf = galsim.Gaussian(sigma=0.3, flux=0.3) + galsim.Gaussian(sigma=0.8, flux=0.7)
+
+    If one of the items is chromatic, it will return a `ChromaticSum`
+
+        >>> disk = galsim.Exponential(half_light_radius=1.4) * galsim.SED(sed_file)
+        >>> gal = bulge + disk
+
+    @param args             Unnamed args should be a list of objects to add.
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
+
+    @returns a galsim.Sum or galsim.ChromaticSum instance as appropriate.
     """
     if len(args) == 0:
         # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
@@ -47,7 +63,7 @@ def Add(*args, **kwargs):
         raise ValueError("Sum must be initialized with at least one ChromaticObject or GSObject.")
     elif len(args) == 1:
         # 1 argument.  Should be either a GSObject or a list of GSObjects
-        if isinstance(args[0], (GSObject, ChromaticObject)):
+        if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
             args = [args[0]]
         elif isinstance(args[0], list):
             args = args[0]
@@ -56,30 +72,49 @@ def Add(*args, **kwargs):
                             + "a (possibly mixed) list of them.")
     # else args is already the list of objects
 
-    if any([isinstance(a, ChromaticObject) for a in args]):
+    if any([isinstance(a, galsim.ChromaticObject) for a in args]):
         return galsim.ChromaticSum(*args, **kwargs)
     else:
         return Sum(*args, **kwargs)
 
 
-class Sum(GSObject):
+class Sum(galsim.GSObject):
     """A class for adding 2 or more GSObjects.
 
     The Sum class is used to represent the sum of multiple GSObjects.  For example, it might be used
     to represent a multiple-component galaxy as the sum of an Exponential and a DeVaucouleurs, or to
     represent a PSF as the sum of multiple Gaussians.
 
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
-    (or None), then the Sum instance inherits the same GSParams as the first item in the list.
-    Also, note that parameters related to the Fourier-space calculations must be set when
-    initializing the individual GSObjects that go into the Sum, NOT when creating the Sum (at which
-    point the accuracy and threshold parameters will simply be ignored).
+    Initialization
+    --------------
+
+    Typically, you do not need to construct a `Sum` object explicitly.  Normally, you would just
+    use the + operator, which returns a `Sum`:
+
+        >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8)
+        >>> disk = galsim.Exponential(half_light_radius=1.4)
+        >>> gal = bulge + disk
+        >>> psf = galsim.Gaussian(sigma=0.3, flux=0.3) + galsim.Gaussian(sigma=0.8, flux=0.7)
+
+    You can also use the `Add` factory function, which returns a `Sum` object if none of the
+    individual objects are chromatic:
+
+        >>> gal = galsim.Add([bulge,disk])
+
+    @param args             Unnamed args should be a list of objects to add.
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
+
+    Note: if gsparams is unspecified (or None), then the Sum instance inherits the same GSParams
+    as the first item in the list.  Also, note that parameters related to the Fourier-space
+    calculations must be set when initializing the individual GSObjects that go into the Sum, NOT
+    when creating the Sum (at which point the accuracy and threshold parameters will simply be
+    ignored).
 
     Methods
     -------
-    The Sum is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.
+
+    There are no additional methods for Sum beyond the usual GSObject methods.
     """
 
     # --- Public Class methods ---
@@ -99,7 +134,7 @@ class Sum(GSObject):
             raise ValueError("Sum must be initialized with at least one GSObject.")
         elif len(args) == 1:
             # 1 argument.  Should be either a GSObject or a list of GSObjects
-            if isinstance(args[0], GSObject):
+            if isinstance(args[0], galsim.GSObject):
                 args = [args[0]]
             elif isinstance(args[0], list):
                 args = args[0]
@@ -109,7 +144,7 @@ class Sum(GSObject):
 
         if len(args) == 1:
             # No need to make an SBAdd in this case.
-            GSObject.__init__(self, args[0])
+            galsim.GSObject.__init__(self, args[0])
             if hasattr(args[0],'noise'):
                 self.noise = args[0].noise
         else:
@@ -123,7 +158,7 @@ class Sum(GSObject):
                     else:
                         noise += obj.noise
             SBList = [obj.SBProfile for obj in args]
-            GSObject.__init__(self, galsim.SBAdd(SBList, gsparams=gsparams))
+            galsim.GSObject.__init__(self, galsim._galsim.SBAdd(SBList, gsparams=gsparams))
             if noise is not None:
                 self.noise = noise
 
@@ -135,7 +170,14 @@ def Convolve(*args, **kwargs):
     galsim.ChromaticConvolution object is required to represent the convolution of surface
     brightness profiles.
 
-    @returns galsim.Convolution or galsim.ChromaticConvolution as appropriate.
+    @param args             Unnamed args should be a list of objects to convolve.
+    @param real_space       Whether to use real space convolution.  [default: None, which means
+                            to automatically decide this according to whether the objects have hard
+                            edges.]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
+
+    @returns a galsim.Convolution or galsim.ChromaticConvolution instance as appropriate.
     """
     # First check for number of arguments != 0
     if len(args) == 0:
@@ -144,7 +186,7 @@ def Convolve(*args, **kwargs):
         raise ValueError("Convolution must be initialized with at least one GSObject "
                          + "or ChromaticObject.")
     elif len(args) == 1:
-        if isinstance(args[0], (GSObject, ChromaticObject)):
+        if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
             args = [args[0]]
         elif isinstance(args[0], list):
             args = args[0]
@@ -153,19 +195,14 @@ def Convolve(*args, **kwargs):
                             + "or a (possibly mixed) list of them.")
     # else args is already the list of objects
 
-    if any([isinstance(a, ChromaticObject) for a in args]):
+    if any([isinstance(a, galsim.ChromaticObject) for a in args]):
         return galsim.ChromaticConvolution(*args, **kwargs)
     else:
         return Convolution(*args, **kwargs)
 
 
-class Convolution(GSObject):
+class Convolution(galsim.GSObject):
     """A class for convolving 2 or more GSObjects.
-
-    The objects to be convolved may be provided either as multiple unnamed arguments (e.g.
-    `Convolve(psf, gal, pix)`) or as a list (e.g. `Convolve([psf, gal, pix])`).  Any number of
-    objects may be provided using either syntax.  (Even 0 or 1, although that doesn't really make
-    much sense.)
 
     The convolution will normally be done using discrete Fourier transforms of each of the component
     profiles, multiplying them together, and then transforming back to real space.
@@ -185,17 +222,37 @@ class Convolution(GSObject):
     are 2 profiles, both of which have hard edges.  In this case, we automatically use real-space
     convolution.  In all other cases, the default is not to use real-space convolution.
 
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
-    (or None), then the Convolve instance inherits the same GSParams as the first item in the list.
-    Also, note that parameters related to the Fourier-space calculations must be set when
-    initializing the individual GSObjects that go into the Convolve, NOT when creating the Convolve
-    (at which point the accuracy and threshold parameters will simply be ignored).
+    Initialization
+    --------------
 
-    @param args       Unnamed args should be a list of objects to convolve.
-    @param real_space Whether to use real space convolution.  Default is to automatically select
-                      this according to whether the object has hard edges.
-    @param gsparams   Optional gsparams argument.
+    The normal way to use this class is to use the `Convolve` factory function:
+
+        >>> gal = galsim.Sersic(n, half_light_radius)
+        >>> psf = galsim.Gaussian(sigma)
+        >>> pix = galsim.Pixel(scale)
+        >>> final = galsim.Convolve([gal, psf, pix])
+
+    The objects to be convolved may be provided either as multiple unnamed arguments (e.g.
+    `Convolve(psf, gal, pix)`) or as a list (e.g. `Convolve([psf, gal, pix])`).  Any number of
+    objects may be provided using either syntax.  (Well, the list has to include at least 1 item.)
+
+    @param args             Unnamed args should be a list of objects to convolve.
+    @param real_space       Whether to use real space convolution.  [default: None, which means
+                            to automatically decide this according to whether the objects have hard
+                            edges.]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
+
+    Note: if gsparams is unspecified (or None), then the Convolution instance inherits the same 
+    GSParams as the first item in the list.  Also, note that parameters related to the Fourier-
+    space calculations must be set when initializing the individual GSObjects that go into the Sum,
+    NOT when creating the Sum (at which point the accuracy and threshold parameters will simply be
+    ignored).
+
+    Methods
+    -------
+
+    There are no additional methods for Convolution beyond the usual GSObject methods.
     """
 
     # --- Public Class methods ---
@@ -207,7 +264,7 @@ class Convolution(GSObject):
             # exception instead.
             raise ValueError("Convolution must be initialized with at least one GSObject.")
         elif len(args) == 1:
-            if isinstance(args[0], GSObject):
+            if isinstance(args[0], galsim.GSObject):
                 args = [args[0]]
             elif isinstance(args[0], list):
                 args = args[0]
@@ -217,7 +274,7 @@ class Convolution(GSObject):
 
         if len(args) == 1:
             # No need to make an SBConvolve in this case.  Can early exit.
-            GSObject.__init__(self, args[0])
+            galsim.GSObject.__init__(self, args[0])
             if hasattr(args[0],'noise'):
                 self.noise = args[0].noise
             return
@@ -301,15 +358,15 @@ class Convolution(GSObject):
                 noise = obj.noise
                 others = [ obj2 for obj2 in args if obj2 is not obj ]
                 assert len(others) > 0
-                if len(others) == 1:
-                    noise.convolveWith(others[0])
-                else:
-                    noise.convolveWith(Convolution(others))
+                if len(others) == 1: 
+                    noise = noise.convolvedWith(others[0])
+                else: 
+                    noise = noise.convolvedWith(galsim.Convolve(others))
 
         # Then finally initialize the SBProfile using the objects' SBProfiles.
         SBList = [ obj.SBProfile for obj in args ]
-        GSObject.__init__(self, galsim.SBConvolve(SBList, real_space=real_space,
-                                                  gsparams=gsparams))
+        galsim.GSObject.__init__(self, galsim._galsim.SBConvolve(SBList, real_space=real_space,
+                                                          gsparams=gsparams))
         if noise is not None:
             self.noise = noise
 
@@ -321,7 +378,11 @@ def Deconvolve(obj, gsparams=None):
     galsim.ChromaticDeconvolution object is required to represent the deconvolution by a surface
     brightness profile.
 
-    @returns galsim.Deconvolution or galsim.ChromaticDeconvolution as appropriate.
+    @param obj              The object to deconvolve.
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
+
+    @returns a galsim.Deconvolution or galsim.ChromaticDeconvolution instance as appropriate.
     """
     if isinstance(obj, galsim.ChromaticObject):
         return galsim.ChromaticDeconvolution(obj, gsparams=gsparams)
@@ -331,7 +392,7 @@ def Deconvolve(obj, gsparams=None):
         raise TypeError("Argument to Deconvolve must be either a GSObject or a ChromaticObject.")
 
 
-class Deconvolution(GSObject):
+class Deconvolution(galsim.GSObject):
     """A class for deconvolving a GSObject.
 
     The Deconvolution class represents a deconvolution kernel.  Note that the Deconvolution class,
@@ -343,14 +404,29 @@ class Deconvolution(GSObject):
     (or None), then the Deconvolution instance inherits the same GSParams as the object being
     deconvolved.
 
-    @param obj        The object to deconvolve.
-    @param gsparams   Optional gsparams argument.
+    Initialization
+    --------------
+
+    The normal way to use this class is to use the `Deconvolve` factory function:
+
+        >>> inv_psf = galsim.Deconvolve(psf)
+        >>> deconv_gal = galsim.Convolve(inv_psf, gal)
+
+    @param obj              The object to deconvolve.
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
+
+    Methods
+    -------
+
+    There are no additional methods for Deconvolution beyond the usual GSObject methods.
     """
     # --- Public Class methods ---
     def __init__(self, obj, gsparams=None):
-        if not isinstance(obj, GSObject):
+        if not isinstance(obj, galsim.GSObject):
             raise TypeError("Argument to Deconvolution must be a GSObject.")
-        GSObject.__init__(self, galsim.SBDeconvolve(obj.SBProfile, gsparams=gsparams))
+        galsim.GSObject.__init__(
+                self, galsim._galsim.SBDeconvolve(obj.SBProfile, gsparams=gsparams))
         if hasattr(obj,'noise'):
             import warnings
             warnings.warn("Unable to propagate noise in galsim.Deconvolution")
@@ -363,7 +439,14 @@ def AutoConvolve(obj, real_space=None, gsparams=None):
     galsim.ChromaticAutoConvolution object is required to represent the convolution of a surface
     brightness profile with itself.
 
-    @returns galsim.AutoConvolution or galsim.ChromaticAutoConvolution as appropriate.
+    @param obj              The object to be convolved with itself.
+    @param real_space       Whether to use real space convolution.  [default: None, which means
+                            to automatically decide this according to whether the object has hard
+                            edges.]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
+
+    @returns a galsim.AutoConvolution or galsim.ChromaticAutoConvolution instance as appropriate.
     """
     if isinstance(obj, galsim.ChromaticObject):
         return galsim.ChromaticAutoConvolution(obj, real_space=real_space, gsparams=gsparams)
@@ -373,20 +456,34 @@ def AutoConvolve(obj, real_space=None, gsparams=None):
         raise TypeError("Argument to AutoConvolve must be either a GSObject or a ChromaticObject.")
 
 
-class AutoConvolution(GSObject):
+class AutoConvolution(galsim.GSObject):
     """A special class for convolving a GSObject with itself.
 
     It is equivalent in functionality to galsim.Convolve([obj,obj]), but takes advantage of
     the fact that the two profiles are the same for some efficiency gains.
 
-    @param obj        The object to be convolved with itself.
-    @param real_space Whether to use real space convolution.  Default is to automatically select
-                      this according to whether the object has hard edges.
-    @param gsparams   Optional gsparams argument.
+    Initialization
+    --------------
+
+    The normal way to use this class is to use the `AutoConvolve` factory function:
+
+        >>> psf_sq = galsim.AutoConvolve(psf)
+
+    @param obj              The object to be convolved with itself.
+    @param real_space       Whether to use real space convolution.  [default: None, which means
+                            to automatically decide this according to whether the object has hard
+                            edges.]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
+
+    Methods
+    -------
+
+    There are no additional methods for AutoConvolution beyond the usual GSObject methods.
     """
     # --- Public Class methods ---
     def __init__(self, obj, real_space=None, gsparams=None):
-        if not isinstance(obj, GSObject):
+        if not isinstance(obj, galsim.GSObject):
             raise TypeError("Argument to AutoConvolution must be a GSObject.")
 
         # Check whether to perform real space convolution...
@@ -415,8 +512,9 @@ class AutoConvolution(GSObject):
             warnings.warn(msg)
             real_space = False
 
-        GSObject.__init__(self, galsim.SBAutoConvolve(obj.SBProfile, real_space=real_space,
-                                                      gsparams=gsparams))
+        sbp = galsim._galsim.SBAutoConvolve(
+                obj.SBProfile, real_space=real_space, gsparams=gsparams)
+        galsim.GSObject.__init__(self, sbp)
         if hasattr(obj,'noise'):
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
@@ -429,7 +527,14 @@ def AutoCorrelate(obj, real_space=None, gsparams=None):
     galsim.ChromaticAutoCorrelation object is required to represent the correlation of a surface
     brightness profile with itself.
 
-    @returns galsim.AutoCorrelation or galsim.ChromaticAutoCorrelation as appropriate.
+    @param obj              The object to be convolved with itself.
+    @param real_space       Whether to use real space convolution.  [default: None, which means
+                            to automatically decide this according to whether the object has hard
+                            edges.]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
+
+    @returns a galsim.AutoCorrelation or galsim.ChromaticAutoCorrelation instance as appropriate.
     """
     if isinstance(obj, galsim.ChromaticObject):
         return galsim.ChromaticAutoCorrelation(obj, real_space=real_space, gsparams=gsparams)
@@ -439,7 +544,7 @@ def AutoCorrelate(obj, real_space=None, gsparams=None):
         raise TypeError("Argument to AutoCorrelate must be either a GSObject or a ChromaticObject.")
 
 
-class AutoCorrelation(GSObject):
+class AutoCorrelation(galsim.GSObject):
     """A special class for correlating a GSObject with itself.
 
     It is equivalent in functionality to
@@ -449,14 +554,28 @@ class AutoCorrelation(GSObject):
     This class is primarily targeted for use by the galsim.CorrelatedNoise models when convolving
     with a GSObject.
 
-    @param obj        The object to be convolved with itself.
-    @param real_space Whether to use real space convolution.  Default is to automatically select
-                      this according to whether the object has hard edges.
-    @param gsparams   Optional gsparams argument.
+    Initialization
+    --------------
+
+    The normal way to use this class is to use the `AutoCorrelate` factory function:
+
+        >>> psf_sq = galsim.AutoCorrelate(psf)
+
+    @param obj              The object to be convolved with itself.
+    @param real_space       Whether to use real space convolution.  [default: None, which means
+                            to automatically decide this according to whether the object has hard
+                            edges.]
+    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+                            for details. [default: None]
+
+    Methods
+    -------
+
+    There are no additional methods for AutoCorrelation beyond the usual GSObject methods.
     """
     # --- Public Class methods ---
     def __init__(self, obj, real_space=None, gsparams=None):
-        if not isinstance(obj, GSObject):
+        if not isinstance(obj, galsim.GSObject):
             raise TypeError("Argument to AutoCorrelation must be a GSObject.")
 
         # Check whether to perform real space convolution...
@@ -485,8 +604,9 @@ class AutoCorrelation(GSObject):
             warnings.warn(msg)
             real_space = False
 
-        GSObject.__init__(self, galsim.SBAutoCorrelate(obj.SBProfile, real_space=real_space,
-                                                       gsparams=gsparams))
+        sbp = galsim._galsim.SBAutoCorrelate(
+                obj.SBProfile, real_space=real_space, gsparams=gsparams)
+        galsim.GSObject.__init__(self, sbp)
 
         if hasattr(obj,'noise'):
             import warnings

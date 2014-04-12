@@ -40,7 +40,7 @@ New features introduced in this demo:
 - gal = galsim.RealGalaxy(..., noise_pad_size)
 - ps = galsim.PowerSpectrum(..., units)
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
-- gal.applyLensing(g1, g2, mu)
+- gal = gal.lens(g1, g2, mu)
 - correlated_noise.applyWhiteningTo(image)
 - vn = galsim.VariableGaussianNoise(rng, var_image)
 - image.addNoise(cn)
@@ -279,17 +279,15 @@ def main(argv):
             gal_list[index] = gal
 
         # Apply the dilation we calculated above.
-        # Use createDilated rather than applyDilation, so we don't change the galaxies in the 
-        # original gal_list -- createDilated makes a new copy.
-        gal = gal.createDilated(dilat)
+        gal = gal.dilate(dilat)
 
         # Apply a random rotation
         theta = ud()*2.0*numpy.pi*galsim.radians
-        gal.applyRotation(theta)
+        gal = gal.rotate(theta)
 
         # Apply the cosmological (reduced) shear and magnification at this position using a single
         # GSObject method.
-        gal.applyLensing(g1, g2, mu)
+        gal = gal.lens(g1, g2, mu)
 
         # Convolve with the PSF.  We don't have to include a pixel response explicitly, since the
         # SDSS PSF image that we are using included the pixel response already.

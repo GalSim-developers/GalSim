@@ -36,10 +36,11 @@ New features introduced in this demo:
 - obj = galsim.Sersic(n, flux, scale_radius)
 - obj = galsim.Kolmogorov(fwhm)
 - obj = galsim.OpticalPSF(lam_over_diam, defocus, coma1, coma2, astig1, astig2, obscuration)
-- obj.applyShear(e, beta)  -- including how to specify an angle in GalSim
+- obj = obj.shear(e, beta)  -- including how to specify an angle in GalSim
 - shear = galsim.Shear(q, beta)
-- obj.applyShear(shear)
+- obj = obj.shear(shear)
 - obj3 = x1 * obj1 + x2 * obj2
+- obj = obj.withFlux(flux)
 - image = galsim.ImageF(image_size, image_size)
 - obj.draw(image, wcs)
 - wcs.toWorld(profile)
@@ -139,14 +140,14 @@ def main(argv):
     # added to each other.
     gal = bulge_frac * bulge + (1-bulge_frac) * disk
     # Could also have written the following, which does the same thing:
-    #   gal = galsim.Add([ bulge.setFlux(bulge_frac) , disk.setFlux(1-bulge_frac) ])
+    #   gal = galsim.Add([ bulge.withFlux(bulge_frac) , disk.withFlux(1-bulge_frac) ])
     # Both syntaxes work with more than two summands as well.
 
     # Set the overall flux of the combined object.
-    gal.setFlux(gal_flux)
+    gal = gal.withFlux(gal_flux)
     # Since the total flux of the components was 1, we could also have written:
     #   gal *= gal_flux
-    # The setFlux method will always set the flux to the given value, while `gal *= flux`
+    # The withFlux method will always set the flux to the given value, while `gal *= flux`
     # will multiply whatever the current flux is by the given factor.
 
     # Set the shape of the galaxy according to axis ratio and position angle
@@ -157,7 +158,7 @@ def main(argv):
     #       galsim.arcsec
     #       galsim.hours
     gal_shape = galsim.Shear(q=gal_q, beta=gal_beta*galsim.degrees)
-    gal.applyShear(gal_shape)
+    gal = gal.shear(gal_shape)
     logger.debug('Made galaxy profile')
 
     # Define the atmospheric part of the PSF.
@@ -165,7 +166,7 @@ def main(argv):
     atmos = galsim.Kolmogorov(fwhm=atmos_fwhm)
     # For the PSF shape here, we use ellipticity rather than axis ratio.
     # And the position angle can be either degrees or radians.  Here we chose radians.
-    atmos.applyShear(e=atmos_e, beta=atmos_beta*galsim.radians)
+    atmos = atmos.shear(e=atmos_e, beta=atmos_beta*galsim.radians)
     logger.debug('Made atmospheric PSF profile')
 
     # Define the optical part of the PSF.

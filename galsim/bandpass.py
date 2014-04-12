@@ -256,7 +256,8 @@ class Bandpass(object):
         attributes, the throughput is assumed to be zero.
 
         @param wave   Wavelength in nanometers.
-        @returns      Dimensionless throughput.
+
+        @returns the dimensionless throughput.
         """
         # figure out what we received, and return the same thing
         # option 1: a Numpy array
@@ -289,7 +290,8 @@ class Bandpass(object):
                                       any intermediate wavelength ranges.  This option is not
                                       available for bandpasses initialized with a function or
                                       `eval` string.
-        @returns   The truncated Bandpass.
+
+        @returns the truncated Bandpass.
         """
         if blue_limit is None:
             blue_limit = self.blue_limit
@@ -316,12 +318,13 @@ class Bandpass(object):
         the integral over the set of tabulated values still accurate to `rel_err`.
 
         @param rel_err            The relative error allowed in the integral over the throughput
-                                  function. (default: 1.e-4)
+                                  function. [default: 1.e-4]
         @param preserve_range     Should the original range (`blue_limit` and `red_limit`) of the
                                   Bandpass be preserved? (True) Or should the ends be trimmed to
                                   include only the region where the integral is significant? (False)
-                                  (default: False)
-        @returns  The thinned Bandpass.
+                                  [default: False]
+
+        @returns the thinned Bandpass.
         """
         if len(self.wave_list) > 0:
             x = self.wave_list

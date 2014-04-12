@@ -64,15 +64,15 @@ namespace galsim {
             bp::class_<BaseDeviateCallBack>
                 pyBaseDeviate("BaseDeviate", "", bp::no_init);
             pyBaseDeviate
-                .def(bp::init<long>(bp::arg("lseed")=0))
-                .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
+                .def(bp::init<long>(bp::arg("seed")=0))
+                .def(bp::init<const BaseDeviate&>(bp::arg("seed")))
                 .def(bp::init<std::string>(bp::arg("str")))
                 .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed,
-                     (bp::arg("lseed")=0), "")
+                     (bp::arg("seed")=0), "")
                 .def("reset", (void (BaseDeviate::*) (long) )&BaseDeviate::reset,
-                     (bp::arg("lseed")=0), "")
+                     (bp::arg("seed")=0), "")
                 .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset, 
-                     (bp::arg("dev")), "")
+                     (bp::arg("seed")), "")
                 .def("clearCache", &BaseDeviate::clearCache, "")
                 .def("serialize", &BaseDeviate::serialize, "")
                 .def("duplicate", &BaseDeviate::duplicate, "")

@@ -65,11 +65,10 @@ __builtin__.file = newfile
 __builtin__.open = newopen
 
 def getOpenFiles(do_print=False):
-    '''
-    return the number of open files and pipes for current process
+    """Return the number of open files and pipes for current process
 
-    .. warning: will only work on UNIX-like os-es.
-    '''
+    .. warning: will only work on a UNIX-like OS.
+    """
     import subprocess
     import os
 

@@ -30,6 +30,7 @@
 #include "boost/python/stl_iterator.hpp"
 
 #include "SBProfile.h"
+#include "SBTransform.h"
 #include "FFT.h"  // For goodFFTSize
 
 namespace bp = boost::python;
@@ -259,15 +260,11 @@ namespace galsim {
                 .def("centroid", &SBProfile::centroid)
                 .def("getFlux", &SBProfile::getFlux)
                 .def("scaleFlux", &SBProfile::scaleFlux, bp::args("fluxRatio"))
-                .def("setFlux", &SBProfile::setFlux, bp::args("flux"))
-                .def("applyShear",
-                     (void (SBProfile::*)(CppShear))&SBProfile::applyShear,
-                     (bp::arg("s")))
-                .def("applyRotation", &SBProfile::applyRotation, bp::args("theta"))
-                .def("applyShift", &SBProfile::applyShift, bp::args("delta"))
-                .def("applyExpansion", &SBProfile::applyExpansion, bp::args("scale"))
-                .def("applyTransformation", &SBProfile::applyTransformation,
-                     bp::args("dudx", "dudy", "dvdx", "dvdy"))
+                .def("shear", &SBProfile::shear, bp::arg("shear"))
+                .def("rotate", &SBProfile::rotate, bp::args("theta"))
+                .def("shift", &SBProfile::shift, bp::args("delta"))
+                .def("expand", &SBProfile::expand, bp::args("scale"))
+                .def("transform", &SBProfile::transform, bp::args("dudx", "dudy", "dvdx", "dvdy"))
                 .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
                 ;
             wrapTemplates<float>(pySBProfile);

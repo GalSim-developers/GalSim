@@ -103,13 +103,10 @@ class PowerSpectrumEstimator(object):
         PowerSpectrumEstimator can be used to estimate the power spectrum quickly for many sets of
         shears at gridded positions.
 
-        @param N             The number of pixels along each side of the grid, default `N=100` as in
-                             the GREAT10 and GREAT3 challenges.
-        @param sky_size_deg  The total grid width (in one dimension) in degrees, default
-                             `sky_size_deg=10.` as in the GREAT10 and GREAT3 challenges.
-        @param nbin          The number of evenly-spaced logarithmic ell bins to use for estimating
-                             the power spectrum, default `nbin=15`, which makes a reasonable number
-                             of bins for the default grid configuration.
+        @param N            The number of pixels along each side of the grid. [default: 100]
+        @param sky_size_deg  The total grid width (in one dimension) in degrees. [default: 10]
+        @param nbin         The number of evenly-spaced logarithmic ell bins to use for estimating
+                            the power spectrum. [default: 15]
         """
         # Set up the scales of the sky and pixels
         self.N = N
@@ -181,23 +178,21 @@ class PowerSpectrumEstimator(object):
 
         For example usage, see the docstring for the PowerSpectrumEstimator class.
 
-        @param g1              The shear component g1 as a square 2D NumPy array.
-        @param g2              The shear component g2 as a square 2D NumPy array.
-        @param weight_EE       If True, then the E auto-power spectrum is re-computed weighting by
+        @param g1               The shear component g1 as a square 2D NumPy array.
+        @param g2               The shear component g2 as a square 2D NumPy array.
+        @param weight_EE        If True, then the E auto-power spectrum is re-computed weighting by
                                 the power within each logarithmically-spaced ell bin. Note that use
                                 of this option requires a usable GalSim installation, unlike the
-                                rest of the PowerSpectrumEstimator functionality.  [Default
-                                `weight_EE=False`]
-        @param weight_BB       If True, then the B auto-power spectrum is re-computed weighting by
+                                rest of the PowerSpectrumEstimator functionality.  [defaul: False]
+        @param weight_BB        If True, then the B auto-power spectrum is re-computed weighting by
                                 the power within each logarithmically-spaced ell bin. Note that use
                                 of this option requires a usable GalSim installation, unlike the
-                                rest of the PowerSpectrumEstimator functionality.  [Default
-                                `weight_BB=False`]
-        @param theory_func     An optional callable function that can be used to get an idealized
+                                rest of the PowerSpectrumEstimator functionality.  [default: False]
+        @param theory_func      An optional callable function that can be used to get an idealized
                                 value of power at each point on the grid, and then see what results
                                 it gives for our chosen ell binning.  Unlike the main
                                 PowerSpectrumEstimator, this option requires a usable GalSim
-                                installation.
+                                installation. [default: None]
         """
         # Check for the expected square geometry consistent with the previously-defined grid size.
         if g1.shape != g2.shape:

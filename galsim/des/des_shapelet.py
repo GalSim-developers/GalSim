@@ -63,9 +63,9 @@ class DES_Shapelet(object):
 
     @param file_name        The name of the file to be read in.
     @param dir              Optionally a directory name can be provided if the file names do not 
-                            already include it.
+                            already include it. [default: None]
     @param file_type        Either 'ASCII' or 'FITS' or None.  If None, infer from the file name 
-                            ending. (default = None).
+                            ending. [default: None]
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str, 'file_type' : str }
@@ -272,7 +272,7 @@ def BuildDES_Shapelet(config, key, base, ignore, gsparams, logger):
         raise galsim.config.gsobject.SkipThisObject(message)
 
     if 'flux' in kwargs:
-        psf.setFlux(kwargs['flux'])
+        psf = psf.withFlux(kwargs['flux'])
 
     # The second item here is "safe", a boolean that declares whether the returned value is 
     # safe to save and use again for later objects.  In this case, we wouldn't want to do 

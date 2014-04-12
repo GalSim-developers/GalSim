@@ -22,6 +22,7 @@
 
 #include "SBConvolve.h"
 #include "SBConvolveImpl.h"
+#include "SBTransform.h"
 
 #ifdef DEBUGLOGGING
 #include <fstream>
@@ -90,8 +91,7 @@ namespace galsim {
             if (!obj.isAnalyticX() && _real_space)
                 throw SBError("Real_space SBConvolve requires members to be analytic in x");
             _plist.push_back(obj);
-            SBProfile temp = obj;
-            temp.applyRotation(180. * degrees);
+            SBProfile temp = obj.rotate(180. * degrees);
             _plist.push_back(temp);
         } else {
             if (!rhs.isAnalyticK() && !_real_space) 
@@ -333,8 +333,7 @@ namespace galsim {
 
     double SBAutoCorrelate::SBAutoCorrelateImpl::xValue(const Position<double>& pos) const
     { 
-        SBProfile temp = _adaptee;
-        temp.applyRotation(180. * degrees);
+        SBProfile temp = _adaptee.rotate(180. * degrees);
         return RealSpaceConvolve(_adaptee,temp,pos,getFlux(),this->gsparams);
     }
 

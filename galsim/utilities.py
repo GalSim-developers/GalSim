@@ -26,8 +26,8 @@ import galsim
 def roll2d(image, (iroll, jroll)):
     """Perform a 2D roll (circular shift) on a supplied 2D numpy array, conveniently.
 
-    @param image            the numpy array to be circular shifted.
-    @param (iroll, jroll)   the roll in the i and j dimensions, respectively.
+    @param image            The numpy array to be circular shifted.
+    @param (iroll, jroll)   The roll in the i and j dimensions, respectively.
 
     @returns the rolled image.
     """
@@ -48,7 +48,7 @@ def kxky(array_shape=(256, 256)):
     leading axis as would be expected in IDL/Fortran.  See docstring for numpy.meshgrid which also
     uses this convention.
 
-    @param array_shape   the Numpy array shape desired for `kx, ky`. 
+    @param array_shape   The Numpy array shape desired for `kx, ky`.
     """
     # Note: numpy shape is y,x
     k_xaxis = np.fft.fftfreq(array_shape[1]) * 2. * np.pi
@@ -60,9 +60,11 @@ def g1g2_to_e1e2(g1, g2):
 
     Here g1 and g2 are reduced shears, and e1 and e2 are distortions - see shear.py for definitions
     of reduced shear and distortion in terms of axis ratios or other ways of specifying ellipses.
-    @param g1  First reduced shear component (along pixel axes)
-    @param g2  Second reduced shear component (at 45 degrees with respect to image axes)
-    @returns The corresponding distortions, e1 and e2.
+
+    @param g1   First reduced shear component (along pixel axes)
+    @param g2   Second reduced shear component (at 45 degrees with respect to image axes)
+
+    @returns the corresponding distortions, e1 and e2.
     """
     # Conversion:
     # e = (a^2-b^2) / (a^2+b^2)
@@ -86,10 +88,11 @@ def rotate_xy(x, y, theta):
     """Rotates points in the xy-Cartesian plane counter-clockwise through an angle theta about the
     origin of the Cartesian coordinate system.
 
-    @param x     NumPy array of input x coordinates
-    @param y     NumPy array of input y coordinates
-    @param theta Rotation angle (+ve counter clockwise) as a galsim.Angle instance
-    @return x_rot, yrot  Coordinates rotated by `theta` around the origin
+    @param x        NumPy array of input x coordinates
+    @param y        NumPy array of input y coordinates
+    @param theta    Rotation angle (+ve counter clockwise) as a galsim.Angle instance
+
+    @return the rotated coordinates (x_rot,y_rot).
     """
     if not isinstance(theta, galsim.Angle):
         raise TypeError("Input rotation angle theta must be a galsim.Angle instance.")
@@ -218,10 +221,11 @@ class AttributeDict(object):
 def rand_arr(shape, deviate):
     """Function to make a 2d array of random deviates (of any sort).
 
-    @param shape A list of length 2, indicating the desired 2d array dimensions
-    @param deviate Any GalSim deviate (see random.py) such as UniformDeviate, GaussianDeviate,
-    etc. to be used to generate random numbers
-    @returns A Numpy array of the desired dimensions with random numbers generated using the
+    @param shape        A list of length 2, indicating the desired 2d array dimensions
+    @param deviate      Any GalSim deviate (see random.py) such as UniformDeviate, GaussianDeviate,
+                        etc. to be used to generate random numbers
+
+    @returns a Numpy array of the desired dimensions with random numbers generated using the
     supplied deviate.
     """
     if len(shape) is not 2:
@@ -451,55 +455,43 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
     biases on adaptive moments due to noise itself, a generic feature in this work.  This can be
     verified with a convergence test.
 
-    @param gsobject               the galsim.GSObject for which this test is to be performed (prior
-                                  to PSF convolution if a PSF is also supplied via `psf_object`).
-                                  Note that this function will automatically handle integration over
-                                  a galsim.Pixel of width `pixel_scale`, so a galsim.Pixel should 
-                                  not be included in the supplied `gsobject` (unless you really mean
-                                  to include it, which will be very rare in normal usage).
-
-    @param psf_object             optional additional PSF for tests of convolved objects, also a
-                                  galsim.GSObject.  Note that this function will automatically 
-                                  handle integration over a galsim.Pixel of width `pixel_scale`,
-                                  so this should not be included in the supplied `psf_object`.
-
-    @param rng                    galsim.BaseDeviate or derived deviate class instance to provide
-                                  the pseudo random numbers for the photon shooting.  If `None` on 
-                                  input (default) a galsim.BaseDeviate is internally initialized.
-
-    @param pixel_scale            the pixel scale to use in the test images.
-
-    @param size                   the size of the images in the rendering tests - all test images
-                                  are currently square.
-
-    @param wmult                  the `wmult` parameter used in .draw() (see the GSObject .draw()
-                                  method docs via `help(galsim.GSObject.draw)` for more details).
-
-    @param abs_tol_ellip          the test will keep iterating, adding ever greater numbers of
-                                  trials, until estimates of the 1-sigma standard error on mean 
-                                  ellipticity moments from photon-shot images are smaller than this
-                                  param value.
-
-    @param abs_tol_size           the test will keep iterating, adding ever greater numbers of
-                                  trials, until estimates of the 1-sigma standard error on mean 
-                                  size moments from photon-shot images are smaller than this param
-                                  value.
-
-    @param n_trials_per_iter      number of trial images used to estimate (or successively
-                                  re-estimate) the standard error on the delta quantities above for
-                                  each iteration of the tests. Default = 32.
-
-    @param n_photons_per_trial    number of photons shot in drawShoot() for each trial.  This should
-                                  be large enough that any noise bias (a.k.a. noise rectification
-                                  bias) on moments estimates is small. Default ~1e7 should be
-                                  sufficient.
-
-    @param moments                set True to compare rendered images using AdaptiveMoments
-                                  estimates of simple observed estimates (default=`True`).
-
-    @param hsm                    set True to compare rendered images using HSM shear estimates
-                                  (i.e. including a PSF correction for shears; default=`False` as
-                                  this feature is not yet implemented!)
+    @param gsobject         The galsim.GSObject for which this test is to be performed (prior
+                            to PSF convolution if a PSF is also supplied via `psf_object`).
+                            Note that this function will automatically handle integration over
+                            a galsim.Pixel of width `pixel_scale`, so a galsim.Pixel should 
+                            not be included in the supplied `gsobject` (unless you really mean
+                            to include it, which will be very rare in normal usage).
+    @param psf_object       Optional additional PSF for tests of convolved objects, also a
+                            galsim.GSObject.  Note that this function will automatically 
+                            handle integration over a galsim.Pixel of width `pixel_scale`,
+                            so this should not be included in the supplied `psf_object`.
+                            [default: None]
+    @param rng              A galsim.BaseDeviate or derived deviate class instance to provide
+                            the pseudo random numbers for the photon shooting.  [default: None]
+    @param pixel_scale      The pixel scale to use in the test images. [default: 1]
+    @param size             The size of the images in the rendering tests - all test images
+                            are currently square. [default: 512]
+    @param wmult            The `wmult` parameter used in .draw() (see the GSObject .draw()
+                            method docs via `help(galsim.GSObject.draw)` for more details).
+                            [default: 4]
+    @param abs_tol_ellip    The test will keep iterating, adding ever greater numbers of
+                            trials, until estimates of the 1-sigma standard error on mean 
+                            ellipticity moments from photon-shot images are smaller than this
+                            param value. [default: 1.e-5]
+    @param abs_tol_size     The test will keep iterating, adding ever greater numbers of
+                            trials, until estimates of the 1-sigma standard error on mean 
+                            size moments from photon-shot images are smaller than this param
+                            value. [default: 1.e-5]
+    @param n_trials_per_iter  Number of trial images used to estimate (or successively
+                            re-estimate) the standard error on the delta quantities above for
+                            each iteration of the tests. [default: 32]
+    @param n_photons_per_trial  Number of photons shot in drawShoot() for each trial.  This should
+                            be large enough that any noise bias (a.k.a. noise rectification
+                            bias) on moments estimates is small. [default: 1e7]
+    @param moments          Set True to compare rendered images using AdaptiveMoments
+                            estimates of simple observed estimates. [default: True]
+    @param hsm              Should the rendered images be compared using HSM shear estimates?
+                            (i.e. including a PSF correction for shears) [not implemented]
     """
     import sys
     import logging
@@ -655,65 +647,52 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     biases on adaptive moments due to noise itself, a generic feature in this work.  This can be
     verified with a convergence test.
 
-    @param config                 GalSim config dictionary describing the GSObject we wish to test
-                                  (see e.g. examples/demo8.py).
-
-    @param gal_num                number for the galaxy in the config dictionary, which will be 
-                                  passed to the config system. It related to obj_num in the config
-                                  system by obj_num = gal_num * n_trials_per_iter (assuming the
-                                  config is created correctly as explained in the example above)
-
-    @param random_seed            integer to be used as the basis of all seeds for the random number
-                                  generator, overrides any value in config['image'].
-
-    @param nproc                  number of cpu processes to run in parallel, overrides any value
-                                  in config['image'].
-
-    @param pixel_scale            the pixel scale to use in the test images, overrides any value in
-                                  config['image'].
-
-    @param size                   the size of the images in the rendering tests - all test images
-                                  are currently square, overrides any value in config['image'].
-
-    @param wmult                  the `wmult` parameter used in .draw() (see the GSObject .draw()
-                                  method docs via `help(galsim.GSObject.draw)` for more details),
-                                  overrides any value in config['image'].
-
-    @param abs_tol_ellip          the test will keep iterating, adding ever greater numbers of
-                                  trials, until estimates of the 1-sigma standard error on mean 
-                                  ellipticity moments from photon-shot images are smaller than this
-                                  param value. If moments=False, then using the measurements 
-                                  from HSM.
-
-    @param abs_tol_size           the test will keep iterating, adding ever greater numbers of
-                                  trials, until estimates of the 1-sigma standard error on mean 
-                                  size moments from photon-shot images are smaller than this param
-                                  value. If moments=False, then using the measurements 
-                                  from HSM.
-
-    @param n_trials_per_iter      number of trial images used to estimate (or successively
-                                  re-estimate) the standard error on the delta quantities above for
-                                  each iteration of the tests. Default = 32.
-
-    @param n_max_iter             maximum number of iterations. After reaching it, the current
-                                  uncertainty on shape measurement is reported, even if
-                                  abs_tol_ellip and abs_tol_size was not reported. If a negative
-                                  number is supplied, then there is no limit of number of 
-                                  iterations. Default=-1.
-
-    @param n_photons_per_trial    number of photons shot in drawShoot() for each trial.  This should
-                                  be large enough that any noise bias (a.k.a. noise rectification
-                                  bias) on moments estimates is small. Default ~1e7 should be
-                                  sufficient.
-
-    @param moments                set True to compare rendered images using AdaptiveMoments
-                                  estimates of simple observed estimates (default=`True`).
-
-    @param hsm                    set True to compare rendered images using HSM shear estimates
-                                  (i.e. including a PSF correction for shears; default=`False`)
-
-    @param logger                 logging Logger instance to record output and pass down to the
-                                  config layer for debuging / verbose output if desired.
+    @param config           GalSim config dictionary describing the GSObject we wish to test
+                            (see e.g. examples/demo8.py).
+    @param gal_num          Number for the galaxy in the config dictionary, which will be 
+                            passed to the config system. It related to obj_num in the config
+                            system by obj_num = gal_num * n_trials_per_iter (assuming the
+                            config is created correctly as explained in the example above)
+                            [default: 0]
+    @param random_seed      Integer to be used as the basis of all seeds for the random number
+                            generator, overrides any value in config['image']. [default: None]
+    @param nproc            Number of cpu processes to run in parallel, overrides any value
+                            in config['image']. [default: None]
+    @param pixel_scale      The pixel scale to use in the test images, overrides any value in
+                            config['image']. [default: None]
+    @param size             The size of the images in the rendering tests - all test images
+                            are currently square, overrides any value in config['image'].
+                            [default: None]
+    @param wmult            The `wmult` parameter used in .draw() (see the GSObject .draw()
+                            method docs via `help(galsim.GSObject.draw)` for more details),
+                            overrides any value in config['image']. [default: None]
+    @param abs_tol_ellip    The test will keep iterating, adding ever greater numbers of
+                            trials, until estimates of the 1-sigma standard error on mean 
+                            ellipticity moments from photon-shot images are smaller than this
+                            param value. If moments=False, then using the measurements 
+                            from HSM. [default: 1.e-5]
+    @param abs_tol_size     The test will keep iterating, adding ever greater numbers of
+                            trials, until estimates of the 1-sigma standard error on mean 
+                            size moments from photon-shot images are smaller than this param
+                            value. If moments=False, then using the measurements 
+                            from HSM. [default: 1.e-5]
+    @param n_trials_per_iter  Number of trial images used to estimate (or successively
+                            re-estimate) the standard error on the delta quantities above for
+                            each iteration of the tests. [default: 32]
+    @param n_max_iter       Maximum number of iterations. After reaching it, the current
+                            uncertainty on shape measurement is reported, even if
+                            abs_tol_ellip and abs_tol_size was not reported. If a negative
+                            number is supplied, then there is no limit of number of 
+                            iterations. [default: -1]
+    @param n_photons_per_trial  Number of photons shot in drawShoot() for each trial.  This should
+                            be large enough that any noise bias (a.k.a. noise rectification
+                            bias) on moments estimates is small. [default: 1e7]
+    @param moments          Set True to compare rendered images using AdaptiveMoments
+                            estimates of simple observed estimates. [default: True]
+    @param hsm              Should the rendered images be compared using HSM shear estimates?
+                            (i.e. including a PSF correction for shears) [default: False]
+    @param logger           Logging Logger instance to record output and pass down to the
+                            config layer for debuging / verbose output if desired. [default: None]
     """
     import sys
     import logging
@@ -1029,7 +1008,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
                             be trimmed to include only the region where the integral is 
                             significant? (False)  (default: False)
 
-    @returns x_new, f_new   Lists with the thinned tabulation.
+    @returns a tuple of lists (x_new, y_new) with the thinned tabulation.
     """
     import numpy
     x = numpy.array(x)

@@ -306,7 +306,7 @@ def main(argv):
 
             # Make the galaxy profile with these values:
             gal = galsim.Exponential(half_light_radius=hlr, flux=flux)
-            gal.applyShear(eta1=eta1, eta2=eta2)
+            gal = gal.shear(eta1=eta1, eta2=eta2)
 
             # Now apply the appropriate lensing effects for this position from 
             # the NFW halo mass.
@@ -337,16 +337,15 @@ def main(argv):
             # the first shear.  i.e. The field shear is taken to be behind the cluster.
             # Kind of a cosmic shear contribution between the source and the cluster.
             # However, this is not quite the same thing as doing:
-            #     gal.applyShear(field_shear)
-            #     gal.applyShear(nfw_shear)
+            #     gal.shear(field_shear).shear(nfw_shear)
             # since the shear addition ignores the rotation that would occur when doing the
             # above lines.  This is normally ok, because the rotation is not observable, but 
             # it is worth keeping in mind.
             total_shear = nfw_shear + field_shear
 
             # Apply the magnification and shear to the galaxy
-            gal.applyMagnification(nfw_mu)
-            gal.applyShear(total_shear)
+            gal = gal.magnify(nfw_mu)
+            gal = gal.shear(total_shear)
 
             # Build the final object
             final = galsim.Convolve([psf, pix, gal])

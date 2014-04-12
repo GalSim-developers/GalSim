@@ -133,9 +133,7 @@ def main(argv):
     gal = galsim.Chromatic(mono_gal, SED)
 
     # You can still shear, shift, and dilate the resulting chromatic object.
-    gal.applyShear(g1=0.5, g2=0.3)
-    gal.applyDilation(1.05)
-    gal.applyShift((0.0, 0.1))
+    gal = gal.shear(g1=0.5, g2=0.3).dilate(1.05).shift((0.0, 0.1))
     logger.debug('Created Chromatic')
 
     # convolve with pixel and PSF to make final profile
@@ -170,13 +168,13 @@ def main(argv):
     bulge_SED = SEDs['CWW_E_ext'].atRedshift(redshift)
     # The `*` operator can be used as a shortcut for creating a chromatic version of a GSObject:
     bulge = mono_bulge * bulge_SED
-    bulge.applyShear(g1=0.12, g2=0.07)
+    bulge = bulge.shear(g1=0.12, g2=0.07)
     logger.debug('Created bulge component')
     # ... and a disk ...
     mono_disk = galsim.Exponential(half_light_radius=2.0)
     disk_SED = SEDs['CWW_Im_ext'].atRedshift(redshift)
     disk = mono_disk * disk_SED
-    disk.applyShear(g1=0.4, g2=0.2)
+    disk = disk.shear(g1=0.4, g2=0.2)
     logger.debug('Created disk component')
     # ... and then combine them.
     bdgal = 1.1 * (0.8*bulge+4*disk) # you can add and multiply ChromaticObjects just like GSObjects
@@ -217,7 +215,7 @@ def main(argv):
     # The flux drawn through other bands, which sample different parts of the SED and have different
     # throughputs, will, of course, be different.
     gal = mono_gal * SED
-    gal.applyShear(g1=0.5, g2=0.3)
+    gal = gal.shear(g1=0.5, g2=0.3)
     logger.debug('Created `Chromatic` galaxy')
 
     # For a ground-based PSF, two chromatic effects are introduced by the atmosphere:

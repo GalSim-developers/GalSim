@@ -44,7 +44,8 @@ def air_refractive_index_minus_one(wave, pressure=69.328, temperature=293.15, H2
     @param pressure       Air pressure in kiloPascals.
     @param temperature    Temperature in Kelvins.
     @param H2O_pressure   Water vapor pressure in kiloPascals.
-    @returns refractive index
+
+    @returns the refractive index minus 1.
     """
     P = pressure * 7.50061683 # kPa -> mmHg
     T = temperature - 273.15 # K -> C
@@ -69,7 +70,8 @@ def get_refraction(wave, zenith_angle, **kwargs):
     @param zenith_angle  as a galsim.Angle
     @param kwargs        Keyword arguments to pass to air_refractive_index() to override default
                          pressure, temperature, and/or H2O_pressure.
-    @returns             Absolute value of change in zenith angle as a galsim.Angle
+
+    @returns the absolute value of change in zenith angle as a galsim.Angle.
     """
     nm1 = air_refractive_index_minus_one(wave, **kwargs)
     # The following line is equivalent to:
@@ -90,7 +92,8 @@ def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=No
     @param HA            The hour angle (as a `galsim.Angle`) of the coordinate for which the
                          zenith and parallactic angles will be computed.
     @param latitude      The observer's latitude, as a `galsim.Angle`.
-    @returns zenith_angle, parallactic_angle as `galsim.Angle`s.
+
+    @returns the zenith_angle, parallactic_angle as galsim.Angles.
     """
     if zenith_coord is None:
         if HA is None or latitude is None:
