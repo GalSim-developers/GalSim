@@ -4,7 +4,7 @@ Changes from v1.0 to v1.1:
 Non-backward-compatible API changes:
 
 We believe that these changes will not impose much hardship on the majority
-of GalSim users.  The funtions are either expected to be rarely used, or the 
+of GalSim users.  The funtions are either expected to be rarely used, or the
 change does not affect the most common uses of the function.
 
 * Changed the `xw` and `yw` parameters of the `Pixel` constructor to a
@@ -15,12 +15,12 @@ change does not affect the most common uses of the function.
   with unequal values of `xw` and `yw`. (Issue #364)
   * `box = Pixel(xw=width, yw=height)` should now be either
     `box = Box(width=width, height=height)` or `box = Box(width, height)`.
-* Changed the handling of the `scale` and `init_value` parameters of the 
+* Changed the handling of the `scale` and `init_value` parameters of the
   `Image` constructor, so that now they have to be named keyword arguments
   rather than positional arguments. (Issue #364)
   * `im = ImageF(nx, ny, scale, init_val)` should now be
     `im = ImageF(nx, ny, scale=scale, init_value=init_val)`.
-* Changed `Angle.wrap()` to return the wrapped angle rather than modifying the 
+* Changed `Angle.wrap()` to return the wrapped angle rather than modifying the
   original. (Issue #364)
   * `angle.wrap()` should now be `angle = angle.wrap()`.
 * Removed the previously deprecated `Ellipse` and `AtmosphericPSF` classes.
@@ -29,15 +29,15 @@ change does not affect the most common uses of the function.
 * Changed Bounds methods `addBorder`, `shift`, and `expand` to return new
   Bounds objects rather than changing the original (in the python layer
   only). (Issue #364)
-* Stopped importing everything from the `galsim._galsim` namespace into the 
-  main `galsim` namespace.  Now only the classes and functions which we 
+* Stopped importing everything from the `galsim._galsim` namespace into the
+  main `galsim` namespace.  Now only the classes and functions which we
   document and use in examples are imported into the `galsim` namespace.
   The rest are considered implementation details, and are not guaranteed
-  to maintain backward compatibility of syntax and/or functionality in future 
+  to maintain backward compatibility of syntax and/or functionality in future
   versions. (Issue #511)
   * e.g. `galsim.SBGaussian` should now be `galsim._galsim.SBGaussian`.
   * Or better, switch to using the documented `galsim.Gaussian` class instead.
-  * Similarly for other `SB*` classes along with a few other undocumented 
+  * Similarly for other `SB*` classes along with a few other undocumented
     classes and functions.
 * Changed the name of the parameter used to seed various Deviate objects
   from `lseed` to `seed`.  The documentation described it as an unnamed arg,
@@ -47,10 +47,10 @@ change does not affect the most common uses of the function.
 
 Other changes to the API
 
-For these changes, we are currently still allowing the old syntax for ease of 
-transition, but that syntax is now discouraged.  It is usually marked in the 
+For these changes, we are currently still allowing the old syntax for ease of
+transition, but that syntax is now discouraged.  It is usually marked in the
 code as being obsolete.  At some point (probably version 1.2) use of the old
-syntax will raise a DeprecationWarning, and with version 2.0, it will be 
+syntax will raise a DeprecationWarning, and with version 2.0, it will be
 removed.
 
 * Changed the name of the `dx` parameter in the `draw`, `drawShoot`, `drawK`
@@ -58,7 +58,7 @@ removed.
   `CorrelatedNoise` to the name `scale`. (Issue #364)
 * Changed the `dx_cosmos` parameter of `getCOSMOSNoise` to `cosmos_scale`.
   (Issue #364)
-* Combined the old `Image`, `ImageView` and `ConstImageView` arrays of class 
+* Combined the old `Image`, `ImageView` and `ConstImageView` arrays of class
   names into a single python layer `Image` class that automatically constructs
   the appropriate C++ image class as an attribute. (Issue #364)
   * `im = ImageF(...)` and similar is still valid.
@@ -67,28 +67,28 @@ removed.
     something else either through the type letter or the `dtype` parameter.
   * `im = ImageViewF(...)` and similar should now be `im = ImageF(...)`
     (preserving the same type letter S, I, F or D).
-  * `im = ConstImageViewF(...)` and similar should now be 
+  * `im = ConstImageViewF(...)` and similar should now be
     `im = ImageF(..., make_const=True)` (again preserving the type letter).
   * `im = Image[type](...)` should now be `Image(..., dtype=type)`
-  * `im = ImageView[type](numpy_array.astype(type))` should now be 
+  * `im = ImageView[type](numpy_array.astype(type))` should now be
     `im = Image(numpy_array.astype(type))`.  i.e. the data type inherits
     from the numpy_array argument when appropriate.  If it is already
     the correct type, you do not need the `astype(type)` part.
-  * `im = ConstImageView[type](numpy_array.astype(type))` should now be 
+  * `im = ConstImageView[type](numpy_array.astype(type))` should now be
     `im = Image(numpy_array.astype(type), make_const=True)`
 * Changed DES_PSFEx class to take in the original image file to get the correct
   WCS information to convert from image coordinates to world coordinates.  If
   unavailable, then the returned PSF profiles will be in image coordinates.
   The old `scale` parameter in `psfex.getPSF` is obsolete since it is not
-  really accurate.  The new behavior accurately converts the PSFEx profile 
+  really accurate.  The new behavior accurately converts the PSFEx profile
   between image and world coordinates. (Issue #364)
   * `psfex = galsim.des.DES_PSFEx(psf_file)` `psf = psfex.getPSF(pos, scale)`
     should become `psfex = galsim.des.DES_PSFEx(psf_file, image_file)`
     `psf = psfex.getPSF(pos)`.
 * Changed the methods createSheared, createRotated, etc. to more succinct
   names.  The applyShear, applyRotation, etc. methods are also discouraged
-  and will eventually be deprecated.  All such usage should be changed to the 
-  version the returns a new object, rather than modify the object in place. 
+  and will eventually be deprecated.  All such usage should be changed to the
+  version the returns a new object, rather than modify the object in place.
   (Issue #511)
   * `gal = gal.createSheared(shear)` or `gal.applyShear(shear)` should
     now be `gal = gal.shear(shear)`.
@@ -106,7 +106,7 @@ removed.
     now be `gal = gal.transform(...)`.
   * `gal = gal.createLensed(g1,g2,mu)` or `gal.applyLensing(g1,g2,mu)` should
     now be `gal = gal.lens(g1,g2,mu)`.
-* Changed the `setFlux` and `scaleFlux` methods to versions that return new 
+* Changed the `setFlux` and `scaleFlux` methods to versions that return new
   objects, rather than change the object in place.  (Issue #511)
   * `gal.setFlux(flux)` should now be `gal = gal.withFlux(flux)`
   * `gal.scaleFlux(flux_ratio)` should now be `gal = gal * flux_ratio`
@@ -137,9 +137,9 @@ removed.
   which returns a new object corresponding to the convolvution. (Issue #511)
   * `cn.convolveWith(obj)` should now be `cn = cn.convolvedWith(obj)`.
 * Changed the Shapelet.fitImage method to a factory function named
-  `FitShapelet` that constructs a new Shapelet object rather than modify 
+  `FitShapelet` that constructs a new Shapelet object rather than modify
   an existing object in place.
-  * `shapelet = galsim.Shapelet(sigma,order); shapelet.fitImage(image)` should 
+  * `shapelet = galsim.Shapelet(sigma,order); shapelet.fitImage(image)` should
     now be `shapelet = galsim.FitShapelet(sigma, order, image)`
 * Changed the name of LVectorSize to ShapeletSize. (Issue #511)
 * Changed the `nyquistDx` method to `nyquistScale`.  (Issue #511)
@@ -233,7 +233,7 @@ New `CelestialCoord` class: (Issue #364)
     coordinate system as a tuple (el, b).
 
 
-New chromatic functionality: (Issue #467)
+New chromatic functionality: (Issue2 #467, #520)
 
 * New `Bandpass` class to represent throughput functions, which can either
   represent a complete imaging system, or the individual components thereof,
@@ -342,5 +342,7 @@ Other new features:
   as an alternative to specifying each one individually.  (The innards of
   OpticalPSF were also rearranged to use arrays instead of individual values,
   but this is not important for users, just developers.) (Issue #409)
+* Added `max_size` optional parameter to OpticalPSF that lets you limit the
+  size of the image that it constructs internally. (Issue #478)
 * Added option to FitsHeader and FitsWCS to read in SCamp-style text files with
   the header information using the parameter `text_file=True`. (Issue #508)
