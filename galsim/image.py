@@ -95,7 +95,7 @@ class Image(object):
         Image(bounds, dtype=numpy.float32, init_value=0, ...)
 
                     Construct a new image, allocating memory for the pixel values according
-                    to a given bounds object.  The bounds should be a galsim.BoundsI instance.
+                    to a given bounds object.  The bounds should be a BoundsI instance.
                     You can specify the data type as `dtype` if you want.  The default is 
                     `numpy.float32` if you don't specify it.  You can also optionally provide
                     an initial value for the pixels, which defaults to 0.
@@ -104,7 +104,7 @@ class Image(object):
 
                     View an existing numpy array as a galsim Image.  The dtype is taken from
                     the dtype of the numpy array, which must be one of the allowed types listed
-                    above.  You can also optionally set the origin (xmin, ymin) if you want it to 
+                    above.  You can also optionally set the origin `(xmin, ymin)` if you want it to 
                     be something other than (1,1).  You can also optionally force the image to
                     be read-only with `make_const=True`.
 
@@ -118,7 +118,7 @@ class Image(object):
     what they are.
 
     The other arguments (shown as ... above) relate to the conversion between sky coordinates,
-    which is how all the galsim objects are defined, and the pixel coordinates.  There are
+    which is how all the GalSim objects are defined, and the pixel coordinates.  There are
     three options for this:
 
         scale       You can optionally specify a pixel scale to use.  This would normally have
@@ -126,7 +126,7 @@ class Image(object):
                     use different units for the physical scale of your galsim objects, then
                     the same unit would be used here.
         wcs         A WCS object that provides a non-trivial mapping between sky units and
-                    pixel units.  The scale parameter is equivalent to wcs=PixelScale(scale).
+                    pixel units.  The `scale` parameter is equivalent to `wcs=PixelScale(scale)`.
                     But there are a number of more complicated options.  See the WCS class
                     for more details.
         None        If you do not provide either of the above, then the conversion is undefined.
@@ -142,18 +142,18 @@ class Image(object):
         im.scale = new_scale
         im.wcs = new_wcs
 
-    Note that im.scale will only work if the WCS is a galsim.PixelScale.  Once you set the 
-    wcs to be something non-trivial, then you must interact with it via the wcs attribute.
-    The im.scale syntax will raise an exception.
+    Note that `im.scale` will only work if the WCS is a PixelScale.  Once you set the 
+    wcs to be something non-trivial, then you must interact with it via the `wcs` attribute.
+    The `im.scale` syntax will raise an exception.
 
     There are also two read-only attributes:
 
         im.bounds
         im.array
 
-    The 'array' attribute provides a numpy view into the Image's pixels.  The individual elements 
-    in the array attribute are accessed as im.array[y,x], matching the standard numpy convention,
-    while the Image class's own accessor uses (x,y).
+    The `array` attribute provides a numpy view into the Image's pixels.  The individual elements 
+    in the array attribute are accessed as `im.array[y,x]`, matching the standard numpy convention,
+    while the Image class's own accessor uses `(x,y)`.
 
 
     Methods
@@ -403,7 +403,7 @@ class Image(object):
         """Make a view of this image, which lets you change the scale, wcs, origin, etc.
         but view the same underlying data as the original image.
 
-        You can make this a const view with the make_const parameter.
+        You can make this a const view with the `make_const` parameter.
         """
         if make_const:
             return Image(image=_galsim.ConstImageView[self.dtype](self.image.view()),
@@ -497,7 +497,7 @@ class Image(object):
         self.image.setValue(pos.x, pos.y, value)
 
     def fill(self, value):
-        """Set all pixel values to the given value
+        """Set all pixel values to the given `value`
         """
         self.image.fill(value)
 
