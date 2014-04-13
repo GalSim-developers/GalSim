@@ -455,7 +455,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return _BaseCorrelatedNoise(self.getRNG(), self._profile * variance_ratio)
 
     def setVariance(self, variance):
-        """This is an obsolete method that is rougly equivalent to
+        """This is an obsolete method that is roughly equivalent to
         corr = corr.withVariance(variance)
         """
         new_obj = self.withVariance(variance)
@@ -464,7 +464,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self.__class__ = new_obj.__class__
 
     def scaleVariance(self, variance_ratio):
-        """This is an obsolete method that is rougly equivalent to corr = corr * variance_ratio"""
+        """This is an obsolete method that is roughly equivalent to corr = corr * variance_ratio"""
         new_obj = self.withScaledVariance(variance_ratio)
         self._profile = new_obj._profile
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
@@ -521,7 +521,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return _BaseCorrelatedNoise(self.getRNG(), conv)
 
     def convolveWith(self, gsobject, gsparams=None):
-        """This is an obsolete method that is rougly equivalent to
+        """This is an obsolete method that is roughly equivalent to
         cn = cn.convolvedWith(gsobject,gsparams)
         """
         new_obj = self.convolvedWith(gsobject,gsparams)

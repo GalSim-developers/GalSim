@@ -91,12 +91,12 @@ Set the BaseDeviate used to generate random numbers for the current noise model.
 _galsim.BaseNoise.getVariance.__func__.__doc__ = "Get variance in current noise model."
 
 def Noise_setVariance(self, variance):
-    """This is an obsolete method that is rougly equivalent to `noise = noise.withVariance(variance)`.
+    """This is an obsolete method that is roughly equivalent to `noise = noise.withVariance(variance)`.
     """
     self._setVariance(variance)
 
 def Noise_scaleVariance(self, variance_ratio):
-    """This is an obsolete method that is rougly equivalent to `noise = noise * variance_ratio`.
+    """This is an obsolete method that is roughly equivalent to `noise = noise * variance_ratio`.
     """
     self._scaleVariance(variance_ratio)
 
