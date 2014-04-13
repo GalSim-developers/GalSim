@@ -163,25 +163,25 @@ class DistDeviate(_galsim.BaseDeviate):
     
     DistDeviate is a BaseDeviate class that can be used to draw from an arbitrary probability
     distribution.  The probability distribution passed to DistDeviate can be given one of three 
-    ways: as the name of a file containing a 2d ASCII array of x and P(x) or as a callable 
+    ways: as the name of a file containing a 2d ASCII array of `x` and `P(x)` or as a callable 
     function.
     
-    Once given a probability, DistDeviate creates a table of x value versus cumulative probability 
+    Once given a probability, DistDeviate creates a table of `x` value versus cumulative probability
     and draws from it using a UniformDeviate.  The precision of its outputs can be controlled with
     the keyword npoints, which sets the number of points DistDeviate creates for its internal table
-    of x vs CDF(x).  To prevent errors due to non-monotonicity, the interpolant for this internal
-    table is always linear.
+    of `x` vs `CDF(x)`.  To prevent errors due to non-monotonicity, the interpolant for this
+    internal table is always linear.
     
-    Two keywords, x_min and x_max, define the support of the function.  They must be passed if a 
-    callable function is given to DistDeviate, unless the function is a galsim.LookupTable, which 
-    has its own defined endpoints.  If a filename or LookupTable is passed to DistDeviate, the use
-    of x_min or x_max will result in an error.
+    Two keywords, `x_min` and `x_max`, define the support of the function.  They must be passed if a
+    callable function is given to DistDeviate, unless the function is a LookupTable, which has its
+    own defined endpoints.  If a filename or LookupTable is passed to DistDeviate, the use of
+    `x_min` or `x_max` will result in an error.
         
-    If given a table in a file, DistDeviate will construct an interpolated LookupTable to obtain 
+    If given a table in a file, DistDeviate will construct an interpolated LookupTable to obtain
     more finely gridded probabilities for generating the cumulative probability table.  The default
-    interpolant is linear, but any interpolant understood by LookupTable may be used.  We caution 
-    against the use of splines because they can cause non-monotonic behavior.  Passing the 
-    interpolant keyword next to anything but a table in a file will result in an error.
+    `interpolant` is linear, but any interpolant understood by LookupTable may be used.  We caution
+    against the use of splines because they can cause non-monotonic behavior.  Passing the
+    `interpolant` keyword next to anything but a table in a file will result in an error.
     
     Initialization
     --------------
@@ -191,34 +191,34 @@ class DistDeviate(_galsim.BaseDeviate):
     >>> d = galsim.DistDeviate(function=f, x_min=x_min, x_max=x_max)
     
     Initializes d to be a DistDeviate instance with a distribution given by the callable function
-    f(x) from x=x_min to x=x_max and seeds the PRNG using current time.  
+    `f(x)` from `x=x_min` to `x=x_max` and seeds the PRNG using current time.  
     
     >>> d = galsim.DistDeviate(1062533, function=file_name, interpolant='floor')
     
     Initializes d to be a DistDeviate instance with a distribution given by the data in file
-    file_name, which must be a 2-column ASCII table, and seeds the PRNG using the long int
-    seed 1062533. It generates probabilities from file_name using the interpolant 'floor'.
+    `file_name`, which must be a 2-column ASCII table, and seeds the PRNG using the long int
+    seed 1062533. It generates probabilities from `file_name` using the interpolant 'floor'.
     
     >>> d = galsim.DistDeviate(rng, function=galsim.LookupTable(x,p))
     
-    Initializes d to be a DistDeviate instance with a distribution given by P(x), defined as two
-    arrays x and p which are used to make a callable galsim.LookupTable, and links the DistDeviate
-    PRNG to the already-existing random number generator rng.
+    Initializes d to be a DistDeviate instance with a distribution given by `P(x)`, defined as two
+    arrays `x` and `p` which are used to make a callable LookupTable, and links the DistDeviate
+    PRNG to the already-existing random number generator `rng`.
     
     @param seed         Something that can seed a BaseDeviate: a long int seed or another 
                         BaseDeviate.  Using 0 means to use the time of day as a seed. [default: 0]
     @param function     A callable function giving a probability distribution or the name of a 
                         file containing a probability distribution as a 2-column ASCII table.
                         [default: None]
-    @param x_min        The minimum desired return value (required for non-galsim.LookupTable
+    @param x_min        The minimum desired return value (required for non-LookupTable
                         callable functions; will raise an error if not passed in that case, or if
                         passed in any other case) [default: None]
-    @param x_min        The maximum desired return value (required for non-galsim.LookupTable
+    @param x_min        The maximum desired return value (required for non-LookupTable
                         callable functions; will raise an error if not passed in that case, or if
                         passed in any other case) [default: None]
     @param interpolant  Type of interpolation used for interpolating a file (causes an error if 
                         passed alongside a callable function).  Options are given in the 
-                        documentation for galsim.LookupTable. [default: 'linear']
+                        documentation for LookupTable. [default: 'linear']
     @param npoints      Number of points DistDeviate should create for its internal interpolation
                         tables. [default: 256]
 
@@ -350,8 +350,8 @@ class DistDeviate(_galsim.BaseDeviate):
         
     def val(self,p):
         """
-        Return the value x of the input function to DistDeviate such that 
-        p = cumulative probability(x).
+        Return the value `x` of the input function to DistDeviate such that 
+        `p` = cumulative probability(x).
         """
         if p<0 or p>1:
             raise ValueError('Cannot request cumulative probability value from DistDeviate for '
@@ -428,7 +428,7 @@ Calling
 -------
 
 Successive calls to g() generate pseudo-random values distributed according to a Gaussian
-distribution with the provided mean, sigma.
+distribution with the provided `mean`, `sigma`.
 
     >>> g = galsim.GaussianDeviate(31415926)
     >>> g()
@@ -440,21 +440,21 @@ distribution with the provided mean, sigma.
 _galsim.GaussianDeviate.__call__.__func__.__doc__ = """
 Draw a new random number from the distribution.
 
-Returns a Gaussian deviate with current mean and sigma.
+Returns a Gaussian deviate with current `mean` and `sigma`.
 """
-_galsim.GaussianDeviate.getMean.__func__.__doc__ = "Get current distribution mean."
-_galsim.GaussianDeviate.setMean.__func__.__doc__ = "Set current distribution mean. Discouraged."
-_galsim.GaussianDeviate.getSigma.__func__.__doc__ = "Get current distribution sigma."
-_galsim.GaussianDeviate.setSigma.__func__.__doc__ = "Set current distribution sigma. Discouraged."
+_galsim.GaussianDeviate.getMean.__func__.__doc__ = "Get current distribution `mean`."
+_galsim.GaussianDeviate.setMean.__func__.__doc__ = "Set current distribution `mean`. Discouraged."
+_galsim.GaussianDeviate.getSigma.__func__.__doc__ = "Get current distribution `sigma`."
+_galsim.GaussianDeviate.setSigma.__func__.__doc__ = "Set current distribution `sigma`. Discouraged."
 
 
 # BinomialDeviate docstrings
 _galsim.BinomialDeviate.__doc__ = """
-Pseudo-random Binomial deviate for N trials each of probability p.
+Pseudo-random Binomial deviate for `N` trials each of probability `p`.
 
-N is number of 'coin flips,' p is probability of 'heads,' and each call returns an integer value
-where 0 <= value <= N giving number of heads.  See http://en.wikipedia.org/wiki/Binomial_distribution
-for more information.
+`N` is number of 'coin flips,' `p` is probability of 'heads,' and each call returns an integer value
+where 0 <= value <= N gives the number of heads.  See
+http://en.wikipedia.org/wiki/Binomial_distribution for more information.
 
 Initialization
 --------------
@@ -468,7 +468,7 @@ Calling
 -------
 
 Successive calls to b() generate pseudo-random integer values distributed according to a binomial
-distribution with the provided N, p.
+distribution with the provided `N`, `p`.
 
     >>> b = galsim.BinomialDeviate(31415926, N=10, p=0.3)
     >>> b()
@@ -480,21 +480,21 @@ distribution with the provided N, p.
 _galsim.BinomialDeviate.__call__.__func__.__doc__ = """
 Draw a new random number from the distribution.
 
-Returns a Binomial deviate with current N and p.
+Returns a Binomial deviate with current `N` and `p`.
 """
-_galsim.BinomialDeviate.getN.__func__.__doc__ = "Get current distribution N."
-_galsim.BinomialDeviate.setN.__func__.__doc__ = "Set current distribution N. Discouraged."
-_galsim.BinomialDeviate.getP.__func__.__doc__ = "Get current distribution p."
-_galsim.BinomialDeviate.setP.__func__.__doc__ = "Set current distribution p. Discouraged."
+_galsim.BinomialDeviate.getN.__func__.__doc__ = "Get current distribution `N`."
+_galsim.BinomialDeviate.setN.__func__.__doc__ = "Set current distribution `N`. Discouraged."
+_galsim.BinomialDeviate.getP.__func__.__doc__ = "Get current distribution `p`."
+_galsim.BinomialDeviate.setP.__func__.__doc__ = "Set current distribution `p`. Discouraged."
 
 
 # PoissonDeviate docstrings
 _galsim.PoissonDeviate.__doc__ = """
-Pseudo-random Poisson deviate with specified mean.
+Pseudo-random Poisson deviate with specified `mean`.
 
-The input mean sets the mean and variance of the Poisson deviate.  An integer deviate with this
-distribution is returned after each call.  See http://en.wikipedia.org/wiki/Poisson_distribution
-for more details.
+The input `mean` sets the mean and variance of the Poisson deviate.  An integer deviate with this
+distribution is returned after each call.  See http://en.wikipedia.org/wiki/Poisson_distribution for
+more details.
 
 Initialization
 --------------
@@ -507,7 +507,7 @@ Calling
 -------
 
 Successive calls to p() generate pseudo-random integer values distributed according to a Poisson
-distribution with the specified mean.
+distribution with the specified `mean`.
 
     >>> p = galsim.PoissonDeviate(31415926, mean=100)
     >>> p()
@@ -519,16 +519,16 @@ distribution with the specified mean.
 _galsim.PoissonDeviate.__call__.__func__.__doc__ = """
 Draw a new random number from the distribution.
 
-Returns a Poisson deviate with current mean.
+Returns a Poisson deviate with current `mean`.
 """
-_galsim.PoissonDeviate.getMean.__func__.__doc__ = "Get current distribution mean."
-_galsim.PoissonDeviate.setMean.__func__.__doc__ = "Set current distribution mean. Discouraged."
+_galsim.PoissonDeviate.getMean.__func__.__doc__ = "Get current distribution `mean`."
+_galsim.PoissonDeviate.setMean.__func__.__doc__ = "Set current distribution `mean`. Discouraged."
 
 
 
 # WeibullDeviate docstrings
 _galsim.WeibullDeviate.__doc__ = """
-Pseudo-random Weibull-distributed deviate for shape parameter a & scale parameter b.
+Pseudo-random Weibull-distributed deviate for shape parameter `a` and scale parameter `b`.
 
 The Weibull distribution is related to a number of other probability distributions;  in particular,
 it interpolates between the exponential distribution (a=1) and the Rayleigh distribution (a=2). 
@@ -548,7 +548,7 @@ Calling
 -------
 
 Successive calls to p() generate pseudo-random values distributed according to a Weibull
-distribution with the specified shape and scale parameters a and b.
+distribution with the specified shape and scale parameters `a` and `b`.
 
     >>> w = galsim.WeibullDeviate(31415926, a=1.3, b=4)
     >>> w()
@@ -560,17 +560,17 @@ distribution with the specified shape and scale parameters a and b.
 _galsim.WeibullDeviate.__call__.__func__.__doc__ = """
 Draw a new random number from the distribution.
 
-Returns a Weibull-distributed deviate with current a and b.
+Returns a Weibull-distributed deviate with current `a` and `b`.
 """
-_galsim.WeibullDeviate.getA.__func__.__doc__ = "Get current distribution shape parameter a."
-_galsim.WeibullDeviate.setA.__func__.__doc__ = "Set current distribution shape parameter a. Discouraged."
-_galsim.WeibullDeviate.getB.__func__.__doc__ = "Get current distribution shape parameter b."
-_galsim.WeibullDeviate.setB.__func__.__doc__ = "Set current distribution shape parameter b. Discouraged."
+_galsim.WeibullDeviate.getA.__func__.__doc__ = "Get current distribution shape parameter `a`."
+_galsim.WeibullDeviate.setA.__func__.__doc__ = "Set current distribution shape parameter `a`. Discouraged."
+_galsim.WeibullDeviate.getB.__func__.__doc__ = "Get current distribution shape parameter `b`."
+_galsim.WeibullDeviate.setB.__func__.__doc__ = "Set current distribution shape parameter `b`. Discouraged."
 
 
 # GammaDeviate docstrings
 _galsim.GammaDeviate.__doc__ = """
-A Gamma-distributed deviate with shape parameter k and scale parameter theta.
+A Gamma-distributed deviate with shape parameter `k` and scale parameter `theta`.
 See http://en.wikipedia.org/wiki/Gamma_distribution.  
 (Note: we use the k, theta notation. If you prefer alpha, beta, use k=alpha, theta=1/beta.)
 The Gamma distribution is a real valued distribution producing deviates >= 0.
@@ -587,7 +587,7 @@ Calling
 -------
 
 Successive calls to p() generate pseudo-random values distributed according to a gamma
-distribution with the specified shape and scale parameters k and theta.
+distribution with the specified shape and scale parameters `k` and `theta`.
 
     >>> gam = galsim.GammaDeviate(31415926, k=1, theta=2)
     >>> gam()
@@ -601,15 +601,15 @@ Draw a new random number from the distribution.
 
 Returns a Gamma-distributed deviate with current k and theta.
 """
-_galsim.GammaDeviate.getK.__func__.__doc__ = "Get current distribution shape parameter k."
-_galsim.GammaDeviate.setK.__func__.__doc__ = "Set current distribution shape parameter k. Discouraged."
-_galsim.GammaDeviate.getTheta.__func__.__doc__ = "Get current distribution shape parameter theta."
-_galsim.GammaDeviate.setTheta.__func__.__doc__ = "Set current distribution shape parameter theta. Discouraged."
+_galsim.GammaDeviate.getK.__func__.__doc__ = "Get current distribution shape parameter `k`."
+_galsim.GammaDeviate.setK.__func__.__doc__ = "Set current distribution shape parameter `k`. Discouraged."
+_galsim.GammaDeviate.getTheta.__func__.__doc__ = "Get current distribution shape parameter `theta`."
+_galsim.GammaDeviate.setTheta.__func__.__doc__ = "Set current distribution shape parameter `theta`. Discouraged."
 
 
 # Chi2Deviate docstrings
 _galsim.Chi2Deviate.__doc__ = """
-Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter n.
+Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter `n`.
 
 See http://en.wikipedia.org/wiki/Chi-squared_distribution (note that k=n in the notation adopted in
 the Boost.Random routine called by this class).  The Chi^2 distribution is a real-valued 
@@ -627,7 +627,7 @@ Calling
 -------
 
 Successive calls to chi2() generate pseudo-random values distributed according to a chi-square
-distribution with the specified degrees of freedom, n.
+distribution with the specified degrees of freedom, `n`.
 
     >>> chi2 = galsim.Chi2Deviate(31415926, n=7)
     >>> chi2()
@@ -639,10 +639,10 @@ distribution with the specified degrees of freedom, n.
 _galsim.Chi2Deviate.__call__.__func__.__doc__ = """
 Draw a new random number from the distribution.
 
-Returns a Chi2-distributed deviate with current n degrees of freedom.
+Returns a Chi2-distributed deviate with current `n` degrees of freedom.
 """
-_galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution n degrees of freedom."
-_galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution n degrees of freedom. Discouraged."
+_galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution `n` degrees of freedom."
+_galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution `n` degrees of freedom. Discouraged."
 
 
 # Some functions to enable pickling of deviates
