@@ -39,13 +39,13 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
     @param config              A configuration dict.
     @param nproc               How many processes to use. [default: 1]
     @param logger              If given, a logger object to log progress. [default: None]
-    @param image_num           If given, the current image_num [default: 0]
-    @param obj_num             If given, the current obj_num [default: 0]
-    @param make_psf_image      Whether to make psf_image. [default: False]
-    @param make_weight_image   Whether to make weight_image. [default: False]
-    @param make_badpix_image   Whether to make badpix_image. [default: False]
+    @param image_num           If given, the current `image_num` [default: 0]
+    @param obj_num             If given, the current `obj_num` [default: 0]
+    @param make_psf_image      Whether to make `psf_image`. [default: False]
+    @param make_weight_image   Whether to make `weight_image`. [default: False]
+    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @returns the tuple (images, psf_images, weight_images, badpix_images).
+    @returns the tuple `(images, psf_images, weight_images, badpix_images)`.
              All in tuple are lists.
     """
     if logger:
@@ -270,17 +270,17 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
 def BuildImage(config, logger=None, image_num=0, obj_num=0,
                make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
-    Build an image according to the information in config.
+    Build an Image according to the information in config.
 
     @param config              A configuration dict.
     @param logger              If given, a logger object to log progress. [default: None]
-    @param image_num           If given, the current image_num [default: 0]
-    @param obj_num             If given, the current obj_num [default: 0]
-    @param make_psf_image      Whether to make psf_image. [default: False]
-    @param make_weight_image   Whether to make weight_image. [default: False]
-    @param make_badpix_image   Whether to make badpix_image. [default: False]
+    @param image_num           If given, the current `image_num` [default: 0]
+    @param obj_num             If given, the current `obj_num` [default: 0]
+    @param make_psf_image      Whether to make `psf_image`. [default: False]
+    @param make_weight_image   Whether to make `weight_image`. [default: False]
+    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @returns the tuple (image, psf_image, weight_image, badpix_image).
+    @returns the tuple `(image, psf_image, weight_image, badpix_image)`.
 
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.
@@ -323,7 +323,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
 
 
 def _set_image_origin(config, convention):
-    """Set config['image_origin'] appropriately based on the provided convention.
+    """Set `config['image_origin']` appropriately based on the provided `convention`.
     """
     if convention.lower() in [ '0', 'c', 'python' ]:
         origin = 0
@@ -341,19 +341,19 @@ def _set_image_origin(config, convention):
 def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
-    Build an image consisting of a single stamp
+    Build an Image consisting of a single stamp.
 
     @param config              A configuration dict.
     @param logger              If given, a logger object to log progress. [default: None]
-    @param image_num           If given, the current image_num [default: 0]
-    @param obj_num             If given, the current obj_num [default: 0]
-    @param make_psf_image      Whether to make psf_image. [default: False]
-    @param make_weight_image   Whether to make weight_image. [default: False]
-    @param make_badpix_image   Whether to make badpix_image. [default: False]
+    @param image_num           If given, the current `image_num` [default: 0]
+    @param obj_num             If given, the current `obj_num` [default: 0]
+    @param make_psf_image      Whether to make `psf_image`. [default: False]
+    @param make_weight_image   Whether to make `weight_image`. [default: False]
+    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @returns the tuple (image, psf_image, weight_image, badpix_image).
+    @returns the tuple `(image, psf_image, weight_image, badpix_image)`.
 
-    Note: All 4 images are always returned in the return tuple,
+    Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
     config['seq_index'] = image_num
@@ -412,19 +412,19 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
 def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                     make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
-    Build an image consisting of a tiled array of postage stamps
+    Build an Image consisting of a tiled array of postage stamps.
 
     @param config              A configuration dict.
     @param logger              If given, a logger object to log progress. [default: None]
-    @param image_num           If given, the current image_num. [default: 0]
-    @param obj_num             If given, the current obj_num. [default: 0]
-    @param make_psf_image      Whether to make psf_image. [default: False]
-    @param make_weight_image   Whether to make weight_image. [default: False]
-    @param make_badpix_image   Whether to make badpix_image. [default: False]
+    @param image_num           If given, the current `image_num`. [default: 0]
+    @param obj_num             If given, the current `obj_num`. [default: 0]
+    @param make_psf_image      Whether to make `psf_image`. [default: False]
+    @param make_weight_image   Whether to make `weight_image`. [default: False]
+    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @returns the tuple (image, psf_image, weight_image, badpix_image).
+    @returns the tuple `(image, psf_image, weight_image, badpix_image)`.
 
-    Note: All 4 images are always returned in the return tuple,
+    Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
     config['seq_index'] = image_num
@@ -659,19 +659,19 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                         make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
-    Build an image containing multiple objects placed at arbitrary locations.
+    Build an Image containing multiple objects placed at arbitrary locations.
 
     @param config              A configuration dict.
     @param logger              If given, a logger object to log progress. [default None]
-    @param image_num           If given, the current image_num [default: 0]
-    @param obj_num             If given, the current obj_num [default: 0]
-    @param make_psf_image      Whether to make psf_image. [default: False]
-    @param make_weight_image   Whether to make weight_image. [default: False]
-    @param make_badpix_image   Whether to make badpix_image. [default: False]
+    @param image_num           If given, the current `image_num` [default: 0]
+    @param obj_num             If given, the current `obj_num` [default: 0]
+    @param make_psf_image      Whether to make `psf_image`. [default: False]
+    @param make_weight_image   Whether to make `weight_image`. [default: False]
+    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @returns the tuple (image, psf_image, weight_image, badpix_image).
+    @returns the tuple `(image, psf_image, weight_image, badpix_image)`.
 
-    Note: All 4 images are always returned in the return tuple,
+    Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
     config['seq_index'] = image_num
