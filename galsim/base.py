@@ -22,8 +22,9 @@ Definitions for the GalSim base classes and associated methods
 This file includes the key parts of the user interface to GalSim: base classes representing surface
 brightness profiles for astronomical objects (galaxies, PSFs, pixel response).  These base classes
 are collectively known as GSObjects.  They include simple objects like the Gaussian, a 2d Gaussian
-intensity profile; compound objects like the Sum and Convolution, which represent the sum and
-convolution of multiple GSObjects, respectively, can be found in compound.py.
+intensity profile, whereas compound GSObjects can be found in other appropriately-named files.  For
+example, the Sum and Convolution, which represent the sum and convolution of multiple GSObjects,
+respectively, can be found in compound.py; RealGalaxy objects are defined in real.py; and so on.
 
 These classes also have associated methods to (a) retrieve information (like the flux, half-light
 radius, or intensity at a particular point); (b) carry out common operations, like shearing,
