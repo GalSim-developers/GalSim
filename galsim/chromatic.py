@@ -19,7 +19,7 @@
 """@file chromatic.py
 Define wavelength-dependent surface brightness profiles.
 
-Implementation is done by constructing GSObjects as functions of wavelength.  `draw` methods then
+Implementation is done by constructing GSObjects as functions of wavelength.  draw() methods then
 integrate over wavelength while also multiplying in a throughput function.
 
 Possible uses include galaxies with color gradients, automatically drawing a given galaxy through
@@ -36,7 +36,7 @@ class ChromaticObject(object):
 
     This class primarily serves as the base class for chromatic subclasses, including Chromatic,
     ChromaticSum, and ChromaticConvolution.  See the docstrings for these classes for more details.
-    The ChromaticAtmosphere function also creates a ChromaticObject.
+    The ChromaticAtmosphere() function also creates a ChromaticObject.
 
     Initialization
     --------------
@@ -56,23 +56,23 @@ class ChromaticObject(object):
 
     Also, ChromaticObject has most of the same methods as GSObjects with the following exceptions:
 
-    The GSObject access methods (e.g. `xValue`, `maxK`, etc.) are not available.  Instead,
+    The GSObject access methods (e.g. xValue(), maxK(), etc.) are not available.  Instead,
     you would need to evaluate the profile at a particular wavelength and access what you want
     from that.
 
-    There is no `withFlux` method, since this is in general undefined for a chromatic object.
-    See the `SED` class for how to set a chromatic flux density function.
+    There is no withFlux() method, since this is in general undefined for a chromatic object.
+    See the SED class for how to set a chromatic flux density function.
 
-    The methods `expand`, `dilate`, and `shift` can now accept functions of wavelength as
+    The methods expand(), dilate(), and shift() can now accept functions of wavelength as
     arguments, as opposed to the constants that GSObjects are limited to.  These methods can be
     used to effect a variety of physical chromatic effects, such as differential chromatic
     refraction, chromatic seeing, and diffraction-limited wavelength-dependence.
 
-    The `draw` method draws the object as observed through a particular bandpass, so the
-    function parameters are somewhat different.  See the docstring for `ChromaticObject.draw`
+    The draw() method draws the object as observed through a particular bandpass, so the
+    function parameters are somewhat different.  See the docstring for ChromaticObject.draw()
     for more details.
 
-    The `drawShoot` and `drawK` methods are not yet implemented.
+    The drawShoot() and drawK() methods are not yet implemented.
     """
 
     # In general, `ChromaticObject` and subclasses should provide the following interface:
@@ -134,21 +134,22 @@ class ChromaticObject(object):
     def draw(self, bandpass, image=None, scale=None, wcs=None, gain=1.0, wmult=1.0,
              normalization="flux", add_to_image=False, use_true_center=True, offset=None,
              integrator=None):
-        """Base chromatic image draw method.  Some subclasses may choose to override this for
+        """Base chromatic image draw() method.  Some subclasses may choose to override this for
         specific efficiency gains.  For instance, most GalSim use cases will probably finish with
         a convolution, in which case ChromaticConvolution.draw() will be used.
 
-        The task of ChromaticObject.draw(bandpass) is to integrate a chromatic surface brightness
+        The task of `ChromaticObject.draw(bandpass)` is to integrate a chromatic surface brightness
         profile multiplied by the throughput of `bandpass`, over the wavelength interval indicated
         by `bandpass`.
 
         Several integrators are available in galsim.integ to do this integration.  By default,
-        galsim.integ.SampleIntegrator(rule=numpy.trapz) will be used if either `bandpass.wave_list`
-        or `self.wave_list` have len() > 0.  If lengths of both `wave_list`s is zero, which may
-        happen if both the bandpass throughput and the SED associated with `self` are analytic
-        python functions, for example, then galsim.integ.ContinuousIntegrator(rule=numpy.trapz)
-        will be used instead.  This latter case by default will evaluate the integrand at 250
-        equally-spaced wavelengths between `bandpass.blue_limit` and `bandpass.red_limit`.
+        `galsim.integ.SampleIntegrator(rule=numpy.trapz)` will be used if either
+        `bandpass.wave_list` or `self.wave_list` have len() > 0.  If lengths of both `wave_list`s
+        are zero, which may happen if both the bandpass throughput and the SED associated with
+        `self` are analytic python functions, for example, then
+        `galsim.integ.ContinuousIntegrator(rule=numpy.trapz)` will be used instead.  This latter
+        case by default will evaluate the integrand at 250 equally-spaced wavelengths between
+        `bandpass.blue_limit` and `bandpass.red_limit`.
 
         By default, the above two integrators will use the trapezoidal rule for integration.  The
         midpoint rule for integration can be specified instead by passing an integrator that has
@@ -158,7 +159,7 @@ class ChromaticObject(object):
         >>> integrator = galsim.ContinuousIntegrator(rule=galsim.integ.midpt, N=100)
         >>> image = chromatic_obj.draw(bandpass, integrator=integrator)
 
-        @param bandpass         A galsim.Bandpass object representing the filter against which to
+        @param bandpass         A Bandpass object representing the filter against which to
                                 integrate.
         @param image            See GSObject.draw()
         @param scale            See GSObject.draw()
@@ -172,7 +173,7 @@ class ChromaticObject(object):
         @param integrator       One of the image integrators from galsim.integ [default: None,
                                 which will try to select an appropriate integrator automatically.]
 
-        @returns the drawn image.
+        @returns the drawn Image.
         """
         # To help developers debug extensions to ChromaticObject, check that ChromaticObject has
         # the expected attributes
@@ -238,7 +239,7 @@ class ChromaticObject(object):
         return image
 
     def evaluateAtWavelength(self, wave):
-        """ Evaluate this chromatic object at a particular wavelength.
+        """Evaluate this chromatic object at a particular wavelength.
 
         @param wave     Wavelength in nanometers.
 
@@ -281,7 +282,7 @@ class ChromaticObject(object):
             return self.withScaledFlux(flux_ratio)
 
     def withScaledFlux(self, flux_ratio):
-        """Multiply the flux of the object by flux_ratio
+        """Multiply the flux of the object by `flux_ratio`
 
         @param flux_ratio   The factor by which to scale the flux.
 
@@ -357,7 +358,7 @@ class ChromaticObject(object):
 
     def expand(self, scale):
         """Expand the linear size of the profile by the given (possibly wavelength-dependent)
-        scale factor, while preserving surface brightness.
+        scale factor `scale`, while preserving surface brightness.
 
         This doesn't correspond to either of the normal operations one would typically want to
         do to a galaxy.  The functions dilate() and magnify() are the more typical usage.  But this
@@ -383,7 +384,7 @@ class ChromaticObject(object):
 
     def dilate(self, scale):
         """Dilate the linear size of the profile by the given (possibly wavelength-dependent)
-        scale, while preserving flux.
+        `scale`, while preserving flux.
 
         e.g. `half_light_radius` <-- `half_light_radius * scale`
 
@@ -402,15 +403,16 @@ class ChromaticObject(object):
             return self.expand(scale) * (1./scale**2)  # conserve flux
 
     def magnify(self, mu):
-        """Apply a lensing magnification, scaling the area and flux by mu at fixed surface
+        """Apply a lensing magnification, scaling the area and flux by `mu` at fixed surface
         brightness.
 
-        This process applies a lensing magnification mu, which scales the linear dimensions of the
+        This process applies a lensing magnification `mu`, which scales the linear dimensions of the
         image by the factor sqrt(mu), i.e., `half_light_radius` <-- `half_light_radius * sqrt(mu)`
-        while increasing the flux by a factor of mu.  Thus, magnify preserves surface brightness.
+        while increasing the flux by a factor of `mu`.  Thus, magnify() preserves surface
+        brightness.
 
         Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
-        function of wavelength as its argument (lensing is achromatic, after all!)  If you find a
+        function of wavelength as its argument (lensing is achromatic, after all!).  If you find a
         use case for this, however, please submit an issue to
 
             https://github.com/GalSim-developers/GalSim/issues
@@ -425,16 +427,16 @@ class ChromaticObject(object):
         return self.expand(math.sqrt(mu))
 
     def shear(self, *args, **kwargs):
-        """Apply an area-preserving shear to this object, where arguments are either a galsim.Shear,
+        """Apply an area-preserving shear to this object, where arguments are either a Shear,
         or arguments that will be used to initialize one.
 
         Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
-        function of wavelength as its argument (lensing is achromatic, after all!)  If you find a
+        function of wavelength as its argument (lensing is achromatic, after all!).  If you find a
         use case for this, however, please submit an issue to
 
             https://github.com/GalSim-developers/GalSim/issues
 
-        For more details about the allowed keyword arguments, see the documentation for galsim.Shear
+        For more details about the allowed keyword arguments, see the documentation for Shear
         (for doxygen documentation, see galsim.shear.Shear).
 
         The shear() method precisely preserves the area.  To include a lensing distortion with
@@ -442,7 +444,7 @@ class ChromaticObject(object):
         combines both operations.
 
         @param shear    The shear to be applied. Or, as described above, you may instead supply
-                        parameters do construct a shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
+                        parameters do construct a Shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
 
         @returns the sheared object.
         """
@@ -464,14 +466,14 @@ class ChromaticObject(object):
         """Apply a lensing shear and magnification to this object.
 
         This ChromaticObject method applies a lensing (reduced) shear and magnification.  The shear
-        must be specified using the g1, g2 definition of shear (see galsim.Shear documentation for
-        more details).  This is the same definition as the outputs of the galsim.PowerSpectrum and
-        galsim.NFWHalo classes, which compute shears according to some lensing power spectrum or
-        lensing by an NFW dark matter halo.  The magnification determines the rescaling factor for
-        the object area and flux, preserving surface brightness.
+        must be specified using the g1, g2 definition of shear (see Shear documentation for more
+        details).  This is the same definition as the outputs of the PowerSpectrum and NFWHalo
+        classes, which compute shears according to some lensing power spectrum or lensing by an NFW
+        dark matter halo.  The magnification determines the rescaling factor for the object area and
+        flux, preserving surface brightness.
 
         Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
-        function of wavelength as its argument (lensing is achromatic, after all!)  If you find a
+        function of wavelength as its argument (lensing is achromatic, after all!).  If you find a
         use case for this, however, please submit an issue to
 
             https://github.com/GalSim-developers/GalSim/issues
@@ -487,7 +489,7 @@ class ChromaticObject(object):
         return self.shear(g1=g1,g2=g2).magnify(mu)
 
     def rotate(self, theta):
-        """Rotate this object by an Angle theta.
+        """Rotate this object by an Angle `theta`.
 
         Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
         function of wavelength as its argument. If you find a use case for this, however, please
@@ -509,7 +511,8 @@ class ChromaticObject(object):
     def transform(self, dudx, dudy, dvdx, dvdy):
         """Apply a transformation to this object defined by an arbitrary Jacobian matrix.
 
-        This works the same as GSObject.transform, so see that method's docstring for more details.
+        This works the same as GSObject.transform(), so see that method's docstring for more
+        details.
 
         Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
         function of wavelength as its argument.  If you find a use case for this, however, please
@@ -532,12 +535,12 @@ class ChromaticObject(object):
     def shift(self, *args, **kwargs):
         """Apply a (possibly wavelength-dependent) (dx, dy) shift to this chromatic object.
 
-        For a wavelength-independent shift, you may supply dx,dy as either two arguments, as a
-        tuple, or as a galsim.PositionD or galsim.PositionI object.
+        For a wavelength-independent shift, you may supply `dx,dy` as either two arguments, as a
+        tuple, or as a PositionD or PositionI object.
 
         For a wavelength-dependent shift, you may supply two functions of wavelength in nanometers
-        which will be interpretted as dx(wave) and dy(wave), or a single function of wavelength in
-        nanometers that returns either a 2-tuple, galsim.PositionD, or galsim.PositionI.
+        which will be interpreted as `dx(wave)` and `dy(wave)`, or a single function of wavelength
+        in nanometers that returns either a 2-tuple, PositionD, or PositionI.
 
         @param dx   Horizontal shift to apply (float or function).
         @param dy   Vertical shift to apply (float or function).
@@ -609,15 +612,15 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     Since DCR depends on the zenith angle and the parallactic angle (which is the position angle of
     the zenith measured from North through East) of the object being drawn, these must be specified
     via keywords.  There are four ways to specify these values:
-      1) explicitly provide `zenith_angle = ...` as a keyword of type galsim.Angle, and
-         parallactic_angle will be assumed to be 0 by default.
+      1) explicitly provide `zenith_angle = ...` as a keyword of type Angle, and
+         `parallactic_angle` will be assumed to be 0 by default.
       2) explicitly provide both `zenith_angle = ...` and `parallactic_angle = ...` as
-         keywords of type galsim.Angle.
+         keywords of type Angle.
       3) provide the coordinates of the object `obj_coord = ...` and the coordinates of the zenith
-         `zenith_coord = ...` as keywords of type galsim.CelestialCoord.
-      4) provide the coordinates of the object `obj_coord = ...` as a galsim.CelestialCoord, the
-         hour angle of the object `HA = ...` as a galsim.Angle, and the latitude of the observer
-         `latitude = ...` as a galsim.Angle.
+         `zenith_coord = ...` as keywords of type CelestialCoord.
+      4) provide the coordinates of the object `obj_coord = ...` as a CelestialCoord, the
+         hour angle of the object `HA = ...` as an Angle, and the latitude of the observer
+         `latitude = ...` as an Angle.
 
     DCR also depends on temperature, pressure and water vapor pressure of the atmosphere.  The
     default values for these are expected to be appropriate for LSST at Cerro Pachon, Chile, but
@@ -628,20 +631,20 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     arcsec.  This is unlike the rest of GalSim, in which Position units only need to be internally
     consistent.
 
-    @param base_obj             Fiducial PSF, equal to the monochromatic PSF at base_wavelength
+    @param base_obj             Fiducial PSF, equal to the monochromatic PSF at `base_wavelength`
     @param base_wavelength      Wavelength represented by the fiducial PSF.
     @param alpha                Power law index for wavelength-dependent seeing.  [default: -0.2,
                                 the prediction for Kolmogorov turbulence]
-    @param zenith_angle         Angle from object to zenith, expressed as a galsim.Angle
+    @param zenith_angle         Angle from object to zenith, expressed as an Angle
                                 [default: 0]
     @param parallactic_angle    Parallactic angle, i.e. the position angle of the zenith, measured
                                 from North through East.  [default: 0]
     @param obj_coord            Celestial coordinates of the object being drawn as a
-                                galsim.CelestialCoord. [default: None]
-    @param zenith_coord         Celestial coordinates of the zenith as a galsim.CelestialCoord.
+                                CelestialCoord. [default: None]
+    @param zenith_coord         Celestial coordinates of the zenith as a CelestialCoord.
                                 [default: None]
-    @param HA                   Hour angle of the object as a galsim.Angle. [default: None]
-    @param latitude             Latitude of the observer as a galsim.Angle. [default: None]
+    @param HA                   Hour angle of the object as an Angle. [default: None]
+    @param latitude             Latitude of the observer as an Angle. [default: None]
     @param pressure             Air pressure in kiloPascals.  [default: 69.328 kPa]
     @param temperature          Temperature in Kelvins.  [default: 293.15 K]
     @param H2O_pressure         Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
@@ -705,8 +708,8 @@ class Chromatic(ChromaticObject):
     >>> disk = galsim.Chromatic(disk_mono, disk_SED)
     >>> gal = bulge + disk
 
-    Some syntactic sugar available for creating `Chromatic` instances is simply to multiply
-    a `GSObject` instance by an `SED` instance.  Thus the last three lines above are equivalent to:
+    Some syntactic sugar available for creating Chromatic instances is simply to multiply
+    a GSObject instance by an SED instance.  Thus the last three lines above are equivalent to:
 
     >>> gal = bulge_mono * bulge_SED + disk_mono * disk_SED
 
@@ -714,7 +717,7 @@ class Chromatic(ChromaticObject):
     spectral density in photons/nanometer as a function of wavelength in nanometers should work.
 
     Typically, the SED describes the flux in photons per nanometer of an object with a particular
-    magnitude, possibly normalized with the method `sed.withFlux` (see the docstrings in the SED
+    magnitude, possibly normalized with the method sed.withFlux() (see the docstrings in the SED
     class for details about this and other normalization options).  Then the `flux` attribute of
     the GSObject should just be the _relative_ flux scaling of the current object compared to that
     normalization.  This implies (at least) two possible conventions.
@@ -730,7 +733,7 @@ class Chromatic(ChromaticObject):
     --------------
 
     @param gsobj    A GSObject instance to be chromaticized.
-    @param SED      Typically a galsim.SED object, though any callable that returns
+    @param SED      Typically an SED object, though any callable that returns
                     spectral density in photons/nanometer as a function of wavelength
                     in nanometers should work.
     """
@@ -743,7 +746,7 @@ class Chromatic(ChromaticObject):
 
     # Apply following transformations to the underlying GSObject
     def withScaledFlux(self, flux_ratio):
-        """Multiply the flux of the object by flux_ratio
+        """Multiply the flux of the object by `flux_ratio`.
 
         @param flux_ratio   The factor by which to scale the flux.
 
@@ -752,7 +755,7 @@ class Chromatic(ChromaticObject):
         return Chromatic(self.obj.withScaledFlux(flux_ratio), self.SED)
 
     def evaluateAtWavelength(self, wave):
-        """ Evaluate this chromatic object at a particular wavelength.
+        """Evaluate this chromatic object at a particular wavelength.
 
         @param wave  Wavelength in nanometers.
 
@@ -771,20 +774,20 @@ class ChromaticSum(ChromaticObject):
     Initialization
     --------------
 
-    Typically, you do not need to construct a `ChromaticSum` object explicitly.  Normally, you
-    would just use the + operator, which returns a `ChromaticSum` when used with chromatic objects:
+    Typically, you do not need to construct a ChromaticSum object explicitly.  Normally, you
+    would just use the + operator, which returns a ChromaticSum when used with chromatic objects:
 
         >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8) * bulge_sed
         >>> disk = galsim.Exponential(half_light_radius=1.4) * disk_sed
         >>> gal = bulge + disk
 
-    You can also use the `Add` factory function, which returns a `ChromaticSum` object if any of
+    You can also use the Add() factory function, which returns a ChromaticSum object if any of
     the individual objects are chromatic:
 
         >>> gal = galsim.Add([bulge,disk])
 
     @param args             Unnamed args should be a list of objects to add.
-    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
                             for details. [default: None]
     """
     def __init__(self, *args, **kwargs):
@@ -849,7 +852,7 @@ class ChromaticSum(ChromaticObject):
             self.wave_list = numpy.union1d(self.wave_list, obj.wave_list)
 
     def evaluateAtWavelength(self, wave):
-        """ Evaluate this chromatic object at a particular wavelength.
+        """Evaluate this chromatic object at a particular wavelength `wave`.
 
         @param wave  Wavelength in nanometers.
 
@@ -861,15 +864,15 @@ class ChromaticSum(ChromaticObject):
     def draw(self, bandpass, image=None, scale=None, wcs=None, gain=1.0, wmult=1.0,
              normalization="flux", add_to_image=False, use_true_center=True, offset=None,
              integrator=None):
-        """ Slightly optimized draw method for ChromaticSum's.  Draw each summand individually
+        """Slightly optimized draw method for ChromaticSum's.  Draw each summand individually
         and add resulting images together.  This might waste time if two or more summands are
         separable and have the same SED, and another summand with a different SED is also added,
-        in which case the summands should be added together first and the resulting galsim.Sum
+        in which case the summands should be added together first and the resulting Sum
         object can then be chromaticized.  In general, however, drawing individual sums
         independently can help with speed by identifying chromatic profiles that are separable into
         spectral and spatial factors.
 
-        @param bandpass         A galsim.Bandpass object representing the filter against which to
+        @param bandpass         A Bandpass object representing the filter against which to
                                 integrate.
         @param image            See GSObject.draw()
         @param scale            See GSObject.draw()
@@ -895,7 +898,7 @@ class ChromaticSum(ChromaticObject):
                     integrator=integrator)
 
     def withScaledFlux(self, flux_ratio):
-        """Multiply the flux of the object by flux_ratio
+        """Multiply the flux of the object by `flux_ratio`
 
         @param flux_ratio   The factor by which to scale the flux.
 
@@ -908,13 +911,13 @@ class ChromaticConvolution(ChromaticObject):
     """Convolve ChromaticObjects and/or GSObjects together.  GSObjects are treated as having flat
     spectra.
 
-    This is the type returned from `galsim.Convolve(objects)` if any of the objects are a
+    This is the type returned from `galsim.Convolve(objects)` if any of the objects is a
     ChromaticObject.
 
     Initialization
     --------------
 
-    The normal way to use this class is to use the `Convolve` factory function:
+    The normal way to use this class is to use the Convolve() factory function:
 
         >>> gal = galsim.Sersic(n, half_light_radius) * galsim.SED(sed_file)
         >>> psf = galsim.ChromaticAtmosphere(...)
@@ -929,7 +932,7 @@ class ChromaticConvolution(ChromaticObject):
     @param real_space       Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
                             for details. [default: None]
     """
     def __init__(self, *args, **kwargs):
@@ -984,7 +987,7 @@ class ChromaticConvolution(ChromaticObject):
             self.wave_list = numpy.union1d(self.wave_list, obj.wave_list)
 
     def evaluateAtWavelength(self, wave):
-        """ Evaluate this chromatic object at a particular wavelength.
+        """Evaluate this chromatic object at a particular wavelength `wave`.
 
         @param wave  Wavelength in nanometers.
 
@@ -996,12 +999,13 @@ class ChromaticConvolution(ChromaticObject):
     def draw(self, bandpass, image=None, scale=None, wcs=None, gain=1.0, wmult=1.0,
              normalization="flux", add_to_image=False, use_true_center=True, offset=None,
              integrator=None, iimult=None):
-        """ Optimized draw method for ChromaticConvolution.  Works by finding sums of profiles
-        which include separable portions, which can then be integrated before doing any
-        convolutions, which are pushed to the end.
+        """Optimized draw method for the ChromaticConvolution class.
 
-        @param bandpass           A galsim.Bandpass object representing the filter
-                                  against which to integrate.
+        Works by finding sums of profiles which include separable portions, which can then be
+        integrated before doing any convolutions, which are pushed to the end.
+
+        @param bandpass           A Bandpass object representing the filter against which to
+                                  integrate.
         @param image              see GSObject.draw()
         @param scale              see GSObject.draw()
         @param wcs                see GSObject.draw()
@@ -1015,7 +1019,7 @@ class ChromaticConvolution(ChromaticObject):
         @param iimult             Oversample any intermediate InterpolatedImages created to hold
                                   effective profiles by this amount.
 
-        @returns the drawn image.
+        @returns the drawn Image.
         """
         # `ChromaticObject.draw()` can just as efficiently handle separable cases.
         if self.separable:
@@ -1151,7 +1155,7 @@ class ChromaticConvolution(ChromaticObject):
                 add_to_image=add_to_image, use_true_center=use_true_center, offset=offset)
 
     def withScaledFlux(self, flux_ratio):
-        """Multiply the flux of the object by flux_ratio
+        """Multiply the flux of the object by `flux_ratio`.
 
         @param flux_ratio   The factor by which to scale the flux.
 
@@ -1167,16 +1171,16 @@ class ChromaticDeconvolution(ChromaticObject):
 
     The ChromaticDeconvolution class represents a wavelength-dependent deconvolution kernel.
 
-    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
-    help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
-    (or None), then the ChromaticDeconvolution instance inherits the same GSParams as the object
-    being deconvolved.
+    You may also specify a gsparams argument.  See the docstring for GSParams using
+    help(galsim.GSParams) for more information about this option.  Note: if `gsparams` is
+    unspecified (or None), then the ChromaticDeconvolution instance inherits the same GSParams as
+    the object being deconvolved.
 
     Initialization
     --------------
 
     @param obj              The object to deconvolve.
-    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
                             for details. [default: None]
     """
     def __init__(self, obj, **kwargs):
@@ -1188,7 +1192,7 @@ class ChromaticDeconvolution(ChromaticObject):
         self.wave_list = obj.wave_list
 
     def evaluateAtWavelength(self, wave):
-        """ Evaluate this chromatic object at a particular wavelength.
+        """Evaluate this chromatic object at a particular wavelength `wave`.
 
         @param wave  Wavelength in nanometers.
 
@@ -1197,7 +1201,7 @@ class ChromaticDeconvolution(ChromaticObject):
         return galsim.Deconvolve(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
     def withScaledFlux(self, flux_ratio):
-        """Multiply the flux of the object by flux_ratio
+        """Multiply the flux of the object by `flux_ratio`.
 
         @param flux_ratio   The factor by which to scale the flux.
 
@@ -1209,7 +1213,7 @@ class ChromaticDeconvolution(ChromaticObject):
 class ChromaticAutoConvolution(ChromaticObject):
     """A special class for convolving a ChromaticObject with itself.
 
-    It is equivalent in functionality to galsim.Convolve([obj,obj]), but takes advantage of
+    It is equivalent in functionality to `galsim.Convolve([obj,obj])`, but takes advantage of
     the fact that the two profiles are the same for some efficiency gains.
 
     Initialization
@@ -1219,7 +1223,7 @@ class ChromaticAutoConvolution(ChromaticObject):
     @param real_space       Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
                             for details. [default: None]
     """
     def __init__(self, obj, **kwargs):
@@ -1231,7 +1235,7 @@ class ChromaticAutoConvolution(ChromaticObject):
         self.wave_list = obj.wave_list
 
     def evaluateAtWavelength(self, wave):
-        """ Evaluate this chromatic object at a particular wavelength.
+        """Evaluate this chromatic object at a particular wavelength `wave`.
 
         @param wave  Wavelength in nanometers.
 
@@ -1240,7 +1244,7 @@ class ChromaticAutoConvolution(ChromaticObject):
         return galsim.AutoConvolve(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
     def withScaledFlux(self, flux_ratio):
-        """Multiply the flux of the object by flux_ratio
+        """Multiply the flux of the object by `flux_ratio`.
 
         @param flux_ratio   The factor by which to scale the flux.
 
@@ -1267,7 +1271,7 @@ class ChromaticAutoCorrelation(ChromaticObject):
     @param real_space       Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
                             for details. [default: None]
     """
     def __init__(self, obj, **kwargs):
@@ -1279,7 +1283,7 @@ class ChromaticAutoCorrelation(ChromaticObject):
         self.wave_list = obj.wave_list
 
     def evaluateAtWavelength(self, wave):
-        """ Evaluate this chromatic object at a particular wavelength.
+        """Evaluate this chromatic object at a particular wavelength `wave`.
 
         @param wave  Wavelength in nanometers.
 
@@ -1288,7 +1292,7 @@ class ChromaticAutoCorrelation(ChromaticObject):
         return galsim.AutoCorrelate(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
     def withScaledFlux(self, flux_ratio):
-        """Multiply the flux of the object by flux_ratio
+        """Multiply the flux of the object by `flux_ratio`.
 
         @param flux_ratio   The factor by which to scale the flux.
 
