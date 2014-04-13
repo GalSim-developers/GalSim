@@ -65,7 +65,7 @@ class Cosmology(object):
     def Da(self, z, z_ref=0):
         """Compute angular diameter distance between two redshifts in units of c/H0.
 
-        In order to get the distance in Mpc/h, multiply by ~3000.
+        In order to get the distance in Mpc/h, multiply by c/H0~3000.
 
         @param z     Redshift.
         @param z_ref Reference redshift, with z_ref <= z.
@@ -102,7 +102,7 @@ class NFWHalo(object):
     The cosmology to use can be set either by providing a Cosmology instance as cosmo,
     or by providing omega_m and/or omega_lam.  
     If only one of the latter is provided, the other is taken to be one minus that.
-    If no cosmology parameters are set, a default Cosmology() is constructed.
+    If no cosmology parameters are set, a default Cosmology is constructed.
 
     @param mass       Mass defined using a spherical overdensity of 200 times the critical density
                       of the universe, in units of M_solar/h.
@@ -175,7 +175,7 @@ class NFWHalo(object):
     def __farcth (self, x, out=None):
         """Numerical implementation of integral functions of a spherical NFW profile.
 
-        All expressions are a function of x, which is the radius r in units of the NFW scale radius,
+        All expressions are a function of `x`, which is the radius r in units of the NFW scale radius,
         r_s.  For the derivation of these functions, see for example Wright & Brainerd (2000, ApJ,
         534, 34).
         """
@@ -203,7 +203,7 @@ class NFWHalo(object):
     def __kappa(self, x, ks, out=None):
         """Calculate convergence of halo.
 
-        @param x   Radial coordinate in units of rs (scale radius of halo), i.e., x=r/rs.
+        @param x   Radial coordinate in units of rs (scale radius of halo), i.e., `x=r/rs`.
         @param ks  Lensing strength prefactor.
         @param out Numpy array into which results should be placed.
         """
@@ -237,7 +237,7 @@ class NFWHalo(object):
     def __gamma(self, x, ks, out=None):
         """Calculate tangential shear of halo.
 
-        @param x   Radial coordinate in units of rs (scale radius of halo), i.e., x=r/rs.
+        @param x   Radial coordinate in units of rs (scale radius of halo), i.e., `x=r/rs`.
         @param ks  Lensing strength prefactor.
         @param out Numpy array into which results should be placed
         """
@@ -282,11 +282,11 @@ class NFWHalo(object):
 
         @param pos       Position(s) of the source(s), assumed to be post-lensing!
                          Valid ways to input this:
-                           - Single galsim.PositionD (or PositionI) instance
+                           - Single PositionD (or PositionI) instance
                            - tuple of floats: (x,y)
-                           - list of galsim.PositionD (or PositionI) instances
+                           - list of PositionD (or PositionI) instances
                            - tuple of lists: ( xlist, ylist )
-                           - NumPy array of galsim.PositionD (or PositionI) instances
+                           - NumPy array of PositionD (or PositionI) instances
                            - tuple of NumPy arrays: ( xarray, yarray )
                            - Multidimensional NumPy array, as long as array[0] contains
                              x-positions and array[1] contains y-positions
@@ -294,7 +294,7 @@ class NFWHalo(object):
         @param units     Angular units of coordinates. [default: arcsec]
         @param reduced   Whether returned shear(s) should be reduced shears. [default: True]
 
-        @returns the reduced shears as a tuple (g1,g2), which match the format of the input `pos`.
+        @returns the reduced shears as a tuple `(g1,g2)`, which match the format of the input `pos`.
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getShear')
@@ -340,18 +340,18 @@ class NFWHalo(object):
 
         @param pos     Position(s) of the source(s), assumed to be post-lensing!
                        Valid ways to input this:
-                         - Single galsim.PositionD (or PositionI) instance
+                         - Single PositionD (or PositionI) instance
                          - tuple of floats: (x,y)
-                         - list of galsim.PositionD (or PositionI) instances
+                         - list of PositionD (or PositionI) instances
                          - tuple of lists: ( xlist, ylist )
-                         - NumPy array of galsim.PositionD (or PositionI) instances
+                         - NumPy array of PositionD (or PositionI) instances
                          - tuple of NumPy arrays: ( xarray, yarray )
                          - Multidimensional NumPy array, as long as array[0] contains
                            x-positions and array[1] contains y-positions
         @param z_s     Source redshift(s).
         @param units   Angular units of coordinates. [default: arcsec]
 
-        @returns the convergence, kappa, which matches the format of the input `pos`.
+        @returns the convergence, `kappa`, which matches the format of the input `pos`.
         """
 
         # Convert to numpy arrays for internal usage:
@@ -382,18 +382,18 @@ class NFWHalo(object):
 
         @param pos     Position(s) of the source(s), assumed to be post-lensing!
                        Valid ways to input this:
-                         - Single galsim.PositionD (or PositionI) instance
+                         - Single PositionD (or PositionI) instance
                          - tuple of floats: (x,y)
-                         - list of galsim.PositionD (or PositionI) instances
+                         - list of PositionD (or PositionI) instances
                          - tuple of lists: ( xlist, ylist )
-                         - NumPy array of galsim.PositionD (or PositionI) instances
+                         - NumPy array of PositionD (or PositionI) instances
                          - tuple of NumPy arrays: ( xarray, yarray )
                          - Multidimensional NumPy array, as long as array[0] contains
                            x-positions and array[1] contains y-positions
         @param z_s     Source redshift(s).
         @param units   Angular units of coordinates (only arcsec implemented so far).
 
-        @returns the magnification mu, which matches the format of the input `pos`.
+        @returns the magnification `mu`, which matches the format of the input `pos`.
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getMagnification')
@@ -426,18 +426,18 @@ class NFWHalo(object):
 
         @param pos         Position(s) of the source(s), assumed to be post-lensing!
                            Valid ways to input this:
-                             - Single galsim.PositionD (or PositionI) instance
+                             - Single PositionD (or PositionI) instance
                              - tuple of floats: (x,y)
-                             - list of galsim.PositionD (or PositionI) instances
+                             - list of PositionD (or PositionI) instances
                              - tuple of lists: ( xlist, ylist )
-                             - NumPy array of galsim.PositionD (or PositionI) instances
+                             - NumPy array of PositionD (or PositionI) instances
                              - tuple of NumPy arrays: ( xarray, yarray )
                              - Multidimensional NumPy array, as long as array[0] contains
                                x-positions and array[1] contains y-positions
         @param z_s         Source redshift(s).
         @param units       Angular units of coordinates (only arcsec implemented so far).
 
-        @returns the reduced shears and magnifications as a tuple (g1,g2,mu), which match the
+        @returns the reduced shears and magnifications as a tuple `(g1,g2,mu)`, which match the
                  format of the input `pos`.
         """
         # Convert to numpy arrays for internal usage:
