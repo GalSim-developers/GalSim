@@ -51,20 +51,20 @@ class GSObject(object):
     """Base class for all GalSim classes that represent some kind of surface brightness profile.
 
     A GSObject is not intended to be constructed directly.  Normally, you would use whatever
-    derived class is appropriate for the surface brightness function you want:
+    derived class is appropriate for the surface brightness profile you want:
 
         gal = galsim.Sersic(n=4, half_light_radius=4.3)
         psf = galsim.Moffat(beta=3, fwhm=2.85)
         pix = galsim.Pixel(scale=0.2)
         conv = galsim.Convolve([gal,psf,pix])
 
-    All of these classes are subclasses of GSObject, so you should see those doc strings for
+    All of these classes are subclasses of GSObject, so you should see those docstrings for
     more details about how to construct the various profiles.
 
     Note that most GSObjects have some kind of size specification.  Typically, these would be
-    given in terms of arcsec, with the connection to the pixel size being given in the `Pixel`
+    given in terms of arcsec, with the connection to the pixel size being given in the Pixel
     class (0.2 arcsec/pixel in the above example).  However, you can have a more complicated
-    relationship between pixel and sky coordinates.  See `BaseWCS` for more details about
+    relationship between pixel and sky coordinates.  See BaseWCS for more details about
     how to specify various kinds of world coordinate systems.
 
     Transforming Methods
@@ -146,23 +146,22 @@ class GSObject(object):
         original    This was mentioned above as a way to access the original object that has
                     been transformed by one of the transforming methods.
 
-        noise       Some types, like RealGalaxy, set this attribute to be the intrinsic noise
-                    that is already inherent in the profile and will thus be present when you
-                    draw the object.  The noise is propagated correctly through the various
-                    transforming methods, as well as convolutions and flux rescalings.
-                    Note that the `noise` attribute can be set directly by users even for GSObjects
-                    that do not naturally have one. The typical use for this attribute is to use it
-                    to whiten the noise in the image after drawing.  See CorrelatedNoise for more
-                    details.
+        noise       Some types, like RealGalaxy, set this attribute to be the intrinsic noise that
+                    is already inherent in the profile and will thus be present when you draw the
+                    object.  The noise is propagated correctly through the various transforming
+                    methods, as well as convolutions and flux rescalings.  Note that the `noise`
+                    attribute can be set directly by users even for GSObjects that do not naturally
+                    have one. The typical use for this attribute is to use it to whiten the noise in
+                    the image after drawing.  See CorrelatedNoise for more details.
 
     GSParams
     --------
 
-    All GSObject classes take an optional `gsparams` argument so we document that feature here.
+    All GSObject classes take an optional `gsparams` argument, so we document that feature here.
     For all documentation about the specific derived classes, please see the docstring for each
     one individually.
 
-    The gsparams argument can be used to specify various numbers that govern the tradeoff between
+    The `gsparams` argument can be used to specify various numbers that govern the tradeoff between
     accuracy and speed for the calculations made in drawing a GSObject.  The numbers are
     encapsulated in a class called GSParams, and the user should make careful choices whenever they
     opt to deviate from the defaults.  For more details about the parameters and their default
@@ -170,7 +169,7 @@ class GSObject(object):
 
     For example, let's say you want to do something that requires an FFT larger than 4096 x 4096
     (and you have enough memory to handle it!).  Then you can create a new GSParams object with a
-    larger maximum_fft_size and pass that to your GSObject on construction:
+    larger `maximum_fft_size` and pass that to your GSObject on construction:
 
         >>> gal = galsim.Sersic(n=4, half_light_radius=4.3)
         >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
@@ -189,12 +188,12 @@ class GSObject(object):
         >>> im = conv.draw(image=im)                        # Now it works (but is slow!)
         >>> im.write('high_res_sersic.fits')
 
-    Note that for compound objects like Convolve or Add, not all gsparams can be changed when the
-    compound object is created.  In the example given here, it is possible to change parameters
-    related to the drawing, but not the Fourier space parameters for the components that go into the
-    Convolve.  To get better sampling in Fourier space, for example, the `gal`, `psf`, and/or `pix`
-    should be created with `gsparams` that have a non-default value of `alias_threshold`.  This
-    statement applies to the threshold and accuracy parameters.
+    Note that for compound objects in compound.py, like Convolution or Sum, not all GSParams can be
+    changed when the compound object is created.  In the example given here, it is possible to
+    change parameters related to the drawing, but not the Fourier space parameters for the
+    components that go into the Convolution.  To get better sampling in Fourier space, for example,
+    the `gal`, `psf`, and/or `pix` should be created with `gsparams` that have a non-default value
+    of `alias_threshold`.  This statement applies to the threshold and accuracy parameters.
     """
     _gsparams = { 'minimum_fft_size' : int,
                   'maximum_fft_size' : int,
@@ -231,8 +230,8 @@ class GSObject(object):
 
     # Also need this method to duck-type as a ChromaticObject
     def evaluateAtWavelength(self, wave):
-        """Return profile at a given wavelength.  For `GSObject` instances, this is just `self`.
-        This allows `GSObject` instances to be duck-typed as `ChromaticObject` instances."""
+        """Return profile at a given wavelength.  For GSObject instances, this is just `self`.
+        This allows GSObject instances to be duck-typed as ChromaticObject instances."""
         return self
 
     # Make op+ of two GSObjects work to return an Add object
@@ -255,7 +254,7 @@ class GSObject(object):
         surface brightness at every location scaled by the given amount.
 
         You can also multiply by an SED, which will create a ChromaticObject where the SED
-        acts like a wavelength-dependent flux_ratio.
+        acts like a wavelength-dependent `flux_ratio`.
 
         obj * sed is equivalent to galsim.Chromatic(obj, sed)
         """
@@ -357,10 +356,10 @@ class GSObject(object):
         The object surface brightness profiles are typically defined in world coordinates, so
         the position here should be in world coordinates as well.
 
-        Not all GSObject classes can use this method.  Classes like Convolve that require a
-        Discrete Fourier Transform to determine the real space values will not do so for a
-        single position.  Instead a RuntimeError will be raised.  The xValue(pos) method
-        is available if and only if obj.isAnalyticX() == True.
+        Not all GSObject classes can use this method.  Classes like Convolution that require a
+        Discrete Fourier Transform to determine the real space values will not do so for a single
+        position.  Instead a RuntimeError will be raised.  The xValue(pos) method is available if
+        and only if `obj.isAnalyticX() == True`.
 
         Users who wish to use the xValue() method for an object that is the convolution of other
         profiles can do so by drawing the convolved profile into an image, using the image to
@@ -381,9 +380,9 @@ class GSObject(object):
         PositionD or PositionI argument, or it may be given as kx,ky (either as a tuple or as two
         arguments).
 
-        Techinically, kValue() is available if and only if the given obj has obj.isAnalyticK()
-        == True, but this is the case for all GSObjects currently, so that should never be an
-        issue (unlike for xValue).
+        Techinically, kValue() is available if and only if the given obj has `obj.isAnalyticK()
+        == True`, but this is the case for all GSObjects currently, so that should never be an
+        issue (unlike for xValue()).
 
         @param position  The position in k space at which you want the fourier amplitude.
 
@@ -395,7 +394,7 @@ class GSObject(object):
     def withFlux(self, flux):
         """Create a version of the current object with a different flux.
 
-        This function is equivalent to obj.withScaledFlux(flux / obj.getFlux())
+        This function is equivalent to `obj.withScaledFlux(flux / obj.getFlux())`.
 
         It creates a new object that has the same profile as the original, but with the
         surface brightness at every location rescaled such that the total flux will be
@@ -408,11 +407,11 @@ class GSObject(object):
         return self.withScaledFlux(flux / self.getFlux())
 
     def withScaledFlux(self, flux_ratio):
-        """Create a version of the current object with the flux scaled by the given flux ratio.
+        """Create a version of the current object with the flux scaled by the given `flux_ratio`.
 
-        This function is equivalent to obj.withFlux(flux_ratio * obj.getFlux()).  However, this
+        This function is equivalent to `obj.withFlux(flux_ratio * obj.getFlux())`.  However, this
         function is the more efficient one, since it doesn't actually require the call to
-        obj.getFlux().  Indeed, withFlux() is implemented in terms of this one and getFlux().
+        getFlux().  Indeed, withFlux() is implemented in terms of this one and getFlux().
 
         It creates a new object that has the same profile as the original, but with the
         surface brightness at every location scaled by the given amount.
@@ -421,7 +420,8 @@ class GSObject(object):
 
             obj = obj * flux_ratio
 
-        @param flux_ratio   The new flux for the object.
+        @param flux_ratio   The ratio by which to rescale the flux of the object when creating a new
+                            one.
 
         @returns the object with the new flux.
         """
@@ -450,7 +450,7 @@ class GSObject(object):
         self.__class__ = new_obj.__class__
 
     def expand(self, scale):
-        """Expand the linear size of the profile by the given scale factor, while preserving
+        """Expand the linear size of the profile by the given `scale` factor, while preserving
         surface brightness.
 
         e.g. `half_light_radius` <-- `half_light_radius * scale`
@@ -491,7 +491,7 @@ class GSObject(object):
         self.__class__ = new_obj.__class__
 
     def dilate(self, scale):
-        """Dilate the linear size of the profile by the given scale factor, while preserving
+        """Dilate the linear size of the profile by the given `scale` factor, while preserving
         flux.
 
         e.g. `half_light_radius` <-- `half_light_radius * scale`
@@ -518,7 +518,7 @@ class GSObject(object):
 
     def magnify(self, mu):
         """Create a version of the current object with a lensing magnification applied to it,
-        scaling the area and flux by mu at fixed surface brightness.
+        scaling the area and flux by `mu` at fixed surface brightness.
 
         This process applies a lensing magnification mu, which scales the linear dimensions of the
         image by the factor sqrt(mu), i.e., `half_light_radius` <-- `half_light_radius * sqrt(mu)`
@@ -550,16 +550,16 @@ class GSObject(object):
     def shear(self, *args, **kwargs):
         """Create a version of the current object with an area-preserving shear applied to it.
 
-        The arguments may be either a galsim.Shear or arguments to be used to initialize one.
+        The arguments may be either a Shear or arguments to be used to initialize one.
 
-        For more details about the allowed keyword arguments, see the documentation for galsim.Shear
+        For more details about the allowed keyword arguments, see the documentation for Shear
         (for doxygen documentation, see galsim.shear.Shear).
 
         The shear() method precisely preserves the area.  To include a lensing distortion with
         the appropriate change in area, either use shear() with magnify(), or use lens(), which
         combines both operations.
 
-        @param shear    The shear to be applied. Or, as described above, you may instead supply
+        @param shear    The Shear to be applied. Or, as described above, you may instead supply
                         parameters do construct a shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
 
         @returns the sheared object.
@@ -601,11 +601,11 @@ class GSObject(object):
         applied to it.
 
         This GSObject method applies a lensing (reduced) shear and magnification.  The shear must be
-        specified using the g1, g2 definition of shear (see galsim.Shear documentation for more
-        details).  This is the same definition as the outputs of the galsim.PowerSpectrum and
-        galsim.NFWHalo classes, which compute shears according to some lensing power spectrum or
-        lensing by an NFW dark matter halo.  The magnification determines the rescaling factor for
-        the object area and flux, preserving surface brightness.
+        specified using the g1, g2 definition of shear (see Shear documentation for more details).
+        This is the same definition as the outputs of the PowerSpectrum and NFWHalo classes, which
+        compute shears according to some lensing power spectrum or lensing by an NFW dark matter
+        halo.  The magnification determines the rescaling factor for the object area and flux,
+        preserving surface brightness.
 
         @param g1       First component of lensing (reduced) shear to apply to the object.
         @param g2       Second component of lensing (reduced) shear to apply to the object.
@@ -629,7 +629,7 @@ class GSObject(object):
         self.__class__ = new_obj.__class__
 
     def rotate(self, theta):
-        """Rotate this object by an Angle theta.
+        """Rotate this object by an Angle `theta`.
 
         @param theta    Rotation angle (Angle object, +ve anticlockwise).
 
@@ -714,7 +714,7 @@ class GSObject(object):
         are no longer available.
 
         Note: in addition to the dx,dy parameter names, you may also supply dx,dy as a tuple,
-        or as a galsim.PositionD or galsim.PositionI object.
+        or as a PositionD or PositionI object.
 
         @param dx       Horizontal shift to apply.
         @param dy       Vertical shift to apply.
@@ -948,7 +948,7 @@ class GSObject(object):
         a pixel as desired to get the profile's (0,0) location where you want it.
 
         Note that when drawing a GSObject that was defined with a particular value of flux, it is
-        not necessarily the case that a drawn image with 'normalization=flux' will have the sum of
+        not necessarily the case that a drawn image with `normalization=flux` will have the sum of
         pixel values equal to flux.  That condition is guaranteed to be satisfied only if the
         profile has been convolved with a pixel response. If there was no convolution by a pixel
         response, then the draw() method is effectively sampling the surface brightness profile of
