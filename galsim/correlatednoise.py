@@ -36,9 +36,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
     to guarantee the above.
 
     The _BaseCorrelatedNoise is therefore here primarily to define the way in which derived classes
-    (currently only the CorrelatedNoise) store the random deviate, noise correlation function
-    profile and allow operations with it, generate images containing noise with these correlation
-    properties, and generate covariance matrices according to the correlation function.
+    (currently only CorrelatedNoise and UncorrelatedNoise) store the random deviate, noise
+    correlation function profile and allow operations with it, generate images containing noise with
+    these correlation properties, and generate covariance matrices according to the correlation
+    function.
     """
     def __init__(self, rng, gsobject):
 
@@ -686,9 +687,6 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     It also allows the combination of multiple correlation functions by addition, and for the
     scaling of the total variance they represent by scalar factors.
-
-    Convolution of correlation functions with a GSObject is not yet supported, but will be in the
-    near future.
 
     Initialization
     --------------
