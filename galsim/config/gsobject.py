@@ -48,7 +48,7 @@ class SkipThisObject(Exception):
 
 
 def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
-    """Build a GSObject using config dict for key=key.
+    """Build a GSObject using config dict for `key=key`.
 
     @param config       A dict with the configuration information.
     @param key          The key name in config indicating which object to build.
@@ -56,16 +56,16 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
                         base['rng'] = random number generator
                         base['catalog'] = input catalog for InputCat items
                         base['real_catalog'] = real galaxy catalog for RealGalaxy objects
-                        Typically on the initial call to BuildGSObject, this will be 
+                        Typically on the initial call to BuildGSObject(), this will be 
                         the same as config, hence the name base. [default: None]
-    @param gsparams     Optionally, provide non-default gsparams items.  Any gsparams specified
+    @param gsparams     Optionally, provide non-default GSParams items.  Any `gsparams` specified
                         at this level will be added to the list.  This should be a dict with
                         whatever kwargs should be used in constructing the GSParams object.
                         [default: {}]
     @param logger       Optionally, provide a logger for logging debug statements.
                         [default: None]
 
-    @returns the tuple (gsobject, safe), where gsobject is the built object, and safe is
+    @returns the tuple `(gsobject, safe)`, where `gsobject` is the built object, and `safe` is
              a bool that says whether it is safe to use this object again next time.
     """
     # I'd like to be able to have base=config be the default value, but python doesn't
@@ -200,7 +200,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 
 
 def UpdateGSParams(gsparams, config, key, base):
-    """@brief Add additional items to the gsparams dict based on config['gsparams']
+    """@brief Add additional items to the `gsparams` dict based on config['gsparams'].
     """
     opt = galsim.GSObject._gsparams
     kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt)
@@ -213,13 +213,13 @@ def UpdateGSParams(gsparams, config, key, base):
 
 
 def _BuildNone(config, key, base, ignore, gsparams, logger):
-    """@brief Special type=None returns None
+    """@brief Special type=None returns None.
     """
     return None, True
 
 
 def _BuildAdd(config, key, base, ignore, gsparams, logger):
-    """@brief  Build an Add object
+    """@brief  Build a Sum object.
     """
     req = { 'items' : list }
     opt = { 'flux' : float }
@@ -274,7 +274,7 @@ def _BuildAdd(config, key, base, ignore, gsparams, logger):
     return gsobject, safe
 
 def _BuildConvolve(config, key, base, ignore, gsparams, logger):
-    """@brief  Build a Convolve object
+    """@brief  Build a Convolution object.
     """
     req = { 'items' : list }
     opt = { 'flux' : float }
@@ -310,7 +310,7 @@ def _BuildConvolve(config, key, base, ignore, gsparams, logger):
     return gsobject, safe
 
 def _BuildList(config, key, base, ignore, gsparams, logger):
-    """@brief  Build a GSObject selected from a List
+    """@brief  Build a GSObject selected from a List.
     """
     req = { 'items' : list }
     opt = { 'index' : float , 'flux' : float }
@@ -340,7 +340,7 @@ def _BuildList(config, key, base, ignore, gsparams, logger):
     return gsobject, safe
 
 def _BuildRing(config, key, base, ignore, gsparams, logger):
-    """@brief  Build a GSObject in a Ring
+    """@brief  Build a GSObject in a Ring.
     """
     req = { 'num' : int, 'first' : dict }
     opt = { 'full_rotation' : galsim.Angle }
@@ -470,7 +470,7 @@ def _BuildOpticalPSF(config, key, base, ignore, gsparams, logger):
 
 def _BuildSimple(config, key, base, ignore, gsparams, logger):
     """@brief Build a simple GSObject (i.e. one without a specialized _Build function) or
-    any other galsim object that defines _req_params, _opt_params and _single_params.
+    any other GalSim object that defines _req_params, _opt_params and _single_params.
     """
     # Build the kwargs according to the various params objects in the class definition.
     type = config['type']
