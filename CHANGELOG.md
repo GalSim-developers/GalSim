@@ -332,6 +332,9 @@ change their yaml files.
 
 Other new features:
 
+* Fixed some bugs in the treatment of correlated noise.  (Issues #526, #528)
+* Modify addNoiseSNR() method to return the variance of the noise that was
+  added.  (Issue #526)
 * Sped up the gzip and bzip2 I/O by using the shell gzip and bzip2 executables
   if they are available on the system. (Issue #344)
 * Added some new functions to convert an angle to/from DMS strings.  Sometimes
