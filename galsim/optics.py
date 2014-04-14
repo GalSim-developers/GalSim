@@ -132,8 +132,8 @@ class OpticalPSF(GSObject):
     @param strut_angle      Angle made between the vertical and the strut starting closest to it,
                             defined to be positive in the counter-clockwise direction; must be an
                             Angle instance. [default: 0. * galsim.degrees]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------

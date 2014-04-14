@@ -93,7 +93,7 @@ def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=No
                          zenith and parallactic angles will be computed.
     @param latitude      The observer's latitude, as an Angle.
 
-    @returns the zenith_angle and parallactic_angle, each as an Angle.
+    @returns the tuple `(zenith_angle, parallactic_angle)`, each of which is an Angle.
     """
     if zenith_coord is None:
         if HA is None or latitude is None:

@@ -513,8 +513,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @param gsobject     A GSObject or derived class instance representing the function
                             with which the user wants to convolve the correlated noise model.
-        @param gsparams     An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+        @param gsparams     An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
         @returns the new CorrelatedNoise of the convolved profile.
         """
@@ -570,7 +570,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         use_stored = False
         for rootps_array, saved_wcs in self._rootps_store:
             if shape == rootps_array.shape:
-                if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.sacle == 1.) or
+                if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
                      wcs == saved_wcs ):
                     use_stored = True
                     rootps = rootps_array
@@ -614,7 +614,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         use_stored = False
         for rootps_whitening_array, saved_wcs, var in self._rootps_whitening_store:
             if shape == rootps_whitening_array.shape:
-                if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.sacle == 1.) or
+                if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
                      wcs == saved_wcs ):
                     use_stored = True
                     rootps_whitening = rootps_whitening_array
@@ -716,12 +716,12 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     or an Interpolant instance (if the latter one-dimensional case is supplied, an InterpolantXY
     will be automatically generated from it).
 
-    The default `x_interpolant` if `None` is set is a
-    `galsim.InterpolantXY(galsim.Linear(tol=1.e-4))`, which uses bilinear interpolation.  The use of
-    this interpolant is an approximation that gives good empirical results without requiring
-    internal convolution of the correlation function profile by a Pixel object when applying
-    correlated noise to images: such an internal convolution has been found to be computationally
-    costly in practice, requiring the Fourier transform of very large arrays.
+    The default `x_interpolant` is `galsim.InterpolantXY(galsim.Linear(tol=1.e-4))`, which uses 
+    bilinear interpolation.  The use of this interpolant is an approximation that gives good 
+    empirical results without requiring internal convolution of the correlation function profile by
+    a Pixel object when applying correlated noise to images: such an internal convolution has been
+    found to be computationally costly in practice, requiring the Fourier transform of very large
+    arrays.
 
     The use of the bilinear interpolants means that the representation of correlated noise will be
     noticeably inaccurate in at least the following two regimes:
@@ -1010,8 +1010,8 @@ def getCOSMOSNoise(file_name, rng=None, cosmos_scale=0.03, variance=0., x_interp
     @param x_interpolant  Forces use of a non-default interpolant for interpolation of the
                         internal lookup table in real space.  See below for more details.
                         [default: galsim.Linear(tol=1.e-4)]
-    @param gsparams     An optional GSParams argument.  See the docstring for GSParams
-                        for details. [default: None]
+    @param gsparams     An optional GSParams argument.  See the docstring for GSParams for
+                        details. [default: None]
 
     @returns a _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.
 
@@ -1138,8 +1138,8 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
                         provided]
     @param wcs          If provided, use this as the wcs for the image.  At most one of `scale`
                         or `wcs` may be provided. [default: None]
-    @param gsparams     An optional GSParams argument.  See the docstring for GSParams
-                        for details. [default: None]
+    @param gsparams     An optional GSParams argument.  See the docstring for GSParams for
+                        details. [default: None]
 
 
     Methods and Use

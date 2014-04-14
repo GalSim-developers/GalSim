@@ -21,10 +21,11 @@ Definitions for the GalSim base classes and associated methods
 
 This file includes the key parts of the user interface to GalSim: base classes representing surface
 brightness profiles for astronomical objects (galaxies, PSFs, pixel response).  These base classes
-are collectively known as GSObjects.  They include simple objects like the Gaussian, a 2d Gaussian
-intensity profile, whereas compound GSObjects can be found in other appropriately-named files.  For
-example, the Sum and Convolution, which represent the sum and convolution of multiple GSObjects,
-respectively, can be found in compound.py; RealGalaxy objects are defined in real.py; and so on.
+are collectively known as GSObjects.  They include simple objects like the Gaussian class, a 2d
+Gaussian intensity profile, whereas compound GSObjects can be found in other appropriately-named
+files.  For example, the Sum and Convolution, which represent the sum and convolution of multiple
+GSObjects, respectively, can be found in compound.py; RealGalaxy objects are defined in real.py;
+and so on.
 
 These classes also have associated methods to (a) retrieve information (like the flux, half-light
 radius, or intensity at a particular point); (b) carry out common operations, like shearing,
@@ -359,8 +360,8 @@ class GSObject(object):
 
         Not all GSObject classes can use this method.  Classes like Convolution that require a
         Discrete Fourier Transform to determine the real space values will not do so for a single
-        position.  Instead a RuntimeError will be raised.  The xValue(pos) method is available if
-        and only if `obj.isAnalyticX() == True`.
+        position.  Instead a RuntimeError will be raised.  The xValue() method is available if and
+        only if `obj.isAnalyticX() == True`.
 
         Users who wish to use the xValue() method for an object that is the convolution of other
         profiles can do so by drawing the convolved profile into an image, using the image to
@@ -551,7 +552,7 @@ class GSObject(object):
     def shear(self, *args, **kwargs):
         """Create a version of the current object with an area-preserving shear applied to it.
 
-        The arguments may be either a Shear or arguments to be used to initialize one.
+        The arguments may be either a Shear instance or arguments to be used to initialize one.
 
         For more details about the allowed keyword arguments, see the documentation for Shear
         (for doxygen documentation, see galsim.shear.Shear).
@@ -994,11 +995,11 @@ class GSObject(object):
                             default automatically calculated FFT grid size used for any
                             intermediate calculations in Fourier space.  The size of the
                             intermediate images is normally automatically chosen to reach some
-                            preset accuracy targets [cf. GSParams()]; however, if you see
-                            strange artifacts in the image, you might try using `wmult > 1`.  This
-                            will take longer of course, but it will produce more accurate images,
-                            since they will have less "folding" in Fourier space. If the image size
-                            is not specified, then the output real-space image will be enlarged by
+                            preset accuracy targets [cf. GSParams]; however, if you see strange
+                            artifacts in the image, you might try using `wmult > 1`.  This will
+                            take longer of course, but it will produce more accurate images, since
+                            they will have less "folding" in Fourier space. If the image size is
+                            not specified, then the output real-space image will be enlarged by
                             a factor of `wmult`.  If the image size is specified by the user,
                             rather than automatically-sized, use of `wmult>1` will still affect the
                             size of the images used for the Fourier-space calculations and hence
@@ -1101,7 +1102,7 @@ class GSObject(object):
         convolved with the square image pixel.  So when using drawShoot() instead of draw(), you
         should not explicitly include the pixel response by convolving with a Pixel GSObject.  Using
         drawShoot() without convolving with a Pixel will produce the equivalent image (for very
-        large n_photons) as draw() produces when the same object is convolved with
+        large `n_photons`) as draw() produces when the same object is convolved with
         `Pixel(scale=scale)` when drawing onto an image with pixel scale `scale`.
 
         Note that the drawShoot() method is unavailable for Deconvolution objects or compound objects
@@ -1394,8 +1395,8 @@ class Gaussian(GSObject):
     @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
                             [One of `sigma`, `fwhm`, or `half_light_radius` is required.]
     @param flux             The flux (in photons) of the profile. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------
@@ -1472,8 +1473,8 @@ class Moffat(GSObject):
                             zero, in the same units as the size parameter.
                             [default: 0, indicating no truncation]
     @param flux             The flux (in photons) of the profile. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------
@@ -1549,8 +1550,8 @@ class Airy(GSObject):
     @param obscuration      The linear dimension of a central obscuration as a fraction of the
                             pupil dimension.  [default: 0]
     @param flux             The flux (in photons) of the profile. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------
@@ -1649,8 +1650,8 @@ class Kolmogorov(GSObject):
     @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
                             [One of `lam_over_r0`, `fwhm`, or `half_light_radius` is required.]
     @param flux             The flux (in photons) of the profile. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------
@@ -1730,8 +1731,8 @@ class Pixel(GSObject):
     @param scale            The linear scale size of the pixel.  Typically given in arcsec.
     @param flux             The flux (in photons) of the profile.  This should almost certainly
                             be left at the default value of 1. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------
@@ -1776,8 +1777,8 @@ class Box(GSObject):
     @param width            The width of the Box.
     @param height           The height of the Box.
     @param flux             The flux (in photons) of the profile. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------
@@ -1859,8 +1860,8 @@ class Sersic(GSObject):
                             zero.  [default: 0, indicating no truncation]
     @param flux_untruncated Should the provided `flux` and `half_light_radius` refer to the
                             untruncated profile? See below for more details. [default: False]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Flux of a truncated profile
     ---------------------------
@@ -2024,8 +2025,8 @@ class Exponential(GSObject):
     @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
                             [One of `scale_radius` or `half_light_radius` is required.]
     @param flux             The flux (in photons) of the profile. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------
@@ -2090,8 +2091,8 @@ class DeVaucouleurs(GSObject):
     @param flux_untruncated Should the provided `flux` and `half_light_radius` refer to the
                             untruncated profile? See the docstring for Sersic for more details.
                             [default: False]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------

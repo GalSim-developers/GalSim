@@ -110,8 +110,8 @@ class RealGalaxy(GSObject):
                             should make sure that the padded image is larger than the postage
                             stamp onto which you are drawing this object.
                             [default: None]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------

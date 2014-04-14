@@ -63,8 +63,7 @@ class Shear(object):
     specify one of two components, with the other assumed to be zero.  If a magnitude such as `e`, 
     `g`, `eta`, or `q` is specified, then `beta` is also required to be specified.  It is possible 
     to initialize a Shear with zero reduced shear by specifying no args or kwargs, i.e. 
-    galsim.Shear().  The Shear contains a C++ CppShear object, and operations on Shear rely 
-    on wrapped methods of the CppShear.
+    galsim.Shear().
 
     Since we have defined a Shear as a transformation that preserves area, this means that it is not
     a precise description of what happens during the process of weak lensing.  The coordinate

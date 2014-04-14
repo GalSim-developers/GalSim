@@ -209,10 +209,10 @@ class InterpolatedImage(GSObject):
                             [default: True]
     @param offset           The location in the input image to use as the center of the profile.
                             This should be specified relative to the center of the input image
-                            (either the true center if `use_true_center=True`, or the nominal center
-                            if `use_true_center=False`).  [default: None]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+                            (either the true center if `use_true_center=True`, or the nominal
+                            center if `use_true_center=False`).  [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------

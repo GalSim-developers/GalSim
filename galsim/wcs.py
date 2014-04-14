@@ -81,8 +81,8 @@ class BaseWCS(object):
 
     2. UniformWCS classes have a constant pixel size and shape, but they have an arbitrary origin 
        in both image coordinates and world coordinates.  A LocalWCS class can be turned into a 
-       non-local UniformWCS class when an image has its bounds changed (e.g. by the commands 
-       `withCenter`, `withOrigin` or `shift`).
+       non-local UniformWCS class when an image has its bounds changed, e.g. by the commands 
+       withCenter(), withOrigin() or shift().
        
        Currently we define the following non-local, UniformWCS classes:
 
@@ -156,7 +156,7 @@ class BaseWCS(object):
       NotImplementedError will be raised if you pass in a `world_pos` argument.
 
       The returned `local_wcs` is usually a JacobianWCS instance, but see the doc string for 
-      wcs.local() for more details.
+      local() for more details.
 
     - Construct a full affine approximation of a WCS at a given location:
 
@@ -333,28 +333,29 @@ class BaseWCS(object):
         `im.scale` works to read and write the pixel scale.  If not, `im.scale` will raise a 
         TypeError exception.
 
-        wcs.isPixelScale() is shorthand for `isinstance(wcs, (galsim.PixelScale, galsim.OffsetWCS))`.
+        `wcs.isPixelScale()` is shorthand for `isinstance(wcs, (galsim.PixelScale,
+        galsim.OffsetWCS))`.
         """
         return False   # Overridden by PixelScale and OffsetWCS
 
     def isLocal(self):
         """Return whether the WCS transformation is a local, linear approximation.
 
-        wcs.isLocal() is shorthand for `isinstance(wcs, galsim.LocalWCS)`.
+        `wcs.isLocal()` is shorthand for `isinstance(wcs, galsim.LocalWCS)`.
         """
         return False   # Overridden by LocalWCS
 
     def isUniform(self):
         """Return whether the pixels in this WCS have uniform size and shape.
         
-        wcs.isUniform() is shorthand for `isinstance(wcs, galsim.UniformWCS)`.
+        `wcs.isUniform()` is shorthand for `isinstance(wcs, galsim.UniformWCS)`.
         """
         return False   # Overridden by UniformWCS
 
     def isCelestial(self):
         """Return whether the world coordinates are CelestialCoord (i.e. ra,dec).  
 
-        wcs.isCelestial() is shorthand for `isinstance(wcs, galsim.CelestialWCS)`.
+        `wcs.isCelestial()` is shorthand for `isinstance(wcs, galsim.CelestialWCS)`.
         """
         return False   # Overridden by CelestialWCS
 
@@ -373,9 +374,9 @@ class BaseWCS(object):
     def jacobian(self, image_pos=None, world_pos=None):
         """Return the local JacobianWCS of the WCS at a given point.
 
-        This is basically the same as wcs.local(), but the return value is
-        guaranteed to be a JacobianWCS, which can be useful in some situations,
-        since you can access the values of the 2x2 Jacobian matrix directly:
+        This is basically the same as local(), but the return value is guaranteed to be a
+        JacobianWCS, which can be useful in some situations, since you can access the values
+        of the 2x2 Jacobian matrix directly:
 
                 jac = wcs.jacobian(image_pos)
                 x,y = np.meshgrid(np.arange(0,32,1), np.arange(0,32,1))
@@ -383,7 +384,7 @@ class BaseWCS(object):
                 v = jac.dvdx * x + jac.dvdy * y
                 ... use u,v values to work directly in world coordinates.
 
-        If you do not need the extra functionality, then you should use wcs.local()
+        If you do not need the extra functionality, then you should use local()
         instead, since it may be more efficient.
 
         @param image_pos    The image coordinate position (for non-uniform WCS types)

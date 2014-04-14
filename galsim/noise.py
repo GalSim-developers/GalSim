@@ -377,9 +377,9 @@ class VariableGaussianNoise(_galsim.BaseNoise):
 
     Parameters:
 
-    @param rng         A BaseDeviate instance to use for generating the random numbers.
-    @param var_image   The variance of the noise to apply to each pixel.  This image must be the 
-                       same shape as the image for which you eventually call addNoise().
+    @param rng          A BaseDeviate instance to use for generating the random numbers.
+    @param var_image    The variance of the noise to apply to each pixel.  This image must be the 
+                        same shape as the image for which you eventually call addNoise().
 
     Methods
     -------

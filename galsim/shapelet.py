@@ -86,9 +86,8 @@ class Shapelet(GSObject):
                         N=p+q included in the decomposition.
     @param bvec         The initial vector of coefficients.  [default: None, which means to use
                         all zeros]
-    @param gsparams     You may also specify a `gsparams` argument.  See the docstring for
-                        GSParams using help(galsim.GSParams) for more information about
-                        this option.
+    @param gsparams     An optional GSParams argument.  See the docstring for GSParams for
+                        details. [default: None]
 
     Fitting an Image
     ----------------
@@ -238,16 +237,16 @@ def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams
     scale size of the image.  However, it should be noted that some images are not well fit by a
     shapelet for any (reasonable) order.
 
-    @param sigma            The scale size in the standard units (usually arcsec).
-    @param order            The order of the shapelet decomposition.  This is the maximum
-                            N=p+q included in the decomposition.
-    @param image            The Image for which to fit the shapelet decomposition
-    @param center           The position in pixels to use for the center of the decomposition.
-                            [default: image.bounds.trueCenter()]
-    @param normalization    The normalization to assume for the image. 
-                            [default: "flux"]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param sigma        The scale size in the standard units (usually arcsec).
+    @param order        The order of the shapelet decomposition.  This is the maximum
+                        N=p+q included in the decomposition.
+    @param image        The Image for which to fit the shapelet decomposition
+    @param center       The position in pixels to use for the center of the decomposition.
+                        [default: image.bounds.trueCenter()]
+    @param normalization  The normalization to assume for the image. 
+                        [default: "flux"]
+    @param gsparams     An optional GSParams argument.  See the docstring for GSParams for
+                        details. [default: None]
 
     @returns the fitted Shapelet profile
     """

@@ -52,8 +52,8 @@ def Add(*args, **kwargs):
         >>> gal = bulge + disk
 
     @param args             Unnamed args should be a list of objects to add.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     @returns a Sum or ChromaticSum instance as appropriate.
     """
@@ -102,8 +102,8 @@ class Sum(galsim.GSObject):
         >>> gal = galsim.Add([bulge,disk])
 
     @param args             Unnamed args should be a list of objects to add.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Note: if `gsparams` is unspecified (or None), then the Sum instance inherits the same GSParams
     as the first item in the list.  Also, note that parameters related to the Fourier-space
@@ -174,8 +174,8 @@ def Convolve(*args, **kwargs):
     @param real_space       Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     @returns a Convolution or ChromaticConvolution instance as appropriate.
     """
@@ -240,8 +240,8 @@ class Convolution(galsim.GSObject):
     @param real_space       Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Note: if `gsparams` is unspecified (or None), then the Convolution instance inherits the same 
     GSParams as the first item in the list.  Also, note that parameters related to the Fourier-
@@ -379,8 +379,8 @@ def Deconvolve(obj, gsparams=None):
     brightness profile.
 
     @param obj              The object to deconvolve.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     @returns a Deconvolution or ChromaticDeconvolution instance as appropriate.
     """
@@ -413,8 +413,8 @@ class Deconvolution(galsim.GSObject):
         >>> deconv_gal = galsim.Convolve(inv_psf, gal)
 
     @param obj              The object to deconvolve.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------
@@ -443,8 +443,8 @@ def AutoConvolve(obj, real_space=None, gsparams=None):
     @param real_space       Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the object has hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     @returns a AutoConvolution or ChromaticAutoConvolution instance as appropriate.
     """
@@ -473,8 +473,8 @@ class AutoConvolution(galsim.GSObject):
     @param real_space       Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the object has hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------
@@ -531,8 +531,8 @@ def AutoCorrelate(obj, real_space=None, gsparams=None):
     @param real_space       Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the object has hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     @returns an AutoCorrelation or ChromaticAutoCorrelation instance as appropriate.
     """
@@ -565,8 +565,8 @@ class AutoCorrelation(galsim.GSObject):
     @param real_space       Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the object has hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------

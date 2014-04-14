@@ -787,8 +787,8 @@ class ChromaticSum(ChromaticObject):
         >>> gal = galsim.Add([bulge,disk])
 
     @param args             Unnamed args should be a list of objects to add.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
     """
     def __init__(self, *args, **kwargs):
         # Check kwargs first:
@@ -932,8 +932,8 @@ class ChromaticConvolution(ChromaticObject):
     @param real_space       Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
     """
     def __init__(self, *args, **kwargs):
         # First check for number of arguments != 0
@@ -1180,8 +1180,8 @@ class ChromaticDeconvolution(ChromaticObject):
     --------------
 
     @param obj              The object to deconvolve.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
     """
     def __init__(self, obj, **kwargs):
         self.obj = obj.copy()
@@ -1223,8 +1223,8 @@ class ChromaticAutoConvolution(ChromaticObject):
     @param real_space       Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
     """
     def __init__(self, obj, **kwargs):
         self.obj = obj.copy()
@@ -1271,8 +1271,8 @@ class ChromaticAutoCorrelation(ChromaticObject):
     @param real_space       Whether to use real space convolution.  [default: None, which means
                             to automatically decide this according to whether the objects have hard
                             edges.]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
     """
     def __init__(self, obj, **kwargs):
         self.obj = obj.copy()

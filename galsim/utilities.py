@@ -62,8 +62,8 @@ def g1g2_to_e1e2(g1, g2):
     definitions of reduced shear and distortion in terms of axis ratios or other ways of specifying
     ellipses.
 
-    @param g1   First reduced shear component (along pixel axes)
-    @param g2   Second reduced shear component (at 45 degrees with respect to pixel axes)
+    @param g1   First reduced shear component
+    @param g2   Second reduced shear component
 
     @returns the corresponding distortions, e1 and e2.
     """
@@ -461,14 +461,13 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
     @param gsobject         The GSObject for which this test is to be performed (prior
                             to PSF convolution if a PSF is also supplied via `psf_object`).
                             Note that this function will automatically handle integration over
-                            a Pixel of width `pixel_scale`, so a Pixel should 
-                            not be included in the supplied `gsobject` (unless you really mean
-                            to include it, which will be very rare in normal usage).
+                            a Pixel of width `pixel_scale`, so a Pixel should not be included in
+                            the supplied `gsobject` (unless you really mean to include it, which
+                            will be very rare in normal usage).
     @param psf_object       Optional additional PSF for tests of convolved objects, also a
-                            GSObject.  Note that this function will automatically 
-                            handle integration over a Pixel of width `pixel_scale`,
-                            so this should not be included in the supplied `psf_object`.
-                            [default: None]
+                            GSObject.  Note that this function will automatically handle
+                            integration over a Pixel of width `pixel_scale`, so this should not
+                            be included in the supplied `psf_object`.  [default: None]
     @param rng              A BaseDeviate or derived deviate class instance to provide
                             the pseudo random numbers for the photon shooting.  [default: None]
     @param pixel_scale      The pixel scale to use in the test images. [default: 1]
@@ -521,7 +520,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
     def _shoot_trials_single(gsobject, ntrials, dx, imsize, rng, n_photons):
         """Convenience function to run `ntrials` and collect the results, uses only a single core.
 
-        Uses a Python `for` loop but this is very unlikely to be a rate determining factor provided
+        Uses a Python for loop but this is very unlikely to be a rate determining factor provided
         n_photons is suitably large (>1e6).
         """
         g1obslist = []

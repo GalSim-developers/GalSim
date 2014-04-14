@@ -69,7 +69,7 @@ class ShapeData(object):
     The ShapeData class is the analogous object at the python level.  It contains the following
     information about moment measurement (from either EstimateShear() or FindAdaptiveMom()):
 
-    - image_bounds: a Bounds object describing the image.
+    - image_bounds: a BoundsI object describing the image.
 
     - moments_status: the status flag resulting from moments measurement; -1 indicates no attempt to
       measure, 0 indicates success.
@@ -147,7 +147,7 @@ class ShapeData(object):
             self.resolution_factor = args[0].resolution_factor
             self.error_message = args[0].error_message
         else:
-            self.image_bounds = _galsim.BoundsD()
+            self.image_bounds = _galsim.BoundsI()
             self.moments_status = -1
             self.observed_shape = galsim.Shear()
             self.moments_sigma = -1.0

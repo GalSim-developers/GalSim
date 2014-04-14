@@ -103,10 +103,10 @@ class PowerSpectrumEstimator(object):
         PowerSpectrumEstimator can be used to estimate the power spectrum quickly for many sets of
         shears at gridded positions.
 
-        @param N             The number of pixels along each side of the grid. [default: 100]
-        @param sky_size_deg  The total grid width (in one dimension) in degrees. [default: 10]
-        @param nbin          The number of evenly-spaced logarithmic `ell` bins to use for estimating
-                             the power spectrum. [default: 15]
+        @param N            The number of pixels along each side of the grid. [default: 100]
+        @param sky_size_deg The total grid width (in one dimension) in degrees. [default: 10]
+        @param nbin         The number of evenly-spaced logarithmic `ell` bins to use for estimating
+                            the power spectrum. [default: 15]
         """
         # Set up the scales of the sky and pixels
         self.N = N
