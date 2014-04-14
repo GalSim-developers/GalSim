@@ -431,7 +431,7 @@ def test_gaussian():
  
     # Check starting with GaussianNoise()
     gn = galsim.GaussianNoise()
-    gn = gn.withVariance(3.)
+    gn = gn.withVariance(9.)
     np.testing.assert_almost_equal(
             gn.getVariance(), 9, precision, 
             err_msg="GaussianNoise().withVariance results in wrong variance")
