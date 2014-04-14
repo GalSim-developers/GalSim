@@ -1593,6 +1593,49 @@ def test_multiprocess():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_addnoisesnr():
+    """Test that addNoiseSNR is behaving sensibly.
+    """
+    import time
+    t1 = time.time()
+
+    # Rather than reproducing the S/N calculation in addNoiseSNR(), we'll just check for
+    # self-consistency of the behavior with / without flux preservation.
+    # Begin by making some object that we draw into an Image.
+    gal_sigma = 3.7
+    pix_scale = 0.6
+    test_snr = 73.
+    rand_seed = 271828
+    gauss = galsim.Gaussian(sigma=gal_sigma)
+    pix = galsim.Pixel(pix_scale)
+    obj = galsim.Convolve(gauss, pix)
+    im = obj.draw(scale=pix_scale)
+
+    # Now make a noise object with default RNG.
+    gn = galsim.GaussianNoise(galsim.BaseDeviate(rand_seed))
+
+    # Try addNoiseSNR with preserve_flux=True, so the RNG needs a different variance.
+    # Check what variance was added for this SNR, and that the RNG is back to its original variance
+    # after this call.
+    var_out = im.addNoiseSNR(gn, test_snr, preserve_flux=True)
+    assert gn.getVariance()==1.0
+    max_val = im.array.max()
+
+    # Now apply addNoiseSNR to another (clean) image with preserve_flux=False (for a new RNG with
+    # same seed as original), so we use the noise variance in the original RNG, i.e., 1.  Check that
+    # the returned variance is 1, and that the value of the maximum pixel (presumably the peak of
+    # the galaxy light profile) is scaled as we expect for this SNR.
+    im2 = obj.draw(scale=pix_scale)
+    gn2 = galsim.GaussianNoise(galsim.BaseDeviate(rand_seed))
+    var_out2 = im2.addNoiseSNR(gn2, test_snr, preserve_flux=False)
+    assert var_out2==1.0
+    expect_max_val2 = max_val*np.sqrt(var_out2/var_out)
+    np.testing.assert_almost_equal(im2.array.max(), expect_max_val2, decimal=6,
+                                   err_msg='Wrongness in AddNoiseSNR calculations')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_uniform()
     test_gaussian()
@@ -1605,4 +1648,4 @@ if __name__ == "__main__":
     test_distLookupTable()
     test_ccdnoise()
     test_multiprocess()
-
+    test_addnoisesnr()
