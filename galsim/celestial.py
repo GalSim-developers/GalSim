@@ -443,10 +443,9 @@ class CelestialCoord(object):
 
     def precess(self, from_epoch, to_epoch):
         """This function precesses equatorial ra and dec from one epoch to another.
-           It is adapted from a set of fortran subroutines found in precess.f,
-           which were based on (a) pages 30-34 of the Explanatory Supplement
-           to the AE, (b) Lieske, et al. (1977) A&A 58, 1-16, and
-           (c) Lieske (1979) A&A 73, 282-284.
+           It is adapted from a set of fortran subroutines based on (a) pages 30-34 of
+           the Explanatory Supplement to the AE, (b) Lieske, et al. (1977) A&A 58, 1-16,
+           and (c) Lieske (1979) A&A 73, 282-284.
         """
         if from_epoch == to_epoch: return self
 
