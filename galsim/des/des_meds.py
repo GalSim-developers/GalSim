@@ -18,8 +18,8 @@
 #
 """@file des_meds.py  Module for generating DES Multi-Epoch Data Structures (MEDS) in GalSim.
 
-This module defines the `MultiExposureObject` class for representing multiple exposure data for a 
-single object.  The `write_meds` function can be used to write a list of `MultiExposureObject` 
+This module defines the MultiExposureObject class for representing multiple exposure data for a 
+single object.  The write_meds() function can be used to write a list of MultiExposureObject
 instances to a single MEDS file.
 
 Importing this module also adds these data structures to the config framework, so that MEDS file 

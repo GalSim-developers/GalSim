@@ -94,8 +94,8 @@ class Cosmology(object):
 class NFWHalo(object):
     """Class for NFW halos.
 
-    Compute the lensing fields shear and convergence of a NFW halo of given mass, concentration, 
-    redshift, assuming Cosmology. No mass-concentration relation is employed.
+    Compute the lensing fields shear and convergence of a spherically symmetric NFW halo of given
+    mass, concentration, redshift, assuming Cosmology. No mass-concentration relation is employed.
 
     Based on Matthias Bartelmann's libastro.
 
