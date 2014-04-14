@@ -53,7 +53,7 @@ change does not affect the most common uses of the function.
     variance, rng=rng, wcs=wcs)` or `UncorrelatedNoise(rng=rng, wcs=wcs,
     variance=variance)`.
   * `getCOSMOSNoise(rng, file_name)` should now be `getCOSMOSNoise(file_name,
-    rng)` or `getCOSMOSNoise(rng=rng, file_name=file_name)`.
+    rng=rng)` or `getCOSMOSNoise(rng=rng, file_name=file_name)`.
 
 
 Other changes to the API
@@ -332,9 +332,6 @@ change their yaml files.
 
 Other new features:
 
-* Fixed some bugs in the treatment of correlated noise.  (Issues #526, #528)
-* Modify addNoiseSNR() method to return the variance of the noise that was
-  added.  (Issue #526)
 * Sped up the gzip and bzip2 I/O by using the shell gzip and bzip2 executables
   if they are available on the system. (Issue #344)
 * Added some new functions to convert an angle to/from DMS strings.  Sometimes
@@ -362,3 +359,6 @@ Other new features:
   size of the image that it constructs internally. (Issue #478)
 * Added option to FitsHeader and FitsWCS to read in SCamp-style text files with
   the header information using the parameter `text_file=True`. (Issue #508)
+* Fixed some bugs in the treatment of correlated noise.  (Issues #526, #528)
+* Modify addNoiseSNR() method to return the variance of the noise that was
+  added.  (Issue #526)
