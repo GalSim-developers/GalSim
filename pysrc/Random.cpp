@@ -92,7 +92,7 @@ namespace galsim {
             // BaseDeviate being wrapped in the shared_ptr is really a BaseDeviateCallBack.
             // So boost python knows how to handle it.  
             //
-            // But if the BaseDevaite was constructed in the C++ layer, which happens when you
+            // But if the BaseDeviate was constructed in the C++ layer, which happens when you
             // default construct the BaseNoise object:
             //
             //     >>> gn = galsim.GaussianNoise()
