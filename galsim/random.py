@@ -163,17 +163,17 @@ class DistDeviate(_galsim.BaseDeviate):
     
     DistDeviate is a BaseDeviate class that can be used to draw from an arbitrary probability
     distribution.  The probability distribution passed to DistDeviate can be given one of three 
-    ways: as the name of a file containing a 2d ASCII array of `x` and `P(x)` or as a callable 
+    ways: as the name of a file containing a 2d ASCII array of x and P(x) or as a callable 
     function.
     
-    Once given a probability, DistDeviate creates a table of `x` value versus cumulative probability
-    and draws from it using a UniformDeviate.  The precision of its outputs can be controlled with
-    the keyword npoints, which sets the number of points DistDeviate creates for its internal table
-    of `x` vs `CDF(x)`.  To prevent errors due to non-monotonicity, the interpolant for this
-    internal table is always linear.
+    Once given a probability, DistDeviate creates a table of the cumulative probability and draws
+    from it using a UniformDeviate.  The precision of its outputs can be controlled with the
+    keyword `npoints`, which sets the number of points DistDeviate creates for its internal table
+    of CDF(x).  To prevent errors due to non-monotonicity, the interpolant for this internal table
+    is always linear.
     
-    Two keywords, `x_min` and `x_max`, define the support of the function.  They must be passed if a
-    callable function is given to DistDeviate, unless the function is a LookupTable, which has its
+    Two keywords, `x_min` and `x_max`, define the support of the function.  They must be passed if
+    a callable function is given to DistDeviate, unless the function is a LookupTable, which has its
     own defined endpoints.  If a filename or LookupTable is passed to DistDeviate, the use of
     `x_min` or `x_max` will result in an error.
         
@@ -201,7 +201,7 @@ class DistDeviate(_galsim.BaseDeviate):
     
     >>> d = galsim.DistDeviate(rng, function=galsim.LookupTable(x,p))
     
-    Initializes d to be a DistDeviate instance with a distribution given by `P(x)`, defined as two
+    Initializes d to be a DistDeviate instance with a distribution given by P(x), defined as two
     arrays `x` and `p` which are used to make a callable LookupTable, and links the DistDeviate
     PRNG to the already-existing random number generator `rng`.
     

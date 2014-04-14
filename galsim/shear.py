@@ -27,7 +27,7 @@ class Shear(object):
 
     The python Shear class (galsim.Shear) can be initialized in a variety of ways to represent shape
     distortions.  A shear is an operation that transforms a circle into an ellipse with
-    minor-to-major axis ratio `b/a`, with position angle `beta`, while conserving the area (see
+    minor-to-major axis ratio b/a, with position angle beta, while conserving the area (see
     below for a discussion of the implications of this choice).  Given the multiple definitions of
     ellipticity, we have multiple definitions of shear:
 
@@ -36,15 +36,14 @@ class Shear(object):
     conformal shear eta, with a/b = exp(eta)
     minor-to-major axis ratio q = b/a
 
-    These can be thought of as a magnitude and a real-space position angle `beta`, or as two
-    components, e.g., `g1` and `g2`, with
+    These can be thought of as a magnitude and a real-space position angle beta, or as two
+    components, e.g., g1 and g2, with
 
-    `g1` = |g| cos(2*`beta`)
-    `g2` = |g| sin(2*`beta`)
+    g1 = |g| cos(2*beta)
+    g2 = |g| sin(2*beta)
 
-    Note: `beta` is _not_ the phase of a complex valued shear.  Rather, the complex shear is 
-    `g1` + i `g2` = `g` exp(2 i `beta`).  Likewise for `eta` or `e`.  The phase of the complex value
-    is twice `beta`.
+    Note: beta is _not_ the phase of a complex valued shear.  Rather, the complex shear is 
+    g1 + i g2 = g exp(2 i beta).  Likewise for eta or e.  The phase of the complex value is 2 beta.
 
     The following are all examples of valid calls to initialize a Shear object:
     

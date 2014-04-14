@@ -128,7 +128,7 @@ class PowerSpectrum(object):
     (ell), i.e., the C_ell values.  In the flat-sky limit, we can replace ell with k and C_ell with
     P(k).  Thus, k and P(k) have dimensions of inverse angle and angle^2, respectively.  It is quite
     common for people to plot ell(ell+1)C_ell/2pi, a dimensionless quantity; the analogous flat-sky
-    quantity is `Delta^2 = k^2 P(k)/2pi`.  By default, the PowerSpectrum object assumes it is getting
+    quantity is Delta^2 = k^2 P(k)/2pi.  By default, the PowerSpectrum object assumes it is getting
     P(k), but it is possible to instead give it Delta^2 by setting the optional keyword `delta2 =
     True` in the constructor.
 
@@ -254,8 +254,8 @@ class PowerSpectrum(object):
             kmax = pi / grid_spacing
 
         and where we have adopted the convention that grid points at a given `k` represent the
-        interval between `k - (Delta k)/2` and `k + (Delta k)/2` (noting that the grid spacing
-        `Delta k` in k space is equivalent to `kmin`).
+        interval between (k - dk/2) and (k + dk/2) (noting that the grid spacing dk in k space
+        is equivalent to `kmin`).
 
         It is worth remembering that this bandpass filter will *not* look like a circular annulus
         in 2D `k` space, but is rather more like a thick-sided picture frame, having a small square

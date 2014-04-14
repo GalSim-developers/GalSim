@@ -1448,7 +1448,7 @@ class Gaussian(GSObject):
 class Moffat(GSObject):
     """A class describing a Moffat surface brightness profile.
 
-    The Moffat surface brightness profile is `I(R) propto [1 + (r/scale_radius)^2]^(-beta)`.  The
+    The Moffat surface brightness profile is I(R) ~ [1 + (r/scale_radius)^2]^(-beta).  The
     GalSim representation of a Moffat profile also includes an optional truncation beyond a given
     radius.
 
@@ -1826,8 +1826,8 @@ class Sersic(GSObject):
 
     The Sersic surface brightness profile is characterized by three properties: its Sersic index
     `n`, its `flux`, and either the `half_light_radius` or `scale_radius`.  Given these properties,
-    the surface brightness profile scales as `I(r) propto exp[-(r/scale_radius)^{1/n}]`, or
-    `I(r) propto exp[-b*(r/half_light_radius)^{1/n}]` (where b is calculated to give the right
+    the surface brightness profile scales as I(r) ~ exp[-(r/scale_radius)^{1/n}], or
+    I(r) ~ exp[-b*(r/half_light_radius)^{1/n}] (where b is calculated to give the right
     half-light radius).
 
     For more information, refer to
@@ -2010,7 +2010,7 @@ class Sersic(GSObject):
 class Exponential(GSObject):
     """A class describing an exponential profile.
 
-    Surface brightness profile with I(r) propto exp[-r/scale_radius].  This is a special case of
+    Surface brightness profile with I(r) ~ exp[-r/scale_radius].  This is a special case of
     the Sersic profile, but is given a separate class since the Fourier transform has closed form
     and can be generated without lookup tables.
 
@@ -2067,8 +2067,8 @@ class Exponential(GSObject):
 class DeVaucouleurs(GSObject):
     """A class describing DeVaucouleurs profile objects.
 
-    Surface brightness profile with I(r) propto exp[-(r/scale_radius)^{1/4}].
-    This is completely equivalent to a Sersic with n=4.
+    Surface brightness profile with I(r) ~ exp[-(r/scale_radius)^{1/4}].  This is completely
+    equivalent to a Sersic with n=4.
 
     For more information, refer to
 
