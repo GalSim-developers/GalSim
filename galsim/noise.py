@@ -59,10 +59,16 @@ def addNoiseSNR(self, noise, snr, preserve_flux=False):
     Thus, the real S/N on the final image will be slightly lower than the target `snr` value, 
     and this effect will be larger for brighter objects.
 
+    Also, this function relies on noise.getVariance() to determine how much variance the
+    noise model will add.  Thus, it will not work for noise models that do not have a well-
+    defined variance, such as VariableGaussianNoise.
+
     @param noise        The noise (BaseNoise) model to use.
     @param snr          The desired signal-to-noise after the noise is applied.
     @param preserve_flux  Whether to preserve the flux of the object (True) or the variance of
                         the noise model (False) to achieve the desired SNR. [default: False]
+
+    @returns the variance of the noise that was applied to the image.
     """
     import numpy
     noise_var = noise.getVariance()
@@ -70,11 +76,13 @@ def addNoiseSNR(self, noise, snr, preserve_flux=False):
         new_noise_var = numpy.sum(self.array**2)/snr/snr
         noise = noise.withVariance(new_noise_var)
         self.addNoise(noise)
+        return new_noise_var
     else:
         sn_meas = numpy.sqrt( numpy.sum(self.array**2)/noise_var )
         flux = snr/sn_meas
         self *= flux
         self.addNoise(noise)
+        return noise_var
 
 galsim.Image.addNoise = addNoise
 galsim.Image.addNoiseSNR = addNoiseSNR
@@ -292,8 +300,8 @@ def CCDNoise_applyTo(self, image):
 
         >>> ccd_noise.applyTo(image)
 
-    On output the Image instance `image` will have been given additional stochastic noise according to 
-    the gain and read noise settings of the given CCDNoise instance.
+    On output the Image instance `image` will have been given additional stochastic noise according
+    to the gain and read noise settings of the given CCDNoise instance.
 
     Note: the syntax `image.addNoise(ccd_noise)` is preferred.
     """
@@ -397,8 +405,8 @@ class VariableGaussianNoise(_galsim.BaseNoise):
 
             >>> variable_noise.applyTo(image)
 
-        On output the Image instance `image` will have been given additional Gaussian noise according 
-        to the variance image of the given VariableGaussianNoise instance.
+        On output the Image instance `image` will have been given additional Gaussian noise
+        according to the variance image of the given VariableGaussianNoise instance.
 
         Note: The syntax `image.addNoise(variable_noise)` is preferred.
         """
