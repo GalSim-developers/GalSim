@@ -97,23 +97,22 @@ class SED(object):
                 spec = galsim.LookupTable(file=spec, interpolant='linear')
             else:
                 origspec = spec
-                # Trap all exceptions generated from `eval()`.
-                try:
-                    spec = eval('lambda wave : ' + spec)
-                except:
-                    raise ValueError(
-                        "SED spec string initialization '{0}' failed.".format(origspec))
-                # Only trap NameErrors when testing to see if the the result of `eval()` is
-                # valid since `spec = '1./(wave-700)'` will generate a ZeroDivisionError despite
+                # Don't catch ZeroDivisionErrors when testing to see if the the result of `eval()`
+                # is valid since `spec = '1./(wave-700)'` will generate a ZeroDivisionError despite
                 # being a valid spectrum specification, while `spec = 'blah'` where `blah` is
                 # undefined generates a NameError and is not a valid spectrum specification.
                 # Are there any other types of errors we should trap here?
                 try:
-                    spec(700)
-                except NameError:
-                    raise NameError(
-                        "SED spec string initialization '{0}' failed.".format(origspec))
-                except:
+                    spec = eval('lambda wave : ' + spec)   # This can raise SyntaxError
+                    spec(700)   # This can raise NameError or ZeroDivisionError
+                except ZeroDivisionError:
+                    pass
+                except (SyntaxError, NameError):
+                    raise ValueError(
+                        "String spec must either be a valid filename or something that "+
+                        "can eval to a function of wave. Input provided: {0}".format(origspec))
+                except: 
+                    # Not sure what this might be, but probably pass is the better option here.
                     pass
 
         if isinstance(spec, galsim.LookupTable):

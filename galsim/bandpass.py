@@ -97,21 +97,22 @@ class Bandpass(object):
             if os.path.isfile(tp):
                 tp = galsim.LookupTable(file=tp, interpolant='linear')
             else:
-                tp = eval('lambda wave : ' + tp)
                 # Evaluate the function somewhere to make sure it is valid before continuing on.
                 if red_limit is not None:
-                    tp(red_limit)
+                    test_wave = red_limit
                 elif blue_limit is not None:
-                    tp(blue_limit)
+                    test_wave = blue_limit
                 else:
                     # If neither `blue_limit` nor `red_limit` is defined, then the Bandpass should
                     # be able to be evaluated at any wavelength, so check.
-                    try:
-                        tp(700)
-                    except:
-                        raise ValueError(
-                            "Bandpass throughput string initialization '{0}' failed."
-                            .format(throughput))
+                    test_wave = 700
+                try:
+                    tp = eval('lambda wave : ' + tp)
+                    tp(test_wave)
+                except:
+                    raise ValueError(
+                        "String throughput must either be a valid filename or something that "+
+                        "can eval to a function of wave. Input provided: {0}".format(throughput))
 
         # Figure out wavelength type
         if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:

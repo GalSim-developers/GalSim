@@ -145,9 +145,9 @@ def test_SED_init():
     """Check that certain invalid SED initializations are trapped.
     """
     # These fail.
-    np.testing.assert_raises(NameError, galsim.SED, spec='blah')
+    np.testing.assert_raises(ValueError, galsim.SED, spec='blah')
     np.testing.assert_raises(ValueError, galsim.SED, spec='wave+')
-    np.testing.assert_raises(NameError, galsim.SED, spec='somewhere/a/file')
+    np.testing.assert_raises(ValueError, galsim.SED, spec='somewhere/a/file')
     np.testing.assert_raises(ValueError, galsim.SED, spec='/somewhere/a/file')
     # These should succeed.
     galsim.SED(spec='wave')

@@ -628,8 +628,9 @@ class PowerSpectrum(object):
                     pf(1.0)
                 except:
                     raise ValueError(
-                        "PowerSpectrum string initialization '{0}' failed."
-                        .format(origpf))
+                        "String power_spectrum must either be a valid filename or something that "+
+                        "can eval to a function of k. Input provided: {0}".format(origpf))
+
 
         # Check that the function is sane.
         # Note: Only try tests below if it's not a LookupTable.
