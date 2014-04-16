@@ -218,9 +218,9 @@ class ChromaticObject(object):
                               use_true_center, offset)
 
         # For performance profiling, store the number of evaluations used for the last integration
-        # performed.  Note that this might not be very useful for ChromaticSum's, which are drawn
-        # one profile at a time, and hence _last_n_eval will only represent the final component
-        # drawn.
+        # performed.  Note that this might not be very useful for ChromaticSum instances, which are
+        # drawn one profile at a time, and hence _last_n_eval will only represent the final
+        # component drawn.
         self._last_n_eval = integrator.last_n_eval
 
         # Clear image if add_to_image is False
@@ -864,13 +864,14 @@ class ChromaticSum(ChromaticObject):
     def draw(self, bandpass, image=None, scale=None, wcs=None, gain=1.0, wmult=1.0,
              normalization="flux", add_to_image=False, use_true_center=True, offset=None,
              integrator=None):
-        """Slightly optimized draw method for ChromaticSum's.  Draw each summand individually
-        and add resulting images together.  This might waste time if two or more summands are
-        separable and have the same SED, and another summand with a different SED is also added,
-        in which case the summands should be added together first and the resulting Sum
-        object can then be chromaticized.  In general, however, drawing individual sums
-        independently can help with speed by identifying chromatic profiles that are separable into
-        spectral and spatial factors.
+        """Slightly optimized draw method for ChromaticSum instances.
+
+        Draws each summand individually and add resulting images together.  This might waste time if
+        two or more summands are separable and have the same SED, and another summand with a
+        different SED is also added, in which case the summands should be added together first and
+        the resulting Sum object can then be chromaticized.  In general, however, drawing individual
+        sums independently can help with speed by identifying chromatic profiles that are separable
+        into spectral and spatial factors.
 
         @param bandpass         A Bandpass object representing the filter against which to
                                 integrate.
@@ -885,7 +886,7 @@ class ChromaticSum(ChromaticObject):
         @param offset           See GSObject.draw()
         @param integrator       One of the image integrators from galsim.integ
 
-        @returns the drawn image.
+        @returns the drawn Image.
         """
         image = self.objlist[0].draw(
                 bandpass, image, scale, wcs, gain, wmult, normalization,
