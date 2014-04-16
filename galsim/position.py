@@ -46,13 +46,13 @@ for Class in (_galsim.PositionD, _galsim.PositionI):
 
     For the float-valued position class, example initializations include:
 
-        pos = galsim.PositionD(x=0.5, y=-0.5)
-        pos = galsim.PositionD(0.5, -0.5)
+        >>> pos = galsim.PositionD(x=0.5, y=-0.5)
+        >>> pos = galsim.PositionD(0.5, -0.5)
 
     And for the integer-valued position class, example initializations include:
 
-        pos = galsim.PositionI(x=45, y=13)
-        pos = galsim.PositionI(45, 13)
+        >>> pos = galsim.PositionI(x=45, y=13)
+        >>> pos = galsim.PositionI(45, 13)
 
     Attributes
     ----------
@@ -63,15 +63,15 @@ for Class in (_galsim.PositionD, _galsim.PositionI):
     ----------
     Most arithmetic that makes sense for a position is allowed:
 
-        pos1 + pos2
-        pos1 - pos2
-        pos * x
-        pos / x
-        -pos
-        pos1 += pos2
-        pos1 -= pos2
-        pos *= x
-        pos -= x
+        >>> pos1 + pos2
+        >>> pos1 - pos2
+        >>> pos * x
+        >>> pos / x
+        >>> -pos
+        >>> pos1 += pos2
+        >>> pos1 -= pos2
+        >>> pos *= x
+        >>> pos -= x
 
     Note though that the types generally need to match.  For example, you cannot multiply
     a PositionI by a float or add a PositionI to a PositionD.

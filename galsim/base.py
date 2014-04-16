@@ -173,22 +173,22 @@ class GSObject(object):
     (and you have enough memory to handle it!).  Then you can create a new GSParams object with a
     larger `maximum_fft_size` and pass that to your GSObject on construction:
 
-        gal = galsim.Sersic(n=4, half_light_radius=4.3)
-        psf = galsim.Moffat(beta=3, fwhm=2.85)
-        pix = galsim.Pixel(scale=0.05)                  # Note the very small pixel scale!
-        conv = galsim.Convolve([gal,psf,pix])
-        im = galsim.Image(1000,1000, scale=0.05)        # Use the same pixel scale on the image.
-        im = conv.draw(image=im)                        # This uses the default GSParams.
+        >>> gal = galsim.Sersic(n=4, half_light_radius=4.3)
+        >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
+        >>> pix = galsim.Pixel(scale=0.05)                  # Note the very small pixel scale!
+        >>> conv = galsim.Convolve([gal,psf,pix])
+        >>> im = galsim.Image(1000,1000, scale=0.05)        # Use the same pixel scale on the image.
+        >>> im = conv.draw(image=im)                        # This uses the default GSParams.
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
           File "galsim/base.py", line 885, in draw
             image.added_flux = prof.SBProfile.draw(image.image, gain, wmult)
         RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
         If you can handle the large FFT, you may update gsparams.maximum_fft_size.
-        big_fft_params = galsim.GSParams(maximum_fft_size=10240)
-        conv = galsim.Convolve([gal,psf,pix],gsparams=big_fft_params)
-        im = conv.draw(image=im)                        # Now it works (but is slow!)
-        im.write('high_res_sersic.fits')
+        >>> big_fft_params = galsim.GSParams(maximum_fft_size=10240)
+        >>> conv = galsim.Convolve([gal,psf,pix],gsparams=big_fft_params)
+        >>> im = conv.draw(image=im)                        # Now it works (but is slow!)
+        >>> im.write('high_res_sersic.fits')
 
     Note that for compound objects in compound.py, like Convolution or Sum, not all GSParams can be
     changed when the compound object is created.  In the example given here, it is possible to
@@ -1540,10 +1540,10 @@ class Airy(GSObject):
     parameter to pass to the Airy constructor, but as it is naturally in radians, you would
     typically convert to arcsec.  e.g.
 
-        lam = 700  # nm
-        diam = 4.0    # meters
-        lam_over_diam = (lambda * 1.e-9) / diam  # radians
-        lam_over_diam *= 206265  # Convert to arcsec
+        >>> lam = 700  # nm
+        >>> diam = 4.0    # meters
+        >>> lam_over_diam = (lambda * 1.e-9) / diam  # radians
+        >>> lam_over_diam *= 206265  # Convert to arcsec
 
     @param lam_over_diam    The parameter that governs the scale size of the profile.
                             See above for details about calculating it.
@@ -1632,10 +1632,10 @@ class Kolmogorov(GSObject):
 
     This ratio is naturally in radians, so you would typically convert to arcsec.  e.g.
 
-        lam = 700  # nm
-        r0 = 0.15 * (lam/500)**(-1.2)  # meters
-        lam_over_r0 = (lam * 1.e-9) / r0  # radians
-        lam_over_r0 *= 206265  # Convert to arcsec
+        >>> lam = 700  # nm
+        >>> r0 = 0.15 * (lam/500)**(-1.2)  # meters
+        >>> lam_over_r0 = (lam * 1.e-9) / r0  # radians
+        >>> lam_over_r0 *= 206265  # Convert to arcsec
 
     The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
 
@@ -1881,44 +1881,44 @@ class Sersic(GSObject):
 
     Example:
 
-        sersic_obj1 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40.)
-        sersic_obj2 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10.)
-        sersic_obj3 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10., \\
+        >>> sersic_obj1 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40.)
+        >>> sersic_obj2 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10.)
+        >>> sersic_obj3 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10., \\
                                         flux_untruncated=True)
 
-        sersic_obj1.xValue(galsim.PositionD(0.,0.))
+        >>> sersic_obj1.xValue(galsim.PositionD(0.,0.))
         237.3094228615618
-        sersic_obj2.xValue(galsim.PositionD(0.,0.))
+        >>> sersic_obj2.xValue(galsim.PositionD(0.,0.))
         142.54505376530574    # Normalization and scale radius adjusted (same half-light radius)
-        sersic_obj3.xValue(galsim.PositionD(0.,0.))
+        >>> sersic_obj3.xValue(galsim.PositionD(0.,0.))
         237.30942286156187
 
-        sersic_obj1.xValue(galsim.PositionD(10.0001,0.))
+        >>> sersic_obj1.xValue(galsim.PositionD(10.0001,0.))
         0.011776164687304694
-        sersic_obj2.xValue(galsim.PositionD(10.0001,0.))
+        >>> sersic_obj2.xValue(galsim.PositionD(10.0001,0.))
         0.0
-        sersic_obj3.xValue(galsim.PositionD(10.0001,0.))
+        >>> sersic_obj3.xValue(galsim.PositionD(10.0001,0.))
         0.0
 
-        sersic_obj1.getHalfLightRadius()
+        >>> sersic_obj1.getHalfLightRadius()
         2.5
-        sersic_obj2.getHalfLightRadius()
+        >>> sersic_obj2.getHalfLightRadius()
         2.5
-        sersic_obj3.getHalfLightRadius()
+        >>> sersic_obj3.getHalfLightRadius()
         1.9795101383056892    # The true half-light radius is smaller than the specified value
 
-        sersic_obj1.getFlux()
+        >>> sersic_obj1.getFlux()
         40.0
-        sersic_obj2.getFlux()
+        >>> sersic_obj2.getFlux()
         40.0
-        sersic_obj3.getFlux()
+        >>> sersic_obj3.getFlux()
         34.56595186009519     # Flux is missing due to truncation
 
-        sersic_obj1.getScaleRadius()
+        >>> sersic_obj1.getScaleRadius()
         0.003262738739834598
-        sersic_obj2.getScaleRadius()
+        >>> sersic_obj2.getScaleRadius()
         0.004754602453641744  # the scale radius needed adjustment to accommodate HLR
-        sersic_obj3.getScaleRadius()
+        >>> sersic_obj3.getScaleRadius()
         0.003262738739834598  # the scale radius is still identical to the untruncated case
 
     When the truncated Sersic scale is specified with `scale_radius`, the behavior between the
@@ -1932,37 +1932,37 @@ class Sersic(GSObject):
 
     Example:
 
-        sersic_obj1 = galsim.Sersic(n=3.5, scale_radius=0.05, flux=40.)
-        sersic_obj2 = galsim.Sersic(n=3.5, scale_radius=0.05, flux=40., trunc=10.)
-        sersic_obj3 = galsim.Sersic(n=3.5, scale_radius=0.05, flux=40., trunc=10., \\
+        >>> sersic_obj1 = galsim.Sersic(n=3.5, scale_radius=0.05, flux=40.)
+        >>> sersic_obj2 = galsim.Sersic(n=3.5, scale_radius=0.05, flux=40., trunc=10.)
+        >>> sersic_obj3 = galsim.Sersic(n=3.5, scale_radius=0.05, flux=40., trunc=10., \\
                                         flux_untruncated=True)
 
-        sersic_obj1.xValue(galsim.PositionD(0.,0.))
+        >>> sersic_obj1.xValue(galsim.PositionD(0.,0.))
         1.010507575186637
-        sersic_obj2.xValue(galsim.PositionD(0.,0.))
+        >>> sersic_obj2.xValue(galsim.PositionD(0.,0.))
         5.786692612210923     # Normalization adjusted to accomodate the flux within trunc radius
-        sersic_obj3.xValue(galsim.PositionD(0.,0.))
+        >>> sersic_obj3.xValue(galsim.PositionD(0.,0.))
         1.010507575186637
 
-        sersic_obj1.getHalfLightRadius()
+        >>> sersic_obj1.getHalfLightRadius()
         38.311372735390016
-        sersic_obj2.getHalfLightRadius()
+        >>> sersic_obj2.getHalfLightRadius()
         5.160062547614234
-        sersic_obj3.getHalfLightRadius()
+        >>> sersic_obj3.getHalfLightRadius()
         5.160062547614234     # For the truncated cases, the half-light radii are the same
 
-        sersic_obj1.getFlux()
+        >>> sersic_obj1.getFlux()
         40.0
-        sersic_obj2.getFlux()
+        >>> sersic_obj2.getFlux()
         40.0
-        sersic_obj3.getFlux()
+        >>> sersic_obj3.getFlux()
         6.985044085834393     # Flux is missing due to truncation
 
-        sersic_obj1.getScaleRadius()
+        >>> sersic_obj1.getScaleRadius()
         0.05
-        sersic_obj2.getScaleRadius()
+        >>> sersic_obj2.getScaleRadius()
         0.05
-        sersic_obj3.getScaleRadius()
+        >>> sersic_obj3.getScaleRadius()
         0.05
 
     Methods

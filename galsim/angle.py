@@ -31,8 +31,8 @@ Initialization
 An AngleUnit takes a single argument for initialization, a float that specifies the size of the
 desired angular unit in radians.  For example:
 
-    import math
-    gradian = galsim.AngleUnit(2. * math.pi / 400.)
+    >>> import math
+    >>> gradian = galsim.AngleUnit(2. * math.pi / 400.)
 
 There are five built-in AngleUnits which are always available for use:
 
@@ -94,15 +94,15 @@ Angles are a value with an AngleUnit.
 
 You typically create an Angle by multiplying a number by a galsim.AngleUnit, for example
 
-    pixel = 0.27 * galsim.arcsec
-    ra = 13.4 * galsim.hours
-    dec = -32 * galsim.degrees
-    import math
-    theta = math.pi / 2. * galsim.radians
+    >>> pixel = 0.27 * galsim.arcsec
+    >>> ra = 13.4 * galsim.hours
+    >>> dec = -32 * galsim.degrees
+    >>> import math
+    >>> theta = math.pi / 2. * galsim.radians
 
 You can initialize explicitly, taking a value and a unit:
 
-    phi = galsim.Angle(90, galsim.degrees)
+    >>> phi = galsim.Angle(90, galsim.degrees)
 
 There are five built-in AngleUnits which are always available for use:
 
@@ -118,13 +118,13 @@ Radian access method
 Since extracting the value in radians is extremely common, we have an accessor method to do this
 quickly:
 
-    x = theta.rad()
-    print x
+    >>> x = theta.rad()
+    >>> print x
     1.57079632679
 
 It is equivalent to the more verbose:
 
-    x = theta / galsim.radians
+    >>> x = theta / galsim.radians
 
 but without actually requiring the FLOP of dividing by 1.
 
@@ -134,17 +134,17 @@ Operations
 Allowed arithmetic with Angles include the following:
 (In the list below, `x` is a double, `unit` is a galsim.AngleUnit, and `theta` is a galsim.Angle)
 
-    theta = x * unit
-    x = theta / unit
-    theta3 = theta1 + theta2
-    theta3 = theta1 - theta2
-    theta2 = theta1 * x
-    theta2 = x * theta1
-    theta2 = theta1 / x
-    theta2 += theta1
-    theta2 -= theta1
-    theta *= x
-    theta /= x
+    >>> theta = x * unit
+    >>> x = theta / unit
+    >>> theta3 = theta1 + theta2
+    >>> theta3 = theta1 - theta2
+    >>> theta2 = theta1 * x
+    >>> theta2 = x * theta1
+    >>> theta2 = theta1 / x
+    >>> theta2 += theta1
+    >>> theta2 -= theta1
+    >>> theta *= x
+    >>> theta /= x
 
 Operations on Numpy arrays containing Angles are permitted, provided that they are within the bounds
 of the allowed operations on Angles listed above (e.g., addition/subtraction of Angles,
@@ -156,7 +156,7 @@ Wrapping
 Depending on the context, theta = 2pi radians and theta = 0 radians are the same thing.
 If you want your angles to be wrapped to [-pi,pi) radians, you can do this by calling
 
-    theta = theta.wrap()
+    >>> theta = theta.wrap()
 
 This could be appropriate before testing for the equality of two angles for example, or
 calculating the difference between them.
@@ -272,7 +272,7 @@ Angle.wrap.__func__.__doc__ = """Wrap Angle to lie in the range [-pi, pi) radian
 Depending on the context, theta = 2pi radians and theta = 0 radians are the same thing.
 If you want your angles to be wrapped to [-pi, pi) radians, you can do this by calling
 
-    theta = theta.wrap()
+    >>> theta = theta.wrap()
 
 This could be appropriate before testing for the equality of two angles for example, or
 calculating the difference between them.

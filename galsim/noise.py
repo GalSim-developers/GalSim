@@ -184,7 +184,7 @@ def GaussianNoise_applyTo(self, image):
     Calling
     -------
 
-        gaussian_noise.applyTo(image)
+        >>> gaussian_noise.applyTo(image)
 
     On output the Image instance `image` will have been given additional Gaussian noise according 
     to the given GaussianNoise instance.
@@ -218,7 +218,7 @@ the addition of Poisson noise.
 Initialization
 --------------
 
-    poisson_noise = galsim.PoissonNoise(rng, sky_level=0.)
+    >>> poisson_noise = galsim.PoissonNoise(rng, sky_level=0.)
 
 Parameters:
 
@@ -238,7 +238,7 @@ def PoissonNoise_applyTo(self, image):
     Calling
     -------
 
-        galsim.PoissonNoise.applyTo(image)
+        >>> galsim.PoissonNoise.applyTo(image)
 
     On output the Image instance `image` will have been given additional Poisson noise according 
     to the given PoissonNoise instance.
@@ -272,7 +272,7 @@ for the Poisson noise.
 Initialization
 --------------
 
-    ccd_noise = galsim.CCDNoise(rng, sky_level=0., gain=1., read_noise=0.)  
+    >>> ccd_noise = galsim.CCDNoise(rng, sky_level=0., gain=1., read_noise=0.)  
 
 Parameters:
 
@@ -298,7 +298,7 @@ def CCDNoise_applyTo(self, image):
     Calling
     -------
 
-        ccd_noise.applyTo(image)
+        >>> ccd_noise.applyTo(image)
 
     On output the Image instance `image` will have been given additional stochastic noise according
     to the gain and read noise settings of the given CCDNoise instance.
@@ -330,7 +330,7 @@ each pixel in an image.
 Initialization
 --------------
 
-    dev_noise = galsim.DeviateNoise(dev)
+    >>> dev_noise = galsim.DeviateNoise(dev)
 
 Parameters:
 
@@ -348,7 +348,7 @@ def DeviateNoise_applyTo(self, image):
     Calling
     -------
 
-        dev_noise.applyTo(image)
+        >>> dev_noise.applyTo(image)
 
     On output the Image instance `image` will have been given additional noise according to 
     the given DeviateNoise instance.
@@ -373,7 +373,7 @@ class VariableGaussianNoise(_galsim.BaseNoise):
     Initialization
     --------------
     
-        variable_noise = galsim.VariableGaussianNoise(rng, var_image)
+        >>> variable_noise = galsim.VariableGaussianNoise(rng, var_image)
 
     Parameters:
 
@@ -403,7 +403,7 @@ class VariableGaussianNoise(_galsim.BaseNoise):
         Calling
         -------
 
-            variable_noise.applyTo(image)
+            >>> variable_noise.applyTo(image)
 
         On output the Image instance `image` will have been given additional Gaussian noise
         according to the variance image of the given VariableGaussianNoise instance.

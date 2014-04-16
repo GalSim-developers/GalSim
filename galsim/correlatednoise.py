@@ -94,12 +94,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         -------
         To add deviates to every element of an image, the syntax
 
-            image.addNoise(correlated_noise)
+            >>> image.addNoise(correlated_noise)
 
         is preferred.  However, this is equivalent to calling this instance's applyTo() method as
         follows
 
-            correlated_noise.applyTo(image)
+            >>> correlated_noise.applyTo(image)
 
         On output the Image instance `image` will have been given additional noise according to the
         given CorrelatedNoise instance `correlated_noise`.  Normally, `image.scale` is used to
@@ -163,7 +163,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         Calling
         -------
 
-            correlated_noise.applyWhiteningTo(image)
+            >>> correlated_noise.applyWhiteningTo(image)
 
         If the `image` originally contained noise with a correlation function described by the
         `correlated_noise` instance, the combined noise after using the applyWhiteningTo() method
@@ -182,24 +182,24 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         If you are interested in a theoretical calculation of the variance in the final noise field
         after whitening, the applyWhiteningTo() method in fact returns this variance.  For example:
 
-            variance = correlated_noise.applyWhiteningTo(image)
+            >>> variance = correlated_noise.applyWhiteningTo(image)
 
         Example
         -------
         To see noise whitening in action, let us use a model of the correlated noise in COSMOS
         as returned by the getCOSMOSNoise() function.  Let's initialize and add noise to an image:
 
-            cosmos_file='YOUR/REPO/PATH/GalSim/examples/data/acs_I_unrot_sci_20_cf.fits'
-            cn = galsim.getCOSMOSNoise(cosmos_file)
-            image = galsim.ImageD(256, 256, scale=0.03)
+            >>> cosmos_file='YOUR/REPO/PATH/GalSim/examples/data/acs_I_unrot_sci_20_cf.fits'
+            >>> cn = galsim.getCOSMOSNoise(cosmos_file)
+            >>> image = galsim.ImageD(256, 256, scale=0.03)
                   # The scale should match the COSMOS default since didn't specify another
-            image.addNoise(cn)
+            >>> image.addNoise(cn)
 
         The `image` will then contain a realization of a random noise field with COSMOS-like
         correlation.  Using the applyWhiteningTo() method, we can now add more noise to `image`
         with a power spectrum specifically designed to make the combined noise fields uncorrelated:
 
-            cn.applyWhiteningTo(image)
+            >>> cn.applyWhiteningTo(image)
 
         Of course, this whitening comes at the cost of adding further noise to the image, but
         the algorithm is designed to make this additional noise (nearly) as small as possible.
@@ -490,14 +490,14 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         The following command simply applies a Moffat PSF with slope parameter beta=3. and
         FWHM=0.7:
 
-            cn = cn.convolvedWith(galsim.Moffat(beta=3., fwhm=0.7))
+            >>> cn = cn.convolvedWith(galsim.Moffat(beta=3., fwhm=0.7))
 
         Often we will want to convolve with more than one function.  For example, if we wanted to
         simulate how a noise field would look if convolved with a ground-based PSF (such as the
         Moffat above) and then rendered onto a new (typically larger) pixel grid, the following
         example command demonstrates the syntax:
 
-            cn = cn.convolvedWith(
+            >>> cn = cn.convolvedWith(
             ...    galsim.Convolve([galsim.Deconvolve(galsim.Pixel(0.03)),
             ...                     galsim.Pixel(0.2), galsim.Moffat(3., fwhm=0.7),
 
@@ -505,9 +505,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         image from which the `correlated_noise` was made.  This command above is functionally
         equivalent to
 
-            cn = cn.convolvedWith(galsim.Deconvolve(galsim.Pixel(0.03)))
-            cn = cn.convolvedWith(galsim.Pixel(0.2))
-            cn = cn.convolvedWith(galsim.Moffat(beta=3., fwhm=0.7))
+            >>> cn = cn.convolvedWith(galsim.Deconvolve(galsim.Pixel(0.03)))
+            >>> cn = cn.convolvedWith(galsim.Pixel(0.2))
+            >>> cn = cn.convolvedWith(galsim.Moffat(beta=3., fwhm=0.7))
 
         as is demanded for a linear operation such as convolution.
 
@@ -693,7 +693,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     Basic example:
 
-        cn = galsim.CorrelatedNoise(image, rng=rng)
+        >>> cn = galsim.CorrelatedNoise(image, rng=rng)
 
     Instantiates a CorrelatedNoise using the pixel scale information contained in `image.scale`
     (assumes the scale is unity if `image.scale <= 0.`) by calculating the correlation function
@@ -703,12 +703,12 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     Optional Inputs: Interpolant
     ----------------------------
 
-        cn = galsim.CorrelatedNoise(image, rng=rng, scale=0.2)
+        >>> cn = galsim.CorrelatedNoise(image, rng=rng, scale=0.2)
 
     The example above instantiates a CorrelatedNoise, but forces the use of the pixel scale
     `scale` to set the units of the internal lookup table.
 
-        cn = galsim.CorrelatedNoise(image, rng=rng,
+        >>> cn = galsim.CorrelatedNoise(image, rng=rng,
         ...     x_interpolant=galsim.InterpolantXY(galsim.Lanczos(5, tol=1.e-4))
 
     The example above instantiates a CorrelatedNoise, but forces use of a non-default interpolant
@@ -747,7 +747,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     There is also an option to switch off an internal correction for assumptions made about the
     periodicity in the input noise image.  If you wish to turn this off you may, e.g.
 
-        cn = galsim.CorrelatedNoise(image, rng=rng, correct_periodicity=False)
+        >>> cn = galsim.CorrelatedNoise(image, rng=rng, correct_periodicity=False)
 
     The default and generally recommended setting is `correct_periodicity=True`.
 
@@ -760,7 +760,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     By default, the image is not mean subtracted before the correlation function is estimated.  To
     do an internal mean subtraction, you can set the `subtract_mean` keyword to `True`, e.g.
 
-        cn = galsim.CorrelatedNoise(image, rng=rng, subtract_mean=True)
+        >>> cn = galsim.CorrelatedNoise(image, rng=rng, subtract_mean=True)
 
     Using the `subtract_mean` option will introduce a small underestimation of variance and other
     correlation function values due to a bias on the square of the sample mean.  This bias reduces
@@ -783,11 +783,11 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     This is common to all the classes that inherit from BaseNoise: to add deviates to every element
     of an image, the syntax
 
-        im.addNoise(cn)
+        >>> im.addNoise(cn)
 
     is preferred, although
 
-        cn.applyTo(im)
+        >>> cn.applyTo(im)
 
     is equivalent.  See the addNoise() method docstring for more information.  The `image.scale`
     is used to get the pixel scale of the input image unless this is <= 0, in which case a scale
@@ -795,7 +795,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     Another method that may be of use is
 
-        cn.calculateCovarianceMatrix(im.bounds, scale)
+        >>> cn.calculateCovarianceMatrix(im.bounds, scale)
 
     which can be used to generate a covariance matrix based on a user input image geometry.  See
     the calculateCovarianceMatrix() method docstring for more information.
@@ -803,20 +803,20 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     A number of methods familiar from GSObject instances have also been implemented directly as
     `cn` methods, so that the following commands are all legal:
 
-        cn.draw(im, scale, wmult=4)
-        cn.shear(s)
-        cn.expand(m)
-        cn.rotate(theta * galsim.degrees)
-        cn.transform(dudx, dudy, dvdx, dvdy)
+        >>> cn.draw(im, scale, wmult=4)
+        >>> cn.shear(s)
+        >>> cn.expand(m)
+        >>> cn.rotate(theta * galsim.degrees)
+        >>> cn.transform(dudx, dudy, dvdx, dvdy)
 
     See the individual method docstrings for more details.  The shift() method is not available
     since a correlation function must always be centred and peaked at the origin.
 
     The BaseNoise methods
 
-        cn.getVariance()
-        cn = cn.withVariance(variance)
-        cn = cn.withScaledVariance(variance_ratio)
+        >>> cn.getVariance()
+        >>> cn = cn.withVariance(variance)
+        >>> cn = cn.withScaledVariance(variance_ratio)
 
     can be used to get and set the point variance of the correlated noise, equivalent to the zero
     separation distance correlation function value.  The withVariance() method scales the whole
@@ -830,8 +830,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     Addition works simply to add the internally-stored correlation functions, so that
 
-        cn3 = cn2 + cn1
-        cn4 += cn5
+        >>> cn3 = cn2 + cn1
+        >>> cn4 += cn5
 
     provides a representation of the correlation function of two linearly summed fields represented
     by the individual correlation function operands.
@@ -846,8 +846,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     The multiplication and division operators, e.g.
 
-        cn1 /= 3.
-        cn2 = cn1 * 3
+        >>> cn1 /= 3.
+        >>> cn2 = cn1 * 3
 
     scale the overall correlation function by a scalar operand.  The random number generators are
     not affected by these scaling operations.
@@ -1060,13 +1060,13 @@ def getCOSMOSNoise(file_name, rng=None, cosmos_scale=0.03, variance=0., x_interp
     The following commands use this function to generate a 300 pixel x 300 pixel image of noise with
     HST COSMOS correlation properties (substitute in your own file and path for the `filestring`).
 
-        file_name='/YOUR/REPO/PATH/GalSim/devel/external/hst/acs_I_unrot_sci_20_cf.fits'
-        import galsim
-        rng = galsim.UniformDeviate(123456)
-        cf = galsim.correlatednoise.getCOSMOSNoise(file_name, rng=rng)
-        im = galsim.ImageD(300, 300, scale=0.03)
-        cf.applyTo(im)
-        im.write('out.fits')
+        >>> file_name='/YOUR/REPO/PATH/GalSim/devel/external/hst/acs_I_unrot_sci_20_cf.fits'
+        >>> import galsim
+        >>> rng = galsim.UniformDeviate(123456)
+        >>> cf = galsim.correlatednoise.getCOSMOSNoise(file_name, rng=rng)
+        >>> im = galsim.ImageD(300, 300, scale=0.03)
+        >>> cf.applyTo(im)
+        >>> im.write('out.fits')
 
     The FITS file `out.fits` should then contain an image of randomly-generated, COSMOS-like noise.
     """
@@ -1124,7 +1124,7 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
     (the usual case), you can specify the size using the `scale` parameter.  If not, they
     are effectively specified using the local wcs function that defines the pixel shape.  i.e.
 
-        world_pix = wcs.toWorld(Pixel(1.))`
+        >>> world_pix = wcs.toWorld(Pixel(1.))`
 
     should return the pixel profile in world coordinates.
 

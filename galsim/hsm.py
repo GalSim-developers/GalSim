@@ -244,16 +244,16 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
 
     Typical application to a single object:
 
-        galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
-        galaxy = galaxy.shear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the 
-                                                # |g| = (a - b)/(a + b) definition
-        psf = galsim.Kolmogorov(flux = 1.0, fwhm = 0.7)
-        pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
-        final = galsim.Convolve([galaxy, psf, pixel])
-        final_epsf = galsim.Convolve([psf, pixel])
-        final_image = final.draw(dx = 0.2)
-        final_epsf_image = final_epsf.draw(dx = 0.2)
-        result = galsim.hsm.EstimateShear(final_image, final_epsf_image)
+        >>> galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
+        >>> galaxy = galaxy.shear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the 
+        >>>                                         # |g| = (a - b)/(a + b) definition
+        >>> psf = galsim.Kolmogorov(flux = 1.0, fwhm = 0.7)
+        >>> pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
+        >>> final = galsim.Convolve([galaxy, psf, pixel])
+        >>> final_epsf = galsim.Convolve([psf, pixel])
+        >>> final_image = final.draw(dx = 0.2)
+        >>> final_epsf_image = final_epsf.draw(dx = 0.2)
+        >>> result = galsim.hsm.EstimateShear(final_image, final_epsf_image)
     
     After running the above code, `result.observed_shape` ["shape" = distortion, the 
     (a^2 - b^2)/(a^2 + b^2) definition of ellipticity] is
@@ -358,13 +358,13 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     Example usage
     -------------
 
-        my_gaussian = galsim.Gaussian(flux = 1.0, sigma = 1.0)
-        my_gaussian_image = my_gaussian.draw(dx = 0.2)
-        my_moments = galsim.hsm.FindAdaptiveMom(my_gaussian_image)
+        >>> my_gaussian = galsim.Gaussian(flux = 1.0, sigma = 1.0)
+        >>> my_gaussian_image = my_gaussian.draw(dx = 0.2)
+        >>> my_moments = galsim.hsm.FindAdaptiveMom(my_gaussian_image)
 
     OR
     
-        my_moments = my_gaussian_image.FindAdaptiveMom()
+        >>> my_moments = my_gaussian_image.FindAdaptiveMom()
 
     Assuming a successful measurement, the most relevant pieces of information are
     `my_moments.moments_sigma`, which is `|det(M)|^(1/4)` [=`sigma` for a circular Gaussian] and
@@ -378,13 +378,13 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     images have unusual properties, such as being very large.  This could occur when measuring the
     properties of a very over-sampled image such as that generated using
 
-        my_gaussian = galsim.Gaussian(sigma = 5.0)
-        my_gaussian_image = my_gaussian.draw(dx = 0.01)
+        >>> my_gaussian = galsim.Gaussian(sigma = 5.0)
+        >>> my_gaussian_image = my_gaussian.draw(dx = 0.01)
 
     If the user attempts to measure the moments of this 4000 x 4000 pixel image using the standard
     syntax,
 
-        my_moments = my_gaussian_image.FindAdaptiveMom()
+        >>> my_moments = my_gaussian_image.FindAdaptiveMom()
 
     then the result will be a RuntimeError due to moment measurement failing because the object is
     so large.  While the list of all possible settings that can be changed is accessible in the
@@ -393,8 +393,8 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     default values for every parameter except for `max_amoment`, will be
     successful:
 
-        new_params = galsim.hsm.HSMParams(max_amoment=5.0e5)
-        my_moments = my_gaussian_image.FindAdaptiveMom(hsmparams = new_params)
+        >>> new_params = galsim.hsm.HSMParams(max_amoment=5.0e5)
+        >>> my_moments = my_gaussian_image.FindAdaptiveMom(hsmparams = new_params)
 
     @param object_image     The Image for the object being measured.
     @param weight           The optional weight image for the object being measured.  Can be an int

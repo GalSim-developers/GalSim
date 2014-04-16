@@ -156,8 +156,8 @@ class ChromaticObject(object):
         been initialized with the `rule=galsim.integ.midpt` argument.  Finally, when creating a
         ContinuousIntegrator, the number of samples `N` is also an argument.  For example:
 
-        integrator = galsim.ContinuousIntegrator(rule=galsim.integ.midpt, N=100)
-        image = chromatic_obj.draw(bandpass, integrator=integrator)
+        >>> integrator = galsim.ContinuousIntegrator(rule=galsim.integ.midpt, N=100)
+        >>> image = chromatic_obj.draw(bandpass, integrator=integrator)
 
         @param bandpass         A Bandpass object representing the filter against which to
                                 integrate.
@@ -700,18 +700,18 @@ class Chromatic(ChromaticObject):
     construct multi-component galaxies, each with a different SED. For example, a bulge+disk galaxy
     could be constructed:
 
-    bulge_SED = user_function_to_get_bulge_spectrum()
-    disk_SED = user_function_to_get_disk_spectrum()
-    bulge_mono = galsim.DeVaucouleurs(half_light_radius=1.0)
-    disk_mono = galsim.Exponential(half_light_radius=2.0)
-    bulge = galsim.Chromatic(bulge_mono, bulge_SED)
-    disk = galsim.Chromatic(disk_mono, disk_SED)
-    gal = bulge + disk
+    >>> bulge_SED = user_function_to_get_bulge_spectrum()
+    >>> disk_SED = user_function_to_get_disk_spectrum()
+    >>> bulge_mono = galsim.DeVaucouleurs(half_light_radius=1.0)
+    >>> disk_mono = galsim.Exponential(half_light_radius=2.0)
+    >>> bulge = galsim.Chromatic(bulge_mono, bulge_SED)
+    >>> disk = galsim.Chromatic(disk_mono, disk_SED)
+    >>> gal = bulge + disk
 
     Some syntactic sugar available for creating Chromatic instances is simply to multiply
     a GSObject instance by an SED instance.  Thus the last three lines above are equivalent to:
 
-    gal = bulge_mono * bulge_SED + disk_mono * disk_SED
+    >>> gal = bulge_mono * bulge_SED + disk_mono * disk_SED
 
     The SED is usually specified as a galsim.SED object, though any callable that returns
     spectral density in photons/nanometer as a function of wavelength in nanometers should work.
@@ -777,14 +777,14 @@ class ChromaticSum(ChromaticObject):
     Typically, you do not need to construct a ChromaticSum object explicitly.  Normally, you
     would just use the + operator, which returns a ChromaticSum when used with chromatic objects:
 
-        bulge = galsim.Sersic(n=3, half_light_radius=0.8) * bulge_sed
-        disk = galsim.Exponential(half_light_radius=1.4) * disk_sed
-        gal = bulge + disk
+        >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8) * bulge_sed
+        >>> disk = galsim.Exponential(half_light_radius=1.4) * disk_sed
+        >>> gal = bulge + disk
 
     You can also use the Add() factory function, which returns a ChromaticSum object if any of
     the individual objects are chromatic:
 
-        gal = galsim.Add([bulge,disk])
+        >>> gal = galsim.Add([bulge,disk])
 
     @param args             Unnamed args should be a list of objects to add.
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
@@ -920,10 +920,10 @@ class ChromaticConvolution(ChromaticObject):
 
     The normal way to use this class is to use the Convolve() factory function:
 
-        gal = galsim.Sersic(n, half_light_radius) * galsim.SED(sed_file)
-        psf = galsim.ChromaticAtmosphere(...)
-        pix = galsim.Pixel(scale)
-        final = galsim.Convolve([gal, psf, pix])
+        >>> gal = galsim.Sersic(n, half_light_radius) * galsim.SED(sed_file)
+        >>> psf = galsim.ChromaticAtmosphere(...)
+        >>> pix = galsim.Pixel(scale)
+        >>> final = galsim.Convolve([gal, psf, pix])
 
     The objects to be convolved may be provided either as multiple unnamed arguments (e.g.
     `Convolve(psf, gal, pix)`) or as a list (e.g. `Convolve([psf, gal, pix])`).  Any number of

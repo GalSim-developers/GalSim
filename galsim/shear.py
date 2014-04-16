@@ -47,16 +47,16 @@ class Shear(object):
 
     The following are all examples of valid calls to initialize a Shear object:
     
-        s = galsim.Shear()                    # empty constructor sets ellipticity/shear to zero
-        s = galsim.Shear(g1=0.05, g2=0.05)
-        s = galsim.Shear(g1=0.05)             # assumes g2=0
-        s = galsim.Shear(e1=0.05, e2=0.05)
-        s = galsim.Shear(e2=0.05)             # assumes e1=0
-        s = galsim.Shear(eta1=0.07, eta2=-0.1)
-        s = galsim.Shear(eta=0.05, beta=45.0*galsim.degrees)
-        s = galsim.Shear(g=0.05, beta=0.25*numpy.pi*galsim.radians)
-        s = galsim.Shear(e=0.3, beta=30.0*galsim.degrees)
-        s = galsim.Shear(q=0.5, beta=0.0*galsim.radians)
+        >>> s = galsim.Shear()                    # empty constructor sets ellipticity/shear to zero
+        >>> s = galsim.Shear(g1=0.05, g2=0.05)
+        >>> s = galsim.Shear(g1=0.05)             # assumes g2=0
+        >>> s = galsim.Shear(e1=0.05, e2=0.05)
+        >>> s = galsim.Shear(e2=0.05)             # assumes e1=0
+        >>> s = galsim.Shear(eta1=0.07, eta2=-0.1)
+        >>> s = galsim.Shear(eta=0.05, beta=45.0*galsim.degrees)
+        >>> s = galsim.Shear(g=0.05, beta=0.25*numpy.pi*galsim.radians)
+        >>> s = galsim.Shear(e=0.3, beta=30.0*galsim.degrees)
+        >>> s = galsim.Shear(q=0.5, beta=0.0*galsim.radians)
 
     There can be no mixing and matching, e.g., specifying `g1` and `e2`.  It is permissible to only
     specify one of two components, with the other assumed to be zero.  If a magnitude such as `e`, 

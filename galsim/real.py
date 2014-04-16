@@ -258,19 +258,19 @@ class RealGalaxyCatalog(object):
     assumed to be in the directory as the catalog file (in the following example, in the current 
     working directory `./`):
 
-        my_rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits')
+        >>> my_rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits')
 
     If `image_dir` is specified, the set of galaxy/PSF image files is assumed to be in that
     subdirectory of where the catalog is (in the following example, `./images`):
 
-        my_rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits', image_dir='images')
+        >>> my_rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits', image_dir='images')
 
     If the real galaxy catalog is in some far-flung directory, and the galaxy/PSF image files are in 
     its subdirectory, one only needs to specify the long directory name once:
 
-        file_name = '/data3/scratch/user_name/galsim/real_galaxy_data/real_galaxy_catalog.fits'
-        image_dir = 'images'
-        my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir)
+        >>> file_name = '/data3/scratch/user_name/galsim/real_galaxy_data/real_galaxy_catalog.fits'
+        >>> image_dir = 'images'
+        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir)
 
     In the above case, the galaxy/PSF image files are in the directory 
     `/data3/scratch/user_name/galsim/real_galaxy_data/images/`.
@@ -278,24 +278,24 @@ class RealGalaxyCatalog(object):
     The above behavior is changed if the `image_dir` specifies a directory.  In this case, 
     `image_dir` is interpreted as the full path:
 
-        file_name = '/data3/scratch/user_name/galsim/real_galaxy_data/real_galaxy_catalog.fits'
-        image_dir = '/data3/scratch/user_name/galsim/real_galaxy_data/images'
-        my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir)
+        >>> file_name = '/data3/scratch/user_name/galsim/real_galaxy_data/real_galaxy_catalog.fits'
+        >>> image_dir = '/data3/scratch/user_name/galsim/real_galaxy_data/images'
+        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir)
 
     When `dir` is specified without `image_dir` being specified, both the catalog and
     the set of galaxy/PSF images will be searched for under the directory `dir`:
 
-        catalog_dir = '/data3/scratch/user_name/galsim/real_galaxy_data'
-        file_name = 'real_galaxy_catalog.fits'
-        my_rgc = galsim.RealGalaxyCatalog(file_name, dir=catalog_dir)
+        >>> catalog_dir = '/data3/scratch/user_name/galsim/real_galaxy_data'
+        >>> file_name = 'real_galaxy_catalog.fits'
+        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, dir=catalog_dir)
 
     If the `image_dir` is specified in addition to `dir`, the catalog name is specified as 
     `dir/file_name`, while the galaxy/PSF image files will be searched for under `dir/image_dir`:
 
-        catalog_dir = '/data3/scratch/user_name/galsim/real_galaxy_data'
-        file_name = 'real_galaxy_catalog.fits'
-        image_dir = 'images'
-        my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir, dir=catalog_dir)
+        >>> catalog_dir = '/data3/scratch/user_name/galsim/real_galaxy_data'
+        >>> file_name = 'real_galaxy_catalog.fits'
+        >>> image_dir = 'images'
+        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir, dir=catalog_dir)
 
     To explore for the future: scaling with number of galaxies, adding more information as needed,
     and other i/o related issues.
