@@ -72,12 +72,12 @@ class Image(object):
 
     The python layer Image class is mostly a wrapper around the C++ classes ImageAlloc and
     ImageView.  The former allocates its own memory, and the latter views memory allocated by some
-    other object (typically an ImageAlloc or a numpy array).
+    other object (typically an ImageAlloc or a NumPy array).
 
     There are 4 data types that the image object can use for the data values.  These are
     numpy.int16, numpy.int32, numpy.float32, and numpy.float64.  If you are constructing a new
     Image from scratch, the default is numpy.float32, but you can specify one of the other data
-    types.  If you construct an Image from an existing allocation such as a numpy array, then the
+    types.  If you construct an Image from an existing allocation such as a NumPy array, then the
     dtype must be one of these or you will get an error.
 
     Initialization
@@ -631,7 +631,7 @@ for Class in _galsim.ImageAlloc.itervalues():
         ImageAllocF == ImageAlloc[numpy.float32]
         ImageAllocD == ImageAlloc[numpy.float64]
     
-    An ImageAlloc can be thought of as containing a 2-d, row-contiguous numpy array (which it may 
+    An ImageAlloc can be thought of as containing a 2-d, row-contiguous NumPy array (which it may 
     share with other ImageView objects), an origin point, and a pixel scale (the origin and pixel 
     scale are not shared).
 
@@ -668,7 +668,7 @@ for Class in _galsim.ImageView.itervalues():
 
     From Python, the only way to explicitly construct an ImageView is
 
-        imv = ImageView(array, xmin=1, ymin=1)       # numpy array and origin
+        imv = ImageView(array, xmin=1, ymin=1)       # NumPy array and origin
 
     However, ImageView instances are also the return type of several functions such as
 
@@ -681,7 +681,7 @@ for Class in _galsim.ImageView.itervalues():
     the case for newly-constructed arrays, but may not be true for some views and generally will not
     be true for array transposes.
     
-    An ImageView also has a '.array' attribute that provides a numpy array view into the ImageView
+    An ImageView also has a '.array' attribute that provides a NumPy array view into the ImageView
     instance's pixels.  Regardless of how the ImageView was constructed, this array and the
     ImageView will point to the same underlying data, and modifying one view will affect any other
     views into the same data.
