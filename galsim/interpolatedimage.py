@@ -82,11 +82,10 @@ class InterpolatedImage(GSObject):
     --------------
     
         interpolated_image = galsim.InterpolatedImage(
-            image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
-            scale = None, wcs = None, flux = None, pad_factor = 4.,
-            noise_pad_size = 0, noise_pad = 0.,
-            use_cache = True, pad_image = None, rng = None, calculate_stepk = True,
-            calculate_maxk = True, use_true_center = True, offset = None)
+            image, x_interpolant=None, k_interpolant=None, normalization='flux', scale=None,
+            wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0., use_cache=True,
+            pad_image=None, rng=None, calculate_stepk=True, calculate_maxk=True,
+            use_true_center=True, offset=None)
 
     Initializes `interpolated_image` as an InterpolatedImage instance.
 
