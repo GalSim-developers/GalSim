@@ -61,16 +61,16 @@ There is not much you can do with something that is only known to be a BaseDevia
 of the derived classes other than construct it and change the seed, and use it as an argument to
 pass to other Deviate constructors.
 
-    >>> rng = galsim.BaseDeviate(215324)    
-    >>> rng()
+    rng = galsim.BaseDeviate(215324)    
+    rng()
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
     TypeError: 'BaseDeviate' object is not callable
-    >>> ud = galsim.UniformDeviate(rng)
-    >>> ud()
+    ud = galsim.UniformDeviate(rng)
+    ud()
     0.58736140513792634
-    >>> ud2 = galsim.UniformDeviate(215324)
-    >>> ud2()
+    ud2 = galsim.UniformDeviate(215324)
+    ud2()
     0.58736140513792634
 
 Methods
@@ -110,21 +110,21 @@ of the Deviate will produce identical values.
 Example
 _______
 
-    >>> u = galsim.UniformDeviate(31415926)
-    >>> u()
+    u = galsim.UniformDeviate(31415926)
+    u()
     0.17100770119577646
-    >>> u2 = u.duplicate()
-    >>> u()
+    u2 = u.duplicate()
+    u()
     0.49095047544687986
-    >>> u()
+    u()
     0.10306670609861612
-    >>> u2()
+    u2()
     0.49095047544687986
-    >>> u2()
+    u2()
     0.10306670609861612
-    >>> u2()
+    u2()
     0.13129289541393518
-    >>> u()
+    u()
     0.13129289541393518
 """
 
@@ -188,18 +188,18 @@ class DistDeviate(_galsim.BaseDeviate):
     
     Some sample initialization calls:
     
-    >>> d = galsim.DistDeviate(function=f, x_min=x_min, x_max=x_max)
+    d = galsim.DistDeviate(function=f, x_min=x_min, x_max=x_max)
     
     Initializes d to be a DistDeviate instance with a distribution given by the callable function
     `f(x)` from `x=x_min` to `x=x_max` and seeds the PRNG using current time.  
     
-    >>> d = galsim.DistDeviate(1062533, function=file_name, interpolant='floor')
+    d = galsim.DistDeviate(1062533, function=file_name, interpolant='floor')
     
     Initializes d to be a DistDeviate instance with a distribution given by the data in file
     `file_name`, which must be a 2-column ASCII table, and seeds the PRNG using the long int
     seed 1062533. It generates probabilities from `file_name` using the interpolant 'floor'.
     
-    >>> d = galsim.DistDeviate(rng, function=galsim.LookupTable(x,p))
+    d = galsim.DistDeviate(rng, function=galsim.LookupTable(x,p))
     
     Initializes d to be a DistDeviate instance with a distribution given by P(x), defined as two
     arrays `x` and `p` which are used to make a callable LookupTable, and links the DistDeviate
@@ -227,10 +227,10 @@ class DistDeviate(_galsim.BaseDeviate):
 
     Successive calls to d() generate pseudo-random values with the given probability distribution.
 
-    >>> d = galsim.DistDeviate(31415926, function=lambda x: 1-abs(x), x_min=-1, x_max=1)
-    >>> d()
+    d = galsim.DistDeviate(31415926, function=lambda x: 1-abs(x), x_min=-1, x_max=1)
+    d()
     -0.4151921102709466
-    >>> d()
+    d()
     -0.00909781188974034
     """    
     def __init__(self, seed=0, function=None, x_min=None, 
@@ -400,10 +400,10 @@ Calling
 Successive calls to u() generate pseudo-random values distributed uniformly in the interval 
 [0., 1.).
 
-    >>> u = galsim.UniformDeviate(31415926)
-    >>> u()
+    u = galsim.UniformDeviate(31415926)
+    u()
     0.17100770119577646
-    >>> u()
+    u()
     0.49095047544687986
 """
 
@@ -430,10 +430,10 @@ Calling
 Successive calls to g() generate pseudo-random values distributed according to a Gaussian
 distribution with the provided `mean`, `sigma`.
 
-    >>> g = galsim.GaussianDeviate(31415926)
-    >>> g()
+    g = galsim.GaussianDeviate(31415926)
+    g()
     0.5533754000847082
-    >>> g()
+    g()
     1.0218588970190354
 """
 
@@ -470,10 +470,10 @@ Calling
 Successive calls to b() generate pseudo-random integer values distributed according to a binomial
 distribution with the provided `N`, `p`.
 
-    >>> b = galsim.BinomialDeviate(31415926, N=10, p=0.3)
-    >>> b()
+    b = galsim.BinomialDeviate(31415926, N=10, p=0.3)
+    b()
     2
-    >>> b()
+    b()
     3
 """
 
@@ -509,10 +509,10 @@ Calling
 Successive calls to p() generate pseudo-random integer values distributed according to a Poisson
 distribution with the specified `mean`.
 
-    >>> p = galsim.PoissonDeviate(31415926, mean=100)
-    >>> p()
+    p = galsim.PoissonDeviate(31415926, mean=100)
+    p()
     94
-    >>> p()
+    p()
     106
 """
 
@@ -550,10 +550,10 @@ Calling
 Successive calls to p() generate pseudo-random values distributed according to a Weibull
 distribution with the specified shape and scale parameters `a` and `b`.
 
-    >>> w = galsim.WeibullDeviate(31415926, a=1.3, b=4)
-    >>> w()
+    w = galsim.WeibullDeviate(31415926, a=1.3, b=4)
+    w()
     1.1038481241018219
-    >>> w()
+    w()
     2.957052966368049
 """
 
@@ -589,10 +589,10 @@ Calling
 Successive calls to p() generate pseudo-random values distributed according to a gamma
 distribution with the specified shape and scale parameters `k` and `theta`.
 
-    >>> gam = galsim.GammaDeviate(31415926, k=1, theta=2)
-    >>> gam()
+    gam = galsim.GammaDeviate(31415926, k=1, theta=2)
+    gam()
     0.37508882726316
-    >>> gam()
+    gam()
     1.3504199388358704
 """
 
@@ -629,10 +629,10 @@ Calling
 Successive calls to chi2() generate pseudo-random values distributed according to a chi-square
 distribution with the specified degrees of freedom, `n`.
 
-    >>> chi2 = galsim.Chi2Deviate(31415926, n=7)
-    >>> chi2()
+    chi2 = galsim.Chi2Deviate(31415926, n=7)
+    chi2()
     7.9182211987712385
-    >>> chi2()
+    chi2()
     6.644121724269535
 """
 

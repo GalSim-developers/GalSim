@@ -41,15 +41,15 @@ def Add(*args, **kwargs):
     Typically, you do not need to call Add() explicitly.  Normally, you would just use the + 
     operator, which returns a Sum:
 
-        >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8)
-        >>> disk = galsim.Exponential(half_light_radius=1.4)
-        >>> gal = bulge + disk
-        >>> psf = galsim.Gaussian(sigma=0.3, flux=0.3) + galsim.Gaussian(sigma=0.8, flux=0.7)
+        bulge = galsim.Sersic(n=3, half_light_radius=0.8)
+        disk = galsim.Exponential(half_light_radius=1.4)
+        gal = bulge + disk
+        psf = galsim.Gaussian(sigma=0.3, flux=0.3) + galsim.Gaussian(sigma=0.8, flux=0.7)
 
     If one of the items is chromatic, it will return a ChromaticSum
 
-        >>> disk = galsim.Exponential(half_light_radius=1.4) * galsim.SED(sed_file)
-        >>> gal = bulge + disk
+        disk = galsim.Exponential(half_light_radius=1.4) * galsim.SED(sed_file)
+        gal = bulge + disk
 
     @param args             Unnamed args should be a list of objects to add.
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
@@ -91,15 +91,15 @@ class Sum(galsim.GSObject):
     Typically, you do not need to construct a Sum object explicitly.  Normally, you would just
     use the + operator, which returns a Sum:
 
-        >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8)
-        >>> disk = galsim.Exponential(half_light_radius=1.4)
-        >>> gal = bulge + disk
-        >>> psf = galsim.Gaussian(sigma=0.3, flux=0.3) + galsim.Gaussian(sigma=0.8, flux=0.7)
+        bulge = galsim.Sersic(n=3, half_light_radius=0.8)
+        disk = galsim.Exponential(half_light_radius=1.4)
+        gal = bulge + disk
+        psf = galsim.Gaussian(sigma=0.3, flux=0.3) + galsim.Gaussian(sigma=0.8, flux=0.7)
 
     You can also use the Add() factory function, which returns a Sum object if none of the
     individual objects are chromatic:
 
-        >>> gal = galsim.Add([bulge,disk])
+        gal = galsim.Add([bulge,disk])
 
     @param args             Unnamed args should be a list of objects to add.
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
@@ -227,10 +227,10 @@ class Convolution(galsim.GSObject):
 
     The normal way to use this class is to use the Convolve() factory function:
 
-        >>> gal = galsim.Sersic(n, half_light_radius)
-        >>> psf = galsim.Gaussian(sigma)
-        >>> pix = galsim.Pixel(scale)
-        >>> final = galsim.Convolve([gal, psf, pix])
+        gal = galsim.Sersic(n, half_light_radius)
+        psf = galsim.Gaussian(sigma)
+        pix = galsim.Pixel(scale)
+        final = galsim.Convolve([gal, psf, pix])
 
     The objects to be convolved may be provided either as multiple unnamed arguments (e.g.
     `Convolve(psf, gal, pix)`) or as a list (e.g. `Convolve([psf, gal, pix])`).  Any number of
@@ -409,8 +409,8 @@ class Deconvolution(galsim.GSObject):
 
     The normal way to use this class is to use the Deconvolve() factory function:
 
-        >>> inv_psf = galsim.Deconvolve(psf)
-        >>> deconv_gal = galsim.Convolve(inv_psf, gal)
+        inv_psf = galsim.Deconvolve(psf)
+        deconv_gal = galsim.Convolve(inv_psf, gal)
 
     @param obj              The object to deconvolve.
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
@@ -467,7 +467,7 @@ class AutoConvolution(galsim.GSObject):
 
     The normal way to use this class is to use the AutoConvolve() factory function:
 
-        >>> psf_sq = galsim.AutoConvolve(psf)
+        psf_sq = galsim.AutoConvolve(psf)
 
     @param obj              The object to be convolved with itself.
     @param real_space       Whether to use real space convolution.  [default: None, which means
@@ -559,7 +559,7 @@ class AutoCorrelation(galsim.GSObject):
 
     The normal way to use this class is to use the AutoCorrelate() factory function:
 
-        >>> psf_sq = galsim.AutoCorrelate(psf)
+        psf_sq = galsim.AutoCorrelate(psf)
 
     @param obj              The object to be convolved with itself.
     @param real_space       Whether to use real space convolution.  [default: None, which means
