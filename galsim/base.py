@@ -1281,7 +1281,7 @@ class GSObject(object):
 
     def drawK(self, re=None, im=None, scale=None, gain=1., add_to_image=False, dk=None):
         """Draws the k-space Images (real and imaginary parts) of the object, with bounds
-        optionally set by input Images.
+        optionally set by input Image instances.
 
         Normalization is always such that re(0,0) = flux.  Unlike the real-space draw() and
         drawShoot() functions, the (0,0) point will always be one of the actual pixel values.
@@ -1316,7 +1316,7 @@ class GSObject(object):
                             Note: This requires that images be provided (i.e. `re`, `im` are
                             not `None`) and that they have defined bounds. [default: False]
 
-        @returns the tuple of Images, `(re, im)` (created if necessary)
+        @returns the tuple of Image instances, `(re, im)` (created if necessary)
         """
         # Check for obsolete dk parameter
         if dk is not None and scale is None: scale = dk
