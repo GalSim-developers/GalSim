@@ -32,8 +32,8 @@ radius, or intensity at a particular point); (b) carry out common operations, li
 rescaling of flux or size, rotating, and shifting; and (c) actually make images of the surface
 brightness profiles.
 
-For a description of units conventions for scale radii for our base classes, see
-`doc/GalSim_Quick_Reference.pdf` section 2.2.  In short, any system that will ensure consistency
+For a description of units conventions for scale radii for our base classes see
+`doc/GalSim_Quick_Reference.pdf`, section 2.2.  In short, any system that will ensure consistency
 between the scale radii used to specify the size of the GSObject and between the pixel scale of the
 Image is acceptable.
 """
