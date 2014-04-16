@@ -120,21 +120,21 @@ class Bandpass(object):
         elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
             wave_factor = 10.0
         else:
-            raise ValueError("Unknown wave_type '{0}' in Bandpass.__init__".format(wave_type))
+            raise ValueError("Unknown wave_type '{0}'".format(wave_type))
 
         # Assign blue and red limits of bandpass
         if blue_limit is None:
             if not isinstance(tp, galsim.LookupTable):
                 raise AttributeError(
-                    "Bandpass.blue_limit is required if Bandpass.throughput is not a LookupTable.")
+                    "blue_limit is required if throughput is not a LookupTable.")
             blue_limit = tp.x_min
         if red_limit is None:
             if not isinstance(tp, galsim.LookupTable):
                 raise AttributeError(
-                    "Bandpass red_limit is required if Bandpass.throughput is not a LookupTable.")
+                    "red_limit is required if throughput is not a LookupTable.")
             red_limit = tp.x_max
         if blue_limit > red_limit:
-            raise ValueError("Bandpass.blue_limit must be less than Bandpass.red_limit")
+            raise ValueError("blue_limit must be less than red_limit")
         self.blue_limit = blue_limit / wave_factor
         self.red_limit = red_limit / wave_factor
 
@@ -143,10 +143,10 @@ class Bandpass(object):
             self.wave_list = numpy.array(tp.getArgs())/wave_factor
             # Make sure that blue_limit and red_limit are within LookupTable region of support.
             if self.blue_limit < (tp.x_min/wave_factor):
-                raise ValueError("Cannot set Bandpass.blue_limit to be less than throughput "
+                raise ValueError("Cannot set blue_limit to be less than throughput "
                                  + "LookupTable.x_min")
             if self.red_limit > (tp.x_max/wave_factor):
-                raise ValueError("Cannot set Bandpass.red_limit to be greater than throughput "
+                raise ValueError("Cannot set red_limit to be greater than throughput "
                                  + "LookupTable.x_max")
             # Make sure that blue_limit and red_limit are part of wave_list.
             if self.blue_limit not in self.wave_list:
@@ -322,7 +322,7 @@ class Bandpass(object):
         else:
             if relative_throughput is not None:
                 raise ValueError(
-                    "Can only truncate with `relative_throughput` if Bandpass.throughput is "
+                    "Can only truncate with relative_throughput argument if throughput is "
                     + "a LookupTable")
             return Bandpass(self.func, blue_limit=blue_limit, red_limit=red_limit)
 
