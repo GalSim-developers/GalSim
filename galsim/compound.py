@@ -17,7 +17,7 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file compound.py
-Some compound GSObject classes that contain other GSObjects:
+Some compound GSObject classes that contain other GSObject instances:
 
 Sum = sum of multiple profiles
 Convolution = convolution of multiple profiles
@@ -33,7 +33,7 @@ from . import _galsim
 # --- Compound GSObject classes: Sum, Convolution, AutoConvolve, and AutoCorrelate ---
 
 def Add(*args, **kwargs):
-    """A function for adding 2 or more GSObjects or ChromaticObjects.
+    """A function for adding 2 or more GSObject or ChromaticObject instances.
 
     This function will inspect its input arguments to decide if a Sum object or a
     ChromaticSum object is required to represent the sum of surface brightness profiles.
@@ -79,11 +79,11 @@ def Add(*args, **kwargs):
 
 
 class Sum(galsim.GSObject):
-    """A class for adding 2 or more GSObjects.
+    """A class for adding 2 or more GSObject instances.
 
-    The Sum class is used to represent the sum of multiple GSObjects.  For example, it might be used
-    to represent a multiple-component galaxy as the sum of an Exponential and a DeVaucouleurs, or to
-    represent a PSF as the sum of multiple Gaussians.
+    The Sum class is used to represent the sum of multiple GSObject instances.  For example, it
+    might be used to represent a multiple-component galaxy as the sum of an Exponential and a
+    DeVaucouleurs, or to represent a PSF as the sum of multiple Gaussian objects.
 
     Initialization
     --------------
@@ -107,9 +107,9 @@ class Sum(galsim.GSObject):
 
     Note: if `gsparams` is unspecified (or None), then the Sum instance inherits the same GSParams
     as the first item in the list.  Also, note that parameters related to the Fourier-space
-    calculations must be set when initializing the individual GSObjects that go into the Sum, NOT
-    when creating the Sum (at which point the accuracy and threshold parameters will simply be
-    ignored).
+    calculations must be set when initializing the individual GSObject instances that go into the
+    Sum, NOT when creating the Sum (at which point the accuracy and threshold parameters will simply
+    be ignored).
 
     Methods
     -------
@@ -164,7 +164,7 @@ class Sum(galsim.GSObject):
 
 
 def Convolve(*args, **kwargs):
-    """A function for convolving 2 or more GSObjects or ChromaticObjects.
+    """A function for convolving 2 or more GSObject or ChromaticObject instances.
 
     This function will inspect its input arguments to decide if a Convolution object or a
     ChromaticConvolution object is required to represent the convolution of surface
@@ -202,7 +202,7 @@ def Convolve(*args, **kwargs):
 
 
 class Convolution(galsim.GSObject):
-    """A class for convolving 2 or more GSObjects.
+    """A class for convolving 2 or more GSObject instances.
 
     The convolution will normally be done using discrete Fourier transforms of each of the component
     profiles, multiplying them together, and then transforming back to real space.
@@ -400,9 +400,9 @@ class Deconvolution(galsim.GSObject):
     cannot be photon-shot using the drawShoot() method.
 
     You may also specify a `gsparams` argument.  See the docstring for GSParams using
-    help(galsim.GSParams) for more information about this option.  Note: if `gsparams` is unspecified
-    (or None), then the Deconvolution instance inherits the same GSParams as the object being
-    deconvolved.
+    `help(galsim.GSParams)` for more information about this option.  Note: if `gsparams` is
+    unspecified (or None), then the Deconvolution instance inherits the same GSParams as the object
+    being deconvolved.
 
     Initialization
     --------------
