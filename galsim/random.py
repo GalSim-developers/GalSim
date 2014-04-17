@@ -256,51 +256,45 @@ class DistDeviate(_galsim.BaseDeviate):
         # Figure out if a string is a filename or something we should be using in an eval call
         if isinstance(function, str):
             input_function = function
-            function = eval('lambda x: ' + function)
-            try:
-                if x_min is not None: # is not None in case x_min=0.
-                    function(x_min)
-                else: 
-                    # Somebody would be silly to pass a string for evaluation without x_min,
-                    # but we'd like to throw reasonable errors in that case anyway
-                    function(0.6) # A value unlikely to be a singular point of a function
-            except: # Okay, maybe it's a file name after all
-                function = input_function
-                import os.path
-                if not os.path.isfile(function):
-                    raise ValueError('String passed with function keyword to DistDeviate does '
-                                     'not point to an existing file and cannot be evaluated via '
-                                     'an eval call with lambda x: %s'%function)
-        # Check that the function is actually a function
-        if not (isinstance(function, galsim.LookupTable) or isinstance(function, str) or
-                hasattr(function,'__call__')):
-            raise TypeError('Keyword function passed to DistDeviate must be a callable function or '
-                            'a string: %s'%function)
-
-        # Set up the probability function & min and max values for any inputs
-        if hasattr(function,'__call__'):
+            import os.path
+            if os.path.isfile(function):
+                if interpolant is None:
+                    interpolant='linear'
+                if x_min or x_max:
+                    raise TypeError('Cannot pass x_min or x_max alongside a '
+                                    'filename in arguments to DistDeviate')
+                function = galsim.LookupTable(file=function, interpolant=interpolant)
+                x_min = function.x_min
+                x_max = function.x_max
+            else:
+                try:
+                    function = eval('lambda x: ' + function)
+                    if x_min is not None: # is not None in case x_min=0.
+                        function(x_min)
+                    else: 
+                        # Somebody would be silly to pass a string for evaluation without x_min,
+                        # but we'd like to throw reasonable errors in that case anyway
+                        function(0.6) # A value unlikely to be a singular point of a function
+                except:
+                    raise ValueError(
+                        "String function must either be a valid filename or something that "+
+                        "can eval to a function of x. Input provided: {0}".format(input_function))
+        else:
+            # Check that the function is actually a function
+            if not (isinstance(function, galsim.LookupTable) or hasattr(function,'__call__')):
+                raise TypeError('Keyword function must be a callable function or a string')
             if interpolant:
-                raise TypeError('Cannot pass an interpolant with a callable '
-                                'function to DistDeviate')
+                raise TypeError('Cannot provide an interpolant with a callable function argument')
             if isinstance(function,galsim.LookupTable):
                 if x_min or x_max:
-                    raise TypeError('Cannot pass x_min or x_max alongside a LookupTable '
-                                    'in arguments to DistDeviate')
+                    raise TypeError('Cannot provide x_min or x_max with a LookupTable function '+
+                                    'argument')
                 x_min = function.x_min
                 x_max = function.x_max
             else:
                 if x_min is None or x_max is None:
-                    raise TypeError('Must pass x_min and x_max alongside non-galsim.LookupTable '
-                                    'callable functions in arguments to DistDeviate')
-        else: # must be a filename
-            if interpolant is None:
-                interpolant='linear'
-            if x_min or x_max:
-                raise TypeError('Cannot pass x_min or x_max alongside a '
-                                'filename in arguments to DistDeviate')
-            function = galsim.LookupTable(file=function, interpolant=interpolant)
-            x_min = function.x_min
-            x_max = function.x_max
+                    raise TypeError('Must provide x_min and x_max when function argument is a '+
+                                    'regular python callable function')
 
         # Compute the cumulative distribution function
         xarray = x_min+(1.*x_max-x_min)/(npoints-1)*numpy.array(range(npoints),float)
