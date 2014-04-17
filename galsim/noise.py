@@ -176,7 +176,14 @@ Initialization
 
 Methods
 -------
+
 To add noise to every element of an image, use the syntax `image.addNoise(gaussian_noise)`.
+
+Attributes
+----------
+
+    noise.rng           # The internal random number generator (read-only)
+    noise.sigma         # The value of the constructor parameter sigma (read-only)
 """
 
 def GaussianNoise_applyTo(self, image):
@@ -230,7 +237,14 @@ Parameters:
 
 Methods
 -------
+
 To add noise to every element of an image, use the syntax `image.addNoise(poisson_noise)`.
+
+Attributes
+----------
+
+    noise.rng           # The internal random number generator (read-only)
+    noise.sky_level     # The value of the constructor parameter sky_level (read-only)
 """
 
 def PoissonNoise_applyTo(self, image):
@@ -290,7 +304,16 @@ Parameters:
 
 Methods
 -------
+
 To add noise to every element of an image, use the syntax `image.addNoise(ccd_noise)`.
+
+Attributes
+----------
+
+    noise.rng           # The internal random number generator (read-only)
+    noise.sky_level     # The value of the constructor parameter sky_level (read-only)
+    noise.gain          # The value of the constructor parameter gain (read-only)
+    noise.read_noise    # The value of the constructor parameter read_noise (read-only)
 """
 
 def CCDNoise_applyTo(self, image):
@@ -340,7 +363,13 @@ Parameters:
 
 Methods
 -------
+
 To add noise to every element of an image, use the syntax `image.addNoise(dev_noise)`.
+
+Attributes
+----------
+
+    noise.rng       # The internal random number generator (read-only)
 """
 
 def DeviateNoise_applyTo(self, image):
@@ -386,6 +415,12 @@ class VariableGaussianNoise(_galsim.BaseNoise):
     Methods
     -------
     To add noise to every element of an image, use the syntax `image.addNoise(variable_noise)`.
+
+    Attributes
+    ----------
+
+        noise.rng           # The internal random number generator (read-only)
+        noise.var_image     # The value of the constructor parameter var_image (read-only)
     """
     def __init__(self, rng, var_image):
         if not isinstance(rng, galsim.BaseDeviate):
