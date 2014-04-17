@@ -123,16 +123,16 @@ class Bandpass(object):
             raise ValueError("Unknown wave_type '{0}'".format(wave_type))
 
         # Assign blue and red limits of bandpass
-        if blue_limit is None:
-            if not isinstance(tp, galsim.LookupTable):
+        if isinstance(tp, galsim.LookupTable):
+            if blue_limit is None:
+                blue_limit = tp.x_min
+            if red_limit is None:
+                red_limit = tp.x_max
+        else:
+            if blue_limit is None or red_limit is None:
                 raise AttributeError(
-                    "blue_limit is required if throughput is not a LookupTable.")
-            blue_limit = tp.x_min
-        if red_limit is None:
-            if not isinstance(tp, galsim.LookupTable):
-                raise AttributeError(
-                    "red_limit is required if throughput is not a LookupTable.")
-            red_limit = tp.x_max
+                    "red_limit and blue_limit are required if throughput is not a LookupTable.")
+
         if blue_limit > red_limit:
             raise ValueError("blue_limit must be less than red_limit")
         self.blue_limit = blue_limit / wave_factor
