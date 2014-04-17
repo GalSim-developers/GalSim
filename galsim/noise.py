@@ -72,13 +72,14 @@ def addNoiseSNR(self, noise, snr, preserve_flux=False):
     """
     import numpy
     noise_var = noise.getVariance()
+    sumsq = numpy.sum(self.array**2)
     if preserve_flux:
-        new_noise_var = numpy.sum(self.array**2)/snr/snr
+        new_noise_var = sumsq/snr/snr
         noise = noise.withVariance(new_noise_var)
         self.addNoise(noise)
         return new_noise_var
     else:
-        sn_meas = numpy.sqrt( numpy.sum(self.array**2)/noise_var )
+        sn_meas = numpy.sqrt( sumsq/noise_var )
         flux = snr/sn_meas
         self *= flux
         self.addNoise(noise)
