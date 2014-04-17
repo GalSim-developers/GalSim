@@ -283,7 +283,7 @@ def generate_pupil_plane(array_shape=(256, 256), scale=1., lam_over_diam=2., cir
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
  
-    Returns a tuple `(rho, in_pupil)`, the first of which is the coordinate of the pupil
+    @returns a tuple `(rho, in_pupil)`, the first of which is the coordinate of the pupil
     in unit disc-scaled coordinates for use by Zernike polynomials (as a complex number)
     for describing the wavefront across the pupil plane.  The array `in_pupil` is a vector of 
     Bools used to specify where in the pupil plane described by `rho` is illuminated.  See also 
@@ -375,7 +375,7 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
 
-    Outputs the wavefront for `kx, ky` locations corresponding to `kxky(array_shape)`.
+    @returns the wavefront for `kx, ky` locations corresponding to `kxky(array_shape)`.
     """
     # Define the pupil coordinates and non-zero regions based on input kwargs
     rho_all, in_pupil = generate_pupil_plane(
