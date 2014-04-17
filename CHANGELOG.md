@@ -362,3 +362,5 @@ Other new features:
 * Fixed some bugs in the treatment of correlated noise.  (Issues #526, #528)
 * Modify addNoiseSNR() method to return the variance of the noise that was
   added.  (Issue #526)
+* Add `dtype` option to `draw`, `drawShoot` and `drawK`, which sets the 
+  data type to use for automatically constructed images.

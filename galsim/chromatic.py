@@ -133,7 +133,7 @@ class ChromaticObject(object):
 
     def draw(self, bandpass, image=None, scale=None, wcs=None, gain=1.0, wmult=1.0,
              normalization="flux", add_to_image=False, use_true_center=True, offset=None,
-             integrator=None):
+             dtype=None, integrator=None):
         """Base chromatic image draw() method.  Some subclasses may choose to override this for
         specific efficiency gains.  For instance, most GalSim use cases will probably finish with
         a convolution, in which case ChromaticConvolution.draw() will be used.
@@ -164,6 +164,7 @@ class ChromaticObject(object):
         @param image            See GSObject.draw()
         @param scale            See GSObject.draw()
         @param wcs              See GSObject.draw()
+        @param dtype            See GSObject.draw()
         @param gain             See GSObject.draw()
         @param wmult            See GSObject.draw()
         @param normalization    See GSObject.draw()
@@ -183,7 +184,7 @@ class ChromaticObject(object):
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
         image = ChromaticObject._draw_setup_image(
-                prof0, image, scale, wcs, wmult, add_to_image, use_true_center, offset)
+                prof0, image, scale, wcs, wmult, add_to_image, dtype, use_true_center, offset)
 
         # determine combined self.wave_list and bandpass.wave_list
         wave_list = bandpass.wave_list
@@ -230,12 +231,13 @@ class ChromaticObject(object):
         return image
 
     @staticmethod
-    def _draw_setup_image(prof, image, scale, wcs, wmult, add_to_image, use_true_center, offset):
+    def _draw_setup_image(prof, image, scale, wcs, wmult, add_to_image, dtype, use_true_center,
+                          offset):
         # Repeat the steps from GSObject.draw that we need to do here.
         wcs = prof._check_wcs(scale, wcs, image)
         offset = prof._parse_offset(offset)
         prof = prof._fix_center(image, wcs, offset, use_true_center, reverse=False)
-        image = prof._draw_setup_image(image, wcs, wmult, add_to_image)
+        image = prof._draw_setup_image(image, wcs, wmult, add_to_image, dtype)
         return image
 
     def evaluateAtWavelength(self, wave):
@@ -863,7 +865,7 @@ class ChromaticSum(ChromaticObject):
 
     def draw(self, bandpass, image=None, scale=None, wcs=None, gain=1.0, wmult=1.0,
              normalization="flux", add_to_image=False, use_true_center=True, offset=None,
-             integrator=None):
+             dtype=None, integrator=None):
         """Slightly optimized draw method for ChromaticSum instances.
 
         Draws each summand individually and add resulting images together.  This might waste time if
@@ -878,6 +880,7 @@ class ChromaticSum(ChromaticObject):
         @param image            See GSObject.draw()
         @param scale            See GSObject.draw()
         @param wcs              See GSObject.draw()
+        @param dtype            See GSObject.draw()
         @param gain             See GSObject.draw()
         @param wmult            See GSObject.draw()
         @param normalization    See GSObject.draw()
@@ -999,26 +1002,27 @@ class ChromaticConvolution(ChromaticObject):
 
     def draw(self, bandpass, image=None, scale=None, wcs=None, gain=1.0, wmult=1.0,
              normalization="flux", add_to_image=False, use_true_center=True, offset=None,
-             integrator=None, iimult=None):
+             dtype=None, integrator=None, iimult=None):
         """Optimized draw method for the ChromaticConvolution class.
 
         Works by finding sums of profiles which include separable portions, which can then be
         integrated before doing any convolutions, which are pushed to the end.
 
-        @param bandpass           A Bandpass object representing the filter against which to
-                                  integrate.
-        @param image              see GSObject.draw()
-        @param scale              see GSObject.draw()
-        @param wcs                see GSObject.draw()
-        @param gain               see GSObject.draw()
-        @param wmult              see GSObject.draw()
-        @param normalization      see GSObject.draw()
-        @param add_to_image       see GSObject.draw()
-        @param use_true_center    see GSObject.draw()
-        @param offset             see GSObject.draw()
-        @param integrator         One of the image integrators from galsim.integ
-        @param iimult             Oversample any intermediate InterpolatedImages created to hold
-                                  effective profiles by this amount.
+        @param bandpass         A Bandpass object representing the filter against which to
+                                integrate.
+        @param image            See GSObject.draw()
+        @param scale            See GSObject.draw()
+        @param wcs              See GSObject.draw()
+        @param dtype            See GSObject.draw()
+        @param gain             See GSObject.draw()
+        @param wmult            See GSObject.draw()
+        @param normalization    See GSObject.draw()
+        @param add_to_image     See GSObject.draw()
+        @param use_true_center  See GSObject.draw()
+        @param offset           See GSObject.draw()
+        @param integrator       One of the image integrators from galsim.integ
+        @param iimult           Oversample any intermediate InterpolatedImages created to hold
+                                effective profiles by this amount.
 
         @returns the drawn Image.
         """
@@ -1095,7 +1099,7 @@ class ChromaticConvolution(ChromaticObject):
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
         image = ChromaticObject._draw_setup_image(
-                prof0, image, scale, wcs, wmult, add_to_image, use_true_center, offset)
+                prof0, image, scale, wcs, wmult, add_to_image, dtype, use_true_center, offset)
 
         # Sort these atomic objects into separable and inseparable lists, and collect
         # the spectral parts of the separable profiles.

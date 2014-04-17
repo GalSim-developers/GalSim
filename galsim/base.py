@@ -748,7 +748,7 @@ class GSObject(object):
 
     # Make sure the image is defined with the right size and wcs for the draw and
     # drawShoot commands.
-    def _draw_setup_image(self, image, wcs, wmult, add_to_image, scale_is_dk=False):
+    def _draw_setup_image(self, image, wcs, wmult, add_to_image, dtype, scale_is_dk=False):
 
         # If image already exists, and its wcs is not a PixelScale, then we're all set.
         # No need to run through the rest of this.
@@ -800,7 +800,7 @@ class GSObject(object):
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image is None")
             N = self.SBProfile.getGoodImageSize(scale,wmult)
-            image = galsim.Image(N,N)
+            image = galsim.Image(N,N,dtype=dtype)
 
         # Resize the given image if necessary
         elif not image.bounds.isDefined():
@@ -929,7 +929,7 @@ class GSObject(object):
             return None
 
     def draw(self, image=None, scale=None, wcs=None, gain=1., wmult=1., normalization="flux",
-             add_to_image=False, use_true_center=True, offset=None, dx=None):
+             add_to_image=False, use_true_center=True, offset=None, dtype=None, dx=None):
         """Draws an Image of the object, with bounds optionally set by an input Image.
 
         The draw() method is used to draw an Image of the GSObject, typically using Fourier space
@@ -989,6 +989,9 @@ class GSObject(object):
                             [default: None]
         @param wcs          If provided, use this as the wcs for the image.  At most one of `scale`
                             or `wcs` may be provided. [default: None]
+        @param dtype        The data type to use for an automatically constructed image.  Only
+                            valid if `image = None`. [default: None, which means to use
+                            numpy.float32]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD).  [default: 1]
         @param wmult        A multiplicative factor by which to enlarge (in each direction) the
@@ -1060,7 +1063,7 @@ class GSObject(object):
         prof = self._fix_center(image, wcs, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
-        image = prof._draw_setup_image(image, wcs, wmult, add_to_image)
+        image = prof._draw_setup_image(image, wcs, wmult, add_to_image, dtype)
 
         # Figure out the position of the center of the object
         obj_cen = self._obj_center(image, offset, use_true_center)
@@ -1080,7 +1083,7 @@ class GSObject(object):
         return image
 
     def drawShoot(self, image=None, scale=None, wcs=None, gain=1., wmult=1., normalization="flux",
-                  add_to_image=False, use_true_center=True, offset=None,
+                  add_to_image=False, use_true_center=True, offset=None, dtype=None,
                   n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None, dx=None):
         """Draw an image of the object by shooting individual photons drawn from the surface
         brightness profile of the object.
@@ -1132,6 +1135,9 @@ class GSObject(object):
                             [default: None]
         @param wcs          If provided, use this as the wcs for the image.  At most one of `scale`
                             or `wcs` may be provided. [default: None]
+        @param dtype        The data type to use for an automatically constructed image.  Only
+                            valid if `image = None`. [default: None, which means to use
+                            numpy.float32]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD).  [default: 1]
         @param wmult        A factor by which to make an automatically-sized image larger than
@@ -1249,7 +1255,7 @@ class GSObject(object):
         prof = self._fix_center(image, wcs, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
-        image = prof._draw_setup_image(image, wcs, wmult, add_to_image)
+        image = prof._draw_setup_image(image, wcs, wmult, add_to_image, dtype)
 
         obj_cen = self._obj_center(image, offset, use_true_center)
 
@@ -1279,7 +1285,8 @@ class GSObject(object):
 
         return image
 
-    def drawK(self, re=None, im=None, scale=None, gain=1., add_to_image=False, dk=None):
+    def drawK(self, re=None, im=None, scale=None, gain=1., add_to_image=False, dk=None,
+              dtype=None):
         """Draws the k-space Images (real and imaginary parts) of the object, with bounds
         optionally set by input Image instances.
 
@@ -1309,6 +1316,9 @@ class GSObject(object):
                             If `scale` is `None` and `re, im == None`, then use the Nyquist scale.
                             If `scale <= 0` (regardless of `re`, `im`), then use the Nyquist scale.
                             [default: None]
+        @param dtype        The data type to use for automatically constructed images.  Only
+                            valid if `re = None` and `im = None`. [default: None, which means to
+                            use numpy.float32]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD).  [default: 1.]
         @param add_to_image Whether to add to the existing images rather than clear out
@@ -1342,8 +1352,8 @@ class GSObject(object):
 
         # Make sure images are setup correctly
         wcs = galsim.PixelScale(scale)
-        re = self._draw_setup_image(re,wcs,1.0,add_to_image,scale_is_dk=True)
-        im = self._draw_setup_image(im,wcs,1.0,add_to_image,scale_is_dk=True)
+        re = self._draw_setup_image(re,wcs,1.0,add_to_image,dtype,scale_is_dk=True)
+        im = self._draw_setup_image(im,wcs,1.0,add_to_image,dtype,scale_is_dk=True)
 
         # Convert the profile in world coordinates to the profile in image coordinates:
         # The scale in the wcs objects is the dk scale, not dx.  So the conversion to
