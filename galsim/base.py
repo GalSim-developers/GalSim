@@ -807,6 +807,8 @@ class GSObject(object):
             # Can't add to image if need to resize
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
+            if dtype is not None:
+                raise ValueError("Cannot specify dtype if image is provided")
             N = self.SBProfile.getGoodImageSize(scale,wmult)
             bounds = galsim.BoundsI(1,N,1,N)
             image.resize(bounds)
@@ -815,6 +817,8 @@ class GSObject(object):
         # Else use the given image as is
         else:
             # Clear the image if we are not adding to it.
+            if dtype is not None:
+                raise ValueError("Cannot specify dtype if image is provided")
             if not add_to_image:
                 image.setZero()
 
