@@ -141,6 +141,20 @@ def test_SED_roundoff_guard():
         np.testing.assert_almost_equal(a(w2/(1.0+z)), b(w2), 10,
                                         err_msg="error using wave_list limits in redshifted SED")
 
+def test_SED_init():
+    """Check that certain invalid SED initializations are trapped.
+    """
+    # These fail.
+    np.testing.assert_raises(ValueError, galsim.SED, spec='blah')
+    np.testing.assert_raises(ValueError, galsim.SED, spec='wave+')
+    np.testing.assert_raises(ValueError, galsim.SED, spec='somewhere/a/file')
+    np.testing.assert_raises(ValueError, galsim.SED, spec='/somewhere/a/file')
+    # These should succeed.
+    galsim.SED(spec='wave')
+    galsim.SED(spec='wave/wave')
+    galsim.SED(spec=lambda w:1.0)
+    galsim.SED(spec='1./(wave-700)')
+
 if __name__ == "__main__":
     test_SED_add()
     test_SED_sub()
@@ -148,3 +162,4 @@ if __name__ == "__main__":
     test_SED_div()
     test_SED_atRedshift()
     test_SED_roundoff_guard()
+    test_SED_init()

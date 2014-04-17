@@ -88,7 +88,7 @@ class SED(object):
         elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
             wave_factor = 10.0
         else:
-            raise ValueError("Unknown wave_type `{}` in SED.__init__".format(wave_type))
+            raise ValueError("Unknown wave_type '{0}'".format(wave_type))
 
         # Figure out input flux density type
         if isinstance(spec, basestring):
@@ -96,7 +96,22 @@ class SED(object):
             if os.path.isfile(spec):
                 spec = galsim.LookupTable(file=spec, interpolant='linear')
             else:
-                spec = eval('lambda wave : ' + spec)
+                origspec = spec
+                # Don't catch ArithmeticErrors when testing to see if the the result of `eval()`
+                # is valid since `spec = '1./(wave-700)'` will generate a ZeroDivisionError (which
+                # is a subclass of ArithmeticError) despite being a valid spectrum specification,
+                # while `spec = 'blah'` where `blah` is undefined generates a NameError and is not
+                # a valid spectrum specification.
+                # Are there any other types of errors we should trap here?
+                try:
+                    spec = eval('lambda wave : ' + spec)   # This can raise SyntaxError
+                    spec(700)   # This can raise NameError or ZeroDivisionError
+                except ArithmeticError:
+                    pass
+                except:
+                    raise ValueError(
+                        "String spec must either be a valid filename or something that "+
+                        "can eval to a function of wave. Input provided: {0}".format(origspec))
 
         if isinstance(spec, galsim.LookupTable):
             self.blue_limit = spec.x_min / wave_factor
@@ -114,7 +129,7 @@ class SED(object):
         elif flux_type == 'fphotons':
             self.fphotons = lambda w: spec(np.array(w) * wave_factor)
         else:
-            raise ValueError("Unknown flux_type `{}` in SED.__init__".format(flux_type))
+            raise ValueError("Unknown flux_type '{0}'".format(flux_type))
         self.redshift = 0
 
         # Hack to avoid (LookupTable.x_max * 10) / 10.0 > LookupTable.x_max due to roundoff
@@ -159,11 +174,11 @@ class SED(object):
             wmax = wave
         if self.blue_limit is not None:
             if wmin < self.blue_limit:
-                raise ValueError("Wavelength ({0}) is bluer than SED blue limit ({1})"
+                raise ValueError("Requested wavelength ({0}) is bluer than blue_limit ({1})"
                                  .format(wmin, self.blue_limit))
         if self.red_limit is not None:
             if wmax > self.red_limit:
-                raise ValueError("Wavelength ({0}) redder than SED red limit ({1})"
+                raise ValueError("Requested wavelength ({0}) is redder than red_limit ({1})"
                                  .format(wmax, self.red_limit))
         return self.fphotons(wave)
 
