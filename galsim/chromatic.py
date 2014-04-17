@@ -887,7 +887,8 @@ class ChromaticSum(ChromaticObject):
         @param add_to_image     See GSObject.draw()
         @param use_true_center  See GSObject.draw()
         @param offset           See GSObject.draw()
-        @param integrator       One of the image integrators from galsim.integ
+        @param integrator       One of the image integrators from galsim.integ [default: None,
+                                which will try to select an appropriate integrator automatically.]
 
         @returns the drawn Image.
         """
@@ -1020,9 +1021,10 @@ class ChromaticConvolution(ChromaticObject):
         @param add_to_image     See GSObject.draw()
         @param use_true_center  See GSObject.draw()
         @param offset           See GSObject.draw()
-        @param integrator       One of the image integrators from galsim.integ
+        @param integrator       One of the image integrators from galsim.integ [default: None,
+                                which will try to select an appropriate integrator automatically.]
         @param iimult           Oversample any intermediate InterpolatedImages created to hold
-                                effective profiles by this amount.
+                                effective profiles by this amount. [default: None]
 
         @returns the drawn Image.
         """

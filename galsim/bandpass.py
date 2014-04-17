@@ -75,18 +75,17 @@ class Bandpass(object):
     Note that the `wave_type` parameter does not propagate into other methods of `Bandpass`.
     For instance, Bandpass.__call__ assumes its input argument is in nanometers.
 
-    @param throughput    Function defining the throughput at each wavelength.  See above for
-                         valid options for this parameter.
-    @param blue_limit    Hard cut off of bandpass on the blue side.  This is optional if the
-                         throughput is a LookupTable or a file, but is required if the
-                         throughput is a function.
-    @param red_limit     Hard cut off of bandpass on the red side.  This is optional if the
-                         throughput is a LookupTable or a file, but is required if the
-                         throughput is a function.
-
+    @param throughput   Function defining the throughput at each wavelength.  See above for
+                        valid options for this parameter.
+    @param blue_limit   Hard cut off of bandpass on the blue side. [default: None, but required
+                        if throughput is not a LookupTable or file.  See above.]
+    @param red_limit    Hard cut off of bandpass on the red side. [default: None, but required
+                        if throughput is not a LookupTable or file.  See above.]
+    @param wave_type    The units to use for the wavelength argument of the `throughput`
+                        function. See above for details. [default: 'nm']
     """
-    def __init__(self, throughput, wave_type='nm',
-                 blue_limit=None, red_limit=None, _wave_list=None):
+    def __init__(self, throughput, blue_limit=None, red_limit=None, wave_type='nm',
+                 _wave_list=None):
         # Note that `_wave_list` acts as a private construction variable that overrides the way that
         # `wave_list` is normally constructed (see `Bandpass.__mul__` below)
 
@@ -291,18 +290,28 @@ class Bandpass(object):
         else:
             return self.func(wave) if (wave >= self.blue_limit and wave <= self.red_limit) else 0.0
 
-    def truncate(self, relative_throughput=None, blue_limit=None, red_limit=None):
-        """ Return a bandpass with its wavelength range truncated.
+    def truncate(self, blue_limit=None, red_limit=None, relative_throughput=None):
+        """Return a bandpass with its wavelength range truncated.
 
-        @param blue_limit             Truncate blue side of bandpass here.
-        @param red_limit              Truncate red side of bandpass here.
-        @param relative_throughput    If the bandpass was initialized with a galsim.LookupTable or
-                                      from a file (which internally creates a galsim.LookupTable),
-                                      then truncate leading and trailing wavelength ranges where the
-                                      relative throughput is less than this amount.  Do not remove
-                                      any intermediate wavelength ranges.  This option is not
-                                      available for bandpasses initialized with a function or
-                                      `eval` string.
+        If the bandpass was initialized with a galsim.LookupTable or from a file (which internally
+        creates a galsim.LookupTable), then 
+
+        This function truncate the range of the bandpass either explicitly (with `blue_limit` or
+        `red_limit` or both) or automatically, just trimming off leading and trailing wavelength
+        ranges where the relative throughput is less than some amount (`relative_throughput`).
+
+        This second option using relative_throughpt is only available for bandpasses initialized
+        with a LookupTable or from a file, not when using a regular python funciton or a string
+        evaluation.
+
+        This function does not remove any intermediate wavelength ranges, but see thin() for
+        a method that can thin out the intermediate values.
+
+        @param blue_limit       Truncate blue side of bandpass here. [default: None]
+        @param red_limit        Truncate red side of bandpass here. [default: None]
+        @param relative_throughput  Truncate leading or trailing wavelengths that are below
+                                this relative throughput level.  (See above for details.)
+                                [default: None]
 
         @returns the truncated Bandpass.
         """
@@ -327,9 +336,17 @@ class Bandpass(object):
             return Bandpass(self.func, blue_limit=blue_limit, red_limit=red_limit)
 
     def thin(self, rel_err=1.e-4, preserve_range=False):
-        """ If the bandpass was initialized with a galsim.LookupTable or from a file (which
-        internally creates a galsim.LookupTable), then remove tabulated values while keeping
-        the integral over the set of tabulated values still accurate to `rel_err`.
+        """Thin out the internal wavelengths of a Bandpass that uses a LookupTable.
+
+        If the bandpass was initialized with a LookupTable or from a file (which internally
+        creates a LookupTable), this function removes tabulated values while keeping the integral
+        over the set of tabulated values still accurate to the given relative error.
+
+        That is, the integral of the bandpass function is preserved to a relative precision
+        of `rel_err`, while eliminating as many internal wavelength values as possible.  This
+        process will usually help speed up integrations using this bandpass.  You should weigh
+        the speed improvements against your fidelity requirements for your particular use
+        case.
 
         @param rel_err            The relative error allowed in the integral over the throughput
                                   function. [default: 1.e-4]
