@@ -171,7 +171,7 @@ class ShapeData(object):
 def _convertMask(image, weight = None, badpix = None):
     """Convert from input weight and badpix images to a single mask image needed by C++ functions.
 
-       This is used by EstimateShear() and FindAdaptiveMom().
+    This is used by EstimateShear() and FindAdaptiveMom().
     """
     # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
     if weight == None:

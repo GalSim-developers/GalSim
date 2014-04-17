@@ -533,7 +533,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
     for a given FITS file.  It requires wcstools command line functions to be installed.
 
     Note: It uses the wcstools executables xy2sky and sky2xy, so it can be quite a bit less
-          efficient than other options that keep the WCS in memory.
+    efficient than other options that keep the WCS in memory.
 
     See their website for information on downloading and installing wcstools:
 
