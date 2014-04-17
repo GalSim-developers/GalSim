@@ -1632,7 +1632,7 @@ def test_addnoisesnr():
     var_out2 = im2.addNoiseSNR(gn2, test_snr, preserve_flux=False)
     assert var_out2==1.0
     expect_max_val2 = max_val*np.sqrt(var_out2/var_out)
-    np.testing.assert_almost_equal(im2.array.max(), expect_max_val2, decimal=6,
+    np.testing.assert_almost_equal(im2.array.max(), expect_max_val2, decimal=5,
                                    err_msg='Wrongness in AddNoiseSNR calculations')
 
     t2 = time.time()
