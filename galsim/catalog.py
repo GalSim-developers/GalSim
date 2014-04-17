@@ -28,13 +28,8 @@ class Catalog(object):
     Each row corresponds to a different object to be built, and each column stores some item of
     information about that object (e.g. flux or half_light_radius).
 
-    After construction, the following fields are available:
-
-        self.nobjects   The number of objects in the catalog.
-        self.ncols      The number of columns in the catalog.
-        self.isfits     Whether the catalog is a fits catalog.
-        self.names      For a fits catalog, the valid column names.
-
+    Initialization
+    --------------
 
     @param file_name     Filename of the input catalog. (Required)
     @param dir           Optionally a directory name can be provided if `file_name` does not 
@@ -44,6 +39,17 @@ class Catalog(object):
     @param comments      The character used to indicate the start of a comment in an
                          ASCII catalog.  [default: '#']
     @param hdu           Which hdu to use for FITS files.  [default: 1]
+
+    Attributes
+    ----------
+
+    After construction, the following attributes are available:
+
+        nobjects   The number of objects in the catalog.
+        ncols      The number of columns in the catalog.
+        isfits     Whether the catalog is a fits catalog.
+        names      For a fits catalog, the valid column names.
+
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str , 'file_type' : str , 'comments' : str , 'hdu' : int }
@@ -200,13 +206,13 @@ class Dict(object):
     to set `key_split` to a different character or string and use that to chain the keys.
 
 
-    @param file_name     Filename storing the dict. (Required)
+    @param file_name     Filename storing the dict.
     @param dir           Optionally a directory name can be provided if `file_name` does not 
-                         already include it.
+                         already include it. [default: None]
     @param file_type     Options are 'Pickle', 'YAML', or 'JSON' or None.  If None, infer from 
                          `file_name` extension ('.p*', '.y*', '.j*' respectively).
                          [default: None]
-    @param key_split     The character (or string) to use to split chained keys.  (c.f. the 
+    @param key_split     The character (or string) to use to split chained keys.  (cf. the 
                          description of this feature above.)  [default: '.']
     """
     _req_params = { 'file_name' : str }
