@@ -107,8 +107,9 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.area.__func__.__doc__ = """Return the area of the enclosed region.
 
     The area is a bit different for integer-type BoundsI and float-type BoundsD instances.
-    For floating point types, it is simply `(xmax-xmin)*(ymax-ymin)`.  However, for integer types, we
-    add 1 to each size to correctly count the number of pixels being described by the bounding box.
+    For floating point types, it is simply `(xmax-xmin)*(ymax-ymin)`.  However, for integer types,
+    we add 1 to each size to correctly count the number of pixels being described by the bounding
+    box.
     """
 
     Class.addBorder.__func__.__doc__ = """Add a border of the specified width to the Bounds.
