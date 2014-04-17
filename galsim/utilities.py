@@ -635,9 +635,9 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     For an example of defining a config dictionary of the sort suitable for input to this function,
     see examples/demo8.py in the GalSim repository.
 
-    Using both photon shooting (via drawShoot()) and Discrete Fourier Transform (via draw()) to render
-    images, we compare the numerical values of adaptive moments estimates of ellipticity and size 
-    to check consistency.
+    Using both photon shooting (via drawShoot()) and Discrete Fourier Transform (via draw()) to
+    render images, we compare the numerical values of adaptive moments estimates of ellipticity
+    and size to check consistency.
 
     We generate successive sets of `n_trials_per_iter` photon-shot images, using 
     `n_photons_per_trial` photons in each image, until the standard error on the mean absolute size

@@ -953,8 +953,8 @@ def _cf_periodicity_dilution_correction(cf_shape):
     Note this should be applied only to correlation functions that have *not* been rolled to place
     the origin at the array centre.  The convention used here is that the lower left corner is the
     [0, 0] origin, following standard FFT conventions (see e.g numpy.fft.fftfreq).  You should
-    therefore only apply this correction before using galsim.utilities.roll2d() to recentre the image
-    of the correlation function.
+    therefore only apply this correction before using galsim.utilities.roll2d() to recentre the
+    image of the correlation function.
     """
     # First calculate the Delta_x, Delta_y
     deltax, deltay = np.meshgrid( # Remember NumPy array shapes are [y, x]

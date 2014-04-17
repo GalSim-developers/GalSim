@@ -1105,8 +1105,8 @@ class GSObject(object):
         large `n_photons`) as draw() produces when the same object is convolved with
         `Pixel(scale=scale)` when drawing onto an image with pixel scale `scale`.
 
-        Note that the drawShoot() method is unavailable for Deconvolution objects or compound objects
-        (e.g. Sum, Convolution) that include a Deconvolution.
+        Note that the drawShoot() method is unavailable for Deconvolution objects or compound
+        objects (e.g. Sum, Convolution) that include a Deconvolution.
 
         On return, the image will have a member `added_flux`, which will be set to be the total
         flux of photons that landed inside the image bounds.  This may be useful as a sanity check

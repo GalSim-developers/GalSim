@@ -28,9 +28,9 @@ def theoryToObserved(gamma1, gamma2, kappa):
 
     This helper function is used internally by PowerSpectrum.getShear(), getMagnification(), and
     getLensing() to convert from theoretical quantities (shear and convergence) to observable ones
-    (reduced shear and magnification).  Users of PowerSpectrum.buildGrid() outputs can also apply this
-    method directly to the outputs in order to get the values of reduced shear and magnification on
-    the output grid.
+    (reduced shear and magnification).  Users of PowerSpectrum.buildGrid() outputs can also apply
+    this method directly to the outputs in order to get the values of reduced shear and
+    magnification on the output grid.
 
     @param gamma1       The first shear component, which must be the NON-reduced shear.  This and
                         all other inputs should be supplied either as individual floating point
@@ -120,9 +120,9 @@ class PowerSpectrum(object):
     spectra, which is normally given as a function P(k).  The typical thing is to just use a lambda
     function in Python (i.e., a function that is not associated with a name); for example, to define
     P(k)=k^2, one would use `lambda k : k**2`.  But the power spectra can also be more complicated
-    user-defined functions that take a single argument `k` and return the power at that `k` value, or
-    they can be instances of the LookupTable class for power spectra that are known at particular k
-    values but for which there is not a simple analytic form.
+    user-defined functions that take a single argument `k` and return the power at that `k` value,
+    or they can be instances of the LookupTable class for power spectra that are known at
+    particular k values but for which there is not a simple analytic form.
     
     Cosmologists often express the power spectra in terms of an expansion in spherical harmonics
     (ell), i.e., the C_ell values.  In the flat-sky limit, we can replace ell with k and C_ell with
@@ -661,8 +661,8 @@ class PowerSpectrum(object):
 
         @param grid_spacing     Spacing for an evenly spaced grid of points, by default in arcsec
                                 for consistency with the natural length scale of images created
-                                using the draw() or drawShoot() methods.  Other units can be specified
-                                using the `units` keyword.
+                                using the draw() or drawShoot() methods.  Other units can be
+                                specified using the `units` keyword.
         @param ngrid            Number of grid points in each dimension.  [Must be an integer]
         @param units            The angular units used for the positions.  [default = arcsec]
         @param kmin_factor      (Optional) Factor by which the grid spacing in fourier space is 
@@ -1742,7 +1742,8 @@ def kappaKaiserSquires(g1, g2):
     return kappaE, kappaB
 
 class xip_integrand:
-    """Utility class to assist in calculating the xi_+ shear correlation function from power spectra."""
+    """Utility class to assist in calculating the xi_+ shear correlation function from power
+    spectra."""
     def __init__(self, pk, r):
         self.pk = pk
         self.r = r
@@ -1750,7 +1751,8 @@ class xip_integrand:
         return k * self.pk(k) * galsim.bessel.j0(self.r*k)
 
 class xim_integrand:
-    """Utility class to assist in calculating the xi_- shear correlation function from power spectra."""
+    """Utility class to assist in calculating the xi_- shear correlation function from power
+    spectra."""
     def __init__(self, pk, r):
         self.pk = pk
         self.r = r

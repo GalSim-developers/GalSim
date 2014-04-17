@@ -119,7 +119,8 @@ class CelestialCoord(object):
         return theta * galsim.radians
 
     def angleBetween(self, coord1, coord2):
-        """Find the open angle at the location of the current coord between `coord1` and `coord2`."""
+        """Find the open angle at the location of the current coord between `coord1` and `coord2`.
+        """
         # Call A = coord1, B = coord2, C = self
         # Then we are looking for the angle ACB.
         # If we treat each coord as a (x,y,z) vector, then we can use the following spherical

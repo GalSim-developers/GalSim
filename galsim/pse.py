@@ -40,11 +40,11 @@ class PowerSpectrumEstimator(object):
     of the problem - the binning and spin weighting factors.
 
     The only public method is estimate(), which is called with 2D `g1` and `g2` arrays on a square
-    grid.  It assumes the flat sky approximation (where `ell` and `k` are interchangeable), and rebins
-    the observed ell modes into a user-defined number of logarithimic bins in ell.  Given that the
-    grid parameters are precomputed and stored when the PowerSpectrumEstimator is initialized,
-    computation of the PS for multiple sets of shears corresponding to the same grid setup can
-    proceed more rapidly than if everything had to be recomputed each time.
+    grid.  It assumes the flat sky approximation (where `ell` and `k` are interchangeable), and
+    rebins the observed ell modes into a user-defined number of logarithimic bins in ell.  Given
+    that the grid parameters are precomputed and stored when the PowerSpectrumEstimator is
+    initialized, computation of the PS for multiple sets of shears corresponding to the same grid
+    setup can proceed more rapidly than if everything had to be recomputed each time.
 
     Below is an example of how to use this code (relying on GalSim to provide the arrays of g1 and
     g2, though that is by no means required, and assuming that the user is sitting in the examples/

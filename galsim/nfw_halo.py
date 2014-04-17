@@ -175,9 +175,9 @@ class NFWHalo(object):
     def __farcth (self, x, out=None):
         """Numerical implementation of integral functions of a spherical NFW profile.
 
-        All expressions are a function of `x`, which is the radius r in units of the NFW scale radius,
-        r_s.  For the derivation of these functions, see for example Wright & Brainerd (2000, ApJ,
-        534, 34).
+        All expressions are a function of `x`, which is the radius r in units of the NFW scale
+        radius, r_s.  For the derivation of these functions, see for example Wright & Brainerd
+        (2000, ApJ, 534, 34).
         """
         if out is None:
             out = np.zeros_like(x)

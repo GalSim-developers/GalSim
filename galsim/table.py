@@ -137,14 +137,14 @@ class LookupTable(object):
         When the LookupTable object is called with a single argument, it returns the value at that
         argument.  An exception will be thrown automatically by the _LookupTable class if the `x`
         value is outside the range of the original tabulated values.  The value that is returned is
-        the same type as that provided as an argument, e.g., if a single value `x` is provided then a
-        single value of `f` is returned; if a tuple of `x` values is provided then a tuple of `f`
-        values is returned; and so on.  Even if interpolation was done using the `x_log` option, the
-        user should still provide `x` rather than `log(x)`.
+        the same type as that provided as an argument, e.g., if a single value `x` is provided then
+        a single value of `f` is returned; if a tuple of `x` values is provided then a tuple of `f`
+        values is returned; and so on.  Even if interpolation was done using the `x_log` option,
+        the user should still provide `x` rather than `log(x)`.
 
-        @param x       The `x` value(s) for which `f(x)` should be calculated via interpolation on the
-                       original `(x,f)` lookup table.  `x` can be a single float/double, or a tuple,
-                       list, or arbitrarily shaped Numpy array.
+        @param x        The `x` value(s) for which `f(x)` should be calculated via interpolation on
+                        the original `(x,f)` lookup table.  `x` can be a single float/double, or a
+                        tuple, list, or arbitrarily shaped Numpy array.
 
         @returns the interpolated `f(x)` value(s).
         """

@@ -315,10 +315,10 @@ class RealGalaxyCatalog(object):
                       containing the galaxy/PDF images. [default: None]
     @param dir        The directory of catalog file. [default: None]
     @param preload    Whether to preload the header information.  If `preload=True`, the bulk of 
-                      the I/O time is in the constructor.  If `preload=False`, there is approximately
-                      the same total I/O time (assuming you eventually use most of the image
-                      files referenced in the catalog), but it is spread over the various calls to 
-                      getGal() and getPSF().  [default: False]
+                      the I/O time is in the constructor.  If `preload=False`, there is
+                      approximately the same total I/O time (assuming you eventually use most of
+                      the image files referenced in the catalog), but it is spread over the
+                      various calls to getGal() and getPSF().  [default: False]
     @param noise_dir  The directory of the noise files if different from the directory of the 
                       image files.  [default: image_dir]
     """
