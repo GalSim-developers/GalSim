@@ -30,19 +30,19 @@ class LookupTable(object):
     A LookupTable may be constructed from two arrays (lists, tuples, or Numpy arrays of 
     floats/doubles).
 
-        args = [...]
-        vals = []
-        for arg in args:
-            val = calculateVal(arg)
-            vals.append(val)
-        table = galsim.LookupTable(x=args,f=vals)
+        >>> args = [...]
+        >>> vals = []
+        >>> for arg in args:
+        ...     val = calculateVal(arg)
+        ...     vals.append(val)
+        >>> table = galsim.LookupTable(x=args,f=vals)
 
     Then you can use this table as a replacement for the slow calculation:
 
-        other_args = [...]
-        for arg in other_args:
-            val = table(arg)
-            [... use val ...]
+        >>> other_args = [...]
+        >>> for arg in other_args:
+        ...     val = table(arg)
+        ...     [... use val ...]
 
 
     The default interpolation method is cubic spline interpolation.  This is usually the 

@@ -178,20 +178,20 @@ class Dict(object):
     In order to facilitate getting values in a hierarchy of fields, we allow the '.'
     character to chain keys together for the get() method.  So,
 
-        d.get('noise.properties.variance')
+        >>> d.get('noise.properties.variance')
 
     is expanded into
 
-        d['noise']['properties']['variance'] 
+        >>> d['noise']['properties']['variance'] 
 
     Furthermore, if a "key" is really an integer, then it is used as such, which accesses 
     the corresponding element in a list.  e.g.
 
-        d.get('noise_models.2.variance')
+        >>> d.get('noise_models.2.variance')
         
     is equivalent to 
 
-        d['noise_models'][2]['variance']
+        >>> d['noise_models'][2]['variance']
 
     This makes it much easier to access arbitrary elements within parameter files.
 

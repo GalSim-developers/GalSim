@@ -65,13 +65,13 @@ class Shapelet(GSObject):
     
     1. Make a blank Shapelet instance with all b_pq = 0.
 
-        shapelet = galsim.Shapelet(sigma, order)
+        >>> shapelet = galsim.Shapelet(sigma, order)
 
     2. Make a Shapelet instance using a given vector for the b_pq values.
 
-        order = 2
-        bvec = [ 1, 0, 0, 0.2, 0.3, -0.1 ]
-        shapelet = galsim.Shapelet(sigma, order, bvec)
+        >>> order = 2
+        >>> bvec = [ 1, 0, 0, 0.2, 0.3, -0.1 ]
+        >>> shapelet = galsim.Shapelet(sigma, order, bvec)
 
     We use the following order for the coefficients, where the subscripts are in terms of p,q.
 
@@ -95,7 +95,7 @@ class Shapelet(GSObject):
     There is also a factory function that measures the shapelet decomposition of a given
     image
 
-        shapelet = galsim.FitShapelet(sigma, order, image)
+        >>> shapelet = galsim.FitShapelet(sigma, order, image)
 
     Attributes
     ----------
@@ -107,8 +107,8 @@ class Shapelet(GSObject):
 
     In addition to the usual GSObject methods, Shapelet has the following access methods:
 
-        b_pq = getPQ(p,q)         # Get b_pq.  Returned as tuple (re, im) (even if p==q).
-        b_Nm = getNM(N,m)         # Get b_Nm.  Returned as tuple (re, im) (even if m=0).
+        >>> b_pq = getPQ(p,q)         # Get b_pq.  Returned as tuple (re, im) (even if p==q).
+        >>> b_Nm = getNM(N,m)         # Get b_Nm.  Returned as tuple (re, im) (even if m=0).
 
     Furthermore, there are specializations of the rotate() and expand() methods that let
     them be performed more efficiently than the usual GSObject implementation.
@@ -228,9 +228,9 @@ def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams
 
     For example:
 
-        image = ...
-        shapelet = galsim.FitShapelet(sigma, order, image, normalization='sb')
-        shapelet.draw(image=image2, scale=image.scale, normalization='sb')
+        >>> image = [...]
+        >>> shapelet = galsim.FitShapelet(sigma, order, image, normalization='sb')
+        >>> shapelet.draw(image=image2, scale=image.scale, normalization='sb')
 
     Then `image2` and `image` should be as close to the same as possible for the given `sigma` and
     `order`.  Increasing the order can improve the fit, as can having `sigma` match the natural

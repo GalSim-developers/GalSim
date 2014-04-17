@@ -972,14 +972,14 @@ def readFile(file_name, dir=None, hdu=None, compression='auto'):
 
     This function is called as:
     
-            hdu, hdu_list, fin = galsim.fits.readFile(...)
+        >>> hdu, hdu_list, fin = galsim.fits.readFile(...)
 
     The first item in the returned tuple is the specified hdu (or the primary if none was 
     specifically requested).  The other two are returned so you can properly close them.
     They are the full HDUList and possibly a file handle.  The appropriate cleanup can be
     done with:
 
-            galsim.fits.closeHDUList(hdu_list, fin)
+        >>> galsim.fits.closeHDUList(hdu_list, fin)
 
     @param file_name    The name of the file to read in.
     @param dir          Optionally a directory name can be provided if `file_name` does not 
@@ -1027,22 +1027,22 @@ class FitsHeader(object):
 
     After construction, you can access a header value by
 
-        value = fits_header[key]
+        >>> value = fits_header[key]
 
     or write to it with
 
-        fits_header[key] = value                # If you just want to set a value.
-        fits_header[key] = (value, comment)     # If you want to include a comment field.
+        >>> fits_header[key] = value                # If you just want to set a value.
+        >>> fits_header[key] = (value, comment)     # If you want to include a comment field.
 
     In fact, most of the normal functions available for a dict are available:
     
-        keys = fits_header.keys()
-        items = fits_header.items()
-        for key in fits_header:
-            value = fits_header[key]
-        value = fits_header.get(key, default)
-        del fits_header[key]
-        etc.
+        >>> keys = fits_header.keys()
+        >>> items = fits_header.items()
+        >>> for key in fits_header:
+        >>>     value = fits_header[key]
+        >>> value = fits_header.get(key, default)
+        >>> del fits_header[key]
+        >>> etc.
 
     This is a particularly useful abstraction, since pyfits has changed its syntax for how 
     to write to a fits header, so this class will work regardless of which version of pyfits

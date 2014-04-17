@@ -329,8 +329,8 @@ class PowerSpectrum(object):
 
         1. Get shears on a grid of points separated by 1 arcsec:
 
-               my_ps = galsim.PowerSpectrum(lambda k : k**2)
-               g1, g2 = my_ps.buildGrid(grid_spacing = 1., ngrid = 100)
+                >>> my_ps = galsim.PowerSpectrum(lambda k : k**2)
+                >>> g1, g2 = my_ps.buildGrid(grid_spacing = 1., ngrid = 100)
 
            The returned g1, g2 are 2-d numpy arrays of values, corresponding to the values of
            g1 and g2 at the locations of the grid points.
@@ -338,20 +338,20 @@ class PowerSpectrum(object):
            For a given value of `grid_spacing` and `ngrid`, we could get the x and y values on the
            grid using
 
-               import numpy as np
-               min = (-ngrid/2 + 0.5) * grid_spacing
-               max = (ngrid/2 - 0.5) * grid_spacing
-               x, y = np.meshgrid(np.arange(min,max+grid_spacing,grid_spacing),
-                                  np.arange(min,max+grid_spacing,grid_spacing))
+                >>> import numpy as np
+                >>> min = (-ngrid/2 + 0.5) * grid_spacing
+                >>> max = (ngrid/2 - 0.5) * grid_spacing
+                >>> x, y = np.meshgrid(np.arange(min,max+grid_spacing,grid_spacing),
+                ...                    np.arange(min,max+grid_spacing,grid_spacing))
 
            where the center of the grid is taken to be (0,0).
 
         2. Rebuild the grid using a particular rng and set the location of the center of the grid
            to be something other than the default (0,0)
 
-               g1, g2 = my_ps.buildGrid(grid_spacing = 8., ngrid = 65,
-                                        rng = galsim.BaseDeviate(1413231),
-                                        center = (256.5, 256.5) )
+                >>> g1, g2 = my_ps.buildGrid(grid_spacing = 8., ngrid = 65,
+                ...                          rng = galsim.BaseDeviate(1413231),
+                ...                          center = (256.5, 256.5) )
 
         3. Make a PowerSpectrum from a tabulated P(k) that gets interpolated to find the power at
            all necessary values of k, then generate shears and convergences on a grid, and convert
@@ -359,11 +359,11 @@ class PowerSpectrum(object):
            Assuming that k and P_k are either lists, tuples, or 1d Numpy arrays containing k and
            P(k):
 
-               tab_pk = galsim.LookupTable(k, P_k)
-               my_ps = galsim.PowerSpectrum(tab_pk)
-               g1, g2, kappa = my_ps.buildGrid(grid_spacing = 1., ngrid = 100,
-                                               get_convergence = True)
-               g1_r, g2_r, mu = galsim.lensing_ps.theoryToObserved(g1, g2, kappa)
+                >>> tab_pk = galsim.LookupTable(k, P_k)
+                >>> my_ps = galsim.PowerSpectrum(tab_pk)
+                >>> g1, g2, kappa = my_ps.buildGrid(grid_spacing = 1., ngrid = 100,
+                ...                                 get_convergence = True)
+                >>> g1_r, g2_r, mu = galsim.lensing_ps.theoryToObserved(g1, g2, kappa)
 
         @param grid_spacing     Spacing for an evenly spaced grid of points, by default in arcsec
                                 for consistency with the natural length scale of images created
@@ -957,22 +957,22 @@ class PowerSpectrum(object):
 
         1. Get the shear for a particular point:
 
-               g1, g2 = my_ps.getShear(pos = galsim.PositionD(12, 412))
+                >>> g1, g2 = my_ps.getShear(pos = galsim.PositionD(12, 412))
 
            This time the returned values are just floats and correspond to the shear for the
            provided position.
 
         2. You can also provide a position as a tuple to save the explicit PositionD construction:
 
-               g1, g2 = my_ps.getShear(pos = (12, 412))
+                >>> g1, g2 = my_ps.getShear(pos = (12, 412))
 
         3. Get the shears for a bunch of points at once:
         
-               xlist = [ 141, 313,  12, 241, 342 ]
-               ylist = [  75, 199, 306, 225, 489 ]
-               poslist = [ galsim.PositionD(xlist[i],ylist[i]) for i in range(len(xlist)) ]
-               g1, g2 = my_ps.getShear( poslist )
-               g1, g2 = my_ps.getShear( (xlist, ylist) )
+                >>> xlist = [ 141, 313,  12, 241, 342 ]
+                >>> ylist = [  75, 199, 306, 225, 489 ]
+                >>> poslist = [ galsim.PositionD(xlist[i],ylist[i]) for i in range(len(xlist)) ]
+                >>> g1, g2 = my_ps.getShear( poslist )
+                >>> g1, g2 = my_ps.getShear( (xlist, ylist) )
 
            Both calls do the same thing.  The returned g1, g2 this time are lists of g1, g2 values.
            The lists are the same length as the number of input positions.

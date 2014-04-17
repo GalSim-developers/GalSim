@@ -41,10 +41,10 @@ class DES_Shapelet(object):
 
     Typical usage:
         
-        des_shapelet = galsim.des.DES_Shapelet(fitpsf_file_name)
-        image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
-                                                          # NOT in arcsec on the sky!
-        psf = des_shapelet.getPSF(image_pos)   # profile is in world coordinates
+        >>> des_shapelet = galsim.des.DES_Shapelet(fitpsf_file_name)
+        >>> image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
+        >>>                                                   # NOT in arcsec on the sky!
+        >>> psf = des_shapelet.getPSF(image_pos)   # profile is in world coordinates
 
     Note that the returned psf here already includes the pixel.  This is what is sometimes
     called an "effective PSF".  Thus, you should not convolve by the pixel profile again
@@ -55,10 +55,10 @@ class DES_Shapelet(object):
     If you try to use it with an invalid position, it will throw an IndexError.
     You can check whether a position is valid with
 
-        if des_shapelet.bounds.includes(pos):
-            psf = des_shapelet.getPSF(pos)
-        else:
-            [...skip this object...]
+        >>> if des_shapelet.bounds.includes(pos):
+        >>>     psf = des_shapelet.getPSF(pos)
+        >>> else:
+        >>>     [...skip this object...]
 
 
     @param file_name        The name of the file to be read in.

@@ -24,22 +24,20 @@ http://stackoverflow.com/questions/4814970/subprocess-check-output-doesnt-seem-t
 
 To use it do the following:
 
-     import galsim.fds_test as fds
-
-     ...
-
-     try:
-        ... Code that might raise OSError ...
-     except OSError as e:
-        print 'Caught ',e
-        fds.printOpenFiles()
-        raise
+    >>> import galsim.fds_test as fds
+    >>> ...
+    >>> try:
+    >>>     [... Code that might raise OSError ...]
+    >>> except OSError as e:
+    >>>     print 'Caught ',e
+    >>>     fds.printOpenFiles()
+    >>>     raise
 
 Of course, you can also do fds.printOpenFiles() elsewhere too for information.
 
 You can also keep track of the number of open files and pipes with:
 
-    print 'files, pipes = ',fds.openFiles()
+    >>> print 'files, pipes = ',fds.openFiles()
 """
 
 

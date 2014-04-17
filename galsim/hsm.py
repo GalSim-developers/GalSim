@@ -264,14 +264,14 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
     The code below gives an example of how one could run this routine on a large batch of galaxies,
     explicitly catching and tracking any failures:
 
-        n_image = 100
-        n_fail = 0
-        for i=0, range(n_image):
-            #...some code defining this_image, this_final_epsf_image...
-            result = galsim.hsm.EstimateShear(this_image, this_final_epsf_image, strict = False)
-            if result.error_message != "":
-                n_fail += 1
-        print "Number of failures: ", n_fail
+        >>> n_image = 100
+        >>> n_fail = 0
+        >>> for i=0, range(n_image):
+        >>>     #...some code defining this_image, this_final_epsf_image...
+        >>>     result = galsim.hsm.EstimateShear(this_image, this_final_epsf_image, strict = False)
+        >>>     if result.error_message != "":
+        >>>         n_fail += 1
+        >>> print "Number of failures: ", n_fail
 
     @param gal_image        The Image of the galaxy being measured.
     @param PSF_image        The Image for the PSF.

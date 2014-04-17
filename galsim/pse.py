@@ -50,26 +50,29 @@ class PowerSpectrumEstimator(object):
     g2, though that is by no means required, and assuming that the user is sitting in the examples/
     directory):
 
-        # Define the total grid extent, in degrees
-        grid_size = 10.
-        # Define the number of grid points in each dimension, i.e., an N x N grid
-        ngrid = 100
-        # Choose the number of logarithmic bins in ell or k for outputs
-        n_ell = 15
-        # Define a lookup-table for the power spectrum as a function of k based on the outputs of
-        # iCosmo (see demo11.py for more description of how this was generated).
-        my_tab = galsim.LookupTable(file='data/cosmo-fid.zmed1.00.out')
-        # Generate a galsim.PowerSpectrum with this P(k), noting the units.
-        my_ps = galsim.PowerSpectrum(my_tab, units=galsim.radians)
-        # Build a grid of shear values with the desired parameters.
-        g1, g2 = my_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, units=galsim.degrees)
-        # Initialize a PowerSpectrumEstimator with the chosen grid geometry and number of ell bins.
-        # Note that these values are actually the default, so we didn't technically have to specify
-        # them.
-        my_pse = galsim.pse.PowerSpectrumEstimator(ngrid, grid_size, n_ell)
-        # Estimate the power based on this set of g1, g2.  If we get another set of shears for the
-        # same grid geometry, we can reuse the same PowerSpectrumEstimator object.
-        ell, P_e, P_b, P_eb = my_pse.estimate(g1, g2)
+        >>> grid_size = 10.  # Define the total grid extent, in degrees
+        >>> ngrid = 100      # Define the number of grid points in each dimension: (ngrid x ngrid)
+        >>> n_ell = 15       # Choose the number of logarithmic bins in ell or k for outputs
+        >>>
+        >>> # Define a lookup-table for the power spectrum as a function of k based on the outputs
+        >>> # of iCosmo (see demo11.py for more description of how this was generated).
+        >>> my_tab = galsim.LookupTable(file='data/cosmo-fid.zmed1.00.out')
+        >>>
+        >>> # Generate a galsim.PowerSpectrum with this P(k), noting the units.
+        >>> my_ps = galsim.PowerSpectrum(my_tab, units=galsim.radians)
+        >>>
+        >>> # Build a grid of shear values with the desired parameters.
+        >>> g1, g2 = my_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid,
+        ...                          units=galsim.degrees)
+        >>>
+        >>> # Initialize a PowerSpectrumEstimator with the chosen grid geometry and number of ell
+        >>> # bins. Note that these values are actually the default, so we didn't technically have
+        >>> # to specifythem.
+        >>> my_pse = galsim.pse.PowerSpectrumEstimator(ngrid, grid_size, n_ell)
+        >>>
+        >>> # Estimate the power based on this set of g1, g2.  If we get another set of shears for
+        >>> # the same grid geometry, we can reuse the same PowerSpectrumEstimator object.
+        >>> ell, P_e, P_b, P_eb = my_pse.estimate(g1, g2)
 
     The output NumPy arrays `ell`, `P_e`, `P_b`, and `P_eb` contain the effective ell value, the
     E-mode auto-power spectrum, the B-mode auto-power spectrum, and the EB cross-power spectrum.

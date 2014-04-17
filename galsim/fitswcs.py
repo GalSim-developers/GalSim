@@ -51,26 +51,26 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
     Astropy may be installed using pip, fink, or port:
 
-            pip install astropy
-            fink install astropy-py27
-            port install py27-astropy
+        >>> pip install astropy
+        >>> fink install astropy-py27
+        >>> port install py27-astropy
 
     It also comes by default with Enthought and Anaconda. For more information, see their website:
 
-            http://www.astropy.org/
+        http://www.astropy.org/
 
     Initialization
     --------------
     An AstropyWCS is initialized with one of the following commands:
 
-        wcs = galsim.AstropyWCS(file_name=file_name)  # Open a file on disk
-        wcs = galsim.AstropyWCS(header=header)        # Use an existing pyfits header
-        wcs = galsim.AstropyWCS(wcs=wcs)              # Use an existing astropy.wcs.WCS instance
+        >>> wcs = galsim.AstropyWCS(file_name=file_name)  # Open a file on disk
+        >>> wcs = galsim.AstropyWCS(header=header)        # Use an existing pyfits header
+        >>> wcs = galsim.AstropyWCS(wcs=wcs)              # Use an existing astropy.wcs.WCS instance
 
     Exactly one of the parameters `file_name`, `header` or `wcs` is required.  Also, since the most
     common usage will probably be the first, you can also give a `file_name` without it being named:
 
-        wcs = galsim.AstropyWCS(file_name)
+        >>> wcs = galsim.AstropyWCS(file_name)
 
     @param file_name      The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [default: None]
@@ -322,11 +322,11 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
 
     Starlink may be installed using pip:
 
-            pip install starlink-pyast
+        >>> pip install starlink-pyast
 
     For more information, see their website:
 
-            https://pypi.python.org/pypi/starlink-pyast/
+        https://pypi.python.org/pypi/starlink-pyast/
 
     Note: There were bugs in starlink.Ast prior to version 2.6, so if you have an earlier version,
     you should upgrade to at least 2.6.
@@ -335,15 +335,15 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
     --------------
     A PyAstWCS is initialized with one of the following commands:
 
-        wcs = galsim.PyAstWCS(file_name=file_name)  # Open a file on disk
-        wcs = galsim.PyAstWCS(header=header)        # Use an existing pyfits header
-        wcs = galsim.PyAstWCS(wcsinfo=wcsinfo)      # Use an existing starlink.Ast.FrameSet
+        >>> wcs = galsim.PyAstWCS(file_name=file_name)  # Open a file on disk
+        >>> wcs = galsim.PyAstWCS(header=header)        # Use an existing pyfits header
+        >>> wcs = galsim.PyAstWCS(wcsinfo=wcsinfo)      # Use an existing starlink.Ast.FrameSet
 
     Exactly one of the parameters `file_name`, `header` or `wcsinfo` is required.  Also, since the
     most common usage will probably be the first, you can also give a file name without it being
     named:
 
-        wcs = galsim.PyAstWCS(file_name)
+        >>> wcs = galsim.PyAstWCS(file_name)
 
     @param file_name      The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [default: None]
@@ -537,13 +537,13 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
 
     See their website for information on downloading and installing wcstools:
 
-            http://tdc-www.harvard.edu/software/wcstools/
+        http://tdc-www.harvard.edu/software/wcstools/
 
     Initialization
     --------------
     A WcsToolsWCS is initialized with the following command:
 
-        wcs = galsim.WcsToolsWCS(file_name)
+        >>> wcs = galsim.WcsToolsWCS(file_name)
 
     @param file_name      The FITS file from which to read the WCS information.
     @param dir            Optional directory to prepend to `file_name`. [default: None]
@@ -791,13 +791,13 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
     --------------
     A GSFitsWCS is initialized with one of the following commands:
 
-        wcs = galsim.GSFitsWCS(file_name=file_name)  # Open a file on disk
-        wcs = galsim.GSFitsWCS(header=header)        # Use an existing pyfits header
+        >>> wcs = galsim.GSFitsWCS(file_name=file_name)  # Open a file on disk
+        >>> wcs = galsim.GSFitsWCS(header=header)        # Use an existing pyfits header
 
     Also, since the most common usage will probably be the first, you can also give a file name 
     without it being named:
 
-        wcs = galsim.GSFitsWCS(file_name)
+        >>> wcs = galsim.GSFitsWCS(file_name)
 
     In addition to reading from a FITS file, there is also a factory function that builds
     a GSFitsWCS object implementing a TAN projection.  See the docstring of TanWCS() for

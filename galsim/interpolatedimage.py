@@ -93,13 +93,13 @@ class InterpolatedImage(GSObject):
     compare `im1` and `im2` from the following code snippet (which can be executed from the
     examples/ directory):
 
-        image = galsim.fits.read('data/147246.0_150.416558_1.998697_masknoise.fits')
-        int_im1 = galsim.InterpolatedImage(image)
-        int_im2 = galsim.InterpolatedImage(image, noise_pad='data/blankimg.fits')
-        im1 = galsim.ImageF(1000,1000)
-        im2 = galsim.ImageF(1000,1000)
-        int_im1.draw(im1)
-        int_im2.draw(im2)
+        >>> image = galsim.fits.read('data/147246.0_150.416558_1.998697_masknoise.fits')
+        >>> int_im1 = galsim.InterpolatedImage(image)
+        >>> int_im2 = galsim.InterpolatedImage(image, noise_pad='data/blankimg.fits')
+        >>> im1 = galsim.ImageF(1000,1000)
+        >>> im2 = galsim.ImageF(1000,1000)
+        >>> int_im1.draw(im1)
+        >>> int_im2.draw(im2)
 
     Examination of these two images clearly shows how padding with a correlated noise field that is
     similar to the one in the real data leads to a more reasonable appearance for the result when

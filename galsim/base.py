@@ -55,10 +55,10 @@ class GSObject(object):
     A GSObject is not intended to be constructed directly.  Normally, you would use whatever
     derived class is appropriate for the surface brightness profile you want:
 
-        gal = galsim.Sersic(n=4, half_light_radius=4.3)
-        psf = galsim.Moffat(beta=3, fwhm=2.85)
-        pix = galsim.Pixel(scale=0.2)
-        conv = galsim.Convolve([gal,psf,pix])
+        >>> gal = galsim.Sersic(n=4, half_light_radius=4.3)
+        >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
+        >>> pix = galsim.Pixel(scale=0.2)
+        >>> conv = galsim.Convolve([gal,psf,pix])
 
     All of these classes are subclasses of GSObject, so you should see those docstrings for
     more details about how to construct the various profiles.
@@ -80,15 +80,15 @@ class GSObject(object):
     In all cases below, we just give an example usage.  See the docstrings for the methods for
     more details about how to use them.
 
-        obj = obj.shear(shear)      # Apply a shear to the object.
-        obj = obj.dilate(scale)     # Apply a flux-preserving dilation.
-        obj = obj.magnify(mu)       # Apply a surface-brightness-preserving magnification.
-        obj = obj.rotate(theta)     # Apply a rotation.
-        obj = obj.shift(dx,dy)      # Shft the object in real space.
-        obj = obj.transform(dudx,dudy,dvdx,dvdy)    # Apply a general jacobian transformation.
-        obj = obj.lens(g1,g2,mu)    # Apply both a lensing shear and magnification.
-        obj = obj.withFlux(flux)    # Set a new flux value.
-        obj = obj * ratio           # Scale the surface brightness profile by some factor.
+        >>> obj = obj.shear(shear)      # Apply a shear to the object.
+        >>> obj = obj.dilate(scale)     # Apply a flux-preserving dilation.
+        >>> obj = obj.magnify(mu)       # Apply a surface-brightness-preserving magnification.
+        >>> obj = obj.rotate(theta)     # Apply a rotation.
+        >>> obj = obj.shift(dx,dy)      # Shft the object in real space.
+        >>> obj = obj.transform(dudx,dudy,dvdx,dvdy)    # Apply a general jacobian transformation.
+        >>> obj = obj.lens(g1,g2,mu)    # Apply both a lensing shear and magnification.
+        >>> obj = obj.withFlux(flux)    # Set a new flux value.
+        >>> obj = obj * ratio           # Scale the surface brightness profile by some factor.
 
     [1]: Technically, there are some methods that do modify the object directly.  However, these
     methods are only present for backwards compatibitility with previous versions of GalSim,
@@ -101,30 +101,30 @@ class GSObject(object):
     There are some access methods that are available for all GSObjects.  Again, see the docstrings
     for each method for more details.
 
-        flux = obj.getFlux()
-        centroid = obj.centroid()
-        f_xy = obj.xValue(x,y)
-        fk_xy = obj.kValue(kx,ky)
-        nyq = obj.nyquistScale()
-        stepk = obj.stepK()
-        maxk = obj.maxK()
-        hard = obj.hasHardEdges()
-        axisym = obj.isAxisymmetric()
-        analytic = obj.isAnalyticX()
+        >>> flux = obj.getFlux()
+        >>> centroid = obj.centroid()
+        >>> f_xy = obj.xValue(x,y)
+        >>> fk_xy = obj.kValue(kx,ky)
+        >>> nyq = obj.nyquistScale()
+        >>> stepk = obj.stepK()
+        >>> maxk = obj.maxK()
+        >>> hard = obj.hasHardEdges()
+        >>> axisym = obj.isAxisymmetric()
+        >>> analytic = obj.isAnalyticX()
 
     Most subclasses have additional methods that are available for values that are particular to
     that specific surface brightness profile.  e.g. `sigma = gauss.getSigma()`.  However, note
     that class-specific methods are not available after performing one of the above transforming
     operations.
 
-        gal = galsim.Gaussian(sigma=5)
-        gal = gal.shear(g1=0.2, g2=0.05)
-        sigma = gal.getSigma()              # This will raise an exception.
+        >>> gal = galsim.Gaussian(sigma=5)
+        >>> gal = gal.shear(g1=0.2, g2=0.05)
+        >>> sigma = gal.getSigma()              # This will raise an exception.
 
     It is however possible to access the original object that was transformed via the 
     `original` attribute.  
 
-        sigma = gal.original.getSigma()     # This works.
+        >>> sigma = gal.original.getSigma()     # This works.
 
     No matter how many transformations are performed, the `original` attribute will contain the
     _original_ object (not necessarily the most recent ancestor).
@@ -136,9 +136,9 @@ class GSObject(object):
     There are three methods that do this.  In all cases, there are lots of optional parameters.
     See the docstrings for these methods for more details.
 
-        image = obj.draw()
-        image = obj.drawShoot()
-        kimage_r, kimage_i = obj.drawK()
+        >>> image = obj.draw()
+        >>> image = obj.drawShoot()
+        >>> kimage_r, kimage_i = obj.drawK()
 
     Attributes
     ----------
@@ -677,7 +677,7 @@ class GSObject(object):
         Note that this function is similar to expand in that it preserves surface brightness,
         not flux.  If you want to preserve flux, you should also do
 
-            prof *= 1./abs(dudx*dvdy - dudy*dvdx)
+            >>> prof *= 1./abs(dudx*dvdy - dudy*dvdx)
 
         @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
@@ -962,8 +962,8 @@ class GSObject(object):
         flux added to the image.  This may be useful as a sanity check that you have provided a
         large enough image to catch most of the flux.  For example:
 
-            obj.draw(image)
-            assert image.added_flux > 0.99 * obj.getFlux()
+            >>> obj.draw(image)
+            >>> assert image.added_flux > 0.99 * obj.getFlux()
 
         The appropriate threshold will depend on your particular application, including what kind
         of profile the object has, how big your image is relative to the size of your object, etc.
@@ -1112,8 +1112,8 @@ class GSObject(object):
         flux of photons that landed inside the image bounds.  This may be useful as a sanity check
         that you have provided a large enough image to catch most of the flux.  For example:
 
-            obj.drawShoot(image)
-            assert image.added_flux > 0.99 * obj.getFlux()
+            >>> obj.drawShoot(image)
+            >>> assert image.added_flux > 0.99 * obj.getFlux()
 
         The appropriate threshold will depend on your particular application, including what kind
         of profile the object has, how big your image is relative to the size of your object,
@@ -1403,9 +1403,9 @@ class Gaussian(GSObject):
 
     In addition to the usual GSObject methods, Gaussian has the following access methods:
 
-        sigma = gauss.getSigma()
-        fwhm = gauss.getFWHM()
-        hlr = gauss.getHalfLightRadius()
+        >>> sigma = gauss.getSigma()
+        >>> fwhm = gauss.getFWHM()
+        >>> hlr = gauss.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information, to indicate
@@ -1481,10 +1481,10 @@ class Moffat(GSObject):
 
     In addition to the usual GSObject methods, Moffat has the following access methods:
 
-        beta = moffat_obj.getBeta()
-        rD = moffat_obj.getScaleRadius()
-        fwhm = moffat_obj.getFWHM()
-        hlr = moffat_obj.getHalfLightRadius()
+        >>> beta = moffat_obj.getBeta()
+        >>> rD = moffat_obj.getScaleRadius()
+        >>> fwhm = moffat_obj.getFWHM()
+        >>> hlr = moffat_obj.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information
@@ -1558,9 +1558,9 @@ class Airy(GSObject):
 
     In addition to the usual GSObject methods, Airy has the following access methods:
 
-        lam_over_diam = airy_obj.getLamOverD()
-        fwhm = airy_obj.getFWHM()
-        hlr = airy_obj.getHalfLightRadius()
+        >>> lam_over_diam = airy_obj.getLamOverD()
+        >>> fwhm = airy_obj.getFWHM()
+        >>> hlr = airy_obj.getHalfLightRadius()
 
     The latter two are only available if the obscuration is 0.
     """
@@ -1658,9 +1658,9 @@ class Kolmogorov(GSObject):
 
     In addition to the usual GSObject methods, Kolmogorov has the following access methods:
 
-        lam_over_r0 = kolm.getLamOverR0()
-        fwhm = kolm.getFWHM()
-        hlr = kolm.getHalfLightRadius()
+        >>> lam_over_r0 = kolm.getLamOverR0()
+        >>> fwhm = kolm.getFWHM()
+        >>> hlr = kolm.getHalfLightRadius()
     """
 
     # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
@@ -1739,7 +1739,7 @@ class Pixel(GSObject):
 
     In addition to the usual GSObject methods, Pixel has the following access method:
 
-        scale = pixel.getScale()
+        >>> scale = pixel.getScale()
 
     Note: We have not implemented drawing a sheared or rotated Pixel in real space.  It's a
           bit tricky to get right at the edges where fractional fluxes are required.
@@ -1785,8 +1785,8 @@ class Box(GSObject):
 
     In addition to the usual GSObject methods, Box has the following access methods:
 
-        width = box.getWidth()
-        height = box.getHeight()
+        >>> width = box.getWidth()
+        >>> height = box.getHeight()
 
     Note: We have not implemented drawing a sheared or rotated Box in real space.  It's a
           bit tricky to get right at the edges where fractional fluxes are required.
@@ -1970,9 +1970,9 @@ class Sersic(GSObject):
 
     In addition to the usual GSObject methods, Sersic has the following access methods:
 
-        n = sersic_obj.getN()
-        r0 = sersic_obj.getScaleRadius()
-        hlr = sersic_obj.getHalfLightRadius()
+        >>> n = sersic_obj.getN()
+        >>> r0 = sersic_obj.getScaleRadius()
+        >>> hlr = sersic_obj.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information
@@ -2033,8 +2033,8 @@ class Exponential(GSObject):
 
     In addition to the usual GSObject methods, Exponential has the following access methods:
 
-        r0 = exp_obj.getScaleRadius()
-        hlr = exp_obj.getHalfLightRadius()
+        >>> r0 = exp_obj.getScaleRadius()
+        >>> hlr = exp_obj.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information
@@ -2099,8 +2099,8 @@ class DeVaucouleurs(GSObject):
 
     In addition to the usual GSObject methods, DeVaucouleurs has the following access methods:
 
-        r0 = devauc_obj.getScaleRadius()
-        hlr = devauc_obj.getHalfLightRadius()
+        >>> r0 = devauc_obj.getScaleRadius()
+        >>> hlr = devauc_obj.getHalfLightRadius()
     """
 
     # Initialization parameters of the object, with type information

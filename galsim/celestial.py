@@ -35,7 +35,7 @@ class CelestialCoord(object):
 
     The distance between two coordinate positions can be calculated with
 
-            d = coord.distanceTo(other_coord)
+        >>> d = coord.distanceTo(other_coord)
 
     There are several tangent plane projections you can use:
         - a Lambert projection, which preserves area
@@ -47,8 +47,8 @@ class CelestialCoord(object):
     You can also precess a coordinate from one epoch to another and get galactic coordinates
     with, e.g.
 
-            coord1950 = coord2000.precess(2000, 1950)
-            el, b = coord.galactic()
+        >>> coord1950 = coord2000.precess(2000, 1950)
+        >>> el, b = coord.galactic()
 
     We don't use either of these for anything within GalSim, but I had the code to do it
     lying around, so I included it here in case someone might find it useful.
@@ -57,7 +57,7 @@ class CelestialCoord(object):
     --------------
     A CelestialCoord object is initialized with the following command:
 
-        coord = galsim.CelestialCoord(ra, dec)
+        >>> coord = galsim.CelestialCoord(ra, dec)
 
     @param ra       The right ascension.  Must be an Angle object.
     @param dec      The declination.  Must be an Angle object.
