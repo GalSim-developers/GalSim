@@ -32,30 +32,33 @@ class Cosmology(object):
 
     Based on Matthias Bartelmann's libastro.
 
-    @param omega_m    Present day energy density of matter relative to critical density.
-    @param omega_lam  Present day density of Dark Energy relative to critical density.
+    @param omega_m      Present day energy density of matter relative to critical density.
+                        [default: 0.3]
+    @param omega_lam    Present day density of Dark Energy relative to critical density.
+                        [default: 0.7]
     """
     def __init__(self, omega_m=0.3, omega_lam=0.7):
         # no quintessence, no radiation in this universe!
         self.omega_m = omega_m
         self.omega_lam = omega_lam
         self.omega_c = (1. - omega_m - omega_lam)
-        self.omega_r = 0
+        #self.omega_r = 0
     
     def a(self, z):
         """Compute scale factor.
 
-        @param z Redshift
+        @param z    Redshift
         """
         return 1./(1+z)
 
     def E(self, a):
         """Evaluates expansion function.
 
-        @param a Scale factor.
+        @param a    Scale factor.
         """
-        return (self.omega_r*a**(-4) + self.omega_m*a**(-3) + self.omega_c*a**(-2) + \
-                self.omega_lam)**0.5
+        #return (self.omega_r*a**(-4) + self.omega_m*a**(-3) + self.omega_c*a**(-2) + \
+        #        self.omega_lam)**0.5
+        return (self.omega_m*a**(-3) + self.omega_c*a**(-2) + self.omega_lam)**0.5
 
     def __angKernel(self, x):
         """Integration kernel for angular diameter distance computation.
@@ -67,8 +70,8 @@ class Cosmology(object):
 
         In order to get the distance in Mpc/h, multiply by c/H0~3000.
 
-        @param z     Redshift.
-        @param z_ref Reference redshift, with z_ref <= z.
+        @param z        Redshift.
+        @param z_ref    Reference redshift, with z_ref <= z. [default: 0]
         """
         if isinstance(z, np.ndarray):
             da = np.zeros_like(z)
@@ -104,14 +107,14 @@ class NFWHalo(object):
     If only one of the latter is provided, the other is taken to be one minus that.
     If no cosmology parameters are set, a default Cosmology is constructed.
 
-    @param mass       Mass defined using a spherical overdensity of 200 times the critical density
-                      of the universe, in units of M_solar/h.
-    @param conc       Concentration parameter, i.e., ratio of virial radius to NFW scale radius.
-    @param redshift   Redshift of the halo.
-    @param halo_pos   Position of halo center (in arcsec). [default: PositionD(0,0)]
-    @param omega_m    Omega_matter to pass to Cosmology constructor. [default: None]
-    @param omega_lam  Omega_lambda to pass to Cosmology constructor. [default: None]
-    @param cosmo      A Cosmology instance. [default: None]
+    @param mass         Mass defined using a spherical overdensity of 200 times the critical density
+                        of the universe, in units of M_solar/h.
+    @param conc         Concentration parameter, i.e., ratio of virial radius to NFW scale radius.
+    @param redshift     Redshift of the halo.
+    @param halo_pos     Position of halo center (in arcsec). [default: PositionD(0,0)]
+    @param omega_m      Omega_matter to pass to Cosmology constructor. [default: None]
+    @param omega_lam    Omega_lambda to pass to Cosmology constructor. [default: None]
+    @param cosmo        A Cosmology instance. [default: None]
     """
     _req_params = { 'mass' : float , 'conc' : float , 'redshift' : float }
     _opt_params = { 'halo_pos' : galsim.PositionD , 'omega_m' : float , 'omega_lam' : float }
@@ -203,9 +206,9 @@ class NFWHalo(object):
     def __kappa(self, x, ks, out=None):
         """Calculate convergence of halo.
 
-        @param x   Radial coordinate in units of rs (scale radius of halo), i.e., `x=r/rs`.
-        @param ks  Lensing strength prefactor.
-        @param out Numpy array into which results should be placed.
+        @param x        Radial coordinate in units of rs (scale radius of halo), i.e., `x=r/rs`.
+        @param ks       Lensing strength prefactor.
+        @param out      NumPy array into which results should be placed. [default: None]
         """
         # convenience: call with single number
         if isinstance(x, np.ndarray) == False:
@@ -237,9 +240,9 @@ class NFWHalo(object):
     def __gamma(self, x, ks, out=None):
         """Calculate tangential shear of halo.
 
-        @param x   Radial coordinate in units of rs (scale radius of halo), i.e., `x=r/rs`.
-        @param ks  Lensing strength prefactor.
-        @param out Numpy array into which results should be placed
+        @param x        Radial coordinate in units of rs (scale radius of halo), i.e., `x=r/rs`.
+        @param ks       Lensing strength prefactor.
+        @param out      NumPy array into which results should be placed. [default: None]
         """
         # convenience: call with single number
         if isinstance(x, np.ndarray) == False:
@@ -280,19 +283,20 @@ class NFWHalo(object):
     def getShear(self, pos, z_s, units=galsim.arcsec, reduced=True):
         """Calculate (reduced) shear of halo at specified positions.
 
-        @param pos       Position(s) of the source(s), assumed to be post-lensing!
-                         Valid ways to input this:
-                           - Single PositionD (or PositionI) instance
-                           - tuple of floats: (x,y)
-                           - list of PositionD (or PositionI) instances
-                           - tuple of lists: ( xlist, ylist )
-                           - NumPy array of PositionD (or PositionI) instances
-                           - tuple of NumPy arrays: ( xarray, yarray )
-                           - Multidimensional NumPy array, as long as array[0] contains
-                             x-positions and array[1] contains y-positions
-        @param z_s       Source redshift(s).
-        @param units     Angular units of coordinates. [default: arcsec]
-        @param reduced   Whether returned shear(s) should be reduced shears. [default: True]
+        @param pos          Position(s) of the source(s), assumed to be post-lensing!
+                            Valid ways to input this:
+                                - Single PositionD (or PositionI) instance
+                                - tuple of floats: (x,y)
+                                - list of PositionD (or PositionI) instances
+                                - tuple of lists: ( xlist, ylist )
+                                - NumPy array of PositionD (or PositionI) instances
+                                - tuple of NumPy arrays: ( xarray, yarray )
+                                - Multidimensional NumPy array, as long as array[0] contains
+                                  x-positions and array[1] contains y-positions
+        @param z_s          Source redshift(s).
+        @param units        Angular units of coordinates (only arcsec implemented so far).
+                            [default: galsim.arcsec]
+        @param reduced      Whether returned shear(s) should be reduced shears. [default: True]
 
         @returns the reduced shears as a tuple `(g1,g2)`, which match the format of the input `pos`.
         """
@@ -338,18 +342,19 @@ class NFWHalo(object):
     def getConvergence(self, pos, z_s, units=galsim.arcsec):
         """Calculate convergence of halo at specified positions.
 
-        @param pos     Position(s) of the source(s), assumed to be post-lensing!
-                       Valid ways to input this:
-                         - Single PositionD (or PositionI) instance
-                         - tuple of floats: (x,y)
-                         - list of PositionD (or PositionI) instances
-                         - tuple of lists: ( xlist, ylist )
-                         - NumPy array of PositionD (or PositionI) instances
-                         - tuple of NumPy arrays: ( xarray, yarray )
-                         - Multidimensional NumPy array, as long as array[0] contains
-                           x-positions and array[1] contains y-positions
-        @param z_s     Source redshift(s).
-        @param units   Angular units of coordinates. [default: arcsec]
+        @param pos          Position(s) of the source(s), assumed to be post-lensing!
+                            Valid ways to input this:
+                                - Single PositionD (or PositionI) instance
+                                - tuple of floats: (x,y)
+                                - list of PositionD (or PositionI) instances
+                                - tuple of lists: ( xlist, ylist )
+                                - NumPy array of PositionD (or PositionI) instances
+                                - tuple of NumPy arrays: ( xarray, yarray )
+                                - Multidimensional NumPy array, as long as array[0] contains
+                                  x-positions and array[1] contains y-positions
+        @param z_s          Source redshift(s).
+        @param units        Angular units of coordinates (only arcsec implemented so far).
+                            [default: galsim.arcsec]
 
         @returns the convergence, `kappa`, which matches the format of the input `pos`.
         """
@@ -380,18 +385,19 @@ class NFWHalo(object):
     def getMagnification(self, pos, z_s, units=galsim.arcsec):
         """Calculate magnification of halo at specified positions.
 
-        @param pos     Position(s) of the source(s), assumed to be post-lensing!
-                       Valid ways to input this:
-                         - Single PositionD (or PositionI) instance
-                         - tuple of floats: (x,y)
-                         - list of PositionD (or PositionI) instances
-                         - tuple of lists: ( xlist, ylist )
-                         - NumPy array of PositionD (or PositionI) instances
-                         - tuple of NumPy arrays: ( xarray, yarray )
-                         - Multidimensional NumPy array, as long as array[0] contains
-                           x-positions and array[1] contains y-positions
-        @param z_s     Source redshift(s).
-        @param units   Angular units of coordinates (only arcsec implemented so far).
+        @param pos          Position(s) of the source(s), assumed to be post-lensing!
+                            Valid ways to input this:
+                                - Single PositionD (or PositionI) instance
+                                - tuple of floats: (x,y)
+                                - list of PositionD (or PositionI) instances
+                                - tuple of lists: ( xlist, ylist )
+                                - NumPy array of PositionD (or PositionI) instances
+                                - tuple of NumPy arrays: ( xarray, yarray )
+                                - Multidimensional NumPy array, as long as array[0] contains
+                                  x-positions and array[1] contains y-positions
+        @param z_s          Source redshift(s).
+        @param units        Angular units of coordinates (only arcsec implemented so far).
+                            [default: galsim.arcsec]
 
         @returns the magnification `mu`, which matches the format of the input `pos`.
         """
@@ -424,18 +430,19 @@ class NFWHalo(object):
     def getLensing(self, pos, z_s, units=galsim.arcsec):
         """Calculate lensing shear and magnification of halo at specified positions.
 
-        @param pos         Position(s) of the source(s), assumed to be post-lensing!
-                           Valid ways to input this:
-                             - Single PositionD (or PositionI) instance
-                             - tuple of floats: (x,y)
-                             - list of PositionD (or PositionI) instances
-                             - tuple of lists: ( xlist, ylist )
-                             - NumPy array of PositionD (or PositionI) instances
-                             - tuple of NumPy arrays: ( xarray, yarray )
-                             - Multidimensional NumPy array, as long as array[0] contains
-                               x-positions and array[1] contains y-positions
-        @param z_s         Source redshift(s).
-        @param units       Angular units of coordinates (only arcsec implemented so far).
+        @param pos          Position(s) of the source(s), assumed to be post-lensing!
+                            Valid ways to input this:
+                                - Single PositionD (or PositionI) instance
+                                - tuple of floats: (x,y)
+                                - list of PositionD (or PositionI) instances
+                                - tuple of lists: ( xlist, ylist )
+                                - NumPy array of PositionD (or PositionI) instances
+                                - tuple of NumPy arrays: ( xarray, yarray )
+                                - Multidimensional NumPy array, as long as array[0] contains
+                                  x-positions and array[1] contains y-positions
+        @param z_s          Source redshift(s).
+        @param units        Angular units of coordinates (only arcsec implemented so far).
+                            [default: galsim.arcsec]
 
         @returns the reduced shears and magnifications as a tuple `(g1,g2,mu)`, which match the
                  format of the input `pos`.
