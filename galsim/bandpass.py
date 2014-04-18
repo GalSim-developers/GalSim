@@ -272,7 +272,7 @@ class Bandpass(object):
         @returns the dimensionless throughput.
         """
         # figure out what we received, and return the same thing
-        # option 1: a Numpy array
+        # option 1: a NumPy array
         if isinstance(wave, numpy.ndarray):
             wgood = (wave >= self.blue_limit) & (wave <= self.red_limit)
             ret = numpy.zeros(wave.shape, dtype=numpy.float)

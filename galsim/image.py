@@ -280,7 +280,7 @@ class Image(object):
             if image != None:
                 raise TypeError("Cannot specify both array and image")
             if not isinstance(array, numpy.ndarray):
-                raise TypeError("array must be a numpy ndarray instance")
+                raise TypeError("array must be a numpy.ndarray instance")
             if make_const:
                 self.image = _galsim.ConstImageView[self.dtype](array, xmin, ymin)
             else:

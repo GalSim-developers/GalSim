@@ -1259,7 +1259,7 @@ class JacobianWCS(LocalWCS):
         v = dvdx x + dvdy y
 
     A JacobianWCS has attributes dudx, dudy, dvdx, dvdy that you can access directly if that 
-    is convenient.  You can also access these as a numpy matrix directly with 
+    is convenient.  You can also access these as a NumPy matrix directly with 
 
         >>> J = jac_wcs.getMatrix()
 
@@ -1340,7 +1340,7 @@ class JacobianWCS(LocalWCS):
         return abs(self._det)
 
     def getMatrix(self):
-        """Get the Jacobian as a numpy matrix:
+        """Get the Jacobian as a NumPy matrix:
 
                 numpy.matrix( [[ dudx, dudy ],
                                [ dvdx, dvdy ]] )
@@ -1825,7 +1825,7 @@ class AffineTransform(UniformWCS):
 #
 #     _radec            function returning (ra, dec) in _radians_ at position (x,y)
 #
-# Ideally, the above functions would work with numpy arrays as inputs.
+# Ideally, the above functions would work with NumPy arrays as inputs.
 #
 #########################################################################################
 
@@ -1963,7 +1963,7 @@ class UVFunction(EuclideanWCS):
     These are not required, but if you do not provide them, then any operation that requires 
     going from world to image coordinates will raise a NotImplementedError.
 
-    Note: some internal calculations will be faster if the functions can take numpy arrays
+    Note: some internal calculations will be faster if the functions can take NumPy arrays
     for x,y and output arrays for u,v.  Usually this does not require any change to your 
     function, but it is worth keeping in mind.  For example, if you want to do a sqrt, you 
     may be better off using `numpy.sqrt` rather than `math.sqrt`.
@@ -2134,8 +2134,8 @@ class RaDecFunction(CelestialWCS):
     The functions should return a tuple of ( ra , dec ) in _radians_.
     
     We don't want a function that returns Angles, because we want to allow for the 
-    possibility of using numpy arrays as inputs and outputs to speed up some calculations.  The 
-    function isn't _required_ to work with numpy arrays, but it is possible that some things 
+    possibility of using NumPy arrays as inputs and outputs to speed up some calculations.  The 
+    function isn't _required_ to work with NumPy arrays, but it is possible that some things 
     will be faster if it does.  If it were expected to return Angles, then it definitely
     couldn't work with arrays.
 

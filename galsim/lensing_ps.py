@@ -34,7 +34,7 @@ def theoryToObserved(gamma1, gamma2, kappa):
 
     @param gamma1       The first shear component, which must be the NON-reduced shear.  This and
                         all other inputs should be supplied either as individual floating point
-                        numbers, tuples, lists, or Numpy arrays.
+                        numbers, tuples, lists, or NumPy arrays.
     @param gamma2       The second (x) shear component, which must be the NON-reduced shear.
     @param kappa        The convergence.
 
@@ -147,7 +147,7 @@ class PowerSpectrum(object):
     consistent).  If the `delta2` keyword is set to specify that the input is actually the
     dimensionless power Delta^2, then the input `units` are taken to apply only to the k values.
 
-    @param e_power_function A function or other callable that accepts a Numpy array of |k| values,
+    @param e_power_function A function or other callable that accepts a NumPy array of |k| values,
                             and returns the E-mode power spectrum P_E(|k|) in an array of the same
                             shape.  The function should return the power spectrum desired in the E
                             (gradient) mode of the image.
@@ -160,7 +160,7 @@ class PowerSpectrum(object):
                             might be more natural for power-law functions) should instead read in
                             the file to create a LookupTable using the necessary non-default
                             settings. [default: None, which means no E-mode power.]
-    @param b_power_function A function or other callable that accepts a Numpy array of |k| values,
+    @param b_power_function A function or other callable that accepts a NumPy array of |k| values,
                             and returns the B-mode power spectrum P_B(|k|) in an array of the same
                             shape.  The function should return the power spectrum desired in the B
                             (curl) mode of the image.  See description of `e_power_function` for
@@ -332,7 +332,7 @@ class PowerSpectrum(object):
                 >>> my_ps = galsim.PowerSpectrum(lambda k : k**2)
                 >>> g1, g2 = my_ps.buildGrid(grid_spacing = 1., ngrid = 100)
 
-           The returned g1, g2 are 2-d numpy arrays of values, corresponding to the values of
+           The returned g1, g2 are 2-d NumPy arrays of values, corresponding to the values of
            g1 and g2 at the locations of the grid points.
 
            For a given value of `grid_spacing` and `ngrid`, we could get the x and y values on the
@@ -356,7 +356,7 @@ class PowerSpectrum(object):
         3. Make a PowerSpectrum from a tabulated P(k) that gets interpolated to find the power at
            all necessary values of k, then generate shears and convergences on a grid, and convert
            to reduced shear and magnification so they can be used to transform galaxy images.
-           Assuming that k and P_k are either lists, tuples, or 1d Numpy arrays containing k and
+           Assuming that k and P_k are either lists, tuples, or 1d NumPy arrays containing k and
            P(k):
 
                 >>> tab_pk = galsim.LookupTable(k, P_k)

@@ -322,7 +322,7 @@ class NFWHalo(object):
         g2 = -g*sin2phi
 
         # Make outputs in proper format: be careful here, we want consistent inputs and outputs
-        # (e.g., if given a Numpy array, return one as well).  But don't attempt to index "pos"
+        # (e.g., if given a NumPy array, return one as well).  But don't attempt to index "pos"
         # until you know that it can be indexed, i.e., that it's not just a single PositionD,
         # because then bad things will happen (TypeError).
         if isinstance(pos, galsim.PositionD):
@@ -365,7 +365,7 @@ class NFWHalo(object):
         kappa = self.__kappa(r, ks)
 
         # Make outputs in proper format: be careful here, we want consistent inputs and outputs
-        # (e.g., if given a Numpy array, return one as well).  But don't attempt to index "pos"
+        # (e.g., if given a NumPy array, return one as well).  But don't attempt to index "pos"
         # until you know that it can be indexed, i.e., that it's not just a single PositionD,
         # because then bad things will happen (TypeError).
         if isinstance(pos, galsim.PositionD):
@@ -409,7 +409,7 @@ class NFWHalo(object):
         mu = 1. / ( (1.-kappa)**2 - g**2 )
 
         # Make outputs in proper format: be careful here, we want consistent inputs and outputs
-        # (e.g., if given a Numpy array, return one as well).  But don't attempt to index "pos"
+        # (e.g., if given a NumPy array, return one as well).  But don't attempt to index "pos"
         # until you know that it can be indexed, i.e., that it's not just a single PositionD,
         # because then bad things will happen (TypeError).
         if isinstance(pos, galsim.PositionD):
@@ -464,7 +464,7 @@ class NFWHalo(object):
         g2 = -g*sin2phi
 
         # Make outputs in proper format: be careful here, we want consistent inputs and outputs
-        # (e.g., if given a Numpy array, return one as well).  But don't attempt to index "pos"
+        # (e.g., if given a NumPy array, return one as well).  But don't attempt to index "pos"
         # until you know that it can be indexed, i.e., that it's not just a single PositionD,
         # because then bad things will happen (TypeError).
         if isinstance(pos, galsim.PositionD):

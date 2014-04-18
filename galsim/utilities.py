@@ -24,9 +24,9 @@ import numpy as np
 import galsim
 
 def roll2d(image, (iroll, jroll)):
-    """Perform a 2D roll (circular shift) on a supplied 2D numpy array, conveniently.
+    """Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.
 
-    @param image            The numpy array to be circular shifted.
+    @param image            The NumPy array to be circular shifted.
     @param (iroll, jroll)   The roll in the i and j dimensions, respectively.
 
     @returns the rolled image.
@@ -44,11 +44,11 @@ def kxky(array_shape=(256, 256)):
     See also the docstring for np.fftfreq, which uses the same DFT convention, and is called here,
     but misses a factor of pi.
     
-    Adopts Numpy array index ordering so that the trailing axis corresponds to `kx`, rather than the
+    Adopts NumPy array index ordering so that the trailing axis corresponds to `kx`, rather than the
     leading axis as would be expected in IDL/Fortran.  See docstring for numpy.meshgrid which also
     uses this convention.
 
-    @param array_shape   The Numpy array shape desired for `kx, ky`.
+    @param array_shape   The NumPy array shape desired for `kx, ky`.
     """
     # Note: numpy shape is y,x
     k_xaxis = np.fft.fftfreq(array_shape[1]) * 2. * np.pi
@@ -226,12 +226,12 @@ def rand_arr(shape, deviate):
     @param deviate      Any GalSim deviate (see random.py) such as UniformDeviate, GaussianDeviate,
                         etc. to be used to generate random numbers
 
-    @returns a Numpy array of the desired dimensions with random numbers generated using the
+    @returns a NumPy array of the desired dimensions with random numbers generated using the
     supplied deviate.
     """
     if len(shape) is not 2:
         raise ValueError("Can only make a 2d array from this function!")
-    # note reversed indices due to Numpy vs. Image array indexing conventions!
+    # note reversed indices due to NumPy vs. Image array indexing conventions!
     tmp_img = galsim.ImageD(shape[1], shape[0])
     tmp_img.addNoise(galsim.DeviateNoise(deviate))
     return tmp_img.array
@@ -946,7 +946,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
 
 # A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
 def _convertPositions(pos, units, func):
-    """Convert `pos` from the valid ways to input positions to two numpy arrays
+    """Convert `pos` from the valid ways to input positions to two NumPy arrays
 
        This is used by the functions getShear(), getConvergence(), getMagnification(), and
        getLensing() for both PowerSpectrum and NFWHalo.
@@ -999,8 +999,8 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     Remove items from a set of tabulated f(x) values so that the error in the integral is still 
     accurate to a given relative accuracy.
 
-    The input `x,f` values can be lists, numpy arrays, or really anything that can be converted
-    to a numpy array.  The new lists will be output as python lists.
+    The input `x,f` values can be lists, NumPy arrays, or really anything that can be converted
+    to a NumPy array.  The new lists will be output as python lists.
 
     @param x                The `x` values in the f(x) tabulation.
     @param f                The `f` values in the f(x) tabulation.

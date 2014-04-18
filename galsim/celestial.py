@@ -247,8 +247,8 @@ class CelestialCoord(object):
 
         Also, the output is returned as a tuple (x,y), rather than packaged as a PositionD object.
 
-        The main advantage to this is that it will work if `ra` and `dec` are numpy arrays, in which
-        case the output `x`, `y` will also be numpy arrays.
+        The main advantage to this is that it will work if `ra` and `dec` are NumPy arrays, in which
+        case the output `x`, `y` will also be NumPy arrays.
         """
         if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
             raise ValueError('Unknown projection ' + projection)
@@ -350,8 +350,8 @@ class CelestialCoord(object):
 
         Also, the input is taken as a tuple (u,v), rather than packaged as a PositionD object.
 
-        The main advantage to this is that it will work if `u` and `v` are numpy arrays, in which 
-        case the output `ra`, `dec` will also be numpy arrays.
+        The main advantage to this is that it will work if `u` and `v` are NumPy arrays, in which 
+        case the output `ra`, `dec` will also be NumPy arrays.
         """
         if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
             raise ValueError('Unknown projection ' + projection)

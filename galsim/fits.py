@@ -594,8 +594,8 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
 
     @param image_list   The `image_list` can also be either an array of NumPy arrays or a 3d NumPy
                         array, in which case this is written to the fits file directly.  In the 
-                        former case, no explicit check is made that the numpy arrays are all the 
-                        same shape, but a numpy exception will be raised which we let pass upstream
+                        former case, no explicit check is made that the NumPy arrays are all the 
+                        same shape, but a NumPy exception will be raised which we let pass upstream
                         unmolested.
     @param file_name    The name of the file to write to.  [Either `file_name` or `hdu_list` is 
                         required.]

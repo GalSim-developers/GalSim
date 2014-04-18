@@ -27,7 +27,7 @@ class LookupTable(object):
     LookupTable represents a lookup table to store function values that may be slow to calculate,
     for which interpolating from a lookup table is sufficiently accurate.
 
-    A LookupTable may be constructed from two arrays (lists, tuples, or Numpy arrays of 
+    A LookupTable may be constructed from two arrays (lists, tuples, or NumPy arrays of 
     floats/doubles).
 
         >>> args = [...]
@@ -63,10 +63,10 @@ class LookupTable(object):
     f(x) (or at least one that is locally power-law-ish for much of the x range) then it might 
     be a good idea to interpolate in log(x) and log(f) rather than x and f.
 
-    @param x             The list, tuple, or Numpy array of `x` values (floats, doubles, or ints,
+    @param x             The list, tuple, or NumPy array of `x` values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
                          [Either `x` and `f` or `file` is required.]
-    @param f             The list, tuple, or Numpy array of `f(x)` values (floats, doubles, or ints,
+    @param f             The list, tuple, or NumPy array of `f(x)` values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
                          [Either `x` and `f` or `file` is required.]
     @param file          A file from which to read the `(x,f)` pairs. [Either `x` and `f`, or `file`
@@ -144,7 +144,7 @@ class LookupTable(object):
 
         @param x        The `x` value(s) for which `f(x)` should be calculated via interpolation on
                         the original `(x,f)` lookup table.  `x` can be a single float/double, or a
-                        tuple, list, or arbitrarily shaped Numpy array.
+                        tuple, list, or arbitrarily shaped NumPy array.
 
         @returns the interpolated `f(x)` value(s).
         """
@@ -156,7 +156,7 @@ class LookupTable(object):
             x = np.log(x)
 
         # figure out what we received, and return the same thing
-        # option 1: a Numpy array
+        # option 1: a NumPy array
         if isinstance(x, np.ndarray):
             dimen = len(x.shape)
             if dimen > 2:
