@@ -199,8 +199,8 @@ New WCS classes: (Issue #364)
   world coordinate system. i.e. the world coordinates are in terms of right
   ascension and declination (RA, Dec).  There is a new CelestialCoord
   class that encapsulates this kind of position on the sphere.
-  * `RaDecFunction` takes an arbitrary function radec_func(x,y) that returns
-    the RA and Dec.
+  * `RaDecFunction` takes an arbitrary functions ra(x,y) and dec(x,y) that
+    return the RA and Dec.
   * `AstropyWCS` uses the astropy.wcs package to read in a given FITS file.
   * `PyAstWCS` uses the starlink.Ast package to read in a given FITS file.
   * `WcsToolsWCS` uses wcstools commands for a given FITS file.

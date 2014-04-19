@@ -1042,6 +1042,7 @@ class PixelScale(LocalWCS):
 
     Initialization
     --------------
+
     A PixelScale is initialized with the command:
 
         >>> wcs = galsim.PixelScale(scale)
@@ -1137,6 +1138,7 @@ class ShearWCS(LocalWCS):
 
     Initialization
     --------------
+
     A ShearWCS is initialized with the command:
 
         >>> wcs = galsim.ShearWCS(scale, shear)
@@ -1272,6 +1274,7 @@ class JacobianWCS(LocalWCS):
 
     Initialization
     --------------
+
     A JacobianWCS is initialized with the command:
 
         >>> wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
@@ -1515,6 +1518,7 @@ class OffsetWCS(UniformWCS):
 
     Initialization
     --------------
+
     An OffsetWCS is initialized with the command:
 
         >>> wcs = galsim.OffsetWCS(scale, origin=None, world_origin=None)
@@ -1598,6 +1602,7 @@ class OffsetShearWCS(UniformWCS):
 
     Initialization
     --------------
+
     An OffsetShearWCS is initialized with the command:
 
         >>> wcs = galsim.OffsetShearWCS(scale, shear, origin=None, world_origin=None)
@@ -1693,6 +1698,7 @@ class AffineTransform(UniformWCS):
 
     Initialization
     --------------
+
     An AffineTransform is initialized with the command:
 
         >>> wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin=None, world_origin=None)
@@ -1970,6 +1976,7 @@ class UVFunction(EuclideanWCS):
 
     Initialization
     --------------
+
     A UVFunction is initialized with the command:
 
         >>> wcs = galsim.UVFunction(ufunc, vfunc, origin=None, world_origin=None)
@@ -2124,15 +2131,23 @@ class UVFunction(EuclideanWCS):
 
 
 class RaDecFunction(CelestialWCS):
-    """This WCS takes an arbitrary function for the Right Ascension and Declination.
+    """This WCS takes an arbitrary function for the Right Ascension (ra) and Declination (dec).
 
-    The radec_func(x,y) may be:
+    In many cases, it can be more convenient to calculate both ra and dec in a single function,
+    since there will typically be intermediate values that are common to both, so it may be more 
+    efficient to just calculate those once and thence calculate both ra and dec.  Thus, we 
+    provide the option to provide either a single function or two separate functions.
+
+    The function parameters used to initialize an RaDecFunction may be:
         - a python functions that take (x,y) arguments
         - a python object with a __call__ method that takes (x,y) arguments
         - a string which can be parsed with eval('lambda x,y: '+str)
 
-    The functions should return a tuple of ( ra , dec ) in _radians_.
-    
+    The return values, ra and dec, should be given in _radians_.
+
+    The first argument is called `ra_func`, but if `dec_func` is omitted, then it is assumed
+    to calculate both ra and dec.  The two values should be returned as a tuple (ra,dec).
+
     We don't want a function that returns Angles, because we want to allow for the 
     possibility of using NumPy arrays as inputs and outputs to speed up some calculations.  The 
     function isn't _required_ to work with NumPy arrays, but it is possible that some things 
@@ -2141,31 +2156,50 @@ class RaDecFunction(CelestialWCS):
 
     Initialization
     --------------
-    An RaDecFunction is initialized with the command:
+
+    An RaDecFunction is initialized with either of the following commands:
 
         >>> wcs = galsim.RaDecFunction(radec_func, origin=None)
+        >>> wcs = galsim.RaDecFunction(ra_func, dec_func, origin=None)
 
-    @param radec_func     A function radec(x,y) returning (ra, dec) in radians.
-    @param origin         Optional origin position for the image coordinate system.
-                          If provided, it should be a PositionD or PositionI.
-                          [default: PositionD(0., 0.)]
+    @param ra_func      If `dec_func` is also give:
+                            A function ra(x,y) returning ra in radians.
+                        If `dec_func=None`:
+                            A function returning a tuple (ra,dec), both in radians.
+    @param dec_func     Either a function dec(x,y) returning dec in radians, or None (in which
+                        case `ra_func` is expected to return both ra and dec. [default: None]
+    @param origin       Optional origin position for the image coordinate system.
+                        If provided, it should be a PositionD or PositionI.
+                        [default: PositionD(0., 0.)]
     """
-    _req_params = { "radec_func" : str }
+    _req_params = { "ra_func" : str, "dec_func" : str }
     _opt_params = { "origin" : galsim.PositionD }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
-    def __init__(self, radec_func, origin=None):
+    def __init__(self, ra_func, dec_func=None, origin=None):
         # Allow the input function to use either math or numpy functions
-        self._orig_radec_func = radec_func
+        self._orig_ra_func = ra_func
+        self._orig_dec_func = dec_func
 
-        if isinstance(radec_func, basestring):
-            import math
-            import numpy
-            self._radec_func = eval('lambda x,y : ' + radec_func)
+        if dec_func == None:
+            if isinstance(ra_func, basestring):
+                import math
+                import numpy
+                self._radec_func = eval('lambda x,y : ' + ra_func)
+            else:
+                self._radec_func = ra_func
         else:
-            self._radec_func = radec_func
+            if isinstance(ra_func, basestring):
+                import math
+                import numpy
+                ra_func = eval('lambda x,y : ' + ra_func)
+            if isinstance(dec_func, basestring):
+                import math
+                import numpy
+                dec_func = eval('lambda x,y : ' + dec_func)
+            self._radec_func = lambda x,y : (ra_func(x,y), dec_func(x,y))
 
         if origin == None:
             self._origin = galsim.PositionD(0,0)
@@ -2187,14 +2221,15 @@ class RaDecFunction(CelestialWCS):
         raise NotImplementedError("World -> Image direction not implemented for RaDecFunction")
 
     def _newOrigin(self, origin):
-        return RaDecFunction(self._orig_radec_func, origin)
+        return RaDecFunction(self._orig_ra_func, self._orig_dec_func, origin)
  
     def _writeHeader(self, header, bounds):
         header["GS_WCS"]  = ("RaDecFunction", "GalSim WCS name")
         header["GS_X0"] = (self.origin.x, "GalSim image origin x")
         header["GS_Y0"] = (self.origin.y, "GalSim image origin y")
 
-        _writeFuncToHeader(self._orig_radec_func, 'R', header)
+        _writeFuncToHeader(self._orig_ra_func, 'R', header)
+        _writeFuncToHeader(self._orig_dec_func, 'D', header)
 
         return self.affine(bounds.trueCenter())._writeLinearWCS(header, bounds)
 
@@ -2202,11 +2237,12 @@ class RaDecFunction(CelestialWCS):
     def _readHeader(header):
         x0 = header["GS_X0"]
         y0 = header["GS_Y0"]
-        radec_func = _readFuncFromHeader('R', header)
-        return RaDecFunction(radec_func, galsim.PositionD(x0,y0))
+        ra_func = _readFuncFromHeader('R', header)
+        dec_func = _readFuncFromHeader('D', header)
+        return RaDecFunction(ra_func, dec_func, galsim.PositionD(x0,y0))
 
     def copy(self):
-        return RaDecFunction(self._orig_radec_func, self.origin)
+        return RaDecFunction(self._orig_ra_func, self._orig_dec_func, self.origin)
 
     def __eq__(self, other):
         return ( isinstance(other, RaDecFunction) and
@@ -2214,5 +2250,5 @@ class RaDecFunction(CelestialWCS):
                  self.origin == other.origin )
 
     def __repr__(self):
-        return "RaDecFunction(%r,%r)"%(self._orig_radec_func, self.origin)
+        return "RaDecFunction(%r,%r,%r)"%(self._orig_ra_func, self._orig_dec_func, self.origin)
 
