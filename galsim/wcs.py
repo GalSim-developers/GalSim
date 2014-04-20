@@ -2162,7 +2162,7 @@ class RaDecFunction(CelestialWCS):
         >>> wcs = galsim.RaDecFunction(radec_func, origin=None)
         >>> wcs = galsim.RaDecFunction(ra_func, dec_func, origin=None)
 
-    @param ra_func      If `dec_func` is also give:
+    @param ra_func      If `dec_func` is also given:
                             A function ra(x,y) returning ra in radians.
                         If `dec_func=None`:
                             A function returning a tuple (ra,dec), both in radians.
