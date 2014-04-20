@@ -112,8 +112,9 @@ def test_float_value():
     input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
+    config['index_key'] = 'file_num'
     for k in range(5):
-        config['seq_index'] = k
+        config['file_num'] = k
         cat1.append(galsim.config.ParseValue(config,'cat1',config, float)[0])
         cat2.append(galsim.config.ParseValue(config,'cat2',config, float)[0])
 
@@ -124,8 +125,8 @@ def test_float_value():
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
-        config['seq_index'] = k  # The Random type doesn't use seq_index, but this keeps it
-                                 # from thinking current_val is still current.
+        config['obj_num'] = k  # The Random type doesn't use obj_num, but this keeps it
+                               # from thinking current_val is still current.
         ran1 = galsim.config.ParseValue(config,'ran1',config, float)[0]
         np.testing.assert_almost_equal(ran1, rng() * 2.5 + 0.5)
 
@@ -135,7 +136,7 @@ def test_float_value():
     # Test values generated from a Gaussian deviate
     gd = galsim.GaussianDeviate(rng)
     for k in range(6):
-        config['seq_index'] = k
+        config['obj_num'] = k
         gauss1 = galsim.config.ParseValue(config,'gauss1',config, float)[0]
         gd.setMean(0)
         gd.setSigma(1)
@@ -177,17 +178,17 @@ def test_float_value():
     # Test values generated from a distribution in a file
     dd=galsim.DistDeviate(rng,function='config_input/distribution.txt',interpolant='linear')
     for k in range(6):
-        config['seq_index'] = k
+        config['obj_num'] = k
         dist1 = galsim.config.ParseValue(config,'dist1',config, float)[0]
         np.testing.assert_almost_equal(dist1, dd())
     dd=galsim.DistDeviate(rng,function='config_input/distribution2.txt',interpolant='linear')
     for k in range(6):
-        config['seq_index'] = k
+        config['obj_num'] = k
         dist2 = galsim.config.ParseValue(config,'dist2',config, float)[0]
         np.testing.assert_almost_equal(dist2, dd())
     dd=galsim.DistDeviate(rng,function=lambda x: x*x,x_min=0.,x_max=2.)
     for k in range(6):
-        config['seq_index'] = k
+        config['obj_num'] = k
         dist3 = galsim.config.ParseValue(config,'dist3',config, float)[0]
         np.testing.assert_almost_equal(dist3, dd())
 
@@ -197,11 +198,23 @@ def test_float_value():
     seq3 = []
     seq4 = []
     seq5 = []
+    config['index_key'] = 'file_num'
     for k in range(6):
-        config['seq_index'] = k
+        config['file_num'] = k
         seq1.append(galsim.config.ParseValue(config,'seq1',config, float)[0])
+    config['index_key'] = 'image_num'
+    for k in range(6):
+        config['image_num'] = k
         seq2.append(galsim.config.ParseValue(config,'seq2',config, float)[0])
+    config['index_key'] = 'obj_num'
+    for k in range(6):
+        config['obj_num'] = k
         seq3.append(galsim.config.ParseValue(config,'seq3',config, float)[0])
+    config['index_key'] = 'overall_obj_num'
+    for k in range(6):
+        config['overall_obj_num'] = k
+        config['obj_num'] = k-10  # Just need this to be something that changes, so the
+                                  # caching doesn't get confused.
         seq4.append(galsim.config.ParseValue(config,'seq4',config, float)[0])
         seq5.append(galsim.config.ParseValue(config,'seq5',config, float)[0])
 
@@ -214,8 +227,9 @@ def test_float_value():
     # Test values taken from a List
     list1 = []
     list2 = []
+    config['index_key'] = 'obj_num'
     for k in range(5):
-        config['seq_index'] = k
+        config['obj_num'] = k
         list1.append(galsim.config.ParseValue(config,'list1',config, float)[0])
         list2.append(galsim.config.ParseValue(config,'list2',config, float)[0])
 
@@ -269,6 +283,10 @@ def test_int_value():
         'seq3' : { 'type' : 'Sequence', 'first' : 1, 'step' : 5 },
         'seq4' : { 'type' : 'Sequence', 'first' : 10, 'step' : -2 },
         'seq5' : { 'type' : 'Sequence', 'first' : 1, 'last' : 2, 'repeat' : 2 },
+        'seq_file' : { 'type' : 'Sequence', 'index_key' : 'file_num' },
+        'seq_image' : { 'type' : 'Sequence', 'index_key' : 'image_num' },
+        'seq_obj' : { 'type' : 'Sequence', 'index_key' : 'obj_num' },
+        'seq_overall' : { 'type' : 'Sequence', 'index_key' : 'overall_obj_num' },
         'list1' : { 'type' : 'List', 'items' : [ 73, 8, 3 ] },
         'list2' : { 'type' : 'List',
                     'items' : [ 6, 8, 1, 7, 3, 5, 1, 0, 6, 3, 8, 2 ],
@@ -309,8 +327,9 @@ def test_int_value():
     input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
+    config['index_key'] = 'image_num'
     for k in range(5):
-        config['seq_index'] = k
+        config['image_num'] = k
         cat1.append(galsim.config.ParseValue(config,'cat1',config, int)[0])
         cat2.append(galsim.config.ParseValue(config,'cat2',config, int)[0])
 
@@ -321,7 +340,7 @@ def test_int_value():
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
-        config['seq_index'] = k
+        config['obj_num'] = k
         ran1 = galsim.config.ParseValue(config,'ran1',config, int)[0]
         np.testing.assert_equal(ran1, int(math.floor(rng() * 4)))
 
@@ -334,8 +353,9 @@ def test_int_value():
     seq3 = []
     seq4 = []
     seq5 = []
+    config['index_key'] = 'obj_num'
     for k in range(6):
-        config['seq_index'] = k
+        config['obj_num'] = k
         seq1.append(galsim.config.ParseValue(config,'seq1',config, int)[0])
         seq2.append(galsim.config.ParseValue(config,'seq2',config, int)[0])
         seq3.append(galsim.config.ParseValue(config,'seq3',config, int)[0])
@@ -348,11 +368,47 @@ def test_int_value():
     np.testing.assert_array_equal(seq4, [ 10, 8, 6, 4, 2, 0 ])
     np.testing.assert_array_equal(seq5, [ 1, 1, 2, 2, 1, 1 ])
 
+    # This is more like how the indexing actually happens in a regular config run:
+    seq_file = []
+    seq_image = []
+    seq_obj = []
+    seq_overall = []
+    config['file_num'] = 0
+    config['image_num'] = 0
+    config['overall_obj_num'] = 0
+    for file_num in range(3):
+        for image_num in range(2):
+            config['obj_num'] = 0
+            for obj_num in range(5):
+                seq_file.append(galsim.config.ParseValue(config,'seq_file',config, int)[0])
+                seq_image.append(galsim.config.ParseValue(config,'seq_image',config, int)[0])
+                seq_obj.append(galsim.config.ParseValue(config,'seq_obj',config, int)[0])
+                seq_overall.append(galsim.config.ParseValue(config,'seq_overall',config, int)[0])
+                config['obj_num'] += 1
+                config['overall_obj_num'] += 1
+            config['image_num'] += 1
+        config['file_num'] += 1
+
+    np.testing.assert_array_equal(seq_file, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                              2, 2, 2, 2, 2, 2, 2, 2, 2, 2 ])
+    np.testing.assert_array_equal(seq_image, [ 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+                                               2, 2, 2, 2, 2, 3, 3, 3, 3, 3,
+                                               4, 4, 4, 4, 4, 5, 5, 5, 5, 5 ])
+    np.testing.assert_array_equal(seq_obj, [ 0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
+                                             0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
+                                             0, 1, 2, 3, 4, 0, 1, 2, 3, 4 ])
+    np.testing.assert_array_equal(seq_overall, [ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
+                                                10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+                                                20, 21, 22, 23, 24, 25, 26, 27, 28, 29 ])
+
+
     # Test values taken from a List
     list1 = []
     list2 = []
+    config['index_key'] = 'obj_num'
     for k in range(5):
-        config['seq_index'] = k
+        config['obj_num'] = k
         list1.append(galsim.config.ParseValue(config,'list1',config, int)[0])
         list2.append(galsim.config.ParseValue(config,'list2',config, int)[0])
 
@@ -447,8 +503,9 @@ def test_bool_value():
     input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
+    config['index_key'] = 'obj_num'
     for k in range(5):
-        config['seq_index'] = k
+        config['obj_num'] = k
         cat1.append(galsim.config.ParseValue(config,'cat1',config, bool)[0])
         cat2.append(galsim.config.ParseValue(config,'cat2',config, bool)[0])
 
@@ -459,15 +516,16 @@ def test_bool_value():
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
-        config['seq_index'] = k
+        config['obj_num'] = k
         ran1 = galsim.config.ParseValue(config,'ran1',config, bool)[0]
         np.testing.assert_equal(ran1, rng() < 0.5)
 
     # Test values generated from a Sequence
     seq1 = []
     seq2 = []
+    config['index_key'] = 'obj_num'
     for k in range(6):
-        config['seq_index'] = k
+        config['obj_num'] = k
         seq1.append(galsim.config.ParseValue(config,'seq1',config, bool)[0])
         seq2.append(galsim.config.ParseValue(config,'seq2',config, bool)[0])
 
@@ -477,8 +535,9 @@ def test_bool_value():
     # Test values taken from a List
     list1 = []
     list2 = []
+    config['index_key'] = 'file_num'
     for k in range(5):
-        config['seq_index'] = k
+        config['file_num'] = k
         list1.append(galsim.config.ParseValue(config,'list1',config, bool)[0])
         list2.append(galsim.config.ParseValue(config,'list2',config, bool)[0])
 
@@ -568,8 +627,9 @@ def test_str_value():
     input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
+    config['index_key'] = 'obj_num'
     for k in range(3):
-        config['seq_index'] = k
+        config['obj_num'] = k
         cat1.append(galsim.config.ParseValue(config,'cat1',config, str)[0])
         cat2.append(galsim.config.ParseValue(config,'cat2',config, str)[0])
 
@@ -579,8 +639,9 @@ def test_str_value():
 
     # Test values taken from a List
     list1 = []
+    config['index_key'] = 'image_num'
     for k in range(5):
-        config['seq_index'] = k
+        config['image_num'] = k
         list1.append(galsim.config.ParseValue(config,'list1',config, str)[0])
 
     np.testing.assert_array_equal(list1, ['Beautiful', 'plumage!', 'Ay?', 'Beautiful', 'plumage!'])
@@ -592,8 +653,9 @@ def test_str_value():
     np.testing.assert_equal(file2, 'file5')
 
     # Test value built from FormattedStr
+    config['index_key'] = 'obj_num'
     for k in range(9):
-        config['seq_index'] = k
+        config['obj_num'] = k
         type = k / 3
         dil = k % 3
         fs1 = galsim.config.ParseValue(config,'fs1',config, str)[0]
@@ -688,8 +750,9 @@ def test_angle_value():
     input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
+    config['index_key'] = 'file_num'
     for k in range(5):
-        config['seq_index'] = k
+        config['file_num'] = k
         cat1.append(galsim.config.ParseValue(config,'cat1',config, galsim.Angle)[0].rad())
         cat2.append(galsim.config.ParseValue(config,'cat2',config, galsim.Angle)[0]/galsim.degrees)
 
@@ -700,7 +763,7 @@ def test_angle_value():
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
-        config['seq_index'] = k
+        config['obj_num'] = k
         ran1 = galsim.config.ParseValue(config,'ran1',config, galsim.Angle)[0]
         theta = rng() * 2 * math.pi
         np.testing.assert_almost_equal(ran1.rad(), theta)
@@ -708,8 +771,9 @@ def test_angle_value():
     # Test values generated from a Sequence
     seq1 = []
     seq2 = []
+    config['index_key'] = 'obj_num'
     for k in range(6):
-        config['seq_index'] = k
+        config['obj_num'] = k
         seq1.append(galsim.config.ParseValue(config,'seq1',config, galsim.Angle)[0].rad())
         seq2.append(galsim.config.ParseValue(config,'seq2',config, galsim.Angle)[0]/galsim.degrees)
 
@@ -718,8 +782,9 @@ def test_angle_value():
 
     # Test values taken from a List
     list1 = []
+    config['index_key'] = 'obj_num'
     for k in range(5):
-        config['seq_index'] = k
+        config['obj_num'] = k
         list1.append(galsim.config.ParseValue(config,'list1',config, galsim.Angle)[0]/galsim.arcmin)
 
     np.testing.assert_array_almost_equal(list1, [ 73, 8.9, 3.14, 73, 8.9 ])
@@ -803,8 +868,9 @@ def test_shear_value():
 
     # Test values taken from a List
     list1 = []
+    config['index_key'] = 'obj_num'
     for k in range(5):
-        config['seq_index'] = k
+        config['obj_num'] = k
         list1.append(galsim.config.ParseValue(config,'list1',config, galsim.Shear)[0])
 
     np.testing.assert_almost_equal(list1[0].getG1(), 0.2)
@@ -862,7 +928,7 @@ def test_pos_value():
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
-        config['seq_index'] = k
+        config['image_num'] = k
         ran1 = galsim.config.ParseValue(config,'ran1',config, galsim.PositionD)[0]
         # Emulate a do-while loop
         while True:
@@ -875,8 +941,9 @@ def test_pos_value():
 
     # Test values taken from a List
     list1 = []
+    config['index_key'] = 'obj_num'
     for k in range(5):
-        config['seq_index'] = k
+        config['obj_num'] = k
         list1.append(galsim.config.ParseValue(config,'list1',config, galsim.PositionD)[0])
 
     np.testing.assert_almost_equal(list1[0].x, 0.2)

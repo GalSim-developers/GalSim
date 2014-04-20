@@ -356,7 +356,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
-    config['seq_index'] = image_num
+    config['index_key'] = 'image_num'
     config['image_num'] = image_num
     if logger:
         logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',image_num,image_num,obj_num)
@@ -427,7 +427,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
-    config['seq_index'] = image_num
+    config['index_key'] = 'image_num'
     config['image_num'] = image_num
     if logger:
         logger.debug('image %d: BuildTiledImage: image, obj = %d,%d',image_num,image_num,obj_num)
@@ -502,8 +502,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
-        config['seq_index'] = nobjects
-        config['obj_num'] = obj_num+nobjects
+        config['index_key'] = 'obj_num'
+        config['obj_num'] = nobjects
+        config['overall_obj_num'] = obj_num+nobjects
         # Technically obj_num+nobjects will be the index of the random seed used for the next 
         # image's first object (if there is a next image).  But I don't think that will have 
         # any adverse effects.
@@ -674,7 +675,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
-    config['seq_index'] = image_num
+    config['index_key'] = 'image_num'
     config['image_num'] = image_num
     if logger:
         logger.debug('image %d: BuildScatteredImage: image, obj = %d,%d',
@@ -735,8 +736,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
-        config['seq_index'] = nobjects
-        config['obj_num'] = obj_num+nobjects
+        config['index_key'] = 'obj_num'
+        config['obj_num'] = nobjects
+        config['overall_obj_num'] = obj_num+nobjects
         # Technically obj_num+nobjects will be the index of the random seed used for the next 
         # image's first object (if there is a next image).  But I don't think that will have 
         # any adverse effects.
@@ -900,7 +902,7 @@ def GetNObjForSingleImage(config, image_num):
 
 def GetNObjForScatteredImage(config, image_num):
 
-    config['seq_index'] = image_num
+    config['index_key'] = 'image_num'
     config['image_num'] = image_num
 
     # Allow nobjects to be automatic based on input catalog
@@ -915,7 +917,7 @@ def GetNObjForScatteredImage(config, image_num):
 
 def GetNObjForTiledImage(config, image_num):
     
-    config['seq_index'] = image_num
+    config['index_key'] = 'image_num'
     config['image_num'] = image_num
 
     if 'nx_tiles' not in config['image'] or 'ny_tiles' not in config['image']:

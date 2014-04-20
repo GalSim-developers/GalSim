@@ -62,7 +62,8 @@ valid_value_types = {
 # Standard keys to ignore while parsing values:
 standard_ignore = [ 
     'type',
-    'current_val', 'current_safe', 'current_seq_index', 'current_file_num', 'current_value_type',
+    'current_val', 'current_safe', 'current_value_type',
+    'current_obj_num', 'current_image_num', 'current_file_num',
     '#' # When we read in json files, there represent comments
 ]
 
@@ -74,7 +75,7 @@ def ParseValue(config, param_name, base, value_type):
     param = config[param_name]
     #print 'ParseValue for param_name = ',param_name,', value_type = ',str(value_type)
     #print 'param = ',param
-    #print 'seq_index = ',base.get('seq_index',0)
+    #print 'nums = ',base.get('file_num',0), base.get('image_num',0), base.get('obj_num',0)
 
     # First see if we can assign by param by a direct constant value
     if isinstance(param, value_type):
@@ -105,12 +106,12 @@ def ParseValue(config, param_name, base, value_type):
             "%s.type attribute required in config for non-constant parameter %s."%(
                 param_name,param_name))
     elif ( 'current_val' in param 
-           and param['current_seq_index'] == base.get('seq_index',0)
+           and param['current_obj_num'] == base.get('obj_num',0)
+           and param['current_image_num'] == base.get('image_num',0)
            and param['current_file_num'] == base.get('file_num',0) ):
         if param['current_value_type'] != value_type:
             raise ValueError(
                 "Attempt to parse %s multiple times with different value types"%param_name)
-        #print 'seq_index = ',base.get('seq_index',0)
         #print base['obj_num'],'Using current value of ',param_name,' = ',param['current_val']
         return param['current_val'], param['current_safe']
     else:
@@ -143,9 +144,10 @@ def ParseValue(config, param_name, base, value_type):
         # Save the current value for possible use by the Current type
         param['current_val'] = val
         param['current_safe'] = safe
-        param['current_seq_index'] = base.get('seq_index',0)
-        param['current_file_num'] = base.get('file_num',0)
         param['current_value_type'] = value_type
+        param['current_obj_num'] = base.get('obj_num',0)
+        param['current_image_num'] = base.get('image_num',0)
+        param['current_file_num'] = base.get('file_num',0)
         #print param_name,' = ',val
         return val, safe
 
@@ -645,7 +647,7 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     """
     ignore = [ 'default' ]
     opt = { 'first' : value_type, 'last' : value_type, 'step' : value_type,
-            'repeat' : int, 'nitems' : int, 'index' : str }
+            'repeat' : int, 'nitems' : int, 'index_key' : str }
     kwargs, safe = GetAllParams(param, param_name, base, opt=opt, ignore=ignore)
 
     step = kwargs.get('step',1)
@@ -653,7 +655,7 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     repeat = kwargs.get('repeat',1)
     last = kwargs.get('last',None)
     nitems = kwargs.get('nitems',None)
-    index_key = kwargs.get('index','seq_index')
+    index_key = kwargs.get('index_key',base.get('index_key','obj_num'))
     if repeat <= 0:
         raise ValueError(
             "Invalid repeat=%d (must be > 0) for %s.type = Sequence"%(repeat,param_name))
@@ -661,7 +663,7 @@ def _GenerateFromSequence(param, param_name, base, value_type):
         raise AttributeError(
             "At most one of the attributes last and nitems is allowed for %s.type = Sequence"%(
                 param_name))
-    if index_key not in [ 'seq_index', 'obj_num', 'image_num', 'file_num' ]:
+    if index_key not in [ 'overall_obj_num', 'obj_num', 'image_num', 'file_num' ]:
         raise AttributeError(
             "Invalid index=%s for %s.type = Sequence."%(index_key,param_name))
 
@@ -1059,6 +1061,8 @@ def _GenerateFromEval(param, param_name, base, value_type):
         image_num = base['image_num']
     if 'obj_num' in base:
         obj_num = base['obj_num']
+    if 'overall_obj_num' in base:
+        obj_num = base['overall_obj_num']
     for key in galsim.config.valid_input_types.keys():
         if key in base:
             exec(key + ' = base[key]')

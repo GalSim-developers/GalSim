@@ -230,7 +230,6 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         current_vars = []
 
         for k in range(nobjects):
-            kwargs['obj_num'] = obj_num+k
             kwargs['config'] = config
             kwargs['obj_num'] = obj_num+k
             kwargs['logger'] = logger
@@ -275,8 +274,9 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     import time
     t1 = time.time()
 
-    config['seq_index'] = obj_num - config.get('start_obj_num',0)
-    config['obj_num'] = obj_num
+    config['index_key'] = 'obj_num'
+    config['obj_num'] = obj_num - config.get('start_obj_num',0)
+    config['overall_obj_num'] = obj_num
     # Initialize the random number generator we will be using.
     if 'random_seed' in config['image']:
         seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]

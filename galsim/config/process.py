@@ -94,8 +94,10 @@ def RemoveCurrent(config, keep_safe=False, type=None):
           and (type == None or ('type' in config and config['type'] == type)) ):
         del config['current_val']
         del config['current_safe']
-        if 'current_seq_index' in config:
-            del config['current_seq_index']
+        if 'current_obj_num' in config:
+            del config['current_obj_num']
+            del config['current_image_num']
+            del config['current_file_num']
             del config['current_value_type']
         return True
     else:
@@ -157,7 +159,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
         config['real_catalog'] = the catalog specified by config.input.real_catalog, if provided.
         etc.
     """
-    config['seq_index'] = file_num
+    config['index_key'] = 'file_num'
     config['file_num'] = file_num
     if logger:
         logger.debug('file %d: Start ProcessInput',file_num)
@@ -299,6 +301,7 @@ def ProcessInputNObjects(config, logger=None):
     """Process the input field, just enough to determine the number of objects.
     """
     if 'input' in config:
+        config['index_key'] = 'file_num'
         input = config['input']
         if not isinstance(input, dict):
             raise AttributeError("config.input is not a dict.")
@@ -499,7 +502,6 @@ def Process(config, logger=None):
     # Process the input field for the first file.  Often there are "safe" input items
     # that won't need to be reprocessed each time.  So do them here once and keep them
     # in the config for all file_nums.  This is more important if nproc != 1.
-    config['seq_index'] = 0
     config['file_num'] = 0
     ProcessInput(config, file_num=0, logger=logger_proxy, safe_only=True)
 
@@ -520,9 +522,9 @@ def Process(config, logger=None):
         # Set the index for any sequences in the input or output parameters.
         # These sequences are indexed by the file_num.
         # (In image, they are indexed by image_num, and after that by obj_num.)
-        config['seq_index'] = file_num
         config['file_num'] = file_num
         config['start_obj_num'] = obj_num
+        config['overall_obj_num'] = obj_num
 
         # Process the input fields that might be relevant at file scope:
         ProcessInput(config, file_num=file_num, logger=logger_proxy, file_scope_only=True)
@@ -538,9 +540,10 @@ def Process(config, logger=None):
         # For example, in demo9, we have a random number of objects per image.
         # So we need to build an rng here.
         if 'random_seed' in config['image']:
-            config['seq_index'] = 0
+            config['index_key'] = 'obj_num'
+            config['obj_num'] = 0
             seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-            config['seq_index'] = file_num
+            config['index_key'] = 'file_num'
             if logger:
                 logger.debug('file %d: seed = %d',file_num,seed)
             rng = galsim.BaseDeviate(seed)
@@ -787,9 +790,10 @@ def BuildFits(file_name, config, logger=None,
     import time
     t1 = time.time()
 
-    config['seq_index'] = file_num
+    config['index_key'] = 'file_num'
     config['file_num'] = file_num
     config['start_obj_num'] = obj_num
+    config['overall_obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
@@ -912,9 +916,10 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     import time
     t1 = time.time()
 
-    config['seq_index'] = file_num
+    config['index_key'] = 'file_num'
     config['file_num'] = file_num
     config['start_obj_num'] = obj_num
+    config['overall_obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildMultiFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
@@ -1026,9 +1031,10 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     import time
     t1 = time.time()
 
-    config['seq_index'] = file_num
+    config['index_key'] = 'file_num'
     config['file_num'] = file_num
     config['start_obj_num'] = obj_num
+    config['overall_obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildDataCube for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
@@ -1168,7 +1174,7 @@ def GetNObjForMultiFits(config, file_num, image_num):
         if nobjects:
             config['output']['nimages'] = nobjects
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
-    config['seq_index'] = file_num
+    config['index_key'] = 'file_num'
     config['file_num'] = file_num
     nimages = params['nimages']
     try :
@@ -1190,7 +1196,7 @@ def GetNObjForDataCube(config, file_num, image_num):
         if nobjects:
             config['output']['nimages'] = nobjects
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
-    config['seq_index'] = file_num
+    config['index_key'] = 'file_num'
     config['file_num'] = file_num
     nimages = params['nimages']
     try :

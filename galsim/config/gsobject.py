@@ -343,13 +343,19 @@ def _BuildRing(config, key, base, ignore, gsparams, logger):
     """@brief  Build a GSObject in a Ring.
     """
     req = { 'num' : int, 'first' : dict }
-    opt = { 'full_rotation' : galsim.Angle }
+    opt = { 'full_rotation' : galsim.Angle , 'index' : int }
     # Only Check, not Get.  We need to handle first a bit differently, since it's a gsobject.
     galsim.config.CheckAllParams(config, key, req=req, opt=opt, ignore=ignore)
 
     num = galsim.config.ParseValue(config, 'num', base, int)[0]
     if num <= 0:
         raise ValueError("Attribute num for gal.type == Ring must be > 0")
+
+    # Setup the indexing sequence if it hasn't been specified using the number of items.
+    galsim.config.SetDefaultIndex(config, num)
+    index, safe = galsim.config.ParseValue(config, 'index', base, int)
+    if index < 0 or index >= num:
+        raise AttributeError("index %d out of bounds for config.%s"%(index,type))
 
     if 'full_rotation' in config:
         full_rotation = galsim.config.ParseValue(config, 'full_rotation', base, galsim.Angle)[0]
@@ -361,14 +367,13 @@ def _BuildRing(config, key, base, ignore, gsparams, logger):
     if logger:
         logger.debug('obj %d: Ring dtheta = %f',base['obj_num'],dtheta.rad())
 
-    k = base['seq_index']
-    if k % num == 0:
+    if index % num == 0:
         # Then this is the first in the Ring.  
         gsobject = BuildGSObject(config, 'first', base, gsparams, logger)[0]
     else:
         if not isinstance(config['first'],dict) or 'current_val' not in config['first']:
             raise RuntimeError("Building Ring after the first item, but no current_val stored.")
-        gsobject = config['first']['current_val'].rotate(k*dtheta)
+        gsobject = config['first']['current_val'].rotate(index*dtheta)
 
     return gsobject, False
 
