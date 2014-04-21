@@ -522,9 +522,11 @@ def Process(config, logger=None):
         # Set the index for any sequences in the input or output parameters.
         # These sequences are indexed by the file_num.
         # (In image, they are indexed by image_num, and after that by obj_num.)
+        config['index_key'] = 'file_num'
         config['file_num'] = file_num
         config['start_obj_num'] = obj_num
         config['overall_obj_num'] = obj_num
+        config['obj_num'] = 0
 
         # Process the input fields that might be relevant at file scope:
         ProcessInput(config, file_num=file_num, logger=logger_proxy, file_scope_only=True)
@@ -533,15 +535,14 @@ def Process(config, logger=None):
         if 'first_seed' in config:
             config['image']['random_seed'] = {
                 'type' : 'Sequence' ,
-                'first' : config['first_seed'] + obj_num 
+                'first' : config['first_seed']
             }
 
         # It is possible that some items at image scope could need a random number generator.
         # For example, in demo9, we have a random number of objects per image.
         # So we need to build an rng here.
         if 'random_seed' in config['image']:
-            config['index_key'] = 'obj_num'
-            config['obj_num'] = 0
+            config['index_key'] = 'overall_obj_num'
             seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
             config['index_key'] = 'file_num'
             if logger:
