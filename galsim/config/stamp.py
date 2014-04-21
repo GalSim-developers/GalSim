@@ -524,9 +524,6 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 galsim.config.process.RemoveCurrent(config, keep_safe=True)
                 continue
 
-        else:
-            break
-
     return im, psf_im, weight_im, badpix_im, current_var, t6-t1
 
 
