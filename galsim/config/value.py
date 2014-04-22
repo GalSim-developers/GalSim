@@ -663,7 +663,7 @@ def _GenerateFromSequence(param, param_name, base, value_type):
         raise AttributeError(
             "At most one of the attributes last and nitems is allowed for %s.type = Sequence"%(
                 param_name))
-    if index_key not in [ 'overall_obj_num', 'obj_num', 'image_num', 'file_num' ]:
+    if index_key not in [ 'obj_num_in_file', 'obj_num', 'image_num', 'file_num' ]:
         raise AttributeError(
             "Invalid index=%s for %s.type = Sequence."%(index_key,param_name))
 
@@ -686,7 +686,10 @@ def _GenerateFromSequence(param, param_name, base, value_type):
         if last is not None:
             nitems = (last - first)/step + 1
 
-    k = base[index_key]
+    if index_key == 'obj_num_in_file':
+        k = base['obj_num'] - base.get('start_obj_num',0)
+    else:
+        k = base[index_key]
     k = k / repeat
 
     if nitems is not None and nitems > 0:
@@ -1056,17 +1059,16 @@ def _GenerateFromEval(param, param_name, base, value_type):
     if 'rng' in base:
         rng = base['rng']
     if 'file_num' in base:
-        file_num = base['file_num']
+        file_num = base.get('file_num',0)
     if 'image_num' in base:
-        image_num = base['image_num']
+        image_num = base.get('image_num',0)
     if 'obj_num' in base:
         obj_num = base['obj_num']
-    if 'overall_obj_num' in base:
-        obj_num = base['overall_obj_num']
+    if 'start_obj_num' in base:
+        start_obj_num = base.get('start_obj_num',0)
     for key in galsim.config.valid_input_types.keys():
         if key in base:
             exec(key + ' = base[key]')
-
     try:
         val = value_type(eval(string))
         #print base['obj_num'],'Eval(%s) needed extra variables: val = %s'%(string,val)

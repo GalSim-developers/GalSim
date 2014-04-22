@@ -525,8 +525,7 @@ def Process(config, logger=None):
         config['index_key'] = 'file_num'
         config['file_num'] = file_num
         config['start_obj_num'] = obj_num
-        config['overall_obj_num'] = obj_num
-        config['obj_num'] = 0
+        config['obj_num'] = obj_num
 
         # Process the input fields that might be relevant at file scope:
         ProcessInput(config, file_num=file_num, logger=logger_proxy, file_scope_only=True)
@@ -542,7 +541,7 @@ def Process(config, logger=None):
         # For example, in demo9, we have a random number of objects per image.
         # So we need to build an rng here.
         if 'random_seed' in config['image']:
-            config['index_key'] = 'overall_obj_num'
+            config['index_key'] = 'obj_num'
             seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
             config['index_key'] = 'file_num'
             if logger:
@@ -794,7 +793,7 @@ def BuildFits(file_name, config, logger=None,
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
     config['start_obj_num'] = obj_num
-    config['overall_obj_num'] = obj_num
+    config['obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
@@ -803,7 +802,7 @@ def BuildFits(file_name, config, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first + obj_num }
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     # hdus is a dict with hdus[i] = the item in all_images to put in the i-th hdu.
     hdus = {}
@@ -920,7 +919,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
     config['start_obj_num'] = obj_num
-    config['overall_obj_num'] = obj_num
+    config['obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildMultiFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
@@ -929,7 +928,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first + obj_num }
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     if psf_file_name:
         make_psf_image = True
@@ -1035,7 +1034,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
     config['start_obj_num'] = obj_num
-    config['overall_obj_num'] = obj_num
+    config['obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildDataCube for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
@@ -1044,7 +1043,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first + obj_num }
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     if psf_file_name:
         make_psf_image = True

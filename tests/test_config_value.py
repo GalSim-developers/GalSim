@@ -210,11 +210,10 @@ def test_float_value():
     for k in range(6):
         config['obj_num'] = k
         seq3.append(galsim.config.ParseValue(config,'seq3',config, float)[0])
-    config['index_key'] = 'overall_obj_num'
+    config['index_key'] = 'obj_num_in_file'
+    config['start_obj_num'] = 10
     for k in range(6):
-        config['overall_obj_num'] = k
-        config['obj_num'] = k-10  # Just need this to be something that changes, so the
-                                  # caching doesn't get confused.
+        config['obj_num'] = k+10
         seq4.append(galsim.config.ParseValue(config,'seq4',config, float)[0])
         seq5.append(galsim.config.ParseValue(config,'seq5',config, float)[0])
 
@@ -286,7 +285,7 @@ def test_int_value():
         'seq_file' : { 'type' : 'Sequence', 'index_key' : 'file_num' },
         'seq_image' : { 'type' : 'Sequence', 'index_key' : 'image_num' },
         'seq_obj' : { 'type' : 'Sequence', 'index_key' : 'obj_num' },
-        'seq_overall' : { 'type' : 'Sequence', 'index_key' : 'overall_obj_num' },
+        'seq_obj2' : { 'type' : 'Sequence', 'index_key' : 'obj_num_in_file' },
         'list1' : { 'type' : 'List', 'items' : [ 73, 8, 3 ] },
         'list2' : { 'type' : 'List',
                     'items' : [ 6, 8, 1, 7, 3, 5, 1, 0, 6, 3, 8, 2 ],
@@ -372,20 +371,19 @@ def test_int_value():
     seq_file = []
     seq_image = []
     seq_obj = []
-    seq_overall = []
+    seq_obj2 = []
     config['file_num'] = 0
     config['image_num'] = 0
-    config['overall_obj_num'] = 0
+    config['obj_num'] = 0
     for file_num in range(3):
+        config['start_obj_num'] = config['obj_num']
         for image_num in range(2):
-            config['obj_num'] = 0
             for obj_num in range(5):
                 seq_file.append(galsim.config.ParseValue(config,'seq_file',config, int)[0])
                 seq_image.append(galsim.config.ParseValue(config,'seq_image',config, int)[0])
                 seq_obj.append(galsim.config.ParseValue(config,'seq_obj',config, int)[0])
-                seq_overall.append(galsim.config.ParseValue(config,'seq_overall',config, int)[0])
+                seq_obj2.append(galsim.config.ParseValue(config,'seq_obj2',config, int)[0])
                 config['obj_num'] += 1
-                config['overall_obj_num'] += 1
             config['image_num'] += 1
         config['file_num'] += 1
 
@@ -395,13 +393,12 @@ def test_int_value():
     np.testing.assert_array_equal(seq_image, [ 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
                                                2, 2, 2, 2, 2, 3, 3, 3, 3, 3,
                                                4, 4, 4, 4, 4, 5, 5, 5, 5, 5 ])
-    np.testing.assert_array_equal(seq_obj, [ 0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
-                                             0, 1, 2, 3, 4, 0, 1, 2, 3, 4,
-                                             0, 1, 2, 3, 4, 0, 1, 2, 3, 4 ])
-    np.testing.assert_array_equal(seq_overall, [ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
-                                                10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-                                                20, 21, 22, 23, 24, 25, 26, 27, 28, 29 ])
-
+    np.testing.assert_array_equal(seq_obj, [ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
+                                            10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+                                            20, 21, 22, 23, 24, 25, 26, 27, 28, 29 ])
+    np.testing.assert_array_equal(seq_obj2, [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                                              0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                                              0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ])
 
     # Test values taken from a List
     list1 = []
