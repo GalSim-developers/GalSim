@@ -166,7 +166,8 @@ removed.
   * `BaseDeviate` subclasses: all `set*` methods.
   * `Shear`: `setG1G2`, `setE1E2`, `setEBeta`, `setEta1Eta2`, `setEtaBeta`
   * `Shapelet`: `setSigma`, `setOrder`, `setBVec`, `setNM`, `setPQ`
-* Removed `image.getCorrelatedNoise` method.  (Issue #527)
+* Changed how to build a `CorrelatedNoise` object from an `Image` to use the 
+  `CorrelatedNoise` constructor rather than `getCorrelatedNoise`. (Issue #527)
   * `image.getCorrelatedNoise()` should now be `galsim.CorrelatedNoise(image)`.
 
 
