@@ -312,8 +312,8 @@ change their yaml files.
   possible if there is only one item being convolved with the pixel.
   (Issue #364)
 * Added ability to index `Sequence` types by any running index, rather than
-  just the default.  The options are 'obj_num', 'image_num', 'file_num',
-  or 'obj_num_in_file'.  (Issue #364, #536)
+  just the default by specifying an `index_key` parameter.  The options are
+  'obj_num', 'image_num', 'file_num', or 'obj_num_in_file'.  (Issue #364, #536)
 * Added `Sum` type for value types for which it makes sense: float, int, angle,
   shear, position. (Issue #457)
 * Allowed the user to modify or add config parameters from the command line.
