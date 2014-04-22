@@ -493,6 +493,9 @@ def Process(config, logger=None):
     # Now start working on the files.
     image_num = 0
     obj_num = 0
+    config['file_num'] = 0
+    config['image_num'] = 0
+    config['obj_num'] = 0
 
     extra_keys = [ 'psf', 'weight', 'badpix' ]
     last_file_name = {}
@@ -502,7 +505,6 @@ def Process(config, logger=None):
     # Process the input field for the first file.  Often there are "safe" input items
     # that won't need to be reprocessed each time.  So do them here once and keep them
     # in the config for all file_nums.  This is more important if nproc != 1.
-    config['file_num'] = 0
     ProcessInput(config, file_num=0, logger=logger_proxy, safe_only=True)
 
     # Normally, random_seed is just a number, which really means to use that number
@@ -524,6 +526,7 @@ def Process(config, logger=None):
         # (In image, they are indexed by image_num, and after that by obj_num.)
         config['index_key'] = 'file_num'
         config['file_num'] = file_num
+        config['image_num'] = image_num
         config['start_obj_num'] = obj_num
         config['obj_num'] = obj_num
 
@@ -792,6 +795,7 @@ def BuildFits(file_name, config, logger=None,
 
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
+    config['image_num'] = image_num
     config['start_obj_num'] = obj_num
     config['obj_num'] = obj_num
     if logger:
@@ -918,6 +922,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
 
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
+    config['image_num'] = image_num
     config['start_obj_num'] = obj_num
     config['obj_num'] = obj_num
     if logger:
@@ -1033,6 +1038,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
+    config['image_num'] = image_num
     config['start_obj_num'] = obj_num
     config['obj_num'] = obj_num
     if logger:
@@ -1176,6 +1182,7 @@ def GetNObjForMultiFits(config, file_num, image_num):
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
+    config['image_num'] = image_num
     nimages = params['nimages']
     try :
         nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
@@ -1198,6 +1205,7 @@ def GetNObjForDataCube(config, file_num, image_num):
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
+    config['image_num'] = image_num
     nimages = params['nimages']
     try :
         nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
