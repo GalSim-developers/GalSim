@@ -44,7 +44,7 @@ namespace galsim {
         bool isAxisymmetric() const { return _isStillAxisymmetric; }
         bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return _real_space; }
-        bool isAnalyticK() const { return !_real_space; }    // convolvees must all meet this
+        bool isAnalyticK() const { return true; }    // convolvees must all meet this
         double maxK() const { return _minMaxK; }
         double stepK() const { return _netStepK; }
 
@@ -159,7 +159,7 @@ namespace galsim {
         bool isAxisymmetric() const { return _adaptee.isAxisymmetric(); }
         bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return _real_space; }
-        bool isAnalyticK() const { return !_real_space; }
+        bool isAnalyticK() const { return true; }
         double maxK() const { return _adaptee.maxK(); }
         double stepK() const { return _adaptee.stepK() / sqrt(2.); }
 
@@ -210,7 +210,7 @@ namespace galsim {
         bool isAxisymmetric() const { return _adaptee.isAxisymmetric(); }
         bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return _real_space; }
-        bool isAnalyticK() const { return !_real_space; }
+        bool isAnalyticK() const { return true; }
         double maxK() const { return _adaptee.maxK(); }
         double stepK() const { return _adaptee.stepK() / sqrt(2.); }
 

@@ -65,7 +65,7 @@ AngleUnit.__getinitargs__ = AngleUnit_getinitargs
 
 
 def get_angle_unit(unit):
-    """Convert a string into the corresponding AngleUnit
+    """Convert a string into the corresponding AngleUnit.
     """
     unit = unit.strip().lower()
     if unit.startswith('rad') :
@@ -132,7 +132,7 @@ Operations
 ----------
 
 Allowed arithmetic with Angles include the following:
-(In the list below, x is a double, unit is a galsim.AngleUnit, and theta is a galsim.Angle)
+(In the list below, `x` is a double, `unit` is a galsim.AngleUnit, and `theta` is a galsim.Angle)
 
     >>> theta = x * unit
     >>> x = theta / unit
@@ -146,7 +146,7 @@ Allowed arithmetic with Angles include the following:
     >>> theta *= x
     >>> theta /= x
 
-Operations on Numpy arrays containing Angles are permitted, provided that they are within the bounds
+Operations on NumPy arrays containing Angles are permitted, provided that they are within the bounds
 of the allowed operations on Angles listed above (e.g., addition/subtraction of Angles,
 multiplication of an Angle by a float, but not multiplication of Angles together).
 

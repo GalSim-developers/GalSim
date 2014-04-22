@@ -67,14 +67,14 @@ class ShapeData(object):
 
     At the C++ level, we have a container for the outputs of the HSM shape measurement routines.
     The ShapeData class is the analogous object at the python level.  It contains the following
-    information about moment measurement (from either EstimateShear or FindAdaptiveMom):
+    information about moment measurement (from either EstimateShear() or FindAdaptiveMom()):
 
-    - image_bounds: a galsim.Bounds object describing the image.
+    - image_bounds: a BoundsI object describing the image.
 
     - moments_status: the status flag resulting from moments measurement; -1 indicates no attempt to
       measure, 0 indicates success.
 
-    - observed_shape: a galsim.Shear object representing the observed shape based on adaptive
+    - observed_shape: a Shear object representing the observed shape based on adaptive
       moments.
 
     - moments_sigma: size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels; -1 if
@@ -86,7 +86,7 @@ class ShapeData(object):
       approximating the flux).  If the image was drawn using the "surface brightness" normalization,
       then moments_amp relates to the flux via flux = (moments_amp)*(pixel scale)^2.
 
-    - moments_centroid: a galsim.PositionD object representing the centroid based on adaptive
+    - moments_centroid: a PositionD object representing the centroid based on adaptive
       moments.  The convention for centroids is such that the center of the lower-left pixel is
       (0,0).
 
@@ -94,7 +94,7 @@ class ShapeData(object):
 
     - moments_n_iter: number of iterations needed to get adaptive moments, or 0 if not measured.
 
-    If EstimateShear was used, then the following fields related to PSF-corrected shape will also
+    If EstimateShear() was used, then the following fields related to PSF-corrected shape will also
     be populated:
 
     - correction_status: the status flag resulting from PSF correction; -1 indicates no attempt to
@@ -118,8 +118,8 @@ class ShapeData(object):
       PSF-correction.
 
     The ShapeData object can be initialized completely empty, or can be returned from the
-    routines that measure object moments (FindAdaptiveMom) and carry out PSF correction
-    (EstimateShear).
+    routines that measure object moments (FindAdaptiveMom()) and carry out PSF correction
+    (EstimateShear()).
     """
     def __init__(self, *args):
         # arg checking: require either a CppShapeData, or nothing
@@ -147,7 +147,7 @@ class ShapeData(object):
             self.resolution_factor = args[0].resolution_factor
             self.error_message = args[0].error_message
         else:
-            self.image_bounds = _galsim.BoundsD()
+            self.image_bounds = _galsim.BoundsI()
             self.moments_status = -1
             self.observed_shape = galsim.Shear()
             self.moments_sigma = -1.0
@@ -171,7 +171,7 @@ class ShapeData(object):
 def _convertMask(image, weight = None, badpix = None):
     """Convert from input weight and badpix images to a single mask image needed by C++ functions.
 
-       This is used by EstimateShear and FindAdaptiveMom.
+    This is used by EstimateShear() and FindAdaptiveMom().
     """
     # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
     if weight == None:
@@ -226,7 +226,7 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
     docstring for file hsm.py) to estimate galaxy shears, correcting for the convolution by the
     PSF.
 
-    This method works from Image inputs rather than galsim.base.GSObject inputs, which provides
+    This method works from Image inputs rather than GSObject inputs, which provides
     additional flexibility (e.g., it is possible to work from an Image that was read from file and
     corresponds to no particular GSObject), but this also means that users who wish to apply it to
     simple combinations of GSObjects (e.g., a Convolve) must take the additional step of drawing
@@ -264,14 +264,14 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
     The code below gives an example of how one could run this routine on a large batch of galaxies,
     explicitly catching and tracking any failures:
 
-        n_image = 100
-        n_fail = 0
-        for i=0, range(n_image):
-            #...some code defining this_image, this_final_epsf_image...
-            result = galsim.hsm.EstimateShear(this_image, this_final_epsf_image, strict = False)
-            if result.error_message != "":
-                n_fail += 1
-        print "Number of failures: ", n_fail
+        >>> n_image = 100
+        >>> n_fail = 0
+        >>> for i=0, range(n_image):
+        >>>     #...some code defining this_image, this_final_epsf_image...
+        >>>     result = galsim.hsm.EstimateShear(this_image, this_final_epsf_image, strict = False)
+        >>>     if result.error_message != "":
+        >>>         n_fail += 1
+        >>> print "Number of failures: ", n_fail
 
     @param gal_image        The Image of the galaxy being measured.
     @param PSF_image        The Image for the PSF.
@@ -310,7 +310,7 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
                             then information about failures will be silently stored in the output 
                             ShapeData object. [default: True]
     @param hsmparams        The hsmparams keyword can be used to change the settings used by
-                            EstimateShear when estimating shears; see HSMParams documentation
+                            EstimateShear() when estimating shears; see HSMParams documentation
                             using help(galsim.hsm.HSMParams) for more information. [default: None]
 
     @returns a ShapeData object containing the results of shape measurement.
@@ -349,11 +349,11 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     by initially guessing a circular Gaussian that is used as a weight function, computing the
     weighted moments, recomputing the moments using the result of the previous step as the weight
     function, and so on until the moments that are measured are the same as those used for the
-    weight function.  FindAdaptiveMom can be used either as a free function, or as a method of the
+    weight function.  FindAdaptiveMom() can be used either as a free function, or as a method of the
     Image class.
 
-    Like EstimateShear, FindAdaptiveMom works on Image inputs, and fails if the object is small
-    compared to the pixel scale.  For more details, see galsim.hsm.EstimateShear.
+    Like EstimateShear(), FindAdaptiveMom() works on Image inputs, and fails if the object is small
+    compared to the pixel scale.  For more details, see EstimateShear().
 
     Example usage
     -------------
@@ -368,9 +368,9 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
 
     Assuming a successful measurement, the most relevant pieces of information are
     `my_moments.moments_sigma`, which is `|det(M)|^(1/4)` [=`sigma` for a circular Gaussian] and
-    `my_moments.observed_shape`, which is a C++ CppShear.  
+    `my_moments.observed_shape`, which is a Shear.  
 
-    Methods of the CppShear class can be used to get the distortion
+    Methods of the Shear class can be used to get the distortion
     `(e1, e2) = (a^2 - b^2)/(a^2 + b^2)`, e.g. `my_moments.observed_shape.getE1()`, or to get the
     shear `g`, the conformal shear `eta`, and so on.
 
@@ -388,7 +388,7 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
 
     then the result will be a RuntimeError due to moment measurement failing because the object is
     so large.  While the list of all possible settings that can be changed is accessible in the
-    docstring of the galsim.hsm.HSMParams class, in this case we need to modify `max_amoment` which
+    docstring of the HSMParams class, in this case we need to modify `max_amoment` which
     is the maximum value of the moments in units of pixel^2.  The following measurement, using the
     default values for every parameter except for `max_amoment`, will be
     successful:

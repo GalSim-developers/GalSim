@@ -27,8 +27,8 @@ class Shear(object):
 
     The python Shear class (galsim.Shear) can be initialized in a variety of ways to represent shape
     distortions.  A shear is an operation that transforms a circle into an ellipse with
-    minor-to-major axis ratio b/a, with position angle beta, while conserving the area (see below
-    for a discussion of the implications of this choice).  Given the multiple definitions of
+    minor-to-major axis ratio b/a, with position angle beta, while conserving the area (see
+    below for a discussion of the implications of this choice).  Given the multiple definitions of
     ellipticity, we have multiple definitions of shear:
 
     reduced shear |g| = (a - b)/(a + b)
@@ -37,14 +37,13 @@ class Shear(object):
     minor-to-major axis ratio q = b/a
 
     These can be thought of as a magnitude and a real-space position angle beta, or as two
-    components, e.g., `g1` and `g2`, with
+    components, e.g., g1 and g2, with
 
-    `g1` = |g| cos(2*`beta`)
-    `g2` = |g| sin(2*`beta`)
+    g1 = |g| cos(2*beta)
+    g2 = |g| sin(2*beta)
 
-    Note: `beta` is _not_ the phase of a complex valued shear.  Rather, the complex shear is 
-    `g1` + i `g2` = `g` exp(2 i `beta`).  Likewise for `eta` or `e`.  The phase of the complex value
-    is twice `beta`.
+    Note: beta is _not_ the phase of a complex valued shear.  Rather, the complex shear is 
+    g1 + i g2 = g exp(2 i beta).  Likewise for eta or e.  The phase of the complex value is 2 beta.
 
     The following are all examples of valid calls to initialize a Shear object:
     
@@ -63,20 +62,19 @@ class Shear(object):
     specify one of two components, with the other assumed to be zero.  If a magnitude such as `e`, 
     `g`, `eta`, or `q` is specified, then `beta` is also required to be specified.  It is possible 
     to initialize a Shear with zero reduced shear by specifying no args or kwargs, i.e. 
-    galsim.Shear().  The galsim.Shear contains a C++ CppShear object, and operations on Shear rely 
-    on wrapped methods of the CppShear.
+    galsim.Shear().
 
-    Since we have defined a galsim.Shear as a transformation that preserves area, this means that it
-    is not a precise description of what happens during the process of weak lensing.  The coordinate
+    Since we have defined a Shear as a transformation that preserves area, this means that it is not
+    a precise description of what happens during the process of weak lensing.  The coordinate
     transformation that occurs during the actual weak lensing process is such that if a galaxy is
-    sheared by some (gamma_1, gamma_2), and then sheared by (-gamma_1, -gamma_2), it will in the end
-    return to its original shape, but will have changed in area due to the magnification, mu =
-    1/((1.-kappa)**2 - (gamma_1**2 + gamma_2**2)), which is not equal to one for non-zero shear even
-    for convergence kappa=0.  Application of a galsim.Shear using the GSObject.shear method does not
-    include this area change.  To properly incorporate the effective change in area due to shear, it
-    is necessary to either (a) define the galsim.Shear object, use the shear() method, and
-    separately use the magnify() method, or (b) use the lens() method that simultaneously 
-    magnifies and shears.
+    sheared by some `(gamma_1, gamma_2)`, and then sheared by `(-gamma_1, -gamma_2)`, it will in the
+    end return to its original shape, but will have changed in area due to the magnification, `mu =
+    1/((1.-kappa)**2 - (gamma_1**2 + gamma_2**2))`, which is not equal to one for non-zero shear
+    even for convergence `kappa=0`.  Application of a Shear using the GSObject.shear() method does
+    not include this area change.  To properly incorporate the effective change in area due to
+    shear, it is necessary to either (a) define the Shear object, use the shear() method, and
+    separately use the magnify() method, or (b) use the lens() method that simultaneously magnifies
+    and shears.
     """
     def __init__(self, *args, **kwargs):
         import numpy as np

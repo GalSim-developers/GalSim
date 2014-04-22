@@ -78,6 +78,30 @@ namespace galsim {
                 .def("duplicate", &BaseDeviate::duplicate, "")
                 .enable_pickling()
                 ;
+
+            // This lets python recognize functions that return a shared_ptr<BaseDeviate>
+            // as a python BaseDeviate object.  This is needed for the BaseNoise::getRNG()
+            // function _if_ the BaseNoise was default constructed.  As far as I understand it,
+            // if you construct a BaseDeviate object in python and then use that to construct
+            // a BaseNoise object:
+            //
+            //     >>> rng = galsim.BaseDeviate()
+            //     >>> gn = galsim.GauusianNoise(rng)
+            //
+            // then the `gn.getRNG()` call doesn't need anything special because the actual
+            // BaseDeviate being wrapped in the shared_ptr is really a BaseDeviateCallBack.
+            // So boost python knows how to handle it.  
+            //
+            // But if the BaseDeviate was constructed in the C++ layer, which happens when you
+            // default construct the BaseNoise object:
+            //
+            //     >>> gn = galsim.GaussianNoise()
+            //
+            // then the `gn.getRNG()` call returns a real BaseDeviate object in the shared_ptr.
+            // So python doesn't really know what that is without this next line.  The
+            // register_ptr_to_python call tells boost that a shared_ptr<BaseDeviate> in the 
+            // C++ layer should be treated like a BaseDeviate in the python layer.
+            bp::register_ptr_to_python< boost::shared_ptr<BaseDeviate> >();
         }
 
     };

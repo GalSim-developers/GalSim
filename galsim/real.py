@@ -17,9 +17,9 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file real.py
-Functions for dealing with galsim.RealGalaxy objects and the catalogs that store their data.
+Functions for dealing with RealGalaxy objects and the catalogs that store their data.
 
-The galsim.RealGalaxy uses images of galaxies from real astrophysical data (e.g. the Hubble Space
+The RealGalaxy uses images of galaxies from real astrophysical data (e.g. the Hubble Space
 Telescope), along with a PSF model of the optical properties of the telescope that took these
 images, to simulate new galaxy images with a different (must be larger) telescope PSF.  A 
 description of the simulation method can be found in Section 5 of Mandelbaum et al. (2012; MNRAS, 
@@ -32,7 +32,7 @@ downloading GalSim-readable RealGalaxyCatalog data in FITS format, see the RealG
 page on the GalSim Wiki: 
 https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data%20Download%20Page
 
-The function simReal takes this information and uses it to simulate a (no-noise-added) image from 
+The function simReal() takes this information and uses it to simulate a (no-noise-added) image from
 some lower-resolution telescope.
 """
 
@@ -43,9 +43,9 @@ from galsim import GSObject
 from galsim import pyfits
 
 class RealGalaxy(GSObject):
-    """A class describing real galaxies from some training dataset.  It's underlying implementation
-    uses Convolve instance of an InterpolatedImage (for the observed galaxy) with a Deconvolve
-    of another InterpolatedImage (for the PSF).
+    """A class describing real galaxies from some training dataset.  Its underlying implementation
+    uses a Convolution instance of an InterpolatedImage (for the observed galaxy) with a
+    Deconvolution of another InterpolatedImage (for the PSF).
 
     This class uses a catalog describing galaxies in some training data (for more details, see the
     RealGalaxyCatalog documentation) to read in data about realistic galaxies that can be used for
@@ -53,22 +53,23 @@ class RealGalaxy(GSObject):
     might be needed to make or interpret the simulations, e.g., the noise properties of the training
     data.
 
-    The GSObject drawShoot method is unavailable for RealGalaxy instances.
+    The GSObject drawShoot() method is unavailable for RealGalaxy instances.
 
     Initialization
     --------------
     
-        real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
-                                        rng=None, x_interpolant=None, k_interpolant=None,
-                                        flux=None, pad_factor=4, noise_pad_size=0)
+        >>> real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
+        ...                                 rng=None, x_interpolant=None, k_interpolant=None,
+        ...                                 flux=None, pad_factor=4, noise_pad_size=0,
+        ...                                 gsparams=None)
 
-    This initializes real_galaxy with three InterpolatedImage objects (one for the deconvolved
+    This initializes `real_galaxy` with three InterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
     keywords for choosing a galaxy; exactly one must be set.  In future we may add more such
     options, e.g., to choose at random but accounting for the non-constant weight factors
     (probabilities for objects to make it into the training sample).  
 
-    Note that tests suggest that for optimal balance between accuracy and speed,`k_interpolant` and
+    Note that tests suggest that for optimal balance between accuracy and speed, `k_interpolant` and
     `pad_factor` should be kept at their default values.  The user should be aware that significant
     inaccuracy can result from using other combinations of these parameters; more details can be
     found in http://arxiv.org/abs/1401.2636, especially table 1, and in comment
@@ -77,28 +78,28 @@ class RealGalaxy(GSObject):
 
     @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
                             find the data, etc.
-    @param index            Index of the desired galaxy in the catalog. [One of index, id, or
-                            random is required.]
-    @param id               Object ID for the desired galaxy in the catalog. [One of index, id, or
-                            random is required.]
+    @param index            Index of the desired galaxy in the catalog. [One of `index`, `id`, or
+                            `random` is required.]
+    @param id               Object ID for the desired galaxy in the catalog. [One of `index`, `id`,
+                            or `random` is required.]
     @param random           If True, then just select a completely random galaxy from the catalog.
-                            [One of index, id, or random is required.]
+                            [One of `index`, `id`, or `random` is required.]
     @param rng              A random number generator to use for selecting a random galaxy
                             (may be any kind of BaseDeviate or None) and to use in generating
                             any noise field when padding.  This user-input random number
                             generator takes precedence over any stored within a user-input
-                            CorrelatedNoise instance (see `noise_pad` param below).
+                            CorrelatedNoise instance (see `noise_pad` parameter below).
                             [default: None]
     @param x_interpolant    Either an Interpolant2d (or Interpolant) instance or a string
                             indicating which real-space interpolant should be used.  Options
                             are 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN'
-                            where N should be the integer order to use. [default: galsim.Quintic()]
+                            where N should be the integer order to use. [default: Quintic]
     @param k_interpolant    Either an Interpolant2d (or Interpolant) instance or a string
                             indicating which k-space interpolant should be used.  Options are
                             'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN'
                             where N should be the integer order to use.  We strongly recommend
                             leaving this parameter at its default value; see text above for
-                            details.  [default: galsim.Quintic()]
+                            details.  [default: Quintic]
     @param flux             Total flux, if None then original flux in galaxy is adopted without
                             change. [default: None]
     @param pad_factor       Factor by which to pad the Image when creating the
@@ -107,11 +108,11 @@ class RealGalaxy(GSObject):
     @param noise_pad_size   If provided, the image will be padded out to this size (in arcsec)
                             with the noise specified in the real galaxy catalog. This is
                             important if you are planning to whiten the resulting image.  You
-                            want to make sure that the padded image is larger than the postage
+                            should make sure that the padded image is larger than the postage
                             stamp onto which you are drawing this object.
                             [default: None]
-    @param gsparams         An optional GSParams argument.  See the docstring for galsim.GSParams
-                            for details. [default: None]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
     Methods
     -------
@@ -181,8 +182,7 @@ class RealGalaxy(GSObject):
             logger.debug('RealGalaxy %d: Got noise_image',use_index)
 
         if noise_image is None:
-            wcs = galsim.PixelScale(pixel_scale)
-            self.noise = galsim.UncorrelatedNoise(rng, wcs, var, gsparams)
+            self.noise = galsim.UncorrelatedNoise(var, rng=rng, scale=pixel_scale, gsparams=gsparams)
         else:
             ii = galsim.InterpolatedImage(noise_image, scale=pixel_scale, normalization="sb",
                                           calculate_stepk=False, calculate_maxk=False,
@@ -261,7 +261,7 @@ class RealGalaxyCatalog(object):
 
         >>> my_rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits')
 
-    If `image_dir` is specified, the set of galaxy/PSF image files is assumed to be in the
+    If `image_dir` is specified, the set of galaxy/PSF image files is assumed to be in that
     subdirectory of where the catalog is (in the following example, `./images`):
 
         >>> my_rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits', image_dir='images')
@@ -314,11 +314,11 @@ class RealGalaxyCatalog(object):
                       If a path (a string containing `/`), it is the full path to the directory
                       containing the galaxy/PDF images. [default: None]
     @param dir        The directory of catalog file. [default: None]
-    @param preload    Whether to preload the header information.  If preload=True, the bulk of 
-                      the I/O time is in the constructor.  If preload=False, there is approximately
-                      the same total I/O time (assuming you eventually use most of the image
-                      files referenced in the catalog), but it is spread over the various calls to 
-                      getGal and getPSF.  [default: False]
+    @param preload    Whether to preload the header information.  If `preload=True`, the bulk of 
+                      the I/O time is in the constructor.  If `preload=False`, there is
+                      approximately the same total I/O time (assuming you eventually use most of
+                      the image files referenced in the catalog), but it is spread over the
+                      various calls to getGal() and getPSF().  [default: False]
     @param noise_dir  The directory of the noise files if different from the directory of the 
                       image files.  [default: image_dir]
     """
@@ -523,7 +523,7 @@ class RealGalaxyCatalog(object):
         return galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
     def getNoiseProperties(self, i):
-        """Returns the components needed to make the noise cf at index `i`.
+        """Returns the components needed to make the noise correlation function at index `i`.
            Specifically, the noise image (or None), the pixel_scale, and the noise variance,
            as a tuple (im, scale, var).
         """
@@ -560,14 +560,13 @@ class RealGalaxyCatalog(object):
         return im, self.pixel_scale[i], self.variance[i]
 
     def getNoise(self, i, rng=None, gsparams=None):
-        """Returns the noise cf at index `i` as a CorrelatedNoise object.
+        """Returns the noise correlation function at index `i` as a CorrelatedNoise object.
            Note: the return value from this function is not picklable, so this cannot be used
            across processes.
         """
         im, scale, var = self.getNoiseProperties(i)
         if im is None:
-            wcs = galsim.PixelScale(pixel_scale)
-            cf = galsim.UncorrelatedNoise(rng, wcs, var, gsparams)
+            cf = galsim.UncorrelatedNoise(var, rng=rng, scale=pixel_scale, gsparams=gsparams)
         else:
             ii = galsim.InterpolatedImage(im, scale=scale, normalization="sb",
                                           calculate_stepk=False, calculate_maxk=False,
@@ -601,10 +600,10 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     @param g1               First component of shear to impose (components defined with respect
                             to pixel coordinates), [default: 0]
     @param g2               Second component of shear to impose, [default: 0]
-    @param rotation_angle   Angle by which to rotate the galaxy (must be a galsim.Angle
+    @param rotation_angle   Angle by which to rotate the galaxy (must be an Angle
                             instance). [default: None]
     @param rand_rotate      Should the galaxy be rotated by some random angle?  [default: True;
-                            unless rotation_angle is set, then False]
+                            unless `rotation_angle` is set, then False]
     @param rng              A BaseDeviate instance to use for the random selection or rotation
                             angle. [default: None]
     @param target_flux      The target flux in the output galaxy image, [default: 1000.]

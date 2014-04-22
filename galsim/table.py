@@ -27,22 +27,22 @@ class LookupTable(object):
     LookupTable represents a lookup table to store function values that may be slow to calculate,
     for which interpolating from a lookup table is sufficiently accurate.
 
-    A LookupTable may be constructed from two arrays (lists, tuples, or Numpy arrays of 
+    A LookupTable may be constructed from two arrays (lists, tuples, or NumPy arrays of 
     floats/doubles).
 
-        args = [...]
-        vals = []
-        for arg in args:
-            val = calculateVal(arg)
-            vals.append(val)
-        table = galsim.LookupTable(x=args,f=vals)
+        >>> args = [...]
+        >>> vals = []
+        >>> for arg in args:
+        ...     val = calculateVal(arg)
+        ...     vals.append(val)
+        >>> table = galsim.LookupTable(x=args,f=vals)
 
     Then you can use this table as a replacement for the slow calculation:
 
-        other_args = [...]
-        for arg in other_args:
-            val = table(arg)
-            [... use val ...]
+        >>> other_args = [...]
+        >>> for arg in other_args:
+        ...     val = table(arg)
+        ...     [... use val ...]
 
 
     The default interpolation method is cubic spline interpolation.  This is usually the 
@@ -56,20 +56,20 @@ class LookupTable(object):
       each argument in the table.
 
     Another option is to read in the values from an ascii file.  The file should have two 
-    columns of numbers, which are taken to be the x and f values.
+    columns of numbers, which are taken to be the `x` and `f` values.
 
     The user can also opt to interpolate in log(x) and/or log(f), though this is not the default.
     It may be a wise choice depending on the particular function, e.g., for a nearly power-law
     f(x) (or at least one that is locally power-law-ish for much of the x range) then it might 
     be a good idea to interpolate in log(x) and log(f) rather than x and f.
 
-    @param x             The list, tuple, or Numpy array of x values (floats, doubles, or ints,
+    @param x             The list, tuple, or NumPy array of `x` values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
-                         [Either x and f or file is required.]
-    @param f             The list, tuple, or Numpy array of f(x) values (floats, doubles, or ints,
+                         [Either `x` and `f` or `file` is required.]
+    @param f             The list, tuple, or NumPy array of `f(x)` values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
-                         [Either x and f or file is required.]
-    @param file          A file from which to read the (x,f) pairs. [Either x and f, or file
+                         [Either `x` and `f` or `file` is required.]
+    @param file          A file from which to read the `(x,f)` pairs. [Either `x` and `f`, or `file`
                          is required]
     @param interpolant   The interpolant to use, with the options being 'floor', 'ceil', 
                          'linear' and 'spline'. [default: 'spline']
@@ -132,21 +132,21 @@ class LookupTable(object):
         self.table = _galsim._LookupTable(x, f, interpolant)
 
     def __call__(self, x):
-        """Interpolate the LookupTable to get f(x) at some x value(s).
+        """Interpolate the LookupTable to get `f(x)` at some `x` value(s).
 
         When the LookupTable object is called with a single argument, it returns the value at that
-        argument.  An exception will be thrown automatically by the _LookupTable class if the x
+        argument.  An exception will be thrown automatically by the _LookupTable class if the `x`
         value is outside the range of the original tabulated values.  The value that is returned is
-        the same type as that provided as an argument, e.g., if a single value x is provided then a
-        single value of f is returned; if a tuple of x values is provided then a tuple of f values
-        is returned; and so on.  Even if interpolation was done using the `x_log` option, the user
-        should still provide x rather than log(x).
+        the same type as that provided as an argument, e.g., if a single value `x` is provided then
+        a single value of `f` is returned; if a tuple of `x` values is provided then a tuple of `f`
+        values is returned; and so on.  Even if interpolation was done using the `x_log` option,
+        the user should still provide `x` rather than `log(x)`.
 
-        @param x       The x value(s) for which f(x) should be calculated via interpolation on
-                       the original (x, f) lookup table.  x can be a single float/double, or a
-                       tuple, list, or arbitrarily shaped Numpy array.
+        @param x        The `x` value(s) for which `f(x)` should be calculated via interpolation on
+                        the original `(x,f)` lookup table.  `x` can be a single float/double, or a
+                        tuple, list, or arbitrarily shaped NumPy array.
 
-        @returns the interpolated f(x) value(s).
+        @returns the interpolated `f(x)` value(s).
         """
         import numpy as np
         # first, keep track of whether interpolation was done in x or log(x)
@@ -156,7 +156,7 @@ class LookupTable(object):
             x = np.log(x)
 
         # figure out what we received, and return the same thing
-        # option 1: a Numpy array
+        # option 1: a NumPy array
         if isinstance(x, np.ndarray):
             dimen = len(x.shape)
             if dimen > 2:

@@ -67,11 +67,11 @@ def get_refraction(wave, zenith_angle, **kwargs):
     radians, even though the apparent zenith angle technically decreases due to this effect.
 
     @param wave          Wavelength array in nanometers
-    @param zenith_angle  as a galsim.Angle
+    @param zenith_angle  as an Angle
     @param kwargs        Keyword arguments to pass to air_refractive_index() to override default
                          pressure, temperature, and/or H2O_pressure.
 
-    @returns the absolute value of change in zenith angle as a galsim.Angle.
+    @returns the absolute value of change in zenith angle as an Angle.
     """
     nm1 = air_refractive_index_minus_one(wave, **kwargs)
     # The following line is equivalent to:
@@ -83,17 +83,17 @@ def get_refraction(wave, zenith_angle, **kwargs):
 def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=None):
     """Compute the zenith angle and parallactic angle of a celestial coordinate, given either
     the celestial coordinate of the zenith, or equivalently, the hour angle of the coordinate and
-    the latitude of the observer.  This is useful for the function ChromaticAtmosphere in the
+    the latitude of the observer.  This is useful for the function ChromaticAtmosphere() in the
     galsim.chromatic module.
 
-    @param obj_coord     A `galsim.CelestialCoord` object for which the zenith and parallactic
+    @param obj_coord     A CelestialCoord object for which the zenith and parallactic
                          angles will be computed.
-    @param zenith_coord  A `galsim.CelestialCoord` indicating the coordinates of the zenith.
-    @param HA            The hour angle (as a `galsim.Angle`) of the coordinate for which the
+    @param zenith_coord  A CelestialCoord indicating the coordinates of the zenith.
+    @param HA            The hour angle (as an Angle) of the coordinate for which the
                          zenith and parallactic angles will be computed.
-    @param latitude      The observer's latitude, as a `galsim.Angle`.
+    @param latitude      The observer's latitude, as an Angle.
 
-    @returns the zenith_angle, parallactic_angle as galsim.Angles.
+    @returns the tuple `(zenith_angle, parallactic_angle)`, each of which is an Angle.
     """
     if zenith_coord is None:
         if HA is None or latitude is None:

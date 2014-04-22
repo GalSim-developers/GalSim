@@ -39,12 +39,12 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.__getinitargs__ = Bounds_getinitargs
     Class.__doc__ = """A class for representing image bounds as 2D rectangles.
 
-    BoundsD describes bounds with floating point values in x and y.
-    BoundsI described bounds with integer values in x and y.
+    BoundsD describes bounds with floating point values in `x` and `y`.
+    BoundsI described bounds with integer values in `x` and `y`.
 
-    The bounds are stored as four numbers in each instance, (xmin, xmax, ymin, ymax), with an
+    The bounds are stored as four numbers in each instance, `(xmin, xmax, ymin, ymax)`, with an
     additional boolean switch to say whether or not the Bounds rectangle has been defined.  The
-    rectangle is undefined if min>max in either direction.
+    rectangle is undefined if the min value > the max value in either direction.
 
     Initialization
     --------------
@@ -57,17 +57,17 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     In the BoundsI example above, `imin`, `imax`, `jmin` & `jmax` must all be integers to avoid an
     ArgumentError exception.
 
-    Another way to initialize a Bounds instance is using two galsim.PositionI/D instances, the first
-    for xmin/ymin and the second for `xmax`/`ymax`:
+    Another way to initialize a Bounds instance is using two PositionI/D instances, the first
+    for `(xmin,ymin)` and the second for `(xmax,ymax)`:
 
         >>> bounds = galsim.BoundsD(galsim.PositionD(xmin, ymin), galsim.PositionD(xmax, ymax))
         >>> bounds = galsim.BoundsI(galsim.PositionI(imin, jmin), galsim.PositionI(imax, jmax))
 
     In both the examples above, the I/D type of PositionI/D must match that of BoundsI/D.
 
-    Finally, there are a two ways to lazily initialize a bounds instance with `xmin`=`xmax`,
-    `ymin`=`ymax`, which will have an undefined rectangle and the instance method .isDefined()
-    will return false.  The first sets `xmin`=`xmax`=`ymin`=`ymax`=0:
+    Finally, there are a two ways to lazily initialize a bounds instance with `xmin = xmax`,
+    `ymin = ymax`, which will have an undefined rectangle and the instance method isDefined()
+    will return False.  The first sets `xmin = xmax = ymin = ymax = 0`:
 
         >>> bounds = galsim.BoundsD()
         >>> bounds = galsim.BoundsI()
@@ -107,19 +107,20 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.area.__func__.__doc__ = """Return the area of the enclosed region.
 
     The area is a bit different for integer-type BoundsI and float-type BoundsD instances.
-    For floating point types, it is simply (xmax-xmin)*(ymax-ymin).  However, for integer types, we
-    add 1 to each size to correctly count the number of pixels being described by the bounding box.
+    For floating point types, it is simply `(xmax-xmin)*(ymax-ymin)`.  However, for integer types,
+    we add 1 to each size to correctly count the number of pixels being described by the bounding
+    box.
     """
 
     Class.addBorder.__func__.__doc__ = """Add a border of the specified width to the Bounds.
 
-    The bounds rectangle must be defined, i.e. xmax > xmin, ymax > ymin.
+    The bounds rectangle must be defined, i.e. `xmax > xmin`, `ymax > ymin`.
     """
 
     Class.center.__func__.__doc__ = "Return the central point of the Bounds as a Position."
 
-    Class.includes.__func__.__doc__ = """Test whether a supplied x-y pair, Position, or Bounds lie
-    within a defined Bounds rectangle of this instance.
+    Class.includes.__func__.__doc__ = """Test whether a supplied `(x,y)` pair, Position, or Bounds
+    lie within a defined Bounds rectangle of this instance.
 
     Calling Examples
     ----------------
@@ -151,13 +152,12 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Calling Examples
     ----------------
     The input shift takes either a PositionI or PositionD instance, which must match 
-    the type of the bounds instance:
+    the type of the Bounds instance:
 
-            bounds = BoundsI(1,32,1,32)
-            bounds = bounds.shift(galsim.PositionI(3, 2))
-
-            bounds = BoundsD(0, 37.4, 0, 49.9)
-            bounds = bounds.shift(galsim.PositionD(3.9, 2.1))
+        >>> bounds = BoundsI(1,32,1,32)
+        >>> bounds = bounds.shift(galsim.PositionI(3, 2))
+        >>> bounds = BoundsD(0, 37.4, 0, 49.9)
+        >>> bounds = bounds.shift(galsim.PositionD(3.9, 2.1))
     """ 
 
 

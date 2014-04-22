@@ -42,7 +42,18 @@ change does not affect the most common uses of the function.
 * Changed the name of the parameter used to seed various Deviate objects
   from `lseed` to `seed`.  The documentation described it as an unnamed arg,
   rather than a named kwarg, so probably no one was using it by name.
-  But if you were, just change `lseed` to `seed`.
+  But if you were, just change `lseed` to `seed`. (Issue #511)
+* Added a default value for rng parameter to CorrelatedNoise objects.  The
+  consequence of this is that if you were relying on the order of the 
+  construction parameters, you will need to rearrange, since rng is no
+  longer first (because it is a kwarg now). (Issue #526)
+  * `CorrelatedNoise(rng, image)` should now be `CorrelatedNoise(image, 
+    rng=rng)` or `CorrelatedNoise(rng=rng, image=image)`.
+  * `UncorrelatedNoise(rng, wcs, variance)` should now be `UncorrelatedNoise(
+    variance, rng=rng, wcs=wcs)` or `UncorrelatedNoise(rng=rng, wcs=wcs,
+    variance=variance)`.
+  * `getCOSMOSNoise(rng, file_name)` should now be `getCOSMOSNoise(file_name,
+    rng=rng)` or `getCOSMOSNoise(rng=rng, file_name=file_name)`.
 
 
 Other changes to the API
@@ -155,6 +166,9 @@ removed.
   * `BaseDeviate` subclasses: all `set*` methods.
   * `Shear`: `setG1G2`, `setE1E2`, `setEBeta`, `setEta1Eta2`, `setEtaBeta`
   * `Shapelet`: `setSigma`, `setOrder`, `setBVec`, `setNM`, `setPQ`
+* Changed how to build a `CorrelatedNoise` object from an `Image` to use the 
+  `CorrelatedNoise` constructor rather than `getCorrelatedNoise`. (Issue #527)
+  * `image.getCorrelatedNoise()` should now be `galsim.CorrelatedNoise(image)`.
 
 
 New WCS classes: (Issue #364)
@@ -186,8 +200,8 @@ New WCS classes: (Issue #364)
   world coordinate system. i.e. the world coordinates are in terms of right
   ascension and declination (RA, Dec).  There is a new CelestialCoord
   class that encapsulates this kind of position on the sphere.
-  * `RaDecFunction` takes an arbitrary function radec_func(x,y) that returns
-    the RA and Dec.
+  * `RaDecFunction` takes an arbitrary functions ra(x,y) and dec(x,y) that
+    return the RA and Dec.
   * `AstropyWCS` uses the astropy.wcs package to read in a given FITS file.
   * `PyAstWCS` uses the starlink.Ast package to read in a given FITS file.
   * `WcsToolsWCS` uses wcstools commands for a given FITS file.
@@ -346,3 +360,8 @@ Other new features:
   size of the image that it constructs internally. (Issue #478)
 * Added option to FitsHeader and FitsWCS to read in SCamp-style text files with
   the header information using the parameter `text_file=True`. (Issue #508)
+* Fixed some bugs in the treatment of correlated noise.  (Issues #526, #528)
+* Modify addNoiseSNR() method to return the variance of the noise that was
+  added.  (Issue #526)
+* Add `dtype` option to `draw`, `drawShoot` and `drawK`, which sets the 
+  data type to use for automatically constructed images.

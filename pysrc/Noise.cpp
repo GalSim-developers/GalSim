@@ -106,6 +106,7 @@ namespace galsim {
                 .def(bp::init<boost::shared_ptr<BaseDeviate> >(bp::arg("rng")=bp::object()))
                 .def("getRNG", &BaseNoise::getRNG, "")
                 .def("setRNG", &BaseNoise::setRNG, "")
+                .add_property("rng", &BaseNoise::getRNG)
                 .def("getVariance", &BaseNoise::getVariance, "")
                 .def("_setVariance", &BaseNoise::setVariance, "")
                 .def("_scaleVariance", &BaseNoise::scaleVariance, "")
@@ -130,6 +131,7 @@ namespace galsim {
             pyGaussianNoise
                 .def("getSigma", &GaussianNoise::getSigma, "")
                 .def("setSigma", &GaussianNoise::setSigma, "")
+                .add_property("sigma", &GaussianNoise::getSigma)
                 ;
         }
 
@@ -147,6 +149,7 @@ namespace galsim {
             pyPoissonNoise
                 .def("getSkyLevel", &PoissonNoise::getSkyLevel, "")
                 .def("setSkyLevel", &PoissonNoise::setSkyLevel, "")
+                .add_property("sky_level", &PoissonNoise::getSkyLevel)
                 ;
         }
 
@@ -169,6 +172,9 @@ namespace galsim {
                 .def("setSkyLevel", &CCDNoise::setSkyLevel, "")
                 .def("setGain", &CCDNoise::setGain, "")
                 .def("setReadNoise", &CCDNoise::setReadNoise, "")
+                .add_property("sky_level", &CCDNoise::getSkyLevel)
+                .add_property("gain", &CCDNoise::getGain)
+                .add_property("read_noise", &CCDNoise::getReadNoise)
                 ;
         }
 
@@ -200,6 +206,7 @@ namespace galsim {
             );
             pyVarGaussianNoise
                 .def("getVarImage", &VarGaussianNoise::getVarImage, "")
+                .add_property("var_image", &VarGaussianNoise::getVarImage)
                 ;
         }
 

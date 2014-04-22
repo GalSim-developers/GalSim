@@ -571,7 +571,7 @@ def test_corr_padding():
     # Rescale it to have a decently large amplitude for the purpose of doing these tests.
     im = 1.e2*galsim.fits.read(imgfile)
     # Make a CorrrlatedNoise out of it.
-    cn = galsim.CorrelatedNoise(galsim.BaseDeviate(orig_seed), im)
+    cn = galsim.CorrelatedNoise(im, galsim.BaseDeviate(orig_seed))
 
     # first, make a noise image
     orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
@@ -622,7 +622,7 @@ def test_corr_padding():
     # (given the same random seed)
     infile = 'fits_files/blankimg.fits'
     inimg = galsim.fits.read(infile)
-    incf = galsim.CorrelatedNoise(galsim.GaussianDeviate(), inimg) # input RNG will be ignored below
+    incf = galsim.CorrelatedNoise(inimg, galsim.GaussianDeviate()) # input RNG will be ignored below
     int_im2 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
                                        noise_pad=inimg, noise_pad_size = max(big_nx,big_ny))
     int_im3 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),

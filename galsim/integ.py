@@ -17,7 +17,7 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file integ.py
-Includes a Python layer version of the C++ int1d function in galim::integ,
+Includes a Python layer version of the C++ int1d() function in galim::integ,
 and python image integrators for use in galsim.chromatic
 """
 
@@ -81,8 +81,21 @@ class ImageIntegrator(object):
     # 2) an function attribute `.rule` which takes a list of integrand evaluations as its first
     #    argument, and a list of evaluation wavelengths as its second argument, and returns
     #    an approximation to the integral.  (E.g., the function midpt above, or numpy.trapz)
+
     def __call__(self, evaluateAtWavelength, bandpass, image, gain=1.0, wmult=1.0,
                  use_true_center=True, offset=None):
+        """
+        @param evaluateAtWavelength Function that returns a monochromatic surface brightness
+                                    profile as a function of wavelength.
+        @param bandpass             Bandpass object representing the filter being imaged through.
+        @param image                Image used to set size and scale of output
+        @param gain                 See GSObject.draw()
+        @param wmult                See GSObject.draw()
+        @param use_true_center      See GSObject.draw()
+        @param offset               See GSObject.draw()
+
+        @returns the result of integral as an Image
+        """
         images = []
         waves = self.calculateWaves(bandpass)
         self.last_n_eval = len(waves)
@@ -97,29 +110,16 @@ class ImageIntegrator(object):
 
 class SampleIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over
-    wavelength using a `galsim.Bandpass` as a weight function.
+    wavelength using a Bandpass as a weight function.
 
     This integrator will evaluate the integrand only at the wavelengths in `bandpass.wave_list`.
-    See `ContinuousIntegrator` for an integrator that evaluates the integrand at a given number of
+    See ContinuousIntegrator for an integrator that evaluates the integrand at a given number of
     points equally spaced apart.
 
-    __init__ parameters:
-    @param rule   What integration rule to apply to the wavelength and monochromatic surface
-                  brightness samples.  Options include:
-                     galsim.integ.midpt  --  Use the midpoint integration rule
-                     numpy.trapz         --  Use the trapezoidal integration rule
-
-    __call__ parameters:
-    @param evaluateAtWavelength  Function that returns a monochromatic surface brightness profile as
-                                 a function of wavelength.
-    @param bandpass              galsim.Bandpass object representing the filter being imaged through.
-    @param image                 galsim.Image used to set size and scale of output
-    @param gain                  See GSObject.draw()
-    @param wmult                 See GSObject.draw()
-    @param use_true_center       See GSObject.draw()
-    @param offset                See GSObject.draw()
-
-    @returns the result of integral as a galsim.Image
+    @param rule         Which integration rule to apply to the wavelength and monochromatic surface
+                        brightness samples.  Options include:
+                            galsim.integ.midpt  --  Use the midpoint integration rule
+                            numpy.trapz         --  Use the trapezoidal integration rule
     """
     def __init__(self, rule):
         self.rule = rule
@@ -131,38 +131,25 @@ class SampleIntegrator(ImageIntegrator):
 
 class ContinuousIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over
-    wavelength using a `galsim.Bandpass` as a weight function.
+    wavelength using a Bandpass as a weight function.
 
     This integrator will evaluate the integrand only at the wavelengths in `bandpass.wave_list`.
-    See `ContinuousIntegrator` for an integrator that evaluates the integrand at a given number of
+    See ContinuousIntegrator for an integrator that evaluates the integrand at a given number of
     points equally spaced apart.
 
-    __init__ parameters:
-    @parma rule            What integration rule to apply to the wavelength and monochromatic
-                           surface brightness samples.  Options include:
-                               galsim.integ.midpt  --  Use the midpoint integration rule
-                               numpy.trapz         --  Use the trapezoidal integration rule
-    @parma N               Number of equally-wavelength-spaced monochromatic surface brightness
-                           samples to evaluate. [default: 250]
-    @param use_endpoints   Whether to sample the endpoints `bandpass.blue_limit` and
-                           `bandpass.red_limit`.  This should probably be True for a rule like
-                           numpy.trapz, which explicitly samples the integration limits.  For a
-                           rule like the midpoint rule, however, the integration limits are not
-                           generally sampled, (only the midpoint between each integration limit and
-                           its nearest interior point is sampled), thus `use_endpoints` should be
-                           set to False in this case.  [default: True]
-
-    __call__ parameters:
-    @param evaluateAtWavelength  Function that returns a monochromatic surface brightness profile as
-                                a function of wavelength.
-    @param bandpass             A Bandpass object representing the filter being imaged through.
-    @param image                An Image used to set size and scale of output
-    @param gain                 See GSObject.draw()
-    @param wmult                See GSObject.draw()
-    @param use_true_center      See GSObject.draw()
-    @param offset               See GSObject.draw()
-
-    @returns the result of integral as a galsim.Image
+    @param rule         Which integration rule to apply to the wavelength and monochromatic
+                        surface brightness samples.  Options include:
+                            galsim.integ.midpt  --  Use the midpoint integration rule
+                            numpy.trapz         --  Use the trapezoidal integration rule
+    @param N            Number of equally-wavelength-spaced monochromatic surface brightness
+                        samples to evaluate. [default: 250]
+    @param use_endpoints  Whether to sample the endpoints `bandpass.blue_limit` and
+                        `bandpass.red_limit`.  This should probably be True for a rule like
+                        numpy.trapz, which explicitly samples the integration limits.  For a
+                        rule like the midpoint rule, however, the integration limits are not
+                        generally sampled, (only the midpoint between each integration limit and
+                        its nearest interior point is sampled), thus `use_endpoints` should be
+                        set to False in this case.  [default: True]
     """
     def __init__(self, rule, N=250, use_endpoints=True):
         self.N = N

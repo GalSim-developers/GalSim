@@ -51,10 +51,10 @@ class DES_PSFEx(object):
     1. Ignore the WCS of the original image.  In this case, the *.psf files have all the
        information you need:
 
-           des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name)
-           image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
-                                                             # NOT in arcsec on the sky!
-           psf = des_psfex.getPSF(image_pos)      # profile is in image coordinates
+           >>> des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name)
+           >>> image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
+           >>>                                                   # NOT in arcsec on the sky!
+           >>> psf = des_psfex.getPSF(image_pos)      # profile is in image coordinates
 
        The psf profile that is returned will be in image coordinates.  Therefore, it should be 
        drawn onto an image with no wcs.  (Or equivalently, one with `scale = 1`.)  If you want 
@@ -68,10 +68,10 @@ class DES_PSFEx(object):
        the file from which to read the WCS, which will often be more convenient, but you can
        also just pass in a WCS object directly.
 
-           des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name, image_file_name)
-           image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
-                                                             # NOT in arcsec on the sky!
-           psf = des_psfex.getPSF(image_pos)      # profile is in world coordinates
+           >>> des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name, image_file_name)
+           >>> image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
+           >>>                                                   # NOT in arcsec on the sky!
+           >>> psf = des_psfex.getPSF(image_pos)      # profile is in world coordinates
 
        This time the psf profile that is returned will already be in world coordinates as 
        GalSim normally expects, so you can use it in the normal ways.  If you want to draw it

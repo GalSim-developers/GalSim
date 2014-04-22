@@ -17,7 +17,7 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file catalog.py
-Routines for controlling catalog Input/Output with GalSim. 
+Routines for controlling catalog input/output with GalSim. 
 """
 
 import galsim
@@ -28,22 +28,28 @@ class Catalog(object):
     Each row corresponds to a different object to be built, and each column stores some item of
     information about that object (e.g. flux or half_light_radius).
 
-    After construction, the following fields are available:
-
-        self.nobjects   The number of objects in the catalog.
-        self.ncols      The number of columns in the catalog.
-        self.isfits     Whether the catalog is a fits catalog.
-        self.names      For a fits catalog, the valid column names.
-
+    Initialization
+    --------------
 
     @param file_name     Filename of the input catalog. (Required)
-    @param dir           Optionally a directory name can be provided if the file_name does not 
+    @param dir           Optionally a directory name can be provided if `file_name` does not 
                          already include it.
-    @param file_type     Either 'ASCII' or 'FITS'.  If None, infer from the file name ending.
+    @param file_type     Either 'ASCII' or 'FITS'.  If None, infer from `file_name` ending.
                          [default: None]
     @param comments      The character used to indicate the start of a comment in an
                          ASCII catalog.  [default: '#']
     @param hdu           Which hdu to use for FITS files.  [default: 1]
+
+    Attributes
+    ----------
+
+    After construction, the following attributes are available:
+
+        nobjects   The number of objects in the catalog.
+        ncols      The number of columns in the catalog.
+        isfits     Whether the catalog is a fits catalog.
+        names      For a fits catalog, the valid column names.
+
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str , 'file_type' : str , 'comments' : str , 'hdu' : int }
@@ -136,10 +142,10 @@ class Catalog(object):
         self.isfits = True
 
     def get(self, index, col):
-        """Return the data for the given index and col in its native type.
+        """Return the data for the given `index` and `col` in its native type.
 
-        For ASCII catalogs, col is the column number.  
-        For FITS catalogs, col is a string giving the name of the column in the FITS table.
+        For ASCII catalogs, `col` is the column number.  
+        For FITS catalogs, `col` is a string giving the name of the column in the FITS table.
 
         Also, for ASCII catalogs, the "native type" is always str.  For FITS catalogs, it is 
         whatever type is specified for each field in the binary table.
@@ -161,37 +167,37 @@ class Catalog(object):
             return self.data[index, icol]
 
     def getFloat(self, index, col):
-        """Return the data for the given index and col as a float if possible
+        """Return the data for the given `index` and `col` as a float if possible
         """
         return float(self.get(index,col))
 
     def getInt(self, index, col):
-        """Return the data for the given index and col as an int if possible
+        """Return the data for the given `index` and `col` as an int if possible
         """
         return int(self.get(index,col))
 
 
 class Dict(object):
-    """A class that reads a python dict from a file
+    """A class that reads a python dict from a file.
 
     After construction, it behaves like a regular python dict, with one exception.
     In order to facilitate getting values in a hierarchy of fields, we allow the '.'
-    character to chain keys together for the get method.  So,
+    character to chain keys together for the get() method.  So,
 
-        d.get('noise.properties.variance')
+        >>> d.get('noise.properties.variance')
 
     is expanded into
 
-        d['noise']['properties']['variance'] 
+        >>> d['noise']['properties']['variance'] 
 
     Furthermore, if a "key" is really an integer, then it is used as such, which accesses 
     the corresponding element in a list.  e.g.
 
-        d.get('noise_models.2.variance')
+        >>> d.get('noise_models.2.variance')
         
     is equivalent to 
 
-        d['noise_models'][2]['variance']
+        >>> d['noise_models'][2]['variance']
 
     This makes it much easier to access arbitrary elements within parameter files.
 
@@ -200,13 +206,13 @@ class Dict(object):
     to set `key_split` to a different character or string and use that to chain the keys.
 
 
-    @param file_name     Filename storing the dict. (Required)
-    @param dir           Optionally a directory name can be provided if the file_name does not 
-                         already include it.
+    @param file_name     Filename storing the dict.
+    @param dir           Optionally a directory name can be provided if `file_name` does not 
+                         already include it. [default: None]
     @param file_type     Options are 'Pickle', 'YAML', or 'JSON' or None.  If None, infer from 
-                         the file name extension ('.p*', '.y*', '.j*' respectively).
+                         `file_name` extension ('.p*', '.y*', '.j*' respectively).
                          [default: None]
-    @param key_split     The character (or string) to use to split chained keys.  (c.f. the 
+    @param key_split     The character (or string) to use to split chained keys.  (cf. the 
                          description of this feature above.)  [default: '.']
     """
     _req_params = { 'file_name' : str }

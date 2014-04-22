@@ -1354,10 +1354,12 @@ def test_radecfunction():
             # Also test with one that doesn't work with numpy arrays to test that the 
             # code does the right thing in that case too, since local and makeSkyImage
             # try the numpy option first and do something else if it fails.
-            alt_radec_func = ( lambda x,y: 
-                    [ (c.ra.rad(), c.dec.rad()) for c in 
-                            [ center.deproject(galsim.PositionD(ufunc(x,y), vfunc(x,y))) ] ][0] )
-            wcs3 = galsim.RaDecFunction(alt_radec_func)
+            # This also tests the alternate initialization using separate ra_func, dec_fun.
+            ra_func = lambda x,y: center.deproject(
+                    galsim.PositionD(ufunc(x,y), vfunc(x,y))).ra.rad()
+            dec_func = lambda x,y: center.deproject(
+                    galsim.PositionD(ufunc(x,y), vfunc(x,y))).dec.rad()
+            wcs3 = galsim.RaDecFunction(ra_func, dec_func)
 
             # Check that distance, jacobian for some x,y positions match the UV values.
             for x,y in zip(far_x_list, far_y_list):
@@ -1383,12 +1385,12 @@ def test_radecfunction():
                 np.testing.assert_almost_equal(
                         d2, d1, digits, 'deprojected dist does not match expected value.')
 
-                # Now test the two RaDec wcs classes
-                for wcs in [ wcs2, wcs3 ]:
+                # Now test the two initializations of RaDecFunction.
+                for test_wcs in [ wcs2, wcs3 ]:
                     image_pos = galsim.PositionD(x,y)
                     world_pos1 = wcs1.toWorld(image_pos)
-                    world_pos2 = wcs2.toWorld(image_pos)
-                    origin = wcs2.toWorld(galsim.PositionD(0.,0.))
+                    world_pos2 = test_wcs.toWorld(image_pos)
+                    origin = test_wcs.toWorld(galsim.PositionD(0.,0.))
                     d3 = np.sqrt( world_pos1.x**2 + world_pos1.y**2 )
                     d4 = center.distanceTo(world_pos2)
                     d4 = 2.*math.sin(d4.rad()/2) * galsim.radians / galsim.arcsec
@@ -1399,7 +1401,7 @@ def test_radecfunction():
 
                     # Calculate the Jacobians for each wcs
                     jac1 = wcs1.jacobian(image_pos)
-                    jac2 = wcs2.jacobian(image_pos)
+                    jac2 = test_wcs.jacobian(image_pos)
 
                     # The pixel area should match pretty much exactly.  The Lambert projection
                     # is an area preserving projection.
@@ -1407,7 +1409,7 @@ def test_radecfunction():
                             jac2.pixelArea(), jac1.pixelArea(), digits,
                             'RaDecFunction '+name+' pixelArea() does not match expected value.')
                     np.testing.assert_almost_equal(
-                            wcs2.pixelArea(image_pos), jac1.pixelArea(), digits,
+                            test_wcs.pixelArea(image_pos), jac1.pixelArea(), digits,
                             'RaDecFunction '+name+' pixelArea(pos) does not match expected value.')
 
                     # The distortion should be pretty small, so the min/max linear scale should
@@ -1416,13 +1418,13 @@ def test_radecfunction():
                             jac2.minLinearScale(), jac1.minLinearScale(), digits,
                             'RaDecFunction '+name+' minScale() does not match expected value.')
                     np.testing.assert_almost_equal(
-                            wcs2.minLinearScale(image_pos), jac1.minLinearScale(), digits,
+                            test_wcs.minLinearScale(image_pos), jac1.minLinearScale(), digits,
                             'RaDecFunction '+name+' minScale(pos) does not match expected value.')
                     np.testing.assert_almost_equal(
                             jac2.maxLinearScale(), jac1.maxLinearScale(), digits,
                             'RaDecFunction '+name+' maxScale() does not match expected value.')
                     np.testing.assert_almost_equal(
-                            wcs2.maxLinearScale(image_pos), jac1.maxLinearScale(), digits,
+                            test_wcs.maxLinearScale(image_pos), jac1.maxLinearScale(), digits,
                             'RaDecFunction '+name+' maxScale(pos) does not match expected value.')
 
                     # The main discrepancy between the jacobians is a rotation term. 
@@ -1442,7 +1444,7 @@ def test_radecfunction():
                             'CelestialCoord calculated the wrong angle between center and coord')
                     angle = 180 * galsim.degrees - A - B
 
-                    # Now we can use this angle to correct the jacobian from wcs2.
+                    # Now we can use this angle to correct the jacobian from test_wcs.
                     c = math.cos(angle.rad())
                     s = math.sin(angle.rad())
                     rot_dudx = c*jac2.dudx + s*jac2.dvdx
