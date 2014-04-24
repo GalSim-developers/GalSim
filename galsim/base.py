@@ -57,8 +57,7 @@ class GSObject(object):
 
         >>> gal = galsim.Sersic(n=4, half_light_radius=4.3)
         >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
-        >>> pix = galsim.Pixel(scale=0.2)
-        >>> conv = galsim.Convolve([gal,psf,pix])
+        >>> conv = galsim.Convolve([gal,psf])
 
     All of these classes are subclasses of GSObject, so you should see those docstrings for
     more details about how to construct the various profiles.
@@ -174,13 +173,13 @@ class GSObject(object):
 
         >>> gal = galsim.Sersic(n=4, half_light_radius=4.3)
         >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
-        >>> conv = galsim.Convolve([gal,psf,pix])
+        >>> conv = galsim.Convolve([gal,psf])
         >>> im = galsim.Image(1000,1000, scale=0.05)        # Note the very small pixel scale!
         >>> im = conv.drawImage(image=im)                   # This uses the default GSParams.
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
-          File "galsim/base.py", line 885, in draw
-            image.added_flux = prof.SBProfile.drawImage(image.image, gain, wmult)
+          File "galsim/base.py", line 1236, in drawImage
+            image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
         RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
         If you can handle the large FFT, you may update gsparams.maximum_fft_size.
         >>> big_fft_params = galsim.GSParams(maximum_fft_size=10240)
@@ -192,8 +191,8 @@ class GSObject(object):
     changed when the compound object is created.  In the example given here, it is possible to
     change parameters related to the drawing, but not the Fourier space parameters for the
     components that go into the Convolution.  To get better sampling in Fourier space, for example,
-    the `gal`, `psf`, and/or `pix` should be created with `gsparams` that have a non-default value
-    of `alias_threshold`.  This statement applies to the threshold and accuracy parameters.
+    the `gal` and/or `psf` should be created with `gsparams` that have a non-default value of
+    `alias_threshold`.  This statement applies to the threshold and accuracy parameters.
     """
     _gsparams = { 'minimum_fft_size' : int,
                   'maximum_fft_size' : int,
@@ -1233,7 +1232,7 @@ class GSObject(object):
                     real_space = True
                 else:
                     real_space = None
-                prof = galsim.Convolve(prof, galsim.Pixel(scale = 1.0, real_space=real_space))
+                prof = galsim.Convolve(prof, galsim.Pixel(scale = 1.0), real_space=real_space)
             image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
 
         return image
@@ -1714,7 +1713,7 @@ class Kolmogorov(GSObject):
 class Pixel(GSObject):
     """A class describing a pixel profile.  This is just a 2D square top-hat function.
 
-    This class is typically used to represent a Pixel response function.  It is usually
+    This class is typically used to represent a pixel response function.  It is usually
     used internally by the drawImage() function, but there may be cases where the user
     would want to use this profile directly.
 
