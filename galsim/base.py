@@ -121,8 +121,8 @@ class GSObject(object):
         >>> gal = gal.shear(g1=0.2, g2=0.05)
         >>> sigma = gal.getSigma()              # This will raise an exception.
 
-    It is however possible to access the original object that was transformed via the 
-    `original` attribute.  
+    It is however possible to access the original object that was transformed via the
+    `original` attribute.
 
         >>> sigma = gal.original.getSigma()     # This works.
 
@@ -136,9 +136,8 @@ class GSObject(object):
     There are three methods that do this.  In all cases, there are lots of optional parameters.
     See the docstrings for these methods for more details.
 
-        >>> image = obj.draw()
-        >>> image = obj.drawShoot()
-        >>> kimage_r, kimage_i = obj.drawK()
+        >>> image = obj.drawImage(...)
+        >>> kimage_r, kimage_i = obj.drawKImages(...)
 
     Attributes
     ----------
@@ -175,19 +174,18 @@ class GSObject(object):
 
         >>> gal = galsim.Sersic(n=4, half_light_radius=4.3)
         >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
-        >>> pix = galsim.Pixel(scale=0.05)                  # Note the very small pixel scale!
         >>> conv = galsim.Convolve([gal,psf,pix])
-        >>> im = galsim.Image(1000,1000, scale=0.05)        # Use the same pixel scale on the image.
-        >>> im = conv.draw(image=im)                        # This uses the default GSParams.
+        >>> im = galsim.Image(1000,1000, scale=0.05)        # Note the very small pixel scale!
+        >>> im = conv.drawImage(image=im)                   # This uses the default GSParams.
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
           File "galsim/base.py", line 885, in draw
-            image.added_flux = prof.SBProfile.draw(image.image, gain, wmult)
+            image.added_flux = prof.SBProfile.drawImage(image.image, gain, wmult)
         RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
         If you can handle the large FFT, you may update gsparams.maximum_fft_size.
         >>> big_fft_params = galsim.GSParams(maximum_fft_size=10240)
-        >>> conv = galsim.Convolve([gal,psf,pix],gsparams=big_fft_params)
-        >>> im = conv.draw(image=im)                        # Now it works (but is slow!)
+        >>> conv = galsim.Convolve([gal,psf],gsparams=big_fft_params)
+        >>> im = conv.drawImage(image=im)                   # Now it works (but is slow!)
         >>> im.write('high_res_sersic.fits')
 
     Note that for compound objects in compound.py, like Convolution or Sum, not all GSParams can be
@@ -746,8 +744,7 @@ class GSObject(object):
         self.__class__ = new_obj.__class__
 
 
-    # Make sure the image is defined with the right size and wcs for the draw and
-    # drawShoot commands.
+    # Make sure the image is defined with the right size and wcs for drawImage()
     def _draw_setup_image(self, image, wcs, wmult, add_to_image, dtype, scale_is_dk=False):
 
         # If image already exists, and its wcs is not a PixelScale, then we're all set.
@@ -932,53 +929,131 @@ class GSObject(object):
             # else leave wcs = None
             return None
 
-    def draw(self, image=None, scale=None, wcs=None, gain=1., wmult=1., normalization="flux",
-             add_to_image=False, use_true_center=True, offset=None, dtype=None, dx=None):
-        """Draws an Image of the object, with bounds optionally set by an input Image.
+    def drawImage(self, image=None, scale=None, wcs=None, add_to_image=False, dtype=None,
+                  method='auto', gain=1., wmult=1., use_true_center=True, offset=None,
+                  n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None, dx=None):
+        """Draws an Image of the object.
 
-        The draw() method is used to draw an Image of the GSObject, typically using Fourier space
-        convolution (or, for certain GSObjects that have hard edges, real-space convolution may be
-        used), and using interpolation to carry out image transformations such as shearing.  This
-        method can create a new Image or can draw into an existing one, depending on the choice of
-        the `image` keyword parameter.  Other keywords of particular relevance for users are those
-        that set the pixel scale or wcs for the image (`scale`, `wcs`), that choose the
-        normalization convention for the flux (`normalization`), and that decide whether to clear
-        the input Image before drawing into it (`add_to_image`).
+        The drawImage() method is used to draw an Image of the current object using one of several
+        possible rendering methods (see below).  It can create a new Image or can draw onto an
+        existing one if provided by the `image` parameter.  If the `image` is given, you can also
+        optionally add to the given Image if `add_to_image = True`, but the default is to replace
+        the current contents with new values.
 
-        The object will always be drawn with its nominal center at the center location of the
-        image.  There is thus a distinction in the behavior at the center for even- and odd-sized
-        images.  For a profile with a maximum at (0,0), this maximum will fall at the central
-        pixel of an odd-sized image, but in the corner of the 4 central pixels of an even-sized
-        image.  If you care about how the sub-pixel offsets are drawn, you should either make
-        sure you provide an image with the right kind of size, or shift the profile by half
-        a pixel as desired to get the profile's (0,0) location where you want it.
+        If drawImage() will be creating the image from scratch for you, it will decide a
+        good size to use based on the size of the object being drawn.  Basically, it will
+        try to use an area large enough to include at least 99.5% of the flux.  However, the
+        pixel scale (or WCS function if you prefer) is something you would typically want
+        to set explicitly via the `scale` (`wcs`) parameter.  You can also set the data type
+        with the `dtype` parameter that has the same options as for the Image constructor.
+        If you do not provide either `scale` or `wcs`, then drawImage() will default to using
+        the Nyquist scale for the current object.
 
-        Note that when drawing a GSObject that was defined with a particular value of flux, it is
-        not necessarily the case that a drawn image with `normalization=flux` will have the sum of
-        pixel values equal to flux.  That condition is guaranteed to be satisfied only if the
-        profile has been convolved with a pixel response. If there was no convolution by a pixel
-        response, then the draw() method is effectively sampling the surface brightness profile of
-        the GSObject at pixel centers without integrating over the flux within pixels, so for
-        profiles that are poorly sampled and/or varying rapidly (e.g., high n Sersic profiles), the
-        sum of pixel values might differ significantly from the GSObject flux.
+        There are several different possible methods drawImage() can use for rendering the image.
+        This is set by the `method` parameter.  The options are:
 
-        On return, the image will have a member `added_flux`, which will be set to be the total
+            'auto'      This is the default, which will normally be equivalent to 'fft'.  However,
+                        if the object being rendered is simple (no convolution) and has hard
+                        edges (e.g. a Box or a truncated Moffat or Sersic), then it will switch
+                        to 'direct', since that is often both faster and more accurate in these
+                        cases (due to ringing in Fourier space).
+
+            'fft'       The integration of the light within each pixel is mathematically equivalent
+                        to convolving by the pixel profile (a Pixel object) and sampling the result
+                        at the centers of the pixels.  This method will do that convolution using
+                        a discrete Fourier transform.  Furthermore, if the object (or any component
+                        of it) has been transformed via shear(), dilate(), etc., the these
+                        transformations are done in Fourier space as well.
+
+            'direct'    This uses a direct integration (using the Gauss-Kronrod-Patterson method)
+                        for the integration over the pixel response.  It is usually slower than
+                        the 'fft' method, but if the profile has hard edges that cause ringing
+                        in Fourier space, it can be faster and/or more accurate.  If you use
+                        'direct' with something that is already a Convolution, then this will
+                        revert to 'fft', since the double convolution is far to slow to be
+                        practical using direct integration.
+
+            'phot'      This uses a technique called photon shooting to render the image.
+                        Essentially, the object profile is taken as a probability distribution
+                        from which a finite number of photons are "shot" onto the image.  The
+                        photon's flux gets added to whichever pixel the photon hits.  This process
+                        automatically accounts for the integration of the light over the pixel
+                        area, since all photons that hit any part of the pixel are counted.
+                        Convolutions and transformations are simple geometric processes in this
+                        framework.  However, there are two caveats with this method: (1) the
+                        resulting image will have Poisson noise from the finite number of photons,
+                        and (2) it is not available for all object types (notably anything that
+                        includes a Deconvolution).
+
+            'no_pixel'  This will draw the profile directly, sampling the profile at the centers
+                        of the pixels, rather than integrating the light over the pixels.  This
+                        might be desirable if you are using a PSF that already includes a
+                        convolution by the pixel response.  For example, if you are using a PSF
+                        from an observed image of a PSF, then it has already been convolved by the
+                        pixel, so you would not want to do so again.  If the object profile is
+                        a convolution, it will normally be computed in Fourier space, but if
+                        both components have hard edges, then it will use direct integration.
+                        Note: The image values are technically the sampled profile time the
+                        pixel area.  This gets the flux normalization right for the above use
+                        case.  cf. `method = 'sb'`.
+
+            'sb'        This is a lot like 'no_pixel', except that the image values will simply
+                        be the sampled object profile's surface brightness, not multiplying this
+                        by the pixel area.  This does not correspond to any real observing
+                        scenario, but it could be useful if you want to view the surface brightness
+                        profile of an object directly, without including the pixel integration.
+
+        Normally, the flux of the object should be equal to the sum of all the pixel values in
+        the image, less some small amount of flux that may fall off the edge of the image
+        (assuming you don't use `method='sb'`).  However, you may optionally set a `gain` value,
+        which converts between photons and ADU (Analog-to-Digital Units), the units of the pixel
+        values in real images.  Normally, the gain of a CCD is in electrons/ADU, but in GalSim, we
+        fold the quantum efficiency into the gain as well, so the units are photons/ADU.  The flux
+        of the object is then taken to be in photons, and the `gain` converts this to ADU.
+
+        The 'phot' method has a few extra parameters that adjust how it functions.  The total
+        number of photons to shoot is noramlly calculated from the object's flux.  This flux
+        is taken to be given in photons, so for most simple profiles, this will equal the number
+        of photons shot.  (See the discussion in Rowe et al, 2014, for why this might be
+        modified for InterpolatedImage and related profiles.)  However, you can manually set
+        a different number of photons with `n_photons`.  You can also set `max_extra_noise` to
+        tell drawImage() to use fewer photons than normal to add no more than the given amount
+        of extra noise per pixel.  This is useful if you will be subsequently adding sky noise,
+        and you can tolerate more noise than the normal number of photons would give you, since
+        using fewer photons is of course faster.  Finally, the default behavior is to have the
+        total flux vary as a Poisson random variate, which is normally appropriate with photon
+        shooting.  But you can turn this off with `poisson_flux=False`.  It also default to False
+        if you set a value for `n_photons`.
+
+        The object will by default be drawn with its nominal center at the center location of the
+        image.  There is thus a qualitative difference in the appearance of the rendered profile
+        when drawn on even- and odd-sized images.  For a profile with a maximum at (0,0), this
+        maximum will fall in the central pixel of an odd-sized image, but in the corner of the
+        four central pixels of an even-sized image.  There are two parameters that can affect
+        this behavior.  If you want the nominal center to always fall at the center of a pixel,
+        you can use `use_true_center=False`.  This will put the object's center at the position
+        `image.center()` which is an integer pixel value, and is not the true center of an
+        even-sized image.  You can also arbitrarily offset the profile from the image center
+        with the `offset` parameter to handle any sub-pixel dithering you want.
+
+        On return, the image will have an attribute `added_flux`, which will be set to be the total
         flux added to the image.  This may be useful as a sanity check that you have provided a
         large enough image to catch most of the flux.  For example:
 
-            >>> obj.draw(image)
+            >>> obj.drawImage(image)
             >>> assert image.added_flux > 0.99 * obj.getFlux()
 
         The appropriate threshold will depend on your particular application, including what kind
-        of profile the object has, how big your image is relative to the size of your object, etc.
+        of profile the object has, how big your image is relative to the size of your object,
+        whether you are keeping `poisson_flux=True`, etc.
 
         Given the periodicity implicitly assumed by use of FFTs, there can occasionally be artifacts
         due to wrapping at the edges, particularly for objects that are quite extended (e.g., due to
         the nature of the radial profile).  Use of the keyword parameter `wmult > 1` can be used to
-        reduce the size of these artifacts, at the expense of the calculations taking longer and
-        using more memory.  Alternatively, the objects that go into the image can be created with a
-        `gsparams` keyword that has a lower-than-default value for `alias_threshold`; see
-        help(galsim.GSParams) for more information.
+        reduce the size of these artifacts (by making larger FFT images), at the expense of the
+        calculations taking longer and using more memory.  Alternatively, the objects that go into
+        the image can be created with a `gsparams` keyword that has a lower-than-default value for
+        `alias_threshold`; see `help(galsim.GSParams)` for more information.
 
         @param image        If provided, this will be the image on which to draw the profile.
                             If `image = None`, then an automatically-sized Image will be created.
@@ -993,9 +1068,15 @@ class GSObject(object):
                             [default: None]
         @param wcs          If provided, use this as the wcs for the image.  At most one of `scale`
                             or `wcs` may be provided. [default: None]
+        @param add_to_image Whether to add flux to the existing image rather than clear out
+                            anything in the image before drawing.
+                            Note: This requires that `image` be provided and that it have defined
+                            bounds. [default: False]
         @param dtype        The data type to use for an automatically constructed image.  Only
                             valid if `image = None`. [default: None, which means to use
                             numpy.float32]
+        @param method       Which method to use for rendering the image.  See discussion above
+                            for the various options and what they do. [default: 'auto']
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD).  [default: 1]
         @param wmult        A multiplicative factor by which to enlarge (in each direction) the
@@ -1012,153 +1093,6 @@ class GSObject(object):
                             size of the images used for the Fourier-space calculations and hence
                             can reduce image artifacts, even though the image that is returned will
                             be the requested size. [default: 1]
-        @param normalization  Two options for the normalization:
-                            "flux" or "f" means that the sum of the output pixels is normalized
-                               to be equal to the total flux.  (Modulo any flux that falls off
-                               the edge of the image of course, and note the caveat in the draw()
-                               method documentation regarding the need to convolve with a pixel
-                               response.)
-                            "surface brightness" or "sb" means that the output pixels sample
-                               the surface brightness distribution at each location.
-                            [default: "flux"]
-        @param add_to_image Whether to add flux to the existing image rather than clear out
-                            anything in the image before drawing.
-                            Note: This requires that `image` be provided and that it have defined
-                            bounds. [default: False]
-        @param use_true_center  Normally, the profile is drawn to be centered at the true center
-                            of the image (using the function image.bounds.trueCenter()).
-                            If you would rather use the integer center (given by
-                            image.bounds.center()), set this to `False`.  [default: True]
-        @param offset       The location at which to center the profile being drawn relative to the
-                            center of the image (either the true center if `use_true_center=True`,
-                            or the nominal center if `use_true_center=False`). [default: None]
-
-        @returns the drawn Image.
-        """
-        # Check for obsolete dx parameter
-        if dx is not None and scale is None: scale = dx
-
-        # Raise an exception immediately if the normalization type is not recognized
-        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
-            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
-                              "'f', 'surface brightness' or 'sb'.") % normalization)
-
-        # Make sure the type of gain is correct and has a valid value:
-        if type(gain) != float:
-            gain = float(gain)
-        if gain <= 0.:
-            raise ValueError("Invalid gain <= 0. in draw command")
-
-        # Make sure the type of wmult is correct and has a valid value
-        if type(wmult) != float:
-            wmult = float(wmult)
-        if wmult <= 0:
-            raise ValueError("Invalid wmult <= 0 in draw command")
-
-        # Check for non-trivial wcs
-        wcs = self._check_wcs(scale, wcs, image)
-
-        # Make sure offset is a PositionD
-        offset = self._parse_offset(offset)
-
-        # Apply the offset, and possibly fix the centering for even-sized images
-        # Note: We need to do this before we call _draw_setup_image, since the shift
-        # affects stepK (especially if the offset is rather large).
-        prof = self._fix_center(image, wcs, offset, use_true_center, reverse=False)
-
-        # Make sure image is setup correctly
-        image = prof._draw_setup_image(image, wcs, wmult, add_to_image, dtype)
-
-        # Figure out the position of the center of the object
-        obj_cen = self._obj_center(image, offset, use_true_center)
-
-        # Surface brightness normalization requires scaling the flux value of each pixel
-        # by the area of the pixel.  We do this by changing the gain.
-        if normalization.lower() in ['surface brightness','sb']:
-            gain *= image.wcs.pixelArea(image_pos=obj_cen)
-
-        # Convert the profile in world coordinates to the profile in image coordinates:
-        prof = image.wcs.toImage(prof, image_pos=obj_cen)
-
-        imview = image.view()
-        imview.setCenter(0,0)
-        image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
-
-        return image
-
-    def drawShoot(self, image=None, scale=None, wcs=None, gain=1., wmult=1., normalization="flux",
-                  add_to_image=False, use_true_center=True, offset=None, dtype=None,
-                  n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None, dx=None):
-        """Draw an image of the object by shooting individual photons drawn from the surface
-        brightness profile of the object.
-
-        The drawShoot() method is used to draw an image of an object by shooting a number of photons
-        to randomly sample the profile of the object. The resulting image will thus have Poisson
-        noise due to the finite number of photons shot.  drawShoot() can create a new Image or use
-        an existing one, depending on the choice of the `image` keyword parameter.  Other keywords
-        of particular relevance for users are those that set the pixel scale or wcs for the image
-        (`scale`, `wcs`), that choose the normalization convention for the flux (`normalization`),
-        and that decide whether the clear the input Image before shooting photons into it
-        (`add_to_image`).
-
-        As for the draw() command, the object will always be drawn with its nominal center at the
-        center location of the image.  See the documentation for draw() for more discussion about
-        the implications of this for even- and odd-sized images.
-
-        It is important to remember that the image produced by drawShoot() represents the object as
-        convolved with the square image pixel.  So when using drawShoot() instead of draw(), you
-        should not explicitly include the pixel response by convolving with a Pixel GSObject.  Using
-        drawShoot() without convolving with a Pixel will produce the equivalent image (for very
-        large `n_photons`) as draw() produces when the same object is convolved with
-        `Pixel(scale=scale)` when drawing onto an image with pixel scale `scale`.
-
-        Note that the drawShoot() method is unavailable for Deconvolution objects or compound
-        objects (e.g. Sum, Convolution) that include a Deconvolution.
-
-        On return, the image will have a member `added_flux`, which will be set to be the total
-        flux of photons that landed inside the image bounds.  This may be useful as a sanity check
-        that you have provided a large enough image to catch most of the flux.  For example:
-
-            >>> obj.drawShoot(image)
-            >>> assert image.added_flux > 0.99 * obj.getFlux()
-
-        The appropriate threshold will depend on your particular application, including what kind
-        of profile the object has, how big your image is relative to the size of your object,
-        whether you are keeping `poisson_flux = True`, etc.
-
-        @param image        If provided, this will be the image on which to draw the profile.
-                            If `image = None`, then an automatically-sized image will be created.
-                            If `image != None`, but its bounds are undefined (e.g. if it was
-                            constructed with `image = galsim.Image()`), then it will be resized
-                            appropriately based on the profile's size [default: None].
-        @param scale        If provided, use this as the pixel scale for the image.
-                            If `scale` is `None` and `image != None`, then take the provided
-                            image's pixel scale.
-                            If `scale` is `None` and `image == None`, then use the Nyquist scale.
-                            If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
-                            [default: None]
-        @param wcs          If provided, use this as the wcs for the image.  At most one of `scale`
-                            or `wcs` may be provided. [default: None]
-        @param dtype        The data type to use for an automatically constructed image.  Only
-                            valid if `image = None`. [default: None, which means to use
-                            numpy.float32]
-        @param gain         The number of photons per ADU ("analog to digital units", the units of
-                            the numbers output from a CCD).  [default: 1]
-        @param wmult        A factor by which to make an automatically-sized image larger than
-                            it would normally be made. [default: 1]
-        @param normalization  Two options for the normalization:
-                            "flux" or "f" means that the sum of the output pixels is normalized
-                               to be equal to the total flux.  (Modulo any flux that falls off
-                               the edge of the image of course, and note the caveat in the draw()
-                               method documentation regarding the need to convolve with a pixel
-                               response.)
-                            "surface brightness" or "sb" means that the output pixels sample
-                               the surface brightness distribution at each location.
-                            [default: "flux"]
-        @param add_to_image Whether to add flux to the existing image rather than clear out
-                            anything in the image before drawing.
-                            Note: This requires that image be provided and that it have defined
-                            bounds. [default: False]
         @param use_true_center  Normally, the profile is drawn to be centered at the true center
                             of the image (using the function image.bounds.trueCenter()).
                             If you would rather use the integer center (given by
@@ -1203,11 +1137,6 @@ class GSObject(object):
         # Check for obsolete dx parameter
         if dx is not None and scale is None: scale = dx
 
-        # Raise an exception immediately if the normalization type is not recognized
-        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
-            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
-                              "'f', 'surface brightness' or 'sb'.") % normalization)
-
         # Make sure the type of gain is correct and has a valid value:
         if type(gain) != float:
             gain = float(gain)
@@ -1220,34 +1149,40 @@ class GSObject(object):
         if wmult <= 0:
             raise ValueError("Invalid wmult <= 0 in draw command")
 
-        # Make sure the type of n_photons is correct and has a valid value:
-        if type(n_photons) != float:
-            n_photons = float(n_photons)
-        if n_photons < 0.:
-            raise ValueError("Invalid n_photons < 0. in draw command")
-        if poisson_flux is None:
-            if n_photons == 0.: poisson_flux = True
-            else: poisson_flux = False
+        if method not in ['auto', 'fft', 'direct', 'phot', 'no_pixel', 'sb' ]:
+            raise ValueError("Invalid method name = %s"%method)
 
-        # Make sure the type of max_extra_noise is correct and has a valid value:
-        if type(max_extra_noise) != float:
-            max_extra_noise = float(max_extra_noise)
+        # Some checks that are only relevant for method == 'phot'
+        if method == 'phot':
+            # Make sure the type of n_photons is correct and has a valid value:
+            if type(n_photons) != float:
+                n_photons = float(n_photons)
+            if n_photons < 0.:
+                raise ValueError("Invalid n_photons < 0. in draw command")
 
-        # Setup the uniform_deviate if not provided one.
-        if rng is None:
-            uniform_deviate = galsim.UniformDeviate()
-        elif isinstance(rng,galsim.BaseDeviate):
-            # If it's a BaseDeviate, we can convert to UniformDeviate
-            uniform_deviate = galsim.UniformDeviate(rng)
-        else:
-            raise TypeError("The rng provided to drawShoot is not a BaseDeviate")
+            if poisson_flux is None:
+                if n_photons == 0.: poisson_flux = True
+                else: poisson_flux = False
 
-        # Check that either n_photons is set to something or flux is set to something
-        if n_photons == 0. and self.getFlux() == 1.:
-            import warnings
-            msg = "Warning: drawShoot for object with flux == 1, but n_photons == 0.\n"
-            msg += "This will only shoot a single photon (since flux = 1)."
-            warnings.warn(msg)
+            # Make sure the type of max_extra_noise is correct and has a valid value:
+            if type(max_extra_noise) != float:
+                max_extra_noise = float(max_extra_noise)
+
+            # Setup the uniform_deviate if not provided one.
+            if rng is None:
+                uniform_deviate = galsim.UniformDeviate()
+            elif isinstance(rng,galsim.BaseDeviate):
+                # If it's a BaseDeviate, we can convert to UniformDeviate
+                uniform_deviate = galsim.UniformDeviate(rng)
+            else:
+                raise TypeError("The rng provided is not a BaseDeviate")
+
+            # Check that either n_photons is set to something or flux is set to something
+            if n_photons == 0. and self.getFlux() == 1.:
+                import warnings
+                msg = "Warning: drawImage for object with flux == 1, but n_photons == 0.\n"
+                msg += "This will only shoot a single photon (since flux = 1)."
+                warnings.warn(msg)
 
         # Check for non-trivial wcs
         wcs = self._check_wcs(scale, wcs, image)
@@ -1256,52 +1191,92 @@ class GSObject(object):
         offset = self._parse_offset(offset)
 
         # Apply the offset, and possibly fix the centering for even-sized images
+        # Note: We need to do this before we call _draw_setup_image, since the shift
+        # affects stepK (especially if the offset is rather large).
         prof = self._fix_center(image, wcs, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
         image = prof._draw_setup_image(image, wcs, wmult, add_to_image, dtype)
 
+        # Figure out the position of the center of the object
         obj_cen = self._obj_center(image, offset, use_true_center)
 
-        # Surface brightness normalization requires scaling the flux value of each pixel
-        # by the area of the pixel.  We do this by changing the gain.
-        if normalization.lower() in ['surface brightness','sb']:
+        if method == 'sb':
             gain *= image.wcs.pixelArea(image_pos=obj_cen)
+            method = 'no_pixel'
 
-        # Convert the profile in world coordinates to the profile in chip coordinates:
+        # Convert the profile in world coordinates to the profile in image coordinates:
         prof = image.wcs.toImage(prof, image_pos=obj_cen)
 
         imview = image.view()
         imview.setCenter(0,0)
 
-        try:
-            image.added_flux = prof.SBProfile.drawShoot(
-                imview.image, n_photons, uniform_deviate, gain, max_extra_noise,
-                poisson_flux, add_to_image)
-        except RuntimeError:
-            # Give some extra explanation as a warning, then raise the original exception
-            # so the traceback shows as much detail as possible.
-            import warnings
-            warnings.warn(
-                "Unable to drawShoot from this GSObject, perhaps it is a Deconvolve "+
-                "or is a compound including one or more Deconvolve objects.")
-            raise
+        if method == 'phot':
+            try:
+                image.added_flux = prof.SBProfile.drawShoot(
+                    imview.image, n_photons, uniform_deviate, gain, max_extra_noise,
+                    poisson_flux, add_to_image)
+            except RuntimeError:
+                # Give some extra explanation as a warning, then raise the original exception
+                # so the traceback shows as much detail as possible.
+                import warnings
+                warnings.warn(
+                    "Unable to draw this GSObject with method='phot'.  Perhaps it is a "+
+                    "Deconvolve or is a compound including one or more Deconvolve objects.")
+                raise
+        else:
+            # Convolve by the Pixel if necessary.
+            if method in ['auto', 'fft', 'direct']:
+                if method == 'fft':
+                    real_space = False
+                elif method == 'direct':
+                    real_space = True
+                else:
+                    real_space = None
+                prof = galsim.Convolve(prof, galsim.Pixel(scale = 1.0, real_space=real_space))
+            image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
 
         return image
 
-    def drawK(self, re=None, im=None, scale=None, gain=1., add_to_image=False, dk=None,
-              dtype=None):
+    def draw(self, *args, **kwargs):
+        """An obsolete synonym for obj.drawImage(method='no_pixel')
+        """
+        normalization = kwargs.pop('normalization','f')
+        if normalization in ['flux','f']:
+            return self.drawImage(*args, method='no_pixel', **kwargs)
+        else:
+            return self.drawImage(*args, method='sb', **kwargs)
+
+    def drawShoot(self, *args, **kwargs):
+        """An obsolete synonym for obj.drawImage(methos='phot')
+        """
+        normalization = kwargs.pop('normalization','f')
+        if normalization in ['flux','f']:
+            return self.drawImage(*args, method='phot', **kwargs)
+        else:
+            if len(args) > 0:
+                image = args[0]
+            else:
+                image = kwargs.get('image', None)
+            scale = kwargs.get('scale', image.scale)
+            if scale == None or scale <= 0.:
+                scale = obj.nyquistScale()
+            gain = kwargs.pop('gain',1.)
+            gain *= scale**2
+            return self.drawImage(*args, method='phot', gain=gain, **kwargs)
+
+    def drawKImages(self, re=None, im=None, scale=None, gain=1., add_to_image=False, dk=None,
+                    dtype=None):
         """Draws the k-space Images (real and imaginary parts) of the object, with bounds
         optionally set by input Image instances.
 
-        Normalization is always such that re(0,0) = flux.  Unlike the real-space draw() and
-        drawShoot() functions, the (0,0) point will always be one of the actual pixel values.
-        For even-sized images, it will be 1/2 pixel above and to the right of the true
-        center of the image.
+        Normalization is always such that re(0,0) = flux.  Unlike the real-space drawImage()
+        function, the (0,0) point will always be one of the actual pixel values.  For even-sized
+        images, it will be 1/2 pixel above and to the right of the true center of the image.
 
-        Unlike for the draw() and drawShoot() commands, a wcs other than a simple pixel scale is not
-        allowed.  There is no `wcs` parameter here, and if the images have a non-trivial wcs (and
-        you don't override it with the `scale` parameter), a TypeError will be raised.
+        Unlike for the drawImage() method, a wcs other than a simple pixel scale is not allowed.
+        There is no `wcs` parameter here, and if the images have a non-trivial wcs (and you don't
+        override it with the `scale` parameter), a TypeError will be raised.
 
         @param re           If provided, this will be the real part of the k-space image.
                             If `re = None`, then an automatically-sized image will be created.
@@ -1380,6 +1355,10 @@ class GSObject(object):
 
         return re,im
 
+    def drawK(self, *args, **kwargs):
+        """An obsolete synonym for drawKImages()
+        """
+        return self.drawKImages(*args, **kwargs)
 
 
 # --- Now defining the derived classes ---
@@ -1735,9 +1714,9 @@ class Kolmogorov(GSObject):
 class Pixel(GSObject):
     """A class describing a pixel profile.  This is just a 2D square top-hat function.
 
-    This class is typically used to represent a Pixel response function, and therefore is only
-    needed when drawing images using Fourier transform or real-space convolution (with the draw()
-    method), not when using photon-shooting (with the drawShoot() method).
+    This class is typically used to represent a Pixel response function.  It is usually
+    used internally by the drawImage() function, but there may be cases where the user
+    would want to use this profile directly.
 
     Initialization
     --------------
