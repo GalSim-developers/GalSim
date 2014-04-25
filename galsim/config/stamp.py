@@ -722,7 +722,6 @@ def DrawPSFStamp(psf, config, bounds, offset, no_pixel, real_space):
 
     if not psf:
         raise AttributeError("DrawPSFStamp requires psf to be provided.")
-    psf = psf.copy()
 
     if ('output' in config and 'psf' in config['output'] and 
         'real_space' in config['output']['psf'] ):
