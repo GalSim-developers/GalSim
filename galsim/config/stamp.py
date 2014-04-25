@@ -591,8 +591,10 @@ def DrawStampFFT(psf, gal, config, xsize, ysize, offset, no_pixel, real_space):
 
     wcs = config['wcs'].local(image_pos = config['image_pos'])
     if not no_pixel:
-        pix = wcs.toWorld(galsim.Pixel(1.0))
-        final = galsim.Convolve(final, pix, real_space=real_space)
+        #pix = wcs.toWorld(galsim.Pixel(1.0))
+        #final = galsim.Convolve(final, pix, real_space=real_space)
+        final = galsim.Convolve(wcs.toImage(final), galsim.Pixel(1.0), real_space=real_space)
+        final = wcs.toWorld(final)
 
     im = final.draw(image=im, wcs=wcs, wmult=wmult, offset=offset)
     im.setOrigin(config['image_origin'])
@@ -741,13 +743,13 @@ def DrawPSFStamp(psf, config, bounds, offset, no_pixel, real_space):
 
     wcs = config['wcs'].local(config['image_pos'])
     if not no_pixel:
-        pix = wcs.toWorld(galsim.Pixel(1.0))
-        final_psf = galsim.Convolve(psf, pix, real_space=real_space)
-    else:
-        final_psf = psf
+        #pix = wcs.toWorld(galsim.Pixel(1.0))
+        #psf = galsim.Convolve(psf, pix, real_space=real_space)
+        psf = galsim.Convolve(wcs.toImage(psf), galsim.Pixel(1.0), real_space=real_space)
+        psf = wcs.toWorld(psf)
 
     im = galsim.ImageF(bounds, wcs=wcs)
-    final_psf.draw(im, offset=offset)
+    psf.draw(im, offset=offset)
 
     if (('output' in config and 'psf' in config['output'] 
             and 'signal_to_noise' in config['output']['psf']) or
