@@ -208,6 +208,10 @@ class Shapelet(GSObject):
 
     def expand(self, scale):
         sigma = self.sigma * scale
+        return Shapelet(sigma, self.order, self.bvec * scale**2)
+
+    def dilate(self, scale):
+        sigma = self.sigma * scale
         return Shapelet(sigma, self.order, self.bvec)
 
     def fitImage(self, image, center=None, normalization='flux'):
