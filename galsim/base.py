@@ -136,7 +136,7 @@ class GSObject(object):
     See the docstrings for these methods for more details.
 
         >>> image = obj.drawImage(...)
-        >>> kimage_r, kimage_i = obj.drawKImages(...)
+        >>> kimage_r, kimage_i = obj.drawKImage(...)
 
     Attributes
     ----------
@@ -954,7 +954,7 @@ class GSObject(object):
             'auto'      This is the default, which will normally be equivalent to 'fft'.  However,
                         if the object being rendered is simple (no convolution) and has hard
                         edges (e.g. a Box or a truncated Moffat or Sersic), then it will switch
-                        to 'direct', since that is often both faster and more accurate in these
+                        to 'real_space', since that is often both faster and more accurate in these
                         cases (due to ringing in Fourier space).
 
             'fft'       The integration of the light within each pixel is mathematically equivalent
@@ -964,13 +964,13 @@ class GSObject(object):
                         of it) has been transformed via shear(), dilate(), etc., the these
                         transformations are done in Fourier space as well.
 
-            'direct'    This uses a direct integration (using the Gauss-Kronrod-Patterson method)
-                        for the integration over the pixel response.  It is usually slower than
-                        the 'fft' method, but if the profile has hard edges that cause ringing
-                        in Fourier space, it can be faster and/or more accurate.  If you use
-                        'direct' with something that is already a Convolution, then this will
-                        revert to 'fft', since the double convolution is far to slow to be
-                        practical using direct integration.
+            'real_space'  This uses direct integrals (using the Gauss-Kronrod-Patterson method)
+                        in real space for the integration over the pixel response.  It is usually
+                        slower than the 'fft' method, but if the profile has hard edges that cause
+                        ringing in Fourier space, it can be faster and/or more accurate.  If you
+                        use 'real_space' with something that is already a Convolution, then this
+                        will revert to 'fft', since the double convolution is far to slow to be
+                        practical using real-space integrals.
 
             'phot'      This uses a technique called photon shooting to render the image.
                         Essentially, the object profile is taken as a probability distribution
@@ -989,12 +989,9 @@ class GSObject(object):
                         might be desirable if you are using a PSF that already includes a
                         convolution by the pixel response.  For example, if you are using a PSF
                         from an observed image of a PSF, then it has already been convolved by the
-                        pixel, so you would not want to do so again.  If the object profile is
-                        a convolution, it will normally be computed in Fourier space, but if
-                        both components have hard edges, then it will use direct integration.
-                        Note: The image values are technically the sampled profile time the
-                        pixel area.  This gets the flux normalization right for the above use
-                        case.  cf. `method = 'sb'`.
+                        pixel, so you would not want to do so again.  Note: The image values are
+                        technically the sampled profile times the pixel area.  This gets the flux
+                        normalization right for the above use case.  cf. `method = 'sb'`.
 
             'sb'        This is a lot like 'no_pixel', except that the image values will simply
                         be the sampled object profile's surface brightness, not multiplying this
@@ -1140,15 +1137,15 @@ class GSObject(object):
         if type(gain) != float:
             gain = float(gain)
         if gain <= 0.:
-            raise ValueError("Invalid gain <= 0. in draw command")
+            raise ValueError("Invalid gain <= 0.")
 
         # Make sure the type of wmult is correct and has a valid value
         if type(wmult) != float:
             wmult = float(wmult)
         if wmult <= 0:
-            raise ValueError("Invalid wmult <= 0 in draw command")
+            raise ValueError("Invalid wmult <= 0.")
 
-        if method not in ['auto', 'fft', 'direct', 'phot', 'no_pixel', 'sb' ]:
+        if method not in ['auto', 'fft', 'real_space', 'phot', 'no_pixel', 'sb' ]:
             raise ValueError("Invalid method name = %s"%method)
 
         # Some checks that are only relevant for method == 'phot'
@@ -1157,7 +1154,7 @@ class GSObject(object):
             if type(n_photons) != float:
                 n_photons = float(n_photons)
             if n_photons < 0.:
-                raise ValueError("Invalid n_photons < 0. in draw command")
+                raise ValueError("Invalid n_photons < 0.")
 
             if poisson_flux is None:
                 if n_photons == 0.: poisson_flux = True
@@ -1225,10 +1222,10 @@ class GSObject(object):
                 raise
         else:
             # Convolve by the Pixel if necessary.
-            if method in ['auto', 'fft', 'direct']:
+            if method in ['auto', 'fft', 'real_space']:
                 if method == 'fft':
                     real_space = False
-                elif method == 'direct':
+                elif method == 'real_space':
                     real_space = True
                 else:
                     real_space = None
@@ -1264,9 +1261,9 @@ class GSObject(object):
             gain *= scale**2
             return self.drawImage(*args, method='phot', gain=gain, **kwargs)
 
-    def drawKImages(self, re=None, im=None, scale=None, gain=1., add_to_image=False, dk=None,
-                    dtype=None):
-        """Draws the k-space Images (real and imaginary parts) of the object, with bounds
+    def drawKImage(self, re=None, im=None, scale=None, dtype=None, gain=1., wmult=1.,
+                   add_to_image=False, dk=None):
+        """Draws the k-space Image (both real and imaginary parts) of the object, with bounds
         optionally set by input Image instances.
 
         Normalization is always such that re(0,0) = flux.  Unlike the real-space drawImage()
@@ -1276,6 +1273,9 @@ class GSObject(object):
         Unlike for the drawImage() method, a wcs other than a simple pixel scale is not allowed.
         There is no `wcs` parameter here, and if the images have a non-trivial wcs (and you don't
         override it with the `scale` parameter), a TypeError will be raised.
+
+        Also, there is no convolution by a pixel.  This is just a direct image of the Fourier
+        transform of the surface brightness profile.
 
         @param re           If provided, this will be the real part of the k-space image.
                             If `re = None`, then an automatically-sized image will be created.
@@ -1288,7 +1288,7 @@ class GSObject(object):
                             If `im != None`, but its bounds are undefined (e.g. if it was
                             constructed with `im = galsim.Image()`), then it will be resized
                             appropriately based on the profile's size. [default: None]
-        @param scale        If provided, use this as the pixel scale for the images.
+        @param scale        If provided, use this as the pixel scale, dk, for the images.
                             If `scale` is `None` and `re, im != None`, then take the provided
                             images' pixel scale (which must be equal).
                             If `scale` is `None` and `re, im == None`, then use the Nyquist scale.
@@ -1299,6 +1299,9 @@ class GSObject(object):
                             use numpy.float32]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD).  [default: 1.]
+        @param wmult        A multiplicative factor by which to enlarge (in each direction) the
+                            size of the image, if you are having drawKImage() automatically
+                            construct the images for you.  [default: 1]
         @param add_to_image Whether to add to the existing images rather than clear out
                             anything in the image before drawing.
                             Note: This requires that images be provided (i.e. `re`, `im` are
@@ -1313,7 +1316,15 @@ class GSObject(object):
         if type(gain) != float:
             gain = float(gain)
         if gain <= 0.:
-            raise ValueError("Invalid gain <= 0. in draw command")
+            raise ValueError("Invalid gain <= 0.")
+
+        # Make sure the type of wmult is correct and has a valid value
+        if type(wmult) != float:
+            wmult = float(wmult)
+        if wmult <= 0:
+            raise ValueError("Invalid wmult <= 0.")
+
+        # Check that the images are consistent, and possibly get the scale from them.
         if re is None:
             if im != None:
                 raise ValueError("re is None, but im is not None")
@@ -1342,9 +1353,8 @@ class GSObject(object):
         #    prof.dilate(re.scale)
         prof = self.dilate(re.scale)
 
-        # wmult isn't really used by drawK, but we need to provide it.
-        wmult = 1.0
 
+        # Making vews of the images lets us change the centers without messing up the originals.
         review = re.view()
         review.setCenter(0,0)
         imview = im.view()
@@ -1355,9 +1365,9 @@ class GSObject(object):
         return re,im
 
     def drawK(self, *args, **kwargs):
-        """An obsolete synonym for drawKImages()
+        """An obsolete synonym for drawKImage()
         """
-        return self.drawKImages(*args, **kwargs)
+        return self.drawKImage(*args, **kwargs)
 
 
 # --- Now defining the derived classes ---
