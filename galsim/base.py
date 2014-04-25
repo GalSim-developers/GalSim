@@ -744,58 +744,13 @@ class GSObject(object):
 
 
     # Make sure the image is defined with the right size and wcs for drawImage()
-    def _draw_setup_image(self, image, wcs, wmult, add_to_image, dtype, scale_is_dk=False):
-
-        # If image already exists, and its wcs is not a PixelScale, then we're all set.
-        # No need to run through the rest of this.
-        if image is not None and image.wcs is not None and not image.wcs.isPixelScale():
-            # Clear the image if we are not adding to it.
-            if not add_to_image:
-                image.setZero()
-            return image
-
-        scale = None
-        if wcs is not None:
-            scale = wcs.maxLinearScale()
-
-        # Save the input value, since we'll need to make a new scale (in case image is None)
-        if scale_is_dk: dk = scale
-
-        # Check scale value and adjust if necessary
-        if scale is None:
-            if image is not None and image.scale > 0.:
-                if scale_is_dk:
-                    # scale = 2pi / (N*dk)
-                    dk = image.scale
-                    scale = 2.*np.pi/( np.max(image.array.shape) * image.scale )
-                else:
-                    scale = image.scale
-            else:
-                scale = self.nyquistScale()
-                if scale_is_dk:
-                    dk = self.stepK()
-        elif scale <= 0:
-            scale = self.nyquistScale()
-            wcs = None # Mark that the input wcs should not be used.
-            if scale_is_dk:
-                dk = self.stepK()
-        elif scale_is_dk:
-            dk = float(scale)
-            if image is not None:
-                scale = 2.*np.pi/( np.max(image.array.shape) * dk )
-            else:
-                scale = self.nyquistScale()
-        elif type(scale) != float:
-            scale = float(scale)
-        # At this point scale is really scale, not dk.  So we can use it to determine
-        # the "GoodImageSize".
-
+    def _setup_image(self, image, wmult, add_to_image, dtype):
         # Make image if necessary
         if image is None:
             # Can't add to image if none is provided.
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image is None")
-            N = self.SBProfile.getGoodImageSize(scale,wmult)
+            N = self.SBProfile.getGoodImageSize(1.0,wmult)
             image = galsim.Image(N,N,dtype=dtype)
 
         # Resize the given image if necessary
@@ -805,7 +760,7 @@ class GSObject(object):
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
             if dtype is not None:
                 raise ValueError("Cannot specify dtype if image is provided")
-            N = self.SBProfile.getGoodImageSize(scale,wmult)
+            N = self.SBProfile.getGoodImageSize(1.0,wmult)
             bounds = galsim.BoundsI(1,N,1,N)
             image.resize(bounds)
             image.setZero()
@@ -819,18 +774,19 @@ class GSObject(object):
                 image.setZero()
 
         # Set the image wcs
-        if scale_is_dk:
-            image.scale = dk
-        elif wcs is not None:
-            image.wcs = wcs
-        else:
-            image.scale = scale
-
         return image
 
-    def _obj_center(self, image, offset, use_true_center):
-        # This just encapsulates this calculation that we do in a few places.
-        if use_true_center:
+    def _local_wcs(self, wcs, image, offset, use_true_center):
+        # Get the local WCS at the location of the object.
+
+        if wcs.isUniform():
+            return wcs.local()
+        elif image is None:
+            # Should have already checked for this, but just to be safe, repeat the check here.
+            raise ValueError("Cannot provide non-local wcs when image == None")
+        elif not image.bounds.isDefined():
+            raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
+        elif use_true_center:
             obj_cen = image.bounds.trueCenter()
         else:
             obj_cen = image.bounds.center()
@@ -838,7 +794,7 @@ class GSObject(object):
             obj_cen = galsim.PositionD(obj_cen.x, obj_cen.y)
         if offset:
             obj_cen += offset
-        return obj_cen
+        return wcs.local(image_pos=obj_cen)
 
     def _parse_offset(self, offset):
         if offset is None:
@@ -851,43 +807,12 @@ class GSObject(object):
                 return galsim.PositionD(offset[0], offset[1])
 
 
-    def _fix_center(self, image, wcs, offset, use_true_center, reverse):
-        # This is a touch circular since we may not know the image shape or scale yet.
-        # So we need to repeat a little bit of what will be done again in _draw_setup_image
-        #
-        # - If the image is None, then it will be built with even sizes, and all fix_center
-        #   cares about is the odd/even-ness of the shape, so juse use (0,0).
-        # - If wcs is None, first try to get it from the image if given.
-        # - If wcs is None, and image is None (or im.scale <= 0), then use the nyquist scale.
-        #   Here is the really circular one, since the nyquist scale depends on stepK, which
-        #   changes when we offset, but we need scale to know how much to offset.  So just
-        #   use the current nyquist scale and hope the offset isn't too large, so it won't
-        #   make that large a difference.
-
+    def _fix_center(self, image, offset, use_true_center, reverse):
+        # Note: this assumes self is in terms of image coordinates.
         if image is None or not image.bounds.isDefined():
             shape = (0,0)
         else:
             shape = image.array.shape
-
-        if wcs is None:
-            if image is not None and image.wcs is not None:
-                if image.wcs.isPixelScale():
-                    if image.scale <= 0:
-                        wcs = galsim.PixelScale(self.nyquistScale())
-                    else:
-                        wcs = image.wcs.local()
-                else:
-                    # Not a PixelScale.  Just make sure we are using a local wcs
-                    obj_cen = self._obj_center(image, offset, use_true_center)
-                    wcs = image.wcs.local(image_pos=obj_cen)
-            else:
-                wcs = galsim.PixelScale(self.nyquistScale())
-        elif wcs.isPixelScale() and wcs.scale <= 0:
-            wcs = galsim.PixelScale(self.nyquistScale())
-        else:
-            # Should have already checked that wcs is uniform, so local() without an
-            # image_pos argument should be ok.
-            wcs = wcs.local()
 
         if use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the
@@ -907,10 +832,10 @@ class GSObject(object):
         if offset == galsim.PositionD(0,0):
             return self.copy()
         else:
-            return self.shift(wcs.toWorld(offset))
+            return self.shift(offset)
 
-    def _check_wcs(self, scale, wcs, image):
-        # Get the correct wcs given the input scale, wcs and image.
+    def _determine_wcs(self, scale, wcs, image):
+        # Determine the correct wcs given the input scale, wcs and image.
         if wcs is not None:
             if scale is not None:
                 raise ValueError("Cannot provide both wcs and scale")
@@ -921,12 +846,18 @@ class GSObject(object):
                     raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
             if not isinstance(wcs, galsim.BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
-            return wcs
+            if image is not None: image.wcs = None
         elif scale is not None:
-            return galsim.PixelScale(scale)
-        else:
-            # else leave wcs = None
-            return None
+            wcs = galsim.PixelScale(scale)
+            if image is not None: image.wcs = None
+        elif image is not None and image.wcs is not None:
+            wcs = image.wcs
+
+        # If the input scale <= 0, or wcs is still None at this point, then use the Nyquist scale:
+        if wcs is None or (wcs.isPixelScale() and wcs.scale <= 0):
+            wcs = galsim.PixelScale(self.nyquistScale())
+
+        return wcs
 
     def drawImage(self, image=None, scale=None, wcs=None, add_to_image=False, dtype=None,
                   method='auto', gain=1., wmult=1., use_true_center=True, offset=None,
@@ -1179,31 +1110,50 @@ class GSObject(object):
                 msg = "Warning: drawImage for object with flux == 1, but n_photons == 0.\n"
                 msg += "This will only shoot a single photon (since flux = 1)."
                 warnings.warn(msg)
+        else:
+            if n_photons != 0.:
+                raise ValueError("n_photons is only relevant for method='phot'")
+            if rng is not None:
+                raise ValueError("rng is only relevant for method='phot'")
+            if max_extra_noise != 0.:
+                raise ValueError("max_extra_noise is only relevant for method='phot'")
+            if poisson_flux is not None:
+                raise ValueError("poisson_flux is only relevant for method='phot'")
 
-        # Check for non-trivial wcs
-        wcs = self._check_wcs(scale, wcs, image)
+        # Figure out what wcs we are going to use.
+        wcs = self._determine_wcs(scale, wcs, image)
 
         # Make sure offset is a PositionD
         offset = self._parse_offset(offset)
 
-        # Apply the offset, and possibly fix the centering for even-sized images
-        # Note: We need to do this before we call _draw_setup_image, since the shift
-        # affects stepK (especially if the offset is rather large).
-        prof = self._fix_center(image, wcs, offset, use_true_center, reverse=False)
-
-        # Make sure image is setup correctly
-        image = prof._draw_setup_image(image, wcs, wmult, add_to_image, dtype)
-
-        # Figure out the position of the center of the object
-        obj_cen = self._obj_center(image, offset, use_true_center)
-
-        if method == 'sb':
-            gain *= image.wcs.pixelArea(image_pos=obj_cen)
-            method = 'no_pixel'
+        # Get the local WCS, accounting for the offset correctly.
+        local_wcs = self._local_wcs(wcs, image, offset, use_true_center)
 
         # Convert the profile in world coordinates to the profile in image coordinates:
-        prof = image.wcs.toImage(prof, image_pos=obj_cen)
+        prof = local_wcs.toImage(self)
 
+        # If necessary, convolve by the pixel
+        if method in ['auto', 'fft', 'real_space']:
+            if method == 'auto':
+                real_space = None
+            elif method == 'fft':
+                real_space = False
+            else:
+                real_space = True
+            prof = galsim.Convolve(prof, galsim.Pixel(scale = 1.0), real_space=real_space)
+ 
+        # Apply the offset, and possibly fix the centering for even-sized images
+        prof = prof._fix_center(image, offset, use_true_center, reverse=False)
+
+        # Make sure image is setup correctly
+        image = prof._setup_image(image, wmult, add_to_image, dtype)
+        image.wcs = wcs
+
+        # For surface brightness normalization, scale gain by the pixel area.
+        if method == 'sb':
+            gain *= local_wcs.pixelArea()
+
+        # Making a vew of the image lets us change the center without messing up the original.
         imview = image.view()
         imview.setCenter(0,0)
 
@@ -1221,16 +1171,7 @@ class GSObject(object):
                     "Deconvolve or is a compound including one or more Deconvolve objects.")
                 raise
         else:
-            # Convolve by the Pixel if necessary.
-            if method in ['auto', 'fft', 'real_space']:
-                if method == 'fft':
-                    real_space = False
-                elif method == 'real_space':
-                    real_space = True
-                else:
-                    real_space = None
-                prof = galsim.Convolve(prof, galsim.Pixel(scale = 1.0), real_space=real_space)
-            image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
+           image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
 
         return image
 
@@ -1335,24 +1276,42 @@ class GSObject(object):
                 # This check will raise a TypeError if re.wcs or im.wcs is not a PixelScale
                 if re.scale != im.scale:
                     raise ValueError("re and im do not have the same input scale")
+                # Grab the scale to use from the image.
+                scale = re.scale
             if re.bounds.isDefined() or im.bounds.isDefined():
                 if re.bounds != im.bounds:
                     raise ValueError("re and im do not have the same defined bounds")
 
-        # Make sure images are setup correctly
-        wcs = galsim.PixelScale(scale)
-        re = self._draw_setup_image(re,wcs,1.0,add_to_image,dtype,scale_is_dk=True)
-        im = self._draw_setup_image(im,wcs,1.0,add_to_image,dtype,scale_is_dk=True)
+        # The input scale (via scale or re.scale) is really a dk value, so call it that for 
+        # clarity here, since we also need the real-space scale size, which we will call dx.
+        if scale is None or scale <= 0:
+            dk = self.stepK()
+        else:
+            dk = float(scale)
+        if re is not None and re.bounds.isDefined():
+            dx = 2.*np.pi/( np.max(re.array.shape) * dk )
+        else:
+            dx = self.nyquistScale()
 
-        # Convert the profile in world coordinates to the profile in image coordinates:
-        # The scale in the wcs objects is the dk scale, not dx.  So the conversion to
-        # image coordinates needs to apply the inverse pixel scale.
+        # If the profile needs to be constructed from scratch, the _setup_image function will
+        # do that, but only if the profile is in image coordinates for the real space image.
+        # So make that profile.
+        real_prof = galsim.PixelScale(dx).toImage(self)
+        re = real_prof._setup_image(re, wmult, add_to_image, dtype)
+        im = real_prof._setup_image(im, wmult, add_to_image, dtype)
+
+        # Set the wcs of the images to use the dk scale size
+        re.scale = dk
+        im.scale = dk
+
+        # Now, for drawing the k-space image, we need the profile to be in the image coordinates
+        # that correspond to having unit-sized pixels in k space. The conversion to image
+        # coordinates in this case is to apply the inverse dk pixel scale.
         # The following are all equivalent ways to do this:
-        #    re.wcs.toWorld(prof)
-        #    galsim.PixelScale(1./re.scale).toImage(prof)
-        #    prof.dilate(re.scale)
-        prof = self.dilate(re.scale)
-
+        #    galsim.PixelScale(dk).toWorld(self)
+        #    galsim.PixelScale(1./dk).toImage(self)
+        #    self.dilate(dk)
+        prof = galsim.PixelScale(1./dk).toImage(self)
 
         # Making vews of the images lets us change the centers without messing up the originals.
         review = re.view()

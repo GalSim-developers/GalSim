@@ -183,8 +183,9 @@ class ChromaticObject(object):
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
-        image = ChromaticObject._draw_setup_image(
-                prof0, image, scale, wcs, wmult, add_to_image, dtype, use_true_center, offset)
+        image = ChromaticObject._setup_image(
+                prof0, image, scale, wcs, wmult, add_to_image, dtype, use_true_center, offset,
+                'no_pixel')
 
         # determine combined self.wave_list and bandpass.wave_list
         wave_list = bandpass.wave_list
@@ -231,13 +232,24 @@ class ChromaticObject(object):
         return image
 
     @staticmethod
-    def _draw_setup_image(prof, image, scale, wcs, wmult, add_to_image, dtype, use_true_center,
-                          offset):
+    def _setup_image(prof, image, scale, wcs, wmult, add_to_image, dtype, use_true_center,
+                     offset, method):
         # Repeat the steps from GSObject.draw that we need to do here.
-        wcs = prof._check_wcs(scale, wcs, image)
+        wcs = prof._determine_wcs(scale, wcs, image)
         offset = prof._parse_offset(offset)
-        prof = prof._fix_center(image, wcs, offset, use_true_center, reverse=False)
-        image = prof._draw_setup_image(image, wcs, wmult, add_to_image, dtype)
+        local_wcs = prof._local_wcs(wcs, image, offset, use_true_center)
+        prof = local_wcs.toImage(prof)
+        if method in ['auto', 'fft', 'real_space']:
+            if method == 'auto':
+                real_space = None
+            elif method == 'fft':
+                real_space = False
+            else:
+                real_space = True
+            prof = galsim.Convolve(prof, galsim.Pixel(scale = 1.0), real_space=real_space)
+        prof = prof._fix_center(image, offset, use_true_center, reverse=False)
+        image = prof._setup_image(image, wmult, add_to_image, dtype)
+        image.wcs = wcs
         return image
 
     def evaluateAtWavelength(self, wave):
@@ -1100,8 +1112,9 @@ class ChromaticConvolution(ChromaticObject):
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
-        image = ChromaticObject._draw_setup_image(
-                prof0, image, scale, wcs, wmult, add_to_image, dtype, use_true_center, offset)
+        image = ChromaticObject._setup_image(
+                prof0, image, scale, wcs, wmult, add_to_image, dtype, use_true_center, offset,
+                'no_pixel')
 
         # Sort these atomic objects into separable and inseparable lists, and collect
         # the spectral parts of the separable profiles.

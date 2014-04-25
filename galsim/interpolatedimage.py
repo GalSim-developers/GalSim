@@ -340,13 +340,15 @@ class InterpolatedImage(GSObject):
         else:
             im_cen = self.image.bounds.center()
 
+        local_wcs = self.image.wcs.local(image_pos = im_cen)
+
         # Make sure the image fits in the noise pad image:
         if noise_pad_size:
             import math
-            # Convert from arcsec to pixels according to the wcs.
+            # Convert from arcsec to pixels according to the local wcs.
             # Use the minimum scale, since we want to make sure noise_pad_size is
             # as large as we need in any direction.
-            scale = self.image.wcs.minLinearScale(image_pos=im_cen)
+            scale = local_wcs.minLinearScale()
             noise_pad_size = int(math.ceil(noise_pad_size / scale))
             # Round up to a good size for doing FFTs
             noise_pad_size = galsim._galsim.goodFFTSize(noise_pad_size)
@@ -415,8 +417,16 @@ class InterpolatedImage(GSObject):
         # Initialize the SBProfile
         GSObject.__init__(self, sbinterpolatedimage)
 
+        # Make sure offset is a PositionD
+        offset = self._parse_offset(offset)
+
+        # Apply the offset, and possibly fix the centering for even-sized images
+        # Note reverse=True, since we want to fix the center in the opposite sense of what the 
+        # draw function does.
+        prof = self._fix_center(self.image, offset, use_true_center, reverse=True)
+
         # Bring the profile from image coordinates into world coordinates
-        prof = self.image.wcs.toWorld(self, image_pos=im_cen)
+        prof = local_wcs.toWorld(prof)
 
         # If the user specified a flux, then set to that flux value.
         if flux != None:
@@ -424,17 +434,9 @@ class InterpolatedImage(GSObject):
         # If the user specified a surface brightness normalization for the input Image, then
         # need to rescale flux by the pixel area to get proper normalization.
         elif normalization.lower() in ['surface brightness','sb']:
-            prof *= self.image.wcs.pixelArea(image_pos=im_cen)
+            prof *= local_wcs.pixelArea()
 
-        # Make sure offset is a PositionD
-        offset = self._parse_offset(offset)
-
-        # Apply the offset, and possibly fix the centering for even-sized images
-        # Note reverse=True, since we want to fix the center in the opposite sense of what the 
-        # draw function does.
-        prof = prof._fix_center(self.image, None, offset, use_true_center, reverse=True)
         GSObject.__init__(self, prof)
-
 
     def buildNoisePadImage(self, noise_pad_size, noise_pad, rng):
         """A helper function that builds the `pad_image` from the given `noise_pad` specification.
