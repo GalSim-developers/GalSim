@@ -662,7 +662,7 @@ def _generate_noise_from_rootps(rng, rootps):
     # and then apply cos(), sin() to it...
     gaussvec_real = galsim.ImageD(rootps.shape[1], rootps.shape[0]) # Remember NumPy is [y, x]
     gaussvec_imag = galsim.ImageD(rootps.shape[1], rootps.shape[0])
-    gn = galsim.GaussianNoise(rng=rng, sigma=1.) # Quicker to create anew each time than to save it and
+    gn = galsim.GaussianNoise(rng=rng, sigma=1.) # Quicker to create anew each time than to save &
                                                  # then check if its rng needs to be changed or not.
     gaussvec_real.addNoise(gn)
     gaussvec_imag.addNoise(gn)
