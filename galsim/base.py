@@ -1120,6 +1120,19 @@ class GSObject(object):
             if poisson_flux is not None:
                 raise ValueError("poisson_flux is only relevant for method='phot'")
 
+        # Check that the user isn't convolving by a Pixel already.  This is almost always an error.
+        if method == 'auto' and isinstance(self, galsim.Convolution):
+            if any([ isinstance(obj, galsim.Pixel) for obj in self.obj_list ]):
+                import warnings
+                warnings.warn(
+                    "You called drawImage with no `method` parameter "
+                    "for an object that includes convolution by a Pixel.  "
+                    "This is probably an error.  Normally, you should let GalSim "
+                    "handle the Pixel convolution for you.  If you want to handle the Pixel "
+                    "convolution yourself, you can use method=no_pixel.  Or if you really meant "
+                    "for your profile to include the Pixel and still want GalSim to convolve "
+                    "by an _additional_ Pixel, you can suppress this warning by using method=fft.")
+
         # Figure out what wcs we are going to use.
         wcs = self._determine_wcs(scale, wcs, image)
 
