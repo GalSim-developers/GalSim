@@ -136,11 +136,15 @@ def test_draw_add_commutativity():
     chromatic_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     # use chromatic parent class to draw without ChromaticConvolution acceleration...
     t4 = time.time()
-    # galsim.ChromaticObject.draw(chromatic_final, bandpass, image=chromatic_image,
-    #                             integrator=galsim.integ.midpt_continuous_integrator, N=N)
     integrator = galsim.integ.ContinuousIntegrator(galsim.integ.midpt, N=N, use_endpoints=False)
-    galsim.ChromaticObject.draw(chromatic_final, bandpass, image=chromatic_image,
-                                integrator=integrator)
+    # NB. You cannot use ChromaticObject.draw() here, since it will automatically farm out to
+    #     the ChromaticConvolution version of drawImage rather than respecting the
+    #     ChromaticObject specification.  Using super() doesn't seem to work either.  So I just
+    #     went ahead and converted this statement to the new format.  There are a couple other
+    #     similar times in the test suite where we want to force it to use the base class
+    #     implementation, so those had to be switched as well.
+    galsim.ChromaticObject.drawImage(chromatic_final, bandpass, image=chromatic_image,
+                                     integrator=integrator, method='no_pixel')
     t5 = time.time()
     print 'ChromaticObject.draw() took {0} seconds.'.format(t5-t4)
     # plotme(chromatic_image)
@@ -182,8 +186,8 @@ def test_ChromaticConvolution_InterpolatedImage():
     II_flux = II_image.array.sum()
 
     image2 = image.copy()
-    # draw image without any speed tricks using ChromaticObject.draw
-    D_image = galsim.ChromaticObject.draw(final, bandpass, image=image2)
+    # draw image without any speed tricks using ChromaticObject.drawImage
+    D_image = galsim.ChromaticObject.drawImage(final, bandpass, image=image2, method='no_pixel')
     D_flux = D_image.array.sum()
 
     #compare
@@ -491,7 +495,7 @@ def test_chromatic_flux():
     final.draw(bandpass, image=image)
     ChromaticConvolve_flux = image.array.sum()
 
-    galsim.ChromaticObject.draw(final, bandpass, image=image2)
+    galsim.ChromaticObject.drawImage(final, bandpass, image=image2, method='no_pixel')
     ChromaticObject_flux = image2.array.sum()
 
     # analytic integral...

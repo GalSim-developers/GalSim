@@ -859,9 +859,10 @@ class GSObject(object):
 
         return wcs
 
-    def drawImage(self, image=None, scale=None, wcs=None, add_to_image=False, dtype=None,
-                  method='auto', gain=1., wmult=1., use_true_center=True, offset=None,
-                  n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None, dx=None):
+    def drawImage(self, image=None, scale=None, wcs=None, dtype=None, method='auto',
+                  gain=1., wmult=1., add_to_image=False, use_true_center=True, offset=None,
+                  n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None,
+                  setup_only=False, dx=None):
         """Draws an Image of the object.
 
         The drawImage() method is used to draw an Image of the current object using one of several
@@ -995,10 +996,6 @@ class GSObject(object):
                             [default: None]
         @param wcs          If provided, use this as the wcs for the image.  At most one of `scale`
                             or `wcs` may be provided. [default: None]
-        @param add_to_image Whether to add flux to the existing image rather than clear out
-                            anything in the image before drawing.
-                            Note: This requires that `image` be provided and that it have defined
-                            bounds. [default: False]
         @param dtype        The data type to use for an automatically constructed image.  Only
                             valid if `image = None`. [default: None, which means to use
                             numpy.float32]
@@ -1020,6 +1017,10 @@ class GSObject(object):
                             size of the images used for the Fourier-space calculations and hence
                             can reduce image artifacts, even though the image that is returned will
                             be the requested size. [default: 1]
+        @param add_to_image Whether to add flux to the existing image rather than clear out
+                            anything in the image before drawing.
+                            Note: This requires that `image` be provided and that it have defined
+                            bounds. [default: False]
         @param use_true_center  Normally, the profile is drawn to be centered at the true center
                             of the image (using the function image.bounds.trueCenter()).
                             If you would rather use the integer center (given by
@@ -1058,6 +1059,10 @@ class GSObject(object):
         @param poisson_flux Whether to allow total object flux scaling to vary according to
                             Poisson statistics for `n_photons` samples. [default: True,
                             unless `n_photons` is given, in which case the default is False]
+        @param setup_only   Don't actually draw anything on the image.  Just make sure the image
+                            is set up correctly.  This is used internally by GalSim, but there
+                            may be cases where the user will want the same functionality.
+                            [default: False]
 
         @returns the drawn Image.
         """
@@ -1161,6 +1166,10 @@ class GSObject(object):
         # Make sure image is setup correctly
         image = prof._setup_image(image, wmult, add_to_image, dtype)
         image.wcs = wcs
+
+        if setup_only:
+            image.added_flux = 0.
+            return image
 
         # For surface brightness normalization, scale gain by the pixel area.
         if method == 'sb':

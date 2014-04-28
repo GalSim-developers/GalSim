@@ -82,30 +82,23 @@ class ImageIntegrator(object):
     #    argument, and a list of evaluation wavelengths as its second argument, and returns
     #    an approximation to the integral.  (E.g., the function midpt above, or numpy.trapz)
 
-    def __call__(self, evaluateAtWavelength, bandpass, image, gain=1.0, wmult=1.0,
-                 use_true_center=True, offset=None):
+    def __call__(self, evaluateAtWavelength, bandpass, image, kwargs):
         """
         @param evaluateAtWavelength Function that returns a monochromatic surface brightness
                                     profile as a function of wavelength.
         @param bandpass             Bandpass object representing the filter being imaged through.
         @param image                Image used to set size and scale of output
-        @param gain                 See GSObject.draw()
-        @param wmult                See GSObject.draw()
-        @param use_true_center      See GSObject.draw()
-        @param offset               See GSObject.draw()
+        @param kwargs               dict with other kwargs to send to drawImage function.
 
         @returns the result of integral as an Image
         """
         images = []
         waves = self.calculateWaves(bandpass)
         self.last_n_eval = len(waves)
+        kwargs.pop('add_to_image', None) # Make sure add_to_image isn't in kwargs
         for w in waves:
             prof = evaluateAtWavelength(w) * bandpass(w)
-            tmpimage = image.copy()
-            tmpimage.setZero()
-            prof.draw(image=tmpimage, gain=gain, wmult=wmult,
-                      use_true_center=use_true_center, offset=offset)
-            images.append(tmpimage)
+            images.append(prof.drawImage(image=image.copy(), **kwargs))
         return self.rule(images, waves)
 
 class SampleIntegrator(ImageIntegrator):
