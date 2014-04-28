@@ -58,9 +58,7 @@ def Add(*args, **kwargs):
     @returns a Sum or ChromaticSum instance as appropriate.
     """
     if len(args) == 0:
-        # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
-        # exception instead.
-        raise ValueError("Sum must be initialized with at least one ChromaticObject or GSObject.")
+        raise ValueError("At least one ChromaticObject or GSObject must be provided.")
     elif len(args) == 1:
         # 1 argument.  Should be either a GSObject or a list of GSObjects
         if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
@@ -129,9 +127,7 @@ class Sum(galsim.GSObject):
                 "Sum constructor got unexpected keyword argument(s): %s"%kwargs.keys())
 
         if len(args) == 0:
-            # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
-            # exception instead.
-            raise ValueError("Sum must be initialized with at least one GSObject.")
+            raise ValueError("At least one ChromaticObject or GSObject must be provided.")
         elif len(args) == 1:
             # 1 argument.  Should be either a GSObject or a list of GSObjects
             if isinstance(args[0], galsim.GSObject):
@@ -184,10 +180,7 @@ def Convolve(*args, **kwargs):
     """
     # First check for number of arguments != 0
     if len(args) == 0:
-        # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
-        # exception instead.
-        raise ValueError("Convolution must be initialized with at least one GSObject "
-                         + "or ChromaticObject.")
+        raise ValueError("At least one ChromaticObject or GSObject must be provided.")
     elif len(args) == 1:
         if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
             args = [args[0]]
@@ -232,12 +225,11 @@ class Convolution(galsim.GSObject):
 
         >>> gal = galsim.Sersic(n, half_light_radius)
         >>> psf = galsim.Gaussian(sigma)
-        >>> pix = galsim.Pixel(scale)
-        >>> final = galsim.Convolve([gal, psf, pix])
+        >>> final = galsim.Convolve([gal, psf])
 
     The objects to be convolved may be provided either as multiple unnamed arguments (e.g.
-    `Convolve(psf, gal, pix)`) or as a list (e.g. `Convolve([psf, gal, pix])`).  Any number of
-    objects may be provided using either syntax.  (Well, the list has to include at least 1 item.)
+    `Convolve(psf, gal)`) or as a list (e.g. `Convolve([psf, gal])`).  Any number of objects may
+    be provided using either syntax.  (Well, the list has to include at least 1 item.)
 
     @param args             Unnamed args should be a list of objects to convolve.
     @param real_space       Whether to use real space convolution.  [default: None, which means
@@ -263,9 +255,7 @@ class Convolution(galsim.GSObject):
 
         # First check for number of arguments != 0
         if len(args) == 0:
-            # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
-            # exception instead.
-            raise ValueError("Convolution must be initialized with at least one GSObject.")
+            raise ValueError("At least one ChromaticObject or GSObject must be provided.")
         elif len(args) == 1:
             if isinstance(args[0], galsim.GSObject):
                 args = [args[0]]
@@ -407,7 +397,7 @@ class Deconvolution(galsim.GSObject):
 
     The Deconvolution class represents a deconvolution kernel.  Note that the Deconvolution class,
     or compound objects (Sum, Convolution) that include a Deconvolution as one of the components,
-    cannot be photon-shot using the drawShoot() method.
+    cannot be photon-shot using the 'phot' method of drawImage() method.
 
     You may also specify a `gsparams` argument.  See the docstring for GSParams using
     `help(galsim.GSParams)` for more information about this option.  Note: if `gsparams` is

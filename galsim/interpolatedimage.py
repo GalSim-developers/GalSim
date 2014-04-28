@@ -37,12 +37,13 @@ class InterpolatedImage(GSObject):
     convolution is not recommended, since it is typically a great deal slower than Fourier-space 
     convolution for this kind of object.
 
-    The constructor needs to know how the Image was drawn: is it an Image of flux or of surface
-    brightness?  Since our default for drawing Images using draw() and drawShoot() is that
-    `normalization == 'flux'` (i.e., sum of pixel values equals the object flux), the default for 
-    the InterpolatedImage class is to assume the same flux normalization.  However, the user can 
-    specify 'surface brightness' normalization if desired, or alternatively, can instead specify 
-    the desired flux for the object.
+    There are three options for determining the flux of the profile.  First, you can simply
+    specify a `flux` value explicitly.  Or there are two ways to get the flux from the image
+    directly.  If you set `normalization = 'flux'`, the flux will be taken as the sum of the
+    pixel values.  This corresponds to an image that was drawn with `drawImage(method='no_pixel')`.
+    This is the default if flux is not given.  The other option, `normalization = 'sb'` treats
+    the pixel values as samples of the surface brightness profile at each location.  This
+    corresponds to an image drawn with `drawImage(method='sb')`.
 
     If the input Image has a `scale` or `wcs` associated with it, then there is no need to specify
     one as a parameter here.  But if one is provided, that will override any `scale` or `wcs` that
@@ -98,8 +99,8 @@ class InterpolatedImage(GSObject):
         >>> int_im2 = galsim.InterpolatedImage(image, noise_pad='data/blankimg.fits')
         >>> im1 = galsim.ImageF(1000,1000)
         >>> im2 = galsim.ImageF(1000,1000)
-        >>> int_im1.draw(im1)
-        >>> int_im2.draw(im2)
+        >>> int_im1.drawImage(im1, method='no_pixel')
+        >>> int_im2.drawImage(im2, method='no_pixel')
 
     Examination of these two images clearly shows how padding with a correlated noise field that is
     similar to the one in the real data leads to a more reasonable appearance for the result when
@@ -131,7 +132,7 @@ class InterpolatedImage(GSObject):
     @param wcs              If provided, use this as the wcs for the image.  At most one of `scale`
                             or `wcs` may be provided. [default: None]
     @param flux             Optionally specify a total flux for the object, which overrides the
-                            implied flux normalization from the Image itself.
+                            implied flux normalization from the Image itself. [default: None]
     @param pad_factor       Factor by which to pad the Image with zeros.  We strongly recommend
                             leaving this parameter at its default value; see text above for
                             details.  [default: 4]
@@ -201,8 +202,8 @@ class InterpolatedImage(GSObject):
                             the `maxk` value is still calculated, but will not go above the
                             provided value.
                             [default: True]
-    @param use_true_center  Similar to the same parameter in the GSObject.draw() function, this
-                            sets whether to use the true center of the provided image as the
+    @param use_true_center  Similar to the same parameter in the GSObject.drawImage() function,
+                            this sets whether to use the true center of the provided image as the
                             center of the profile (if `use_true_center=True`) or the nominal
                             center returned by image.bounds.center() (if `use_true_center=False`)
                             [default: True]
@@ -241,10 +242,9 @@ class InterpolatedImage(GSObject):
     _cache_noise_pad = {}
 
     # --- Public Class methods ---
-    def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
-                 scale = None, wcs = None, flux = None, pad_factor = 4.,
-                 noise_pad_size=0, noise_pad = 0.,
-                 rng = None, pad_image = None, calculate_stepk=True, calculate_maxk=True,
+    def __init__(self, image, x_interpolant=None, k_interpolant=None, normalization='flux',
+                 scale=None, wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0.,
+                 rng=None, pad_image=None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None):
         # Check for obsolete dx parameter
         if dx is not None and scale is None: scale = dx

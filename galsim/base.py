@@ -425,7 +425,7 @@ class GSObject(object):
         @returns the object with the new flux.
         """
         new_obj = GSObject(self.SBProfile.scaleFlux(flux_ratio))
-        if hasattr(self,'original'): 
+        if hasattr(self,'original'):
             new_obj.original = self.original
         else:
             new_obj.original = self
@@ -469,7 +469,7 @@ class GSObject(object):
         @returns the expanded object.
         """
         new_obj = GSObject(self.SBProfile.expand(scale))
-        if hasattr(self,'original'): 
+        if hasattr(self,'original'):
             new_obj.original = self.original
         else:
             new_obj.original = self
@@ -575,7 +575,7 @@ class GSObject(object):
             shear = galsim.Shear(**kwargs)
 
         new_obj = GSObject(self.SBProfile.shear(shear._shear))
-        if hasattr(self,'original'): 
+        if hasattr(self,'original'):
             new_obj.original = self.original
         else:
             new_obj.original = self
@@ -637,7 +637,7 @@ class GSObject(object):
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         new_obj = GSObject(self.SBProfile.rotate(theta))
-        if hasattr(self,'original'): 
+        if hasattr(self,'original'):
             new_obj.original = self.original
         else:
             new_obj.original = self
@@ -684,7 +684,7 @@ class GSObject(object):
         @returns the transformed object
         """
         new_obj = GSObject(self.SBProfile.transform(dudx,dudy,dvdx,dvdy))
-        if hasattr(self,'original'): 
+        if hasattr(self,'original'):
             new_obj.original = self.original
         else:
             new_obj.original = self
@@ -722,7 +722,7 @@ class GSObject(object):
         """
         delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
         new_obj = GSObject(self.SBProfile.shift(delta))
-        if hasattr(self,'original'): 
+        if hasattr(self,'original'):
             new_obj.original = self.original
         else:
             new_obj.original = self
@@ -1159,7 +1159,7 @@ class GSObject(object):
             else:
                 real_space = True
             prof = galsim.Convolve(prof, galsim.Pixel(scale = 1.0), real_space=real_space)
- 
+
         # Apply the offset, and possibly fix the centering for even-sized images
         prof = prof._fix_center(image, offset, use_true_center, reverse=False)
 
@@ -1213,15 +1213,23 @@ class GSObject(object):
         if normalization in ['flux','f']:
             return self.drawImage(*args, method='phot', **kwargs)
         else:
+            # We don't have a method for this, but it must be rare.  Photon shooting with
+            # surface brightness normalization seems pretty odd.  We do use it in the test
+            # suite a few times though.  So, need to reproduce a big of code to get the
+            # pixel area to switch to sb normalization (via the gain).
             if len(args) > 0:
                 image = args[0]
             else:
                 image = kwargs.get('image', None)
-            scale = kwargs.get('scale', image.scale)
-            if scale == None or scale <= 0.:
-                scale = obj.nyquistScale()
+            scale = kwargs.get('scale', None)
+            wcs = kwargs.get('wcs', None)
+            offset = kwargs.get('offset', None)
+            use_true_center = kwargs.get('use_true_center', None)
+            wcs = self._determine_wcs(scale, wcs, image)
+            offset = self._parse_offset(offset)
+            local_wcs = self._local_wcs(wcs, image, offset, use_true_center)
             gain = kwargs.pop('gain',1.)
-            gain *= scale**2
+            gain *= local_wcs.pixelArea()
             return self.drawImage(*args, method='phot', gain=gain, **kwargs)
 
     def drawKImage(self, re=None, im=None, scale=None, dtype=None, gain=1., wmult=1.,
@@ -1233,9 +1241,9 @@ class GSObject(object):
         function, the (0,0) point will always be one of the actual pixel values.  For even-sized
         images, it will be 1/2 pixel above and to the right of the true center of the image.
 
-        Unlike for the drawImage() method, a wcs other than a simple pixel scale is not allowed.
-        There is no `wcs` parameter here, and if the images have a non-trivial wcs (and you don't
-        override it with the `scale` parameter), a TypeError will be raised.
+        Another difference from  drawImage() is that a wcs other than a simple pixel scale is not
+        allowed.  There is no `wcs` parameter here, and if the images have a non-trivial wcs (and
+        you don't override it with the `scale` parameter), a TypeError will be raised.
 
         Also, there is no convolution by a pixel.  This is just a direct image of the Fourier
         transform of the surface brightness profile.
@@ -1304,7 +1312,7 @@ class GSObject(object):
                 if re.bounds != im.bounds:
                     raise ValueError("re and im do not have the same defined bounds")
 
-        # The input scale (via scale or re.scale) is really a dk value, so call it that for 
+        # The input scale (via scale or re.scale) is really a dk value, so call it that for
         # clarity here, since we also need the real-space scale size, which we will call dx.
         if scale is None or scale <= 0:
             dk = self.stepK()

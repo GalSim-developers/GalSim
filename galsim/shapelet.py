@@ -226,17 +226,17 @@ class Shapelet(GSObject):
 def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams=None):
     """Fit for a shapelet decomposition of a given image.
 
-    The optional `normalization` parameter mirrors the parameter in the GSObject draw() method.  If
-    the fitted shapelet is drawn with the same `normalization` value as was used when it was fit,
-    then the resulting image should be an approximate match to the original image.
-
-    For example:
+    The optional `normalization` parameter mirrors the parameter of the InterpolatedImage class.
+    The following sequence should produce drawn images that are approximate matches to the original
+    image:
 
         >>> image = [...]
         >>> shapelet = galsim.FitShapelet(sigma, order, image, normalization='sb')
-        >>> shapelet.draw(image=image2, scale=image.scale, normalization='sb')
+        >>> im2 = shapelet.drawImage(image=im2, scale=image.scale, method='sb')
+        >>> shapelet = galsim.FitShapelet(sigma, order, image, normalization='flux')
+        >>> im3 = shapelet.drawImage(image=im3, scale=image.scale, method='no_pixel')
 
-    Then `image2` and `image` should be as close to the same as possible for the given `sigma` and
+    Then `im2` and `im3` should be as close as possible to `image` for the given `sigma` and
     `order`.  Increasing the order can improve the fit, as can having `sigma` match the natural
     scale size of the image.  However, it should be noted that some images are not well fit by a
     shapelet for any (reasonable) order.

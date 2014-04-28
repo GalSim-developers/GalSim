@@ -80,11 +80,11 @@ class ShapeData(object):
     - moments_sigma: size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels; -1 if
       not measured.
 
-    - moments_amp: total image intensity for best-fit elliptical Gaussian from adaptive moments.  If
-      image was drawn using the "flux" normalization, then this field is simply equal to the image
-      flux (for objects that follow a Gaussian light distribution, otherwise it is something
-      approximating the flux).  If the image was drawn using the "surface brightness" normalization,
-      then moments_amp relates to the flux via flux = (moments_amp)*(pixel scale)^2.
+    - moments_amp: total image intensity for best-fit elliptical Gaussian from adaptive moments.
+      Normally, this field is simply equal to the image flux (for objects that follow a Gaussian
+      light distribution, otherwise it is something approximating the flux).  However, if the image
+      was drawn using `drawImage(method='sb')` then moments_amp relates to the flux via
+      flux = (moments_amp)*(pixel scale)^2.
 
     - moments_centroid: a PositionD object representing the centroid based on adaptive
       moments.  The convention for centroids is such that the center of the lower-left pixel is
@@ -248,11 +248,9 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
         >>> galaxy = galaxy.shear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the 
         >>>                                         # |g| = (a - b)/(a + b) definition
         >>> psf = galsim.Kolmogorov(flux = 1.0, fwhm = 0.7)
-        >>> pixel = galsim.Pixel(xw = 0.2, yw = 0.2)
-        >>> final = galsim.Convolve([galaxy, psf, pixel])
-        >>> final_epsf = galsim.Convolve([psf, pixel])
-        >>> final_image = final.draw(dx = 0.2)
-        >>> final_epsf_image = final_epsf.draw(dx = 0.2)
+        >>> final = galsim.Convolve([galaxy, psf])
+        >>> final_image = final.drawImage(dx = 0.2)
+        >>> final_epsf_image = psf.drawImage(dx = 0.2)
         >>> result = galsim.hsm.EstimateShear(final_image, final_epsf_image)
     
     After running the above code, `result.observed_shape` ["shape" = distortion, the 
@@ -359,7 +357,7 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     -------------
 
         >>> my_gaussian = galsim.Gaussian(flux = 1.0, sigma = 1.0)
-        >>> my_gaussian_image = my_gaussian.draw(dx = 0.2)
+        >>> my_gaussian_image = my_gaussian.drawImage(dx = 0.2, method='no_pixel')
         >>> my_moments = galsim.hsm.FindAdaptiveMom(my_gaussian_image)
 
     OR
@@ -379,7 +377,7 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     properties of a very over-sampled image such as that generated using
 
         >>> my_gaussian = galsim.Gaussian(sigma = 5.0)
-        >>> my_gaussian_image = my_gaussian.draw(dx = 0.01)
+        >>> my_gaussian_image = my_gaussian.drawImage(dx = 0.01, method='no_pixel')
 
     If the user attempts to measure the moments of this 4000 x 4000 pixel image using the standard
     syntax,
