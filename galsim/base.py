@@ -1190,7 +1190,7 @@ class GSObject(object):
                     "Deconvolve or is a compound including one or more Deconvolve objects.")
                 raise
         else:
-           image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
+            image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
 
         return image
 

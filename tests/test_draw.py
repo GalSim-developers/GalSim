@@ -273,6 +273,88 @@ def test_draw():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_draw_methods():
+    """Test the the different method options do the right thing.
+    """
+    import time
+    t1 = time.time()
+
+    # We use a simple Exponential for our object:
+    obj = galsim.Exponential(flux=test_flux, scale_radius=1.09)
+    test_scale = 0.28
+    pix = galsim.Pixel(scale=test_scale)
+    obj_pix = galsim.Convolve(obj, pix)
+
+    im1 = galsim.ImageD(64, 64, scale=test_scale)
+
+    im1 = obj.drawImage(image=im1)
+    im2 = obj_pix.drawImage(image=im1.copy(), method='no_pixel')
+    im3 = obj.drawImage(image=im1.copy(), method='fft')
+    im4 = obj.drawImage(image=im1.copy(), method='real_space')
+    im5 = obj_pix.drawImage(image=im1.copy(), method='sb')
+
+    print 'im1 flux diff = ',abs(im1.array.sum() - test_flux)
+    np.testing.assert_almost_equal(
+            im1.array.sum(), test_flux, 2,
+            "obj.drawImage() produced image with wrong flux")
+    print 'im2 flux diff = ',abs(im2.array.sum() - test_flux)
+    np.testing.assert_almost_equal(
+            im2.array.sum(), test_flux, 2,
+            "obj_pix.drawImage(no_pixel) produced image with wrong flux")
+    print 'im1, im2 max diff = ',abs(im1.array - im2.array).max()
+    np.testing.assert_array_almost_equal(
+            im1.array, im2.array, 6,
+            "obj.drawImage() differs from obj_pix.drawImage(no_pixel)")
+    print 'im1, im3 max diff = ',abs(im1.array - im3.array).max()
+    np.testing.assert_array_almost_equal(
+            im1.array, im3.array, 6,
+            "obj.drawImage(fft) differs from obj.drawImage")
+    print 'im1, im4 max diff = ',abs(im1.array - im4.array).max()
+    np.testing.assert_array_almost_equal(
+            im1.array, im4.array, 4, # Should be close, but not exact.
+            "obj.drawImage(real_space) differs from obj.drawImage")
+    print 'im2, im5*scale**2 max diff = ',abs(im2.array - im5.array*test_scale**2).max()
+    np.testing.assert_array_almost_equal(
+            im5.array * test_scale**2, im2.array, 6,
+            "obj_pix.drawImage(sb) * scale**2 differs from obj_pix.drawImage(no_pixel)")
+
+    # Drawing a truncated object, auto should be identical to real_space
+    obj = galsim.Sersic(flux=test_flux, n=3.7, half_light_radius=2, trunc=4)
+    obj_pix = galsim.Convolve(obj, pix)
+    im1 = obj.drawImage(image=im1)
+    im2 = obj_pix.drawImage(image=im1.copy(), method='no_pixel')
+    im3 = obj.drawImage(image=im1.copy(), method='fft')
+    im4 = obj.drawImage(image=im1.copy(), method='real_space')
+    im5 = obj_pix.drawImage(image=im1.copy(), method='sb')
+
+    print 'im1 flux diff = ',abs(im1.array.sum() - test_flux)
+    np.testing.assert_almost_equal(
+            im1.array.sum(), test_flux, 2,
+            "obj.drawImage() produced image with wrong flux")
+    print 'im2 flux diff = ',abs(im2.array.sum() - test_flux)
+    np.testing.assert_almost_equal(
+            im2.array.sum(), test_flux, 2,
+            "obj_pix.drawImage(no_pixel) produced image with wrong flux")
+    print 'im1, im2 max diff = ',abs(im1.array - im2.array).max()
+    np.testing.assert_array_almost_equal(
+            im1.array, im2.array, 6,
+            "obj.drawImage() differs from obj_pix.drawImage(no_pixel)")
+    print 'im1, im3 max diff = ',abs(im1.array - im3.array).max()
+    np.testing.assert_array_almost_equal(
+            im1.array, im3.array, 3, # Should be close, but not exact.
+            "obj.drawImage(fft) differs from obj.drawImage")
+    print 'im1, im4 max diff = ',abs(im1.array - im4.array).max()
+    np.testing.assert_array_almost_equal(
+            im1.array, im4.array, 6,
+            "obj.drawImage(real_space) differs from obj.drawImage")
+    print 'im2, im5*scale**2 max diff = ',abs(im2.array - im5.array*test_scale**2).max()
+    np.testing.assert_array_almost_equal(
+            im5.array * test_scale**2, im2.array, 6,
+            "obj_pix.drawImage(sb) * scale**2 differs from obj_pix.drawImage(no_pixel)")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_drawK():
     """Test the various optional parameters to the drawK function.
        In particular test the parameters image, and scale in various combinations.
@@ -768,6 +850,7 @@ def test_offset():
 
 if __name__ == "__main__":
     test_draw()
+    test_draw_methods()
     test_drawK()
     test_drawK_Gaussian()
     test_drawK_Exponential_Moffat()
