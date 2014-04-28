@@ -871,29 +871,28 @@ class GSObject(object):
         optionally add to the given Image if `add_to_image = True`, but the default is to replace
         the current contents with new values.
 
-        If drawImage() will be creating the image from scratch for you, it will decide a
-        good size to use based on the size of the object being drawn.  Basically, it will
-        try to use an area large enough to include at least 99.5% of the flux.  However, the
-        pixel scale (or WCS function if you prefer) is something you would typically want
-        to set explicitly via the `scale` (`wcs`) parameter.  You can also set the data type
-        with the `dtype` parameter that has the same options as for the Image constructor.
-        If you do not provide either `scale` or `wcs`, then drawImage() will default to using
-        the Nyquist scale for the current object.
+        If drawImage() will be creating the image from scratch for you, it will decide a good size
+        to use based on the size of the object being drawn.  Basically, it will try to use an area
+        large enough to include at least 99.5% of the flux.  However, the pixel scale (or WCS
+        function if you prefer) is something you would typically want to set explicitly via the
+        `scale` (`wcs`) parameter.  You can also set the data type with the `dtype` parameter that
+        has the same options as for the Image constructor.  If you do not provide either `scale` or
+        `wcs`, then drawImage() will default to using the Nyquist scale for the current object.
 
         There are several different possible methods drawImage() can use for rendering the image.
         This is set by the `method` parameter.  The options are:
 
             'auto'      This is the default, which will normally be equivalent to 'fft'.  However,
-                        if the object being rendered is simple (no convolution) and has hard
-                        edges (e.g. a Box or a truncated Moffat or Sersic), then it will switch
-                        to 'real_space', since that is often both faster and more accurate in these
+                        if the object being rendered is simple (no convolution) and has hard edges
+                        (e.g. a Box or a truncated Moffat or Sersic), then it will switch to
+                        'real_space', since that is often both faster and more accurate in these
                         cases (due to ringing in Fourier space).
 
             'fft'       The integration of the light within each pixel is mathematically equivalent
                         to convolving by the pixel profile (a Pixel object) and sampling the result
                         at the centers of the pixels.  This method will do that convolution using
                         a discrete Fourier transform.  Furthermore, if the object (or any component
-                        of it) has been transformed via shear(), dilate(), etc., the these
+                        of it) has been transformed via shear(), dilate(), etc., then these
                         transformations are done in Fourier space as well.
 
             'real_space'  This uses direct integrals (using the Gauss-Kronrod-Patterson method)
@@ -901,12 +900,12 @@ class GSObject(object):
                         slower than the 'fft' method, but if the profile has hard edges that cause
                         ringing in Fourier space, it can be faster and/or more accurate.  If you
                         use 'real_space' with something that is already a Convolution, then this
-                        will revert to 'fft', since the double convolution is far to slow to be
+                        will revert to 'fft', since the double convolution is far too slow to be
                         practical using real-space integrals.
 
             'phot'      This uses a technique called photon shooting to render the image.
                         Essentially, the object profile is taken as a probability distribution
-                        from which a finite number of photons are "shot" onto the image.  The
+                        from which a finite number of photons are "shot" onto the image.  Each
                         photon's flux gets added to whichever pixel the photon hits.  This process
                         automatically accounts for the integration of the light over the pixel
                         area, since all photons that hit any part of the pixel are counted.
@@ -916,53 +915,52 @@ class GSObject(object):
                         and (2) it is not available for all object types (notably anything that
                         includes a Deconvolution).
 
-            'no_pixel'  This will draw the profile directly, sampling the profile at the centers
-                        of the pixels, rather than integrating the light over the pixels.  This
-                        might be desirable if you are using a PSF that already includes a
-                        convolution by the pixel response.  For example, if you are using a PSF
-                        from an observed image of a PSF, then it has already been convolved by the
-                        pixel, so you would not want to do so again.  Note: The image values are
-                        technically the sampled profile times the pixel area.  This gets the flux
-                        normalization right for the above use case.  cf. `method = 'sb'`.
+            'no_pixel'  Instead of integrating over the pixels, this method will sample the profile
+                        at the centers of the pixels.  This might be desirable if you are using a
+                        PSF that already includes a convolution by the pixel response.  For
+                        example, if you are using a PSF from an observed image of a PSF, then it
+                        has already been convolved by the pixel, so you would not want to do so
+                        again.  Note: The image values are technically the sampled profile times
+                        the pixel area.  This gets the flux normalization right for the above use
+                        case.  cf. `method = 'sb'`.
 
-            'sb'        This is a lot like 'no_pixel', except that the image values will simply
-                        be the sampled object profile's surface brightness, not multiplying this
-                        by the pixel area.  This does not correspond to any real observing
-                        scenario, but it could be useful if you want to view the surface brightness
-                        profile of an object directly, without including the pixel integration.
+            'sb'        This is a lot like 'no_pixel', except that the image values will simply be
+                        the sampled object profile's surface brightness, not multiplying by the
+                        pixel area.  This does not correspond to any real observing scenario, but
+                        it could be useful if you want to view the surface brightness profile of an
+                        object directly, without including the pixel integration.
 
-        Normally, the flux of the object should be equal to the sum of all the pixel values in
-        the image, less some small amount of flux that may fall off the edge of the image
-        (assuming you don't use `method='sb'`).  However, you may optionally set a `gain` value,
-        which converts between photons and ADU (Analog-to-Digital Units), the units of the pixel
-        values in real images.  Normally, the gain of a CCD is in electrons/ADU, but in GalSim, we
-        fold the quantum efficiency into the gain as well, so the units are photons/ADU.  The flux
-        of the object is then taken to be in photons, and the `gain` converts this to ADU.
+        Normally, the flux of the object should be equal to the sum of all the pixel values in the
+        image, less some small amount of flux that may fall off the edge of the image (assuming you
+        don't use `method='sb'`).  However, you may optionally set a `gain` value, which converts
+        between photons and ADU (Analog-to-Digital Units), the units of the pixel values in real
+        images.  Normally, the gain of a CCD is in electrons/ADU, but in GalSim, we fold the
+        quantum efficiency into the gain as well, so the units are photons/ADU.  The flux of the
+        object is then taken to be in photons, and the `gain` converts this to ADU.
 
         The 'phot' method has a few extra parameters that adjust how it functions.  The total
-        number of photons to shoot is noramlly calculated from the object's flux.  This flux
-        is taken to be given in photons, so for most simple profiles, this will equal the number
-        of photons shot.  (See the discussion in Rowe et al, 2014, for why this might be
-        modified for InterpolatedImage and related profiles.)  However, you can manually set
-        a different number of photons with `n_photons`.  You can also set `max_extra_noise` to
-        tell drawImage() to use fewer photons than normal to add no more than the given amount
-        of extra noise per pixel.  This is useful if you will be subsequently adding sky noise,
-        and you can tolerate more noise than the normal number of photons would give you, since
-        using fewer photons is of course faster.  Finally, the default behavior is to have the
-        total flux vary as a Poisson random variate, which is normally appropriate with photon
-        shooting.  But you can turn this off with `poisson_flux=False`.  It also default to False
-        if you set a value for `n_photons`.
+        number of photons to shoot is noramlly calculated from the object's flux.  This flux is
+        taken to be given in photons, so for most simple profiles, this will equal the number of
+        photons shot.  (See the discussion in Rowe et al, 2014, for why this might be modified for
+        InterpolatedImage and related profiles.)  However, you can manually set a different number
+        of photons with `n_photons`.  You can also set `max_extra_noise` to tell drawImage() to use
+        fewer photons than normal to add no greater than that much extra noise per pixel.  This is
+        useful if you will be subsequently adding sky noise, and you can tolerate more noise than
+        the normal number of photons would give you, since using fewer photons is of course faster.
+        Finally, the default behavior is to have the total flux vary as a Poisson random variate,
+        which is normally appropriate with photon shooting.  But you can turn this off with
+        `poisson_flux=False`.  It also default to False if you set a value for `n_photons`.
 
         The object will by default be drawn with its nominal center at the center location of the
         image.  There is thus a qualitative difference in the appearance of the rendered profile
         when drawn on even- and odd-sized images.  For a profile with a maximum at (0,0), this
-        maximum will fall in the central pixel of an odd-sized image, but in the corner of the
-        four central pixels of an even-sized image.  There are two parameters that can affect
-        this behavior.  If you want the nominal center to always fall at the center of a pixel,
-        you can use `use_true_center=False`.  This will put the object's center at the position
+        maximum will fall in the central pixel of an odd-sized image, but in the corner of the four
+        central pixels of an even-sized image.  There are two parameters that can affect this
+        behavior.  If you want the nominal center to always fall at the center of a pixel, you can
+        use `use_true_center=False`.  This will put the object's center at the position
         `image.center()` which is an integer pixel value, and is not the true center of an
-        even-sized image.  You can also arbitrarily offset the profile from the image center
-        with the `offset` parameter to handle any sub-pixel dithering you want.
+        even-sized image.  You can also arbitrarily offset the profile from the image center with
+        the `offset` parameter to handle any sub-pixel dithering you want.
 
         On return, the image will have an attribute `added_flux`, which will be set to be the total
         flux added to the image.  This may be useful as a sanity check that you have provided a
@@ -975,13 +973,14 @@ class GSObject(object):
         of profile the object has, how big your image is relative to the size of your object,
         whether you are keeping `poisson_flux=True`, etc.
 
-        Given the periodicity implicitly assumed by use of FFTs, there can occasionally be artifacts
-        due to wrapping at the edges, particularly for objects that are quite extended (e.g., due to
-        the nature of the radial profile).  Use of the keyword parameter `wmult > 1` can be used to
-        reduce the size of these artifacts (by making larger FFT images), at the expense of the
-        calculations taking longer and using more memory.  Alternatively, the objects that go into
-        the image can be created with a `gsparams` keyword that has a lower-than-default value for
-        `alias_threshold`; see `help(galsim.GSParams)` for more information.
+        Given the periodicity implicitly assumed by use of FFTs, there can occasionally be
+        artifacts due to wrapping at the edges, particularly for objects that are quite extended
+        (e.g., due to the nature of the radial profile).  Use of the keyword parameter `wmult > 1`
+        can be used to reduce the size of these artifacts (by making larger FFT images), at the
+        expense of the calculations taking longer and using more memory.  Alternatively, the
+        objects that go into the image can be created with a `gsparams` keyword that has a
+        lower-than-default value for `alias_threshold`; see `help(galsim.GSParams)` for more
+        information.
 
         @param image        If provided, this will be the image on which to draw the profile.
                             If `image = None`, then an automatically-sized Image will be created.
@@ -1036,25 +1035,19 @@ class GSObject(object):
                             more than this because some of the shot photons are negative
                             (usually due to interpolants).
                             [default: 0]
-        @param rng          If provided, a random number generator to use for photon shooting.
-                            (may be any kind of BaseDeviate object)
-                            If `rng=None`, one will be automatically created, using the time
-                            as a seed.  [default: None]
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng=None`, one will
+                            be automatically created, using the time as a seed.  [default: None]
         @param max_extra_noise  If provided, the allowed extra noise in each pixel.
-                            This is only relevant if `n_photons=0`, so the number of photons
-                            is being automatically calculated.  In that case, if the image
-                            noise is dominated by the sky background, you can get away with
-                            using fewer shot photons than the full `n_photons = flux`.
-                            Essentially each shot photon can have a `flux > 1`, which
-                            increases the noise in each pixel.  The `max_extra_noise`
-                            parameter specifies how much extra noise per pixel is allowed
-                            because of this approximation.  A typical value for this might be
-                            `max_extra_noise = sky_level / 100` where `sky_level` is the flux
-                            per pixel due to the sky.  If the natural number of photons
-                            produces less noise than this value for all pixels, we lower the
-                            number of photons to bring the resultant noise up to this value.
-                            If the natural value produces more noise than this, we accept it
-                            and just use the natural value.  Note that this uses a "variance"
+                            This is only relevant if `n_photons=0`, so the number of photons is
+                            being automatically calculated.  In that case, if the image noise is
+                            dominated by the sky background, then you can get away with using fewer
+                            shot photons than the full `n_photons = flux`.  Essentially each shot
+                            photon can have a `flux > 1`, which increases the noise in each pixel.
+                            The `max_extra_noise` parameter specifies how much extra noise per
+                            pixel is allowed because of this approximation.  A typical value for
+                            this might be `max_extra_noise = sky_level / 100` where `sky_level` is
+                            the flux per pixel due to the sky.  Note that this uses a "variance"
                             definition of noise, not a "sigma" definition.  [default: 0.]
         @param poisson_flux Whether to allow total object flux scaling to vary according to
                             Poisson statistics for `n_photons` samples. [default: True,
@@ -1135,8 +1128,8 @@ class GSObject(object):
                     "This is probably an error.  Normally, you should let GalSim "
                     "handle the Pixel convolution for you.  If you want to handle the Pixel "
                     "convolution yourself, you can use method=no_pixel.  Or if you really meant "
-                    "for your profile to include the Pixel and still want GalSim to convolve "
-                    "by an _additional_ Pixel, you can suppress this warning by using method=fft.")
+                    "for your profile to include the Pixel and also have GalSim convolve by"
+                    "an _additional_ Pixel, you can suppress this warning by using method=fft.")
 
         # Figure out what wcs we are going to use.
         wcs = self._determine_wcs(scale, wcs, image)
