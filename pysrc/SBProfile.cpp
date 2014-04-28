@@ -93,7 +93,7 @@ namespace galsim {
                 "                              table_spacing < 1 will use a spacing value that \n"
                 "                              much smaller than the default, which should \n"
                 "                              produce more accurate interpolations.\n"
-                "realspace_relerr=1.e-3        The relative accuracy for realspace convolution.\n"
+                "realspace_relerr=1.e-4        The relative accuracy for realspace convolution.\n"
                 "realspace_abserr=1.e-6        The absolute accuracy for realspace convolution.\n"
                 "integration_relerr=1.e-5      The relative accuracy for integrals (other than\n"
                 "                              real-space convolution).\n"
@@ -130,7 +130,7 @@ namespace galsim {
                         bp::arg("kvalue_accuracy")=1.e-5,
                         bp::arg("xvalue_accuracy")=1.e-5,
                         bp::arg("table_spacing")=1.,
-                        bp::arg("realspace_relerr")=1.e-3,
+                        bp::arg("realspace_relerr")=1.e-4,
                         bp::arg("realspace_abserr")=1.e-6,
                         bp::arg("integration_relerr")=1.e-5,
                         bp::arg("integration_abserr")=1.e-7,

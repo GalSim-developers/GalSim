@@ -161,8 +161,12 @@
 #include <boost/shared_ptr.hpp>
 
 #include "MoreFunctional.h"
-//#include "IntGKPData10.h"
-#include "IntGKPData1.h"
+// MJ: I think GKPData10 is more accurate...
+//     But worth doing a more thorough comparison to see.  I just based this assessment on the 
+//     performance of test in test_draw.py (test_draw_methods) about capturing most of the flux
+//     when method=real_space.  I don't know how representative this is.
+#include "IntGKPData10.h"
+//#include "IntGKPData1.h"
 namespace galsim {
 namespace integ {
 

@@ -159,7 +159,7 @@ namespace galsim {
             xvalue_accuracy(1.e-5),
             table_spacing(1.),
 
-            realspace_relerr(1.e-3),
+            realspace_relerr(1.e-4),
             realspace_abserr(1.e-6),
             integration_relerr(1.e-5),
             integration_abserr(1.e-7),
