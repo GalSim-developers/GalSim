@@ -627,7 +627,7 @@ def Process(config, logger=None):
                 req['hdu'] = int
 
             if extra_key == 'psf': 
-                ignore += ['real_space', 'signal_to_noise']
+                ignore += ['draw_method', 'signal_to_noise']
             if extra_key == 'weight': 
                 ignore += ['include_obj_var']
             if 'file_name' in output_extra:

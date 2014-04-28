@@ -1062,6 +1062,10 @@ class GSObject(object):
         # Check for obsolete dx parameter
         if dx is not None and scale is None: scale = dx
 
+        # Check that image is sane
+        if image is not None and not isinstance(image, galsim.Image):
+            raise ValueError("image is not an Image instance")
+
         # Make sure the type of gain is correct and has a valid value:
         if type(gain) != float:
             gain = float(gain)

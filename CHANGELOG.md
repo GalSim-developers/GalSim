@@ -380,9 +380,9 @@ change their yaml files.
 * Removed `pix` top layer in config structure.  Add `draw_method=no_pixel` to
   do what `pix : None` used to do. (Issue #364)
 * Added `draw_method=real_space` to try to use real-space convolution.  This
-  had been an option for the psf draw, but not the main draw.  This is only
-  possible if there is only one item being convolved with the pixel.
-  (Issue #364)
+  had been an option for the psf draw (via the `real_space=True` parameter),
+  but not the main draw.  It corresponds to the `method='real_space'` option
+  for drawImage() described above.  (Issue #364)
 * Added ability to index `Sequence` types by any running index, rather than
   just the default.  i.e. `obj_num`, `image_num`, or `file_num`. (Issue #364)
 * Added `Sum` type for value types for which it makes sense: float, int, angle,
@@ -401,6 +401,12 @@ change their yaml files.
   file or image is not a constant.  If the number of objects is constant, the
   automatic looping of the sequencing index essentially did this for you.
   (Issue #487)
+* Added `draw_method=sb` to make this parameter completely consistent with
+  the way the `method` parameter for drawImage() now works.  (Issue #535)
+* Changed the `output.psf.real_space` option to `output.psf.draw_method`
+  and allow all of the options that exist for `image.draw_method`.  So if you
+  had been using `real_space = True`, switch to `draw_method = real_space`.
+  (Issue #535)
 
 
 Other new features
