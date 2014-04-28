@@ -434,8 +434,11 @@ def test_sersic():
                  },
         'gal6' : { 'type' : 'Sersic' , 'n' : 0.7,  'half_light_radius' : 1, 'flux' : 50,
                    'gsparams' : { 'maximum_fft_size' : 64 }
+                 },
+        'gal7' : { 'type' : 'Sersic' , 'n' : 3.2,  'half_light_radius' : 1.7, 'flux' : 50,
+                   'trunc' : 4.3,
+                   'gsparams' : { 'realspace_relerr' : 1.e-2 , 'realspace_abserr' : 1.e-4 }
                  }
-
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -484,6 +487,21 @@ def test_sersic():
 
     except ImportError:
         print 'The assert_raises tests require nose'
+
+    gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
+    gsparams = galsim.GSParams(realspace_relerr=1.e-2, realspace_abserr=1.e-4)
+    gal7b = galsim.Sersic(n=3.2, half_light_radius=1.7, flux=50, trunc=4.3, gsparams=gsparams)
+    # Convolution with a truncated Moffat will use realspace convolution
+    conv = galsim.Moffat(beta=2.8, fwhm=1.3, trunc=3.7)
+    gsobject_compare(gal7a, gal7b, conv=conv)
+
+    try:
+        # Make sure they don't match when using the default GSParams
+        gal7c = galsim.Sersic(n=3.2, half_light_radius=1.7, flux=50, trunc=4.3)
+        np.testing.assert_raises(AssertionError,gsobject_compare, gal7a, gal7c, conv=conv)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -570,9 +588,6 @@ def test_pixel():
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } 
                  },
-        'gal5' : { 'type' : 'Pixel' , 'scale' : 2, 'flux' : 50,
-                   'gsparams' : { 'realspace_relerr' : 1.e-2 , 'realspace_abserr' : 1.e-4 } 
-                 }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -605,20 +620,6 @@ def test_pixel():
         gal4b.applyShear(g1 = 0.03, g2 = -0.05)
         gal4b.applyShift(dx = 0.7, dy = -1.2) 
         gsobject_compare(gal4a, gal4b, conv=galsim.Gaussian(0.1))
-
-    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
-    gsparams = galsim.GSParams(realspace_relerr=1.e-2, realspace_abserr=1.e-4)
-    gal5b = galsim.Pixel(scale=2, flux=50, gsparams=gsparams)
-    # Convolution of a pixel with a truncated Moffat will use realspace convolution
-    conv = galsim.Moffat(beta=2.8, fwhm=1.3, trunc=3.7)
-    gsobject_compare(gal5a, gal5b, conv=conv)
-
-    try:
-        # Make sure they don't match when using the default GSParams
-        gal5c = galsim.Pixel(scale=2, flux=50)
-        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c, conv=conv)
-    except ImportError:
-        print 'The assert_raises tests require nose'
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
