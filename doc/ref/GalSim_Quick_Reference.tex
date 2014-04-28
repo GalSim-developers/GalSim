@@ -88,10 +88,8 @@ be something like the following:
   Sections~\ref{sect:gsobjectmethods}~\&~\ref{sect:chromaticity}.
 \item Draw the object into a GalSim \texttt{Image}, representing a postage
   stamp image of your astronomical object.  This can be done using the
-  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{draw}}\texttt{(\dots)}
-  or
-  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{drawShoot}}\texttt{(\dots)}
-  methods carried by all \texttt{GSObject}s or the \texttt{obj.draw} method carried by
+  \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{drawImage}}\texttt{(\dots)}
+  method carried by all \texttt{GSObject}s or the \texttt{obj.drawImage} method carried by
   \texttt{ChromaticObject}s for rendering images --- see
   Sections~\ref{sect:gsobjectmethods}~\&~\ref{sect:image}.
 \item Add noise to the \texttt{Image}~using one of the GalSim
@@ -261,9 +259,7 @@ The choice of units for the size parameters is up to the user,
 but it must be kept consistent between all \texttt{GSObjects}.  These
 units must also adopted when specifying the \texttt{Image} pixel
 \texttt{scale}, whether this is set via the \texttt{GSObject}
-instance methods \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{draw}}\texttt{(\dots)}
-and
-\texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{drawShoot}}\texttt{(\dots)}
+instance method \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{drawImage}}\texttt{(\dots)}
 (see Section~\ref{sect:gsobjectmethods}),
 or when setting the scale of an \texttt{Image}
 using \texttt{image.scale = scale} (see Section~\ref{sect:image}).
@@ -338,7 +334,7 @@ instance are:
   Section~\ref{sect:shears}).  Commonly-used input conventions
   (supplied as keyword arguments, default values zero):
    \begin{itemize}
-  \item \texttt{obj.shear(g1=g1, g2=g2)} \\
+   \item \texttt{obj.shear(g1=g1, g2=g2)} \\
     apply the first (\texttt{g1}) and second (\texttt{g2}) component
     of a shear defined so that $|g| = (a - b) / (a + b)$ where $a$ and
     $b$ are the semi-major and semi-minor axes of an ellipse.
@@ -364,15 +360,9 @@ instance are:
   \texttt{obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a6b547741eeec4086de9abe227dae9325}{\texttt{shift}}\texttt{(dx, dy)}
   \newline {return a version of the \texttt{GSObject} with its centroid position shifted by $(dx, dy)$.}
 \item[$\circ$]
-  \texttt{image = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{draw}}\texttt{(image=None, scale=None, wcs=None, \\
-  \phantom{image = obj.draw(}add\_to\_image=False, \dots)}
-  \newline {draw and return an \texttt{Image} (see Section \ref{sect:image}) of the \texttt{GSObject}~using Discrete Fourier
-  Transforms and interpolation to perform the image rendering.
-  Note
-  that if a profile is not convolved with a pixel response before drawing, then
-  \texttt{draw} samples the surface brightness distribution without
-  integrating within pixels, so the sum of pixel values might not
-  equal the GSObject flux.
+  \texttt{image = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{drawImage}}\texttt{(image=None, scale=None, wcs=None, \\
+  \phantom{image = obj.drawImage(}method='auto', add\_to\_image=False, \dots)}
+  \newline {draw and return an \texttt{Image} (see Section \ref{sect:image}) of the \texttt{GSObject}.
   Some information about important optional parameters (see the
   linked / Python docstrings for more detail), along with default values:
   \begin{itemize}
@@ -395,49 +385,57 @@ instance are:
     use the \texttt{wcs} attribute of the \texttt{image} if available.
     Otherwise, it will use the Nyquist scale given the
     maximum modeled frequency in the \texttt{GSObject}.
+  \item \texttt{method} (default = \texttt{'auto'})
+    \begin{itemize}
+      \item \texttt{'auto'} chooses either \texttt{'fft'} or \texttt{'real\_space'}
+        appropriately based on the kind of profile being drawn.
+      \item \texttt{'fft'} renders the image using a discrete Fourier transform to convolve by the
+        pixel response.
+      \item \texttt{'real\_space'} uses direct integration to integrate the flux over the pixels
+        if possible.  (It defaults to \texttt{'fft'} when such a procedure is impossible or 
+        impractical.)
+      \item \texttt{'phot'} renders the image by shooting a finite number of photons.
+        The resulting rendering therefore contains stochastic noise, but uses few approximations.
+        Note however, that you cannot use \texttt{'phot'} with a \texttt{RealGalaxy} instance.
+        This \texttt{method} has a few additional optional parmaeters; see below.
+      \item \texttt{'no\_pixel'} does not integrate over the pixel response, but rather samples
+        the profile directly at the pixel centers and multiplies by the pixel area.  This is
+        the appropriate choice if your PSF already includes the convolution by the pixel response,
+        e.g. if it comes from an image of a star observed on the same camera.
+      \item \texttt{'sb'} is simlar to \texttt{'no\_pixel'} except that it does not scale the
+        values by the pixel area.  So the drawn values will be direct samples of the surface
+        brightness at each location.
+    \end{itemize}
   \item \texttt{add\_to\_image} (default = \texttt{False}) \newline
-   Whether to add flux to a (must be supplied) \texttt{image} rather than clear out
-   anything in the image before drawing.
- \end{itemize}
-The \texttt{draw} method has a number of additional optional
+    Whether to add flux to a (must be supplied) \texttt{image} rather than clear out
+    anything in the image before drawing.
+\end{itemize}
+If \texttt{method = 'phot'}, there are a number of additional optional parameters. Important
+examples worthy of mention are:
+\begin{itemize}
+  \item \texttt{n\_photons} (default = \texttt{0}) \newline If provided,
+    the number of photons to use.  If not provided, use as many photons
+    as necessary to end up with an image with the correct poisson shot
+    noise for the object's \texttt{flux}.  (Normally, this means use \texttt{n\_photons=flux},
+    since \texttt{flux} is taken to be in units of photons, but there are exceptions to this.)
+  \item \texttt{max\_extra\_noise} (default = \texttt{0.}) \newline If
+    provided, the allowed extra noise in each pixel.  This is only
+    relevant if \texttt{n\_photons = 0}, so the number of photons is
+    being automatically calculated.  In that case, if the image noise is
+    dominated by the sky background, you can get away with using fewer
+    shot photons than the full \texttt{n\_photons = flux}.  Essentially
+    each shot photon can have a $\texttt{flux} > 1$, which increases the
+    noise in each pixel.  The \texttt{max\_extra\_noise} parameter
+    specifies how much extra noise per pixel is allowed because of this
+    approximation.
+  \item \texttt{poisson\_flux} (default = \texttt{True}) \newline
+    Whether to allow total object flux scaling to vary according to
+    Poisson statistics for \texttt{n\_photons} samples.
+\end{itemize}
+The \texttt{drawImage} method has a number of additional optional
  parameters.  Please see the linked / Python docstrings for more
  details.
  }
-\item[$\circ$]
-  \texttt{image = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{drawShoot}}\texttt{(image=None, scale=None, wcs=None \\
-  \phantom{image = obj.drawShoot(}add\_to\_image=False, \dots)}
-  \newline {draw and return an \texttt{Image} (see
-    Section \ref{sect:image}) of the \texttt{GSObject}~by shooting a
-    finite number of photons.
-    The resulting rendering therefore
-    contains stochastic noise, but uses few approximations.  Note
-    however, that you cannot \texttt{drawShoot} with a
-    \texttt{RealGalaxy} instance.  \texttt{drawShoot} shares all the parameters
-    listed for \texttt{draw}, above, but the \texttt{drawShoot} method
-    also has a number of additional optional parameters. Important
-    examples worthy of mention are:
-\begin{itemize}
-\item \texttt{n\_photons} (default = \texttt{0}) \newline If provided,
-  the number of photons to use.  If not provided, use as many photons
-  as necessary to end up with an image with the correct poisson shot
-  noise for the object's \texttt{flux}.
-\item \texttt{max\_extra\_noise} (default = \texttt{0.}) \newline If
-  provided, the allowed extra noise in each pixel.  This is only
-  relevant if \texttt{n\_photons = 0}, so the number of photons is
-  being automatically calculated.  In that case, if the image noise is
-  dominated by the sky background, you can get away with using fewer
-  shot photons than the full \texttt{n\_photons = flux}.  Essentially
-  each shot photon can have a $\texttt{flux} > 1$, which increases the
-  noise in each pixel.  The \texttt{max\_extra\_noise} parameter
-  specifies how much extra noise per pixel is allowed because of this
-  approximation.
-\item \texttt{poisson\_flux} (default = \texttt{True}) \newline
-  Whether to allow total object flux scaling to vary according to
-  Poisson statistics for \texttt{n\_photons} samples.
-\end{itemize}
-As before, you are strongly encouraged to see the linked / Python
-docstrings for more details.
-}
 \end{itemize}
 
 Finally, you may see by exploring the docstrings that many of the \texttt{GSObject}
@@ -581,14 +579,14 @@ like:
 {\tt >>> chromatic\_psf = ChromaticObject(psf500)}\newline
 {\tt >>> chromatic\_psf.dilate(lambda w:(w/500.0)**(1.0))}
 
-The draw method of a \texttt{ChromaticObject} is similar to the draw method of a \texttt{GSObject},
+The \texttt{drawImage} method of a \texttt{ChromaticObject} is similar to the \texttt{drawImage}
+method of a \texttt{GSObject},
 except that it requires a \texttt{Bandpass} object as its first
 argument.
 
 {\tt >>> gband = galsim.Bandpass(lambda w:1.0, blue\_limit=410, red\_limit=550)} \newline
-{\tt >>> pix = galsim.Pixel(0.2)}\newline
-{\tt >>> final = galsim.Convolve(chromatic\_gal, chromatic\_psf, pix)}\newline
-{\tt >>> image = final.draw(gband)}\newline
+{\tt >>> final = galsim.Convolve(chromatic\_gal, chromatic\_psf)}\newline
+{\tt >>> image = final.drawImage(gband)}\newline
 
 GalSim also comes with built-in support for ground-based PSFs affected by differential chromatic
 refraction and Kolmogorov chromatic seeing ($\mathrm{FWHM} \propto \lambda^{-0.2}$) through the
