@@ -285,14 +285,12 @@ def test_draw_methods():
     pix = galsim.Pixel(scale=test_scale)
     obj_pix = galsim.Convolve(obj, pix)
 
-    im1 = galsim.ImageD(64, 64, scale=test_scale)
+    N = 64
+    im1 = galsim.ImageD(N, N, scale=test_scale)
 
+    # auto and fft should be equivalent to drawing obj_pix with no_pixel
     im1 = obj.drawImage(image=im1)
     im2 = obj_pix.drawImage(image=im1.copy(), method='no_pixel')
-    im3 = obj.drawImage(image=im1.copy(), method='fft')
-    im4 = obj.drawImage(image=im1.copy(), method='real_space')
-    im5 = obj_pix.drawImage(image=im1.copy(), method='sb')
-
     print 'im1 flux diff = ',abs(im1.array.sum() - test_flux)
     np.testing.assert_almost_equal(
             im1.array.sum(), test_flux, 2,
@@ -305,28 +303,52 @@ def test_draw_methods():
     np.testing.assert_array_almost_equal(
             im1.array, im2.array, 6,
             "obj.drawImage() differs from obj_pix.drawImage(no_pixel)")
+    im3 = obj.drawImage(image=im1.copy(), method='fft')
     print 'im1, im3 max diff = ',abs(im1.array - im3.array).max()
     np.testing.assert_array_almost_equal(
             im1.array, im3.array, 6,
             "obj.drawImage(fft) differs from obj.drawImage")
+
+    # real_space should be similar, but not precisely equal.
+    im4 = obj.drawImage(image=im1.copy(), method='real_space')
     print 'im1, im4 max diff = ',abs(im1.array - im4.array).max()
     np.testing.assert_array_almost_equal(
-            im1.array, im4.array, 4, # Should be close, but not exact.
+            im1.array, im4.array, 4,
             "obj.drawImage(real_space) differs from obj.drawImage")
-    print 'im2, im5*scale**2 max diff = ',abs(im2.array - im5.array*test_scale**2).max()
+
+    # sb should match xValue for pixel centers.  And be scale**2 factor different from no_pixel.
+    im5 = obj.drawImage(image=im1.copy(), method='sb', use_true_center=False)
+    im5.setCenter(0,0)
+    print 'im5(0,0) = ',im5(0,0)
+    print 'obj.xValue(0,0) = ',obj.xValue(0.,0.)
+    np.testing.assert_almost_equal(
+            im5(0,0), obj.xValue(0.,0.), 6,
+            "obj.drawImage(sb) values do not match surface brightness given by xValue")
+    np.testing.assert_almost_equal(
+            im5(3,2), obj.xValue(3*test_scale, 2*test_scale), 6,
+            "obj.drawImage(sb) values do not match surface brightness given by xValue")
+    im5 = obj.drawImage(image=im5, method='sb')
+    print 'im5(0,0) = ',im5(0,0)
+    print 'obj.xValue(dx/2,dx/2) = ',obj.xValue(test_scale/2., test_scale/2.)
+    np.testing.assert_almost_equal(
+            im5(0,0), obj.xValue(0.5*test_scale, 0.5*test_scale), 6,
+            "obj.drawImage(sb) values do not match surface brightness given by xValue")
+    np.testing.assert_almost_equal(
+            im5(3,2), obj.xValue(3.5*test_scale, 2.5*test_scale), 6,
+            "obj.drawImage(sb) values do not match surface brightness given by xValue")
+    im6 = obj.drawImage(image=im1.copy(), method='no_pixel')
+    print 'im6, im5*scale**2 max diff = ',abs(im6.array - im5.array*test_scale**2).max()
     np.testing.assert_array_almost_equal(
-            im5.array * test_scale**2, im2.array, 6,
-            "obj_pix.drawImage(sb) * scale**2 differs from obj_pix.drawImage(no_pixel)")
+            im5.array * test_scale**2, im6.array, 6,
+            "obj.drawImage(sb) * scale**2 differs from obj.drawImage(no_pixel)")
 
     # Drawing a truncated object, auto should be identical to real_space
     obj = galsim.Sersic(flux=test_flux, n=3.7, half_light_radius=2, trunc=4)
     obj_pix = galsim.Convolve(obj, pix)
+
+    # auto and real_space should be equivalent to drawing obj_pix with no_pixel
     im1 = obj.drawImage(image=im1)
     im2 = obj_pix.drawImage(image=im1.copy(), method='no_pixel')
-    im3 = obj.drawImage(image=im1.copy(), method='fft')
-    im4 = obj.drawImage(image=im1.copy(), method='real_space')
-    im5 = obj_pix.drawImage(image=im1.copy(), method='sb')
-
     print 'im1 flux diff = ',abs(im1.array.sum() - test_flux)
     np.testing.assert_almost_equal(
             im1.array.sum(), test_flux, 2,
@@ -339,18 +361,39 @@ def test_draw_methods():
     np.testing.assert_array_almost_equal(
             im1.array, im2.array, 6,
             "obj.drawImage() differs from obj_pix.drawImage(no_pixel)")
-    print 'im1, im3 max diff = ',abs(im1.array - im3.array).max()
-    np.testing.assert_array_almost_equal(
-            im1.array, im3.array, 3, # Should be close, but not exact.
-            "obj.drawImage(fft) differs from obj.drawImage")
+    im4 = obj.drawImage(image=im1.copy(), method='real_space')
     print 'im1, im4 max diff = ',abs(im1.array - im4.array).max()
     np.testing.assert_array_almost_equal(
             im1.array, im4.array, 6,
             "obj.drawImage(real_space) differs from obj.drawImage")
-    print 'im2, im5*scale**2 max diff = ',abs(im2.array - im5.array*test_scale**2).max()
+
+    # fft should be similar, but not precisely equal.
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        # This emits a warning about convolving two things with hard edges.
+        im3 = obj.drawImage(image=im1.copy(), method='fft')
+    print 'im1, im3 max diff = ',abs(im1.array - im3.array).max()
     np.testing.assert_array_almost_equal(
-            im5.array * test_scale**2, im2.array, 6,
-            "obj_pix.drawImage(sb) * scale**2 differs from obj_pix.drawImage(no_pixel)")
+            im1.array, im3.array, 3, # Should be close, but not exact.
+            "obj.drawImage(fft) differs from obj.drawImage")
+
+    # sb should match xValue for pixel centers.  And be scale**2 factor different from no_pixel.
+    im5 = obj.drawImage(image=im1.copy(), method='sb')
+    im5.setCenter(0,0)
+    print 'im5(0,0) = ',im5(0,0)
+    print 'obj.xValue(dx/2,dx/2) = ',obj.xValue(test_scale/2., test_scale/2.)
+    np.testing.assert_almost_equal(
+            im5(0,0), obj.xValue(0.5*test_scale, 0.5*test_scale), 6,
+            "obj.drawImage(sb) values do not match surface brightness given by xValue")
+    np.testing.assert_almost_equal(
+            im5(3,2), obj.xValue(3.5*test_scale, 2.5*test_scale), 6,
+            "obj.drawImage(sb) values do not match surface brightness given by xValue")
+    im6 = obj.drawImage(image=im1.copy(), method='no_pixel')
+    print 'im6, im5*scale**2 max diff = ',abs(im6.array - im5.array*test_scale**2).max()
+    np.testing.assert_array_almost_equal(
+            im5.array * test_scale**2, im6.array, 6,
+            "obj.drawImage(sb) * scale**2 differs from obj.drawImage(no_pixel)")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
