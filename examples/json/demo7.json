@@ -19,7 +19,7 @@
 "#" : "- obj type : Airy (lam_over_diam)",
 "#" : "- obj type : Sersic (..., trunc)",
 "#" : "- obj : dilate",
-"#" : "- value type : Sequence (..., repeat)",
+"#" : "- value type : Sequence (..., repeat, index_key)",
 "#" : "- value type : Random (min, max)",
 "#" : "- image type : Tiled (..., stamp_size, xborder, yborder)",
 "#" : "- image : draw_method (fft or phot)",
@@ -175,12 +175,13 @@
         "#" : "index : { type : Sequence , firat : 0 , last : 1 }"
     },
 
-    "#" : "This is also pretty contrived. ",
-    "#" : "It is really only relevant for this particular example.  ",
+    "#" : "This is also pretty contrived. It is really only relevant for this particular example.",
     "#" : "The usual case is to just set a single number, which really means that each object",
-    "#" : "gets a sequential value starting with this number.  In this case we repeat each value",
-    "#" : "two times, so the fft and phot images get the same values for the random parameters.",
-    "random_seed" : { "type" : "Sequence" , "first" : 553728 , "repeat" : 2 },
+    "#" : "gets a sequential value starting with this number.  In this case we want to use the",
+    "#" : "same value for both the fft and phot images to get the same values for the random",
+    "#" : "parameters. To implement this, we tell it to use the image_num for the sequencing key",
+    "#" : "rather than the usual obj_num.",
+    "random_seed" : { "type" : "Sequence" , "first" : 553728 , "index_key" : "image_num" },
 
     "#" : "This script is set up as a comparison between using FFTs for doing the convolutions and",
     "#" : "shooting photons.  The two methods have trade-offs in speed and accuracy which vary",

@@ -668,26 +668,26 @@ def test_realgalaxy():
     # This makes the comparison much faster without changing the validity of the test.
     conv = galsim.Gaussian(sigma = 1)
 
-    config['seq_index'] = 0
+    config['obj_num'] = 0
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b = galsim.RealGalaxy(real_cat, index=0)
     # The convolution here 
     gsobject_compare(gal1a, gal1b, conv=conv)
 
-    config['seq_index'] = 1
+    config['obj_num'] = 1
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
     gal2b = galsim.RealGalaxy(real_cat, index = 23)
     gal2b.setFlux(100)
     gsobject_compare(gal2a, gal2b, conv=conv)
 
-    config['seq_index'] = 2
+    config['obj_num'] = 2
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.RealGalaxy(real_cat, index = 17)
     gal3b.setFlux(1.e6)
     gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b, conv=conv)
 
-    config['seq_index'] = 3
+    config['obj_num'] = 3
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.RealGalaxy(real_cat, index = 5)
     gal4b.scaleFlux(50)
@@ -699,12 +699,12 @@ def test_realgalaxy():
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b, conv=conv)
 
-    config['seq_index'] = 4
+    config['obj_num'] = 4
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
     gal5b = galsim.RealGalaxy(real_cat, index = 23, rng = rng, noise_pad_size = 10)
     gsobject_compare(gal5a, gal5b, conv=conv)
 
-    config['seq_index'] = 5
+    config['obj_num'] = 5
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
     gal6b = galsim.RealGalaxy(real_cat, index = 23, rng = rng, noise_pad_size = 8)
     gsobject_compare(gal6a, gal6b, conv=conv)
@@ -1043,23 +1043,23 @@ def test_list():
         }
     }
 
-    config['seq_index'] = 0
+    config['obj_num'] = 0
     gal1a = galsim.config.BuildGSObject(config, 'gal')[0]
     gal1b = galsim.Gaussian(sigma = 2)
     gsobject_compare(gal1a, gal1b)
 
-    config['seq_index'] = 1
+    config['obj_num'] = 1
     gal2a = galsim.config.BuildGSObject(config, 'gal')[0]
     gal2b = galsim.Gaussian(fwhm = 2, flux = 100)
     gsobject_compare(gal2a, gal2b)
 
-    config['seq_index'] = 2
+    config['obj_num'] = 2
     gal3a = galsim.config.BuildGSObject(config, 'gal')[0]
     gal3b = galsim.Gaussian(half_light_radius = 2, flux = 1.e6)
     gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
-    config['seq_index'] = 3
+    config['obj_num'] = 3
     gal4a = galsim.config.BuildGSObject(config, 'gal')[0]
     gal4b = galsim.Gaussian(sigma = 1, flux = 50)
     gal4b.applyDilation(3)
@@ -1084,7 +1084,7 @@ def test_list():
         }
     }
 
-    config['seq_index'] = 0
+    config['obj_num'] = 0
     gal5a = galsim.config.BuildGSObject(config, 'gal')[0]
     gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
     gal5b = galsim.Exponential(scale_radius=3.4, flux=100, gsparams=gsparams)
@@ -1132,7 +1132,7 @@ def test_ring():
     e2_list = [ 0.1, -0.1, 0.1, -0.1, 0.1, -0.1 ]
 
     for k in range(6):
-        config['seq_index'] = k
+        config['obj_num'] = k
         gal1a = galsim.config.BuildGSObject(config, 'gal')[0]
         gal1b = gauss.createSheared(e1=e1_list[k], e2=e2_list[k])
         gsobject_compare(gal1a, gal1b)
@@ -1151,7 +1151,7 @@ def test_ring():
     disk.applyShear(e2=0.3)
 
     for k in range(25):
-        config['seq_index'] = k
+        config['obj_num'] = k
         gal2a = galsim.config.BuildGSObject(config, 'gal')[0]
         gal2b = disk.createRotated(theta = k * 18 * galsim.degrees)
         gsobject_compare(gal2a, gal2b)
@@ -1159,7 +1159,7 @@ def test_ring():
     config = {
         'gal' : {
             'type' : 'Ring' ,
-            'num' : 20,
+            'num' : 5,
             'full_rotation' : 360. * galsim.degrees,
             'first' : { 
                 'type' : 'Sum',
@@ -1171,7 +1171,8 @@ def test_ring():
                       'ellip' : galsim.Shear(e1=0.12,e2=-0.08) 
                     } 
                 ]
-            }
+            },
+            'index' : { 'type' : 'Sequence', 'repeat' : 4 }
         }
     }
 
@@ -1182,9 +1183,10 @@ def test_ring():
     sum = disk + bulge
 
     for k in range(25):
-        config['seq_index'] = k
+        config['obj_num'] = k
+        index = k // 4  # make sure we use integer division
         gal3a = galsim.config.BuildGSObject(config, 'gal')[0]
-        gal3b = sum.createRotated(theta = k * 18 * galsim.degrees)
+        gal3b = sum.createRotated(theta = index * 72 * galsim.degrees)
         gsobject_compare(gal3a, gal3b)
 
     # Check that the ring items correctly inherit their gsparams from the top level
@@ -1210,7 +1212,7 @@ def test_ring():
         }
     }
 
-    config['seq_index'] = 0
+    config['obj_num'] = 0
     gal4a = galsim.config.BuildGSObject(config, 'gal')[0]
     gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
     disk = galsim.Exponential(half_light_radius=2, gsparams=gsparams)

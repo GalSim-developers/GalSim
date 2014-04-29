@@ -98,9 +98,9 @@ gal :
             type : List
             items : [ 106416, 106731, 108402, 116045, 116448 ]
             # Because this is in a Ring, the "first" item only gets accessed every 20 objects.
-            # However, all sequences are indexed by the overall object number, so in order to 
-            # step through this sequence once for each time into the "first" item, we need
-            # to set index to repeat 20 times before moving on to the next item.
+            # However, sequences are indexed by the overall object number, so in order to
+            # step through the items in this list once for each time it gets to the "first"
+            # item, we need to set the index to repeat 20 times before incrementing.
             # We again use the convenient YAML variable name notation to do so.
             index : { type : Sequence , repeat : *num_in_ring }
 
