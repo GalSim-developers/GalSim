@@ -45,6 +45,8 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     @returns the tuple (images, psf_images, weight_images, badpix_images, current_vars).
              All in tuple are lists.
     """
+    config['obj_num'] = obj_num
+
     def worker(input, output):
         proc = current_process().name
         for job in iter(input.get, 'STOP'):
@@ -230,7 +232,6 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         current_vars = []
 
         for k in range(nobjects):
-            kwargs['obj_num'] = obj_num+k
             kwargs['config'] = config
             kwargs['obj_num'] = obj_num+k
             kwargs['logger'] = logger
@@ -248,7 +249,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
 
 
     if logger:
-        logger.debug('image %d: Done making stamps',config['image_num'])
+        logger.debug('image %d: Done making stamps',config.get('image_num',0))
 
     return images, psf_images, weight_images, badpix_images, current_vars
  
@@ -275,16 +276,21 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     import time
     t1 = time.time()
 
-    config['seq_index'] = obj_num - config.get('start_obj_num',0)
+    # For everything except random_seed, the default key is obj_num_in_file
+    config['index_key'] = 'obj_num_in_file'
     config['obj_num'] = obj_num
+
     # Initialize the random number generator we will be using.
     if 'random_seed' in config['image']:
+        config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
+        config['index_key'] = 'obj_num_in_file'
         if logger:
             logger.debug('obj %d: seed = %d',obj_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:
         rng = galsim.BaseDeviate()
+
     # Store the rng in the config for use by BuildGSObject function.
     config['rng'] = rng
     if 'gd' in config:
@@ -523,9 +529,6 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 # the value generators will do a quick return with the cached value.
                 galsim.config.process.RemoveCurrent(config, keep_safe=True)
                 continue
-
-        else:
-            break
 
     return im, psf_im, weight_im, badpix_im, current_var, t6-t1
 

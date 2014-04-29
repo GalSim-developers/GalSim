@@ -49,9 +49,9 @@ change does not affect the most common uses of the function.
   longer first (because it is a kwarg now). (Issue #526)
   * `CorrelatedNoise(rng, image)` should now be `CorrelatedNoise(image, 
     rng=rng)` or `CorrelatedNoise(rng=rng, image=image)`.
-  * `UncorrelatedNoise(rng, wcs, variance)` should now be `UncorrelatedNoise(
-    variance, rng=rng, wcs=wcs)` or `UncorrelatedNoise(rng=rng, wcs=wcs,
-    variance=variance)`.
+  * `UncorrelatedNoise(rng, scale, variance)` should now be `UncorrelatedNoise(
+    variance, rng=rng, scale=scale)` or `UncorrelatedNoise(rng=rng,
+    scale=scale, variance=variance)`.
   * `getCOSMOSNoise(rng, file_name)` should now be `getCOSMOSNoise(file_name,
     rng=rng)` or `getCOSMOSNoise(rng=rng, file_name=file_name)`.
 
@@ -312,7 +312,8 @@ change their yaml files.
   possible if there is only one item being convolved with the pixel.
   (Issue #364)
 * Added ability to index `Sequence` types by any running index, rather than
-  just the default.  i.e. `obj_num`, `image_num`, or `file_num`. (Issue #364)
+  just the default by specifying an `index_key` parameter.  The options are
+  'obj_num', 'image_num', 'file_num', or 'obj_num_in_file'.  (Issue #364, #536)
 * Added `Sum` type for value types for which it makes sense: float, int, angle,
   shear, position. (Issue #457)
 * Allowed the user to modify or add config parameters from the command line.
@@ -323,12 +324,11 @@ change their yaml files.
 * Added a new `output.retry_io` item that can be set so that if the output write
   command fails (due to hard drive overloading for example), then it will wait
   a second and try again. (Issue #482)
-* Changed the sequence indexing within an image to always start at 0, rather
-  than use `obj_num` (which continues increasing through all objects in the run).
-  Functionally, this would usually only matter if the number of objects per
-  file or image is not a constant.  If the number of objects is constant, the
-  automatic looping of the sequencing index essentially did this for you.
-  (Issue #487)
+* Changed the default sequence indexing for most things to be 'obj_num_in_file'
+  rather than 'obj_num'.  Functionally, this would usually only matter if the
+  number of objects per file or image is not a constant.  If the number of
+  objects is constant, the automatic looping of the sequencing index
+  essentially did this for you for most use cases.  (Issue #487)
 
 
 Other new features:
@@ -361,7 +361,7 @@ Other new features:
 * Added option to FitsHeader and FitsWCS to read in SCamp-style text files with
   the header information using the parameter `text_file=True`. (Issue #508)
 * Fixed some bugs in the treatment of correlated noise.  (Issues #526, #528)
-* Modify addNoiseSNR() method to return the variance of the noise that was
+* Modified addNoiseSNR() method to return the variance of the noise that was
   added.  (Issue #526)
-* Add `dtype` option to `draw`, `drawShoot` and `drawK`, which sets the 
-  data type to use for automatically constructed images.
+* Added `dtype` option to `draw`, `drawShoot` and `drawK`, which sets the 
+  data type to use for automatically constructed images. (Issue #526)
