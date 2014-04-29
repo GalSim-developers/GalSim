@@ -108,7 +108,7 @@ code as being obsolete.  At some point (probably version 1.2) use of the old
 syntax will raise a DeprecationWarning, and with version 2.0, it will be
 removed.
 
-* Changed the name of the `dx` parameter in the `draw`, `drawShoot`, `drawK`
+* Changed the name of the `dx` parameter in the `drawImage` and `drawKImage`
   methods of `GSObject` and the constructors of `InterpolatedImage` and
   `CorrelatedNoise` to the name `scale`. (Issue #364)
 * Changed the `dx_cosmos` parameter of `getCOSMOSNoise` to `cosmos_scale`.
@@ -242,9 +242,9 @@ New WCS classes (Issue #364)
 ----------------------------
 
 * Every place in the code that can take a `scale` parameter (e.g. the `Image`
-  constructor,  `GSObject.draw()`, `InterpolatedImage`, etc.) can now take a
-  `wcs` parameter.  The `scale` parameter is still an option, but now it is
-  just shorthand for `wcs = PixelScale(scale)`.
+  constructor,  `GSObject.drawImage()`, `InterpolatedImage`, etc.) can now
+  take a `wcs` parameter.  The `scale` parameter is still an option, but now it
+  is just shorthand for `wcs = PixelScale(scale)`.
 * There are three LocalWCS classes that have a common origin for image and
   world coordinates:
   * `PixelScale` describes a simple scale conversion from pixels to arcsec.
@@ -362,7 +362,7 @@ New chromatic functionality (Issues #467, #520)
     The one difference is that `ChromaticObject`s require an additional argument,
     (given first) which is the `Bandpass` throughput function against which to
     integrate over wavelength.
-    E.g. `image = chroma_obj.draw(bandpass, ...)`
+    E.g. `image = chroma_obj.drawImage(bandpass, ...)`
 * Added demo12.py for wavelength dependence examples.
 
 
@@ -380,8 +380,8 @@ change their yaml files.
 * Removed `pix` top layer in config structure.  Add `draw_method=no_pixel` to
   do what `pix : None` used to do. (Issue #364)
 * Added `draw_method=real_space` to try to use real-space convolution.  This
-  had been an option for the psf draw (via the `real_space=True` parameter),
-  but not the main draw.  It corresponds to the `method='real_space'` option
+  had been an option for the psf image (via the `real_space=True` parameter),
+  but not the main image.  It corresponds to the `method='real_space'` option
   for drawImage() described above.  (Issue #364)
 * Added ability to index `Sequence` types by any running index, rather than
   just the default by specifying an `index_key` parameter.  The options are
@@ -442,5 +442,5 @@ Other new features
 * Fixed some bugs in the treatment of correlated noise.  (Issues #526, #528)
 * Modified addNoiseSNR() method to return the variance of the noise that was
   added.  (Issue #526)
-* Added `dtype` option to `draw`, `drawShoot` and `drawK`, which sets the 
-  data type to use for automatically constructed images. (Issue #526)
+* Added `dtype` option to `drawImage` and `drawKImage`, which sets the data
+  type to use for automatically constructed images. (Issue #526)
