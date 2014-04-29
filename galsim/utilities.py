@@ -790,9 +790,8 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     hsm_shear_est = 'KSB'
 
     # get the fft image
-    im_draw,im_psf,_,_ = galsim.config.BuildImage(config1,obj_num=obj_num,
-                                                  nproc=config['image']['nproc'],
-                                                  make_psf_image=True, logger=logger)
+    im_draw,im_psf,_,_ = galsim.config.BuildImage(
+      config1, obj_num=obj_num, make_psf_image=True, logger=logger)
 
     # get the moments for FFT image
     if moments:
@@ -853,8 +852,8 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
 
         # Run the trials using galsim.config.BuildImages function
         trial_images = galsim.config.BuildImages( 
-            nimages = n_trials_per_iter, obj_num = obj_num,
-            config = config2, logger = logger , nproc=config2['image']['nproc'])[0] 
+            nimages=n_trials_per_iter, obj_num=obj_num,
+            config=config2, logger=logger , nproc=config2['image']['nproc'])[0] 
 
         # Collect results 
         trial_results = []
