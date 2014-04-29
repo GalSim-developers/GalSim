@@ -790,7 +790,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     hsm_shear_est = 'KSB'
 
     # get the fft image
-    im_draw,im_psf,_,_ = galsim.config.BuildImage(
+    im_draw, im_psf, _, _ = galsim.config.BuildImage(
       config1, obj_num=obj_num, make_psf_image=True, logger=logger)
 
     # get the moments for FFT image
