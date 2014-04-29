@@ -414,7 +414,9 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
             do_noise=True, logger=logger,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
-            make_badpix_image=make_badpix_image)
+            make_badpix_image=make_badpix_image)[:-2] # Required due to `current_var, time` being
+                                                      # last two elements of the BuildSingleStamp
+                                                      # return tuple
 
 
 def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
