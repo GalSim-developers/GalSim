@@ -7,7 +7,7 @@ complicated than a simple pixel scale) and chromatic objects (objects whose
 surface brightness profile is a function of wavelength).  Each of these
 topics has its own section below, so see those for more details.
 
-In addition, we decided to make quite a few changes to the API.  Soem of these
+In addition, we decided to make quite a few changes to the API.  Some of these
 changes were necessary (or at least helpful) for implementing the new
 functionality.  But since we were doing some API changes, we decided to go
 ahead and include a number of other API changes that we had been reluctant
@@ -26,15 +26,15 @@ you time to convert any existing GalSim code you may have.
 
 The most significant API changes are: (1) A new `Image` class combines the
 functionality of all the various different image classes we used to have
-(`ImageF`, `ImageD`, `ImageViewF`, etc.). (2) We changed the way objects are
-transformed (sheared, dilated, rotated, etc.) to use things like
+(`ImageF`, `ImageD`, `ImageViewF`, etc.).  (2) We changed the way objects are
+transformed (sheared, dilated, rotated, etc.) to use expressions like
 `obj = obj.shear(s)` rather than either `obj.applyShear(s)` or
 `obj = obj.createSheared(s)`.  (3) We combined the functionality of
 the `draw` and `drawShoot` commands into a single `drawImage` command
 useing a `method` keyword to specify which rendering method to use.
 Furthermore, the default method is for the `drawImage` command to handle
 the convolution by the pixel for you, so you no longer need to include
-the pixel convolution yourself unless you are doing something slightly
+the pixel convolution yourself, unless you are doing something slightly
 non-standard.
 
 See the sections below on the API changes for more details about these

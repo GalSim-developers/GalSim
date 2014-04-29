@@ -118,7 +118,7 @@ dx=[0.0, 1.0, 1.000000001, 2.999999999, 3.0, 4.0]
 dp=[0.1, 0.1, 0.0    , 0.0    , 0.1, 0.1]
 dLookupTable=galsim.LookupTable(x=dx,f=dp,interpolant='linear')
 # Tabulated results for DistDeviate LookupTable call
-dLookupTableResult = (0.23721845680847722, 0.42913599265739233, 0.8617639681324352)
+dLookupTableResult = (0.23721845680847731, 0.42913599265739233, 0.86176396813243539)
 # File with the same values
 dLookupTableFile = os.path.join('random_data','dLookupTable.dat')
 

@@ -249,8 +249,10 @@ def main(argv):
                 # Draw the profile
                 # This default rendering method (method='auto') usually defaults to FFT, since
                 # that is normally the most efficient method.  However, we can also set method
-                # to 'fft' explcitly to force it to always use FFTs for the convolution
-                # by the pixel response.
+                # to 'fft' explicitly to force it to always use FFTs for the convolution
+                # by the pixel response.  (In this case, it doesn't have any effect, since
+                # the 'auto' method would have always chosen 'fft' anyway, so this is just
+                # for illustrative purposes.)
                 final.drawImage(fft_image, method='fft')
 
                 logger.debug('   Drew fft image.  Total drawn flux = %f.  .flux = %f',

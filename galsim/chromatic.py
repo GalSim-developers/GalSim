@@ -20,7 +20,7 @@
 Define wavelength-dependent surface brightness profiles.
 
 Implementation is done by constructing GSObjects as functions of wavelength. The drawImage()
-method then integrates over wavelength while also multiplying in a throughput function.
+method then integrates over wavelength while also multiplying by a throughput function.
 
 Possible uses include galaxies with color gradients, automatically drawing a given galaxy through
 different filters, or implementing wavelength-dependent point spread functions.

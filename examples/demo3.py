@@ -43,6 +43,7 @@ New features introduced in this demo:
 - obj = obj.withFlux(flux)
 - image = galsim.ImageF(image_size, image_size)
 - image = obj.drawImage(image, wcs)
+- image = obj.drawImage(method='sb')
 - world_profile = wcs.toWorld(profile)
 - shear3 = shear1 + shear2
 - noise = galsim.CCDNoise(rng, sky_level, gain, read_noise)
@@ -222,7 +223,11 @@ def main(argv):
 
     # We also draw the optical part of the PSF at its own Nyquist-sampled pixel size
     # in order to better see the features of the (highly structured) profile.
-    image_opticalpsf = optics.drawImage()
+    # In this case, we draw a "surface brightness image" using method='sb'.  Rather than 
+    # integrate the flux over the area of each pixel, this method just samples the surface
+    # brightness value at the locations of the pixel centers.  We will encounter a few other
+    # drawing methods as we go through this sequence of demos.  cf. demos 7, 8, 10, and 11.
+    image_opticalpsf = optics.drawImage(method='sb')
     logger.debug('Made image of the profile')
 
     # Add a constant sky level to the image.
