@@ -214,9 +214,9 @@ removed.
   `CorrelatedNoise` constructor rather than `getCorrelatedNoise`. (Issue #527)
   * `image.getCorrelatedNoise()` should now be `galsim.CorrelatedNoise(image)`.
 * Combined the `draw` and `drawShoot` methods into a single `drawImage` method
-  with more options about how the profile should be rendered.  Furthermore,
-  in most cases, you no longer need to convolve by a Pixel by hand.  The
-  default rendering method will include the pixel convolution for you.
+  with more options about how the profile should be rendered.  Furthermore, in
+  most cases, you no longer need to convolve by a Pixel by hand.  The default
+  rendering method will include the pixel convolution for you. (Issue #535)
   So, if `obj` is a GSObject, then:
   * `obj_pix = galsim.Convolve(obj, galsim.Pixel(scale));`
     `im = obj_pix.draw(...)`
@@ -234,7 +234,7 @@ removed.
   * `im = obj.draw(normalization='sb', ...)`
         -> `im = obj.drawImage(method='sb', ...)`
 * Changed the name of `drawK` to `drawKImage` to be more parallel with the
-  new `drawImage` name.
+  new `drawImage` name. (Issue #535)
   * `re, im = obj.drawK(...)` -> `re, im = obj.drawKImage(...)`
 
 
@@ -407,6 +407,8 @@ change their yaml files.
   and allow all of the options that exist for `image.draw_method`.  So if you
   had been using `real_space = True`, switch to `draw_method = real_space`.
   (Issue #535)
+* Added an `index` item for Ring objects in case you want to index the ring
+  items in an unusual way. (#536)
 
 
 Other new features
