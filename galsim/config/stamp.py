@@ -589,6 +589,12 @@ def DrawStamp(psf, gal, config, xsize, ysize, offset, method):
     elif method == 'phot':
         max_extra_noise = 0.01
 
+    if 'image' in config and 'poisson_flux' in config['image']:
+        if method != 'phot':
+            raise AttributeError('poisson_flux is invalid with method != phot')
+        kwargs['poisson_flux'] = galsim.config.ParseValue(
+                config['image'], 'poisson_flux', config, bool)[0]
+
     if max_extra_noise is not None:
         if max_extra_noise < 0.:
             raise ValueError("image.max_extra_noise cannot be negative")
