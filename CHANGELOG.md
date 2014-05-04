@@ -15,11 +15,11 @@ to introduce previously for backwards-compatibility reasons.  Getting them
 all in now means that the API will hopefully be more stable going forward.
 
 We tried to implement the changes in as backwards-compatible a way as
-possible.  In most case, the previous syntax will still work correctly
+possible.  In most cases, the previous syntax will still work correctly
 for the time being.  The old functions are merely marked as obsolete or
 discouraged in the doc strings with a pointer to the new preferred syntax.
 At some point (probably version 1.2), the old syntax will be officially
-deprecated, and use of them will raise DeprecationWarnings.  Then evenually
+deprecated, and use of them will raise DeprecationWarnings.  Then eventually
 (probably version 2.0), the deprecated versions will be removed.  Hopefully,
 this will provide for a relatively easy transition to the new style, giving
 you time to convert any existing GalSim code you may have.

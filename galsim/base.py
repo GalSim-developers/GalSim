@@ -939,7 +939,7 @@ class GSObject(object):
         the object is then taken to be in photons, and the `gain` converts this to ADU.
 
         The 'phot' method has a few extra parameters that adjust how it functions.  The total
-        number of photons to shoot is noramlly calculated from the object's flux.  This flux is
+        number of photons to shoot is normally calculated from the object's flux.  This flux is
         taken to be given in photons, so for most simple profiles, this will equal the number of
         photons shot.  (See the discussion in Rowe et al, 2014, for why this might be modified for
         InterpolatedImage and related profiles.)  However, you can manually set a different number
@@ -1174,7 +1174,7 @@ class GSObject(object):
         if method == 'sb':
             gain *= local_wcs.pixelArea()
 
-        # Making a vew of the image lets us change the center without messing up the original.
+        # Making a view of the image lets us change the center without messing up the original.
         imview = image.view()
         imview.setCenter(0,0)
 
@@ -1338,7 +1338,7 @@ class GSObject(object):
         # coordinates in this case is to apply the inverse dk pixel scale.
         prof = galsim.PixelScale(1./dk).toImage(self)
 
-        # Making vews of the images lets us change the centers without messing up the originals.
+        # Making views of the images lets us change the centers without messing up the originals.
         review = re.view()
         review.setCenter(0,0)
         imview = im.view()

@@ -105,7 +105,7 @@ def main(argv):
 
     # Draw the image with a particular pixel scale.
     image = final.drawImage(scale=pixel_scale)
-    # The "effective PSF" is the PSf as drawn on an image, which includes the convolution
+    # The "effective PSF" is the PSF as drawn on an image, which includes the convolution
     # by the pixel response.  We label it epsf here.
     image_epsf = psf.drawImage(scale=pixel_scale)
     logger.debug('Made image of the profile')
