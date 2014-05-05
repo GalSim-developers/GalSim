@@ -108,11 +108,12 @@ code as being obsolete.  At some point (probably version 1.2) use of the old
 syntax will raise a DeprecationWarning, and with version 2.0, it will be
 removed.
 
-* Changed the name of the `dx` parameter in the `drawImage` and `drawKImage`
-  methods of `GSObject` and the constructors of `InterpolatedImage` and
-  `CorrelatedNoise` to the name `scale`. (Issue #364)
-* Changed the `dx_cosmos` parameter of `getCOSMOSNoise` to `cosmos_scale`.
-  (Issue #364)
+* Changed the name of the `dx` parameter of the `draw`, `drawShoot` and
+  `drawK` methods of `GSObject` to the name `scale` in the new `drawImage`
+  and `drawKImage` methods (see below).  Similarly, the `dx` parameter of
+  the `InterpolatedImage` and `CorrelatedNoise` constructors is also now
+  named `scale`, and the `dx_cosmos` parameter of `getCOSMOSNoise` is now
+  `cosmos_scale`. (Issue #364)
 * Combined the old `Image`, `ImageView` and `ConstImageView` arrays of class
   names into a single python layer `Image` class that automatically constructs
   the appropriate C++ image class as an attribute. (Issue #364)
