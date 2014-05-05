@@ -873,7 +873,9 @@ class GSObject(object):
 
         If drawImage() will be creating the image from scratch for you, it will decide a good size
         to use based on the size of the object being drawn.  Basically, it will try to use an area
-        large enough to include at least 99.5% of the flux.  You can set the pixel scale of the
+        large enough to include at least 99.5% of the flux.  (Note: the value 0.995 is really
+        `1 - alias_threshold`.  You can change the value of `alias_threshold` for any object via
+        GSParams.  See `help(GSParams)` for more details.)  You can set the pixel scale of the
         constructed image with the `scale` parameter, or set a WCS function with `wcs`.  If you do
         not provide either `scale` or `wcs`, then drawImage() will default to using the Nyquist
         scale for the current object.  You can also set the data type used in the new Image with
