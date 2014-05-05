@@ -2121,10 +2121,7 @@ class DeVaucouleurs(GSObject):
 _galsim.GSParams.__doc__ = """
 GSParams stores a set of numbers that govern how GSObjects make various speed/accuracy tradeoff
 decisions.  All GSObjects can take an optional parameter named `gsparams`, which would be an
-instance of this class.
-
-To change any of the parameters from the default values (see below), you only
-need to give the parameter(s) you want to change in the constructor.  e.g.
+instance of this class.  e.g.
 
     >>> gsp = galsim.GSParams(alias_threshold=1.e-3)
     >>> gal = galsim.Sersic(n=3.4, half_light_radius=3.2, flux=200, gsparams=gsp)
@@ -2132,8 +2129,8 @@ need to give the parameter(s) you want to change in the constructor.  e.g.
 Initialization
 --------------
 
-A DeVaucouleurs can be initialized using one (and only one) of two possible size parameters:
-The parameters, along with their default values are the following:
+All parameters have reasonable default values.  You only need to specify the ones you want
+to change.
 
 @param minimum_fft_size     The minimum size of any FFT that may need to be performed.
                             [default: 128]
