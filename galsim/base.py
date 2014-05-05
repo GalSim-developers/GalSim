@@ -206,8 +206,6 @@ class GSObject(object):
                   'integration_relerr' : float,
                   'integration_abserr' : float,
                   'shoot_accuracy' : float,
-                  'shoot_relerr' : float,
-                  'shoot_abserr' : float,
                   'allowed_flux_variation' : float,
                   'range_division_for_extrema' : int,
                   'small_fraction_of_flux' : float
@@ -2192,19 +2190,15 @@ The parameters, along with their default values are the following:
                             `realspace_relerr` times the pixel flux or `realspace_abserr`
                             times the object's total flux.
 @param integration_relerr   The relative error tolerance for integrations other than real-space
-                            rendering. [default: 1.e-5]
+                            rendering. [default: 1.e-6]
 @param integration_abserr   The absolute error tolerance for integrations other than real-space
-                            rendering. [default: 1.e-7]
+                            rendering. [default: 1.e-8]
 @param shoot_accuracy       This sets the relative accuracy on the total flux when photon
                             shooting.  The photon shooting algorithm at times needs to make
                             approximations, such as how high in radius it needs to sample the
                             radial profile. When such approximations need to be made, it makes
                             sure that the resulting fractional error in the flux will be at
                             most this much. [default: 1.e-5]
-shoot_relerr                The target relative error allowed on any flux integral for photon
-                            shooting. [default: 1.e-6]
-shoot_abserr                The target absolute error allowed on any flux integral for photon
-                            shooting. [default: 1.e-8]
 allowed_flux_variation      The maximum range of allowed (abs value of) photon fluxes within
                             an interval before the rejection sampling algorithm is invoked for
                             photon shooting. [default: 0.81]

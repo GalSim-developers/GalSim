@@ -56,11 +56,9 @@ namespace galsim {
                         bp::arg("table_spacing")=1.,
                         bp::arg("realspace_relerr")=1.e-4,
                         bp::arg("realspace_abserr")=1.e-6,
-                        bp::arg("integration_relerr")=1.e-5,
-                        bp::arg("integration_abserr")=1.e-7,
+                        bp::arg("integration_relerr")=1.e-6,
+                        bp::arg("integration_abserr")=1.e-8,
                         bp::arg("shoot_accuracy")=1.e-5,
-                        bp::arg("shoot_relerr")=1.e-6,
-                        bp::arg("shoot_abserr")=1.e-8,
                         bp::arg("allowed_flux_variation")=0.81,
                         bp::arg("range_division_for_extrema")=32,
                         bp::arg("small_fraction_of_flux")=1.e-4)
@@ -79,8 +77,6 @@ namespace galsim {
                 .def_readwrite("integration_relerr", &GSParams::integration_relerr)
                 .def_readwrite("integration_abserr", &GSParams::integration_abserr)
                 .def_readwrite("shoot_accuracy", &GSParams::shoot_accuracy)
-                .def_readwrite("shoot_relerr", &GSParams::shoot_relerr)
-                .def_readwrite("shoot_abserr", &GSParams::shoot_abserr)
                 .def_readwrite("allowed_flux_variation", &GSParams::allowed_flux_variation)
                 .def_readwrite("range_division_for_extrema", &GSParams::range_division_for_extrema)
                 .def_readwrite("small_fraction_of_flux", &GSParams::small_fraction_of_flux)

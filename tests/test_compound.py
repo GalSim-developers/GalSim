@@ -44,8 +44,8 @@ default_params = galsim.GSParams(
         shoot_accuracy = 1.e-5,
         realspace_relerr = 1.e-4,
         realspace_abserr = 1.e-6,
-        integration_relerr = 1.e-5,
-        integration_abserr = 1.e-7)
+        integration_relerr = 1.e-6,
+        integration_abserr = 1.e-8)
 
 # Some standard values for testing
 test_flux = 1.8

@@ -97,6 +97,9 @@ change does not affect the most common uses of the function.
     scale=scale, variance=variance)`.
   * `getCOSMOSNoise(rng, file_name)` should now be `getCOSMOSNoise(file_name,
     rng=rng)` or `getCOSMOSNoise(rng=rng, file_name=file_name)`.
+* Merged the GSParams parameters `shoot_relerr` and `shoot_abserr` into the
+  parameters `integration_relerr` and `integration_abserr`.  The latter items
+  now cover all integrations other than real-space rendering. (Issue #535)
 
 
 Other changes to the API
@@ -447,3 +450,5 @@ Other new features
   added.  (Issue #526)
 * Added `dtype` option to `drawImage` and `drawKImage`, which sets the data
   type to use for automatically constructed images. (Issue #526)
+* Improved the real-space rendering, and integrations in general, to be a bit
+  more accurate. (Issue #535)

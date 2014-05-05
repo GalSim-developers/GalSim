@@ -190,14 +190,14 @@ namespace galsim {
             RTimesF<FluxDensity> integrand(*_fluxDensityPtr);
             _flux = integ::int1d(integrand, 
                                  _xLower, _xUpper,
-                                 _gsparams->shoot_relerr,
-                                 _gsparams->shoot_abserr);
+                                 _gsparams->integration_relerr,
+                                 _gsparams->integration_abserr);
         } else {
             // Integrate the input function
             _flux = integ::int1d(*_fluxDensityPtr, 
                                  _xLower, _xUpper,
-                                 _gsparams->shoot_relerr,
-                                 _gsparams->shoot_abserr);
+                                 _gsparams->integration_relerr,
+                                 _gsparams->integration_abserr);
         }
         _fluxIsReady = true;
     }
