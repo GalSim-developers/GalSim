@@ -86,9 +86,9 @@ change does not affect the most common uses of the function.
   from `lseed` to `seed`.  The documentation described it as an unnamed arg,
   rather than a named kwarg, so probably no one was using it by name.
   But if you were, just change `lseed` to `seed`. (Issue #511)
-* Added a default value for rng parameter to CorrelatedNoise objects.  The
-  consequence of this is that if you were relying on the order of the
-  construction parameters, you will need to rearrange, since rng is no
+* Added a default value for the `rng` parameter of `CorrelatedNoise` objects.
+  The consequence of this is that if you were relying on the order of the
+  construction parameters, you will need to rearrange, since `rng` is no
   longer first (because it is a kwarg now). (Issue #526)
   * `CorrelatedNoise(rng, image)` should now be `CorrelatedNoise(image,
     rng=rng)` or `CorrelatedNoise(rng=rng, image=image)`.
