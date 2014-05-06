@@ -42,7 +42,7 @@ __author__ = (
 	"Gina 'foosel' Haeussge (gina at foosel dot net)" 
 )
 
-__licenseName__ = "FreeBSD"
+__licenseName__ = "BSD"
 __license__ = """
 Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 https://github.com/GalSim-developers
