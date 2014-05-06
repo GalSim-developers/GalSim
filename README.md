@@ -39,6 +39,9 @@ Or clone the master branch with either of the following:
 The code is also distributed via Fink, Macports, and Homebrew for Mac users.
 See INSTALL.md for more information.
 
+The code is licensed under a FreeBSD-style license.  See the file LICENSE for
+more details.
+
 
 Keeping up-to-date with GalSim
 ------------------------------
