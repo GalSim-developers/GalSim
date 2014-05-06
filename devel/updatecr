@@ -35,7 +35,8 @@
 #
 # There are a few other random things that may be easier to update manually.
 # Especially when the copyright notice doesn't start on the first line (this
-# file for example).  Also, don't forget to update the docstring in __init__.py.
+# file for example).  Also, don't forget to update the docstring in __init__.py
+# and the license in doxypy.py
 
 # Count how many lines to remove
 open(A,"oldcr") || die "Cannot open oldcr: $!";
