@@ -16,6 +16,52 @@
 # You should have received a copy of the GNU General Public License
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
+"""
+GalSim: The modular galaxy image simulation toolkit
+
+GalSim is open-source software for simulating images of astronomical objects
+(stars, galaxies) in a variety of ways.  The bulk of the calculations are
+carried out in C++, and the user interface is in python.  In addition, the code
+can operate directly on "config" files, for those users who prefer not to work
+in python.  The impetus for the software package was a weak lensing community
+data challenge, called GREAT3:
+
+    http://great3challenge.info/
+
+However, the code has numerous additional capabilities beyond those needed for
+the challenge, and has been useful for a number of projects that needed to
+simulate high-fidelity galaxy images with accurate sizes and shears.
+
+For an overview of GalSim workflow and python tools, please see
+`doc/GalSim_Quick_Reference.pdf` in the GalSim repository.  A guide to using
+the configuration files to generate simulations, a FAQ for installation issues,
+and other useful references can be found on the GalSim wiki,
+
+    https://github.com/GalSim-developers/GalSim/wiki
+
+Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+https://github.com/GalSim-developers
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+This software is made available to you on an ``as is'' basis with no
+representations or warranties, express or implied, including but not
+limited to any warranty of performance, merchantability, fitness for a
+particular purpose, commercial utility, non-infringement or title.
+Neither the authors nor the organizations providing the support under
+which the work was developed will be liable to you or any third party
+with respect to any claim arising from your further development of the
+software or any products related to or derived from the software, or for
+lost profits, business interruption, or indirect special or consequential
+damages of any kind.
+"""
 
 # Two options for pyfits module:
 try:
