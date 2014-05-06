@@ -1,4 +1,4 @@
-All GalSim source files should contain the following GPL copyright statement (Python and C++
+All GalSim source files should contain the following copyright statement (Python and C++
 commented versions follow below):
 
 
