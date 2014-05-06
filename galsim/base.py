@@ -1039,7 +1039,7 @@ class GSObject(object):
                             which may be any kind of BaseDeviate object.  If `rng=None`, one will
                             be automatically created, using the time as a seed.  [default: None]
         @param max_extra_noise  If provided, the allowed extra noise in each pixel when photon
-                            shooting..  This is only relevant if `n_photons=0`, so the number of
+                            shooting.  This is only relevant if `n_photons=0`, so the number of
                             photons is being automatically calculated.  In that case, if the image
                             noise is dominated by the sky background, then you can get away with
                             using fewer shot photons than the full `n_photons = flux`.  Essentially
