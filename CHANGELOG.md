@@ -31,7 +31,7 @@ transformed (sheared, dilated, rotated, etc.) to use expressions like
 `obj = obj.shear(s)` rather than either `obj.applyShear(s)` or
 `obj = obj.createSheared(s)`.  (3) We combined the functionality of
 the `draw` and `drawShoot` commands into a single `drawImage` command
-useing a `method` keyword to specify which rendering method to use.
+using a `method` keyword to specify which rendering method to use.
 Furthermore, the default method is for the `drawImage` command to handle
 the convolution by the pixel for you, so you no longer need to include
 the pixel convolution yourself, unless you are doing something slightly

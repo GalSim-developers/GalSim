@@ -132,7 +132,7 @@ class GSObject(object):
     ---------------
 
     The main thing to do with a GSObject once you have built it is to draw it onto an image.
-    There are three methods that do this.  In all cases, there are lots of optional parameters.
+    There are two methods that do this.  In both cases, there are lots of optional parameters.
     See the docstrings for these methods for more details.
 
         >>> image = obj.drawImage(...)

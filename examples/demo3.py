@@ -187,7 +187,7 @@ def main(argv):
     # So far, our coordinate transformation between image and sky coordinates has been just a 
     # scaling of the units between pixels and arcsec, which we have defined as the "pixel scale".
     # This is fine for many purposes, so we have made it easy to treat the coordinate systems
-    # this we via the `scale` parameter to commands like drawImage.  However, in general, the 
+    # this way via the `scale` parameter to commands like drawImage.  However, in general, the
     # transformation between the two coordinate systems can be more complicated than that,
     # including distortions, rotations, variation in pixel size, and so forth.  GalSim can 
     # model a number of different "World Coordinate System" (WCS) transformations.  See the
