@@ -916,13 +916,15 @@ class GSObject(object):
                         includes a Deconvolution).
 
             'no_pixel'  Instead of integrating over the pixels, this method will sample the profile
-                        at the centers of the pixels and multiply by the pixel area.  This is the
-                        appropriate method to use if you are using a PSF that already includes a
-                        convolution by the pixel response.  For example, if you are using a PSF
-                        from an observed image of a PSF, then it has already been convolved by the
-                        pixel, so you would not want to do so again.  Note: The multiplication by
-                        the pixel area gets the flux normalization right for the above use case.
-                        cf. `method = 'sb'`.
+                        at the centers of the pixels and multiply by the pixel area.  If there is
+                        a convolution involved, the choice of whether this will use an FFT or
+                        real-space calculation is governed by the `real_space` parameter of the
+                        Convolution class.  This method is the appropriate choice if you are using
+                        a PSF that already includes a convolution by the pixel response.  For
+                        example, if you are using a PSF from an observed image of a star, then it
+                        has already been convolved by the pixel, so you would not want to do so
+                        again.  Note: The multiplication by the pixel area gets the flux
+                        normalization right for the above use case.  cf. `method = 'sb'`.
 
             'sb'        This is a lot like 'no_pixel', except that the image values will simply be
                         the sampled object profile's surface brightness, not multiplied by the
