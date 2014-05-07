@@ -45,7 +45,7 @@ namespace galsim {
             pyGSParams
                 .def(bp::init<
                     int, int, double, double, double, double, double, double, double, double,
-                    double, double, double, double, double, double, int, double>((
+                    double, double, double, double, int, double>((
                         bp::arg("minimum_fft_size")=128, 
                         bp::arg("maximum_fft_size")=4096,
                         bp::arg("alias_threshold")=5.e-3,

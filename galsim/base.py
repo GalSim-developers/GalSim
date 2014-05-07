@@ -2144,7 +2144,7 @@ to change.
                             value to help prevent the user from accidentally trying to perform
                             an extremely large FFT that crashes the program. Instead, GalSim
                             will raise an exception indicating that the image is too large,
-                            which is often a sign of an error in the user’s code. However, if
+                            which is often a sign of an error in the user's code. However, if
                             you have the memory to handle it, you can raise this limit to
                             allow the calculation to happen. [default: 4096]
 @param alias_threshold      This sets a maximum amount of aliasing that is allowed because of
