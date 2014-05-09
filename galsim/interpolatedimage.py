@@ -45,6 +45,15 @@ class InterpolatedImage(GSObject):
     the pixel values as samples of the surface brightness profile at each location.  This
     corresponds to an image drawn with `drawImage(method='sb')`.
 
+    You can also use images that were drawn with one of the pixel-integrating methods ('auto',
+    'fft', or 'real_space'); however, the resulting profile will not correspond to the one
+    that was used to call `drawImage`.  The integration over the pixel is equivalent to convolving
+    the original profile by a Pixel and then drawing with `method='no_pixel'`.  So if you use
+    such an image with InterpolatedImage, the resulting profile will include the Pixel convolution
+    already.  As such, if you use it as a PSF for example, then the final objects convolved by
+    this PSF will already include the pixel convolution, so you should draw them using
+    `method='no_pixel'`.
+
     If the input Image has a `scale` or `wcs` associated with it, then there is no need to specify
     one as a parameter here.  But if one is provided, that will override any `scale` or `wcs` that
     is native to the Image.
