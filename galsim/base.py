@@ -900,8 +900,9 @@ class GSObject(object):
                         slower than the 'fft' method, but if the profile has hard edges that cause
                         ringing in Fourier space, it can be faster and/or more accurate.  If you
                         use 'real_space' with something that is already a Convolution, then this
-                        will revert to 'fft', since the double convolution is far too slow to be
-                        practical using real-space integrals.
+                        will revert to 'fft', since the double convolution that is required to also
+                        handle the pixel response is far too slow to be practical using real-space
+                        integrals.
 
             'phot'      This uses a technique called photon shooting to render the image.
                         Essentially, the object profile is taken as a probability distribution
