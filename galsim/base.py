@@ -2149,16 +2149,20 @@ to change.
                             which is often a sign of an error in the user's code. However, if
                             you have the memory to handle it, you can raise this limit to
                             allow the calculation to happen. [default: 4096]
-@param alias_threshold      This sets a maximum amount of aliasing that is allowed because of
-                            the periodic nature of the FFTs.  FFTs implicitly use periodic
-                            boundary conditions which means that low frequency modes below the
-                            step size in k are aliased onto higher frequency modes.  This
-                            parameter is used to set an appropriate step size in k to allow at
-                            most this fraction of the flux to be aliased.  This parameter is
-                            also relevant when you let GalSim decide how large an image to
-                            use for your object. The image is made to be large enough that at
-                            most a fraction `alias_threshold` of the total flux is allowed to
-                            fall of the edge of the image. [default: 5.e-3]
+@param alias_threshold      This sets a maximum amount of real space aliasing that is allowed,
+                            an effect caused by the periodic nature of FFTs.  FFTs implicitly
+                            use periodic boundary conditions, and a profile specified on a
+                            finite grid in Fourier space corresponds to a real space image
+                            that will have some overlap with the neighboring (aliased) copies
+                            of the real space profile.  As the step size in k increases, the
+                            spacing between neighboring aliases in real space decreases,
+                            increasing the amount of overlapping flux.  `alias_threshold` is
+                            used to set an appropriate step size in k to allow at most this
+                            fraction of the flux to be aliased.  This parameter is also
+                            relevant when you let GalSim decide how large an image to use for
+                            your object.  The image is made to be large enough that at most a
+                            fraction `alias_threshold` of the total flux is allowed to fall off
+                            the edge of the image.  [default: 5.e-3]
 @param stepk_minimum_hlr    In addition to the above constraint for aliasing, also set stepk
                             such that pi/stepk is at least `stepk_minimum_hlr` times the
                             profile's half-light radius (for profiles that have a well-defined
