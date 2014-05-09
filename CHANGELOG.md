@@ -24,18 +24,19 @@ deprecated, and use of them will raise DeprecationWarnings.  Then eventually
 this will provide for a relatively easy transition to the new style, giving
 you time to convert any existing GalSim code you may have.
 
-The most significant API changes are: (1) A new `Image` class combines the
-functionality of all the various different image classes we used to have
-(`ImageF`, `ImageD`, `ImageViewF`, etc.).  (2) We changed the way objects are
-transformed (sheared, dilated, rotated, etc.) to use expressions like
-`obj = obj.shear(s)` rather than either `obj.applyShear(s)` or
-`obj = obj.createSheared(s)`.  (3) We combined the functionality of
-the `draw` and `drawShoot` commands into a single `drawImage` command
-using a `method` keyword to specify which rendering method to use.
-Furthermore, the default method is for the `drawImage` command to handle
-the convolution by the pixel for you, so you no longer need to include
-the pixel convolution yourself, unless you are doing something slightly
-non-standard.
+The most significant API changes are: 
+
+1. A new `Image` class combines the functionality of all the various different
+   image classes we used to have (`ImageF`, `ImageD`, `ImageViewF`, etc.).
+2. We changed the way objects are transformed (sheared, dilated, rotated, etc.)
+   to use expressions like `obj = obj.shear(s)` rather than either
+   `obj.applyShear(s)` or `obj = obj.createSheared(s)`.
+3. We combined the functionality of the `draw` and `drawShoot` commands into a
+   single `drawImage` command using a `method` keyword to specify which
+   rendering method to use.
+4. The default method for the new `drawImage` command handles the convolution
+   by the pixel for you, so you no longer need to include the pixel convolution
+   yourself, unless you are doing something slightly non-standard.
 
 See the sections below on the API changes for more details about these
 and the various other more minor changes we have made in this release.
