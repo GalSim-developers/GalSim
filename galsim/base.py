@@ -771,7 +771,6 @@ class GSObject(object):
             if not add_to_image:
                 image.setZero()
 
-        # Set the image wcs
         return image
 
     def _local_wcs(self, wcs, image, offset, use_true_center):
