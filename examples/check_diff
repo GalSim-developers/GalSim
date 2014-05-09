@@ -2,10 +2,6 @@
 
 import sys
 import subprocess
-try:
-    import astropy.io.fits as pyfits
-except:
-    import pyfits
 
 cmd = "diff -q %s %s"%(tuple(sys.argv[1:]))
 p = subprocess.Popen([cmd],stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
@@ -13,6 +9,15 @@ diff_output = p.stdout.read()
 
 if len(diff_output) > 0:
     print diff_output.strip()
+
+    try:
+        try:
+            import astropy.io.fits as pyfits
+        except:
+            import pyfits
+    except ImportError as e:
+        # Then /usr/bin/env python doesn't have pyfits installed.  Oh well.
+        sys.exit()
 
     try:
         f1 = pyfits.open(sys.argv[1])
