@@ -159,8 +159,10 @@ namespace galsim {
         void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
         {
             if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
-            else { ymax = sqrt(_trunc_sq - x*x);  ymin=-ymax; }
-            if (std::abs(x/_re) < 1.e-2) splits.push_back(0.); 
+            else if (std::abs(x) >= _trunc) { ymin = 0; ymax = 0; }
+            else { ymax = sqrt(_trunc_sq - x*x);  ymin = -ymax; }
+
+            if (std::abs(x/_re) < 1.e-2) splits.push_back(0.);
         }
 
         bool isAxisymmetric() const { return true; }

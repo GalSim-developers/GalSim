@@ -229,12 +229,7 @@ def AddNoisePoisson(noise, config, draw_method, rng, im, weight_im, current_var,
 
     # At this point, there is a slight difference between fft and phot. For photon shooting, the 
     # galaxy already has Poisson noise, so we want to make sure not to add that again!
-    if draw_method == 'fft':
-        im += extra_sky
-        # Do the normal PoissonNoise calculation.
-        im.addNoise(galsim.PoissonNoise(rng))
-        im -= extra_sky
-    else:
+    if draw_method == 'phot':
         # Only add in the noise from the sky.
         if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
             noise_im = sky + extra_sky
@@ -252,6 +247,11 @@ def AddNoisePoisson(noise, config, draw_method, rng, im, weight_im, current_var,
                 # This deviate adds a noisy version of the sky, so need to subtract the mean back 
                 # off.
                 im -= total_sky
+    else:
+        im += extra_sky
+        # Do the normal PoissonNoise calculation.
+        im.addNoise(galsim.PoissonNoise(rng))
+        im -= extra_sky
 
     if logger:
         logger.debug('image %d, obj %d: Added Poisson noise with sky = %f',
@@ -382,12 +382,7 @@ def AddNoiseCCD(noise, config, draw_method, rng, im, weight_im, current_var, sky
 
     # At this point, there is a slight difference between fft and phot. For photon shooting, the 
     # galaxy already has Poisson noise, so we want to make sure not to add that again!
-    if draw_method == 'fft':
-        # Do the normal CCDNoise calculation.
-        im += extra_sky
-        im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
-        im -= extra_sky
-    else:
+    if draw_method == 'phot':
         # Add in the noise from the sky.
         if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
             noise_im = sky + extra_sky
@@ -410,6 +405,11 @@ def AddNoiseCCD(noise, config, draw_method, rng, im, weight_im, current_var, sky
         # And add the read noise
         if read_noise != 0.:
             im.addNoise(galsim.GaussianNoise(rng, sigma=read_noise))
+    else:
+        # Do the normal CCDNoise calculation.
+        im += extra_sky
+        im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
+        im -= extra_sky
 
     if logger:
         logger.debug('image %d, obj %d: Added CCD noise with sky = %f, ' +

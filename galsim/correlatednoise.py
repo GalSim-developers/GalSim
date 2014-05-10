@@ -425,7 +425,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 variance = self._variance_stored
             else:
                 imtmp = galsim.ImageD(1, 1)
-                self.draw(imtmp, scale=1.) # GalSim internals handle this correctly w/out folding
+                # GalSim internals handle this correctly w/out folding
+                self.drawImage(imtmp, scale=1.)
                 variance = imtmp.at(1, 1)
                 self._variance_stored = variance # Store variance for next time
         return variance
@@ -530,20 +531,45 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
         self.__class__ = new_obj.__class__
 
-    def draw(self, image=None, scale=None, wmult=1., add_to_image=False):
-        """The draw method for profiles storing correlation functions.
+    def drawImage(self, image=None, scale=None, dtype=None, wmult=1., add_to_image=False):
+        """A method for drawing profiles storing correlation functions.
 
-        This is a very mild reimplementation of the draw() method for GSObjects.  The normalization
-        is automatically set to have the behaviour appropriate for a correlation function, and the
-        `gain` kwarg is automatically set to unity.
+        This is a mild reimplementation of the drawImage() method for GSObjects.  The `method` is
+        automatically set to 'sb' and cannot be changed, and the `gain` is set to unity.
+        Also, not all the normal parameters of the GSObject method are available.
 
-        See the general GSObject draw() method for more information about the input parameters.
+        @param image        If provided, this will be the image on which to draw the profile.
+                            If `image = None`, then an automatically-sized Image will be created.
+                            If `image != None`, but its bounds are undefined (e.g. if it was
+                            constructed with `image = galsim.Image()`), then it will be resized
+                            appropriately based on the profile's size [default: None].
+        @param scale        If provided, use this as the pixel scale for the image.
+                            If `scale` is `None` and `image != None`, then take the provided
+                            image's pixel scale.
+                            If `scale` is `None` and `image == None`, then use the Nyquist scale.
+                            If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
+                            [default: None]
+        @param dtype        The data type to use for an automatically constructed image.  Only
+                            valid if `image = None`. [default: None, which means to use
+                            numpy.float32]
+        @param wmult        A multiplicative factor by which to enlarge (in each direction) the
+                            default automatically calculated FFT grid size used for any
+                            intermediate calculations in Fourier space.  See the description
+                            in GSObject.drawImage() for more details. [default: 1]
+        @param add_to_image Whether to add flux to the existing image rather than clear out
+                            anything in the image before drawing.
+                            Note: This requires that `image` be provided and that it have defined
+                            bounds. [default: False]
 
         @returns an Image of the correlation function.
         """
-        return self._profile.draw(
-            image=image, scale=scale, gain=1., wmult=wmult, normalization="surface brightness",
+        return self._profile.drawImage(
+            image=image, scale=scale, dtype=dtype, method='sb', gain=1., wmult=wmult,
             add_to_image=add_to_image, use_true_center=False)
+
+    def draw(self, image=None, scale=None, dtype=None, wmult=1., add_to_image=False):
+        """An obsolete synonym of drawImage"""
+        return self.drawImage(image,scale,dtype,wmult,add_to_image)
 
     def calculateCovarianceMatrix(self, bounds, scale):
         """Calculate the covariance matrix for an image with specified properties.
@@ -586,7 +612,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             else:
                 newcf.wcs = wcs
             # Then draw this correlation function into an array.
-            self.draw(newcf)
+            newcf = self.drawImage(newcf)
 
             # Since we just drew it, save the variance value for posterity.
             var = newcf(newcf.bounds.center())
@@ -726,7 +752,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     The use of the bilinear interpolants means that the representation of correlated noise will be
     noticeably inaccurate in at least the following two regimes:
 
-      i)  If the pixel scale of the desired final output (e.g. the target image of draw(),
+      i)  If the pixel scale of the desired final output (e.g. the target image of drawImage(),
           applyTo() or applyWhiteningTo()) is small relative to the separation between pixels
           in the `image` used to instantiate `cn` as shown above.
       ii) If the CorrelatedNoise instance `cn` was instantiated with an image of scale comparable
@@ -795,7 +821,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     Another method that may be of use is
 
-        >>> cn.calculateCovarianceMatrix(im.bounds, scale)
+        >>> m = cn.calculateCovarianceMatrix(im.bounds, scale)
 
     which can be used to generate a covariance matrix based on a user input image geometry.  See
     the calculateCovarianceMatrix() method docstring for more information.
@@ -803,20 +829,20 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     A number of methods familiar from GSObject instances have also been implemented directly as
     `cn` methods, so that the following commands are all legal:
 
-        >>> cn.draw(im, scale, wmult=4)
-        >>> cn.shear(s)
-        >>> cn.expand(m)
-        >>> cn.rotate(theta * galsim.degrees)
-        >>> cn.transform(dudx, dudy, dvdx, dvdy)
+        >>> image = cn.drawImage(im, scale, wmult=4)
+        >>> cn = cn.shear(s)
+        >>> cn = cn.expand(m)
+        >>> cn = cn.rotate(theta * galsim.degrees)
+        >>> cn = cn.transform(dudx, dudy, dvdx, dvdy)
 
     See the individual method docstrings for more details.  The shift() method is not available
     since a correlation function must always be centred and peaked at the origin.
 
     The BaseNoise methods
 
-        >>> cn.getVariance()
-        >>> cn = cn.withVariance(variance)
-        >>> cn = cn.withScaledVariance(variance_ratio)
+        >>> var = cn.getVariance()
+        >>> cn1 = cn.withVariance(variance)
+        >>> cn2 = cn.withScaledVariance(variance_ratio)
 
     can be used to get and set the point variance of the correlated noise, equivalent to the zero
     separation distance correlation function value.  The withVariance() method scales the whole
@@ -1025,7 +1051,7 @@ def getCOSMOSNoise(file_name, rng=None, cosmos_scale=0.03, variance=0., x_interp
     The use of the bilinear interpolants means that the representation of correlated noise will be
     noticeably inaccurate in at least the following two regimes:
 
-      i)  If the pixel scale of the desired final output (e.g. the target image of draw(),
+      i)  If the pixel scale of the desired final output (e.g. the target image of drawImage(),
           applyTo() or applyWhiteningTo()) is small relative to the separation between pixels
           in the `image` used to instantiate `cn` as shown above.
       ii) If the CorrelatedNoise instance `cn` was instantiated with an image of scale comparable

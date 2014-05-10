@@ -114,7 +114,7 @@ def dfunction(x):
 dFunctionResult = (0.9826461346196363, 1.1973307331701328, 1.5105900949284945)
 
 # x and p arrays and interpolant to use for DistDeviate LookupTable tests
-dx=[0.0, 1.0, 1.00001, 2.99999, 3.0, 4.0]
+dx=[0.0, 1.0, 1.000000001, 2.999999999, 3.0, 4.0]
 dp=[0.1, 0.1, 0.0    , 0.0    , 0.1, 0.1]
 dLookupTable=galsim.LookupTable(x=dx,f=dp,interpolant='linear')
 # Tabulated results for DistDeviate LookupTable call
@@ -1242,6 +1242,7 @@ def test_distLookupTable():
             err_msg='DistDeviate and the LookupTable passed to it have different upper bounds')
 
     testResult = (d(), d(), d())
+    print 'testResult = ',testResult
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dLookupTableResult), precision,
             err_msg='Wrong DistDeviate random number sequence using LookupTable')

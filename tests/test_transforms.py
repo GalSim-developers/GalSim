@@ -45,10 +45,10 @@ default_params = galsim.GSParams(
         kvalue_accuracy = 1.e-5,
         xvalue_accuracy = 1.e-5,
         shoot_accuracy = 1.e-5,
-        realspace_relerr = 1.e-3,
+        realspace_relerr = 1.e-4,
         realspace_abserr = 1.e-6,
-        integration_relerr = 1.e-5,
-        integration_abserr = 1.e-7)
+        integration_relerr = 1.e-6,
+        integration_abserr = 1.e-8)
 
 # Some parameters used in the two unit tests test_integer_shift_fft and test_integer_shift_photon:
 test_sigma = 1.8

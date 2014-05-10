@@ -303,7 +303,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
         raise AttributeError("config.image is not a dict.")
 
     if 'draw_method' not in image:
-        image['draw_method'] = 'fft'
+        image['draw_method'] = 'auto'
 
     if 'type' not in image:
         image['type'] = 'Single'  # Default is Single

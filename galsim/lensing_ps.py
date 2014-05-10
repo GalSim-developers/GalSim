@@ -367,8 +367,8 @@ class PowerSpectrum(object):
 
         @param grid_spacing     Spacing for an evenly spaced grid of points, by default in arcsec
                                 for consistency with the natural length scale of images created
-                                using the draw() or drawShoot() methods.  Other units can be
-                                specified using the `units` keyword.
+                                using the drawImage() method.  Other units can be specified using
+                                the `units` keyword.
         @param ngrid            Number of grid points in each dimension.  [Must be an integer]
         @param rng              A BaseDeviate object for drawing the random numbers. [default: None]
         @param interpolant      Interpolant that will be used for interpolating the gridded shears
@@ -673,8 +673,8 @@ class PowerSpectrum(object):
 
         @param grid_spacing     Spacing for an evenly spaced grid of points, by default in arcsec
                                 for consistency with the natural length scale of images created
-                                using the draw() or drawShoot() methods.  Other units can be
-                                specified using the `units` keyword.
+                                using the drawImage() method.  Other units can be specified using
+                                the `units` keyword.
         @param ngrid            Number of grid points in each dimension.  [Must be an integer]
         @param units            The angular units used for the positions.  [default = arcsec]
         @param kmin_factor      (Optional) Factor by which the grid spacing in fourier space is

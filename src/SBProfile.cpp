@@ -816,9 +816,9 @@ namespace galsim {
         // The input max_extra_noise parameter is the maximum value of spurious noise we want 
         // to allow.
         //
-        // So setting N^2 = max_extra_noise, we get
+        // So setting N^2 = fmax / (1-2eta)^2 + max_extra_noise, we get
         //
-        // Ntot = fmax * flux / (1-2eta)^2 / max_extra_noise
+        // Ntot = flux / [ (1-2eta)^2 max_extra_noise / fmax + 1 ]
         //
         // One wrinkle about this calculation is that we don't know fmax a priori.
         // So we start with a plausible number of photons to get going.  Then we keep adding 
@@ -915,7 +915,7 @@ namespace galsim {
         int fmax_count = 0;
         while (true) {
             // We break out of the loop when either N drops to 0 (if max_extra_noise = 0) or 
-            // we find that the max pixel has a noise level < max_extra_noise
+            // we find that the max pixel has an excess noise level < max_extra_noise
 
             if (thisN > maxN) thisN = maxN;
             // NB: don't need floor, since rhs is positive, so floor is superfluous.
@@ -973,8 +973,8 @@ namespace galsim {
                 double fmax = raw_fmax * origN / (origN-N);
                 xdbg<<"fmax = "<<fmax<<std::endl;
                 // Estimate a good value of Ntot based on what we know now
-                // Ntot = fmax * flux / (1-2eta)^2 / max_extra_noise
-                double Ntot = fmax * mod_flux / max_extra_noise;
+                // Ntot = flux / [ (1-2eta)^2 max_extra_noise / fmax + 1 ]
+                double Ntot = flux / ( eta_factor * eta_factor * max_extra_noise / fmax + 1.);
                 xdbg<<"Calculated Ntot = "<<Ntot<<std::endl;
                 // So far we've done (origN-N)
                 // Set thisN to do the rest on the next pass.

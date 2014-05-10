@@ -45,7 +45,7 @@ New features introduced in this demo:
 - obj = obj.magnify(mu)
 - image += background
 - noise = galsim.PoissonNoise()  # with no sky_level given
-- obj.draw(..., offset)
+- obj.drawImage(..., offset)
 - galsim.fits.writeCube([list of images], file_name)
 """
 
@@ -113,20 +113,15 @@ def main(argv):
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
     logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
 
-    # Make the ePSF
-    # first make the double Gaussian PSF
+    # Make the double Gaussian PSF
     psf1 = galsim.Gaussian(fwhm = psf_inner_fwhm, flux = psf_inner_fraction)
     psf2 = galsim.Gaussian(fwhm = psf_outer_fwhm, flux = psf_outer_fraction)
     psf = psf1+psf2
-    # make the pixel response
-    pix = galsim.Pixel(pixel_scale)
-    # convolve PSF and pixel response function to get the effective PSF (ePSF)
-    epsf = galsim.Convolve([psf, pix])
-    # Draw this one with no noise.
-    epsf_image = epsf.draw(scale = pixel_scale)
+    # Draw the PSF with no noise.
+    psf_image = psf.drawImage(scale = pixel_scale)
     # write to file
-    epsf_image.write(psf_file_name)
-    logger.info('Created ePSF and wrote to file %r',psf_file_name)
+    psf_image.write(psf_file_name)
+    logger.info('Created PSF and wrote to file %r',psf_file_name)
 
     # Build the images
     all_images = []
@@ -156,7 +151,7 @@ def main(argv):
         gal = gal.magnify(gal_mu)
         
         # Make the combined profile
-        final = galsim.Convolve([psf, pix, gal])
+        final = galsim.Convolve([psf, gal])
 
         # Offset by up to 1/2 pixel in each direction
         # We had previously (in demo4 and demo5) used shift(dx,dy) as a way to shift the center of 
@@ -170,11 +165,11 @@ def main(argv):
         # Draw the profile
         if k == 0:
             # Note that the offset argument may be a galsim.PositionD object or a tuple (dx,dy).
-            im = final.draw(scale=pixel_scale, offset=(dx,dy))
+            im = final.drawImage(scale=pixel_scale, offset=(dx,dy))
             xsize, ysize = im.array.shape
         else:
             im = galsim.ImageF(xsize,ysize)
-            final.draw(im, scale=pixel_scale, offset=(dx,dy))
+            final.drawImage(im, scale=pixel_scale, offset=(dx,dy))
 
         logger.debug('   Drew image')
         t3 = time.time()

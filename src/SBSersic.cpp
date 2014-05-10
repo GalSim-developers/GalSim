@@ -85,7 +85,7 @@ namespace galsim {
                                          double trunc, bool flux_untruncated,
                                          const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _n(n), _flux(flux), _trunc(trunc), 
+        _n(n), _flux(flux), _trunc(trunc), _trunc_sq(trunc*trunc),
         // Start with untruncated SersicInfo regardless of value of trunc
         _info(cache.get(boost::make_tuple(_n, 0., this->gsparams.duplicate())))
     {

@@ -42,8 +42,9 @@ New features introduced in this demo:
 - obj3 = x1 * obj1 + x2 * obj2
 - obj = obj.withFlux(flux)
 - image = galsim.ImageF(image_size, image_size)
-- obj.draw(image, wcs)
-- wcs.toWorld(profile)
+- image = obj.drawImage(image, wcs)
+- image = obj.drawImage(method='sb')
+- world_profile = wcs.toWorld(profile)
 - shear3 = shear1 + shear2
 - noise = galsim.CCDNoise(rng, sky_level, gain, read_noise)
 """
@@ -186,7 +187,7 @@ def main(argv):
     # So far, our coordinate transformation between image and sky coordinates has been just a 
     # scaling of the units between pixels and arcsec, which we have defined as the "pixel scale".
     # This is fine for many purposes, so we have made it easy to treat the coordinate systems
-    # this we via the `scale` parameter to commands like draw.  However, in general, the 
+    # this way via the `scale` parameter to commands like drawImage.  However, in general, the
     # transformation between the two coordinate systems can be more complicated than that,
     # including distortions, rotations, variation in pixel size, and so forth.  GalSim can 
     # model a number of different "World Coordinate System" (WCS) transformations.  See the
@@ -197,18 +198,9 @@ def main(argv):
     wcs = galsim.ShearWCS(scale=pixel_scale, shear=galsim.Shear(g1=wcs_g1, g2=wcs_g2))
     logger.debug('Made the WCS')
 
-    # Using a non-trivial WCS means that the pixel is no longer a square box profile.
-    # At least not in world coordinates, where we have typically been defining the profiles.
-    # It is a square in image coordinates though, so the easiest way to deal with the pixel
-    # is to define it as a unit pixel in image coordinates and let the WCS object convert it 
-    # to world coordinates.
-    pix = wcs.toWorld(galsim.Pixel(1.0))
-    logger.debug('Made pixel profile')
-
     # Next we will convolve the components in world coordinates.
     psf = galsim.Convolve([atmos, optics])
-    final = galsim.Convolve([psf, gal, pix])
-    final_epsf = galsim.Convolve([psf, pix])
+    final = galsim.Convolve([psf, gal])
     logger.debug('Convolved components into final profile')
 
     # This time we specify a particular size for the image rather than let GalSim 
@@ -217,21 +209,25 @@ def main(argv):
     #   ImageD uses 64-bit floats    (like a C double, aka numpy.float64)
     #   ImageS uses 16-bit integers  (usually like a C short, aka numpy.int16)
     #   ImageI uses 32-bit integers  (usually like a C int, aka numpy.int32)
-    # If you let the GalSim draw command create the image for you, it will create an ImageF.
+    # If you let the GalSim drawImage command create the image for you, it will create an ImageF.
     # However, you can make a different type if you prefer.  In this case, we still use
     # ImageF, since 32-bit floats are fine.  We just want to set the size explicitly.
     image = galsim.ImageF(image_size, image_size)
     # Draw the image with the given WCS.  Note that we use wcs rather than scale when the
     # WCS is more complicated than just a pixel scale.
-    final.draw(image=image, wcs=wcs)
+    final.drawImage(image=image, wcs=wcs)
 
     # Also draw the effective PSF by itself and the optical PSF component alone.
     image_epsf = galsim.ImageF(image_size, image_size)
-    final_epsf.draw(image_epsf, wcs=wcs)
+    psf.drawImage(image_epsf, wcs=wcs)
 
     # We also draw the optical part of the PSF at its own Nyquist-sampled pixel size
     # in order to better see the features of the (highly structured) profile.
-    image_opticalpsf = optics.draw()
+    # In this case, we draw a "surface brightness image" using method='sb'.  Rather than 
+    # integrate the flux over the area of each pixel, this method just samples the surface
+    # brightness value at the locations of the pixel centers.  We will encounter a few other
+    # drawing methods as we go through this sequence of demos.  cf. demos 7, 8, 10, and 11.
+    image_opticalpsf = optics.drawImage(method='sb')
     logger.debug('Made image of the profile')
 
     # Add a constant sky level to the image.

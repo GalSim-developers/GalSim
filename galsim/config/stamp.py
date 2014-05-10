@@ -433,18 +433,12 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                                                    galsim.PositionD)[0]
                 offset += offset1
 
-            draw_method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
-
-            if draw_method == 'no_pixel':
-                draw_method = 'fft'
-                no_pixel = True
+            if 'image' in config and 'draw_method' in config['image']:
+                method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
             else:
-                no_pixel = False
-            if draw_method == 'real_space':
-                draw_method = 'fft'
-                real_space = True
-            else:
-                real_space = False
+                method = 'auto'
+            if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
+                raise AttributeError("Invalid draw_method: %s"%method)
 
             if skip: 
                 if xsize and ysize:
@@ -465,33 +459,17 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     weight_im = None
                 current_var = 0
 
-            elif draw_method == 'fft':
-                im, current_var = DrawStampFFT(psf,gal,config,xsize,ysize,offset,
-                                               no_pixel,real_space)
-                if icenter:
-                    im.setCenter(icenter.x, icenter.y)
-                if make_weight_image:
-                    weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
-                    weight_im.setZero()
-                else:
-                    weight_im = None
-                if do_noise:
-                    galsim.config.AddNoise(config,'fft',im,weight_im,current_var,logger)
-
-            elif draw_method == 'phot':
-                im, current_var = DrawStampPhot(psf,gal,config,xsize,ysize,rng,offset)
-                if icenter:
-                    im.setCenter(icenter.x, icenter.y)
-                if make_weight_image:
-                    weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
-                    weight_im.setZero()
-                else:
-                    weight_im = None
-                if do_noise:
-                    galsim.config.AddNoise(config,'phot',im,weight_im,current_var,logger)
-
             else:
-                raise AttributeError("Unknown draw_method %s."%draw_method)
+                im, current_var = DrawStamp(psf,gal,config,xsize,ysize,offset,method)
+                if icenter:
+                    im.setCenter(icenter.x, icenter.y)
+                if make_weight_image:
+                    weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
+                    weight_im.setZero()
+                else:
+                    weight_im = None
+                if do_noise:
+                    galsim.config.AddNoise(config,method,im,weight_im,current_var,logger)
 
             if make_badpix_image:
                 badpix_im = galsim.ImageS(im.bounds, wcs=im.wcs)
@@ -502,7 +480,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             t5 = time.time()
 
             if make_psf_image:
-                psf_im = DrawPSFStamp(psf,config,im.bounds,offset,no_pixel,real_space)
+                psf_im = DrawPSFStamp(psf,config,im.bounds,offset,method)
                 if ('output' in config and 'psf' in config['output'] and 
                         'signal_to_noise' in config['output']['psf'] and
                         'noise' in config['image']):
@@ -567,37 +545,74 @@ def BuildGal(config, logger=None, gsparams={}):
 
 
 
-def DrawStampFFT(psf, gal, config, xsize, ysize, offset, no_pixel, real_space):
+def DrawStamp(psf, gal, config, xsize, ysize, offset, method):
     """
-    Draw an image using the given psf, pix and gal profiles (which may be None)
+    Draw an image using the given psf and gal profiles (which may be None)
     using the FFT method for doing the convolution.
 
     @returns the resulting image.
     """
 
-    # The real_space parameter being False really means let Convolve decide.
-    if real_space == False:
-        real_space = None
-     
-    fft_list = [ prof for prof in (psf,gal) if prof is not None ]
-    final = galsim.Convolve(fft_list, real_space=real_space)
-
-    if 'image' in config and 'wmult' in config['image']:
-        wmult = galsim.config.ParseValue(config['image'], 'wmult', config, float)[0]
+    # Setup the object to draw:
+    prof_list = [ prof for prof in (psf,gal) if prof is not None ]
+    assert len(prof_list) > 0  # Should have already been checked.
+    if len(prof_list) > 1:
+        final = galsim.Convolve(prof_list)
     else:
-        wmult = 1.0
+        final = prof_list[0]
 
+    # Setup the kwargs to pass to drawImage
+    kwargs = {}
     if xsize:
-        im = galsim.ImageF(xsize, ysize)
-    else:
-        im = None
+        kwargs['image'] = galsim.ImageF(xsize, ysize)
+    kwargs['offset'] = offset
+    kwargs['method'] = method
+    if 'image' in config and 'wmult' in config['image']:
+        kwargs['wmult'] = galsim.config.ParseValue(config['image'], 'wmult', config, float)[0]
+    kwargs['wcs'] = config['wcs'].local(image_pos = config['image_pos'])
+    if method == 'phot':
+        kwargs['rng'] = config['rng']
 
-    wcs = config['wcs'].local(image_pos = config['image_pos'])
-    if not no_pixel:
-        pix = wcs.toWorld(galsim.Pixel(1.0))
-        final = galsim.Convolve(final, pix, real_space=real_space)
+    # Check validity of extra phot options:
+    max_extra_noise = None
+    if 'image' in config and 'n_photons' in config['image']:
+        if method != 'phot':
+            raise AttributeError('n_photons is invalid with method != phot')
+        if 'max_extra_noise' in config['image']:
+            import warnings
+            warnings.warn(
+                "Both 'max_extra_noise' and 'n_photons' are set in config['image'], "+
+                "ignoring 'max_extra_noise'.")
+        kwargs['n_photons'] = galsim.config.ParseValue(config['image'], 'n_photons', config, int)[0]
+    elif 'image' in config and 'max_extra_noise' in config['image']:
+        if method != 'phot':
+            raise AttributeError('max_extra_noise is invalid with method != phot')
+        max_extra_noise = galsim.config.ParseValue(
+            config['image'], 'max_extra_noise', config, float)[0]
+    elif method == 'phot':
+        max_extra_noise = 0.01
 
-    im = final.draw(image=im, wcs=wcs, wmult=wmult, offset=offset)
+    if 'image' in config and 'poisson_flux' in config['image']:
+        if method != 'phot':
+            raise AttributeError('poisson_flux is invalid with method != phot')
+        kwargs['poisson_flux'] = galsim.config.ParseValue(
+                config['image'], 'poisson_flux', config, bool)[0]
+
+    if max_extra_noise is not None:
+        if max_extra_noise < 0.:
+            raise ValueError("image.max_extra_noise cannot be negative")
+        if max_extra_noise > 0.:
+            if 'image' in config and 'noise' in config['image']:
+                noise_var = galsim.config.CalculateNoiseVar(config)
+            else:
+                raise AttributeError(
+                    "Need to specify noise level when using draw_method = phot")
+            if noise_var < 0.:
+                raise ValueError("noise_var calculated to be < 0.")
+            max_extra_noise *= noise_var
+            kwargs['max_extra_noise'] = max_extra_noise
+
+    im = final.drawImage(**kwargs)
     im.setOrigin(config['image_origin'])
 
     # Whiten if requested.  Our signal to do so is that the object will have a noise attribute.
@@ -608,6 +623,9 @@ def DrawStampFFT(psf, gal, config, xsize, ysize, offset, no_pixel, real_space):
 
     if (('gal' in config and 'signal_to_noise' in config['gal']) or
         ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
+        if method == 'phot':
+            raise NotImplementedError(
+                "signal_to_noise option not implemented for draw_method = phot")
         import math
         import numpy
         if 'gal' in config: root_key = 'gal'
@@ -645,78 +663,7 @@ def DrawStampFFT(psf, gal, config, xsize, ysize, offset, no_pixel, real_space):
     return im, current_var
 
 
-def DrawStampPhot(psf, gal, config, xsize, ysize, rng, offset):
-    """
-    Draw an image using the given psf and gal profiles (which may be None)
-    using the photon shooting method for doing the convolution.
-
-    @returns the resulting image.
-    """
-
-    phot_list = [ prof for prof in (psf,gal) if prof is not None ]
-    final = galsim.Convolve(phot_list)
-
-    if (('gal' in config and 'signal_to_noise' in config['gal']) or
-        ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
-        raise NotImplementedError(
-            "signal_to_noise option not implemented for draw_method = phot")
-
-    if xsize:
-        im = galsim.ImageF(xsize, ysize)
-    else:
-        im = None
-
-    wcs = config['wcs']
-
-    if 'image' in config and 'n_photons' in config['image']:
-
-        if 'max_extra_noise' in config['image']:
-            import warnings
-            warnings.warn(
-                "Both 'max_extra_noise' and 'n_photons' are set in config['image'], "+
-                "ignoring 'max_extra_noise'.")
-
-        n_photons = galsim.config.ParseValue(
-            config['image'], 'n_photons', config, int)[0]
-        im = final.drawShoot(image=im, wcs=wcs, n_photons=n_photons, rng=rng,
-                             offset=offset)
-        im.setOrigin(config['image_origin'])
-
-    else:
-
-        if 'image' in config and 'max_extra_noise' in config['image']:
-            max_extra_noise = galsim.config.ParseValue(
-                config['image'], 'max_extra_noise', config, float)[0]
-        else:
-            max_extra_noise = 0.01
-
-        if max_extra_noise < 0.:
-            raise ValueError("image.max_extra_noise cannot be negative")
-
-        if max_extra_noise > 0.:
-            if 'image' in config and 'noise' in config['image']:
-                noise_var = galsim.config.CalculateNoiseVar(config)
-            else:
-                raise AttributeError(
-                    "Need to specify noise level when using draw_method = phot")
-            if noise_var < 0.:
-                raise ValueError("noise_var calculated to be < 0.")
-            max_extra_noise *= noise_var
-
-        im = final.drawShoot(image=im, wcs=wcs, max_extra_noise=max_extra_noise, rng=rng,
-                             offset=offset)
-        im.setOrigin(config['image_origin'])
-
-    # Whiten if requested.  Our signal to do so is that the object will have a noise attribute.
-    if hasattr(final,'noise'):
-        current_var = final.noise.applyWhiteningTo(im)
-    else:
-        current_var = 0.
-
-    return im, current_var
-    
-
-def DrawPSFStamp(psf, config, bounds, offset, no_pixel, real_space):
+def DrawPSFStamp(psf, config, bounds, offset, method):
     """
     Draw an image using the given psf profile.
 
@@ -725,17 +672,15 @@ def DrawPSFStamp(psf, config, bounds, offset, no_pixel, real_space):
 
     if not psf:
         raise AttributeError("DrawPSFStamp requires psf to be provided.")
-    psf = psf.copy()
 
     if ('output' in config and 'psf' in config['output'] and 
-        'real_space' in config['output']['psf'] ):
-        # Let this override the input real_space from the draw_method.
-        real_space = galsim.config.ParseValue(config['output']['psf'],'real_space',config,bool)[0]
+        'draw_method' in config['output']['psf'] ):
+        method = galsim.config.ParseValue(config['output']['psf'],'draw_method',config,str)[0]
+        if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
+            raise AttributeError("Invalid draw_method: %s"%method)
+    else:
+        method = 'auto'
 
-    # The real_space parameter being False really means let Convolve decide.
-    if real_space == False:
-        real_space = None
-     
     # Special: if the galaxy was shifted, then also shift the psf 
     if 'shift' in config['gal']:
         gal_shift = galsim.config.GetCurrentValue(config['gal'],'shift')
@@ -744,18 +689,15 @@ def DrawPSFStamp(psf, config, bounds, offset, no_pixel, real_space):
         psf = psf.shift(gal_shift)
 
     wcs = config['wcs'].local(config['image_pos'])
-    if not no_pixel:
-        pix = wcs.toWorld(galsim.Pixel(1.0))
-        final_psf = galsim.Convolve(psf, pix, real_space=real_space)
-    else:
-        final_psf = psf
-
     im = galsim.ImageF(bounds, wcs=wcs)
-    final_psf.draw(im, offset=offset)
+    im = psf.drawImage(image=im, offset=offset, method=method)
 
     if (('output' in config and 'psf' in config['output'] 
             and 'signal_to_noise' in config['output']['psf']) or
         ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
+        if method == 'phot':
+            raise NotImplementedError(
+                "signal_to_noise option not implemented for draw_method = phot")
         import math
         import numpy
 

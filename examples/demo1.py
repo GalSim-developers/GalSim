@@ -44,10 +44,9 @@ ways.  (demo*.py are python scripts, while demo*.yaml and demo*.json are configu
 New features introduced in this demo:
 
 - obj = galsim.Gaussian(flux, sigma)
-- obj = galsim.Pixel(pixel_scale)
 - obj = galsim.Convolve([list of objects])
-- image = obj.draw(scale)
-- image.added_flux  (Only present after a draw command.)
+- image = obj.drawImage(scale)
+- image.added_flux  (Only present after a drawImage command.)
 - noise = galsim.GaussianNoise(sigma)
 - image.addNoise(noise)
 - image.write(file_name)
@@ -91,21 +90,17 @@ def main(argv):
     psf = galsim.Gaussian(flux=1., sigma=psf_sigma) # PSF flux should always = 1
     logger.debug('Made PSF profile')
 
-    # Define the pixel size
-    pix = galsim.Pixel(pixel_scale)
-    logger.debug('Made pixel profile')
-
     # Final profile is the convolution of these
     # Can include any number of things in the list, all of which are convolved 
     # together to make the final flux profile.
-    final = galsim.Convolve([gal, psf, pix])
+    final = galsim.Convolve([gal, psf])
     logger.debug('Convolved components into final profile')
 
-    # Draw the image with a particular pixel scale
+    # Draw the image with a particular pixel scale, given in arcsec/pixel.
     # The returned image has a member, added_flux, which is gives the total flux actually added to 
     # the image.  One could use this value to check if the image is large enough for some desired
     # accuracy level.  Here, we just ignore it.
-    image = final.draw(scale=pixel_scale)
+    image = final.drawImage(scale=pixel_scale)
     logger.debug('Made image of the profile: flux = %f, added_flux = %f',gal_flux,image.added_flux)
 
     # Add Gaussian noise to the image with specified sigma
