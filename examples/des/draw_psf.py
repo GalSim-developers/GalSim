@@ -148,7 +148,9 @@ def main(argv):
                 #print '    psfex psf = ',psf
 
                 # Draw the postage stamp image
-                stamp = psf.draw(wcs=wcs.local(image_pos), offset=offset)
+                # Note: Use no_pixel method, since the PSFEx estimate of the PSF already includes
+                # the pixel response.
+                stamp = psf.drawImage(wcs=wcs.local(image_pos), offset=offset, method='no_pixel')
 
                 # Recenter the stamp at the desired position:
                 stamp.setCenter(ix,iy)
@@ -167,7 +169,8 @@ def main(argv):
                 #print '    fitpsf psf = ',psf
 
                 # Draw the postage stamp image
-                stamp = psf.draw(wcs=wcs.local(image_pos), offset=offset)
+                # Again, the PSF already includes the pixel response.
+                stamp = psf.drawImage(wcs=wcs.local(image_pos), offset=offset, method='no_pixel')
 
                 # Recenter the stamp at the desired position:
                 stamp.setCenter(ix,iy)

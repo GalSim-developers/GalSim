@@ -128,8 +128,6 @@ def main(argv):
         # Take the (e1, e2) shape parameters from the catalog as well.
         psf = psf.shear(e1=cat.getFloat(k,2), e2=cat.getFloat(k,3))
 
-        pix = galsim.Pixel(pixel_scale)
-
         # Galaxy is a bulge + disk with parameters taken from the catalog:
         disk = galsim.Exponential(flux=0.6, half_light_radius=cat.getFloat(k,5))
         disk = disk.shear(e1=cat.getFloat(k,6), e2=cat.getFloat(k,7))
@@ -149,11 +147,11 @@ def main(argv):
         # You can change that with shift:
         gal = gal.shift(dx=cat.getFloat(k,11), dy=cat.getFloat(k,12))
 
-        final = galsim.Convolve([psf, pix, gal])
+        final = galsim.Convolve([psf, gal])
 
         # Draw the profile
         image = galsim.ImageF(xsize, ysize)
-        final.draw(image, scale=pixel_scale)
+        final.drawImage(image, scale=pixel_scale)
 
         # Add Poisson noise to the image:
         image.addNoise(galsim.PoissonNoise(rng, sky_level * pixel_scale**2))

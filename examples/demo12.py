@@ -51,7 +51,7 @@ New features introduced in this demo:
 - gal = galsim.Chromatic(GSObject, SED)
 - gal = GSObject * SED
 - obj = galsim.Add([list of ChromaticObjects])
-- ChromaticObject.draw(bandpass)
+- ChromaticObject.drawImage(bandpass)
 - PSF = galsim.ChromaticAtmosphere(GSObject, base_wavelength, zenith_angle)
 """
 
@@ -136,17 +136,16 @@ def main(argv):
     gal = gal.shear(g1=0.5, g2=0.3).dilate(1.05).shift((0.0, 0.1))
     logger.debug('Created Chromatic')
 
-    # convolve with pixel and PSF to make final profile
-    pix = galsim.Pixel(pixel_scale)
+    # convolve with PSF to make final profile
     PSF = galsim.Moffat(fwhm=0.6, beta=2.5)
-    final = galsim.Convolve([gal, pix, PSF])
+    final = galsim.Convolve([gal, PSF])
     logger.debug('Created final profile')
 
     # draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.1)
     for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
-        final.draw(filter_, image=img)
+        final.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo12a_{}.fits'.format(filter_name))
@@ -178,7 +177,7 @@ def main(argv):
     logger.debug('Created disk component')
     # ... and then combine them.
     bdgal = 1.1 * (0.8*bulge+4*disk) # you can add and multiply ChromaticObjects just like GSObjects
-    bdfinal = galsim.Convolve([bdgal, pix, PSF])
+    bdfinal = galsim.Convolve([bdgal, PSF])
     # Note that at this stage, our galaxy is chromatic but our PSF is still achromatic.  Part C)
     # below will dive into chromatic PSFs.
     logger.debug('Created bulge+disk galaxy final profile')
@@ -187,7 +186,7 @@ def main(argv):
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
     for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
-        bdfinal.draw(filter_, image=img)
+        bdfinal.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo12b_{}.fits'.format(filter_name))
@@ -253,16 +252,15 @@ def main(argv):
     PSF = galsim.ChromaticAtmosphere(PSF_500, 500.0, obj_coord=m101, latitude=latitude, HA=HA)
     # and proceed like normal.
 
-    # convolve with galaxy and pixel to create final profile
-    pix = galsim.Pixel(pixel_scale)
-    final = galsim.Convolve([gal, pix, PSF])
+    # convolve with galaxy to create final profile
+    final = galsim.Convolve([gal, PSF])
     logger.debug('Created chromatic PSF finale profile')
 
     # Draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.03)
     for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
-        final.draw(filter_, image=img)
+        final.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo12c_{}.fits'.format(filter_name))

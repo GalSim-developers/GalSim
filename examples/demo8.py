@@ -72,9 +72,6 @@ def main(argv):
     # We'll only be using three top-level fields in this file: psf, gal, and image.
     # We don't have any input files, so we don't need input.   And we're only going to 
     # have the config machinery build the images, so we don't need output.
-    # And as usual, we'll use a simple square pixel, so we don't need pix.
-    # Note: This is true regardless of the draw method.  Even if draw_method (below) were fft,
-    # the config machinery would automatically create the square pixel for us.
 
     # We can define each attribute individually:
     config['psf'] = {}

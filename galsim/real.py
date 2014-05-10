@@ -53,7 +53,8 @@ class RealGalaxy(GSObject):
     might be needed to make or interpret the simulations, e.g., the noise properties of the training
     data.
 
-    The GSObject drawShoot() method is unavailable for RealGalaxy instances.
+    Because RealGalaxy involved a Deconvolution, `method = 'phot'` is unavailable for the
+    drawImage() function.
 
     Initialization
     --------------
@@ -607,7 +608,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     @param rng              A BaseDeviate instance to use for the random selection or rotation
                             angle. [default: None]
     @param target_flux      The target flux in the output galaxy image, [default: 1000.]
-    @param image            As with the GSObject.draw() function, if an image is provided,
+    @param image            As with the GSObject.drawImage() function, if an image is provided,
                             then it will be used and returned.  [default: None, which means an
                             appropriately-sized image will be created.]
 
@@ -643,7 +644,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
         elif isinstance(rng,galsim.BaseDeviate):
             uniform_deviate = galsim.UniformDeviate(rng)
         else:
-            raise TypeError("The rng provided to drawShoot is not a BaseDeviate")
+            raise TypeError("The rng provided is not a BaseDeviate")
         rand_angle = galsim.Angle(math.pi*uniform_deviate(), galsim.radians)
         real_galaxy = real_galaxy.rotate(rand_angle)
 
@@ -656,7 +657,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
 
     # convolve, resample
     out_gal = galsim.Convolve([real_galaxy, target_PSF])
-    image = out_gal.draw(image=image, scale = target_pixel_scale)
+    image = out_gal.drawImage(image=image, scale=target_pixel_scale, method='no_pixel')
 
     # return simulated image
     return image

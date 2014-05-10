@@ -202,9 +202,6 @@ def main(argv):
         psf = galsim.Gaussian(fwhm=psf_fwhm)
         psf = psf.shear(e=psf_e, beta=psf_beta)
 
-        # Define the pixel
-        pix = galsim.Pixel(pixel_scale)
-
         # Define the galaxy profile:
 
         # For this demo, we are doing a ring test where the same galaxy profile is drawn at many
@@ -237,11 +234,11 @@ def main(argv):
         dy = shift_r * math.sin(theta)
         gal = gal.shift(dx,dy)
 
-        # Make the final image, convolving with psf and pix
-        final = galsim.Convolve([psf,pix,gal])
+        # Make the final image, convolving with the psf
+        final = galsim.Convolve([psf,gal])
 
         # Draw the image
-        final.draw(sub_gal_image)
+        final.drawImage(sub_gal_image)
 
         # Now add noise to get our desired S/N
         # See demo5.py for more info about how this works.
@@ -249,18 +246,15 @@ def main(argv):
         noise = galsim.PoissonNoise(rng, sky_level=sky_level_pixel)
         sub_gal_image.addNoiseSNR(noise, gal_signal_to_noise)
 
+        # For the PSF image, we also shift the PSF by the same amount.
+        psf = psf.shift(dx,dy)
+
         # Draw the PSF image:
-        # We use real space convolution to avoid some of the 
+        # We use real space integration over the pixels to avoid some of the 
         # artifacts that can show up with Fourier convolution.
         # The level of the artifacts is quite low, but when drawing with
-        # no noise, they are apparent with ds9's zscale viewing.
-        final_psf = galsim.Convolve([psf,pix], real_space=True)
-
-        # For the PSF image, we also shift the PSF by the same amount.
-        final_psf = final_psf.shift(dx,dy)
-
-        # Draw the PSF image
-        final_psf.draw(sub_psf_image)
+        # so little noise, they are apparent with ds9's zscale viewing.
+        psf.drawImage(sub_psf_image, method='real_space')
 
         # Again, add noise, but at higher S/N this time.
         sub_psf_image.addNoiseSNR(noise, psf_signal_to_noise)

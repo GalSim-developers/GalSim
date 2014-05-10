@@ -515,45 +515,34 @@ def _TransformObject(gsobject, config, base, logger):
     @returns transformed GSObject.
     """
     safe = True
-    orig = True
     if 'dilate' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _DilateObject(gsobject, config, 'dilate', base, logger)
         safe = safe and safe1
     if 'dilation' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _DilateObject(gsobject, config, 'dilation', base, logger)
         safe = safe and safe1
     if 'ellip' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _EllipObject(gsobject, config, 'ellip', base, logger)
         safe = safe and safe1
     if 'rotate' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _RotateObject(gsobject, config, 'rotate', base, logger)
         safe = safe and safe1
     if 'rotation' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _RotateObject(gsobject, config, 'rotation', base, logger)
         safe = safe and safe1
     if 'scale_flux' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _ScaleFluxObject(gsobject, config, 'scale_flux', base, logger)
         safe = safe and safe1
     if 'shear' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _EllipObject(gsobject, config, 'shear', base, logger)
         safe = safe and safe1
     if 'magnify' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnify', base, logger)
         safe = safe and safe1
     if 'magnification' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnification', base, logger)
         safe = safe and safe1
     if 'shift' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _ShiftObject(gsobject, config, 'shift', base, logger)
         safe = safe and safe1
     return gsobject, safe

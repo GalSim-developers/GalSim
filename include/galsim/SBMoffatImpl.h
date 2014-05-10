@@ -54,8 +54,8 @@ namespace galsim {
 
         void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& ) const 
         {
-            ymax = sqrt(_maxR_sq - x*x);
-            ymin = -ymax;
+            if (std::abs(x) >= _maxR) { ymin = 0; ymax = 0; }
+            else { ymax = sqrt(_maxR_sq - x*x); ymin = -ymax; }
         }
 
         Position<double> centroid() const 

@@ -1,7 +1,51 @@
-Changes from v1.0 to v1.1:
---------------------------
+Changes from v1.0 to v1.1
+=========================
 
-Non-backward-compatible API changes:
+In this release, we introduce two big pieces of new functionality: arbitrary
+WCS transformations (conversions between image and world coordinates more
+complicated than a simple pixel scale) and chromatic objects (objects whose
+surface brightness profile is a function of wavelength).  Each of these
+topics has its own section below, so see those for more details.
+
+In addition, we decided to make quite a few changes to the API.  Some of these
+changes were necessary (or at least helpful) for implementing the new
+functionality.  But since we were doing some API changes, we decided to go
+ahead and include a number of other API changes that we had been reluctant
+to introduce previously for backwards-compatibility reasons.  Getting them
+all in now means that the API will hopefully be more stable going forward.
+
+We tried to implement the changes in as backwards-compatible a way as
+possible.  In most cases, the previous syntax will still work correctly
+for the time being.  The old functions are merely marked as obsolete or
+discouraged in the doc strings with a pointer to the new preferred syntax.
+At some point (probably version 1.2), the old syntax will be officially
+deprecated, and use of them will raise DeprecationWarnings.  Then eventually
+(probably version 2.0), the deprecated versions will be removed.  Hopefully,
+this will provide for a relatively easy transition to the new style, giving
+you time to convert any existing GalSim code you may have.
+
+The most significant API changes are: 
+
+1. A new `Image` class combines the functionality of all the various different
+   image classes we used to have (`ImageF`, `ImageD`, `ImageViewF`, etc.).
+2. We changed the way objects are transformed (sheared, dilated, rotated, etc.)
+   to use expressions like `obj = obj.shear(s)` rather than either
+   `obj.applyShear(s)` or `obj = obj.createSheared(s)`.
+3. We combined the functionality of the `draw` and `drawShoot` commands into a
+   single `drawImage` command using a `method` keyword to specify which
+   rendering method to use.
+4. The default method for the new `drawImage` command handles the convolution
+   by the pixel for you, so you no longer need to include the pixel convolution
+   yourself, unless you are doing something slightly non-standard.
+
+See the sections below on the API changes for more details about these
+and the various other more minor changes we have made in this release.
+Again, we sincerely hope that doing these all at once means that we will not
+have very many (or any) big API changes going forward.
+
+
+Non-backward-compatible API changes
+-----------------------------------
 
 We believe that these changes will not impose much hardship on the majority
 of GalSim users.  The funtions are either expected to be rarely used, or the
@@ -43,20 +87,24 @@ change does not affect the most common uses of the function.
   from `lseed` to `seed`.  The documentation described it as an unnamed arg,
   rather than a named kwarg, so probably no one was using it by name.
   But if you were, just change `lseed` to `seed`. (Issue #511)
-* Added a default value for rng parameter to CorrelatedNoise objects.  The
-  consequence of this is that if you were relying on the order of the 
-  construction parameters, you will need to rearrange, since rng is no
+* Added a default value for the `rng` parameter of `CorrelatedNoise` objects.
+  The consequence of this is that if you were relying on the order of the
+  construction parameters, you will need to rearrange, since `rng` is no
   longer first (because it is a kwarg now). (Issue #526)
-  * `CorrelatedNoise(rng, image)` should now be `CorrelatedNoise(image, 
+  * `CorrelatedNoise(rng, image)` should now be `CorrelatedNoise(image,
     rng=rng)` or `CorrelatedNoise(rng=rng, image=image)`.
   * `UncorrelatedNoise(rng, scale, variance)` should now be `UncorrelatedNoise(
     variance, rng=rng, scale=scale)` or `UncorrelatedNoise(rng=rng,
     scale=scale, variance=variance)`.
   * `getCOSMOSNoise(rng, file_name)` should now be `getCOSMOSNoise(file_name,
     rng=rng)` or `getCOSMOSNoise(rng=rng, file_name=file_name)`.
+* Merged the GSParams parameters `shoot_relerr` and `shoot_abserr` into the
+  parameters `integration_relerr` and `integration_abserr`.  The latter items
+  now cover all integrations other than real-space rendering. (Issue #535)
 
 
 Other changes to the API
+------------------------
 
 For these changes, we are currently still allowing the old syntax for ease of
 transition, but that syntax is now discouraged.  It is usually marked in the
@@ -64,11 +112,12 @@ code as being obsolete.  At some point (probably version 1.2) use of the old
 syntax will raise a DeprecationWarning, and with version 2.0, it will be
 removed.
 
-* Changed the name of the `dx` parameter in the `draw`, `drawShoot`, `drawK`
-  methods of `GSObject` and the constructors of `InterpolatedImage` and
-  `CorrelatedNoise` to the name `scale`. (Issue #364)
-* Changed the `dx_cosmos` parameter of `getCOSMOSNoise` to `cosmos_scale`.
-  (Issue #364)
+* Changed the name of the `dx` parameter of the `draw`, `drawShoot` and
+  `drawK` methods of `GSObject` to the name `scale` in the new `drawImage`
+  and `drawKImage` methods (see below).  Similarly, the `dx` parameter of
+  the `InterpolatedImage` and `CorrelatedNoise` constructors is also now
+  named `scale`, and the `dx_cosmos` parameter of `getCOSMOSNoise` is now
+  `cosmos_scale`. (Issue #364)
 * Combined the old `Image`, `ImageView` and `ConstImageView` arrays of class
   names into a single python layer `Image` class that automatically constructs
   the appropriate C++ image class as an attribute. (Issue #364)
@@ -166,17 +215,41 @@ removed.
   * `BaseDeviate` subclasses: all `set*` methods.
   * `Shear`: `setG1G2`, `setE1E2`, `setEBeta`, `setEta1Eta2`, `setEtaBeta`
   * `Shapelet`: `setSigma`, `setOrder`, `setBVec`, `setNM`, `setPQ`
-* Changed how to build a `CorrelatedNoise` object from an `Image` to use the 
+* Changed how to build a `CorrelatedNoise` object from an `Image` to use the
   `CorrelatedNoise` constructor rather than `getCorrelatedNoise`. (Issue #527)
   * `image.getCorrelatedNoise()` should now be `galsim.CorrelatedNoise(image)`.
+* Combined the `draw` and `drawShoot` methods into a single `drawImage` method
+  with more options about how the profile should be rendered.  Furthermore, in
+  most cases, you no longer need to convolve by a Pixel by hand.  The default
+  rendering method will include the pixel convolution for you. (Issue #535)
+  So, if `obj` is a GSObject, then:
+  * `obj_pix = galsim.Convolve(obj, galsim.Pixel(scale));`
+    `im = obj_pix.draw(...)`
+        -> `im = obj.drawImage(...)`
+  * `obj_pix = galsim.Convolve(obj, galsim.Pixel(scale), real_space=False);`
+    `im = obj_pix.draw(...)`
+        -> `im = obj.drawImage(method='fft', ...)`
+  * `obj_pix = galsim.Convolve(obj, galsim.Pixel(scale), real_space=True);`
+    `im = obj_pix.draw(...)`
+        -> `im = obj.drawImage(method='real_space', ...)`
+  * `im = obj.drawShoot(...)`
+        -> `im = obj.drawImage(method='phot', ...)`
+  * `im = obj.draw(...)`
+        -> `im = obj.drawImage(method='no_pixel', ...)`
+  * `im = obj.draw(normalization='sb', ...)`
+        -> `im = obj.drawImage(method='sb', ...)`
+* Changed the name of `drawK` to `drawKImage` to be more parallel with the
+  new `drawImage` name. (Issue #535)
+  * `re, im = obj.drawK(...)` -> `re, im = obj.drawKImage(...)`
 
 
-New WCS classes: (Issue #364)
+New WCS classes (Issue #364)
+----------------------------
 
 * Every place in the code that can take a `scale` parameter (e.g. the `Image`
-  constructor,  `GSObject.draw()`, `InterpolatedImage`, etc.) can now take a
-  `wcs` parameter.  The `scale` parameter is still an option, but now it is
-  just shorthand for `wcs = PixelScale(scale)`.
+  constructor,  `GSObject.drawImage()`, `InterpolatedImage`, etc.) can now
+  take a `wcs` parameter.  The `scale` parameter is still an option, but now it
+  is just shorthand for `wcs = PixelScale(scale)`.
 * There are three LocalWCS classes that have a common origin for image and
   world coordinates:
   * `PixelScale` describes a simple scale conversion from pixels to arcsec.
@@ -222,7 +295,8 @@ for information about how to use these classes. Also, check out demo3, demo9,
 demo10, and demo11 for example usage.
 
 
-New `CelestialCoord` class: (Issue #364)
+New CelestialCoord class (Issue #364)
+-------------------------------------
 
 * This class describes a position on the celestial sphere according to
   RightAscension (RA) and Declination (Dec).  These two values are accessible
@@ -247,7 +321,8 @@ New `CelestialCoord` class: (Issue #364)
     coordinate system as a tuple (el, b).
 
 
-New chromatic functionality: (Issue2 #467, #520)
+New chromatic functionality (Issues #467, #520)
+-----------------------------------------------
 
 * New `Bandpass` class to represent throughput functions, which can either
   represent a complete imaging system, or the individual components thereof,
@@ -279,7 +354,7 @@ New chromatic functionality: (Issue2 #467, #520)
   * `gsobj * sed` is a shortcut for `Chromatic(gsobj, sed)`.
   * Galaxies with color gradients can be created as sums of separable chromatic
     profiles.
-    E.g.: `gal = bulge_prof * bulge_sed + disk_prof * disk_sed`.
+    E.g. `gal = bulge_prof * bulge_sed + disk_prof * disk_sed`.
   * `ChromaticObject.applyDilation()`, `.applyExpansion()`, and `.applyShift()`,
     can take function(s) of wavelength in nanometers as their argument(s), which
     can be used to create a variety of chromatic effects, for instance, a
@@ -292,10 +367,12 @@ New chromatic functionality: (Issue2 #467, #520)
     The one difference is that `ChromaticObject`s require an additional argument,
     (given first) which is the `Bandpass` throughput function against which to
     integrate over wavelength.
-    E.g., `image = chroma_obj.draw(bandpass, ...)`
+    E.g. `image = chroma_obj.drawImage(bandpass, ...)`
 * Added demo12.py for wavelength dependence examples.
 
-Updates to config options:
+
+Updates to config options
+-------------------------
 
 Some of these changes are not backwards compatible, but we believe they are
 only in rarely used functionality, so we do not expect most users to have to
@@ -308,9 +385,9 @@ change their yaml files.
 * Removed `pix` top layer in config structure.  Add `draw_method=no_pixel` to
   do what `pix : None` used to do. (Issue #364)
 * Added `draw_method=real_space` to try to use real-space convolution.  This
-  had been an option for the psf draw, but not the main draw.  This is only
-  possible if there is only one item being convolved with the pixel.
-  (Issue #364)
+  had been an option for the psf image (via the `real_space=True` parameter),
+  but not the main image.  It corresponds to the `method='real_space'` option
+  for drawImage() described above.  (Issue #364)
 * Added ability to index `Sequence` types by any running index, rather than
   just the default by specifying an `index_key` parameter.  The options are
   'obj_num', 'image_num', 'file_num', or 'obj_num_in_file'.  (Issue #364, #536)
@@ -329,9 +406,18 @@ change their yaml files.
   number of objects per file or image is not a constant.  If the number of
   objects is constant, the automatic looping of the sequencing index
   essentially did this for you for most use cases.  (Issue #487)
+* Added `draw_method=sb` to make this parameter completely consistent with
+  the way the `method` parameter for drawImage() now works.  (Issue #535)
+* Changed the `output.psf.real_space` option to `output.psf.draw_method`
+  and allow all of the options that exist for `image.draw_method`.  So if you
+  had been using `real_space = True`, switch to `draw_method = real_space`.
+  (Issue #535)
+* Added an `index` item for Ring objects in case you want to index the ring
+  items in an unusual way. (#536)
 
 
-Other new features:
+Other new features
+------------------
 
 * Sped up the gzip and bzip2 I/O by using the shell gzip and bzip2 executables
   if they are available on the system. (Issue #344)
@@ -363,5 +449,7 @@ Other new features:
 * Fixed some bugs in the treatment of correlated noise.  (Issues #526, #528)
 * Modified addNoiseSNR() method to return the variance of the noise that was
   added.  (Issue #526)
-* Added `dtype` option to `draw`, `drawShoot` and `drawK`, which sets the 
-  data type to use for automatically constructed images. (Issue #526)
+* Added `dtype` option to `drawImage` and `drawKImage`, which sets the data
+  type to use for automatically constructed images. (Issue #526)
+* Improved the real-space rendering, and integrations in general, to be a bit
+  more accurate. (Issue #535)

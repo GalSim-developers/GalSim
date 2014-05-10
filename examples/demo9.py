@@ -290,13 +290,6 @@ def main(argv):
             dy = y_nominal - iy_nominal
             offset = galsim.PositionD(dx,dy)
 
-            # Make the pixel the same way we did in demo3.  We make it in image coordinates
-            # and let the wcs convert it to world coordinates  The only difference here is
-            # that the wcs needs to know where we are on the image, since the shape of the 
-            # pixel is variable.  So we need to provide an image_pos parameter.
-            # (Or a world_pos parameter would also have worked.)
-            pix = wcs.toWorld(galsim.Pixel(1.0), image_pos=image_pos)
-
             # Determine the random values for the galaxy:
             flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
             hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
@@ -348,7 +341,7 @@ def main(argv):
             gal = gal.shear(total_shear)
 
             # Build the final object
-            final = galsim.Convolve([psf, pix, gal])
+            final = galsim.Convolve([psf, gal])
 
             # Draw the stamp image
             # To draw the image at a position other than the center of the image, you can
@@ -356,7 +349,7 @@ def main(argv):
             # center of the image.
             # We also need to provide the local wcs at the current position.
             local_wcs = wcs.local(image_pos)
-            stamp = final.draw(wcs=local_wcs, offset=offset)
+            stamp = final.drawImage(wcs=local_wcs, offset=offset)
 
             # Recenter the stamp at the desired position:
             stamp.setCenter(ix_nominal,iy_nominal)
@@ -366,9 +359,8 @@ def main(argv):
             full_image[bounds] += stamp[bounds]
 
             # Also draw the PSF
-            psf_final = galsim.Convolve([psf, pix])
             psf_stamp = galsim.ImageF(stamp.bounds) # Use same bounds as galaxy stamp
-            psf_final.draw(psf_stamp, wcs=local_wcs, offset=offset)
+            psf.drawImage(psf_stamp, wcs=local_wcs, offset=offset)
             psf_image[bounds] += psf_stamp[bounds]
 
 

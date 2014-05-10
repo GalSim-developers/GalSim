@@ -99,19 +99,15 @@ def main(argv):
     psf = galsim.Moffat(beta=psf_beta, flux=1., half_light_radius=psf_re)
     logger.debug('Made PSF profile')
 
-    # Define the pixel size.  It's not usually necessary, but the pixel scale parameter
-    # is named scale, so you can use a keyword argument if you want.
-    pix = galsim.Pixel(scale=pixel_scale)
-    logger.debug('Made pixel profile')
-
     # Final profile is the convolution of these.
-    final = galsim.Convolve([gal, psf, pix])
-    final_epsf = galsim.Convolve([psf, pix])
+    final = galsim.Convolve([gal, psf])
     logger.debug('Convolved components into final profile')
 
     # Draw the image with a particular pixel scale.
-    image = final.draw(scale=pixel_scale)
-    image_epsf = final_epsf.draw(scale=pixel_scale)
+    image = final.drawImage(scale=pixel_scale)
+    # The "effective PSF" is the PSF as drawn on an image, which includes the convolution
+    # by the pixel response.  We label it epsf here.
+    image_epsf = psf.drawImage(scale=pixel_scale)
     logger.debug('Made image of the profile')
 
     # To get Poisson noise on the image, we will use a class called PoissonNoise.

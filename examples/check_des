@@ -19,8 +19,10 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 
-python=../bin/installed_python  # For python scripts
-bin=../bin  # For galsim executable
+cd des
+
+python=../../bin/installed_python  # For python scripts
+bin=../../bin  # For galsim executable
 
 if [ ! -d "output" ]; then
     mkdir output
@@ -32,8 +34,8 @@ fi
 /bin/rm -rf output/DECam*
 /bin/rm -rf output_yaml/DECam*
 
-time $python des.py || exit
-time $bin/galsim -m des -v1 des.yaml || exit
+time $python draw_psf.py || exit
+time $bin/galsim -m des -v1 draw_psf.yaml || exit
 
 echo 'Checking diffs:'
 

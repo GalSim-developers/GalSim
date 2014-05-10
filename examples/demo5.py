@@ -142,13 +142,6 @@ def main(argv):
     psf = psf.shear(e1=psf_e1,e2=psf_e2)
     logger.debug('Made PSF profile')
 
-    pix = galsim.Pixel(pixel_scale)
-    logger.debug('Made pixel profile')
-
-    final_psf = galsim.Convolve([psf,pix])
-    logger.debug('Made final_psf profile')
-
-
     # Define the galaxy profile
 
     # First figure out the size we need from the resolution
@@ -234,13 +227,13 @@ def main(argv):
                 rsq = dx**2 + dy**2
 
             this_gal = this_gal.shift(dx,dy)
-            this_psf = final_psf.shift(dx,dy)
+            this_psf = psf.shift(dx,dy)
 
-            # Make the final image, convolving with psf and pix
-            final_gal = galsim.Convolve([psf,pix,this_gal])
+            # Make the final image, convolving with the psf
+            final_gal = galsim.Convolve([psf,this_gal])
 
             # Draw the image
-            final_gal.draw(sub_gal_image)
+            final_gal.drawImage(sub_gal_image)
 
             # Now add an appropriate amount of noise to get our desired S/N
             # There are lots of definitions of S/N, but here is the one used by Great08
@@ -262,7 +255,7 @@ def main(argv):
 
             # Draw the PSF image
             # No noise on PSF images.  Just draw it as is.
-            this_psf.draw(sub_psf_image)
+            this_psf.drawImage(sub_psf_image)
 
             # For first instance, measure moments
             if ix==0 and iy==0:
