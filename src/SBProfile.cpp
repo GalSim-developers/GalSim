@@ -797,35 +797,35 @@ namespace galsim {
         // noise we'll be adding to the image for the sky noise.
         //
         // Let's still have Ntot photons, but now each with a flux of g. And let's look at the 
-        // noise we get in the brightest pixel that has a nominal total flux of fmax.
+        // noise we get in the brightest pixel that has a nominal total flux of Imax.
         //
-        // The number of photons hitting this pixel will be fmax/flux * Ntot.
+        // The number of photons hitting this pixel will be Imax/flux * Ntot.
         // The variance of this number is the same thing (Poisson counting). 
         // So the noise in that pixel is:
         //
-        // N^2 = fmax/flux * Ntot * g^2
+        // N^2 = Imax/flux * Ntot * g^2
         //
         // And the signal in that pixel will be:
         //
-        // S = fmax/flux * (N+ - N-) * g which has to equal fmax, so
+        // S = Imax/flux * (N+ - N-) * g which has to equal Imax, so
         // g = flux / Ntot(1-2eta)
-        // N^2 = fmax/Ntot * flux / (1-2eta)^2
+        // N^2 = Imax/Ntot * flux / (1-2eta)^2
         //
         // As expected, we see that lowering Ntot will increase the noise in that (and every 
         // other) pixel.
         // The input max_extra_noise parameter is the maximum value of spurious noise we want 
         // to allow.
         //
-        // So setting N^2 = fmax / (1-2eta)^2 + max_extra_noise, we get
+        // So setting N^2 = Imax + nu, we get
         //
-        // Ntot = flux / [ (1-2eta)^2 max_extra_noise / fmax + 1 ]
+        // Ntot = flux / (1-2eta)^2 / (1 + nu/Imax)
         //
-        // One wrinkle about this calculation is that we don't know fmax a priori.
+        // One wrinkle about this calculation is that we don't know Imax a priori.
         // So we start with a plausible number of photons to get going.  Then we keep adding 
-        // more photons until we either hit N = flux / (1-2eta)^2 or the noise in the brightest
-        // pixel is < max_extra_noise.
+        // more photons until we either hit N = flux / (1-2eta)^2 or the extra noise in the
+        // brightest pixel is < nu
         //
-        // We also make the assumption that the pixel to look at for fmax is at the centroid.
+        // We also make the assumption that the pixel to look at for Imax is at the centroid.
         //
         // Returns the total flux placed inside the image bounds by photon shooting.
         // 
@@ -910,9 +910,9 @@ namespace galsim {
         Position<double> cen = centroid();
         Bounds<double> b(cen);
         b.addBorder(0.5);
-        dbg<<"Bounds for fmax = "<<b<<std::endl;
-        T raw_fmax = 0.;
-        int fmax_count = 0;
+        dbg<<"Bounds for Imax = "<<b<<std::endl;
+        T raw_Imax = 0.;
+        int Imax_count = 0;
         while (true) {
             // We break out of the loop when either N drops to 0 (if max_extra_noise = 0) or 
             // we find that the max pixel has an excess noise level < max_extra_noise
@@ -953,28 +953,28 @@ namespace galsim {
 
             if (max_extra_noise > 0.) {
                 xdbg<<"Check the noise level\n";
-                // First need to find what the current fmax is.
+                // First need to find what the current Imax is.
                 // (Only need to update based on the latest pa.)
 
                 for(int i=0; i<pa->size(); ++i) {
                     if (b.includes(pa->getX(i),pa->getY(i))) {
-                        ++fmax_count;
-                        raw_fmax += pa->getFlux(i);
+                        ++Imax_count;
+                        raw_Imax += pa->getFlux(i);
                     }
                 }
-                xdbg<<"fmax_count = "<<fmax_count<<std::endl;
-                xdbg<<"raw_fmax = "<<raw_fmax<<std::endl;
+                xdbg<<"Imax_count = "<<Imax_count<<std::endl;
+                xdbg<<"raw_Imax = "<<raw_Imax<<std::endl;
 
-                // Make sure we've got at least 25 photons for our fmax estimate and that
-                // the fmax value is positive.
+                // Make sure we've got at least 25 photons for our Imax estimate and that
+                // the Imax value is positive.
                 // Otherwise keep the same initial value of thisN = 100 and try again.
-                if (fmax_count < 25 || raw_fmax < 0.) continue;  
+                if (Imax_count < 25 || raw_Imax < 0.) continue;
 
-                double fmax = raw_fmax * origN / (origN-N);
-                xdbg<<"fmax = "<<fmax<<std::endl;
+                double Imax = raw_Imax * origN / (origN-N);
+                xdbg<<"Imax = "<<Imax<<std::endl;
                 // Estimate a good value of Ntot based on what we know now
-                // Ntot = flux / [ (1-2eta)^2 max_extra_noise / fmax + 1 ]
-                double Ntot = flux / ( eta_factor * eta_factor * max_extra_noise / fmax + 1.);
+                // Ntot = flux / [ (1-2eta)^2 * (1 + nu/Imax) ]
+                double Ntot = mod_flux / (1. + max_extra_noise / Imax);
                 xdbg<<"Calculated Ntot = "<<Ntot<<std::endl;
                 // So far we've done (origN-N)
                 // Set thisN to do the rest on the next pass.
