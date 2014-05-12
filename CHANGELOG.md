@@ -412,8 +412,13 @@ change their yaml files.
   and allow all of the options that exist for `image.draw_method`.  So if you
   had been using `real_space = True`, switch to `draw_method = real_space`.
   (Issue #535)
+* Switched the GSParams of the final object to inherit from the galaxy rather
+  than the PSF.  This is likely more intuitive, since the user is more likely
+  to put the gsparams item in the gal profile, and sometimes the values do
+  not take effect until the profiles are combined in the Convolution object.
+  (Issue #535)
 * Added an `index` item for Ring objects in case you want to index the ring
-  items in an unusual way. (#536)
+  items in an unusual way. (Issue #536)
 
 
 Other new features

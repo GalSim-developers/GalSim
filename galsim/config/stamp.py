@@ -554,7 +554,7 @@ def DrawStamp(psf, gal, config, xsize, ysize, offset, method):
     """
 
     # Setup the object to draw:
-    prof_list = [ prof for prof in (psf,gal) if prof is not None ]
+    prof_list = [ prof for prof in (gal,psf) if prof is not None ]
     assert len(prof_list) > 0  # Should have already been checked.
     if len(prof_list) > 1:
         final = galsim.Convolve(prof_list)
