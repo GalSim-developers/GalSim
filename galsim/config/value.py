@@ -245,7 +245,8 @@ def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
     valid_keys += ignore
     valid_keys += standard_ignore
     for key in param.keys():
-        if key not in valid_keys:
+        # Generators are allowed to use item names that start with _, which we ignore here.
+        if key not in valid_keys and not key.startswith('_'):
             raise AttributeError(
                 "Unexpected attribute %s found for parameter %s"%(key,param_name))
 
@@ -584,19 +585,19 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
            'x_min' : float, 'x_max' : float }
     kwargs, safe = GetAllParams(param, param_name, base, opt=opt)
     
-    if 'distdev' in base:
+    if '_distdev' in param:
         # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
         # time, so first check if we've already made one:
-        distdev = base['distdev']
-        if base['distdev_kwargs'] != kwargs:
+        distdev = param['_distdev']
+        if param['_distdev_kwargs'] != kwargs:
             distdev=galsim.DistDeviate(rng,**kwargs)
-            base['distdev'] = distdev
-            base['distdev_kwargs'] = kwargs
+            param['_distdev'] = distdev
+            param['_distdev_kwargs'] = kwargs
     else:
         # Otherwise, just go ahead and make a new one.
         distdev=galsim.DistDeviate(rng,**kwargs)
-        base['distdev'] = distdev
-        base['distdev_kwargs'] = kwargs
+        param['_distdev'] = distdev
+        param['_distdev_kwargs'] = kwargs
 
     # Typically, the rng will change between successive calls to this, so reset the 
     # seed.  (The other internal calculations don't need to be redone unless the rest of the
