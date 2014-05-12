@@ -161,7 +161,7 @@ class Shear(object):
                         "The position angle that was supplied is not an Angle instance!")
                 eta = kwargs.pop('eta')
                 if eta < 0:
-                    raise ValueError("Requested eta is below 0: %f"%e)
+                    raise ValueError("Requested eta is below 0: %f"%eta)
                 use_shear = _galsim._CppShear()
                 use_shear.setEtaBeta(eta, beta)
             elif 'q' in kwargs:
