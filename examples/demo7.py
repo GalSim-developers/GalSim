@@ -37,7 +37,6 @@ New features introduced in this demo:
 - obj = galsim.Airy(lam_over_diam)
 - obj = galsim.Sersic(n, half_light_radius, trunc)
 - psf = galsim.OpticalPSF(..., aberrations=aberrations, ...)
-- obj2 = obj.copy()
 - obj = obj.dilate(scale)
 - image.scale = pixel_scale
 - obj.drawImage(image, method='fft')
@@ -212,23 +211,22 @@ def main(argv):
                 # Initialize the random number generator we will be using.
                 rng = galsim.UniformDeviate(random_seed+k)
 
-                # Get a new copy, we'll want to keep the original unmodified.
-                gal1 = gal.copy()
-
                 # Generate random variates:
                 flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
-                gal1 = gal1.withFlux(flux)
+
+                # Use a new variable name, since we'll want to keep the original unmodified.
+                this_gal = gal.withFlux(flux)
 
                 hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
-                gal1 = gal1.dilate(hlr)
+                this_gal = this_gal.dilate(hlr)
 
                 beta_ellip = rng() * 2*math.pi * galsim.radians
                 ellip = rng() * (gal_e_max-gal_e_min) + gal_e_min
                 gal_shape = galsim.Shear(e=ellip, beta=beta_ellip)
-                gal1 = gal1.shear(gal_shape)
+                this_gal = this_gal.shear(gal_shape)
 
                 # Build the final object by convolving the galaxy and PSF.
-                final = galsim.Convolve([psf, gal1])
+                final = galsim.Convolve([this_gal, psf])
 
                 # Create the large, double width output image
                 # Rather than provide a scale= argument to the drawImage commands, we can also
