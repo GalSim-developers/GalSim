@@ -116,7 +116,7 @@ Getting started
 Reference documentation
 -----------------------
 
-For an overview of GalSim workflow and python tools, please see
+For an overview of GalSim workflow and python tools, please see the file
 `doc/GalSim_Quick_Reference.pdf` in the GalSim repository.  A guide to using
 the configuration files to generate simulations, a FAQ for installation issues,
 and other useful references can be found on the GalSim wiki,

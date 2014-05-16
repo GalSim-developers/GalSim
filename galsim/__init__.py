@@ -32,12 +32,27 @@ However, the code has numerous additional capabilities beyond those needed for
 the challenge, and has been useful for a number of projects that needed to
 simulate high-fidelity galaxy images with accurate sizes and shears.
 
-For an overview of GalSim workflow and python tools, please see
+For an overview of GalSim workflow and python tools, please see the file
 `doc/GalSim_Quick_Reference.pdf` in the GalSim repository.  A guide to using
 the configuration files to generate simulations, a FAQ for installation issues,
-and other useful references can be found on the GalSim wiki,
+a link to Doxygen-generated documentation, and other useful references can be
+found on the GalSim wiki,
 
     https://github.com/GalSim-developers/GalSim/wiki
+
+If you experience any issues with the software, or if you would like to file
+a feature request, please do so on the main github site for GalSim,
+
+    https://github.com/GalSim-developers/GalSim
+
+Finally, if you have questions about how to do something in GalSim, you may
+ask a question on StackOverflow,
+
+    http://stackoverflow.com/
+
+Use the galsim tag to flag it as a question about GalSim.
+
+
 
 Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 https://github.com/GalSim-developers
