@@ -39,6 +39,9 @@ Or clone the master branch with either of the following:
 The code is also distributed via Fink, Macports, and Homebrew for Mac users.
 See INSTALL.md for more information.
 
+The code is licensed under a BSD-style license.  See the file LICENSE for more
+details.
+
 
 Keeping up-to-date with GalSim
 ------------------------------
@@ -113,7 +116,7 @@ Getting started
 Reference documentation
 -----------------------
 
-For an overview of GalSim workflow and python tools, please see
+For an overview of GalSim workflow and python tools, please see the file
 `doc/GalSim_Quick_Reference.pdf` in the GalSim repository.  A guide to using
 the configuration files to generate simulations, a FAQ for installation issues,
 and other useful references can be found on the GalSim wiki,

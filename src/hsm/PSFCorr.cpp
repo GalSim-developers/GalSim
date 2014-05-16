@@ -19,27 +19,30 @@
  */
 
 /****************************************************************
-  Copyright 2003, 2004 Christopher Hirata: original code
-  2007, 2009, 2010 Rachel Mandelbaum: minor modifications
+Copyright (c) 2003-2014 by Christopher Hirata (hirata.10@osu.edu),
+Rachel Mandelbaum (rmandelb@andrew.cmu.edu), and Uros Seljak
+(useljak@berkeley.edu)
 
-  For a copy of the license, see LICENSE; for more information,
-  including contact information, see README.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-  This file is part of the meas_shape distribution.
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
 
-  Meas_shape is free software: you can redistribute it and/or modify it
-  under the terms of the GNU General Public License as published by the
-  Free Software Foundation, either version 3 of the License, or (at your
-  option) any later version.
-
-  Meas_shape is distributed in the hope that it will be useful, but
-  WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with meas_shape.  If not, see <http://www.gnu.org/licenses/>.
- *******************************************************************/
+This software is made available to you on an ``as is'' basis with no
+representations or warranties, express or implied, including but not
+limited to any warranty of performance, merchantability, fitness for a
+particular purpose, commercial utility, non-infringement or title.
+Neither the authors nor the organizations providing the support under
+which the work was developed will be liable to you or any third party
+with respect to any claim arising from your further development of the
+software or any products related to or derived from the software, or for
+lost profits, business interruption, or indirect special or consequential
+damages of any kind.
+*******************************************************************/
 
 //#define DEBUGLOGGING
 
