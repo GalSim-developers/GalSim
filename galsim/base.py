@@ -1612,7 +1612,7 @@ class Kolmogorov(GSObject):
     Initialization
     --------------
 
-    The Kolmogorov profile is normally defined in terms of the ratio lambda / D, where lambda is
+    The Kolmogorov profile is normally defined in terms of the ratio lambda / r0, where lambda is
     the wavelength of the light (say in the middle of the bandpass you are using) and r0 is the
     Fried parameter.  Typical values for the Fried parameter are on the order of 10cm for
     most observatories and up to 20cm for excellent sites. The values are usually quoted at
