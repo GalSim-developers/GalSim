@@ -22,10 +22,10 @@ development.
 Distribution
 ------------
 
-The current released version of GalSim is version 1.0.  To get the code, you
+The current released version of GalSim is version 1.1.  To get the code, you
 can grab the tarball (or zip file) from
 
-    https://github.com/GalSim-developers/GalSim/releases/tag/v1.0.0
+    https://github.com/GalSim-developers/GalSim/releases/tag/v1.1.0
 
 Also, feel free to fork the repository:
 
@@ -207,7 +207,7 @@ at one time or another.
 The version of the code at any given snapshot can be downloaded from our
 GitHub webpage, or checked out from the repository using the tag name, e.g.:
 
-    git checkout v1.0.0
+    git checkout v1.1.0
 
 This will then update your directory tree to the snapshot of the code at the
 milestone requested.  (You will also get a message about being in a "detached"
