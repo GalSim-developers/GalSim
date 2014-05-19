@@ -1072,6 +1072,9 @@ PyMODINIT_FUNC initcheck_python(void)
     else:
         py_version = ''
 
+    # Might also need this, so calculate it here.
+    py_root = os.path.split(os.path.split(python)[0])[0]
+
     # First check if this works as is.  Sometimes there is a link from somewhere in the
     # standard path, so we won't have to add anything to env['LIBPATH']
     result = (
@@ -1092,21 +1095,26 @@ PyMODINIT_FUNC initcheck_python(void)
 
     # Check if LIBDIR/LIBRARY is actually a file:
     if os.path.isfile(os.path.join(py_libdir,py_libfile)):
-        #print 'full file name = %s exists.'%os.path.join(py_libdir,py_libfile)
         py_libdir1 = py_libdir
         config.env.PrependUnique(LIBPATH=py_libdir)
 
     # Otherwise try to find the correct path
     # First option: add config to LIBDIR
     elif os.path.isfile(os.path.join(py_libdir,'config',py_libfile)):
-        #print 'Adding config worked: use %s.'%os.path.join(py_libdir,'config',py_libfile)
         py_libdir1 = os.path.join(py_libdir,'config')
         config.env.PrependUnique(LIBPATH=py_libdir1)
 
     # Next try adding python2.x/config
     elif os.path.isfile(os.path.join(py_libdir,'python'+py_version,'config',py_libfile)):
-        #print 'Adding config worked: use %s.'%os.path.join(py_libdir,'python'+py_version,'config',py_libfile)
         py_libdir1 = os.path.join(py_libdir,'python'+py_version,'config')
+        config.env.PrependUnique(LIBPATH=py_libdir1)
+
+    # We can also try to get the location from the name of the executable.  Typically the 
+    # python executable is called PREFIX/bin/python and the corresponding library is
+    # PREFIX/lib/python2.7/config/libpython2.7.a.  So try stripping off the bin/python part
+    # and add lib/python2.7/config.  (The prefix is already computed as py_root above.)
+    elif os.path.isfile(os.path.join(py_root,'lib','python'+py_version,'config',py_libfile)):
+        py_libdir1 = os.path.join(py_root,'lib','python'+py_version,'config')
         config.env.PrependUnique(LIBPATH=py_libdir1)
 
     # Oh well, it was worth a shot.
