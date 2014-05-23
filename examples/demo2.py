@@ -30,7 +30,6 @@ New features introduced in this demo:
 
 - obj = galsim.Exponential(flux, scale_radius)
 - obj = galsim.Moffat(beta, flux, half_light_radius)
-- obj = galsim.Pixel(scale)
 - obj = obj.shear(g1, g2)  -- with explanation of other ways to specify shear
 - rng = galsim.BaseDeviate(seed)
 - noise = galsim.PoissonNoise(rng, sky_level)
