@@ -194,7 +194,7 @@ removed.
   * `n.setVariance(variance)` should now be `n = n.withVariance(variance)`
   * `n.scaleVariance(variance_ratio)` should now be `n = n * variance_ratio`
 * Changed the `CorrelatedNoise.convolveWith` method to `convolvedWith`,
-  which returns a new object corresponding to the convolvution. (Issue #511)
+  which returns a new object corresponding to the convolution. (Issue #511)
   * `cn.convolveWith(obj)` should now be `cn = cn.convolvedWith(obj)`.
 * Changed the Shapelet.fitImage method to a factory function named
   `FitShapelet` that constructs a new Shapelet object rather than modify
