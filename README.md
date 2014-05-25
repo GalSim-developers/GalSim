@@ -169,29 +169,6 @@ capabilities to the software, more demo scripts may be added to `examples/`
 to illustrate what GalSim can do.
 
 
-Additional scripts
-------------------
-
-There are some additional scripts in the `examples/` directory as well.
-These utilities take various command-line arguments, which are explained
-in comments at the top of each file.
-
-* `ShootInterpolated.py` is a script that takes as input a filename for a FITS
-image, which it will simulate (optionally sheared and/or resampled) via
-photon-shooting.
-
-* `MeasMoments.py` can be used to measure the adaptive moments (best-fit
-elliptical Gaussian) for a FITS image.
-
-* `MeasShape.py` can be used to carry out PSF correction using one of four
-methods, given FITS images of the galaxy and PSF.
-
-* `des.py` creates an image based on DES PSF estimates using DES catalogs
-as input.  It is primarily designed to demonstrate the usage of the des
-module, and is accompanies by a config file, `des.yaml` that does the same
-thing.
-
-
 Tagged versions
 ---------------
 
