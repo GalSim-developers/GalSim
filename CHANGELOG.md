@@ -300,7 +300,7 @@ New CelestialCoord class (Issue #364)
 
 * This class describes a position on the celestial sphere according to
   RightAscension (RA) and Declination (Dec).  These two values are accessible
-  as coord.ra and coord.dec.  So it is used by some of the WCS classes for
+  as `coord.ra` and `coord.dec`.  So it is used by some of the WCS classes for
   the world coordinate positions.
 * It has methods to handle a number of spherical trigonometry operations
   that are sometimes required when dealing with celestial coordinates:
