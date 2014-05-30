@@ -1468,22 +1468,32 @@ def DoCppChecks(config):
         # The Mac BLAS library is notoriously sketchy.  In particular, we have discovered that it
         # is thread-unsafe for Mac OS 10.7+ prior to XCode 5.1.  Try to give an appropriate warning
         # if we can tell that this is what the TMV library is using.
+        # Update: Even after 5.1, it still seems to have problems for some systems.
         import platform
         import subprocess
         print 'Mac version is',platform.mac_ver()[0]
         p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
         xcode_version = p.stdout.readlines()[0].split()[1]
         print 'XCode version is',xcode_version
-        if (platform.mac_ver()[0] >= '10.7' and xcode_version < '5.1' and
+        if (platform.mac_ver()[0] >= '10.7' and #xcode_version < '5.1' and
             '-latlas' not in tmv_link and ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
             print 'WARNING: The Apple BLAS library has been found not to be thread safe on'
             print '         Mac OS versions 10.7+, even across multiple processes (i.e. not'
             print '         just multiple threads in the same process.)  The symptom is that'
-            print '         `scons tests` will hang when running nosetests using multiple'
+            print '         `scons tests` may hang when running nosetests using multiple'
             print '         processes.'
-            print '         This seems to have been fixed with XCode 5.1, so we recommend'
-            print '         upgrading to the latest XCode version.'
-            env['BAD_BLAS'] = True
+            if xcode_version < '5.1':
+                print '         This seems to have been partially fixed with XCode 5.1, so we'
+                print '         recommend upgrading to the latest XCode version.  However, even'
+                print '         with 5.1, some systems still seem to have problems.'
+                env['BAD_BLAS'] = True
+            else:
+                print '         This seems to have been partially fixed with XCode 5.1, so there'
+                print '         is a good chance you will not have any problems.  But there are'
+                print '         still occasional systems that fail when using multithreading with'
+                print '         programs or modules that link to the BLAS library (such as GalSim).'
+                print '         If you do have problems, the solution is to recompile TMV with'
+                print '         the SCons option "WITH_BLAS=false".'
 
     # ParseFlags doesn't know about -fopenmp being a LINKFLAG, so it
     # puts it into CCFLAGS instead.  Move it over to LINKFLAGS before
