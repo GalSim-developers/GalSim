@@ -622,6 +622,13 @@ def AddExtraPaths(env):
         env['INSTALL_PREFIX'] = default_prefix
         env['FINAL_PREFIX'] = default_prefix
     else:
+        if os.path.samefile('.',env['PREFIX']):
+            ErrorExit(
+                'Using the source directory as the PREFIX value is not allowed.',
+                'You should install GalSim to some other directory.  The typical',
+                'choice is to use your home directory, which on most machines can',
+                'be specified using PREFIX=~')
+
         env['INSTALL_PREFIX'] = env['PREFIX']
 
         # FINAL_PREFIX is designed for installations like that done by fink where it installs
