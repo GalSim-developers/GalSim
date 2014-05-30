@@ -31,7 +31,7 @@ TOL_ELLIP = 2.e-5
 TOL_SIZE = 2.e-4 # Note this is in pixels by default, so for 0.03 arcsec/pixel this is still small
 
 # Range of sersic n indices to check
-SERSIC_N_TEST = [1.5, 4.5, 6.25, 6.5]
+SERSIC_N_TEST = [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.2]#, 6.5]
 NPHOTONS = 3.e7
 
 # Params for a very simple, Airy PSF
@@ -58,10 +58,14 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
               fail_value=-666.):
     """Run a full set of tests, writing pickled tuple output to outfile.
     """
+    import sys
     import cPickle
     import numpy as np
     import galsim
     import galaxy_sample
+    # Load up the comparison_utilities module from the parent directory
+    sys.path.append('..')
+    import comparison_utilities
     
     if config is None:
         use_config = False
@@ -116,7 +120,7 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
                 }
                 config['psf'] = {"type" : "Airy" , "lam_over_diam" : PSF_LAM_OVER_DIAM }
                 try:
-                    results = galsim.utilities.compare_dft_vs_photon_config(
+                    results = comparison_utilities.compare_dft_vs_photon_config(
                         config, abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE, logger=logger)
                     test_ran = True
                 except RuntimeError as err:
@@ -132,7 +136,7 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
                 galaxy.applyShear(g1=g1, g2=g2)
                 psf = galsim.Airy(lam_over_diam=PSF_LAM_OVER_DIAM, gsparams=test_gsparams)
                 try:
-                    results = galsim.utilities.compare_dft_vs_photon_object(
+                    results = comparison_utilities.compare_dft_vs_photon_object(
                         galaxy, psf_object=psf, rng=ud, pixel_scale=PIXEL_SCALE, size=IMAGE_SIZE,
                         abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE,
                         n_photons_per_trial=NPHOTONS, wmult=wmult)
