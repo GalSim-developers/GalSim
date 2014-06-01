@@ -1070,10 +1070,15 @@ PyMODINIT_FUNC initcheck_python(void)
 
     # Other times (e.g. most Mac systems) we'll need to link the library.
     # We can get the library name from distutils.sysconfig:
-    source_file3 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBRARY')"
+    source_file3 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LDLIBRARY')"
     result, py_libfile = TryScript(config,source_file3,python)
     if not result:
-        ErrorExit('Unable to get python library name using python executable:\n%s'%python)
+        # I think the one we want should be called LDLIBRARY, but if that's not there, check
+        # for LIBRARY instead.
+        source_file3 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBRARY')"
+        result, py_libfile = TryScript(config,source_file3,python)
+        if not result:
+            ErrorExit('Unable to get python library name using python executable:\n%s'%python)
     py_lib = os.path.splitext(py_libfile)[0]
     if py_lib.startswith('lib'):
         py_lib = py_lib[3:]
