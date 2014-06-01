@@ -858,6 +858,18 @@ def CheckBoost(config):
             'Boost not found',
             'You should specify the location of Boost as BOOST_DIR=...')
     config.Result(1)
+
+    boost_version_file = """
+#include <iostream>
+#define BOOST_NO_CXX11_SMART_PTR
+#include "boost/version.hpp"
+int main() { std::cout<<BOOST_VERSION<<std::endl; return 0; }
+"""
+    ok, boost_version = config.TryRun(boost_version_file,'.cpp')
+    boost_version = boost_version.strip()
+    print 'Boost version is %d.%d.%d'%(
+            int(boost_version[:-4]), int(boost_version[-4:-2]), int(boost_version[-2:]))
+    
     return 1
 
 
