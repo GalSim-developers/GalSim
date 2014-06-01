@@ -143,11 +143,14 @@ def test_SED_roundoff_guard():
 def test_SED_init():
     """Check that certain invalid SED initializations are trapped.
     """
-    # These fail.
-    np.testing.assert_raises(ValueError, galsim.SED, spec='blah')
-    np.testing.assert_raises(ValueError, galsim.SED, spec='wave+')
-    np.testing.assert_raises(ValueError, galsim.SED, spec='somewhere/a/file')
-    np.testing.assert_raises(ValueError, galsim.SED, spec='/somewhere/a/file')
+    try:
+        # These fail.
+        np.testing.assert_raises(ValueError, galsim.SED, spec='blah')
+        np.testing.assert_raises(ValueError, galsim.SED, spec='wave+')
+        np.testing.assert_raises(ValueError, galsim.SED, spec='somewhere/a/file')
+        np.testing.assert_raises(ValueError, galsim.SED, spec='/somewhere/a/file')
+    except ImportError:
+        print 'The assert_raises tests require nose'
     # These should succeed.
     galsim.SED(spec='wave')
     galsim.SED(spec='wave/wave')

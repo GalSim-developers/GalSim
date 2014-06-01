@@ -879,7 +879,11 @@ def test_gsparam():
     # getting properly forwarded through the internals of ChromaticObjects.
     gsparams.maximum_fft_size = 16
     final = galsim.Convolve(gal, pix, gsparams=gsparams)
-    np.testing.assert_raises(RuntimeError, final.draw, bandpass)
+    try:
+        np.testing.assert_raises(RuntimeError, final.draw, bandpass)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
