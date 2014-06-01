@@ -1095,6 +1095,7 @@ PyMODINIT_FUNC initcheck_python(void)
         py_version = '2.4'
     else:
         py_version = ''
+    print 'Building for python version '+py_version
 
     # Might also need this, so calculate it here.
     py_root = os.path.split(os.path.split(python)[0])[0]
@@ -1116,6 +1117,8 @@ PyMODINIT_FUNC initcheck_python(void)
     result, py_libdir = TryScript(config,source_file4,python)
     if not result:
         ErrorExit('Unable to get python library path using python executable:\n%s'%python)
+    print 'Python LIBDIR = ',py_libdir
+    print 'Pythod LDLIBRARY = ',py_libfile
 
     # Check if LIBDIR/LIBRARY is actually a file:
     if os.path.isfile(os.path.join(py_libdir,py_libfile)):
