@@ -1473,6 +1473,15 @@ def DoCppChecks(config):
             'TMV.h not found',
             'You should specify the location of TMV as TMV_DIR=...')
 
+    tmv_version_file = """
+#include <iostream>
+#include "TMV.h"
+int main()
+{ std::cout<<tmv::TMV_Version()<<std::endl; return 0; }
+"""
+    ok, tmv_version = config.TryRun(tmv_version_file,'.cpp')
+    print 'TMV version is '+tmv_version.strip()
+
     compiler = config.env['CXXTYPE']
     version = config.env['CXXVERSION_NUMERICAL']
 
