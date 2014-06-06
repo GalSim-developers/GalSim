@@ -189,9 +189,12 @@ class Bandpass(object):
         self.zeropoint = zeropoint
 
     def getZeroPoint(self):
+        """ Calculate and return the magnitude zeropoint for this bandpass.
+        """
         # By default, assume we want an AB magnitude system zeropoint.
-        if self.zeropoint is None:
-            AB_source = 3631e-23 # 3631 in units of erg/s/Hz/cm^2
+        if (self.zeropoint is None or
+            (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='AB')):
+            AB_source = 3631e-23 # 3631 Jy in units of erg/s/Hz/cm^2
             c = 29979245800.0 # speed of light in cm/s
             nm_to_cm = 1.0e-7
             AB_flambda = AB_source * c / self.wave_list**2 / nm_to_cm

@@ -177,6 +177,14 @@ def test_SED_calculateMagnitude():
     np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass),
                                    (sed*100).calculateMagnitude(bandpass)+5.0)
 
+    # Check that zeropoint=None and zeropoint='ab' do the same thing.
+    bandpass1 = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
+    bandpass2 = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), zeropoint='ab')
+    np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass1),
+                                   sed.calculateMagnitude(bandpass2))
+
+
+
 if __name__ == "__main__":
     test_SED_add()
     test_SED_sub()
