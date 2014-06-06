@@ -191,7 +191,7 @@ class Bandpass(object):
     def getZeroPoint(self):
         """ Calculate and return the magnitude zeropoint for this bandpass.
         """
-        # By default, assume we want an AB magnitude system zeropoint.
+        # If zeropoint is None (default), or set to a string 'AB', then use AB magnitudes
         if (self.zeropoint is None or
             (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='AB')):
             AB_source = 3631e-23 # 3631 Jy in units of erg/s/Hz/cm^2
@@ -201,13 +201,25 @@ class Bandpass(object):
             AB_SED = galsim.SED(galsim.LookupTable(self.wave_list, AB_flambda))
             flux = AB_SED.calculateFlux(self)
             self.zeropoint = -2.5 * np.log10(flux)
+        # If zeropoint.upper() is 'VEGA', then load vega spectrum stored in repository,
+        # and use that for zeropoint spectrum.
+        if (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='VEGA'):
+            import os
+            path, filename = os.path.split(__file__)
+            datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+            vegafile = os.path.join(datapath, "vega.txt")
+            sed = galsim.SED(vegafile)
+            flux = sed.calculateFlux(self)
+            self.zeropoint = -2.5 * np.log10(flux)
         # If `self.zeropoint` is an `SED`, then compute the SED flux through the bandpass, and
-        # use this to create a numerical zeropoint.
+        # use this to create a magnitude zeropoint.
         elif isinstance(self.zeropoint, galsim.SED):
             flux = self.zeropoint.calculateFlux(self)
             self.zeropoint = -2.5 * np.log10(flux)
+        # If zeropoint is a number, then pass
         elif isinstance(self.zeropoint, (float, int)):
             pass
+        # But if zeropoint is none of these, raise an exception.
         else:
             raise ValueError(
                 "Don't know how to handle zeropoint of type: {0}".format(type(self.zeropoint)))

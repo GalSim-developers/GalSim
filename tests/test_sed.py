@@ -183,7 +183,26 @@ def test_SED_calculateMagnitude():
     np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass1),
                                    sed.calculateMagnitude(bandpass2))
 
+    # See if we can set a magnitude.
+    sed = sed.withMagnitude(24.0, bandpass)
+    np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass), 24.0)
 
+    # See if Vega magnitudes work.
+    # The following AB/Vega conversions are sourced from
+    # http://www.astronomy.ohio-state.edu/~martini/usefuldata.html
+    # Almost certainly, the LSST filters and the filters used on this website are not perfect
+    # matches, but should give some idea of the expected conversion between Vega magnitudes and AB
+    # magnitudes.  The results are consistent to 0.1 magnitudes, which is encouraging, but the true
+    # accuracy of the get/set magnitude algorithms is probably much better than this.
+    ugrizy_vega_ab_conversions = [0.91, -0.08, 0.16, 0.37, 0.54, 0.634]
+    filter_names = 'ugrizy'
+    for conversion, filter_name in zip(ugrizy_vega_ab_conversions, filter_names):
+        filter_filename = os.path.join(datapath, 'LSST_{}.dat'.format(filter_name))
+        AB_bandpass = galsim.Bandpass(filter_filename, zeropoint='AB')
+        vega_bandpass = galsim.Bandpass(filter_filename, zeropoint='vega')
+        AB_mag = sed.calculateMagnitude(AB_bandpass)
+        vega_mag = sed.calculateMagnitude(vega_bandpass)
+        assert (abs((AB_mag - vega_mag) - conversion) < 0.1)
 
 if __name__ == "__main__":
     test_SED_add()

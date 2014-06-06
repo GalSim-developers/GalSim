@@ -287,6 +287,21 @@ class SED(object):
         ret.fphotons = lambda w: self.fphotons(w) * norm
         return ret
 
+    def withMagnitude(self, target_magnitude, bandpass):
+        """ Return a new SED with `bandpass` magnitude set to `target_magnitude`. Note that this
+        normalization is *relative* to the `flux` attribute of the chromaticized GSObject.
+
+        @param target_magnitude  The desired *relative* magnitude of the SED.
+        @param bandpass          A Bandpass object defining a filter bandpass.
+
+        @returns the new normalized SED.
+        """
+        current_magnitude = self.calculateMagnitude(bandpass)
+        norm = 10**(-0.4*(target_magnitude - current_magnitude))
+        ret = self.copy()
+        ret.fphotons = lambda w: self.fphotons(w) * norm
+        return ret
+
     def atRedshift(self, redshift):
         """ Return a new SED with redshifted wavelengths.
 
