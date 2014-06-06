@@ -157,6 +157,26 @@ def test_SED_init():
     galsim.SED(spec=lambda w:1.0)
     galsim.SED(spec='1./(wave-700)')
 
+def test_SED_calculateMagnitude():
+    """ Check that magnitudes work as expected.
+    """
+    # Test that we can create a zeropoint with an SED, and that magnitudes for that SED are
+    # then 0.0
+    sed = galsim.SED(spec='wave')
+    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), zeropoint=sed)
+    np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass), 0.0)
+    # Try multiplying SED by 100 to verify that magnitude decreases by 5
+    sed *= 100
+    np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass), -5.0)
+    # Try setting zeropoint to a constant.
+    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), zeropoint=6.0)
+    np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass),
+                                   (sed*100).calculateMagnitude(bandpass)+5.0)
+    # Try setting AB zeropoint
+    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
+    np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass),
+                                   (sed*100).calculateMagnitude(bandpass)+5.0)
+
 if __name__ == "__main__":
     test_SED_add()
     test_SED_sub()
@@ -165,3 +185,4 @@ if __name__ == "__main__":
     test_SED_atRedshift()
     test_SED_roundoff_guard()
     test_SED_init()
+    test_SED_calculateMagnitude()

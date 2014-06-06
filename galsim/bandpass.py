@@ -74,6 +74,14 @@ class Bandpass(object):
     Note that the `wave_type` parameter does not propagate into other methods of `Bandpass`.
     For instance, Bandpass.__call__ assumes its input argument is in nanometers.
 
+    The optional `zeropoint` argument can be used to specify the magnitude zeropoint for the
+    bandpass.  This input parameter can also take a variety of possible forms:
+    1. a number, which will be the zeropoint
+    2. a galsim.SED.  In this case, the zeropoint is set such that the magnitude of the supplied
+       SED through the bandpass is 0.0
+    3. None.  In this (default) case, use an AB zeropoint, under the assumption that SEDs
+       whose magnitudes will be calculated have units of erg/s/nm/cm^2.
+
     @param throughput   Function defining the throughput at each wavelength.  See above for
                         valid options for this parameter.
     @param blue_limit   Hard cut off of bandpass on the blue side. [default: None, but required
@@ -82,9 +90,10 @@ class Bandpass(object):
                         if throughput is not a LookupTable or file.  See above.]
     @param wave_type    The units to use for the wavelength argument of the `throughput`
                         function. See above for details. [default: 'nm']
+    @param zeropoint    Zeropoint for this bandpass.
     """
     def __init__(self, throughput, blue_limit=None, red_limit=None, wave_type='nm',
-                 _wave_list=None):
+                 zeropoint=None, _wave_list=None):
         # Note that `_wave_list` acts as a private construction variable that overrides the way that
         # `wave_list` is normally constructed (see `Bandpass.__mul__` below)
 
@@ -177,6 +186,29 @@ class Bandpass(object):
                                                             self.blue_limit, self.red_limit)
                                          / galsim.integ.int1d(self.func,
                                                               self.blue_limit, self.red_limit))
+        self.zeropoint = zeropoint
+
+    def getZeroPoint(self):
+        # By default, assume we want an AB magnitude system zeropoint.
+        if self.zeropoint is None:
+            AB_source = 3631e-23 # 3631 in units of erg/s/Hz/cm^2
+            c = 29979245800.0 # speed of light in cm/s
+            nm_to_cm = 1.0e-7
+            AB_flambda = AB_source * c / self.wave_list**2 / nm_to_cm
+            AB_SED = galsim.SED(galsim.LookupTable(self.wave_list, AB_flambda))
+            flux = AB_SED.calculateFlux(self)
+            self.zeropoint = -2.5 * numpy.log10(flux)
+        # If `self.zeropoint` is an `SED`, then compute the SED flux through the bandpass, and
+        # use this to create a numerical zeropoint.
+        elif isinstance(self.zeropoint, galsim.SED):
+            flux = self.zeropoint.calculateFlux(self)
+            self.zeropoint = -2.5 * numpy.log10(flux)
+        elif isinstance(self.zeropoint, (float, int)):
+            pass
+        else:
+            raise ValueError(
+                "Don't know how to handle zeropoint of type: {0}".format(type(self.zeropoint)))
+        return self.zeropoint
 
     def __mul__(self, other):
         blue_limit = self.blue_limit
@@ -293,7 +325,7 @@ class Bandpass(object):
         """Return a bandpass with its wavelength range truncated.
 
         If the bandpass was initialized with a galsim.LookupTable or from a file (which internally
-        creates a galsim.LookupTable), then 
+        creates a galsim.LookupTable), then
 
         This function truncate the range of the bandpass either explicitly (with `blue_limit` or
         `red_limit` or both) or automatically, just trimming off leading and trailing wavelength

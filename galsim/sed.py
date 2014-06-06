@@ -332,6 +332,17 @@ class SED(object):
                 return galsim.integ.int1d(lambda w: bandpass(w)*self.fphotons(w),
                                           bandpass.blue_limit, bandpass.red_limit)
 
+    def calculateMagnitude(self, bandpass):
+        """ Return the SED magnitude through a Bandpass `bandpass`.
+
+        @param bandpass   A Bandpass object representing a filter, or None for bolometric
+                          magnitude (over defined wavelengths).
+
+        @returns the bandpass magnitude.
+        """
+        current_flux = self.calculateFlux(bandpass)
+        return -2.5 * np.log10(current_flux) - bandpass.getZeroPoint()
+
     def thin(self, rel_err=1.e-4, preserve_range=False):
         """ If the SED was initialized with a LookupTable or from a file (which internally creates a
         LookupTable), then remove tabulated values while keeping the integral over the set of
