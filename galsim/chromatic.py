@@ -25,7 +25,7 @@ Possible uses include galaxies with color gradients, automatically drawing a giv
 different filters, or implementing wavelength-dependent point spread functions.
 """
 
-import numpy
+import numpy as np
 import copy
 
 import galsim
@@ -111,7 +111,7 @@ class ChromaticObject(object):
         if isinstance(obj, galsim.GSObject):
             self.separable = True
             self.SED = lambda w: 1.0
-            self.wave_list = numpy.array([], dtype=float)
+            self.wave_list = np.array([], dtype=float)
         elif obj.separable:
             self.separable = True
             self.SED = obj.SED
@@ -119,12 +119,12 @@ class ChromaticObject(object):
         else:
             self.separable = False
             self.SED = lambda w: 1.0
-            self.wave_list = numpy.array([], dtype=float)
+            self.wave_list = np.array([], dtype=float)
         # Some private attributes to handle affine transformations
         # _A is a 3x3 augmented affine transformation matrix that holds both translation and
         # shear/rotate/dilate specifications.
         # (see http://en.wikipedia.org/wiki/Affine_transformation#Augmented_matrix)
-        self._A = lambda w: numpy.matrix(numpy.identity(3), dtype=float)
+        self._A = lambda w: np.matrix(np.identity(3), dtype=float)
         # _fluxFactor holds a wavelength-dependent flux rescaling.  This is only needed because
         # a wavelength-dependent dilate(f(w)) is implemented as a combination of a
         # wavelength-dependent expansion and wavelength-dependent flux rescaling.
@@ -142,10 +142,10 @@ class ChromaticObject(object):
         indicated by `bandpass`.
 
         Several integrators are available in galsim.integ to do this integration.  By default,
-        `galsim.integ.SampleIntegrator(rule=numpy.trapz)` will be used if either
+        `galsim.integ.SampleIntegrator(rule=np.trapz)` will be used if either
         `bandpass.wave_list` or `self.wave_list` have len() > 0.  If lengths of both are zero, which
         may happen if both the bandpass throughput and the SED associated with `self` are analytic
-        python functions, for example, then `galsim.integ.ContinuousIntegrator(rule=numpy.trapz)`
+        python functions, for example, then `galsim.integ.ContinuousIntegrator(rule=np.trapz)`
         will be used instead.  This latter case by default will evaluate the integrand at 250
         equally-spaced wavelengths between `bandpass.blue_limit` and `bandpass.red_limit`.
 
@@ -178,13 +178,13 @@ class ChromaticObject(object):
 
         # determine combined self.wave_list and bandpass.wave_list
         wave_list = bandpass.wave_list
-        wave_list = numpy.union1d(wave_list, self.wave_list)
+        wave_list = np.union1d(wave_list, self.wave_list)
         wave_list = wave_list[wave_list <= bandpass.red_limit]
         wave_list = wave_list[wave_list >= bandpass.blue_limit]
 
         if self.separable:
             if len(wave_list) > 0:
-                multiplier = numpy.trapz(self.SED(wave_list) * bandpass(wave_list), wave_list)
+                multiplier = np.trapz(self.SED(wave_list) * bandpass(wave_list), wave_list)
             else:
                 multiplier = galsim.integ.int1d(lambda w: self.SED(w) * bandpass(w),
                                                 bandpass.blue_limit, bandpass.red_limit)
@@ -195,9 +195,9 @@ class ChromaticObject(object):
         # decide on integrator
         if integrator is None:
             if len(wave_list) > 0:
-                integrator = galsim.integ.SampleIntegrator(numpy.trapz)
+                integrator = galsim.integ.SampleIntegrator(np.trapz)
             else:
-                integrator = galsim.integ.ContinuousIntegrator(numpy.trapz)
+                integrator = galsim.integ.ContinuousIntegrator(np.trapz)
 
         # merge self.wave_list into bandpass.wave_list if using a sampling integrator
         if isinstance(integrator, galsim.integ.SampleIntegrator):
@@ -370,9 +370,9 @@ class ChromaticObject(object):
         @returns the expanded object
         """
         if hasattr(scale, '__call__'):
-            E = lambda w: numpy.matrix(numpy.diag([scale(w), scale(w), 1]))
+            E = lambda w: np.matrix(np.diag([scale(w), scale(w), 1]))
         else:
-            E = numpy.diag([scale, scale, 1])
+            E = np.diag([scale, scale, 1])
         return self._applyMatrix(E)
 
     def dilate(self, scale):
@@ -451,7 +451,7 @@ class ChromaticObject(object):
             raise TypeError("Error, too many unnamed arguments to applyShear!")
         else:
             shear = galsim.Shear(**kwargs)
-        S = numpy.matrix(numpy.identity(3), dtype=float)
+        S = np.matrix(np.identity(3), dtype=float)
         S[0:2,0:2] = shear._shear.getMatrix()
         return self._applyMatrix(S)
 
@@ -494,11 +494,11 @@ class ChromaticObject(object):
 
         @returns the rotated object.
         """
-        cth = numpy.cos(theta.rad())
-        sth = numpy.sin(theta.rad())
-        R = numpy.matrix([[cth, -sth, 0],
-                          [sth,  cth, 0],
-                          [  0,    0, 1]], dtype=float)
+        cth = np.cos(theta.rad())
+        sth = np.sin(theta.rad())
+        R = np.matrix([[cth, -sth, 0],
+                       [sth,  cth, 0],
+                       [  0,    0, 1]], dtype=float)
         return self._applyMatrix(R)
 
     def transform(self, dudx, dudy, dvdx, dvdy):
@@ -520,9 +520,9 @@ class ChromaticObject(object):
 
         @returns the transformed object.
         """
-        J = numpy.matrix([[dudx, dudy, 0],
-                          [dvdx, dvdy, 0],
-                          [   0,    0, 1]], dtype=float)
+        J = np.matrix([[dudx, dudy, 0],
+                       [dvdx, dvdy, 0],
+                       [   0,    0, 1]], dtype=float)
         return self._applyMatrix(J)
 
     def shift(self, *args, **kwargs):
@@ -584,13 +584,13 @@ class ChromaticObject(object):
                 tmpdy = dy
                 dy = lambda w: tmpdy
             # Then create augmented affine transform matrix and multiply or set as necessary
-            T = lambda w: numpy.matrix([[1, 0, dx(w)],
-                                        [0, 1, dy(w)],
-                                        [0, 0,     1]], dtype=float)
+            T = lambda w: np.matrix([[1, 0, dx(w)],
+                                     [0, 1, dy(w)],
+                                     [0, 0,     1]], dtype=float)
         else:
-            T = numpy.matrix([[1, 0, dx],
-                              [0, 1, dy],
-                              [0, 0,  1]], dtype=float)
+            T = np.matrix([[1, 0, dx],
+                           [0, 1, dy],
+                           [0, 0,  1]], dtype=float)
         return self._applyMatrix(T)
 
 def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
@@ -679,8 +679,8 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
         shift_magnitude = galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
         shift_magnitude -= base_refraction
         shift_magnitude = shift_magnitude / galsim.arcsec
-        shift = (-shift_magnitude*numpy.sin(parallactic_angle.rad()),
-                 shift_magnitude*numpy.cos(parallactic_angle.rad()))
+        shift = (-shift_magnitude*np.sin(parallactic_angle.rad()),
+                 shift_magnitude*np.cos(parallactic_angle.rad()))
         return shift
     ret = ret.shift(shift_fn)
     return ret
@@ -841,9 +841,9 @@ class ChromaticSum(ChromaticObject):
                 else:
                     self.objlist.append(ChromaticSum(v))
         # finish up by constructing self.wave_list
-        self.wave_list = numpy.array([], dtype=float)
+        self.wave_list = np.array([], dtype=float)
         for obj in self.objlist:
-            self.wave_list = numpy.union1d(self.wave_list, obj.wave_list)
+            self.wave_list = np.union1d(self.wave_list, obj.wave_list)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
@@ -967,9 +967,9 @@ class ChromaticConvolution(ChromaticObject):
             self.separable = False
 
         # Assemble wave_lists
-        self.wave_list = numpy.array([], dtype=float)
+        self.wave_list = np.array([], dtype=float)
         for obj in self.objlist:
-            self.wave_list = numpy.union1d(self.wave_list, obj.wave_list)
+            self.wave_list = np.union1d(self.wave_list, obj.wave_list)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
@@ -1079,7 +1079,7 @@ class ChromaticConvolution(ChromaticObject):
         sep_profs = []
         insep_profs = []
         sep_SED = []
-        wave_list = numpy.array([], dtype=float)
+        wave_list = np.array([], dtype=float)
         for obj in objlist:
             if obj.separable:
                 if isinstance(obj, galsim.GSObject):
@@ -1088,7 +1088,7 @@ class ChromaticConvolution(ChromaticObject):
                     sep_profs.append(obj.evaluateAtWavelength(bandpass.getEffectiveWavelength())
                                      /obj.SED(bandpass.getEffectiveWavelength())) # more g(x,y)'s
                     sep_SED.append(obj.SED) # The h(lambda)'s (see above)
-                    wave_list = numpy.union1d(wave_list, obj.wave_list)
+                    wave_list = np.union1d(wave_list, obj.wave_list)
             else:
                 insep_profs.append(obj) # The f(x,y,lambda)'s (see above)
         # insep_profs should never be empty, since separable cases were farmed out to
@@ -1102,7 +1102,7 @@ class ChromaticConvolution(ChromaticObject):
         if iimult is not None:
             iiscale /= iimult
         # Create the effective bandpass.
-        wave_list = numpy.union1d(wave_list, bandpass.wave_list)
+        wave_list = np.union1d(wave_list, bandpass.wave_list)
         wave_list = wave_list[wave_list >= bandpass.blue_limit]
         wave_list = wave_list[wave_list <= bandpass.red_limit]
         effective_bandpass = galsim.Bandpass(
