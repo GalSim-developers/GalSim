@@ -377,9 +377,12 @@ class SED(object):
             f = self(x)
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
                                                          preserve_range=preserve_range)
-            return SED(galsim.LookupTable(newx, newf, interpolant='linear'),
-                       flux_type='fphotons')
-
+            ret = self.copy()
+            ret.blue_limit = np.min(newx) - 0.0000001
+            ret.red_limit = np.max(newx) + 0.0000001
+            ret.wave_list = newx
+            ret.fphotons = galsim.LookupTable(newx, newf, interpolant='linear')
+            return ret
 
     def calculateDCRMomentShifts(self, bandpass, **kwargs):
         """ Calculates shifts in first and second moments of PSF due to differential chromatic
