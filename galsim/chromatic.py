@@ -173,7 +173,7 @@ class ChromaticObject(object):
         assert hasattr(self, 'wave_list')
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
-        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
+        prof0 = self.evaluateAtWavelength(bandpass.getEffectiveWavelength())
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
 
         # determine combined self.wave_list and bandpass.wave_list
@@ -188,7 +188,7 @@ class ChromaticObject(object):
             else:
                 multiplier = galsim.integ.int1d(lambda w: self.SED(w) * bandpass(w),
                                                 bandpass.blue_limit, bandpass.red_limit)
-            prof0 *= multiplier/self.SED(bandpass.effective_wavelength)
+            prof0 *= multiplier/self.SED(bandpass.getEffectiveWavelength())
             image = prof0.drawImage(image=image, **kwargs)
             return image
 
@@ -1071,7 +1071,7 @@ class ChromaticConvolution(ChromaticObject):
         # and non-ChromaticConvolution).  (The latter case was dealt with in the constructor.)
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
-        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
+        prof0 = self.evaluateAtWavelength(bandpass.getEffectiveWavelength())
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
 
         # Sort these atomic objects into separable and inseparable lists, and collect
@@ -1085,8 +1085,8 @@ class ChromaticConvolution(ChromaticObject):
                 if isinstance(obj, galsim.GSObject):
                     sep_profs.append(obj) # The g(x,y)'s (see above)
                 else:
-                    sep_profs.append(obj.evaluateAtWavelength(bandpass.effective_wavelength)
-                                     /obj.SED(bandpass.effective_wavelength)) # more g(x,y)'s
+                    sep_profs.append(obj.evaluateAtWavelength(bandpass.getEffectiveWavelength())
+                                     /obj.SED(bandpass.getEffectiveWavelength())) # more g(x,y)'s
                     sep_SED.append(obj.SED) # The h(lambda)'s (see above)
                     wave_list = numpy.union1d(wave_list, obj.wave_list)
             else:
@@ -1098,7 +1098,7 @@ class ChromaticConvolution(ChromaticObject):
         SED = lambda w: reduce(lambda x,y:x*y, [s(w) for s in sep_SED], 1)
         insep_obj = galsim.Convolve(insep_profs, gsparams=self.gsparams)
         # Find scale at which to draw effective profile
-        iiscale = insep_obj.evaluateAtWavelength(bandpass.effective_wavelength).nyquistScale()
+        iiscale = insep_obj.evaluateAtWavelength(bandpass.getEffectiveWavelength()).nyquistScale()
         if iimult is not None:
             iiscale /= iimult
         # Create the effective bandpass.

@@ -19,6 +19,8 @@
 Very simple implementation of a filter bandpass.  Used by galsim.chromatic.
 """
 
+import copy
+
 import numpy as np
 
 import galsim
@@ -44,8 +46,9 @@ class Bandpass(object):
 
     Bandpasses may be multiplied by other Bandpasses, functions, or scalars.
 
-    A Bandpass.effective_wavelength will be computed upon construction.  We use throughput-weighted
-    average wavelength (which is independent of any SED) as our definition for effective wavelength.
+    You can calculate the effective wavelength of a Bandpass using the method
+    getEffectiveWavelength().  We use throughput-weighted average wavelength (which is independent
+    of any SED) as our definition for effective wavelength.
 
     For Bandpasses defined using a LookupTable, a numpy.array of wavelengths, `wave_list`, defining
     the table is maintained.  Bandpasses defined as products of two other Bandpasses will define
@@ -179,62 +182,7 @@ class Bandpass(object):
             self.wave_list[0] = self.wave_list[0] + 0.0000001
             self.wave_list[-1] = self.wave_list[-1] - 0.0000001
 
-        # Evaluate and store bandpass effective wavelength, which we define as the
-        # throughput-weighted average wavelength, independent of any SED.  Units are nanometers.
-        if len(self.wave_list) > 0:
-            f = self.func(self.wave_list)
-            self.effective_wavelength = (np.trapz(f * self.wave_list, self.wave_list) /
-                                         np.trapz(f, self.wave_list))
-        else:
-            self.effective_wavelength = (galsim.integ.int1d(lambda w: self.func(w) * w,
-                                                            self.blue_limit, self.red_limit)
-                                         / galsim.integ.int1d(self.func,
-                                                              self.blue_limit, self.red_limit))
         self.zeropoint = zeropoint
-
-    def getZeroPoint(self):
-        """ Calculate and return the magnitude zeropoint for this bandpass.
-        """
-        # If zeropoint is None (default), or set to a string 'AB', then use AB magnitudes
-        if (self.zeropoint is None or
-            (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='AB')):
-            AB_source = 3631e-23 # 3631 Jy in units of erg/s/Hz/cm^2
-            c = 29979245800.0 # speed of light in cm/s
-            nm_to_cm = 1.0e-7
-            AB_flambda = AB_source * c / self.wave_list**2 / nm_to_cm
-            AB_sed = galsim.SED(galsim.LookupTable(self.wave_list, AB_flambda))
-            flux = AB_sed.calculateFlux(self)
-            self.zeropoint = -2.5 * np.log10(flux)
-        # If zeropoint.upper() is 'ST', then use HST STmags:
-        # http://www.stsci.edu/hst/acs/analysis/zeropoints
-        elif (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='ST'):
-            ST_flambda = 3.63e-8 # erg/s/cm^2/nm
-            ST_sed = galsim.SED(galsim.LookupTable(self.wave_list, ST_flambda))
-            flux = ST_sed.calculateFlux(self)
-            self.zeropoint = -2.5 * np.log10(flux)
-        # If zeropoint.upper() is 'VEGA', then load vega spectrum stored in repository,
-        # and use that for zeropoint spectrum.
-        elif (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='VEGA'):
-            import os
-            path, filename = os.path.split(__file__)
-            datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
-            vegafile = os.path.join(datapath, "vega.txt")
-            sed = galsim.SED(vegafile)
-            flux = sed.calculateFlux(self)
-            self.zeropoint = -2.5 * np.log10(flux)
-        # If `self.zeropoint` is an `SED`, then compute the SED flux through the bandpass, and
-        # use this to create a magnitude zeropoint.
-        elif isinstance(self.zeropoint, galsim.SED):
-            flux = self.zeropoint.calculateFlux(self)
-            self.zeropoint = -2.5 * np.log10(flux)
-        # If zeropoint is a number, then pass
-        elif isinstance(self.zeropoint, (float, int)):
-            pass
-        # But if zeropoint is none of these, raise an exception.
-        else:
-            raise ValueError(
-                "Don't know how to handle zeropoint of type: {0}".format(type(self.zeropoint)))
-        return self.zeropoint
 
     def __mul__(self, other):
         blue_limit = self.blue_limit
@@ -248,7 +196,17 @@ class Bandpass(object):
             red_limit = min([self.red_limit, other.red_limit])
             wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
 
-        if hasattr(other, '__call__'):
+        # preserve type if possible.
+        if type(self) == type(other):
+            ret = self.copy()
+            ret.blue_limit = blue_limit
+            ret.red_limit = red_limit
+            ret.wave_list = wave_list
+            ret.func = lambda w: other(w)*self(w)
+            if hasattr(ret, 'effective_wavelength'):
+                del ret.effective_wavelength # this will get lazily recomputed when needed
+        # if not possible, then demote to Bandpass
+        elif hasattr(other, '__call__'):
             ret = Bandpass(lambda w: other(w)*self(w),
                            blue_limit=blue_limit, red_limit=red_limit,
                            _wave_list=wave_list)
@@ -275,7 +233,17 @@ class Bandpass(object):
             red_limit = min([self.red_limit, other.red_limit])
             wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
 
-        if hasattr(other, '__call__'):
+        # preserve type if possible.
+        if type(self) == type(other):
+            ret = self.copy()
+            ret.blue_limit = blue_limit
+            ret.red_limit = red_limit
+            ret.wave_list = wave_list
+            ret.func = lambda w: self(w)/other(w)
+            if hasattr(ret, 'effective_wavelength'):
+                del ret.effective_wavelength # this will get lazily recomputed when needed
+        # if not possible, then demote to Bandpass
+        elif hasattr(other, '__call__'):
             ret = Bandpass(lambda w: self(w)/other(w),
                            blue_limit=blue_limit, red_limit=red_limit,
                            _wave_list=wave_list)
@@ -299,7 +267,17 @@ class Bandpass(object):
             red_limit = min([self.red_limit, other.red_limit])
             wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
 
-        if hasattr(other, '__call__'):
+        # preserve type if possible.
+        if type(self) == type(other):
+            ret = self.copy()
+            ret.blue_limit = blue_limit
+            ret.red_limit = red_limit
+            ret.wave_list = wave_list
+            ret.func = lambda w: other(w)/self(w)
+            if hasattr(ret, 'effective_wavelength'):
+                del ret.effective_wavelength # this will get lazily recomputed when needed
+        # if not possible, then demote to Bandpass
+        elif hasattr(other, '__call__'):
             ret = Bandpass(lambda w: other(w)/self(w),
                            blue_limit=blue_limit, red_limit=red_limit,
                            _wave_list=wave_list)
@@ -317,6 +295,13 @@ class Bandpass(object):
     # Doesn't check for divide by zero, so be careful.
     def __rtruediv__(self, other):
         return __rdiv__(self, other)
+
+    def copy(self):
+        cls = self.__class__
+        ret = cls.__new__(cls)
+        for k, v in self.__dict__.iteritems():
+            ret.__dict__[k] = copy.deepcopy(v) # need deepcopy for copying self.func
+        return ret
 
     def __call__(self, wave):
         """ Return dimensionless throughput of bandpass at given wavelength in nanometers.
@@ -346,6 +331,68 @@ class Bandpass(object):
         # option 4: a single value
         else:
             return self.func(wave) if (wave >= self.blue_limit and wave <= self.red_limit) else 0.0
+
+    def getEffectiveWavelength(self):
+        """ Calculate, store, and return the effective wavelength for this bandpass.  We define
+        the effective wavelength as the throughput-weighted average wavelength, which is
+        SED-independent.  Units are nanometers.
+        """
+        if not hasattr(self, 'effective_wavelength'):
+            if len(self.wave_list) > 0:
+                f = self.func(self.wave_list)
+                self.effective_wavelength = (np.trapz(f * self.wave_list, self.wave_list) /
+                                             np.trapz(f, self.wave_list))
+            else:
+                self.effective_wavelength = (galsim.integ.int1d(lambda w: self.func(w) * w,
+                                                                self.blue_limit, self.red_limit)
+                                             / galsim.integ.int1d(self.func,
+                                                                  self.blue_limit, self.red_limit))
+        return self.effective_wavelength
+
+    def getZeroPoint(self):
+        """ Calculate and return the magnitude zeropoint for this bandpass.
+        """
+        if not hasattr(self, '_zeropoint'):
+            # If zeropoint is None (default), or set to a string 'AB', then use AB magnitudes
+            if (self.zeropoint is None or
+                (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='AB')):
+                AB_source = 3631e-23 # 3631 Jy in units of erg/s/Hz/cm^2
+                c = 29979245800.0 # speed of light in cm/s
+                nm_to_cm = 1.0e-7
+                AB_flambda = AB_source * c / self.wave_list**2 / nm_to_cm
+                AB_sed = galsim.SED(galsim.LookupTable(self.wave_list, AB_flambda))
+                flux = AB_sed.calculateFlux(self)
+                self._zeropoint = -2.5 * np.log10(flux)
+            # If zeropoint.upper() is 'ST', then use HST STmags:
+            # http://www.stsci.edu/hst/acs/analysis/zeropoints
+            elif (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='ST'):
+                ST_flambda = 3.63e-8 # erg/s/cm^2/nm
+                ST_sed = galsim.SED(galsim.LookupTable(self.wave_list, ST_flambda))
+                flux = ST_sed.calculateFlux(self)
+                self._zeropoint = -2.5 * np.log10(flux)
+            # If zeropoint.upper() is 'VEGA', then load vega spectrum stored in repository,
+            # and use that for zeropoint spectrum.
+            elif (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='VEGA'):
+                import os
+                path, filename = os.path.split(__file__)
+                datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+                vegafile = os.path.join(datapath, "vega.txt")
+                sed = galsim.SED(vegafile)
+                flux = sed.calculateFlux(self)
+                self._zeropoint = -2.5 * np.log10(flux)
+            # If `self.zeropoint` is an `SED`, then compute the SED flux through the bandpass, and
+            # use this to create a magnitude zeropoint.
+            elif isinstance(self.zeropoint, galsim.SED):
+                flux = self.zeropoint.calculateFlux(self)
+                self._zeropoint = -2.5 * np.log10(flux)
+            # If zeropoint is a number, then use that
+            elif isinstance(self.zeropoint, (float, int)):
+                self._zeropoint = self.zeropoint
+            # But if zeropoint is none of these, raise an exception.
+            else:
+                raise ValueError(
+                    "Don't know how to handle zeropoint of type: {0}".format(type(self.zeropoint)))
+        return self._zeropoint
 
     def truncate(self, blue_limit=None, red_limit=None, relative_throughput=None):
         """Return a bandpass with its wavelength range truncated.
@@ -383,14 +430,19 @@ class Bandpass(object):
                 w = (tp >= tp.max()*relative_throughput).nonzero()
                 blue_limit = max([min(wave[w]), blue_limit])
                 red_limit = min([max(wave[w]), red_limit])
-            w = (wave >= blue_limit) & (wave <= red_limit)
-            return Bandpass(galsim.LookupTable(wave[w], tp[w], interpolant='linear'))
-        else:
-            if relative_throughput is not None:
-                raise ValueError(
-                    "Can only truncate with relative_throughput argument if throughput is "
-                    + "a LookupTable")
-            return Bandpass(self.func, blue_limit=blue_limit, red_limit=red_limit)
+        elif relative_throughput is not None:
+            raise ValueError(
+                "Can only truncate with relative_throughput argument if throughput is "
+                + "a LookupTable")
+        # preserve type
+        ret = self.copy()
+        ret.blue_limit = blue_limit
+        ret.red_limit = red_limit
+        if hasattr(ret, 'effective_wavelength'):
+            del ret.effective_wavelength
+        if hasattr(ret, 'zeropoint'):
+            del ret.zeropoint
+        return ret
 
     def thin(self, rel_err=1.e-4, preserve_range=False):
         """Thin out the internal wavelengths of a Bandpass that uses a LookupTable.
@@ -419,4 +471,14 @@ class Bandpass(object):
             f = self(x)
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
                                                          preserve_range=preserve_range)
-            return Bandpass(galsim.LookupTable(newx, newf, interpolant='linear'))
+            # preserve type
+            ret = self.copy()
+            ret.func = galsim.LookupTable(newx, newf, interpolant='linear')
+            ret.blue_limit = np.min(newx) - 0.0000001
+            ret.red_limit = np.max(newx) + 0.0000001
+            ret.wave_list = np.array(newx)
+            if hasattr(ret, 'effective_wavelength'):
+                del ret.effective_wavelength
+            if hasattr(ret, '_zeropoint'):
+                del ret._zeropoint
+            return ret
