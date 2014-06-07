@@ -1,3 +1,10 @@
+# HST CALSPEC model spectrum of Alpha Lyra (Vega)
+# File taken from http://www.stsci.edu/hst/observatory/crds/calspec.html
+# Filename: alpha_lyr_mod_001.fits
+# Clipped on the red side at 2200 nm
+# Units converted to nm and erg/s/cm^2/nm.
+#
+# Wavelength(nm)  Flux(erg/s/cm^2/nm)
       89.945099    3.983435e-15
       90.035303    5.422057e-15
       90.125500    5.755306e-15
