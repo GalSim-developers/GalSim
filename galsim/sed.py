@@ -452,3 +452,26 @@ class SED(object):
         Rbar = rot * Rbar * np.matrix([0,1]).T
         V = rot * np.matrix([[0, 0], [0, V]]) * rot.T
         return Rbar, V
+
+    def calculateSeeingMomentShift(self, bandpass, alpha=-0.2, base_wavelength=500):
+        """ Calculates the relative size of a PSF compared to the monochromatic PSF size at
+        wavelength `base_wavelength`.
+
+        @param bandpass             Bandpass through which object is being imaged.
+        @param alpha                Power law index for wavelength-dependeing seeing.  [default:
+                                    -0.2, the prediction for Kolmogorov turbulence]
+        @param base_wavelength      A reference wavelength from which to compute the relative PSF
+                                    size.
+        @returns the ratio of the PSF second moments to the second moments of the reference PSF.
+        """
+        flux = self.calculateFlux(bandpass)
+        if len(bandpass.wave_list) > 0:
+            x = np.union1d(bandpass.wave_list, self.wave_list)
+            x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
+            photons = self.fphotons(x)
+            return np.trapz(photons * (wave_list/base_wavelength)**(2*alpha), wave_list) / flux
+        else:
+            weight = lambda w: bandpass(w) * self.fphotons(w)
+            kernel = lambda w: (w/base_wavelength)**(2*alpha)
+            return galsim.integ.int1d(lambda w: weight(w) * kernel(w),
+                                      bandpass.blue_limit, bandpass.red_limit) / flux
