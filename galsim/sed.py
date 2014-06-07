@@ -453,7 +453,7 @@ class SED(object):
         V = rot * np.matrix([[0, 0], [0, V]]) * rot.T
         return Rbar, V
 
-    def calculateSeeingMomentShift(self, bandpass, alpha=-0.2, base_wavelength=500):
+    def calculateSeeingMomentShifts(self, bandpass, alpha=-0.2, base_wavelength=500):
         """ Calculates the relative size of a PSF compared to the monochromatic PSF size at
         wavelength `base_wavelength`.
 
@@ -469,7 +469,8 @@ class SED(object):
             x = np.union1d(bandpass.wave_list, self.wave_list)
             x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
             photons = self.fphotons(x)
-            return np.trapz(photons * (wave_list/base_wavelength)**(2*alpha), wave_list) / flux
+            throughput = bandpass(x)
+            return np.trapz(photons * throughput * (x/base_wavelength)**(2*alpha), x) / flux
         else:
             weight = lambda w: bandpass(w) * self.fphotons(w)
             kernel = lambda w: (w/base_wavelength)**(2*alpha)

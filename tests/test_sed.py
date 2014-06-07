@@ -222,6 +222,13 @@ def test_SED_calculateDCRMomentShifts():
     # and now test against an external known result.
     np.testing.assert_almost_equal(V[1,1] * (180.0/np.pi * 3600)**2, 0.0065, 4)
 
+def test_SED_calculateSeeingMomentShifts():
+    # compute a relative moment shift and compare to externally generated known result.
+    sed = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'))
+    bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
+    relative_size = sed.calculateSeeingMomentShifts(bandpass)
+    np.testing.assert_almost_equal(relative_size, 0.919577157172, 4)
+
 if __name__ == "__main__":
     test_SED_add()
     test_SED_sub()
@@ -232,3 +239,4 @@ if __name__ == "__main__":
     test_SED_init()
     test_SED_calculateMagnitude()
     test_SED_calculateDCRMomentShifts()
+    test_SED_calculateSeeingMomentShifts()
