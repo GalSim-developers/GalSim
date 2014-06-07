@@ -204,6 +204,24 @@ def test_SED_calculateMagnitude():
         vega_mag = sed.calculateMagnitude(vega_bandpass)
         assert (abs((AB_mag - vega_mag) - conversion) < 0.1)
 
+def test_SED_calculateDCRMomentShifts():
+    # compute some moment shifts
+    sed = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'))
+    bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
+    Rbar, V = sed.calculateDCRMomentShifts(bandpass, zenith_angle=45*galsim.degrees)
+    # now rotate parallactic angle 180 degrees, and see if the output makes sense.
+    Rbar2, V2 = sed.calculateDCRMomentShifts(bandpass, zenith_angle=45*galsim.degrees,
+                                             parallactic_angle=180*galsim.degrees)
+    np.testing.assert_array_almost_equal(Rbar, -Rbar2, 15)
+    np.testing.assert_array_almost_equal(V, V2, 25)
+    # now rotate parallactic angle 90 degrees.
+    Rbar3, V3 = sed.calculateDCRMomentShifts(bandpass, zenith_angle=45*galsim.degrees,
+                                             parallactic_angle=90*galsim.degrees)
+    np.testing.assert_almost_equal(Rbar[0], Rbar3[1], 15)
+    np.testing.assert_almost_equal(V[1,1], V3[0,0], 25)
+    # and now test against an external known result.
+    np.testing.assert_almost_equal(V[1,1] * (180.0/np.pi * 3600)**2, 0.0065, 4)
+
 if __name__ == "__main__":
     test_SED_add()
     test_SED_sub()
@@ -213,3 +231,4 @@ if __name__ == "__main__":
     test_SED_roundoff_guard()
     test_SED_init()
     test_SED_calculateMagnitude()
+    test_SED_calculateDCRMomentShifts()

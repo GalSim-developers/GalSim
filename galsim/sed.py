@@ -379,3 +379,76 @@ class SED(object):
                                                          preserve_range=preserve_range)
             return SED(galsim.LookupTable(newx, newf, interpolant='linear'),
                        flux_type='fphotons')
+
+
+    def calculateDCRMomentShifts(self, bandpass, **kwargs):
+        """ Calculates shifts in first and second moments of PSF due to differential chromatic
+        refraction (DCR).
+
+        @param bandpass             Bandpass through which object is being imaged.
+        @param zenith_angle         Angle from object to zenith, expressed as an Angle
+        @param parallactic_angle    Parallactic angle, i.e. the position angle of the zenith,
+                                    measured from North through East.  [default: 0]
+        @param obj_coord            Celestial coordinates of the object being drawn as a
+                                    CelestialCoord. [default: None]
+        @param zenith_coord         Celestial coordinates of the zenith as a CelestialCoord.
+                                    [default: None]
+        @param HA                   Hour angle of the object as an Angle. [default: None]
+        @param latitude             Latitude of the observer as an Angle. [default: None]
+        @param pressure             Air pressure in kiloPascals.  [default: 69.328 kPa]
+        @param temperature          Temperature in Kelvins.  [default: 293.15 K]
+        @param H2O_pressure         Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
+
+        @returns a tuple.  The first element is the vector of DCR first moment shifts, and the
+                 second element is the 2x2 matrix of DCR second (central) moment shifts.
+        """
+        if 'zenith_angle' in kwargs:
+            zenith_angle = kwargs.pop('zenith_angle')
+            parallactic_angle = kwargs.pop('parallactic_angle', 0.0*galsim.degrees)
+        elif 'obj_coord' in kwargs:
+            obj_coord = kwargs.pop('obj_coord')
+            if 'zenith_coord' in kwargs:
+                zenith_coord = kwargs.pop('zenith_coord')
+                zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
+                    obj_coord=obj_coord, zenith_coord=zenith_coord)
+            else:
+                if 'HA' not in kwargs or 'latitude' not in kwargs:
+                    raise TypeError("calculateDCRMomemntShifts requires either zenith_coord or "+
+                                    "(HA, latitude) when obj_coord is specified!")
+                HA = kwargs.pop('HA')
+                latitude = kwargs.pop('latitude')
+                zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
+                    obj_coord=obj_coord, HA=HA, latitude=latitude)
+        else:
+            raise TypeError(
+                "Need to specify zenith_angle and parallactic_angle in calculateDCRMomentShifts!")
+        # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
+        # Check that they're valid
+        for kw in kwargs.keys():
+            if kw not in ['temperature', 'pressure', 'H2O_pressure']:
+                raise TypeError("Got unexpected keyword in ChromaticAtmosphere: {0}".format(kw))
+        # Now actually start calculating things.
+        flux = self.calculateFlux(bandpass)
+        if len(bandpass.wave_list) > 0:
+            x = np.union1d(bandpass.wave_list, self.wave_list)
+            x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
+            R = galsim.dcr.get_refraction(x, zenith_angle, **kwargs) / galsim.radians
+            photons = self.fphotons(x)
+            throughput = bandpass(x)
+            Rbar = np.trapz(throughput * photons * R, x) / flux
+            V = np.trapz(throughput * photons * (R-Rbar)**2, x) / flux
+        else:
+            weight = lambda w: bandpass(w) * self.fphotons(w)
+            Rbar_kernel = lambda w: galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
+            Rbar = galsim.integ.int1d(lambda w: weight(w) * Rbar_kernel(w),
+                                      bandpass.blue_limit, bandpass.red_limit)
+            V_kernel = lambda w: (galsim.dcr.get_refraction(w, zenith_angle, **kwargs) - Rbar)**2
+            V = galsim.integ.int1d(lambda w: weight(w) * V_kernel(w),
+                                   bandpass.blue_limit, bandpass.red_limit)
+        # Rbar and V are computed above assuming that the parallactic angle is 0.  Hence we
+        # need to rotate our frame by the parallactic angle to get the desired output.
+        rot = np.matrix([[np.cos(parallactic_angle.rad()), -np.sin(parallactic_angle.rad())],
+                         [np.sin(parallactic_angle.rad()), np.cos(parallactic_angle.rad())]])
+        Rbar = rot * Rbar * np.matrix([0,1]).T
+        V = rot * np.matrix([[0, 0], [0, V]]) * rot.T
+        return Rbar, V
