@@ -645,6 +645,7 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     @returns a ChromaticObject representing a chromatic atmospheric PSF.
     """
     alpha = kwargs.pop('alpha', -0.2)
+    # Determine zenith_angle and parallactic_angle from kwargs
     if 'zenith_angle' in kwargs:
         zenith_angle = kwargs.pop('zenith_angle')
         parallactic_angle = kwargs.pop('parallactic_angle', 0.0*galsim.degrees)
@@ -672,7 +673,7 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
             raise TypeError("Got unexpected keyword in ChromaticAtmosphere: {0}".format(kw))
 
     ret = ChromaticObject(base_obj)
-    ret = ret.dilate(lambda w: (w/base_wavelength)**(alpha))
+    ret = ret.dilate(lambda w: (w/base_wavelength)**alpha)
     base_refraction = galsim.dcr.get_refraction(base_wavelength, zenith_angle, **kwargs)
     def shift_fn(w):
         shift_magnitude = galsim.dcr.get_refraction(w, zenith_angle, **kwargs)

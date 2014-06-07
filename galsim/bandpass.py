@@ -79,8 +79,12 @@ class Bandpass(object):
     1. a number, which will be the zeropoint
     2. a galsim.SED.  In this case, the zeropoint is set such that the magnitude of the supplied
        SED through the bandpass is 0.0
-    3. None.  In this (default) case, use an AB zeropoint, under the assumption that SEDs
-       whose magnitudes will be calculated have units of erg/s/nm/cm^2.
+    3. the string 'AB' or constant None.  In this (default) case, use an AB zeropoint.
+    4. the string 'Vega'.  Use a Vega zeropoint.
+    5. the string 'ST'.  Use a HST STmag zeropoint.
+    For 3, 4, and 5, the SEDs whose magnitudes are to be calculated are assumed to have units
+    of precisely erg/s/cm^2/nm, instead of simply units proportional to erg/nm, as would
+    otherwise be assumed.
 
     @param throughput   Function defining the throughput at each wavelength.  See above for
                         valid options for this parameter.
