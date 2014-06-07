@@ -460,8 +460,8 @@ class SED(object):
         @param bandpass             Bandpass through which object is being imaged.
         @param alpha                Power law index for wavelength-dependeing seeing.  [default:
                                     -0.2, the prediction for Kolmogorov turbulence]
-        @param base_wavelength      A reference wavelength from which to compute the relative PSF
-                                    size.
+        @param base_wavelength      Reference wavelength in nm from which to compute the relative
+                                    PSF size.  [default: 500]
         @returns the ratio of the PSF second moments to the second moments of the reference PSF.
         """
         flux = self.calculateFlux(bandpass)
