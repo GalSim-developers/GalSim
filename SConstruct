@@ -622,7 +622,7 @@ def AddExtraPaths(env):
         env['INSTALL_PREFIX'] = default_prefix
         env['FINAL_PREFIX'] = default_prefix
     else:
-        if os.path.samefile('.',env['PREFIX']):
+        if os.path.isfile(env['PREFIX']) and os.path.samefile('.',env['PREFIX']):
             ErrorExit(
                 'Using the source directory as the PREFIX value is not allowed.',
                 'You should install GalSim to some other directory.  The typical',
