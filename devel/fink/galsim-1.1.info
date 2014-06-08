@@ -26,7 +26,7 @@ Depends: <<
 
 Source: https://github.com/GalSim-developers/GalSim/archive/v%v.0.tar.gz 
 SourceRename: GalSim-%v.0.tar.gz
-Source-MD5: 13d780470e1a5d94bca8a37332fd2881
+Source-MD5: 346484daafaf90c5ed67d9fd6431d834
 GCC: 4.0
 NoSetMAKEFLAGS: true
 UseMaxBuildJobs: true
