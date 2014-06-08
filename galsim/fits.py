@@ -227,7 +227,7 @@ class _WriteFile:
             os.rename(tmp+".gz",file)
         else:
             hdu_list.writeto(root)
-            p = subprocess.Popen(["gzip", "-S", ext, root], close_fds=True)
+            p = subprocess.Popen(["gzip", "-S", ext, "-f", root], close_fds=True)
             p.communicate()
         assert p.returncode == 0 
 

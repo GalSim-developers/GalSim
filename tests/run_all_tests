@@ -1,5 +1,5 @@
 #!/bin/bash
-python=python
+python=python2.6
 for test in `ls test*.py`
 do
     echo $test

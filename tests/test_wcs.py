@@ -1539,6 +1539,7 @@ def test_astropywcs():
 
     try:
         import astropy.wcs
+        import scipy  # AstropyWCS constructor will do this, so check now.
     except ImportError:
         print 'Unable to import astropy.wcs.  Skipping AstropyWCS tests.'
         return
