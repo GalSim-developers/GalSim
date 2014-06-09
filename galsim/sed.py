@@ -121,10 +121,12 @@ class SED(object):
             self.red_limit = None
             self.wave_list = np.array([], dtype=float)
 
+        c = 29979245800.0 # speed of light in cm/s
+        h = 6.62606957e-27 # Planck's constant in erg seconds
         if flux_type == 'flambda':
-            self.fphotons = lambda w: spec(np.array(w) * wave_factor) * w
+            self.fphotons = lambda w: spec(np.array(w) * wave_factor) * w / (h*c)
         elif flux_type == 'fnu':
-            self.fphotons = lambda w: spec(np.array(w) * wave_factor) / w
+            self.fphotons = lambda w: spec(np.array(w) * wave_factor) / w / h
         elif flux_type == 'fphotons':
             self.fphotons = lambda w: spec(np.array(w) * wave_factor)
         else:
