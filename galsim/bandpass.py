@@ -362,14 +362,14 @@ class Bandpass(object):
                 AB_flambda = AB_source * c / self.wave_list**2 / nm_to_cm
                 AB_sed = galsim.SED(galsim.LookupTable(self.wave_list, AB_flambda))
                 flux = AB_sed.calculateFlux(self)
-                self._zeropoint = -2.5 * np.log10(flux)
+                self._zeropoint = 2.5 * np.log10(flux)
             # If zeropoint.upper() is 'ST', then use HST STmags:
             # http://www.stsci.edu/hst/acs/analysis/zeropoints
             elif (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='ST'):
                 ST_flambda = 3.63e-8 # erg/s/cm^2/nm
                 ST_sed = galsim.SED(galsim.LookupTable(self.wave_list, ST_flambda))
                 flux = ST_sed.calculateFlux(self)
-                self._zeropoint = -2.5 * np.log10(flux)
+                self._zeropoint = 2.5 * np.log10(flux)
             # If zeropoint.upper() is 'VEGA', then load vega spectrum stored in repository,
             # and use that for zeropoint spectrum.
             elif (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='VEGA'):
@@ -377,12 +377,12 @@ class Bandpass(object):
                 vegafile = os.path.join(galsim.meta_data.share_dir, "vega.txt")
                 sed = galsim.SED(vegafile)
                 flux = sed.calculateFlux(self)
-                self._zeropoint = -2.5 * np.log10(flux)
+                self._zeropoint = 2.5 * np.log10(flux)
             # If `self.zeropoint` is an `SED`, then compute the SED flux through the bandpass, and
             # use this to create a magnitude zeropoint.
             elif isinstance(self.zeropoint, galsim.SED):
                 flux = self.zeropoint.calculateFlux(self)
-                self._zeropoint = -2.5 * np.log10(flux)
+                self._zeropoint = 2.5 * np.log10(flux)
             # If zeropoint is a number, then use that
             elif isinstance(self.zeropoint, (float, int)):
                 self._zeropoint = self.zeropoint

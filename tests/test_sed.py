@@ -204,6 +204,17 @@ def test_SED_calculateMagnitude():
         vega_mag = sed.calculateMagnitude(vega_bandpass)
         assert (abs((AB_mag - vega_mag) - conversion) < 0.1)
 
+    # Test intended meaning of zeropoint.  I.e., that an object with magnitude equal to the
+    # zeropoint will have a flux of 1.0.
+    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
+    sed = sed.withMagnitude(bandpass.getZeroPoint(), bandpass)
+    np.testing.assert_almost_equal(sed.calculateFlux(bandpass), 1.0, 10)
+    # And again with an explicitly set zeropoint.
+    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), zeropoint=24.0)
+    sed = sed.withMagnitude(bandpass.getZeroPoint(), bandpass)
+    np.testing.assert_almost_equal(sed.calculateFlux(bandpass), 1.0, 10)
+
+
 def test_SED_calculateDCRMomentShifts():
     # compute some moment shifts
     sed = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'))
