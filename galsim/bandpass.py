@@ -357,9 +357,8 @@ class Bandpass(object):
             if (self.zeropoint is None or
                 (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='AB')):
                 AB_source = 3631e-23 # 3631 Jy in units of erg/s/Hz/cm^2
-                c = 29979245800.0 # speed of light in cm/s
-                nm_to_cm = 1.0e-7
-                AB_flambda = AB_source * c / self.wave_list**2 / nm_to_cm
+                c = 2.99792458e17 # speed of light in nm/s
+                AB_flambda = AB_source * c / self.wave_list**2
                 AB_sed = galsim.SED(galsim.LookupTable(self.wave_list, AB_flambda))
                 flux = AB_sed.calculateFlux(self)
                 self._zeropoint = 2.5 * np.log10(flux)
