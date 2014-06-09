@@ -374,9 +374,7 @@ class Bandpass(object):
             # and use that for zeropoint spectrum.
             elif (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='VEGA'):
                 import os
-                path, filename = os.path.split(__file__)
-                datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
-                vegafile = os.path.join(datapath, "vega.txt")
+                vegafile = os.path.join(galsim.meta_data.share_dir, "vega.txt")
                 sed = galsim.SED(vegafile)
                 flux = sed.calculateFlux(self)
                 self._zeropoint = -2.5 * np.log10(flux)
