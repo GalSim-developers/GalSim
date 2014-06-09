@@ -23,9 +23,9 @@ try:
     f = open(meta_data_file,'w')
 except IOError:
     # Probably the user ran sudo scons install without first running plain old scons
-    # (without sudo), so the meta_data.py file is owned by root now.  
+    # (without sudo), so the meta_data.py file is owned by root now.
     # However, it should still be removable, since the directory should be owned
-    # by the user.  So removed it and then retry opening it.
+    # by the user.  So remove it and then retry opening it.
     os.remove(meta_data_file)
     f = open(meta_data_file,'w')
 
