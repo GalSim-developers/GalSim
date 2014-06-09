@@ -205,6 +205,10 @@ class Bandpass(object):
             ret.func = lambda w: other(w)*self(w)
             if hasattr(ret, 'effective_wavelength'):
                 del ret.effective_wavelength # this will get lazily recomputed when needed
+            if hasattr(ret, '_zeropoint'):
+                del ret._zeropoint # recalculate this too
+            # Use default AB magnitudes for Bandpasses constructed via multiplication
+            ret.zeropoint = None
         # if not possible, then demote to Bandpass
         elif hasattr(other, '__call__'):
             ret = Bandpass(lambda w: other(w)*self(w),
@@ -242,6 +246,10 @@ class Bandpass(object):
             ret.func = lambda w: self(w)/other(w)
             if hasattr(ret, 'effective_wavelength'):
                 del ret.effective_wavelength # this will get lazily recomputed when needed
+            if hasattr(ret, '_zeropoint'):
+                del ret._zeropoint # recalculate this too
+            # Use default AB magnitudes for Bandpasses constructed via multiplication
+            ret.zeropoint = None
         # if not possible, then demote to Bandpass
         elif hasattr(other, '__call__'):
             ret = Bandpass(lambda w: self(w)/other(w),
@@ -276,6 +284,10 @@ class Bandpass(object):
             ret.func = lambda w: other(w)/self(w)
             if hasattr(ret, 'effective_wavelength'):
                 del ret.effective_wavelength # this will get lazily recomputed when needed
+            if hasattr(ret, '_zeropoint'):
+                del ret._zeropoint # recalculate this too
+            # Use default AB magnitudes for Bandpasses constructed via multiplication
+            ret.zeropoint = None
         # if not possible, then demote to Bandpass
         elif hasattr(other, '__call__'):
             ret = Bandpass(lambda w: other(w)/self(w),
@@ -437,8 +449,8 @@ class Bandpass(object):
         ret.red_limit = red_limit
         if hasattr(ret, 'effective_wavelength'):
             del ret.effective_wavelength
-        if hasattr(ret, 'zeropoint'):
-            del ret.zeropoint
+        if hasattr(ret, '_zeropoint'):
+            del ret._zeropoint
         return ret
 
     def thin(self, rel_err=1.e-4, preserve_range=False):
