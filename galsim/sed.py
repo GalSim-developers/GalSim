@@ -440,7 +440,7 @@ class SED(object):
         # Check that they're valid
         for kw in kwargs.keys():
             if kw not in ['temperature', 'pressure', 'H2O_pressure']:
-                raise TypeError("Got unexpected keyword in ChromaticAtmosphere: {0}".format(kw))
+                raise TypeError("Got unexpected keyword in calculateDCRMomentShifts: {0}".format(kw))
         # Now actually start calculating things.
         flux = self.calculateFlux(bandpass)
         if len(bandpass.wave_list) > 0:
