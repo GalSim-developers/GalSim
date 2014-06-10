@@ -678,7 +678,7 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     def shift_fn(w):
         shift_magnitude = galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
         shift_magnitude -= base_refraction
-        shift_magnitude = shift_magnitude * (1 * galsim.radians / galsim.arcsec)
+        shift_magnitude = shift_magnitude * (galsim.radians / galsim.arcsec)
         shift = (-shift_magnitude*np.sin(parallactic_angle.rad()),
                  shift_magnitude*np.cos(parallactic_angle.rad()))
         return shift

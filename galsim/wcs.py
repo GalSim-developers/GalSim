@@ -940,7 +940,7 @@ class CelestialWCS(BaseWCS):
         dvdy = 0.5 * (dec[3] - dec[4]) / dy
 
         # These values are all in radians.  Convert to arcsec as per our usual standard.
-        factor = 1. * galsim.radians / galsim.arcsec
+        factor = galsim.radians / galsim.arcsec
         return JacobianWCS(dudx*factor, dudy*factor, dvdx*factor, dvdy*factor)
 
     # This is similar to the version for EuclideanWCS, but uses dra, ddec.
@@ -973,7 +973,7 @@ class CelestialWCS(BaseWCS):
         dvdy = 0.5 * (dec[2:ny,1:nx-1] - dec[0:ny-2,1:nx-1])
 
         area = numpy.abs(dudx * dvdy - dvdx * dudy)
-        factor = 1. * galsim.radians / galsim.arcsec
+        factor = galsim.radians / galsim.arcsec
         image.image.array[:,:] = area * sky_level * factor**2
 
 

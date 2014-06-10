@@ -186,7 +186,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             ra, dec = self._wcs.all_pix2world(x1, y1, 1)
 
         # astropy outputs ra, dec in degrees.  Need to convert to radians.
-        factor = 1. * galsim.degrees / galsim.radians
+        factor = galsim.degrees / galsim.radians
         ra *= factor
         dec *= factor
 
@@ -203,7 +203,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
     def _xy(self, ra, dec):
         import numpy
-        factor = 1. * galsim.radians / galsim.degrees
+        factor = galsim.radians / galsim.degrees
         rd = numpy.atleast_2d([ra, dec]) * factor
         # Here we have to work around another astropy.wcs bug.  The way they use scipy's
         # Broyden's method doesn't work.  So I implement a fix here.
@@ -671,7 +671,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             #print 'dec => ',dec
 
         # wcstools reports ra, dec in degrees, so convert to radians
-        factor = 1. * galsim.degrees / galsim.radians
+        factor = galsim.degrees / galsim.radians
 
         try:
             len(x)
@@ -687,7 +687,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
         import subprocess
         import numpy
         rd = numpy.array([ra, dec]).transpose().flatten()
-        rd *= 1. * galsim.radians / galsim.degrees
+        rd *= galsim.radians / galsim.degrees
         for digits in range(10,5,-1):
             rd_strs = [ str(z) for z in rd ]
             p = subprocess.Popen(['sky2xy', '-n', str(digits), self._file_name] + rd_strs,
