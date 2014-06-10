@@ -70,7 +70,6 @@ class SED(object):
     `SED`.  For instance, SED.__call__ assumes its input argument is in nanometers and returns
     flux proportional to photons/nm.
 
-
     @param spec          Function defining the spectrum at each wavelength.  See above for
                          valid options for this parameter.
     @param wave_type     String specifying units for wavelength input to `spec`. [default: 'nm']
@@ -294,8 +293,11 @@ class SED(object):
         return ret
 
     def withMagnitude(self, target_magnitude, bandpass):
-        """ Return a new SED with `bandpass` magnitude set to `target_magnitude`. Note that this
-        normalization is *relative* to the `flux` attribute of the chromaticized GSObject.
+        """ Return a new SED with `bandpass` magnitude set to `target_magnitude`.  I.e., when the
+        resulting SED is multiplied by a GSObject with `flux=1`, the resulting ChromaticObject
+        will have magnitude `target_magnitude` when drawn through the `bandpass` Bandpass.  Note
+        that the total normalization depends both on the SED and the GSObject.  See the
+        galsim.Chromatic doc string for more details on normalization conventions.
 
         @param target_magnitude  The desired *relative* magnitude of the SED.
         @param bandpass          A Bandpass object defining a filter bandpass.
