@@ -19,8 +19,6 @@
 Simple spectral energy distribution class.  Used by galsim/chromatic.py
 """
 
-import copy
-
 import numpy as np
 
 import galsim
@@ -261,11 +259,8 @@ class SED(object):
         return self.__add__(-1.0 * other)
 
     def copy(self):
-        cls = self.__class__
-        ret = cls.__new__(cls)
-        for k, v in self.__dict__.iteritems():
-            ret.__dict__[k] = copy.deepcopy(v) # need deepcopy for copying self.fphotons
-        return ret
+        import copy
+        return copy.deepcopy(self)
 
     def withFluxDensity(self, target_flux_density, wavelength):
         """ Return a new SED with flux density set to `target_flux_density` at wavelength

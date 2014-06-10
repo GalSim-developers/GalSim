@@ -19,8 +19,6 @@
 Very simple implementation of a filter bandpass.  Used by galsim.chromatic.
 """
 
-import copy
-
 import numpy as np
 
 import galsim
@@ -309,11 +307,8 @@ class Bandpass(object):
         return __rdiv__(self, other)
 
     def copy(self):
-        cls = self.__class__
-        ret = cls.__new__(cls)
-        for k, v in self.__dict__.iteritems():
-            ret.__dict__[k] = copy.deepcopy(v) # need deepcopy for copying self.func
-        return ret
+        import copy
+        return copy.deepcopy(self)
 
     def __call__(self, wave):
         """ Return dimensionless throughput of bandpass at given wavelength in nanometers.
