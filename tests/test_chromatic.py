@@ -91,7 +91,8 @@ def test_draw_add_commutativity():
     N = 50
     h = (bandpass.red_limit * 1.0 - bandpass.blue_limit) / N
     ws = [bandpass.blue_limit + h*(i+0.5) for i in range(N)]
-    shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
+    shift_fn = lambda w:(0, ((galsim.dcr.get_refraction(w, zenith_angle) - R500)
+                             * (1 * galsim.radians / galsim.arcsec)))
     dilate_fn = lambda w:(w/500.0)**(-0.2)
     for w in ws:
         flux = bulge_SED(w) * bandpass(w) * h
@@ -297,7 +298,7 @@ def test_dcr_moments():
     star2 = galsim.Gaussian(fwhm=1.e-8) * disk_SED
 
     shift_fn = lambda w:(0, ((galsim.dcr.get_refraction(w, zenith_angle) - R500)
-                             / galsim.arcsec))
+                             * (1 * galsim.radians / galsim.arcsec)))
     mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
     PSF = galsim.ChromaticObject(mono_PSF)
     PSF = PSF.shift(shift_fn)
@@ -401,7 +402,8 @@ def test_monochromatic_filter():
     chromatic_gal = galsim.Gaussian(fwhm=1.0) * bulge_SED
     GS_gal = galsim.Gaussian(fwhm=1.0)
 
-    shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
+    shift_fn = lambda w:(0, ((galsim.dcr.get_refraction(w, zenith_angle) - R500)
+                             * (1 * galsim.radians / galsim.arcsec)))
     dilate_fn = lambda wave: (wave/500.0)**(-0.2)
     mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
     mono_PSF = mono_PSF.shear(e1=PSF_e1, e2=PSF_e2)

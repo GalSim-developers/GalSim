@@ -126,7 +126,7 @@ class SED(object):
         c = 2.99792458e17  # speed of light in nm/s
         h = 6.62606957e-27 # Planck's constant in erg seconds
         if flux_type == 'flambda':
-            # photons/nm = (erg/nm) * (photons/erg) 
+            # photons/nm = (erg/nm) * (photons/erg)
             #            = spec(w) * 1/(h nu) = spec(w) * lambda / hc
             self.fphotons = lambda w: (spec(np.array(w) * wave_factor) * (w * wave_factor) / (h*c))
         elif flux_type == 'fnu':
@@ -446,7 +446,7 @@ class SED(object):
         if len(bandpass.wave_list) > 0:
             x = np.union1d(bandpass.wave_list, self.wave_list)
             x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
-            R = galsim.dcr.get_refraction(x, zenith_angle, **kwargs) / galsim.radians
+            R = galsim.dcr.get_refraction(x, zenith_angle, **kwargs)
             photons = self.fphotons(x)
             throughput = bandpass(x)
             Rbar = np.trapz(throughput * photons * R, x) / flux

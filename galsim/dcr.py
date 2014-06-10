@@ -70,14 +70,14 @@ def get_refraction(wave, zenith_angle, **kwargs):
     @param kwargs        Keyword arguments to pass to air_refractive_index() to override default
                          pressure, temperature, and/or H2O_pressure.
 
-    @returns the absolute value of change in zenith angle as an Angle.
+    @returns the absolute value of change in zenith angle in radians.
     """
     nm1 = air_refractive_index_minus_one(wave, **kwargs)
     # The following line is equivalent to:
     # n_squared = (nm1 + 1)**2
     # r0 = (n_squared - 1.0) / (2.0 * n_squared)
     r0 = nm1 * (nm1+2) / 2.0 / (nm1**2 + 2*nm1 + 1)
-    return r0 * numpy.tan(zenith_angle.rad()) * galsim.radians
+    return r0 * numpy.tan(zenith_angle.rad())
 
 def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=None):
     """Compute the zenith angle and parallactic angle of a celestial coordinate, given either
