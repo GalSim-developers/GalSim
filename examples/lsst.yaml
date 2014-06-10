@@ -1,0 +1,122 @@
+# Generate a semi-realistic set of images of the complete LSST focal plane
+
+psf :
+    type : Convolution  # The PSF is a convolution of the atmospheric seeing and
+                        # an optical PSF
+    items:
+        - # The atmospheric seeing follows a Kolmogorov spectrum
+            type : Kolmogorov
+            fwhm : 0.7
+        - # The optical component models the effect of the telescope.
+            type : OpticalPSF
+            lam_over_diam : 0.017     # (700 nm / 8.4 m) * 206265 = 0.017 arcsec
+            obscuration : 0.4         # The linear obscuration.  3.4m/8.4m = 0.4
+            nstruts : 4               # LSST has 4 supports, although each is actually
+                                      # two bars, so this isn't quite right.
+            strut_thick : 0.03        # The size relative to the diam.
+                                      # 25 cm in this case.
+            strut_angle : 10 degrees  # Arbitrary, but intentionally not aligned with
+                                      # the axes of the image.
+
+            # Some plausible magnitudes for the aberrations
+            defocus : 0.06
+            astig1 : 0.02
+            astig2 : -0.03
+            coma1 : 0.02
+            coma2 : -0.04
+
+gal : 
+    # For the "galaxy", we'll actually have some of the objects be stars, which
+    # we'll model as delta functions.  We select from this list with index below.
+    type : List
+    items:
+        - # First the galaxy, a bulge + disc model
+            type : Sum
+            items : 
+                - # The disc component.
+                    type : Exponential
+                    ellip :
+                        type : EtaBeta
+                        eta : { type : RandomGaussian, sigma : 1.0, min : 0 }
+                        beta : { type : Random }
+                    flux : 1
+                    half_light_radius : 1.
+                - # The bulge component.
+                    type : Sersic
+                    n : 3.4
+                    flux : { type : Random, min : 0, max : 2 } # relative to disc flux
+                    half_light_radius : { type : Random, min : 0.2, max : 0.6 }
+                    shift : { type : RandomCircle, radius : 0.5 } # up to 0.5 arcsec shift.
+  
+            flux :  # Power law distribution for total flux in photons
+                type : RandomDistribution
+                function : x**-1.5
+                x_min : 1.e1
+                x_max : 1.e6
+
+            dilation :  # Also a power law for the total size in arcsec 
+                        # This should really be correlated with the flux of the galaxy.
+                        # It is possible to do so, but we didn't bother here.
+                type : RandomDistribution
+                function : x**-2
+                x_min : 0.3  # Minimum is significantly smaller than psf size
+                x_max : 20   # Avoid objects that would require exceptionally large FFTs
+            shear : # Use a cosmologically motivated power spectrum for the shear
+                    # This is defined below.  cf. input.power_spectrum
+                type : PowerSpectrumShear
+            magnification : # Also for the magnification
+                type : PowerSpectrumMagnification
+        - # Now the stars, which we model as essentially a delta function.
+            type : Gaussian
+            sigma : 1.e-4
+            flux :  # Let the star fluxes range larger than the galaxy fluxes
+                type : RandomDistribution
+                function : x**-2.5
+                x_min : 1.e1
+                x_max : 1.e8
+            gsparams:
+                alias_threshold : 1.e-3  # Build PSFs a bit larger to avoid artifacts
+                                         # that are apparent for the brightest stars.
+    index : 
+        type : Eval
+        # 80% will be real galaxies, 20% stars
+        str : 'int(p<0.2)'
+        fp : { type : Random , min : 0, max : 1 }
+
+    gsparams: 
+        # Some of these objects are a bit large, so allow for larger FFT images.
+        maximum_fft_size : 10000
+
+image :
+    # The "Scattered" type means the objects can be anywhere in the image, even 
+    # overlapping. You can place them at specific locations if you want, but here,
+    # we use the default, which is random locations.
+    type : Scattered
+    size : 4096           # LSST chips are 4K x 4K
+    pixel_scale : 0.2     # Pixel scale in arcsec/pixel
+    nobjects : 13000      # 70 gal/arcmin^2 * (4K*0.2)^2 / 3600 = ~13000 obj per chip
+    sky_level : 18000     # ADU / arcsec^2
+    noise :
+        type : CCD        # CCD noise includes both read noise and poisson noise
+        gain : 2.1        # e- / ADU
+        read_noise : 3.4  # Variance in ADU^2
+    random_seed : 8675309 # A specific seed, so results are repeatable. (optional)
+
+input:
+    # Define the lensing power spectrum to use for shear and magnification here:
+    power_spectrum:
+        # This formula roughly approximates a typical cosmological power spectrum.
+        # It's also possible to read in a tabulated function from a file, which lets
+        # you be as precise as you want, but we don't bother for this example.
+        e_power_function : '1.e-6 * k**(-0.04) * np.log(1.+0.09*k)**2 / np.sqrt(1.+0.16*k+0.41*k**2+0.01*k**3+0.005*k**4)'
+        units : radians   # The default is arcsec, but the above has k in radians^-1
+        grid_spacing : 20 # arcsec
+
+output :
+    nfiles : 189          # 21 rafts, each 3x3
+    dir : lsst_images
+    file_name :           # The file names will follow the model lsst_chip000.fits
+        type : NumberedFile
+        root : lsst_chip
+        digits : 3
+    nproc : -1            # -1 here means to use the number of CPUs.

@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 import os
 import numpy as np
@@ -141,6 +140,23 @@ def test_SED_roundoff_guard():
         np.testing.assert_almost_equal(a(w2/(1.0+z)), b(w2), 10,
                                         err_msg="error using wave_list limits in redshifted SED")
 
+def test_SED_init():
+    """Check that certain invalid SED initializations are trapped.
+    """
+    try:
+        # These fail.
+        np.testing.assert_raises(ValueError, galsim.SED, spec='blah')
+        np.testing.assert_raises(ValueError, galsim.SED, spec='wave+')
+        np.testing.assert_raises(ValueError, galsim.SED, spec='somewhere/a/file')
+        np.testing.assert_raises(ValueError, galsim.SED, spec='/somewhere/a/file')
+    except ImportError:
+        print 'The assert_raises tests require nose'
+    # These should succeed.
+    galsim.SED(spec='wave')
+    galsim.SED(spec='wave/wave')
+    galsim.SED(spec=lambda w:1.0)
+    galsim.SED(spec='1./(wave-700)')
+
 if __name__ == "__main__":
     test_SED_add()
     test_SED_sub()
@@ -148,3 +164,4 @@ if __name__ == "__main__":
     test_SED_div()
     test_SED_atRedshift()
     test_SED_roundoff_guard()
+    test_SED_init()

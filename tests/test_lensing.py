@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 import numpy as np
 import math
@@ -981,8 +980,10 @@ def test_periodic():
     grid_spacing = 0.1 # degrees
 
     # Make shears on the grid.
-    g1, g2 = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
-                          rng=galsim.UniformDeviate(314159), interpolant='nearest', kmin_factor=3)
+    g1, g2, kappa = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                                 rng=galsim.UniformDeviate(314159), interpolant='nearest', kmin_factor=3,
+                                 get_convergence=True)
+    g1_r, g2_r, mu = galsim.lensing_ps.theoryToObserved(g1, g2, kappa)
 
     # Set up a new set of x, y.  Make a grid and then shift it coherently:
     min = (-ngrid/2 + 0.5) * grid_spacing
@@ -1001,6 +1002,7 @@ def test_periodic():
     # default settings for the power spectrum estimator.
     pse = galsim.pse.PowerSpectrumEstimator()
     k, pe, pb, peb = pse.estimate(g1, g2)
+    _, pe_r, pb_r, peb_r = pse.estimate(g1_r, g2_r)
     _, pe_shift, pb_shift, peb_shift = pse.estimate(g1_shift, g2_shift)
 
     # Check that they are identical.
@@ -1025,6 +1027,60 @@ def test_periodic():
         np.testing.assert_array_almost_equal(
             peb_shift, peb, decimal=9,
             err_msg="EB power altered by NN periodic interpolation.")
+
+    ### Now, check getLensing ###
+    g1_r_shift, g2_r_shift, mu_shift = ps.getLensing(pos=(x.flatten(),y.flatten()),
+                                                     units=galsim.degrees,
+                                                     periodic=True)
+    g1_r_shift = g1_r_shift.reshape((ngrid,ngrid))
+    g2_r_shift = g2_r_shift.reshape((ngrid,ngrid))
+    _, pe_r_shift, pb_r_shift, peb_r_shift = pse.estimate(g1_r_shift, g2_r_shift)
+    try:
+        np.testing.assert_allclose(
+            pe_r_shift, pe_r, rtol=1e-10,
+            err_msg="E power altered by NN periodic interpolation.")
+        np.testing.assert_allclose(
+            pb_r_shift, pb_r, rtol=1e-10,
+            err_msg="B power altered by NN periodic interpolation.")
+        np.testing.assert_allclose(
+            peb_r_shift, peb_r, rtol=1e-10,
+            err_msg="EB power altered by NN periodic interpolation.")
+    except AttributeError:
+        # Older numpy versions don't have assert_allclose, so use this instead:
+        np.testing.assert_array_almost_equal(
+            pe_r_shift, pe_r, decimal=9,
+            err_msg="E power altered by NN periodic interpolation.")
+        np.testing.assert_array_almost_equal(
+            pb_r_shift, pb_r, decimal=9,
+            err_msg="B power altered by NN periodic interpolation.")
+        np.testing.assert_array_almost_equal(
+            peb_r_shift, peb_r, decimal=9,
+            err_msg="EB power altered by NN periodic interpolation.")
+    # Should also check convergences/magnifications.  We don't have a power spectrum measure, so
+    # let's just check the mean and variance.
+    np.testing.assert_almost_equal(np.mean(mu_shift), np.mean(mu), decimal=8,
+                                   err_msg='Mean magnification altered by periodic interpolation')
+    np.testing.assert_almost_equal(np.var(mu_shift), np.var(mu), decimal=8,
+                                   err_msg='Magnification variance altered by periodic interpolation')
+
+    ### Check getConvergence ###
+    kappa_shift = ps.getConvergence(pos=(x.flatten(),y.flatten()),
+                                    units=galsim.degrees, periodic=True)
+    # We don't have a power spectrum measure, so let's just check the mean and variance.
+    np.testing.assert_almost_equal(np.mean(kappa_shift), np.mean(kappa), decimal=8,
+                                   err_msg='Mean convergence altered by periodic interpolation')
+    np.testing.assert_almost_equal(np.var(kappa_shift), np.var(kappa), decimal=8,
+                                   err_msg='Convergence variance altered by periodic interpolation')
+
+    ### Check getMagnification ###
+    mu_shift = ps.getMagnification(pos=(x.flatten(),y.flatten()),
+                                   units=galsim.degrees, periodic=True)
+    # We don't have a power spectrum measure, so let's just check the mean and variance.
+    np.testing.assert_almost_equal(np.mean(mu_shift), np.mean(mu), decimal=8,
+                                   err_msg='Mean magnification altered by periodic interpolation')
+    np.testing.assert_almost_equal(np.var(mu_shift), np.var(mu), decimal=8,
+                                   err_msg='Magnification variance altered by periodic interpolation')
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

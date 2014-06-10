@@ -1,28 +1,28 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """@file angle.py
 A few adjustments to the Angle class at the Python layer.
 """
 
 import galsim
+from ._galsim import Angle, AngleUnit, radians, degrees, hours, arcmin, arcsec
 
-galsim.AngleUnit.__doc__ = """A class for defining angular units in galsim.Angle objects.
+AngleUnit.__doc__ = """A class for defining angular units in galsim.Angle objects.
 
 Initialization
 --------------
@@ -55,16 +55,16 @@ def AngleUnit_repr(self):
         return 'galsim.arcsec'
     else:
         return 'galsim.AngleUnit(' + str(self.getValue()) + ')'
-galsim.AngleUnit.__repr__ = AngleUnit_repr
+AngleUnit.__repr__ = AngleUnit_repr
 
 # Enable pickling
 def AngleUnit_getinitargs(self):
     return self.getValue()
-galsim.AngleUnit.__getinitargs__ = AngleUnit_getinitargs
+AngleUnit.__getinitargs__ = AngleUnit_getinitargs
 
 
 def get_angle_unit(unit):
-    """Convert a string into the corresponding AngleUnit
+    """Convert a string into the corresponding AngleUnit.
     """
     unit = unit.strip().lower()
     if unit.startswith('rad') :
@@ -84,7 +84,7 @@ def get_angle_unit(unit):
 
 
 
-galsim.Angle.__doc__ = """A class representing an Angle.
+Angle.__doc__ = """A class representing an Angle.
 
 Initialization
 --------------
@@ -131,7 +131,7 @@ Operations
 ----------
 
 Allowed arithmetic with Angles include the following:
-(In the list below, x is a double, unit is a galsim.AngleUnit, and theta is a galsim.Angle)
+(In the list below, `x` is a double, `unit` is a galsim.AngleUnit, and `theta` is a galsim.Angle)
 
     >>> theta = x * unit
     >>> x = theta / unit
@@ -145,7 +145,7 @@ Allowed arithmetic with Angles include the following:
     >>> theta *= x
     >>> theta /= x
 
-Operations on Numpy arrays containing Angles are permitted, provided that they are within the bounds
+Operations on NumPy arrays containing Angles are permitted, provided that they are within the bounds
 of the allowed operations on Angles listed above (e.g., addition/subtraction of Angles,
 multiplication of an Angle by a float, but not multiplication of Angles together).
 
@@ -208,19 +208,19 @@ def dms(self, sep=":"):
     d = self.wrap() / galsim.degrees
     return _make_dms_string(d,sep)
 
-galsim.Angle.__str__ = __str__
-galsim.Angle.__repr__ = __repr__
-galsim.Angle.__neg__ = __neg__
-galsim.Angle.hms = hms
-galsim.Angle.dms = dms
+Angle.__str__ = __str__
+Angle.__repr__ = __repr__
+Angle.__neg__ = __neg__
+Angle.hms = hms
+Angle.dms = dms
 
 # Enable pickling
 def Angle_getstate(self):
     return self.rad()
 def Angle_setstate(self, theta):
     self.__init__(theta, galsim.radians)
-galsim.Angle.__getstate__ = Angle_getstate
-galsim.Angle.__setstate__ = Angle_setstate
+Angle.__getstate__ = Angle_getstate
+Angle.__setstate__ = Angle_setstate
 
 def parse_dms(s):
     """Convert a string of the form dd:mm:ss.decimal into decimal degrees."""
@@ -266,7 +266,7 @@ def DMS_Angle(str):
     """
     return parse_dms(str) * galsim.degrees
 
-galsim.Angle.wrap.__func__.__doc__ = """Wrap Angle to lie in the range [-pi, pi) radians.
+Angle.wrap.__func__.__doc__ = """Wrap Angle to lie in the range [-pi, pi) radians.
 
 Depending on the context, theta = 2pi radians and theta = 0 radians are the same thing.
 If you want your angles to be wrapped to [-pi, pi) radians, you can do this by calling

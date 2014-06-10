@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """@file des_shapelet.py
 
@@ -41,10 +40,10 @@ class DES_Shapelet(object):
 
     Typical usage:
         
-        des_shapelet = galsim.des.DES_Shapelet(fitpsf_file_name)
-        image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
-                                                          # NOT in arcsec on the sky!
-        psf = des_shapelet.getPSF(image_pos)   # profile is in world coordinates
+        >>> des_shapelet = galsim.des.DES_Shapelet(fitpsf_file_name)
+        >>> image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
+        >>>                                                   # NOT in arcsec on the sky!
+        >>> psf = des_shapelet.getPSF(image_pos)   # profile is in world coordinates
 
     Note that the returned psf here already includes the pixel.  This is what is sometimes
     called an "effective PSF".  Thus, you should not convolve by the pixel profile again
@@ -55,17 +54,17 @@ class DES_Shapelet(object):
     If you try to use it with an invalid position, it will throw an IndexError.
     You can check whether a position is valid with
 
-        if des_shapelet.bounds.includes(pos):
-            psf = des_shapelet.getPSF(pos)
-        else:
-            [...skip this object...]
+        >>> if des_shapelet.bounds.includes(pos):
+        >>>     psf = des_shapelet.getPSF(pos)
+        >>> else:
+        >>>     [...skip this object...]
 
 
     @param file_name        The name of the file to be read in.
     @param dir              Optionally a directory name can be provided if the file names do not 
-                            already include it.
+                            already include it. [default: None]
     @param file_type        Either 'ASCII' or 'FITS' or None.  If None, infer from the file name 
-                            ending. (default = None).
+                            ending. [default: None]
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str, 'file_type' : str }
@@ -272,7 +271,7 @@ def BuildDES_Shapelet(config, key, base, ignore, gsparams, logger):
         raise galsim.config.gsobject.SkipThisObject(message)
 
     if 'flux' in kwargs:
-        psf.setFlux(kwargs['flux'])
+        psf = psf.withFlux(kwargs['flux'])
 
     # The second item here is "safe", a boolean that declares whether the returned value is 
     # safe to save and use again for later objects.  In this case, we wouldn't want to do 

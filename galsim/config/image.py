@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 
 import galsim
@@ -37,25 +36,29 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
 
     @param nimages             How many images to build.
     @param config              A configuration dict.
-    @param nproc               How many processes to use.
-    @param logger              If given, a logger object to log progress.
-    @param image_num           If given, the current image_num (default = 0)
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param nproc               How many processes to use. [default: 1]
+    @param logger              If given, a logger object to log progress. [default: None]
+    @param image_num           If given, the current `image_num` [default: 0]
+    @param obj_num             If given, the current `obj_num` [default: 0]
+    @param make_psf_image      Whether to make `psf_image`. [default: False]
+    @param make_weight_image   Whether to make `weight_image`. [default: False]
+    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @return (images, psf_images, weight_images, badpix_images)  (All in tuple are lists)
+    @returns the tuple `(images, psf_images, weight_images, badpix_images)`.
+             All in tuple are lists.
     """
+    config['index_key'] = 'image_num'
+    config['image_num'] = image_num
+    config['obj_num'] = obj_num
+
     if logger:
         logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
-                     config['file_num'],nimages,image_num,obj_num)
+                     config.get('file_num',0),nimages,image_num,obj_num)
 
     if ( 'image' in config 
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        first += config.get('start_obj_num',0)
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     import time
@@ -148,7 +151,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
              config['gal']['type'] == 'Ring' and 'num' in config['gal'] ):
             min_nim = galsim.config.ParseValue(config['gal'], 'num', config, int)[0]
             if logger:
-                logger.debug('file %d: Found ring: num = %d',config['file_num'],min_nim)
+                logger.debug('file %d: Found ring: num = %d',config.get('file_num',0),min_nim)
         if max_nim < min_nim: 
             nim_per_task = min_nim
         else:
@@ -156,7 +159,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
             # This formula keeps nim a multiple of min_nim, so Rings are intact.
             nim_per_task = min_nim * int(math.sqrt(float(max_nim) / float(min_nim)))
         if logger:
-            logger.debug('file %d: nim_per_task = %d',config['file_num'],nim_per_task)
+            logger.debug('file %d: nim_per_task = %d',config.get('file_num',0),nim_per_task)
 
         # The logger is not picklable, se we set up a proxy object.  See comments in process.py
         # for more details about how this works.
@@ -260,7 +263,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
             obj_num += galsim.config.GetNObjForImage(config, image_num+k)
 
     if logger:
-        logger.debug('file %d: Done making images %d--%d',config['file_num'],
+        logger.debug('file %d: Done making images %d--%d',config.get('file_num',0),
                      image_num,image_num+nimages-1)
 
     return images, psf_images, weight_images, badpix_images
@@ -269,21 +272,25 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
 def BuildImage(config, logger=None, image_num=0, obj_num=0,
                make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
-    Build an image according to the information in config.
+    Build an Image according to the information in config.
 
     @param config              A configuration dict.
-    @param logger              If given, a logger object to log progress.
-    @param image_num           If given, the current image_num (default = 0)
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param logger              If given, a logger object to log progress. [default: None]
+    @param image_num           If given, the current `image_num` [default: 0]
+    @param obj_num             If given, the current `obj_num` [default: 0]
+    @param make_psf_image      Whether to make `psf_image`. [default: False]
+    @param make_weight_image   Whether to make `weight_image`. [default: False]
+    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @return (image, psf_image, weight_image, badpix_image)  
+    @returns the tuple `(image, psf_image, weight_image, badpix_image)`.
 
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.
     """
+    config['index_key'] = 'image_num'
+    config['image_num'] = image_num
+    config['obj_num'] = obj_num
+
     if logger:
         logger.debug('image %d: BuildImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
@@ -295,7 +302,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
         raise AttributeError("config.image is not a dict.")
 
     if 'draw_method' not in image:
-        image['draw_method'] = 'fft'
+        image['draw_method'] = 'auto'
 
     if 'type' not in image:
         image['type'] = 'Single'  # Default is Single
@@ -322,7 +329,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
 
 
 def _set_image_origin(config, convention):
-    """Set config['image_origin'] appropriately based on the provided convention.
+    """Set `config['image_origin']` appropriately based on the provided `convention`.
     """
     if convention.lower() in [ '0', 'c', 'python' ]:
         origin = 0
@@ -340,29 +347,30 @@ def _set_image_origin(config, convention):
 def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
-    Build an image consisting of a single stamp
+    Build an Image consisting of a single stamp.
 
     @param config              A configuration dict.
-    @param logger              If given, a logger object to log progress.
-    @param image_num           If given, the current image_num (default = 0)
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param logger              If given, a logger object to log progress. [default: None]
+    @param image_num           If given, the current `image_num` [default: 0]
+    @param obj_num             If given, the current `obj_num` [default: 0]
+    @param make_psf_image      Whether to make `psf_image`. [default: False]
+    @param make_weight_image   Whether to make `weight_image`. [default: False]
+    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @return (image, psf_image, weight_image, badpix_image)  
+    @returns the tuple `(image, psf_image, weight_image, badpix_image)`.
 
-    Note: All 4 images are always returned in the return tuple,
+    Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
-    config['seq_index'] = image_num
+    config['index_key'] = 'image_num'
     config['image_num'] = image_num
+    config['obj_num'] = obj_num
+
     if logger:
         logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        first += config.get('start_obj_num',0)
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc', 
@@ -405,35 +413,38 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
             do_noise=True, logger=logger,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
-            make_badpix_image=make_badpix_image)
+            make_badpix_image=make_badpix_image)[:4] # Required due to `current_var, time` being
+                                                     # last two elements of the BuildSingleStamp
+                                                     # return tuple
 
 
 def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                     make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
-    Build an image consisting of a tiled array of postage stamps
+    Build an Image consisting of a tiled array of postage stamps.
 
     @param config              A configuration dict.
-    @param logger              If given, a logger object to log progress.
-    @param image_num           If given, the current image_num (default = 0)
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param logger              If given, a logger object to log progress. [default: None]
+    @param image_num           If given, the current `image_num`. [default: 0]
+    @param obj_num             If given, the current `obj_num`. [default: 0]
+    @param make_psf_image      Whether to make `psf_image`. [default: False]
+    @param make_weight_image   Whether to make `weight_image`. [default: False]
+    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @return (image, psf_image, weight_image, badpix_image)  
+    @returns the tuple `(image, psf_image, weight_image, badpix_image)`.
 
-    Note: All 4 images are always returned in the return tuple,
+    Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
-    config['seq_index'] = image_num
+    config['index_key'] = 'image_num'
     config['image_num'] = image_num
+    config['obj_num'] = obj_num
+
     if logger:
         logger.debug('image %d: BuildTiledImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        first += config.get('start_obj_num',0)
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc',
@@ -501,12 +512,13 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
-        config['seq_index'] = nobjects
-        config['obj_num'] = obj_num+nobjects
         # Technically obj_num+nobjects will be the index of the random seed used for the next 
         # image's first object (if there is a next image).  But I don't think that will have 
         # any adverse effects.
+        config['obj_num'] = obj_num + nobjects
+        config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['index_key'] = 'image_num'
         if logger:
             logger.debug('image %d: seed = %d',image_num,seed)
         rng = galsim.BaseDeviate(seed)
@@ -658,30 +670,31 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                         make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
-    Build an image containing multiple objects placed at arbitrary locations.
+    Build an Image containing multiple objects placed at arbitrary locations.
 
     @param config              A configuration dict.
-    @param logger              If given, a logger object to log progress.
-    @param image_num           If given, the current image_num (default = 0)
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param logger              If given, a logger object to log progress. [default None]
+    @param image_num           If given, the current `image_num` [default: 0]
+    @param obj_num             If given, the current `obj_num` [default: 0]
+    @param make_psf_image      Whether to make `psf_image`. [default: False]
+    @param make_weight_image   Whether to make `weight_image`. [default: False]
+    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @return (image, psf_image, weight_image, badpix_image)  
+    @returns the tuple `(image, psf_image, weight_image, badpix_image)`.
 
-    Note: All 4 images are always returned in the return tuple,
+    Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
-    config['seq_index'] = image_num
+    config['index_key'] = 'image_num'
     config['image_num'] = image_num
+    config['obj_num'] = obj_num
+
     if logger:
         logger.debug('image %d: BuildScatteredImage: image, obj = %d,%d',
                      image_num,image_num,obj_num)
 
     if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        first += config.get('start_obj_num',0)
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     nobjects = GetNObjForScatteredImage(config,image_num)
@@ -734,12 +747,13 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
-        config['seq_index'] = nobjects
-        config['obj_num'] = obj_num+nobjects
         # Technically obj_num+nobjects will be the index of the random seed used for the next 
         # image's first object (if there is a next image).  But I don't think that will have 
         # any adverse effects.
+        config['obj_num'] = obj_num + nobjects
+        config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['index_key'] = 'image_num'
         if logger:
             logger.debug('image %d: seed = %d',image_num,seed)
         rng = galsim.BaseDeviate(seed)
@@ -899,7 +913,7 @@ def GetNObjForSingleImage(config, image_num):
 
 def GetNObjForScatteredImage(config, image_num):
 
-    config['seq_index'] = image_num
+    config['index_key'] = 'image_num'
     config['image_num'] = image_num
 
     # Allow nobjects to be automatic based on input catalog
@@ -914,7 +928,7 @@ def GetNObjForScatteredImage(config, image_num):
 
 def GetNObjForTiledImage(config, image_num):
     
-    config['seq_index'] = image_num
+    config['index_key'] = 'image_num'
     config['image_num'] = image_num
 
     if 'nx_tiles' not in config['image'] or 'ny_tiles' not in config['image']:

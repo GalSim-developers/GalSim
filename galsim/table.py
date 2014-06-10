@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """"@file table.py
 A few adjustments to galsim.LookupTable at the Python layer, including the 
@@ -27,22 +26,22 @@ class LookupTable(object):
     LookupTable represents a lookup table to store function values that may be slow to calculate,
     for which interpolating from a lookup table is sufficiently accurate.
 
-    A LookupTable may be constructed from two arrays (lists, tuples, or Numpy arrays of 
+    A LookupTable may be constructed from two arrays (lists, tuples, or NumPy arrays of 
     floats/doubles).
 
-        args = [...]
-        vals = []
-        for arg in args:
-            val = calculateVal(arg)
-            vals.append(val)
-        table = galsim.LookupTable(x=args,f=vals)
+        >>> args = [...]
+        >>> vals = []
+        >>> for arg in args:
+        ...     val = calculateVal(arg)
+        ...     vals.append(val)
+        >>> table = galsim.LookupTable(x=args,f=vals)
 
     Then you can use this table as a replacement for the slow calculation:
 
-        other_args = [...]
-        for arg in other_args:
-            val = table(arg)
-            [... use val ...]
+        >>> other_args = [...]
+        >>> for arg in other_args:
+        ...     val = table(arg)
+        ...     [... use val ...]
 
 
     The default interpolation method is cubic spline interpolation.  This is usually the 
@@ -56,29 +55,31 @@ class LookupTable(object):
       each argument in the table.
 
     Another option is to read in the values from an ascii file.  The file should have two 
-    columns of numbers, which are taken to be the x and f values.
+    columns of numbers, which are taken to be the `x` and `f` values.
 
     The user can also opt to interpolate in log(x) and/or log(f), though this is not the default.
     It may be a wise choice depending on the particular function, e.g., for a nearly power-law
     f(x) (or at least one that is locally power-law-ish for much of the x range) then it might 
     be a good idea to interpolate in log(x) and log(f) rather than x and f.
 
-    @param x             The list, tuple, or Numpy array of x values (floats, doubles, or ints,
+    @param x             The list, tuple, or NumPy array of `x` values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
-    @param f             The list, tuple, or Numpy array of f(x) values (floats, doubles, or ints,
+                         [Either `x` and `f` or `file` is required.]
+    @param f             The list, tuple, or NumPy array of `f(x)` values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
+                         [Either `x` and `f` or `file` is required.]
+    @param file          A file from which to read the `(x,f)` pairs. [Either `x` and `f`, or `file`
+                         is required]
     @param interpolant   The interpolant to use, with the options being 'floor', 'ceil', 
-                         'linear' and 'spline'. [Default `interpolant = 'spline'`]
-    @param file          A file from which to read the (x,f) pairs.
+                         'linear' and 'spline'. [default: 'spline']
     @param x_log         Set to True if you wish to interpolate using log(x) rather than x.  Note
                          that all inputs / outputs will still be x, it's just a question of how the
-                         interpolation is done. [Default `x_log = False`]
+                         interpolation is done. [default: False]
     @param f_log         Set to True if you wish to interpolate using log(f) rather than f.  Note
                          that all inputs / outputs will still be f, it's just a question of how the
-                         interpolation is done. [Default `f_log = False`]
+                         interpolation is done. [default: False]
     """
-    def __init__(self, x = None, f = None, interpolant = None, file = None,
-                 x_log = False, f_log = False):
+    def __init__(self, x=None, f=None, file=None, interpolant=None, x_log=False, f_log=False):
         import numpy as np
         self.x_log = x_log
         self.f_log = f_log
@@ -130,20 +131,21 @@ class LookupTable(object):
         self.table = _galsim._LookupTable(x, f, interpolant)
 
     def __call__(self, x):
-        """Interpolate the LookupTable to get f(x) at some x value(s).
+        """Interpolate the LookupTable to get `f(x)` at some `x` value(s).
 
         When the LookupTable object is called with a single argument, it returns the value at that
-        argument.  An exception will be thrown automatically by the _LookupTable class if the x
+        argument.  An exception will be thrown automatically by the _LookupTable class if the `x`
         value is outside the range of the original tabulated values.  The value that is returned is
-        the same type as that provided as an argument, e.g., if a single value x is provided then a
-        single value of f is returned; if a tuple of x values is provided then a tuple of f values
-        is returned; and so on.  Even if interpolation was done using the `x_log` option, the user
-        should still provide x rather than log(x).
+        the same type as that provided as an argument, e.g., if a single value `x` is provided then
+        a single value of `f` is returned; if a tuple of `x` values is provided then a tuple of `f`
+        values is returned; and so on.  Even if interpolation was done using the `x_log` option,
+        the user should still provide `x` rather than `log(x)`.
 
-        @param x       The x value(s) for which f(x) should be calculated via interpolation on
-                       the original (x, f) lookup table.  x can be a single float/double, or a
-                       tuple, list, or arbitrarily shaped Numpy array.
-        @returns The interpolated f(x) value(s)
+        @param x        The `x` value(s) for which `f(x)` should be calculated via interpolation on
+                        the original `(x,f)` lookup table.  `x` can be a single float/double, or a
+                        tuple, list, or arbitrarily shaped NumPy array.
+
+        @returns the interpolated `f(x)` value(s).
         """
         import numpy as np
         # first, keep track of whether interpolation was done in x or log(x)
@@ -153,7 +155,7 @@ class LookupTable(object):
             x = np.log(x)
 
         # figure out what we received, and return the same thing
-        # option 1: a Numpy array
+        # option 1: a NumPy array
         if isinstance(x, np.ndarray):
             dimen = len(x.shape)
             if dimen > 2:

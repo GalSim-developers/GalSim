@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 import numpy as np
 import os
@@ -60,70 +59,14 @@ scale = 0.4
 # The reference image was drawn with the old convention, which is now use_true_center=False
 final.draw(image=ref_image, scale=scale, normalization='sb', use_true_center=False)
 
-
-def test_sbinterpolatedimage():
-    """Test that we can make SBInterpolatedImages from Images of various types, and convert back.
-    """
-    import time
-    t1 = time.time()
-    # for each type, try to make an SBInterpolatedImage, and check that when we draw an image from
-    # that SBInterpolatedImage that it is the same as the original
-    lan3 = galsim.Lanczos(3, True, 1.E-4)
-    lan3_2d = galsim.InterpolantXY(lan3)
-    quint = galsim.Quintic()
-    quint_2d = galsim.InterpolantXY(quint)
-
-    ftypes = [np.float32, np.float64]
-    ref_array = np.array([
-        [0.01, 0.08, 0.07, 0.02],
-        [0.13, 0.38, 0.52, 0.06],
-        [0.09, 0.41, 0.44, 0.09],
-        [0.04, 0.11, 0.10, 0.01] ]) 
-
-    for array_type in ftypes:
-        image_in = galsim.Image(ref_array.astype(array_type))
-        np.testing.assert_array_equal(
-                ref_array.astype(array_type),image_in.array,
-                err_msg="Array from input Image differs from reference array for type %s"%
-                        array_type)
-        sbinterp = galsim.SBInterpolatedImage(image_in.image, lan3_2d, quint_2d)
-        test_array = np.zeros(ref_array.shape, dtype=array_type)
-        image_out = galsim.Image(test_array, scale=1.0)
-        image_out.setCenter(0,0)
-        sbinterp.draw(image_out.image.view())
-        np.testing.assert_array_equal(
-                ref_array.astype(array_type),image_out.array,
-                err_msg="Array from output Image differs from reference array for type %s"%
-                        array_type)
- 
-        # Lanczos doesn't quite get the flux right.  Wrong at the 5th decimal place.
-        # Gary says that's expected -- Lanczos isn't technically flux conserving.  
-        # He applied the 1st order correction to the flux, but expect to be wrong at around
-        # the 10^-5 level.
-        # Anyway, Quintic seems to be accurate enough.
-        quint = galsim.Quintic(1.e-4)
-        quint_2d = galsim.InterpolantXY(quint)
-        sbinterp = galsim.SBInterpolatedImage(image_in.image, quint_2d, quint_2d)
-        sbinterp.setFlux(1.)
-        do_shoot(galsim.GSObject(sbinterp),image_out,"InterpolatedImage")
-
-        # Test kvalues
-        do_kvalue(galsim.GSObject(sbinterp),"InterpolatedImage")
-
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-
 def test_roundtrip():
     """Test round trip from Image to InterpolatedImage back to Image.
     """
-    # Based heavily on test_sbinterpolatedimage() in test_SBProfile.py!
     import time
     t1 = time.time()
 
-    # for each type, try to make an SBInterpolatedImage, and check that when we draw an image from
-    # that SBInterpolatedImage that it is the same as the original
+    # for each type, try to make an InterpolatedImage, and check that when we draw an image from
+    # that InterpolatedImage that it is the same as the original
     ftypes = [np.float32, np.float64]
     ref_array = np.array([
         [0.01, 0.08, 0.07, 0.02],
@@ -154,6 +97,10 @@ def test_roundtrip():
         quint = galsim.Quintic(1.e-4)
         interp = galsim.InterpolatedImage(image_in, x_interpolant=quint, scale=test_scale, flux=1.)
         do_shoot(interp,image_out,"InterpolatedImage")
+
+        # Test kvalues
+        do_kvalue(interp,"InterpolatedImage")
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -623,7 +570,7 @@ def test_corr_padding():
     # Rescale it to have a decently large amplitude for the purpose of doing these tests.
     im = 1.e2*galsim.fits.read(imgfile)
     # Make a CorrrlatedNoise out of it.
-    cn = galsim.CorrelatedNoise(galsim.BaseDeviate(orig_seed), im)
+    cn = galsim.CorrelatedNoise(im, galsim.BaseDeviate(orig_seed))
 
     # first, make a noise image
     orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
@@ -674,7 +621,7 @@ def test_corr_padding():
     # (given the same random seed)
     infile = 'fits_files/blankimg.fits'
     inimg = galsim.fits.read(infile)
-    incf = galsim.CorrelatedNoise(galsim.GaussianDeviate(), inimg) # input RNG will be ignored below
+    incf = galsim.CorrelatedNoise(inimg, galsim.GaussianDeviate()) # input RNG will be ignored below
     int_im2 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
                                        noise_pad=inimg, noise_pad_size = max(big_nx,big_ny))
     int_im3 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
@@ -926,7 +873,6 @@ def test_conserve_dc():
 
 
 if __name__ == "__main__":
-    test_sbinterpolatedimage()
     test_roundtrip()
     test_fluxnorm()
     test_exceptions()

@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 import numpy as np
 import os
@@ -42,10 +41,10 @@ default_params = galsim.GSParams(
         kvalue_accuracy = 1.e-5,
         xvalue_accuracy = 1.e-5,
         shoot_accuracy = 1.e-5,
-        realspace_relerr = 1.e-3,
+        realspace_relerr = 1.e-4,
         realspace_abserr = 1.e-6,
-        integration_relerr = 1.e-5,
-        integration_abserr = 1.e-7)
+        integration_relerr = 1.e-6,
+        integration_abserr = 1.e-8)
 
 # Some standard values for testing
 test_flux = 1.8
@@ -59,32 +58,21 @@ def test_convolve():
     """
     import time
     t1 = time.time()
+
+    dx = 0.2
+    # Using an exact Maple calculation for the comparison.  Only accurate to 4 decimal places.
+    savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
+    myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
+ 
     # Code was formerly:
-    # mySBP = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
+    # psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     #
     # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
     # physical units.  However, the same profile can be constructed using 
     # fwhm=1.0927449310213702,
     # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.0927449310213702
-    mySBP = galsim.SBMoffat(beta=1.5, fwhm=fwhm_backwards_compatible, 
-                            trunc=4*fwhm_backwards_compatible, flux=1)
-    dx = 0.2
-    mySBP2 = galsim.SBBox(dx, dx, flux=1.)
-    myConv = galsim.SBConvolve([mySBP,mySBP2])
-    # Using an exact Maple calculation for the comparison.  Only accurate to 4 decimal places.
-    savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
-    myImg = galsim.ImageF(savedImg.bounds, scale=dx)
-    myImg.setCenter(0,0)
-    myConv.applyExpansion(1./dx)
-    myConv.draw(myImg.image.view())
-    printval(myImg, savedImg)
- 
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 4,
-            err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
-
-    # Repeat with the GSObject version of this:
     psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible, trunc=4*fwhm_backwards_compatible,
                         flux=1)
     pixel = galsim.Pixel(scale=dx, flux=1.)
@@ -99,7 +87,7 @@ def test_convolve():
         conv.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
         np.testing.assert_array_almost_equal(
                 myImg.array, savedImg.array, 4,
-                err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
+                err_msg="Moffat convolved with Pixel disagrees with expected result")
 
         # Other ways to do the convolution:
         conv = galsim.Convolve(psf,pixel,real_space=False)
@@ -198,26 +186,15 @@ def test_shearconvolve():
     """
     import time
     t1 = time.time()
+
     e1 = 0.04
     e2 = 0.0
     myShear = galsim.Shear(e1=e1, e2=e2)
-    # test at SBProfile level using applyShear
-    mySBP = galsim.SBGaussian(flux=1, sigma=1)
-    mySBP.applyShear(myShear._shear)
     dx = 0.2
-    mySBP2 = galsim.SBBox(dx, dx, flux=1.)
-    myConv = galsim.SBConvolve([mySBP,mySBP2])
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
-    myConv.applyExpansion(1./dx)
-    myConv.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")
 
-    # Repeat with the GSObject version of this:
     psf = galsim.Gaussian(flux=1, sigma=1)
     psf2 = psf.createSheared(e1=e1, e2=e2)
     psf.applyShear(e1=e1, e2=e2)
@@ -266,34 +243,21 @@ def test_realspace_convolve():
     """
     import time
     t1 = time.time()
+
+    dx = 0.2
+    # Note: Using an image created from Maple "exact" calculations.
+    saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
+    img = galsim.ImageF(saved_img.bounds, scale=dx)
+    img.setCenter(0,0)
+
     # Code was formerly:
-    # mySBP = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
+    # psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     #
     # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
     # physical units.  However, the same profile can be constructed using 
     # fwhm=1.0927449310213702,
     # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.0927449310213702
-    #psf = galsim.SBMoffat(beta=1.5, fwhm=fwhm_backwards_compatible, 
-                          #trunc=4*fwhm_backwards_compatible, flux=1)
-    psf = galsim.SBMoffat(beta=1.5, half_light_radius=1,
-                          trunc=4*fwhm_backwards_compatible, flux=1)
-    dx = 0.2
-    pixel = galsim.SBBox(dx, dx, flux=1.)
-    conv = galsim.SBConvolve([psf,pixel],real_space=True)
-    # Note: Using an image created from Maple "exact" calculations.
-    saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
-    img = galsim.ImageF(saved_img.bounds, scale=dx)
-    img.setCenter(0,0)
-    conv.applyExpansion(1./dx)
-    conv.draw(img.image.view())
-    printval(img, saved_img)
-    arg = abs(saved_img.array-img.array).argmax()
-    np.testing.assert_array_almost_equal(
-            img.array, saved_img.array, 5,
-            err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
-
-    # Repeat with the GSObject version of this:
     psf = galsim.Moffat(beta=1.5, half_light_radius=1,
                         trunc=4*fwhm_backwards_compatible, flux=1)
     #psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible,
@@ -349,32 +313,13 @@ def test_realspace_distorted_convolve():
     """
     import time
     t1 = time.time()
-    fwhm_backwards_compatible = 1.0927449310213702
-    psf = galsim.SBMoffat(beta=1.5, half_light_radius=1,
-                          trunc=4*fwhm_backwards_compatible, flux=1)
-    #psf = galsim.SBMoffat(beta=1.5, fwhm=fwhm_backwards_compatible, 
-                          #trunc=4*fwhm_backwards_compatible, flux=1)  
-    psf.applyShear(galsim.Shear(g1=0.11,g2=0.17)._shear)
-    psf.applyRotation(13 * galsim.degrees)
-    dx = 0.2
-    pixel = galsim.SBBox(dx, dx, flux=1.)
-    pixel.applyShear(galsim.Shear(g1=0.2,g2=0.0)._shear)
-    pixel.applyRotation(80 * galsim.degrees)
-    pixel.applyShift(galsim.PositionD(0.13,0.27))
-    conv = galsim.SBConvolve([psf,pixel],real_space=True)
 
-    # Note: Using an image created from Maple "exact" calculations.
+    dx = 0.2
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel_distorted.fits"))
     img = galsim.ImageF(saved_img.bounds, scale=dx)
     img.setCenter(0,0)
-    conv.applyExpansion(1./dx)
-    conv.draw(img.image.view())
-    printval(img, saved_img)
-    np.testing.assert_array_almost_equal(
-            img.array, saved_img.array, 5,
-            err_msg="distorted Moffat convolved with distorted Box disagrees with expected result")
 
-    # Repeat with the GSObject version of this:
+    fwhm_backwards_compatible = 1.0927449310213702
     psf = galsim.Moffat(beta=1.5, half_light_radius=1,
                         trunc=4*fwhm_backwards_compatible, flux=1)
     #psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible,
@@ -430,25 +375,15 @@ def test_realspace_shearconvolve():
     """
     import time
     t1 = time.time()
-    psf = galsim.SBGaussian(flux=1, sigma=1)
+
     e1 = 0.04
     e2 = 0.0
     myShear = galsim.Shear(e1=e1, e2=e2)
-    psf.applyShear(myShear._shear)
     dx = 0.2
-    pix = galsim.SBBox(dx, dx, flux=1.)
-    conv = galsim.SBConvolve([psf,pix],real_space=True)
     saved_img = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
     img = galsim.ImageF(saved_img.bounds, scale=dx)
     img.setCenter(0,0)
-    conv.applyExpansion(1./dx)
-    conv.draw(img.image.view())
-    printval(img, saved_img)
-    np.testing.assert_array_almost_equal(
-            img.array, saved_img.array, 5,
-            err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")
 
-    # Repeat with the GSObject version of this:
     psf = galsim.Gaussian(flux=1, sigma=1)
     psf.applyShear(e1=e1,e2=e2)
     pixel = galsim.Pixel(scale=dx, flux=1.)
@@ -496,21 +431,12 @@ def test_add():
     """
     import time
     t1 = time.time()
-    mySBP = galsim.SBGaussian(flux=0.75, sigma=1)
-    mySBP2 = galsim.SBGaussian(flux=0.25, sigma=3)
-    myAdd = galsim.SBAdd([mySBP, mySBP2])
+
     savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
-    myAdd.applyExpansion(1./dx)
-    myAdd.draw(myImg.image.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Addition of two rescaled Gaussian profiles disagrees with expected result")
 
-    # Repeat with the GSObject version of this:
     gauss1 = galsim.Gaussian(flux=0.75, sigma=1)
     gauss2 = galsim.Gaussian(flux=0.25, sigma=3)
     sum = galsim.Add(gauss1,gauss2)
@@ -644,24 +570,12 @@ def test_autoconvolve():
     import time
     t1 = time.time()
 
-    mySBP = galsim.SBMoffat(beta=3.8, fwhm=1.3, flux=5)
-    myConv = galsim.SBConvolve([mySBP,mySBP])
     dx = 0.4
     myImg1 = galsim.ImageF(80,80, scale=dx)
     myImg1.setCenter(0,0)
-    myConv.applyExpansion(1./dx)
-    myConv.draw(myImg1.image.view())
-    myAutoConv = galsim.SBAutoConvolve(mySBP)
     myImg2 = galsim.ImageF(80,80, scale=dx)
     myImg2.setCenter(0,0)
-    myAutoConv.applyExpansion(1./dx)
-    myAutoConv.draw(myImg2.image.view())
-    printval(myImg1, myImg2)
-    np.testing.assert_array_almost_equal(
-            myImg1.array, myImg2.array, 4,
-            err_msg="Moffat convolved with self disagrees with SBAutoConvolve result")
 
-    # Repeat with the GSObject version of this:
     psf = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
     conv = galsim.Convolve([psf,psf])
     conv.draw(myImg1)
@@ -735,38 +649,20 @@ def test_autocorrelate():
     """
     import time
     t1 = time.time()
-    # Use a function that is NOT two-fold rotationally symmetric, e.g. two different flux Gaussians
-    myGauss1 = galsim.SBGaussian(sigma=3., flux=4)
-    myGauss1.applyShift(galsim.PositionD(-0.2, -0.4))
-    myGauss2 = (galsim.SBGaussian(sigma=6., flux=1.3))
-    myGauss2.applyShift(galsim.PositionD(0.3, 0.3))
-    mySBP1 = galsim.SBAdd([myGauss1, myGauss2])
-    mySBP2 = galsim.SBAdd([myGauss1, myGauss2])
-    # Here we rotate by 180 degrees to create mirror image
-    mySBP2.applyRotation(180. * galsim.degrees)
-    myConv = galsim.SBConvolve([mySBP1, mySBP2])
+
     dx = 0.7
     myImg1 = galsim.ImageF(80,80, scale=dx)
     myImg1.setCenter(0,0)
-    myConv.applyExpansion(1./dx)
-    myConv.draw(myImg1.image.view())
-    myAutoCorr = galsim.SBAutoCorrelate(mySBP1)
     myImg2 = galsim.ImageF(80,80, scale=dx)
     myImg2.setCenter(0,0)
-    myAutoCorr.applyExpansion(1./dx)
-    myAutoCorr.draw(myImg2.image.view())
-    printval(myImg1, myImg2)
-    np.testing.assert_array_almost_equal(
-            myImg1.array, myImg2.array, 4,
-            err_msg="Asymmetric sum of Gaussians convolved with mirror of self disagrees with "+
-            "SBAutoCorrelate result")
 
-    # Repeat with the GSObject version of this:
+    # Use a function that is NOT two-fold rotationally symmetric, e.g. two different flux Gaussians
     obj1 = galsim.Gaussian(sigma=3., flux=4)
     obj1.applyShift(-0.2, -0.4)
     obj2 = galsim.Gaussian(sigma=6., flux=1.3)
     obj2.applyShift(0.3, 0.3)
     add1 = galsim.Add(obj1, obj2)
+    # Here we rotate by 180 degrees to create mirror image
     add2 = (galsim.Add(obj1, obj2)).createRotated(180. * galsim.degrees)
     conv = galsim.Convolve([add1, add2])
     conv.draw(myImg1)

@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """
 Demo #10
@@ -118,8 +117,7 @@ def main(argv):
     gal_list = [ galsim.RealGalaxy(real_galaxy_catalog, id=id) for id in id_list ]
 
     # Make the galaxies a bit larger than their original observed size.
-    for gal in gal_list:
-        gal.applyDilation(gal_dilation) 
+    gal_list = [ gal.dilate(gal_dilation) for gal in gal_list ]
 
     # Setup the PowerSpectrum object we'll be using:
     ps = galsim.PowerSpectrum(lambda k : k**1.8)
@@ -201,10 +199,7 @@ def main(argv):
 
         # Define the PSF profile
         psf = galsim.Gaussian(fwhm=psf_fwhm)
-        psf.applyShear(e=psf_e, beta=psf_beta)
-
-        # Define the pixel
-        pix = galsim.Pixel(pixel_scale)
+        psf = psf.shear(e=psf_e, beta=psf_beta)
 
         # Define the galaxy profile:
 
@@ -219,7 +214,7 @@ def main(argv):
         gal = gal_list[index]
 
         # This makes a new copy so we're not changing the object in the gal_list.
-        gal = gal.createRotated(theta)
+        gal = gal.rotate(theta)
 
         # Apply the shear from the power spectrum.  We should either turn the gridded shears
         # grid_g1[iy, ix] and grid_g2[iy, ix] into gridded reduced shears using a utility called
@@ -228,7 +223,7 @@ def main(argv):
         # are not on the original grid, as long as they are contained within the bounds of the full
         # grid. So in this example we'll use ps.getShear().
         alt_g1,alt_g2 = ps.getShear(pos)
-        gal.applyShear(g1=alt_g1, g2=alt_g2)
+        gal = gal.shear(g1=alt_g1, g2=alt_g2)
 
         # Apply half-pixel shift in a random direction.
         shift_r = pixel_scale * 0.5
@@ -236,13 +231,13 @@ def main(argv):
         theta = ud() * 2. * math.pi
         dx = shift_r * math.cos(theta)
         dy = shift_r * math.sin(theta)
-        gal.applyShift(dx,dy)
+        gal = gal.shift(dx,dy)
 
-        # Make the final image, convolving with psf and pix
-        final = galsim.Convolve([psf,pix,gal])
+        # Make the final image, convolving with the psf
+        final = galsim.Convolve([psf,gal])
 
         # Draw the image
-        final.draw(sub_gal_image)
+        final.drawImage(sub_gal_image)
 
         # Now add noise to get our desired S/N
         # See demo5.py for more info about how this works.
@@ -250,18 +245,15 @@ def main(argv):
         noise = galsim.PoissonNoise(rng, sky_level=sky_level_pixel)
         sub_gal_image.addNoiseSNR(noise, gal_signal_to_noise)
 
+        # For the PSF image, we also shift the PSF by the same amount.
+        psf = psf.shift(dx,dy)
+
         # Draw the PSF image:
-        # We use real space convolution to avoid some of the 
+        # We use real space integration over the pixels to avoid some of the 
         # artifacts that can show up with Fourier convolution.
         # The level of the artifacts is quite low, but when drawing with
-        # no noise, they are apparent with ds9's zscale viewing.
-        final_psf = galsim.Convolve([psf,pix], real_space=True)
-
-        # For the PSF image, we also shift the PSF by the same amount.
-        final_psf.applyShift(dx,dy)
-
-        # Draw the PSF image
-        final_psf.draw(sub_psf_image)
+        # so little noise, they are apparent with ds9's zscale viewing.
+        psf.drawImage(sub_psf_image, method='real_space')
 
         # Again, add noise, but at higher S/N this time.
         sub_psf_image.addNoiseSNR(noise, psf_signal_to_noise)

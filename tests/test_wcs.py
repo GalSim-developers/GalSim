@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 
 import numpy as np
@@ -298,7 +297,7 @@ def do_wcs_image(wcs, name, approx=False):
         # describe an equivalent WCS as this one.
         hdu, hdu_list, fin = galsim.fits.readFile(test_name, dir=dir)
         affine = galsim.AffineTransform._readHeader(hdu.header)
-        affine = affine.setOrigin(galsim.PositionD(dx,dy))
+        affine = affine.withOrigin(galsim.PositionD(dx,dy))
         galsim.fits.closeHDUList(hdu_list, fin)
         check_world(affine.toWorld(im.origin()), world1, digits2,
                     "World position of origin is wrong after write/read.")
@@ -373,28 +372,28 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
     wcs2 = wcs.local()
     assert wcs == wcs2, name+' local() is not == the original'
     new_origin = galsim.PositionI(123,321)
-    wcs3 = wcs.setOrigin(new_origin)
-    assert wcs != wcs3, name+' is not != wcs.setOrigin(pos)'
-    assert wcs3 != wcs, name+' is not != wcs.setOrigin(pos) (reverse)'
+    wcs3 = wcs.withOrigin(new_origin)
+    assert wcs != wcs3, name+' is not != wcs.withOrigin(pos)'
+    assert wcs3 != wcs, name+' is not != wcs.withOrigin(pos) (reverse)'
     wcs2 = wcs3.local()
-    assert wcs == wcs2, name+' is not equal after wcs.setOrigin(pos).local()'
+    assert wcs == wcs2, name+' is not equal after wcs.withOrigin(pos).local()'
     world_pos1 = wcs.toWorld(galsim.PositionD(0,0))
     world_pos2 = wcs3.toWorld(new_origin)
     np.testing.assert_almost_equal(
             world_pos2.x, world_pos1.x, digits,
-            'setOrigin(new_origin) returned wrong world position')
+            'withOrigin(new_origin) returned wrong world position')
     np.testing.assert_almost_equal(
             world_pos2.y, world_pos1.y, digits,
-            'setOrigin(new_origin) returned wrong world position')
+            'withOrigin(new_origin) returned wrong world position')
     new_world_origin = galsim.PositionD(5352.7, 9234.3)
-    wcs4 = wcs.setOrigin(new_origin, new_world_origin)
+    wcs4 = wcs.withOrigin(new_origin, new_world_origin)
     world_pos3 = wcs4.toWorld(new_origin)
     np.testing.assert_almost_equal(
             world_pos3.x, new_world_origin.x, digits,
-            'setOrigin(new_origin, new_world_origin) returned wrong position')
+            'withOrigin(new_origin, new_world_origin) returned wrong position')
     np.testing.assert_almost_equal(
             world_pos3.y, new_world_origin.y, digits,
-            'setOrigin(new_origin, new_world_origin) returned wrong position')
+            'withOrigin(new_origin, new_world_origin) returned wrong position')
 
     # Check inverse:
     image_pos = wcs.inverse().toWorld(world_pos1)
@@ -555,40 +554,40 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
     print 'Start testing non-local WCS '+name
     #print 'wcs = ',wcs
 
-    # Check that setOrigin and local work correctly:
+    # Check that withOrigin and local work correctly:
     new_origin = galsim.PositionI(123,321)
-    wcs3 = wcs.setOrigin(new_origin)
+    wcs3 = wcs.withOrigin(new_origin)
     #print 'wcs3 = ',wcs3
-    assert wcs != wcs3, name+' is not != wcs.setOrigin(pos)'
+    assert wcs != wcs3, name+' is not != wcs.withOrigin(pos)'
     wcs4 = wcs.local(wcs.origin)
     assert wcs != wcs4, name+' is not != wcs.local()'
     assert wcs4 != wcs, name+' is not != wcs.local() (reverse)'
     world_origin = wcs.toWorld(wcs.origin)
     if wcs.isUniform():
         if wcs.world_origin == galsim.PositionD(0,0):
-            wcs2 = wcs.local(wcs.origin).setOrigin(wcs.origin)
-            assert wcs == wcs2, name+' is not equal after wcs.local().setOrigin(origin)'
-        wcs2 = wcs.local(wcs.origin).setOrigin(wcs.origin, wcs.world_origin)
-        assert wcs == wcs2, name+' not equal after wcs.local().setOrigin(origin,world_origin)'
+            wcs2 = wcs.local(wcs.origin).withOrigin(wcs.origin)
+            assert wcs == wcs2, name+' is not equal after wcs.local().withOrigin(origin)'
+        wcs2 = wcs.local(wcs.origin).withOrigin(wcs.origin, wcs.world_origin)
+        assert wcs == wcs2, name+' not equal after wcs.local().withOrigin(origin,world_origin)'
     world_pos1 = wcs.toWorld(galsim.PositionD(0,0))
-    wcs3 = wcs.setOrigin(new_origin)
+    wcs3 = wcs.withOrigin(new_origin)
     world_pos2 = wcs3.toWorld(new_origin)
     np.testing.assert_almost_equal(
             world_pos2.x, world_pos1.x, digits,
-            'setOrigin(new_origin) returned wrong world position')
+            'withOrigin(new_origin) returned wrong world position')
     np.testing.assert_almost_equal(
             world_pos2.y, world_pos1.y, digits,
-            'setOrigin(new_origin) returned wrong world position')
+            'withOrigin(new_origin) returned wrong world position')
     if not wcs.isCelestial():
         new_world_origin = galsim.PositionD(5352.7, 9234.3)
-        wcs5 = wcs.setOrigin(new_origin, new_world_origin)
+        wcs5 = wcs.withOrigin(new_origin, new_world_origin)
         world_pos3 = wcs5.toWorld(new_origin)
         np.testing.assert_almost_equal(
                 world_pos3.x, new_world_origin.x, digits,
-                'setOrigin(new_origin, new_world_origin) returned wrong position')
+                'withOrigin(new_origin, new_world_origin) returned wrong position')
         np.testing.assert_almost_equal(
                 world_pos3.y, new_world_origin.y, digits,
-                'setOrigin(new_origin, new_world_origin) returned wrong position')
+                'withOrigin(new_origin, new_world_origin) returned wrong position')
 
 
     # Check that (x,y) -> (u,v) and converse work correctly
@@ -667,19 +666,19 @@ def do_celestial_wcs(wcs, name):
     print 'Start testing celestial WCS '+name
     #print 'wcs = ',wcs
 
-    # Check that setOrigin and local work correctly:
+    # Check that withOrigin and local work correctly:
     new_origin = galsim.PositionI(123,321)
-    wcs3 = wcs.setOrigin(new_origin)
-    assert wcs != wcs3, name+' is not != wcs.setOrigin(pos)'
+    wcs3 = wcs.withOrigin(new_origin)
+    assert wcs != wcs3, name+' is not != wcs.withOrigin(pos)'
     wcs4 = wcs.local(wcs.origin)
     assert wcs != wcs4, name+' is not != wcs.local()'
     assert wcs4 != wcs, name+' is not != wcs.local() (reverse)'
     world_pos1 = wcs.toWorld(galsim.PositionD(0,0))
-    wcs3 = wcs.setOrigin(new_origin)
+    wcs3 = wcs.withOrigin(new_origin)
     world_pos2 = wcs3.toWorld(new_origin)
     np.testing.assert_almost_equal(
             world_pos2.distanceTo(world_pos1) / galsim.arcsec, 0, digits,
-            'setOrigin(new_origin) returned wrong world position')
+            'withOrigin(new_origin) returned wrong world position')
 
     world_origin = wcs.toWorld(wcs.origin)
 
@@ -795,8 +794,8 @@ def test_pixelscale():
     y0 = 1
     origin = galsim.PositionD(x0,y0)
     wcs = galsim.OffsetWCS(scale, origin)
-    wcs2 = galsim.PixelScale(scale).setOrigin(origin)
-    assert wcs == wcs2, 'OffsetWCS is not == PixelScale.setOrigin(origin)'
+    wcs2 = galsim.PixelScale(scale).withOrigin(origin)
+    assert wcs == wcs2, 'OffsetWCS is not == PixelScale.withOrigin(origin)'
 
     # Check basic copy and == , != for OffsetWCS:
     wcs2 = wcs.copy()
@@ -888,8 +887,8 @@ def test_shearwcs():
     y0 = 1
     origin = galsim.PositionD(x0,y0)
     wcs = galsim.OffsetShearWCS(scale, shear, origin)
-    wcs2 = galsim.ShearWCS(scale, shear).setOrigin(origin)
-    assert wcs == wcs2, 'OffsetShearWCS is not == ShearWCS.setOrigin(origin)'
+    wcs2 = galsim.ShearWCS(scale, shear).withOrigin(origin)
+    assert wcs == wcs2, 'OffsetShearWCS is not == ShearWCS.withOrigin(origin)'
 
     # Check basic copy and == , != for OffsetShearWCS:
     wcs2 = wcs.copy()
@@ -972,8 +971,8 @@ def test_affinetransform():
     y0 = 1
     origin = galsim.PositionD(x0,y0)
     wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin)
-    wcs2 = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy).setOrigin(origin)
-    assert wcs == wcs2, 'AffineTransform is not == JacobianWCS.setOrigin(origin)'
+    wcs2 = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy).withOrigin(origin)
+    assert wcs == wcs2, 'AffineTransform is not == JacobianWCS.withOrigin(origin)'
 
     # Check basic copy and == , != for AffineTransform:
     wcs2 = wcs.copy()
@@ -1354,10 +1353,12 @@ def test_radecfunction():
             # Also test with one that doesn't work with numpy arrays to test that the 
             # code does the right thing in that case too, since local and makeSkyImage
             # try the numpy option first and do something else if it fails.
-            alt_radec_func = ( lambda x,y: 
-                    [ (c.ra.rad(), c.dec.rad()) for c in 
-                            [ center.deproject(galsim.PositionD(ufunc(x,y), vfunc(x,y))) ] ][0] )
-            wcs3 = galsim.RaDecFunction(alt_radec_func)
+            # This also tests the alternate initialization using separate ra_func, dec_fun.
+            ra_func = lambda x,y: center.deproject(
+                    galsim.PositionD(ufunc(x,y), vfunc(x,y))).ra.rad()
+            dec_func = lambda x,y: center.deproject(
+                    galsim.PositionD(ufunc(x,y), vfunc(x,y))).dec.rad()
+            wcs3 = galsim.RaDecFunction(ra_func, dec_func)
 
             # Check that distance, jacobian for some x,y positions match the UV values.
             for x,y in zip(far_x_list, far_y_list):
@@ -1383,12 +1384,12 @@ def test_radecfunction():
                 np.testing.assert_almost_equal(
                         d2, d1, digits, 'deprojected dist does not match expected value.')
 
-                # Now test the two RaDec wcs classes
-                for wcs in [ wcs2, wcs3 ]:
+                # Now test the two initializations of RaDecFunction.
+                for test_wcs in [ wcs2, wcs3 ]:
                     image_pos = galsim.PositionD(x,y)
                     world_pos1 = wcs1.toWorld(image_pos)
-                    world_pos2 = wcs2.toWorld(image_pos)
-                    origin = wcs2.toWorld(galsim.PositionD(0.,0.))
+                    world_pos2 = test_wcs.toWorld(image_pos)
+                    origin = test_wcs.toWorld(galsim.PositionD(0.,0.))
                     d3 = np.sqrt( world_pos1.x**2 + world_pos1.y**2 )
                     d4 = center.distanceTo(world_pos2)
                     d4 = 2.*math.sin(d4.rad()/2) * galsim.radians / galsim.arcsec
@@ -1399,7 +1400,7 @@ def test_radecfunction():
 
                     # Calculate the Jacobians for each wcs
                     jac1 = wcs1.jacobian(image_pos)
-                    jac2 = wcs2.jacobian(image_pos)
+                    jac2 = test_wcs.jacobian(image_pos)
 
                     # The pixel area should match pretty much exactly.  The Lambert projection
                     # is an area preserving projection.
@@ -1407,7 +1408,7 @@ def test_radecfunction():
                             jac2.pixelArea(), jac1.pixelArea(), digits,
                             'RaDecFunction '+name+' pixelArea() does not match expected value.')
                     np.testing.assert_almost_equal(
-                            wcs2.pixelArea(image_pos), jac1.pixelArea(), digits,
+                            test_wcs.pixelArea(image_pos), jac1.pixelArea(), digits,
                             'RaDecFunction '+name+' pixelArea(pos) does not match expected value.')
 
                     # The distortion should be pretty small, so the min/max linear scale should
@@ -1416,13 +1417,13 @@ def test_radecfunction():
                             jac2.minLinearScale(), jac1.minLinearScale(), digits,
                             'RaDecFunction '+name+' minScale() does not match expected value.')
                     np.testing.assert_almost_equal(
-                            wcs2.minLinearScale(image_pos), jac1.minLinearScale(), digits,
+                            test_wcs.minLinearScale(image_pos), jac1.minLinearScale(), digits,
                             'RaDecFunction '+name+' minScale(pos) does not match expected value.')
                     np.testing.assert_almost_equal(
                             jac2.maxLinearScale(), jac1.maxLinearScale(), digits,
                             'RaDecFunction '+name+' maxScale() does not match expected value.')
                     np.testing.assert_almost_equal(
-                            wcs2.maxLinearScale(image_pos), jac1.maxLinearScale(), digits,
+                            test_wcs.maxLinearScale(image_pos), jac1.maxLinearScale(), digits,
                             'RaDecFunction '+name+' maxScale(pos) does not match expected value.')
 
                     # The main discrepancy between the jacobians is a rotation term. 
@@ -1442,7 +1443,7 @@ def test_radecfunction():
                             'CelestialCoord calculated the wrong angle between center and coord')
                     angle = 180 * galsim.degrees - A - B
 
-                    # Now we can use this angle to correct the jacobian from wcs2.
+                    # Now we can use this angle to correct the jacobian from test_wcs.
                     c = math.cos(angle.rad())
                     s = math.sin(angle.rad())
                     rot_dudx = c*jac2.dudx + s*jac2.dvdx
@@ -1538,6 +1539,7 @@ def test_astropywcs():
 
     try:
         import astropy.wcs
+        import scipy  # AstropyWCS constructor will do this, so check now.
     except ImportError:
         print 'Unable to import astropy.wcs.  Skipping AstropyWCS tests.'
         return
@@ -1641,7 +1643,7 @@ def test_wcstools():
         # Recenter (x,y) = (0,0) at the image center to avoid wcstools warnings about going
         # off the image.
         im = galsim.fits.read(file_name, dir=dir)
-        wcs = wcs.setOrigin(origin = -im.bounds.center())
+        wcs = wcs.withOrigin(origin = -im.bounds.center())
 
         do_celestial_wcs(wcs, 'WcsToolsWCS '+file_name)
 

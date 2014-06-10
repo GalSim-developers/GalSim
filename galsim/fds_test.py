@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """@file fds_test.py
 I found these routines helpful in tracking down some errors about too many files being open.
@@ -24,22 +23,20 @@ http://stackoverflow.com/questions/4814970/subprocess-check-output-doesnt-seem-t
 
 To use it do the following:
 
-     import galsim.fds_test as fds
-
-     ...
-
-     try:
-        ... Code that might raise OSError ...
-     except OSError as e:
-        print 'Caught ',e
-        fds.printOpenFiles()
-        raise
+    >>> import galsim.fds_test as fds
+    >>> ...
+    >>> try:
+    >>>     [... Code that might raise OSError ...]
+    >>> except OSError as e:
+    >>>     print 'Caught ',e
+    >>>     fds.printOpenFiles()
+    >>>     raise
 
 Of course, you can also do fds.printOpenFiles() elsewhere too for information.
 
 You can also keep track of the number of open files and pipes with:
 
-    print 'files, pipes = ',fds.openFiles()
+    >>> print 'files, pipes = ',fds.openFiles()
 """
 
 
@@ -65,11 +62,10 @@ __builtin__.file = newfile
 __builtin__.open = newopen
 
 def getOpenFiles(do_print=False):
-    '''
-    return the number of open files and pipes for current process
+    """Return the number of open files and pipes for current process
 
-    .. warning: will only work on UNIX-like os-es.
-    '''
+    .. warning: will only work on a UNIX-like OS.
+    """
     import subprocess
     import os
 

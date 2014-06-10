@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 #
 # Demo #7
@@ -37,7 +36,7 @@
 # - obj type : Airy (lam_over_diam)
 # - obj type : Sersic (..., trunc)
 # - obj : dilate
-# - value type : Sequence (..., repeat)
+# - value type : Sequence (..., repeat, index_key)
 # - value type : Random (min, max)
 # - image type : Tiled (..., stamp_size, xborder, yborder)
 # - image : draw_method (fft or phot)
@@ -178,9 +177,11 @@ image :
 
     # This is also pretty contrived.  It is really only relevant for this particular example.  
     # The usual case is to just set a single number, which really means that each object
-    # gets a sequential value starting with this number.  In this case we repeat each value
-    # two times, so the fft and phot images get the same values for the random parameters.
-    random_seed : { type : Sequence , first : 553728 , repeat : 2 }
+    # gets a sequential value starting with this number.  In this case we want to use the
+    # same value for both the fft and phot images to get the same values for the random
+    # parameters. To implement this, we tell it to use the image_num for the sequencing key
+    # rather than the usual obj_num.
+    random_seed : { type : Sequence , first : 553728 , index_key : 'image_num' }
 
     # This script is set up as a comparison between using FFTs for doing the convolutions and
     # shooting photons.  The two methods have trade-offs in speed and accuracy which vary

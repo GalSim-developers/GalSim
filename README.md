@@ -22,10 +22,10 @@ development.
 Distribution
 ------------
 
-The current released version of GalSim is version 1.0.  To get the code, you
+The current released version of GalSim is version 1.1.  To get the code, you
 can grab the tarball (or zip file) from
 
-    https://github.com/GalSim-developers/GalSim/releases/tag/v1.0.0
+    https://github.com/GalSim-developers/GalSim/releases/tag/v1.1.0
 
 Also, feel free to fork the repository:
 
@@ -38,6 +38,9 @@ Or clone the master branch with either of the following:
 
 The code is also distributed via Fink, Macports, and Homebrew for Mac users.
 See INSTALL.md for more information.
+
+The code is licensed under a BSD-style license.  See the file LICENSE for more
+details.
 
 
 Keeping up-to-date with GalSim
@@ -113,7 +116,7 @@ Getting started
 Reference documentation
 -----------------------
 
-For an overview of GalSim workflow and python tools, please see
+For an overview of GalSim workflow and python tools, please see the file
 `doc/GalSim_Quick_Reference.pdf` in the GalSim repository.  A guide to using
 the configuration files to generate simulations, a FAQ for installation issues,
 and other useful references can be found on the GalSim wiki,
@@ -166,29 +169,6 @@ capabilities to the software, more demo scripts may be added to `examples/`
 to illustrate what GalSim can do.
 
 
-Additional scripts
-------------------
-
-There are some additional scripts in the `examples/` directory as well.
-These utilities take various command-line arguments, which are explained
-in comments at the top of each file.
-
-* `ShootInterpolated.py` is a script that takes as input a filename for a FITS
-image, which it will simulate (optionally sheared and/or resampled) via
-photon-shooting.
-
-* `MeasMoments.py` can be used to measure the adaptive moments (best-fit
-elliptical Gaussian) for a FITS image.
-
-* `MeasShape.py` can be used to carry out PSF correction using one of four
-methods, given FITS images of the galaxy and PSF.
-
-* `des.py` creates an image based on DES PSF estimates using DES catalogs
-as input.  It is primarily designed to demonstrate the usage of the des
-module, and is accompanies by a config file, `des.yaml` that does the same
-thing.
-
-
 Tagged versions
 ---------------
 
@@ -204,7 +184,7 @@ at one time or another.
 The version of the code at any given snapshot can be downloaded from our
 GitHub webpage, or checked out from the repository using the tag name, e.g.:
 
-    git checkout v1.0.0
+    git checkout v1.1.0
 
 This will then update your directory tree to the snapshot of the code at the
 milestone requested.  (You will also get a message about being in a "detached"

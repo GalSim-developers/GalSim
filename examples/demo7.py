@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """
 Demo #7
@@ -37,11 +36,10 @@ New features introduced in this demo:
 - obj = galsim.Airy(lam_over_diam)
 - obj = galsim.Sersic(n, half_light_radius, trunc)
 - psf = galsim.OpticalPSF(..., aberrations=aberrations, ...)
-- obj2 = obj.copy()
-- obj.applyDilation(scale)
+- obj = obj.dilate(scale)
 - image.scale = pixel_scale
-- obj.draw(image)  -- i.e. taking the scale from the image rather than a scale= argument
-- obj.drawShoot(image, max_extra_noise, rng)
+- obj.drawImage(image, method='fft')
+- obj.drawImage(image, method='phot', max_extra_noise, rng)
 - dev = galsim.PoissonDeviate(rng, mean)
 - noise = galsim.DeviateNoise(dev)
 - writeCube(..., compress='gzip')
@@ -125,9 +123,6 @@ def main(argv):
         minimum_fft_size=64)     # minimum size of ffts
 
     logger.info('Starting demo script 7')
-
-    # Make the pixel:
-    pix = galsim.Pixel(pixel_scale)
 
     # Make the PSF profiles:
     psf1 = galsim.Gaussian(fwhm = psf_fwhm, gsparams=gsparams)
@@ -215,28 +210,25 @@ def main(argv):
                 # Initialize the random number generator we will be using.
                 rng = galsim.UniformDeviate(random_seed+k)
 
-                # Get a new copy, we'll want to keep the original unmodified.
-                gal1 = gal.copy()
-
                 # Generate random variates:
                 flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
-                gal1.setFlux(flux)
+
+                # Use a new variable name, since we'll want to keep the original unmodified.
+                this_gal = gal.withFlux(flux)
 
                 hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
-                gal1.applyDilation(hlr)
+                this_gal = this_gal.dilate(hlr)
 
                 beta_ellip = rng() * 2*math.pi * galsim.radians
                 ellip = rng() * (gal_e_max-gal_e_min) + gal_e_min
                 gal_shape = galsim.Shear(e=ellip, beta=beta_ellip)
-                gal1.applyShear(gal_shape)
+                this_gal = this_gal.shear(gal_shape)
 
-                # Build the final object by convolving the galaxy, PSF and pixel response.
-                final = galsim.Convolve([psf, pix, gal1])
-                # For photon shooting, need a version without the pixel (see below).
-                final_nopix = galsim.Convolve([psf, gal1])
+                # Build the final object by convolving the galaxy and PSF.
+                final = galsim.Convolve([this_gal, psf])
 
                 # Create the large, double width output image
-                # Rather than provide a scale= argument to the draw commands, we can also
+                # Rather than provide a scale= argument to the drawImage commands, we can also
                 # set the pixel scale in the image constructor.
                 # Note: You can also change it after the construction with im.scale=pixel_scale
                 image = galsim.ImageF(2*nx+2, ny, scale=pixel_scale)
@@ -252,7 +244,13 @@ def main(argv):
                 t2 = time.time()
 
                 # Draw the profile
-                final.draw(fft_image)
+                # This default rendering method (method='auto') usually defaults to FFT, since
+                # that is normally the most efficient method.  However, we can also set method
+                # to 'fft' explicitly to force it to always use FFTs for the convolution
+                # by the pixel response.  (In this case, it doesn't have any effect, since
+                # the 'auto' method would have always chosen 'fft' anyway, so this is just
+                # for illustrative purposes.)
+                final.drawImage(fft_image, method='fft')
 
                 logger.debug('   Drew fft image.  Total drawn flux = %f.  .flux = %f',
                              fft_image.array.sum(),final.getFlux())
@@ -270,9 +268,11 @@ def main(argv):
                 rng(); rng(); rng(); rng();
 
                 # Repeat for photon shooting image.
-                # Photon shooting automatically convolves by the pixel, so we've made sure not
-                # to include it in the profile!
-                final_nopix.drawShoot(phot_image, max_extra_noise=sky_level_pixel/100, rng=rng)
+                # The max_extra_noise parameter indicates how much extra noise per pixel we are
+                # willing to tolerate.  The sky noise will be adding a variance of sky_level_pixel,
+                # so we allow up to 1% of that extra.
+                final.drawImage(phot_image, method='phot', max_extra_noise=sky_level_pixel/100,
+                                rng=rng)
                 t5 = time.time()
 
                 # For photon shooting, galaxy already has Poisson noise, so we want to make 

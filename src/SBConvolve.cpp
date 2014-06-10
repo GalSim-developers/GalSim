@@ -1,27 +1,27 @@
 /* -*- c++ -*-
- * Copyright 2012-2014 The GalSim developers:
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
  *
- * GalSim is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
  *
- * GalSim is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
  */
 
 //#define DEBUGLOGGING
 
 #include "SBConvolve.h"
 #include "SBConvolveImpl.h"
+#include "SBTransform.h"
 
 #ifdef DEBUGLOGGING
 #include <fstream>
@@ -90,8 +90,7 @@ namespace galsim {
             if (!obj.isAnalyticX() && _real_space)
                 throw SBError("Real_space SBConvolve requires members to be analytic in x");
             _plist.push_back(obj);
-            SBProfile temp = obj;
-            temp.applyRotation(180. * degrees);
+            SBProfile temp = obj.rotate(180. * degrees);
             _plist.push_back(temp);
         } else {
             if (!rhs.isAnalyticK() && !_real_space) 
@@ -333,8 +332,7 @@ namespace galsim {
 
     double SBAutoCorrelate::SBAutoCorrelateImpl::xValue(const Position<double>& pos) const
     { 
-        SBProfile temp = _adaptee;
-        temp.applyRotation(180. * degrees);
+        SBProfile temp = _adaptee.rotate(180. * degrees);
         return RealSpaceConvolve(_adaptee,temp,pos,getFlux(),this->gsparams);
     }
 

@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """@file sed.py
 Simple spectral energy distribution class.  Used by galsim/chromatic.py
@@ -46,17 +45,17 @@ class SED(object):
     region where both of the operand SEDs are defined. `blue_limit` and `red_limit` will be reset
     accordingly.
 
-    The input parameter, spec, may be one of several possible forms:
+    The input parameter, `spec`, may be one of several possible forms:
     1. a regular python function (or an object that acts like a function)
-    2. a galsim.LookupTable
+    2. a LookupTable
     3. a file from which a LookupTable can be read in
     4. a string which can be evaluated into a function of `wave`
        via `eval('lambda wave : '+spec)
        e.g. spec = '0.8 + 0.2 * (wave-800)`
 
-    The argument of `spec` will be the wavelength in either nanometers (default) or
-    Angstroms depending on the value of `wave_type`.  The output should be the flux density at
-    that wavelength.  (Note we use wave rather than lambda, since lambda is a python reserved
+    The argument of `spec` will be the wavelength in either nanometers (default) or Angstroms
+    depending on the value of `wave_type`.  The output should be the flux density at that
+    wavelength.  (Note we use `wave` rather than `lambda`, since `lambda` is a python reserved
     word.)
 
     The argument `wave_type` specifies the units to assume for wavelength and must be one of
@@ -76,9 +75,9 @@ class SED(object):
 
     @param spec          Function defining the spectrum at each wavelength.  See above for
                          valid options for this parameter.
+    @param wave_type     String specifying units for wavelength input to `spec`. [default: 'nm']
     @param flux_type     String specifying what type of spectral density `spec` represents.  See
-                         above for valid options for this parameter.
-    @param wave_type     String specifying units for wavelength input to `spec`.
+                         above for valid options for this parameter. [default: 'flambda']
 
     """
     def __init__(self, spec, wave_type='nm', flux_type='flambda'):
@@ -88,7 +87,7 @@ class SED(object):
         elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
             wave_factor = 10.0
         else:
-            raise ValueError("Unknown wave_type `{}` in SED.__init__".format(wave_type))
+            raise ValueError("Unknown wave_type '{0}'".format(wave_type))
 
         # Figure out input flux density type
         if isinstance(spec, basestring):
@@ -96,7 +95,22 @@ class SED(object):
             if os.path.isfile(spec):
                 spec = galsim.LookupTable(file=spec, interpolant='linear')
             else:
-                spec = eval('lambda wave : ' + spec)
+                origspec = spec
+                # Don't catch ArithmeticErrors when testing to see if the the result of `eval()`
+                # is valid since `spec = '1./(wave-700)'` will generate a ZeroDivisionError (which
+                # is a subclass of ArithmeticError) despite being a valid spectrum specification,
+                # while `spec = 'blah'` where `blah` is undefined generates a NameError and is not
+                # a valid spectrum specification.
+                # Are there any other types of errors we should trap here?
+                try:
+                    spec = eval('lambda wave : ' + spec)   # This can raise SyntaxError
+                    spec(700)   # This can raise NameError or ZeroDivisionError
+                except ArithmeticError:
+                    pass
+                except:
+                    raise ValueError(
+                        "String spec must either be a valid filename or something that "+
+                        "can eval to a function of wave. Input provided: {0}".format(origspec))
 
         if isinstance(spec, galsim.LookupTable):
             self.blue_limit = spec.x_min / wave_factor
@@ -114,7 +128,7 @@ class SED(object):
         elif flux_type == 'fphotons':
             self.fphotons = lambda w: spec(np.array(w) * wave_factor)
         else:
-            raise ValueError("Unknown flux_type `{}` in SED.__init__".format(flux_type))
+            raise ValueError("Unknown flux_type '{0}'".format(flux_type))
         self.redshift = 0
 
         # Hack to avoid (LookupTable.x_max * 10) / 10.0 > LookupTable.x_max due to roundoff
@@ -147,8 +161,9 @@ class SED(object):
         attributes, the SED is considered undefined, and this method will raise an exception if a
         flux at a wavelength outside the defined range is requested.
 
-        @param   wave  Wavelength in nanometers at which to evaluate the SED.
-        @returns       Photon density, Units proportional to photons/nm
+        @param wave     Wavelength in nanometers at which to evaluate the SED.
+
+        @returns the photon density in units of photons/nm
         """
         if hasattr(wave, '__iter__'): # Only iterables respond to min(), max()
             wmin = min(wave)
@@ -158,11 +173,11 @@ class SED(object):
             wmax = wave
         if self.blue_limit is not None:
             if wmin < self.blue_limit:
-                raise ValueError("Wavelength ({0}) is bluer than SED blue limit ({1})"
+                raise ValueError("Requested wavelength ({0}) is bluer than blue_limit ({1})"
                                  .format(wmin, self.blue_limit))
         if self.red_limit is not None:
             if wmax > self.red_limit:
-                raise ValueError("Wavelength ({0}) redder than SED red limit ({1})"
+                raise ValueError("Requested wavelength ({0}) is redder than red_limit ({1})"
                                  .format(wmax, self.red_limit))
         return self.fphotons(wave)
 
@@ -246,9 +261,10 @@ class SED(object):
         `wavelength`.  Note that this normalization is *relative* to the `flux` attribute of the
         chromaticized GSObject.
 
-        @param target_flux_density   The target *relative* normalization in photons / nm.
-        @param wavelength   The wavelength, in nanometers, at which flux density will be set.
-        @returns   New normalized SED.
+        @param target_flux_density  The target *relative* normalization in photons / nm.
+        @param wavelength           The wavelength, in nm, at which flux density will be set.
+
+        @returns the new normalized SED.
         """
         current_fphotons = self(wavelength)
         factor = target_flux_density / current_fphotons
@@ -260,9 +276,10 @@ class SED(object):
         """ Return a new SED with flux through the Bandpass `bandpass` set to `target_flux`. Note
         that this normalization is *relative* to the `flux` attribute of the chromaticized GSObject.
 
-        @param target_flux  Desired *relative* flux normalization of the SED.
-        @param bandpass   A galsim.Bandpass object defining a filter bandpass.
-        @returns   New normalized SED.
+        @param target_flux  The desired *relative* flux normalization of the SED.
+        @param bandpass     A Bandpass object defining a filter bandpass.
+
+        @returns the new normalized SED.
         """
         current_flux = self.calculateFlux(bandpass)
         norm = target_flux/current_flux
@@ -274,7 +291,8 @@ class SED(object):
         """ Return a new SED with redshifted wavelengths.
 
         @param redshift
-        @returns Redshifted SED.
+
+        @returns the redshifted SED.
         """
         ret = self.copy()
         wave_factor = (1.0 + redshift) / (1.0 + self.redshift)
@@ -288,11 +306,12 @@ class SED(object):
         return ret
 
     def calculateFlux(self, bandpass):
-        """ Return the SED flux through a bandpass.
+        """ Return the SED flux through a Bandpass `bandpass`.
 
-        @param bandpass   galsim.Bandpass object representing a filter, or None for bolometric
+        @param bandpass   A Bandpass object representing a filter, or None for bolometric
                           flux (over defined wavelengths).
-        @returns   Flux through bandpass.
+
+        @returns the flux through the bandpass.
         """
         if bandpass is None: # do bolometric flux
             if self.blue_limit is None:
@@ -314,17 +333,18 @@ class SED(object):
                                           bandpass.blue_limit, bandpass.red_limit)
 
     def thin(self, rel_err=1.e-4, preserve_range=False):
-        """ If the SED was initialized with a galsim.LookupTable or from a file (which
-        internally creates a galsim.LookupTable), then remove tabulated values while keeping
-        the integral over the over the set of tabulated values still accurate to `rel_err`.
+        """ If the SED was initialized with a LookupTable or from a file (which internally creates a
+        LookupTable), then remove tabulated values while keeping the integral over the set of
+        tabulated values still accurate to `rel_err`.
 
         @param rel_err            The relative error allowed in the integral over the SED
-                                  (default: 1.e-4)
+                                  [default: 1.e-4]
         @param preserve_range     Should the original range (`blue_limit` and `red_limit`) of the
                                   SED be preserved? (True) Or should the ends be trimmed to
                                   include only the region where the integral is significant? (False)
-                                  (default: False)
-        @returns  The thinned SED.
+                                  [default: False]
+
+        @returns the thinned SED.
         """
         if len(self.wave_list) > 0:
             x = self.wave_list
