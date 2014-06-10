@@ -181,26 +181,24 @@ class Bandpass(object):
             red_limit = min([self.red_limit, other.red_limit])
             wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
 
-        # preserve type if possible.
-        if type(self) == type(other):
+        # product of Bandpass instance and Bandpass subclass instance
+        if isinstance(other, Bandpass) and type(self) != type(other):
+            ret = Bandpass(lambda w: other(w)*self(w),
+                           blue_limit=blue_limit, red_limit=red_limit,
+                           _wave_list=wave_list)
+        # otherwise, preserve type of self
+        else:
             ret = self.copy()
             ret.blue_limit = blue_limit
             ret.red_limit = red_limit
             ret.wave_list = wave_list
-            ret.func = lambda w: other(w)*self(w)
             ret.zeropoint = None
             if hasattr(ret, 'effective_wavelength'):
                 del ret.effective_wavelength # this will get lazily recomputed when needed
-        # if not possible, then demote to Bandpass
-        elif hasattr(other, '__call__'):
-            ret = Bandpass(lambda w: other(w)*self(w),
-                           blue_limit=blue_limit, red_limit=red_limit,
-                           _wave_list=wave_list)
-        else:
-            ret = Bandpass(lambda w: other*self(w),
-                           blue_limit=blue_limit, red_limit=red_limit,
-                           _wave_list=wave_list)
-
+            if hasattr(other, '__call__'):
+                ret.func = lambda w: other(w)*self(w)
+            else:
+                ret.func = lambda w: other*self(w)
         return ret
 
     def __rmul__(self, other):
@@ -212,33 +210,31 @@ class Bandpass(object):
         red_limit = self.red_limit
         wave_list = self.wave_list
 
-        if isinstance(other, galsim.Bandpass):
+        if isinstance(other, Bandpass):
             if len(other.wave_list) > 0:
                 wave_list = np.union1d(wave_list, other.wave_list)
             blue_limit = max([self.blue_limit, other.blue_limit])
             red_limit = min([self.red_limit, other.red_limit])
             wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
 
-        # preserve type if possible.
-        if type(self) == type(other):
+        # product of Bandpass instance and Bandpass subclass instance
+        if isinstance(other, Bandpass) and type(self) != type(other):
+            ret = Bandpass(lambda w: self(w)/other(w),
+                           blue_limit=blue_limit, red_limit=red_limit,
+                           _wave_list=wave_list)
+        # otherwise, preserve type of self
+        else:
             ret = self.copy()
             ret.blue_limit = blue_limit
             ret.red_limit = red_limit
             ret.wave_list = wave_list
-            ret.func = lambda w: self(w)/other(w)
             ret.zeropoint = None
             if hasattr(ret, 'effective_wavelength'):
                 del ret.effective_wavelength # this will get lazily recomputed when needed
-        # if not possible, then demote to Bandpass
-        elif hasattr(other, '__call__'):
-            ret = Bandpass(lambda w: self(w)/other(w),
-                           blue_limit=blue_limit, red_limit=red_limit,
-                           _wave_list=wave_list)
-        else:
-            ret = Bandpass(lambda w: self(w)/other,
-                           blue_limit=blue_limit, red_limit=red_limit,
-                           _wave_list=wave_list)
-
+            if hasattr(other, '__call__'):
+                ret.func = lambda w: self(w)/other(w)
+            else:
+                ret.func = lambda w: self(w)/other
         return ret
 
     # Doesn't check for divide by zero, so be careful.
@@ -247,33 +243,31 @@ class Bandpass(object):
         red_limit = self.red_limit
         wave_list = self.wave_list
 
-        if isinstance(other, galsim.Bandpass):
+        if isinstance(other, Bandpass):
             if len(other.wave_list) > 0:
                 wave_list = np.union1d(wave_list, other.wave_list)
             blue_limit = max([self.blue_limit, other.blue_limit])
             red_limit = min([self.red_limit, other.red_limit])
             wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
 
-        # preserve type if possible.
-        if type(self) == type(other):
+        # product of Bandpass instance and Bandpass subclass instance
+        if isinstance(other, Bandpass) and type(self) != type(other):
+            ret = Bandpass(lambda w: other(w)/self(w),
+                           blue_limit=blue_limit, red_limit=red_limit,
+                           _wave_list=wave_list)
+        # otherwise, preserve type of self
+        else:
             ret = self.copy()
             ret.blue_limit = blue_limit
             ret.red_limit = red_limit
             ret.wave_list = wave_list
-            ret.func = lambda w: other(w)/self(w)
             ret.zeropoint = None
             if hasattr(ret, 'effective_wavelength'):
                 del ret.effective_wavelength # this will get lazily recomputed when needed
-        # if not possible, then demote to Bandpass
-        elif hasattr(other, '__call__'):
-            ret = Bandpass(lambda w: other(w)/self(w),
-                           blue_limit=blue_limit, red_limit=red_limit,
-                           _wave_list=wave_list)
-        else:
-            ret = Bandpass(lambda w: other/self(w),
-                           blue_limit=blue_limit, red_limit=red_limit,
-                           _wave_list=wave_list)
-
+            if hasattr(other, '__call__'):
+                ret.func = lambda w: other(w)/self(w)
+            else:
+                ret.func = lambda w: other/self(w)
         return ret
 
     # Doesn't check for divide by zero, so be careful.
