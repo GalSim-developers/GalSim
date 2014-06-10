@@ -75,18 +75,6 @@ class Bandpass(object):
     Note that the `wave_type` parameter does not propagate into other methods of `Bandpass`.
     For instance, Bandpass.__call__ assumes its input argument is in nanometers.
 
-    The optional `zeropoint` argument can be used to specify the magnitude zeropoint for the
-    bandpass.  This input parameter can also take a variety of possible forms:
-    1. a number, which will be the zeropoint
-    2. a galsim.SED.  In this case, the zeropoint is set such that the magnitude of the supplied
-       SED through the bandpass is 0.0
-    3. the string 'AB' or constant None.  In this (default) case, use an AB zeropoint.
-    4. the string 'Vega'.  Use a Vega zeropoint.
-    5. the string 'ST'.  Use a HST STmag zeropoint.
-    For 3, 4, and 5, the SEDs whose magnitudes are to be calculated are assumed to have units
-    of precisely erg/s/cm^2/nm, instead of simply units proportional to erg/nm, as would
-    otherwise be assumed.
-
     @param throughput   Function defining the throughput at each wavelength.  See above for
                         valid options for this parameter.
     @param blue_limit   Hard cut off of bandpass on the blue side. [default: None, but required
@@ -95,10 +83,9 @@ class Bandpass(object):
                         if throughput is not a LookupTable or file.  See above.]
     @param wave_type    The units to use for the wavelength argument of the `throughput`
                         function. See above for details. [default: 'nm']
-    @param zeropoint    Zeropoint for this bandpass.
     """
     def __init__(self, throughput, blue_limit=None, red_limit=None, wave_type='nm',
-                 zeropoint=None, _wave_list=None):
+                 _wave_list=None):
         # Note that `_wave_list` acts as a private construction variable that overrides the way that
         # `wave_list` is normally constructed (see `Bandpass.__mul__` below)
 
@@ -180,7 +167,7 @@ class Bandpass(object):
             self.wave_list[0] = self.wave_list[0] + 0.0000001
             self.wave_list[-1] = self.wave_list[-1] - 0.0000001
 
-        self.zeropoint = zeropoint
+        self.zeropoint = None
 
     def __mul__(self, other):
         blue_limit = self.blue_limit
@@ -201,12 +188,9 @@ class Bandpass(object):
             ret.red_limit = red_limit
             ret.wave_list = wave_list
             ret.func = lambda w: other(w)*self(w)
+            ret.zeropoint = None
             if hasattr(ret, 'effective_wavelength'):
                 del ret.effective_wavelength # this will get lazily recomputed when needed
-            if hasattr(ret, '_zeropoint'):
-                del ret._zeropoint # recalculate this too
-            # Use default AB magnitudes for Bandpasses constructed via multiplication
-            ret.zeropoint = None
         # if not possible, then demote to Bandpass
         elif hasattr(other, '__call__'):
             ret = Bandpass(lambda w: other(w)*self(w),
@@ -242,12 +226,9 @@ class Bandpass(object):
             ret.red_limit = red_limit
             ret.wave_list = wave_list
             ret.func = lambda w: self(w)/other(w)
+            ret.zeropoint = None
             if hasattr(ret, 'effective_wavelength'):
                 del ret.effective_wavelength # this will get lazily recomputed when needed
-            if hasattr(ret, '_zeropoint'):
-                del ret._zeropoint # recalculate this too
-            # Use default AB magnitudes for Bandpasses constructed via multiplication
-            ret.zeropoint = None
         # if not possible, then demote to Bandpass
         elif hasattr(other, '__call__'):
             ret = Bandpass(lambda w: self(w)/other(w),
@@ -280,12 +261,9 @@ class Bandpass(object):
             ret.red_limit = red_limit
             ret.wave_list = wave_list
             ret.func = lambda w: other(w)/self(w)
+            ret.zeropoint = None
             if hasattr(ret, 'effective_wavelength'):
                 del ret.effective_wavelength # this will get lazily recomputed when needed
-            if hasattr(ret, '_zeropoint'):
-                del ret._zeropoint # recalculate this too
-            # Use default AB magnitudes for Bandpasses constructed via multiplication
-            ret.zeropoint = None
         # if not possible, then demote to Bandpass
         elif hasattr(other, '__call__'):
             ret = Bandpass(lambda w: other(w)/self(w),
@@ -356,47 +334,61 @@ class Bandpass(object):
                                                                   self.blue_limit, self.red_limit))
         return self.effective_wavelength
 
-    def getZeroPoint(self):
-        """ Calculate and return the magnitude zeropoint for this bandpass.
+    def withZeropoint(self, zeropoint, effective_diameter=None, exptime=None):
+        """ Assign a zeropoint to this Bandpass.
+
+        The first argument `zeropoint` can take a variety of possible forms:
+        1. a number, which will be the zeropoint
+        2. a galsim.SED.  In this case, the zeropoint is set such that the magnitude of the supplied
+           SED through the bandpass is 0.0
+        3. the string 'AB'.  In this case, use an AB zeropoint.
+        4. the string 'Vega'.  Use a Vega zeropoint.
+        5. the string 'ST'.  Use a HST STmag zeropoint.
+        For 3, 4, and 5, the effective diameter of the telescope and exposure time of the
+        observation are also required.
         """
-        if not hasattr(self, '_zeropoint'):
-            # If zeropoint is None (default), or set to a string 'AB', then use AB magnitudes
-            if (self.zeropoint is None or
-                (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='AB')):
+        if isinstance(zeropoint, basestring):
+            if zeropoint.upper()=='AB':
                 AB_source = 3631e-23 # 3631 Jy in units of erg/s/Hz/cm^2
                 c = 2.99792458e17 # speed of light in nm/s
                 AB_flambda = AB_source * c / self.wave_list**2
                 AB_sed = galsim.SED(galsim.LookupTable(self.wave_list, AB_flambda))
                 flux = AB_sed.calculateFlux(self)
-                self._zeropoint = 2.5 * np.log10(flux)
             # If zeropoint.upper() is 'ST', then use HST STmags:
             # http://www.stsci.edu/hst/acs/analysis/zeropoints
-            elif (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='ST'):
+            elif zeropoint.upper()=='ST':
                 ST_flambda = 3.63e-8 # erg/s/cm^2/nm
                 ST_sed = galsim.SED(galsim.LookupTable(self.wave_list, ST_flambda))
                 flux = ST_sed.calculateFlux(self)
-                self._zeropoint = 2.5 * np.log10(flux)
             # If zeropoint.upper() is 'VEGA', then load vega spectrum stored in repository,
             # and use that for zeropoint spectrum.
-            elif (isinstance(self.zeropoint, basestring) and self.zeropoint.upper()=='VEGA'):
+            elif zeropoint.upper()=='VEGA':
                 import os
                 vegafile = os.path.join(galsim.meta_data.share_dir, "vega.txt")
                 sed = galsim.SED(vegafile)
                 flux = sed.calculateFlux(self)
-                self._zeropoint = 2.5 * np.log10(flux)
-            # If `self.zeropoint` is an `SED`, then compute the SED flux through the bandpass, and
-            # use this to create a magnitude zeropoint.
-            elif isinstance(self.zeropoint, galsim.SED):
-                flux = self.zeropoint.calculateFlux(self)
-                self._zeropoint = 2.5 * np.log10(flux)
-            # If zeropoint is a number, then use that
-            elif isinstance(self.zeropoint, (float, int)):
-                self._zeropoint = self.zeropoint
-            # But if zeropoint is none of these, raise an exception.
             else:
-                raise ValueError(
-                    "Don't know how to handle zeropoint of type: {0}".format(type(self.zeropoint)))
-        return self._zeropoint
+                raise ValueError("Do not recognize Zeropoint string {0}.".format(zeropoint))
+            if effective_diameter == None or exptime == None:
+                raise ValueError("Cannot calculate Zeropoint from string {0} without "
+                                 +"telescope effective diameter or exposure time.")
+            flux *= np.pi*effective_diameter**2/4 * exptime
+            new_zeropoint = 2.5 * np.log10(flux)
+        # If `zeropoint` is an `SED`, then compute the SED flux through the bandpass, and
+        # use this to create a magnitude zeropoint.
+        elif isinstance(zeropoint, galsim.SED):
+            flux = zeropoint.calculateFlux(self)
+            new_zeropoint = 2.5 * np.log10(flux)
+        # If zeropoint is a number, then use that
+        elif isinstance(zeropoint, (float, int)):
+            new_zeropoint = zeropoint
+        # But if zeropoint is none of these, raise an exception.
+        else:
+            raise ValueError(
+                "Don't know how to handle zeropoint of type: {0}".format(type(zeropoint)))
+        ret = self.copy()
+        ret.zeropoint = new_zeropoint
+        return ret
 
     def truncate(self, blue_limit=None, red_limit=None, relative_throughput=None):
         """Return a bandpass with its wavelength range truncated.
@@ -444,8 +436,6 @@ class Bandpass(object):
         ret.red_limit = red_limit
         if hasattr(ret, 'effective_wavelength'):
             del ret.effective_wavelength
-        if hasattr(ret, '_zeropoint'):
-            del ret._zeropoint
         return ret
 
     def thin(self, rel_err=1.e-4, preserve_range=False):
@@ -483,6 +473,4 @@ class Bandpass(object):
             ret.wave_list = np.array(newx)
             if hasattr(ret, 'effective_wavelength'):
                 del ret.effective_wavelength
-            if hasattr(ret, '_zeropoint'):
-                del ret._zeropoint
             return ret

@@ -362,7 +362,7 @@ class SED(object):
         @returns the bandpass magnitude.
         """
         current_flux = self.calculateFlux(bandpass)
-        return -2.5 * np.log10(current_flux) + bandpass.getZeroPoint()
+        return -2.5 * np.log10(current_flux) + bandpass.zeropoint
 
     def thin(self, rel_err=1.e-4, preserve_range=False):
         """ If the SED was initialized with a LookupTable or from a file (which internally creates a

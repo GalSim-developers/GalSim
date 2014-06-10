@@ -163,25 +163,20 @@ def test_SED_calculateMagnitude():
     # Test that we can create a zeropoint with an SED, and that magnitudes for that SED are
     # then 0.0
     sed = galsim.SED(spec='wave')
-    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), zeropoint=sed)
+    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5])).withZeropoint(sed)
     np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass), 0.0)
     # Try multiplying SED by 100 to verify that magnitude decreases by 5
     sed *= 100
     np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass), -5.0)
     # Try setting zeropoint to a constant.
-    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), zeropoint=6.0)
+    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5])).withZeropoint(6.0)
     np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass),
                                    (sed*100).calculateMagnitude(bandpass)+5.0)
     # Try setting AB zeropoint
-    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
+    bandpass = (galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
+                .withZeropoint('AB', effective_diameter=640.0, exptime=15.0))
     np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass),
                                    (sed*100).calculateMagnitude(bandpass)+5.0)
-
-    # Check that zeropoint=None and zeropoint='ab' do the same thing.
-    bandpass1 = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
-    bandpass2 = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), zeropoint='ab')
-    np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass1),
-                                   sed.calculateMagnitude(bandpass2))
 
     # See if we can set a magnitude.
     sed = sed.withMagnitude(24.0, bandpass)
@@ -198,22 +193,19 @@ def test_SED_calculateMagnitude():
     filter_names = 'ugrizy'
     for conversion, filter_name in zip(ugrizy_vega_ab_conversions, filter_names):
         filter_filename = os.path.join(datapath, 'LSST_{}.dat'.format(filter_name))
-        AB_bandpass = galsim.Bandpass(filter_filename, zeropoint='AB')
-        vega_bandpass = galsim.Bandpass(filter_filename, zeropoint='vega')
+        AB_bandpass = (galsim.Bandpass(filter_filename)
+                       .withZeropoint('AB', effective_diameter=640, exptime=15))
+        vega_bandpass = (galsim.Bandpass(filter_filename)
+                         .withZeropoint('vega', effective_diameter=640, exptime=15))
         AB_mag = sed.calculateMagnitude(AB_bandpass)
         vega_mag = sed.calculateMagnitude(vega_bandpass)
         assert (abs((AB_mag - vega_mag) - conversion) < 0.1)
 
     # Test intended meaning of zeropoint.  I.e., that an object with magnitude equal to the
     # zeropoint will have a flux of 1.0.
-    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
-    sed = sed.withMagnitude(bandpass.getZeroPoint(), bandpass)
+    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5])).withZeropoint(24.0)
+    sed = sed.withMagnitude(bandpass.zeropoint, bandpass)
     np.testing.assert_almost_equal(sed.calculateFlux(bandpass), 1.0, 10)
-    # And again with an explicitly set zeropoint.
-    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), zeropoint=24.0)
-    sed = sed.withMagnitude(bandpass.getZeroPoint(), bandpass)
-    np.testing.assert_almost_equal(sed.calculateFlux(bandpass), 1.0, 10)
-
 
 def test_SED_calculateDCRMomentShifts():
     # compute some moment shifts
