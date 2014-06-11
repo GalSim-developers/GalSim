@@ -232,6 +232,26 @@ def test_SED_calculateSeeingMomentShifts():
     relative_size = sed.calculateSeeingMomentShifts(bandpass)
     np.testing.assert_almost_equal(relative_size, 0.919577157172, 4)
 
+def test_fnu_vs_flambda():
+    c = 2.99792458e17  # speed of light in nm/s
+    h = 6.62606957e-27 # Planck's constant in erg seconds
+    k = 1.3806488e-16  # Boltzmann's constant ergs per Kelvin
+    nm_in_cm = 1e7
+    # read these straight from Wikipedia
+    def rayleigh_jeans_fnu(T, w):
+        nu = c/w
+        return 2*nu**2*k*T/c**2 * nm_in_cm**2 # should have units of erg/s/cm^2/Hz
+    def rayleigh_jeans_flambda(T, w):
+        return 2*c*k*T / w**4 * nm_in_cm**2 # should have units of erg/s/cm^2/nm
+    waves = np.linspace(500, 1000, 100)
+    fnu = rayleigh_jeans_fnu(5800, waves)
+    flambda = rayleigh_jeans_flambda(5800, waves)
+
+    sed1 = galsim.SED(galsim.LookupTable(waves, fnu), flux_type='fnu')
+    sed2 = galsim.SED(galsim.LookupTable(waves, flambda), flux_type='flambda')
+    np.testing.assert_allclose(sed1(waves), sed2(waves), 1e-10,
+                               err_msg="Check fnu & flambda consistency.")
+
 if __name__ == "__main__":
     test_SED_add()
     test_SED_sub()
@@ -243,3 +263,4 @@ if __name__ == "__main__":
     test_SED_calculateMagnitude()
     test_SED_calculateDCRMomentShifts()
     test_SED_calculateSeeingMomentShifts()
+    test_fnu_vs_flambda()
