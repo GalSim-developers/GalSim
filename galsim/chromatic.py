@@ -285,6 +285,44 @@ class ChromaticObject(object):
         ret.obj = self.obj.withScaledFlux(flux_ratio)
         return ret
 
+    def centroid(self, bandpass):
+        """ Determine the centroid of the wavelength-integrated surface brightness profile.
+
+        @param bandpass  The bandpass through which the observation is made.
+
+        @returns the centroid of the integrated surface brightness profile, as a PositionD.
+        """
+        # if either the Bandpass or self maintain a wave_list, evaluate integrand only at
+        # those wavelengths.
+        if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
+            w = numpy.union1d(bandpass.wave_list, self.wave_list)
+            w = w[(w <= bandpass.red_limit) & (w >= bandpass.blue_limit)]
+            objs = [self.evaluateAtWavelength(y) for y in w]
+            fluxes = [o.getFlux() for o in objs]
+            centroids = [o.centroid() for o in objs]
+            xcentroids = numpy.array([c.x for c in centroids])
+            ycentroids = numpy.array([c.y for c in centroids])
+            bp = bandpass(w)
+            flux = numpy.trapz(bp * fluxes, w)
+            xcentroid = numpy.trapz(bp * fluxes * xcentroids, w) / flux
+            ycentroid = numpy.trapz(bp * fluxes * ycentroids, w) / flux
+            return galsim.PositionD(xcentroid, ycentroid)
+        else:
+            flux_integrand = lambda w: self.evaluateAtWavelength(w).getFlux() * bandpass(w)
+            xcentroid_integrand = lambda w: (self.evaluateAtWavelength(w).centroid().x
+                                             * self.evaluateAtWavelength(w).getFlux()
+                                             * bandpass(w))
+            ycentroid_integrand = lambda w: (self.evaluateAtWavelength(w).centroid().y
+                                             * self.evaluateAtWavelength(w).getFlux()
+                                             * bandpass(w))
+            flux = galsim.integ.int1d(flux_integrand, bandpass.blue_limit, bandpass.red_limit)
+            xcentroid = 1./flux * galsim.integ.int1d(xcentroid_integrand,
+                                                     bandpass.blue_limit,
+                                                     bandpass.red_limit)
+            ycentroid = 1./flux * galsim.integ.int1d(ycentroid_integrand,
+                                                     bandpass.blue_limit,
+                                                     bandpass.red_limit)
+            return galsim.PositionD(xcentroid, ycentroid)
 
     # Add together `ChromaticObject`s and/or `GSObject`s
     def __add__(self, other):
