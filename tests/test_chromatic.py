@@ -343,12 +343,21 @@ def test_dcr_moments():
     V2 = numV2/den2
     dV_analytic = V1 - V2
 
+    # also compute dR_analytic using ChromaticObject.centroid()
+    centroid1 = final1.centroid(bandpass)
+    centroid2 = final2.centroid(bandpass)
+    dR_centroid = (centroid1 - centroid2).y
+
     print 'image delta R:    {0}'.format(dR_image)
     print 'analytic delta R: {0}'.format(dR_analytic)
+    print 'centroid delta R: {0}'.format(dR_centroid)
     print 'image delta V:    {0}'.format(dV_image)
     print 'analytic delta V: {0}'.format(dV_analytic)
     np.testing.assert_almost_equal(dR_image, dR_analytic, 5,
                                    err_msg="dRbar Shift from DCR doesn't match analytic formula")
+    np.testing.assert_almost_equal(dR_analytic, dR_centroid, 10,
+                                   err_msg="direct dRbar calculation doesn't match"
+                                           +" ChromaticObject.centroid()")
     np.testing.assert_almost_equal(dV_image, dV_analytic, 5,
                                    err_msg="dV Shift from DCR doesn't match analytic formula")
 
