@@ -956,6 +956,26 @@ def test_separable_ChromaticSum():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_centroid():
+    sed = galsim.SED('wave', flux_type='fphotons')
+    bp = galsim.Bandpass('wave', blue_limit=0, red_limit=1)
+    shift_fn = lambda w: (w, 0)
+    gal = sed * galsim.Gaussian(fwhm=1)
+    gal = gal.shift(shift_fn)
+    # The sed and bandpass each contribute a factor of wavelength to the flux integrand of the
+    # galaxy.  The shift function contributes an additional factor of wavelength to the x-centroid
+    # integrand.  The end result is that the x-centroid should be:
+    # int(w^3, 0, 1) / int(w^2, 0, 1) = (1/4)/(1/3) = 3/4.
+    centroid = gal.centroid(bp)
+    np.testing.assert_almost_equal(centroid.x, 0.75, 5, "ChromaticObject.centroid() failed")
+    np.testing.assert_almost_equal(centroid.y, 0.0, 5, "ChromaticObject.centroid() failed")
+
+    # Now check the centroid sampling integrator...
+    gal.wave_list = np.linspace(0.0, 1.0, 500)
+    centroid = gal.centroid(bp)
+    np.testing.assert_almost_equal(centroid.x, 0.75, 5, "ChromaticObject.centroid() failed")
+    np.testing.assert_almost_equal(centroid.y, 0.0, 5, "ChromaticObject.centroid() failed")
+
 if __name__ == "__main__":
     test_draw_add_commutativity()
     test_ChromaticConvolution_InterpolatedImage()
@@ -976,3 +996,4 @@ if __name__ == "__main__":
     test_analytic_integrator()
     test_gsparam()
     test_separable_ChromaticSum()
+    test_centroid()
