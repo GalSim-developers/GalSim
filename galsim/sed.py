@@ -293,9 +293,9 @@ class SED(object):
         return ret
 
     def withMagnitude(self, target_magnitude, bandpass):
-        """ Return a new SED with `bandpass` magnitude set to `target_magnitude`.  I.e., when the
-        resulting SED is multiplied by a GSObject with `flux=1`, the resulting ChromaticObject
-        will have magnitude `target_magnitude` when drawn through the `bandpass` Bandpass.  Note
+        """ Return a new SED with magnitude through `bandpass` set to `target_magnitude`. I.e.,
+        when the resulting SED is multiplied by a GSObject with flux=1, the resulting
+        ChromaticObject will have magnitude `target_magnitude` when drawn through `bandpass`. Note
         that the total normalization depends both on the SED and the GSObject.  See the
         galsim.Chromatic doc string for more details on normalization conventions.
 
