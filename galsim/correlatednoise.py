@@ -62,6 +62,11 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile_for_stored = None
         self._rootps_store = []
         self._rootps_whitening_store = []
+        # Likewise for the stored quantities to be used for symmetrizing the noise, which have
+        # additional requirements.
+        self._profile_for_stored_sym = None
+        self._rootps_store_sym = []
+        self._rootps_symmetrizing_store = []
         # Also set up the cache for a stored value of the variance, needed for efficiency once the
         # noise field can get convolved with other GSObjects making isAnalyticX() False
         self._variance_stored = None
@@ -236,6 +241,89 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         # Finally generate a random field in Fourier space with the right PS and add to image
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps_whitening)
+        image += galsim.Image(noise_array)
+
+        # Return the variance to the interested user
+        return variance
+
+    def symmetrize(self, image, order=4):
+        """Apply noise designed to impose N-fold symmetry on the existing noise in an input Image.
+
+        The order `N` of the symmetry can be supplied as a keyword argument, with the default being
+        4 because this is presumably the minimum required for the anisotropy of noise correlations
+        to not affect shear statistics.
+
+        On output the Image instance `image` will have been given additional noise according to a
+        specified CorrelatedNoise instance, designed to symmetrize the correlated noise that may
+        have originally existed in `image`.
+
+        Calling
+        -------
+
+            >>> correlated_noise.symmetrize(image, order=order)
+
+        If the `image` originally contained noise with a correlation function described by the
+        `correlated_noise` instance, the combined noise after using the symmetrize() method
+        will have a noise correlation function with N-fold symmetry, where `N=order`.
+
+        Note that the code doesn't check that the "if" above is true: the user MUST make sure this
+        is the case for the final noise correlation function to be symmetric in the requested way.
+
+        Normally, `image.scale` is used to determine the input Image pixel separation, and if
+        `image.wcs` is None, a pixel scale of 1 is assumed.  If the image has a non-trivial WCS, it
+        must at least be "uniform", i.e., `image.wcs.isUniform() == True`.
+
+        If you are interested in a theoretical calculation of the variance in the final noise field
+        after imposing symmetry, the symmetrize() method in fact returns this variance.  For example:
+
+            >>> variance = correlated_noise.symmetrize(image, order=order)
+
+        For context, in comparison with the applyWhiteningTo() method for the case of noise
+        correlation functions that are roughly like those in the COSMOS HST data, the amount of
+        noise added to impose N-fold symmetry is usually much less than what is added to fully
+        whiten the noise.  The usage of symmetrize() is totally analogous to the usage of
+        applyWhiteningTo().
+
+        @param image The input Image object.
+        @param order The order at which to require the noise to be symmetric.  All noise fields are
+        already 2-fold symmetric, so `order` should be an even integer >2.  [default: 4].
+
+        @returns the theoretically calculated variance of the combined noise fields in the
+                 updated image.
+        """
+        # Check that the input has defined bounds
+        if not isinstance(image, galsim.Image):
+            raise TypeError("Input image not a galsim.Image object")
+        if not image.bounds.isDefined():
+            raise ValueError("Input image argument must have defined bounds.")
+
+        # Check that the input order is an allowed value.
+
+        # If the profile has changed since last time (or if we have never been here before),
+        # clear out the stored values.  Note that this cache is not the same as the one used for
+        # whitening, because we need the stored correlation function / power spectrum to be square
+        # in order to facilitate our calculations.  (For the general case they can be rectangular,
+        # since that satisfies the 2-fold symmetry requirement, but here they must be square to get
+        # 4-fold symmetry.)  Technically, if the entries in the whitening cache are square then we
+        # could use them, but rather than trying to transfer values back and forth we set up a new
+        # cache.  In general we expect that people will either whiten or symmetrize, not both, so
+        # it's unlikely they will populate both caches anyway.
+        if self._profile_for_stored_sym is not self._profile:
+            self._rootps_store_sym = []
+            self._rootps_symmetrizing_store = []
+        # Set profile_for_stored for next time.
+        self._profile_for_stored_sym = self._profile
+
+        # Then retrieve or redraw the sqrt(power spectrum) needed for making the symmetrizing noise,
+        # and the total variance of the combination.  This routine only takes a single number for
+        # the shape, rather than a tuple, because we require a square PS.
+        rootps_symmetrizing, variance = self._get_update_rootps_symmetrizing(
+            max(image.array.shape), image.wcs)
+
+        # Finally generate a random field in Fourier space with the right PS and add to image.
+        # Currently these lines assume the input image has the same shape as the rootps image, which
+        # seems potentially limiting.
+        noise_array = _generate_noise_from_rootps(self.getRNG(), rootps_symmetrizing)
         image += galsim.Image(noise_array)
 
         # Return the variance to the interested user
