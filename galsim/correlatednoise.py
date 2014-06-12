@@ -780,7 +780,6 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         if use_stored is False:
 
             rootps = self._get_update_rootps(shape, wcs)
-            ###Everything below here has to get fixed for the case of symmetrizing.
             ps_actual = rootps * rootps
             # This routine will get a PS that is a symmetrized version of `ps_actual` at the desired
             # order, with a minimum entry equal to max(`ps_actual`)
@@ -790,8 +789,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
             # Finally calculate the theoretical combined variance to output alongside the image
             # to be generated with the rootps_symmetrizing.  The factor of product of the image shape
-            # is required due to inverse FFT conventions. We must use the [0, 0] element; the PS
-            # will not be flat.
+            # is required due to inverse FFT conventions.
+            # This calculation is wrong - power spectra are not flat - TODO: fix!
             variance = (rootps[0, 0]**2 + ps_symmetrizing[0, 0]) / np.product(shape)
 
             # Then add all this and the relevant wcs to the _rootps_symmetrizing_store
@@ -828,7 +827,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # symmetrized power spectrum should always be >= the original one (`ps`).  We therefore find
         # the difference between the maximum value of `ps` and the minimum value of `final_arr`, and
         # add that to `final_arr`
-        var_to_add = np.max(ps) - np.min(final_arr)
+        power_to_add = np.max(ps) - np.min(final_arr)
         final_arr += var_to_add
         return final_arr
 
