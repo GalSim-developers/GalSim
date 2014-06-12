@@ -784,8 +784,6 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             # This routine will get a PS that is a symmetrized version of `ps_actual` at the desired
             # order, with a minimum entry equal to max(`ps_actual`)
             ps_symmetrized = self._get_symmetrized_ps(ps_actual, order)
-            print np.min(ps_actual), np.max(ps_actual)
-            print np.min(ps_symmetrized), np.max(ps_symmetrized)
             ps_symmetrizing = ps_symmetrized * headroom - ps_actual # add a little extra variance
             rootps_symmetrizing = np.sqrt(ps_symmetrizing)
 
@@ -826,10 +824,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         final_arr /= order
         # final_arr now contains the average of the rotations by 2pi/order, which should be
         # symmetric at the required order.  However, our other requirement is that the target
-        # symmetrized power spectrum should always be >= the original one (`ps`).  We therefore find
-        # the difference between the maximum value of `ps` and the minimum value of `final_arr`, and
-        # add that to `final_arr`
-        power_to_add = np.max(ps) - np.min(final_arr)
+        # symmetrized power spectrum should always be >= the original one (`ps`).
+        delta_pow = final_arr - ps
+        # We need to add the absolute value of the minimum entry (which will be negative).
+        power_to_add = np.abs(np.min(delta_pow))
         final_arr += power_to_add
         return final_arr
 
