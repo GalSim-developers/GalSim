@@ -753,7 +753,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         return rootps_whitening, variance
 
-    def _get_update_rootps_symmetrizing(self, shape, wcs, order, headroom=1.05):
+    def _get_update_rootps_symmetrizing(self, shape, wcs, order, headroom=1.02):
         """Internal utility function for querying the `rootps_symmetrizing` cache, used by the
         symmetrize() method, and calculate and update it if not present.
 
@@ -781,20 +781,56 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
             rootps = self._get_update_rootps(shape, wcs)
             ###Everything below here has to get fixed for the case of symmetrizing.
-            ps_whitening = -rootps * rootps
-            ps_whitening += np.abs(np.min(ps_whitening)) * headroom # Headroom adds a little extra
-            rootps_whitening = np.sqrt(ps_whitening)                # variance, for "safety"
+            ps_actual = rootps * rootps
+            # This routine will get a PS that is a symmetrized version of `ps_actual` at the desired
+            # order, with a minimum entry equal to max(`ps_actual`)
+            ps_symmetrized = _get_symmetrized_ps(ps_actual, order)
+            ps_symmetrizing = ps_symmetrized * headroom - ps_actual # add a little extra variance
+            rootps_symmetrizing = np.sqrt(ps_symmetrizing)
 
             # Finally calculate the theoretical combined variance to output alongside the image
-            # to be generated with the rootps_whitening.  The factor of product of the image shape
-            # is required due to inverse FFT conventions, and note that although we use the [0, 0]
-            # element we could use any as the PS should be flat
-            variance = (rootps[0, 0]**2 + ps_whitening[0, 0]) / np.product(shape)
+            # to be generated with the rootps_symmetrizing.  The factor of product of the image shape
+            # is required due to inverse FFT conventions. We must use the [0, 0] element; the PS
+            # will not be flat.
+            variance = (rootps[0, 0]**2 + ps_symmetrizing[0, 0]) / np.product(shape)
 
-            # Then add all this and the relevant wcs to the _rootps_whitening_store
-            self._rootps_whitening_store.append((rootps_whitening, wcs, variance))
+            # Then add all this and the relevant wcs to the _rootps_symmetrizing_store
+            self._rootps_symmetrizing_store.append((rootps_symmetrizing, wcs, variance, order))
 
-        return rootps_whitening, variance
+        return rootps_symmetrizing, variance
+
+    def _get_symmetrized_ps(self, ps, order):
+        """Internal utility function for taking an input power spectrum and generating a version of
+        it with symmetry at a given `order`.
+
+        We make an image of the PS and turn it into an galsim.InterpolatedImage in order to carry
+        out the necessary rotations using well-tested interpolation routines.  We will also require
+        the output to be strictly >= the input noise power spectrum, so that it should be possible
+        to generate noise with power equal to the difference between the two power spectra."""
+        # Begin by initializing the array in which to build up the symmetrized PS.
+        final_arr = np.zeros(ps.shape)
+        # And a temporary one, which we will turn into an InterpolatedImage
+        tmp_arr = ps.copy()
+        tmp_im = galsim.Image(tmp_arr, scale=1)
+        tmp_obj = galsim.InterpolatedImage(tmp_im)
+        # Now loop over the rotations by 2pi/order.
+        for i_rot in range(order):
+            # For the first one, we don't rotate at all.
+            if i_rot > 0:
+                # For later ones, rotate by 2pi/order, and draw it back into a new image.
+                tmp_obj = tmp_obj.rotate(2.*np.pi*galsim.radians/order)
+                tmp_im = galsim.Image(ps.shape[0], ps.shape[1], scale=1)
+                tmp_obj.draw(tmp_im, scale=1)
+            final_arr += tmp_im.array
+        final_arr /= order
+        # final_arr now contains the average of the rotations by 2pi/order, which should be
+        # symmetric at the required order.  However, our other requirement is that the target
+        # symmetrized power spectrum should always be >= the original one (`ps`).  We therefore find
+        # the difference between the maximum value of `ps` and the minimum value of `final_arr`, and
+        # add that to `final_arr`
+        var_to_add = np.max(ps) - np.min(final_arr)
+        final_arr += var_to_add
+        return final_arr
 
 ###
 # Now a standalone utility function for generating noise according to an input (square rooted)
