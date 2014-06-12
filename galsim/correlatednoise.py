@@ -764,7 +764,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # requested order of the symmetry to be the same as the stored one.
         use_stored = False
         for rootps_symmetrizing_array, saved_wcs, var, saved_order in self._rootps_symmetrizing_store:
-            if shape == rootps_whitening_array.shape and order == saved_order:
+            if shape == rootps_symmetrizing_array.shape and order == saved_order:
                 if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
                      wcs == saved_wcs ):
                     use_stored = True
@@ -784,7 +784,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             ps_actual = rootps * rootps
             # This routine will get a PS that is a symmetrized version of `ps_actual` at the desired
             # order, with a minimum entry equal to max(`ps_actual`)
-            ps_symmetrized = _get_symmetrized_ps(ps_actual, order)
+            ps_symmetrized = self._get_symmetrized_ps(ps_actual, order)
             ps_symmetrizing = ps_symmetrized * headroom - ps_actual # add a little extra variance
             rootps_symmetrizing = np.sqrt(ps_symmetrizing)
 
