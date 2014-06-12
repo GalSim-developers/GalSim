@@ -784,6 +784,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             # This routine will get a PS that is a symmetrized version of `ps_actual` at the desired
             # order, with a minimum entry equal to max(`ps_actual`)
             ps_symmetrized = self._get_symmetrized_ps(ps_actual, order)
+            print np.min(ps_actual), np.max(ps_actual)
+            print np.min(ps_symmetrized), np.max(ps_symmetrized)
             ps_symmetrizing = ps_symmetrized * headroom - ps_actual # add a little extra variance
             rootps_symmetrizing = np.sqrt(ps_symmetrizing)
 
@@ -828,7 +830,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # the difference between the maximum value of `ps` and the minimum value of `final_arr`, and
         # add that to `final_arr`
         power_to_add = np.max(ps) - np.min(final_arr)
-        final_arr += var_to_add
+        final_arr += power_to_add
         return final_arr
 
 ###
