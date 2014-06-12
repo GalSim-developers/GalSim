@@ -56,16 +56,13 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         # When applying normal or whitening noise to an image, we normally do calculations.
         # If _profile_for_stored is profile, then it means that we can use the stored values in
-        # _rootps_store and/or _rootps_whitening_store and avoid having to redo the calculations.
-        # So for now, we start out with _profile_for_stored = None and _rootps_store and
-        # _rootps_whitening_store empty.
+        # _rootps_store, _rootps_whitening_store, and/or _rootps_symmetrizing_store and avoid having
+        # to redo the calculations.
+        # So for now, we start out with _profile_for_stored = None, and _rootps_store,  
+        # _rootps_whitening_store, _rootps_symmetrizing_store empty.
         self._profile_for_stored = None
         self._rootps_store = []
         self._rootps_whitening_store = []
-        # Likewise for the stored quantities to be used for symmetrizing the noise, which have
-        # additional requirements.
-        self._profile_for_stored_sym = None
-        self._rootps_store_sym = []
         self._rootps_symmetrizing_store = []
         # Also set up the cache for a stored value of the variance, needed for efficiency once the
         # noise field can get convolved with other GSObjects making isAnalyticX() False
@@ -310,17 +307,16 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # If the profile has changed since last time (or if we have never been here before),
         # clear out the stored values.  Note that this cache is not the same as the one used for
         # whitening.
-        if self._profile_for_stored_sym is not self._profile:
-            self._rootps_store_sym = []
+        if self._profile_for_stored is not self._profile:
+            self._rootps_store = []
             self._rootps_symmetrizing_store = []
         # Set profile_for_stored for next time.
-        self._profile_for_stored_sym = self._profile
+        self._profile_for_stored = self._profile
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the symmetrizing noise,
-        # and the total variance of the combination.  This routine only takes a single number for
-        # the shape, rather than a tuple, because we require a square PS.
+        # and the total variance of the combination.
         rootps_symmetrizing, variance = self._get_update_rootps_symmetrizing(
-            max(image.array.shape), image.wcs)
+            image.array.shape, image.wcs, order)
 
         # Finally generate a random field in Fourier space with the right PS and add to image.
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps_symmetrizing)
@@ -676,8 +672,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return galsim._galsim._calculateCovarianceMatrix(self._profile.SBProfile, bounds, scale)
 
     def _get_update_rootps(self, shape, wcs):
-        """Internal utility function for querying the `rootps` cache, used by applyTo() and
-        applyWhiteningTo() methods.
+        """Internal utility function for querying the `rootps` cache, used by applyTo(),
+        applyWhiteningTo(), and symmetrize() methods.
         """
         # First check whether we can just use a stored power spectrum (no drawing necessary if so)
         use_stored = False
@@ -742,6 +738,49 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         if use_stored is False:
 
             rootps = self._get_update_rootps(shape, wcs)
+            ps_whitening = -rootps * rootps
+            ps_whitening += np.abs(np.min(ps_whitening)) * headroom # Headroom adds a little extra
+            rootps_whitening = np.sqrt(ps_whitening)                # variance, for "safety"
+
+            # Finally calculate the theoretical combined variance to output alongside the image
+            # to be generated with the rootps_whitening.  The factor of product of the image shape
+            # is required due to inverse FFT conventions, and note that although we use the [0, 0]
+            # element we could use any as the PS should be flat
+            variance = (rootps[0, 0]**2 + ps_whitening[0, 0]) / np.product(shape)
+
+            # Then add all this and the relevant wcs to the _rootps_whitening_store
+            self._rootps_whitening_store.append((rootps_whitening, wcs, variance))
+
+        return rootps_whitening, variance
+
+    def _get_update_rootps_symmetrizing(self, shape, wcs, order, headroom=1.05):
+        """Internal utility function for querying the `rootps_symmetrizing` cache, used by the
+        symmetrize() method, and calculate and update it if not present.
+
+        @returns rootps_symmetrizing, variance
+        """
+        # First check whether we can just use a stored symmetrizing power spectrum.  In addition for
+        # the considerations for use of cached observations for noise whitening, we need the
+        # requested order of the symmetry to be the same as the stored one.
+        use_stored = False
+        for rootps_symmetrizing_array, saved_wcs, var, saved_order in self._rootps_symmetrizing_store:
+            if shape == rootps_whitening_array.shape and order == saved_order:
+                if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
+                     wcs == saved_wcs ):
+                    use_stored = True
+                    rootps_symmetrizing = rootps_symmetrizing_array
+                    variance = var
+                    break
+
+        # If not, calculate the symmetrizing power spectrum as (almost) the smallest power spectrum
+        # that when added to rootps**2 gives a power that has N-fold symmetry, where `N=order`.
+        # Note that rootps = sqrt(power spectrum), and this procedure therefore works since power
+        # spectra add (rather like variances).  The resulting power spectrum will be all positive
+        # (and thus physical).
+        if use_stored is False:
+
+            rootps = self._get_update_rootps(shape, wcs)
+            ###Everything below here has to get fixed for the case of symmetrizing.
             ps_whitening = -rootps * rootps
             ps_whitening += np.abs(np.min(ps_whitening)) * headroom # Headroom adds a little extra
             rootps_whitening = np.sqrt(ps_whitening)                # variance, for "safety"
