@@ -300,8 +300,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             raise ValueError("Input image argument must have defined bounds.")
 
         # Check that the input is square in shape.
+        if image.array.shape[0] != image.array.shape[1]:
+            raise ValueError("Input image is not square!")
 
         # Check that the input order is an allowed value.
+        if order % 2 != 0 or order <= 2:
+            raise ValueError("Order must be an even number >=4!")
 
         # If the profile has changed since last time (or if we have never been here before),
         # clear out the stored values.  Note that this cache is not the same as the one used for
