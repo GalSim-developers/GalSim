@@ -247,7 +247,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return variance
 
     def symmetrize(self, image, order=4):
-        """Apply noise designed to impose N-fold symmetry on the existing noise in an input Image.
+        """Apply noise designed to impose N-fold symmetry on the existing noise in a (square) input
+        Image.
 
         The order `N` of the symmetry can be supplied as a keyword argument, with the default being
         4 because this is presumably the minimum required for the anisotropy of noise correlations
@@ -284,9 +285,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         whiten the noise.  The usage of symmetrize() is totally analogous to the usage of
         applyWhiteningTo().
 
-        @param image The input Image object.
+        @param image The square input Image object.
         @param order The order at which to require the noise to be symmetric.  All noise fields are
-        already 2-fold symmetric, so `order` should be an even integer >2.  [default: 4].
+                     already 2-fold symmetric, so `order` should be an even integer >2.
+                     [default: 4].
 
         @returns the theoretically calculated variance of the combined noise fields in the
                  updated image.
@@ -297,17 +299,13 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         if not image.bounds.isDefined():
             raise ValueError("Input image argument must have defined bounds.")
 
+        # Check that the input is square in shape.
+
         # Check that the input order is an allowed value.
 
         # If the profile has changed since last time (or if we have never been here before),
         # clear out the stored values.  Note that this cache is not the same as the one used for
-        # whitening, because we need the stored correlation function / power spectrum to be square
-        # in order to facilitate our calculations.  (For the general case they can be rectangular,
-        # since that satisfies the 2-fold symmetry requirement, but here they must be square to get
-        # 4-fold symmetry.)  Technically, if the entries in the whitening cache are square then we
-        # could use them, but rather than trying to transfer values back and forth we set up a new
-        # cache.  In general we expect that people will either whiten or symmetrize, not both, so
-        # it's unlikely they will populate both caches anyway.
+        # whitening.
         if self._profile_for_stored_sym is not self._profile:
             self._rootps_store_sym = []
             self._rootps_symmetrizing_store = []
@@ -321,8 +319,6 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             max(image.array.shape), image.wcs)
 
         # Finally generate a random field in Fourier space with the right PS and add to image.
-        # Currently these lines assume the input image has the same shape as the rootps image, which
-        # seems potentially limiting.
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps_symmetrizing)
         image += galsim.Image(noise_array)
 
