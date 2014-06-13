@@ -7,7 +7,7 @@ License: BSD
 Maintainer: Mike Jarvis <mikejarvis17@gmail.com>
 
 BuildDepends: <<
-    boost1.53.python27,
+    boost1.55-python27,
     fink (>= 0.28),
     fftw3,
     scons,
@@ -15,7 +15,7 @@ BuildDepends: <<
 <<
 
 Depends: <<
-    boost1.53.python27-shlibs,
+    boost1.55-python27-shlibs,
     fftw3-shlibs,
     numpy-py27,
     pyfits-py27,
@@ -36,7 +36,7 @@ CompileScript: <<
     # Note: The above two parameters should mean that the MAKEFILES 
     # environment variable only has '-jN'.  This has the same meaning for 
     # scons, but scons doesn't use MAKEFLAGS, so put it here explicitly.
-    scons PYTHON=%p/bin/python2.7 PREFIX=%i FINAL_PREFIX=%p PYPREFIX=%i/lib/python2.7/site-packages IMPORT_PREFIX=false TMV_DIR=%p $MAKEFLAGS
+    scons PYTHON=%p/bin/python2.7 PREFIX=%i FINAL_PREFIX=%p PYPREFIX=%i/lib/python2.7/site-packages IMPORT_PREFIX=false TMV_DIR=%p BOOST_DIR=%p/opt/boost-1_55 $MAKEFLAGS
 <<
 
 InstallScript: <<
