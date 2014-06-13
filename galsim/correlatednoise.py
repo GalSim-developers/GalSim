@@ -866,12 +866,12 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     """A class that represents 2D correlated noise fields calculated from an input Image.
 
     This class stores an internal representation of a 2D, discrete correlation function, and allows
-    a number of subsequent operations including interpolation, shearing, magnification and
-    rendering of the correlation function profile into an output Image.  The class also allows
-    correlated Gaussian noise fields to be generated according to the correlation function, and
-    added to an Image: see the applyTo() method.  It also provides a method for whitening
-    pre-existing noise that shares the same spatial correlations: see the applyWhiteningTo()
-    method.
+    a number of subsequent operations including interpolation, shearing, magnification and rendering
+    of the correlation function profile into an output Image.  The class also allows correlated
+    Gaussian noise fields to be generated according to the correlation function, and added to an
+    Image: see the applyTo() method.  It also provides methods for whitening or imposing N-fold
+    symmetry on pre-existing noise that shares the same spatial correlations: see the
+    applyWhiteningTo() and symmetrize() methods, respectively.
 
     It also allows the combination of multiple correlation functions by addition, and for the
     scaling of the total variance they represent by scalar factors.
