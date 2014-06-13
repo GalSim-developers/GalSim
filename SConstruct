@@ -866,9 +866,9 @@ def CheckBoost(config):
 int main() { std::cout<<BOOST_VERSION<<std::endl; return 0; }
 """
     ok, boost_version = config.TryRun(boost_version_file,'.cpp')
-    boost_version = boost_version.strip()
-    print 'Boost version is %d.%d.%d'%(
-            int(boost_version[:-4]), int(boost_version[-4:-2]), int(boost_version[-2:]))
+    boost_version = int(boost_version.strip())
+    print 'Boost version is %d.%d.%d' % (
+            boost_version / 100000, boost_version / 100 % 1000, boost_version % 100)
     
     return 1
 
