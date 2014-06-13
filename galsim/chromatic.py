@@ -712,7 +712,7 @@ class Chromatic(ChromaticObject):
 
     Typically, the SED describes the flux in photons per nanometer of an object with a particular
     magnitude, possibly normalized with either the method sed.withFlux() or sed.withMagnitude()
-    (see the docstrings in the SED class for details about this and other normalization options).
+    (see the docstrings in the SED class for details about these and other normalization options).
     Then the `flux` attribute of the GSObject should just be the _relative_ flux scaling of the
     current object compared to that normalization.  This implies (at least) two possible
     conventions.

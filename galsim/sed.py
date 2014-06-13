@@ -469,7 +469,7 @@ class SED(object):
         wavelength `base_wavelength`.
 
         @param bandpass             Bandpass through which object is being imaged.
-        @param alpha                Power law index for wavelength-dependeing seeing.  [default:
+        @param alpha                Power law index for wavelength-dependent seeing.  [default:
                                     -0.2, the prediction for Kolmogorov turbulence]
         @param base_wavelength      Reference wavelength in nm from which to compute the relative
                                     PSF size.  [default: 500]
