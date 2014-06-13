@@ -790,8 +790,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             # Finally calculate the theoretical combined variance to output alongside the image
             # to be generated with the rootps_symmetrizing.  The factor of product of the image shape
             # is required due to inverse FFT conventions.
-            # This calculation is wrong - power spectra are not flat - TODO: fix!
-            variance = (rootps[0, 0]**2 + ps_symmetrizing[0, 0]) / np.product(shape)
+            # Here, unlike in _get_update_rootps_whitening, the final power spectrum is not flat, so
+            # we have to take the mean power instead of just using the [0, 0] element.
+            variance = np.mean(rootps**2 + ps_symmetrizing) / np.product(shape)
 
             # Then add all this and the relevant wcs to the _rootps_symmetrizing_store
             self._rootps_symmetrizing_store.append((rootps_symmetrizing, wcs, variance, order))
