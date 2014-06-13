@@ -782,7 +782,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             rootps = self._get_update_rootps(shape, wcs)
             ps_actual = rootps * rootps
             # This routine will get a PS that is a symmetrized version of `ps_actual` at the desired
-            # order, with a minimum entry equal to max(`ps_actual`)
+            # order, that also satisfies the requirement of being >= ps_actual for all k values.
             ps_symmetrized = self._get_symmetrized_ps(ps_actual, order)
             ps_symmetrizing = ps_symmetrized * headroom - ps_actual # add a little extra variance
             rootps_symmetrizing = np.sqrt(ps_symmetrizing)
