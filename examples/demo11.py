@@ -309,7 +309,8 @@ def main(argv):
         # noise attribute.
         # The returned value is the variance of the Gaussian noise that is present after
         # the whitening process.
-        new_variance = final.noise.applyWhiteningTo(stamp)
+        #new_variance = final.noise.applyWhiteningTo(stamp)
+        new_variance = final.noise.symmetrize(stamp, 8)
 
         # Rescale flux to get the S/N we want.  We have to do that before we add it to the big 
         # image, which might have another galaxy near that point (so our S/N calculation would 

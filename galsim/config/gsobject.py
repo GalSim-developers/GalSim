@@ -401,8 +401,20 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
         galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
 
     if 'whiten' in config:
-        whiten, safe1 = galsim.config.ParseValue(config, 'whiten', base, bool)
+        # whiten may be bool or str.  Try bool first.
+        try:
+            whiten, safe1 = galsim.config.ParseValue(config, 'whiten', base, bool)
+        except:
+            whiten, safe1 = galsim.config.ParseValue(config, 'whiten', base, str)
         safe = safe and safe1
+        if isinstance(whiten, basestring):
+            if whiten.startswith('symmetric'):
+                try:
+                    base['symmetric_whitening'] = int(whiten[9:])
+                except:
+                    raise ValueError("Invalid whiten parameter: "+whiten)
+            else:
+                raise ValueError("Invalid whiten parameter: "+whiten)
     else:
         whiten = False
     ignore.append('whiten')

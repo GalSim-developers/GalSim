@@ -51,9 +51,17 @@ psf :
 gal :
     type : List
     items :
-        # Another option available for the RealGalaxy type is whiten.  If set to true, then
-        # we will keep track of the original correlated noise in the image and whiten it before 
-        # adding the additional noise (specified below in image.noise).
+        # Another option available for the RealGalaxy type is whiten.  If set, then GalSim will
+        # keep track of the original correlated noise in the image and whiten it before adding
+        # the additional noise (specified below in image.noise).
+        # 
+        # The whitening procedure can take several forms.  If whiten is True or 'full', then
+        # the final noise will be fully whitened into noise with a flat power spectrum
+        # (white noise).  However, this is often overkill for many applications.  If noise
+        # with some degree of symmetry (say 4-fold or 8-fold symmetry) is sufficient, then
+        # the "whitening" algorithm doesn't need to add as much noise to the image.  This
+        # option is specified by setting the whiten parameter to 'symmetricN' where N is the
+        # degree of symmetry of the resulting noise.  We use 8-fold symmetry here.
         #
         # When whitening the image, we need to make sure the original correlated noise is
         # present throughout the whole image, otherwise the whitening will do the wrong thing
@@ -70,11 +78,11 @@ gal :
         # padded size is
         #     noise_pad_size = 32 * sqrt(2) * 0.2 arcsec/pixel = 9.1 arcsec
         # We round this up to 10 to be safe.
-        - { type : RealGalaxy, id : 106416, whiten : true, noise_pad_size : 10 }
-        - { type : RealGalaxy, id : 106731, whiten : true, noise_pad_size : 10 }
-        - { type : RealGalaxy, id : 108402, whiten : true, noise_pad_size : 10 }
-        - { type : RealGalaxy, id : 116045, whiten : true, noise_pad_size : 10 }
-        - { type : RealGalaxy, id : 116448, whiten : true, noise_pad_size : 10 }
+        - { type : RealGalaxy, id : 106416, whiten : 'symmetric8', noise_pad_size : 10 }
+        - { type : RealGalaxy, id : 106731, whiten : 'symmetric8', noise_pad_size : 10 }
+        - { type : RealGalaxy, id : 108402, whiten : 'symmetric8', noise_pad_size : 10 }
+        - { type : RealGalaxy, id : 116045, whiten : 'symmetric8', noise_pad_size : 10 }
+        - { type : RealGalaxy, id : 116448, whiten : 'symmetric8', noise_pad_size : 10 }
     index : { type : Random }
     # Note: we could also have set the main gal type to RealGalaxy and had id be a list with
     # a random index.  However, the above structure lets the code cache the constructed items
