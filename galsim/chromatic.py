@@ -309,12 +309,12 @@ class ChromaticObject(object):
             return galsim.PositionD(xcentroid, ycentroid)
         else:
             flux_integrand = lambda w: self.evaluateAtWavelength(w).getFlux() * bandpass(w)
-            xcentroid_integrand = lambda w: (self.evaluateAtWavelength(w).centroid().x
-                                             * self.evaluateAtWavelength(w).getFlux()
-                                             * bandpass(w))
-            ycentroid_integrand = lambda w: (self.evaluateAtWavelength(w).centroid().y
-                                             * self.evaluateAtWavelength(w).getFlux()
-                                             * bandpass(w))
+            def xcentroid_integrand(w):
+                mono = self.evaluateAtWavelength(w)
+                return mono.centroid().x * mono.getFlux() * bandpass(w)
+            def ycentroid_integrand(w):
+                mono = self.evaluateAtWavelength(w)
+                return mono.centroid().y * mono.getFlux() * bandpass(w)
             flux = galsim.integ.int1d(flux_integrand, bandpass.blue_limit, bandpass.red_limit)
             xcentroid = 1./flux * galsim.integ.int1d(xcentroid_integrand,
                                                      bandpass.blue_limit,
