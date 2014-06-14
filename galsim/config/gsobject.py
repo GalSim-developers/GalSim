@@ -413,8 +413,12 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
                     base['symmetric_whitening'] = int(whiten[9:])
                 except:
                     raise ValueError("Invalid whiten parameter: "+whiten)
+            elif whiten == 'full':
+                base['symmetric_whitening'] = 0
             else:
                 raise ValueError("Invalid whiten parameter: "+whiten)
+        else:
+            base['symmetric_whitening'] = 0
     else:
         whiten = False
     ignore.append('whiten')
