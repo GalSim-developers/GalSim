@@ -400,7 +400,8 @@ class SED(object):
 
     def calculateDCRMomentShifts(self, bandpass, **kwargs):
         """ Calculates shifts in first and second moments of PSF due to differential chromatic
-        refraction (DCR).
+        refraction (DCR).  I.e., equations (1) and (2) from Plazas and Bernstein (2012)
+        (http://arxiv.org/abs/1204.1346).
 
         @param bandpass             Bandpass through which object is being imaged.
         @param zenith_angle         Angle from object to zenith, expressed as an Angle
