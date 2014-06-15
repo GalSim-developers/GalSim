@@ -5,7 +5,7 @@ New Features
 ------------
 
 - Added magnitudes as a method to set the flux of SED objects. (#547)
-- Added SED.calculateDCRMomentShifts and SED.calculateChromaticSeeingShift convenience functions
+- Added SED.calculateDCRMomentShifts and SED.calculateChromaticSeeingRatio convenience functions
   for estimating chromatic PSF moment shifts (#547)
 
 Bug Fixes and Improvements
