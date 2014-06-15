@@ -44,9 +44,9 @@ class Bandpass(object):
 
     Bandpasses may be multiplied by other Bandpasses, functions, or scalars.
 
-    You can calculate the effective wavelength of a Bandpass using the method
-    getEffectiveWavelength().  We use throughput-weighted average wavelength (which is independent
-    of any SED) as our definition for effective wavelength.
+    The Bandpass effective wavelength is stored in the python property `effective_wavelength`. We
+    use throughput-weighted average wavelength (which is independent of any SED) as our definition
+    for effective wavelength.
 
     For Bandpasses defined using a LookupTable, a numpy.array of wavelengths, `wave_list`, defining
     the table is maintained.  Bandpasses defined as products of two other Bandpasses will define
@@ -193,8 +193,8 @@ class Bandpass(object):
             ret.red_limit = red_limit
             ret.wave_list = wave_list
             ret.zeropoint = None
-            if hasattr(ret, 'effective_wavelength'):
-                del ret.effective_wavelength # this will get lazily recomputed when needed
+            if hasattr(ret, '_effective_wavelength'):
+                del ret._effective_wavelength # this will get lazily recomputed when needed
             if hasattr(other, '__call__'):
                 ret.func = lambda w: other(w)*self(w)
             else:
@@ -229,8 +229,8 @@ class Bandpass(object):
             ret.red_limit = red_limit
             ret.wave_list = wave_list
             ret.zeropoint = None
-            if hasattr(ret, 'effective_wavelength'):
-                del ret.effective_wavelength # this will get lazily recomputed when needed
+            if hasattr(ret, '_effective_wavelength'):
+                del ret._effective_wavelength # this will get lazily recomputed when needed
             if hasattr(other, '__call__'):
                 ret.func = lambda w: self(w)/other(w)
             else:
@@ -262,8 +262,8 @@ class Bandpass(object):
             ret.red_limit = red_limit
             ret.wave_list = wave_list
             ret.zeropoint = None
-            if hasattr(ret, 'effective_wavelength'):
-                del ret.effective_wavelength # this will get lazily recomputed when needed
+            if hasattr(ret, '_effective_wavelength'):
+                del ret._effective_wavelength # this will get lazily recomputed when needed
             if hasattr(other, '__call__'):
                 ret.func = lambda w: other(w)/self(w)
             else:
@@ -311,22 +311,25 @@ class Bandpass(object):
         else:
             return self.func(wave) if (wave >= self.blue_limit and wave <= self.red_limit) else 0.0
 
-    def getEffectiveWavelength(self):
+    @property
+    def effective_wavelength(self):
         """ Calculate, store, and return the effective wavelength for this bandpass.  We define
         the effective wavelength as the throughput-weighted average wavelength, which is
         SED-independent.  Units are nanometers.
         """
-        if not hasattr(self, 'effective_wavelength'):
+        if not hasattr(self, '_effective_wavelength'):
             if len(self.wave_list) > 0:
                 f = self.func(self.wave_list)
-                self.effective_wavelength = (np.trapz(f * self.wave_list, self.wave_list) /
-                                             np.trapz(f, self.wave_list))
+                self._effective_wavelength = (np.trapz(f * self.wave_list, self.wave_list) /
+                                              np.trapz(f, self.wave_list))
             else:
-                self.effective_wavelength = (galsim.integ.int1d(lambda w: self.func(w) * w,
-                                                                self.blue_limit, self.red_limit)
-                                             / galsim.integ.int1d(self.func,
-                                                                  self.blue_limit, self.red_limit))
-        return self.effective_wavelength
+                self._effective_wavelength = (galsim.integ.int1d(lambda w: self.func(w) * w,
+                                                                 self.blue_limit,
+                                                                 self.red_limit)
+                                              / galsim.integ.int1d(self.func,
+                                                                   self.blue_limit,
+                                                                   self.red_limit))
+        return self._effective_wavelength
 
     def withZeropoint(self, zeropoint, effective_diameter=None, exptime=None):
         """ Assign a zeropoint to this Bandpass.
@@ -428,8 +431,8 @@ class Bandpass(object):
         ret = self.copy()
         ret.blue_limit = blue_limit
         ret.red_limit = red_limit
-        if hasattr(ret, 'effective_wavelength'):
-            del ret.effective_wavelength
+        if hasattr(ret, '_effective_wavelength'):
+            del ret._effective_wavelength
         return ret
 
     def thin(self, rel_err=1.e-4, preserve_range=False):
@@ -465,6 +468,6 @@ class Bandpass(object):
             ret.blue_limit = np.min(newx) - 0.0000001
             ret.red_limit = np.max(newx) + 0.0000001
             ret.wave_list = np.array(newx)
-            if hasattr(ret, 'effective_wavelength'):
-                del ret.effective_wavelength
+            if hasattr(ret, '_effective_wavelength'):
+                del ret._effective_wavelength
             return ret
