@@ -295,17 +295,17 @@ class ChromaticObject(object):
         # if either the Bandpass or self maintain a wave_list, evaluate integrand only at
         # those wavelengths.
         if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
-            w = numpy.union1d(bandpass.wave_list, self.wave_list)
+            w = np.union1d(bandpass.wave_list, self.wave_list)
             w = w[(w <= bandpass.red_limit) & (w >= bandpass.blue_limit)]
             objs = [self.evaluateAtWavelength(y) for y in w]
             fluxes = [o.getFlux() for o in objs]
             centroids = [o.centroid() for o in objs]
-            xcentroids = numpy.array([c.x for c in centroids])
-            ycentroids = numpy.array([c.y for c in centroids])
+            xcentroids = np.array([c.x for c in centroids])
+            ycentroids = np.array([c.y for c in centroids])
             bp = bandpass(w)
-            flux = numpy.trapz(bp * fluxes, w)
-            xcentroid = numpy.trapz(bp * fluxes * xcentroids, w) / flux
-            ycentroid = numpy.trapz(bp * fluxes * ycentroids, w) / flux
+            flux = np.trapz(bp * fluxes, w)
+            xcentroid = np.trapz(bp * fluxes * xcentroids, w) / flux
+            ycentroid = np.trapz(bp * fluxes * ycentroids, w) / flux
             return galsim.PositionD(xcentroid, ycentroid)
         else:
             flux_integrand = lambda w: self.evaluateAtWavelength(w).getFlux() * bandpass(w)
