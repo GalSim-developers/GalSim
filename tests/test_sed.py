@@ -192,7 +192,7 @@ def test_SED_calculateMagnitude():
     ugrizy_vega_ab_conversions = [0.91, -0.08, 0.16, 0.37, 0.54, 0.634]
     filter_names = 'ugrizy'
     for conversion, filter_name in zip(ugrizy_vega_ab_conversions, filter_names):
-        filter_filename = os.path.join(datapath, 'LSST_{}.dat'.format(filter_name))
+        filter_filename = os.path.join(datapath, 'LSST_{0}.dat'.format(filter_name))
         AB_bandpass = (galsim.Bandpass(filter_filename)
                        .withZeropoint('AB', effective_diameter=640, exptime=15))
         vega_bandpass = (galsim.Bandpass(filter_filename)
@@ -249,17 +249,17 @@ def test_fnu_vs_flambda():
 
     sed1 = galsim.SED(galsim.LookupTable(waves, fnu), flux_type='fnu')
     sed2 = galsim.SED(galsim.LookupTable(waves, flambda), flux_type='flambda')
-    np.testing.assert_allclose(sed1(waves), sed2(waves), 1e-10,
-                               err_msg="Check fnu & flambda consistency.")
+    np.testing.assert_array_almost_equal(sed1(waves)/sed2(waves), np.ones(len(waves)), 10,
+                                         err_msg="Check fnu & flambda consistency.")
 
     # Now also check that wavelengths in Angstroms work.
     waves_ang = waves * 10
     sed3 = galsim.SED(galsim.LookupTable(waves_ang, fnu), flux_type='fnu', wave_type='Ang')
     sed4 = galsim.SED(galsim.LookupTable(waves_ang, flambda), flux_type='flambda', wave_type='Ang')
-    np.testing.assert_allclose(sed1(waves), sed3(waves), 1e-10,
-                               err_msg="Check nm and Ang SED wavelengths consistency.")
-    np.testing.assert_allclose(sed2(waves), sed4(waves), 1e-10,
-                               err_msg="Check nm and Ang SED wavelengths consistency.")
+    np.testing.assert_array_almost_equal(sed1(waves)/sed3(waves), np.ones(len(waves)), 10,
+                                         err_msg="Check nm and Ang SED wavelengths consistency.")
+    np.testing.assert_array_almost_equal(sed2(waves)/sed4(waves), np.ones(len(waves)), 10,
+                                         err_msg="Check nm and Ang SED wavelengths consistency.")
 
 if __name__ == "__main__":
     test_SED_add()
