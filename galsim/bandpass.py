@@ -345,6 +345,9 @@ class Bandpass(object):
         observation are also required.
         """
         if isinstance(zeropoint, basestring):
+            if effective_diameter == None or exptime == None:
+                raise ValueError("Cannot calculate Zeropoint from string {0} without "
+                                 +"telescope effective diameter or exposure time.")
             if zeropoint.upper()=='AB':
                 AB_source = 3631e-23 # 3631 Jy in units of erg/s/Hz/cm^2
                 c = 2.99792458e17 # speed of light in nm/s
@@ -366,9 +369,6 @@ class Bandpass(object):
                 flux = sed.calculateFlux(self)
             else:
                 raise ValueError("Do not recognize Zeropoint string {0}.".format(zeropoint))
-            if effective_diameter == None or exptime == None:
-                raise ValueError("Cannot calculate Zeropoint from string {0} without "
-                                 +"telescope effective diameter or exposure time.")
             flux *= np.pi*effective_diameter**2/4 * exptime
             new_zeropoint = 2.5 * np.log10(flux)
         # If `zeropoint` is an `SED`, then compute the SED flux through the bandpass, and
