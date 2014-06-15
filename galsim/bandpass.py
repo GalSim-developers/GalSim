@@ -390,15 +390,12 @@ class Bandpass(object):
     def truncate(self, blue_limit=None, red_limit=None, relative_throughput=None):
         """Return a bandpass with its wavelength range truncated.
 
-        If the bandpass was initialized with a galsim.LookupTable or from a file (which internally
-        creates a galsim.LookupTable), then
-
         This function truncate the range of the bandpass either explicitly (with `blue_limit` or
         `red_limit` or both) or automatically, just trimming off leading and trailing wavelength
         ranges where the relative throughput is less than some amount (`relative_throughput`).
 
         This second option using relative_throughpt is only available for bandpasses initialized
-        with a LookupTable or from a file, not when using a regular python funciton or a string
+        with a LookupTable or from a file, not when using a regular python function or a string
         evaluation.
 
         This function does not remove any intermediate wavelength ranges, but see thin() for
