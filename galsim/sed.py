@@ -347,7 +347,7 @@ class SED(object):
                 red_limit = self.red_limit
             return galsim.integ.int1d(self.fphotons, blue_limit, red_limit)
         else: # do flux through bandpass
-            if len(bandpass.wave_list) > 0:
+            if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
                 x = np.union1d(bandpass.wave_list, self.wave_list)
                 x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
                 return np.trapz(bandpass(x) * self.fphotons(x), x)
