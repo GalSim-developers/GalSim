@@ -293,11 +293,13 @@ class SED(object):
         return ret
 
     def withMagnitude(self, target_magnitude, bandpass):
-        """ Return a new SED with magnitude through `bandpass` set to `target_magnitude`. I.e.,
-        when the resulting SED is multiplied by a GSObject with flux=1, the resulting
-        ChromaticObject will have magnitude `target_magnitude` when drawn through `bandpass`. Note
-        that the total normalization depends both on the SED and the GSObject.  See the
-        galsim.Chromatic doc string for more details on normalization conventions.
+        """ Return a new SED with magnitude through `bandpass` set to `target_magnitude`.  Note
+        that this requires `bandpass` to have been assigned a zeropoint using
+        `Bandpass.withZeropoint()`.  When the returned SED is multiplied by a GSObject with
+        flux=1, the resulting ChromaticObject will have magnitude `target_magnitude` when drawn
+        through `bandpass`. Note that the total normalization depends both on the SED and the
+        GSObject.  See the galsim.Chromatic docstring for more details on normalization
+        conventions.
 
         @param target_magnitude  The desired *relative* magnitude of the SED.
         @param bandpass          A Bandpass object defining a filter bandpass.
@@ -359,7 +361,8 @@ class SED(object):
                                           bandpass.blue_limit, bandpass.red_limit)
 
     def calculateMagnitude(self, bandpass):
-        """ Return the SED magnitude through a Bandpass `bandpass`.
+        """ Return the SED magnitude through a Bandpass `bandpass`.  Note that this requires
+        `bandpass` to have been assigned a zeropoint using `Bandpass.withZeropoint()`.
 
         @param bandpass   A Bandpass object representing a filter, or None to compute the
                           bolometric magnitude.  For the bolometric magnitude the integration
