@@ -252,6 +252,15 @@ def test_fnu_vs_flambda():
     np.testing.assert_allclose(sed1(waves), sed2(waves), 1e-10,
                                err_msg="Check fnu & flambda consistency.")
 
+    # Now also check that wavelengths in Angstroms work.
+    waves_ang = waves * 10
+    sed3 = galsim.SED(galsim.LookupTable(waves_ang, fnu), flux_type='fnu', wave_type='Ang')
+    sed4 = galsim.SED(galsim.LookupTable(waves_ang, flambda), flux_type='flambda', wave_type='Ang')
+    np.testing.assert_allclose(sed1(waves), sed3(waves), 1e-10,
+                               err_msg="Check nm and Ang SED wavelengths consistency.")
+    np.testing.assert_allclose(sed2(waves), sed4(waves), 1e-10,
+                               err_msg="Check nm and Ang SED wavelengths consistency.")
+
 if __name__ == "__main__":
     test_SED_add()
     test_SED_sub()
