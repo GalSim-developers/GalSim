@@ -383,8 +383,8 @@ def test_chromatic_seeing_moments():
         dr2byr2_image = ((mom1[2]+mom1[3]) - (mom2[2]+mom2[3])) / (mom1[2]+mom1[3])
 
         # analytic moment differences
-        r2_1 = bulge_SED.calculateSeeingMomentShifts(bandpass, alpha=index)
-        r2_2 = disk_SED.calculateSeeingMomentShifts(bandpass, alpha=index)
+        r2_1 = bulge_SED.calculateSeeingMomentRatio(bandpass, alpha=index)
+        r2_2 = disk_SED.calculateSeeingMomentRatio(bandpass, alpha=index)
         dr2byr2_analytic = (r2_1 - r2_2) / r2_1
 
         np.testing.assert_almost_equal(dr2byr2_image, dr2byr2_analytic, 5,

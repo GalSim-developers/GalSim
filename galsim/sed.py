@@ -474,7 +474,7 @@ class SED(object):
         V = rot * np.matrix([[0, 0], [0, V]]) * rot.T
         return Rbar, V
 
-    def calculateSeeingMomentShifts(self, bandpass, alpha=-0.2, base_wavelength=500):
+    def calculateSeeingMomentRatio(self, bandpass, alpha=-0.2, base_wavelength=500):
         """ Calculates the relative size of a PSF compared to the monochromatic PSF size at
         wavelength `base_wavelength`.
 
