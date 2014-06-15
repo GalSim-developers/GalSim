@@ -331,8 +331,11 @@ class SED(object):
     def calculateFlux(self, bandpass):
         """ Return the SED flux through a Bandpass `bandpass`.
 
-        @param bandpass   A Bandpass object representing a filter, or None for bolometric
-                          flux (over defined wavelengths).
+        @param bandpass   A Bandpass object representing a filter, or None to compute the
+                          bolometric flux.  For the bolometric flux the integration limits will be
+                          set to (0, infinity) unless overridden by non-`None` SED attributes
+                          `blue_limit` or `red_limit`.  Note that SEDs defined using
+                          `LookupTable`s automatically have `blue_limit` and `red_limit` set.
 
         @returns the flux through the bandpass.
         """
@@ -358,8 +361,11 @@ class SED(object):
     def calculateMagnitude(self, bandpass):
         """ Return the SED magnitude through a Bandpass `bandpass`.
 
-        @param bandpass   A Bandpass object representing a filter, or None for bolometric
-                          magnitude (over defined wavelengths).
+        @param bandpass   A Bandpass object representing a filter, or None to compute the
+                          bolometric magnitude.  For the bolometric magnitude the integration
+                          limits will be set to (0, infinity) unless overridden by non-`None` SED
+                          attributes `blue_limit` or `red_limit`.  Note that SEDs defined using
+                          `LookupTable`s automatically have `blue_limit` and `red_limit` set.
 
         @returns the bandpass magnitude.
         """
