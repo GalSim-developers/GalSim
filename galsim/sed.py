@@ -19,8 +19,6 @@
 Simple spectral energy distribution class.  Used by galsim/chromatic.py
 """
 
-import copy
-
 import numpy as np
 
 import galsim
@@ -72,7 +70,6 @@ class SED(object):
     `SED`.  For instance, SED.__call__ assumes its input argument is in nanometers and returns
     flux proportional to photons/nm.
 
-
     @param spec          Function defining the spectrum at each wavelength.  See above for
                          valid options for this parameter.
     @param wave_type     String specifying units for wavelength input to `spec`. [default: 'nm']
@@ -121,11 +118,22 @@ class SED(object):
             self.red_limit = None
             self.wave_list = np.array([], dtype=float)
 
+        # Do some SED unit conversions to make internal representation proportional to photons/nm.
+        # Note that w should have units of nm below.
+        c = 2.99792458e17  # speed of light in nm/s
+        h = 6.62606957e-27 # Planck's constant in erg seconds
         if flux_type == 'flambda':
-            self.fphotons = lambda w: spec(np.array(w) * wave_factor) * w
+            # photons/nm = (erg/nm) * (photons/erg)
+            #            = spec(w) * 1/(h nu) = spec(w) * lambda / hc
+            self.fphotons = lambda w: (spec(np.array(w) * wave_factor) * w / (h*c))
         elif flux_type == 'fnu':
-            self.fphotons = lambda w: spec(np.array(w) * wave_factor) / w
+            # photons/nm = (erg/Hz) * (photons/erg) * (Hz/nm)
+            #            = spec(w) * 1/(h nu) * |dnu/dlambda|
+            # [Use dnu/dlambda = d(c/lambda)/dlambda = -c/lambda^2 = -nu/lambda]
+            #            = spec(w) * 1/(h lambda)
+            self.fphotons = lambda w: (spec(np.array(w) * wave_factor) / (w * h))
         elif flux_type == 'fphotons':
+            # Already basically correct.  Just convert the units of lambda
             self.fphotons = lambda w: spec(np.array(w) * wave_factor)
         else:
             raise ValueError("Unknown flux_type '{0}'".format(flux_type))
@@ -250,11 +258,8 @@ class SED(object):
         return self.__add__(-1.0 * other)
 
     def copy(self):
-        cls = self.__class__
-        ret = cls.__new__(cls)
-        for k, v in self.__dict__.iteritems():
-            ret.__dict__[k] = copy.deepcopy(v) # need deepcopy for copying self.fphotons
-        return ret
+        import copy
+        return copy.deepcopy(self)
 
     def withFluxDensity(self, target_flux_density, wavelength):
         """ Return a new SED with flux density set to `target_flux_density` at wavelength
@@ -287,6 +292,26 @@ class SED(object):
         ret.fphotons = lambda w: self.fphotons(w) * norm
         return ret
 
+    def withMagnitude(self, target_magnitude, bandpass):
+        """ Return a new SED with magnitude through `bandpass` set to `target_magnitude`.  Note
+        that this requires `bandpass` to have been assigned a zeropoint using
+        `Bandpass.withZeropoint()`.  When the returned SED is multiplied by a GSObject with
+        flux=1, the resulting ChromaticObject will have magnitude `target_magnitude` when drawn
+        through `bandpass`. Note that the total normalization depends both on the SED and the
+        GSObject.  See the galsim.Chromatic docstring for more details on normalization
+        conventions.
+
+        @param target_magnitude  The desired *relative* magnitude of the SED.
+        @param bandpass          A Bandpass object defining a filter bandpass.
+
+        @returns the new normalized SED.
+        """
+        current_magnitude = self.calculateMagnitude(bandpass)
+        norm = 10**(-0.4*(target_magnitude - current_magnitude))
+        ret = self.copy()
+        ret.fphotons = lambda w: self.fphotons(w) * norm
+        return ret
+
     def atRedshift(self, redshift):
         """ Return a new SED with redshifted wavelengths.
 
@@ -308,8 +333,11 @@ class SED(object):
     def calculateFlux(self, bandpass):
         """ Return the SED flux through a Bandpass `bandpass`.
 
-        @param bandpass   A Bandpass object representing a filter, or None for bolometric
-                          flux (over defined wavelengths).
+        @param bandpass   A Bandpass object representing a filter, or None to compute the
+                          bolometric flux.  For the bolometric flux the integration limits will be
+                          set to (0, infinity) unless overridden by non-`None` SED attributes
+                          `blue_limit` or `red_limit`.  Note that SEDs defined using
+                          `LookupTable`s automatically have `blue_limit` and `red_limit` set.
 
         @returns the flux through the bandpass.
         """
@@ -332,6 +360,21 @@ class SED(object):
                 return galsim.integ.int1d(lambda w: bandpass(w)*self.fphotons(w),
                                           bandpass.blue_limit, bandpass.red_limit)
 
+    def calculateMagnitude(self, bandpass):
+        """ Return the SED magnitude through a Bandpass `bandpass`.  Note that this requires
+        `bandpass` to have been assigned a zeropoint using `Bandpass.withZeropoint()`.
+
+        @param bandpass   A Bandpass object representing a filter, or None to compute the
+                          bolometric magnitude.  For the bolometric magnitude the integration
+                          limits will be set to (0, infinity) unless overridden by non-`None` SED
+                          attributes `blue_limit` or `red_limit`.  Note that SEDs defined using
+                          `LookupTable`s automatically have `blue_limit` and `red_limit` set.
+
+        @returns the bandpass magnitude.
+        """
+        current_flux = self.calculateFlux(bandpass)
+        return -2.5 * np.log10(current_flux) + bandpass.zeropoint
+
     def thin(self, rel_err=1.e-4, preserve_range=False):
         """ If the SED was initialized with a LookupTable or from a file (which internally creates a
         LookupTable), then remove tabulated values while keeping the integral over the set of
@@ -351,5 +394,106 @@ class SED(object):
             f = self(x)
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
                                                          preserve_range=preserve_range)
-            return SED(galsim.LookupTable(newx, newf, interpolant='linear'),
-                       flux_type='fphotons')
+            ret = self.copy()
+            ret.blue_limit = np.min(newx) - 0.0000001
+            ret.red_limit = np.max(newx) + 0.0000001
+            ret.wave_list = newx
+            ret.fphotons = galsim.LookupTable(newx, newf, interpolant='linear')
+            return ret
+
+    def calculateDCRMomentShifts(self, bandpass, **kwargs):
+        """ Calculates shifts in first and second moments of PSF due to differential chromatic
+        refraction (DCR).  I.e., equations (1) and (2) from Plazas and Bernstein (2012)
+        (http://arxiv.org/abs/1204.1346).
+
+        @param bandpass             Bandpass through which object is being imaged.
+        @param zenith_angle         Angle from object to zenith, expressed as an Angle
+        @param parallactic_angle    Parallactic angle, i.e. the position angle of the zenith,
+                                    measured from North through East.  [default: 0]
+        @param obj_coord            Celestial coordinates of the object being drawn as a
+                                    CelestialCoord. [default: None]
+        @param zenith_coord         Celestial coordinates of the zenith as a CelestialCoord.
+                                    [default: None]
+        @param HA                   Hour angle of the object as an Angle. [default: None]
+        @param latitude             Latitude of the observer as an Angle. [default: None]
+        @param pressure             Air pressure in kiloPascals.  [default: 69.328 kPa]
+        @param temperature          Temperature in Kelvins.  [default: 293.15 K]
+        @param H2O_pressure         Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
+
+        @returns a tuple.  The first element is the vector of DCR first moment shifts, and the
+                 second element is the 2x2 matrix of DCR second (central) moment shifts.
+        """
+        if 'zenith_angle' in kwargs:
+            zenith_angle = kwargs.pop('zenith_angle')
+            parallactic_angle = kwargs.pop('parallactic_angle', 0.0*galsim.degrees)
+        elif 'obj_coord' in kwargs:
+            obj_coord = kwargs.pop('obj_coord')
+            if 'zenith_coord' in kwargs:
+                zenith_coord = kwargs.pop('zenith_coord')
+                zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
+                    obj_coord=obj_coord, zenith_coord=zenith_coord)
+            else:
+                if 'HA' not in kwargs or 'latitude' not in kwargs:
+                    raise TypeError("calculateDCRMomemntShifts requires either zenith_coord or "+
+                                    "(HA, latitude) when obj_coord is specified!")
+                HA = kwargs.pop('HA')
+                latitude = kwargs.pop('latitude')
+                zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
+                    obj_coord=obj_coord, HA=HA, latitude=latitude)
+        else:
+            raise TypeError(
+                "Need to specify zenith_angle and parallactic_angle in calculateDCRMomentShifts!")
+        # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
+        # Check that they're valid
+        for kw in kwargs.keys():
+            if kw not in ['temperature', 'pressure', 'H2O_pressure']:
+                raise TypeError("Got unexpected keyword in calculateDCRMomentShifts: {0}".format(kw))
+        # Now actually start calculating things.
+        flux = self.calculateFlux(bandpass)
+        if len(bandpass.wave_list) > 0:
+            x = np.union1d(bandpass.wave_list, self.wave_list)
+            x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
+            R = galsim.dcr.get_refraction(x, zenith_angle, **kwargs)
+            photons = self.fphotons(x)
+            throughput = bandpass(x)
+            Rbar = np.trapz(throughput * photons * R, x) / flux
+            V = np.trapz(throughput * photons * (R-Rbar)**2, x) / flux
+        else:
+            weight = lambda w: bandpass(w) * self.fphotons(w)
+            Rbar_kernel = lambda w: galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
+            Rbar = galsim.integ.int1d(lambda w: weight(w) * Rbar_kernel(w),
+                                      bandpass.blue_limit, bandpass.red_limit)
+            V_kernel = lambda w: (galsim.dcr.get_refraction(w, zenith_angle, **kwargs) - Rbar)**2
+            V = galsim.integ.int1d(lambda w: weight(w) * V_kernel(w),
+                                   bandpass.blue_limit, bandpass.red_limit)
+        # Rbar and V are computed above assuming that the parallactic angle is 0.  Hence we
+        # need to rotate our frame by the parallactic angle to get the desired output.
+        rot = np.matrix([[np.cos(parallactic_angle.rad()), -np.sin(parallactic_angle.rad())],
+                         [np.sin(parallactic_angle.rad()), np.cos(parallactic_angle.rad())]])
+        Rbar = rot * Rbar * np.matrix([0,1]).T
+        V = rot * np.matrix([[0, 0], [0, V]]) * rot.T
+        return Rbar, V
+
+    def calculateSeeingMomentRatio(self, bandpass, alpha=-0.2, base_wavelength=500):
+        """ Calculates the relative size of a PSF compared to the monochromatic PSF size at
+        wavelength `base_wavelength`.
+
+        @param bandpass             Bandpass through which object is being imaged.
+        @param alpha                Power law index for wavelength-dependent seeing.  [default:
+                                    -0.2, the prediction for Kolmogorov turbulence]
+        @param base_wavelength      Reference wavelength in nm from which to compute the relative
+                                    PSF size.  [default: 500]
+        @returns the ratio of the PSF second moments to the second moments of the reference PSF.
+        """
+        flux = self.calculateFlux(bandpass)
+        if len(bandpass.wave_list) > 0:
+            x = np.union1d(bandpass.wave_list, self.wave_list)
+            x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
+            photons = self.fphotons(x)
+            throughput = bandpass(x)
+            return np.trapz(photons * throughput * (x/base_wavelength)**(2*alpha), x) / flux
+        else:
+            weight = lambda w: bandpass(w) * self.fphotons(w)
+            kernel = lambda w: (w/base_wavelength)**(2*alpha)
+            return galsim.integ.int1d(lambda w: weight(w) * kernel(w),
+                                      bandpass.blue_limit, bandpass.red_limit) / flux
