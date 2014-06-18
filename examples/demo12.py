@@ -79,7 +79,7 @@ def main(argv):
     SED_names = ['CWW_E_ext', 'CWW_Sbc_ext', 'CWW_Scd_ext', 'CWW_Im_ext']
     SEDs = {}
     for SED_name in SED_names:
-        SED_filename = os.path.join(datapath, '{}.sed'.format(SED_name))
+        SED_filename = os.path.join(datapath, '{0}.sed'.format(SED_name))
         # Here we create some galsim.SED objects to hold star or galaxy spectra.  The most
         # convenient way to create realistic spectra is to read them in from a two-column ASCII
         # file, where the first column is wavelength and the second column is flux. Wavelengths in
@@ -98,7 +98,7 @@ def main(argv):
     filter_names = 'ugrizy'
     filters = {}
     for filter_name in filter_names:
-        filter_filename = os.path.join(datapath, 'LSST_{}.dat'.format(filter_name))
+        filter_filename = os.path.join(datapath, 'LSST_{0}.dat'.format(filter_name))
         # Here we create some galsim.Bandpass objects to represent the filters we're observing
         # through.  These include the entire imaging system throughput including the atmosphere,
         # reflective and refractive optics, filters, and the CCD quantum efficiency.  These are
@@ -146,11 +146,11 @@ def main(argv):
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         final.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)
-        logger.debug('Created {}-band image'.format(filter_name))
-        out_filename = os.path.join(outpath, 'demo12a_{}.fits'.format(filter_name))
+        logger.debug('Created {0}-band image'.format(filter_name))
+        out_filename = os.path.join(outpath, 'demo12a_{0}.fits'.format(filter_name))
         galsim.fits.write(img, out_filename)
-        logger.debug('Wrote {}-band image to disk'.format(filter_name))
-        logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
+        logger.debug('Wrote {0}-band image to disk'.format(filter_name))
+        logger.info('Added flux for {0}-band image: {1}'.format(filter_name, img.added_flux))
 
     logger.info('You can display the output in ds9 with a command line that looks something like:')
     logger.info('ds9 output/demo12a_*.fits -match scale -zoom 2 -match frame image &')
@@ -187,11 +187,11 @@ def main(argv):
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         bdfinal.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)
-        logger.debug('Created {}-band image'.format(filter_name))
-        out_filename = os.path.join(outpath, 'demo12b_{}.fits'.format(filter_name))
+        logger.debug('Created {0}-band image'.format(filter_name))
+        out_filename = os.path.join(outpath, 'demo12b_{0}.fits'.format(filter_name))
         galsim.fits.write(img, out_filename)
-        logger.debug('Wrote {}-band image to disk'.format(filter_name))
-        logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
+        logger.debug('Wrote {0}-band image to disk'.format(filter_name))
+        logger.info('Added flux for {0}-band image: {1}'.format(filter_name, img.added_flux))
 
     logger.info('You can display the output in ds9 with a command line that looks something like:')
     logger.info('ds9 -rgb -blue -scale limits -0.2 0.8 output/demo12b_r.fits -green -scale limits'
@@ -261,11 +261,11 @@ def main(argv):
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         final.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)
-        logger.debug('Created {}-band image'.format(filter_name))
-        out_filename = os.path.join(outpath, 'demo12c_{}.fits'.format(filter_name))
+        logger.debug('Created {0}-band image'.format(filter_name))
+        out_filename = os.path.join(outpath, 'demo12c_{0}.fits'.format(filter_name))
         galsim.fits.write(img, out_filename)
-        logger.debug('Wrote {}-band image to disk'.format(filter_name))
-        logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
+        logger.debug('Wrote {0}-band image to disk'.format(filter_name))
+        logger.info('Added flux for {0}-band image: {1}'.format(filter_name, img.added_flux))
 
     logger.info('You can display the output in ds9 with a command line that looks something like:')
     logger.info('ds9 output/demo12c_*.fits -match scale -zoom 2 -match frame image -blink &')

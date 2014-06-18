@@ -154,3 +154,4 @@ from . import pse
 from . import hsm
 from . import deprecated
 from . import dcr
+from . import meta_data

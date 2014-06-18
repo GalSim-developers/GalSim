@@ -234,7 +234,7 @@ class CelestialCoord(object):
         v = k * ( self._cosdec * sindec - self._sindec * cosdec * cosdra )
 
         # Convert to arcsec
-        factor = 1. * galsim.radians / galsim.arcsec
+        factor = galsim.radians / galsim.arcsec
         u *= factor
         v *= factor
 
@@ -292,7 +292,7 @@ class CelestialCoord(object):
         # c = r               for postel
 
         # Convert from arcsec to radians
-        factor = 1. * galsim.arcsec / galsim.radians
+        factor = galsim.arcsec / galsim.radians
         u = u * factor
         v = v * factor
 
@@ -370,7 +370,7 @@ class CelestialCoord(object):
         if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
             raise ValueError('Unknown projection ' + projection)
 
-        factor = 1. * galsim.arcsec / galsim.radians
+        factor = galsim.arcsec / galsim.radians
         u = u * factor
         v = v * factor
 

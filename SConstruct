@@ -36,7 +36,7 @@ EnsureSConsVersion(1, 1)
 
 # Subdirectories containing SConscript files.  We always process these, but
 # there are some other optional ones
-subdirs=['src', 'pysrc', 'bin', 'galsim']
+subdirs=['src', 'pysrc', 'bin', 'galsim', 'share']
 
 # Configurations will be saved here so command line options don't
 # have to be sent more than once
@@ -866,9 +866,9 @@ def CheckBoost(config):
 int main() { std::cout<<BOOST_VERSION<<std::endl; return 0; }
 """
     ok, boost_version = config.TryRun(boost_version_file,'.cpp')
-    boost_version = boost_version.strip()
-    print 'Boost version is %d.%d.%d'%(
-            int(boost_version[:-4]), int(boost_version[-4:-2]), int(boost_version[-2:]))
+    boost_version = int(boost_version.strip())
+    print 'Boost version is %d.%d.%d' % (
+            boost_version / 100000, boost_version / 100 % 1000, boost_version % 100)
     
     return 1
 

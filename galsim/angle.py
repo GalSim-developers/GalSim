@@ -144,6 +144,7 @@ Allowed arithmetic with Angles include the following:
     >>> theta2 -= theta1
     >>> theta *= x
     >>> theta /= x
+    >>> x = unit1 / unit2   # equivalent to x = (1 * unit1) / unit2
 
 Operations on NumPy arrays containing Angles are permitted, provided that they are within the bounds
 of the allowed operations on Angles listed above (e.g., addition/subtraction of Angles,

@@ -91,7 +91,8 @@ def test_draw_add_commutativity():
     N = 50
     h = (bandpass.red_limit * 1.0 - bandpass.blue_limit) / N
     ws = [bandpass.blue_limit + h*(i+0.5) for i in range(N)]
-    shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
+    shift_fn = lambda w:(0, ((galsim.dcr.get_refraction(w, zenith_angle) - R500)
+                             * (galsim.radians / galsim.arcsec)))
     dilate_fn = lambda w:(w/500.0)**(-0.2)
     for w in ws:
         flux = bulge_SED(w) * bandpass(w) * h
@@ -297,7 +298,7 @@ def test_dcr_moments():
     star2 = galsim.Gaussian(fwhm=1.e-8) * disk_SED
 
     shift_fn = lambda w:(0, ((galsim.dcr.get_refraction(w, zenith_angle) - R500)
-                             / galsim.arcsec))
+                             * (galsim.radians / galsim.arcsec)))
     mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
     PSF = galsim.ChromaticObject(mono_PSF)
     PSF = PSF.shift(shift_fn)
@@ -318,37 +319,27 @@ def test_dcr_moments():
     dR_image = (mom1[1] - mom2[1]) * pixel_scale
     dV_image = (mom1[3] - mom2[3]) * (pixel_scale)**2
 
-    # analytic first moment differences
-    R = lambda w:((galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec).astype(float)
-    x1 = np.union1d(bandpass.wave_list, bulge_SED.wave_list)
-    x1 = x1[(x1 >= bandpass.blue_limit) & (x1 <= bandpass.red_limit)]
-    x2 = np.union1d(bandpass.wave_list, disk_SED.wave_list)
-    x2 = x2[(x2 >= bandpass.blue_limit) & (x2 <= bandpass.red_limit)]
-    numR1 = np.trapz(R(x1) * bandpass(x1) * bulge_SED(x1), x1)
-    numR2 = np.trapz(R(x2) * bandpass(x2) * disk_SED(x2), x2)
-    den1 = bulge_SED.calculateFlux(bandpass)
-    den2 = disk_SED.calculateFlux(bandpass)
+    # analytic moment differences
+    R_bulge, V_bulge = bulge_SED.calculateDCRMomentShifts(bandpass, zenith_angle=zenith_angle)
+    R_disk, V_disk = disk_SED.calculateDCRMomentShifts(bandpass, zenith_angle=zenith_angle)
+    dR_analytic = (R_bulge[1] - R_disk[1]) * 180.0/np.pi * 3600
+    dV_analytic = (V_bulge[1,1] - V_disk[1,1]) * (180.0/np.pi * 3600)**2
 
-    R1 = numR1/den1
-    R2 = numR2/den2
-    dR_analytic = R1 - R2
-
-    # analytic second moment differences
-    V1_kernel = lambda w:(R(w) - R1)**2
-    V2_kernel = lambda w:(R(w) - R2)**2
-    numV1 = np.trapz(V1_kernel(x1) * bandpass(x1) * bulge_SED(x1), x1)
-    numV2 = np.trapz(V2_kernel(x2) * bandpass(x2) * disk_SED(x2), x2)
-
-    V1 = numV1/den1
-    V2 = numV2/den2
-    dV_analytic = V1 - V2
+    # also compute dR_analytic using ChromaticObject.centroid()
+    centroid1 = final1.centroid(bandpass)
+    centroid2 = final2.centroid(bandpass)
+    dR_centroid = (centroid1 - centroid2).y
 
     print 'image delta R:    {0}'.format(dR_image)
     print 'analytic delta R: {0}'.format(dR_analytic)
+    print 'centroid delta R: {0}'.format(dR_centroid)
     print 'image delta V:    {0}'.format(dV_image)
     print 'analytic delta V: {0}'.format(dV_analytic)
     np.testing.assert_almost_equal(dR_image, dR_analytic, 5,
                                    err_msg="dRbar Shift from DCR doesn't match analytic formula")
+    np.testing.assert_almost_equal(dR_analytic, dR_centroid, 10,
+                                   err_msg="direct dRbar calculation doesn't match"
+                                           +" ChromaticObject.centroid()")
     np.testing.assert_almost_equal(dV_image, dV_analytic, 5,
                                    err_msg="dV Shift from DCR doesn't match analytic formula")
 
@@ -392,18 +383,8 @@ def test_chromatic_seeing_moments():
         dr2byr2_image = ((mom1[2]+mom1[3]) - (mom2[2]+mom2[3])) / (mom1[2]+mom1[3])
 
         # analytic moment differences
-        x1 = np.union1d(bandpass.wave_list, bulge_SED.wave_list)
-        x1 = x1[(x1 <= bandpass.red_limit) & (x1 >= bandpass.blue_limit)]
-        x2 = np.union1d(bandpass.wave_list, disk_SED.wave_list)
-        x2 = x2[(x2 <= bandpass.red_limit) & (x2 >= bandpass.blue_limit)]
-        num1 = np.trapz((x1/500)**(2*index) * bandpass(x1) * bulge_SED(x1), x1)
-        num2 = np.trapz((x2/500)**(2*index) * bandpass(x2) * disk_SED(x2), x2)
-        den1 = bulge_SED.calculateFlux(bandpass)
-        den2 = disk_SED.calculateFlux(bandpass)
-
-        r2_1 = num1/den1
-        r2_2 = num2/den2
-
+        r2_1 = bulge_SED.calculateSeeingMomentRatio(bandpass, alpha=index)
+        r2_2 = disk_SED.calculateSeeingMomentRatio(bandpass, alpha=index)
         dr2byr2_analytic = (r2_1 - r2_2) / r2_1
 
         np.testing.assert_almost_equal(dr2byr2_image, dr2byr2_analytic, 5,
@@ -430,7 +411,8 @@ def test_monochromatic_filter():
     chromatic_gal = galsim.Gaussian(fwhm=1.0) * bulge_SED
     GS_gal = galsim.Gaussian(fwhm=1.0)
 
-    shift_fn = lambda w:(0, (galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec)
+    shift_fn = lambda w:(0, ((galsim.dcr.get_refraction(w, zenith_angle) - R500)
+                             * (galsim.radians / galsim.arcsec)))
     dilate_fn = lambda wave: (wave/500.0)**(-0.2)
     mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
     mono_PSF = mono_PSF.shear(e1=PSF_e1, e2=PSF_e2)
@@ -956,6 +938,26 @@ def test_separable_ChromaticSum():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_centroid():
+    sed = galsim.SED('wave', flux_type='fphotons')
+    bp = galsim.Bandpass('wave', blue_limit=0, red_limit=1)
+    shift_fn = lambda w: (w, 0)
+    gal = sed * galsim.Gaussian(fwhm=1)
+    gal = gal.shift(shift_fn)
+    # The sed and bandpass each contribute a factor of wavelength to the flux integrand of the
+    # galaxy.  The shift function contributes an additional factor of wavelength to the x-centroid
+    # integrand.  The end result is that the x-centroid should be:
+    # int(w^3, 0, 1) / int(w^2, 0, 1) = (1/4)/(1/3) = 3/4.
+    centroid = gal.centroid(bp)
+    np.testing.assert_almost_equal(centroid.x, 0.75, 5, "ChromaticObject.centroid() failed")
+    np.testing.assert_almost_equal(centroid.y, 0.0, 5, "ChromaticObject.centroid() failed")
+
+    # Now check the centroid sampling integrator...
+    gal.wave_list = np.linspace(0.0, 1.0, 500)
+    centroid = gal.centroid(bp)
+    np.testing.assert_almost_equal(centroid.x, 0.75, 5, "ChromaticObject.centroid() failed")
+    np.testing.assert_almost_equal(centroid.y, 0.0, 5, "ChromaticObject.centroid() failed")
+
 if __name__ == "__main__":
     test_draw_add_commutativity()
     test_ChromaticConvolution_InterpolatedImage()
@@ -976,3 +978,4 @@ if __name__ == "__main__":
     test_analytic_integrator()
     test_gsparam()
     test_separable_ChromaticSum()
+    test_centroid()

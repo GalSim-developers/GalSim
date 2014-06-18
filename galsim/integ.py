@@ -125,9 +125,10 @@ class ContinuousIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over
     wavelength using a Bandpass as a weight function.
 
-    This integrator will evaluate the integrand only at the wavelengths in `bandpass.wave_list`.
-    See ContinuousIntegrator for an integrator that evaluates the integrand at a given number of
-    points equally spaced apart.
+    This integrator will evaluate the integrand at a given number `N` of equally spaced
+    wavelengths over the interval defined by bandpass.blue_limit and bandpass.red_limit.  See
+    SampleIntegrator for an integrator that only evaluates the integrand at the predefined set of
+    wavelengths in `bandpass.wave_list`.
 
     @param rule         Which integration rule to apply to the wavelength and monochromatic
                         surface brightness samples.  Options include:
