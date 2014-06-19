@@ -400,29 +400,6 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
     if 'id' not in config:
         galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
 
-    if 'whiten' in config:
-        # whiten may be bool or str.  Try bool first.
-        try:
-            whiten, safe1 = galsim.config.ParseValue(config, 'whiten', base, bool)
-        except:
-            whiten, safe1 = galsim.config.ParseValue(config, 'whiten', base, str)
-        safe = safe and safe1
-        if isinstance(whiten, basestring):
-            if whiten.startswith('symmetric'):
-                try:
-                    base['symmetric_whitening'] = int(whiten[9:])
-                except:
-                    raise ValueError("Invalid whiten parameter: "+whiten)
-            elif whiten == 'full':
-                base['symmetric_whitening'] = 0
-            else:
-                raise ValueError("Invalid whiten parameter: "+whiten)
-        else:
-            base['symmetric_whitening'] = 0
-    else:
-        whiten = False
-    ignore.append('whiten')
-
     kwargs, safe1 = galsim.config.GetAllParams(config, key, base, 
         req = galsim.__dict__['RealGalaxy']._req_params,
         opt = galsim.__dict__['RealGalaxy']._opt_params,
@@ -447,11 +424,6 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
         logger.debug('obj %d: RealGalaxy kwargs = %s',base['obj_num'],str(kwargs))
 
     gal = galsim.RealGalaxy(**kwargs)
-
-    # If we are not going to whiten the noise, then we don't need to keep it as an attribute.
-    # In fact, that is how we communicate to the upper levels that we do need to whiten.
-    # If the galaxy has a noise attribute, then we do the whitening step.
-    if not whiten: del gal.noise
 
     return gal, safe
 
