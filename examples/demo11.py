@@ -40,7 +40,7 @@ New features introduced in this demo:
 - ps = galsim.PowerSpectrum(..., units)
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
 - gal = gal.lens(g1, g2, mu)
-- correlated_noise.applyWhiteningTo(image)
+- correlated_noise.whitenImage(image)
 - vn = galsim.VariableGaussianNoise(rng, var_image)
 - image.addNoise(cn)
 - image.setOrigin(x,y)
@@ -309,8 +309,8 @@ def main(argv):
         # noise attribute.
         # The returned value is the variance of the Gaussian noise that is present after
         # the whitening process.
-        #new_variance = final.noise.applyWhiteningTo(stamp)
-        new_variance = final.noise.symmetrize(stamp, 8)
+        #new_variance = final.noise.whitenImage(stamp)
+        new_variance = final.noise.symmetrizeImage(stamp, 8)
 
         # Rescale flux to get the S/N we want.  We have to do that before we add it to the big 
         # image, which might have another galaxy near that point (so our S/N calculation would 

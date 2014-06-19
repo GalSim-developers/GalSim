@@ -617,9 +617,9 @@ def DrawStamp(psf, gal, config, xsize, ysize, offset, method):
     # Whiten if requested.  Our signal to do so is that the object will have a noise attribute.
     if hasattr(final,'noise'):
         if config['symmetric_whitening'] > 0:
-            current_var = final.noise.symmetrize(im, config['symmetric_whitening'])
+            current_var = final.noise.symmetrizeImage(im, config['symmetric_whitening'])
         else:
-            current_var = final.noise.applyWhiteningTo(im)
+            current_var = final.noise.whitenImage(im)
     else:
         current_var = 0.
 
