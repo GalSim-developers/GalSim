@@ -304,12 +304,19 @@ def main(argv):
         # pixel response already.
         final.drawImage(image=stamp, wcs=wcs.local(image_pos), offset=offset, method='no_pixel')
 
-        # Now we can whiten the noise on the postage stamp.
-        # Galsim automatically propagates the noise correctly from the initial RealGalaxy object
-        # through the applied shear, distortion, rotation, and convolution into the final object's
-        # noise attribute.
-        # The returned value is the variance of the Gaussian noise that is present after
-        # the whitening process.
+        # Now we can whiten or symmetrize the noise on the postage stamp.  Galsim automatically
+        # propagates the noise correctly from the initial RealGalaxy object through the applied
+        # shear, distortion, rotation, and convolution into the final object's noise attribute.  To
+        # make the noise fully white, use the whitenImage() method. The returned value is the
+        # variance of the Gaussian noise that is present after the whitening process.
+        #
+        # However, this is often overkill for many applications.  If it is acceptable to merely end
+        # up with noise with some degree of symmetry (say 4-fold or 8-fold symmetry), then you can
+        # instead have GalSim just add enough noise to make the resulting noise have this kind of
+        # symmetry.  Usually this requires adding significantly less additional noise, which means
+        # you can have the resulting total variance be somewhat smaller.  The returned variance
+        # corresponds to the zero-lag value of the noise correlation function, which will still have
+        # off-diagonal elements.
         #new_variance = final.noise.whitenImage(stamp)
         new_variance = final.noise.symmetrizeImage(stamp, 8)
 
