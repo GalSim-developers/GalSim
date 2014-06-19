@@ -41,6 +41,7 @@ New features introduced in this demo:
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
 - gal = gal.lens(g1, g2, mu)
 - correlated_noise.whitenImage(image)
+- correlated_noise.symmetrizeImage(image)
 - vn = galsim.VariableGaussianNoise(rng, var_image)
 - image.addNoise(cn)
 - image.setOrigin(x,y)
