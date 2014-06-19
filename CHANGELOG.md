@@ -10,7 +10,8 @@ New Features
 - Added an option to impose N-fold symmetry (for user-selected even values of
   N>=4) on correlated noise fields, parallel to the existing noise whitening
   options. Changed name for noise whitening routine from applyWhiteningTo() to
-  whitenImage(), parallel to the new symmetrizeImage().  (#529)
+  whitenImage(), parallel to the new symmetrizeImage(); use of applyWhiteningTo()
+  is deprecated.  (#529)
 
 Bug Fixes and Improvements
 --------------------------
@@ -21,5 +22,5 @@ Bug Fixes and Improvements
 Updates to config options
 -------------------------
 
-- Moved noise whitening option from being an attribute of real galaxies, to being
-  a part of the description of the noise. (#529)
+- Moved noise whitening option from being an attribute of the RealGalaxy class,
+  to being a part of the description of the noise. (#529)
