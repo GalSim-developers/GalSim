@@ -243,6 +243,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Return the variance to the interested user
         return variance
 
+    def applyWhiteningTo(self, image):
+        """An obsolete synonym for whitenImage"""
+        return self.whitenImage(image)
+
     def symmetrizeImage(self, image, order=4):
         """Apply noise designed to impose N-fold symmetry on the existing noise in a (square) input
         Image.
