@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """
 Demo #9
@@ -290,13 +289,6 @@ def main(argv):
             dy = y_nominal - iy_nominal
             offset = galsim.PositionD(dx,dy)
 
-            # Make the pixel the same way we did in demo3.  We make it in image coordinates
-            # and let the wcs convert it to world coordinates  The only difference here is
-            # that the wcs needs to know where we are on the image, since the shape of the 
-            # pixel is variable.  So we need to provide an image_pos parameter.
-            # (Or a world_pos parameter would also have worked.)
-            pix = wcs.toWorld(galsim.Pixel(1.0), image_pos=image_pos)
-
             # Determine the random values for the galaxy:
             flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
             hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
@@ -306,7 +298,7 @@ def main(argv):
 
             # Make the galaxy profile with these values:
             gal = galsim.Exponential(half_light_radius=hlr, flux=flux)
-            gal.applyShear(eta1=eta1, eta2=eta2)
+            gal = gal.shear(eta1=eta1, eta2=eta2)
 
             # Now apply the appropriate lensing effects for this position from 
             # the NFW halo mass.
@@ -337,19 +329,18 @@ def main(argv):
             # the first shear.  i.e. The field shear is taken to be behind the cluster.
             # Kind of a cosmic shear contribution between the source and the cluster.
             # However, this is not quite the same thing as doing:
-            #     gal.applyShear(field_shear)
-            #     gal.applyShear(nfw_shear)
+            #     gal.shear(field_shear).shear(nfw_shear)
             # since the shear addition ignores the rotation that would occur when doing the
             # above lines.  This is normally ok, because the rotation is not observable, but 
             # it is worth keeping in mind.
             total_shear = nfw_shear + field_shear
 
             # Apply the magnification and shear to the galaxy
-            gal.applyMagnification(nfw_mu)
-            gal.applyShear(total_shear)
+            gal = gal.magnify(nfw_mu)
+            gal = gal.shear(total_shear)
 
             # Build the final object
-            final = galsim.Convolve([psf, pix, gal])
+            final = galsim.Convolve([psf, gal])
 
             # Draw the stamp image
             # To draw the image at a position other than the center of the image, you can
@@ -357,7 +348,7 @@ def main(argv):
             # center of the image.
             # We also need to provide the local wcs at the current position.
             local_wcs = wcs.local(image_pos)
-            stamp = final.draw(wcs=local_wcs, offset=offset)
+            stamp = final.drawImage(wcs=local_wcs, offset=offset)
 
             # Recenter the stamp at the desired position:
             stamp.setCenter(ix_nominal,iy_nominal)
@@ -367,9 +358,8 @@ def main(argv):
             full_image[bounds] += stamp[bounds]
 
             # Also draw the PSF
-            psf_final = galsim.Convolve([psf, pix])
             psf_stamp = galsim.ImageF(stamp.bounds) # Use same bounds as galaxy stamp
-            psf_final.draw(psf_stamp, wcs=local_wcs, offset=offset)
+            psf.drawImage(psf_stamp, wcs=local_wcs, offset=offset)
             psf_image[bounds] += psf_stamp[bounds]
 
 

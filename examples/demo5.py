@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """
 Demo #5
@@ -42,8 +41,6 @@ New features introduced in this demo:
 - pos = bounds.center()
 - pos.x, pos.y
 - sub_image = image[bounds]
-- obj2 = obj.createSheared(e, beta)
-- obj2 = obj.createShifted(dx, dy)
 
 - Build a single large image, and access sub-images within it.
 - Set the galaxy size based on the PSF size and a resolution factor.
@@ -141,15 +138,8 @@ def main(argv):
     # We'll use this later to set the galaxy's half-light radius in terms of a resolution.
     psf_re = psf.getHalfLightRadius()
 
-    psf.applyShear(e1=psf_e1,e2=psf_e2)
+    psf = psf.shear(e1=psf_e1,e2=psf_e2)
     logger.debug('Made PSF profile')
-
-    pix = galsim.Pixel(pixel_scale)
-    logger.debug('Made pixel profile')
-
-    final_psf = galsim.Convolve([psf,pix])
-    logger.debug('Made final_psf profile')
-
 
     # Define the galaxy profile
 
@@ -223,10 +213,10 @@ def main(argv):
 
             # Make a new copy of the galaxy with an applied e1/e2-type distortion 
             # by specifying the ellipticity and a real-space position angle
-            this_gal = gal.createSheared(e=ellip, beta=beta)
+            this_gal = gal.shear(e=ellip, beta=beta)
 
             # Apply the gravitational reduced shear by specifying g1/g2
-            this_gal.applyShear(g1=gal_g1, g2=gal_g2)
+            this_gal = this_gal.shear(g1=gal_g1, g2=gal_g2)
 
             # Apply a random shift_radius:
             rsq = 2 * shift_radius_sq
@@ -235,14 +225,14 @@ def main(argv):
                 dy = (2*ud()-1) * shift_radius
                 rsq = dx**2 + dy**2
 
-            this_gal.applyShift(dx,dy)
-            this_psf = final_psf.createShifted(dx,dy)
+            this_gal = this_gal.shift(dx,dy)
+            this_psf = psf.shift(dx,dy)
 
-            # Make the final image, convolving with psf and pix
-            final_gal = galsim.Convolve([psf,pix,this_gal])
+            # Make the final image, convolving with the psf
+            final_gal = galsim.Convolve([psf,this_gal])
 
             # Draw the image
-            final_gal.draw(sub_gal_image)
+            final_gal.drawImage(sub_gal_image)
 
             # Now add an appropriate amount of noise to get our desired S/N
             # There are lots of definitions of S/N, but here is the one used by Great08
@@ -264,7 +254,7 @@ def main(argv):
 
             # Draw the PSF image
             # No noise on PSF images.  Just draw it as is.
-            this_psf.draw(sub_psf_image)
+            this_psf.drawImage(sub_psf_image)
 
             # For first instance, measure moments
             if ix==0 and iy==0:

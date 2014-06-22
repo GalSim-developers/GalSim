@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 
 import os
@@ -65,10 +64,13 @@ valid_output_types = {
 def RemoveCurrent(config, keep_safe=False, type=None):
     """
     Remove any "current values" stored in the config dict at any level.
-    If keep_safe = True (default = False), then any current values that are marked
-    as safe will be preserved.
-    If type is provided, it will only clear the current value of objects that use
-    this particular type.  If type = None, it remove current values of all types.
+
+    @param config       The config dict to process.
+    @param keep_safe    Should current values that are marked as safe be preserved? 
+                        [default: False]
+    @param type         If provided, only clear the current value of objects that use this 
+                        particular type.  [default: None, which means to remove current values
+                        of all types.]
     """
     # End recursion if this is not a dict.
     if not isinstance(config,dict): return
@@ -91,8 +93,10 @@ def RemoveCurrent(config, keep_safe=False, type=None):
           and (type == None or ('type' in config and config['type'] == type)) ):
         del config['current_val']
         del config['current_safe']
-        if 'current_seq_index' in config:
-            del config['current_seq_index']
+        if 'current_obj_num' in config:
+            del config['current_obj_num']
+            del config['current_image_num']
+            del config['current_file_num']
             del config['current_value_type']
         return True
     else:
@@ -154,7 +158,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
         config['real_catalog'] = the catalog specified by config.input.real_catalog, if provided.
         etc.
     """
-    config['seq_index'] = file_num
+    config['index_key'] = 'file_num'
     config['file_num'] = file_num
     if logger:
         logger.debug('file %d: Start ProcessInput',file_num)
@@ -296,6 +300,7 @@ def ProcessInputNObjects(config, logger=None):
     """Process the input field, just enough to determine the number of objects.
     """
     if 'input' in config:
+        config['index_key'] = 'file_num'
         input = config['input']
         if not isinstance(input, dict):
             raise AttributeError("config.input is not a dict.")
@@ -487,6 +492,9 @@ def Process(config, logger=None):
     # Now start working on the files.
     image_num = 0
     obj_num = 0
+    config['file_num'] = 0
+    config['image_num'] = 0
+    config['obj_num'] = 0
 
     extra_keys = [ 'psf', 'weight', 'badpix' ]
     last_file_name = {}
@@ -496,8 +504,6 @@ def Process(config, logger=None):
     # Process the input field for the first file.  Often there are "safe" input items
     # that won't need to be reprocessed each time.  So do them here once and keep them
     # in the config for all file_nums.  This is more important if nproc != 1.
-    config['seq_index'] = 0
-    config['file_num'] = 0
     ProcessInput(config, file_num=0, logger=logger_proxy, safe_only=True)
 
     # Normally, random_seed is just a number, which really means to use that number
@@ -517,9 +523,11 @@ def Process(config, logger=None):
         # Set the index for any sequences in the input or output parameters.
         # These sequences are indexed by the file_num.
         # (In image, they are indexed by image_num, and after that by obj_num.)
-        config['seq_index'] = file_num
+        config['index_key'] = 'file_num'
         config['file_num'] = file_num
+        config['image_num'] = image_num
         config['start_obj_num'] = obj_num
+        config['obj_num'] = obj_num
 
         # Process the input fields that might be relevant at file scope:
         ProcessInput(config, file_num=file_num, logger=logger_proxy, file_scope_only=True)
@@ -528,16 +536,16 @@ def Process(config, logger=None):
         if 'first_seed' in config:
             config['image']['random_seed'] = {
                 'type' : 'Sequence' ,
-                'first' : config['first_seed'] + obj_num 
+                'first' : config['first_seed']
             }
 
         # It is possible that some items at image scope could need a random number generator.
         # For example, in demo9, we have a random number of objects per image.
         # So we need to build an rng here.
         if 'random_seed' in config['image']:
-            config['seq_index'] = 0
+            config['index_key'] = 'obj_num'
             seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-            config['seq_index'] = file_num
+            config['index_key'] = 'file_num'
             if logger:
                 logger.debug('file %d: seed = %d',file_num,seed)
             rng = galsim.BaseDeviate(seed)
@@ -624,7 +632,7 @@ def Process(config, logger=None):
                 req['hdu'] = int
 
             if extra_key == 'psf': 
-                ignore += ['real_space', 'signal_to_noise']
+                ignore += ['draw_method', 'signal_to_noise']
             if extra_key == 'weight': 
                 ignore += ['include_obj_var']
             if 'file_name' in output_extra:
@@ -749,9 +757,9 @@ def _retry_io(func, args, ntries, file_name, logger):
                     logger.warn('File %s: Caught IOError: %s',file_name,str(e))
                     logger.warn('This is try %d/%d, so sleep for %d sec and try again.',
                                 itry+1,ntries,itry+1)
-                    import time
-                    time.sleep(itry+1)
-                    continue
+                import time
+                time.sleep(itry+1)
+                continue
         else:
             break
     return ret
@@ -764,27 +772,31 @@ def BuildFits(file_name, config, logger=None,
     """
     Build a regular fits file as specified in config.
     
-    @param file_name         The name of the output file.
-    @param config            A configuration dict.
-    @param logger            If given, a logger object to log progress.
-    @param file_num          If given, the current file_num (default = 0)
-    @param image_num         If given, the current image_num (default = 0)
-    @param obj_num           If given, the current obj_num (default = 0)
-    @param psf_file_name     If given, write a psf image to this file
-    @param psf_hdu           If given, write a psf image to this hdu in file_name
-    @param weight_file_name  If given, write a weight image to this file
-    @param weight_hdu        If given, write a weight image to this hdu in file_name
-    @param badpix_file_name  If given, write a badpix image to this file
-    @param badpix_hdu        If given, write a badpix image to this hdu in file_name
+    @param file_name        The name of the output file.
+    @param config           A configuration dict.
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param file_num         If given, the current file_num. [default: 0]
+    @param image_num        If given, the current image_num. [default: 0]
+    @param obj_num          If given, the current obj_num. [default: 0]
+    @param psf_file_name    If given, write a psf image to this file. [default: None]
+    @param psf_hdu          If given, write a psf image to this hdu in file_name. [default: None]
+    @param weight_file_name If given, write a weight image to this file. [default: None]
+    @param weight_hdu       If given, write a weight image to this hdu in file_name.  [default: 
+                            None]
+    @param badpix_file_name If given, write a badpix image to this file. [default: None]
+    @param badpix_hdu       If given, write a badpix image to this hdu in file_name. [default:
+                            None]
 
-    @return time      Time taken to build file
+    @returns the time taken to build file.
     """
     import time
     t1 = time.time()
 
-    config['seq_index'] = file_num
+    config['index_key'] = 'file_num'
     config['file_num'] = file_num
+    config['image_num'] = image_num
     config['start_obj_num'] = obj_num
+    config['obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
@@ -793,7 +805,7 @@ def BuildFits(file_name, config, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first + obj_num }
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     # hdus is a dict with hdus[i] = the item in all_images to put in the i-th hdu.
     hdus = {}
@@ -891,25 +903,27 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     """
     Build a multi-extension fits file as specified in config.
     
-    @param file_name         The name of the output file.
-    @param config            A configuration dict.
-    @param nproc             How many processes to use.
-    @param logger            If given, a logger object to log progress.
-    @param file_num          If given, the current file_num (default = 0)
-    @param image_num         If given, the current image_num (default = 0)
-    @param obj_num           If given, the current obj_num (default = 0)
-    @param psf_file_name     If given, write a psf image to this file
-    @param weight_file_name  If given, write a weight image to this file
-    @param badpix_file_name  If given, write a badpix image to this file
+    @param file_name        The name of the output file.
+    @param config           A configuration dict.
+    @param nproc            How many processes to use. [default: 1]
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param file_num         If given, the current file_num. [default: 0]
+    @param image_num        If given, the current image_num. [default: 0]
+    @param obj_num          If given, the current obj_num. [default: 0]
+    @param psf_file_name    If given, write a psf image to this file. [default: None]
+    @param weight_file_name If given, write a weight image to this file. [default: None]
+    @param badpix_file_name If given, write a badpix image to this file. [default: None]
 
-    @return time      Time taken to build file
+    @returns the time taken to build file.
     """
     import time
     t1 = time.time()
 
-    config['seq_index'] = file_num
+    config['index_key'] = 'file_num'
     config['file_num'] = file_num
+    config['image_num'] = image_num
     config['start_obj_num'] = obj_num
+    config['obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildMultiFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
@@ -918,7 +932,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first + obj_num }
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     if psf_file_name:
         make_psf_image = True
@@ -1005,25 +1019,27 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     """
     Build a multi-image fits data cube as specified in config.
     
-    @param file_name         The name of the output file.
-    @param config            A configuration dict.
-    @param nproc             How many processes to use.
-    @param logger            If given, a logger object to log progress.
-    @param file_num          If given, the current file_num (default = 0)
-    @param image_num         If given, the current image_num (default = 0)
-    @param obj_num           If given, the current obj_num (default = 0)
-    @param psf_file_name     If given, write a psf image to this file
-    @param weight_file_name  If given, write a weight image to this file
-    @param badpix_file_name  If given, write a badpix image to this file
+    @param file_name        The name of the output file.
+    @param config           A configuration dict.
+    @param nproc            How many processes to use. [default: 1]
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param file_num         If given, the current file_num. [default: 0]
+    @param image_num        If given, the current image_num. [default: 0]
+    @param obj_num          If given, the current obj_num. [default: 0]
+    @param psf_file_name    If given, write a psf image to this file. [default: None]
+    @param weight_file_name If given, write a weight image to this file. [default: None]
+    @param badpix_file_name If given, write a badpix image to this file. [default: None]
 
-    @return time      Time taken to build file
+    @returns the time taken to build file.
     """
     import time
     t1 = time.time()
 
-    config['seq_index'] = file_num
+    config['index_key'] = 'file_num'
     config['file_num'] = file_num
+    config['image_num'] = image_num
     config['start_obj_num'] = obj_num
+    config['obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildDataCube for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
@@ -1032,7 +1048,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first + obj_num }
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     if psf_file_name:
         make_psf_image = True
@@ -1163,8 +1179,9 @@ def GetNObjForMultiFits(config, file_num, image_num):
         if nobjects:
             config['output']['nimages'] = nobjects
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
-    config['seq_index'] = file_num
+    config['index_key'] = 'file_num'
     config['file_num'] = file_num
+    config['image_num'] = image_num
     nimages = params['nimages']
     try :
         nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
@@ -1185,8 +1202,9 @@ def GetNObjForDataCube(config, file_num, image_num):
         if nobjects:
             config['output']['nimages'] = nobjects
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
-    config['seq_index'] = file_num
+    config['index_key'] = 'file_num'
     config['file_num'] = file_num
+    config['image_num'] = image_num
     nimages = params['nimages']
     try :
         nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]

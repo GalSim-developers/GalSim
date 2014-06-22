@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 
 import galsim
@@ -229,12 +228,7 @@ def AddNoisePoisson(noise, config, draw_method, rng, im, weight_im, current_var,
 
     # At this point, there is a slight difference between fft and phot. For photon shooting, the 
     # galaxy already has Poisson noise, so we want to make sure not to add that again!
-    if draw_method == 'fft':
-        im += extra_sky
-        # Do the normal PoissonNoise calculation.
-        im.addNoise(galsim.PoissonNoise(rng))
-        im -= extra_sky
-    else:
+    if draw_method == 'phot':
         # Only add in the noise from the sky.
         if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
             noise_im = sky + extra_sky
@@ -252,6 +246,11 @@ def AddNoisePoisson(noise, config, draw_method, rng, im, weight_im, current_var,
                 # This deviate adds a noisy version of the sky, so need to subtract the mean back 
                 # off.
                 im -= total_sky
+    else:
+        im += extra_sky
+        # Do the normal PoissonNoise calculation.
+        im.addNoise(galsim.PoissonNoise(rng))
+        im -= extra_sky
 
     if logger:
         logger.debug('image %d, obj %d: Added Poisson noise with sky = %f',
@@ -382,12 +381,7 @@ def AddNoiseCCD(noise, config, draw_method, rng, im, weight_im, current_var, sky
 
     # At this point, there is a slight difference between fft and phot. For photon shooting, the 
     # galaxy already has Poisson noise, so we want to make sure not to add that again!
-    if draw_method == 'fft':
-        # Do the normal CCDNoise calculation.
-        im += extra_sky
-        im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
-        im -= extra_sky
-    else:
+    if draw_method == 'phot':
         # Add in the noise from the sky.
         if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
             noise_im = sky + extra_sky
@@ -410,6 +404,11 @@ def AddNoiseCCD(noise, config, draw_method, rng, im, weight_im, current_var, sky
         # And add the read noise
         if read_noise != 0.:
             im.addNoise(galsim.GaussianNoise(rng, sigma=read_noise))
+    else:
+        # Do the normal CCDNoise calculation.
+        im += extra_sky
+        im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
+        im -= extra_sky
 
     if logger:
         logger.debug('image %d, obj %d: Added CCD noise with sky = %f, ' +

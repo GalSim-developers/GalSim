@@ -1,25 +1,24 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """@file des_meds.py  Module for generating DES Multi-Epoch Data Structures (MEDS) in GalSim.
 
-This module defines the `MultiExposureObject` class for representing multiple exposure data for a 
-single object.  The `write_meds` function can be used to write a list of `MultiExposureObject` 
+This module defines the MultiExposureObject class for representing multiple exposure data for a 
+single object.  The write_meds() function can be used to write a list of MultiExposureObject
 instances to a single MEDS file.
 
 Importing this module also adds these data structures to the config framework, so that MEDS file 
@@ -47,21 +46,28 @@ class MultiExposureObject(object):
     """
     A class containing exposures for single object, along with other information.
 
-    Available fields:
-        self.images             list of images of the object (GalSim Images)
-        self.weights            list of weight maps (GalSim Images)
-        self.segs               list of segmentation masks (GalSim Images)
-        self.wcs                list of WCS transformations (GalSim AffineTransforms)
-        self.n_cutouts          number of exposures
-        self.box_size           size of each exposure image
+    Initialization
+    --------------
 
-    Constructor parameters:
-    @param images               list of images of the object (GalSim Images)
-    @param weights              list of weight maps (GalSim Images)
-    @param badpix               list of bad pixel masks (GalSim Images)
-    @param segs                 list of segmentation maps (GalSim Images)
-    @param wcs                  list of WCS transformations (GalSim AffineTransforms)
-    @param id                   galaxy id
+    @param images       List of images of the object (GalSim Images).
+    @param weights      List of weight maps (GalSim Images). [default: None]
+    @param badpix       List of bad pixel masks (GalSim Images). [default: None]
+    @param segs         List of segmentation maps (GalSim Images). [default: None]
+    @param wcs          List of WCS transformations (GalSim AffineTransforms). [default: None]
+    @param id           Galaxy id. [default: 0]
+
+    Attributes
+    ----------
+
+    self.images         List of images of the object (GalSim Images).
+    self.weights        List of weight maps (GalSim Images).
+    self.segs           List of segmentation masks (GalSim Images).
+    self.wcs            List of WCS transformations (GalSim AffineTransforms).
+    self.n_cutouts      Number of exposures.
+    self.box_size       Size of each exposure image.
+
+    Module level variables
+    ----------------------
 
     Images, weights and segs have to be square numpy arrays with size in
     BOX_SIZES = [32,48,64,96,128,196,256].
@@ -375,13 +381,13 @@ def BuildMEDS(file_name, config, nproc=1, logger=None, file_num=0, image_num=0, 
 
     @param file_name         The name of the output file.
     @param config            A configuration dict.
-    @param nproc             How many processes to use.
-    @param logger            If given, a logger object to log progress.
-    @param file_num          If given, the current file_num (default = 0)
-    @param image_num         If given, the current image_num (default = 0)
-    @param obj_num           If given, the current obj_num (default = 0)
+    @param nproc             How many processes to use. [default: 1]
+    @param logger            If given, a logger object to log progress. [default: None]
+    @param file_num          If given, the current file_num. [default: 0]
+    @param image_num         If given, the current image_num. [default: 0]
+    @param obj_num           If given, the current obj_num. [default: 0]
 
-    @return time      Time taken to build file
+    @returns the time taken to build file
     """
     import time
     t1 = time.time()

@@ -1,21 +1,20 @@
 /* -*- c++ -*-
- * Copyright 2012-2014 The GalSim developers:
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
  *
- * GalSim is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
  *
- * GalSim is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
  */
 #ifndef __INTEL_COMPILER
 #if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
@@ -64,20 +63,44 @@ namespace galsim {
             bp::class_<BaseDeviateCallBack>
                 pyBaseDeviate("BaseDeviate", "", bp::no_init);
             pyBaseDeviate
-                .def(bp::init<long>(bp::arg("lseed")=0))
-                .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
+                .def(bp::init<long>(bp::arg("seed")=0))
+                .def(bp::init<const BaseDeviate&>(bp::arg("seed")))
                 .def(bp::init<std::string>(bp::arg("str")))
                 .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed,
-                     (bp::arg("lseed")=0), "")
+                     (bp::arg("seed")=0), "")
                 .def("reset", (void (BaseDeviate::*) (long) )&BaseDeviate::reset,
-                     (bp::arg("lseed")=0), "")
+                     (bp::arg("seed")=0), "")
                 .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset, 
-                     (bp::arg("dev")), "")
+                     (bp::arg("seed")), "")
                 .def("clearCache", &BaseDeviate::clearCache, "")
                 .def("serialize", &BaseDeviate::serialize, "")
                 .def("duplicate", &BaseDeviate::duplicate, "")
                 .enable_pickling()
                 ;
+
+            // This lets python recognize functions that return a shared_ptr<BaseDeviate>
+            // as a python BaseDeviate object.  This is needed for the BaseNoise::getRNG()
+            // function _if_ the BaseNoise was default constructed.  As far as I understand it,
+            // if you construct a BaseDeviate object in python and then use that to construct
+            // a BaseNoise object:
+            //
+            //     >>> rng = galsim.BaseDeviate()
+            //     >>> gn = galsim.GauusianNoise(rng)
+            //
+            // then the `gn.getRNG()` call doesn't need anything special because the actual
+            // BaseDeviate being wrapped in the shared_ptr is really a BaseDeviateCallBack.
+            // So boost python knows how to handle it.  
+            //
+            // But if the BaseDeviate was constructed in the C++ layer, which happens when you
+            // default construct the BaseNoise object:
+            //
+            //     >>> gn = galsim.GaussianNoise()
+            //
+            // then the `gn.getRNG()` call returns a real BaseDeviate object in the shared_ptr.
+            // So python doesn't really know what that is without this next line.  The
+            // register_ptr_to_python call tells boost that a shared_ptr<BaseDeviate> in the 
+            // C++ layer should be treated like a BaseDeviate in the python layer.
+            bp::register_ptr_to_python< boost::shared_ptr<BaseDeviate> >();
         }
 
     };

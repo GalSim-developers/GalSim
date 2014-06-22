@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """"
 Demo #11
@@ -40,7 +39,7 @@ New features introduced in this demo:
 - gal = galsim.RealGalaxy(..., noise_pad_size)
 - ps = galsim.PowerSpectrum(..., units)
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
-- gal.applyLensing(g1, g2, mu)
+- gal = gal.lens(g1, g2, mu)
 - correlated_noise.applyWhiteningTo(image)
 - vn = galsim.VariableGaussianNoise(rng, var_image)
 - image.addNoise(cn)
@@ -161,8 +160,6 @@ def main(argv):
     # with flux 1, and we can set the pixel scale using a keyword.
     psf_file = os.path.join('data','example_sdss_psf_sky0.fits.bz2')
     psf = galsim.InterpolatedImage(psf_file, scale = pixel_scale, flux = 1.)
-    # We do not include a pixel response function galsim.Pixel here, because the image that was read
-    # in from file already included it.
     logger.info('Read in PSF image from bzipped FITS file')
 
     # Setup the image:
@@ -279,20 +276,17 @@ def main(argv):
             gal_list[index] = gal
 
         # Apply the dilation we calculated above.
-        # Use createDilated rather than applyDilation, so we don't change the galaxies in the 
-        # original gal_list -- createDilated makes a new copy.
-        gal = gal.createDilated(dilat)
+        gal = gal.dilate(dilat)
 
         # Apply a random rotation
         theta = ud()*2.0*numpy.pi*galsim.radians
-        gal.applyRotation(theta)
+        gal = gal.rotate(theta)
 
         # Apply the cosmological (reduced) shear and magnification at this position using a single
         # GSObject method.
-        gal.applyLensing(g1, g2, mu)
+        gal = gal.lens(g1, g2, mu)
 
-        # Convolve with the PSF.  We don't have to include a pixel response explicitly, since the
-        # SDSS PSF image that we are using included the pixel response already.
+        # Convolve with the PSF.  
         final = galsim.Convolve(psf, gal)
 
         # Account for the fractional part of the position:
@@ -304,7 +298,10 @@ def main(argv):
         # Note: We make the stamp size odd to make the above calculation of the offset easier.
         this_stamp_size = 2 * int(math.ceil(base_stamp_size * dilat / 2)) + 1
         stamp = galsim.ImageF(this_stamp_size,this_stamp_size)
-        final.draw(image=stamp, wcs=wcs.local(image_pos), offset=offset)
+
+        # We use method='no_pixel' here because the SDSS PSF image that we are using includes the
+        # pixel response already.
+        final.drawImage(image=stamp, wcs=wcs.local(image_pos), offset=offset, method='no_pixel')
 
         # Now we can whiten the noise on the postage stamp.
         # Galsim automatically propagates the noise correctly from the initial RealGalaxy object

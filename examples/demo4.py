@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """
 Demo #4
@@ -36,8 +35,9 @@ New features introduced in this demo:
 
 - cat = galsim.Catalog(file_name, dir)
 - obj = galsim.Moffat(beta, fwhm, trunc)
+- obj = galsim.DeVaucouleurs(flux, half_light_radius)
 - obj = galsim.Add([list of objects])
-- obj.setFlux(flux)
+- obj = obj.shift(dx,dy)
 - galsim.fits.writeMulti([list of images], file_name)
 """
 
@@ -125,34 +125,32 @@ def main(argv):
         psf = galsim.Moffat(beta=beta, fwhm=fwhm, trunc=trunc)
 
         # Take the (e1, e2) shape parameters from the catalog as well.
-        psf.applyShear(e1=cat.getFloat(k,2), e2=cat.getFloat(k,3))
-
-        pix = galsim.Pixel(pixel_scale)
+        psf = psf.shear(e1=cat.getFloat(k,2), e2=cat.getFloat(k,3))
 
         # Galaxy is a bulge + disk with parameters taken from the catalog:
         disk = galsim.Exponential(flux=0.6, half_light_radius=cat.getFloat(k,5))
-        disk.applyShear(e1=cat.getFloat(k,6), e2=cat.getFloat(k,7))
+        disk = disk.shear(e1=cat.getFloat(k,6), e2=cat.getFloat(k,7))
 
         bulge = galsim.DeVaucouleurs(flux=0.4, half_light_radius=cat.getFloat(k,8))
-        bulge.applyShear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
+        bulge = bulge.shear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
 
         # The flux of an Add object is the sum of the component fluxes.
         # Note that in demo3.py, a similar addition was performed by the binary operator "+".
         gal = galsim.Add([disk, bulge])
-        # This flux may be overridden by setFlux.  The relative fluxes of the components
+        # This flux may be overridden by withFlux.  The relative fluxes of the components
         # remains the same, but the total flux is set to gal_flux.
-        gal.setFlux(gal_flux)
-        gal.applyShear(g1=gal_g1, g2=gal_g2)
+        gal = gal.withFlux(gal_flux)
+        gal = gal.shear(g1=gal_g1, g2=gal_g2)
 
         # The center of the object is normally placed at the center of the postage stamp image.
-        # You can change that with applyShift:
-        gal.applyShift(dx=cat.getFloat(k,11), dy=cat.getFloat(k,12))
+        # You can change that with shift:
+        gal = gal.shift(dx=cat.getFloat(k,11), dy=cat.getFloat(k,12))
 
-        final = galsim.Convolve([psf, pix, gal])
+        final = galsim.Convolve([psf, gal])
 
         # Draw the profile
         image = galsim.ImageF(xsize, ysize)
-        final.draw(image, scale=pixel_scale)
+        final.drawImage(image, scale=pixel_scale)
 
         # Add Poisson noise to the image:
         image.addNoise(galsim.PoissonNoise(rng, sky_level * pixel_scale**2))

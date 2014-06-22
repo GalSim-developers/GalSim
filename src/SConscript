@@ -43,7 +43,7 @@ obj_lib = env1.SharedObject(lib_files)
 
 def get_version():
     version = '0.0' # Just in case we fall through, it won't completely fail.
-    f = open(os.path.join('..','galsim','base.py'))
+    f = open(os.path.join('..','galsim','__init__.py'))
     for line in f:
         if line.startswith('version = '):
             # Line with version number looks like:

@@ -1,21 +1,20 @@
 /* -*- c++ -*-
- * Copyright 2012-2014 The GalSim developers:
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
  *
- * GalSim is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
  *
- * GalSim is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
  */
 
 #ifndef ANGLE_H
@@ -137,6 +136,7 @@ namespace galsim {
      *    theta2 -= theta1
      *    theta *= x
      *    theta /= x
+     *    x = unit1/unit2
      *  @endcode
      *
      *  I/O:
@@ -204,6 +204,9 @@ namespace galsim {
     /// Define conversion from value to an Angle
     inline Angle operator*(double val, AngleUnit unit) { return Angle(val,unit); }
 
+    /// A convenience function.  unit1/unit2 is equivalent to (1 * unit1) / unit2.
+    inline double operator/(AngleUnit unit1, AngleUnit unit2) 
+    { return unit1.getValue() / unit2.getValue(); }
 
 }
 #endif

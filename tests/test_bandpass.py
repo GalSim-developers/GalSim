@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 import os
 import numpy as np
@@ -124,7 +123,8 @@ def test_Bandpass_wave_type():
     np.testing.assert_approx_equal(a0.blue_limit, a1.blue_limit*10,
                                    err_msg="Bandpass.blue_limit doesn't respect wave_type")
     np.testing.assert_approx_equal(a0.effective_wavelength, a1.effective_wavelength*10,
-                                   err_msg="Bandpass.effective_wavelength doesn't respect wave_type")
+                                   err_msg="Bandpass.effective_wavelength doesn't respect"
+                                           +" wave_type")
 
     b0 = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
     b1 = galsim.Bandpass(galsim.LookupTable([10,20,30,40,50], [1,2,3,4,5]), wave_type='ang')
@@ -133,7 +133,8 @@ def test_Bandpass_wave_type():
     np.testing.assert_approx_equal(b0.blue_limit, b1.blue_limit,
                                    err_msg="Bandpass.blue_limit doesn't respect wave_type")
     np.testing.assert_approx_equal(b0.effective_wavelength, b1.effective_wavelength,
-                                   err_msg="Bandpass.effective_wavelength doesn't respect wave_type")
+                                   err_msg="Bandpass.effective_wavelength doesn't respect"
+                                           +" wave_type")
     np.testing.assert_allclose(b0([1,2,3,4,5]), b1([1,2,3,4,5]),
                                err_msg="Bandpass.__call__ doesn't respect wave_type")
 

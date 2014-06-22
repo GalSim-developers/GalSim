@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """
 Demo #1
@@ -44,10 +43,9 @@ ways.  (demo*.py are python scripts, while demo*.yaml and demo*.json are configu
 New features introduced in this demo:
 
 - obj = galsim.Gaussian(flux, sigma)
-- obj = galsim.Pixel(pixel_scale)
 - obj = galsim.Convolve([list of objects])
-- image = obj.draw(scale)
-- image.added_flux  (Only present after a draw command.)
+- image = obj.drawImage(scale)
+- image.added_flux  (Only present after a drawImage command.)
 - noise = galsim.GaussianNoise(sigma)
 - image.addNoise(noise)
 - image.write(file_name)
@@ -91,21 +89,17 @@ def main(argv):
     psf = galsim.Gaussian(flux=1., sigma=psf_sigma) # PSF flux should always = 1
     logger.debug('Made PSF profile')
 
-    # Define the pixel size
-    pix = galsim.Pixel(pixel_scale)
-    logger.debug('Made pixel profile')
-
     # Final profile is the convolution of these
     # Can include any number of things in the list, all of which are convolved 
     # together to make the final flux profile.
-    final = galsim.Convolve([gal, psf, pix])
+    final = galsim.Convolve([gal, psf])
     logger.debug('Convolved components into final profile')
 
-    # Draw the image with a particular pixel scale
+    # Draw the image with a particular pixel scale, given in arcsec/pixel.
     # The returned image has a member, added_flux, which is gives the total flux actually added to 
     # the image.  One could use this value to check if the image is large enough for some desired
     # accuracy level.  Here, we just ignore it.
-    image = final.draw(scale=pixel_scale)
+    image = final.drawImage(scale=pixel_scale)
     logger.debug('Made image of the profile: flux = %f, added_flux = %f',gal_flux,image.added_flux)
 
     # Add Gaussian noise to the image with specified sigma

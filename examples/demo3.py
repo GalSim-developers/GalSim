@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """
 Demo #3
@@ -36,13 +35,15 @@ New features introduced in this demo:
 - obj = galsim.Sersic(n, flux, scale_radius)
 - obj = galsim.Kolmogorov(fwhm)
 - obj = galsim.OpticalPSF(lam_over_diam, defocus, coma1, coma2, astig1, astig2, obscuration)
-- obj.applyShear(e, beta)  -- including how to specify an angle in GalSim
+- obj = obj.shear(e, beta)  -- including how to specify an angle in GalSim
 - shear = galsim.Shear(q, beta)
-- obj.applyShear(shear)
+- obj = obj.shear(shear)
 - obj3 = x1 * obj1 + x2 * obj2
+- obj = obj.withFlux(flux)
 - image = galsim.ImageF(image_size, image_size)
-- obj.draw(image, wcs)
-- wcs.toWorld(profile)
+- image = obj.drawImage(image, wcs)
+- image = obj.drawImage(method='sb')
+- world_profile = wcs.toWorld(profile)
 - shear3 = shear1 + shear2
 - noise = galsim.CCDNoise(rng, sky_level, gain, read_noise)
 """
@@ -139,14 +140,14 @@ def main(argv):
     # added to each other.
     gal = bulge_frac * bulge + (1-bulge_frac) * disk
     # Could also have written the following, which does the same thing:
-    #   gal = galsim.Add([ bulge.setFlux(bulge_frac) , disk.setFlux(1-bulge_frac) ])
+    #   gal = galsim.Add([ bulge.withFlux(bulge_frac) , disk.withFlux(1-bulge_frac) ])
     # Both syntaxes work with more than two summands as well.
 
     # Set the overall flux of the combined object.
-    gal.setFlux(gal_flux)
+    gal = gal.withFlux(gal_flux)
     # Since the total flux of the components was 1, we could also have written:
     #   gal *= gal_flux
-    # The setFlux method will always set the flux to the given value, while `gal *= flux`
+    # The withFlux method will always set the flux to the given value, while `gal *= flux`
     # will multiply whatever the current flux is by the given factor.
 
     # Set the shape of the galaxy according to axis ratio and position angle
@@ -157,7 +158,7 @@ def main(argv):
     #       galsim.arcsec
     #       galsim.hours
     gal_shape = galsim.Shear(q=gal_q, beta=gal_beta*galsim.degrees)
-    gal.applyShear(gal_shape)
+    gal = gal.shear(gal_shape)
     logger.debug('Made galaxy profile')
 
     # Define the atmospheric part of the PSF.
@@ -165,7 +166,7 @@ def main(argv):
     atmos = galsim.Kolmogorov(fwhm=atmos_fwhm)
     # For the PSF shape here, we use ellipticity rather than axis ratio.
     # And the position angle can be either degrees or radians.  Here we chose radians.
-    atmos.applyShear(e=atmos_e, beta=atmos_beta*galsim.radians)
+    atmos = atmos.shear(e=atmos_e, beta=atmos_beta*galsim.radians)
     logger.debug('Made atmospheric PSF profile')
 
     # Define the optical part of the PSF.
@@ -185,7 +186,7 @@ def main(argv):
     # So far, our coordinate transformation between image and sky coordinates has been just a 
     # scaling of the units between pixels and arcsec, which we have defined as the "pixel scale".
     # This is fine for many purposes, so we have made it easy to treat the coordinate systems
-    # this we via the `scale` parameter to commands like draw.  However, in general, the 
+    # this way via the `scale` parameter to commands like drawImage.  However, in general, the
     # transformation between the two coordinate systems can be more complicated than that,
     # including distortions, rotations, variation in pixel size, and so forth.  GalSim can 
     # model a number of different "World Coordinate System" (WCS) transformations.  See the
@@ -196,18 +197,9 @@ def main(argv):
     wcs = galsim.ShearWCS(scale=pixel_scale, shear=galsim.Shear(g1=wcs_g1, g2=wcs_g2))
     logger.debug('Made the WCS')
 
-    # Using a non-trivial WCS means that the pixel is no longer a square box profile.
-    # At least not in world coordinates, where we have typically been defining the profiles.
-    # It is a square in image coordinates though, so the easiest way to deal with the pixel
-    # is to define it as a unit pixel in image coordinates and let the WCS object convert it 
-    # to world coordinates.
-    pix = wcs.toWorld(galsim.Pixel(1.0))
-    logger.debug('Made pixel profile')
-
     # Next we will convolve the components in world coordinates.
     psf = galsim.Convolve([atmos, optics])
-    final = galsim.Convolve([psf, gal, pix])
-    final_epsf = galsim.Convolve([psf, pix])
+    final = galsim.Convolve([psf, gal])
     logger.debug('Convolved components into final profile')
 
     # This time we specify a particular size for the image rather than let GalSim 
@@ -216,21 +208,25 @@ def main(argv):
     #   ImageD uses 64-bit floats    (like a C double, aka numpy.float64)
     #   ImageS uses 16-bit integers  (usually like a C short, aka numpy.int16)
     #   ImageI uses 32-bit integers  (usually like a C int, aka numpy.int32)
-    # If you let the GalSim draw command create the image for you, it will create an ImageF.
+    # If you let the GalSim drawImage command create the image for you, it will create an ImageF.
     # However, you can make a different type if you prefer.  In this case, we still use
     # ImageF, since 32-bit floats are fine.  We just want to set the size explicitly.
     image = galsim.ImageF(image_size, image_size)
     # Draw the image with the given WCS.  Note that we use wcs rather than scale when the
     # WCS is more complicated than just a pixel scale.
-    final.draw(image=image, wcs=wcs)
+    final.drawImage(image=image, wcs=wcs)
 
     # Also draw the effective PSF by itself and the optical PSF component alone.
     image_epsf = galsim.ImageF(image_size, image_size)
-    final_epsf.draw(image_epsf, wcs=wcs)
+    psf.drawImage(image_epsf, wcs=wcs)
 
     # We also draw the optical part of the PSF at its own Nyquist-sampled pixel size
     # in order to better see the features of the (highly structured) profile.
-    image_opticalpsf = optics.draw()
+    # In this case, we draw a "surface brightness image" using method='sb'.  Rather than 
+    # integrate the flux over the area of each pixel, this method just samples the surface
+    # brightness value at the locations of the pixel centers.  We will encounter a few other
+    # drawing methods as we go through this sequence of demos.  cf. demos 7, 8, 10, and 11.
+    image_opticalpsf = optics.drawImage(method='sb')
     logger.debug('Made image of the profile')
 
     # Add a constant sky level to the image.

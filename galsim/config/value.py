@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 import galsim
 
@@ -62,19 +61,20 @@ valid_value_types = {
 # Standard keys to ignore while parsing values:
 standard_ignore = [ 
     'type',
-    'current_val', 'current_safe', 'current_seq_index', 'current_file_num', 'current_value_type',
+    'current_val', 'current_safe', 'current_value_type',
+    'current_obj_num', 'current_image_num', 'current_file_num',
     '#' # When we read in json files, there represent comments
 ]
 
 def ParseValue(config, param_name, base, value_type):
     """@brief Read or generate a parameter value from config.
 
-    @return value, safe
+    @returns the tuple (value, safe).
     """
     param = config[param_name]
     #print 'ParseValue for param_name = ',param_name,', value_type = ',str(value_type)
     #print 'param = ',param
-    #print 'seq_index = ',base.get('seq_index',0)
+    #print 'nums = ',base.get('file_num',0), base.get('image_num',0), base.get('obj_num',0)
 
     # First see if we can assign by param by a direct constant value
     if isinstance(param, value_type):
@@ -105,12 +105,12 @@ def ParseValue(config, param_name, base, value_type):
             "%s.type attribute required in config for non-constant parameter %s."%(
                 param_name,param_name))
     elif ( 'current_val' in param 
-           and param['current_seq_index'] == base.get('seq_index',0)
+           and param['current_obj_num'] == base.get('obj_num',0)
+           and param['current_image_num'] == base.get('image_num',0)
            and param['current_file_num'] == base.get('file_num',0) ):
         if param['current_value_type'] != value_type:
             raise ValueError(
                 "Attempt to parse %s multiple times with different value types"%param_name)
-        #print 'seq_index = ',base.get('seq_index',0)
         #print base['obj_num'],'Using current value of ',param_name,' = ',param['current_val']
         return param['current_val'], param['current_safe']
     else:
@@ -143,9 +143,10 @@ def ParseValue(config, param_name, base, value_type):
         # Save the current value for possible use by the Current type
         param['current_val'] = val
         param['current_safe'] = safe
-        param['current_seq_index'] = base.get('seq_index',0)
-        param['current_file_num'] = base.get('file_num',0)
         param['current_value_type'] = value_type
+        param['current_obj_num'] = base.get('obj_num',0)
+        param['current_image_num'] = base.get('image_num',0)
+        param['current_file_num'] = base.get('file_num',0)
         #print param_name,' = ',val
         return val, safe
 
@@ -203,7 +204,7 @@ def _GetBoolValue(param, param_name):
 def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
     """@brief Check that the parameters for a particular item are all valid
     
-    @return a dict, get, with get[key] = value_type for all keys to get
+    @returns a dict, get, with get[key] = value_type for all keys to get.
     """
     get = {}
     valid_keys = req.keys() + opt.keys()
@@ -243,7 +244,8 @@ def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
     valid_keys += ignore
     valid_keys += standard_ignore
     for key in param.keys():
-        if key not in valid_keys:
+        # Generators are allowed to use item names that start with _, which we ignore here.
+        if key not in valid_keys and not key.startswith('_'):
             raise AttributeError(
                 "Unexpected attribute %s found for parameter %s"%(key,param_name))
 
@@ -253,7 +255,7 @@ def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
 def GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
     """@brief Check and get all the parameters for a particular item
 
-    @return kwargs, safe
+    @returns the tuple (kwargs, safe).
     """
     get = CheckAllParams(param,param_name,req,opt,single,ignore)
     kwargs = {}
@@ -520,15 +522,12 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
 
     sigma = kwargs['sigma']
 
-    if 'gd' in base:
+    if 'gd' in base and base['current_gdsigma'] == sigma:
         # Minor subtlety here.  GaussianDeviate requires two random numbers to 
         # generate a single Gaussian deviate.  But then it gets a second 
         # deviate for free.  So it's more efficient to store gd than to make
         # a new one each time.  So check if we did that.
         gd = base['gd']
-        if base['current_gdsigma'] != sigma:
-            gd.setSigma(sigma)
-            base['current_gdsigma'] = sigma
     else:
         # Otherwise, just go ahead and make a new one.
         gd = galsim.GaussianDeviate(rng,sigma=sigma)
@@ -585,19 +584,19 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
            'x_min' : float, 'x_max' : float }
     kwargs, safe = GetAllParams(param, param_name, base, opt=opt)
     
-    if 'distdev' in base:
+    if '_distdev' in param:
         # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
         # time, so first check if we've already made one:
-        distdev = base['distdev']
-        if base['distdev_kwargs'] != kwargs:
+        distdev = param['_distdev']
+        if param['_distdev_kwargs'] != kwargs:
             distdev=galsim.DistDeviate(rng,**kwargs)
-            base['distdev'] = distdev
-            base['distdev_kwargs'] = kwargs
+            param['_distdev'] = distdev
+            param['_distdev_kwargs'] = kwargs
     else:
         # Otherwise, just go ahead and make a new one.
         distdev=galsim.DistDeviate(rng,**kwargs)
-        base['distdev'] = distdev
-        base['distdev_kwargs'] = kwargs
+        param['_distdev'] = distdev
+        param['_distdev_kwargs'] = kwargs
 
     # Typically, the rng will change between successive calls to this, so reset the 
     # seed.  (The other internal calculations don't need to be redone unless the rest of the
@@ -648,7 +647,7 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     """
     ignore = [ 'default' ]
     opt = { 'first' : value_type, 'last' : value_type, 'step' : value_type,
-            'repeat' : int, 'nitems' : int, 'index' : str }
+            'repeat' : int, 'nitems' : int, 'index_key' : str }
     kwargs, safe = GetAllParams(param, param_name, base, opt=opt, ignore=ignore)
 
     step = kwargs.get('step',1)
@@ -656,7 +655,7 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     repeat = kwargs.get('repeat',1)
     last = kwargs.get('last',None)
     nitems = kwargs.get('nitems',None)
-    index_key = kwargs.get('index','seq_index')
+    index_key = kwargs.get('index_key',base.get('index_key','obj_num'))
     if repeat <= 0:
         raise ValueError(
             "Invalid repeat=%d (must be > 0) for %s.type = Sequence"%(repeat,param_name))
@@ -664,7 +663,7 @@ def _GenerateFromSequence(param, param_name, base, value_type):
         raise AttributeError(
             "At most one of the attributes last and nitems is allowed for %s.type = Sequence"%(
                 param_name))
-    if index_key not in [ 'seq_index', 'obj_num', 'image_num', 'file_num' ]:
+    if index_key not in [ 'obj_num_in_file', 'obj_num', 'image_num', 'file_num' ]:
         raise AttributeError(
             "Invalid index=%s for %s.type = Sequence."%(index_key,param_name))
 
@@ -687,7 +686,10 @@ def _GenerateFromSequence(param, param_name, base, value_type):
         if last is not None:
             nitems = (last - first)/step + 1
 
-    k = base[index_key]
+    if index_key == 'obj_num_in_file':
+        k = base['obj_num'] - base.get('start_obj_num',0)
+    else:
+        k = base[index_key]
     k = k / repeat
 
     if nitems is not None and nitems > 0:
@@ -1057,15 +1059,16 @@ def _GenerateFromEval(param, param_name, base, value_type):
     if 'rng' in base:
         rng = base['rng']
     if 'file_num' in base:
-        file_num = base['file_num']
+        file_num = base.get('file_num',0)
     if 'image_num' in base:
-        image_num = base['image_num']
+        image_num = base.get('image_num',0)
     if 'obj_num' in base:
         obj_num = base['obj_num']
+    if 'start_obj_num' in base:
+        start_obj_num = base.get('start_obj_num',0)
     for key in galsim.config.valid_input_types.keys():
         if key in base:
             exec(key + ' = base[key]')
-
     try:
         val = value_type(eval(string))
         #print base['obj_num'],'Eval(%s) needed extra variables: val = %s'%(string,val)

@@ -1,21 +1,20 @@
 /* -*- c++ -*-
- * Copyright 2012-2014 The GalSim developers:
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
  *
- * GalSim is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
  *
- * GalSim is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
  */
 
 #ifndef GSPARAMS_H
@@ -95,10 +94,6 @@ namespace galsim {
          *                                    sample the radial profile out to some value.  We
          *                                    choose the outer radius such that the integral
          *                                    encloses at least (1-shoot_accuracy) of the flux.
-         * @param shoot_relerr                The target relative error allowed on any flux integral
-         *                                    for photon shooting.
-         * @param shoot_abserr                The target absolute error allowed on any flux integral
-         *                                    for photon shooting.
          * @param allowed_flux_variation      Max range of allowed (abs value of) photon fluxes
          *                                    within an Interval before rejection sampling is
          *                                    invoked.
@@ -120,8 +115,6 @@ namespace galsim {
                  double _integration_relerr,
                  double _integration_abserr,
                  double _shoot_accuracy,
-                 double _shoot_relerr,
-                 double _shoot_abserr,
                  double _allowed_flux_variation,
                  int _range_division_for_extrema,
                  double _small_fraction_of_flux) :
@@ -138,8 +131,6 @@ namespace galsim {
             integration_relerr(_integration_relerr),
             integration_abserr(_integration_abserr),
             shoot_accuracy(_shoot_accuracy),
-            shoot_relerr(_shoot_relerr),
-            shoot_abserr(_shoot_abserr),
             allowed_flux_variation(_allowed_flux_variation),
             range_division_for_extrema(_range_division_for_extrema),
             small_fraction_of_flux(_small_fraction_of_flux)
@@ -159,14 +150,12 @@ namespace galsim {
             xvalue_accuracy(1.e-5),
             table_spacing(1.),
 
-            realspace_relerr(1.e-3),
+            realspace_relerr(1.e-4),
             realspace_abserr(1.e-6),
-            integration_relerr(1.e-5),
-            integration_abserr(1.e-7),
+            integration_relerr(1.e-6),
+            integration_abserr(1.e-8),
 
             shoot_accuracy(1.e-5),
-            shoot_relerr(1.e-6),
-            shoot_abserr(1.e-8),
             allowed_flux_variation(0.81),
             range_division_for_extrema(32),
             small_fraction_of_flux(1.e-4)
@@ -190,8 +179,6 @@ namespace galsim {
         double integration_abserr;
 
         double shoot_accuracy;
-        double shoot_relerr;
-        double shoot_abserr;
         double allowed_flux_variation;
         int range_division_for_extrema;
         double small_fraction_of_flux;
@@ -212,8 +199,6 @@ namespace galsim {
             else if (integration_relerr != rhs.integration_relerr) return false;
             else if (integration_abserr != rhs.integration_abserr) return false;
             else if (shoot_accuracy != rhs.shoot_accuracy) return false;
-            else if (shoot_relerr != rhs.shoot_relerr) return false;
-            else if (shoot_abserr != rhs.shoot_abserr) return false;
             else if (allowed_flux_variation != rhs.allowed_flux_variation) return false;
             else if (range_division_for_extrema != rhs.range_division_for_extrema) return false;
             else if (small_fraction_of_flux != rhs.small_fraction_of_flux) return false;
@@ -249,10 +234,6 @@ namespace galsim {
             else if (integration_abserr > rhs.integration_abserr) return false;
             else if (shoot_accuracy < rhs.shoot_accuracy) return true;
             else if (shoot_accuracy > rhs.shoot_accuracy) return false;
-            else if (shoot_relerr < rhs.shoot_relerr) return true;
-            else if (shoot_relerr > rhs.shoot_relerr) return false;
-            else if (shoot_abserr < rhs.shoot_abserr) return true;
-            else if (shoot_abserr > rhs.shoot_abserr) return false;
             else if (allowed_flux_variation < rhs.allowed_flux_variation) return true;
             else if (allowed_flux_variation > rhs.allowed_flux_variation) return false;
             else if (range_division_for_extrema < rhs.range_division_for_extrema) return true;
@@ -272,7 +253,7 @@ namespace galsim {
             << gsp.table_spacing << ", "
             << gsp.realspace_relerr << "," << gsp.realspace_abserr << ",  "
             << gsp.integration_relerr << "," << gsp.integration_abserr << ",  "
-            << gsp.shoot_accuracy << "," << gsp.shoot_relerr << "," << gsp.shoot_abserr << ",  "
+            << gsp.shoot_accuracy << "," 
             << gsp.allowed_flux_variation << "," << gsp.range_division_for_extrema << ","
             << gsp.small_fraction_of_flux;
         return os;

@@ -37,8 +37,8 @@ http://adsabs.harvard.edu/abs/2005MNRAS.361.1287M
 
 ******************License***************************************
 
-This package is distributed under the Gnu Public License (GPL), see
-COPYING for a copy.
+This package is distributed under a BSD license that is very similar
+to the one used for GalSim.  See the file src/hsm/LICENSE.
 
 ******************Warranty**************************************
 

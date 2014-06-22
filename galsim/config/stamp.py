@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 
 import galsim
@@ -25,25 +24,28 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     """
     Build a number of postage stamp images as specified by the config dict.
 
-    @param nobjects            How many postage stamps to build.
-    @param config              A configuration dict.
-    @param nproc               How many processes to use.
-    @param logger              If given, a logger object to log progress.
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param xsize               The size of a single stamp in the x direction.
-                               (If 0, look for config.image.stamp_xsize, and if that's
-                                not there, use automatic sizing.)
-    @param ysize               The size of a single stamp in the y direction.
-                               (If 0, look for config.image.stamp_ysize, and if that's
-                                not there, use automatic sizing.)
-    @param do_noise            Whether to add noise to the image (according to config['noise']).
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param nobjects         How many postage stamps to build.
+    @param config           A configuration dict.
+    @param nproc            How many processes to use. [default: 1]
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param obj_num          If given, the current obj_num. [default: 0]
+    @param xsize            The size of a single stamp in the x direction. [default: 0,
+                            which means to look for config.image.stamp_xsize, and if that's
+                            not there, use automatic sizing.]
+    @param ysize            The size of a single stamp in the y direction. [default: 0,
+                            which means to look for config.image.stamp_xsize, and if that's
+                            not there, use automatic sizing.]
+    @param do_noise         Whether to add noise to the image (according to config['noise']).
+                            [default: True]
+    @param make_psf_image   Whether to make psf_image. [default: False]
+    @param make_weight_image  Whether to make weight_image. [default: False]
+    @param make_badpix_image  Whether to make badpix_image. [default: False]
 
-    @return (images, psf_images, weight_images, badpix_images, current_vars) 
-    (All in tuple are lists)
+    @returns the tuple (images, psf_images, weight_images, badpix_images, current_vars).
+             All in tuple are lists.
     """
+    config['obj_num'] = obj_num
+
     def worker(input, output):
         proc = current_process().name
         for job in iter(input.get, 'STOP'):
@@ -229,7 +231,6 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         current_vars = []
 
         for k in range(nobjects):
-            kwargs['obj_num'] = obj_num+k
             kwargs['config'] = config
             kwargs['obj_num'] = obj_num+k
             kwargs['logger'] = logger
@@ -247,34 +248,10 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
 
 
     if logger:
-        logger.debug('image %d: Done making stamps',config['image_num'])
+        logger.debug('image %d: Done making stamps',config.get('image_num',0))
 
     return images, psf_images, weight_images, badpix_images, current_vars
  
-
-def RemoveCurrent(config, keep_safe=False):
-    """
-    Remove any "current values" stored in the config dict at any level.
-    If keep_safe = True (default = False), then any current values that are marked
-    as safe will be preserved.
-    """
-    # End recursion if this is not a dict.
-    if not isinstance(config,dict): return
-
-    # Delete the current_val at this level, if any
-    if 'current_val' in config:
-        if not (keep_safe and config['current_safe']):
-            del config['current_val']
-            del config['current_safe']
-
-    # Recurse to lower levels, if any
-    for key in config:
-        if isinstance(config[key],list):
-            for item in config[key]:
-                RemoveCurrent(item, keep_safe)
-        else:
-            RemoveCurrent(config[key], keep_safe)
-
 
 def BuildSingleStamp(config, xsize=0, ysize=0,
                      obj_num=0, do_noise=True, logger=None,
@@ -282,31 +259,37 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     """
     Build a single image using the given config file
 
-    @param config              A configuration dict.
-    @param xsize               The xsize of the image to build (if known).
-    @param ysize               The ysize of the image to build (if known).
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param do_noise            Whether to add noise to the image (according to config['noise']).
-    @param logger              If given, a logger object to log progress.
-    @param make_psf_image      Whether to make psf_image.
-    @param make_weight_image   Whether to make weight_image.
-    @param make_badpix_image   Whether to make badpix_image.
+    @param config           A configuration dict.
+    @param xsize            The xsize of the image to build (if known). [default: 0]
+    @param ysize            The ysize of the image to build (if known). [default: 0]
+    @param obj_num          If given, the current obj_num [default: 0]
+    @param do_noise         Whether to add noise to the image (according to config['noise']).
+                            [default: True]
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param make_psf_image   Whether to make psf_image. [default: False]
+    @param make_weight_image  Whether to make weight_image. [default: False]
+    @param make_badpix_image  Whether to make badpix_image. [default: False]
 
-    @return image, psf_image, weight_image, badpix_image, current_var, time
+    @returns the tuple (image, psf_image, weight_image, badpix_image, current_var, time)
     """
     import time
     t1 = time.time()
 
-    config['seq_index'] = obj_num - config.get('start_obj_num',0)
+    # For everything except random_seed, the default key is obj_num_in_file
+    config['index_key'] = 'obj_num_in_file'
     config['obj_num'] = obj_num
+
     # Initialize the random number generator we will be using.
     if 'random_seed' in config['image']:
+        config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
+        config['index_key'] = 'obj_num_in_file'
         if logger:
             logger.debug('obj %d: seed = %d',obj_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:
         rng = galsim.BaseDeviate()
+
     # Store the rng in the config for use by BuildGSObject function.
     config['rng'] = rng
     if 'gd' in config:
@@ -449,18 +432,12 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                                                    galsim.PositionD)[0]
                 offset += offset1
 
-            draw_method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
-
-            if draw_method == 'no_pixel':
-                draw_method = 'fft'
-                no_pixel = True
+            if 'image' in config and 'draw_method' in config['image']:
+                method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
             else:
-                no_pixel = False
-            if draw_method == 'real_space':
-                draw_method = 'fft'
-                real_space = True
-            else:
-                real_space = False
+                method = 'auto'
+            if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
+                raise AttributeError("Invalid draw_method: %s"%method)
 
             if skip: 
                 if xsize and ysize:
@@ -481,33 +458,17 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     weight_im = None
                 current_var = 0
 
-            elif draw_method == 'fft':
-                im, current_var = DrawStampFFT(psf,gal,config,xsize,ysize,offset,
-                                               no_pixel,real_space)
-                if icenter:
-                    im.setCenter(icenter.x, icenter.y)
-                if make_weight_image:
-                    weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
-                    weight_im.setZero()
-                else:
-                    weight_im = None
-                if do_noise:
-                    galsim.config.AddNoise(config,'fft',im,weight_im,current_var,logger)
-
-            elif draw_method == 'phot':
-                im, current_var = DrawStampPhot(psf,gal,config,xsize,ysize,rng,offset)
-                if icenter:
-                    im.setCenter(icenter.x, icenter.y)
-                if make_weight_image:
-                    weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
-                    weight_im.setZero()
-                else:
-                    weight_im = None
-                if do_noise:
-                    galsim.config.AddNoise(config,'phot',im,weight_im,current_var,logger)
-
             else:
-                raise AttributeError("Unknown draw_method %s."%draw_method)
+                im, current_var = DrawStamp(psf,gal,config,xsize,ysize,offset,method)
+                if icenter:
+                    im.setCenter(icenter.x, icenter.y)
+                if make_weight_image:
+                    weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
+                    weight_im.setZero()
+                else:
+                    weight_im = None
+                if do_noise:
+                    galsim.config.AddNoise(config,method,im,weight_im,current_var,logger)
 
             if make_badpix_image:
                 badpix_im = galsim.ImageS(im.bounds, wcs=im.wcs)
@@ -518,7 +479,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             t5 = time.time()
 
             if make_psf_image:
-                psf_im = DrawPSFStamp(psf,config,im.bounds,offset,no_pixel,real_space)
+                psf_im = DrawPSFStamp(psf,config,im.bounds,offset,method)
                 if ('output' in config and 'psf' in config['output'] and 
                         'signal_to_noise' in config['output']['psf'] and
                         'noise' in config['image']):
@@ -543,11 +504,8 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     logger.info('This is try %d/%d, so trying again.',itry+1,ntries)
                 # Need to remove the "current_val"s from the config dict.  Otherwise,
                 # the value generators will do a quick return with the cached value.
-                RemoveCurrent(config, keep_safe=True)
+                galsim.config.process.RemoveCurrent(config, keep_safe=True)
                 continue
-
-        else:
-            break
 
     return im, psf_im, weight_im, badpix_im, current_var, t6-t1
 
@@ -586,37 +544,74 @@ def BuildGal(config, logger=None, gsparams={}):
 
 
 
-def DrawStampFFT(psf, gal, config, xsize, ysize, offset, no_pixel, real_space):
+def DrawStamp(psf, gal, config, xsize, ysize, offset, method):
     """
-    Draw an image using the given psf, pix and gal profiles (which may be None)
+    Draw an image using the given psf and gal profiles (which may be None)
     using the FFT method for doing the convolution.
 
-    @return the resulting image.
+    @returns the resulting image.
     """
 
-    # The real_space parameter being False really means let Convolve decide.
-    if real_space == False:
-        real_space = None
-     
-    fft_list = [ prof for prof in (psf,gal) if prof is not None ]
-    final = galsim.Convolve(fft_list, real_space=real_space)
-
-    if 'image' in config and 'wmult' in config['image']:
-        wmult = galsim.config.ParseValue(config['image'], 'wmult', config, float)[0]
+    # Setup the object to draw:
+    prof_list = [ prof for prof in (gal,psf) if prof is not None ]
+    assert len(prof_list) > 0  # Should have already been checked.
+    if len(prof_list) > 1:
+        final = galsim.Convolve(prof_list)
     else:
-        wmult = 1.0
+        final = prof_list[0]
 
+    # Setup the kwargs to pass to drawImage
+    kwargs = {}
     if xsize:
-        im = galsim.ImageF(xsize, ysize)
-    else:
-        im = None
+        kwargs['image'] = galsim.ImageF(xsize, ysize)
+    kwargs['offset'] = offset
+    kwargs['method'] = method
+    if 'image' in config and 'wmult' in config['image']:
+        kwargs['wmult'] = galsim.config.ParseValue(config['image'], 'wmult', config, float)[0]
+    kwargs['wcs'] = config['wcs'].local(image_pos = config['image_pos'])
+    if method == 'phot':
+        kwargs['rng'] = config['rng']
 
-    wcs = config['wcs'].local(image_pos = config['image_pos'])
-    if not no_pixel:
-        pix = wcs.toWorld(galsim.Pixel(1.0))
-        final = galsim.Convolve(final, pix, real_space=real_space)
+    # Check validity of extra phot options:
+    max_extra_noise = None
+    if 'image' in config and 'n_photons' in config['image']:
+        if method != 'phot':
+            raise AttributeError('n_photons is invalid with method != phot')
+        if 'max_extra_noise' in config['image']:
+            import warnings
+            warnings.warn(
+                "Both 'max_extra_noise' and 'n_photons' are set in config['image'], "+
+                "ignoring 'max_extra_noise'.")
+        kwargs['n_photons'] = galsim.config.ParseValue(config['image'], 'n_photons', config, int)[0]
+    elif 'image' in config and 'max_extra_noise' in config['image']:
+        if method != 'phot':
+            raise AttributeError('max_extra_noise is invalid with method != phot')
+        max_extra_noise = galsim.config.ParseValue(
+            config['image'], 'max_extra_noise', config, float)[0]
+    elif method == 'phot':
+        max_extra_noise = 0.01
 
-    im = final.draw(image=im, wcs=wcs, wmult=wmult, offset=offset)
+    if 'image' in config and 'poisson_flux' in config['image']:
+        if method != 'phot':
+            raise AttributeError('poisson_flux is invalid with method != phot')
+        kwargs['poisson_flux'] = galsim.config.ParseValue(
+                config['image'], 'poisson_flux', config, bool)[0]
+
+    if max_extra_noise is not None:
+        if max_extra_noise < 0.:
+            raise ValueError("image.max_extra_noise cannot be negative")
+        if max_extra_noise > 0.:
+            if 'image' in config and 'noise' in config['image']:
+                noise_var = galsim.config.CalculateNoiseVar(config)
+            else:
+                raise AttributeError(
+                    "Need to specify noise level when using draw_method = phot")
+            if noise_var < 0.:
+                raise ValueError("noise_var calculated to be < 0.")
+            max_extra_noise *= noise_var
+            kwargs['max_extra_noise'] = max_extra_noise
+
+    im = final.drawImage(**kwargs)
     im.setOrigin(config['image_origin'])
 
     # Whiten if requested.  Our signal to do so is that the object will have a noise attribute.
@@ -627,6 +622,9 @@ def DrawStampFFT(psf, gal, config, xsize, ysize, offset, no_pixel, real_space):
 
     if (('gal' in config and 'signal_to_noise' in config['gal']) or
         ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
+        if method == 'phot':
+            raise NotImplementedError(
+                "signal_to_noise option not implemented for draw_method = phot")
         import math
         import numpy
         if 'gal' in config: root_key = 'gal'
@@ -664,117 +662,41 @@ def DrawStampFFT(psf, gal, config, xsize, ysize, offset, no_pixel, real_space):
     return im, current_var
 
 
-def DrawStampPhot(psf, gal, config, xsize, ysize, rng, offset):
-    """
-    Draw an image using the given psf and gal profiles (which may be None)
-    using the photon shooting method for doing the convolution.
-
-    @return the resulting image.
-    """
-
-    phot_list = [ prof for prof in (psf,gal) if prof is not None ]
-    final = galsim.Convolve(phot_list)
-
-    if (('gal' in config and 'signal_to_noise' in config['gal']) or
-        ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
-        raise NotImplementedError(
-            "signal_to_noise option not implemented for draw_method = phot")
-
-    if xsize:
-        im = galsim.ImageF(xsize, ysize)
-    else:
-        im = None
-
-    wcs = config['wcs']
-
-    if 'image' in config and 'n_photons' in config['image']:
-
-        if 'max_extra_noise' in config['image']:
-            import warnings
-            warnings.warn(
-                "Both 'max_extra_noise' and 'n_photons' are set in config['image'], "+
-                "ignoring 'max_extra_noise'.")
-
-        n_photons = galsim.config.ParseValue(
-            config['image'], 'n_photons', config, int)[0]
-        im = final.drawShoot(image=im, wcs=wcs, n_photons=n_photons, rng=rng,
-                             offset=offset)
-        im.setOrigin(config['image_origin'])
-
-    else:
-
-        if 'image' in config and 'max_extra_noise' in config['image']:
-            max_extra_noise = galsim.config.ParseValue(
-                config['image'], 'max_extra_noise', config, float)[0]
-        else:
-            max_extra_noise = 0.01
-
-        if max_extra_noise < 0.:
-            raise ValueError("image.max_extra_noise cannot be negative")
-
-        if max_extra_noise > 0.:
-            if 'image' in config and 'noise' in config['image']:
-                noise_var = galsim.config.CalculateNoiseVar(config)
-            else:
-                raise AttributeError(
-                    "Need to specify noise level when using draw_method = phot")
-            if noise_var < 0.:
-                raise ValueError("noise_var calculated to be < 0.")
-            max_extra_noise *= noise_var
-
-        im = final.drawShoot(image=im, wcs=wcs, max_extra_noise=max_extra_noise, rng=rng,
-                             offset=offset)
-        im.setOrigin(config['image_origin'])
-
-    # Whiten if requested.  Our signal to do so is that the object will have a noise attribute.
-    if hasattr(final,'noise'):
-        current_var = final.noise.applyWhiteningTo(im)
-    else:
-        current_var = 0.
-
-    return im, current_var
-    
-
-def DrawPSFStamp(psf, config, bounds, offset, no_pixel, real_space):
+def DrawPSFStamp(psf, config, bounds, offset, method):
     """
     Draw an image using the given psf profile.
 
-    @return the resulting image.
+    @returns the resulting image.
     """
 
     if not psf:
         raise AttributeError("DrawPSFStamp requires psf to be provided.")
-    psf = psf.copy()
 
     if ('output' in config and 'psf' in config['output'] and 
-        'real_space' in config['output']['psf'] ):
-        # Let this override the input real_space from the draw_method.
-        real_space = galsim.config.ParseValue(config['output']['psf'],'real_space',config,bool)[0]
+        'draw_method' in config['output']['psf'] ):
+        method = galsim.config.ParseValue(config['output']['psf'],'draw_method',config,str)[0]
+        if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
+            raise AttributeError("Invalid draw_method: %s"%method)
+    else:
+        method = 'auto'
 
-    # The real_space parameter being False really means let Convolve decide.
-    if real_space == False:
-        real_space = None
-     
     # Special: if the galaxy was shifted, then also shift the psf 
     if 'shift' in config['gal']:
         gal_shift = galsim.config.GetCurrentValue(config['gal'],'shift')
         if False:
             logger.debug('obj %d: psf shift (1): %s',config['obj_num'],str(gal_shift))
-        psf.applyShift(gal_shift)
+        psf = psf.shift(gal_shift)
 
     wcs = config['wcs'].local(config['image_pos'])
-    if not no_pixel:
-        pix = wcs.toWorld(galsim.Pixel(1.0))
-        final_psf = galsim.Convolve(psf, pix, real_space=real_space)
-    else:
-        final_psf = psf
-
     im = galsim.ImageF(bounds, wcs=wcs)
-    final_psf.draw(im, offset=offset)
+    im = psf.drawImage(image=im, offset=offset, method=method)
 
     if (('output' in config and 'psf' in config['output'] 
             and 'signal_to_noise' in config['output']['psf']) or
         ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
+        if method == 'phot':
+            raise NotImplementedError(
+                "signal_to_noise option not implemented for draw_method = phot")
         import math
         import numpy
 

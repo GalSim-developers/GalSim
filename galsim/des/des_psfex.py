@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """@file des_psfex.py
 
@@ -51,10 +50,10 @@ class DES_PSFEx(object):
     1. Ignore the WCS of the original image.  In this case, the *.psf files have all the
        information you need:
 
-           des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name)
-           image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
-                                                             # NOT in arcsec on the sky!
-           psf = des_psfex.getPSF(image_pos)      # profile is in image coordinates
+           >>> des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name)
+           >>> image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
+           >>>                                                   # NOT in arcsec on the sky!
+           >>> psf = des_psfex.getPSF(image_pos)      # profile is in image coordinates
 
        The psf profile that is returned will be in image coordinates.  Therefore, it should be 
        drawn onto an image with no wcs.  (Or equivalently, one with `scale = 1`.)  If you want 
@@ -68,10 +67,10 @@ class DES_PSFEx(object):
        the file from which to read the WCS, which will often be more convenient, but you can
        also just pass in a WCS object directly.
 
-           des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name, image_file_name)
-           image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
-                                                             # NOT in arcsec on the sky!
-           psf = des_psfex.getPSF(image_pos)      # profile is in world coordinates
+           >>> des_psfex = galsim.des.DES_PSFEx(fitpsf_file_name, image_file_name)
+           >>> image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
+           >>>                                                   # NOT in arcsec on the sky!
+           >>> psf = des_psfex.getPSF(image_pos)      # profile is in world coordinates
 
        This time the psf profile that is returned will already be in world coordinates as 
        GalSim normally expects, so you can use it in the normal ways.  If you want to draw it
@@ -338,7 +337,7 @@ def BuildDES_PSFEx(config, key, base, ignore, gsparams, logger):
     psf = des_psfex.getLocalWCS(image_pos).toWorld(psf)
 
     if 'flux' in kwargs:
-        psf.setFlux(kwargs['flux'])
+        psf = psf.withFlux(kwargs['flux'])
 
     # The second item here is "safe", a boolean that declares whether the returned value is 
     # safe to save and use again for later objects.  In this case, we wouldn't want to do 

@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """
 Demo #2
@@ -31,8 +30,7 @@ New features introduced in this demo:
 
 - obj = galsim.Exponential(flux, scale_radius)
 - obj = galsim.Moffat(beta, flux, half_light_radius)
-- obj = galsim.Pixel(scale)
-- obj.applyShear(g1, g2)  -- with explanation of other ways to specify shear
+- obj = obj.shear(g1, g2)  -- with explanation of other ways to specify shear
 - rng = galsim.BaseDeviate(seed)
 - noise = galsim.PoissonNoise(rng, sky_level)
 - galsim.hsm.EstimateShear(image, image_epsf)
@@ -92,26 +90,22 @@ def main(argv):
     # e1,e2        Ellipticity components: e1 = e cos(2 beta), e2 = e sin(2 beta)
     # g1,g2        ("Reduced") shear components: g1 = g cos(2 beta), g2 = g sin(2 beta)
     # eta1,eta2    Conformal shear components: eta1 = eta cos(2 beta), eta2 = eta sin(2 beta)
-    gal.applyShear(g1=g1, g2=g2)
+    gal = gal.shear(g1=g1, g2=g2)
     logger.debug('Made galaxy profile')
 
     # Define the PSF profile.
     psf = galsim.Moffat(beta=psf_beta, flux=1., half_light_radius=psf_re)
     logger.debug('Made PSF profile')
 
-    # Define the pixel size.  It's not usually necessary, but the pixel scale parameter
-    # is named scale, so you can use a keyword argument if you want.
-    pix = galsim.Pixel(scale=pixel_scale)
-    logger.debug('Made pixel profile')
-
     # Final profile is the convolution of these.
-    final = galsim.Convolve([gal, psf, pix])
-    final_epsf = galsim.Convolve([psf, pix])
+    final = galsim.Convolve([gal, psf])
     logger.debug('Convolved components into final profile')
 
     # Draw the image with a particular pixel scale.
-    image = final.draw(scale=pixel_scale)
-    image_epsf = final_epsf.draw(scale=pixel_scale)
+    image = final.drawImage(scale=pixel_scale)
+    # The "effective PSF" is the PSF as drawn on an image, which includes the convolution
+    # by the pixel response.  We label it epsf here.
+    image_epsf = psf.drawImage(scale=pixel_scale)
     logger.debug('Made image of the profile')
 
     # To get Poisson noise on the image, we will use a class called PoissonNoise.

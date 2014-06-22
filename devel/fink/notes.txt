@@ -17,5 +17,6 @@ Process for updating fink with a new version:
 - git add new info file for this version.
 - Submit to: http://sourceforge.net/p/fink/package-submissions/
   - Don't forget to change the name to galsim.info (without the version number).
-  - Group = Undergoing Validation
+  - Milestone = Undergoing Validation
+  - Status = open
   - Mention that you have done the above tests.

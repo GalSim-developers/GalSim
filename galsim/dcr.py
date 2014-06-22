@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """@file dcr.py
 Implementation of atmospheric differential chromatic refraction.
@@ -44,7 +43,8 @@ def air_refractive_index_minus_one(wave, pressure=69.328, temperature=293.15, H2
     @param pressure       Air pressure in kiloPascals.
     @param temperature    Temperature in Kelvins.
     @param H2O_pressure   Water vapor pressure in kiloPascals.
-    @returns refractive index
+
+    @returns the refractive index minus 1.
     """
     P = pressure * 7.50061683 # kPa -> mmHg
     T = temperature - 273.15 # K -> C
@@ -66,31 +66,33 @@ def get_refraction(wave, zenith_angle, **kwargs):
     radians, even though the apparent zenith angle technically decreases due to this effect.
 
     @param wave          Wavelength array in nanometers
-    @param zenith_angle  as a galsim.Angle
+    @param zenith_angle  as an Angle
     @param kwargs        Keyword arguments to pass to air_refractive_index() to override default
                          pressure, temperature, and/or H2O_pressure.
-    @returns             Absolute value of change in zenith angle as a galsim.Angle
+
+    @returns the absolute value of change in zenith angle in radians.
     """
     nm1 = air_refractive_index_minus_one(wave, **kwargs)
     # The following line is equivalent to:
     # n_squared = (nm1 + 1)**2
     # r0 = (n_squared - 1.0) / (2.0 * n_squared)
     r0 = nm1 * (nm1+2) / 2.0 / (nm1**2 + 2*nm1 + 1)
-    return r0 * numpy.tan(zenith_angle.rad()) * galsim.radians
+    return r0 * numpy.tan(zenith_angle.rad())
 
 def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=None):
     """Compute the zenith angle and parallactic angle of a celestial coordinate, given either
     the celestial coordinate of the zenith, or equivalently, the hour angle of the coordinate and
-    the latitude of the observer.  This is useful for the function ChromaticAtmosphere in the
+    the latitude of the observer.  This is useful for the function ChromaticAtmosphere() in the
     galsim.chromatic module.
 
-    @param obj_coord     A `galsim.CelestialCoord` object for which the zenith and parallactic
+    @param obj_coord     A CelestialCoord object for which the zenith and parallactic
                          angles will be computed.
-    @param zenith_coord  A `galsim.CelestialCoord` indicating the coordinates of the zenith.
-    @param HA            The hour angle (as a `galsim.Angle`) of the coordinate for which the
+    @param zenith_coord  A CelestialCoord indicating the coordinates of the zenith.
+    @param HA            The hour angle (as an Angle) of the coordinate for which the
                          zenith and parallactic angles will be computed.
-    @param latitude      The observer's latitude, as a `galsim.Angle`.
-    @returns zenith_angle, parallactic_angle as `galsim.Angle`s.
+    @param latitude      The observer's latitude, as an Angle.
+
+    @returns the tuple `(zenith_angle, parallactic_angle)`, each of which is an Angle.
     """
     if zenith_coord is None:
         if HA is None or latitude is None:

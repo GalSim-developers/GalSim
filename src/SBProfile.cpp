@@ -1,21 +1,20 @@
 /* -*- c++ -*-
- * Copyright 2012-2014 The GalSim developers:
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
  *
- * GalSim is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
  *
- * GalSim is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
  */
 
 //#define DEBUGLOGGING
@@ -170,33 +169,20 @@ namespace galsim {
     SBProfile::SBProfileImpl* SBProfile::GetImpl(const SBProfile& rhs) 
     { return rhs._pimpl.get(); }
 
-    void SBProfile::scaleFlux(double fluxRatio)
-    { 
-        SBTransform d(*this,1.,0.,0.,1.,Position<double>(0.,0.),fluxRatio); 
-        _pimpl = d._pimpl;
-    }
+    SBTransform SBProfile::scaleFlux(double fluxRatio) const
+    { return SBTransform(*this,1.,0.,0.,1.,Position<double>(0.,0.),fluxRatio); }
 
-    void SBProfile::setFlux(double flux)
-    { 
-        SBTransform d(*this,1.,0.,0.,1.,Position<double>(0.,0.),flux/getFlux());
-        _pimpl = d._pimpl;
-    }
+    SBTransform SBProfile::expand(double scale) const
+    { return SBTransform(*this,scale,0.,0.,scale); }
 
-    void SBProfile::applyExpansion(double scale)
-    {
-        SBTransform d(*this,scale,0.,0.,scale);
-        _pimpl = d._pimpl;
-    }
-
-    void SBProfile::applyShear(CppShear s)
+    SBTransform SBProfile::shear(CppShear s) const
     {
         double a, b, c;
         s.getMatrix(a,b,c);
-        SBTransform d(*this,a,c,c,b);
-        _pimpl = d._pimpl;
+        return SBTransform(*this,a,c,c,b);
     }
 
-    void SBProfile::applyRotation(const Angle& theta)
+    SBTransform SBProfile::rotate(const Angle& theta) const
     {
 #ifdef _GLIBCXX_HAVE_SINCOS
         // Most optimizing compilers will do this automatically, but just in case...
@@ -206,21 +192,14 @@ namespace galsim {
         double cost = std::cos(theta.rad());
         double sint = std::sin(theta.rad());
 #endif
-        SBTransform d(*this,cost,-sint,sint,cost);
-        _pimpl = d._pimpl;
+        return SBTransform(*this,cost,-sint,sint,cost);
     }
 
-    void SBProfile::applyTransformation(double dudx, double dudy, double dvdx, double dvdy)
-    {
-        SBTransform d(*this, dudx, dudy, dvdx, dvdy);
-        _pimpl = d._pimpl;
-    }
+    SBTransform SBProfile::transform(double dudx, double dudy, double dvdx, double dvdy) const
+    { return SBTransform(*this, dudx, dudy, dvdx, dvdy); }
 
-    void SBProfile::applyShift(const Position<double>& delta)
-    { 
-        SBTransform d(*this,1.,0.,0.,1., delta);
-        _pimpl = d._pimpl;
-    }
+    SBTransform SBProfile::shift(const Position<double>& delta) const
+    { return SBTransform(*this,1.,0.,0.,1., delta); }
 
     //
     // Common methods of Base Class "SBProfile"
@@ -817,35 +796,35 @@ namespace galsim {
         // noise we'll be adding to the image for the sky noise.
         //
         // Let's still have Ntot photons, but now each with a flux of g. And let's look at the 
-        // noise we get in the brightest pixel that has a nominal total flux of fmax.
+        // noise we get in the brightest pixel that has a nominal total flux of Imax.
         //
-        // The number of photons hitting this pixel will be fmax/flux * Ntot.
+        // The number of photons hitting this pixel will be Imax/flux * Ntot.
         // The variance of this number is the same thing (Poisson counting). 
         // So the noise in that pixel is:
         //
-        // N^2 = fmax/flux * Ntot * g^2
+        // N^2 = Imax/flux * Ntot * g^2
         //
         // And the signal in that pixel will be:
         //
-        // S = fmax/flux * (N+ - N-) * g which has to equal fmax, so
+        // S = Imax/flux * (N+ - N-) * g which has to equal Imax, so
         // g = flux / Ntot(1-2eta)
-        // N^2 = fmax/Ntot * flux / (1-2eta)^2
+        // N^2 = Imax/Ntot * flux / (1-2eta)^2
         //
         // As expected, we see that lowering Ntot will increase the noise in that (and every 
         // other) pixel.
         // The input max_extra_noise parameter is the maximum value of spurious noise we want 
         // to allow.
         //
-        // So setting N^2 = max_extra_noise, we get
+        // So setting N^2 = Imax + nu, we get
         //
-        // Ntot = fmax * flux / (1-2eta)^2 / max_extra_noise
+        // Ntot = flux / (1-2eta)^2 / (1 + nu/Imax)
         //
-        // One wrinkle about this calculation is that we don't know fmax a priori.
+        // One wrinkle about this calculation is that we don't know Imax a priori.
         // So we start with a plausible number of photons to get going.  Then we keep adding 
-        // more photons until we either hit N = flux / (1-2eta)^2 or the noise in the brightest
-        // pixel is < max_extra_noise.
+        // more photons until we either hit N = flux / (1-2eta)^2 or the extra noise in the
+        // brightest pixel is < nu
         //
-        // We also make the assumption that the pixel to look at for fmax is at the centroid.
+        // We also make the assumption that the pixel to look at for Imax is at the centroid.
         //
         // Returns the total flux placed inside the image bounds by photon shooting.
         // 
@@ -930,12 +909,12 @@ namespace galsim {
         Position<double> cen = centroid();
         Bounds<double> b(cen);
         b.addBorder(0.5);
-        dbg<<"Bounds for fmax = "<<b<<std::endl;
-        T raw_fmax = 0.;
-        int fmax_count = 0;
+        dbg<<"Bounds for Imax = "<<b<<std::endl;
+        T raw_Imax = 0.;
+        int Imax_count = 0;
         while (true) {
             // We break out of the loop when either N drops to 0 (if max_extra_noise = 0) or 
-            // we find that the max pixel has a noise level < max_extra_noise
+            // we find that the max pixel has an excess noise level < max_extra_noise
 
             if (thisN > maxN) thisN = maxN;
             // NB: don't need floor, since rhs is positive, so floor is superfluous.
@@ -973,28 +952,28 @@ namespace galsim {
 
             if (max_extra_noise > 0.) {
                 xdbg<<"Check the noise level\n";
-                // First need to find what the current fmax is.
+                // First need to find what the current Imax is.
                 // (Only need to update based on the latest pa.)
 
                 for(int i=0; i<pa->size(); ++i) {
                     if (b.includes(pa->getX(i),pa->getY(i))) {
-                        ++fmax_count;
-                        raw_fmax += pa->getFlux(i);
+                        ++Imax_count;
+                        raw_Imax += pa->getFlux(i);
                     }
                 }
-                xdbg<<"fmax_count = "<<fmax_count<<std::endl;
-                xdbg<<"raw_fmax = "<<raw_fmax<<std::endl;
+                xdbg<<"Imax_count = "<<Imax_count<<std::endl;
+                xdbg<<"raw_Imax = "<<raw_Imax<<std::endl;
 
-                // Make sure we've got at least 25 photons for our fmax estimate and that
-                // the fmax value is positive.
+                // Make sure we've got at least 25 photons for our Imax estimate and that
+                // the Imax value is positive.
                 // Otherwise keep the same initial value of thisN = 100 and try again.
-                if (fmax_count < 25 || raw_fmax < 0.) continue;  
+                if (Imax_count < 25 || raw_Imax < 0.) continue;
 
-                double fmax = raw_fmax * origN / (origN-N);
-                xdbg<<"fmax = "<<fmax<<std::endl;
+                double Imax = raw_Imax * origN / (origN-N);
+                xdbg<<"Imax = "<<Imax<<std::endl;
                 // Estimate a good value of Ntot based on what we know now
-                // Ntot = fmax * flux / (1-2eta)^2 / max_extra_noise
-                double Ntot = fmax * mod_flux / max_extra_noise;
+                // Ntot = flux / [ (1-2eta)^2 * (1 + nu/Imax) ]
+                double Ntot = mod_flux / (1. + max_extra_noise / Imax);
                 xdbg<<"Calculated Ntot = "<<Ntot<<std::endl;
                 // So far we've done (origN-N)
                 // Set thisN to do the rest on the next pass.

@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """
 Demo #12
@@ -51,7 +50,7 @@ New features introduced in this demo:
 - gal = galsim.Chromatic(GSObject, SED)
 - gal = GSObject * SED
 - obj = galsim.Add([list of ChromaticObjects])
-- ChromaticObject.draw(bandpass)
+- ChromaticObject.drawImage(bandpass)
 - PSF = galsim.ChromaticAtmosphere(GSObject, base_wavelength, zenith_angle)
 """
 
@@ -80,7 +79,7 @@ def main(argv):
     SED_names = ['CWW_E_ext', 'CWW_Sbc_ext', 'CWW_Scd_ext', 'CWW_Im_ext']
     SEDs = {}
     for SED_name in SED_names:
-        SED_filename = os.path.join(datapath, '{}.sed'.format(SED_name))
+        SED_filename = os.path.join(datapath, '{0}.sed'.format(SED_name))
         # Here we create some galsim.SED objects to hold star or galaxy spectra.  The most
         # convenient way to create realistic spectra is to read them in from a two-column ASCII
         # file, where the first column is wavelength and the second column is flux. Wavelengths in
@@ -99,7 +98,7 @@ def main(argv):
     filter_names = 'ugrizy'
     filters = {}
     for filter_name in filter_names:
-        filter_filename = os.path.join(datapath, 'LSST_{}.dat'.format(filter_name))
+        filter_filename = os.path.join(datapath, 'LSST_{0}.dat'.format(filter_name))
         # Here we create some galsim.Bandpass objects to represent the filters we're observing
         # through.  These include the entire imaging system throughput including the atmosphere,
         # reflective and refractive optics, filters, and the CCD quantum efficiency.  These are
@@ -133,28 +132,25 @@ def main(argv):
     gal = galsim.Chromatic(mono_gal, SED)
 
     # You can still shear, shift, and dilate the resulting chromatic object.
-    gal.applyShear(g1=0.5, g2=0.3)
-    gal.applyDilation(1.05)
-    gal.applyShift((0.0, 0.1))
+    gal = gal.shear(g1=0.5, g2=0.3).dilate(1.05).shift((0.0, 0.1))
     logger.debug('Created Chromatic')
 
-    # convolve with pixel and PSF to make final profile
-    pix = galsim.Pixel(pixel_scale)
+    # convolve with PSF to make final profile
     PSF = galsim.Moffat(fwhm=0.6, beta=2.5)
-    final = galsim.Convolve([gal, pix, PSF])
+    final = galsim.Convolve([gal, PSF])
     logger.debug('Created final profile')
 
     # draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.1)
     for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
-        final.draw(filter_, image=img)
+        final.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)
-        logger.debug('Created {}-band image'.format(filter_name))
-        out_filename = os.path.join(outpath, 'demo12a_{}.fits'.format(filter_name))
+        logger.debug('Created {0}-band image'.format(filter_name))
+        out_filename = os.path.join(outpath, 'demo12a_{0}.fits'.format(filter_name))
         galsim.fits.write(img, out_filename)
-        logger.debug('Wrote {}-band image to disk'.format(filter_name))
-        logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
+        logger.debug('Wrote {0}-band image to disk'.format(filter_name))
+        logger.info('Added flux for {0}-band image: {1}'.format(filter_name, img.added_flux))
 
     logger.info('You can display the output in ds9 with a command line that looks something like:')
     logger.info('ds9 output/demo12a_*.fits -match scale -zoom 2 -match frame image &')
@@ -170,17 +166,17 @@ def main(argv):
     bulge_SED = SEDs['CWW_E_ext'].atRedshift(redshift)
     # The `*` operator can be used as a shortcut for creating a chromatic version of a GSObject:
     bulge = mono_bulge * bulge_SED
-    bulge.applyShear(g1=0.12, g2=0.07)
+    bulge = bulge.shear(g1=0.12, g2=0.07)
     logger.debug('Created bulge component')
     # ... and a disk ...
     mono_disk = galsim.Exponential(half_light_radius=2.0)
     disk_SED = SEDs['CWW_Im_ext'].atRedshift(redshift)
     disk = mono_disk * disk_SED
-    disk.applyShear(g1=0.4, g2=0.2)
+    disk = disk.shear(g1=0.4, g2=0.2)
     logger.debug('Created disk component')
     # ... and then combine them.
     bdgal = 1.1 * (0.8*bulge+4*disk) # you can add and multiply ChromaticObjects just like GSObjects
-    bdfinal = galsim.Convolve([bdgal, pix, PSF])
+    bdfinal = galsim.Convolve([bdgal, PSF])
     # Note that at this stage, our galaxy is chromatic but our PSF is still achromatic.  Part C)
     # below will dive into chromatic PSFs.
     logger.debug('Created bulge+disk galaxy final profile')
@@ -189,13 +185,13 @@ def main(argv):
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
     for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
-        bdfinal.draw(filter_, image=img)
+        bdfinal.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)
-        logger.debug('Created {}-band image'.format(filter_name))
-        out_filename = os.path.join(outpath, 'demo12b_{}.fits'.format(filter_name))
+        logger.debug('Created {0}-band image'.format(filter_name))
+        out_filename = os.path.join(outpath, 'demo12b_{0}.fits'.format(filter_name))
         galsim.fits.write(img, out_filename)
-        logger.debug('Wrote {}-band image to disk'.format(filter_name))
-        logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
+        logger.debug('Wrote {0}-band image to disk'.format(filter_name))
+        logger.info('Added flux for {0}-band image: {1}'.format(filter_name, img.added_flux))
 
     logger.info('You can display the output in ds9 with a command line that looks something like:')
     logger.info('ds9 -rgb -blue -scale limits -0.2 0.8 output/demo12b_r.fits -green -scale limits'
@@ -217,7 +213,7 @@ def main(argv):
     # The flux drawn through other bands, which sample different parts of the SED and have different
     # throughputs, will, of course, be different.
     gal = mono_gal * SED
-    gal.applyShear(g1=0.5, g2=0.3)
+    gal = gal.shear(g1=0.5, g2=0.3)
     logger.debug('Created `Chromatic` galaxy')
 
     # For a ground-based PSF, two chromatic effects are introduced by the atmosphere:
@@ -255,22 +251,21 @@ def main(argv):
     PSF = galsim.ChromaticAtmosphere(PSF_500, 500.0, obj_coord=m101, latitude=latitude, HA=HA)
     # and proceed like normal.
 
-    # convolve with galaxy and pixel to create final profile
-    pix = galsim.Pixel(pixel_scale)
-    final = galsim.Convolve([gal, pix, PSF])
+    # convolve with galaxy to create final profile
+    final = galsim.Convolve([gal, PSF])
     logger.debug('Created chromatic PSF finale profile')
 
     # Draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.03)
     for filter_name, filter_ in filters.iteritems():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
-        final.draw(filter_, image=img)
+        final.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)
-        logger.debug('Created {}-band image'.format(filter_name))
-        out_filename = os.path.join(outpath, 'demo12c_{}.fits'.format(filter_name))
+        logger.debug('Created {0}-band image'.format(filter_name))
+        out_filename = os.path.join(outpath, 'demo12c_{0}.fits'.format(filter_name))
         galsim.fits.write(img, out_filename)
-        logger.debug('Wrote {}-band image to disk'.format(filter_name))
-        logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
+        logger.debug('Wrote {0}-band image to disk'.format(filter_name))
+        logger.info('Added flux for {0}-band image: {1}'.format(filter_name, img.added_flux))
 
     logger.info('You can display the output in ds9 with a command line that looks something like:')
     logger.info('ds9 output/demo12c_*.fits -match scale -zoom 2 -match frame image -blink &')

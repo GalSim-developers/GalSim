@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 """@file pse.py
 Module containing code for estimating shear power spectra from shears at gridded positions.
@@ -39,57 +38,60 @@ class PowerSpectrumEstimator(object):
     This class stores all the data used in power spectrum estimation that is fixed with the geometry
     of the problem - the binning and spin weighting factors.
 
-    The only public method is `estimate()`, which is called with 2D g1 and g2 arrays on a square
-    grid.  It assumes the flat sky approximation (where ell and k are interchangeable), and rebins
-    the observed ell modes into a user-defined number of logarithimic bins in ell.  Given that the
-    grid parameters are precomputed and stored when the PowerSpectrumEstimator is initialized,
-    computation of the PS for multiple sets of shears corresponding to the same grid setup can
-    proceed more rapidly than if everything had to be recomputed each time.
+    The only public method is estimate(), which is called with 2D `g1` and `g2` arrays on a square
+    grid.  It assumes the flat sky approximation (where `ell` and `k` are interchangeable), and
+    rebins the observed ell modes into a user-defined number of logarithimic bins in ell.  Given
+    that the grid parameters are precomputed and stored when the PowerSpectrumEstimator is
+    initialized, computation of the PS for multiple sets of shears corresponding to the same grid
+    setup can proceed more rapidly than if everything had to be recomputed each time.
 
     Below is an example of how to use this code (relying on GalSim to provide the arrays of g1 and
     g2, though that is by no means required, and assuming that the user is sitting in the examples/
     directory):
 
-        # Define the total grid extent, in degrees
-        grid_size = 10.
-        # Define the number of grid points in each dimension, i.e., an N x N grid
-        ngrid = 100
-        # Choose the number of logarithmic bins in ell or k for outputs
-        n_ell = 15
-        # Define a lookup-table for the power spectrum as a function of k based on the outputs of
-        # iCosmo (see demo11.py for more description of how this was generated).
-        my_tab = galsim.LookupTable(file='data/cosmo-fid.zmed1.00.out')
-        # Generate a galsim.PowerSpectrum with this P(k), noting the units.
-        my_ps = galsim.PowerSpectrum(my_tab, units=galsim.radians)
-        # Build a grid of shear values with the desired parameters.
-        g1, g2 = my_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, units=galsim.degrees)
-        # Initialize a PowerSpectrumEstimator with the chosen grid geometry and number of ell bins.
-        # Note that these values are actually the default, so we didn't technically have to specify
-        # them.
-        my_pse = galsim.pse.PowerSpectrumEstimator(ngrid, grid_size, n_ell)
-        # Estimate the power based on this set of g1, g2.  If we get another set of shears for the
-        # same grid geometry, we can reuse the same PowerSpectrumEstimator object.
-        ell, P_e, P_b, P_eb = my_pse.estimate(g1, g2)
+        >>> grid_size = 10.  # Define the total grid extent, in degrees
+        >>> ngrid = 100      # Define the number of grid points in each dimension: (ngrid x ngrid)
+        >>> n_ell = 15       # Choose the number of logarithmic bins in ell or k for outputs
+        >>>
+        >>> # Define a lookup-table for the power spectrum as a function of k based on the outputs
+        >>> # of iCosmo (see demo11.py for more description of how this was generated).
+        >>> my_tab = galsim.LookupTable(file='data/cosmo-fid.zmed1.00.out')
+        >>>
+        >>> # Generate a galsim.PowerSpectrum with this P(k), noting the units.
+        >>> my_ps = galsim.PowerSpectrum(my_tab, units=galsim.radians)
+        >>>
+        >>> # Build a grid of shear values with the desired parameters.
+        >>> g1, g2 = my_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid,
+        ...                          units=galsim.degrees)
+        >>>
+        >>> # Initialize a PowerSpectrumEstimator with the chosen grid geometry and number of ell
+        >>> # bins. Note that these values are actually the default, so we didn't technically have
+        >>> # to specifythem.
+        >>> my_pse = galsim.pse.PowerSpectrumEstimator(ngrid, grid_size, n_ell)
+        >>>
+        >>> # Estimate the power based on this set of g1, g2.  If we get another set of shears for
+        >>> # the same grid geometry, we can reuse the same PowerSpectrumEstimator object.
+        >>> ell, P_e, P_b, P_eb = my_pse.estimate(g1, g2)
 
-    The output NumPy arrays ell, P_e, P_b, and P_eb contain the effective ell value, the E-mode
-    auto-power spectrum, the B-mode auto-power spectrum, and the EB cross-power spectrum.  The units
-    are inverse radians for ell, and radians^2 for the output power spectra.
+    The output NumPy arrays `ell`, `P_e`, `P_b`, and `P_eb` contain the effective ell value, the
+    E-mode auto-power spectrum, the B-mode auto-power spectrum, and the EB cross-power spectrum.
+    The units are inverse radians for ell, and radians^2 for the output power spectra.
 
     Some important notes:
 
-    1) Power spectrum estimation requires a weight function which decides how the averaging
-    is done across ell within each bin.  By default that weighting is flat in ell using an
-    analytic calculation of the area in ell space, but this is easy to change with the `_bin_power`
-    function.  (Note this area averaged bin weighting is only approximate for the higher frequency
-    bins in which the lower ell edge is greater than pi * ngrid / grid_size, due to the annular
-    ell region being cut off by the square grid edges beyond this value.)  A keyword allows for
+    1) Power spectrum estimation requires a weight function which decides how the averaging is done
+    across ell within each bin.  By default that weighting is flat in ell using an analytic
+    calculation of the area in ell space, but this is easy to change with the `_bin_power` function.
+    (Note this area averaged bin weighting is only approximate for the higher frequency bins in
+    which the lower `ell` edge is greater than `pi * ngrid / grid_size`, due to the annular `ell`
+    region being cut off by the square grid edges beyond this value.)  A keyword allows for
     weighting by the power itself, but use of this functionality requires the GalSim software
     package.
 
     2) This is the power spectrum of the gridded *data*, not the underlying field - we do not
     account for the effects of the finite grid (basically, ignoring all the reasons why power
     spectrum estimation is hard - see devel/modules/lensing_engine.pdf in the GalSim repository).
-    Users must account for the contribution of noise in g1, g2 and any masking.
+    Users must account for the contribution of noise in `g1`, `g2` and any masking.
 
     3) The binning is currently fixed as uniform in log(ell).
 
@@ -103,13 +105,10 @@ class PowerSpectrumEstimator(object):
         PowerSpectrumEstimator can be used to estimate the power spectrum quickly for many sets of
         shears at gridded positions.
 
-        @param N             The number of pixels along each side of the grid, default `N=100` as in
-                             the GREAT10 and GREAT3 challenges.
-        @param sky_size_deg  The total grid width (in one dimension) in degrees, default
-                             `sky_size_deg=10.` as in the GREAT10 and GREAT3 challenges.
-        @param nbin          The number of evenly-spaced logarithmic ell bins to use for estimating
-                             the power spectrum, default `nbin=15`, which makes a reasonable number
-                             of bins for the default grid configuration.
+        @param N            The number of pixels along each side of the grid. [default: 100]
+        @param sky_size_deg The total grid width (in one dimension) in degrees. [default: 10]
+        @param nbin         The number of evenly-spaced logarithmic `ell` bins to use for estimating
+                            the power spectrum. [default: 15]
         """
         # Set up the scales of the sky and pixels
         self.N = N
@@ -177,27 +176,25 @@ class PowerSpectrumEstimator(object):
         return P/count
 
     def estimate(self, g1, g2, weight_EE=False, weight_BB=False, theory_func=None):
-        """Compute the EE, BB, and EB power spectra of two 2D arrays g1 and g2.
+        """Compute the EE, BB, and EB power spectra of two 2D arrays `g1` and `g2`.
 
         For example usage, see the docstring for the PowerSpectrumEstimator class.
 
-        @param g1              The shear component g1 as a square 2D NumPy array.
-        @param g2              The shear component g2 as a square 2D NumPy array.
-        @param weight_EE       If True, then the E auto-power spectrum is re-computed weighting by
+        @param g1               The shear component g1 as a square 2D NumPy array.
+        @param g2               The shear component g2 as a square 2D NumPy array.
+        @param weight_EE        If True, then the E auto-power spectrum is re-computed weighting by
                                 the power within each logarithmically-spaced ell bin. Note that use
                                 of this option requires a usable GalSim installation, unlike the
-                                rest of the PowerSpectrumEstimator functionality.  [Default
-                                `weight_EE=False`]
-        @param weight_BB       If True, then the B auto-power spectrum is re-computed weighting by
+                                rest of the PowerSpectrumEstimator functionality.  [defaul: False]
+        @param weight_BB        If True, then the B auto-power spectrum is re-computed weighting by
                                 the power within each logarithmically-spaced ell bin. Note that use
                                 of this option requires a usable GalSim installation, unlike the
-                                rest of the PowerSpectrumEstimator functionality.  [Default
-                                `weight_BB=False`]
-        @param theory_func     An optional callable function that can be used to get an idealized
+                                rest of the PowerSpectrumEstimator functionality.  [default: False]
+        @param theory_func      An optional callable function that can be used to get an idealized
                                 value of power at each point on the grid, and then see what results
                                 it gives for our chosen ell binning.  Unlike the main
                                 PowerSpectrumEstimator, this option requires a usable GalSim
-                                installation.
+                                installation. [default: None]
         """
         # Check for the expected square geometry consistent with the previously-defined grid size.
         if g1.shape != g2.shape:

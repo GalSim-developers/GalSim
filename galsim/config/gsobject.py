@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 import galsim
 
@@ -48,24 +47,25 @@ class SkipThisObject(Exception):
 
 
 def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
-    """Build a GSObject using config dict for key=key.
+    """Build a GSObject using config dict for `key=key`.
 
-    @param config     A dict with the configuration information.
-    @param key        The key name in config indicating which object to build.
-    @param base       A dict which stores potentially useful things like
-                      base['rng'] = random number generator
-                      base['catalog'] = input catalog for InputCat items
-                      base['real_catalog'] = real galaxy catalog for RealGalaxy objects
-                      Typically on the initial call to BuildGSObject, this will be 
-                      the same as config, hence the name base.
-    @param gsparams   Optionally, provide non-default gsparams items.  Any gsparams specified
-                      at this level will be added to the list.  This should be a dict with
-                      whatever kwargs should be used in constructing the GSParams object.
-    @param logger     Optionally, provide a logger for logging debug statements.
+    @param config       A dict with the configuration information.
+    @param key          The key name in config indicating which object to build.
+    @param base         A dict which stores potentially useful things like
+                        base['rng'] = random number generator
+                        base['catalog'] = input catalog for InputCat items
+                        base['real_catalog'] = real galaxy catalog for RealGalaxy objects
+                        Typically on the initial call to BuildGSObject(), this will be 
+                        the same as config, hence the name base. [default: None]
+    @param gsparams     Optionally, provide non-default GSParams items.  Any `gsparams` specified
+                        at this level will be added to the list.  This should be a dict with
+                        whatever kwargs should be used in constructing the GSParams object.
+                        [default: {}]
+    @param logger       Optionally, provide a logger for logging debug statements.
+                        [default: None]
 
-    @returns gsobject, safe 
-        gsobject is the built object 
-        safe is a bool that says whether it is safe to use this object again next time
+    @returns the tuple `(gsobject, safe)`, where `gsobject` is the built object, and `safe` is
+             a bool that says whether it is safe to use this object again next time.
     """
     # I'd like to be able to have base=config be the default value, but python doesn't
     # allow that.  So None is the default, and if it's None, we set it to config.
@@ -199,7 +199,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 
 
 def UpdateGSParams(gsparams, config, key, base):
-    """@brief Add additional items to the gsparams dict based on config['gsparams']
+    """@brief Add additional items to the `gsparams` dict based on config['gsparams'].
     """
     opt = galsim.GSObject._gsparams
     kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt)
@@ -212,13 +212,13 @@ def UpdateGSParams(gsparams, config, key, base):
 
 
 def _BuildNone(config, key, base, ignore, gsparams, logger):
-    """@brief Special type=None returns None
+    """@brief Special type=None returns None.
     """
     return None, True
 
 
 def _BuildAdd(config, key, base, ignore, gsparams, logger):
-    """@brief  Build an Add object
+    """@brief  Build a Sum object.
     """
     req = { 'items' : list }
     opt = { 'flux' : float }
@@ -258,7 +258,7 @@ def _BuildAdd(config, key, base, ignore, gsparams, logger):
                 warnings.warn(
                     "Automatically scaling the last item in Sum to make the total flux\n" +
                     "equal 1 requires the last item to have negative flux = %f"%f)
-            gsobjects[-1].setFlux(f)
+            gsobjects[-1] = gsobjects[-1].withFlux(f)
         if gsparams: gsparams = galsim.GSParams(**gsparams)
         else: gsparams = None
         gsobject = galsim.Add(gsobjects,gsparams=gsparams)
@@ -267,13 +267,13 @@ def _BuildAdd(config, key, base, ignore, gsparams, logger):
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
         if logger:
             logger.debug('obj %d: flux == %f',base['obj_num'],flux)
-        gsobject.setFlux(flux)
+        gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
 
     return gsobject, safe
 
 def _BuildConvolve(config, key, base, ignore, gsparams, logger):
-    """@brief  Build a Convolve object
+    """@brief  Build a Convolution object.
     """
     req = { 'items' : list }
     opt = { 'flux' : float }
@@ -303,13 +303,13 @@ def _BuildConvolve(config, key, base, ignore, gsparams, logger):
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
         if logger:
             logger.debug('obj %d: flux == %f',base['obj_num'],flux)
-        gsobject.setFlux(flux)
+        gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
 
     return gsobject, safe
 
 def _BuildList(config, key, base, ignore, gsparams, logger):
-    """@brief  Build a GSObject selected from a List
+    """@brief  Build a GSObject selected from a List.
     """
     req = { 'items' : list }
     opt = { 'index' : float , 'flux' : float }
@@ -333,22 +333,28 @@ def _BuildList(config, key, base, ignore, gsparams, logger):
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
         if logger:
             logger.debug('obj %d: flux == %f',base['obj_num'],flux)
-        gsobject.setFlux(flux)
+        gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
 
     return gsobject, safe
 
 def _BuildRing(config, key, base, ignore, gsparams, logger):
-    """@brief  Build a GSObject in a Ring
+    """@brief  Build a GSObject in a Ring.
     """
     req = { 'num' : int, 'first' : dict }
-    opt = { 'full_rotation' : galsim.Angle }
+    opt = { 'full_rotation' : galsim.Angle , 'index' : int }
     # Only Check, not Get.  We need to handle first a bit differently, since it's a gsobject.
     galsim.config.CheckAllParams(config, key, req=req, opt=opt, ignore=ignore)
 
     num = galsim.config.ParseValue(config, 'num', base, int)[0]
     if num <= 0:
         raise ValueError("Attribute num for gal.type == Ring must be > 0")
+
+    # Setup the indexing sequence if it hasn't been specified using the number of items.
+    galsim.config.SetDefaultIndex(config, num)
+    index, safe = galsim.config.ParseValue(config, 'index', base, int)
+    if index < 0 or index >= num:
+        raise AttributeError("index %d out of bounds for config.%s"%(index,type))
 
     if 'full_rotation' in config:
         full_rotation = galsim.config.ParseValue(config, 'full_rotation', base, galsim.Angle)[0]
@@ -360,14 +366,13 @@ def _BuildRing(config, key, base, ignore, gsparams, logger):
     if logger:
         logger.debug('obj %d: Ring dtheta = %f',base['obj_num'],dtheta.rad())
 
-    k = base['seq_index']
-    if k % num == 0:
+    if index % num == 0:
         # Then this is the first in the Ring.  
         gsobject = BuildGSObject(config, 'first', base, gsparams, logger)[0]
     else:
         if not isinstance(config['first'],dict) or 'current_val' not in config['first']:
             raise RuntimeError("Building Ring after the first item, but no current_val stored.")
-        gsobject = config['first']['current_val'].createRotated(k*dtheta)
+        gsobject = config['first']['current_val'].rotate(index*dtheta)
 
     return gsobject, False
 
@@ -469,7 +474,7 @@ def _BuildOpticalPSF(config, key, base, ignore, gsparams, logger):
 
 def _BuildSimple(config, key, base, ignore, gsparams, logger):
     """@brief Build a simple GSObject (i.e. one without a specialized _Build function) or
-    any other galsim object that defines _req_params, _opt_params and _single_params.
+    any other GalSim object that defines _req_params, _opt_params and _single_params.
     """
     # Build the kwargs according to the various params objects in the class definition.
     type = config['type']
@@ -509,45 +514,34 @@ def _TransformObject(gsobject, config, base, logger):
     @returns transformed GSObject.
     """
     safe = True
-    orig = True
     if 'dilate' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _DilateObject(gsobject, config, 'dilate', base, logger)
         safe = safe and safe1
     if 'dilation' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _DilateObject(gsobject, config, 'dilation', base, logger)
         safe = safe and safe1
     if 'ellip' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _EllipObject(gsobject, config, 'ellip', base, logger)
         safe = safe and safe1
     if 'rotate' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _RotateObject(gsobject, config, 'rotate', base, logger)
         safe = safe and safe1
     if 'rotation' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _RotateObject(gsobject, config, 'rotation', base, logger)
         safe = safe and safe1
     if 'scale_flux' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _ScaleFluxObject(gsobject, config, 'scale_flux', base, logger)
         safe = safe and safe1
     if 'shear' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _EllipObject(gsobject, config, 'shear', base, logger)
         safe = safe and safe1
     if 'magnify' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnify', base, logger)
         safe = safe and safe1
     if 'magnification' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnification', base, logger)
         safe = safe and safe1
     if 'shift' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _ShiftObject(gsobject, config, 'shift', base, logger)
         safe = safe and safe1
     return gsobject, safe
@@ -561,7 +555,7 @@ def _EllipObject(gsobject, config, key, base, logger):
     shear, safe = galsim.config.ParseValue(config, key, base, galsim.Shear)
     if logger:
         logger.debug('obj %d: shear = %f,%f',base['obj_num'],shear.g1,shear.g2)
-    gsobject = gsobject.createSheared(shear)
+    gsobject = gsobject.shear(shear)
     return gsobject, safe
 
 def _RotateObject(gsobject, config, key, base, logger):
@@ -572,7 +566,7 @@ def _RotateObject(gsobject, config, key, base, logger):
     theta, safe = galsim.config.ParseValue(config, key, base, galsim.Angle)
     if logger:
         logger.debug('obj %d: theta = %f rad',base['obj_num'],theta.rad())
-    gsobject = gsobject.createRotated(theta)
+    gsobject = gsobject.rotate(theta)
     return gsobject, safe
 
 def _ScaleFluxObject(gsobject, config, key, base, logger):
@@ -583,8 +577,7 @@ def _ScaleFluxObject(gsobject, config, key, base, logger):
     flux_ratio, safe = galsim.config.ParseValue(config, key, base, float)
     if logger:
         logger.debug('obj %d: flux_ratio  = %f',base['obj_num'],flux_ratio)
-    gsobject = gsobject.copy()
-    gsobject.scaleFlux(flux_ratio)
+    gsobject = gsobject * flux_ratio
     return gsobject, safe
 
 def _DilateObject(gsobject, config, key, base, logger):
@@ -595,7 +588,7 @@ def _DilateObject(gsobject, config, key, base, logger):
     scale, safe = galsim.config.ParseValue(config, key, base, float)
     if logger:
         logger.debug('obj %d: scale  = %f',base['obj_num'],scale)
-    gsobject = gsobject.createDilated(scale)
+    gsobject = gsobject.dilate(scale)
     return gsobject, safe
 
 def _MagnifyObject(gsobject, config, key, base, logger):
@@ -606,7 +599,7 @@ def _MagnifyObject(gsobject, config, key, base, logger):
     mu, safe = galsim.config.ParseValue(config, key, base, float)
     if logger:
         logger.debug('obj %d: mu  = %f',base['obj_num'],mu)
-    gsobject = gsobject.createMagnified(mu)
+    gsobject = gsobject.magnify(mu)
     return gsobject, safe
 
 def _ShiftObject(gsobject, config, key, base, logger):
@@ -617,6 +610,6 @@ def _ShiftObject(gsobject, config, key, base, logger):
     shift, safe = galsim.config.ParseValue(config, key, base, galsim.PositionD)
     if logger:
         logger.debug('obj %d: shift  = %f,%f',base['obj_num'],shift.x,shift.y)
-    gsobject = gsobject.createShifted(shift.x,shift.y)
+    gsobject = gsobject.shift(shift.x,shift.y)
     return gsobject, safe
 

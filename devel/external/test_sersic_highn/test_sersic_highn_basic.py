@@ -1,20 +1,19 @@
-# Copyright 2012-2014 The GalSim developers:
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
 #
-# GalSim is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
 #
-# GalSim is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 #
 
 """Script for testing the generation of high-n Sersic profiles by both DFT and photon shooting, for
@@ -32,7 +31,7 @@ TOL_ELLIP = 2.e-5
 TOL_SIZE = 2.e-4 # Note this is in pixels by default, so for 0.03 arcsec/pixel this is still small
 
 # Range of sersic n indices to check
-SERSIC_N_TEST = [1.5, 4.5, 6.25, 6.5]
+SERSIC_N_TEST = [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.2]#, 6.5]
 NPHOTONS = 3.e7
 
 # Params for a very simple, Airy PSF
@@ -59,10 +58,14 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
               fail_value=-666.):
     """Run a full set of tests, writing pickled tuple output to outfile.
     """
+    import sys
     import cPickle
     import numpy as np
     import galsim
     import galaxy_sample
+    # Load up the comparison_utilities module from the parent directory
+    sys.path.append('..')
+    import comparison_utilities
     
     if config is None:
         use_config = False
@@ -117,7 +120,7 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
                 }
                 config['psf'] = {"type" : "Airy" , "lam_over_diam" : PSF_LAM_OVER_DIAM }
                 try:
-                    results = galsim.utilities.compare_dft_vs_photon_config(
+                    results = comparison_utilities.compare_dft_vs_photon_config(
                         config, abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE, logger=logger)
                     test_ran = True
                 except RuntimeError as err:
@@ -133,7 +136,7 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
                 galaxy.applyShear(g1=g1, g2=g2)
                 psf = galsim.Airy(lam_over_diam=PSF_LAM_OVER_DIAM, gsparams=test_gsparams)
                 try:
-                    results = galsim.utilities.compare_dft_vs_photon_object(
+                    results = comparison_utilities.compare_dft_vs_photon_object(
                         galaxy, psf_object=psf, rng=ud, pixel_scale=PIXEL_SCALE, size=IMAGE_SIZE,
                         abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE,
                         n_photons_per_trial=NPHOTONS, wmult=wmult)
