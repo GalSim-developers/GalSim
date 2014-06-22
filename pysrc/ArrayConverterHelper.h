@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
-#ifndef Converter_H
-#define Converter_H
+#ifndef ArrayConverterHelper_H
+#define ArrayConverterHelper_H
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
