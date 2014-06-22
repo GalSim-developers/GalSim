@@ -61,7 +61,7 @@ class BaseCDModel(object):
         return image.applyCD(self._a_lrbt, self.n)
 
     def applyBackward(self, image):
-        """Apply the charge deflection model in the backward direction (to linear order)
+        """Apply the charge deflection model in the backward direction (accurate to linear order)
         """
         return image.applyCD(-self._a_lrbt, self.n)
 
@@ -73,7 +73,8 @@ class BaseCDModel(object):
 
         @staticmethod
         def _modelShiftCoeffR(x, y, r0, t0, rx, tx, r, t, alpha):
-            """Calculate the model shift coeff of right pixel border as a function of int pixel position x, y
+            """Calculate the model shift coeff of right pixel border as a function of int pixel
+            position (x, y)
             """
             if not isinstance(x, (int, long)):
                 raise ValueError("Input x coordinate must be an int or long")
@@ -94,7 +95,8 @@ class BaseCDModel(object):
 
         @staticmethod
         def _modelShiftCoeffL(x, y, r0, t0, rx, tx, r, t, alpha):
-            """Calculate the model shift coeff of left pixel border as a function of int pixel position x, y
+            """Calculate the model shift coeff of left pixel border as a function of int pixel
+            position (x, y)
 
             Equal to -_modelShiftCoeffR(x+1, y, *args)
             """
@@ -103,7 +105,8 @@ class BaseCDModel(object):
 
         @staticmethod
         def _modelShiftCoeffT(x, y, r0, t0, rx, tx, r, t, alpha):
-            """Calculate the model shift coeff of top pixel border as a function of int pixel position x, y
+            """Calculate the model shift coeff of top pixel border as a function of int pixel
+            position (x, y)
             """
             if not isinstance(x, (int, long)):
                 raise ValueError("Input x coordinate must be an int or long")
@@ -124,7 +127,8 @@ class BaseCDModel(object):
 
         @staticmethod
         def _modelShiftCoeffB(x, y, r0, t0, rx, tx, r, t, alpha):
-            """Calculate the model shift coeff of bottom pixel border as a function of int pixel position x, y
+            """Calculate the model shift coeff of bottom pixel border as a function of int pixel
+            position (x, y)
 
             Equal to -_modelShiftCoeffT(x, y+1, *args)
             """
