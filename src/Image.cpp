@@ -220,65 +220,59 @@ ImageAlloc<T> BaseImage<T>::applyCD(const double* a, const int dmax) const
 {
     if(dmax<0) throw ImageError("Attempt to apply CD model with invalid extent");
   
-    const int arraydim=(2*dmax+1)*(2*dmax+1);
-    const double *aL=a;
-    const double *aR=aL+arraydim;
-    const double *aB=aR+arraydim;
-    const double *aT=aT+arraydim;
+    const int arraydim = (2 * dmax + 1) * (2 * dmax + 1);
+    const double *aL = a;
+    const double *aR = aL + arraydim;
+    const double *aB = aR + arraydim;
+    const double *aT = aT + arraydim;
     
     ImageAlloc<T> output(getXMax()-getXMin()+1,getYMax()-getYMin()+1);  
     // working version of image, which we later return
     
-    for(int x=getXMin(); x<=getXMax(); x++)
-    {
-      for(int y=getYMin(); y<=getYMax(); y++)
-      {
-	double f = at(x,y);
-	  
-	// get flux densities at top, bottom, left, right corner
-	double fT = 0.;
-	double fB = 0.;
-	double fL = 0.;
-	double fR = 0.;
-	
-	// don't do anything for pixels at a border
-	// could do this more efficiently with three separate versions of this whole loop
-	if(y<getYMax() && y>getYMin())
-	{
-	  fT = (f+at(x,y+1))/2.;
-	  fB = (f+at(x,y-1))/2.;
-	}
-	if(x<getXMax() && x>getXMin())
-	{
-	  fR = (f+at(x+1,y))/2.;
-	  fL = (f+at(x-1,y))/2.;
-	}
-	
-	  
-	// for each surrounding pixel do
-	int matrixindex=0; // for iterating over the a matrices in 1d
-	for(int iy=-dmax; iy<=dmax; iy++)
-	{
-	  if(y+iy<getYMin() || y+iy>getYMax()) { matrixindex += 2*dmax+1; continue; }
-	  for(int ix=-dmax; ix<=dmax; ix++)
-	  {
-	    if(x+ix<getXMin() || x+ix>getXMax()) { matrixindex++; continue; }
+    for(int x=getXMin(); x<=getXMax(); x++){
 
-	    double qkl = at(x+ix,y+iy);
-	    f += qkl*fT*aT[matrixindex];
-	    f += qkl*fB*aB[matrixindex];
-	    f += qkl*fL*aL[matrixindex];
-	    f += qkl*fR*aR[matrixindex];
-	    
-	    matrixindex++;
-	  }
-	}
-	
-	output.setValue(x,y,f);
-      }
-      }
- 
-      return output;
+        for(int y=getYMin(); y<=getYMax(); y++){
+
+            double f = at(x, y);
+            // get flux densities at top, bottom, left, right corner
+            double fT = 0.;
+            double fB = 0.;
+            double fL = 0.;
+            double fR = 0.;
+
+            // don't do anything for pixels at a border
+	        // could do this more efficiently with three separate versions of this whole loop
+	        if(y<getYMax() && y>getYMin()){
+                fT = (f + at(x, y + 1)) / 2.;
+                fB = (f + at(x, y - 1)) / 2.;
+            }
+            if(x<getXMax() && x>getXMin()){
+                fR = (f + at(x + 1, y)) / 2.;
+                fL = (f + at(x - 1, y)) / 2.;
+            }
+
+            // for each surrounding pixel do
+            int matrixindex = 0; // for iterating over the a matrices in 1d
+            for(int iy=-dmax; iy<=dmax; iy++){
+
+                if(y+iy<getYMin() || y+iy>getYMax()) { matrixindex += 2*dmax+1; continue; }
+	            for(int ix=-dmax; ix<=dmax; ix++){
+
+                    if(x+ix<getXMin() || x+ix>getXMax()) { matrixindex++; continue; }
+                    double qkl = at(x + ix, y + iy);
+                    f += qkl * fT * aT[matrixindex];
+                    f += qkl * fB * aB[matrixindex];
+                    f += qkl * fL * aL[matrixindex];
+                    f += qkl * fR * aR[matrixindex];
+                    matrixindex++;
+
+                }
+
+            }
+            output.setValue(x,y,f);
+        }
+    }
+    return output;
 }
 
 template <typename T>
