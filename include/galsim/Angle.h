@@ -136,6 +136,7 @@ namespace galsim {
      *    theta2 -= theta1
      *    theta *= x
      *    theta /= x
+     *    x = unit1/unit2
      *  @endcode
      *
      *  I/O:
@@ -203,6 +204,9 @@ namespace galsim {
     /// Define conversion from value to an Angle
     inline Angle operator*(double val, AngleUnit unit) { return Angle(val,unit); }
 
+    /// A convenience function.  unit1/unit2 is equivalent to (1 * unit1) / unit2.
+    inline double operator/(AngleUnit unit1, AngleUnit unit2) 
+    { return unit1.getValue() / unit2.getValue(); }
 
 }
 #endif

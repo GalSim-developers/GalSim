@@ -40,6 +40,7 @@ struct PyAngleUnit {
             .def(bp::self == bp::self)
             .def("getValue", &AngleUnit::getValue)
             .def(bp::other<double>() * bp::self)
+            .def(bp::self / bp::other<AngleUnit>())
             .enable_pickling()
             ;
     }
