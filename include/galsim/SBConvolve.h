@@ -49,7 +49,7 @@ namespace galsim {
      * The stepK used for the k-space image will be (Sum 1/stepK()^2)^(-1/2) where the sum is over
      * all the components being convolved.  Since the size of the convolved image scales roughly as
      * the quadrature sum of the components, this should be close to Pi/Rmax where Rmax is the
-     * radius that encloses all but (1-alias_threshold) of the flux in the final convolved image.
+     * radius that encloses all but (1-folding_threshold) of the flux in the final convolved image.
      *
      * The maxK used for the k-space image will be the minimum of the maxK() calculated for each
      * component.  Since the k-space images are multiplied, if one of them is essentially zero

@@ -43,9 +43,9 @@ namespace galsim {
          *
          * @param minimum_fft_size    Constant giving minimum FFT size we're willing to do.
          * @param maximum_fft_size    Constant giving maximum FFT size we're willing to do.
-         * @param alias_threshold     A threshold parameter used for setting the stepK value for 
+         * @param folding_threshold     A threshold parameter used for setting the stepK value for 
          *                            FFTs.  The FFT's stepK is set so that at most a fraction 
-         *                            alias_threshold of the flux of any profile is aliased.
+         *                            folding_threshold of the flux of any profile is aliased.
          * @param stepk_minimum_hlr   In addition to the above constraint for aliasing, also set 
          *                            stepk such that pi/stepk is at least stepk_minimum_hlr
          *                            times the profile's half-light radius (for profiles that
@@ -104,7 +104,7 @@ namespace galsim {
          */
         GSParams(int _minimum_fft_size,
                  int _maximum_fft_size,
-                 double _alias_threshold,
+                 double _folding_threshold,
                  double _stepk_minimum_hlr,
                  double _maxk_threshold,
                  double _kvalue_accuracy,
@@ -120,7 +120,7 @@ namespace galsim {
                  double _small_fraction_of_flux) :
             minimum_fft_size(_minimum_fft_size),
             maximum_fft_size(_maximum_fft_size),
-            alias_threshold(_alias_threshold),
+            folding_threshold(_folding_threshold),
             stepk_minimum_hlr(_stepk_minimum_hlr),
             maxk_threshold(_maxk_threshold),
             kvalue_accuracy(_kvalue_accuracy),
@@ -142,7 +142,7 @@ namespace galsim {
         GSParams() :
             minimum_fft_size(128),
             maximum_fft_size(4096),
-            alias_threshold(5.e-3),
+            folding_threshold(5.e-3),
             stepk_minimum_hlr(5.),
             maxk_threshold(1.e-3),
 
@@ -165,7 +165,7 @@ namespace galsim {
         int minimum_fft_size;
         int maximum_fft_size;
 
-        double alias_threshold;
+        double folding_threshold;
         double stepk_minimum_hlr;
         double maxk_threshold;
 
@@ -188,7 +188,7 @@ namespace galsim {
             if (this == &rhs) return true;
             else if (minimum_fft_size != rhs.minimum_fft_size) return false;
             else if (maximum_fft_size != rhs.maximum_fft_size) return false;
-            else if (alias_threshold != rhs.alias_threshold) return false;
+            else if (folding_threshold != rhs.folding_threshold) return false;
             else if (stepk_minimum_hlr != rhs.stepk_minimum_hlr) return false;
             else if (maxk_threshold != rhs.maxk_threshold) return false;
             else if (kvalue_accuracy != rhs.kvalue_accuracy) return false;
@@ -212,8 +212,8 @@ namespace galsim {
             else if (minimum_fft_size > rhs.minimum_fft_size) return false;
             else if (maximum_fft_size < rhs.maximum_fft_size) return true;
             else if (maximum_fft_size > rhs.maximum_fft_size) return false;
-            else if (alias_threshold < rhs.alias_threshold) return true;
-            else if (alias_threshold > rhs.alias_threshold) return false;
+            else if (folding_threshold < rhs.folding_threshold) return true;
+            else if (folding_threshold > rhs.folding_threshold) return false;
             else if (stepk_minimum_hlr < rhs.stepk_minimum_hlr) return true;
             else if (stepk_minimum_hlr > rhs.stepk_minimum_hlr) return false;
             else if (maxk_threshold < rhs.maxk_threshold) return true;
@@ -247,7 +247,7 @@ namespace galsim {
     inline std::ostream& operator<<(std::ostream& os, const GSParams& gsp)
     {
         os << gsp.minimum_fft_size << "," << gsp.maximum_fft_size << ",  "
-            << gsp.alias_threshold << "," << gsp.stepk_minimum_hlr << ","
+            << gsp.folding_threshold << "," << gsp.stepk_minimum_hlr << ","
             << gsp.maxk_threshold << ",  "
             << gsp.kvalue_accuracy << "," << gsp.xvalue_accuracy << ","
             << gsp.table_spacing << ", "
