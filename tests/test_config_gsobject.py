@@ -525,7 +525,7 @@ def test_devaucouleurs():
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } 
                  },
         'gal5' : { 'type' : 'DeVaucouleurs' , 'half_light_radius' : 1, 'flux' : 50,
-                   'gsparams' : { 'alias_threshold' : 1.e-4 }
+                   'gsparams' : { 'folding_threshold' : 1.e-4 }
                  }
     }
 
@@ -553,7 +553,7 @@ def test_devaucouleurs():
     gsobject_compare(gal4a, gal4b)
 
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
-    gsparams = galsim.GSParams(alias_threshold=1.e-4)
+    gsparams = galsim.GSParams(folding_threshold=1.e-4)
     gal5b = galsim.DeVaucouleurs(half_light_radius=1, flux=50, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
 
@@ -837,7 +837,7 @@ def test_add():
                 { 'type' : 'Gaussian' , 'sigma' : 1, 'flux' : 50 }
             ],
             'gsparams' : { 'maxk_threshold' : 1.e-2,
-                           'alias_threshold' : 1.e-2,
+                           'folding_threshold' : 1.e-2,
                            'stepk_minimum_hlr' : 3 }
         }
     }
@@ -880,7 +880,7 @@ def test_add():
 
     # Check that the Add items correctly inherit their gsparams from the top level
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
-    gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
+    gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
     gal5b_1 = galsim.Exponential(scale_radius=3.4, flux=100, gsparams=gsparams)
     gal5b_2 = galsim.Gaussian(sigma=1, flux=50, gsparams=gsparams)
     gal5b = galsim.Add([gal5b_1, gal5b_2])
@@ -955,7 +955,7 @@ def test_convolve():
                 { 'type' : 'Gaussian' , 'sigma' : 1 }
             ],
             'gsparams' : { 'maxk_threshold' : 1.e-2,
-                           'alias_threshold' : 1.e-2,
+                           'folding_threshold' : 1.e-2,
                            'stepk_minimum_hlr' : 3 }
         }
     }
@@ -998,7 +998,7 @@ def test_convolve():
 
     # Check that the Convolve items correctly inherit their gsparams from the top level
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
-    gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
+    gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
     gal5b_1 = galsim.Exponential(scale_radius=1.7, flux=100, gsparams=gsparams)
     gal5b_2 = galsim.Gaussian(sigma=1, gsparams=gsparams)
     gal5b = galsim.Convolve([gal5b_1, gal5b_2])
@@ -1078,14 +1078,14 @@ def test_list():
                 { 'type' : 'Exponential' , 'scale_radius' : 3, 'flux' : 10 }
             ],
             'gsparams' : { 'maxk_threshold' : 1.e-2,
-                           'alias_threshold' : 1.e-2,
+                           'folding_threshold' : 1.e-2,
                            'stepk_minimum_hlr' : 3 }
         }
     }
 
     config['obj_num'] = 0
     gal5a = galsim.config.BuildGSObject(config, 'gal')[0]
-    gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
+    gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
     gal5b = galsim.Exponential(scale_radius=3.4, flux=100, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
 
@@ -1206,14 +1206,14 @@ def test_ring():
                 ]
             },
             'gsparams' : { 'maxk_threshold' : 1.e-2,
-                           'alias_threshold' : 1.e-2,
+                           'folding_threshold' : 1.e-2,
                            'stepk_minimum_hlr' : 3 }
         }
     }
 
     config['obj_num'] = 0
     gal4a = galsim.config.BuildGSObject(config, 'gal')[0]
-    gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
+    gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
     disk = galsim.Exponential(half_light_radius=2, gsparams=gsparams)
     disk.applyShear(e2=0.3)
     bulge = galsim.Sersic(n=3,half_light_radius=1.3, gsparams=gsparams)
