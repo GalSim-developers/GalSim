@@ -47,7 +47,7 @@ namespace galsim {
                     double, double, double, double, int, double>((
                         bp::arg("minimum_fft_size")=128, 
                         bp::arg("maximum_fft_size")=4096,
-                        bp::arg("alias_threshold")=5.e-3,
+                        bp::arg("folding_threshold")=5.e-3,
                         bp::arg("stepk_minimum_hlr")=5.,
                         bp::arg("maxk_threshold")=1.e-3,
                         bp::arg("kvalue_accuracy")=1.e-5,
@@ -65,7 +65,7 @@ namespace galsim {
                 )
                 .def_readwrite("minimum_fft_size", &GSParams::minimum_fft_size)
                 .def_readwrite("maximum_fft_size", &GSParams::maximum_fft_size)
-                .def_readwrite("alias_threshold", &GSParams::alias_threshold)
+                .def_readwrite("folding_threshold", &GSParams::folding_threshold)
                 .def_readwrite("stepk_minimum_hlr", &GSParams::stepk_minimum_hlr)
                 .def_readwrite("maxk_threshold", &GSParams::maxk_threshold)
                 .def_readwrite("kvalue_accuracy", &GSParams::kvalue_accuracy)
