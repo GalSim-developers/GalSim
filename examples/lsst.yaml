@@ -75,8 +75,8 @@ gal :
                 x_min : 1.e1
                 x_max : 1.e8
             gsparams:
-                alias_threshold : 1.e-3  # Build PSFs a bit larger to avoid artifacts
-                                         # that are apparent for the brightest stars.
+                folding_threshold : 1.e-3  # Build PSFs a bit larger to avoid artifacts
+                                           # that are apparent for the brightest stars.
     index : 
         type : Eval
         # 80% will be real galaxies, 20% stars
