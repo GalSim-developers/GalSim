@@ -143,7 +143,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         rootps = self._get_update_rootps(image.array.shape, image.wcs)
 
         # Finally generate a random field in Fourier space with the right PS
-        noise_array = _generate_noise_from_rootps(self.getRNG(), rootps)
+        noise_array = _generate_noise_from_rootps(self.getRNG(), image.array.shape, rootps)
         # Add it to the image
         image += galsim.Image(noise_array, wcs=image.wcs)
         return image
@@ -235,7 +235,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             image.array.shape, image.wcs)
 
         # Finally generate a random field in Fourier space with the right PS and add to image
-        noise_array = _generate_noise_from_rootps(self.getRNG(), rootps_whitening)
+        noise_array = _generate_noise_from_rootps(
+            self.getRNG(), image.array.shape, rootps_whitening)
         image += galsim.Image(noise_array)
 
         # Return the variance to the interested user
@@ -593,8 +594,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """
         # First check whether we can just use a stored power spectrum (no drawing necessary if so)
         use_stored = False
+        # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
+        half_shape = (shape[0], shape[1] // 2 + 1)
         for rootps_array, saved_wcs in self._rootps_store:
-            if shape == rootps_array.shape:
+            if half_shape == rootps_array.shape:
                 if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
                      wcs == saved_wcs ):
                     use_stored = True
@@ -621,7 +624,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 raise RuntimeError("CorrelatedNoise found to have negative variance.")
 
             # Then calculate the sqrt(PS) that will be used to generate the actual noise
-            ps = np.fft.fft2(newcf.array)
+            ps = np.fft.rfft2(newcf.array)
             rootps = np.sqrt(np.abs(ps) * np.product(shape))
 
             # Then add this and the relevant wcs to the _rootps_store for later use
@@ -637,8 +640,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """
         # First check whether we can just use a stored whitening power spectrum
         use_stored = False
+        # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
+        half_shape = (shape[0], shape[1] // 2 + 1)
         for rootps_whitening_array, saved_wcs, var in self._rootps_whitening_store:
-            if shape == rootps_whitening_array.shape:
+            if half_shape == rootps_whitening_array.shape:
                 if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
                      wcs == saved_wcs ):
                     use_stored = True
@@ -673,26 +678,28 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 # Now a standalone utility function for generating noise according to an input (square rooted)
 # Power Spectrum
 #
-def _generate_noise_from_rootps(rng, rootps):
+def _generate_noise_from_rootps(rng, shape, rootps):
     """Utility function for generating a NumPy array containing a Gaussian random noise field with
     a user-specified power spectrum also supplied as a NumPy array.
 
     @param rng      BaseDeviate instance to provide the random number generation
-    @param rootps   a NumPy array containing the square root of the discrete Power Spectrum ordered
+    @param rootps   NumPy array containing the square root of the discrete Power Spectrum ordered
                     in two dimensions according to the usual DFT pattern (see np.fft.fftfreq)
 
     @returns a NumPy array (contiguous) of the same shape as `rootps`, filled with the noise field.
     """
-    # I believe it is cheaper to make two random vectors than to make a single one (for a phase)
-    # and then apply cos(), sin() to it...
+    # Sanity check on requested shape versus that of rootps
+    if rootps.shape != (shape[0], shape[-1] // 2 + 1):
+        raise ValueError("Requested shape does not match that of the supplied rootps")
+    # Make half size Images using Hermitian symmetry to get full sized real inverse FFT
     gaussvec_real = galsim.ImageD(rootps.shape[1], rootps.shape[0]) # Remember NumPy is [y, x]
     gaussvec_imag = galsim.ImageD(rootps.shape[1], rootps.shape[0])
     gn = galsim.GaussianNoise(rng=rng, sigma=1.) # Quicker to create anew each time than to save &
                                                  # then check if its rng needs to be changed or not.
     gaussvec_real.addNoise(gn)
     gaussvec_imag.addNoise(gn)
-    noise_array = np.fft.ifft2((gaussvec_real.array + gaussvec_imag.array * 1j) * rootps)
-    return np.ascontiguousarray(noise_array.real)
+    noise_array = np.fft.irfft2((gaussvec_real.array + gaussvec_imag.array * 1j) * rootps, s=shape)
+    return np.ascontiguousarray(noise_array)
 
 
 ###
