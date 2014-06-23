@@ -115,7 +115,7 @@ def main(argv):
     # Type help(galsim.GSParams) for the complete list of parameters and more detailed
     # documentation, including the default values for each parameter.
     gsparams = galsim.GSParams(
-        alias_threshold=1.e-2,   # maximum fractional flux that may be aliased around edge of FFT
+        folding_threshold=1.e-2, # maximum fractional flux that may be folded around edge of FFT
         maxk_threshold=2.e-3,    # k-values less than this may be excluded off edge of FFT
         xvalue_accuracy=1.e-4,   # approximations in real space aim to be this accurate
         kvalue_accuracy=1.e-4,   # approximations in fourier space aim to be this accurate
