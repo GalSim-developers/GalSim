@@ -683,8 +683,12 @@ def _generate_noise_from_rootps(rng, shape, rootps):
     a user-specified power spectrum also supplied as a NumPy array.
 
     @param rng      BaseDeviate instance to provide the random number generation
+    @param shape    Shape of the output array, needed because of the use of Hermitian symmetry to
+                    increase inverse FFT efficiency using the `np.fft.irfft2` function (gets sent to
+                    the kwarg `s=` of `np.fft.irfft2`)
     @param rootps   NumPy array containing the square root of the discrete Power Spectrum ordered
-                    in two dimensions according to the usual DFT pattern (see np.fft.fftfreq)
+                    in two dimensions according to the usual DFT pattern for `np.fft.rfft2` output
+                    (see also `np.fft.fftfreq`)
 
     @returns a NumPy array (contiguous) of the same shape as `rootps`, filled with the noise field.
     """
