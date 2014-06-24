@@ -898,13 +898,14 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             raise TypeError("Input image not a galsim.Image object")
         # Build a noise correlation function (CF) from the input image, using DFTs
         # Calculate the power spectrum then a (preliminary) CF
-        ft_array = np.fft.fft2(image.array)
-        ps_array = (ft_array * ft_array.conj()).real
+        ft_array = np.fft.rfft2(image.array)
+        ps_array = np.abs(ft_array)**2 # Using timeit this seems to have the slight speed edge
         if subtract_mean: # Quickest non-destructive way to make the PS correspond to the
                           # mean-subtracted case
             ps_array[0, 0] = 0.
         # Note need to normalize due to one-directional 1/N^2 in FFT conventions
-        cf_array_prelim = (np.fft.ifft2(ps_array)).real / np.product(image.array.shape)
+        cf_array_prelim = np.fft.irfft2(
+            ps_array, s=image.array.shape) / np.product(image.array.shape)
 
         store_rootps = True # Currently the ps_array above corresponds to cf, but this may change...
 
