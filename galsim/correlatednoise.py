@@ -903,7 +903,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         if subtract_mean: # Quickest non-destructive way to make the PS correspond to the
                           # mean-subtracted case
             ps_array[0, 0] = 0.
-        # Note need to normalize due to one-directional 1/N^2 in FFT conventions
+        # Note need to normalize due to one-directional 1/N^2 in FFT conventions and the fact that
+        # we *squared* the ft_array to get ps_array
         cf_array_prelim = np.fft.irfft2(
             ps_array, s=image.array.shape) / np.product(image.array.shape)
 
