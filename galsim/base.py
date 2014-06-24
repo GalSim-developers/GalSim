@@ -1355,6 +1355,22 @@ class GSObject(object):
         return self.drawKImage(*args, **kwargs)
 
 
+# GSParams is defined in C++ and wrapped.  But we want to modify it here slightly to add
+# the obsolete name alias_threshold as a valid synonym for folding_threshold
+GSParams.alias_threshold = property(lambda self: self.folding_threshold,
+                                    lambda self, val: setattr(self,'folding_threshold',val))
+
+# Also update the constructor to allow this name.
+_orig_GSP_init = GSParams.__init__
+def _new_GSP_init(self, *args, **kwargs):
+    if 'alias_threshold' in kwargs:
+        if 'folding_threshold' in kwargs:
+            raise TypeError('Cannot specify both alias_threshold and folding_threshold')
+        kwargs['folding_threshold'] = kwargs.pop('alias_threshold')
+    _orig_GSP_init(self, *args, **kwargs)
+GSParams.__init__ = _new_GSP_init
+
+
 # --- Now defining the derived classes ---
 #
 # All derived classes inherit the GSObject method interface, but therefore have a "has a"
