@@ -901,13 +901,14 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         # Calculate the power spectrum then a (preliminary) CF
         ft_array = np.fft.rfft2(image.array)
         ps_array = np.abs(ft_array)**2 # Using timeit this seems to have the slight speed edge
+        # Note need to normalize due to one-directional 1/N^2 in FFT conventions and the fact that
+        # we *squared* the ft_array to get ps_array:
+        ps_array /= np.product(image.array.shape)
         if subtract_mean: # Quickest non-destructive way to make the PS correspond to the
                           # mean-subtracted case
             ps_array[0, 0] = 0.
-        # Note need to normalize due to one-directional 1/N^2 in FFT conventions and the fact that
-        # we *squared* the ft_array to get ps_array
-        cf_array_prelim = np.fft.irfft2(
-            ps_array, s=image.array.shape) / np.product(image.array.shape)
+        # Then calculate the CF by inverse DFT
+        cf_array_prelim = np.fft.irfft2(ps_array, s=image.array.shape)
 
         store_rootps = True # Currently the ps_array above corresponds to cf, but this may change...
 
