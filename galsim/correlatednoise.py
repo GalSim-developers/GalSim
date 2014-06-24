@@ -625,7 +625,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
             # Then calculate the sqrt(PS) that will be used to generate the actual noise
             ps = np.fft.rfft2(newcf.array)
-            rootps = np.sqrt(np.abs(ps) * np.product(shape))
+            rootps = np.sqrt(np.abs(ps)) # The PS will be close to purely real, but not quite (due
+                                         # the approximations involved in interpolating)
 
             # Then add this and the relevant wcs to the _rootps_store for later use
             self._rootps_store.append((rootps, newcf.wcs))
