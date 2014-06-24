@@ -699,8 +699,12 @@ def _generate_noise_from_rootps(rng, shape, rootps):
     # Make half size Images using Hermitian symmetry to get full sized real inverse FFT
     gaussvec_real = galsim.ImageD(rootps.shape[1], rootps.shape[0]) # Remember NumPy is [y, x]
     gaussvec_imag = galsim.ImageD(rootps.shape[1], rootps.shape[0])
-    gn = galsim.GaussianNoise(rng=rng, sigma=1.) # Quicker to create anew each time than to save &
-                                                 # then check if its rng needs to be changed or not.
+    gn = galsim.GaussianNoise(
+        rng=rng, sigma=np.sqrt(rootps.shape[0] * rootps.shape[1])) # Quickest to create rng each
+                                                                   # time needed, also note sigma
+                                                                   # scaling, needed because of
+                                                                   # the asymmetry in the 1/N^2
+                                                                   # division in the NumPy FFT/iFFT
     gaussvec_real.addNoise(gn)
     gaussvec_imag.addNoise(gn)
     noise_array = np.fft.irfft2((gaussvec_real.array + gaussvec_imag.array * 1j) * rootps, s=shape)
