@@ -668,7 +668,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             # to be generated with the rootps_whitening.  The factor of product of the image shape
             # is required due to inverse FFT conventions, and note that although we use the [0, 0]
             # element we could use any as the PS should be flat
-            variance = (rootps[0, 0]**2 + ps_whitening[0, 0]) / np.product(shape)
+            variance = rootps[0, 0]**2 + ps_whitening[0, 0]
 
             # Then add all this and the relevant wcs to the _rootps_whitening_store
             self._rootps_whitening_store.append((rootps_whitening, wcs, variance))
