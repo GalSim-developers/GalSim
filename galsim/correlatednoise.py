@@ -144,6 +144,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         # Finally generate a random field in Fourier space with the right PS
         noise_array = _generate_noise_from_rootps(self.getRNG(), image.array.shape, rootps)
+        #import matplotlib.pyplot as plt
+        #print noise_array.shape
+        #plt.pcolor(noise_array); plt.colorbar(); plt.show()
         # Add it to the image
         image += galsim.Image(noise_array, wcs=image.wcs)
         return image
@@ -595,9 +598,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # First check whether we can just use a stored power spectrum (no drawing necessary if so)
         use_stored = False
         # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
-        half_shape = (shape[0], shape[1] // 2 + 1)
+        #half_shape = (shape[0], shape[1] // 2 + 1)
         for rootps_array, saved_wcs in self._rootps_store:
-            if half_shape == rootps_array.shape:
+            if shape == rootps_array.shape:
                 if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
                      wcs == saved_wcs ):
                     use_stored = True
@@ -624,7 +627,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 raise RuntimeError("CorrelatedNoise found to have negative variance.")
 
             # Then calculate the sqrt(PS) that will be used to generate the actual noise
-            ps = np.fft.rfft2(newcf.array)
+            ps = np.fft.fft2(newcf.array)
             rootps = np.sqrt(np.abs(ps)) # The PS will be close to purely real, but not quite (due
                                          # the approximations involved in interpolating)
 
@@ -642,9 +645,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # First check whether we can just use a stored whitening power spectrum
         use_stored = False
         # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
-        half_shape = (shape[0], shape[1] // 2 + 1)
+        #half_shape = (shape[0], shape[1] // 2 + 1)
         for rootps_whitening_array, saved_wcs, var in self._rootps_whitening_store:
-            if half_shape == rootps_whitening_array.shape:
+            if shape == rootps_whitening_array.shape:
                 if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
                      wcs == saved_wcs ):
                     use_stored = True
@@ -694,20 +697,21 @@ def _generate_noise_from_rootps(rng, shape, rootps):
     @returns a NumPy array (contiguous) of the same shape as `rootps`, filled with the noise field.
     """
     # Sanity check on requested shape versus that of rootps
-    if rootps.shape != (shape[0], shape[-1] // 2 + 1):
+    if len(shape) != 2 or (shape[0], shape[1]) != rootps.shape:
         raise ValueError("Requested shape does not match that of the supplied rootps")
     # Make half size Images using Hermitian symmetry to get full sized real inverse FFT
-    gaussvec_real = galsim.ImageD(rootps.shape[1], rootps.shape[0]) # Remember NumPy is [y, x]
-    gaussvec_imag = galsim.ImageD(rootps.shape[1], rootps.shape[0])
+    gaussvec_real = galsim.ImageD(shape[1]//2 + 1, shape[0]) # Remember NumPy is [y, x]
+    gaussvec_imag = galsim.ImageD(shape[1]//2 + 1, shape[0])
     gn = galsim.GaussianNoise(
-        rng=rng, sigma=np.sqrt(rootps.shape[0] * rootps.shape[1])) # Quickest to create rng each
-                                                                   # time needed, also note sigma
-                                                                   # scaling, needed because of
-                                                                   # the asymmetry in the 1/N^2
-                                                                   # division in the NumPy FFT/iFFT
+        rng=rng, sigma=np.sqrt(shape[0] * (shape[1]//2 + 1))) # Quickest to create rng each
+                                                              # time needed, also note sigma
+                                                              # scaling, needed because of
+                                                              # the asymmetry in the 1/N^2
+                                                              # division in the NumPy FFT/iFFT
     gaussvec_real.addNoise(gn)
     gaussvec_imag.addNoise(gn)
-    noise_array = np.fft.irfft2((gaussvec_real.array + gaussvec_imag.array * 1j) * rootps, s=shape)
+    noise_array = np.fft.irfft2(
+        (gaussvec_real.array + gaussvec_imag.array * 1j) * rootps[:,:shape[1]//2+1], s=shape)
     return np.ascontiguousarray(noise_array)
 
 
@@ -903,7 +907,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             raise TypeError("Input image not a galsim.Image object")
         # Build a noise correlation function (CF) from the input image, using DFTs
         # Calculate the power spectrum then a (preliminary) CF
-        ft_array = np.fft.rfft2(image.array)
+        ft_array = np.fft.fft2(image.array)
         ps_array = np.abs(ft_array)**2 # Using timeit this seems to have the slight speed edge
         # Note need to normalize due to one-directional 1/N^2 in FFT conventions and the fact that
         # we *squared* the ft_array to get ps_array:
@@ -912,7 +916,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
                           # mean-subtracted case
             ps_array[0, 0] = 0.
         # Then calculate the CF by inverse DFT
-        cf_array_prelim = np.fft.irfft2(ps_array, s=image.array.shape)
+        cf_array_prelim = np.fft.ifft2(ps_array).real#, s=image.array.shape)
 
         store_rootps = True # Currently the ps_array above corresponds to cf, but this may change...
 
