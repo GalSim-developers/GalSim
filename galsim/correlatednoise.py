@@ -86,7 +86,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.copy())
 
-    def applyTo(self, image):
+    def applyTo(self, image, use_irfft=False):
         """Apply this correlated Gaussian random noise field to an input Image.
 
         Calling
@@ -143,10 +143,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         rootps = self._get_update_rootps(image.array.shape, image.wcs)
 
         # Finally generate a random field in Fourier space with the right PS
-        noise_array = _generate_noise_from_rootps(self.getRNG(), image.array.shape, rootps)
-        #import matplotlib.pyplot as plt
-        #print noise_array.shape
-        #plt.pcolor(noise_array); plt.colorbar(); plt.show()
+        noise_array = _generate_noise_from_rootps(
+            self.getRNG(), image.array.shape, rootps, use_irfft=use_irfft)
+
         # Add it to the image
         image += galsim.Image(noise_array, wcs=image.wcs)
         return image
@@ -682,7 +681,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 # Now a standalone utility function for generating noise according to an input (square rooted)
 # Power Spectrum
 #
-def _generate_noise_from_rootps(rng, shape, rootps):
+def _generate_noise_from_rootps(rng, shape, rootps, use_irfft=False):
     """Utility function for generating a NumPy array containing a Gaussian random noise field with
     a user-specified power spectrum also supplied as a NumPy array.
 
@@ -699,19 +698,32 @@ def _generate_noise_from_rootps(rng, shape, rootps):
     # Sanity check on requested shape versus that of rootps
     if len(shape) != 2 or (shape[0], shape[1]) != rootps.shape:
         raise ValueError("Requested shape does not match that of the supplied rootps")
-    # Make half size Images using Hermitian symmetry to get full sized real inverse FFT
-    gaussvec_real = galsim.ImageD(shape[1]//2 + 1, shape[0]) # Remember NumPy is [y, x]
-    gaussvec_imag = galsim.ImageD(shape[1]//2 + 1, shape[0])
-    gn = galsim.GaussianNoise(
-        rng=rng, sigma=np.sqrt(shape[0] * (shape[1]//2 + 1))) # Quickest to create rng each
-                                                              # time needed, also note sigma
-                                                              # scaling, needed because of
-                                                              # the asymmetry in the 1/N^2
-                                                              # division in the NumPy FFT/iFFT
-    gaussvec_real.addNoise(gn)
-    gaussvec_imag.addNoise(gn)
-    noise_array = np.fft.irfft2(
-        (gaussvec_real.array + gaussvec_imag.array * 1j) * rootps[:,:shape[1]//2+1], s=shape)
+    if use_irfft:
+        # Make half size Images using Hermitian symmetry to get full sized real inverse FFT
+        gaussvec_real = galsim.ImageD(shape[1]//2 + 1, shape[0]) # Remember NumPy is [y, x]
+        gaussvec_imag = galsim.ImageD(shape[1]//2 + 1, shape[0])
+        gn = galsim.GaussianNoise(
+            rng=rng, sigma=np.sqrt(shape[0] * (shape[1]//2 + 1))) # Quickest to create rng each
+                                                                  # time needed, also note sigma
+                                                                  # scaling, needed because of
+                                                                  # the asymmetry in the 1/N^2
+                                                                  # division in the NumPy FFT/iFFT
+        gaussvec_real.addNoise(gn)
+        gaussvec_imag.addNoise(gn)
+        noise_array = np.fft.irfft2(
+            (gaussvec_real.array + gaussvec_imag.array * 1j) * rootps[:,:shape[1]//2+1], s=shape)
+    else:
+        gaussvec_real = galsim.ImageD(shape[1], shape[0]) # Remember NumPy is [y, x]
+        gaussvec_imag = galsim.ImageD(shape[1], shape[0])
+        gn = galsim.GaussianNoise(
+            rng=rng, sigma=np.sqrt(shape[0] * shape[1]))          # Quickest to create rng each
+                                                                  # time needed, also note sigma
+                                                                  # scaling, needed because of
+                                                                  # the asymmetry in the 1/N^2
+                                                                  # division in the NumPy FFT/iFFT
+        gaussvec_real.addNoise(gn)
+        gaussvec_imag.addNoise(gn)
+        noise_array = np.fft.ifft2((gaussvec_real.array + gaussvec_imag.array * 1j) * rootps).real
     return np.ascontiguousarray(noise_array)
 
 
