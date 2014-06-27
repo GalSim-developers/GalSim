@@ -704,12 +704,12 @@ def _generate_noise_from_rootps(rng, shape, rootps):
     #  Quickest to create Gaussian rng each time needed, so do that here...
     gn = galsim.GaussianNoise(
         rng=rng, sigma=np.sqrt(.5 * shape[0] * shape[1])) # Note sigma scaling: 1/sqrt(2) needed to
-                                                          # <|gaussvec|**2> = 1; shape product
+                                                          # <|gaussvec|**2> = product(shape); shape
                                                           # needed because of the asymmetry in the
                                                           # 1/N^2 division in the NumPy FFT/iFFT
     gaussvec_real.addNoise(gn)
     gaussvec_imag.addNoise(gn)
-    noise_array = np.fft.irfft2((gaussvec_real.array + gaussvec_imag.array * 1j) * rootps, s=shape)
+    noise_array = np.fft.irfft2((gaussvec_real.array + 1j * gaussvec_imag.array) * rootps, s=shape)
     return np.ascontiguousarray(noise_array)
 
 
