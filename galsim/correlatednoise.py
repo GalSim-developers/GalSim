@@ -86,7 +86,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.copy())
 
-    def applyTo(self, image, use_irfft=False):
+    def applyTo(self, image, use_irfft=True):
         """Apply this correlated Gaussian random noise field to an input Image.
 
         Calling
@@ -112,7 +112,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         avoid this property being present in your final `image` you should applyTo() an `image` of
         greater extent than you need, and take a subset.
 
-        @param image The input Image object.
+        @param image  The input Image object.
         """
         # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate
         # noise according to the correlation function represented by this instance.  An alternative
