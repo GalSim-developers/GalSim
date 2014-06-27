@@ -703,7 +703,7 @@ def _generate_noise_from_rootps(rng, shape, rootps, use_irfft=False):
         gaussvec_real = galsim.ImageD(shape[1]//2 + 1, shape[0]) # Remember NumPy is [y, x]
         gaussvec_imag = galsim.ImageD(shape[1]//2 + 1, shape[0])
         gn = galsim.GaussianNoise(
-            rng=rng, sigma=np.sqrt(shape[0] * (shape[1]//2 + 1))) # Quickest to create rng each
+            rng=rng, sigma=np.sqrt(.5 * shape[0] * shape[1]))     # Quickest to create rng each
                                                                   # time needed, also note sigma
                                                                   # scaling, needed because of
                                                                   # the asymmetry in the 1/N^2
