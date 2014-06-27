@@ -25,7 +25,7 @@ import numpy as np
 
 # Define sizes of arrays, input parameters
 sigma = 1.7            # our noise field is going to have a Gaussian CF & PS for simplicity
-nu = 21                # number of array elements
+nu = 22                # number of array elements
 u = np.fft.fftfreq(nu) # get the u0, u1, u2 etc. frequency values
 nsamples = 50000       # number of realizations to average over
 ps = np.exp(-2. * np.pi**2 * sigma**2 * u**2) # using result for FT of a Gaussian being another one
