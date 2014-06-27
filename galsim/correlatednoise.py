@@ -715,7 +715,7 @@ def _generate_noise_from_rootps(rng, shape, rootps):
                                  # time of the irfft below, so am not going to stress about it
     rootps_fixed[:, 0] *= np.sqrt(2.) # Compensates for the fact that NumPy silently discards the
                                       # imaginary part of the argument to np.fft.irfft2() all along
-                                      # the line kx==0
+                                      # the line kx == 0
     # Finally generate noise using the irfft
     noise_array = np.fft.irfft2(
         (gaussvec_real.array + 1j * gaussvec_imag.array) * rootps_fixed, s=shape)
