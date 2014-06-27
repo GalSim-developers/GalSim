@@ -692,7 +692,7 @@ def _generate_noise_from_rootps(rng, shape, rootps):
                     in two dimensions according to the usual DFT pattern for `np.fft.rfft2` output
                     (see also `np.fft.fftfreq`)
 
-    @returns a NumPy array (contiguous) of the same shape as `rootps`, filled with the noise field.
+    @returns a NumPy array (contiguous) of the requested shape, filled with the noise field.
     """
     # Sanity check on requested shape versus that of rootps
     if len(shape) != 2 or (shape[0], shape[1] // 2 + 1) != rootps.shape:
@@ -941,7 +941,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         cf_array = np.zeros((
             1 + 2 * (cf_array_prelim.shape[0] / 2),
             1 + 2 * (cf_array_prelim.shape[1] / 2))) # using integer division
-    
+
         # Then put the data from the prelim CF into this array
         cf_array[0:cf_array_prelim.shape[0], 0:cf_array_prelim.shape[1]] = cf_array_prelim
         # Then copy-invert-paste data from the leftmost column to the rightmost column, and lowest
