@@ -840,7 +840,7 @@ def test_convolve_cosmos():
                                          # zero convimage and write over it later!
     mnsq_list = [np.mean(convimage.array**2)]
     var_list = [convimage.array.var()]
-    nsum_test = 1000 #- uncomment this line to pass test below at 2dp
+    #nsum_test = 1000 #- uncomment this line to pass test below at 2dp
     for i in range(nsum_test - 1):
         cosimage_padded.setZero()
         cosimage_padded.addNoise(cn)
@@ -891,8 +891,9 @@ def test_convolve_cosmos():
     # Test (this is a crude regression test at best, for a much more precise test of this behaviour
     # see devel/external/test_cf/test_cf_convolution_detailed.py)
     np.testing.assert_array_almost_equal(
-        testim.array, refim.array, decimal=2,#decimal_approx, - if you want to pass at 2dp, make
-                                             # nsum_test=1000 above, takes ~100s on a fast laptop
+        testim.array, refim.array, decimal=decimal_approx, # 2, #- if you want to pass at 2dp, make
+                                                           # nsum_test=1000 above, takes ~200s on a
+                                                           # midrange laptop
         err_msg="Convolved COSMOS noise fields do not match the convolved correlated noise model.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
