@@ -840,7 +840,8 @@ def test_convolve_cosmos():
                                          # zero convimage and write over it later!
     mnsq_list = [np.mean(convimage.array**2)]
     var_list = [convimage.array.var()]
-    #nsum_test = 1000 #- uncomment this line to pass test below at 2dp
+    #nsum_test = 1000 #- uncomment this line and comment the one below to pass test below at 2dp
+    nsum_test = 8 # Needed to increase the number of realizations beyond default to get this to pass
     for i in range(nsum_test - 1):
         cosimage_padded.setZero()
         cosimage_padded.addNoise(cn)
