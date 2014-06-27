@@ -819,7 +819,7 @@ def test_convolve_cosmos():
     cosimage_padded = galsim.ImageD(
         (2 * smallim_size) * 6 + 256, # Note 6 here since 0.18 = 6 * 0.03
         (2 * smallim_size) * 6 + 256, # large image to beat down noise + padding
-        scale = cosmos_scale)            # Use COSMOS pixel scale
+        scale=cosmos_scale)           # Use COSMOS pixel scale
     cosimage_padded.addNoise(cn) # Add cosmos noise
     # Put this noise into a GSObject and then convolve
     imobj_padded = galsim.InterpolatedImage(
