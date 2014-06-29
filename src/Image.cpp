@@ -223,10 +223,12 @@ ImageAlloc<T> BaseImage<T>::applyCD(ConstImageView<double> aL, ConstImageView<do
     // Perform sanity check
     if(dmax < 0) throw ImageError("Attempt to apply CD model with invalid extent");
     // Get the array dimension and perform other checks
-    const int arraydim = aL.getXMax();
+    const int arraydim = 1 + aL.getXMax() - aL.getXMin();
     if (arraydim != (2 * dmax + 1) * (2 * dmax + 1) throw ImageError(
         "Dimensions of input image do not match specified dmax");
-    if (aR.getXMax() != arraydim || aB.getXMax() != arraydim || aT.getXMax() != arraydim)
+    if (1 + aR.getXMax() - aR.getXmin() != arraydim ||
+        1 + aB.getXMax() - aB.getXmin() != arraydim ||
+        1 + aT.getXMax() - aT.getXmin() != arraydim)
         throw ImageError("All input aL, aR, aB, aT Images must be the same dimensions")
     
     ImageAlloc<T> output(getXMax()-getXMin()+1,getYMax()-getYMin()+1);  
@@ -255,7 +257,7 @@ ImageAlloc<T> BaseImage<T>::applyCD(ConstImageView<double> aL, ConstImageView<do
             }
 
             // for each surrounding pixel do
-            int matrixindex = 1; // for iterating over the aL, aR, aB, aT images in 1d
+            int matrixindex = 0; // for iterating over the aL, aR, aB, aT images in 1d
             for(int iy=-dmax; iy<=dmax; iy++){
 
                 if(y+iy<getYMin() || y+iy>getYMax()) { matrixindex += 2*dmax+1; continue; }
@@ -263,10 +265,10 @@ ImageAlloc<T> BaseImage<T>::applyCD(ConstImageView<double> aL, ConstImageView<do
 
                     if(x+ix<getXMin() || x+ix>getXMax()) { matrixindex++; continue; }
                     double qkl = at(x + ix, y + iy);
-                    f += qkl * fT * aT.at(matrixindex, 1);
-                    f += qkl * fB * aB.at(matrixindex, 1);
-                    f += qkl * fL * aL.at(matrixindex, 1);
-                    f += qkl * fR * aR.at(matrixindex, 1);
+                    f += qkl * fT * aT.at(aT.getXMin() + matrixindex, aT.getYMin());
+                    f += qkl * fB * aB.at(aB.getXMin() + matrixindex, aB.getYMin());
+                    f += qkl * fL * aL.at(aL.getXMin() + matrixindex, aL.getYMin());
+                    f += qkl * fR * aR.at(aR.getXMin() + matrixindex, aR.getYMin());
                     matrixindex++;
 
                 }
