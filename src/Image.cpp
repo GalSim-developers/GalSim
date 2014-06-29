@@ -216,15 +216,18 @@ ConstImageView<T> BaseImage<T>::subImage(const Bounds<int>& bounds) const
 }
 
 template <typename T>
-ImageAlloc<T> BaseImage<T>::applyCD(const double* a, const int dmax) const
+ImageAlloc<T> BaseImage<T>::applyCD(ConstImageView<double> aL, ConstImageView<double> aR, 
+                                    ConstImageView<double> aB, ConstImageView<double> aT,
+                                    const int dmax)
 {
-    if(dmax<0) throw ImageError("Attempt to apply CD model with invalid extent");
-  
-    const int arraydim = (2 * dmax + 1) * (2 * dmax + 1);
-    const double *aL = a;
-    const double *aR = aL + arraydim;
-    const double *aB = aR + arraydim;
-    const double *aT = aT + arraydim;
+    // Perform sanity check
+    if(dmax < 0) throw ImageError("Attempt to apply CD model with invalid extent");
+    // Get the array dimension and perform other checks
+    const int arraydim = aL.getXMax();
+    if (arraydim != (2 * dmax + 1) * (2 * dmax + 1) throw ImageError(
+        "Dimensions of input image do not match specified dmax");
+    if (aR.getXMax() != arraydim || aB.getXMax() != arraydim || aT.getXMax() != arraydim)
+        throw ImageError("All input aL, aR, aB, aT Images must be the same dimensions")
     
     ImageAlloc<T> output(getXMax()-getXMin()+1,getYMax()-getYMin()+1);  
     // working version of image, which we later return
@@ -252,7 +255,7 @@ ImageAlloc<T> BaseImage<T>::applyCD(const double* a, const int dmax) const
             }
 
             // for each surrounding pixel do
-            int matrixindex = 0; // for iterating over the a matrices in 1d
+            int matrixindex = 1; // for iterating over the aL, aR, aB, aT images in 1d
             for(int iy=-dmax; iy<=dmax; iy++){
 
                 if(y+iy<getYMin() || y+iy>getYMax()) { matrixindex += 2*dmax+1; continue; }
@@ -260,16 +263,16 @@ ImageAlloc<T> BaseImage<T>::applyCD(const double* a, const int dmax) const
 
                     if(x+ix<getXMin() || x+ix>getXMax()) { matrixindex++; continue; }
                     double qkl = at(x + ix, y + iy);
-                    f += qkl * fT * aT[matrixindex];
-                    f += qkl * fB * aB[matrixindex];
-                    f += qkl * fL * aL[matrixindex];
-                    f += qkl * fR * aR[matrixindex];
+                    f += qkl * fT * aT.at(matrixindex, 1);
+                    f += qkl * fB * aB.at(matrixindex, 1);
+                    f += qkl * fL * aL.at(matrixindex, 1);
+                    f += qkl * fR * aR.at(matrixindex, 1);
                     matrixindex++;
 
                 }
 
             }
-            output.setValue(x,y,f);
+            output.setValue(x, y, f);
         }
     }
     return output;
