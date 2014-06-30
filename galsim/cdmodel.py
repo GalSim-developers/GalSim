@@ -55,24 +55,24 @@ class BaseCDModel(object):
         # Also save all these arrays in flattened format as Image instance (dtype=float) for easy
         # passing to C++ via Python wrapping code
         self._a_l_flat = galsim.Image(
-            np.reshape(a_l.flatten(), (1, np.product(a_l.shape))), dtype=float)
+            np.reshape(a_l.flatten(), (1, np.product(a_l.shape))), dtype=float, make_const=True)
         self._a_r_flat = galsim.Image(
-            np.reshape(a_r.flatten(), (1, np.product(a_r.shape))), dtype=float)
+            np.reshape(a_r.flatten(), (1, np.product(a_r.shape))), dtype=float, make_const=True)
         self._a_b_flat = galsim.Image(
-            np.reshape(a_b.flatten(), (1, np.product(a_b.shape))), dtype=float)
+            np.reshape(a_b.flatten(), (1, np.product(a_b.shape))), dtype=float, make_const=True)
         self._a_t_flat = galsim.Image(
-            np.reshape(a_t.flatten(), (1, np.product(a_t.shape))), dtype=float)
+            np.reshape(a_t.flatten(), (1, np.product(a_t.shape))), dtype=float, make_const=True)
 
     def applyForward(self, image):
         """Apply the charge deflection model in the forward direction
         """
-        return image.applyCD(
+        return image.image.applyCD(
             self._a_l_flat, self._a_r_flat, self._a_b_flat, self._a_t_flat, self.n)
 
     def applyBackward(self, image):
         """Apply the charge deflection model in the backward direction (accurate to linear order)
         """
-        return image.applyCD(
+        return image.image.applyCD(
             -self._a_l_flat, -self._a_r_flat, -self._a_b_flat, -self._a_t_flat, self.n)
 
     class PowerLawCD(BaseCDModel):
