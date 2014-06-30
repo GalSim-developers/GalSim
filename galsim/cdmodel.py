@@ -55,25 +55,31 @@ class BaseCDModel(object):
         # Also save all these arrays in flattened format as Image instance (dtype=float) for easy
         # passing to C++ via Python wrapping code
         self._a_l_flat = galsim.Image(
-            np.reshape(a_l.flatten(), (1, np.product(a_l.shape))), dtype=float, make_const=True)
+            np.reshape(a_l.flatten(), (1, np.product(a_l.shape))), dtype=np.float64,
+            make_const=True)
         self._a_r_flat = galsim.Image(
-            np.reshape(a_r.flatten(), (1, np.product(a_r.shape))), dtype=float, make_const=True)
+            np.reshape(a_r.flatten(), (1, np.product(a_r.shape))), dtype=np.float64,
+            make_const=True)
         self._a_b_flat = galsim.Image(
-            np.reshape(a_b.flatten(), (1, np.product(a_b.shape))), dtype=float, make_const=True)
+            np.reshape(a_b.flatten(), (1, np.product(a_b.shape))), dtype=np.float64,
+            make_const=True)
         self._a_t_flat = galsim.Image(
-            np.reshape(a_t.flatten(), (1, np.product(a_t.shape))), dtype=float, make_const=True)
+            np.reshape(a_t.flatten(), (1, np.product(a_t.shape))), dtype=np.float64,
+            make_const=True)
 
     def applyForward(self, image):
         """Apply the charge deflection model in the forward direction
         """
         return image.image.applyCD(
-            self._a_l_flat, self._a_r_flat, self._a_b_flat, self._a_t_flat, self.n)
+            self._a_l_flat.image, self._a_r_flat.image, self._a_b_flat.image, self._a_t_flat.image,
+            self.n)
 
     def applyBackward(self, image):
         """Apply the charge deflection model in the backward direction (accurate to linear order)
         """
         return image.image.applyCD(
-            -self._a_l_flat, -self._a_r_flat, -self._a_b_flat, -self._a_t_flat, self.n)
+            -self._a_l_flat.image, -self._a_r_flat.image, -self._a_b_flat.image,
+            -self._a_t_flat.image, self.n)
 
     class PowerLawCD(BaseCDModel):
         """Class for parametrizing charge deflection coefficient strengths as a power law in
