@@ -81,95 +81,90 @@ class BaseCDModel(object):
             -self._a_l_flat.image, -self._a_r_flat.image, -self._a_b_flat.image,
             -self._a_t_flat.image, self.n)
 
-    class PowerLawCD(BaseCDModel):
-        """Class for parametrizing charge deflection coefficient strengths as a power law in
-        distance from affected pixel border
+
+def _modelShiftCoeffR(x, y, r0, t0, rx, tx, r, t, alpha):
+    """Calculate the model shift coeff of right pixel border as a function of int pixel position
+    (x, y)
+    """
+    if not isinstance(x, (int, long)):
+        raise ValueError("Input x coordinate must be an int or long")
+    if not isinstance(y, (int, long)):
+        raise ValueError("Input x coordinate must be an int or long")
+    # Invoke symmetry
+    if y < 0: return _modelShiftCoeffR(x, -y, r0, t0, rx, tx, r, t, alpha)
+    if x < 0: return -_modelShiftCoeffR(1 - x, y, r0, t0, rx, tx, r, t, alpha)
+    # Invoke special immediate neighbour cases
+    if x == 0 and y == 0: return -r0
+    if x == 1 and y == 0: return +r0
+    if x == 0 and y == 1: return -rx
+    if x == 1 and y == 1: return +rx
+    # Then, for remainder, apply power law model
+    rr = np.sqrt((float(x) - .5)**2 + float(y)**2)
+    cc = (x - 0.5) / rr # projection onto relevant axis
+    return cc * r * rr**(-alpha)
+
+def _modelShiftCoeffL(x, y, r0, t0, rx, tx, r, t, alpha):
+    """Calculate the model shift coeff of left pixel border as a function of int pixel
+    position (x, y)
+
+    Equal to -_modelShiftCoeffR(x+1, y, *args)
+    """
+    return -_modelShiftCoeffR(x+1, y, r0, t0, rx, tx, r, t, alpha)
+
+def _modelShiftCoeffT(x, y, r0, t0, rx, tx, r, t, alpha):
+    """Calculate the model shift coeff of top pixel border as a function of int pixel
+    position (x, y)
+    """
+    if not isinstance(x, (int, long)):
+        raise ValueError("Input x coordinate must be an int or long")
+    if not isinstance(y, (int, long)):
+        raise ValueError("Input x coordinate must be an int or long")
+    # Invoke symmetry
+    if x < 0: return _modelShiftCoeffR(-x, y, r0, t0, rx, tx, r, t, alpha)
+    if y < 0: return -_modelShiftCoeffR(x, 1 - y, r0, t0, rx, tx, r, t, alpha)
+    # Invoke special immediate neighbour cases
+    if x == 0 and y == 0: return -t0
+    if x == 0 and y == 1: return +t0
+    if x == 1 and y == 0: return -tx
+    if x == 1 and y == 1: return +tx
+    # Then, for remainder, apply power law model
+    rr = np.sqrt((float(y) - .5)**2 + float(x)**2)
+    cc = (y - 0.5) / rr # projection onto relevant axis
+    return cc * t * rr**(-alpha)
+
+def _modelShiftCoeffB(x, y, r0, t0, rx, tx, r, t, alpha):
+    """Calculate the model shift coeff of bottom pixel border as a function of int pixel
+    position (x, y)
+
+    Equal to -_modelShiftCoeffT(x, y+1, *args)
+    """
+    return -_modelShiftCoeffT(x, y+1, r0, t0, rx, tx, r, t, alpha)
+
+class PowerLawCD(BaseCDModel):
+    """Class for parametrizing charge deflection coefficient strengths as a power law in distance
+    from affected pixel border
+    """
+
+    def __init__(self, n, r0, t0, rx, tx, r, t, alpha):
+        """Initialize a power-law charge deflection model.
         """
+        # First define x and y coordinates in a square grid of shape (2n + 1) * (2n + 1)
+        x, y = np.meshgrid(np.arange(2 * n + 1) - n, np.arange(2 * n + 1) - n)
 
-        @staticmethod
-        def _modelShiftCoeffR(x, y, r0, t0, rx, tx, r, t, alpha):
-            """Calculate the model shift coeff of right pixel border as a function of int pixel
-            position (x, y)
-            """
-            if not isinstance(x, (int, long)):
-                raise ValueError("Input x coordinate must be an int or long")
-            if not isinstance(y, (int, long)):
-                raise ValueError("Input x coordinate must be an int or long")
-            # Invoke symmetry
-            if y < 0: return _modelShiftCoeffR(x, -y, r0, t0, rx, tx, r, t, alpha)
-            if x < 0: return -_modelShiftCoeffR(1 - x, y, r0, t0, rx, tx, r, t, alpha)
-            # Invoke special immediate neighbour cases
-            if x == 0 and y == 0: return -r0
-            if x == 1 and y == 0: return +r0
-            if x == 0 and y == 1: return -rx
-            if x == 1 and y == 1: return +rx
-            # Then, for remainder, apply power law model
-            rr = np.sqrt((float(x) - .5)**2 + float(y)**2)
-            cc = (x - 0.5) / rr # projection onto relevant axis
-            return cc * r * rr**(-alpha)
+        # prepare a_* matrices
+        a_l = np.zeros((2 * n + 1, 2 * n + 1))
+        a_r = np.zeros((2 * n + 1, 2 * n + 1))
+        a_b = np.zeros((2 * n + 1, 2 * n + 1))
+        a_t = np.zeros((2 * n + 1, 2 * n + 1))
 
-        @staticmethod
-        def _modelShiftCoeffL(x, y, r0, t0, rx, tx, r, t, alpha):
-            """Calculate the model shift coeff of left pixel border as a function of int pixel
-            position (x, y)
+        # fill with power law model (slightly clunky loop but not likely a big time sink)
+        for ix in np.arange(-n, n + 1):
 
-            Equal to -_modelShiftCoeffR(x+1, y, *args)
-            """
-            return -_modelShiftCoeffR(x+1, y, r0, t0, rx, tx, r, t, alpha)
+            for iy in np.arange(-n, n + 1):
 
+                a_l[iy, ix] = _modelShiftCoeffL(ix, iy, r0, t0, rx, tx, r, t, alpha)
+                a_r[iy, ix] = _modelShiftCoeffR(ix, iy, r0, t0, rx, tx, r, t, alpha)
+                a_b[iy, ix] = _modelShiftCoeffB(ix, iy, r0, t0, rx, tx, r, t, alpha)
+                a_t[iy, ix] = _modelShiftCoeffT(ix, iy, r0, t0, rx, tx, r, t, alpha)
 
-        @staticmethod
-        def _modelShiftCoeffT(x, y, r0, t0, rx, tx, r, t, alpha):
-            """Calculate the model shift coeff of top pixel border as a function of int pixel
-            position (x, y)
-            """
-            if not isinstance(x, (int, long)):
-                raise ValueError("Input x coordinate must be an int or long")
-            if not isinstance(y, (int, long)):
-                raise ValueError("Input x coordinate must be an int or long")
-            # Invoke symmetry
-            if x < 0: return _modelShiftCoeffR(-x, y, r0, t0, rx, tx, r, t, alpha)
-            if y < 0: return -_modelShiftCoeffR(x, 1 - y, r0, t0, rx, tx, r, t, alpha)
-            # Invoke special immediate neighbour cases
-            if x == 0 and y == 0: return -t0
-            if x == 0 and y == 1: return +t0
-            if x == 1 and y == 0: return -tx
-            if x == 1 and y == 1: return +tx
-            # Then, for remainder, apply power law model
-            rr = np.sqrt((float(y) - .5)**2 + float(x)**2)
-            cc = (y - 0.5) / rr # projection onto relevant axis
-            return cc * t * rr**(-alpha)
-
-        @staticmethod
-        def _modelShiftCoeffB(x, y, r0, t0, rx, tx, r, t, alpha):
-            """Calculate the model shift coeff of bottom pixel border as a function of int pixel
-            position (x, y)
-
-            Equal to -_modelShiftCoeffT(x, y+1, *args)
-            """
-            return -_modelShiftCoeffT(x, y+1, r0, t0, rx, tx, r, t, alpha)
-
-
-        def __init__(self, n, r0, t0, rx, tx, r, t, alpha):
-            """Initialize a power-law charge deflection model.
-            """
-            # First define x and y coordinates in a square grid of shape (2n + 1) * (2n + 1)
-            x, y = np.meshgrid(np.arange(2 * n + 1) - n, np.arange(2 * n + 1) - n)
-            
-            # prepare a_* matrices
-            a_l = np.zeros((2 * n + 1, 2 * n + 1))
-            a_r = np.zeros((2 * n + 1, 2 * n + 1))
-            a_b = np.zeros((2 * n + 1, 2 * n + 1))
-            a_t = np.zeros((2 * n + 1, 2 * n + 1))
-            
-            # fill with power law model (slightly clunky loop but not likely a big time sink)
-            for ix in np.arange(-n, n + 1):
-
-                for iy in np.arange(-n, n + 1):
-
-                    a_l[iy, ix] = _modelShiftCoeffL(ix, iy, r0, t0, rx, tx, r, t, alpha)
-                    a_r[iy, ix] = _modelShiftCoeffR(ix, iy, r0, t0, rx, tx, r, t, alpha)
-                    a_b[iy, ix] = _modelShiftCoeffB(ix, iy, r0, t0, rx, tx, r, t, alpha)
-                    a_t[iy, ix] = _modelShiftCoeffT(ix, iy, r0, t0, rx, tx, r, t, alpha)
-
-            BaseCDModel.__init__(self, a_l, a_r, a_b, a_t)
+        BaseCDModel.__init__(self, a_l, a_r, a_b, a_t)
