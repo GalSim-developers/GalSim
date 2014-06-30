@@ -150,17 +150,19 @@ class BaseCDModel(object):
             x, y = np.meshgrid(np.arange(2 * n + 1) - n, np.arange(2 * n + 1) - n)
             
             # prepare a_* matrices
-            a_l = numpy.zeros((2*n+1,2*n+1))            
-            a_r = numpy.zeros((2*n+1,2*n+1))            
-            a_b = numpy.zeros((2*n+1,2*n+1))            
-            a_t = numpy.zeros((2*n+1,2*n+1))
+            a_l = np.zeros((2 * n + 1, 2 * n + 1))
+            a_r = np.zeros((2 * n + 1, 2 * n + 1))
+            a_b = np.zeros((2 * n + 1, 2 * n + 1))
+            a_t = np.zeros((2 * n + 1, 2 * n + 1))
             
-            # fill with power law model
-            for ix in arange(-n,n+1):
-             for iy in arange(-n,n+1):
-	       a_l[iy,ix] = _modelShiftCoeffL(ix, iy, r0, t0, rx, tx, r, t, alpha)
-	       a_r[iy,ix] = _modelShiftCoeffR(ix, iy, r0, t0, rx, tx, r, t, alpha)
-	       a_b[iy,ix] = _modelShiftCoeffB(ix, iy, r0, t0, rx, tx, r, t, alpha)
-	       a_t[iy,ix] = _modelShiftCoeffT(ix, iy, r0, t0, rx, tx, r, t, alpha)
-            
+            # fill with power law model (slightly clunky loop but not likely a big time sink)
+            for ix in np.arange(-n, n + 1):
+
+                for iy in np.arange(-n, n + 1):
+
+                    a_l[iy, ix] = _modelShiftCoeffL(ix, iy, r0, t0, rx, tx, r, t, alpha)
+                    a_r[iy, ix] = _modelShiftCoeffR(ix, iy, r0, t0, rx, tx, r, t, alpha)
+                    a_b[iy, ix] = _modelShiftCoeffB(ix, iy, r0, t0, rx, tx, r, t, alpha)
+                    a_t[iy, ix] = _modelShiftCoeffT(ix, iy, r0, t0, rx, tx, r, t, alpha)
+
             BaseCDModel.__init__(self, a_l, a_r, a_b, a_t)
