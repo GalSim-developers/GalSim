@@ -17,6 +17,7 @@
 #
 import os
 import numpy as np
+import sys
 
 try:
     import galsim
