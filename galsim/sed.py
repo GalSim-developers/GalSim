@@ -125,25 +125,25 @@ class SED(object):
         if flux_type == 'flambda':
             # photons/nm = (erg/nm) * (photons/erg)
             #            = spec(w) * 1/(h nu) = spec(w) * lambda / hc
-            self.fphotons = lambda w: (spec(np.array(w) * wave_factor) * w / (h*c))
+            self._rest_photons = lambda w: (spec(np.array(w) * wave_factor) * w / (h*c))
         elif flux_type == 'fnu':
             # photons/nm = (erg/Hz) * (photons/erg) * (Hz/nm)
             #            = spec(w) * 1/(h nu) * |dnu/dlambda|
             # [Use dnu/dlambda = d(c/lambda)/dlambda = -c/lambda^2 = -nu/lambda]
             #            = spec(w) * 1/(h lambda)
-            self.fphotons = lambda w: (spec(np.array(w) * wave_factor) / (w * h))
+            self._rest_photons = lambda w: (spec(np.array(w) * wave_factor) / (w * h))
         elif flux_type == 'fphotons':
             # Already basically correct.  Just convert the units of lambda
-            self.fphotons = lambda w: spec(np.array(w) * wave_factor)
+            self._rest_photons = lambda w: spec(np.array(w) * wave_factor)
         else:
             raise ValueError("Unknown flux_type '{0}'".format(flux_type))
         self.redshift = 0
 
         # Hack to avoid (LookupTable.x_max * 10) / 10.0 > LookupTable.x_max due to roundoff
         # error.
-        if len(self.wave_list) > 0.0:
-            self.wave_list[0] = self.wave_list[0] + 0.0000001
-            self.wave_list[-1] = self.wave_list[-1] - 0.0000001
+        # if len(self.wave_list) > 0.0:
+        #     self.wave_list[0] = self.wave_list[0] + 0.0000001
+        #     self.wave_list[-1] = self.wave_list[-1] - 0.0000001
 
     def _wavelength_intersection(self, other):
         blue_limit = self.blue_limit
@@ -179,28 +179,29 @@ class SED(object):
         else: # python scalar
             wmin = wave
             wmax = wave
+        extrapolation_slop = 1.e-6 # allow a small amount of extrapolation
         if self.blue_limit is not None:
-            if wmin < self.blue_limit:
+            if wmin < self.blue_limit - extrapolation_slop:
                 raise ValueError("Requested wavelength ({0}) is bluer than blue_limit ({1})"
                                  .format(wmin, self.blue_limit))
         if self.red_limit is not None:
-            if wmax > self.red_limit:
+            if wmax > self.red_limit + extrapolation_slop:
                 raise ValueError("Requested wavelength ({0}) is redder than red_limit ({1})"
                                  .format(wmax, self.red_limit))
         wave_factor = 1.0 + self.redshift
         # figure out what we received, and return the same thing
         # option 1: a numpy array
         if isinstance(wave, np.ndarray):
-            return self.fphotons(wave / wave_factor)
+            return self._rest_photons(wave / wave_factor)
         # option 2: a tuple
         elif isinstance(wave, tuple):
-            return tuple(self.fphotons(np.array(wave) / wave_factor))
+            return tuple(self._rest_photons(np.array(wave) / wave_factor))
         # option 3: a list
         elif isinstance(wave, list):
-            return list(self.fphotons(np.array(wave) / wave_factor))
+            return list(self._rest_photons(np.array(wave) / wave_factor))
         # option 4: a single value
         else:
-            return self.fphotons(wave / wave_factor)
+            return self._rest_photons(wave / wave_factor)
 
     def __mul__(self, other):
         if isinstance(other, galsim.GSObject):
@@ -208,9 +209,9 @@ class SED(object):
         # SEDs can be multiplied by scalars or functions (callables)
         ret = self.copy()
         if hasattr(other, '__call__'):
-            ret.fphotons = lambda w: self(w) * other(w)
+            ret._rest_photons = lambda w: self(w) * other(w)
         else:
-            ret.fphotons = lambda w: self(w) * other
+            ret._rest_photons = lambda w: self(w) * other
         return ret
 
     def __rmul__(self, other):
@@ -220,18 +221,18 @@ class SED(object):
         # SEDs can be divided by scalars or functions (callables)
         ret = self.copy()
         if hasattr(other, '__call__'):
-            ret.fphotons = lambda w: self(w) / other(w)
+            ret._rest_photons = lambda w: self(w) / other(w)
         else:
-            ret.fphotons = lambda w: self(w) / other
+            ret._rest_photons = lambda w: self(w) / other
         return ret
 
     def __rdiv__(self, other):
         # SEDs can be divided by scalars or functions (callables)
         ret = self.copy()
         if hasattr(other, '__call__'):
-            ret.fphotons = lambda w: other(w) / self(w)
+            ret._rest_photons = lambda w: other(w) / self(w)
         else:
-            ret.fphotons = lambda w: other / self(w)
+            ret._rest_photons = lambda w: other / self(w)
         return ret
 
     def __truediv__(self, other):
@@ -254,7 +255,7 @@ class SED(object):
         ret = self.copy()
         ret.blue_limit = blue_limit
         ret.red_limit = red_limit
-        ret.fphotons = lambda w: self(w) + other(w)
+        ret._rest_photons = lambda w: self(w) + other(w)
         ret.redshift = 0
         if len(self.wave_list) > 0 and len(other.wave_list) > 0:
             wave_list = np.union1d(self.wave_list, other.wave_list)
@@ -287,7 +288,7 @@ class SED(object):
         current_flux_density = self(wavelength)
         factor = target_flux_density / current_flux_density
         ret = self.copy()
-        ret.fphotons = lambda w: self(w) * factor
+        ret._rest_photons = lambda w: self(w) * factor
         return ret
 
     def withFlux(self, target_flux, bandpass):
@@ -302,7 +303,7 @@ class SED(object):
         current_flux = self.calculateFlux(bandpass)
         norm = target_flux/current_flux
         ret = self.copy()
-        ret.fphotons = lambda w: self(w) * norm
+        ret._rest_photons = lambda w: self(w) * norm
         return ret
 
     def withMagnitude(self, target_magnitude, bandpass):
@@ -322,7 +323,7 @@ class SED(object):
         current_magnitude = self.calculateMagnitude(bandpass)
         norm = 10**(-0.4*(target_magnitude - current_magnitude))
         ret = self.copy()
-        ret.fphotons = lambda w: self(w) * norm
+        ret._rest_photons = lambda w: self(w) * norm
         return ret
 
     def atRedshift(self, redshift):
@@ -362,7 +363,7 @@ class SED(object):
                 red_limit = 1.e11 # = infinity in int1d
             else:
                 red_limit = self.red_limit
-            return galsim.integ.int1d(self.fphotons, blue_limit, red_limit)
+            return galsim.integ.int1d(self._rest_photons, blue_limit, red_limit)
         else: # do flux through bandpass
             if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
                 x = np.union1d(bandpass.wave_list, self.wave_list)
@@ -404,14 +405,14 @@ class SED(object):
         if len(self.wave_list) > 0:
             wave_factor = 1.0 + self.redshift
             x = np.array(self.wave_list) / wave_factor
-            f = self.fphotons(x)
+            f = self._rest_photons(x)
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
                                                          preserve_range=preserve_range)
             ret = self.copy()
-            ret.blue_limit = np.min(newx) * wave_factor - 0.0000001
-            ret.red_limit = np.max(newx) * wave_factor + 0.0000001
+            ret.blue_limit = np.min(newx) * wave_factor# - 0.0000001
+            ret.red_limit = np.max(newx) * wave_factor# + 0.0000001
             ret.wave_list = np.array(newx) * wave_factor
-            ret.fphotons = galsim.LookupTable(newx, newf, interpolant='linear')
+            ret._rest_photons = galsim.LookupTable(newx, newf, interpolant='linear')
             return ret
 
     def calculateDCRMomentShifts(self, bandpass, **kwargs):
