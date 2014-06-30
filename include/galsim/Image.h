@@ -269,7 +269,7 @@ namespace galsim {
          *  a_L(dx=-dmax,dy=-dmax), a_L(dx=-dmax+1,dy=-dmax), ..., a_R, a_B, a_T(dx=+dmax,dy=+dmax)
          */
         ImageAlloc<T> applyCD(ConstImageView<double> aL, ConstImageView<double> aR, 
-                              ConstImageView<double> aB, ConstImageView<double> aT,,
+                              ConstImageView<double> aB, ConstImageView<double> aT,
                               const int dmax) const;
 
     protected:

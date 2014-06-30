@@ -218,18 +218,18 @@ ConstImageView<T> BaseImage<T>::subImage(const Bounds<int>& bounds) const
 template <typename T>
 ImageAlloc<T> BaseImage<T>::applyCD(ConstImageView<double> aL, ConstImageView<double> aR, 
                                     ConstImageView<double> aB, ConstImageView<double> aT,
-                                    const int dmax)
+                                    const int dmax) const
 {
     // Perform sanity check
     if(dmax < 0) throw ImageError("Attempt to apply CD model with invalid extent");
     // Get the array dimension and perform other checks
     const int arraydim = 1 + aL.getXMax() - aL.getXMin();
-    if (arraydim != (2 * dmax + 1) * (2 * dmax + 1) throw ImageError(
+    if (arraydim != (2 * dmax + 1) * (2 * dmax + 1)) throw ImageError(
         "Dimensions of input image do not match specified dmax");
-    if (1 + aR.getXMax() - aR.getXmin() != arraydim ||
-        1 + aB.getXMax() - aB.getXmin() != arraydim ||
-        1 + aT.getXMax() - aT.getXmin() != arraydim)
-        throw ImageError("All input aL, aR, aB, aT Images must be the same dimensions")
+    if (1 + aR.getXMax() - aR.getXMin() != arraydim ||
+        1 + aB.getXMax() - aB.getXMin() != arraydim ||
+        1 + aT.getXMax() - aT.getXMin() != arraydim)
+        throw ImageError("All input aL, aR, aB, aT Images must be the same dimensions");
     
     ImageAlloc<T> output(getXMax()-getXMin()+1,getYMax()-getYMin()+1);  
     // working version of image, which we later return
