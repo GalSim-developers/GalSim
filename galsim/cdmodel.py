@@ -161,7 +161,7 @@ class PowerLawCD(BaseCDModel):
         for ix in np.arange(-n, n + 1):
 
             for iy in np.arange(-n, n + 1):
-
+                # BARNEY QUERY: IS THE CODE BELOW CORRECT? Check indexing...
                 a_l[iy, ix] = _modelShiftCoeffL(ix, iy, r0, t0, rx, tx, r, t, alpha)
                 a_r[iy, ix] = _modelShiftCoeffR(ix, iy, r0, t0, rx, tx, r, t, alpha)
                 a_b[iy, ix] = _modelShiftCoeffB(ix, iy, r0, t0, rx, tx, r, t, alpha)
