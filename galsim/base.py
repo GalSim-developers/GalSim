@@ -2164,7 +2164,7 @@ to change.
                             which is often a sign of an error in the user's code. However, if
                             you have the memory to handle it, you can raise this limit to
                             allow the calculation to happen. [default: 4096]
-@param folding_threshold      This sets a maximum amount of real space aliasing that is allowed,
+@param folding_threshold    This sets a maximum amount of real space aliasing that is allowed,
                             an effect caused by the periodic nature of FFTs.  FFTs implicitly
                             use periodic boundary conditions, and a profile specified on a
                             finite grid in Fourier space corresponds to a real space image
