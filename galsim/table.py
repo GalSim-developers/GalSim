@@ -87,7 +87,7 @@ class LookupTable(object):
         # read in from file if a filename was specified
         if file:
             if x is not None or f is not None:
-                raise ValueError("Cannot profide both file _and_ x,f for LookupTable")
+                raise ValueError("Cannot provide both file _and_ x,f for LookupTable")
             data = np.loadtxt(file).transpose()
             if data.shape[0] != 2:
                 raise ValueError("File %s provided for LookupTable does not have 2 columns"%file)
@@ -184,6 +184,7 @@ class LookupTable(object):
     def getArgs(self):
         args = self.table.getArgs()
         if self.x_log:
+            import numpy as np
             return np.exp(args)
         else:
             return args
@@ -191,6 +192,7 @@ class LookupTable(object):
     def getVals(self):
         vals = self.table.getVals()
         if self.f_log:
+            import numpy as np
             return np.exp(vals)
         else:
             return vals
