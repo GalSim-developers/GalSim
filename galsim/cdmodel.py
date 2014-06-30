@@ -46,25 +46,33 @@ class BaseCDModel(object):
                 raise ValueError("Input array is not square")
             if a.shape[0] != a_l.shape[0]:
                 raise ValueError("Input arrays not all the same dimensions")
+        # Save the relevant dimension and the matrices storing deflection coefficients
         self.n = a_l.shape[0] / 2
         self.a_l = a_l
         self.a_r = a_r
         self.a_b = a_b
         self.a_t = a_t
-        # Save all these arrays in the contiguous, format.  This assumes that the input arrays were
-        # ordered as per usual in NumPy, i.e. array[y, x]
-        self._a_lrbt = np.concatenate((a_l.flatten(), a_r.flatten(), a_b.flatten(), a_t.flatten()))
+        # Also save all these arrays in flattened format as Image instance (dtype=float) for easy
+        # passing to C++ via Python wrapping code
+        self._a_l_flat = galsim.Image(
+            np.reshape(a_l.flatten(), (1, np.product(a_l.shape))), dtype=float)
+        self._a_r_flat = galsim.Image(
+            np.reshape(a_r.flatten(), (1, np.product(a_r.shape))), dtype=float)
+        self._a_b_flat = galsim.Image(
+            np.reshape(a_b.flatten(), (1, np.product(a_b.shape))), dtype=float)
+        self._a_t_flat = galsim.Image(
+            np.reshape(a_t.flatten(), (1, np.product(a_t.shape))), dtype=float)
 
     def applyForward(self, image):
         """Apply the charge deflection model in the forward direction
         """
-        return image.applyCD(self._a_lrbt, self.n)
+        return image.applyCD(self._a_l_flat, self._a_r_flat, self._a_b_flat, self._a_t_flat, self.n)
 
     def applyBackward(self, image):
         """Apply the charge deflection model in the backward direction (accurate to linear order)
         """
-        return image.applyCD(-self._a_lrbt, self.n)
-
+        return image.applyCD(
+            -self._a_l_flat, -self._a_r_flat, -self._a_b_flat, -self._a_t_flat, self.n)
 
     class PowerLawCD(BaseCDModel):
         """Class for parametrizing charge deflection coefficient strengths as a power law in
