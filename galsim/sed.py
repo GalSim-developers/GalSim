@@ -187,7 +187,20 @@ class SED(object):
             if wmax > self.red_limit:
                 raise ValueError("Requested wavelength ({0}) is redder than red_limit ({1})"
                                  .format(wmax, self.red_limit))
-        return self.fphotons(wave)
+        wave_factor = 1.0 + self.redshift
+        # figure out what we received, and return the same thing
+        # option 1: a numpy array
+        if isinstance(wave, np.ndarray):
+            return self.fphotons(wave / wave_factor)
+        # option 2: a tuple
+        elif isinstance(wave, tuple):
+            return tuple(self.fphotons(np.array(wave) / wave_factor))
+        # option 3: a list
+        elif isinstance(wave, list):
+            return list(self.fphotons(np.array(wave) / wave_factor))
+        # option 4: a single value
+        else:
+            return self.fphotons(wave / wave_factor)
 
     def __mul__(self, other):
         if isinstance(other, galsim.GSObject):
@@ -195,9 +208,9 @@ class SED(object):
         # SEDs can be multiplied by scalars or functions (callables)
         ret = self.copy()
         if hasattr(other, '__call__'):
-            ret.fphotons = lambda w: self.fphotons(w) * other(w)
+            ret.fphotons = lambda w: self(w) * other(w)
         else:
-            ret.fphotons = lambda w: self.fphotons(w) * other
+            ret.fphotons = lambda w: self(w) * other
         return ret
 
     def __rmul__(self, other):
@@ -207,18 +220,18 @@ class SED(object):
         # SEDs can be divided by scalars or functions (callables)
         ret = self.copy()
         if hasattr(other, '__call__'):
-            ret.fphotons = lambda w: self.fphotons(w) / other(w)
+            ret.fphotons = lambda w: self(w) / other(w)
         else:
-            ret.fphotons = lambda w: self.fphotons(w) / other
+            ret.fphotons = lambda w: self(w) / other
         return ret
 
     def __rdiv__(self, other):
         # SEDs can be divided by scalars or functions (callables)
         ret = self.copy()
         if hasattr(other, '__call__'):
-            ret.fphotons = lambda w: other(w) / self.fphotons(w)
+            ret.fphotons = lambda w: other(w) / self(w)
         else:
-            ret.fphotons = lambda w: other / self.fphotons(w)
+            ret.fphotons = lambda w: other / self(w)
         return ret
 
     def __truediv__(self, other):
@@ -271,10 +284,10 @@ class SED(object):
 
         @returns the new normalized SED.
         """
-        current_fphotons = self(wavelength)
-        factor = target_flux_density / current_fphotons
+        current_flux_density = self(wavelength)
+        factor = target_flux_density / current_flux_density
         ret = self.copy()
-        ret.fphotons = lambda w: self.fphotons(w) * factor
+        ret.fphotons = lambda w: self(w) * factor
         return ret
 
     def withFlux(self, target_flux, bandpass):
@@ -289,7 +302,7 @@ class SED(object):
         current_flux = self.calculateFlux(bandpass)
         norm = target_flux/current_flux
         ret = self.copy()
-        ret.fphotons = lambda w: self.fphotons(w) * norm
+        ret.fphotons = lambda w: self(w) * norm
         return ret
 
     def withMagnitude(self, target_magnitude, bandpass):
@@ -309,7 +322,7 @@ class SED(object):
         current_magnitude = self.calculateMagnitude(bandpass)
         norm = 10**(-0.4*(target_magnitude - current_magnitude))
         ret = self.copy()
-        ret.fphotons = lambda w: self.fphotons(w) * norm
+        ret.fphotons = lambda w: self(w) * norm
         return ret
 
     def atRedshift(self, redshift):
@@ -320,14 +333,13 @@ class SED(object):
         @returns the redshifted SED.
         """
         ret = self.copy()
+        ret.redshift = redshift
         wave_factor = (1.0 + redshift) / (1.0 + self.redshift)
-        ret.fphotons = lambda w: self.fphotons(w / wave_factor)
         ret.wave_list = self.wave_list * wave_factor
         if ret.blue_limit is not None:
             ret.blue_limit = self.blue_limit * wave_factor
         if ret.red_limit is not None:
             ret.red_limit = self.red_limit * wave_factor
-        ret.redshift = redshift
         return ret
 
     def calculateFlux(self, bandpass):
@@ -355,9 +367,9 @@ class SED(object):
             if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
                 x = np.union1d(bandpass.wave_list, self.wave_list)
                 x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
-                return np.trapz(bandpass(x) * self.fphotons(x), x)
+                return np.trapz(bandpass(x) * self(x), x)
             else:
-                return galsim.integ.int1d(lambda w: bandpass(w)*self.fphotons(w),
+                return galsim.integ.int1d(lambda w: bandpass(w)*self(w),
                                           bandpass.blue_limit, bandpass.red_limit)
 
     def calculateMagnitude(self, bandpass):
@@ -390,14 +402,15 @@ class SED(object):
         @returns the thinned SED.
         """
         if len(self.wave_list) > 0:
-            x = self.wave_list
-            f = self(x)
+            wave_factor = 1.0 + self.redshift
+            x = np.array(self.wave_list) / wave_factor
+            f = self.fphotons(x)
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
                                                          preserve_range=preserve_range)
             ret = self.copy()
-            ret.blue_limit = np.min(newx) - 0.0000001
-            ret.red_limit = np.max(newx) + 0.0000001
-            ret.wave_list = newx
+            ret.blue_limit = np.min(newx) * wave_factor - 0.0000001
+            ret.red_limit = np.max(newx) * wave_factor + 0.0000001
+            ret.wave_list = np.array(newx) * wave_factor
             ret.fphotons = galsim.LookupTable(newx, newf, interpolant='linear')
             return ret
 
@@ -454,12 +467,12 @@ class SED(object):
             x = np.union1d(bandpass.wave_list, self.wave_list)
             x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
             R = galsim.dcr.get_refraction(x, zenith_angle, **kwargs)
-            photons = self.fphotons(x)
+            photons = self(x)
             throughput = bandpass(x)
             Rbar = np.trapz(throughput * photons * R, x) / flux
             V = np.trapz(throughput * photons * (R-Rbar)**2, x) / flux
         else:
-            weight = lambda w: bandpass(w) * self.fphotons(w)
+            weight = lambda w: bandpass(w) * self(w)
             Rbar_kernel = lambda w: galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
             Rbar = galsim.integ.int1d(lambda w: weight(w) * Rbar_kernel(w),
                                       bandpass.blue_limit, bandpass.red_limit)
@@ -489,11 +502,11 @@ class SED(object):
         if len(bandpass.wave_list) > 0:
             x = np.union1d(bandpass.wave_list, self.wave_list)
             x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
-            photons = self.fphotons(x)
+            photons = self(x)
             throughput = bandpass(x)
             return np.trapz(photons * throughput * (x/base_wavelength)**(2*alpha), x) / flux
         else:
-            weight = lambda w: bandpass(w) * self.fphotons(w)
+            weight = lambda w: bandpass(w) * self(w)
             kernel = lambda w: (w/base_wavelength)**(2*alpha)
             return galsim.integ.int1d(lambda w: weight(w) * kernel(w),
                                       bandpass.blue_limit, bandpass.red_limit) / flux
