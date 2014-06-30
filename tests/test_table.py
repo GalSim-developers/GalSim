@@ -61,7 +61,7 @@ def test_table():
         table1 = galsim.LookupTable(x=args1,f=vals1,interpolant=interp)
         testvals1 = [ table1(x) for x in testargs1 ]
 
-        # The 4th item is in the args list, so it should be exactly the same as the 
+        # The 4th item is in the args list, so it should be exactly the same as the
         # corresponding item in the vals list.
         np.testing.assert_almost_equal(testvals1[3], vals1[3], DECIMAL,
                 err_msg="Interpolated value for exact arg entry does not match val entry")
@@ -122,6 +122,16 @@ def test_table():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_roundoff():
+    table1 = galsim.LookupTable([1,2,3,4,5,6,7,8,9,10], [1,2,3,4,5,6,7,8,9,10])
+    try:
+        table1(1.0 - 1.e-7)
+        table1(10.0 + 1.e-7)
+    except:
+        raise ValueError("c++ LookupTable roundoff guard failed.")
+    np.testing.assert_raises(RuntimeError, table1, 1.0-1.e5)
+    np.testing.assert_raises(RuntimeError, table1, 10.0+1.e5)
+
 if __name__ == "__main__":
     test_table()
-
+    test_roundoff()
