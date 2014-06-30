@@ -47,6 +47,10 @@ namespace galsim {
     int Table<V,A>::upperIndex(const A a) const
     {
         if (a<_argMin() || a>_argMax()) throw TableOutOfRange(a,_argMin(),_argMax());
+        // check for slop
+        if (a < v[0].arg) return 1;
+        if (a > v[v.size()-1].arg) return v.size()-1;
+
         // Go directly to index if arguments are regularly spaced.
         if (equalSpaced) {
             int index = int( std::ceil( (a-_argMin()) / dx) );
@@ -55,10 +59,6 @@ namespace galsim {
             if (index == 0) ++index;
             while (a > v[index].arg) ++index;
             while (a < v[index-1].arg) --index;
-
-            // check for slop
-            if (a < v[0].arg) index=1;
-            if (a > v[v.size()-1].arg) index=v.size()-1;
             return index;
         } else {
             xassert(lastIndex >= 1);
