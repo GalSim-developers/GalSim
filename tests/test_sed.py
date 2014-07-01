@@ -17,6 +17,7 @@
 #
 import os
 import numpy as np
+from galsim_test_helpers import *
 import sys
 
 try:
@@ -32,6 +33,9 @@ datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
 def test_SED_add():
     """Check that SEDs add like I think they should...
     """
+    import time
+    t1 = time.time()
+
     a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
                    flux_type='fphotons')
     b = galsim.SED(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]),
@@ -48,9 +52,15 @@ def test_SED_add():
     np.testing.assert_almost_equal(c(5.0), 5.5+b(5.0), 10,
                                    err_msg="Wrong sum in SED.__add__")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_SED_sub():
     """Check that SEDs subtract like I think they should...
     """
+    import time
+    t1 = time.time()
+
     a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
                    flux_type='fphotons')
     b = galsim.SED(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]),
@@ -67,9 +77,15 @@ def test_SED_sub():
     np.testing.assert_almost_equal(c(5.0), 5.5-b(5.0), 10,
                                    err_msg="Wrong sum in SED.__add__")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_SED_mul():
     """Check that SEDs multiply like I think they should...
     """
+    import time
+    t1 = time.time()
+
     a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
                    flux_type='fphotons')
     b = lambda w: w**2
@@ -90,9 +106,15 @@ def test_SED_mul():
     np.testing.assert_almost_equal(d(3.0), 3.3 * 3**2 * 4.2 * 2, 10,
                                    err_msg="Found wrong value in SED.__mul__")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_SED_div():
     """Check that SEDs divide like I think they should...
     """
+    import time
+    t1 = time.time()
+
     a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
                    flux_type='fphotons')
     b = lambda w: w**2
@@ -113,9 +135,15 @@ def test_SED_div():
     np.testing.assert_almost_equal(d(3.0), 3**2 / 3.3 / 4.2 / 2, 10,
                                    err_msg="Found wrong value in SED.__div__")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_SED_atRedshift():
     """Check that SEDs redshift correctly.
     """
+    import time
+    t1 = time.time()
+
     a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'))
     bolo_flux = a.calculateFlux(bandpass=None)
     for z1, z2 in zip([0.5, 1.0, 1.4], [1.0, 1.0, 1.0]):
@@ -134,9 +162,15 @@ def test_SED_atRedshift():
             np.testing.assert_almost_equal((a(w)-e(w*(1.0+z1)))/bolo_flux, 0., 5,
                                            err_msg="error redshifting and thinning SED")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_SED_roundoff_guard():
     """Check that SED.__init__ roundoff error guard works. (Issue #520).
     """
+    import time
+    t1 = time.time()
+
     a = galsim.SED(os.path.join(datapath, 'CWW_Scd_ext.sed'))
     for z in np.arange(0.0, 0.5, 0.001):
         b = a.atRedshift(z)
@@ -147,9 +181,15 @@ def test_SED_roundoff_guard():
         np.testing.assert_almost_equal(a(w2/(1.0+z)), b(w2), 10,
                                         err_msg="error using wave_list limits in redshifted SED")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_SED_init():
     """Check that certain invalid SED initializations are trapped.
     """
+    import time
+    t1 = time.time()
+
     try:
         # These fail.
         np.testing.assert_raises(ValueError, galsim.SED, spec='blah')
@@ -175,9 +215,15 @@ def test_SED_init():
     except ImportError:
         print 'The assert_raises tests require nose'
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_SED_calculateMagnitude():
     """ Check that magnitudes work as expected.
     """
+    import time
+    t1 = time.time()
+
     # Test that we can create a zeropoint with an SED, and that magnitudes for that SED are
     # then 0.0
     sed = galsim.SED(spec='wave')
@@ -225,7 +271,13 @@ def test_SED_calculateMagnitude():
     sed = sed.withMagnitude(bandpass.zeropoint, bandpass)
     np.testing.assert_almost_equal(sed.calculateFlux(bandpass), 1.0, 10)
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_SED_calculateDCRMomentShifts():
+    import time
+    t1 = time.time()
+
     # compute some moment shifts
     sed = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'))
     bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
@@ -243,14 +295,26 @@ def test_SED_calculateDCRMomentShifts():
     # and now test against an external known result.
     np.testing.assert_almost_equal(V[1,1] * (180.0/np.pi * 3600)**2, 0.0065, 4)
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_SED_calculateSeeingMomentRatio():
+    import time
+    t1 = time.time()
+
     # compute a relative moment shift and compare to externally generated known result.
     sed = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'))
     bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
     relative_size = sed.calculateSeeingMomentRatio(bandpass)
     np.testing.assert_almost_equal(relative_size, 0.919577157172, 4)
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_fnu_vs_flambda():
+    import time
+    t1 = time.time()
+
     c = 2.99792458e17  # speed of light in nm/s
     h = 6.62606957e-27 # Planck's constant in erg seconds
     k = 1.3806488e-16  # Boltzmann's constant ergs per Kelvin
@@ -278,6 +342,9 @@ def test_fnu_vs_flambda():
                                          err_msg="Check nm and Ang SED wavelengths consistency.")
     np.testing.assert_array_almost_equal(sed2(waves)/sed4(waves), np.ones(len(waves)), 10,
                                          err_msg="Check nm and Ang SED wavelengths consistency.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_SED_add()
