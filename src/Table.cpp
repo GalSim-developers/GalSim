@@ -56,8 +56,8 @@ namespace galsim {
         if (equalSpaced) {
             int index = int( std::ceil( (a-_argMin()) / dx) );
             if (index >= int(v.size())) --index; // in case of rounding error
-            // check if we need to move ahead or back one step due to rounding errors
             if (index == 0) ++index;
+            // check if we need to move ahead or back one step due to rounding errors
             while (a > v[index].arg) ++index;
             while (a < v[index-1].arg) --index;
             return index;

@@ -139,12 +139,6 @@ class SED(object):
             raise ValueError("Unknown flux_type '{0}'".format(flux_type))
         self.redshift = 0
 
-        # Hack to avoid (LookupTable.x_max * 10) / 10.0 > LookupTable.x_max due to roundoff
-        # error.
-        # if len(self.wave_list) > 0.0:
-        #     self.wave_list[0] = self.wave_list[0] + 0.0000001
-        #     self.wave_list[-1] = self.wave_list[-1] - 0.0000001
-
     def _wavelength_intersection(self, other):
         blue_limit = self.blue_limit
         if other.blue_limit is not None:
@@ -409,8 +403,8 @@ class SED(object):
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
                                                          preserve_range=preserve_range)
             ret = self.copy()
-            ret.blue_limit = np.min(newx) * wave_factor# - 0.0000001
-            ret.red_limit = np.max(newx) * wave_factor# + 0.0000001
+            ret.blue_limit = np.min(newx) * wave_factor
+            ret.red_limit = np.max(newx) * wave_factor
             ret.wave_list = np.array(newx) * wave_factor
             ret._rest_photons = galsim.LookupTable(newx, newf, interpolant='linear')
             return ret
