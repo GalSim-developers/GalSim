@@ -434,7 +434,7 @@ class SED(object):
                     obj_coord=obj_coord, zenith_coord=zenith_coord)
             else:
                 if 'HA' not in kwargs or 'latitude' not in kwargs:
-                    raise TypeError("calculateDCRMomemntShifts requires either zenith_coord or "+
+                    raise TypeError("calculateDCRMomentShifts requires either zenith_coord or "+
                                     "(HA, latitude) when obj_coord is specified!")
                 HA = kwargs.pop('HA')
                 latitude = kwargs.pop('latitude')
