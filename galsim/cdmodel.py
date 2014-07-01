@@ -66,6 +66,20 @@ class BaseCDModel(object):
         self._a_t_flat = galsim.Image(
             np.reshape(a_t.flatten(), (1, np.product(a_t.shape))), dtype=np.float64,
             make_const=True)
+            
+        # Also save inverse this once, otherwise we'll run into a const cast later
+        self._a_l_flat_inv = galsim.Image(
+            np.reshape((-a_l).flatten(), (1, np.product(a_l.shape))), dtype=np.float64,
+            make_const=True)
+        self._a_r_flat_inv = galsim.Image(
+            np.reshape((-a_r).flatten(), (1, np.product(a_r.shape))), dtype=np.float64,
+            make_const=True)
+        self._a_b_flat_inv = galsim.Image(
+            np.reshape((-a_b).flatten(), (1, np.product(a_b.shape))), dtype=np.float64,
+            make_const=True)
+        self._a_t_flat_inv = galsim.Image(
+            np.reshape((-a_t).flatten(), (1, np.product(a_t.shape))), dtype=np.float64,
+            make_const=True)
 
     def applyForward(self, image):
         """Apply the charge deflection model in the forward direction
@@ -78,8 +92,8 @@ class BaseCDModel(object):
         """Apply the charge deflection model in the backward direction (accurate to linear order)
         """
         return image.image.applyCD(
-            -self._a_l_flat.image, -self._a_r_flat.image, -self._a_b_flat.image,
-            -self._a_t_flat.image, self.n)
+            self._a_l_flat_inv.image, self._a_r_flat_inv.image, self._a_b_flat_inv.image,
+            self._a_t_flat_inv.image, self.n)
 
 
 def _modelShiftCoeffR(x, y, r0, t0, rx, tx, r, t, alpha):
@@ -120,8 +134,8 @@ def _modelShiftCoeffT(x, y, r0, t0, rx, tx, r, t, alpha):
     if not isinstance(y, (int, long)):
         raise ValueError("Input x coordinate must be an int or long")
     # Invoke symmetry
-    if x < 0: return _modelShiftCoeffR(-x, y, r0, t0, rx, tx, r, t, alpha)
-    if y < 0: return -_modelShiftCoeffR(x, 1 - y, r0, t0, rx, tx, r, t, alpha)
+    if x < 0: return _modelShiftCoeffT(-x, y, r0, t0, rx, tx, r, t, alpha)
+    if y < 0: return -_modelShiftCoeffT(x, 1 - y, r0, t0, rx, tx, r, t, alpha)
     # Invoke special immediate neighbour cases
     if x == 0 and y == 0: return -t0
     if x == 0 and y == 1: return +t0
@@ -158,13 +172,12 @@ class PowerLawCD(BaseCDModel):
         a_t = np.zeros((2 * n + 1, 2 * n + 1))
 
         # fill with power law model (slightly clunky loop but not likely a big time sink)
-        for ix in np.arange(-n, n + 1):
+        for ix in np.arange(0, 2*n + 1):
 
-            for iy in np.arange(-n, n + 1):
-                # BARNEY QUERY: IS THE CODE BELOW CORRECT? Check indexing...
-                a_l[iy, ix] = _modelShiftCoeffL(ix, iy, r0, t0, rx, tx, r, t, alpha)
-                a_r[iy, ix] = _modelShiftCoeffR(ix, iy, r0, t0, rx, tx, r, t, alpha)
-                a_b[iy, ix] = _modelShiftCoeffB(ix, iy, r0, t0, rx, tx, r, t, alpha)
-                a_t[iy, ix] = _modelShiftCoeffT(ix, iy, r0, t0, rx, tx, r, t, alpha)
+            for iy in np.arange(0, 2*n + 1):
+                a_l[iy, ix] = _modelShiftCoeffL(ix-n, iy-n, r0, t0, rx, tx, r, t, alpha)
+                a_r[iy, ix] = _modelShiftCoeffR(ix-n, iy-n, r0, t0, rx, tx, r, t, alpha)
+                a_b[iy, ix] = _modelShiftCoeffB(ix-n, iy-n, r0, t0, rx, tx, r, t, alpha)
+                a_t[iy, ix] = _modelShiftCoeffT(ix-n, iy-n, r0, t0, rx, tx, r, t, alpha)
 
         BaseCDModel.__init__(self, a_l, a_r, a_b, a_t)

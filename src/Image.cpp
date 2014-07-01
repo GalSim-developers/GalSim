@@ -239,6 +239,8 @@ ImageAlloc<T> BaseImage<T>::applyCD(ConstImageView<double> aL, ConstImageView<do
         for(int y=getYMin(); y<=getYMax(); y++){
 
             double f = at(x, y);
+	    
+	    
             // get flux densities at top, bottom, left, right corner
             double fT = 0.;
             double fB = 0.;
@@ -246,8 +248,8 @@ ImageAlloc<T> BaseImage<T>::applyCD(ConstImageView<double> aL, ConstImageView<do
             double fR = 0.;
 
             // don't do anything for pixels at a border
-	        // could do this more efficiently with three separate versions of this whole loop
-	        if(y<getYMax() && y>getYMin()){
+	    // could do this more efficiently with three separate versions of this whole loop
+	    if(y<getYMax() && y>getYMin()){
                 fT = (f + at(x, y + 1)) / 2.;
                 fB = (f + at(x, y - 1)) / 2.;
             }
@@ -255,6 +257,11 @@ ImageAlloc<T> BaseImage<T>::applyCD(ConstImageView<double> aL, ConstImageView<do
                 fR = (f + at(x + 1, y)) / 2.;
                 fL = (f + at(x - 1, y)) / 2.;
             }
+            
+            //if(fT>0. || fB>0 | fR>0 || fL>0) {
+	    // std::cout << "found some flux in " << x << " " << y << " f=" << f << std::endl; 
+	    // std::cout << "fT=" << fT << " fB=" << fB << " fR=" << fR << " fL=" << fL << std::endl; 
+	    //}
 
             // for each surrounding pixel do
             int matrixindex = 0; // for iterating over the aL, aR, aB, aT images in 1d
@@ -268,6 +275,8 @@ ImageAlloc<T> BaseImage<T>::applyCD(ConstImageView<double> aL, ConstImageView<do
                     f += qkl * fT * aT.at(aT.getXMin() + matrixindex, aT.getYMin());
                     f += qkl * fB * aB.at(aB.getXMin() + matrixindex, aB.getYMin());
                     f += qkl * fL * aL.at(aL.getXMin() + matrixindex, aL.getYMin());
+		    //if(fL>0)
+		    //  std::cout << ix << "," << iy << ": " << qkl << "*" << fL << "*" << aL.at(aL.getXMin() + matrixindex, aL.getYMin()) << std::endl;
                     f += qkl * fR * aR.at(aR.getXMin() + matrixindex, aR.getYMin());
                     matrixindex++;
 
