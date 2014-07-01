@@ -176,8 +176,8 @@ class Image(object):
     """
     cpp_valid_dtypes = _galsim.ImageView.keys()
     alias_dtypes = {
-        int : cpp_valid_dtypes[1],    # int32
-        float : cpp_valid_dtypes[3],  # float64
+        int : numpy.int32,
+        float : numpy.float64,
     }
     valid_dtypes = cpp_valid_dtypes + alias_dtypes.keys()
 
