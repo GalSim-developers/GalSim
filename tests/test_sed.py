@@ -156,6 +156,8 @@ def test_SED_init():
         np.testing.assert_raises(ValueError, galsim.SED, spec='wave+')
         np.testing.assert_raises(ValueError, galsim.SED, spec='somewhere/a/file')
         np.testing.assert_raises(ValueError, galsim.SED, spec='/somewhere/a/file')
+        np.testing.assert_raises(ValueError, galsim.SED, spec=lambda w:1.0, wave_type='bar')
+        np.testing.assert_raises(ValueError, galsim.SED, spec=lambda w:1.0, flux_type='bar')
     except ImportError:
         print 'The assert_raises tests require nose'
     # These should succeed.
@@ -163,6 +165,15 @@ def test_SED_init():
     galsim.SED(spec='wave/wave')
     galsim.SED(spec=lambda w:1.0)
     galsim.SED(spec='1./(wave-700)')
+
+    # Also check for invalid calls
+    foo = np.arange(10.)+1.
+    sed = galsim.SED(galsim.LookupTable(foo,foo))
+    try:
+        np.testing.assert_raises(ValueError, sed, 0.5)
+        np.testing.assert_raises(ValueError, sed, 12.0)
+    except ImportError:
+        print 'The assert_raises tests require nose'
 
 def test_SED_calculateMagnitude():
     """ Check that magnitudes work as expected.
