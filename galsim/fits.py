@@ -174,10 +174,10 @@ class _ReadFile:
             file = os.path.join(dir,file)
 
         if not file_compress:
-            if pyfits_version < '3.0':
+            if pyfits_version < '3.1':
                 # Sometimes early versions of pyfits do weird things with the final hdu when 
                 # writing fits files with rice compression.  It seems to add a bunch of '\0'
-                # characters after then end of what should be the last hdu.  When reading this
+                # characters after the end of what should be the last hdu.  When reading this
                 # back in, it gets interpreted as the start of another hdu, which is then found 
                 # to be missing its END card in the header.  The easiest workaround is to just
                 # tell it to ignore any missing END problems on the read command.  Also ignore
