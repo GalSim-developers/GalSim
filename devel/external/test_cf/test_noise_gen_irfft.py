@@ -163,4 +163,42 @@ plt.colorbar()
 plt.xlim(0, ux.shape[1])
 plt.ylim(0, ux.shape[0])
 plt.savefig("cfxy_rfft_fixed-fft.png")
+
+# NEWFIX - this is an attempt to reftify the code prior to this point in 2D, which seems to include
+# quite a bit of muddled thinking!
+# See: https://github.com/GalSim-developers/GalSim/issues/563#issuecomment-47344100
+print "Generating 2D plots with Gary's fix..."
+halfpsxy = psxy[:, :ux.shape[1]//2+1]
+halfpsxy[:, 0] *= 2.
+
+rt2 = np.sqrt(2.)
+nsamplesxy = 10000
+psxyests_r_fixed = []
+for i in range(nsamplesxy):
+
+    randvec_real = np.random.randn(ux.shape[0], ux.shape[1]//2 + 1)
+    randvec_imag = np.random.randn(ux.shape[0], ux.shape[1]//2 + 1)
+    randvec = randvec_real + 1j * randvec_imag
+    # Then do Gary's suggested fix
+    randvec[ux.shape[0]-1: ux.shape[0]/2:-1, 0] = np.conj(
+        randvec[1:ux.shape[0]/2, 0])
+    randvec[ux.shape[0]-1: ux.shape[0]/2:-1, ux.shape[0]/2] = np.conj(
+        randvec[1:ux.shape[0]/2, ux.shape[0]/2])
+    randvec[0, 0] = rt2 * randvec[0, 0].real
+    randvec[0, ux.shape[0]/2] = rt2 * randvec[0, ux.shape[0]/2].real
+    randvec[ux.shape[0]/2, 0] = rt2 * randvec[ux.shape[0]/2, 0].real
+    randvec[ux.shape[0]/2, ux.shape[0]/2] = rt2 * randvec[ux.shape[0]/2, ux.shape[0]/2].real
+    realization_irfft = np.fft.irfft2(randvec * np.sqrt(halfpsxy), s=ux.shape)
+    psxyests_r_fixed.append(np.abs(np.fft.fft2(realization_irfft))**2)
+
+psxyest_r_fixed = np.mean(np.array(psxyests_r_fixed), axis=0)
+cfest_r_fixed = np.fft.irfft2(psxyest_r_fixed[:, :ux.shape[1]//2 + 1], s=ux.shape)
+
+plt.clf()
+plt.pcolor(
+    galsim.utilities.roll2d(cfest_r_fixed - cfest, (ux.shape[0]/2, ux.shape[1]/2)))
+plt.colorbar()
+plt.xlim(0, ux.shape[1])
+plt.ylim(0, ux.shape[0])
+plt.savefig("cfxy_rfft_gary_fixed-fft.png")
 plt.show()
