@@ -195,8 +195,8 @@ namespace galsim {
 
         //@{
         /// Private versions that don't check for a null table:
-        A _argMin() const { return v.front().arg - lower_slop; }
-        A _argMax() const { return v.back().arg + upper_slop; }
+        A _argMin() const { return v.front().arg; }
+        A _argMax() const { return v.back().arg; }
         //@}
 
         /// get index to 1st element >= argument.  Can throw the exception here.

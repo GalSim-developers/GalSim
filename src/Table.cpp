@@ -46,7 +46,8 @@ namespace galsim {
     template<class V, class A>
     int Table<V,A>::upperIndex(const A a) const
     {
-        if (a<_argMin() || a>_argMax()) throw TableOutOfRange(a,_argMin(),_argMax());
+        if (a<_argMin()-lower_slop || a>_argMax()+upper_slop)
+            throw TableOutOfRange(a,_argMin(),_argMax());
         // check for slop
         if (a < v[0].arg) return 1;
         if (a > v[v.size()-1].arg) return v.size()-1;
