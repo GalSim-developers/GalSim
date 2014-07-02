@@ -240,43 +240,30 @@ ImageAlloc<T> BaseImage<T>::applyCD(ConstImageView<double> aL, ConstImageView<do
 
             double f = at(x, y);
 	    
+	    if(x<getXMin()+dmax || x>getXMax()-dmax || y<getYMin()+dmax || y>getYMax()-dmax) // outer pixel would not be flux conserving + require fencepost checks
+	    {
+	      output.setValue(x, y, f);
+	      continue;
+	    }
 	    
-            // get flux densities at top, bottom, left, right corner
-            double fT = 0.;
-            double fB = 0.;
-            double fL = 0.;
-            double fR = 0.;
-
-            // don't do anything for pixels at a border
-	    // could do this more efficiently with three separate versions of this whole loop
-	    if(y<getYMax() && y>getYMin()){
-                fT = (f + at(x, y + 1)) / 2.;
-                fB = (f + at(x, y - 1)) / 2.;
-            }
-            if(x<getXMax() && x>getXMin()){
-                fR = (f + at(x + 1, y)) / 2.;
-                fL = (f + at(x - 1, y)) / 2.;
-            }
-            
-            //if(fT>0. || fB>0 | fR>0 || fL>0) {
-	    // std::cout << "found some flux in " << x << " " << y << " f=" << f << std::endl; 
-	    // std::cout << "fT=" << fT << " fB=" << fB << " fR=" << fR << " fL=" << fL << std::endl; 
-	    //}
+            double    fT = (f + at(x, y + 1)) / 2.;
+            double    fB = (f + at(x, y - 1)) / 2.;
+            double    fR = (f + at(x + 1, y)) / 2.;
+            double    fL = (f + at(x - 1, y)) / 2.;
 
             // for each surrounding pixel do
             int matrixindex = 0; // for iterating over the aL, aR, aB, aT images in 1d
+            //std::cout << "### in " << x << " " << y << std::endl;
             for(int iy=-dmax; iy<=dmax; iy++){
 
-                if(y+iy<getYMin() || y+iy>getYMax()) { matrixindex += 2*dmax+1; continue; }
-	            for(int ix=-dmax; ix<=dmax; ix++){
+                for(int ix=-dmax; ix<=dmax; ix++){
 
-                    if(x+ix<getXMin() || x+ix>getXMax()) { matrixindex++; continue; }
                     double qkl = at(x + ix, y + iy);
                     f += qkl * fT * aT.at(aT.getXMin() + matrixindex, aT.getYMin());
                     f += qkl * fB * aB.at(aB.getXMin() + matrixindex, aB.getYMin());
                     f += qkl * fL * aL.at(aL.getXMin() + matrixindex, aL.getYMin());
 		    //if(fL>0)
-		    //  std::cout << ix << "," << iy << ": " << qkl << "*" << fL << "*" << aL.at(aL.getXMin() + matrixindex, aL.getYMin()) << std::endl;
+		    //  std::cout << ix << " " << iy << " " << qkl << " * " << fL << " * " << aL.at(aL.getXMin() + matrixindex, aL.getYMin()) << std::endl;
                     f += qkl * fR * aR.at(aR.getXMin() + matrixindex, aR.getYMin());
                     matrixindex++;
 

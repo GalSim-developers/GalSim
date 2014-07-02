@@ -31,7 +31,7 @@ except ImportError:
     from galsim.cdmodel import *
     
 
-def test_onepixel():
+def test_simplegeometry():
     """Test charge deflection model for image with charges in only the central pixel(s)
     """
     size=50
@@ -70,12 +70,6 @@ def test_onepixel():
     # these shouldn't do anything
     itcdtx = galsim.Image(cdtx.applyForward(it).array)
     ircdrx = galsim.Image(cdrx.applyForward(ir).array)
-    
-    #itcdtx.write("itcdtx.fits")
-    #itcdrx.write("itcdrx.fits")
-    #ircdtx.write("ircdtx.fits")
-    #ircdrx.write("ircdrx.fits")
-    
     
     # R0, T0
     np.testing.assert_almost_equal(i0cdr0.at(center,center), 1.-shiftcoeff, 4,
@@ -176,7 +170,35 @@ def test_onepixel():
                                    "itcdtx array is not 0 where it should be")
     np.testing.assert_array_almost_equal(itcdrx.array, i0.array, 6,
                                    "itcdrx array is not 0 where it should be")
+
+
+def test_fluxconservation():
+    """Test flux conservation of charge deflection model for galaxy and flat image
+    """
+
+    galflux=30000.
+    galsigma=3.
+    noise=1.
+    shiftcoeff=5.e-5
+    alpha=0.3
     
+    size=50
+
+    gal = galsim.Gaussian(flux=galflux, sigma=galsigma)
+    image = gal.drawImage(scale=1.)
+    image.addNoise(galsim.GaussianNoise(sigma=noise))
+    
+    flat = galsim.Image(size,size,dtype=np.float32,init_value=0)
+    flat.fill(100)
+    
+    cd   = PowerLawCD(2,shiftcoeff,shiftcoeff,shiftcoeff/2.,shiftcoeff/2.,shiftcoeff/2.,shiftcoeff/2.,alpha)
+    
+    imagecd = galsim.Image(cd.applyForward(image).array)
+    flatcd  = galsim.Image(cd.applyForward(flat).array)
+    
+    np.testing.assert_almost_equal(image.array.sum(), imagecd.array.sum(), 5, "Galaxy image flux is not left invariant by charge deflection")
+    np.testing.assert_almost_equal(flat.array.sum(), flatcd.array.sum(), 5, "Flat image flux is not left invariant by charge deflection")
     
 if __name__ == "__main__":
-    test_onepixel()
+    test_simplegeometry()
+    test_fluxconservation()

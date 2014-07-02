@@ -175,9 +175,13 @@ class PowerLawCD(BaseCDModel):
         for ix in np.arange(0, 2*n + 1):
 
             for iy in np.arange(0, 2*n + 1):
-                a_l[iy, ix] = _modelShiftCoeffL(ix-n, iy-n, r0, t0, rx, tx, r, t, alpha)
-                a_r[iy, ix] = _modelShiftCoeffR(ix-n, iy-n, r0, t0, rx, tx, r, t, alpha)
-                a_b[iy, ix] = _modelShiftCoeffB(ix-n, iy-n, r0, t0, rx, tx, r, t, alpha)
-                a_t[iy, ix] = _modelShiftCoeffT(ix-n, iy-n, r0, t0, rx, tx, r, t, alpha)
+	        if(ix<2*n): # need to keep the other elements zero for flux conservation
+                  a_l[iy, ix] = _modelShiftCoeffL(ix-n, iy-n, r0, t0, rx, tx, r, t, alpha)
+                if(ix>0):
+                  a_r[iy, ix] = _modelShiftCoeffR(ix-n, iy-n, r0, t0, rx, tx, r, t, alpha)
+                if(iy<2*n):
+                  a_b[iy, ix] = _modelShiftCoeffB(ix-n, iy-n, r0, t0, rx, tx, r, t, alpha)
+                if(iy>0):
+                  a_t[iy, ix] = _modelShiftCoeffT(ix-n, iy-n, r0, t0, rx, tx, r, t, alpha)
 
         BaseCDModel.__init__(self, a_l, a_r, a_b, a_t)
