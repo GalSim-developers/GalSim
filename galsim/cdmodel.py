@@ -84,16 +84,22 @@ class BaseCDModel(object):
     def applyForward(self, image):
         """Apply the charge deflection model in the forward direction
         """
-        return image.image.applyCD(
-            self._a_l_flat.image, self._a_r_flat.image, self._a_b_flat.image, self._a_t_flat.image,
-            self.n)
+        retimage = galsim.Image(
+            image=image.image.applyCD(
+                self._a_l_flat.image, self._a_r_flat.image,
+                self._a_b_flat.image, self._a_t_flat.image, self.n),
+            wcs=image.wcs)
+        return retimage
 
     def applyBackward(self, image):
         """Apply the charge deflection model in the backward direction (accurate to linear order)
         """
-        return image.image.applyCD(
-            self._a_l_flat_inv.image, self._a_r_flat_inv.image, self._a_b_flat_inv.image,
-            self._a_t_flat_inv.image, self.n)
+        retimage = galsim.Image(
+            image=image.image.applyCD(
+                self._a_l_flat_inv.image, self._a_r_flat_inv.image,
+                self._a_b_flat_inv.image, self._a_t_flat_inv.image, self.n),
+            wcs=image.wcs)
+        return retimage
 
 
 def _modelShiftCoeffR(x, y, r0, t0, rx, tx, r, t, alpha):
