@@ -32,44 +32,44 @@ ps = np.exp(-2. * np.pi**2 * sigma**2 * u**2) # using result for FT of a Gaussia
                                               # (note scale factors in this might be wrong, done
                                               # from memory, but not crucial for demonstration)
 
-# 1D plots first
-print "Generating 1D plots..."
-psests = []
-psests_r = []
-for i in range(nsamples):
+# # 1D plots first
+# print "Generating 1D plots..."
+# psests = []
+# psests_r = []
+# for i in range(nsamples):
 
-    realization = np.fft.ifft((np.random.randn(nu) + 1j * np.random.randn(nu)) * np.sqrt(ps)).real
-    realization_irfft = np.fft.irfft(
-        (np.random.randn(nu//2+1) + 1j * np.random.randn(nu//2+1)) * np.sqrt(.5 * ps[:nu//2+1]), nu)
-    psests.append(np.abs(np.fft.fft(realization))**2)
-    psests_r.append(np.abs(np.fft.fft(realization_irfft))**2)
+#     realization = np.fft.ifft((np.random.randn(nu) + 1j * np.random.randn(nu)) * np.sqrt(ps)).real
+#     realization_irfft = np.fft.irfft(
+#         (np.random.randn(nu//2+1) + 1j * np.random.randn(nu//2+1)) * np.sqrt(.5 * ps[:nu//2+1]), nu)
+#     psests.append(np.abs(np.fft.fft(realization))**2)
+#     psests_r.append(np.abs(np.fft.fft(realization_irfft))**2)
 
-psest = np.mean(np.array(psests), axis=0)
-psest_r = np.mean(np.array(psests_r), axis=0)
+# psest = np.mean(np.array(psests), axis=0)
+# psest_r = np.mean(np.array(psests_r), axis=0)
 
-cfest = np.fft.irfft(psest[:nu//2+1])
-cfest_r = np.fft.irfft(psest_r[:nu//2+1])
-cf = np.fft.irfft(ps[:nu//2+1])
+# cfest = np.fft.irfft(psest[:nu//2+1])
+# cfest_r = np.fft.irfft(psest_r[:nu//2+1])
+# cf = np.fft.irfft(ps[:nu//2+1])
 
 
-import matplotlib.pyplot as plt
-# Plot the power spectra
+# import matplotlib.pyplot as plt
+# # Plot the power spectra
 
-plt.clf()
-plt.plot(psest, label="fft")
-plt.plot(psest_r, label="rfft")
-plt.plot(ps, label="reference", lw=2, color="k", ls=":")
-plt.ylabel("Power spectrum")
-plt.legend()
-plt.savefig("ps_irfft.png")
+# plt.clf()
+# plt.plot(psest, label="fft")
+# plt.plot(psest_r, label="rfft")
+# plt.plot(ps, label="reference", lw=2, color="k", ls=":")
+# plt.ylabel("Power spectrum")
+# plt.legend()
+# plt.savefig("ps_irfft.png")
 
-plt.clf()
-plt.plot(cfest, label="fft")
-plt.plot(cfest_r, label="rfft")
-plt.plot(cf, label="reference", lw=2, color="k", ls=":")
-plt.ylabel("Correlation function")
-plt.legend()
-plt.savefig("cf_irfft.png")
+# plt.clf()
+# plt.plot(cfest, label="fft")
+# plt.plot(cfest_r, label="rfft")
+# plt.plot(cf, label="reference", lw=2, color="k", ls=":")
+# plt.ylabel("Correlation function")
+# plt.legend()
+# plt.savefig("cf_irfft.png")
 
 # Then do 2D tests
 print "Generating 2D plots..."
@@ -99,75 +99,76 @@ cfest = np.fft.irfft2(psxyest[:, :ux.shape[1] // 2 + 1], s=ux.shape)
 cfest_r = np.fft.irfft2(psxyest_r[:, :ux.shape[1] // 2 + 1], s=ux.shape)
 cf = np.fft.irfft2(psxy[:, :ux.shape[1] // 2 + 1], s=ux.shape)
 
-plt.clf()
-plt.pcolor(psxyest)
-plt.colorbar()
-plt.savefig("psxy_fft.png")
+# plt.clf()
+# plt.pcolor(psxyest)
+# plt.colorbar()
+# plt.savefig("psxy_fft.png")
 
-plt.clf()
-plt.pcolor(psxyest_r)
-plt.colorbar()
-plt.savefig("psxy_rfft.png")
+# plt.clf()
+# plt.pcolor(psxyest_r)
+# plt.colorbar()
+# plt.savefig("psxy_rfft.png")
 
-plt.clf()
-plt.pcolor(psxyest_r - psxyest)
-plt.colorbar()
-plt.savefig("psxy_rfft-fft.png")
+# plt.clf()
+# plt.pcolor(psxyest_r - psxyest)
+# plt.colorbar()
+# plt.savefig("psxy_rfft-fft.png")
 
-import galsim
-plt.clf()
-plt.pcolor(
-    galsim.utilities.roll2d(cfest, (ux.shape[0]/2, ux.shape[1]/2)))
-plt.colorbar()
-plt.xlim(0, ux.shape[1])
-plt.ylim(0, ux.shape[0])
-plt.savefig("cfxy_fft.png")
+# import galsim
+# plt.clf()
+# plt.pcolor(
+#     galsim.utilities.roll2d(cfest, (ux.shape[0]/2, ux.shape[1]/2)))
+# plt.colorbar()
+# plt.xlim(0, ux.shape[1])
+# plt.ylim(0, ux.shape[0])
+# plt.savefig("cfxy_fft.png")
 
-plt.clf()
-plt.pcolor(
-    galsim.utilities.roll2d(cfest_r, (ux.shape[0]/2, ux.shape[1]/2)))
-plt.colorbar()
-plt.xlim(0, ux.shape[1])
-plt.ylim(0, ux.shape[0])
-plt.savefig("cfxy_rfft.png")
+# plt.clf()
+# plt.pcolor(
+#     galsim.utilities.roll2d(cfest_r, (ux.shape[0]/2, ux.shape[1]/2)))
+# plt.colorbar()
+# plt.xlim(0, ux.shape[1])
+# plt.ylim(0, ux.shape[0])
+# plt.savefig("cfxy_rfft.png")
 
-plt.clf()
-plt.pcolor(
-    galsim.utilities.roll2d(cfest_r - cfest, (ux.shape[0]/2, ux.shape[1]/2)))
-plt.colorbar()
-plt.xlim(0, ux.shape[1])
-plt.ylim(0, ux.shape[0])
-plt.savefig("cfxy_rfft-fft.png")
+# plt.clf()
+# plt.pcolor(
+#     galsim.utilities.roll2d(cfest_r - cfest, (ux.shape[0]/2, ux.shape[1]/2)))
+# plt.colorbar()
+# plt.xlim(0, ux.shape[1])
+# plt.ylim(0, ux.shape[0])
+# plt.savefig("cfxy_rfft-fft.png")
 
-# Then try the fix
-print "Generating 2D plots with PS[x==0] *= 2. fix..."
-halfpsxy = psxy[:, :ux.shape[1]//2+1]
-halfpsxy[:, 0] *= 2.
+# # Then try the fix
+# print "Generating 2D plots with PS[x==0] *= 2. fix..."
+# halfpsxy = psxy[:, :ux.shape[1]//2+1]
+# halfpsxy[:, 0] *= 2.
 
-nsamplesxy = 10000
-psxyests_r_fixed = []
-for i in range(nsamplesxy):
+# nsamplesxy = 10000
+# psxyests_r_fixed = []
+# for i in range(nsamplesxy):
 
-    realization_irfft = np.fft.irfft2((
-        np.random.randn(ux.shape[0], ux.shape[1]//2 + 1) +
-        1j * np.random.randn(ux.shape[0], ux.shape[1]//2 + 1)) * np.sqrt(.5 * halfpsxy), s=ux.shape)
-    psxyests_r_fixed.append(np.abs(np.fft.fft2(realization_irfft))**2)
+#     realization_irfft = np.fft.irfft2((
+#         np.random.randn(ux.shape[0], ux.shape[1]//2 + 1) +
+#         1j * np.random.randn(ux.shape[0], ux.shape[1]//2 + 1)) * np.sqrt(.5 * halfpsxy), s=ux.shape)
+#     psxyests_r_fixed.append(np.abs(np.fft.fft2(realization_irfft))**2)
 
-psxyest_r_fixed = np.mean(np.array(psxyests_r_fixed), axis=0)
-cfest_r_fixed = np.fft.irfft2(psxyest_r_fixed[:, :ux.shape[1]//2 + 1], s=ux.shape)
+# psxyest_r_fixed = np.mean(np.array(psxyests_r_fixed), axis=0)
+# cfest_r_fixed = np.fft.irfft2(psxyest_r_fixed[:, :ux.shape[1]//2 + 1], s=ux.shape)
 
-plt.clf()
-plt.pcolor(
-    galsim.utilities.roll2d(cfest_r_fixed - cfest, (ux.shape[0]/2, ux.shape[1]/2)))
-plt.colorbar()
-plt.xlim(0, ux.shape[1])
-plt.ylim(0, ux.shape[0])
-plt.savefig("cfxy_rfft_fixed-fft.png")
+# plt.clf()
+# plt.pcolor(
+#     galsim.utilities.roll2d(cfest_r_fixed - cfest, (ux.shape[0]/2, ux.shape[1]/2)))
+# plt.colorbar()
+# plt.xlim(0, ux.shape[1])
+# plt.ylim(0, ux.shape[0])
+# plt.savefig("cfxy_rfft_fixed-fft.png")
 
 # NEWFIX - this is an attempt to reftify the code prior to this point in 2D, which seems to include
 # quite a bit of muddled thinking!
 # See: https://github.com/GalSim-developers/GalSim/issues/563#issuecomment-47344100
 print "Generating 2D plots with Gary's fix..."
+print psxy[0, 0]
 halfpsxy = psxy[:, :ux.shape[1]//2+1]
 halfpsxy[:, 0] *= 2.
 
@@ -194,6 +195,11 @@ for i in range(nsamplesxy):
 psxyest_r_fixed = np.mean(np.array(psxyests_r_fixed), axis=0)
 cfest_r_fixed = np.fft.irfft2(psxyest_r_fixed[:, :ux.shape[1]//2 + 1], s=ux.shape)
 
+print psxy[0, 0]
+
+plt.clf()
+plt.pcolor(psxyest_r_fixed - psxy); plt.colorbar(); plt.show()
+import galsim
 plt.clf()
 plt.pcolor(
     galsim.utilities.roll2d(cfest_r_fixed - cfest, (ux.shape[0]/2, ux.shape[1]/2)))
