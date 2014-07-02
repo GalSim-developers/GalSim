@@ -7,6 +7,8 @@ New Features
 - Added magnitudes as a method to set the flux of SED objects. (#547)
 - Added SED.calculateDCRMomentShifts and SED.calculateChromaticSeeingRatio convenience functions
   for estimating chromatic PSF moment shifts (#547)
+- Renamed the GSParams parameter `alias_threshold` to `folding_threshold`, a clearer term for the
+  profile image folding in real space that this GSParam controls (#562)
 
 Bug Fixes and Improvements
 --------------------------
