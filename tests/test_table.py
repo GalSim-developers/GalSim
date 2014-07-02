@@ -129,8 +129,11 @@ def test_roundoff():
         table1(10.0 + 1.e-7)
     except:
         raise ValueError("c++ LookupTable roundoff guard failed.")
-    np.testing.assert_raises(RuntimeError, table1, 1.0-1.e5)
-    np.testing.assert_raises(RuntimeError, table1, 10.0+1.e5)
+    try:
+        np.testing.assert_raises(RuntimeError, table1, 1.0-1.e5)
+        np.testing.assert_raises(RuntimeError, table1, 10.0+1.e5)
+    except ImportError:
+        print 'The assert_raises tests require nose'
 
 if __name__ == "__main__":
     test_table()
