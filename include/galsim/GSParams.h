@@ -43,9 +43,9 @@ namespace galsim {
          *
          * @param minimum_fft_size    Constant giving minimum FFT size we're willing to do.
          * @param maximum_fft_size    Constant giving maximum FFT size we're willing to do.
-         * @param folding_threshold     A threshold parameter used for setting the stepK value for 
+         * @param folding_threshold   A threshold parameter used for setting the stepK value for 
          *                            FFTs.  The FFT's stepK is set so that at most a fraction 
-         *                            folding_threshold of the flux of any profile is aliased.
+         *                            folding_threshold of the flux of any profile is folded.
          * @param stepk_minimum_hlr   In addition to the above constraint for aliasing, also set 
          *                            stepk such that pi/stepk is at least stepk_minimum_hlr
          *                            times the profile's half-light radius (for profiles that
