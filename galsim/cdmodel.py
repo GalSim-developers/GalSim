@@ -85,26 +85,26 @@ class BaseCDModel(object):
         """Apply the charge deflection model in the forward direction.
 
         Returns an image with the forward charge deflection transformation applied.  The input image
-        is not modified, and a copy of its WCS is included in the returned image.
+        is not modified, but its WCS is included in the returned image.
         """
         retimage = galsim.Image(
             image=image.image.applyCD(
                 self._a_l_flat.image, self._a_r_flat.image,
                 self._a_b_flat.image, self._a_t_flat.image, self.n),
-            wcs=image.wcs.copy())
+            wcs=image.wcs)
         return retimage
 
     def applyBackward(self, image):
         """Apply the charge deflection model in the backward direction (accurate to linear order).
 
         Returns an image with the backward charge deflection transformation applied.  The input
-        image is not modified, and a copy of its WCS is included in the returned image.
+        image is not modified, but its WCS is included in the returned image.
         """
         retimage = galsim.Image(
             image=image.image.applyCD(
                 self._a_l_flat_inv.image, self._a_r_flat_inv.image,
                 self._a_b_flat_inv.image, self._a_t_flat_inv.image, self.n),
-            wcs=image.wcs.copy())
+            wcs=image.wcs)
         return retimage
 
 
