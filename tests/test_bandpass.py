@@ -158,7 +158,7 @@ def test_Bandpass_wave_type():
     np.testing.assert_approx_equal(b0.effective_wavelength, b1.effective_wavelength,
                                    err_msg="Bandpass.effective_wavelength doesn't respect"
                                            +" wave_type")
-    np.testing.assert_allclose(b0([1,2,3,4,5]), b1([1,2,3,4,5]),
+    np.testing.assert_array_almost_equal(b0([1,2,3,4,5]), b1([1,2,3,4,5]), decimal=7,
                                err_msg="Bandpass.__call__ doesn't respect wave_type")
 
     t2 = time.time()
