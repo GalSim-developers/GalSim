@@ -82,7 +82,7 @@ cf = np.fft.irfft2(psxy[:, :ux.shape[1] // 2 + 1], s=ux.shape)
 psxyest = np.zeros_like(ux)
 psxyest_r = np.zeros_like(ux)
 
-nsamplesxy = 1000000
+nsamplesxy = 10000000
 for i in range(nsamplesxy):
 
     realization = np.fft.ifft2(
