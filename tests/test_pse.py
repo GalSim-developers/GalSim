@@ -33,9 +33,9 @@ datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
 
 # Here are some parameters that define array sizes and other such things.
 array_size = 300
-tolerance = 0.15  # 15% error allowed because of finite grid effects, noise fluctuations, and other
+tolerance = 0.05  # 10% error allowed because of finite grid effects, noise fluctuations, and other
                   # things.  This unit test is just for a basic sanity test.
-zero_tolerance = 0.03 # For power that should be zero, allow it to be <zero_tolerance * the nonzero
+zero_tolerance = 0.01 # For power that should be zero, allow it to be <0.02 * the nonzero
                       # ones.
 n_ell = 8
 grid_spacing = 0.1 # degrees
@@ -67,24 +67,30 @@ def test_PSE_basic():
         P_e_theory[ind] = my_tab(ell[ind])
     # Note: we don't check the first element because at low ell the tests can fail more
     # spectacularly for reasons that are well understood.
-    np.testing.assert_allclose(P_e1[1:], P_e_theory[1:], rtol=tolerance,
-                               err_msg='PSE returned wrong E power')
-    np.testing.assert_allclose(P_b1[1:]/P_e_theory[1:], 0., rtol=0, atol=zero_tolerance,
-                               err_msg='PSE found B power')
-    np.testing.assert_allclose(P_eb1[1:]/P_e_theory[1:], 0., rtol=0, atol=zero_tolerance,
-                               err_msg='PSE found EB cross-power')
+    np.testing.assert_array_almost_equal(
+        (P_e1[1:]/P_e_theory[1:]-1.)/(2*tolerance), 0., decimal=0,
+        err_msg='PSE returned wrong E power')
+    np.testing.assert_array_almost_equal(
+        (P_b1[1:]/P_e_theory[1:])/(2*zero_tolerance), 0., decimal=0,
+         err_msg='PSE found B power')
+    np.testing.assert_array_almost_equal(
+        (P_eb1[1:]/P_e_theory[1:])/(2*zero_tolerance), 0., decimal=0,
+         err_msg='PSE found EB cross-power')
 
     # Also check the case where P_e=P_b.
     my_ps = galsim.PowerSpectrum(my_tab, my_tab, units=galsim.radians)
     g1, g2 = my_ps.buildGrid(grid_spacing=grid_spacing, ngrid=array_size, units=galsim.degrees,
                              rng=galsim.BaseDeviate(rand_seed))
     ell, P_e2, P_b2, P_eb2 = my_pse.estimate(g1, g2)
-    np.testing.assert_allclose(P_e2[1:], P_e_theory[1:], rtol=tolerance,
-                               err_msg='PSE returned wrong E power')
-    np.testing.assert_allclose(P_b2[1:], P_e_theory[1:], rtol=tolerance,
-                               err_msg='PSE returned wrong B power')
-    np.testing.assert_allclose(P_eb2[1:]/P_e_theory[1:], 0., rtol=0, atol=zero_tolerance,
-                               err_msg='PSE found EB cross-power')
+    np.testing.assert_array_almost_equal(
+        (P_e2[1:]/P_e_theory[1:]-1.)/(2*tolerance), 0., decimal=0,
+        err_msg='PSE returned wrong E power')
+    np.testing.assert_array_almost_equal(
+        (P_b2[1:]/P_e_theory[1:]-1.)/(2*tolerance), 0., decimal=0,
+        err_msg='PSE returned wrong B power')
+    np.testing.assert_array_almost_equal(
+        (P_eb2[1:]/P_e_theory[1:])/(2*zero_tolerance), 0., decimal=0,
+        err_msg='PSE found EB cross-power')
 
     # And check the case where P_b is nonzero and P_e is zero.
     my_ps = galsim.PowerSpectrum(e_power_function=None, b_power_function=my_tab,
@@ -92,12 +98,15 @@ def test_PSE_basic():
     g1, g2 = my_ps.buildGrid(grid_spacing=grid_spacing, ngrid=array_size, units=galsim.degrees,
                              rng=galsim.BaseDeviate(rand_seed))
     ell, P_e3, P_b3, P_eb3 = my_pse.estimate(g1, g2)
-    np.testing.assert_allclose(P_e3[1:]/P_e_theory[1:], 0., atol=zero_tolerance,
-                               err_msg='PSE found E power when it should be zero')
-    np.testing.assert_allclose(P_b3[1:], P_e_theory[1:], rtol=0, atol=zero_tolerance,
-                               err_msg='PSE returned wrong B power')
-    np.testing.assert_allclose(P_eb3[1:]/P_e_theory[1:], 0., rtol=0, atol=zero_tolerance,
-                               err_msg='PSE found EB cross-power')
+    np.testing.assert_array_almost_equal(
+        (P_e3[1:]/P_e_theory[1:])/(2*zero_tolerance), 0., decimal=0,
+        err_msg='PSE found E power when it should be zero')
+    np.testing.assert_array_almost_equal(
+        (P_b3[1:]/P_e_theory[1:]-1.)/(2*tolerance), 0., decimal=0,
+        err_msg='PSE returned wrong B power')
+    np.testing.assert_array_almost_equal(
+        (P_eb3[1:]/P_e_theory[1:])/(2*zero_tolerance), 0., decimal=0,
+        err_msg='PSE found EB cross-power')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
