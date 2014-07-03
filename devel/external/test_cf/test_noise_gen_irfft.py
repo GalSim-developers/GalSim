@@ -81,7 +81,7 @@ cf = np.fft.irfft2(psxy[:, :ux.shape[1] // 2 + 1], s=ux.shape)
 psxyest = np.zeros_like(ux)
 psxyest_r = np.zeros_like(ux)
 
-nsamplesxy = 300000
+nsamplesxy = 10000
 for i in range(nsamplesxy):
 
     realization = np.fft.ifft2(
@@ -90,7 +90,7 @@ for i in range(nsamplesxy):
         np.random.randn(ux.shape[0], ux.shape[1]//2 + 1) +
         1j * np.random.randn(ux.shape[0], ux.shape[1]//2 + 1)) * np.sqrt(
             .5 * psxy[:, :ux.shape[1]//2 + 1]), s=ux.shape)
-    psxyest += np.abs(np.fft.fft2(realization))**2)
+    psxyest += np.abs(np.fft.fft2(realization))**2
     psxyest_r += np.abs(np.fft.fft2(realization_irfft))**2
 
 psxyest /= float(nsamplesxy)
