@@ -78,8 +78,8 @@ ux, uy = np.meshgrid(u, u)
 psxy = np.exp(-2. * np.pi**2 * sigma**2 * (ux**2 + uy**2))
 cf = np.fft.irfft2(psxy[:, :ux.shape[1] // 2 + 1], s=ux.shape)
 
-psxyests = []
-psxyests_r = []
+psxyest = np.zeros_like(ux)
+psxyest_r = np.zeros_like(ux)
 
 nsamplesxy = 300000
 for i in range(nsamplesxy):
@@ -90,11 +90,11 @@ for i in range(nsamplesxy):
         np.random.randn(ux.shape[0], ux.shape[1]//2 + 1) +
         1j * np.random.randn(ux.shape[0], ux.shape[1]//2 + 1)) * np.sqrt(
             .5 * psxy[:, :ux.shape[1]//2 + 1]), s=ux.shape)
-    psxyests.append(np.abs(np.fft.fft2(realization))**2)
-    psxyests_r.append(np.abs(np.fft.fft2(realization_irfft))**2)
+    psxyest += np.abs(np.fft.fft2(realization))**2)
+    psxyest_r += np.abs(np.fft.fft2(realization_irfft))**2
 
-psxyest = np.mean(np.array(psxyests), axis=0)
-psxyest_r = np.mean(np.array(psxyests_r), axis=0)
+psxyest /= float(nsamplesxy)
+psxyest_r /= float(nsamplesxy)
 
 cfest = np.fft.irfft2(psxyest[:, :ux.shape[1] // 2 + 1], s=ux.shape)
 cfest_r = np.fft.irfft2(psxyest_r[:, :ux.shape[1] // 2 + 1], s=ux.shape)
@@ -149,7 +149,7 @@ rt2 = np.sqrt(2.)
 irt2 = 1. / rt2
 for nu in (3, 4, 21, 22): # number of array elements, odd first then even
 
-    psxyests_r_fixed = []
+    psxyest_r_fixed = np.zeros_like(ux)
     u = np.fft.fftfreq(nu) # get the u0, u1, u2 etc. frequency values
     print "Running case with nu = "+str(nu)
     # Set up the 2D arrays and PS
@@ -174,9 +174,9 @@ for nu in (3, 4, 21, 22): # number of array elements, odd first then even
             randvec[ux.shape[0]/2, 0] = rt2 * randvec[ux.shape[0]/2, 0].real
             randvec[ux.shape[0]/2, ux.shape[1]/2] = rt2 * randvec[ux.shape[0]/2, ux.shape[1]/2].real
         realization_irfft = np.fft.irfft2(randvec * np.sqrt(halfpsxy), s=ux.shape)
-        psxyests_r_fixed.append(np.abs(np.fft.fft2(realization_irfft))**2)
+        psxyest_r_fixed += np.abs(np.fft.fft2(realization_irfft))**2
 
-    psxyest_r_fixed = np.mean(np.array(psxyests_r_fixed), axis=0)
+    psxyest_r_fixed /= float(nsamplesxy)
     cfest_r_fixed = np.fft.irfft2(psxyest_r_fixed[:, :ux.shape[1]//2 + 1], s=ux.shape)
 
     # Make some plots!
