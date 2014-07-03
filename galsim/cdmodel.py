@@ -32,6 +32,18 @@ class BaseCDModel(object):
         Usually this class will not be instantiated directly, but there is nothing to prevent you
         from doing so.  Each of the input a_l, a_r, a_b & a_t matrices must have the same shape and
         be odd-dimensioned.
+        
+        The model implemented here is described in Antilogus et al. (2014). The effective border
+        of a pixel shifts to an extent proportional to the flux in a pixel at separation (dx,dy) 
+        and a coefficient a(dx,dy). Contributions of all neighbouring pixels are superposed. Border
+        shifts are calculated for each (l=left, r=right (=positive x), b=bottom, t=top (=pos. y)) 
+        border and the resulting change in flux in a pixel is the shift times the mean of its flux
+        and the flux in the pixel on the opposite side of the border.
+        
+        The parameters of the model are the a_l/r/b/t matrices, whose entry at (dy,dx) gives the
+        respective shift coefficient. Note that for a realistic model, the matrices have a number
+        of symmetries, as described in Antilogus et al. (2014). Use derived classes like PowerLawCD
+        to have a model that automatically fulfills the symmetry conditions.
 
         @param a_l  Array containing matrix of deflection coefficients of left pixel border
         @param a_r  Array containing matrix of deflection coefficients of right pixel border
@@ -173,6 +185,28 @@ class PowerLawCD(BaseCDModel):
 
     def __init__(self, n, r0, t0, rx, tx, r, t, alpha):
         """Initialize a power-law charge deflection model.
+        
+        The deflections from charges in the six pixels directly neighbouring a pixel border are 
+        modelled independently by the parameters r0, t0 (directly adjacent to borders between 
+        two pixels in the same row=y / column=x) and rx, tx (pixels on the corner of pixel borders)
+        
+        Deflections due to charges further away are modelled as a power-law,
+          a = A * sin(theta) * r^(-alpha)
+        where A is a power-law amplitude (r for a_l / a_b and t for a_b / a_t), theta is the angle
+        between pixel border line and line from border center to other pixel center.
+        
+        Sign convention is such that positive r0,t0,rx,tx,r,t correspond to physical deflection of
+        equal charges (this is also how the theta above is defined).
+        
+        @param n      Maximum separation [pix] out to which charges contribute to deflection
+        @param r0     a_l(0,-1)=a_r(0,+1) deflection coefficient along x direction
+        @param t0     a_b(-1,0)=a_t(+1,0) deflection coefficient along y direction
+        @param rx     a_l(-1,-1)=a_r(+1,+1) diagonal contribution to deflection along x direction
+        @param tx     a_b(-1,-1)=a_t(+1,+1) diagonal contribution to deflection along y direction
+        @param r      power-law amplitude for contribution to deflection along x from further away
+        @param t      power-law amplitude for contribution to deflection along y from further away
+        @param alpha  power-law exponent for deflection from further away
+        
         """
         # First define x and y coordinates in a square grid of shape (2n + 1) * (2n + 1)
         x, y = np.meshgrid(np.arange(2 * n + 1) - n, np.arange(2 * n + 1) - n)
