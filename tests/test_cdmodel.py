@@ -56,20 +56,20 @@ def test_simplegeometry():
         
       
     cdr0   = PowerLawCD(2,shiftcoeff,0,0,0,0,0,0)
-    i0cdr0 = galsim.Image(cdr0.applyForward(i0).array)
+    i0cdr0 = cdr0.applyForward(i0)
     cdt0   = PowerLawCD(2,0,shiftcoeff,0,0,0,0,0)
-    i0cdt0 = galsim.Image(cdt0.applyForward(i0).array)
+    i0cdt0 = cdt0.applyForward(i0)
     
     cdrx   = PowerLawCD(2,0,0,shiftcoeff,0,0,0,0)
     cdtx   = PowerLawCD(2,0,0,0,shiftcoeff,0,0,0)
     
     # these should do something
-    ircdtx = galsim.Image(cdtx.applyForward(ir).array)
-    itcdrx = galsim.Image(cdrx.applyForward(it).array)
+    ircdtx = cdtx.applyForward(ir)
+    itcdrx = cdrx.applyForward(it)
     
     # these shouldn't do anything
-    itcdtx = galsim.Image(cdtx.applyForward(it).array)
-    ircdrx = galsim.Image(cdrx.applyForward(ir).array)
+    itcdtx = cdtx.applyForward(it)
+    ircdrx = cdrx.applyForward(ir)
     
     # R0, T0
     np.testing.assert_almost_equal(i0cdr0.at(center,center), 1.-shiftcoeff, 4,
@@ -137,7 +137,7 @@ def test_simplegeometry():
     u = galsim.UniformDeviate(int(time.time()))
     
     cdnull   = PowerLawCD(2,0,0,shiftcoeff*u(),shiftcoeff*u(),shiftcoeff*u(),shiftcoeff*u(),0)
-    i0cdnull = galsim.Image(cdnull.applyForward(i0).array)
+    i0cdnull = cdnull.applyForward(i0)
         
     # setting all pixels to 0 that we expect to be not 0...
     i0.setValue(center,center,0)
@@ -193,12 +193,59 @@ def test_fluxconservation():
     
     cd   = PowerLawCD(2,shiftcoeff,shiftcoeff,shiftcoeff/2.,shiftcoeff/2.,shiftcoeff/2.,shiftcoeff/2.,alpha)
     
-    imagecd = galsim.Image(cd.applyForward(image).array)
-    flatcd  = galsim.Image(cd.applyForward(flat).array)
+    imagecd = cd.applyForward(image)
+    flatcd  = cd.applyForward(flat)
     
-    np.testing.assert_almost_equal(image.array.sum(), imagecd.array.sum(), 5, "Galaxy image flux is not left invariant by charge deflection")
-    np.testing.assert_almost_equal(flat.array.sum(), flatcd.array.sum(), 5, "Flat image flux is not left invariant by charge deflection")
+    np.testing.assert_almost_equal(image.array.sum(), imagecd.array.sum(), 2, "Galaxy image flux is not left invariant by charge deflection")
+    np.testing.assert_almost_equal(flat.array.sum(), flatcd.array.sum(), 2, "Flat image flux is not left invariant by charge deflection")
+    
+    
+def test_forwardbackward():
+    """Test invariance (to first order) under forward-backward transformation
+    """
+    galflux=30000.
+    galsigma=3.
+    noise=1.
+    shiftcoeff=1.e-5
+    alpha=0.3
+    
+    size=50
+
+    gal = galsim.Gaussian(flux=galflux, sigma=galsigma)
+    maxflux = gal.xValue(0,0)
+    #print maxflux
+    image = gal.drawImage(scale=1.)
+    
+    cimage = galsim.Image(image.getBounds()) # used for normalization later   
+    cimage.fill(1.)
+    cimage = cimage+image
+    cimage = cimage*maxflux*maxflux*shiftcoeff*shiftcoeff
+    
+    image.addNoise(galsim.GaussianNoise(sigma=noise))    
+    
+    #image.write("image.fits")
+    #cimage.write("imagec.fits")
+    
+    cd   = PowerLawCD(2,shiftcoeff,2.*shiftcoeff,shiftcoeff/2.,2.*shiftcoeff/3.,shiftcoeff/2.,shiftcoeff/3.,alpha)
+    
+    imagecd = cd.applyForward(image)
+    imagecddc = cd.applyBackward(imagecd)
+    
+    #imagecd.write("imagecd.fits")
+    #imagecddc.write("imagecddc.fits")
+    
+    # residual after forward-backward should be of order a^2 q qmax^2
+    
+    imageres = (imagecddc-image)/cimage
+    #imageres.write("imageres.fits")
+    
+    maxres = imageres.array.max()
+    minres = imageres.array.min()
+    
+    assert maxres<10, ("maximum positive residual of forward-backward transformation is too large")
+    assert minres>-10, ("maximum negative residual of forward-backward transformation is too large")
     
 if __name__ == "__main__":
     test_simplegeometry()
     test_fluxconservation()
+    test_forwardbackward()
