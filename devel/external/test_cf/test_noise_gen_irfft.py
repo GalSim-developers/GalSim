@@ -149,7 +149,6 @@ rt2 = np.sqrt(2.)
 irt2 = 1. / rt2
 for nu in (3, 4, 21, 22): # number of array elements, odd first then even
 
-    psxyest_r_fixed = np.zeros_like(ux)
     u = np.fft.fftfreq(nu) # get the u0, u1, u2 etc. frequency values
     print "Running case with nu = "+str(nu)
     # Set up the 2D arrays and PS
@@ -157,6 +156,8 @@ for nu in (3, 4, 21, 22): # number of array elements, odd first then even
     psxy = np.exp(-2. * np.pi**2 * sigma**2 * (ux**2 + uy**2))
     cf = np.fft.irfft2(psxy[:, :ux.shape[1] // 2 + 1], s=ux.shape)
     halfpsxy = psxy[:, :ux.shape[1]//2+1].copy()
+    # Result storage array
+    psxyest_r_fixed = np.zeros_like(ux)
     for i in range(nsamplesxy):
 
         randvec_real = np.random.randn(ux.shape[0], ux.shape[1]//2 + 1)
