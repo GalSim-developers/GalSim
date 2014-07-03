@@ -21,6 +21,7 @@ the line x=0, and NumPy FFTs silently discard the complex part, leading to a 50%
 those modes in the realized noise field.  This script illustrates the problem first in 1D, then 2D,
 and is where the workaround was road tested.
 """
+import sys
 import numpy as np
 
 # Define sizes of arrays, input parameters
@@ -81,7 +82,7 @@ cf = np.fft.irfft2(psxy[:, :ux.shape[1] // 2 + 1], s=ux.shape)
 psxyest = np.zeros_like(ux)
 psxyest_r = np.zeros_like(ux)
 
-nsamplesxy = 10000
+nsamplesxy = 1000000
 for i in range(nsamplesxy):
 
     realization = np.fft.ifft2(
@@ -92,6 +93,10 @@ for i in range(nsamplesxy):
             .5 * psxy[:, :ux.shape[1]//2 + 1]), s=ux.shape)
     psxyest += np.abs(np.fft.fft2(realization))**2
     psxyest_r += np.abs(np.fft.fft2(realization_irfft))**2
+    if i % 1000 == 0:
+        sys.stdout.write(
+            "Completed: %d%%      %s" % (int(np.round(100. * float(i) / float(nsamplesxy))), "\r"))
+        sys.stdout.flush()
 
 psxyest /= float(nsamplesxy)
 psxyest_r /= float(nsamplesxy)
@@ -176,6 +181,11 @@ for nu in (3, 4, 21, 22): # number of array elements, odd first then even
             randvec[ux.shape[0]/2, ux.shape[1]/2] = rt2 * randvec[ux.shape[0]/2, ux.shape[1]/2].real
         realization_irfft = np.fft.irfft2(randvec * np.sqrt(halfpsxy), s=ux.shape)
         psxyest_r_fixed += np.abs(np.fft.fft2(realization_irfft))**2
+        if i % 1000 == 0:
+            sys.stdout.write(
+                "Completed: %d%%      %s" % (
+                    int(np.round(100. * float(i) / float(nsamplesxy))), "\r"))
+            sys.stdout.flush()
 
     psxyest_r_fixed /= float(nsamplesxy)
     cfest_r_fixed = np.fft.irfft2(psxyest_r_fixed[:, :ux.shape[1]//2 + 1], s=ux.shape)
