@@ -109,7 +109,7 @@ def test_SED_div():
 def test_SED_atRedshift():
     """Check that SEDs redshift correctly.
     """
-    a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'))
+    a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
     bolo_flux = a.calculateFlux(bandpass=None)
     for z1, z2 in zip([0.5, 1.0, 1.4], [1.0, 1.0, 1.0]):
         b = a.atRedshift(z1)
