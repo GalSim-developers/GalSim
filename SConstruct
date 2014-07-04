@@ -1224,17 +1224,18 @@ PyMODINIT_FUNC initcheck_tmv(void)
     if not result:
         ErrorExit('Unable to compile a module using tmv')
 
-    # TMV finds the mkl libraries necessary for compiling an executable.  But sometimes
-    # there are extra libraries required for loading mkl from a python module.
-    # So if the first line fails, try adding a few mkl libraries that might make it work.
-    result = (
-        CheckModuleLibs(config,[],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_rt'],tmv_source_file,'check_tmv',False) or
-        CheckModuleLibs(config,['mkl_base'],tmv_source_file,'check_tmv',False) or
-        CheckModuleLibs(config,['mkl_mc3'],tmv_source_file,'check_tmv',False) or
-        CheckModuleLibs(config,['mkl_mc3','mkl_def'],tmv_source_file,'check_tmv',False) or
-        CheckModuleLibs(config,['mkl_mc'],tmv_source_file,'check_tmv',False) or
-        CheckModuleLibs(config,['mkl_mc','mkl_def'],tmv_source_file,'check_tmv'),False)
+    result = CheckModuleLibs(config,[],tmv_source_file,'check_tmv')
+    if not result and any(['mkl' in lib for lib in config.env['LIBS']]):
+        # TMV finds the mkl libraries necessary for compiling an executable.  But sometimes
+        # there are extra libraries required for loading mkl from a python module.
+        # So if the above line fails, try adding a few mkl libraries that might make it work.
+        result = (
+            CheckModuleLibs(config,['mkl_rt'],tmv_source_file,'check_tmv',False) or
+            CheckModuleLibs(config,['mkl_base'],tmv_source_file,'check_tmv',False) or
+            CheckModuleLibs(config,['mkl_mc3'],tmv_source_file,'check_tmv',False) or
+            CheckModuleLibs(config,['mkl_mc3','mkl_def'],tmv_source_file,'check_tmv',False) or
+            CheckModuleLibs(config,['mkl_mc'],tmv_source_file,'check_tmv',False) or
+            CheckModuleLibs(config,['mkl_mc','mkl_def'],tmv_source_file,'check_tmv'),False)
     if not result:
         ErrorExit('Unable to build a python loadable module that uses tmv')
 

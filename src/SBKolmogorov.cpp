@@ -230,7 +230,7 @@ namespace galsim {
     { return _info->maxK() * _k0; }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at 
-    // most alias_threshold of the flux.
+    // most folding_threshold of the flux.
     double SBKolmogorov::SBKolmogorovImpl::stepK() const
     { return _info->stepK() * _k0; }
 
@@ -351,11 +351,11 @@ namespace galsim {
         double dr = gsparams->table_spacing * sqrt(sqrt(gsparams->xvalue_accuracy / 10.));
 
         // Along the way accumulate the flux integral to determine the radius
-        // that encloses (1-alias_threshold) of the flux.
+        // that encloses (1-folding_threshold) of the flux.
         double sum = 0.;
         double thresh0 = 0.5 / (2.*M_PI*dr);
-        double thresh1 = (1.-gsparams->alias_threshold) / (2.*M_PI*dr);
-        double thresh2 = (1.-gsparams->alias_threshold/5.) / (2.*M_PI*dr);
+        double thresh1 = (1.-gsparams->folding_threshold) / (2.*M_PI*dr);
+        double thresh2 = (1.-gsparams->folding_threshold/5.) / (2.*M_PI*dr);
         double R = 0., hlr = 0.;
         // Continue until accumulate 0.999 of the flux
         KolmXValue xval_func(gsparams);

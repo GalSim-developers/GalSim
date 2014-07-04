@@ -282,7 +282,7 @@ namespace galsim {
         // A fast solution to (1+R)exp(-R) = x:
         // log(1+R) - R = log(x)
         // R = log(1+R) - log(x)
-        double logx = std::log(gsparams->alias_threshold);
+        double logx = std::log(gsparams->folding_threshold);
         double R = -logx;
         for (int i=0; i<3; i++) R = std::log(1.+R) - logx;
         // Make sure it is at least 5 hlr
@@ -298,7 +298,7 @@ namespace galsim {
     { return _maxk; }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at 
-    // most alias_threshold of the flux.
+    // most folding_threshold of the flux.
     double ExponentialInfo::stepK() const
     { return _stepk; }
 

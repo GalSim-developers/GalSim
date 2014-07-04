@@ -161,12 +161,6 @@ class Bandpass(object):
 
         self.func = lambda w: tp(np.array(w) * wave_factor)
 
-        # Hack to avoid (LookupTable.x_max * 10) / 10.0 > LookupTable.x_max due to roundoff
-        # error.
-        if len(self.wave_list) > 0.0:
-            self.wave_list[0] = self.wave_list[0] + 0.0000001
-            self.wave_list[-1] = self.wave_list[-1] - 0.0000001
-
         self.zeropoint = None
 
     def __mul__(self, other):
@@ -346,7 +340,7 @@ class Bandpass(object):
 
         @param zeropoint            see above for valid input options
         @param effective_diameter   Effective diameter of telescope aperture in cm^2. [default:
-                                    None, but required if zerpoint is 'AB', 'Vega', or 'ST'].
+                                    None, but required if zeropoint is 'AB', 'Vega', or 'ST'].
         @param exptime              Exposure time in seconds. [default: None, but required if
                                     zeropoint is 'AB', 'Vega', or 'ST'].
         @returns new Bandpass with zeropoint set.
@@ -469,8 +463,8 @@ class Bandpass(object):
             # preserve type
             ret = self.copy()
             ret.func = galsim.LookupTable(newx, newf, interpolant='linear')
-            ret.blue_limit = np.min(newx) - 0.0000001
-            ret.red_limit = np.max(newx) + 0.0000001
+            ret.blue_limit = np.min(newx)
+            ret.red_limit = np.max(newx)
             ret.wave_list = np.array(newx)
             if hasattr(ret, '_effective_wavelength'):
                 del ret._effective_wavelength
