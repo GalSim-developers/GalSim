@@ -695,31 +695,37 @@ def _generate_noise_from_rootps(rng, shape, rootps):
     @returns a NumPy array (contiguous) of the requested shape, filled with the noise field.
     """
     # Sanity check on requested shape versus that of rootps
-    if len(shape) != 2 or (shape[0], shape[1] // 2 + 1) != rootps.shape:
+    if len(shape) != 2 or (shape[0], shape[1]/2+1) != rootps.shape:
         raise ValueError("Requested shape does not match that of the supplied rootps")
-    
-    # Make half size Images using Hermitian symmetry to get full sized real inverse FFT
-    gaussvec_real = galsim.ImageD(shape[1] // 2 + 1, shape[0]) # Remember NumPy is [y, x]
-    gaussvec_imag = galsim.ImageD(shape[1] // 2 + 1, shape[0])
     #  Quickest to create Gaussian rng each time needed, so do that here...
-    gn = galsim.GaussianNoise(
-        rng=rng, sigma=np.sqrt(.5 * shape[0] * shape[1])) # Note sigma scaling: 1/sqrt(2) needed so
-                                                          # <|gaussvec|**2> = product(shape); shape
-                                                          # needed because of the asymmetry in the
-                                                          # 1/N^2 division in the NumPy FFT/iFFT
-    gaussvec_real.addNoise(gn)
-    gaussvec_imag.addNoise(gn)
-    # Then we need to modify the rootps to account for a subtle effect when using irfft to generate
-    # a noise field, see Issue #563 on GitHub
-    rootps_fixed = rootps.copy() # Checked using timeit, this copy represents about ~1/50th of the
-                                 # time of the irfft below, so am not going to stress about it
-    rootps_fixed[:, 0] *= np.sqrt(2.) # Compensates for the fact that NumPy silently discards the
-                                      # imaginary part of the argument to np.fft.irfft2() all along
-                                      # the line kx == 0
-    # Finally generate noise using the irfft
-    noise_array = np.fft.irfft2(
-        (gaussvec_real.array + 1j * gaussvec_imag.array) * rootps_fixed, s=shape)
-    return np.ascontiguousarray(noise_array)
+    gd = galsim.GaussianDeviate(
+        rng, sigma=np.sqrt(.5 * shape[0] * shape[1])) # Note sigma scaling: 1/sqrt(2) needed so
+                                                      # <|gaussvec|**2> = product(shape); shape
+                                                      # needed because of the asymmetry in the
+                                                      # 1/N^2 division in the NumPy FFT/iFFT
+    # Fill a couple of arrays with this noise
+    gvec_real = galsim.utilities.rand_arr((shape[0], shape[1]/2+1), gd)
+    gvec_imag = galsim.utilities.rand_arr((shape[0], shape[1]/2+1), gd)
+    # Prepare a complex vector upon which to impose Hermitian symmetry
+    gvec = gvec_real + 1J * gvec_imag
+    # Now mpose requirements of Hermitian symmetry on random Gaussian halfcomplex array, and ensure
+    # self-conjugate elements (e.g. [0, 0]) are purely real and multiplied by sqrt(2) to compensate
+    # for lost variance, see https://github.com/GalSim-developers/GalSim/issues/563
+    # First do the bits necessary for both odd and even shapes:
+    gvec[-1:shape[0]/2:-1, 0] = np.conj(gvec[1:(shape[0]+1)/2, 0])
+    rt2 = np.sqrt(2.)
+    gvec[0, 0] = rt2 * gvec[0, 0].real
+    # Then make the changes necessary for even sized arrays
+    if shape[1] % 2 == 0: # x dimension even
+        gvec[-1:shape[0]/2:-1, shape[1]/2] = np.conj(gvec[1:(shape[0]+1)/2, shape[1]/2])
+        gvec[0, shape[1]/2] = rt2 * gvec[0, shape[1]/2].real
+    if shape[0] % 2 == 0: # y dimension even
+        gvec[shape[0]/2, 0] = rt2 * gvec[shape[0]/2, 0].real
+        # Both dimensions even
+        if shape[1] % 2 == 0:
+            gvec[shape[0]/2, shape[1]/2] = rt2 * gvec[shape[0]/2, shape[1]/2].real
+    # Finally generate and return noise using the irfft
+    return np.fft.irfft2(gvec * rootps, s=shape)
 
 
 ###
