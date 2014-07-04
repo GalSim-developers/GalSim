@@ -25,7 +25,7 @@ import sys
 import numpy as np
 
 # Define sizes of arrays, input parameters
-sigma = 0.17            # our noise field is going to have a Gaussian CF & PS for simplicity
+sigma = 0.17           # our noise field is going to have a Gaussian CF & PS for simplicity
 nu = 22                # number of array elements
 u = np.fft.fftfreq(nu) # get the u0, u1, u2 etc. frequency values
 nsamples = 50000       # number of realizations to average over
@@ -73,7 +73,7 @@ ps = np.exp(-2. * np.pi**2 * sigma**2 * u**2) # using result for FT of a Gaussia
 # plt.savefig("cf_irfft.png")
 
 # Then do 2D tests
-print "Generating 2D plots (no fix)..."
+# print "Generating 2D plots (no fix)..."
 # Set up the 2D arrays and PS
 ux, uy = np.meshgrid(u, u)
 psxy = np.exp(-2. * np.pi**2 * sigma**2 * (ux**2 + uy**2))
@@ -83,68 +83,68 @@ psxyest = np.zeros_like(ux)
 psxyest_r = np.zeros_like(ux)
 
 nsamplesxy = 10000000
-for i in range(nsamplesxy):
+# for i in range(nsamplesxy):
 
-    realization = np.fft.ifft2(
-        (np.random.randn(*ux.shape) + 1j * np.random.randn(*ux.shape)) * np.sqrt(psxy)).real
-    realization_irfft = np.fft.irfft2((
-        np.random.randn(ux.shape[0], ux.shape[1]//2 + 1) +
-        1j * np.random.randn(ux.shape[0], ux.shape[1]//2 + 1)) * np.sqrt(
-            .5 * psxy[:, :ux.shape[1]//2 + 1]), s=ux.shape)
-    psxyest += np.abs(np.fft.fft2(realization))**2
-    psxyest_r += np.abs(np.fft.fft2(realization_irfft))**2
-    if i % 1000 == 0:
-        sys.stdout.write(
-            "Completed: %d%%      %s" % (int(np.round(100. * float(i) / float(nsamplesxy))), "\r"))
-        sys.stdout.flush()
+#     realization = np.fft.ifft2(
+#         (np.random.randn(*ux.shape) + 1j * np.random.randn(*ux.shape)) * np.sqrt(psxy)).real
+#     realization_irfft = np.fft.irfft2((
+#         np.random.randn(ux.shape[0], ux.shape[1]//2 + 1) +
+#         1j * np.random.randn(ux.shape[0], ux.shape[1]//2 + 1)) * np.sqrt(
+#             .5 * psxy[:, :ux.shape[1]//2 + 1]), s=ux.shape)
+#     psxyest += np.abs(np.fft.fft2(realization))**2
+#     psxyest_r += np.abs(np.fft.fft2(realization_irfft))**2
+#     if i % 1000 == 0:
+#         sys.stdout.write(
+#             "Completed: %d%%      %s" % (int(np.round(100. * float(i) / float(nsamplesxy))), "\r"))
+#         sys.stdout.flush()
 
-psxyest /= float(nsamplesxy)
-psxyest_r /= float(nsamplesxy)
+# psxyest /= float(nsamplesxy)
+# psxyest_r /= float(nsamplesxy)
 
-cfest = np.fft.irfft2(psxyest[:, :ux.shape[1] // 2 + 1], s=ux.shape)
-cfest_r = np.fft.irfft2(psxyest_r[:, :ux.shape[1] // 2 + 1], s=ux.shape)
+# cfest = np.fft.irfft2(psxyest[:, :ux.shape[1] // 2 + 1], s=ux.shape)
+# cfest_r = np.fft.irfft2(psxyest_r[:, :ux.shape[1] // 2 + 1], s=ux.shape)
 
 # Make some plots
-import matplotlib.pyplot as plt
-import galsim
-plt.clf()
-plt.pcolor(psxyest)
-plt.colorbar()
-plt.savefig("psxy_fft.png")
+# import matplotlib.pyplot as plt
+# import galsim
+# plt.clf()
+# plt.pcolor(psxyest)
+# plt.colorbar()
+# plt.savefig("psxy_fft.png")
 
-plt.clf()
-plt.pcolor(psxyest_r)
-plt.colorbar()
-plt.savefig("psxy_rfft.png")
+# plt.clf()
+# plt.pcolor(psxyest_r)
+# plt.colorbar()
+# plt.savefig("psxy_rfft.png")
 
-plt.clf()
-plt.pcolor(psxyest_r - psxyest)
-plt.colorbar()
-plt.savefig("psxy_rfft-fft.png")
+# plt.clf()
+# plt.pcolor(psxyest_r - psxyest)
+# plt.colorbar()
+# plt.savefig("psxy_rfft-fft.png")
 
-plt.clf()
-plt.pcolor(
-    galsim.utilities.roll2d(cfest, (ux.shape[0]/2, ux.shape[1]/2)))
-plt.colorbar()
-plt.xlim(0, ux.shape[1])
-plt.ylim(0, ux.shape[0])
-plt.savefig("cfxy_fft.png")
+# plt.clf()
+# plt.pcolor(
+#     galsim.utilities.roll2d(cfest, (ux.shape[0]/2, ux.shape[1]/2)))
+# plt.colorbar()
+# plt.xlim(0, ux.shape[1])
+# plt.ylim(0, ux.shape[0])
+# plt.savefig("cfxy_fft.png")
 
-plt.clf()
-plt.pcolor(
-    galsim.utilities.roll2d(cfest_r, (ux.shape[0]/2, ux.shape[1]/2)))
-plt.colorbar()
-plt.xlim(0, ux.shape[1])
-plt.ylim(0, ux.shape[0])
-plt.savefig("cfxy_rfft.png")
+# plt.clf()
+# plt.pcolor(
+#     galsim.utilities.roll2d(cfest_r, (ux.shape[0]/2, ux.shape[1]/2)))
+# plt.colorbar()
+# plt.xlim(0, ux.shape[1])
+# plt.ylim(0, ux.shape[0])
+# plt.savefig("cfxy_rfft.png")
 
-plt.clf()
-plt.pcolor(
-    galsim.utilities.roll2d(cfest_r - cfest, (ux.shape[0]/2, ux.shape[1]/2)))
-plt.colorbar()
-plt.xlim(0, ux.shape[1])
-plt.ylim(0, ux.shape[0])
-plt.savefig("cfxy_rfft-fft.png")
+# plt.clf()
+# plt.pcolor(
+#     galsim.utilities.roll2d(cfest_r - cfest, (ux.shape[0]/2, ux.shape[1]/2)))
+# plt.colorbar()
+# plt.xlim(0, ux.shape[1])
+# plt.ylim(0, ux.shape[0])
+# plt.savefig("cfxy_rfft-fft.png")
 
 # NEWFIX - this is an attempt to reftify the code prior to this point in 2D, which seems to include
 # quite a bit of muddled thinking!
@@ -152,7 +152,7 @@ plt.savefig("cfxy_rfft-fft.png")
 print "Generating 2D plots with Gary's fix..."
 rt2 = np.sqrt(2.)
 irt2 = 1. / rt2
-for nu in (3, 4, 21, 22): # number of array elements, odd first then even
+for nu in (21, 22): # number of array elements, odd first then even
 
     u = np.fft.fftfreq(nu) # get the u0, u1, u2 etc. frequency values
     print "Running case with nu = "+str(nu)
