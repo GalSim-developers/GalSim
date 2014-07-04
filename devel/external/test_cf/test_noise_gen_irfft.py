@@ -100,8 +100,11 @@ for nu in (21, 22): # number of array elements, odd first then even
             randvec[-1: ux.shape[0]/2:-1, ux.shape[0]/2] = np.conj(
                 randvec[1: (ux.shape[0]+1)/2, ux.shape[1]/2])
             randvec[0, ux.shape[1]/2] = rt2 * randvec[0, ux.shape[1]/2].real
+        if ux.shape[0] % 2 == 0:
             randvec[ux.shape[0]/2, 0] = rt2 * randvec[ux.shape[0]/2, 0].real
-            randvec[ux.shape[0]/2, ux.shape[1]/2] = rt2 * randvec[ux.shape[0]/2, ux.shape[1]/2].real
+            if ux.shape[1] % 2 == 0:
+                randvec[ux.shape[0]/2, ux.shape[1]/2] = \
+                    rt2 * randvec[ux.shape[0]/2, ux.shape[1]/2].real
         realization_irfft = np.fft.irfft2(randvec * np.sqrt(halfpsxy), s=ux.shape)
         psxyest_r_fixed += np.abs(np.fft.fft2(realization_irfft))**2
         if i % 1000 == 0:
