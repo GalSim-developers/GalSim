@@ -88,12 +88,12 @@ namespace galsim {
     { return sqrt(-2.*std::log(this->gsparams->maxk_threshold))*_inv_sigma; }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at 
-    // most alias_threshold of the flux.
+    // most folding_threshold of the flux.
     double SBGaussian::SBGaussianImpl::stepK() const
     {
         // int( exp(-r^2/2) r, r=0..R) = 1 - exp(-R^2/2)
-        // exp(-R^2/2) = alias_threshold
-        double R = sqrt(-2.*std::log(this->gsparams->alias_threshold));
+        // exp(-R^2/2) = folding_threshold
+        double R = sqrt(-2.*std::log(this->gsparams->folding_threshold));
         // Make sure it is at least 5 hlr
         // half-light radius = sqrt(2ln(2)) * sigma
         const double hlr = 1.177410022515475;

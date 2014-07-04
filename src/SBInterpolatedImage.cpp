@@ -232,7 +232,7 @@ namespace galsim {
         // Calculate stepK:
         // 
         // The amount of flux missed in a circle of radius pi/stepk should be at 
-        // most alias_threshold of the flux.
+        // most folding_threshold of the flux.
         //
         // We add the size of the image and the size of the interpolant in quadrature.
         // (Note: Since this isn't a radial profile, R isn't really a radius, but rather 
@@ -557,14 +557,14 @@ namespace galsim {
     }
 
     // We provide an option to update the stepk value by directly calculating what
-    // size region around the center encloses (1-alias_threshold) of the total flux.
+    // size region around the center encloses (1-folding_threshold) of the total flux.
     // This can be useful if you make the image bigger than you need to, just to be
     // safe, but then want to use as large a stepk value as possible.
     void SBInterpolatedImage::SBInterpolatedImageImpl::calculateStepK(double max_stepk) const
     {
         dbg<<"Start SBInterpolatedImage calculateStepK()\n";
         dbg<<"Current value of stepk = "<<_stepk<<std::endl;
-        dbg<<"Find box that encloses "<<1.-this->gsparams->alias_threshold<<" of the flux.\n";
+        dbg<<"Find box that encloses "<<1.-this->gsparams->folding_threshold<<" of the flux.\n";
         dbg<<"Max_stepk = "<<max_stepk<<std::endl;
         dbg<<"xtab size = "<<_xtab->getN()<<", scale = "<<_xtab->getDx()<<std::endl;
         //int N = _xtab->getN();
@@ -573,7 +573,7 @@ namespace galsim {
         double fluxTot = getFlux()/scalesq;
         dbg<<"fluxTot = "<<fluxTot<<std::endl;
         double flux = (*_xtab).xval(0,0);
-        double thresh = (1.-this->gsparams->alias_threshold) * fluxTot;
+        double thresh = (1.-this->gsparams->folding_threshold) * fluxTot;
         dbg<<"thresh = "<<thresh<<std::endl;
 
         // d1 = 0 means that we haven't yet found the d that enclosed enough flux.

@@ -370,8 +370,8 @@ namespace galsim {
     {
         if (_stepk == 0.) {
             // How far should the profile extend, if not truncated?
-            // Estimate number of effective radii needed to enclose (1-alias_threshold) of flux
-            double R = calculateMissingFluxRadius(_gsparams->alias_threshold);
+            // Estimate number of effective radii needed to enclose (1-folding_threshold) of flux
+            double R = calculateMissingFluxRadius(_gsparams->folding_threshold);
             if (_truncated && _trunc < R)  R = _trunc;
             // Go to at least 5*re
             R = std::max(R,_gsparams->stepk_minimum_hlr);
