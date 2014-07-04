@@ -39,7 +39,7 @@ namespace galsim {
      * circular aperture), with central obscuration.
      *
      * maxK() is set at the hard limit for Airy disks, stepK() makes transforms go to at least 
-     * 5 lam/D or EE>(1-alias_threshold).  Schroeder (10.1.18) gives limit of EE at large radius.
+     * 5 lam/D or EE>(1-folding_threshold).  Schroeder (10.1.18) gives limit of EE at large radius.
      * This stepK could probably be relaxed, it makes overly accurate FFTs.
      * Note x & y are in units of lambda/D here.  Integral over area will give unity in this 
      * normalization.
