@@ -816,7 +816,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # And a temporary one, which we will turn into an InterpolatedImage
         tmp_arr = ps.copy()
         tmp_im = galsim.Image(tmp_arr, scale=1)
-        tmp_obj = galsim.InterpolatedImage(tmp_im)
+        tmp_obj = galsim.InterpolatedImage(tmp_im, calculate_maxk=False, calculate_stepk=False)
         # Now loop over the rotations by 2pi/order.
         for i_rot in range(order):
             # For the first one, we don't rotate at all.
