@@ -815,6 +815,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         final_arr = np.zeros(ps.shape)
         # And a temporary one, which we will turn into an InterpolatedImage
         tmp_arr = ps.copy()
+        # But first, we're going to use utilities.roll2d() to shift it so the kx=ky=0 element is at
+        # the center, instead of in the corner.
+        tmp_arr = utilities.roll2d(tmp_arr, (tmp_arr.shape[0] / 2, tmp_arr.shape[1] / 2))
         tmp_im = galsim.Image(tmp_arr, scale=1)
         tmp_obj = galsim.InterpolatedImage(tmp_im, calculate_maxk=False, calculate_stepk=False)
         # Now loop over the rotations by 2pi/order.
@@ -827,6 +830,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 tmp_obj.draw(tmp_im, scale=1)
             final_arr += tmp_im.array
         final_arr /= order
+        # Now shift it back to the convention where kx=ky=o is in the lower left.
+        final_arr = utilities.roll2d(final_arr, (-final_arr.shape[0] / 2, -final_arr.shape[1] / 2))
         # final_arr now contains the average of the rotations by 2pi/order, which should be
         # symmetric at the required order.  However, our other requirement is that the target
         # symmetrized power spectrum should always be >= the original one (`ps`).
