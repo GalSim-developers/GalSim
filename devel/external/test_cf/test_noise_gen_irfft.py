@@ -77,10 +77,11 @@ rt2 = np.sqrt(2.)
 irt2 = 1. / rt2
 for nu in (21, 22): # number of array elements, odd first then even
 
-    u = np.fft.fftfreq(nu) # get the u0, u1, u2 etc. frequency values
+    u1 = np.fft.fftfreq(nu) # get the u0, u1, u2 etc. frequency values
+    u2 = np.fft.fftfreq(nu + 1) # get the u0, u1, u2 etc. frequency values
     print "Running case with nu = "+str(nu)
     # Set up the 2D arrays and PS
-    ux, uy = np.meshgrid(u, u)
+    ux, uy = np.meshgrid(u1, u2)
     psxy = np.exp(-2. * np.pi**2 * sigma**2 * (ux**2 + uy**2))
     cf = np.fft.irfft2(psxy[:, :ux.shape[1] // 2 + 1], s=ux.shape)
     halfpsxy = psxy[:, :ux.shape[1]//2+1].copy()
@@ -97,11 +98,14 @@ for nu in (21, 22): # number of array elements, odd first then even
         randvec[0, 0] = rt2 * randvec[0, 0].real
         # Then make the changes required for even sized arrays
         if ux.shape[1] % 2 == 0:
-            randvec[-1: ux.shape[0]/2:-1, ux.shape[0]/2] = np.conj(
+            randvec[-1: ux.shape[0]/2:-1, ux.shape[1]/2] = np.conj(
                 randvec[1: (ux.shape[0]+1)/2, ux.shape[1]/2])
             randvec[0, ux.shape[1]/2] = rt2 * randvec[0, ux.shape[1]/2].real
+        if ux.shape[0] % 2 == 0:
             randvec[ux.shape[0]/2, 0] = rt2 * randvec[ux.shape[0]/2, 0].real
-            randvec[ux.shape[0]/2, ux.shape[1]/2] = rt2 * randvec[ux.shape[0]/2, ux.shape[1]/2].real
+            if ux.shape[1] % 2 == 0:
+                randvec[ux.shape[0]/2, ux.shape[1]/2] = \
+                    rt2 * randvec[ux.shape[0]/2, ux.shape[1]/2].real
         realization_irfft = np.fft.irfft2(randvec * np.sqrt(halfpsxy), s=ux.shape)
         psxyest_r_fixed += np.abs(np.fft.fft2(realization_irfft))**2
         if i % 1000 == 0:
@@ -114,26 +118,26 @@ for nu in (21, 22): # number of array elements, odd first then even
     cfest_r_fixed = np.fft.irfft2(psxyest_r_fixed[:, :ux.shape[1]//2 + 1], s=ux.shape)
 
     # Make some plots!
-    
+    import galsim
     # PS ref, fixed and difference
     plt.clf()
     plt.pcolor(psxy)
     plt.colorbar()
     plt.xlim(0, ux.shape[1])
     plt.ylim(0, ux.shape[0])
-    plt.savefig("psxy_ref_nu"+str(nu)+"_N"+str(nsamplesxy)+".png")
+    plt.savefig("psxy_ref_nu1"+str(len(u1))+"_nu2"+str(len(u2))+"_N"+str(nsamplesxy)+".png")
     plt.clf()
     plt.pcolor(psxyest_r_fixed)
     plt.colorbar()
     plt.xlim(0, ux.shape[1])
     plt.ylim(0, ux.shape[0])
-    plt.savefig("psxy_rfft_gary_fixed_nu"+str(nu)+"_N"+str(nsamplesxy)+".png")
+    plt.savefig("psxy_rfft_gary_fixed_nu1"+str(len(u1))+"_nu2"+str(len(u2))+"_N"+str(nsamplesxy)+".png")
     plt.clf()
     plt.pcolor(psxyest_r_fixed - psxy)
     plt.colorbar()
     plt.xlim(0, ux.shape[1])
     plt.ylim(0, ux.shape[0])
-    plt.savefig("psxy_rfft_gary_fixed-ref_nu"+str(nu)+"_N"+str(nsamplesxy)+".png")
+    plt.savefig("psxy_rfft_gary_fixed-ref_nu1"+str(len(u1))+"_nu2"+str(len(u2))+"_N"+str(nsamplesxy)+".png")
     
     # CF ref, fixed and difference
     plt.clf()
@@ -142,21 +146,21 @@ for nu in (21, 22): # number of array elements, odd first then even
     plt.colorbar()
     plt.xlim(0, ux.shape[1])
     plt.ylim(0, ux.shape[0])
-    plt.savefig("cfxy_ref_nu"+str(nu)+"_N"+str(nsamplesxy)+".png")
+    plt.savefig("cfxy_ref_nu1"+str(len(u1))+"_nu2"+str(len(u2))+"_N"+str(nsamplesxy)+".png")
     plt.clf()
     plt.pcolor(
         galsim.utilities.roll2d(cfest_r_fixed, (ux.shape[0]/2, ux.shape[1]/2)))
     plt.colorbar()
     plt.xlim(0, ux.shape[1])
     plt.ylim(0, ux.shape[0])
-    plt.savefig("cfxy_rfft_gary_fixed_nu"+str(nu)+"_N"+str(nsamplesxy)+".png")
+    plt.savefig("cfxy_rfft_gary_fixed_nu1"+str(len(u1))+"_nu2"+str(len(u2))+"_N"+str(nsamplesxy)+".png")
     plt.clf()
     plt.pcolor(
         galsim.utilities.roll2d(cfest_r_fixed - cf, (ux.shape[0]/2, ux.shape[1]/2)))
     plt.colorbar()
     plt.xlim(0, ux.shape[1])
     plt.ylim(0, ux.shape[0])
-    plt.savefig("cfxy_rfft_gary_fixed-cf_nu"+str(nu)+"_N"+str(nsamplesxy)+".png")
+    plt.savefig("cfxy_rfft_gary_fixed-cf_nu1"+str(len(u1))+"_nu2"+str(len(u2))+"_N"+str(nsamplesxy)+".png")
 
     
 
