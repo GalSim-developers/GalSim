@@ -267,7 +267,7 @@ namespace galsim {
     { return 2.*M_PI*_D; }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at 
-    // most alias_threshold of the flux.
+    // most folding_threshold of the flux.
     double SBAiry::SBAiryImpl::stepK() const
     { return _info->stepK() * _D; }
 
@@ -356,7 +356,7 @@ namespace galsim {
         // Calculate stepK:
         // Schroeder (10.1.18) gives limit of EE at large radius.
         // This stepK could probably be relaxed, it makes overly accurate FFTs.
-        double R = 1. / (_gsparams->alias_threshold * 0.5 * M_PI * M_PI * (1.-_obscuration));
+        double R = 1. / (_gsparams->folding_threshold * 0.5 * M_PI * M_PI * (1.-_obscuration));
         // Make sure it is at least 5 hlr
         // The half-light radius of an obscured Airy disk is not so easy to calculate.
         // So we just use the value for the unobscured Airy disk.
@@ -455,7 +455,7 @@ namespace galsim {
         xdbg<<"gsparams = "<<_gsparams.get()<<std::endl;
         xdbg<<*_gsparams<<std::endl;
         // Calculate stepK:
-        double R = 1. / (_gsparams->alias_threshold * 0.5 * M_PI * M_PI);
+        double R = 1. / (_gsparams->folding_threshold * 0.5 * M_PI * M_PI);
         // Make sure it is at least 5 hlr
         // The half-light radius of an Airy disk is 0.5348321477 * lam/D
         const double hlr = 0.5348321477;

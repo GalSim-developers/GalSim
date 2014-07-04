@@ -34,7 +34,7 @@ namespace galsim {
      * and the characteristic size `sigma` where the radial profile of the circular Gaussian
      * drops off as `exp[-r^2 / (2. * sigma^2)]`.
      * The maxK() and stepK() are for the SBGaussian are chosen to extend to 4 sigma in both 
-     * real and k domains, or more if needed to reach the `alias_threshold` spec.
+     * real and k domains, or more if needed to reach the `folding_threshold` spec.
      */
     class SBGaussian : public SBProfile 
     {
