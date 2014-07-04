@@ -13,13 +13,7 @@ spectrum... wasn't working properly.  It was close, but one of the more sensitiv
 in the tests/test_correlatednoise.py suite was failing (test_convolve_cosmos) when the precision
 was ramped up.
 
-More details will be posted on the issue linked above, but it turns out the effect causing the
-problem is quite subtle.  Gary's comment on the GalSim paper, which led to this whole investigation,
-was so sensible-sounding: "Equivalent and faster to construct hermitiam noise in fourier domain?".
-The problem is that for the array to be Hermitian the noise field FFTs have to be purely real along
-the line x=0, and NumPy FFTs silently discard the complex part, leading to a 50% power deficit for
-those modes in the realized noise field.  This script illustrates the problem first in 1D, then 2D,
-and is where the workaround was road tested.
+More details are posted on the issue linked above.
 """
 import sys
 import numpy as np
