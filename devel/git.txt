@@ -252,13 +252,9 @@ git push
 
 --- Deleting branches on the origin ---
 
-PLEASE NOTE: We have not decided any policy about cleaning up old branches on the origin yet, so
-please do not use this for deleting branches that have been successfully merged into the master
-branch.  Use it only for cleanup jobs, as in Issue #122.
-
-Note that branches can be easily deleted on GitHub itself.  Click the branches tab and press 
-"Delete branch" for the branch you want to delete.  This is probably easier than the method 
-described below.
+Note that branches can be easily deleted on GitHub itself, either for cleanup jobs or after the
+branch has been merged into master.  Click the branches tab and press "Delete branch" for the branch
+you want to delete.  This is probably easier than the method described below.
 
 The rather obtuse syntax for deleting a branch on the origin uses a push command as follows:
 
