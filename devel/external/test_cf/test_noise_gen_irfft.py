@@ -105,8 +105,8 @@ nsamplesxy = 10000000
 # cfest_r = np.fft.irfft2(psxyest_r[:, :ux.shape[1] // 2 + 1], s=ux.shape)
 
 # Make some plots
-# import matplotlib.pyplot as plt
-# import galsim
+import matplotlib.pyplot as plt
+import galsim
 # plt.clf()
 # plt.pcolor(psxyest)
 # plt.colorbar()
