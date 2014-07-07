@@ -203,6 +203,7 @@ def test_OpticalPSF_flux():
         optics_array = optics_test.draw(scale=.25*lod, image=image).array 
         np.testing.assert_almost_equal(optics_array.sum(), 1., 2, 
                 err_msg="Unaberrated Optical flux not quite unity.")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -341,10 +342,26 @@ def test_OpticalPSF_aberrations_struts():
     optics = galsim.OpticalPSF(
         lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=8.*galsim.degrees,
         astig2=0.04, coma1=-0.07, defocus=0.09, oversampling=1)
+    try:
+        np.testing.assert_raises(TypeError, galsim.OpticalPSF, lod, nstruts=5, strut_thick=0.01,
+                                 strut_angle=8.) # wrong units
+    except ImportError:
+        print 'The assert_raises tests require nose'
+    # Make sure it doesn't have some weird error if strut_angle=0 (should be the easiest case, but
+    # check anyway...)
+    optics_2 = galsim.OpticalPSF(
+        lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=0.*galsim.degrees,
+        astig2=0.04, coma1=-0.07, defocus=0.09, oversampling=1)
     myImg = optics.draw(myImg, scale=0.2*lod, use_true_center=True)
     np.testing.assert_array_almost_equal(
         myImg.array, savedImg.array, 6,
         err_msg="Optical PSF (with struts) disagrees with expected result")
+
+    # make sure it doesn't completely explode when asked to return a PSF with non-circular pupil and
+    # non-zero obscuration
+    optics = galsim.OpticalPSF(
+        lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=8.*galsim.degrees,
+        astig2=0.04, coma1=-0.07, defocus=0.09, oversampling=1, circular_pupil=False)
 
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
