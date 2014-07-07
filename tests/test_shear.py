@@ -156,6 +156,7 @@ def test_shear_initialization():
     # finally check some examples of invalid initializations for Shear
     try:
         np.testing.assert_raises(TypeError,galsim.Shear,0.3)
+        np.testing.assert_raises(TypeError,galsim.Shear,0.3,0.3)
         np.testing.assert_raises(TypeError,galsim.Shear,g1=0.3,e2=0.2)
         np.testing.assert_raises(TypeError,galsim.Shear,eta1=0.3,beta=0.*galsim.degrees)
         np.testing.assert_raises(TypeError,galsim.Shear,q=0.3)
@@ -163,6 +164,15 @@ def test_shear_initialization():
         np.testing.assert_raises(ValueError,galsim.Shear,g1=0.9,g2=0.6)
         np.testing.assert_raises(ValueError,galsim.Shear,e=-1.3,beta=0.*galsim.radians)
         np.testing.assert_raises(ValueError,galsim.Shear,e=1.3,beta=0.*galsim.radians)
+        np.testing.assert_raises(ValueError,galsim.Shear,e1=0.7,e2=0.9)
+        np.testing.assert_raises(TypeError,galsim.Shear,g=0.5)
+        np.testing.assert_raises(TypeError,galsim.Shear,e=0.5)
+        np.testing.assert_raises(TypeError,galsim.Shear,eta=0.5)
+        np.testing.assert_raises(ValueError,galsim.Shear,eta=-0.5,beta=0.*galsim.radians)
+        np.testing.assert_raises(ValueError,galsim.Shear,g=1.3,beta=0.*galsim.radians)
+        np.testing.assert_raises(ValueError,galsim.Shear,g=-0.3,beta=0.*galsim.radians)
+        np.testing.assert_raises(TypeError,galsim.Shear,e=0.3,beta=0.)
+        np.testing.assert_raises(TypeError,galsim.Shear,eta=0.3,beta=0.)
         np.testing.assert_raises(TypeError,galsim.Shear,randomkwarg=0.1)
         np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,randomkwarg=0.1)
         np.testing.assert_raises(TypeError,galsim.Shear,g1=0.1,e1=0.1)
@@ -171,6 +181,7 @@ def test_shear_initialization():
         np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0*galsim.degrees)
         np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0*galsim.degrees,g=0.3,eta=0.1)
         np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0,g=0.3)
+        np.testing.assert_raises(TypeError,galsim.Shear,q=0.1,beta=0.)
     except ImportError:
         print 'The assert_raises tests require nose'
 

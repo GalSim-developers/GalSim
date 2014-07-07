@@ -17,7 +17,15 @@
 #
 import os
 import numpy as np
-import galsim
+from galsim_test_helpers import *
+import sys
+
+try:
+    import galsim
+except ImportError:
+    path, filename = os.path.split(__file__)
+    sys.path.append(os.path.abspath(os.path.join(path, "..")))
+    import galsim
 
 path, filename = os.path.split(__file__)
 datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
@@ -25,6 +33,9 @@ datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
 def test_Bandpass_mul():
     """Check that Bandpasses multiply like I think they should...
     """
+    import time
+    t1 = time.time()
+
     a = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
     b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]))
     # Bandpass * Bandpass
@@ -67,9 +78,15 @@ def test_Bandpass_mul():
     np.testing.assert_array_almost_equal(f.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
                                          err_msg="wrong wave_list in Bandpass.__mul__")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_Bandpass_div():
     """Check that Bandpasses multiply like I think they should...
     """
+    import time
+    t1 = time.time()
+
     a = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
     b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]))
     # Bandpass / Bandpass
@@ -112,9 +129,15 @@ def test_Bandpass_div():
     np.testing.assert_array_almost_equal(f.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
                                          err_msg="wrong wave_list in Bandpass.__mul__")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_Bandpass_wave_type():
     """Check that `wave_type='ang'` works in Bandpass.__init__
     """
+    import time
+    t1 = time.time()
+
     a0 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
     a1 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), wave_type='ang')
 
@@ -135,8 +158,11 @@ def test_Bandpass_wave_type():
     np.testing.assert_approx_equal(b0.effective_wavelength, b1.effective_wavelength,
                                    err_msg="Bandpass.effective_wavelength doesn't respect"
                                            +" wave_type")
-    np.testing.assert_allclose(b0([1,2,3,4,5]), b1([1,2,3,4,5]),
+    np.testing.assert_array_almost_equal(b0([1,2,3,4,5]), b1([1,2,3,4,5]), decimal=7,
                                err_msg="Bandpass.__call__ doesn't respect wave_type")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_Bandpass_mul()

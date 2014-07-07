@@ -939,6 +939,9 @@ def test_separable_ChromaticSum():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_centroid():
+    import time
+    t1 = time.time()
+
     sed = galsim.SED('wave', flux_type='fphotons')
     bp = galsim.Bandpass('wave', blue_limit=0, red_limit=1)
     shift_fn = lambda w: (w, 0)
@@ -957,6 +960,9 @@ def test_centroid():
     centroid = gal.centroid(bp)
     np.testing.assert_almost_equal(centroid.x, 0.75, 5, "ChromaticObject.centroid() failed")
     np.testing.assert_almost_equal(centroid.y, 0.0, 5, "ChromaticObject.centroid() failed")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_draw_add_commutativity()
