@@ -82,6 +82,18 @@ def test_real_galaxy_ideal():
     # read in faked Gaussian RealGalaxy from file
     rgc = galsim.RealGalaxyCatalog(catalog_file, image_dir)
     rg = galsim.RealGalaxy(rgc, index = ind_fake)
+    # as a side note, make sure it behaves okay given a legit RNG and a bad RNG
+    # or when trying to specify the galaxy too many ways
+    rg_1 = galsim.RealGalaxy(rgc, index = ind_fake, rng = galsim.BaseDeviate(1234))
+    rg_2 = galsim.RealGalaxy(rgc, random=True)
+    try:
+        np.testing.assert_raises(TypeError, galsim.RealGalaxy, rgc, index=ind_fake, rng='foo')
+        np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc, index=ind_fake, id=0)
+        np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc, index=ind_fake, random=True)
+        np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc, id=0, random=True)
+        np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc)
+    except ImportError:
+        print 'The assert_raises tests require nose'
 
     ## for the generation of the ideal right answer, we need to add the intrinsic shape of the
     ## galaxy and the lensing shear using the rule for addition of distortions which is ugly, but oh
