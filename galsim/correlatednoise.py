@@ -811,13 +811,14 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         out the necessary rotations using well-tested interpolation routines.  We will also require
         the output to be strictly >= the input noise power spectrum, so that it should be possible
         to generate noise with power equal to the difference between the two power spectra."""
-        # Begin by initializing the array in which to build up the symmetrized PS.
-        final_arr = np.zeros(ps.shape)
-        # And a temporary one, which we will turn into an InterpolatedImage
+        # Initialize a temporary copy of the original PS array, which we will turn into an
+        # InterpolatedImage.
         tmp_arr = ps.copy()
         # But first, we're going to use utilities.roll2d() to shift it so the kx=ky=0 element is at
         # the center, instead of in the corner.
         tmp_arr = utilities.roll2d(tmp_arr, (tmp_arr.shape[0] / 2, tmp_arr.shape[1] / 2))
+        # Also initialize the array in which to build up the symmetrized PS.
+        final_arr = tmp_arr.copy()
         tmp_im = galsim.Image(tmp_arr, scale=1)
         tmp_obj = galsim.InterpolatedImage(tmp_im, calculate_maxk=False, calculate_stepk=False)
         # Now loop over the rotations by 2pi/order.
@@ -828,17 +829,13 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 tmp_obj = tmp_obj.rotate(2.*np.pi*galsim.radians/order)
                 tmp_im = galsim.Image(ps.shape[0], ps.shape[1], scale=1)
                 tmp_obj.draw(tmp_im, scale=1)
-            final_arr += tmp_im.array
-        final_arr /= order
-        # Now shift it back to the convention where kx=ky=o is in the lower left.
+                final_arr[tmp_im.array > final_arr] = tmp_im.array[tmp_im.array > final_arr]
+        # Now shift it back to the convention where kx=ky=0 is in the lower left.
         final_arr = utilities.roll2d(final_arr, (-final_arr.shape[0] / 2, -final_arr.shape[1] / 2))
-        # final_arr now contains the average of the rotations by 2pi/order, which should be
-        # symmetric at the required order.  However, our other requirement is that the target
-        # symmetrized power spectrum should always be >= the original one (`ps`).
-        delta_pow = final_arr - ps
-        # We need to add the absolute value of the minimum entry (which will be negative).
-        power_to_add = np.abs(np.min(delta_pow))
-        final_arr += power_to_add
+        # final_arr now contains the maximum of the set of images rotated by 2pi/order, which (a)
+        # should be symmetric at the required order and (b) be the minimal array that is symmetric
+        # at that order and >= the original PS.  So we do not have to add any more noise to ensure
+        # that the target symmetrized PS is always >= the original one.
         return final_arr
 
 ###
