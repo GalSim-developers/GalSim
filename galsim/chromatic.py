@@ -573,19 +573,19 @@ class ChromaticObject(object):
 
         @returns the transformed object.
         """
-        if hasattr(dudx, '__call__'):
-            if ( not hasattr(dudy, '__call__') or 
-                 not hasattr(dvdx, '__call__') or 
-                 not hasattr(dvdy, '__call__') ):
-                raise TypeError("If any of dudx, dudy, dvdx, dvdy are callable, they all must be.")
-            J = lambda w: np.matrix([[dudx(w), dudy(w), 0],
-                                     [dvdx(w), dvdy(w), 0],
+        if any(hasattr(dd, '__call__') for dd in [dudx, dudy, dvdx, dvdy]):
+            _dudx = dudx
+            _dudy = dudy
+            _dvdx = dvdx
+            _dvdy = dvdy
+            if not hasattr(dudx, '__call__'): _dudx = lambda w: dudx
+            if not hasattr(dudy, '__call__'): _dudy = lambda w: dudy
+            if not hasattr(dvdx, '__call__'): _dvdx = lambda w: dvdx
+            if not hasattr(dvdy, '__call__'): _dvdy = lambda w: dvdy
+            J = lambda w: np.matrix([[_dudx(w), _dudy(w), 0],
+                                     [_dvdx(w), _dvdy(w), 0],
                                      [      0,       0, 1]], dtype=float)
         else:
-            if ( hasattr(dudy, '__call__') or 
-                 hasattr(dvdx, '__call__') or 
-                 hasattr(dvdy, '__call__') ):
-                raise TypeError("If any of dudx, dudy, dvdx, dvdy are callable, they all must be.")
             J = np.matrix([[dudx, dudy, 0],
                            [dvdx, dvdy, 0],
                            [   0,    0, 1]], dtype=float)
