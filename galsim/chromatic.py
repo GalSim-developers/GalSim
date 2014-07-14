@@ -472,6 +472,11 @@ class ChromaticObject(object):
         the appropriate change in area, either use shear() with magnify(), or use lens(), which
         combines both operations.
 
+        Note that, while gravitational shear is monochromatic, the shear method may be used for 
+        many other use cases including some which may be wavelenght-dependent, such as 
+        intrinsic galaxy shape, telescope dilation, atmospheric PSF shape, etc.  Thus, the
+        shear argument is allowed to be a function of wavelength like other transformations.
+
         @param shear    The shear to be applied. Or, as described above, you may instead supply
                         parameters to construct a Shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
                         `shear` may be callable, in which case the argument should be wavelength
@@ -567,8 +572,7 @@ class ChromaticObject(object):
 
         As with the other more specific chromatic trasnformations, dudx, dudy, dvdx, and dvdy
         may be callable, in which case the argument should be wavelength in nanometers and the
-        return value the appropriate value for that wavelength.  If one of these is a callable
-        function then all 4 of them must be.
+        return value the appropriate value for that wavelength.
 
         @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
@@ -588,7 +592,7 @@ class ChromaticObject(object):
             if not hasattr(dvdy, '__call__'): _dvdy = lambda w: dvdy
             J = lambda w: np.matrix([[_dudx(w), _dudy(w), 0],
                                      [_dvdx(w), _dvdy(w), 0],
-                                     [      0,       0, 1]], dtype=float)
+                                     [       0,        0, 1]], dtype=float)
         else:
             J = np.matrix([[dudx, dudy, 0],
                            [dvdx, dvdy, 0],
