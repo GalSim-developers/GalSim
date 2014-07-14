@@ -668,6 +668,80 @@ def test_ChromaticObject_expand():
         flux2, 2.*flux, 5,
         err_msg="expanded ChromaticObject * 2 resulted in wrong flux.")
 
+    # Test the wavelength-dependent expansion option
+    pixel_scale = 0.3
+    sigma = 1.7
+    gal = galsim.Gaussian(sigma=sigma, flux=132)
+    im0 = gal.draw(scale=pixel_scale, dtype=float)
+    # Initial mxx,myy should be sigma**2 in units of arcsec^2, so (sigma/pixel_scale)**2 in pix.
+    mx, my, mxx, myy, mxy = getmoments(im0)
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, 1.0, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, 1.0, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+
+    # First a very simple case with no actual wavelength dependence, but using the 
+    # functional syntax.
+    gal1 = galsim.ChromaticObject(gal).expand(lambda w: 1.2)
+    # Use a simple bandpass so we can do the integral below analytically
+    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 500, 700)
+    im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
+    mx, my, mxx, myy, mxy = getmoments(im1)
+    print 'simple growth = ',mxx/(sigma/pixel_scale)**2, 1.2**2
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, 1.2**2, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, 1.2**2, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+
+    # Use an expansion that varies quadratically within the range 500-700
+    expansion = lambda w: 1.2 + 0.11*(w-600)/100 - 0.36*(w-600)**2/100**2
+    gal2 = galsim.ChromaticObject(gal).expand(expansion)
+    im2 = gal2.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
+    # The test here relies on linearity to swap the order of the integrals.
+    # The getmoments test is essentially int(dxdy x^2 int(dlambda I(x,y,lam) F(lam)))
+    # But we can swap the order of the integrals to do int(dlambda int(dxdy x^2 I(x,y,lam) F(lam)))
+    # and do the integral analytically.
+    mx, my, mxx, myy, mxy = getmoments(im2)
+    # Now the analytic integral:
+    # mxx = int(dlam (sigma * expansion)**2 * expansion**2 * F(lam))
+    #         / int(dlam expansion**2 * F(lam))
+    # Note that two of the factors of expansion are the flux scaling.  The other two, only in the
+    # numerator, are the size scaling.
+    #     = sigma**2 * int(dt (1.2 + 0.11 t - 0.36 t**2)**4 (1 - 0.12 t**2), t=-1..1)
+    #            / int(dt (1.2 + 0.11 t - 0.36 t**2)**2 (1 - 0.12 t**2), t=-1..1)
+    #     = sigma**2 * 1.243224162 (according to Maple)
+    growth_factor = galsim.integ.int1d(lambda w: expansion(w)**4 * bp(w),500,700)
+    growth_factor /= galsim.integ.int1d(lambda w: expansion(w)**2 * bp(w),500,700)
+    print 'growth factor = ',mxx/(sigma/pixel_scale)**2, growth_factor
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+
+    # Repeat using transform rather than expand
+    gal3 = galsim.ChromaticObject(gal).transform(expansion, 0.0, 0.0, expansion)
+    im3 = gal3.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
+    mx, my, mxx, myy, mxy = getmoments(im3)
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+
+    # Repeat using magnify
+    gal4 = galsim.ChromaticObject(gal).magnify(lambda w: expansion(w)**2)
+    im4 = gal4.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
+    mx, my, mxx, myy, mxy = getmoments(im4)
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+
+    # Dilate isn't quite the same, since it doesn't have the extra flux factor:
+    gal5 = galsim.ChromaticObject(gal).dilate(expansion)
+    im5 = gal5.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
+    mx, my, mxx, myy, mxy = getmoments(im5)
+    dilate_growth_factor = galsim.integ.int1d(lambda w: expansion(w)**2 * bp(w),500,700)
+    dilate_growth_factor /= galsim.integ.int1d(lambda w: bp(w),500,700)
+    print 'dilate_growth factor = ',mxx/(sigma/pixel_scale)**2, dilate_growth_factor
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, dilate_growth_factor, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, dilate_growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -697,6 +771,80 @@ def test_ChromaticObject_rotate():
         flux2, 2.*flux, 5,
         err_msg="rotated ChromaticObject * 2 resulted in wrong flux.")
 
+    # Test the wavelength-dependent rotation option
+    pixel_scale = 0.3
+    sigma = 1.7
+    gal = galsim.Gaussian(sigma=sigma, flux=132).shear(e1=0.3)
+    im0 = gal.draw(scale=pixel_scale, dtype=float)
+    # Initial distortion should be (e1,0).
+    mx, my, mxx, myy, mxy = getmoments(im0)
+    print 'e1 = ',(mxx-myy)/(mxx+myy)
+    print 'e2 = ',(2*mxy)/(mxx+myy)
+    print '(mxx+myy)/sigma^2 = ',(mxx+myy)/(sigma/pixel_scale)**2
+    print '2/(mxx+myy)/sigma^2 = ',2./((mxx+myy)/(sigma/pixel_scale)**2)
+    print 'sqrt(1-0.3**2) = ',np.sqrt(1.-0.3**2)
+    fact = np.sqrt(1.-0.3**2)
+    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), 0.3, decimal=4)
+    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), 0.0, decimal=4)
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, (1+0.3)/fact, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, (1-0.3)/fact, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+
+    # First a very simple case with no actual wavelength dependence, but using the 
+    # functional syntax.
+    gal1 = galsim.ChromaticObject(gal).rotate(lambda w: 0.4 * galsim.radians)
+    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 500, 700)
+    im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
+    mx, my, mxx, myy, mxy = getmoments(im1)
+    print 'simple angle = ',(np.arctan2(2.*mxy,mxx-myy)/2.), 0.4
+    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), 0.3*np.cos(2.*0.4), decimal=4)
+    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), 0.3*np.sin(2.*0.4), decimal=4)
+    rot_e1 = 0.3*np.cos(2.*0.4)
+    rot_e2 = 0.3*np.sin(2.*0.4)
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, (1+rot_e1)/fact, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, (1-rot_e1)/fact, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, rot_e2/fact, decimal=4)
+
+    # Use an expansion that varies quadratically within the range 500-700
+    rotation = lambda w: (0.4 + 0.11*(w-600)/100 - 0.36*(w-600)**2/100**2) * galsim.radians
+    gal2 = galsim.ChromaticObject(gal).rotate(rotation)
+    im2 = gal2.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
+    mx, my, mxx, myy, mxy = getmoments(im2)
+    # The analytic integrals:
+    # mxx = int(dw (1 + 0.3 cos(2theta(w))) * F(w))  / int(dw F(w))
+    # myy = int(dw (1 - 0.3 cos(2theta(w))) * F(w))  / int(dw F(w))
+    # mxy = int(dw 0.3 sin(2theta(w)) * F(w))  / int(dw F(w))
+    rot_mxx = galsim.integ.int1d(lambda w: (1.+0.3*np.cos(2*rotation(w).rad())) * bp(w),500,700)
+    rot_mxx /= galsim.integ.int1d(lambda w: bp(w),500,700)
+    rot_myy = galsim.integ.int1d(lambda w: (1.-0.3*np.cos(2*rotation(w).rad())) * bp(w),500,700)
+    rot_myy /= galsim.integ.int1d(lambda w: bp(w),500,700)
+    rot_mxy = galsim.integ.int1d(lambda w: (0.3*np.sin(2*rotation(w).rad())) * bp(w),500,700)
+    rot_mxy /= galsim.integ.int1d(lambda w: bp(w),500,700)
+    rot_e1 = (rot_mxx-rot_myy)/(rot_mxx+rot_myy)
+    rot_e2 = (2*rot_mxy)/(rot_mxx+rot_myy)
+    print 'rot e1 = ',(mxx-myy)/(mxx+myy), rot_e1
+    print 'rot e2 = ',(2*mxy)/(mxx+myy), rot_e2
+    print 'rot e = ',np.sqrt(rot_e1**2+rot_e2**2)
+    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), rot_e1, decimal=4)
+    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), rot_e2, decimal=4)
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, (1+rot_e1)/fact, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, (1-rot_e1)/fact, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, rot_e2/fact, decimal=4)
+
+    # Repeat using transform rather than expand
+    gal3 = galsim.ChromaticObject(gal).transform(
+                lambda w: np.cos(rotation(w).rad()),
+                lambda w: -np.sin(rotation(w).rad()),
+                lambda w: np.sin(rotation(w).rad()),
+                lambda w: np.cos(rotation(w).rad()) )
+    im3 = gal3.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
+    mx, my, mxx, myy, mxy = getmoments(im3)
+    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), rot_e1, decimal=4)
+    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), rot_e2, decimal=4)
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, (1+rot_e1)/fact, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, (1-rot_e1)/fact, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, rot_e2/fact, decimal=4)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -722,6 +870,74 @@ def test_ChromaticObject_shear():
     np.testing.assert_array_almost_equal(
         flux2, 2.*flux, 5,
         err_msg="rotated ChromaticObject * 2 resulted in wrong flux.")
+
+    # Test the wavelength-dependent shear option
+    pixel_scale = 0.3
+    sigma = 1.7
+    gal = galsim.Gaussian(sigma=sigma, flux=132)
+    im0 = gal.draw(scale=pixel_scale, dtype=float)
+    # Initial distortion should be (0,0).
+    mx, my, mxx, myy, mxy = getmoments(im0)
+    print 'mxx+myy = ',mxx+myy
+    print 'e1 = ',(mxx-myy)/(mxx+myy)
+    print 'e2 = ',(2*mxy)/(mxx+myy)
+    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), 0.0, decimal=4)
+    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), 0.0, decimal=4)
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, 1.0, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, 1.0, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0.0, decimal=4)
+
+    # First a very simple case with no actual wavelength dependence, but using the 
+    # functional syntax.
+    gal1 = galsim.ChromaticObject(gal).shear(lambda w: galsim.Shear(e1=0.23, e2=0.13))
+    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 500, 700)
+    im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
+    mx, my, mxx, myy, mxy = getmoments(im1)
+    print 'mxx+myy = ',mxx+myy
+    print 'simple e1 = ',(mxx-myy)/(mxx+myy)
+    print 'simple e2 = ',(2.*mxy)/(mxx+myy)
+    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), 0.23, decimal=4)
+    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), 0.13, decimal=4)
+    fact = np.sqrt(1. - 0.23**2 - 0.13**2)
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, (1+0.23)/fact, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, (1-0.23)/fact, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0.13/fact, decimal=4)
+
+    # Use an expansion that varies quadratically within the range 500-700
+    shear = lambda w: galsim.Shear(e1=0.23 + 0.11*(w-600)/100 - 0.36*(w-600)**2/100**2,
+                                   e2=0.13 + 0.19*(w-600)/100 - 0.09*(w-600)**2/100**2)
+    gal2 = galsim.ChromaticObject(gal).shear(shear)
+    im2 = gal2.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
+    mx, my, mxx, myy, mxy = getmoments(im2)
+    # The analytic integrals:
+    # mxx = int(dw (1 + e1(w))/sqrt(1-e(w)^2) * F(w))  / int(dw F(w))
+    # myy = int(dw (1 - e1(w))/sqrt(1-e(w)^2) * F(w))  / int(dw F(w))
+    # mxy = int(dw e2(w)/sqrt(1-e(w)^2) * F(w))  / int(dw F(w))
+    sh_mxx = galsim.integ.int1d(lambda w: (1.+shear(w).e1)/np.sqrt(1.-shear(w).e**2)*bp(w),500,700)
+    sh_mxx /= galsim.integ.int1d(lambda w: bp(w),500,700)
+    sh_myy = galsim.integ.int1d(lambda w: (1.-shear(w).e1)/np.sqrt(1.-shear(w).e**2)*bp(w),500,700)
+    sh_myy /= galsim.integ.int1d(lambda w: bp(w),500,700)
+    sh_mxy = galsim.integ.int1d(lambda w: shear(w).e2/np.sqrt(1.-shear(w).e**2)*bp(w),500,700)
+    sh_mxy /= galsim.integ.int1d(lambda w: bp(w),500,700)
+    print 'mxx+myy = ',mxx+myy
+    print 'shear e1 = ',(mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy)
+    print 'shear e2 = ',(2*mxy)/(mxx+myy), (2*sh_mxy)/(sh_mxx+sh_myy)
+    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy), decimal=4)
+    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), (2*sh_mxy)/(sh_mxx+sh_myy), decimal=4)
+
+    # Repeat using transform rather than expand
+    gal3 = galsim.ChromaticObject(gal).transform(
+                lambda w: (1.+shear(w).g1)/np.sqrt(1.-shear(w).g**2),
+                lambda w: shear(w).g2/np.sqrt(1.-shear(w).g**2),
+                lambda w: shear(w).g2/np.sqrt(1.-shear(w).g**2),
+                lambda w: (1.-shear(w).g1)/np.sqrt(1.-shear(w).g**2) )
+    im3 = gal3.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
+    mx, my, mxx, myy, mxy = getmoments(im3)
+    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy), decimal=4)
+    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), (2*sh_mxy)/(sh_mxx+sh_myy), decimal=4)
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, sh_mxx, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, sh_myy, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, sh_mxy, decimal=4)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

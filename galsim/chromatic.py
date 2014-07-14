@@ -176,6 +176,10 @@ class ChromaticObject(object):
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
+        # Remove from kwargs anything that is only used for setting up image:
+        if 'dtype' in kwargs: kwargs.pop('dtype')
+        if 'scale' in kwargs: kwargs.pop('scale')
+        if 'wcs' in kwargs: kwargs.pop('wcs')
 
         # determine combined self.wave_list and bandpass.wave_list
         wave_list = bandpass.wave_list
