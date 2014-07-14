@@ -271,7 +271,7 @@ namespace galsim {
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at 
-    // most alias_threshold of the flux.
+    // most folding_threshold of the flux.
     double SBBox::SBBoxImpl::stepK() const
     {
         // In this case max(width,height) encloses all the flux, so use that.
