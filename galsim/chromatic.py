@@ -478,17 +478,17 @@ class ChromaticObject(object):
         """
         if len(args) == 1:
             if kwargs:
-                raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
-            if not isinstance(args[0], galsim.Shear):
-                raise TypeError("Error, unnamed argument to applyShear is not a Shear!")
+                raise TypeError("Gave both unnamed and named arguments!")
+            if not hasattr(args[0], '__call__') and not isinstance(args[0], galsim.Shear):
+                raise TypeError("Unnamed argument is not a Shear!")
             shear = args[0]
         elif len(args) > 1:
-            raise TypeError("Error, too many unnamed arguments to applyShear!")
+            raise TypeError("Too many unnamed arguments!")
         elif 'shear' in kwargs:
             # Need to break this out specially in case it is a function of wavelength
             shear = kwargs.pop('shear')
             if kwargs:
-                raise TypeError("Error, too many kwargs provided to applyShear!")
+                raise TypeError("Too many kwargs provided!")
         else:
             shear = galsim.Shear(**kwargs)
         if hasattr(shear, '__call__'):
@@ -638,9 +638,9 @@ class ChromaticObject(object):
             dx = args[0]
             dy = args[1]
         else:
-            raise TypeError("Too many arguments supplied to applyShift ")
+            raise TypeError("Too many arguments supplied!")
         if kwargs:
-            raise TypeError("shift() got unexpected keyword arguments: %s",kwargs.keys())
+            raise TypeError("Got unexpected keyword arguments: %s",kwargs.keys())
         if hasattr(dx, '__call__') or hasattr(dy, '__call__'):
             # Functionalize dx, dy as needed.
             if not hasattr(dx, '__call__'):
@@ -730,13 +730,12 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
             zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
                 obj_coord=obj_coord, HA=HA, latitude=latitude)
     else:
-        raise TypeError(
-            "Need to specify zenith_angle and parallactic_angle in ChromaticAtmosphere!")
+        raise TypeError("Need to specify zenith_angle and parallactic_angle!")
     # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
     # Check that they're valid
     for kw in kwargs.keys():
         if kw not in ['temperature', 'pressure', 'H2O_pressure']:
-            raise TypeError("Got unexpected keyword in ChromaticAtmosphere: {0}".format(kw))
+            raise TypeError("Got unexpected keyword: {0}".format(kw))
 
     ret = ChromaticObject(base_obj)
     ret = ret.dilate(lambda w: (w/base_wavelength)**alpha)
@@ -857,14 +856,12 @@ class ChromaticSum(ChromaticObject):
 
         # Make sure there is nothing left in the dict.
         if kwargs:
-            raise TypeError(
-                "ChromaticSum constructor got unexpected keyword argument(s): %s"%kwargs.keys())
+            raise TypeError("Got unexpected keyword argument(s): %s"%kwargs.keys())
 
         if len(args) == 0:
             # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
             # exception instead.
-            raise ValueError("ChromaticSum must be initialized with at least one GSObject"
-                             +" or ChromaticObject.")
+            raise ValueError("Must provide at least one GSObject or ChromaticObject.")
         elif len(args) == 1:
             # 1 argument.  Should be either a GSObject, ChromaticObject or a list of these.
             if isinstance(args[0], (galsim.GSObject, ChromaticObject)):
@@ -992,9 +989,7 @@ class ChromaticConvolution(ChromaticObject):
         if len(args) == 0:
             # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
             # exception instead.
-            raise ValueError(
-                "ChromaticConvolution must be initialized with at least one GSObject or"
-                +" ChromaticObject")
+            raise ValueError("Must provide at least one GSObject or ChromaticObject")
         elif len(args) == 1:
             if isinstance(args[0], (galsim.GSObject, ChromaticObject)):
                 args = [args[0]]
@@ -1015,9 +1010,7 @@ class ChromaticConvolution(ChromaticObject):
 
         # Make sure there is nothing left in the dict.
         if kwargs:
-            raise TypeError(
-                "ChromaticConvolution constructor got unexpected keyword "
-                +"argument(s): %s"%kwargs.keys())
+            raise TypeError("Got unexpected keyword argument(s): %s"%kwargs.keys())
 
         self.objlist = []
         for obj in args:
