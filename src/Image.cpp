@@ -253,18 +253,28 @@ ImageAlloc<T> BaseImage<T>::applyCD(ConstImageView<double> aL, ConstImageView<do
 
             // for each surrounding pixel do
             int matrixindex = 0; // for iterating over the aL, aR, aB, aT images in 1d
-            //std::cout << "### in " << x << " " << y << std::endl;
-            for(int iy=-dmax; iy<=dmax; iy++){
+            
+            //if(x==25 && y==24)
+            //std::cout << "##### x,y=" << x << "," << y << std::endl;
+	    for(int iy=-dmax; iy<=dmax; iy++){
 
-                for(int ix=-dmax; ix<=dmax; ix++){
-
+		for(int ix=-dmax; ix<=dmax; ix++){
+		    //if(x==25 && y==24)
+		    //std::cout << "## dx,dy=" << ix << "," << iy << std::endl; 
                     double qkl = at(x + ix, y + iy);
+		    
                     f += qkl * fT * aT.at(aT.getXMin() + matrixindex, aT.getYMin());
+		    //if(x==25 && y==24)
+		    //std::cout << "T: " << qkl << "*" << fT << "*" << aT.at(aT.getXMin() + matrixindex, aT.getYMin()) << std::endl;
                     f += qkl * fB * aB.at(aB.getXMin() + matrixindex, aB.getYMin());
+		    //if(x==25 && y==24)
+		    //std::cout << "B: " << qkl << "*" << fB << "*" << aB.at(aB.getXMin() + matrixindex, aB.getYMin()) << std::endl;
                     f += qkl * fL * aL.at(aL.getXMin() + matrixindex, aL.getYMin());
-		    //if(fL>0)
-		    //  std::cout << ix << " " << iy << " " << qkl << " * " << fL << " * " << aL.at(aL.getXMin() + matrixindex, aL.getYMin()) << std::endl;
+		    //if(x==25 && y==24)
+		    //std::cout << "L: " << qkl << "*" << fL << "*" << aL.at(aL.getXMin() + matrixindex, aL.getYMin()) << std::endl;
                     f += qkl * fR * aR.at(aR.getXMin() + matrixindex, aR.getYMin());
+		    //if(x==25 && y==24)
+		    //std::cout << "R: " << qkl << "*" << fR << "*" << aR.at(aR.getXMin() + matrixindex, aR.getYMin()) << std::endl;
                     matrixindex++;
 
                 }

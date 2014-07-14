@@ -57,6 +57,7 @@ def test_simplegeometry():
       
     cdr0   = PowerLawCD(2,shiftcoeff,0,0,0,0,0,0)
     i0cdr0 = cdr0.applyForward(i0)
+
     cdt0   = PowerLawCD(2,0,shiftcoeff,0,0,0,0,0)
     i0cdt0 = cdt0.applyForward(i0)
     
@@ -245,7 +246,30 @@ def test_forwardbackward():
     assert maxres<10, ("maximum positive residual of forward-backward transformation is too large")
     assert minres>-10, ("maximum negative residual of forward-backward transformation is too large")
     
+def test_exampleimage():
+    """Test application of model compared to an independent implementation that was run on example 
+       image
+    """
+    
+    #n, r0, t0, rx, tx, r, t, alpha
+    cd = PowerLawCD(5, 2.e-7, 1.e-7, 1.25e-7, 1.25e-7, 0.75e-7, 0.5e-7, 0.3)
+      # model used externally to bring cdtest1 to cdtest2
+
+    image_orig  = galsim.fits.read("fits_files/cdtest1.fits") # unprocessed image
+    image_proc  = galsim.fits.read("fits_files/cdtest2.fits") # image with cd model applied with other library
+    
+    image_plcd  = cd.applyForward(image_orig)
+    
+    #image_plcd.write("cdtest_intern.fits")
+    #image_proc.write("cdtest_extern.fits")
+
+    np.testing.assert_array_almost_equal(image_proc.array, image_plcd.array, 1,
+                                   "externally and internally processed image not equal") 
+                                   # I checked that the remaining differences are numerical noise
+
+    
 if __name__ == "__main__":
     test_simplegeometry()
     test_fluxconservation()
     test_forwardbackward()
+    test_exampleimage()
