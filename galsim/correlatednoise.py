@@ -529,7 +529,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
         self.__class__ = new_obj.__class__
 
-    def drawImage(self, image=None, scale=None, dtype=None, wmult=1., add_to_image=False):
+    def drawImage(self, image=None, scale=None, dtype=None, wmult=1., add_to_image=False, dx=None):
         """A method for drawing profiles storing correlation functions.
 
         This is a mild reimplementation of the drawImage() method for GSObjects.  The `method` is
@@ -561,13 +561,16 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @returns an Image of the correlation function.
         """
+        # Check for obsolete dx parameter
+        if dx is not None and scale is None: scale = dx
+
         return self._profile.drawImage(
             image=image, scale=scale, dtype=dtype, method='sb', gain=1., wmult=wmult,
             add_to_image=add_to_image, use_true_center=False)
 
-    def draw(self, image=None, scale=None, dtype=None, wmult=1., add_to_image=False):
+    def draw(self, *args, **kwargs):
         """An obsolete synonym of drawImage"""
-        return self.drawImage(image,scale,dtype,wmult,add_to_image)
+        return self.drawImage(*args, **kwargs)
 
     def calculateCovarianceMatrix(self, bounds, scale):
         """Calculate the covariance matrix for an image with specified properties.
