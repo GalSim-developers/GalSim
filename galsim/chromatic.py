@@ -473,7 +473,7 @@ class ChromaticObject(object):
         combines both operations.
 
         Note that, while gravitational shear is monochromatic, the shear method may be used for 
-        many other use cases including some which may be wavelenght-dependent, such as 
+        many other use cases including some which may be wavelength-dependent, such as 
         intrinsic galaxy shape, telescope dilation, atmospheric PSF shape, etc.  Thus, the
         shear argument is allowed to be a function of wavelength like other transformations.
 
