@@ -266,9 +266,9 @@ class ChromaticObject(object):
         surface brightness at every location scaled by the given amount.
 
         @param flux_ratio   The factor by which to scale the linear dimension of the object.
-                            `flux_ratio` may be callable, in which case the argument should be
-                            wavelength in nanometers and the return value the scale for that
-                            wavelength.
+                            In addition, `flux_ratio` may be a callable function, in which case
+                            the argument should be wavelength in nanometers and the return value
+                            the scale for that wavelength.
 
         @returns a new object with the flux scaled appropriately.
         """
@@ -406,9 +406,10 @@ class ChromaticObject(object):
         See magnify() for a version that applies a scale factor to the area while preserving surface
         brightness.
 
-        @param scale    The factor by which to scale the linear dimension of the object.  `scale`
-                        may be callable, in which case the argument should be wavelength in
-                        nanometers and the return value the scale for that wavelength.
+        @param scale    The factor by which to scale the linear dimension of the object.  In
+                        addition, `scale` may be a callable function, in which case the argument
+                        should be wavelength in nanometers and the return value the scale for that
+                        wavelength.
 
         @returns the expanded object
         """
@@ -427,9 +428,9 @@ class ChromaticObject(object):
         See expand() and magnify() for versions that preserve surface brightness, and thus
         change the flux.
 
-        @param scale    The linear rescaling factor to apply.  `scale` may be callable, in which
-                        case the argument should be wavelength in nanometers and the return value
-                        the scale for that wavelength.
+        @param scale    The linear rescaling factor to apply.  In addition, `scale` may be a
+                        callable function, in which case the argument should be wavelength in
+                        nanometers and the return value the scale for that wavelength.
 
         @returns the dilated object.
         """
@@ -449,9 +450,9 @@ class ChromaticObject(object):
 
         See dilate() for a version that applies a linear scale factor while preserving flux.
 
-        @param mu       The lensing magnification to apply.  `mu` may be callable, in which
-                        case the argument should be wavelength in nanometers and the return value
-                        the magnification for that wavelength.
+        @param mu       The lensing magnification to apply.  In addition, `mu` may be a callable
+                        function, in which case the argument should be wavelength in nanometers
+                        and the return value the magnification for that wavelength.
 
         @returns the magnified object.
         """
@@ -479,9 +480,9 @@ class ChromaticObject(object):
 
         @param shear    The shear to be applied. Or, as described above, you may instead supply
                         parameters to construct a Shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
-                        `shear` may be callable, in which case the argument should be wavelength
-                        in nanometers and the return value the shear for that wavelength, returned
-                        as a galsim.Shear instance.
+                        In addition, the `shear` parameter may be a callable function, in which
+                        case the argument should be wavelength in nanometers and the return value
+                        the shear for that wavelength, returned as a galsim.Shear instance.
 
         @returns the sheared object.
         """
@@ -489,7 +490,7 @@ class ChromaticObject(object):
             if kwargs:
                 raise TypeError("Gave both unnamed and named arguments!")
             if not hasattr(args[0], '__call__') and not isinstance(args[0], galsim.Shear):
-                raise TypeError("Unnamed argument is not a Shear!")
+                raise TypeError("Unnamed argument is not a Shear or function returning Shear!")
             shear = args[0]
         elif len(args) > 1:
             raise TypeError("Too many unnamed arguments!")
@@ -540,9 +541,10 @@ class ChromaticObject(object):
     def rotate(self, theta):
         """Rotate this object by an Angle `theta`.
 
-        @param theta    Rotation angle (Angle object, +ve anticlockwise). `theta` may be callable,
-                        in which case the argument should be wavelength in nanometers and the
-                        return value the rotation angle for that wavelength.
+        @param theta    Rotation angle (Angle object, +ve anticlockwise). In addition, `theta` may
+                        be a callable function, in which case the argument should be wavelength in
+                        nanometers and the return value the rotation angle for that wavelength,
+                        returned as a galsim.Angle instance.
 
         @returns the rotated object.
         """
@@ -571,8 +573,8 @@ class ChromaticObject(object):
         details.
 
         As with the other more specific chromatic trasnformations, dudx, dudy, dvdx, and dvdy
-        may be callable, in which case the argument should be wavelength in nanometers and the
-        return value the appropriate value for that wavelength.
+        may be callable functions, in which case the argument should be wavelength in nanometers
+        and the return value the appropriate value for that wavelength.
 
         @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
