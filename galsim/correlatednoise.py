@@ -1023,7 +1023,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
         /YOUR/REPO/PATH/GalSim/share/acs_I_unrot_sci_20_cf.fits
 
     @param file_name    If provided, override the usual location of the file with the given
-                        file name.  [defualt: None]
+                        file name.  [default: None]
     @param rng          If provided, a random number generator to use as the random number
                         generator of the resulting noise object. (may be any kind of
                         BaseDeviate object) [default: None, in which case, one will be
