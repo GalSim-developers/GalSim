@@ -731,6 +731,14 @@ def test_ChromaticObject_expand():
     np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, growth_factor, decimal=4)
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
 
+    # Repeat using lens
+    gal5 = galsim.ChromaticObject(gal).lens(0., 0., lambda w: expansion(w)**2)
+    im5 = gal5.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
+    mx, my, mxx, myy, mxy = getmoments(im5)
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+
     # Dilate isn't quite the same, since it doesn't have the extra flux factor:
     gal5 = galsim.ChromaticObject(gal).dilate(expansion)
     im5 = gal5.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
@@ -805,7 +813,7 @@ def test_ChromaticObject_rotate():
     np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, (1-rot_e1)/fact, decimal=4)
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, rot_e2/fact, decimal=4)
 
-    # Use an expansion that varies quadratically within the range 500-700
+    # Use a rotation that varies quadratically within the range 500-700
     rotation = lambda w: (0.4 + 0.11*(w-600)/100 - 0.36*(w-600)**2/100**2) * galsim.radians
     gal2 = galsim.ChromaticObject(gal).rotate(rotation)
     im2 = gal2.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
@@ -831,7 +839,7 @@ def test_ChromaticObject_rotate():
     np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, (1-rot_e1)/fact, decimal=4)
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, rot_e2/fact, decimal=4)
 
-    # Repeat using transform rather than expand
+    # Repeat using transform rather than rotate
     gal3 = galsim.ChromaticObject(gal).transform(
                 lambda w: np.cos(rotation(w).rad()),
                 lambda w: -np.sin(rotation(w).rad()),
@@ -903,7 +911,7 @@ def test_ChromaticObject_shear():
     np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, (1-0.23)/fact, decimal=4)
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0.13/fact, decimal=4)
 
-    # Use an expansion that varies quadratically within the range 500-700
+    # Use a shear that varies quadratically within the range 500-700
     shear = lambda w: galsim.Shear(e1=0.23 + 0.11*(w-600)/100 - 0.36*(w-600)**2/100**2,
                                    e2=0.13 + 0.19*(w-600)/100 - 0.09*(w-600)**2/100**2)
     gal2 = galsim.ChromaticObject(gal).shear(shear)
@@ -924,8 +932,11 @@ def test_ChromaticObject_shear():
     print 'shear e2 = ',(2*mxy)/(mxx+myy), (2*sh_mxy)/(sh_mxx+sh_myy)
     np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy), decimal=4)
     np.testing.assert_almost_equal((2*mxy)/(mxx+myy), (2*sh_mxy)/(sh_mxx+sh_myy), decimal=4)
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, sh_mxx, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, sh_myy, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, sh_mxy, decimal=4)
 
-    # Repeat using transform rather than expand
+    # Repeat using transform rather than shear
     gal3 = galsim.ChromaticObject(gal).transform(
                 lambda w: (1.+shear(w).g1)/np.sqrt(1.-shear(w).g**2),
                 lambda w: shear(w).g2/np.sqrt(1.-shear(w).g**2),
@@ -933,6 +944,16 @@ def test_ChromaticObject_shear():
                 lambda w: (1.-shear(w).g1)/np.sqrt(1.-shear(w).g**2) )
     im3 = gal3.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im3)
+    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy), decimal=4)
+    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), (2*sh_mxy)/(sh_mxx+sh_myy), decimal=4)
+    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, sh_mxx, decimal=4)
+    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, sh_myy, decimal=4)
+    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, sh_mxy, decimal=4)
+
+    # Repeat using lens
+    gal4 = galsim.ChromaticObject(gal).lens(lambda w: shear(w).g1, lambda w: shear(w).g2, 1.)
+    im4 = gal4.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
+    mx, my, mxx, myy, mxy = getmoments(im4)
     np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy), decimal=4)
     np.testing.assert_almost_equal((2*mxy)/(mxx+myy), (2*sh_mxy)/(sh_mxx+sh_myy), decimal=4)
     np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, sh_mxx, decimal=4)
