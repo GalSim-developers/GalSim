@@ -40,8 +40,8 @@ New features introduced in this demo:
 - ps = galsim.PowerSpectrum(..., units)
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
 - gal = gal.lens(g1, g2, mu)
-- correlated_noise.whitenImage(image)
-- correlated_noise.symmetrizeImage(image)
+- correlated_noise.whitenImage(image) or image.whitenNoise(correlated_noise)
+- correlated_noise.symmetrizeImage(image) or image.symmetrizeNoise(correlated_noise)
 - vn = galsim.VariableGaussianNoise(rng, var_image)
 - image.addNoise(cn)
 - image.setOrigin(x,y)
@@ -316,9 +316,13 @@ def main(argv):
         # symmetry.  Usually this requires adding significantly less additional noise, which means
         # you can have the resulting total variance be somewhat smaller.  The returned variance
         # corresponds to the zero-lag value of the noise correlation function, which will still have
-        # off-diagonal elements.
+        # off-diagonal elements.  We can do this step using either a method of the CorrelatedNoise
+        # class (commented out below) or a method of the Image class, whcih is the recommended
+        # syntax.
         #new_variance = final.noise.whitenImage(stamp)
-        new_variance = final.noise.symmetrizeImage(stamp, 8)
+        #new_variance = final.noise.symmetrizeImage(stamp, 8)
+        #new_variance = stamp.whitenNoise(final.noise)
+        new_variance = stamp.symmetrizeNoise(final.noise, 8)
 
         # Rescale flux to get the S/N we want.  We have to do that before we add it to the big 
         # image, which might have another galaxy near that point (so our S/N calculation would 
