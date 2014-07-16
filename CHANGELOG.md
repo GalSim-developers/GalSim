@@ -18,3 +18,7 @@ Bug Fixes and Improvements
 
 Updates to config options
 -------------------------
+
+- Added RandomPoisson, RandomBinomial, RandomWeibull, RandomGamma, and RandomChi2 random number
+  generators, corresponding to the random deviate classes in the python layer. (#537)
+
