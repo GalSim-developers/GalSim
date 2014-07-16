@@ -24,6 +24,42 @@ import galsim
 from . import base
 from . import utilities
 
+def whitenNoise(self, noise):
+    # This will be inserted into the Image class as a method.  So self = image.
+    """Whiten the noise in the image assuming that the noise currently in the image can be described
+    by the CorrelatedNoise object `noise`.  See CorrelatedNoise.whitenImage() docstring for more
+    details of how this method works.
+
+    @param noise        The CorrelatedNoise model to use when figuring out how much noise to add to
+                        make the final noise white.
+    @returns the theoretically calculated variance of the combined noise fields in the
+             updated image.
+
+    """
+    return noise.whitenImage(self)
+
+def symmetrizeNoise(self, noise, order=4):
+    # This will be inserted into the Image class as a method.  So self = image.
+    """Impose N-fold symmetry (where N=`order` is an even integer >=4) on the noise in the image
+    assuming that the noise currently in the image can be described by the CorrelatedNoise object
+    `noise`.  See CorrelatedNoise.symmetrizeImage() docstring for more details of how this method
+    works.
+
+    @param noise        The CorrelatedNoise model to use when figuring out how much noise to add to
+                        make the final noise have symmetry at the desired order.
+    @param order        Desired symmetry order.  Must be an even integer larger than 2.
+                        [default: 4]
+
+    @returns the theoretically calculated variance of the combined noise fields in the
+             updated image.
+
+    """
+    return noise.symmetrizeImage(self, order=order)
+
+# Now inject whitenNoise and symmetrizeNoise as methods of the Image class.
+galsim.Image.whitenNoise = whitenNoise
+galsim.Image.symmetrizeNoise = symmetrizeNoise
+
 class _BaseCorrelatedNoise(galsim.BaseNoise):
     """A Base Class describing 2D correlated Gaussian random noise fields.
 
@@ -161,6 +197,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         a specified CorrelatedNoise instance, designed to whiten any correlated noise that may have
         originally existed in `image`.
 
+        Note: the syntax `image.whitenNoise(noise)` is preferred.
+
         Calling
         -------
 
@@ -254,6 +292,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         The order `N` of the symmetry can be supplied as a keyword argument, with the default being
         4 because this is presumably the minimum required for the anisotropy of noise correlations
         to not affect shear statistics.
+
+        Note: the syntax `image.symmetrizeNoise(noise, order)` is preferred.
 
         On output the Image instance `image` will have been given additional noise according to a
         specified CorrelatedNoise instance, designed to symmetrize the correlated noise that may
