@@ -13,7 +13,9 @@ New Features
   N>=4) on correlated noise fields, parallel to the existing noise whitening
   options. Changed name for noise whitening routine from applyWhiteningTo() to
   whitenImage(), parallel to the new symmetrizeImage(); use of applyWhiteningTo()
-  is deprecated.  (#529)
+  is deprecated.  Encouraged use of new Image methods whitenNoise() and
+  symmetrizeNoise() rather than CorrelatedNoise methods whitenImage() and
+  symmetrizeImage(). (#529)
 
 Bug Fixes and Improvements
 --------------------------
