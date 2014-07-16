@@ -176,9 +176,13 @@ class Image(object):
     """
     cpp_valid_dtypes = _galsim.ImageView.keys()
     alias_dtypes = {
-        int : numpy.zeros(1, dtype=int).dtype.type,     # So that user gets what they would expect
-        float : numpy.zeros(1, dtype=float).dtype.type, # from NumPy if using dtype=int or float
+        int : numpy.int32,          # So that user gets what they would expect
+        float : numpy.float64,      # if using dtype=int or float
     }
+    # Note: Numpy uses int64 for int on 64 bit machines.  We don't implement int64 at all,
+    # so we cannot follow this pattern.  If this becomes too confusing, we might need to
+    # add an ImageL class that uses int64.  Hard to imagine a use case where this would
+    # be required though...
     valid_dtypes = cpp_valid_dtypes + alias_dtypes.keys()
 
     def __init__(self, *args, **kwargs):
@@ -853,8 +857,7 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
 
-import numpy as np
-for int_type in [ np.int16, np.int32 ]:
+for int_type in [ numpy.int16, numpy.int32 ]:
     for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type],
                    _galsim.ConstImageView[int_type] ]:
         Class.__and__ = Image_and
