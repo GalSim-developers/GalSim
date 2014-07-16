@@ -15,6 +15,9 @@ Bug Fixes and Improvements
 
 - SED and Bandpass methods that return a new SED or Bandpass now attempt to preserve the type of
   the object calling the method. (#547)
+- Changed the the `file_name` argument to `CorrelatedNoise.getCOSMOSNoise()` to no longer be
+  required.  The normal file to use is now installed along with GalSim (in the directory
+  PREFIX/share/galsim), so that file can be used by default. (#548)
 
 Updates to config options
 -------------------------
