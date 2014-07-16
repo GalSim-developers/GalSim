@@ -817,7 +817,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         tmp_arr = ps.copy()
         # But first, we're going to use utilities.roll2d() to shift it so the kx=ky=0 element is at
         # the center, instead of in the corner.
-        tmp_arr = utilities.roll2d(tmp_arr, (tmp_arr.shape[0] / 2, tmp_arr.shape[1] / 2))
+        tmp_arr = utilities.roll2d(tmp_arr, (tmp_arr.shape[0]//2, tmp_arr.shape[1]//2))
         # Check for even-sized arrays, which need special treatment:
         do_expansion = False
         if tmp_arr.shape[0] % 2 == 0:
@@ -852,7 +852,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         if do_expansion:
             final_arr = final_arr[0:final_arr.shape[0]-1, 0:final_arr.shape[1]-1]
         # Now shift it back to the convention where kx=ky=0 is in the lower left.
-        final_arr = utilities.roll2d(final_arr, (-final_arr.shape[0] / 2, -final_arr.shape[1] / 2))
+        final_arr = utilities.roll2d(final_arr, (-(final_arr.shape[0]//2), -(final_arr.shape[1]//2)))
         # final_arr now contains the maximum of the set of images rotated by 2pi/order, which (a)
         # should be symmetric at the required order and (b) be the minimal array that is symmetric
         # at that order and >= the original PS.  So we do not have to add any more noise to ensure
