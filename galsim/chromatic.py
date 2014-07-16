@@ -522,11 +522,10 @@ class ChromaticObject(object):
         dark matter halo.  The magnification determines the rescaling factor for the object area and
         flux, preserving surface brightness.
 
-        Note that, in contrast to the other transformations, this method cannot accept a function
-        of wavelength as its argument (lensing is achromatic, after all!).  If you find a use case
-        for this, however, please submit an issue to
-
-            https://github.com/GalSim-developers/GalSim/issues
+        While gravitational lensing is achromatic, we do allow the parameters `g1`, `g2`, and `mu`
+        to be callable functions to be parallel to all the other transformations of chromatic
+        objects.  In this case, the functions should take the wavelength in nanometers as the 
+        arguement, and the return values are the corresponding value at that wavelength.
 
         @param g1       First component of lensing (reduced) shear to apply to the object.
         @param g2       Second component of lensing (reduced) shear to apply to the object.
@@ -536,7 +535,16 @@ class ChromaticObject(object):
 
         @returns the lensed object.
         """
-        return self.shear(g1=g1,g2=g2).magnify(mu)
+        if any(hasattr(g, '__call__') for g in [g1,g2]):
+            _g1 = g1
+            _g2 = g2
+            if not hasattr(g1, '__call__'): _g1 = lambda w: g1
+            if not hasattr(g2, '__call__'): _g2 = lambda w: g2
+            S = lambda w: galsim.Shear(g1=_g1(w), g2=_g2(w))
+            sheared = self.shear(S)
+        else:
+            sheared = self.shear(g1=g1,g2=g2)
+        return sheared.magnify(mu)
 
     def rotate(self, theta):
         """Rotate this object by an Angle `theta`.
