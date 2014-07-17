@@ -31,10 +31,15 @@ Also, feel free to fork the repository:
 
     https://github.com/GalSim-developers/GalSim/fork
 
-Or clone the master branch with either of the following:
+Or clone the repository with either of the following:
 
     git clone git@github.com:GalSim-developers/GalSim.git
     git clone https://github.com/GalSim-developers/GalSim.git
+
+although after doing so, if you are not a developer, you should probably
+checkout the latest release tag, rather than use the master branch:
+
+    git checkout v1.1.0
 
 The code is also distributed via Fink, Macports, and Homebrew for Mac users.
 See INSTALL.md for more information.

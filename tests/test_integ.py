@@ -223,6 +223,23 @@ def test_invroot_infinite_limits():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_midpoint_basic():
+    """Test the basic functionality of the midpt() method.
+    """
+    import time
+    t1 = time.time()
+
+    # This shouldn't be super accurate, but just make sure it's not really broken.
+    x = 0.01*np.arange(1000)
+    f = x**2
+    result = galsim.integ.midpt(f, x)
+    expected_val = 10**3./3.
+    np.testing.assert_almost_equal(
+        result/expected_val, 1.0, decimal=2, verbose=True,
+        err_msg='Simple test of midpt() method failed for f(x)=x^2 from 0 to 10')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_gaussian_finite_limits()
@@ -231,4 +248,4 @@ if __name__ == "__main__":
     test_sinxsqexpabsx_infinite_limits()
     test_invroot_finite_limits()
     test_invroot_infinite_limits()
-
+    test_midpoint_basic()

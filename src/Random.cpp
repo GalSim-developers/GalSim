@@ -19,8 +19,28 @@
 
 #include <sys/time.h>
 #include "Random.h"
+#include <fcntl.h>
 
 namespace galsim {
+
+    void BaseDeviate::seedurandom() 
+    {
+        // This implementation shamelessly taken from:
+        // http://stackoverflow.com/questions/2572366/how-to-use-dev-random-or-urandom-in-c
+        int randomData = open("/dev/urandom", O_RDONLY);
+        int myRandomInteger;
+        size_t randomDataLen = 0;
+        while (randomDataLen < sizeof myRandomInteger)
+        {
+            ssize_t result = read(randomData, ((char*)&myRandomInteger) + randomDataLen,
+                                  (sizeof myRandomInteger) - randomDataLen);
+            if (result < 0)
+                throw std::runtime_error("Unable to read from /dev/urandom");
+            randomDataLen += result;
+        }
+        close(randomData);
+        _rng->seed(myRandomInteger);
+    }
 
     void BaseDeviate::seedtime() 
     {
@@ -31,8 +51,14 @@ namespace galsim {
 
     void BaseDeviate::seed(long lseed)
     {
-        if (lseed == 0) seedtime();
-        else {
+        if (lseed == 0) {
+            try {
+                seedurandom();
+            } catch(...) {
+                // If urandom is not possible, revert to using the time
+                seedtime();
+            }
+        } else {
             // We often use sequential seeds for our RNG's (so we can be sure that runs on multiple
             // processors are deterministic).  The Boost Mersenne Twister is supposed to work with
             // this kind of seeding, having been updated in April 2005 to address an issue with
