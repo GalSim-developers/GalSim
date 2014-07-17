@@ -679,8 +679,7 @@ def test_cosmos_and_whitening():
     t1 = time.time()
     gd = galsim.GaussianDeviate(rseed)
     cosmos_scale = 7.5 # Use some non-default, non-unity value of COSMOS pixel spacing
-    ccn = galsim.getCOSMOSNoise(
-        '../examples/data/acs_I_unrot_sci_20_cf.fits', gd, cosmos_scale=cosmos_scale)
+    ccn = galsim.getCOSMOSNoise(rng=gd, cosmos_scale=cosmos_scale)
     # large image to beat down noise
     outimage = galsim.ImageD(3 * largeim_size, 3 * largeim_size, scale=cosmos_scale)
     outimage.addNoise(ccn)  # Add the COSMOS noise
@@ -789,8 +788,7 @@ def test_convolve_cosmos():
     t1 = time.time()
     gd = galsim.GaussianDeviate(rseed)
     cosmos_scale=0.03 # Non-unity, non-default value to be used below
-    cn = galsim.getCOSMOSNoise(
-        '../examples/data/acs_I_unrot_sci_20_cf.fits', gd, cosmos_scale=cosmos_scale)
+    cn = galsim.getCOSMOSNoise(rng=gd, cosmos_scale=cosmos_scale)
     cn.setVariance(300.) # Again chosen to be non-unity and so as to produce ~unity output variance
     # Define a PSF with which to convolve the noise field, one WITHOUT 2-fold rotational symmetry
     # (see test_autocorrelate in test_SBProfile.py for more info as to why this is relevant)
@@ -973,8 +971,7 @@ def test_variance_changes():
     # Now do this for a CorrelatedNoise object.
     gd = galsim.GaussianDeviate()
     cosmos_scale=0.03
-    cn = galsim.getCOSMOSNoise(
-        '../examples/data/acs_I_unrot_sci_20_cf.fits', gd, cosmos_scale=cosmos_scale)
+    cn = galsim.getCOSMOSNoise(rng=gd, cosmos_scale=cosmos_scale)
     cn.setVariance(new_var)
     np.testing.assert_equal(cn.getVariance(), new_var,
                             err_msg='Failure to reset and then get variance for CorrelatedNoise')

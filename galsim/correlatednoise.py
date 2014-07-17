@@ -189,10 +189,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         To see noise whitening in action, let us use a model of the correlated noise in COSMOS
         as returned by the getCOSMOSNoise() function.  Let's initialize and add noise to an image:
 
-            >>> cosmos_file='YOUR/REPO/PATH/GalSim/examples/data/acs_I_unrot_sci_20_cf.fits'
-            >>> cn = galsim.getCOSMOSNoise(cosmos_file)
+            >>> cn = galsim.getCOSMOSNoise()
             >>> image = galsim.ImageD(256, 256, scale=0.03)
-                  # The scale should match the COSMOS default since didn't specify another
+            >>> # The scale should match the COSMOS default since didn't specify another
             >>> image.addNoise(cn)
 
         The `image` will then contain a realization of a random noise field with COSMOS-like
@@ -531,7 +530,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
         self.__class__ = new_obj.__class__
 
-    def drawImage(self, image=None, scale=None, dtype=None, wmult=1., add_to_image=False):
+    def drawImage(self, image=None, scale=None, dtype=None, wmult=1., add_to_image=False, dx=None):
         """A method for drawing profiles storing correlation functions.
 
         This is a mild reimplementation of the drawImage() method for GSObjects.  The `method` is
@@ -563,13 +562,16 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @returns an Image of the correlation function.
         """
+        # Check for obsolete dx parameter
+        if dx is not None and scale is None: scale = dx
+
         return self._profile.drawImage(
             image=image, scale=scale, dtype=dtype, method='sb', gain=1., wmult=wmult,
             add_to_image=add_to_image, use_true_center=False)
 
-    def draw(self, image=None, scale=None, dtype=None, wmult=1., add_to_image=False):
+    def draw(self, *args, **kwargs):
         """An obsolete synonym of drawImage"""
-        return self.drawImage(image,scale,dtype,wmult,add_to_image)
+        return self.drawImage(*args, **kwargs)
 
     def calculateCovarianceMatrix(self, bounds, scale):
         """Calculate the covariance matrix for an image with specified properties.
@@ -1042,7 +1044,7 @@ def _Image_getCorrelatedNoise(image):
 galsim.Image.getCorrelatedNoise = _Image_getCorrelatedNoise
 
 # Free function for returning a COSMOS noise field correlation function
-def getCOSMOSNoise(file_name, rng=None, cosmos_scale=0.03, variance=0., x_interpolant=None,
+def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_interpolant=None,
                    gsparams=None, dx_cosmos=None):
     """Returns a representation of correlated noise in the HST COSMOS F814W unrotated science coadd
     images.
@@ -1051,16 +1053,17 @@ def getCOSMOSNoise(file_name, rng=None, cosmos_scale=0.03, variance=0., x_interp
     and Leauthaud et al (2007) for detailed information about the unrotated F814W coadds used for
     weak lensing science.
 
-    This function uses a stacked estimate of the correlation function in COSMOS noise fields, the
-    location of which should be input to this function via the `file_name` argument.  This image is
-    stored in FITS format, and is generated as described in
-    `YOUR/REPO/PATH/GalSim/devel/external/hst/make_cosmos_cfimage.py`.  The image itself can also be
-    found within the GalSim repo, located at:
+    This function uses a stacked estimate of the correlation function in COSMOS noise fields.
+    The correlation function was computed by the GalSim team as described in
 
-        /YOUR/REPO/PATH/GalSim/examples/data/acs_I_unrot_sci_20_cf.fits
+        /YOUR/REPO/PATH/GalSim/devel/external/hst/make_cosmos_cfimage.py
 
-    @param file_name    String containing the path and filename above but modified to match the
-                        location of the GalSim repository on your system.
+    and the resulting file is distributed with GalSim as
+
+        /YOUR/REPO/PATH/GalSim/share/acs_I_unrot_sci_20_cf.fits
+
+    @param file_name    If provided, override the usual location of the file with the given
+                        file name.  [default: None]
     @param rng          If provided, a random number generator to use as the random number
                         generator of the resulting noise object. (may be any kind of
                         BaseDeviate object) [default: None, in which case, one will be
@@ -1125,10 +1128,9 @@ def getCOSMOSNoise(file_name, rng=None, cosmos_scale=0.03, variance=0., x_interp
     The following commands use this function to generate a 300 pixel x 300 pixel image of noise with
     HST COSMOS correlation properties (substitute in your own file and path for the `filestring`).
 
-        >>> file_name='/YOUR/REPO/PATH/GalSim/devel/external/hst/acs_I_unrot_sci_20_cf.fits'
         >>> import galsim
         >>> rng = galsim.UniformDeviate(123456)
-        >>> cf = galsim.correlatednoise.getCOSMOSNoise(file_name, rng=rng)
+        >>> cf = galsim.correlatednoise.getCOSMOSNoise(rng=rng)
         >>> im = galsim.ImageD(300, 300, scale=0.03)
         >>> cf.applyTo(im)
         >>> im.write('out.fits')
@@ -1140,8 +1142,10 @@ def getCOSMOSNoise(file_name, rng=None, cosmos_scale=0.03, variance=0., x_interp
 
     # First try to read in the image of the COSMOS correlation function stored in the repository
     import os
+    if file_name is None:
+        file_name = os.path.join(galsim.meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits')
     if not os.path.isfile(file_name):
-        raise IOError("The input file_name '"+str(file_name)+"' does not exist.")
+        raise IOError("The file '"+str(file_name)+"' does not exist.")
     try:
         cfimage = galsim.fits.read(file_name)
     except Exception:
