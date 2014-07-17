@@ -1,3 +1,12 @@
+Changes from v1.1.0 to v1.1.1
+=============================
+
+- Fixed the `int` and `float` aliases with the `dtype=` kwarg when initializing `Image` instances
+  to use the `numpy.int32` and `numpy.float64` data types.  Previously the behavior was
+  unpredictable and platform dependent. (#571)
+
+
+
 Changes from v1.0 to v1.1
 =========================
 
