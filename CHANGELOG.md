@@ -9,11 +9,12 @@ New Features
   for estimating chromatic PSF moment shifts (#547)
 - Renamed the GSParams parameter `alias_threshold` to `folding_threshold`, a clearer term for the
   profile image folding in real space that this GSParam controls (#562)
-- Added an option to impose N-fold symmetry (for user-selected even values of
-  N>=4) on correlated noise fields, parallel to the existing noise whitening
-  options. Changed name for noise whitening routine from noise.applyWhiteningTo() to
-  image.whitenNoise(), parallel to the new image.symmetrizeNoise(); use of 
+- Changed name of noise whitening routine from noise.applyWhiteningTo(image)
+  to image.whitenNoise(noise), parallel to image.addNoise(noise); use of 
   noise.applyWhiteningTo() is deprecated. (#529)
+- Added an option to impose N-fold symmetry (for user-selected even values of
+  N>=4) on the noise in images with correlated noise rather than fully whiten
+  the noise called image.symmetrizeNoise(noise, N). (#529)
 
 Bug Fixes and Improvements
 --------------------------
