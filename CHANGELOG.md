@@ -9,6 +9,12 @@ New Features
   for estimating chromatic PSF moment shifts (#547)
 - Renamed the GSParams parameter `alias_threshold` to `folding_threshold`, a clearer term for the
   profile image folding in real space that this GSParam controls (#562)
+- Changed name of noise whitening routine from noise.applyWhiteningTo(image)
+  to image.whitenNoise(noise), parallel to image.addNoise(noise); use of 
+  noise.applyWhiteningTo() is deprecated. (#529)
+- Added an option to impose N-fold symmetry (for user-selected even values of
+  N>=4) on the noise in images with correlated noise rather than fully whiten
+  the noise called image.symmetrizeNoise(noise, N). (#529)
 
 Bug Fixes and Improvements
 --------------------------
@@ -25,6 +31,8 @@ Bug Fixes and Improvements
 Updates to config options
 -------------------------
 
+- Moved noise whitening option from being an attribute of the RealGalaxy class,
+  to being a part of the description of the noise. (#529)
 - Added RandomPoisson, RandomBinomial, RandomWeibull, RandomGamma, and RandomChi2 random number
   generators, corresponding to the random deviate classes in the python layer. (#537)
 
