@@ -65,6 +65,13 @@ def test_float_value():
                     'interpolant' : 'linear' },
         'dist3' : { 'type' : 'RandomDistribution', 'function' : 'x*x', 
                     'x_min' : 0., 'x_max' : 2.0 },
+        'dev1' : { 'type' : 'RandomPoisson', 'mean' : 137 },
+        'dev2' : { 'type' : 'RandomBinomial', 'N' : 17 },
+        'dev3' : { 'type' : 'RandomBinomial', 'N' : 17, 'p' : 0.2 },
+        'dev4' : { 'type' : 'RandomWeibull', 'a' : 1.7, 'b' : 4.3 },
+        'dev5' : { 'type' : 'RandomGamma', 'k' : 1, 'theta' : 4 },
+        'dev6' : { 'type' : 'RandomGamma', 'k' : 1.9, 'theta' : 4.1 },
+        'dev7' : { 'type' : 'RandomChi2', 'n' : 17},
         'seq1' : { 'type' : 'Sequence' },
         'seq2' : { 'type' : 'Sequence', 'step' : 0.1 },
         'seq3' : { 'type' : 'Sequence', 'first' : 1.5, 'step' : 0.5 },
@@ -191,6 +198,37 @@ def test_float_value():
         dist3 = galsim.config.ParseValue(config,'dist3',config, float)[0]
         np.testing.assert_almost_equal(dist3, dd())
 
+    # Test values generated from various other deviates
+    for k in range(6):
+        config['obj_num'] = k
+        dev = galsim.PoissonDeviate(rng, mean=137)
+        dev1 = galsim.config.ParseValue(config,'dev1',config, float)[0]
+        np.testing.assert_almost_equal(dev1, dev())
+
+        dev = galsim.BinomialDeviate(rng, N=17)
+        dev2 = galsim.config.ParseValue(config,'dev2',config, float)[0]
+        np.testing.assert_almost_equal(dev2, dev())
+
+        dev = galsim.BinomialDeviate(rng, N=17, p=0.2)
+        dev3 = galsim.config.ParseValue(config,'dev3',config, float)[0]
+        np.testing.assert_almost_equal(dev3, dev())
+
+        dev = galsim.WeibullDeviate(rng, a=1.7, b=4.3)
+        dev4 = galsim.config.ParseValue(config,'dev4',config, float)[0]
+        np.testing.assert_almost_equal(dev4, dev())
+
+        dev = galsim.GammaDeviate(rng, k=1, theta=4)
+        dev5 = galsim.config.ParseValue(config,'dev5',config, float)[0]
+        np.testing.assert_almost_equal(dev5, dev())
+
+        dev = galsim.GammaDeviate(rng, k=1.9, theta=4.1)
+        dev6 = galsim.config.ParseValue(config,'dev6',config, float)[0]
+        np.testing.assert_almost_equal(dev6, dev())
+
+        dev = galsim.Chi2Deviate(rng, n=17)
+        dev7 = galsim.config.ParseValue(config,'dev7',config, float)[0]
+        np.testing.assert_almost_equal(dev7, dev())
+
     # Test values generated from a Sequence
     seq1 = []
     seq2 = []
@@ -276,6 +314,9 @@ def test_int_value():
         'cat2' : { 'type' : 'Catalog' , 'col' : 3 },
         'ran1' : { 'type' : 'Random', 'min' : 0, 'max' : 3 },
         'ran2' : { 'type' : 'Random', 'min' : -5, 'max' : 10 },
+        'dev1' : { 'type' : 'RandomPoisson', 'mean' : 137 },
+        'dev2' : { 'type' : 'RandomBinomial', 'N' : 17 },
+        'dev3' : { 'type' : 'RandomBinomial', 'N' : 17, 'p' : 0.2 },
         'seq1' : { 'type' : 'Sequence' },
         'seq2' : { 'type' : 'Sequence', 'step' : 3 },
         'seq3' : { 'type' : 'Sequence', 'first' : 1, 'step' : 5 },
@@ -344,6 +385,21 @@ def test_int_value():
 
         ran2 = galsim.config.ParseValue(config,'ran2',config, int)[0]
         np.testing.assert_equal(ran2, int(math.floor(rng() * 16))-5)
+
+    # Test values generated from various other deviates
+    for k in range(6):
+        config['obj_num'] = k
+        dev = galsim.PoissonDeviate(rng, mean=137)
+        dev1 = galsim.config.ParseValue(config,'dev1',config, int)[0]
+        np.testing.assert_almost_equal(dev1, dev())
+
+        dev = galsim.BinomialDeviate(rng, N=17)
+        dev2 = galsim.config.ParseValue(config,'dev2',config, int)[0]
+        np.testing.assert_almost_equal(dev2, dev())
+
+        dev = galsim.BinomialDeviate(rng, N=17, p=0.2)
+        dev3 = galsim.config.ParseValue(config,'dev3',config, int)[0]
+        np.testing.assert_almost_equal(dev3, dev())
 
     # Test values generated from a Sequence
     seq1 = []
@@ -452,6 +508,9 @@ def test_bool_value():
         'cat1' : { 'type' : 'Catalog' , 'col' : 4 },
         'cat2' : { 'type' : 'Catalog' , 'col' : 5 },
         'ran1' : { 'type' : 'Random' },
+        'dev1' : { 'type' : 'RandomBinomial', 'N' : 1 },
+        'dev2' : { 'type' : 'RandomBinomial', 'N' : 1, 'p' : 0.5 },
+        'dev3' : { 'type' : 'RandomBinomial', 'p' : 0.2 },
         'seq1' : { 'type' : 'Sequence' },
         'seq2' : { 'type' : 'Sequence', 'first' : True, 'repeat' : 2 },
         'list1' : { 'type' : 'List', 'items' : [ 'yes', 'no', 'no' ] },
@@ -515,6 +574,21 @@ def test_bool_value():
         config['obj_num'] = k
         ran1 = galsim.config.ParseValue(config,'ran1',config, bool)[0]
         np.testing.assert_equal(ran1, rng() < 0.5)
+
+    # Test values generated from binomial deviate
+    for k in range(6):
+        config['obj_num'] = k
+        dev = galsim.BinomialDeviate(rng, N=1)
+        dev1 = galsim.config.ParseValue(config,'dev1',config, bool)[0]
+        np.testing.assert_almost_equal(dev1, dev())
+
+        dev = galsim.BinomialDeviate(rng, N=1, p=0.5)
+        dev2 = galsim.config.ParseValue(config,'dev2',config, bool)[0]
+        np.testing.assert_almost_equal(dev2, dev())
+
+        dev = galsim.BinomialDeviate(rng, N=1, p=0.2)
+        dev3 = galsim.config.ParseValue(config,'dev3',config, bool)[0]
+        np.testing.assert_almost_equal(dev3, dev())
 
     # Test values generated from a Sequence
     seq1 = []

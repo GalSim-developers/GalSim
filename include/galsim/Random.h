@@ -129,9 +129,10 @@ namespace galsim {
         /**
          * @brief Construct and seed a new BaseDeviate, using the provided value as seed.
          *
-         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
-         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
-         * independent. 
+         * If lseed == 0, this means to use a random seed from the system: either /dev/urandom
+         * if possible, or the time of day otherwise.  Note that in the latter case, the
+         * microsecond counter is the seed, so BaseDeviates constructed in rapid succession may
+         * not be independent. 
          *
          * @param[in] lseed A long-integer seed for the RNG.
          */
@@ -177,9 +178,10 @@ namespace galsim {
         /**
          * @brief Re-seed the PRNG using specified seed
          *
-         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
-         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
-         * independent. 
+         * If lseed == 0, this means to use a random seed from the system: either /dev/urandom
+         * if possible, or the time of day otherwise.  Note that in the latter case, the
+         * microsecond counter is the seed, so BaseDeviates constructed in rapid succession may
+         * not be independent. 
          *
          * @param[in] lseed A long-integer seed for the RNG.
          *
@@ -191,7 +193,7 @@ namespace galsim {
          * @brief Like seed(lseed), but severs the relationship between other Deviates.
          *
          * Other Deviates that had been using the same RNG will be unaffected, while this 
-         * Deviate will obtain a fresh RNG seeding by the current time.
+         * Deviate will obtain a fresh RNG seed according to lseed.
          */
         void reset(long lseed) { _rng.reset(new rng_type()); seed(lseed); }
 
@@ -239,6 +241,12 @@ namespace galsim {
          * @brief Private routine to seed with microsecond counter from time-of-day structure.
          */
         void seedtime();
+
+        /**
+         * @brief Private routine to seed using /dev/random.  This will throw an exception
+         * if this is not possible.
+         */
+        void seedurandom();
     };
 
     /**
@@ -249,9 +257,10 @@ namespace galsim {
     public:
         /** @brief Construct and seed a new UniformDeviate, using the provided value as seed.
          *
-         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
-         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
-         * independent. 
+         * If lseed == 0, this means to use a random seed from the system: either /dev/urandom
+         * if possible, or the time of day otherwise.  Note that in the latter case, the
+         * microsecond counter is the seed, so BaseDeviates constructed in rapid succession may
+         * not be independent. 
          *
          * @param[in] lseed A long-integer seed for the RNG.
          */
@@ -303,9 +312,10 @@ namespace galsim {
         /**
          * @brief Construct a new Gaussian-distributed RNG, using the provided value as seed.
          *
-         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
-         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
-         * independent. 
+         * If lseed == 0, this means to use a random seed from the system: either /dev/urandom
+         * if possible, or the time of day otherwise.  Note that in the latter case, the
+         * microsecond counter is the seed, so BaseDeviates constructed in rapid succession may
+         * not be independent. 
          *
          * @param[in] lseed Seed to use.
          * @param[in] mean  Mean of the output distribution
@@ -408,9 +418,10 @@ namespace galsim {
         /**
          * @brief Construct a new binomial-distributed RNG, using the provided value as seed.
          *
-         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
-         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
-         * independent. 
+         * If lseed == 0, this means to use a random seed from the system: either /dev/urandom
+         * if possible, or the time of day otherwise.  Note that in the latter case, the
+         * microsecond counter is the seed, so BaseDeviates constructed in rapid succession may
+         * not be independent. 
          *
          * @param[in] lseed Seed to use
          * @param[in] N Number of "coin flips" per trial
@@ -507,9 +518,10 @@ namespace galsim {
         /**
          * @brief Construct a new Poisson-distributed RNG, using the provided value as seed.
          *
-         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
-         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
-         * independent. 
+         * If lseed == 0, this means to use a random seed from the system: either /dev/urandom
+         * if possible, or the time of day otherwise.  Note that in the latter case, the
+         * microsecond counter is the seed, so BaseDeviates constructed in rapid succession may
+         * not be independent. 
          *
          * @param[in] lseed Seed to use
          * @param[in] mean  Mean of the output distribution
@@ -594,9 +606,10 @@ namespace galsim {
         /**
          * @brief Construct a new Weibull-distributed RNG, using the provided value as seed.
          *
-         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
-         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
-         * independent. 
+         * If lseed == 0, this means to use a random seed from the system: either /dev/urandom
+         * if possible, or the time of day otherwise.  Note that in the latter case, the
+         * microsecond counter is the seed, so BaseDeviates constructed in rapid succession may
+         * not be independent. 
          *
          * @param[in] lseed Seed to use
          * @param[in] a    Shape parameter of the output distribution, must be > 0.
@@ -702,9 +715,10 @@ namespace galsim {
         /**
          * @brief Construct a new Gamma-distributed RNG, using the provided value as seed.
          *
-         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
-         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
-         * independent. 
+         * If lseed == 0, this means to use a random seed from the system: either /dev/urandom
+         * if possible, or the time of day otherwise.  Note that in the latter case, the
+         * microsecond counter is the seed, so BaseDeviates constructed in rapid succession may
+         * not be independent. 
          *
          * @param[in] lseed  Seed to use.
          * @param[in] k      Shape parameter of the output distribution, must be > 0.
@@ -812,9 +826,10 @@ namespace galsim {
         /**
          * @brief Construct a new Chi^2-distributed RNG, using the provided value as seed.
          *
-         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
-         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
-         * independent. 
+         * If lseed == 0, this means to use a random seed from the system: either /dev/urandom
+         * if possible, or the time of day otherwise.  Note that in the latter case, the
+         * microsecond counter is the seed, so BaseDeviates constructed in rapid succession may
+         * not be independent. 
          *
          * @param[in] lseed Seed to use
          * @param[in] n     Number of degrees of freedom for the output distribution, must be > 0.

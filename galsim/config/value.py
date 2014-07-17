@@ -35,6 +35,11 @@ valid_value_types = {
     'Sequence' : ('_GenerateFromSequence', [ float, int, bool ]),
     'Random' : ('_GenerateFromRandom', [ float, int, bool, galsim.Angle ]),
     'RandomGaussian' : ('_GenerateFromRandomGaussian', [ float ]),
+    'RandomPoisson' : ('_GenerateFromRandomPoisson', [ float, int ]),
+    'RandomBinomial' : ('_GenerateFromRandomBinomial', [ float, int, bool ]),
+    'RandomWeibull' : ('_GenerateFromRandomWeibull', [ float ]),
+    'RandomGamma' : ('_GenerateFromRandomGamma', [ float ]),
+    'RandomChi2' : ('_GenerateFromRandomChi2', [ float ]),
     'RandomDistribution' : ('_GenerateFromRandomDistribution', [ float ]),
     'RandomCircle' : ('_GenerateFromRandomCircle', [ galsim.PositionD ]),
     'NumberedFile' : ('_GenerateFromNumberedFile', [ str ]),
@@ -572,6 +577,108 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
     #print base['obj_num'],'RandomGaussian: ',val
     return val, False
 
+def _GenerateFromRandomPoisson(param, param_name, base, value_type):
+    """@brief Return a random value drawn from a Poisson distribution
+    """
+    if 'rng' not in base:
+        raise ValueError("No base['rng'] available for %s.type = RandomPoisson"%param_name)
+    rng = base['rng']
+
+    req = { 'mean' : float }
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+
+    mean = kwargs['mean']
+
+    dev = galsim.PoissonDeviate(rng,mean=mean)
+    val = dev()
+
+    #print base['obj_num'],'RandomPoisson: ',val
+    return val, False
+
+def _GenerateFromRandomBinomial(param, param_name, base, value_type):
+    """@brief Return a random value drawn from a Binomial distribution
+    """
+    if 'rng' not in base:
+        raise ValueError("No base['rng'] available for %s.type = RandomBinomial"%param_name)
+    rng = base['rng']
+
+    req = {}
+    opt = { 'p' : float }
+
+    # Let N be optional for bool, since N=2 is the only value that makes sense.
+    if value_type is bool:
+        opt['N'] = int
+    else:
+        req['N'] = int
+    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
+
+    N = kwargs.get('N',1)
+    p = kwargs.get('p',0.5)
+    if value_type is bool and N != 1:
+        raise ValueError("N must = 1 for %s.type = RandomBinomial used in bool context"%param_name)
+
+    dev = galsim.BinomialDeviate(rng,N=N,p=p)
+    val = dev()
+
+    #print base['obj_num'],'RandomBinomial: ',val
+    return val, False
+
+
+def _GenerateFromRandomWeibull(param, param_name, base, value_type):
+    """@brief Return a random value drawn from a Weibull distribution
+    """
+    if 'rng' not in base:
+        raise ValueError("No base['rng'] available for %s.type = RandomWeibull"%param_name)
+    rng = base['rng']
+
+    req = { 'a' : float, 'b' : float }
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+
+    a = kwargs['a']
+    b = kwargs['b']
+    dev = galsim.WeibullDeviate(rng,a=a,b=b)
+    val = dev()
+
+    #print base['obj_num'],'RandomWeibull: ',val
+    return val, False
+
+
+def _GenerateFromRandomGamma(param, param_name, base, value_type):
+    """@brief Return a random value drawn from a Gamma distribution
+    """
+    if 'rng' not in base:
+        raise ValueError("No base['rng'] available for %s.type = RandomGamma"%param_name)
+    rng = base['rng']
+
+    req = { 'k' : float, 'theta' : float }
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+
+    k = kwargs['k']
+    theta = kwargs['theta']
+    dev = galsim.GammaDeviate(rng,k=k,theta=theta)
+    val = dev()
+
+    #print base['obj_num'],'RandomGamma: ',val
+    return val, False
+
+
+def _GenerateFromRandomChi2(param, param_name, base, value_type):
+    """@brief Return a random value drawn from a Chi^2 distribution
+    """
+    if 'rng' not in base:
+        raise ValueError("No base['rng'] available for %s.type = RandomChi2"%param_name)
+    rng = base['rng']
+
+    req = { 'n' : float }
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+
+    n = kwargs['n']
+
+    dev = galsim.Chi2Deviate(rng,n=n)
+    val = dev()
+
+    #print base['obj_num'],'RandomChi2: ',val
+    return val, False
 
 def _GenerateFromRandomDistribution(param, param_name, base, value_type):
     """@brief Return a random value drawn from a user-defined probability distribution
