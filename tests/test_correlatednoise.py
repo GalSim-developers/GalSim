@@ -772,7 +772,8 @@ def test_cosmos_and_whitening():
     # Add correlated noise
     outimage.addNoise(ccn_convolved)
     # Then whiten
-    wht_variance = ccn_convolved.whitenImage(outimage)
+    #wht_variance = ccn_convolved.whitenImage(outimage)
+    wht_variance = outimage.whitenNoise(ccn_convolved)
     # Then test
     cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
     cftest00 = cntest_whitened._profile.xValue(galsim.PositionD(0., 0.))
