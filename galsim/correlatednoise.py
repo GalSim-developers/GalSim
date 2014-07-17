@@ -34,7 +34,6 @@ def whitenNoise(self, noise):
                         make the final noise white.
     @returns the theoretically calculated variance of the combined noise fields in the
              updated image.
-
     """
     return noise.whitenImage(self)
 
@@ -52,7 +51,6 @@ def symmetrizeNoise(self, noise, order=4):
 
     @returns the theoretically calculated variance of the combined noise fields in the
              updated image.
-
     """
     return noise.symmetrizeImage(self, order=order)
 
@@ -850,7 +848,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         We make an image of the PS and turn it into an galsim.InterpolatedImage in order to carry
         out the necessary rotations using well-tested interpolation routines.  We will also require
         the output to be strictly >= the input noise power spectrum, so that it should be possible
-        to generate noise with power equal to the difference between the two power spectra."""
+        to generate noise with power equal to the difference between the two power spectra.
+        """
 
         # Initialize a temporary copy of the original PS array, which we will turn into an
         # InterpolatedImage.
