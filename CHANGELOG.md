@@ -29,9 +29,9 @@ Bug Fixes and Improvements
 - Changed the the `file_name` argument to `CorrelatedNoise.getCOSMOSNoise()` to no longer be
   required.  The normal file to use is now installed along with GalSim (in the directory
   PREFIX/share/galsim), so that file can be used by default. (#548)
-- Fixed the `int` and `float` aliases with the `dtype=` kwarg when initializing `Image` instances
-  to use the `numpy.int32` and `numpy.float64` data types.  Previously the behavior was
-  unpredictable and platform dependent. (#571)
+- Fixed the `dtype=` kwarg used when initializing `Image` instances to interpret the aliases `int`
+  and `float` as the `numpy.int32` and `numpy.float64` data types, respectively.  Previously the
+  behavior was unpredictable and platform dependent. (#571)
 
 Updates to config options
 -------------------------
