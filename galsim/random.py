@@ -43,9 +43,9 @@ generator.  It has three different kinds of behavior.
      run the program.
 
   2. A special value of 0 means to pick some arbitrary value that will be different each time
-     you run the program.  Currently, this is taken from the current time, but this behavior
-     may change in the future.  You can also get this behavior by omitting the seed argument
-     entirely.  (i.e. the default is 0.)
+     you run the program.  Currently, this tries to get a seed from /dev/urandom if possible.
+     If that doesn't work, then it creates a seed from the current time.  You can also get this
+     behavior by omitting the seed argument entirely.  (i.e. the default is 0.)
 
   3. Providing another BaseDeviate object as the seed will make the new Deviate share the same
      underlying random number generator as the other Deviate.  So you can make one Deviate (of
@@ -90,7 +90,7 @@ _galsim.BaseDeviate.seed.__func__.__doc__ = """
 Seed the pseudo-random number generator with a given integer value.
 
 @param seed         An int value to be used to seed the random number generator.  Using 0
-                    means to use the time of day as a seed. [default: 0]
+                    means to generate a seed from the system. [default: 0]
 """
 
 _galsim.BaseDeviate.reset.__func__.__doc__ = """
@@ -99,7 +99,7 @@ Providing another BaseDeviate object as the seed connects this deviate with the 
 one, so they will both use the same underlying random number generator.
 
 @param seed         Something that can seed a BaseDeviate: a long int seed or another 
-                    BaseDeviate.  Using 0 means to use the time of day as a seed. [default: 0]
+                    BaseDeviate.  Using 0 means to generate a seed from the system. [default: 0]
 """
 
 _galsim.BaseDeviate.duplicate.__func__.__doc__ = """
@@ -205,7 +205,7 @@ class DistDeviate(_galsim.BaseDeviate):
     PRNG to the already-existing random number generator `rng`.
     
     @param seed         Something that can seed a BaseDeviate: a long int seed or another 
-                        BaseDeviate.  Using 0 means to use the time of day as a seed. [default: 0]
+                        BaseDeviate.  Using 0 means to generate a seed from the system. [default: 0]
     @param function     A callable function giving a probability distribution or the name of a 
                         file containing a probability distribution as a 2-column ASCII table.
                         [default: None]
@@ -385,7 +385,7 @@ Initialization
 --------------
 
 @param seed         Something that can seed a BaseDeviate: a long int seed or another 
-                    BaseDeviate.  Using 0 means to use the time of day as a seed. [default: 0]
+                    BaseDeviate.  Using 0 means to generate a seed from the system. [default: 0]
 
 Calling
 -------
@@ -413,7 +413,7 @@ Initialization
 --------------
 
 @param seed         Something that can seed a BaseDeviate: a long int seed or another 
-                    BaseDeviate.  Using 0 means to use the time of day as a seed. [default: 0]
+                    BaseDeviate.  Using 0 means to generate a seed from the system. [default: 0]
 @param mean         Mean of Gaussian distribution. [default: 0.]
 @param sigma        Sigma of Gaussian distribution. [default: 1.; Must be > 0]
 
@@ -453,7 +453,7 @@ Initialization
 --------------
 
 @param seed         Something that can seed a BaseDeviate: a long int seed or another 
-                    BaseDeviate.  Using 0 means to use the time of day as a seed. [default: 0]
+                    BaseDeviate.  Using 0 means to generate a seed from the system. [default: 0]
 @param N            The number of 'coin flips' per trial. [default: 1; Must be > 0]
 @param p            The probability of success per coin flip. [default: 0.5; Must be > 0]
 
@@ -493,7 +493,7 @@ Initialization
 --------------
 
 @param seed         Something that can seed a BaseDeviate: a long int seed or another 
-                    BaseDeviate.  Using 0 means to use the time of day as a seed. [default: 0]
+                    BaseDeviate.  Using 0 means to generate a seed from the system. [default: 0]
 @param mean         Mean of the distribution. [default: 1; Must be > 0]
 
 Calling
@@ -533,7 +533,7 @@ Initialization
 --------------
 
 @param seed         Something that can seed a BaseDeviate: a long int seed or another 
-                    BaseDeviate.  Using 0 means to use the time of day as a seed. [default: 0]
+                    BaseDeviate.  Using 0 means to generate a seed from the system. [default: 0]
 @param a            Shape parameter of the distribution. [default: 1; Must be > 0]
 @param b            Scale parameter of the distribution. [default: 1; Must be > 0]
 
@@ -572,7 +572,7 @@ Initialization
 --------------
 
 @param seed         Something that can seed a BaseDeviate: a long int seed or another 
-                    BaseDeviate.  Using 0 means to use the time of day as a seed. [default: 0]
+                    BaseDeviate.  Using 0 means to generate a seed from the system. [default: 0]
 @param k            Shape parameter of the distribution. [default: 1; Must be > 0]
 @param theta        Scale parameter of the distribution. [default: 1; Must be > 0]
 
@@ -612,7 +612,7 @@ Initialization
 --------------
 
 @param seed         Something that can seed a BaseDeviate: a long int seed or another 
-                    BaseDeviate.  Using 0 means to use the time of day as a seed. [default: 0]
+                    BaseDeviate.  Using 0 means to generate a seed from the system. [default: 0]
 @param n            Number of degrees of freedom for the output distribution. [default: 1; 
                     Must be > 0]
 
