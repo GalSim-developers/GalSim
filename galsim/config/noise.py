@@ -28,6 +28,8 @@ valid_noise_types = {
     'COSMOS' : ('AddNoiseCOSMOS', 'NoiseVarCOSMOS'),
 }
 
+# items that are parsed separately from the normal noise function
+noise_ignore = [ 'whiten', 'symmetrize' ]
 
 def _get_sky(config, base, wcs=None):
 
@@ -120,7 +122,8 @@ def AddNoiseGaussian(noise, config, draw_method, rng, im, weight_im, current_var
     # The noise level can be specified either as a sigma or a variance.  Here we just calculate
     # the value of the variance from either one.
     single = [ { 'sigma' : float , 'variance' : float } ]
-    params = galsim.config.GetAllParams(noise, 'noise', config, single=single)[0]
+    params = galsim.config.GetAllParams(noise, 'noise', config, single=single,
+                                        ignore=noise_ignore)[0]
     if 'sigma' in params:
         sigma = params['sigma']
         var = sigma**2
@@ -152,7 +155,8 @@ def NoiseVarGaussian(noise, config):
 
     # The noise variance is just sigma^2 or variance
     single = [ { 'sigma' : float , 'variance' : float } ]
-    params = galsim.config.GetAllParams(noise, 'noise', config, single=single)[0]
+    params = galsim.config.GetAllParams(noise, 'noise', config, single=single,
+                                        ignore=noise_ignore)[0]
     if 'sigma' in params:
         sigma = params['sigma']
         return sigma * sigma
@@ -173,7 +177,8 @@ def AddNoisePoisson(noise, config, draw_method, rng, im, weight_im, current_var,
     else:
         opt = {}
         single = [ { 'sky_level' : float , 'sky_level_pixel' : float } ]
-    params = galsim.config.GetAllParams(noise, 'noise', config, opt=opt, single=single)[0]
+    params = galsim.config.GetAllParams(noise, 'noise', config, opt=opt, single=single,
+                                        ignore=noise_ignore)[0]
     if 'sky_level' in params:
         if 'sky_level_pixel' in params:
             raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
@@ -270,7 +275,8 @@ def NoiseVarPoisson(noise, config):
     else:
         opt = {}
         single = [ { 'sky_level' : float , 'sky_level_pixel' : float } ]
-    params = galsim.config.GetAllParams(noise, 'noise', config, opt=opt, single=single)[0]
+    params = galsim.config.GetAllParams(noise, 'noise', config, opt=opt, single=single,
+                                        ignore=noise_ignore)[0]
     if 'sky_level' in params:
         if 'sky_level_pixel' in params:
             raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
@@ -302,7 +308,8 @@ def AddNoiseCCD(noise, config, draw_method, rng, im, weight_im, current_var, sky
         single = []
     else:
         single = [ { 'sky_level' : float , 'sky_level_pixel' : float } ]
-    params = galsim.config.GetAllParams(noise, 'noise', config, opt=opt, single=single)[0]
+    params = galsim.config.GetAllParams(noise, 'noise', config, opt=opt, single=single,
+                                        ignore=noise_ignore)[0]
     gain = params.get('gain',1.0)
     read_noise = params.get('read_noise',0.0)
     read_noise_var = read_noise**2
@@ -429,7 +436,8 @@ def NoiseVarCCD(noise, config):
         single = []
     else:
         single = [ { 'sky_level' : float , 'sky_level_pixel' : float } ]
-    params = galsim.config.GetAllParams(noise, 'noise', config, opt=opt, single=single)[0]
+    params = galsim.config.GetAllParams(noise, 'noise', config, opt=opt, single=single,
+                                        ignore=noise_ignore)[0]
     if 'sky_level' in params:
         if 'sky_level_pixel' in params:
             raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
@@ -453,7 +461,8 @@ def AddNoiseCOSMOS(noise, config, draw_method, rng, im, weight_im, current_var, 
     req = { 'file_name' : str }
     opt = { 'cosmos_scale' : float, 'variance' : float }
         
-    kwargs = galsim.config.GetAllParams(noise, 'noise', config, req=req, opt=opt)[0]
+    kwargs = galsim.config.GetAllParams(noise, 'noise', config, req=req, opt=opt,
+                                        ignore=noise_ignore)[0]
 
     # Build the correlated noise 
     cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
@@ -482,7 +491,8 @@ def NoiseVarCOSMOS(noise, config):
 
     req = { 'file_name' : str }
     opt = { 'cosmos_scale' : float, 'variance' : float }
-    kwargs = galsim.config.GetAllParams(noise, 'noise', config, req=req, opt=opt)[0]
+    kwargs = galsim.config.GetAllParams(noise, 'noise', config, req=req, opt=opt,
+                                        ignore=noise_ignore)[0]
 
     # Build and add the correlated noise (lets the cn internals handle dealing with the options
     # for default variance: quick and ensures we don't needlessly duplicate code) 
