@@ -525,7 +525,7 @@ class ChromaticObject(object):
         While gravitational lensing is achromatic, we do allow the parameters `g1`, `g2`, and `mu`
         to be callable functions to be parallel to all the other transformations of chromatic
         objects.  In this case, the functions should take the wavelength in nanometers as the 
-        arguement, and the return values are the corresponding value at that wavelength.
+        argument, and the return values are the corresponding value at that wavelength.
 
         @param g1       First component of lensing (reduced) shear to apply to the object.
         @param g2       Second component of lensing (reduced) shear to apply to the object.
