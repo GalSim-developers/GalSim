@@ -741,7 +741,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 newcf.scale = 1.
             else:
                 newcf.wcs = wcs
-            # Then draw this correlation function into an array.
+            # Then draw this correlation function into an array.  If this is not done at the same
+            # scale/wcs as the original image from which the CF derives, then this step requires
+            # interpolation and the newcf (used to generate the PS below) is thus approximate
             newcf = self.drawImage(newcf)
 
             # Since we just drew it, save the variance value for posterity.
