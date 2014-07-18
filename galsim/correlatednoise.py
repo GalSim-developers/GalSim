@@ -832,7 +832,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # the considerations for use of cached observations for noise whitening, we need the
         # requested order of the symmetry to be the same as the stored one.
         use_stored = False
-        for rootps_symmetrizing_array, saved_wcs, var, saved_order in self._rootps_symmetrizing_store:
+        for (
+            rootps_symmetrizing_array, saved_wcs, var, saved_order
+            ) in self._rootps_symmetrizing_store:
             if shape == rootps_symmetrizing_array.shape and order == saved_order:
                 if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
                      wcs == saved_wcs ):
@@ -856,12 +858,11 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             ps_symmetrizing = ps_symmetrized * headroom - ps_actual # add a little extra variance
             rootps_symmetrizing = np.sqrt(ps_symmetrizing)
 
-            # Finally calculate the theoretical combined variance to output alongside the image
-            # to be generated with the rootps_symmetrizing.  The factor of product of the image shape
-            # is required due to inverse FFT conventions.
+            # Finally calculate the theoretical combined variance to output alongside the image to
+            # be generated with the rootps_symmetrizing.
             # Here, unlike in _get_update_rootps_whitening, the final power spectrum is not flat, so
             # we have to take the mean power instead of just using the [0, 0] element.
-            variance = np.mean(rootps**2 + ps_symmetrizing) / np.product(shape)
+            variance = np.mean(rootps**2 + ps_symmetrizing)
 
             # Then add all this and the relevant wcs to the _rootps_symmetrizing_store
             self._rootps_symmetrizing_store.append((rootps_symmetrizing, wcs, variance, order))
