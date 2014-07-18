@@ -771,8 +771,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             if np.abs(np.sum(ps[ps < 0.])) > 0.01 * np.sum(ps[ps >= 0]):
                 import warnings
                 warnings.warn(
-                    "Negative values (>1% of total power) detected in correlated noise power "+
-                    "spectrum")
+                    "Negative values (>1% of total positive power) detected in correlated noise "+
+                    "power spectrum")
             # Then just take the sqrt
             rootps = np.sqrt(np.abs(ps))
 
