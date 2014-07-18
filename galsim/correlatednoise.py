@@ -753,10 +753,16 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
             # Then calculate the sqrt(PS) that will be used to generate the actual noise
             ps = np.fft.rfft2(newcf.array)
-            rootps = np.sqrt(np.abs(ps)) # The PS will often be purely real, but sometimes only
-                                         # close (due to the approximations of interpolating), so
-                                         # abs() is necessary... This approx. means that correlated
-                                         # noise should always be tested for any given application
+            rootps = np.sqrt(np.abs(ps)) # The PS will often be *purely* +ve, but sometimes only
+                                         # close (due to the approximations of interpolating the CF)
+                                         # thus abs() is necessary here... The interpolation over
+                                         # CFs means that the performance of correlated noise fields
+                                         # should always be tested for any given scientific
+                                         # application that requires high precision output.  An
+                                         # example of such a test is the generation of noise
+                                         # whitened images of sheared RealGalaxy objects in
+                                         # Section 9.2 of the GalSim paper (Rowe, Jarvis,
+                                         # Mandelbaum et al. 2014)
 
             # Then add this and the relevant wcs to the _rootps_store for later use
             self._rootps_store.append((rootps, newcf.wcs))
