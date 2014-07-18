@@ -58,10 +58,12 @@ except ImportError:
 from galsim import pyfits
 
 # Setup info for tests, not likely to change
-ntypes = 4
-types = [np.int16, np.int32, np.float32, np.float64]
-simple_types = [int, int, float, float]
-tchar = ['S', 'I', 'F', 'D']
+ntypes = 4  # Note: Most tests below only run through the first 4 types.
+            # test_Image_basic tests all 6 types including the aliases.
+types = [np.int16, np.int32, np.float32, np.float64, int, float]
+simple_types = [int, int, float, float, int, float]
+np_types = [np.int16, np.int32, np.float32, np.float64, np.int32, np.float64]
+tchar = ['S', 'I', 'F', 'D', 'I', 'D']
 
 ncol = 7
 nrow = 5
@@ -88,10 +90,14 @@ def test_Image_basic():
     """
     import time
     t1 = time.time()
-    for i in xrange(ntypes):
+    # Do all 6 types here, rather than just the 4 real types.  i.e. Test the aliases.
+    for i in xrange(len(types)):
 
         # Check basic constructor from ncol, nrow
         array_type = types[i]
+        np_array_type = np_types[i]
+        print 'array_type = ',array_type
+        print 'np_array_type = ',np_array_type
         im1 = galsim.Image(ncol,nrow,dtype=array_type)
         bounds = galsim.BoundsI(1,ncol,1,nrow)
 
@@ -101,6 +107,7 @@ def test_Image_basic():
         assert im1.getYMax() == nrow
         assert im1.getBounds() == bounds
         assert im1.bounds == bounds
+        assert im1.array.dtype.type == np_array_type
 
         # Check basic constructor from ncol, nrow
         # Also test alternate name of image type: ImageD, ImageF, etc.
@@ -114,12 +121,14 @@ def test_Image_basic():
         assert im2_view.getYMin() == 1
         assert im2_view.getYMax() == nrow
         assert im2_view.bounds == bounds
+        assert im2_view.array.dtype.type == np_array_type
 
         assert im2_cview.getXMin() == 1
         assert im2_cview.getXMax() == ncol
         assert im2_cview.getYMin() == 1
         assert im2_cview.getYMax() == nrow
         assert im2_cview.bounds == bounds
+        assert im2_cview.array.dtype.type == np_array_type
 
         # Check various ways to set and get values
         for y in range(1,nrow):
@@ -169,7 +178,7 @@ def test_Image_basic():
             print 'The assert_raises tests require nose'
 
         # Check view of given data
-        im3_view = galsim.Image(ref_array.astype(array_type))
+        im3_view = galsim.Image(ref_array.astype(np_array_type))
         for y in range(1,nrow):
             for x in range(1,ncol):
                 assert im3_view(x,y) == 10*x+y
