@@ -614,11 +614,20 @@ def DrawStamp(psf, gal, config, xsize, ysize, offset, method):
     im = final.drawImage(**kwargs)
     im.setOrigin(config['image_origin'])
 
-    # Whiten if requested.  Our signal to do so is that the object will have a noise attribute.
+    # If the object has a noise attribute, then check if we need to do anything with it.
+    current_var = 0.  # Default if not overwritten
     if hasattr(final,'noise'):
-        current_var = final.noise.applyWhiteningTo(im)
-    else:
-        current_var = 0.
+        if 'noise' in config['image']:
+            noise = config['image']['noise']
+            if 'whiten' in noise:
+                if 'symmetrize' in noise:
+                    raise AttributeError('Only one of whiten or symmetrize is allowed')
+                whiten, safe = galsim.config.ParseValue(noise, 'whiten', config, bool)
+                current_var = final.noise.whitenImage(im)
+
+            elif 'symmetrize' in noise:
+                symmetrize, safe = galsim.config.ParseValue(noise, 'symmetrize', config, int)
+                current_var = final.noise.symmetrizeImage(im, symmetrize)
 
     if (('gal' in config and 'signal_to_noise' in config['gal']) or
         ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
