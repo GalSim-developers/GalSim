@@ -63,9 +63,9 @@ class ChromaticObject(object):
     See the SED class for how to set a chromatic flux density function.
 
     The transformation methods: transform(), expand(), dilate(), magnify(), shear(), rotate(),
-    and shift() can now accept functions of wavelength as arguments, as opposed to the constants
-    that GSObjects are limited to.  These methods can be used to effect a variety of physical
-    chromatic effects, such as differential chromatic refraction, chromatic seeing, and
+    lens(), and shift() can now accept functions of wavelength as arguments, as opposed to the
+    constants that GSObjects are limited to.  These methods can be used to effect a variety of
+    physical chromatic effects, such as differential chromatic refraction, chromatic seeing, and
     diffraction-limited wavelength-dependence.
 
     The drawImage() method draws the object as observed through a particular bandpass, so the
