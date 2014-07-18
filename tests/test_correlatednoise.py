@@ -56,9 +56,16 @@ nsum_test = 7
 if __name__ == "__main__":
     symm_divide = 2. # test to precision determined by decimal_approx (usually 2%)
     symm_size_mult = 6 # make really huge images
+    # The convolve_cosmos test, which includes a lot of the correlated noise functionality is
+    # fairly sensitive at 2dp, but takes ~200s on a mid-range laptop
+    decimal_convolve_cosmos = 2
+    nsum_test_convolve_cosmos = 1000
 else:
     symm_divide = 3. # test to worse precision than determined by decimal_approx (usually 3%)
     symm_size_mult = 3 # make only moderately huge images
+    # Basic settings for convolve_cosmos, will only catch basic screwups
+    decimal_convolve_cosmos = 1
+    nsum_test_convolve_cosmos = 10
 
 
 def setup_uncorrelated_noise(deviate, size):
@@ -946,7 +953,7 @@ def test_convolve_cosmos():
     cimobj_padded = galsim.Convolve(imobj_padded, psf_shera)
 
     # We draw, calculate a correlation function for the resulting field, and repeat to get an
-    # average over nsum_test trials
+    # average over nsum_test_convolve_cosmos trials
     convimage = galsim.ImageD(2 * smallim_size, 2 * smallim_size)
     cimobj_padded.draw(convimage, scale=0.18, normalization='sb')
     cn_test = galsim.CorrelatedNoise(
@@ -958,9 +965,8 @@ def test_convolve_cosmos():
                                          # zero convimage and write over it later!
     mnsq_list = [np.mean(convimage.array**2)]
     var_list = [convimage.array.var()]
-    #nsum_test = 1000 #- uncomment this line and comment the one below to pass test below at 2dp
-    nsum_test = 8 # Needed to increase the number of realizations beyond default to get this to pass
-    for i in range(nsum_test - 1):
+    for i in range(nsum_test_convolve_cosmos - 1): # See notes for nsum_test_convolve_cosmos
+                                                   # at the top of the module: varies test accuracy
         cosimage_padded.setZero()
         cosimage_padded.addNoise(cn)
         imobj_padded = galsim.InterpolatedImage(
@@ -980,10 +986,10 @@ def test_convolve_cosmos():
         del cimobj_padded
         del cn_test
 
-    mnsq_individual = sum(mnsq_list) / float(nsum_test)
-    var_individual = sum(var_list) / float(nsum_test)
-    mnsq_individual = sum(mnsq_list) / float(nsum_test)
-    testim /= float(nsum_test) # Take average CF of trials   
+    mnsq_individual = sum(mnsq_list) / float(nsum_test_convolve_cosmos)
+    var_individual = sum(var_list) / float(nsum_test_convolve_cosmos)
+    mnsq_individual = sum(mnsq_list) / float(nsum_test_convolve_cosmos)
+    testim /= float(nsum_test_convolve_cosmos) # Take average CF of trials
     conv_array = np.asarray(conv_list)
     mnsq_all = np.mean(conv_array**2)
     var_all = conv_array.var()
@@ -1010,9 +1016,7 @@ def test_convolve_cosmos():
     # Test (this is a crude regression test at best, for a much more precise test of this behaviour
     # see devel/external/test_cf/test_cf_convolution_detailed.py)
     np.testing.assert_array_almost_equal(
-        testim.array, refim.array, decimal=1, # 2, #- if you want to pass at 2dp, make
-                                              # nsum_test=1000 above, takes ~200s on a
-                                              # midrange laptop
+        testim.array, refim.array, decimal=decimal_convolve_cosmos,
         err_msg="Convolved COSMOS noise fields do not match the convolved correlated noise model.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
