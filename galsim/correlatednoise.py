@@ -754,18 +754,27 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             if var <= 0.:
                 raise RuntimeError("CorrelatedNoise found to have negative variance.")
 
-            # Then calculate the sqrt(PS) that will be used to generate the actual noise
+            # Then calculate the sqrt(PS) that will be used to generate the actual noise.  First do
+            # the power spectrum (PS)
             ps = np.fft.rfft2(newcf.array)
-            rootps = np.sqrt(np.abs(ps)) # The PS will often be *purely* +ve, but sometimes only
-                                         # close (due to the approximations of interpolating the CF)
-                                         # thus abs() is necessary here... The interpolation over
-                                         # CFs means that the performance of correlated noise fields
-                                         # should always be tested for any given scientific
-                                         # application that requires high precision output.  An
-                                         # example of such a test is the generation of noise
-                                         # whitened images of sheared RealGalaxy objects in
-                                         # Section 9.2 of the GalSim paper (Rowe, Jarvis,
-                                         # Mandelbaum et al. 2014)
+
+            # This PS will often be *purely* +ve, but sometimes only close (due to the
+            # approximations of interpolating the CF) thus an abs() will be necessary here.  This is
+            # a fudge necessart due to the approximate nature of the CF.  The interpolation over CFs
+            # means that the performance of correlated noise fields should always be tested for any
+            # given scientific application that requires high precision output.  An example of such
+            # a test is the generation of noise whitened images of sheared RealGalaxy objects in
+            # Section 9.2 of the GalSim paper (Rowe, Jarvis, Mandelbaum et al. 2014)
+
+            # Given all the above, we will check for egregious negative values in the PS and produce
+            # a warning if they are found
+            if np.abs(np.sum(ps[ps < 0.])) > 0.01 * np.sum(ps[ps >= 0]):
+                import warnings
+                warnings.warn(
+                    "Negative values (>1% of total power) detected in correlated noise power "+
+                    "spectrum")
+            # Then just take the sqrt
+            rootps = np.sqrt(np.abs(ps))
 
             # Then add this and the relevant wcs to the _rootps_store for later use
             self._rootps_store.append((rootps, newcf.wcs))
