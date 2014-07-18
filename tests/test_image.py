@@ -58,7 +58,8 @@ except ImportError:
 from galsim import pyfits
 
 # Setup info for tests, not likely to change
-ntypes = 4
+ntypes = 4  # Note: Most tests below only run through the first 4 types.
+            # test_Image_basic tests all 6 types including the aliases.
 types = [np.int16, np.int32, np.float32, np.float64, int, float]
 simple_types = [int, int, float, float, int, float]
 np_types = [np.int16, np.int32, np.float32, np.float64, np.int32, np.float64]
