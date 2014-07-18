@@ -768,11 +768,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
             # Given all the above, we will check for egregious negative values in the PS and produce
             # a warning if they are found
-            if np.abs(np.sum(ps[ps < 0.])) > 0.01 * np.sum(ps[ps >= 0]):
-                import warnings
-                warnings.warn(
-                    "Negative values (>1% of total positive power) detected in correlated noise "+
-                    "power spectrum")
+            #if np.abs(np.sum(ps[ps < 0.])) > 0.1 * np.sum(ps[ps >= 0]):
+            #    import warnings
+            #    warnings.warn(
+            #        "Negative values (>10% of total positive power) detected in correlated noise "+
+            #        "power spectrum")
+            #    import pdb; pdb.set_trace()
             # Then just take the sqrt
             rootps = np.sqrt(np.abs(ps))
 
