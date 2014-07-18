@@ -1170,7 +1170,9 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         # Build a noise correlation function (CF) from the input image, using DFTs
         # Calculate the power spectrum then a (preliminary) CF
         ft_array = np.fft.rfft2(image.array)
-        ps_array = np.abs(ft_array)**2 # Using timeit abs() seems to have the slight speed edge
+        ps_array = np.abs(ft_array)**2 # Using timeit abs() seems to have the slight speed edge over
+                                       # all other options tried, cf. results described by MJ in
+                                       # the optics.psf() function in optics.py
 
         # Need to normalize ps due to one-directional 1/N^2 in FFT conventions and the fact that
         # we *squared* the ft_array to get ps_array:
