@@ -1106,6 +1106,29 @@ def test_distfunction():
     import time
     t1 = time.time()
 
+    try:
+        # Make sure it requires an input function in order to work.
+        np.testing.assert_raises(TypeError, galsim.DistDeviate)
+        # Make sure it does appropriate input sanity checks.
+        np.testing.assert_raises(TypeError, galsim.DistDeviate,
+                                 function='../examples/data/cosmo-fid.zmed1.00_smoothed.out',
+                                 x_min=1.)
+        np.testing.assert_raises(TypeError, galsim.DistDeviate, function=1.0)
+        np.testing.assert_raises(ValueError, galsim.DistDeviate, function='foo.dat')
+        np.testing.assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x,
+                                 interpolant='linear')
+        np.testing.assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x)
+        np.testing.assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x,
+                                 x_min=1.)
+        test_vals = range(10)
+        np.testing.assert_raises(TypeError, galsim.DistDeviate,
+                                 function=galsim.LookupTable(test_vals, test_vals),
+                                 x_min = 1.)
+        foo = galsim.DistDeviate(10, galsim.LookupTable(test_vals, test_vals))
+        np.testing.assert_raises(ValueError, foo.val, -1.)
+    except ImportError:
+        print 'The assert_raises test requires nose'
+
     d = galsim.DistDeviate(testseed, function=dfunction, x_min=dmin, x_max=dmax)
     d2 = d.duplicate()
     d3 = galsim.DistDeviate(d.serialize(), function=dfunction, x_min=dmin, x_max=dmax)
@@ -1639,6 +1662,28 @@ def test_addnoisesnr():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_permute():
+    """Simple tests of the permute() function."""
+    import time
+    t1 = time.time()
+
+    # Make a fake list, and another list consisting of indices.
+    my_list = [3.7, 4.1, 1.9, 11.1, 378.3, 100.0]
+    import copy
+    my_list_copy = copy.deepcopy(my_list)
+    n_list = len(my_list)
+    ind_list = list(range(n_list))
+
+    # Permute both at the same time.
+    galsim.random.permute(312, my_list, ind_list)
+
+    # Make sure that everything is sensible
+    for ind in range(n_list):
+        assert my_list_copy[ind_list[ind]] == my_list[ind]
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_uniform()
     test_gaussian()
@@ -1652,3 +1697,4 @@ if __name__ == "__main__":
     test_ccdnoise()
     test_multiprocess()
     test_addnoisesnr()
+    test_permute()

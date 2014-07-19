@@ -589,6 +589,73 @@ def test_hsmparams_nodefault():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_shapedata():
+    """Check for basic issues with initialization of ShapeData objects."""
+    import time
+    t1 = time.time()
+
+    x = 1.
+    try:
+        # Cannot initialize with messed up arguments.
+        np.testing.assert_raises(TypeError, galsim.hsm.ShapeData, x, x)
+        np.testing.assert_raises(TypeError, galsim.hsm.ShapeData, x)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
+    # Check that if initialized when empty, the resulting object has certain properties.
+    foo = galsim.hsm.ShapeData()
+    if foo.observed_shape != galsim.Shear() or foo.moments_n_iter != 0 or foo.meas_type != "None":
+        raise AssertionError("Default ShapeData object was not as expected!")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_strict():
+    """Check that using strict=True results in the behavior we expect."""
+    import time
+    t1 = time.time()
+
+    # Set up an image for which moments measurement should fail spectacularly.
+    scale = 2.7
+    size = 11
+    pix = galsim.Pixel(scale)
+    image = galsim.Image(size, size)
+    im = pix.drawImage(image=image, scale=scale, method='no_pixel')
+
+    # Try to measure moments with strict = False. Make sure there's an error message stored.
+    res = im.FindAdaptiveMom(strict = False)
+    if res.error_message == '':
+        raise AssertionError("Should have error message stored in case of FindAdaptiveMom failure!")
+
+    # Check that measuring moments with strict = True results in the expected exception, and that
+    # it is the same one as is stored when running with strict = False.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, im)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+    try:
+        res2 = im.FindAdaptiveMom()
+    except RuntimeError as err:
+        if str(err) != res.error_message:
+            raise AssertionError("Error messages do not match when running identical tests!")
+
+    # Now redo the above for EstimateShear
+    res = galsim.hsm.EstimateShear(im, im, strict = False)
+    if res.error_message == '':
+        raise AssertionError("Should have error message stored in case of EstimateShear failure!")
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, im, im)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+    try:
+        res2 = galsim.hsm.EstimateShear(im, im)
+    except RuntimeError as err:
+        if str(err) != res.error_message:
+            raise AssertionError("Error messages do not match when running identical tests!")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_moments_basic()
     test_shearest_basic()
@@ -597,4 +664,5 @@ if __name__ == "__main__":
     test_shearest_shape()
     test_hsmparams()
     test_hsmparams_nodefault()
-
+    test_shapedata()
+    test_strict()

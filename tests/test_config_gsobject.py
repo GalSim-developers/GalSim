@@ -525,7 +525,7 @@ def test_devaucouleurs():
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } 
                  },
         'gal5' : { 'type' : 'DeVaucouleurs' , 'half_light_radius' : 1, 'flux' : 50,
-                   'gsparams' : { 'alias_threshold' : 1.e-4 }
+                   'gsparams' : { 'folding_threshold' : 1.e-4 }
                  }
     }
 
@@ -553,6 +553,7 @@ def test_devaucouleurs():
     gsobject_compare(gal4a, gal4b)
 
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    #gsparams = galsim.GSParams(folding_threshold=1.e-4)
     gsparams = galsim.GSParams(alias_threshold=1.e-4)
     gal5b = galsim.DeVaucouleurs(half_light_radius=1, flux=50, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
@@ -652,8 +653,7 @@ def test_realgalaxy():
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } 
                  },
-        'gal5' : { 'type' : 'RealGalaxy' , 'index' : 23, 'noise_pad_size' : 10 },
-        'gal6' : { 'type' : 'RealGalaxy' , 'index' : 23, 'whiten' : True, 'noise_pad_size' : 8 }
+        'gal5' : { 'type' : 'RealGalaxy' , 'index' : 23, 'noise_pad_size' : 10 }
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
@@ -702,15 +702,9 @@ def test_realgalaxy():
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
     gal5b = galsim.RealGalaxy(real_cat, index = 23, rng = rng, noise_pad_size = 10)
     gsobject_compare(gal5a, gal5b, conv=conv)
+    # Also check that the noise attribute is correct.
+    gsobject_compare(gal5a.noise._profile, gal5b.noise._profile, conv=conv)
 
-    config['obj_num'] = 5
-    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
-    gal6b = galsim.RealGalaxy(real_cat, index = 23, rng = rng, noise_pad_size = 8)
-    gsobject_compare(gal6a, gal6b, conv=conv)
-    # If whiten=True, it doesn't do anything to the profile yet, but it does save the noise 
-    # attribute in the galaxy.
-    gsobject_compare(gal6a.noise._profile, gal6b.noise._profile, conv=conv)
-    
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -837,7 +831,7 @@ def test_add():
                 { 'type' : 'Gaussian' , 'sigma' : 1, 'flux' : 50 }
             ],
             'gsparams' : { 'maxk_threshold' : 1.e-2,
-                           'alias_threshold' : 1.e-2,
+                           'folding_threshold' : 1.e-2,
                            'stepk_minimum_hlr' : 3 }
         }
     }
@@ -880,6 +874,7 @@ def test_add():
 
     # Check that the Add items correctly inherit their gsparams from the top level
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    #gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
     gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
     gal5b_1 = galsim.Exponential(scale_radius=3.4, flux=100, gsparams=gsparams)
     gal5b_2 = galsim.Gaussian(sigma=1, flux=50, gsparams=gsparams)
@@ -955,7 +950,7 @@ def test_convolve():
                 { 'type' : 'Gaussian' , 'sigma' : 1 }
             ],
             'gsparams' : { 'maxk_threshold' : 1.e-2,
-                           'alias_threshold' : 1.e-2,
+                           'folding_threshold' : 1.e-2,
                            'stepk_minimum_hlr' : 3 }
         }
     }
@@ -998,6 +993,7 @@ def test_convolve():
 
     # Check that the Convolve items correctly inherit their gsparams from the top level
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    #gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
     gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
     gal5b_1 = galsim.Exponential(scale_radius=1.7, flux=100, gsparams=gsparams)
     gal5b_2 = galsim.Gaussian(sigma=1, gsparams=gsparams)
@@ -1078,13 +1074,14 @@ def test_list():
                 { 'type' : 'Exponential' , 'scale_radius' : 3, 'flux' : 10 }
             ],
             'gsparams' : { 'maxk_threshold' : 1.e-2,
-                           'alias_threshold' : 1.e-2,
+                           'folding_threshold' : 1.e-2,
                            'stepk_minimum_hlr' : 3 }
         }
     }
 
     config['obj_num'] = 0
     gal5a = galsim.config.BuildGSObject(config, 'gal')[0]
+    #gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
     gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
     gal5b = galsim.Exponential(scale_radius=3.4, flux=100, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
@@ -1206,13 +1203,14 @@ def test_ring():
                 ]
             },
             'gsparams' : { 'maxk_threshold' : 1.e-2,
-                           'alias_threshold' : 1.e-2,
+                           'folding_threshold' : 1.e-2,
                            'stepk_minimum_hlr' : 3 }
         }
     }
 
     config['obj_num'] = 0
     gal4a = galsim.config.BuildGSObject(config, 'gal')[0]
+    #gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
     gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
     disk = galsim.Exponential(half_light_radius=2, gsparams=gsparams)
     disk.applyShear(e2=0.3)

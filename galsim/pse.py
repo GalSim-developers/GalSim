@@ -185,7 +185,7 @@ class PowerSpectrumEstimator(object):
         @param weight_EE        If True, then the E auto-power spectrum is re-computed weighting by
                                 the power within each logarithmically-spaced ell bin. Note that use
                                 of this option requires a usable GalSim installation, unlike the
-                                rest of the PowerSpectrumEstimator functionality.  [defaul: False]
+                                rest of the PowerSpectrumEstimator functionality.  [default: False]
         @param weight_BB        If True, then the B auto-power spectrum is re-computed weighting by
                                 the power within each logarithmically-spaced ell bin. Note that use
                                 of this option requires a usable GalSim installation, unlike the

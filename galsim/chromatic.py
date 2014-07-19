@@ -62,10 +62,11 @@ class ChromaticObject(object):
     There is no withFlux() method, since this is in general undefined for a chromatic object.
     See the SED class for how to set a chromatic flux density function.
 
-    The methods expand(), dilate(), and shift() can now accept functions of wavelength as
-    arguments, as opposed to the constants that GSObjects are limited to.  These methods can be
-    used to effect a variety of physical chromatic effects, such as differential chromatic
-    refraction, chromatic seeing, and diffraction-limited wavelength-dependence.
+    The transformation methods: transform(), expand(), dilate(), magnify(), shear(), rotate(),
+    lens(), and shift() can now accept functions of wavelength as arguments, as opposed to the
+    constants that GSObjects are limited to.  These methods can be used to effect a variety of
+    physical chromatic effects, such as differential chromatic refraction, chromatic seeing, and
+    diffraction-limited wavelength-dependence.
 
     The drawImage() method draws the object as observed through a particular bandpass, so the
     function parameters are somewhat different.  See the docstring for ChromaticObject.drawImage()
@@ -175,6 +176,10 @@ class ChromaticObject(object):
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
+        # Remove from kwargs anything that is only used for setting up image:
+        if 'dtype' in kwargs: kwargs.pop('dtype')
+        if 'scale' in kwargs: kwargs.pop('scale')
+        if 'wcs' in kwargs: kwargs.pop('wcs')
 
         # determine combined self.wave_list and bandpass.wave_list
         wave_list = bandpass.wave_list
@@ -261,9 +266,9 @@ class ChromaticObject(object):
         surface brightness at every location scaled by the given amount.
 
         @param flux_ratio   The factor by which to scale the linear dimension of the object.
-                            `flux_ratio` may be callable, in which case the argument should be
-                            wavelength in nanometers and the return value the scale for that
-                            wavelength.
+                            In addition, `flux_ratio` may be a callable function, in which case
+                            the argument should be wavelength in nanometers and the return value
+                            the scale for that wavelength.
 
         @returns a new object with the flux scaled appropriately.
         """
@@ -401,9 +406,10 @@ class ChromaticObject(object):
         See magnify() for a version that applies a scale factor to the area while preserving surface
         brightness.
 
-        @param scale    The factor by which to scale the linear dimension of the object.  `scale`
-                        may be callable, in which case the argument should be wavelength in
-                        nanometers and the return value the scale for that wavelength.
+        @param scale    The factor by which to scale the linear dimension of the object.  In
+                        addition, `scale` may be a callable function, in which case the argument
+                        should be wavelength in nanometers and the return value the scale for that
+                        wavelength.
 
         @returns the expanded object
         """
@@ -422,9 +428,9 @@ class ChromaticObject(object):
         See expand() and magnify() for versions that preserve surface brightness, and thus
         change the flux.
 
-        @param scale    The linear rescaling factor to apply.  `scale` may be callable, in which
-                        case the argument should be wavelength in nanometers and the return value
-                        the scale for that wavelength.
+        @param scale    The linear rescaling factor to apply.  In addition, `scale` may be a
+                        callable function, in which case the argument should be wavelength in
+                        nanometers and the return value the scale for that wavelength.
 
         @returns the dilated object.
         """
@@ -442,30 +448,23 @@ class ChromaticObject(object):
         while increasing the flux by a factor of `mu`.  Thus, magnify() preserves surface
         brightness.
 
-        Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
-        function of wavelength as its argument (lensing is achromatic, after all!).  If you find a
-        use case for this, however, please submit an issue to
-
-            https://github.com/GalSim-developers/GalSim/issues
-
         See dilate() for a version that applies a linear scale factor while preserving flux.
 
-        @param mu   The lensing magnification to apply.
+        @param mu       The lensing magnification to apply.  In addition, `mu` may be a callable
+                        function, in which case the argument should be wavelength in nanometers
+                        and the return value the magnification for that wavelength.
 
         @returns the magnified object.
         """
         import math
-        return self.expand(math.sqrt(mu))
+        if hasattr(mu, '__call__'):
+            return self.expand(lambda w: math.sqrt(mu(w)))
+        else:
+            return self.expand(math.sqrt(mu))
 
     def shear(self, *args, **kwargs):
         """Apply an area-preserving shear to this object, where arguments are either a Shear,
         or arguments that will be used to initialize one.
-
-        Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
-        function of wavelength as its argument (lensing is achromatic, after all!).  If you find a
-        use case for this, however, please submit an issue to
-
-            https://github.com/GalSim-developers/GalSim/issues
 
         For more details about the allowed keyword arguments, see the documentation for Shear
         (for doxygen documentation, see galsim.shear.Shear).
@@ -474,23 +473,43 @@ class ChromaticObject(object):
         the appropriate change in area, either use shear() with magnify(), or use lens(), which
         combines both operations.
 
+        Note that, while gravitational shear is monochromatic, the shear method may be used for 
+        many other use cases including some which may be wavelength-dependent, such as 
+        intrinsic galaxy shape, telescope dilation, atmospheric PSF shape, etc.  Thus, the
+        shear argument is allowed to be a function of wavelength like other transformations.
+
         @param shear    The shear to be applied. Or, as described above, you may instead supply
-                        parameters do construct a Shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
+                        parameters to construct a Shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
+                        In addition, the `shear` parameter may be a callable function, in which
+                        case the argument should be wavelength in nanometers and the return value
+                        the shear for that wavelength, returned as a galsim.Shear instance.
 
         @returns the sheared object.
         """
         if len(args) == 1:
             if kwargs:
-                raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
-            if not isinstance(args[0], galsim.Shear):
-                raise TypeError("Error, unnamed argument to applyShear is not a Shear!")
+                raise TypeError("Gave both unnamed and named arguments!")
+            if not hasattr(args[0], '__call__') and not isinstance(args[0], galsim.Shear):
+                raise TypeError("Unnamed argument is not a Shear or function returning Shear!")
             shear = args[0]
         elif len(args) > 1:
-            raise TypeError("Error, too many unnamed arguments to applyShear!")
+            raise TypeError("Too many unnamed arguments!")
+        elif 'shear' in kwargs:
+            # Need to break this out specially in case it is a function of wavelength
+            shear = kwargs.pop('shear')
+            if kwargs:
+                raise TypeError("Too many kwargs provided!")
         else:
             shear = galsim.Shear(**kwargs)
-        S = np.matrix(np.identity(3), dtype=float)
-        S[0:2,0:2] = shear._shear.getMatrix()
+        if hasattr(shear, '__call__'):
+            def buildSMatrix(w):
+                S = np.matrix(np.identity(3), dtype=float)
+                S[0:2,0:2] = shear(w)._shear.getMatrix()
+                return S
+            S = buildSMatrix
+        else:
+            S = np.matrix(np.identity(3), dtype=float)
+            S[0:2,0:2] = shear._shear.getMatrix()
         return self._applyMatrix(S)
 
     def lens(self, g1, g2, mu):
@@ -503,11 +522,10 @@ class ChromaticObject(object):
         dark matter halo.  The magnification determines the rescaling factor for the object area and
         flux, preserving surface brightness.
 
-        Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
-        function of wavelength as its argument (lensing is achromatic, after all!).  If you find a
-        use case for this, however, please submit an issue to
-
-            https://github.com/GalSim-developers/GalSim/issues
+        While gravitational lensing is achromatic, we do allow the parameters `g1`, `g2`, and `mu`
+        to be callable functions to be parallel to all the other transformations of chromatic
+        objects.  In this case, the functions should take the wavelength in nanometers as the 
+        argument, and the return values are the corresponding value at that wavelength.
 
         @param g1       First component of lensing (reduced) shear to apply to the object.
         @param g2       Second component of lensing (reduced) shear to apply to the object.
@@ -517,26 +535,43 @@ class ChromaticObject(object):
 
         @returns the lensed object.
         """
-        return self.shear(g1=g1,g2=g2).magnify(mu)
+        if any(hasattr(g, '__call__') for g in [g1,g2]):
+            _g1 = g1
+            _g2 = g2
+            if not hasattr(g1, '__call__'): _g1 = lambda w: g1
+            if not hasattr(g2, '__call__'): _g2 = lambda w: g2
+            S = lambda w: galsim.Shear(g1=_g1(w), g2=_g2(w))
+            sheared = self.shear(S)
+        else:
+            sheared = self.shear(g1=g1,g2=g2)
+        return sheared.magnify(mu)
 
     def rotate(self, theta):
         """Rotate this object by an Angle `theta`.
 
-        Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
-        function of wavelength as its argument. If you find a use case for this, however, please
-        submit an issue to
-
-            https://github.com/GalSim-developers/GalSim/issues
-
-        @param theta    Rotation angle (Angle object, +ve anticlockwise).
+        @param theta    Rotation angle (Angle object, +ve anticlockwise). In addition, `theta` may
+                        be a callable function, in which case the argument should be wavelength in
+                        nanometers and the return value the rotation angle for that wavelength,
+                        returned as a galsim.Angle instance.
 
         @returns the rotated object.
         """
-        cth = np.cos(theta.rad())
-        sth = np.sin(theta.rad())
-        R = np.matrix([[cth, -sth, 0],
-                       [sth,  cth, 0],
-                       [  0,    0, 1]], dtype=float)
+        import math
+        if hasattr(theta, '__call__'):
+            def buildRMatrix(w):
+                cth = math.cos(theta(w).rad())
+                sth = math.sin(theta(w).rad())
+                R = np.matrix([[cth, -sth, 0],
+                               [sth,  cth, 0],
+                               [  0,    0, 1]], dtype=float)
+                return R
+            R = buildRMatrix
+        else:
+            cth = math.cos(theta.rad())
+            sth = math.sin(theta.rad())
+            R = np.matrix([[cth, -sth, 0],
+                           [sth,  cth, 0],
+                           [  0,    0, 1]], dtype=float)
         return self._applyMatrix(R)
 
     def transform(self, dudx, dudy, dvdx, dvdy):
@@ -545,11 +580,9 @@ class ChromaticObject(object):
         This works the same as GSObject.transform(), so see that method's docstring for more
         details.
 
-        Note that, in contrast to dilate(), expand(), and shift(), this method cannot accept a
-        function of wavelength as its argument.  If you find a use case for this, however, please
-        submit an issue to
-
-            https://github.com/GalSim-developers/GalSim/issues
+        As with the other more specific chromatic trasnformations, dudx, dudy, dvdx, and dvdy
+        may be callable functions, in which case the argument should be wavelength in nanometers
+        and the return value the appropriate value for that wavelength.
 
         @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
@@ -558,9 +591,22 @@ class ChromaticObject(object):
 
         @returns the transformed object.
         """
-        J = np.matrix([[dudx, dudy, 0],
-                       [dvdx, dvdy, 0],
-                       [   0,    0, 1]], dtype=float)
+        if any(hasattr(dd, '__call__') for dd in [dudx, dudy, dvdx, dvdy]):
+            _dudx = dudx
+            _dudy = dudy
+            _dvdx = dvdx
+            _dvdy = dvdy
+            if not hasattr(dudx, '__call__'): _dudx = lambda w: dudx
+            if not hasattr(dudy, '__call__'): _dudy = lambda w: dudy
+            if not hasattr(dvdx, '__call__'): _dvdx = lambda w: dvdx
+            if not hasattr(dvdy, '__call__'): _dvdy = lambda w: dvdy
+            J = lambda w: np.matrix([[_dudx(w), _dudy(w), 0],
+                                     [_dvdx(w), _dvdy(w), 0],
+                                     [       0,        0, 1]], dtype=float)
+        else:
+            J = np.matrix([[dudx, dudy, 0],
+                           [dvdx, dvdy, 0],
+                           [   0,    0, 1]], dtype=float)
         return self._applyMatrix(J)
 
     def shift(self, *args, **kwargs):
@@ -610,9 +656,9 @@ class ChromaticObject(object):
             dx = args[0]
             dy = args[1]
         else:
-            raise TypeError("Too many arguments supplied to applyShift ")
+            raise TypeError("Too many arguments supplied!")
         if kwargs:
-            raise TypeError("shift() got unexpected keyword arguments: %s",kwargs.keys())
+            raise TypeError("Got unexpected keyword arguments: %s",kwargs.keys())
         if hasattr(dx, '__call__') or hasattr(dy, '__call__'):
             # Functionalize dx, dy as needed.
             if not hasattr(dx, '__call__'):
@@ -702,13 +748,12 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
             zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
                 obj_coord=obj_coord, HA=HA, latitude=latitude)
     else:
-        raise TypeError(
-            "Need to specify zenith_angle and parallactic_angle in ChromaticAtmosphere!")
+        raise TypeError("Need to specify zenith_angle and parallactic_angle!")
     # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
     # Check that they're valid
     for kw in kwargs.keys():
         if kw not in ['temperature', 'pressure', 'H2O_pressure']:
-            raise TypeError("Got unexpected keyword in ChromaticAtmosphere: {0}".format(kw))
+            raise TypeError("Got unexpected keyword: {0}".format(kw))
 
     ret = ChromaticObject(base_obj)
     ret = ret.dilate(lambda w: (w/base_wavelength)**alpha)
@@ -829,14 +874,12 @@ class ChromaticSum(ChromaticObject):
 
         # Make sure there is nothing left in the dict.
         if kwargs:
-            raise TypeError(
-                "ChromaticSum constructor got unexpected keyword argument(s): %s"%kwargs.keys())
+            raise TypeError("Got unexpected keyword argument(s): %s"%kwargs.keys())
 
         if len(args) == 0:
             # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
             # exception instead.
-            raise ValueError("ChromaticSum must be initialized with at least one GSObject"
-                             +" or ChromaticObject.")
+            raise ValueError("Must provide at least one GSObject or ChromaticObject.")
         elif len(args) == 1:
             # 1 argument.  Should be either a GSObject, ChromaticObject or a list of these.
             if isinstance(args[0], (galsim.GSObject, ChromaticObject)):
@@ -964,9 +1007,7 @@ class ChromaticConvolution(ChromaticObject):
         if len(args) == 0:
             # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
             # exception instead.
-            raise ValueError(
-                "ChromaticConvolution must be initialized with at least one GSObject or"
-                +" ChromaticObject")
+            raise ValueError("Must provide at least one GSObject or ChromaticObject")
         elif len(args) == 1:
             if isinstance(args[0], (galsim.GSObject, ChromaticObject)):
                 args = [args[0]]
@@ -987,9 +1028,7 @@ class ChromaticConvolution(ChromaticObject):
 
         # Make sure there is nothing left in the dict.
         if kwargs:
-            raise TypeError(
-                "ChromaticConvolution constructor got unexpected keyword "
-                +"argument(s): %s"%kwargs.keys())
+            raise TypeError("Got unexpected keyword argument(s): %s"%kwargs.keys())
 
         self.objlist = []
         for obj in args:

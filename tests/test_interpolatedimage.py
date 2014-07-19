@@ -181,8 +181,17 @@ def test_exceptions():
         # Weird flux normalization
         im = galsim.ImageF(5, 5, scale=1.)
         np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im, normalization = 'foo')
+        # scale and WCS
+        np.testing.assert_raises(TypeError, galsim.InterpolatedImage, im,
+                                 wcs = galsim.PixelScale(1.), scale=1.)
+        # weird WCS
+        np.testing.assert_raises(TypeError, galsim.InterpolatedImage, im,
+                                 wcs = 1.)
         # Weird interpolant - give it something random like a GSObject
         np.testing.assert_raises(Exception, galsim.InterpolatedImage, im, x_interpolant = g)
+        # Image has wrong type
+        im = galsim.ImageI(5, 5)
+        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
     except ImportError:
         print 'The assert_raises tests require nose'
 

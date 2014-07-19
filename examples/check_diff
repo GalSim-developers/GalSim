@@ -34,14 +34,14 @@ if len(diff_output) > 0:
             import astropy.io.fits as pyfits
         except:
             import pyfits
-    except ImportError as e:
+    except ImportError, e:
         # Then /usr/bin/env python doesn't have pyfits installed.  Oh well.
         sys.exit()
 
     try:
         f1 = pyfits.open(sys.argv[1])
         f2 = pyfits.open(sys.argv[2])
-    except IOError as e:
+    except IOError, e:
         # Then at least one of the files doesn't exist, which diff will have already reported.
         sys.exit()
 

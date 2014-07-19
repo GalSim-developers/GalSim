@@ -535,7 +535,7 @@ namespace galsim {
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at 
-    // most alias_threshold of the flux.
+    // most folding_threshold of the flux.
     double SBMoffat::SBMoffatImpl::stepK() const
     {
         dbg<<"Find Moffat stepK\n";
@@ -544,13 +544,13 @@ namespace galsim {
         if (_stepk == 0.) {
             // The fractional flux out to radius R is (if not truncated)
             // 1 - (1+R^2)^(1-beta)
-            // So solve (1+R^2)^(1-beta) = alias_threshold
+            // So solve (1+R^2)^(1-beta) = folding_threshold
             if (_beta <= 1.1) {
                 // Then flux never converges (or nearly so), so just use truncation radius
                 _stepk = M_PI / _maxR;
             } else {
                 // Ignore the 1 in (1+R^2), so approximately:
-                double R = std::pow(this->gsparams->alias_threshold, 0.5/(1.-_beta)) * _rD;
+                double R = std::pow(this->gsparams->folding_threshold, 0.5/(1.-_beta)) * _rD;
                 dbg<<"R = "<<R<<std::endl;
                 // If it is truncated at less than this, drop to that value.
                 if (R > _maxR) R = _maxR;

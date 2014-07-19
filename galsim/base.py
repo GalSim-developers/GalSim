@@ -191,11 +191,11 @@ class GSObject(object):
     change parameters related to the drawing, but not the Fourier space parameters for the
     components that go into the Convolution.  To get better sampling in Fourier space, for example,
     the `gal` and/or `psf` should be created with `gsparams` that have a non-default value of
-    `alias_threshold`.  This statement applies to the threshold and accuracy parameters.
+    `folding_threshold`.  This statement applies to the threshold and accuracy parameters.
     """
     _gsparams = { 'minimum_fft_size' : int,
                   'maximum_fft_size' : int,
-                  'alias_threshold' : float,
+                  'folding_threshold' : float,
                   'stepk_minimum_hlr' : float,
                   'maxk_threshold' : float,
                   'kvalue_accuracy' : float,
@@ -870,7 +870,7 @@ class GSObject(object):
         If drawImage() will be creating the image from scratch for you, it will decide a good size
         to use based on the size of the object being drawn.  Basically, it will try to use an area
         large enough to include at least 99.5% of the flux.  (Note: the value 0.995 is really
-        `1 - alias_threshold`.  You can change the value of `alias_threshold` for any object via
+        `1 - folding_threshold`.  You can change the value of `folding_threshold` for any object via
         GSParams.  See `help(GSParams)` for more details.)  You can set the pixel scale of the
         constructed image with the `scale` parameter, or set a WCS function with `wcs`.  If you do
         not provide either `scale` or `wcs`, then drawImage() will default to using the Nyquist
@@ -981,7 +981,7 @@ class GSObject(object):
         reduce the size of these artifacts (by making larger FFT images), at the expense of the
         calculations taking longer and using more memory.  Alternatively, the objects that go into
         the image can be created with a `gsparams` keyword that has a lower-than-default value for
-        `alias_threshold`; see `help(galsim.GSParams)` for more information.
+        `folding_threshold`; see `help(galsim.GSParams)` for more information.
 
         @param image        If provided, this will be the image on which to draw the profile.
                             If `image = None`, then an automatically-sized Image will be created.
@@ -2117,14 +2117,30 @@ class DeVaucouleurs(GSObject):
         return self.SBProfile.getScaleRadius()
 
 
+# GSParams is defined in C++ and wrapped.  But we want to modify it here slightly to add
+# the obsolete name alias_threshold as a valid synonym for folding_threshold
+GSParams.alias_threshold = property(lambda self: self.folding_threshold,
+                                    lambda self, val: setattr(self,'folding_threshold',val))
+
+# Also update the constructor to allow this name.
+_orig_GSP_init = GSParams.__init__
+def _new_GSP_init(self, *args, **kwargs):
+    if 'alias_threshold' in kwargs:
+        if 'folding_threshold' in kwargs:
+            raise TypeError('Cannot specify both alias_threshold and folding_threshold')
+        kwargs['folding_threshold'] = kwargs.pop('alias_threshold')
+    _orig_GSP_init(self, *args, **kwargs)
+GSParams.__init__ = _new_GSP_init
+
+
 # Set the docstring for GSParams here.  It's easier to edit in the python layer than using
 # the boost python doc parameter.
-_galsim.GSParams.__doc__ = """
+GSParams.__doc__ = """
 GSParams stores a set of numbers that govern how GSObjects make various speed/accuracy tradeoff
 decisions.  All GSObjects can take an optional parameter named `gsparams`, which would be an
 instance of this class.  e.g.
 
-    >>> gsp = galsim.GSParams(alias_threshold=1.e-3)
+    >>> gsp = galsim.GSParams(folding_threshold=1.e-3)
     >>> gal = galsim.Sersic(n=3.4, half_light_radius=3.2, flux=200, gsparams=gsp)
 
 Note that `gsparams` needs to be provided when the object is initialized, rather than when the
@@ -2148,20 +2164,20 @@ to change.
                             which is often a sign of an error in the user's code. However, if
                             you have the memory to handle it, you can raise this limit to
                             allow the calculation to happen. [default: 4096]
-@param alias_threshold      This sets a maximum amount of real space aliasing that is allowed,
+@param folding_threshold    This sets a maximum amount of real space folding that is allowed,
                             an effect caused by the periodic nature of FFTs.  FFTs implicitly
                             use periodic boundary conditions, and a profile specified on a
                             finite grid in Fourier space corresponds to a real space image
-                            that will have some overlap with the neighboring (aliased) copies
-                            of the real space profile.  As the step size in k increases, the
-                            spacing between neighboring aliases in real space decreases,
-                            increasing the amount of overlapping flux.  `alias_threshold` is
-                            used to set an appropriate step size in k to allow at most this
-                            fraction of the flux to be aliased.  This parameter is also
-                            relevant when you let GalSim decide how large an image to use for
-                            your object.  The image is made to be large enough that at most a
-                            fraction `alias_threshold` of the total flux is allowed to fall off
-                            the edge of the image.  [default: 5.e-3]
+                            that will have some overlap with the neighboring copies of the real
+                            space profile.  As the step size in k increases, the spacing between
+                            neighboring aliases in real space decreases, increasing the amount of
+                            folded, overlapping flux.  `folding_threshold` is used to set an
+                            appropriate step size in k to allow at most this fraction of the flux
+                            to be folded.
+                            This parameter is also relevant when you let GalSim decide how large
+                            an image to use for your object.  The image is made to be large enough
+                            that at most a fraction `folding_threshold` of the total flux is
+                            allowed to fall off the edge of the image. [default: 5.e-3]
 @param stepk_minimum_hlr    In addition to the above constraint for aliasing, also set stepk
                             such that pi/stepk is at least `stepk_minimum_hlr` times the
                             profile's half-light radius (for profiles that have a well-defined

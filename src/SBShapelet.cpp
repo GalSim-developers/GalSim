@@ -69,7 +69,7 @@ namespace galsim {
     double SBShapelet::SBShapeletImpl::stepK() const 
     {
         // Start with value for plain old Gaussian:
-        double R = std::max(4., sqrt(-2.*std::log(this->gsparams->alias_threshold)));
+        double R = std::max(4., sqrt(-2.*std::log(this->gsparams->folding_threshold)));
         // Grow as sqrt of (order+1)
         R *= sqrt(double(_bvec.getOrder()+1));
         return M_PI / (R*_sigma);
