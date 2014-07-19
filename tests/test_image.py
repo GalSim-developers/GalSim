@@ -1661,6 +1661,7 @@ def test_BoundsI_init_with_non_pure_ints():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 if __name__ == "__main__":
     test_Image_basic()
     test_Image_obsolete()
