@@ -759,23 +759,22 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             # the power spectrum (PS)
             ps = np.fft.rfft2(newcf.array)
 
-            # This PS will often be *purely* +ve, but sometimes only close (due to the
-            # approximations of interpolating the CF) thus an abs() will be necessary here.  This is
-            # a fudge necessart due to the approximate nature of the CF.  The interpolation over CFs
-            # means that the performance of correlated noise fields should always be tested for any
-            # given scientific application that requires high precision output.  An example of such
-            # a test is the generation of noise whitened images of sheared RealGalaxy objects in
+            # The PS we expect should be *purely* +ve, but there are reasons why this is not the
+            # case.  One is that the PS is calculated from a correlation function CF that has not
+            # been rolled to be centred on the [0, 0] array element.  Another reason is due to the
+            # approximate nature of the CF rendered above.  Thus an abs(ps) will be necessary when
+            # calculating the sqrt().
+            # This all means that the performance of correlated noise fields should always be tested
+            # for any given scientific application that requires high precision output.  An example
+            # of such a test is the generation of noise whitened images of sheared RealGalaxies in
             # Section 9.2 of the GalSim paper (Rowe, Jarvis, Mandelbaum et al. 2014)
 
-            # Given all the above, we will check for egregious negative values in the PS and produce
-            # a warning if they are found
-            #if np.abs(np.sum(ps[ps < 0.])) > 0.1 * np.sum(ps[ps >= 0]):
-            #    import warnings
-            #    warnings.warn(
-            #        "Negative values (>10% of total positive power) detected in correlated noise "+
-            #        "power spectrum")
-            #    import pdb; pdb.set_trace()
-            # Then just take the sqrt
+            # Given all the above, it might make sense to warn the user if we do detect a PS that
+            # doesn't "look right" (i.e. has strongly negative values where these are not expected).
+            # This is the subject of Issue #587 on GalSim's GitHub repository page (see 
+            # https://github.com/GalSim-developers/GalSim/issues/587)
+
+            # For now we just take the sqrt(abs(PS)):
             rootps = np.sqrt(np.abs(ps))
 
             # Then add this and the relevant wcs to the _rootps_store for later use
