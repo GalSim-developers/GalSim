@@ -923,7 +923,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 tmp_obj.draw(tmp_im, scale=1)
                 final_arr[tmp_im.array > final_arr] = tmp_im.array[tmp_im.array > final_arr]
 
-        # Now simply take the halfcomplex, complex stored part that we are interested in,
+        # Now simply take the halfcomplex, compact stored part that we are interested in,
         # remembering that the kx=ky=0 element is still in the centre
         final_arr = final_arr[:, final_arr.shape[1]/2:]
         # If we extended the array to be odd-sized along y, we have to go back to an even subarray
