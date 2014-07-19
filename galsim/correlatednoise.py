@@ -361,7 +361,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             image.array.shape, image.wcs, order)
 
         # Finally generate a random field in Fourier space with the right PS and add to image.
-        noise_array = _generate_noise_from_rootps(self.getRNG(), rootps_symmetrizing)
+        noise_array = _generate_noise_from_rootps(
+            self.getRNG(), image.array.shape, rootps_symmetrizing)
         image += galsim.Image(noise_array)
 
         # Return the variance to the interested user
@@ -833,10 +834,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # the considerations for use of cached observations for noise whitening, we need the
         # requested order of the symmetry to be the same as the stored one.
         use_stored = False
+        # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
+        half_shape = (shape[0], shape[1] // 2 + 1)
         for (
             rootps_symmetrizing_array, saved_wcs, var, saved_order
             ) in self._rootps_symmetrizing_store:
-            if shape == rootps_symmetrizing_array.shape and order == saved_order:
+            if rootps_symmetrizing_array.shape == half_shape and saved_order == order:
                 if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
                      wcs == saved_wcs ):
                     use_stored = True
@@ -880,26 +883,31 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         to generate noise with power equal to the difference between the two power spectra.
         """
 
-        # Initialize a temporary copy of the original PS array, which we will turn into an
-        # InterpolatedImage.
-        tmp_arr = ps.copy()
-        # But first, we're going to use utilities.roll2d() to shift it so the kx=ky=0 element is at
-        # the center, instead of in the corner.
-        tmp_arr = utilities.roll2d(tmp_arr, (tmp_arr.shape[0]//2, tmp_arr.shape[1]//2))
-        # Check for even-sized arrays, which need special treatment:
+        # Initialize a temporary copy of the original PS array, expanded to full size rather than
+        # the compact halfcomplex format that the PS is supplied in, which we will turn into an
+        # InterpolatedImage
+        # Check for an input ps which was even-sized along the y axis, which needs special treatment
         do_expansion = False
-        if tmp_arr.shape[0] % 2 == 0:
+        if ps.shape[0] % 2 == 0:
             do_expansion = True
+        # Then roll the PS by half its size in the leading dimension, centering it in that dimension
+        # (we will construct the expanded array to be centred in the other dimension)
+        ps_rolled = galsim.utilities.roll2d(ps, (ps.shape[0] / 2, 0))
+        # Then create and fill an expanded-size tmp_arr with this PS
+        if not do_expansion:
+            tmp_arr = np.zeros((ps_rolled.shape[0], 2 * ps_rolled.shape[1] - 1)) # Both dims now odd
+            # Fill the first half, the RHS...
+            tmp_arr[:, ps.shape[1]-1:] = ps_rolled
+            # Then do the LHS of tmp_arr, straightforward enough, fill with the inverted RHS
+            tmp_arr[:, :ps.shape[1]-1] = ps_rolled[:, 1:][::-1, ::-1]
         if do_expansion:
-            # For the even-sized ones, after rolling, we have to take the lower left two edges and
-            # copy them to the upper right edges, as in the CorrelatedNoise constructor.
-            new_tmp_arr = np.zeros((1+tmp_arr.shape[0], 1+tmp_arr.shape[1]))
-            new_tmp_arr[0:tmp_arr.shape[0], 0:tmp_arr.shape[1]] = tmp_arr
-            lhs_column = new_tmp_arr[:, 0]
-            new_tmp_arr[:, tmp_arr.shape[1]] = lhs_column[::-1] # inverts order as required
-            bottom_row = new_tmp_arr[0, :]
-            new_tmp_arr[tmp_arr.shape[0], :] = bottom_row[::-1] # inverts order as required
-            tmp_arr = new_tmp_arr.copy()
+            # For the even-sized leading dimension ps, we have to do a tiny bit more work than
+            # the odd case...
+            tmp_arr = np.zeros((ps_rolled.shape[0] + 1, 2 * ps_rolled.shape[1] - 1))
+            tmp_arr[:-1, ps_rolled.shape[1]-1:] = ps_rolled
+            tmp_arr[1:, :ps_rolled.shape[1]-1] = ps_rolled[:, 1:][::-1, ::-1]
+            # Then one tiny element breaks the symmetry of the above, so fix this
+            tmp_arr[-1, tmp_arr.shape[1] / 2] = tmp_arr[0, tmp_arr.shape[1] / 2]
 
         # Also initialize the array in which to build up the symmetrized PS.
         final_arr = tmp_arr.copy()
@@ -912,19 +920,25 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             if i_rot > 0:
                 # For later ones, rotate by 2pi/order, and draw it back into a new image.
                 tmp_obj = tmp_obj.rotate(2.*np.pi*galsim.radians/order)
-                tmp_im = galsim.Image(tmp_arr.shape[0], tmp_arr.shape[1], scale=1)
+                tmp_im = galsim.Image(tmp_arr.shape[1], tmp_arr.shape[0], scale=1)
                 tmp_obj.draw(tmp_im, scale=1)
                 final_arr[tmp_im.array > final_arr] = tmp_im.array[tmp_im.array > final_arr]
 
-        # If we extended the array to be odd-sized, now we have to go back to a subset
-        if do_expansion:
-            final_arr = final_arr[0:final_arr.shape[0]-1, 0:final_arr.shape[1]-1]
-        # Now shift it back to the convention where kx=ky=0 is in the lower left.
-        final_arr = utilities.roll2d(final_arr, (-(final_arr.shape[0]//2), -(final_arr.shape[1]//2)))
-        # final_arr now contains the maximum of the set of images rotated by 2pi/order, which (a)
-        # should be symmetric at the required order and (b) be the minimal array that is symmetric
-        # at that order and >= the original PS.  So we do not have to add any more noise to ensure
-        # that the target symmetrized PS is always >= the original one.
+        # Now simply take the halfcomplex, complex stored part that we are interested in,
+        # remembering that the kx=ky=0 element is still in the centre
+        final_arr = final_arr[:, final_arr.shape[1]/2:]
+        # If we extended the array to be odd-sized along y, we have to go back to an even subarray
+        if do_expansion: final_arr = final_arr[:-1, :]
+        # Finally roll back the leading dimension (note rolling fwd by half is same as rolling back)
+        final_arr = galsim.utilities.roll2d(final_arr, (final_arr.shape[0] / 2, 0))
+        # final_arr now contains the halfcomplex compact format PS of the maximum of the set of PS
+        # images rotated by 2pi/order, which (a) should be symmetric at the required order and
+        # (b) be the minimal array that is symmetric at that order and >= the original PS.  So we do
+        # not have to add any more noise to ensure that the target symmetrized PS is always >= the
+        # original one.
+        import matplotlib.pyplot as plt
+        import pdb; pdb.set_trace()
+        assert not (final_arr - ps < 0.).any()
         return final_arr
 
 ###
