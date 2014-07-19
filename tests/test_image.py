@@ -1640,6 +1640,27 @@ def test_ConstImage_array_constness():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
             
+def test_BoundsI_init_with_non_pure_ints():
+    """Test that BoundsI converts its input args to int variables on input.
+    """
+    import time
+    t1 = time.time()
+    ref_bound_vals = (5, 35, 1, 48)
+    xmin_test, xmax_test, ymin_test, ymax_test = ref_bound_vals
+    ref_bounds = galsim.BoundsI(xmin_test, xmax_test, ymin_test, ymax_test)
+    bound_arr_int = np.asarray(ref_bound_vals, dtype=int)
+    bound_arr_flt = np.asarray(ref_bound_vals, dtype=float)
+    bound_arr_flt_nonint = bound_arr_flt + 0.3
+    assert ref_bounds == galsim.BoundsI(
+        xmin=bound_arr_int[0], xmax=bound_arr_int[1],
+        ymin=bound_arr_int[2], ymax=bound_arr_int[3]), \
+        "Cannot initialize a BoundI with int array elements"
+    assert ref_bounds == galsim.BoundsI(*bound_arr_flt), \
+        "Cannot initialize a BoundI with float array elements"
+    assert ref_bounds == galsim.BoundsI(*bound_arr_flt_nonint), \
+        "Cannot initialize a BoundI by flooring float array elements"
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_Image_basic()
@@ -1669,3 +1690,4 @@ if __name__ == "__main__":
     test_Image_subImage()
     test_Image_resize()
     test_ConstImage_array_constness()
+    test_BoundsI_init_with_non_pure_ints()
