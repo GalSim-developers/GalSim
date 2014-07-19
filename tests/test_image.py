@@ -1651,9 +1651,7 @@ def test_BoundsI_init_with_non_pure_ints():
     bound_arr_int = np.asarray(ref_bound_vals, dtype=int)
     bound_arr_flt = np.asarray(ref_bound_vals, dtype=float)
     bound_arr_flt_nonint = bound_arr_flt + 0.3
-    assert ref_bounds == galsim.BoundsI(
-        xmin=bound_arr_int[0], xmax=bound_arr_int[1],
-        ymin=bound_arr_int[2], ymax=bound_arr_int[3]), \
+    assert ref_bounds == galsim.BoundsI(*bound_arr_int), \
         "Cannot initialize a BoundI with int array elements"
     assert ref_bounds == galsim.BoundsI(*bound_arr_flt), \
         "Cannot initialize a BoundI with float array elements"
