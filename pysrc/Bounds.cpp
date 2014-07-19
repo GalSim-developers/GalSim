@@ -25,7 +25,6 @@
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-#include "ArrayConverterHelper.h"
 #include "Bounds.h"
 
 namespace bp = boost::python;
