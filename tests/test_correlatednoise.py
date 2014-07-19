@@ -1120,7 +1120,7 @@ if __name__ == "__main__":
     test_copy()
     test_cosmos_and_whitening()
     test_symmetrizing()
-    #test_convolve_cosmos()
+    test_convolve_cosmos()
     test_uncorrelated_noise_tracking()
     test_variance_changes()
 
