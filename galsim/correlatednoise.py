@@ -924,21 +924,20 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 tmp_obj.draw(tmp_im, scale=1)
                 final_arr[tmp_im.array > final_arr] = tmp_im.array[tmp_im.array > final_arr]
 
+        fat = final_arr.copy()
         # Now simply take the halfcomplex, complex stored part that we are interested in,
         # remembering that the kx=ky=0 element is still in the centre
         final_arr = final_arr[:, final_arr.shape[1]/2:]
         # If we extended the array to be odd-sized along y, we have to go back to an even subarray
         if do_expansion: final_arr = final_arr[:-1, :]
-        # Finally roll back the leading dimension (note rolling fwd by half is same as rolling back)
-        final_arr = galsim.utilities.roll2d(final_arr, (final_arr.shape[0] / 2, 0))
+        # Finally roll back the leading dimension
+        final_arr = galsim.utilities.roll2d(final_arr, (-(final_arr.shape[0] / 2), 0))
         # final_arr now contains the halfcomplex compact format PS of the maximum of the set of PS
         # images rotated by 2pi/order, which (a) should be symmetric at the required order and
         # (b) be the minimal array that is symmetric at that order and >= the original PS.  So we do
         # not have to add any more noise to ensure that the target symmetrized PS is always >= the
         # original one.
-        import matplotlib.pyplot as plt
-        import pdb; pdb.set_trace()
-        assert not (final_arr - ps < 0.).any()
+        #assert not (final_arr - ps < 0.).any()
         return final_arr
 
 ###
