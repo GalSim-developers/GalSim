@@ -899,7 +899,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             tmp_arr[:, ps.shape[1]-1:] = ps_rolled
             # Then do the LHS of tmp_arr, straightforward enough, fill with the inverted RHS
             tmp_arr[:, :ps.shape[1]-1] = ps_rolled[:, 1:][::-1, ::-1]
-        if do_expansion:
+        else:
             # For the even-sized leading dimension ps, we have to do a tiny bit more work than
             # the odd case...
             tmp_arr = np.zeros((ps_rolled.shape[0] + 1, 2 * ps_rolled.shape[1] - 1))
@@ -935,7 +935,6 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # (b) be the minimal array that is symmetric at that order and >= the original PS.  So we do
         # not have to add any more noise to ensure that the target symmetrized PS is always >= the
         # original one.
-        #assert not (final_arr - ps < 0.).any()
         return final_arr
 
 ###
