@@ -1,6 +1,8 @@
 Changes from v1.1.0 to v1.1.1
 =============================
 
+- Modified BoundsI initialization to ensure that integer elements in NumPy arrays with
+  `dtype==int` are handled without error. (#486)
 - Fixed the `int` and `float` aliases with the `dtype=` kwarg when initializing `Image` instances
   to use the `numpy.int32` and `numpy.float64` data types.  Previously the behavior was
   unpredictable and platform dependent. (#571)
