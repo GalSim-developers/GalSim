@@ -77,3 +77,21 @@ for Class in (_galsim.PositionD, _galsim.PositionI):
     """
 
 del Class    # cleanup public namespace
+
+# Force the input args to PositionI to be `int` (correctly handles elements of int arrays)
+_orig_PositionI_init = PositionI.__init__
+def _new_PositionI_init(self, *args, **kwargs):
+    if len(args) == 2 and len(kwargs) == 0:
+        if any([a != int(a) for a in args]):
+            raise ValueError("PositionI must be initialized with integer values")
+        _orig_PositionI_init(self, *[int(a) for a in args])
+    elif len(args) == 0 and len(kwargs) == 2:
+        x = kwargs.pop('x')
+        y = kwargs.pop('y')
+        if any([a != int(a) for a in [x,y]]):
+            raise ValueError("PositionI must be initialized with integer values")
+        _orig_PositionI_init(self, int(x), int(y))
+    else:
+        _orig_PositionI_init(self, *args, **kwargs)
+PositionI.__init__ = _new_PositionI_init
+
