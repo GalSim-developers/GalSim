@@ -4,8 +4,6 @@ Changes from v1.1 to v1.2
 New Features
 ------------
 
-- Modified BoundsI initialization to ensure that integer elements in NumPy arrays with
-  `dtype==int` are handled without error. (#486)
 - Changed name of noise whitening routine from noise.applyWhiteningTo(image)
   to image.whitenNoise(noise), parallel to image.addNoise(noise); use of 
   noise.applyWhiteningTo() is deprecated. (#529)
@@ -23,6 +21,8 @@ New Features
 Bug Fixes and Improvements
 --------------------------
 
+- Modified BoundsI initialization to ensure that integer elements in NumPy arrays with
+  `dtype==int` are handled without error. (#486)
 - Changed the default seed used for Deviate objects when no seed is given to use /dev/urandom
   if it is available.  If not, it reverts to the old behavior of using the current time to
   generate a seed value. (#537)
