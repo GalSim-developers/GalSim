@@ -4,6 +4,8 @@ Changes from v1.1 to v1.2
 New Features
 ------------
 
+- Modified BoundsI initialization to ensure that integer elements in NumPy arrays with
+  `dtype==int` are handled without error. (#486)
 - Changed name of noise whitening routine from noise.applyWhiteningTo(image)
   to image.whitenNoise(noise), parallel to image.addNoise(noise); use of 
   noise.applyWhiteningTo() is deprecated. (#529)
