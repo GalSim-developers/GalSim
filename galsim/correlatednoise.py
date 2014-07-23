@@ -39,10 +39,10 @@ def whitenNoise(self, noise):
 
 def symmetrizeNoise(self, noise, order=4):
     # This will be inserted into the Image class as a method.  So self = image.
-    """Impose N-fold symmetry (where N=`order` is an even integer >=4) on the noise in the image
-    assuming that the noise currently in the image can be described by the CorrelatedNoise object
-    `noise`.  See CorrelatedNoise.symmetrizeImage() docstring for more details of how this method
-    works.
+    """Impose N-fold symmetry (where N=`order` is an even integer >=4) on the noise in a square
+    image assuming that the noise currently in the image can be described by the CorrelatedNoise
+    object `noise`.  See CorrelatedNoise.symmetrizeImage() docstring for more details of how this
+    method works.
 
     @param noise        The CorrelatedNoise model to use when figuring out how much noise to add to
                         make the final noise have symmetry at the desired order.
@@ -286,6 +286,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
     def symmetrizeImage(self, image, order=4):
         """Apply noise designed to impose N-fold symmetry on the existing noise in a (square) input
         Image.
+
+        When called for a non-square image, this method will raise an exception, unlike the noise
+        whitening routines.
 
         The order `N` of the symmetry can be supplied as a keyword argument, with the default being
         4 because this is presumably the minimum required for the anisotropy of noise correlations
