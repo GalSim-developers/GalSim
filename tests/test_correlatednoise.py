@@ -773,8 +773,8 @@ def test_cosmos_and_whitening():
     # Convolve the correlated noise field with each of the psf, pix
     ccn_convolved.convolveWith(galsim.Convolve([psf_ground, pix_ground]))
     # Reset the outimage, and set its pixel scale to now be the ground-based resolution
-    outimage.setZero()
-    outimage.scale = scale
+    # Also, check both odd-size and non-square here.  Both should be ok.
+    outimage = galsim.ImageD(3 * largeim_size + 1, 3 * largeim_size + 43, scale=scale)
     # Add correlated noise
     outimage.addNoise(ccn_convolved)
     # Then whiten
@@ -844,6 +844,7 @@ def test_symmetrizing():
     ccn_transformed = ccn.createSheared(g1=-0.05, g2=0.11)
     ccn_transformed.applyRotation(313. * galsim.degrees)
     ccn_transformed.applyExpansion(2.1)
+    # Note: symmetrize currently cannot handle non-square images.  But odd is ok.
     outimage = galsim.ImageD(symm_size_mult*largeim_size + 1,
                              symm_size_mult*largeim_size + 1, scale=cosmos_scale)
     outimage.addNoise(ccn_transformed)
