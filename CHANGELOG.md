@@ -23,6 +23,8 @@ New Features
 Bug Fixes and Improvements
 --------------------------
 
+- Modified BoundsI and PositionI initialization to ensure that integer elements
+  in NumPy arrays with `dtype==int` are handled without error. (#486)
 - Changed the default seed used for Deviate objects when no seed is given to use /dev/urandom
   if it is available.  If not, it reverts to the old behavior of using the current time to
   generate a seed value. (#537)

@@ -159,5 +159,24 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
         >>> bounds = bounds.shift(galsim.PositionD(3.9, 2.1))
     """ 
 
-
 del Class    # cleanup public namespace
+
+# Force the input args to BoundsI to be `int` (correctly handles elements of int arrays)
+_orig_BoundsI_init = BoundsI.__init__
+def _new_BoundsI_init(self, *args, **kwargs):
+    if len(args) == 4 and len(kwargs) == 0:
+        if any([a != int(a) for a in args]):
+            raise ValueError("BoundsI must be initialized with integer values")
+        _orig_BoundsI_init(self, *[int(a) for a in args])
+    elif len(args) == 0 and len(kwargs) == 4:
+        xmin = kwargs.pop('xmin')
+        xmax = kwargs.pop('xmax')
+        ymin = kwargs.pop('ymin')
+        ymax = kwargs.pop('ymax')
+        if any([a != int(a) for a in [xmin, xmax, ymin, ymax]]):
+            raise ValueError("BoundsI must be initialized with integer values")
+        _orig_BoundsI_init(self, int(xmin), int(xmax), int(ymin), int(ymax))
+    else:
+        _orig_BoundsI_init(self, *args, **kwargs)
+BoundsI.__init__ = _new_BoundsI_init
+
