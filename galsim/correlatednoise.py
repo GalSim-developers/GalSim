@@ -39,10 +39,10 @@ def whitenNoise(self, noise):
 
 def symmetrizeNoise(self, noise, order=4):
     # This will be inserted into the Image class as a method.  So self = image.
-    """Impose N-fold symmetry (where N=`order` is an even integer >=4) on the noise in the image
-    assuming that the noise currently in the image can be described by the CorrelatedNoise object
-    `noise`.  See CorrelatedNoise.symmetrizeImage() docstring for more details of how this method
-    works.
+    """Impose N-fold symmetry (where N=`order` is an even integer >=4) on the noise in a square
+    image assuming that the noise currently in the image can be described by the CorrelatedNoise
+    object `noise`.  See CorrelatedNoise.symmetrizeImage() docstring for more details of how this
+    method works.
 
     @param noise        The CorrelatedNoise model to use when figuring out how much noise to add to
                         make the final noise have symmetry at the desired order.
@@ -179,7 +179,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         rootps = self._get_update_rootps(image.array.shape, image.wcs)
 
         # Finally generate a random field in Fourier space with the right PS
-        noise_array = _generate_noise_from_rootps(self.getRNG(), rootps)
+        noise_array = _generate_noise_from_rootps(self.getRNG(), image.array.shape, rootps)
+
         # Add it to the image
         image += galsim.Image(noise_array, wcs=image.wcs)
         return image
@@ -268,11 +269,11 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the whitening noise,
         # and the total variance of the combination
-        rootps_whitening, variance = self._get_update_rootps_whitening(
-            image.array.shape, image.wcs)
+        rootps_whitening, variance = self._get_update_rootps_whitening(image.array.shape, image.wcs)
 
         # Finally generate a random field in Fourier space with the right PS and add to image
-        noise_array = _generate_noise_from_rootps(self.getRNG(), rootps_whitening)
+        noise_array = _generate_noise_from_rootps(
+            self.getRNG(), image.array.shape, rootps_whitening)
         image += galsim.Image(noise_array)
 
         # Return the variance to the interested user
@@ -285,6 +286,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
     def symmetrizeImage(self, image, order=4):
         """Apply noise designed to impose N-fold symmetry on the existing noise in a (square) input
         Image.
+
+        When called for a non-square image, this method will raise an exception, unlike the noise
+        whitening routines.
 
         The order `N` of the symmetry can be supplied as a keyword argument, with the default being
         4 because this is presumably the minimum required for the anisotropy of noise correlations
@@ -360,7 +364,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             image.array.shape, image.wcs, order)
 
         # Finally generate a random field in Fourier space with the right PS and add to image.
-        noise_array = _generate_noise_from_rootps(self.getRNG(), rootps_symmetrizing)
+        noise_array = _generate_noise_from_rootps(
+            self.getRNG(), image.array.shape, rootps_symmetrizing)
         image += galsim.Image(noise_array)
 
         # Return the variance to the interested user
@@ -721,8 +726,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """
         # First check whether we can just use a stored power spectrum (no drawing necessary if so)
         use_stored = False
+        # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
+        half_shape = (shape[0], shape[1] // 2 + 1)
         for rootps_array, saved_wcs in self._rootps_store:
-            if shape == rootps_array.shape:
+            if rootps_array.shape == half_shape:
                 if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
                      wcs == saved_wcs ):
                     use_stored = True
@@ -738,7 +745,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 newcf.scale = 1.
             else:
                 newcf.wcs = wcs
-            # Then draw this correlation function into an array.
+            # Then draw this correlation function into an array.  If this is not done at the same
+            # wcs as the original image from which the CF derives, even if the image is rotated,
+            # then this step requires interpolation and the newcf (used to generate the PS below) is
+            # thus approximate at some level
             newcf = self.drawImage(newcf)
 
             # Since we just drew it, save the variance value for posterity.
@@ -748,9 +758,27 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             if var <= 0.:
                 raise RuntimeError("CorrelatedNoise found to have negative variance.")
 
-            # Then calculate the sqrt(PS) that will be used to generate the actual noise
-            ps = np.fft.fft2(newcf.array)
-            rootps = np.sqrt(np.abs(ps) * np.product(shape))
+            # Then calculate the sqrt(PS) that will be used to generate the actual noise.  First do
+            # the power spectrum (PS)
+            ps = np.fft.rfft2(newcf.array)
+
+            # The PS we expect should be *purely* +ve, but there are reasons why this is not the
+            # case.  One is that the PS is calculated from a correlation function CF that has not
+            # been rolled to be centred on the [0, 0] array element.  Another reason is due to the
+            # approximate nature of the CF rendered above.  Thus an abs(ps) will be necessary when
+            # calculating the sqrt().
+            # This all means that the performance of correlated noise fields should always be tested
+            # for any given scientific application that requires high precision output.  An example
+            # of such a test is the generation of noise whitened images of sheared RealGalaxies in
+            # Section 9.2 of the GalSim paper (Rowe, Jarvis, Mandelbaum et al. 2014)
+
+            # Given all the above, it might make sense to warn the user if we do detect a PS that
+            # doesn't "look right" (i.e. has strongly negative values where these are not expected).
+            # This is the subject of Issue #587 on GalSim's GitHub repository page (see 
+            # https://github.com/GalSim-developers/GalSim/issues/587)
+
+            # For now we just take the sqrt(abs(PS)):
+            rootps = np.sqrt(np.abs(ps))
 
             # Then add this and the relevant wcs to the _rootps_store for later use
             self._rootps_store.append((rootps, newcf.wcs))
@@ -765,8 +793,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """
         # First check whether we can just use a stored whitening power spectrum
         use_stored = False
+        # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
+        half_shape = (shape[0], shape[1] // 2 + 1)
         for rootps_whitening_array, saved_wcs, var in self._rootps_whitening_store:
-            if shape == rootps_whitening_array.shape:
+            if rootps_whitening_array.shape == half_shape:
                 if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
                      wcs == saved_wcs ):
                     use_stored = True
@@ -787,10 +817,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             rootps_whitening = np.sqrt(ps_whitening)                # variance, for "safety"
 
             # Finally calculate the theoretical combined variance to output alongside the image
-            # to be generated with the rootps_whitening.  The factor of product of the image shape
-            # is required due to inverse FFT conventions, and note that although we use the [0, 0]
-            # element we could use any as the PS should be flat
-            variance = (rootps[0, 0]**2 + ps_whitening[0, 0]) / np.product(shape)
+            # to be generated with the rootps_whitening.  Note that although we use the [0, 0]
+            # element we could use any as the PS should be flat.
+            variance = rootps[0, 0]**2 + ps_whitening[0, 0]
 
             # Then add all this and the relevant wcs to the _rootps_whitening_store
             self._rootps_whitening_store.append((rootps_whitening, wcs, variance))
@@ -807,8 +836,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # the considerations for use of cached observations for noise whitening, we need the
         # requested order of the symmetry to be the same as the stored one.
         use_stored = False
-        for rootps_symmetrizing_array, saved_wcs, var, saved_order in self._rootps_symmetrizing_store:
-            if shape == rootps_symmetrizing_array.shape and order == saved_order:
+        # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
+        half_shape = (shape[0], shape[1] // 2 + 1)
+        for (
+            rootps_symmetrizing_array, saved_wcs, var, saved_order
+            ) in self._rootps_symmetrizing_store:
+            if rootps_symmetrizing_array.shape == half_shape and saved_order == order:
                 if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
                      wcs == saved_wcs ):
                     use_stored = True
@@ -831,12 +864,11 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             ps_symmetrizing = ps_symmetrized * headroom - ps_actual # add a little extra variance
             rootps_symmetrizing = np.sqrt(ps_symmetrizing)
 
-            # Finally calculate the theoretical combined variance to output alongside the image
-            # to be generated with the rootps_symmetrizing.  The factor of product of the image shape
-            # is required due to inverse FFT conventions.
+            # Finally calculate the theoretical combined variance to output alongside the image to
+            # be generated with the rootps_symmetrizing.
             # Here, unlike in _get_update_rootps_whitening, the final power spectrum is not flat, so
             # we have to take the mean power instead of just using the [0, 0] element.
-            variance = np.mean(rootps**2 + ps_symmetrizing) / np.product(shape)
+            variance = np.mean(rootps**2 + ps_symmetrizing)
 
             # Then add all this and the relevant wcs to the _rootps_symmetrizing_store
             self._rootps_symmetrizing_store.append((rootps_symmetrizing, wcs, variance, order))
@@ -853,26 +885,31 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         to generate noise with power equal to the difference between the two power spectra.
         """
 
-        # Initialize a temporary copy of the original PS array, which we will turn into an
-        # InterpolatedImage.
-        tmp_arr = ps.copy()
-        # But first, we're going to use utilities.roll2d() to shift it so the kx=ky=0 element is at
-        # the center, instead of in the corner.
-        tmp_arr = utilities.roll2d(tmp_arr, (tmp_arr.shape[0]//2, tmp_arr.shape[1]//2))
-        # Check for even-sized arrays, which need special treatment:
+        # Initialize a temporary copy of the original PS array, expanded to full size rather than
+        # the compact halfcomplex format that the PS is supplied in, which we will turn into an
+        # InterpolatedImage
+        # Check for an input ps which was even-sized along the y axis, which needs special treatment
         do_expansion = False
-        if tmp_arr.shape[0] % 2 == 0:
+        if ps.shape[0] % 2 == 0:
             do_expansion = True
-        if do_expansion:
-            # For the even-sized ones, after rolling, we have to take the lower left two edges and
-            # copy them to the upper right edges, as in the CorrelatedNoise constructor.
-            new_tmp_arr = np.zeros((1+tmp_arr.shape[0], 1+tmp_arr.shape[1]))
-            new_tmp_arr[0:tmp_arr.shape[0], 0:tmp_arr.shape[1]] = tmp_arr
-            lhs_column = new_tmp_arr[:, 0]
-            new_tmp_arr[:, tmp_arr.shape[1]] = lhs_column[::-1] # inverts order as required
-            bottom_row = new_tmp_arr[0, :]
-            new_tmp_arr[tmp_arr.shape[0], :] = bottom_row[::-1] # inverts order as required
-            tmp_arr = new_tmp_arr.copy()
+        # Then roll the PS by half its size in the leading dimension, centering it in that dimension
+        # (we will construct the expanded array to be centred in the other dimension)
+        ps_rolled = galsim.utilities.roll2d(ps, (ps.shape[0] / 2, 0))
+        # Then create and fill an expanded-size tmp_arr with this PS
+        if not do_expansion:
+            tmp_arr = np.zeros((ps_rolled.shape[0], 2 * ps_rolled.shape[1] - 1)) # Both dims now odd
+            # Fill the first half, the RHS...
+            tmp_arr[:, ps.shape[1]-1:] = ps_rolled
+            # Then do the LHS of tmp_arr, straightforward enough, fill with the inverted RHS
+            tmp_arr[:, :ps.shape[1]-1] = ps_rolled[:, 1:][::-1, ::-1]
+        else:
+            # For the even-sized leading dimension ps, we have to do a tiny bit more work than
+            # the odd case...
+            tmp_arr = np.zeros((ps_rolled.shape[0] + 1, 2 * ps_rolled.shape[1] - 1))
+            tmp_arr[:-1, ps_rolled.shape[1]-1:] = ps_rolled
+            tmp_arr[1:, :ps_rolled.shape[1]-1] = ps_rolled[:, 1:][::-1, ::-1]
+            # Then one tiny element breaks the symmetry of the above, so fix this
+            tmp_arr[-1, tmp_arr.shape[1] / 2] = tmp_arr[0, tmp_arr.shape[1] / 2]
 
         # Also initialize the array in which to build up the symmetrized PS.
         final_arr = tmp_arr.copy()
@@ -885,45 +922,74 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             if i_rot > 0:
                 # For later ones, rotate by 2pi/order, and draw it back into a new image.
                 tmp_obj = tmp_obj.rotate(2.*np.pi*galsim.radians/order)
-                tmp_im = galsim.Image(tmp_arr.shape[0], tmp_arr.shape[1], scale=1)
+                tmp_im = galsim.Image(tmp_arr.shape[1], tmp_arr.shape[0], scale=1)
                 tmp_obj.draw(tmp_im, scale=1)
                 final_arr[tmp_im.array > final_arr] = tmp_im.array[tmp_im.array > final_arr]
 
-        # If we extended the array to be odd-sized, now we have to go back to a subset
-        if do_expansion:
-            final_arr = final_arr[0:final_arr.shape[0]-1, 0:final_arr.shape[1]-1]
-        # Now shift it back to the convention where kx=ky=0 is in the lower left.
-        final_arr = utilities.roll2d(final_arr, (-(final_arr.shape[0]//2), -(final_arr.shape[1]//2)))
-        # final_arr now contains the maximum of the set of images rotated by 2pi/order, which (a)
-        # should be symmetric at the required order and (b) be the minimal array that is symmetric
-        # at that order and >= the original PS.  So we do not have to add any more noise to ensure
-        # that the target symmetrized PS is always >= the original one.
+        # Now simply take the halfcomplex, compact stored part that we are interested in,
+        # remembering that the kx=ky=0 element is still in the centre
+        final_arr = final_arr[:, final_arr.shape[1]/2:]
+        # If we extended the array to be odd-sized along y, we have to go back to an even subarray
+        if do_expansion: final_arr = final_arr[:-1, :]
+        # Finally roll back the leading dimension
+        final_arr = galsim.utilities.roll2d(final_arr, (-(final_arr.shape[0] / 2), 0))
+        # final_arr now contains the halfcomplex compact format PS of the maximum of the set of PS
+        # images rotated by 2pi/order, which (a) should be symmetric at the required order and
+        # (b) be the minimal array that is symmetric at that order and >= the original PS.  So we do
+        # not have to add any more noise to ensure that the target symmetrized PS is always >= the
+        # original one.
         return final_arr
 
 ###
 # Now a standalone utility function for generating noise according to an input (square rooted)
 # Power Spectrum
 #
-def _generate_noise_from_rootps(rng, rootps):
+def _generate_noise_from_rootps(rng, shape, rootps):
     """Utility function for generating a NumPy array containing a Gaussian random noise field with
     a user-specified power spectrum also supplied as a NumPy array.
 
     @param rng      BaseDeviate instance to provide the random number generation
-    @param rootps   a NumPy array containing the square root of the discrete Power Spectrum ordered
-                    in two dimensions according to the usual DFT pattern (see np.fft.fftfreq)
+    @param shape    Shape of the output array, needed because of the use of Hermitian symmetry to
+                    increase inverse FFT efficiency using the `np.fft.irfft2` function (gets sent to
+                    the kwarg `s=` of `np.fft.irfft2`)
+    @param rootps   NumPy array containing the square root of the discrete Power Spectrum ordered
+                    in two dimensions according to the usual DFT pattern for `np.fft.rfft2` output
+                    (see also `np.fft.fftfreq`)
 
-    @returns a NumPy array (contiguous) of the same shape as `rootps`, filled with the noise field.
+    @returns a NumPy array (contiguous) of the requested shape, filled with the noise field.
     """
-    # I believe it is cheaper to make two random vectors than to make a single one (for a phase)
-    # and then apply cos(), sin() to it...
-    gaussvec_real = galsim.ImageD(rootps.shape[1], rootps.shape[0]) # Remember NumPy is [y, x]
-    gaussvec_imag = galsim.ImageD(rootps.shape[1], rootps.shape[0])
-    gn = galsim.GaussianNoise(rng=rng, sigma=1.) # Quicker to create anew each time than to save &
-                                                 # then check if its rng needs to be changed or not.
-    gaussvec_real.addNoise(gn)
-    gaussvec_imag.addNoise(gn)
-    noise_array = np.fft.ifft2((gaussvec_real.array + gaussvec_imag.array * 1j) * rootps)
-    return np.ascontiguousarray(noise_array.real)
+    # Sanity check on requested shape versus that of rootps
+    if len(shape) != 2 or (shape[0], shape[1]/2+1) != rootps.shape:
+        raise ValueError("Requested shape does not match that of the supplied rootps")
+    #  Quickest to create Gaussian rng each time needed, so do that here...
+    gd = galsim.GaussianDeviate(
+        rng, sigma=np.sqrt(.5 * shape[0] * shape[1])) # Note sigma scaling: 1/sqrt(2) needed so
+                                                      # <|gaussvec|**2> = product(shape); shape
+                                                      # needed because of the asymmetry in the
+                                                      # 1/N^2 division in the NumPy FFT/iFFT
+    # Fill a couple of arrays with this noise
+    gvec_real = galsim.utilities.rand_arr((shape[0], shape[1]/2+1), gd)
+    gvec_imag = galsim.utilities.rand_arr((shape[0], shape[1]/2+1), gd)
+    # Prepare a complex vector upon which to impose Hermitian symmetry
+    gvec = gvec_real + 1J * gvec_imag
+    # Now impose requirements of Hermitian symmetry on random Gaussian halfcomplex array, and ensure
+    # self-conjugate elements (e.g. [0, 0]) are purely real and multiplied by sqrt(2) to compensate
+    # for lost variance, see https://github.com/GalSim-developers/GalSim/issues/563
+    # First do the bits necessary for both odd and even shapes:
+    gvec[-1:shape[0]/2:-1, 0] = np.conj(gvec[1:(shape[0]+1)/2, 0])
+    rt2 = np.sqrt(2.)
+    gvec[0, 0] = rt2 * gvec[0, 0].real
+    # Then make the changes necessary for even sized arrays
+    if shape[1] % 2 == 0: # x dimension even
+        gvec[-1:shape[0]/2:-1, shape[1]/2] = np.conj(gvec[1:(shape[0]+1)/2, shape[1]/2])
+        gvec[0, shape[1]/2] = rt2 * gvec[0, shape[1]/2].real
+    if shape[0] % 2 == 0: # y dimension even
+        gvec[shape[0]/2, 0] = rt2 * gvec[shape[0]/2, 0].real
+        # Both dimensions even
+        if shape[1] % 2 == 0:
+            gvec[shape[0]/2, shape[1]/2] = rt2 * gvec[shape[0]/2, shape[1]/2].real
+    # Finally generate and return noise using the irfft
+    return np.fft.irfft2(gvec * rootps, s=shape)
 
 
 ###
@@ -1118,13 +1184,21 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             raise TypeError("Input image not a galsim.Image object")
         # Build a noise correlation function (CF) from the input image, using DFTs
         # Calculate the power spectrum then a (preliminary) CF
-        ft_array = np.fft.fft2(image.array)
-        ps_array = (ft_array * ft_array.conj()).real
+        ft_array = np.fft.rfft2(image.array)
+        ps_array = np.abs(ft_array)**2 # Using timeit abs() seems to have the slight speed edge over
+                                       # all other options tried, cf. results described by MJ in
+                                       # the optics.psf() function in optics.py
+
+        # Need to normalize ps due to one-directional 1/N^2 in FFT conventions and the fact that
+        # we *squared* the ft_array to get ps_array:
+        ps_array /= np.product(image.array.shape)
+        
         if subtract_mean: # Quickest non-destructive way to make the PS correspond to the
                           # mean-subtracted case
             ps_array[0, 0] = 0.
-        # Note need to normalize due to one-directional 1/N^2 in FFT conventions
-        cf_array_prelim = (np.fft.ifft2(ps_array)).real / np.product(image.array.shape)
+
+        # Then calculate the CF by inverse DFT
+        cf_array_prelim = np.fft.irfft2(ps_array, s=image.array.shape)
 
         store_rootps = True # Currently the ps_array above corresponds to cf, but this may change...
 
@@ -1148,6 +1222,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         cf_array = np.zeros((
             1 + 2 * (cf_array_prelim.shape[0] / 2),
             1 + 2 * (cf_array_prelim.shape[1] / 2))) # using integer division
+
         # Then put the data from the prelim CF into this array
         cf_array[0:cf_array_prelim.shape[0], 0:cf_array_prelim.shape[1]] = cf_array_prelim
         # Then copy-invert-paste data from the leftmost column to the rightmost column, and lowest
