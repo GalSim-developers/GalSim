@@ -15,6 +15,8 @@ New Features
   for estimating chromatic PSF moment shifts. (#547)
 - Renamed the GSParams parameter `alias_threshold` to `folding_threshold`, a clearer term for the
   profile image folding in real space that this GSParam controls. (#562)
+- Modified the internals of noise generation by correlated noise models to use Hermitian symmetry,
+  for greater efficiency. (#563)
 - Extended to the `rotate`, `shear`, and `transform` methods of ChromaticObject the ability
   to take functions of wavelength for the arguments. (#581)
 
