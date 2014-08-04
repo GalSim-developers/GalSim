@@ -15,7 +15,13 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+"""@file cdmodel.py
 
+This module contains classes used to model charge deflection by image pixels due to the charge they
+contain.  The base class BaseCDModel provides the general functionality for a pixel boundary charge
+deflection of the kind described by Antilogus et al (2014), and derived classes may invoke
+additional symmetries or a simple prescription for setting the many free parameters of such a model.
+"""
 import numpy as np
 import galsim
 
