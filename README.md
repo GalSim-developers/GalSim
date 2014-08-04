@@ -16,7 +16,9 @@ However, the code has numerous additional capabilities beyond those needed for
 the challenge, and has been useful for a number of projects that needed to
 simulate high-fidelity galaxy images with accurate sizes and shears.  At the
 end of this file, there is a list of the code capabilities and plans for future
-development.
+development.  For details of algorithms and code validation, please see
+
+    http://arxiv.org/abs/1407.7676
 
 
 Distribution
