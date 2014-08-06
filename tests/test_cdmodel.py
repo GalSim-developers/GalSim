@@ -32,7 +32,7 @@ except ImportError:
     
 
 def test_simplegeometry():
-    """Test charge deflection model for image with charges in only the central pixel(s)
+    """Test charge deflection model for image with charges in only the central pixel(s).
     """
     size=50
     center=25
@@ -53,8 +53,7 @@ def test_simplegeometry():
     it.setValue(center,center-1,1)
     it.setValue(center,center  ,1)
     it.setValue(center,center+1,1)
-        
-      
+
     cdr0   = PowerLawCD(2,shiftcoeff,0,0,0,0,0,0)
     i0cdr0 = cdr0.applyForward(i0)
 
@@ -133,7 +132,6 @@ def test_simplegeometry():
                                    "Off-center pixel wrong in test_onepixel RX")
     
     # a model that should not change anything here
-    
     import time
     u = galsim.UniformDeviate(int(time.time()))
     
@@ -172,9 +170,8 @@ def test_simplegeometry():
     np.testing.assert_array_almost_equal(itcdrx.array, i0.array, 6,
                                    "itcdrx array is not 0 where it should be")
 
-
 def test_fluxconservation():
-    """Test flux conservation of charge deflection model for galaxy and flat image
+    """Test flux conservation of charge deflection model for galaxy and flat image.
     """
 
     galflux=30000.
@@ -192,17 +189,22 @@ def test_fluxconservation():
     flat = galsim.Image(size,size,dtype=np.float32,init_value=0)
     flat.fill(100)
     
-    cd   = PowerLawCD(2,shiftcoeff,shiftcoeff,shiftcoeff/2.,shiftcoeff/2.,shiftcoeff/2.,shiftcoeff/2.,alpha)
+    cd   = PowerLawCD(
+        2, shiftcoeff, shiftcoeff, shiftcoeff/2., shiftcoeff/2., shiftcoeff/2., shiftcoeff/2.,
+        alpha)
     
     imagecd = cd.applyForward(image)
     flatcd  = cd.applyForward(flat)
     
-    np.testing.assert_almost_equal(image.array.sum(), imagecd.array.sum(), 2, "Galaxy image flux is not left invariant by charge deflection")
-    np.testing.assert_almost_equal(flat.array.sum(), flatcd.array.sum(), 2, "Flat image flux is not left invariant by charge deflection")
-    
+    np.testing.assert_almost_equal(
+        image.array.sum(), imagecd.array.sum(), 2,
+        "Galaxy image flux is not left invariant by charge deflection")
+    np.testing.assert_almost_equal(
+        flat.array.sum(), flatcd.array.sum(), 2,
+        "Flat image flux is not left invariant by charge deflection")
     
 def test_forwardbackward():
-    """Test invariance (to first order) under forward-backward transformation
+    """Test invariance (to first order) under forward-backward transformation.
     """
     galflux=30000.
     galsigma=3.
@@ -227,7 +229,9 @@ def test_forwardbackward():
     #image.write("image.fits")
     #cimage.write("imagec.fits")
     
-    cd   = PowerLawCD(2,shiftcoeff,2.*shiftcoeff,shiftcoeff/2.,2.*shiftcoeff/3.,shiftcoeff/2.,shiftcoeff/3.,alpha)
+    cd   = PowerLawCD(
+        2, shiftcoeff, 2.*shiftcoeff, shiftcoeff/2., 2.*shiftcoeff/3., shiftcoeff/2.,
+        shiftcoeff/3., alpha)
     
     imagecd = cd.applyForward(image)
     imagecddc = cd.applyBackward(imagecd)
@@ -247,8 +251,8 @@ def test_forwardbackward():
     assert minres>-10, ("maximum negative residual of forward-backward transformation is too large")
     
 def test_exampleimage():
-    """Test application of model compared to an independent implementation that was run on example 
-       image
+    """Test application of model compared to an independent implementation that was run on the
+    example image.
     """
     
     #n, r0, t0, rx, tx, r, t, alpha
@@ -256,7 +260,8 @@ def test_exampleimage():
       # model used externally to bring cdtest1 to cdtest2
 
     image_orig  = galsim.fits.read("fits_files/cdtest1.fits") # unprocessed image
-    image_proc  = galsim.fits.read("fits_files/cdtest2.fits") # image with cd model applied with other library
+    image_proc  = galsim.fits.read("fits_files/cdtest2.fits") # image with cd model applied with
+                                                              # other library
     
     image_plcd  = cd.applyForward(image_orig)
     
