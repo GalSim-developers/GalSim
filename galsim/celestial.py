@@ -328,7 +328,7 @@ class CelestialCoord(object):
         else:
             r = numpy.sqrt(rsq)
             cosc = numpy.cos(r)
-            sinc_over_r = numpy.sinc(r)
+            sinc_over_r = numpy.sinc(r/numpy.pi)
 
         # Compute sindec, tandra
         self._set_aux()
