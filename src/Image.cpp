@@ -239,47 +239,48 @@ ImageAlloc<T> BaseImage<T>::applyCD(ConstImageView<double> aL, ConstImageView<do
         for(int y=getYMin(); y<=getYMax(); y++){
 
             double f = at(x, y);
-	        if(x<getXMin()+dmax || x>getXMax()-dmax || y<getYMin()+dmax || y>getYMax()-dmax)
-	        { // outer pixel would not be flux conserving + require fencepost checks
-	            output.setValue(x, y, f);
-	            continue;
-	        }
-            double    fT = (f + at(x, y + 1)) / 2.;
-            double    fB = (f + at(x, y - 1)) / 2.;
-            double    fR = (f + at(x + 1, y)) / 2.;
-            double    fL = (f + at(x - 1, y)) / 2.;
+	    
+	    double    fT = 0.; if(y<getYMax())  fT = (f + at(x, y + 1)) / 2.;
+            double    fB = 0.; if(y>getYMin())  fB = (f + at(x, y - 1)) / 2.;
+            double    fR = 0.; if(x<getXMax())  fR = (f + at(x + 1, y)) / 2.;
+            double    fL = 0.; if(x>getXMin())  fL = (f + at(x - 1, y)) / 2.;
 
             // for each surrounding pixel do
             int matrixindex = 0; // for iterating over the aL, aR, aB, aT images in 1d
-            //if(x==25 && y==24)
-            //std::cout << "##### x,y=" << x << "," << y << std::endl;
-	        for(int iy=-dmax; iy<=dmax; iy++){
 
-		        for(int ix=-dmax; ix<=dmax; ix++){
+	    for(int iy=-dmax; iy<=dmax; iy++){
 
-    // Debug statments commented out below - could remove?
-	//if(x==25 && y==24)
-	//std::cout << "## dx,dy=" << ix << "," << iy << std::endl; 
-                    double qkl = at(x + ix, y + iy);
-		    
-                    f += qkl * fT * aT.at(aT.getXMin() + matrixindex, aT.getYMin());
-	//if(x==25 && y==24)
-    //std::cout<<"T: "<<qkl<<"*"<<fT<<"*"<<aT.at(aT.getXMin()+matrixindex,aT.getYMin())<<std::endl;
-                    f += qkl * fB * aB.at(aB.getXMin() + matrixindex, aB.getYMin());
-	//if(x==25 && y==24)
-	//std::cout<<"B: "<<qkl<<"*"<<fB<<"*"<<aB.at(aB.getXMin()+matrixindex,aB.getYMin())<<std::endl;
-                    f += qkl * fL * aL.at(aL.getXMin() + matrixindex, aL.getYMin());
-	//if(x==25 && y==24)
-	//std::cout<<"L: "<<qkl<<"*"<<fL<<"*"<<aL.at(aL.getXMin()+matrixindex,aL.getYMin())<<std::endl;
-                    f += qkl * fR * aR.at(aR.getXMin() + matrixindex, aR.getYMin());
-	//if(x==25 && y==24)
-	//std::cout<<"R: "<<qkl<<"*"<<fR<<"*"<<aR.at(aR.getXMin()+matrixindex,aR.getYMin())<<std::endl;
-                    matrixindex++;
+		    for(int ix=-dmax; ix<=dmax; ix++){
 
-                }
+			if(x+ix<getXMin() || x+ix>getXMax() 
+			|| y+iy<getYMin() || y+iy>getYMax()) {
+			  // a non-existent pixel is not going to move us
+			  matrixindex++;
+			  continue;
+			}
 
-            }
-            output.setValue(x, y, f);
+			double qkl = at(x + ix, y + iy);
+			
+			if(y + 1 - iy >= getYMin() && y + 1 - iy <= getYMax())  
+			  // don't apply shift if pixel mirrored at t border non-existent
+			  f += qkl * fT * aT.at(aT.getXMin() + matrixindex, aT.getYMin());
+
+			if(y - 1 - iy >= getYMin() && y - 1 - iy <= getYMax())  
+			  // don't apply shift if pixel mirrored at b border non-existent
+			  f += qkl * fB * aB.at(aB.getXMin() + matrixindex, aB.getYMin());
+
+			if(x - 1 - ix >= getXMin() && x - 1 - ix <= getXMax())  
+			  // don't apply shift if pixel mirrored at l border non-existent
+			  f += qkl * fL * aL.at(aL.getXMin() + matrixindex, aL.getYMin());
+
+			if(x + 1 - ix >= getXMin() && x + 1 - ix <= getXMax())  
+			  // don't apply shift if pixel mirrored at r border non-existent
+			  f += qkl * fR * aR.at(aR.getXMin() + matrixindex, aR.getYMin());
+
+			matrixindex++;
+		    }
+	    }
+	    output.setValue(x, y, f);
         }
     }
     return output;

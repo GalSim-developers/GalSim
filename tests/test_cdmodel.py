@@ -37,17 +37,17 @@ def test_simplegeometry():
     shiftcoeff = 0.1
     
     # create otherwise empty image with central pixel at one
-    i0 = galsim.Image(size,size,dtype=np.float32,init_value=0)
+    i0 = galsim.Image(size,size,dtype=np.float64,init_value=0)
     i0.setValue(center,center,1)
     
     # create otherwise empty image with three central pixels at one
     # central row
-    ir = galsim.Image(size,size,dtype=np.float32,init_value=0)
+    ir = galsim.Image(size,size,dtype=np.float64,init_value=0)
     ir.setValue(center-1,center,1)
     ir.setValue(center  ,center,1)
     ir.setValue(center+1,center,1)
     # central column
-    it = galsim.Image(size,size,dtype=np.float32,init_value=0)
+    it = galsim.Image(size,size,dtype=np.float64,init_value=0)
     it.setValue(center,center-1,1)
     it.setValue(center,center  ,1)
     it.setValue(center,center+1,1)
@@ -69,63 +69,63 @@ def test_simplegeometry():
     ircdrx = cdrx.applyForward(ir)
     
     # R0, T0
-    np.testing.assert_almost_equal(i0cdr0.at(center,center), 1.-shiftcoeff, 4,
+    np.testing.assert_almost_equal(i0cdr0.at(center,center), 1.-shiftcoeff, 10,
                                    "Central pixel wrong in test_onepixel R0")
-    np.testing.assert_almost_equal(i0cdt0.at(center,center), 1.-shiftcoeff, 4,
+    np.testing.assert_almost_equal(i0cdt0.at(center,center), 1.-shiftcoeff, 10,
                                    "Central pixel wrong in test_onepixel T0")
     
-    np.testing.assert_almost_equal(i0cdr0.at(center+1,center), shiftcoeff/2., 4,
+    np.testing.assert_almost_equal(i0cdr0.at(center+1,center), shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel R0")
-    np.testing.assert_almost_equal(i0cdr0.at(center-1,center), shiftcoeff/2., 4,
+    np.testing.assert_almost_equal(i0cdr0.at(center-1,center), shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel R0")
     
-    np.testing.assert_almost_equal(i0cdt0.at(center,center+1), shiftcoeff/2., 4,
+    np.testing.assert_almost_equal(i0cdt0.at(center,center+1), shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel T0")
-    np.testing.assert_almost_equal(i0cdt0.at(center,center-1), shiftcoeff/2., 4,
+    np.testing.assert_almost_equal(i0cdt0.at(center,center-1), shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel T0")
     
     # Tx
-    np.testing.assert_almost_equal(ircdtx.at(center,center), 1.-2.*shiftcoeff, 4,
+    np.testing.assert_almost_equal(ircdtx.at(center,center), 1.-2.*shiftcoeff, 10,
                                    "Central pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center-1,center), 1.-shiftcoeff, 4,
+    np.testing.assert_almost_equal(ircdtx.at(center-1,center), 1.-shiftcoeff, 10,
                                    "Off-center pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center+1,center), 1.-shiftcoeff, 4,
+    np.testing.assert_almost_equal(ircdtx.at(center+1,center), 1.-shiftcoeff, 10,
                                    "Off-center pixel wrong in test_onepixel TX")
                                        
-    np.testing.assert_almost_equal(ircdtx.at(center,center+1), shiftcoeff, 4,
+    np.testing.assert_almost_equal(ircdtx.at(center,center+1), shiftcoeff, 10,
                                    "Central pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center-1,center+1), shiftcoeff/2., 4,
+    np.testing.assert_almost_equal(ircdtx.at(center-1,center+1), shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center+1,center+1), shiftcoeff/2., 4,
+    np.testing.assert_almost_equal(ircdtx.at(center+1,center+1), shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel TX")
                                    
-    np.testing.assert_almost_equal(ircdtx.at(center,center-1), shiftcoeff, 4,
+    np.testing.assert_almost_equal(ircdtx.at(center,center-1), shiftcoeff, 10,
                                    "Central pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center-1,center-1), shiftcoeff/2., 4,
+    np.testing.assert_almost_equal(ircdtx.at(center-1,center-1), shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center+1,center-1), shiftcoeff/2., 4,
+    np.testing.assert_almost_equal(ircdtx.at(center+1,center-1), shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel TX")
                                    
     # Rx
-    np.testing.assert_almost_equal(itcdrx.at(center,center), 1.-2.*shiftcoeff, 4,
+    np.testing.assert_almost_equal(itcdrx.at(center,center), 1.-2.*shiftcoeff, 10,
                                    "Central pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center,center-1), 1.-shiftcoeff, 4,
+    np.testing.assert_almost_equal(itcdrx.at(center,center-1), 1.-shiftcoeff, 10,
                                    "Off-center pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center,center+1), 1.-shiftcoeff, 4,
+    np.testing.assert_almost_equal(itcdrx.at(center,center+1), 1.-shiftcoeff, 10,
                                    "Off-center pixel wrong in test_onepixel RX")
                                        
-    np.testing.assert_almost_equal(itcdrx.at(center+1,center), shiftcoeff, 4,
+    np.testing.assert_almost_equal(itcdrx.at(center+1,center), shiftcoeff, 10,
                                    "Central pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center+1,center-1), shiftcoeff/2., 4,
+    np.testing.assert_almost_equal(itcdrx.at(center+1,center-1), shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center+1,center+1), shiftcoeff/2., 4,
+    np.testing.assert_almost_equal(itcdrx.at(center+1,center+1), shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel RX")
                                    
-    np.testing.assert_almost_equal(itcdrx.at(center-1,center), shiftcoeff, 4,
+    np.testing.assert_almost_equal(itcdrx.at(center-1,center), shiftcoeff, 10,
                                    "Central pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center-1,center-1), shiftcoeff/2., 4,
+    np.testing.assert_almost_equal(itcdrx.at(center-1,center-1), shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center-1,center+1), shiftcoeff/2., 4,
+    np.testing.assert_almost_equal(itcdrx.at(center-1,center+1), shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel RX")
     
     # a model that should not change anything here
@@ -152,48 +152,50 @@ def test_simplegeometry():
     itcdtx.subImage(galsim.BoundsI(center,center,center-1,center+1)).fill(0)
     
     # ... and comparing
-    np.testing.assert_array_almost_equal(i0cdnull.array, i0.array, 6,
+    np.testing.assert_array_almost_equal(i0cdnull.array, i0.array, 10,
                                    "i0cdnull array is not 0 where it should be")
-    np.testing.assert_array_almost_equal(i0cdr0.array, i0.array, 6,
+    np.testing.assert_array_almost_equal(i0cdr0.array, i0.array, 10,
                                    "i0cdr0 array is not 0 where it should be")
-    np.testing.assert_array_almost_equal(i0cdt0.array, i0.array, 6,
+    np.testing.assert_array_almost_equal(i0cdt0.array, i0.array, 10,
                                    "i0cdr0 array is not 0 where it should be")
-    np.testing.assert_array_almost_equal(ircdtx.array, i0.array, 6,
+    np.testing.assert_array_almost_equal(ircdtx.array, i0.array, 10,
                                    "ircdtx array is not 0 where it should be")
-    np.testing.assert_array_almost_equal(ircdrx.array, i0.array, 6,
+    np.testing.assert_array_almost_equal(ircdrx.array, i0.array, 10,
                                    "ircdrx array is not 0 where it should be")
-    np.testing.assert_array_almost_equal(itcdtx.array, i0.array, 6,
+    np.testing.assert_array_almost_equal(itcdtx.array, i0.array, 10,
                                    "itcdtx array is not 0 where it should be")
-    np.testing.assert_array_almost_equal(itcdrx.array, i0.array, 6,
+    np.testing.assert_array_almost_equal(itcdrx.array, i0.array, 10,
                                    "itcdrx array is not 0 where it should be")
 
 def test_fluxconservation():
     """Test flux conservation of charge deflection model for galaxy and flat image.
     """
-    galflux = 30000.
+    galflux = 30.
     galsigma = 3.
-    noise = 1.
-    shiftcoeff = 5.e-5
+    noise = 0.1
+    shiftcoeff = 5.e-2
     alpha = 0.3
     size = 50
 
     gal = galsim.Gaussian(flux=galflux, sigma=galsigma)
-    image = gal.drawImage(scale=1.)
+    image = gal.drawImage(scale=1.,dtype=np.float64)
     image.addNoise(galsim.GaussianNoise(sigma=noise))
 
-    flat = galsim.Image(size, size, dtype=np.float32, init_value=0)
-    flat.fill(100)    
+    flat = galsim.Image(size, size, dtype=np.float64, init_value=0)
+    flat.fill(1.)
+        
     cd = PowerLawCD(
         2, shiftcoeff, shiftcoeff, shiftcoeff/2., shiftcoeff/2., shiftcoeff/2., shiftcoeff/2.,
         alpha)
     imagecd = cd.applyForward(image)
     flatcd  = cd.applyForward(flat)
+    
     # Then test
     np.testing.assert_almost_equal(
-        image.array.sum(), imagecd.array.sum(), 2,
+        image.array.sum(), imagecd.array.sum(), 10,
         "Galaxy image flux is not left invariant by charge deflection")
     np.testing.assert_almost_equal(
-        flat.array.sum(), flatcd.array.sum(), 2,
+        flat.array.sum(), flatcd.array.sum(), 10,
         "Flat image flux is not left invariant by charge deflection")
     
 def test_forwardbackward():
@@ -208,9 +210,10 @@ def test_forwardbackward():
 
     gal = galsim.Gaussian(flux=galflux, sigma=galsigma)
     maxflux = gal.xValue(0,0)
-    image = gal.drawImage(scale=1.)
+    image = gal.drawImage(scale=1.,dtype=np.float64)
     
-    cimage = galsim.Image(image.getBounds()) # used for normalization later   
+    cimage = galsim.Image(image.getBounds(),dtype=np.float64) 
+    # used for normalization later, we expect residual to be of this order
     cimage.fill(1.)
     cimage = cimage+image
     cimage = cimage*maxflux*maxflux*shiftcoeff*shiftcoeff
