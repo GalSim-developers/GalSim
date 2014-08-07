@@ -536,9 +536,9 @@ class CelestialCoord(object):
         # Perform the rotation:
         # And note that Lieske defines y with the opposite sign of our convention.
         self._set_aux()
-        x2 = xx*self._x - yx*self._y + zx*self._z,
-        y2 = -xy*self._x + yy*self._y - zy*self._z,
-        z2 = xz*self._x - yz*self._y + zz*self._z,
+        x2 = xx*self._x - yx*self._y + zx*self._z
+        y2 = -xy*self._x + yy*self._y - zy*self._z
+        z2 = xz*self._x - yz*self._y + zz*self._z
 
         new_dec = math.atan2(z2,math.sqrt(x2**2+y2**2)) * galsim.radians
         new_ra = math.atan2(-y2,x2) * galsim.radians
