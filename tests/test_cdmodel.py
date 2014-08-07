@@ -18,7 +18,9 @@
 import numpy as np
 import os
 import sys
+
 from galsim_test_helpers import *
+
 try:
     import galsim
     from galsim.cdmodel import *
