@@ -148,6 +148,57 @@ class CelestialCoord(object):
         C = math.atan2(sinC, cosC)
         return C * galsim.radians
 
+    def area(self, coord1, coord2):
+        """Find the area of the spherical triangle defined by the current coord, `coord1`,
+        and `coord2`, returning the area in steradians.
+        """
+        # The area of a spherical triangle is defined by the "spherical excess", E.
+        # There are several formulae for E:
+        #    (cf. http://en.wikipedia.org/wiki/Spherical_trigonometry#Area_and_spherical_excess)
+        #
+        # E = A + B + C - pi
+        # tan(E/4) = sqrt(tan(s/2) tan((s-a)/2) tan((s-b)/2) tan((s-c)/2)
+        # tan(E/2) = tan(a/2) tan(b/2) sin(C) / (1 + tan(a/2) tan(b/2) cos(C))
+        # 
+        # We use the last formula, which is stable both for small triangles and ones that are
+        # nearly degenerate (which the middle formula may have trouble with).
+        #
+        # Furthermore, we can use some of the math for angleBetween and distanceTo to simplify
+        # this further:
+        #
+        # In angleBetween, we have formulae for sina sinb sinC and sina sinb cosC.
+        # In distanceTo, we have formulae for sin(a/2) and sin(b/2).
+        #
+        # Define: F = sina sinb sinC
+        #         G = sina sinb cosC
+        #         da = 2 sin(a/2)
+        #         db = 2 sin(b/2)
+        # 
+        # tan(E/2) = sin(a/2) sin(b/2) sin(C) / (cos(a/2) cos(b/2) + sin(a/2) sin(b/2) cos(C))
+        #          = sin(a) sin(b) sin(C) / (4 cos(a/2)^2 cos(b/2)^2 + sin(a) sin(b) cos(C))
+        #          = F / (4 (1-sin(a/2)^2) (1-sin(b/2)^2) + G)
+        #          = F / (4-da^2) (4-db^2)/4 + G)
+
+        import math
+        self._set_aux()
+        coord1._set_aux()
+        coord2._set_aux()
+
+        AxC = ( coord1._y * self._z - coord1._z * self._y ,
+                coord1._z * self._x - coord1._x * self._z ,
+                coord1._x * self._y - coord1._y * self._x )
+        BxC = ( coord2._y * self._z - coord2._z * self._y ,
+                coord2._z * self._x - coord2._x * self._z ,
+                coord2._x * self._y - coord2._y * self._x )
+        F = AxC[0] * coord2._x + AxC[1] * coord2._y + AxC[2] * coord2._z
+        G = AxC[0] * BxC[0] + AxC[1] * BxC[1] + AxC[2] * BxC[2]
+        dasq = (self._x-coord1._x)**2 + (self._y-coord1._y)**2 + (self._z-coord1._z)**2
+        dbsq = (self._x-coord2._x)**2 + (self._y-coord2._y)**2 + (self._z-coord2._z)**2
+
+        tanEo2 = F / ( 0.25 * (4.-dasq) * (4.-dbsq) + G)
+        E = 2. * math.atan( abs(tanEo2) )
+        return E
+
     def project(self, other, projection='lambert'):
         """Use the currect coord as the center point of a tangent plane projection to project
         the `other` coordinate onto that plane.
@@ -156,7 +207,7 @@ class CelestialCoord(object):
         a tangent plane projection around the current coordinate, with +v pointing north and
         +u pointing west.
 
-        There are currently three options for the projection, which you can specify with the
+        There are currently four options for the projection, which you can specify with the
         optional `projection` keyword argument:
 
             'lambert' [default] uses a Lambert azimuthal projection, which preserves
@@ -209,7 +260,7 @@ class CelestialCoord(object):
         # cos(dra) = cos(ra-ra0) = cos(ra0) cos(ra) + sin(ra0) sin(ra)
         cosdra = self._cosra * cosra + self._sinra * sinra
 
-        # sin(dra) = -sin(ra - ra0);
+        # sin(dra) = -sin(ra - ra0)
         # Note: - sign here is to make +x correspond to -ra,
         #       so x increases for decreasing ra.
         #       East is to the left on the sky!
@@ -450,11 +501,11 @@ class CelestialCoord(object):
         if from_epoch == to_epoch: return self
 
         # t0, t below correspond to Lieske's big T and little T
-        t0 = (_epoch-2000.)/100.;
-        t = (newepoch-_epoch)/100.;
-        t02 = t0*t0;
-        t2 = t*t;
-        t3 = t2*t;
+        t0 = (from_epoch-2000.)/100.
+        t = (to_epoch-from_epoch)/100.
+        t02 = t0*t0
+        t2 = t*t
+        t3 = t2*t
 
         # a,b,c below correspond to Lieske's zeta_A, z_A and theta_A
         a = ( (2306.2181 + 1.39656*t0 - 0.000139*t02) * t +
@@ -472,24 +523,25 @@ class CelestialCoord(object):
         sinc = math.sin(c.rad())
 
         # This is the precession rotation matrix:
-        xx = cosa*cosc*cosb - sina*sinb;
-        yx = -sina*cosc*cosb - cosa*sinb;
-        zx = -sinc*cosb;
-        xy = cosa*cosc*sinb + sina*cosb;
-        yy = -sina*cosc*sinb + cosa*cosb;
-        zy = -sinc*sinb;
-        xz = cosa*sinc;
-        yz = -sina*sinc;
-        zz = cosc;
+        xx = cosa*cosc*cosb - sina*sinb
+        yx = -sina*cosc*cosb - cosa*sinb
+        zx = -sinc*cosb
+        xy = cosa*cosc*sinb + sina*cosb
+        yy = -sina*cosc*sinb + cosa*cosb
+        zy = -sinc*sinb
+        xz = cosa*sinc
+        yz = -sina*sinc
+        zz = cosc
 
         # Perform the rotation:
+        # And note that Lieske defines y with the opposite sign of our convention.
         self._set_aux()
-        x2 = xx*self._x + yx*self._y + zx*self._z,
-        y2 = xy*self._x + yy*self._y + zy*self._z,
-        z2 = xz*self._x + yz*self._y + zz*self._z,
+        x2 = xx*self._x - yx*self._y + zx*self._z,
+        y2 = -xy*self._x + yy*self._y - zy*self._z,
+        z2 = xz*self._x - yz*self._y + zz*self._z,
 
         new_dec = math.atan2(z2,math.sqrt(x2**2+y2**2)) * galsim.radians
-        new_ra = math.atan2(y2,x2) * galsim.radians
+        new_ra = math.atan2(-y2,x2) * galsim.radians
         new_coord = CelestialCoord(new_ra,new_dec)
         return new_coord
 
@@ -502,6 +554,7 @@ class CelestialCoord(object):
 
         @returns the longitude and latitude as a tuple (el, b), given as Angle instances.
         """
+        # cf. Lang, Astrophysical Formulae, page 13
         # cos(b) cos(el-33) = cos(dec) cos(ra-282.25)
         # cos(b) sin(el-33) = sin(dec) sin(62.6) + cos(dec) sin(ra-282.25) cos(62.6)
         #            sin(b) = sin(dec) sin(62.6) - cos(dec) sin(ra-282.25) sin(62.6)
@@ -509,10 +562,10 @@ class CelestialCoord(object):
         el0 = 33. * galsim.degrees
         r0 = 282.25 * galsim.degrees
         d0 = 62.6 * galsim.degrees
-        cosd0 = math.cos(d0.rad());
-        sind0 = math.sin(d0.rad());
+        cosd0 = math.cos(d0.rad())
+        sind0 = math.sin(d0.rad())
 
-        temp = self.precess(epoch, 1950.);
+        temp = self.precess(epoch, 1950.)
         d = temp.dec
         r = temp.ra
         cosd = math.cos(d.rad())
@@ -520,14 +573,12 @@ class CelestialCoord(object):
         cosr = math.cos(r.rad() - r0.rad())
         sinr = math.sin(r.rad() - r0.rad())
 
-        cbcl = cosd*cosr;
-        cbsl = sind*sind0 + cosd*sinr*cosd0;
-        sb = sind*cosd0 - cosd*sinr*sind0;
+        cbcl = cosd*cosr
+        cbsl = sind*sind0 + cosd*sinr*cosd0
+        sb = sind*cosd0 - cosd*sinr*sind0
 
-        b = math.asin(sb) * galsim.radians;
-        cl = cbcl/cosb;
-        sl = cbsl/cosb;
-        el = math.atan2(sl,cl) * galsim.radians + el0;
+        b = math.asin(sb) * galsim.radians
+        el = math.atan2(cbsl,cbcl) * galsim.radians + el0
 
         return (el, b)
 
