@@ -183,7 +183,7 @@ def test_fluxconservation():
     t1 = time.time()
     galflux = 30.
     galsigma = 3.
-    noise = 0.1
+    noise = 0.01
     shiftcoeff = 5.e-2
     alpha = 0.3
     size = 50
@@ -216,9 +216,9 @@ def test_forwardbackward():
     """
     import time
     t1 = time.time()
-    galflux = 30000.
+    galflux = 30.
     galsigma = 3.
-    noise = 1.
+    noise = 0.01
     shiftcoeff = 1.e-5
     alpha = 0.3
     size = 50
@@ -229,7 +229,7 @@ def test_forwardbackward():
     
     cimage = galsim.Image(image.getBounds(),dtype=np.float64) 
     # used for normalization later, we expect residual to be of this order
-    cimage.fill(1.)
+    cimage.fill(1.e-3)
     cimage = cimage+image
     cimage = cimage*maxflux*maxflux*shiftcoeff*shiftcoeff
 
