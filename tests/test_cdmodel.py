@@ -38,6 +38,8 @@ rseed=12345
 def test_simplegeometry():
     """Test charge deflection model for image with charges in only the central pixel(s).
     """
+    import time
+    t1 = time.time()
     size = 50
     center = 25
     shiftcoeff = 0.1
@@ -171,10 +173,14 @@ def test_simplegeometry():
                                    "itcdtx array is not 0 where it should be")
     np.testing.assert_array_almost_equal(itcdrx.array, i0.array, 10,
                                    "itcdrx array is not 0 where it should be")
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2 - t1)
 
 def test_fluxconservation():
     """Test flux conservation of charge deflection model for galaxy and flat image.
     """
+    import time
+    t1 = time.time()
     galflux = 30.
     galsigma = 3.
     noise = 0.1
@@ -202,10 +208,14 @@ def test_fluxconservation():
     np.testing.assert_almost_equal(
         flat.array.sum(), flatcd.array.sum(), 10,
         "Flat image flux is not left invariant by charge deflection")
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2 - t1)
     
 def test_forwardbackward():
     """Test invariance (to first order) under forward-backward transformation.
     """
+    import time
+    t1 = time.time()
     galflux = 30000.
     galsigma = 3.
     noise = 1.
@@ -237,11 +247,15 @@ def test_forwardbackward():
     minres = imageres.array.min()
     assert maxres<10, ("maximum positive residual of forward-backward transformation is too large")
     assert minres>-10, ("maximum negative residual of forward-backward transformation is too large")
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2 - t1)
     
 def test_exampleimage():
     """Test application of model compared to an independent implementation that was run on the
     example image.
     """
+    import time
+    t1 = time.time()
     #n, r0, t0, rx, tx, r, t, alpha
     cd = PowerLawCD(5, 2.e-7, 1.e-7, 1.25e-7, 1.25e-7, 0.75e-7, 0.5e-7, 0.3)
     # model used externally to bring cdtest1 to cdtest2
@@ -252,6 +266,8 @@ def test_exampleimage():
     np.testing.assert_array_almost_equal(
         image_proc.array, image_plcd.array, 1, "externally and internally processed image unequal") 
                                    # I checked that the remaining differences are numerical noise
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2 - t1)
 
 
 if __name__ == "__main__":
