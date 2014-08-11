@@ -30,6 +30,10 @@ except ImportError:
     import galsim
     from galsim.cdmodel import *
     
+# Use a deterministic random number generator so we don't fail tests because of rare flukes in the
+# random numbers.
+rseed=12345
+
 
 def test_simplegeometry():
     """Test charge deflection model for image with charges in only the central pixel(s).
@@ -131,8 +135,7 @@ def test_simplegeometry():
                                    "Off-center pixel wrong in test_onepixel RX")
     
     # a model that should not change anything here
-    import time
-    u = galsim.UniformDeviate(int(time.time()))
+    u = galsim.UniformDeviate(rseed)
     
     cdnull = PowerLawCD(2, 0, 0, shiftcoeff*u(), shiftcoeff*u(), shiftcoeff*u(), shiftcoeff*u(), 0)
     i0cdnull = cdnull.applyForward(i0)
