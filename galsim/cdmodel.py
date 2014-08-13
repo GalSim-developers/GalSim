@@ -106,8 +106,8 @@ class BaseCDModel(object):
         """
         retimage = galsim.Image(
             image=image.image.applyCD(
-                self._a_l_flat.image, self._a_r_flat.image,
-                self._a_b_flat.image, self._a_t_flat.image, self.n),
+                self._a_l_flat.image, self._a_r_flat.image, self._a_b_flat.image,
+                self._a_t_flat.image, self.n),
             wcs=image.wcs)
         return retimage
 
@@ -119,15 +119,15 @@ class BaseCDModel(object):
         """
         retimage = galsim.Image(
             image=image.image.applyCD(
-                self._a_l_flat_inv.image, self._a_r_flat_inv.image,
-                self._a_b_flat_inv.image, self._a_t_flat_inv.image, self.n),
+                self._a_l_flat_inv.image, self._a_r_flat_inv.image, self._a_b_flat_inv.image,
+                self._a_t_flat_inv.image, self.n),
             wcs=image.wcs)
         return retimage
 
-
+# The _modelShiftCoeffX functions are used by the PowerLawCD class
 def _modelShiftCoeffR(x, y, r0, t0, rx, tx, r, t, alpha):
     """Calculate the model shift coeff of right pixel border as a function of int pixel position
-    (x, y)
+    (x, y).
     """
     if not isinstance(x, (int, long)):
         raise ValueError("Input x coordinate must be an int or long")
@@ -148,15 +148,15 @@ def _modelShiftCoeffR(x, y, r0, t0, rx, tx, r, t, alpha):
 
 def _modelShiftCoeffL(x, y, r0, t0, rx, tx, r, t, alpha):
     """Calculate the model shift coeff of left pixel border as a function of int pixel
-    position (x, y)
+    position (x, y).
 
-    Equal to -_modelShiftCoeffR(x+1, y, *args)
+    Equivalent to `-_modelShiftCoeffR(x+1, y, *args)`.
     """
     return -_modelShiftCoeffR(x+1, y, r0, t0, rx, tx, r, t, alpha)
 
 def _modelShiftCoeffT(x, y, r0, t0, rx, tx, r, t, alpha):
     """Calculate the model shift coeff of top pixel border as a function of int pixel
-    position (x, y)
+    position (x, y).
     """
     if not isinstance(x, (int, long)):
         raise ValueError("Input x coordinate must be an int or long")
@@ -179,30 +179,34 @@ def _modelShiftCoeffB(x, y, r0, t0, rx, tx, r, t, alpha):
     """Calculate the model shift coeff of bottom pixel border as a function of int pixel
     position (x, y)
 
-    Equal to -_modelShiftCoeffT(x, y+1, *args)
+    Equivalent to `-_modelShiftCoeffT(x, y+1, *args)`.
     """
     return -_modelShiftCoeffT(x, y+1, r0, t0, rx, tx, r, t, alpha)
 
 class PowerLawCD(BaseCDModel):
     """Class for parametrizing charge deflection coefficient strengths as a power law in distance
-    from affected pixel border
+    from affected pixel border.
     """
 
     def __init__(self, n, r0, t0, rx, tx, r, t, alpha):
         """Initialize a power-law charge deflection model.
         
         The deflections from charges in the six pixels directly neighbouring a pixel border are 
-        modelled independently by the parameters r0, t0 (directly adjacent to borders between 
-        two pixels in the same row=y / column=x) and rx, tx (pixels on the corner of pixel borders)
+        modelled independently by the parameters `r0`, `t0` (directly adjacent to borders between 
+        two pixels in the same row=y / column=x) and `rx`, `tx` (pixels on the corner of pixel
+        borders).
         
-        Deflections due to charges further away are modelled as a power-law,
-          a = A * sin(theta) * r^(-alpha)
-        where A is a power-law amplitude (r for a_l / a_b and t for a_b / a_t), theta is the angle
-        between pixel border line and line from border center to other pixel center.
+        Deflections due to charges further away are modelled as a power-law
+
+            a = A * numpy.sin(theta) * (r_distance)**(-alpha)
+
+        where `A` is a power-law amplitude (`r` for `a_l / a_b` and `t` `for a_b / a_t`), `theta` is
+        the angle between the pixel border line and the line from border center to the other pixel
+        center.
         
-        Sign convention is such that positive r0,t0,rx,tx,r,t correspond to physical deflection of
-        equal charges (this is also how the theta above is defined).
-        
+        Sign conventions are such that positive `r0`, `t0`, `rx`, `tx`, `r`, `t` correspond to
+        physical deflection of equal charges (this is also how the `theta` above is defined).
+
         @param n      Maximum separation [pix] out to which charges contribute to deflection
         @param r0     a_l(0,-1)=a_r(0,+1) deflection coefficient along x direction
         @param t0     a_b(-1,0)=a_t(+1,0) deflection coefficient along y direction
