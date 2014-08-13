@@ -194,7 +194,6 @@ def test_fluxconservation():
 
     flat = galsim.Image(size, size, dtype=np.float64, init_value=0)
     flat.fill(1.)
-        
     cd = PowerLawCD(
         2, shiftcoeff, shiftcoeff, shiftcoeff/2., shiftcoeff/2., shiftcoeff/2., shiftcoeff/2.,
         alpha)
@@ -256,27 +255,32 @@ def test_exampleimage():
     """
     import time
     t1 = time.time()
-    scale_fac = 1.71 # Something not quite 1
     #n, r0, t0, rx, tx, r, t, alpha
     cd = PowerLawCD(5, 2.e-7, 1.e-7, 1.25e-7, 1.25e-7, 0.75e-7, 0.5e-7, 0.3)
     # model used externally to bring cdtest1 to cdtest2
     image_orig  = galsim.fits.read("fits_files/cdtest1.fits") # unprocessed image
     image_proc  = galsim.fits.read("fits_files/cdtest2.fits") # image with cd model applied with
                                                               # other library
-    # These images have a large flux per pixel, so make the flux per pixel closer to O(1) to allow
-    # a more meaningful decimal order to be adopted in tests
-    norm = 1. #DEBUGGING - setting this to 0.3, 1., 3. gets very different results scale_fac / image_orig.array.std()
-    image_orig *= norm
-    image_proc *= norm # Multiply reference image by the same factor
     # Calculate the test image
     image_plcd  = cd.applyForward(image_orig)
-    # Output image for DEBUGGING
-    import pyfits
-    pyfits.writeto(
-        "junk_test_exampleimage_diff.fits", (image_plcd - image_proc).array, clobber=True)
+    # For debugging (remove at end of PR?): make if True in block below to output difference image.
+    # Compare to fits_files/cdtest[1-2].fits above
+    if False:
+        import pyfits
+        pyfits.writeto(
+            "junk_test_cdmodel_exampleimage_difference.fits", (image_proc - image_plcd).array,
+            clobber=True)
+    # These images have a large flux per pixel, so make the typical flux per pixel in each image
+    # closer to O(1) for a more transparently meaningful decimal order in the test
+    norm = 2.64 / np.std(image_orig.array)
+    image_proc *= norm
+    image_plcd *= norm
+    # Compare
     np.testing.assert_array_almost_equal(
-        image_proc.array, image_plcd.array, 1, "Externally and internally processed image unequal")
-                                   # DG checked that the remaining differences are numerical noise
+        image_proc.array, image_plcd.array, 4, "Externally and internally processed image unequal")
+        # DG checked that the remaining differences appear to be numerical noise - BR agrees the
+        # that the difference images do not show coherent structure other than a border feature
+        # which is expected
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
 
