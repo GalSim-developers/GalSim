@@ -28,11 +28,11 @@ import galsim
 
 class BaseCDModel(object):
     """Base class for the most generic, i.e. no with symmetries or distance scaling relationships
-    assumed, pixel boundary charge deflection model (as per, e.g. Antilogus et al 2014).
+    assumed, pixel boundary charge deflection model (as per Antilogus et al 2014).
     """
 
     def __init__(self, a_l, a_r, a_b, a_t):
-        """Initialize a generic CDModel (charge deflection model) as described
+        """Initialize a generic CDModel (charge deflection model).
 
         Usually this class will not be instantiated directly, but there is nothing to prevent you
         from doing so.  Each of the input a_l, a_r, a_b & a_t matrices must have the same shape and
