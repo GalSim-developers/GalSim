@@ -66,7 +66,6 @@ class MetaImage(type):
         return Image_dict[t]
 
 class Image(object):
-    __metaclass__ = MetaImage
     """A class for storing image data along with the pixel scale or wcs information
 
     The Image class encapsulates all the relevant information about an image including a NumPy
@@ -174,6 +173,7 @@ class Image(object):
     See their doc strings for more details.
 
     """
+    __metaclass__ = MetaImage
     cpp_valid_dtypes = _galsim.ImageView.keys()
     alias_dtypes = {
         int : numpy.int32,          # So that user gets what they would expect
