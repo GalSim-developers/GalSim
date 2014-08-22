@@ -8,7 +8,7 @@ RunUninstall = env['_RunUninstall']
 
 install_subdir = 'share/galsim'
 
-files = [ 'vega.txt', 'acs_I_unrot_sci_20_cf.fits' ]
+files = [ 'vega.txt', 'acs_I_unrot_sci_20_cf.fits', 'afta_throughput.txt' ]
 
 if 'install' in COMMAND_LINE_TARGETS:
     install_dir = env['FINAL_PREFIX']
