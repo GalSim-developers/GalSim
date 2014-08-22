@@ -1706,13 +1706,7 @@ def test_Image_constructor():
             err_msg="Image constructor mangled input NumPy array.")
 
         # Now make an opposite-endian Numpy array, to initialize the Image.
-        # So first we figure out which one is the native one (little or big).
-        # Then we swap.
-        if native_byteorder == '>':
-            new_type = array_dtype.descr[0][1].replace('>','<')
-        else:
-            new_type = array_dtype.descr[0][1].replace('<','>')
-
+        new_type = array_dtype.newbyteorder('S')
         test_arr = np.ones((3,4), dtype=new_type)
         test_arr[1,3] = -5
         test_arr[2,2] = 7
