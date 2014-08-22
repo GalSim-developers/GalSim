@@ -245,6 +245,12 @@ class Image(object):
                                  "dtype explicitly.")
             if dtype != None and dtype != array.dtype.type:
                 array = array.astype(dtype)
+            # Be careful here: we have to watch out for little-endian / big-endian issues.
+            # The path of least resistance is to check whether the array.dtype is equal to the
+            # native one (using the dtype.isnative flag), and if not, make a new array that has a
+            # type equal to the same one but with the appropriate endian-ness.
+            if not array.dtype.isnative:
+                array = array.astype(array.dtype.newbyteorder('='))
             self.dtype = array.dtype.type
         elif dtype != None:
             self.dtype = dtype
