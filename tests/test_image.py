@@ -1680,6 +1680,46 @@ def test_BoundsI_init_with_non_pure_ints():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_Image_constructor():
+    """Check that the Image constructor that takes NumPy array does not mangle input.
+    """
+    import time
+    t1 = time.time()
+
+    from sys import byteorder
+    native_byteorder = {'big': '>', 'little': '<'}[byteorder]
+
+    # Loop over types.
+    for i in xrange(ntypes):
+
+        array_dtype = np.dtype(types[i])
+
+        # Make a NumPy array directly, with non-trivially interesting values.
+        test_arr = np.ones((3,4), dtype=types[i])
+        test_arr[1,3] = -5
+        test_arr[2,2] = 7
+        # Initialize the Image from it.
+        test_im = galsim.Image(test_arr)
+        # Check that the image.array attribute matches the original.
+        np.testing.assert_array_equal(
+            test_arr, test_im.array,
+            err_msg="Image constructor mangled input NumPy array.")
+
+        # Now make an opposite-endian Numpy array, to initialize the Image.
+        new_type = array_dtype.newbyteorder('S')
+        test_arr = np.ones((3,4), dtype=new_type)
+        test_arr[1,3] = -5
+        test_arr[2,2] = 7
+        # Initialize the Image from it.
+        test_im = galsim.Image(test_arr)
+        # Check that the image.array attribute matches the original.
+        np.testing.assert_array_equal(
+            test_arr, test_im.array,
+            err_msg="Image constructor mangled input NumPy array (endian issues).")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 if __name__ == "__main__":
     test_Image_basic()
@@ -1710,3 +1750,4 @@ if __name__ == "__main__":
     test_Image_resize()
     test_ConstImage_array_constness()
     test_BoundsI_init_with_non_pure_ints()
+    test_Image_constructor()
