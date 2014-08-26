@@ -49,6 +49,10 @@ class BaseCDModel(object):
         respective shift coefficient. Note that for a realistic model, the matrices have a number
         of symmetries, as described in Antilogus et al. (2014). Use derived classes like PowerLawCD
         to have a model that automatically fulfills the symmetry conditions.
+        
+        Note that there is a gain factor included in the coefficients. When the a_* are measured 
+        from flat fields according to eqn. 4.10 in Antilogus et. al (2014) and applied to images
+        that have the same gain as the flats, the correction is as intended.
 
         @param a_l  Array containing matrix of deflection coefficients of left pixel border
         @param a_r  Array containing matrix of deflection coefficients of right pixel border
