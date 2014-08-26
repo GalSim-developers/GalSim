@@ -19,6 +19,8 @@ New Features
   for greater efficiency. (#563)
 - Extended to the `rotate`, `shear`, and `transform` methods of ChromaticObject the ability
   to take functions of wavelength for the arguments. (#581)
+- Added a module to describe charge deflection in CCD pixels (also known as the "brighter-fatter"
+  effect) following the model of Antilogus et al (2014). (#524)
 
 Bug Fixes and Improvements
 --------------------------
@@ -36,6 +38,8 @@ Bug Fixes and Improvements
 - Fixed the `dtype=` kwarg used when initializing `Image` instances to interpret the aliases `int`
   and `float` as the `numpy.int32` and `numpy.float64` data types, respectively.  Previously the
   behavior was unpredictable and platform dependent. (#571)
+- Fixed the Image constructor so that if it is passed a NumPy array with the opposite byteorder
+  as the native one on the system, it does not return an Image with different contents. (#594)
 
 Updates to config options
 -------------------------

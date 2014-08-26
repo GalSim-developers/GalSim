@@ -18,7 +18,9 @@
 import numpy as np
 import os
 import sys
+
 from galsim_test_helpers import *
+
 try:
     import galsim
     from galsim.cdmodel import *
@@ -28,10 +30,16 @@ except ImportError:
     import galsim
     from galsim.cdmodel import *
     
+# Use a deterministic random number generator so we don't fail tests because of rare flukes in the
+# random numbers.
+rseed=12345
+
 
 def test_simplegeometry():
     """Test charge deflection model for image with charges in only the central pixel(s).
     """
+    import time
+    t1 = time.time()
     size = 50
     center = 25
     shiftcoeff = 0.1
@@ -129,8 +137,7 @@ def test_simplegeometry():
                                    "Off-center pixel wrong in test_onepixel RX")
     
     # a model that should not change anything here
-    import time
-    u = galsim.UniformDeviate(int(time.time()))
+    u = galsim.UniformDeviate(rseed)
     
     cdnull = PowerLawCD(2, 0, 0, shiftcoeff*u(), shiftcoeff*u(), shiftcoeff*u(), shiftcoeff*u(), 0)
     i0cdnull = cdnull.applyForward(i0)
@@ -166,13 +173,17 @@ def test_simplegeometry():
                                    "itcdtx array is not 0 where it should be")
     np.testing.assert_array_almost_equal(itcdrx.array, i0.array, 10,
                                    "itcdrx array is not 0 where it should be")
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2 - t1)
 
 def test_fluxconservation():
     """Test flux conservation of charge deflection model for galaxy and flat image.
     """
+    import time
+    t1 = time.time()
     galflux = 30.
     galsigma = 3.
-    noise = 0.1
+    noise = 0.01
     shiftcoeff = 5.e-2
     alpha = 0.3
     size = 50
@@ -183,7 +194,6 @@ def test_fluxconservation():
 
     flat = galsim.Image(size, size, dtype=np.float64, init_value=0)
     flat.fill(1.)
-        
     cd = PowerLawCD(
         2, shiftcoeff, shiftcoeff, shiftcoeff/2., shiftcoeff/2., shiftcoeff/2., shiftcoeff/2.,
         alpha)
@@ -197,13 +207,17 @@ def test_fluxconservation():
     np.testing.assert_almost_equal(
         flat.array.sum(), flatcd.array.sum(), 10,
         "Flat image flux is not left invariant by charge deflection")
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2 - t1)
     
 def test_forwardbackward():
     """Test invariance (to first order) under forward-backward transformation.
     """
-    galflux = 30000.
+    import time
+    t1 = time.time()
+    galflux = 30.
     galsigma = 3.
-    noise = 1.
+    noise = 0.01
     shiftcoeff = 1.e-5
     alpha = 0.3
     size = 50
@@ -214,7 +228,7 @@ def test_forwardbackward():
     
     cimage = galsim.Image(image.getBounds(),dtype=np.float64) 
     # used for normalization later, we expect residual to be of this order
-    cimage.fill(1.)
+    cimage.fill(1.e-3)
     cimage = cimage+image
     cimage = cimage*maxflux*maxflux*shiftcoeff*shiftcoeff
 
@@ -225,28 +239,50 @@ def test_forwardbackward():
     
     imagecd = cd.applyForward(image)
     imagecddc = cd.applyBackward(imagecd)
-    
+
     # residual after forward-backward should be of order a^2 q qmax^2
     imageres = (imagecddc - image) / cimage    
     maxres = imageres.array.max()
     minres = imageres.array.min()
     assert maxres<10, ("maximum positive residual of forward-backward transformation is too large")
     assert minres>-10, ("maximum negative residual of forward-backward transformation is too large")
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2 - t1)
     
 def test_exampleimage():
     """Test application of model compared to an independent implementation that was run on the
     example image.
     """
+    import time
+    t1 = time.time()
     #n, r0, t0, rx, tx, r, t, alpha
     cd = PowerLawCD(5, 2.e-7, 1.e-7, 1.25e-7, 1.25e-7, 0.75e-7, 0.5e-7, 0.3)
     # model used externally to bring cdtest1 to cdtest2
     image_orig  = galsim.fits.read("fits_files/cdtest1.fits") # unprocessed image
     image_proc  = galsim.fits.read("fits_files/cdtest2.fits") # image with cd model applied with
                                                               # other library
+    # Calculate the test image
     image_plcd  = cd.applyForward(image_orig)
+    # For debugging (remove at end of PR?): make if True in block below to output difference image.
+    # Compare to fits_files/cdtest[1-2].fits above
+    if False:
+        import pyfits
+        pyfits.writeto(
+            "junk_test_cdmodel_exampleimage_difference.fits", (image_proc - image_plcd).array,
+            clobber=True)
+    # These images have a large flux per pixel, so make the typical flux per pixel in each image
+    # closer to O(1) for a more transparently meaningful decimal order in the test
+    norm = 2.64 / np.std(image_orig.array)
+    image_proc *= norm
+    image_plcd *= norm
+    # Compare
     np.testing.assert_array_almost_equal(
-        image_proc.array, image_plcd.array, 1, "externally and internally processed image unequal") 
-                                   # I checked that the remaining differences are numerical noise
+        image_proc.array, image_plcd.array, 4, "Externally and internally processed image unequal")
+        # DG checked that the remaining differences appear to be numerical noise - BR agrees the
+        # that the difference images do not show coherent structure other than a border feature
+        # which is expected
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2 - t1)
 
 
 if __name__ == "__main__":

@@ -264,9 +264,9 @@ namespace galsim {
          *  @brief Return a copy of the image to which the Antilogus+2014 charge deflection model
          *  has been applied.
          *
-         *  a is a pointer to the 4 (2dmax+1)x(2dmax+1) 'a' matrices as a contiguous piece of 
-         *  memory ordered as
-         *  a_L(dx=-dmax,dy=-dmax), a_L(dx=-dmax+1,dy=-dmax), ..., a_R, a_B, a_T(dx=+dmax,dy=+dmax)
+         *  The 4 (2dmax+1)x(2dmax+1) 'a_X' matrices are supplied as flattened ConstImageView
+         *  objects that are ordered as, e.g.,
+         *  a_L(dx=-dmax,dy=-dmax), a_L(dx=-dmax+1,dy=-dmax), ..., a_T(dx=+dmax,dy=+dmax)
          */
         ImageAlloc<T> applyCD(ConstImageView<double> aL, ConstImageView<double> aR, 
                               ConstImageView<double> aB, ConstImageView<double> aT,

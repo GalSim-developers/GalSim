@@ -24,12 +24,8 @@ routines for handling multiple Images.
 
 
 import os
-from sys import byteorder
 import galsim
 from galsim import pyfits, pyfits_version
-
-# Convert sys.byteorder into the notation numpy dtypes use
-native_byteorder = {'big': '>', 'little': '<'}[byteorder]
 
 
 ##############################################################################################
@@ -778,19 +774,6 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
         import numpy
         data = hdu.data.astype(numpy.float64)
 
-    # Check through byteorder possibilities, compare to native (used for numpy and our default) and
-    # swap if necessary so that C++ gets the correct view.
-    if hdu.data.dtype.byteorder == '!':
-        if native_byteorder == '>':
-            pass
-        else:
-            hdu.data.byteswap(True)
-    elif hdu.data.dtype.byteorder in (native_byteorder, '=', '@'):
-        pass
-    else:
-        hdu.data.byteswap(True)   # Note inplace is just an arg, not a kwarg, inplace=True throws
-                                  # a TypeError exception in EPD Python 2.7.2
-
     image = galsim.Image(array=data)
     image.setOrigin(origin)
     image.wcs = wcs
@@ -934,19 +917,6 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
         warnings.warn("   Using numpy.float64 instead.")
         import numpy
         data = hdu.data.astype(numpy.float64)
-
-    # Check through byteorder possibilities, compare to native (used for numpy and our default) and
-    # swap if necessary so that C++ gets the correct view.
-    if hdu.data.dtype.byteorder == '!':
-        if native_byteorder == '>':
-            pass
-        else:
-            hdu.data.byteswap(True)
-    elif hdu.data.dtype.byteorder in (native_byteorder, '=', '@'):
-        pass
-    else:
-        hdu.data.byteswap(True)   # Note inplace is just an arg, not a kwarg, inplace=True throws
-                                  # a TypeError exception in EPD Python 2.7.2
 
     nimages = hdu.data.shape[0]
     image_list = []
