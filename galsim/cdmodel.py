@@ -132,7 +132,7 @@ def _modelShiftCoeffR(x, y, r0, t0, rx, tx, r, t, alpha):
     if not isinstance(x, (int, long)):
         raise ValueError("Input x coordinate must be an int or long")
     if not isinstance(y, (int, long)):
-        raise ValueError("Input x coordinate must be an int or long")
+        raise ValueError("Input y coordinate must be an int or long")
     # Invoke symmetry
     if y < 0: return _modelShiftCoeffR(x, -y, r0, t0, rx, tx, r, t, alpha)
     if x < 0: return -_modelShiftCoeffR(1 - x, y, r0, t0, rx, tx, r, t, alpha)
