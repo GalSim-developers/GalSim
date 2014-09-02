@@ -267,10 +267,13 @@ namespace galsim {
          *  The 4 (2dmax+1)x(2dmax+1) 'a_X' matrices are supplied as flattened ConstImageView
          *  objects that are ordered as, e.g.,
          *  a_L(dx=-dmax,dy=-dmax), a_L(dx=-dmax+1,dy=-dmax), ..., a_T(dx=+dmax,dy=+dmax)
+         *
+         *  gain_ratio is gain_img/gain_flat when 'a_X' matrices were derived from flat with
+         *  a gain differing from image
          */
         ImageAlloc<T> applyCD(ConstImageView<double> aL, ConstImageView<double> aR, 
                               ConstImageView<double> aB, ConstImageView<double> aT,
-                              const int dmax) const;
+                              const int dmax, const double gain_ratio=1.) const;
 
     protected:
 

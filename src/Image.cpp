@@ -218,8 +218,13 @@ ConstImageView<T> BaseImage<T>::subImage(const Bounds<int>& bounds) const
 template <typename T>
 ImageAlloc<T> BaseImage<T>::applyCD(ConstImageView<double> aL, ConstImageView<double> aR, 
                                     ConstImageView<double> aB, ConstImageView<double> aT,
-                                    const int dmax) const
+                                    const int dmax, const double gain_ratio) const
 {
+    // images aL, aR, aB, aT contain shift coefficients for left, right, bottom and top border 
+    // dmax is maximum separation considered
+    // gain_ratio is gain_image/gain_flat when shift coefficients were measured on flat and 
+    //    image has different gain
+
     // Perform sanity check
     if(dmax < 0) throw ImageError("Attempt to apply CD model with invalid extent");
     // Get the array dimension and perform other checks
@@ -259,7 +264,7 @@ ImageAlloc<T> BaseImage<T>::applyCD(ConstImageView<double> aL, ConstImageView<do
 			  continue;
 			}
 
-			double qkl = at(x + ix, y + iy);
+			double qkl = at(x + ix, y + iy)*gain_ratio;
 			
 			if(y + 1 - iy >= getYMin() && y + 1 - iy <= getYMax())  
 			  // don't apply shift if pixel mirrored at t border non-existent

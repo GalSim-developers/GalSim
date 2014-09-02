@@ -249,6 +249,41 @@ def test_forwardbackward():
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
     
+    
+def test_gainratio():
+    """Test gain ratio functionality
+    """
+    import time
+    t1 = time.time()
+    galflux = 30.
+    galsigma = 3.
+    noise = 0.01
+    shiftcoeff = 1.e-5
+    alpha = 0.3
+    size = 50
+
+    # image with fiducial gain
+    gal    = galsim.Gaussian(flux=galflux, sigma=galsigma)
+    image  = gal.drawImage(scale=1.,dtype=np.float64)    
+    
+    # image with twice the gain, i.e. half the level
+    gal2   = galsim.Gaussian(flux=0.5*galflux, sigma=galsigma)    
+    image2 = gal2.drawImage(scale=1.,dtype=np.float64)   
+    
+    cd = PowerLawCD(2, shiftcoeff, 2.*shiftcoeff, shiftcoeff/2., 2.*shiftcoeff/3., shiftcoeff/2.,
+        shiftcoeff/3., alpha)
+        
+    image_cd  = cd.applyForward(image)
+    image2_cd = cd.applyForward(image2,gain_ratio=2.)
+    
+    imageres = (2.*image2_cd - image_cd)
+    np.testing.assert_array_almost_equal(2.*image2_cd.array, image_cd.array, 10,
+                                   "images with different gain not transformed equally")
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2 - t1)
+    
+    
+    
 def test_exampleimage():
     """Test application of model compared to an independent implementation that was run on the
     example image.
@@ -289,4 +324,5 @@ if __name__ == "__main__":
     test_simplegeometry()
     test_fluxconservation()
     test_forwardbackward()
+    test_gainratio()
     test_exampleimage()

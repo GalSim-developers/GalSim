@@ -43,7 +43,8 @@ class BaseCDModel(object):
         and a coefficient a(dx,dy). Contributions of all neighbouring pixels are superposed. Border
         shifts are calculated for each (l=left, r=right (=positive x), b=bottom, t=top (=pos. y)) 
         border and the resulting change in flux in a pixel is the shift times the mean of its flux
-        and the flux in the pixel on the opposite side of the border.
+        and the flux in the pixel on the opposite side of the border (caveat: in Antilogus et al. 
+        2014 the sum is used instead of the mean, making the a(dx,dy) a factor of 2 smaller).
         
         The parameters of the model are the a_l/r/b/t matrices, whose entry at (dy,dx) gives the
         respective shift coefficient. Note that for a realistic model, the matrices have a number
@@ -52,7 +53,9 @@ class BaseCDModel(object):
         
         Note that there is a gain factor included in the coefficients. When the a_* are measured 
         from flat fields according to eqn. 4.10 in Antilogus et. al (2014) and applied to images
-        that have the same gain as the flats, the correction is as intended.
+        that have the same gain as the flats, the correction is as intended. If the gain in the
+        images is different, this can be accounted for with the gain_ratio parameter when calling
+        applyForward or applyBackward.
 
         @param a_l  Array containing matrix of deflection coefficients of left pixel border
         @param a_r  Array containing matrix of deflection coefficients of right pixel border
@@ -102,29 +105,37 @@ class BaseCDModel(object):
             np.reshape((-a_t).flatten(), (1, np.product(a_t.shape))), dtype=np.float64,
             make_const=True)
 
-    def applyForward(self, image):
+    def applyForward(self, image, gain_ratio=1):
         """Apply the charge deflection model in the forward direction.
 
         Returns an image with the forward charge deflection transformation applied.  The input image
         is not modified, but its WCS is included in the returned image.
+
+        @param gain_ratio  Ratio of gain_image/gain_flat when shift coefficients were derived from 
+                           flat fields; default value is 1, which assumes the common case that your
+                           flat and science images have the same gain value
         """
         retimage = galsim.Image(
             image=image.image.applyCD(
-                self._a_l_flat.image, self._a_r_flat.image, self._a_b_flat.image,
-                self._a_t_flat.image, self.n),
+                self._a_l_flat.image, self._a_r_flat.image, 
+                self._a_b_flat.image, self._a_t_flat.image, self.n, gain_ratio),
             wcs=image.wcs)
         return retimage
 
-    def applyBackward(self, image):
+    def applyBackward(self, image, gain_ratio=1):
         """Apply the charge deflection model in the backward direction (accurate to linear order).
 
         Returns an image with the backward charge deflection transformation applied.  The input
         image is not modified, but its WCS is included in the returned image.
+
+        @param gain_ratio  Ratio of gain_image/gain_flat when shift coefficients were derived from 
+                           flat fields; default value is 1, which assumes the common case that your
+                           flat and science images have the same gain value
         """
         retimage = galsim.Image(
             image=image.image.applyCD(
-                self._a_l_flat_inv.image, self._a_r_flat_inv.image, self._a_b_flat_inv.image,
-                self._a_t_flat_inv.image, self.n),
+                self._a_l_flat_inv.image, self._a_r_flat_inv.image, 
+                self._a_b_flat_inv.image, self._a_t_flat_inv.image, self.n, gain_ratio),
             wcs=image.wcs)
         return retimage
 
