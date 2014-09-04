@@ -714,6 +714,11 @@ def Image_ipow(self, other):
     self.array[:,:] **= other
     return self
 
+def Image_neg(self, other):
+    result = self.copy()
+    result *= -1
+    return result
+
 # Define &, ^ and | only for integer-type images
 def Image_and(self, other):
     result = self.copy()
@@ -791,6 +796,7 @@ Image.__idiv__ = Image_idiv
 Image.__itruediv__ = Image_idiv
 Image.__ipow__ = Image_ipow
 Image.__pow__ = Image_pow
+Image.__neg__ = Image_neg
 Image.__and__ = Image_and
 Image.__xor__ = Image_xor
 Image.__or__ = Image_or
@@ -818,6 +824,7 @@ for Class in _galsim.ImageAlloc.itervalues():
     Class.__idiv__ = Image_idiv
     Class.__itruediv__ = Image_idiv
     Class.__ipow__ = Image_ipow
+    Class.__neg__ = Image_neg
     Class.__pow__ = Image_pow
     Class.copy = Image_copy
     Class.__getstate_manages_dict__ = 1
@@ -844,6 +851,7 @@ for Class in _galsim.ImageView.itervalues():
     Class.__itruediv__ = Image_idiv
     Class.__ipow__ = Image_ipow
     Class.__pow__ = Image_pow
+    Class.__neg__ = Image_neg
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
 
@@ -860,6 +868,7 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.__truediv__ = Image_div
     Class.__rtruediv__ = Image_rdiv
     Class.__pow__ = Image_pow
+    Class.__neg__ = Image_neg
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
 
