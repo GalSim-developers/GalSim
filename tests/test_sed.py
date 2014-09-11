@@ -236,6 +236,38 @@ def test_SED_init():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_SED_withFlux():
+    """ Check that setting the flux works.
+    """
+    import time
+    t1 = time.time()
+
+    a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
+    a = a.atRedshift(0.1)
+    rband = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
+    a = a.withFlux(1.0, rband)
+    np.testing.assert_array_almost_equal(a.calculateFlux(rband), 1.0, 5,
+                                         "Setting SED flux failed.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_SED_withFluxDensity():
+    """ Check that setting the flux density works.
+    """
+    import time
+    t1 = time.time()
+
+    a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
+    a = a.atRedshift(0.1)
+    a = a.withFluxDensity(1.0, 500)
+    np.testing.assert_array_almost_equal(a(500), 1.0, 5,
+                                         "Setting SED flux density failed.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_SED_calculateMagnitude():
     """ Check that magnitudes work as expected.
     """
@@ -288,6 +320,14 @@ def test_SED_calculateMagnitude():
     bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5])).withZeropoint(24.0)
     sed = sed.withMagnitude(bandpass.zeropoint, bandpass)
     np.testing.assert_almost_equal(sed.calculateFlux(bandpass), 1.0, 10)
+
+    # Test that can set magnitude of redshifted SED.
+    a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
+    a = a.atRedshift(0.1)
+    rband = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat')).withZeropoint(20.0)
+    a = a.withMagnitude(24.0, rband)
+    np.testing.assert_array_almost_equal(a.calculateMagnitude(rband), 24.0, 5,
+                                         "Setting SED magnitude failed.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -365,14 +405,16 @@ def test_fnu_vs_flambda():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
-    test_SED_add()
-    test_SED_sub()
-    test_SED_mul()
-    test_SED_div()
-    test_SED_atRedshift()
-    test_SED_roundoff_guard()
-    test_SED_init()
+    # test_SED_add()
+    # test_SED_sub()
+    # test_SED_mul()
+    # test_SED_div()
+    # test_SED_atRedshift()
+    # test_SED_roundoff_guard()
+    # test_SED_init()
+    test_SED_withFlux()
+    test_SED_withFluxDensity()
     test_SED_calculateMagnitude()
-    test_SED_calculateDCRMomentShifts()
-    test_SED_calculateSeeingMomentRatio()
-    test_fnu_vs_flambda()
+    # test_SED_calculateDCRMomentShifts()
+    # test_SED_calculateSeeingMomentRatio()
+    # test_fnu_vs_flambda()
