@@ -52,6 +52,13 @@ def test_SED_add():
     np.testing.assert_almost_equal(c(5.0), 5.5+b(5.0), 10,
                                    err_msg="Wrong sum in SED.__add__")
 
+    try:
+        # Adding together two SEDs with different redshifts should fail.
+        d = b.atRedshift(0.1)
+        np.testing.assert_raises(ValueError, b.__add__, d)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -77,6 +84,13 @@ def test_SED_sub():
     np.testing.assert_almost_equal(c(5.0), 5.5-b(5.0), 10,
                                    err_msg="Wrong sum in SED.__add__")
 
+    try:
+        # Subracting two SEDs with different redshifts should fail.
+        d = b.atRedshift(0.1)
+        np.testing.assert_raises(ValueError, b.__sub__, d)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -88,22 +102,24 @@ def test_SED_mul():
 
     a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
                    flux_type='fphotons')
-    b = lambda w: w**2
+    b = a.atRedshift(0.1)
+    c = lambda w: w**2
     # SED multiplied by function
-    c = a*b
-    np.testing.assert_almost_equal(c(3.0), 3.3 * 3**2, 10,
+    d = b*c
+    x = 3.0
+    np.testing.assert_almost_equal(d(x), b(x) * c(x), 10,
                                    err_msg="Found wrong value in SED.__mul__")
     # function multiplied by SED
-    c = b*a
-    np.testing.assert_almost_equal(c(3.0), 3.3 * 3**2, 10,
+    d = c*b
+    np.testing.assert_almost_equal(d(x), b(x) * c(x), 10,
                                    err_msg="Found wrong value in SED.__rmul__")
     # SED multiplied by scalar
-    d = c*4.2
-    np.testing.assert_almost_equal(d(3.0), 3.3 * 3**2 * 4.2, 10,
+    e = d*4.2
+    np.testing.assert_almost_equal(e(x), d(x) * 4.2, 10,
                                    err_msg="Found wrong value in SED.__mul__")
     # assignment multiplication
-    d *= 2
-    np.testing.assert_almost_equal(d(3.0), 3.3 * 3**2 * 4.2 * 2, 10,
+    e *= 2
+    np.testing.assert_almost_equal(e(x), d(x) * 4.2 * 2, 10,
                                    err_msg="Found wrong value in SED.__mul__")
 
     t2 = time.time()
@@ -117,22 +133,24 @@ def test_SED_div():
 
     a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
                    flux_type='fphotons')
-    b = lambda w: w**2
+    b = a.atRedshift(0.1)
+    c = lambda w: w**2
     # SED divided by function
-    c = a/b
-    np.testing.assert_almost_equal(c(3.0), 3.3 / 3**2, 10,
+    d = b/c
+    x = 3.0
+    np.testing.assert_almost_equal(d(x), b(x)/c(x), 10,
                                    err_msg="Found wrong value in SED.__div__")
     # function divided by SED
-    c = b/a
-    np.testing.assert_almost_equal(c(3.0), 3**2 / 3.3, 10,
+    d = c/b
+    np.testing.assert_almost_equal(d(x), c(x)/b(x), 10,
                                    err_msg="Found wrong value in SED.__rdiv__")
     # SED divided by scalar
-    d = c/4.2
-    np.testing.assert_almost_equal(d(3.0), 3**2 / 3.3 / 4.2, 10,
+    e = d/4.2
+    np.testing.assert_almost_equal(e(x), d(x)/4.2, 10,
                                    err_msg="Found wrong value in SED.__div__")
     # assignment division
-    d /= 2
-    np.testing.assert_almost_equal(d(3.0), 3**2 / 3.3 / 4.2 / 2, 10,
+    e /= 2
+    np.testing.assert_almost_equal(e(x), d(x)/4.2/2, 10,
                                    err_msg="Found wrong value in SED.__div__")
 
     t2 = time.time()
