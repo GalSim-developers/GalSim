@@ -37,20 +37,22 @@ def test_SED_add():
     t1 = time.time()
 
     a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
-                   flux_type='fphotons')
+                   flux_type='fphotons').atRedshift(0.2)
     b = galsim.SED(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]),
-                   flux_type='fphotons')
+                   flux_type='fphotons').atRedshift(0.2)
     c = a+b
-    np.testing.assert_almost_equal(c.blue_limit, 1.1, 10,
+    np.testing.assert_almost_equal(c.blue_limit, np.max([a.blue_limit, b.blue_limit]), 10,
                                    err_msg="Found wrong blue limit in SED.__add__")
-    np.testing.assert_almost_equal(c.red_limit, 5.0, 10,
+    np.testing.assert_almost_equal(c.red_limit, np.min([a.red_limit, b.red_limit]), 10,
                                    err_msg="Found wrong red limit in SED.__add__")
-    np.testing.assert_almost_equal(c(3.0), 3.3 + 3.33, 10,
+    np.testing.assert_almost_equal(c(3.0), a(3.0) + b(3.0), 10,
                                    err_msg="Wrong sum in SED.__add__")
-    np.testing.assert_almost_equal(c(1.1), a(1.1)+1.11, 10,
+    np.testing.assert_almost_equal(c(1.32), a(1.32) + b(1.32), 10,
                                    err_msg="Wrong sum in SED.__add__")
-    np.testing.assert_almost_equal(c(5.0), 5.5+b(5.0), 10,
+    np.testing.assert_almost_equal(c(5.0), a(5.0) + b(5.0), 10,
                                    err_msg="Wrong sum in SED.__add__")
+    np.testing.assert_almost_equal(c.redshift, a.redshift, 10,
+                                   err_msg="Wrong redshift in SED sum")
 
     try:
         # Adding together two SEDs with different redshifts should fail.
@@ -69,20 +71,22 @@ def test_SED_sub():
     t1 = time.time()
 
     a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
-                   flux_type='fphotons')
+                   flux_type='fphotons').atRedshift(0.2)
     b = galsim.SED(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]),
-                   flux_type='fphotons')
+                   flux_type='fphotons').atRedshift(0.2)
     c = a-b
-    np.testing.assert_almost_equal(c.blue_limit, 1.1, 10,
-                                   err_msg="Found wrong blue limit in SED.__add__")
-    np.testing.assert_almost_equal(c.red_limit, 5.0, 10,
-                                   err_msg="Found wrong red limit in SED.__add__")
-    np.testing.assert_almost_equal(c(3.0), 3.3 - 3.33, 10,
+    np.testing.assert_almost_equal(c.blue_limit, np.max([a.blue_limit, b.blue_limit]), 10,
+                                   err_msg="Found wrong blue limit in SED.__sub__")
+    np.testing.assert_almost_equal(c.red_limit, np.min([a.red_limit, b.red_limit]), 10,
+                                   err_msg="Found wrong red limit in SED.__sub__")
+    np.testing.assert_almost_equal(c(3.0), a(3.0) - b(3.0), 10,
                                    err_msg="Wrong sum in SED.__sub__")
-    np.testing.assert_almost_equal(c(1.1), a(1.1)-1.11, 10,
-                                   err_msg="Wrong sum in SED.__add__")
-    np.testing.assert_almost_equal(c(5.0), 5.5-b(5.0), 10,
-                                   err_msg="Wrong sum in SED.__add__")
+    np.testing.assert_almost_equal(c(1.32), a(1.32) - b(1.32), 10,
+                                   err_msg="Wrong sum in SED.__sub__")
+    np.testing.assert_almost_equal(c(5.0), a(5.0) - b(5.0), 10,
+                                   err_msg="Wrong sum in SED.__sub__")
+    np.testing.assert_almost_equal(c.redshift, a.redshift, 10,
+                                   err_msg="Wrong redshift in SED difference")
 
     try:
         # Subracting two SEDs with different redshifts should fail.
@@ -276,7 +280,7 @@ def test_SED_calculateMagnitude():
 
     # Test that we can create a zeropoint with an SED, and that magnitudes for that SED are
     # then 0.0
-    sed = galsim.SED(spec='wave')
+    sed = galsim.SED(spec='wave').atRedshift(0.2)
     bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5])).withZeropoint(sed)
     np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass), 0.0)
     # Try multiplying SED by 100 to verify that magnitude decreases by 5
@@ -386,19 +390,22 @@ def test_fnu_vs_flambda():
     waves = np.linspace(500, 1000, 100)
     fnu = rayleigh_jeans_fnu(5800, waves)
     flambda = rayleigh_jeans_flambda(5800, waves)
+    zwaves = waves * 1.1
 
-    sed1 = galsim.SED(galsim.LookupTable(waves, fnu), flux_type='fnu')
-    sed2 = galsim.SED(galsim.LookupTable(waves, flambda), flux_type='flambda')
-    np.testing.assert_array_almost_equal(sed1(waves)/sed2(waves), np.ones(len(waves)), 10,
+    sed1 = galsim.SED(galsim.LookupTable(waves, fnu), flux_type='fnu').atRedshift(0.1)
+    sed2 = galsim.SED(galsim.LookupTable(waves, flambda), flux_type='flambda').atRedshift(0.1)
+    np.testing.assert_array_almost_equal(sed1(zwaves)/sed2(zwaves), np.ones(len(zwaves)), 10,
                                          err_msg="Check fnu & flambda consistency.")
 
     # Now also check that wavelengths in Angstroms work.
     waves_ang = waves * 10
-    sed3 = galsim.SED(galsim.LookupTable(waves_ang, fnu), flux_type='fnu', wave_type='Ang')
-    sed4 = galsim.SED(galsim.LookupTable(waves_ang, flambda), flux_type='flambda', wave_type='Ang')
-    np.testing.assert_array_almost_equal(sed1(waves)/sed3(waves), np.ones(len(waves)), 10,
+    sed3 = (galsim.SED(galsim.LookupTable(waves_ang, fnu), flux_type='fnu', wave_type='Ang')
+            .atRedshift(0.1))
+    sed4 = (galsim.SED(galsim.LookupTable(waves_ang, flambda), flux_type='flambda', wave_type='Ang')
+            .atRedshift(0.1))
+    np.testing.assert_array_almost_equal(sed1(zwaves)/sed3(zwaves), np.ones(len(zwaves)), 10,
                                          err_msg="Check nm and Ang SED wavelengths consistency.")
-    np.testing.assert_array_almost_equal(sed2(waves)/sed4(waves), np.ones(len(waves)), 10,
+    np.testing.assert_array_almost_equal(sed2(zwaves)/sed4(zwaves), np.ones(len(zwaves)), 10,
                                          err_msg="Check nm and Ang SED wavelengths consistency.")
 
     t2 = time.time()
