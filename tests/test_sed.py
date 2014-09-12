@@ -36,24 +36,28 @@ def test_SED_add():
     import time
     t1 = time.time()
 
-    a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
-                   flux_type='fphotons').atRedshift(0.2)
-    b = galsim.SED(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]),
-                   flux_type='fphotons').atRedshift(0.2)
-    c = a+b
-    np.testing.assert_almost_equal(c.blue_limit, np.max([a.blue_limit, b.blue_limit]), 10,
-                                   err_msg="Found wrong blue limit in SED.__add__")
-    np.testing.assert_almost_equal(c.red_limit, np.min([a.red_limit, b.red_limit]), 10,
-                                   err_msg="Found wrong red limit in SED.__add__")
-    np.testing.assert_almost_equal(c(3.0), a(3.0) + b(3.0), 10,
-                                   err_msg="Wrong sum in SED.__add__")
-    np.testing.assert_almost_equal(c(1.32), a(1.32) + b(1.32), 10,
-                                   err_msg="Wrong sum in SED.__add__")
-    np.testing.assert_almost_equal(c(5.0), a(5.0) + b(5.0), 10,
-                                   err_msg="Wrong sum in SED.__add__")
-    np.testing.assert_almost_equal(c.redshift, a.redshift, 10,
-                                   err_msg="Wrong redshift in SED sum")
-
+    for z in [0, 0.2, 0.4]:
+        a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
+                       flux_type='fphotons')
+        b = galsim.SED(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]),
+                       flux_type='fphotons')
+        if z != 0:
+            a = a.atRedshift(z)
+            b = b.atRedshift(z)
+        c = a+b
+        np.testing.assert_almost_equal(c.blue_limit, np.max([a.blue_limit, b.blue_limit]), 10,
+                                       err_msg="Found wrong blue limit in SED.__add__")
+        np.testing.assert_almost_equal(c.red_limit, np.min([a.red_limit, b.red_limit]), 10,
+                                       err_msg="Found wrong red limit in SED.__add__")
+        np.testing.assert_almost_equal(c(c.blue_limit), a(c.blue_limit) + b(c.blue_limit), 10,
+                                       err_msg="Wrong sum in SED.__add__")
+        np.testing.assert_almost_equal(c(c.red_limit), a(c.red_limit) + b(c.red_limit), 10,
+                                       err_msg="Wrong sum in SED.__add__")
+        x = 0.5 * (c.blue_limit + c.red_limit)
+        np.testing.assert_almost_equal(c(x), a(x) + b(x), 10,
+                                       err_msg="Wrong sum in SED.__add__")
+        np.testing.assert_almost_equal(c.redshift, a.redshift, 10,
+                                       err_msg="Wrong redshift in SED sum")
     try:
         # Adding together two SEDs with different redshifts should fail.
         d = b.atRedshift(0.1)
@@ -70,23 +74,28 @@ def test_SED_sub():
     import time
     t1 = time.time()
 
-    a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
-                   flux_type='fphotons').atRedshift(0.2)
-    b = galsim.SED(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]),
-                   flux_type='fphotons').atRedshift(0.2)
-    c = a-b
-    np.testing.assert_almost_equal(c.blue_limit, np.max([a.blue_limit, b.blue_limit]), 10,
-                                   err_msg="Found wrong blue limit in SED.__sub__")
-    np.testing.assert_almost_equal(c.red_limit, np.min([a.red_limit, b.red_limit]), 10,
-                                   err_msg="Found wrong red limit in SED.__sub__")
-    np.testing.assert_almost_equal(c(3.0), a(3.0) - b(3.0), 10,
-                                   err_msg="Wrong sum in SED.__sub__")
-    np.testing.assert_almost_equal(c(1.32), a(1.32) - b(1.32), 10,
-                                   err_msg="Wrong sum in SED.__sub__")
-    np.testing.assert_almost_equal(c(5.0), a(5.0) - b(5.0), 10,
-                                   err_msg="Wrong sum in SED.__sub__")
-    np.testing.assert_almost_equal(c.redshift, a.redshift, 10,
-                                   err_msg="Wrong redshift in SED difference")
+    for z in [0, 0.2, 0.4]:
+        a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
+                       flux_type='fphotons')
+        b = galsim.SED(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]),
+                       flux_type='fphotons')
+        if z != 0:
+            a = a.atRedshift(z)
+            b = b.atRedshift(z)
+        c = a-b
+        np.testing.assert_almost_equal(c.blue_limit, np.max([a.blue_limit, b.blue_limit]), 10,
+                                       err_msg="Found wrong blue limit in SED.__sub__")
+        np.testing.assert_almost_equal(c.red_limit, np.min([a.red_limit, b.red_limit]), 10,
+                                       err_msg="Found wrong red limit in SED.__sub__")
+        np.testing.assert_almost_equal(c(c.blue_limit), a(c.blue_limit) - b(c.blue_limit), 10,
+                                       err_msg="Wrong difference in SED.__sub__")
+        np.testing.assert_almost_equal(c(c.red_limit), a(c.red_limit) - b(c.red_limit), 10,
+                                       err_msg="Wrong difference in SED.__sub__")
+        x = 0.5 * (c.blue_limit + c.red_limit)
+        np.testing.assert_almost_equal(c(x), a(x) - b(x), 10,
+                                       err_msg="Wrong difference in SED.__sub__")
+        np.testing.assert_almost_equal(c.redshift, a.redshift, 10,
+                                       err_msg="Wrong redshift in SED difference")
 
     try:
         # Subracting two SEDs with different redshifts should fail.
@@ -104,27 +113,29 @@ def test_SED_mul():
     import time
     t1 = time.time()
 
-    a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
-                   flux_type='fphotons')
-    b = a.atRedshift(0.1)
-    c = lambda w: w**2
-    # SED multiplied by function
-    d = b*c
-    x = 3.0
-    np.testing.assert_almost_equal(d(x), b(x) * c(x), 10,
-                                   err_msg="Found wrong value in SED.__mul__")
-    # function multiplied by SED
-    d = c*b
-    np.testing.assert_almost_equal(d(x), b(x) * c(x), 10,
-                                   err_msg="Found wrong value in SED.__rmul__")
-    # SED multiplied by scalar
-    e = d*4.2
-    np.testing.assert_almost_equal(e(x), d(x) * 4.2, 10,
-                                   err_msg="Found wrong value in SED.__mul__")
-    # assignment multiplication
-    e *= 2
-    np.testing.assert_almost_equal(e(x), d(x) * 4.2 * 2, 10,
-                                   err_msg="Found wrong value in SED.__mul__")
+    for z in [0, 0.2, 0.4]:
+        a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
+                       flux_type='fphotons')
+        if z != 0:
+            a = a.atRedshift(z)
+        b = lambda w: w**2
+        # SED multiplied by function
+        c = a*b
+        x = 3.0
+        np.testing.assert_almost_equal(c(x), a(x) * b(x), 10,
+                                       err_msg="Found wrong value in SED.__mul__")
+        # function multiplied by SED
+        c = b*a
+        np.testing.assert_almost_equal(c(x), a(x) * b(x), 10,
+                                       err_msg="Found wrong value in SED.__rmul__")
+        # SED multiplied by scalar
+        d = c*4.2
+        np.testing.assert_almost_equal(d(x), c(x) * 4.2, 10,
+                                       err_msg="Found wrong value in SED.__mul__")
+        # assignment multiplication
+        d *= 2
+        np.testing.assert_almost_equal(d(x), c(x) * 4.2 * 2, 10,
+                                       err_msg="Found wrong value in SED.__mul__")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -135,27 +146,29 @@ def test_SED_div():
     import time
     t1 = time.time()
 
-    a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
-                   flux_type='fphotons')
-    b = a.atRedshift(0.1)
-    c = lambda w: w**2
-    # SED divided by function
-    d = b/c
-    x = 3.0
-    np.testing.assert_almost_equal(d(x), b(x)/c(x), 10,
-                                   err_msg="Found wrong value in SED.__div__")
-    # function divided by SED
-    d = c/b
-    np.testing.assert_almost_equal(d(x), c(x)/b(x), 10,
-                                   err_msg="Found wrong value in SED.__rdiv__")
-    # SED divided by scalar
-    e = d/4.2
-    np.testing.assert_almost_equal(e(x), d(x)/4.2, 10,
-                                   err_msg="Found wrong value in SED.__div__")
-    # assignment division
-    e /= 2
-    np.testing.assert_almost_equal(e(x), d(x)/4.2/2, 10,
-                                   err_msg="Found wrong value in SED.__div__")
+    for z in [0, 0.2, 0.4]:
+        a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
+                       flux_type='fphotons')
+        if z != 0:
+            a = a.atRedshift(z)
+        b = lambda w: w**2
+        # SED divided by function
+        c = a/b
+        x = 3.0
+        np.testing.assert_almost_equal(c(x), a(x)/b(x), 10,
+                                       err_msg="Found wrong value in SED.__div__")
+        # function divided by SED
+        c = b/a
+        np.testing.assert_almost_equal(c(x), b(x)/a(x), 10,
+                                       err_msg="Found wrong value in SED.__rdiv__")
+        # SED divided by scalar
+        d = c/4.2
+        np.testing.assert_almost_equal(d(x), c(x)/4.2, 10,
+                                       err_msg="Found wrong value in SED.__div__")
+        # assignment division
+        d /= 2
+        np.testing.assert_almost_equal(d(x), c(x)/4.2/2, 10,
+                                       err_msg="Found wrong value in SED.__div__")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -246,13 +259,14 @@ def test_SED_withFlux():
     import time
     t1 = time.time()
 
-    a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
-    a = a.atRedshift(0.1)
     rband = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
-    a = a.withFlux(1.0, rband)
-    np.testing.assert_array_almost_equal(a.calculateFlux(rband), 1.0, 5,
-                                         "Setting SED flux failed.")
-
+    for z in [0, 0.2, 0.4]:
+        a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
+        if z != 0:
+            a = a.atRedshift(z)
+        a = a.withFlux(1.0, rband)
+        np.testing.assert_array_almost_equal(a.calculateFlux(rband), 1.0, 5,
+                                             "Setting SED flux failed.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -263,11 +277,13 @@ def test_SED_withFluxDensity():
     import time
     t1 = time.time()
 
-    a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
-    a = a.atRedshift(0.1)
-    a = a.withFluxDensity(1.0, 500)
-    np.testing.assert_array_almost_equal(a(500), 1.0, 5,
-                                         "Setting SED flux density failed.")
+    for z in [0, 0.2, 0.4]:
+        a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
+        if z != 0:
+            a = a.atRedshift(z)
+        a = a.withFluxDensity(1.0, 500)
+        np.testing.assert_array_almost_equal(a(500), 1.0, 5,
+                                             "Setting SED flux density failed.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -280,25 +296,34 @@ def test_SED_calculateMagnitude():
 
     # Test that we can create a zeropoint with an SED, and that magnitudes for that SED are
     # then 0.0
-    sed = galsim.SED(spec='wave').atRedshift(0.2)
-    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5])).withZeropoint(sed)
-    np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass), 0.0)
-    # Try multiplying SED by 100 to verify that magnitude decreases by 5
-    sed *= 100
-    np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass), -5.0)
-    # Try setting zeropoint to a constant.
-    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5])).withZeropoint(6.0)
-    np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass),
-                                   (sed*100).calculateMagnitude(bandpass)+5.0)
-    # Try setting AB zeropoint
-    bandpass = (galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
-                .withZeropoint('AB', effective_diameter=640.0, exptime=15.0))
-    np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass),
-                                   (sed*100).calculateMagnitude(bandpass)+5.0)
+    for z in [0, 0.2, 0.4]:
+        sed = galsim.SED(spec='wave')
+        if z != 0:
+            sed = sed.atRedshift(z)
+        bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5])).withZeropoint(sed)
+        np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass), 0.0)
+        # Try multiplying SED by 100 to verify that magnitude decreases by 5
+        sed *= 100
+        np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass), -5.0)
+        # Try setting zeropoint to a constant.
+        bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5])).withZeropoint(6.0)
+        np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass),
+                                       (sed*100).calculateMagnitude(bandpass)+5.0)
+        # Try setting AB zeropoint
+        bandpass = (galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
+                    .withZeropoint('AB', effective_diameter=640.0, exptime=15.0))
+        np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass),
+                                       (sed*100).calculateMagnitude(bandpass)+5.0)
 
-    # See if we can set a magnitude.
-    sed = sed.withMagnitude(24.0, bandpass)
-    np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass), 24.0)
+        # See if we can set a magnitude.
+        sed = sed.withMagnitude(24.0, bandpass)
+        np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass), 24.0)
+
+        # Test intended meaning of zeropoint.  I.e., that an object with magnitude equal to the
+        # zeropoint will have a flux of 1.0.
+        bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5])).withZeropoint(24.0)
+        sed = sed.withMagnitude(bandpass.zeropoint, bandpass)
+        np.testing.assert_almost_equal(sed.calculateFlux(bandpass), 1.0, 10)
 
     # See if Vega magnitudes work.
     # The following AB/Vega conversions are sourced from
@@ -309,6 +334,7 @@ def test_SED_calculateMagnitude():
     # accuracy of the get/set magnitude algorithms is probably much better than this.
     ugrizy_vega_ab_conversions = [0.91, -0.08, 0.16, 0.37, 0.54, 0.634]
     filter_names = 'ugrizy'
+    sed = sed.atRedshift(0.0)
     for conversion, filter_name in zip(ugrizy_vega_ab_conversions, filter_names):
         filter_filename = os.path.join(datapath, 'LSST_{0}.dat'.format(filter_name))
         AB_bandpass = (galsim.Bandpass(filter_filename)
@@ -318,20 +344,6 @@ def test_SED_calculateMagnitude():
         AB_mag = sed.calculateMagnitude(AB_bandpass)
         vega_mag = sed.calculateMagnitude(vega_bandpass)
         assert (abs((AB_mag - vega_mag) - conversion) < 0.1)
-
-    # Test intended meaning of zeropoint.  I.e., that an object with magnitude equal to the
-    # zeropoint will have a flux of 1.0.
-    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5])).withZeropoint(24.0)
-    sed = sed.withMagnitude(bandpass.zeropoint, bandpass)
-    np.testing.assert_almost_equal(sed.calculateFlux(bandpass), 1.0, 10)
-
-    # Test that can set magnitude of redshifted SED.
-    a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
-    a = a.atRedshift(0.1)
-    rband = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat')).withZeropoint(20.0)
-    a = a.withMagnitude(24.0, rband)
-    np.testing.assert_array_almost_equal(a.calculateMagnitude(rband), 24.0, 5,
-                                         "Setting SED magnitude failed.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -390,23 +402,30 @@ def test_fnu_vs_flambda():
     waves = np.linspace(500, 1000, 100)
     fnu = rayleigh_jeans_fnu(5800, waves)
     flambda = rayleigh_jeans_flambda(5800, waves)
-    zwaves = waves * 1.1
 
-    sed1 = galsim.SED(galsim.LookupTable(waves, fnu), flux_type='fnu').atRedshift(0.1)
-    sed2 = galsim.SED(galsim.LookupTable(waves, flambda), flux_type='flambda').atRedshift(0.1)
-    np.testing.assert_array_almost_equal(sed1(zwaves)/sed2(zwaves), np.ones(len(zwaves)), 10,
-                                         err_msg="Check fnu & flambda consistency.")
+    for z in [0, 0.2, 0.4]:
+        sed1 = galsim.SED(galsim.LookupTable(waves, fnu), flux_type='fnu')
+        sed2 = galsim.SED(galsim.LookupTable(waves, flambda), flux_type='flambda')
+        if z != 0:
+            sed1 = sed1.atRedshift(z)
+            sed2 = sed2.atRedshift(z)
+        zwaves = waves * (1.0 + z)
+        np.testing.assert_array_almost_equal(sed1(zwaves)/sed2(zwaves), np.ones(len(zwaves)), 10,
+                                             err_msg="Check fnu & flambda consistency.")
 
-    # Now also check that wavelengths in Angstroms work.
-    waves_ang = waves * 10
-    sed3 = (galsim.SED(galsim.LookupTable(waves_ang, fnu), flux_type='fnu', wave_type='Ang')
-            .atRedshift(0.1))
-    sed4 = (galsim.SED(galsim.LookupTable(waves_ang, flambda), flux_type='flambda', wave_type='Ang')
-            .atRedshift(0.1))
-    np.testing.assert_array_almost_equal(sed1(zwaves)/sed3(zwaves), np.ones(len(zwaves)), 10,
-                                         err_msg="Check nm and Ang SED wavelengths consistency.")
-    np.testing.assert_array_almost_equal(sed2(zwaves)/sed4(zwaves), np.ones(len(zwaves)), 10,
-                                         err_msg="Check nm and Ang SED wavelengths consistency.")
+        # Now also check that wavelengths in Angstroms work.
+        waves_ang = waves * 10
+        sed3 = galsim.SED(galsim.LookupTable(waves_ang, fnu), flux_type='fnu', wave_type='Ang')
+        sed4 = galsim.SED(galsim.LookupTable(waves_ang, flambda),
+                          flux_type='flambda',
+                          wave_type='Ang')
+        if z != 0:
+            sed3 = sed3.atRedshift(z)
+            sed4 = sed4.atRedshift(z)
+        np.testing.assert_array_almost_equal(sed1(zwaves)/sed3(zwaves), np.ones(len(zwaves)), 10,
+                                             err_msg="Check nm and Ang SED wavelengths consistency.")
+        np.testing.assert_array_almost_equal(sed2(zwaves)/sed4(zwaves), np.ones(len(zwaves)), 10,
+                                             err_msg="Check nm and Ang SED wavelengths consistency.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
