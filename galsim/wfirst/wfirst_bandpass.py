@@ -39,6 +39,13 @@ def getBandpasses():
 
     Currently the bandpasses are not truncated or thinned in any way.  We leave it to the user to
     decide whether they wish to do either of those operations.
+
+    Example usage
+    -------------
+
+        >>> wfirst_bandpasses = galsim.wfirst.getBandpasses()
+        >>> f184 = wfirst_bandpasses['F184']
+
     """
     # Begin by reading in the file containing the info.
     datafile = os.path.join(galsim.meta_data.share_dir, "afta_throughput.txt")
