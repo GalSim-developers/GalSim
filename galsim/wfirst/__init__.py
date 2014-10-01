@@ -15,4 +15,25 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+"""
+The galsim.wfirst module, containing information GalSim needs to simulate images for the WFIRST-AFTA
+project.
+
+This module contains numbers and routines for the WFIRST-AFTA project.  Currently, it includes the
+following numbers:
+
+    gain - The gain for all SCAs (sensor chip arrays) is expected to be the same, so this is a
+           single value rather than a list of values.
+
+For example, to get the gain value, use galsim.wfirst.gain.
+
+This module also contains the following routines:
+
+    getBandpasses() - A utility to get a dictionary containing galsim.Bandpass objects for each of
+                      the WFIRST-AFTA bandpasses.  For more detail, do
+                      help(galsim.wfirst.getBandpasses).
+"""
+
+gain = 1.0
+
 from wfirst_bandpass import *
