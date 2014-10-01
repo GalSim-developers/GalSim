@@ -39,9 +39,9 @@ class SED(object):
 
     SEDs may be multiplied by scalars or scalar functions of wavelength.
 
-    SEDs may be added together.  The resulting SED will only be defined on the wavelength
-    region where both of the operand SEDs are defined. `blue_limit` and `red_limit` will be reset
-    accordingly.
+    SEDs may be added together if they are at the same redshift.  The resulting SED will only be
+    defined on the wavelength region where both of the operand SEDs are defined. `blue_limit` and
+    `red_limit` will be reset accordingly.
 
     The input parameter, `spec`, may be one of several possible forms:
     1. a regular python function (or an object that acts like a function)
@@ -203,9 +203,10 @@ class SED(object):
         # SEDs can be multiplied by scalars or functions (callables)
         ret = self.copy()
         if hasattr(other, '__call__'):
-            ret._rest_photons = lambda w: self(w) * other(w)
+            wave_factor = 1.0 + self.redshift
+            ret._rest_photons = lambda w: self._rest_photons(w) * other(w * wave_factor)
         else:
-            ret._rest_photons = lambda w: self(w) * other
+            ret._rest_photons = lambda w: self._rest_photons(w) * other
         return ret
 
     def __rmul__(self, other):
@@ -215,18 +216,20 @@ class SED(object):
         # SEDs can be divided by scalars or functions (callables)
         ret = self.copy()
         if hasattr(other, '__call__'):
-            ret._rest_photons = lambda w: self(w) / other(w)
+            wave_factor = 1.0 + self.redshift
+            ret._rest_photons = lambda w: self._rest_photons(w) / other(w * wave_factor)
         else:
-            ret._rest_photons = lambda w: self(w) / other
+            ret._rest_photons = lambda w: self._rest_photons(w) / other
         return ret
 
     def __rdiv__(self, other):
         # SEDs can be divided by scalars or functions (callables)
         ret = self.copy()
         if hasattr(other, '__call__'):
-            ret._rest_photons = lambda w: other(w) / self(w)
+            wave_factor = 1.0 + self.redshift
+            ret._rest_photons = lambda w: other(w * wave_factor) / self._rest_photons(w)
         else:
-            ret._rest_photons = lambda w: other / self(w)
+            ret._rest_photons = lambda w: other / self._rest_photons(w)
         return ret
 
     def __truediv__(self, other):
@@ -237,20 +240,21 @@ class SED(object):
 
     def __add__(self, other):
         # Add together two SEDs, with the following caveats:
-        # 1) The resulting SED will be defined on the wavelength range set by the overlap of the
+        # 1) The SEDs must have the same redshift.
+        # 2) The resulting SED will be defined on the wavelength range set by the overlap of the
         #    wavelength ranges of the two SED operands.
-        # 2) If both SEDs maintain a `wave_list` attribute, then the new `wave_list` will be
+        # 3) If both SEDs maintain a `wave_list` attribute, then the new `wave_list` will be
         #    the union of the old `wave_list`s in the intersecting region.
-        # 3) The resulting SED `redshift` attribute will be set to zero.
         # This ensures that SED addition is commutative.
 
+        if self.redshift != other.redshift:
+            raise ValueError("Can only add SEDs with same redshift.")
         # Find overlapping wavelength interval
         blue_limit, red_limit = self._wavelength_intersection(other)
         ret = self.copy()
         ret.blue_limit = blue_limit
         ret.red_limit = red_limit
-        ret._rest_photons = lambda w: self(w) + other(w)
-        ret.redshift = 0
+        ret._rest_photons = lambda w: self._rest_photons(w) + other._rest_photons(w)
         if len(self.wave_list) > 0 and len(other.wave_list) > 0:
             wave_list = np.union1d(self.wave_list, other.wave_list)
             wave_list = wave_list[wave_list <= red_limit]
@@ -259,10 +263,7 @@ class SED(object):
         return ret
 
     def __sub__(self, other):
-        # Subtract two SEDs, with the caveat that the resulting SED will be defined on the
-        # wavelength range set by the overlap of the wavelength ranges of the two SED operands.
-
-        # Find overlapping wavelength interval
+        # Subtract two SEDs, with the same caveats as adding two SEDs.
         return self.__add__(-1.0 * other)
 
     def copy(self):
@@ -282,7 +283,7 @@ class SED(object):
         current_flux_density = self(wavelength)
         factor = target_flux_density / current_flux_density
         ret = self.copy()
-        ret._rest_photons = lambda w: self(w) * factor
+        ret._rest_photons = lambda w: self._rest_photons(w) * factor
         return ret
 
     def withFlux(self, target_flux, bandpass):
@@ -297,7 +298,7 @@ class SED(object):
         current_flux = self.calculateFlux(bandpass)
         norm = target_flux/current_flux
         ret = self.copy()
-        ret._rest_photons = lambda w: self(w) * norm
+        ret._rest_photons = lambda w: self._rest_photons(w) * norm
         return ret
 
     def withMagnitude(self, target_magnitude, bandpass):
@@ -317,7 +318,7 @@ class SED(object):
         current_magnitude = self.calculateMagnitude(bandpass)
         norm = 10**(-0.4*(target_magnitude - current_magnitude))
         ret = self.copy()
-        ret._rest_photons = lambda w: self(w) * norm
+        ret._rest_photons = lambda w: self._rest_photons(w) * norm
         return ret
 
     def atRedshift(self, redshift):
