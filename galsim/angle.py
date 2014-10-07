@@ -192,9 +192,30 @@ def _make_dms_string(decimal, sep):
     return '%s%02d%s%02d%s%02d.%08d'%(sign,d,sep,m,sep,s,decimal)
 
 def hms(self, sep=":"):
-    """Return an HMS representation of the angle as a string: (+/-)hh:mm:ss.decimal.
+    """Return an HMS representation of the angle as a string: hh:mm:ss.decimal.
+
+    The returned representation will have 0 <= hh < 24.
+
     An optional `sep` parameter can change the : to something else (e.g. a space or 
     nothing at all).
+
+    Note: the reverse process is effected by HMS_Angle:
+
+        >>> angle = -5.357 * galsim.hours
+        >>> hms = angle.hms()
+        >>> print hms
+        +18:38:34.80000000
+        >>> angle2 = galsim.HMS_Angle(hms)
+        >>> print angle2 / galsim.hours
+        18.643
+        >>> print angle2 / galsim.hours - 24
+        -5.357
+        >>> print angle2 - angle - 24 * galsim.hours
+        0.0 radians
+
+    @param sep      The token to put between the hh and mm, and beteen mm and ss.  [default: ':']
+
+    @returns a string of the HMS representation of the angle.
     """
     # HMS convention is usually to have the hours between 0 and 24, not -12 and 12
     h = self.wrap() / galsim.hours
@@ -205,6 +226,22 @@ def dms(self, sep=":"):
     """Return a DMS representation of the angle as a string: (+/-)ddmmss.decimal
     An optional `sep` parameter can change the : to something else (e.g. a space or 
     nothing at all).
+
+    Note: the reverse process is effected by DMS_Angle:
+
+        >>> angle = -(5 * galsim.degrees + 13 * galsim.arcmin + 23 * galsim.arcsec)
+        >>> dms = angle.dms()
+        >>> print dms
+        -05:13:23.00000000
+        >>> angle2 = galsim.DMS_Angle(dms)
+        >>> print angle2 / galsim.degrees
+        -5.22305555556
+        >>> print angle2 - angle
+        0.0 radians
+
+    @param sep      The token to put between the dd and mm, and beteen mm and ss.  [default: ':']
+
+    @returns a string of the DMS representation of the angle.
     """
     d = self.wrap() / galsim.degrees
     return _make_dms_string(d,sep)
@@ -250,6 +287,20 @@ def HMS_Angle(str):
     minutes, and two for the seconds.  Then there may be a decimal point followed by more
     digits.  There may be a colon separating hh, mm, and ss, or whitespace, or nothing at all.
     In fact, the code will ignore any non-digits between the hours, minutes, and seconds.
+
+    Note: the reverse process is effected by Angle.hms():
+
+        >>> angle = -5.357 * galsim.hours
+        >>> hms = angle.hms()
+        >>> print hms
+        +18:38:34.80000000
+        >>> angle2 = galsim.HMS_Angle(hms)
+        >>> print angle2 / galsim.hours
+        18.643
+        >>> print angle2 / galsim.hours - 24
+        -5.357
+        >>> print angle2 - angle - 24 * galsim.hours
+        0.0 radians
 
     @returns the corresponding Angle instance
     """
