@@ -25,6 +25,18 @@ following numbers:
     gain - The gain for all SCAs (sensor chip arrays) is expected to be the same, so this is a
            single value rather than a list of values.
 
+    pixel_scale - The pixel scale in units of arcsec/pixel.
+
+    dark_current - The dark current in units of e-/s.
+
+    exposure_time - The typical exposure time in units of seconds.  (Band?)
+
+    sky_background - The typical sky background flux in e-/pix/s.  (Band?)
+
+    read_noise - The value of read noise in electrons.  (Band?)
+
+    ... also values related to nonlinearity, etc. ...
+
 For example, to get the gain value, use galsim.wfirst.gain.
 
 This module also contains the following routines:
@@ -35,5 +47,7 @@ This module also contains the following routines:
 """
 
 gain = 1.0
+pixel_scale = 0.11
+dark_current = 0.01
 
 from wfirst_bandpass import *
