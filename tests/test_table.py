@@ -99,6 +99,13 @@ def test_table():
         table1(args1[-1]-0.01)
         table2(args2[0]+0.01)
         table2(args2[-1]-0.01)
+        table1(np.zeros(3)+args1[0]+0.01)
+        table1((args1[0]+0.01,args1[0]+0.01))
+        table1([args1[0]+0.01,args1[0]+0.01])
+        # Check 2d arrays
+        table1(np.zeros((3,3))+args1[0])
+        # This last is to check for 2d arrays that are not square
+        table1(np.array(testargs1).reshape((2,3)))
 
         # Check that a LookupTable is picklable.
         p1 = pickle.dumps(table1)
