@@ -9,6 +9,7 @@ Changes from v1.1.0 to v1.1.1
 - Added workaround for bug in pyfits 3.0 that affected `galsim.fits.read`. (#572)
 - Fixed the Image constructor so that if it is passed a NumPy array with the opposite byteorder
   as the native one on the system, it does not return an Image with different contents. (#594)
+- Fixed bug that prevented calling LookupTables on non-square 2d arrays. (#599)
 
 
 
