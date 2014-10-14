@@ -19,7 +19,7 @@
 import galsim
 import numpy
 
-def applyNL(img,NLfunc,args=None):
+def applyNonlinearity(img,NLfunc,args=None):
     """ Applies the given non-linear function (NLfunc) on the input image and returns a new image of the same datatype 
 
     The argument NLfunc is a callable function, possibly with few arguments that need to be given as input to the 'args'.
@@ -37,7 +37,7 @@ def applyNL(img,NLfunc,args=None):
 
 return galsim.Image(img_nl,dtype=img.dtype)
 
-def addRecipFail(img,exp_time=200,alpha=0.0065):
+def addReciprocityFailure(img,exp_time=200,alpha=0.0065):
      """ Takes into account of reciprocity failure.
      Calling
      -------
