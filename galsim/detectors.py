@@ -24,25 +24,25 @@ failure, interpixel capacitance, etc.
 import galsim
 import numpy
 
-def applyNonlinearity(img,NLfunc,args=None):
+def applyNonlinearity(img, NLfunc, args=None):
     """ Applies the given non-linear function (NLfunc) on the input image and returns a new image of the same datatype 
 
     The argument NLfunc is a callable function, possibly with few arguments that need to be given as input to the 'args'.
     Callable functions from empirical curves and lookup tables can be constructed from galsim.LookupTable
     """
 
-    #extract out the array from Image since not all functions can act directly on Images
+    # extract out the array from Image since not all functions can act directly on Images
     if args!=None:
-        img_nl = NLfunc(img.array,args) 
+        img_nl = NLfunc(img.array, args) 
     else:
     	img_nl = NLfunc(img.array)
 
     if img.array.shape != img_nl.shape:
         raise ValueError("Image shapes are inconsistent")
 
-return galsim.Image(img_nl,dtype=img.dtype)
+return galsim.Image(img_nl, dtype=img.dtype)
 
-def addReciprocityFailure(img,exp_time=200,alpha=0.0065):
+def addReciprocityFailure(img, exp_time=200, alpha=0.0065):
      """ Takes into account of reciprocity failure.
      Calling
      -------
@@ -50,7 +50,7 @@ def addReciprocityFailure(img,exp_time=200,alpha=0.0065):
         >>> new_image = addRecipFail(img,exp_time,alpha)
     """
 
-     #extracting the array out since log won't operate on Image
+     #e xtracting the array out since log won't operate on Image
      arr_in = img.array
-     arr_out = arr_in*(1.0+alpha*numpy.log10(1.0*arr_in/exp_time))
-     return Image(arr_out,dtype=img.dtype)
+     arr_out = arr_in*(1.0 + alpha*numpy.log10(1.0*arr_in/exp_time))
+     return Image(arr_out, dtype=img.dtype)
