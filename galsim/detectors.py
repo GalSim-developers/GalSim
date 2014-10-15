@@ -62,7 +62,7 @@ def addReciprocityFailure(self, exp_time=200, alpha=0.0065):
         >>> new_image = addRecipFail(img,exp_time,alpha)
     """
 
-     #e xtracting the array out since log won't operate on Image
+     # Extracting the array out since log won't operate on Image
      arr_in = self.array
      arr_out = arr_in*(1.0 + alpha*numpy.log10(1.0*arr_in/exp_time))
      return Image(arr_out, dtype=self.dtype)
