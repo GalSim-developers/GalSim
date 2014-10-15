@@ -24,14 +24,15 @@ failure, interpixel capacitance, etc.
 import galsim
 import numpy
 
-def applyNonlinearity(img, NLfunc, args=None):
-    """Applies the given non-linearity function (`NLfunc`) to the input image, and returns a new
-    image of the same datatype.
+def applyNonlinearity(self, NLfunc, args=None):
+    """
+    Applies the given non-linearity function (`NLfunc`) to the image, and returns a new image of the
+    same datatype.
 
-    The image argument `img` should be in units of electrons (not ADU), and should include both the
-    signal from the astronomical objects as well as the background level.  Other detectors effects
-    such as reciprocity, dark current, and persistence (not currently included in GalSim) would also
-    occur before the inclusion of nonlinearity.
+    The imageshould be in units of electrons (not ADU), and should include both the signal from the
+    astronomical objects as well as the background level.  Other detectors effects such as
+    reciprocity, dark current, and persistence (not currently included in GalSim) would also occur
+    before the inclusion of nonlinearity.
 
     The argument `NLfunc` is a callable function (for example a lambda function, a
     galsim.LookupTable, or a user-defined function), possibly with arguments that need to be given
@@ -41,19 +42,20 @@ def applyNonlinearity(img, NLfunc, args=None):
     should return the original image, NOT zero).
     """
 
-    # extract out the array from Image since not all functions can act directly on Images
+    # Extract out the array from Image since not all functions can act directly on Images
     if args != None:
-        img_nl = NLfunc(img.array, args) 
+        img_nl = NLfunc(self.array, args) 
     else:
-    	img_nl = NLfunc(img.array)
+        img_nl = NLfunc(self.array)
 
-    if img.array.shape != img_nl.shape:
+    if self.array.shape != img_nl.shape:
         raise ValueError("Image shapes are inconsistent after applying nonlinearity function!")
 
-    return galsim.Image(img_nl, dtype=img.dtype)
+    return galsim.Image(img_nl, dtype=self.dtype)
 
-def addReciprocityFailure(img, exp_time=200, alpha=0.0065):
-     """ Takes into account of reciprocity failure.
+def addReciprocityFailure(self, exp_time=200, alpha=0.0065):
+     """
+     Takes into account of reciprocity failure.
      Calling
      -------
 
@@ -61,6 +63,9 @@ def addReciprocityFailure(img, exp_time=200, alpha=0.0065):
     """
 
      #e xtracting the array out since log won't operate on Image
-     arr_in = img.array
+     arr_in = self.array
      arr_out = arr_in*(1.0 + alpha*numpy.log10(1.0*arr_in/exp_time))
-     return Image(arr_out, dtype=img.dtype)
+     return Image(arr_out, dtype=self.dtype)
+
+galsim.Image.applyNonlinearity = applyNonlinearity
+galsim.Image.addReciprocityFailure = addReciprocityFailure
