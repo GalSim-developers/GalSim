@@ -40,6 +40,12 @@ def applyNonlinearity(self, NLfunc, args=None):
     and return a NumPy array of the same shape.  It should be defined such that it outputs the final
     image with nonlinearity included (i.e., in the limit that there is no nonlinearity, the function
     should return the original image, NOT zero).
+
+    @param NLfunc    The function that maps the input image pixel values to the output image pixel
+                     values.
+    @param args      Any necessary arguments required by `NLfunc`.
+
+    @returns a new Image with the nonlinearity effects included.
     """
 
     # Extract out the array from Image since not all functions can act directly on Images
@@ -71,6 +77,12 @@ def addReciprocityFailure(self, exp_time=200, alpha=0.0065):
 
         >>> new_image = img.addRecipFail(exp_time, alpha)
 
+    @param exp_time  The exposure time in seconds, which goes into the expression for reciprocity
+                     failure given in the docstring. [default: 200]
+    @param alpha     The alpha parameter in the expression for reciprocity failure.
+                     [default: 0.0065]
+
+    @returns a new Image with the effects of reciprocity failure included.
     """
 
      # Extracting the array out since log won't operate on Image
