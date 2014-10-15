@@ -29,10 +29,10 @@ def applyNonlinearity(self, NLfunc, args=None):
     Applies the given non-linearity function (`NLfunc`) to the image, and returns a new image of the
     same datatype.
 
-    The imageshould be in units of electrons (not ADU), and should include both the signal from the
-    astronomical objects as well as the background level.  Other detectors effects such as
-    reciprocity, dark current, and persistence (not currently included in GalSim) would also occur
-    before the inclusion of nonlinearity.
+    The image should be in units of electrons (not ADU), and should include both the signal from the
+    astronomical objects as well as the background level.  Other detectors effects such as dark
+    current and persistence (not currently included in GalSim) would also occur before the inclusion
+    of nonlinearity.
 
     The argument `NLfunc` is a callable function (for example a lambda function, a
     galsim.LookupTable, or a user-defined function), possibly with arguments that need to be given
@@ -55,11 +55,22 @@ def applyNonlinearity(self, NLfunc, args=None):
 
 def addReciprocityFailure(self, exp_time=200, alpha=0.0065):
      """
-     Takes into account of reciprocity failure.
+     Given the data in the image, returns a new image that includes the effects of reciprocity
+     failure.
+
+     The reciprocity failure results in mapping the original image to a new one that is equal to the
+     original `im` multiplied by `(1+alpha*log10(im/exp_time))`, where the parameter `alpha` and the
+     exposure time are given as keyword arguments.
+
+     The image should be in units of electrons (not ADU), and should include both the signal from
+     the astronomical objects as well as the background level.  The addition of nonlinearity should
+     occur after reciprocity failure.
+
      Calling
      -------
 
-        >>> new_image = addRecipFail(img,exp_time,alpha)
+        >>> new_image = img.addRecipFail(exp_time, alpha)
+
     """
 
      # Extracting the array out since log won't operate on Image
