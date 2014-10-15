@@ -25,10 +25,12 @@ import galsim
 import numpy
 
 def applyNonlinearity(img, NLfunc, args=None):
-    """ Applies the given non-linear function (NLfunc) on the input image and returns a new image of the same datatype 
+    """Applies the given non-linearity function (`NLfunc`) to the input image, and returns a new
+    image of the same datatype.
 
-    The argument NLfunc is a callable function, possibly with few arguments that need to be given as input to the 'args'.
-    Callable functions from empirical curves and lookup tables can be constructed from galsim.LookupTable
+    The argument `NLfunc` is a callable function (for example a lambda function, a
+    galsim.LookupTable, or a user-defined function), possibly with arguments that need to be given
+    as input using the `args` keyword.
     """
 
     # extract out the array from Image since not all functions can act directly on Images
