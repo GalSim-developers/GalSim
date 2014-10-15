@@ -31,7 +31,9 @@ def applyNonlinearity(img, NLfunc, args=None):
     The argument `NLfunc` is a callable function (for example a lambda function, a
     galsim.LookupTable, or a user-defined function), possibly with arguments that need to be given
     as input using the `args` keyword.  `NLfunc` should be able to take a 2d NumPy array as input,
-    and return a NumPy array of the same shape.
+    and return a NumPy array of the same shape.  It should be defined such that it outputs the final
+    image with nonlinearity included (i.e., in the limit that there is no nonlinearity, the function
+    should return the original image, NOT zero).
     """
 
     # extract out the array from Image since not all functions can act directly on Images
