@@ -57,22 +57,24 @@ def applyNonlinearity(self, NLfunc, args=None):
     if self.array.shape != img_nl.shape:
         raise ValueError("Image shapes are inconsistent after applying nonlinearity function!")
 
-    return galsim.Image(img_nl, dtype=self.dtype)
+    img_nl = galsim.Image(img_nl, xmin=self.xmin, ymin=self.ymin)
+    img_nl.scale = self.scale
+    return img_nl
 
 def addReciprocityFailure(self, exp_time=200, alpha=0.0065):
-     """
-     For the given image, returns a new image that includes the effects of reciprocity failure.
+    """
+    For the given image, returns a new image that includes the effects of reciprocity failure.
 
-     The reciprocity failure results in mapping the original image to a new one that is equal to the
-     original `im` multiplied by `(1+alpha*log10(im/exp_time))`, where the parameter `alpha` and the
-     exposure time are given as keyword arguments.
+    The reciprocity failure results in mapping the original image to a new one that is equal to the
+    original `im` multiplied by `(1+alpha*log10(im/exp_time))`, where the parameter `alpha` and the
+    exposure time are given as keyword arguments.
 
-     The image should be in units of electrons (not ADU), and should include both the signal from
-     the astronomical objects as well as the background level.  The addition of nonlinearity should
-     occur after reciprocity failure.
+    The image should be in units of electrons (not ADU), and should include both the signal from
+    the astronomical objects as well as the background level.  The addition of nonlinearity should
+    occur after reciprocity failure.
 
-     Calling
-     -------
+    Calling
+    -------
 
         >>> new_image = img.addRecipFail(exp_time, alpha)
 
@@ -84,10 +86,14 @@ def addReciprocityFailure(self, exp_time=200, alpha=0.0065):
     @returns a new Image with the effects of reciprocity failure included.
     """
 
-     # Extracting the array out since log won't operate on Image
-     arr_in = self.array
-     arr_out = arr_in*(1.0 + alpha*numpy.log10(1.0*arr_in/exp_time))
-     return Image(arr_out, dtype=self.dtype)
+    # Extracting the array out since log won't operate on Image
+    arr_in = self.array
+    arr_out = arr_in*(1.0 + alpha*numpy.log10(1.0*arr_in/exp_time))
+
+    im_out = galsim.Image(arr_out, xmin=self.xmin, ymin=self.ymin)
+    im_out.scale = self.scale
+    return im_out
+
 
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
