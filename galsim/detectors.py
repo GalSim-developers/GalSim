@@ -45,7 +45,7 @@ def applyNonlinearity(self, NLfunc, args=None):
     -------
 
 	>>> f = lambda x, beta: x - beta*x*x;
-	>>> imgNL = img.applyNonlinearity(f,1e-7)
+	>>> imgNL = img.applyNonlinearity(f,args=1e-7)
 
     On output the Image instance `imgNL` is the transformation of the Image instance `img` given by the 
     user-defined function `f` with a user-defined parameter of 1e-7.
