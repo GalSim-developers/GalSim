@@ -61,8 +61,7 @@ def applyNonlinearity(self, NLfunc, args=None):
 
 def addReciprocityFailure(self, exp_time=200, alpha=0.0065):
      """
-     Given the data in the image, returns a new image that includes the effects of reciprocity
-     failure.
+     For the given image, returns a new image that includes the effects of reciprocity failure.
 
      The reciprocity failure results in mapping the original image to a new one that is equal to the
      original `im` multiplied by `(1+alpha*log10(im/exp_time))`, where the parameter `alpha` and the
