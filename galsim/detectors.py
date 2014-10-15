@@ -54,7 +54,7 @@ def applyNonlinearity(self, NLfunc, args=None):
     else:
         img_nl = NLfunc(self.array)
 
-    if self.array.shape != img_nl.shape:
+    if not isinstance(img_nl, numpy.ndarray) or self.array.shape != img_nl.shape:
         raise ValueError("Image shapes are inconsistent after applying nonlinearity function!")
 
     img_nl = galsim.Image(img_nl, xmin=self.xmin, ymin=self.ymin)
