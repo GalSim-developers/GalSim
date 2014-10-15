@@ -85,6 +85,10 @@ def addReciprocityFailure(self, exp_time=200, alpha=0.0065):
 
     @returns a new Image with the effects of reciprocity failure included.
     """
+    if not isinstance(alpha, float) or alpha < 0.:
+        raise ValueError("Invalid value of alpha, must be float >= 0")
+    if not isinstance(exp_time, float) or exp_time < 0.:
+        raise ValueError("Invalid value of exp_time, must be float >= 0")
 
     # Extracting the array out since log won't operate on Image
     arr_in = self.array
