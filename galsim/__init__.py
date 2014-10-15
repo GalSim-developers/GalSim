@@ -145,6 +145,9 @@ from fitswcs import AstropyWCS, PyAstWCS, WcsToolsWCS, GSFitsWCS, FitsWCS, TanWC
 from lensing_ps import PowerSpectrum
 from nfw_halo import NFWHalo, Cosmology
 
+# Detector effects
+from detectors import *
+
 # Packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)
 from . import fits
 from . import config
