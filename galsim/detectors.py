@@ -61,7 +61,7 @@ def applyNonlinearity(self, NLfunc, args=None):
     img_nl.scale = self.scale
     return img_nl
 
-def addReciprocityFailure(self, exp_time=200, alpha=0.0065):
+def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
     """
     For the given image, returns a new image that includes the effects of reciprocity failure.
 
