@@ -43,7 +43,7 @@ def applyNonlinearity(img, NLfunc, args=None):
     if img.array.shape != img_nl.shape:
         raise ValueError("Image shapes are inconsistent after applying nonlinearity function!")
 
-return galsim.Image(img_nl, dtype=img.dtype)
+    return galsim.Image(img_nl, dtype=img.dtype)
 
 def addReciprocityFailure(img, exp_time=200, alpha=0.0065):
      """ Takes into account of reciprocity failure.
