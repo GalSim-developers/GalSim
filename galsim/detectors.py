@@ -34,7 +34,7 @@ def applyNonlinearity(img, NLfunc, args=None):
     """
 
     # extract out the array from Image since not all functions can act directly on Images
-    if args!=None:
+    if args != None:
         img_nl = NLfunc(img.array, args) 
     else:
     	img_nl = NLfunc(img.array)
