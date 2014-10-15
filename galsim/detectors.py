@@ -41,6 +41,15 @@ def applyNonlinearity(self, NLfunc, args=None):
     image with nonlinearity included (i.e., in the limit that there is no nonlinearity, the function
     should return the original image, NOT zero).
 
+    Calling
+    -------
+
+	>>> f = lambda x, beta: x - beta*x*x;
+	>>> imgNL = img.applyNonlinearity(f,1e-7)
+
+    On output the Image instance `imgNL` is the transformation of the Image instance `img` given by the 
+    user-defined function `f` with a user-defined parameter of 1e-7.
+
     @param NLfunc    The function that maps the input image pixel values to the output image pixel
                      values.
     @param args      Any necessary arguments required by `NLfunc`.
