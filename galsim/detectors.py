@@ -15,6 +15,11 @@
 # this list of conditions, and the disclaimer given in the documentation
 # and/or other materials provided with the distribution.
 #
+"""@file detectors.py
+
+Module with routines to simulate CCD and NIR detector effects like nonlinearity, reciprocity
+failure, interpixel capacitance, etc.
+"""
 
 import galsim
 import numpy
