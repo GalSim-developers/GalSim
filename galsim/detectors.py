@@ -87,12 +87,12 @@ def addReciprocityFailure(self, exp_time=200, alpha=0.0065):
     """
     if not isinstance(alpha, float) or alpha < 0.:
         raise ValueError("Invalid value of alpha, must be float >= 0")
-    if not isinstance(exp_time, float) or exp_time < 0.:
+    if not (isinstance(exp_time, float) or isinstance(exp_time, int)) or exp_time < 0.:
         raise ValueError("Invalid value of exp_time, must be float >= 0")
 
     # Extracting the array out since log won't operate on Image
     arr_in = self.array
-    arr_out = arr_in*(1.0 + alpha*numpy.log10(1.0*arr_in/exp_time))
+    arr_out = arr_in*(1.0 + alpha*numpy.log10(1.0*arr_in/float(exp_time)))
 
     im_out = galsim.Image(arr_out, xmin=self.xmin, ymin=self.ymin)
     im_out.scale = self.scale
