@@ -101,6 +101,10 @@ def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
 
     # Extracting the array out since log won't operate on Image
     arr_in = self.array
+
+    if numpy.any(1.0*arr_in/float(exp_time)<10**(-320)):
+	raise ValueError("At least one pixel value is too close to 0.")
+
     arr_out = arr_in*(1.0 + alpha*numpy.log10(1.0*arr_in/float(exp_time)))
 
     im_out = galsim.Image(arr_out, xmin=self.xmin, ymin=self.ymin)
