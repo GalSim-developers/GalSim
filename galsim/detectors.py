@@ -37,7 +37,7 @@ def applyNonlinearity(self, NLfunc, args=None):
     The argument `NLfunc` is a callable function (for example a lambda function, a
     galsim.LookupTable, or a user-defined function), possibly with arguments that need to be given
     as input using the `args` keyword.  If the `NLfunc` has more than one parameter to be specified, 
-    then it must take it's arguments as a tuple. `NLfunc` should be able to take a 2d NumPy array as 
+    then it must take its arguments as a tuple. `NLfunc` should be able to take a 2d NumPy array as 
     input, and return a NumPy array of the same shape.  It should be defined such that it outputs the
     final image with nonlinearity included (i.e., in the limit that there is no nonlinearity, the 
     function should return the original image, NOT zero).
@@ -45,15 +45,16 @@ def applyNonlinearity(self, NLfunc, args=None):
     Calling
     -------
 
-	>>> f = lambda x, (beta1, beta2): x - beta1*x*x + beta2*x*x*x;
-	>>> imgNL = img.applyNonlinearity(f,args=(1e-7,1e-10))
+	>>> f = lambda x, (beta1, beta2): x - beta1*x*x + beta2*x*x*x
+	>>> imgNL = img.applyNonlinearity(f, args=(1e-7,1e-10))
 
-    On output the Image instance `imgNL` is the transformation of the Image instance `img` given by the 
-    user-defined function `f` with a user-defined parameter of 1e-7.
+    On output, the Image instance `imgNL` is the transformation of the Image instance `img` given by the 
+    user-defined function `f` with user-defined parameters of 1e-7 and 1e-10.
 
     @param NLfunc    The function that maps the input image pixel values to the output image pixel
                      values. 
-    @param args      Any necessary arguments required by `NLfunc`.
+    @param args      Any necessary arguments required by `NLfunc`, which must take either a single
+                     non-iterable argument or a tuple containing multiple parameters.
 
     @returns a new Image with the nonlinearity effects included.
     """
@@ -67,6 +68,7 @@ def applyNonlinearity(self, NLfunc, args=None):
     if not isinstance(img_nl, numpy.ndarray) or self.array.shape != img_nl.shape:
         raise ValueError("Image shapes are inconsistent after applying nonlinearity function!")
 
+    # Enforce consistency of bounds and scale between input, output Images.
     img_nl = galsim.Image(img_nl, xmin=self.xmin, ymin=self.ymin)
     img_nl.scale = self.scale
     return img_nl
@@ -77,16 +79,17 @@ def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
 
     The reciprocity failure results in mapping the original image to a new one that is equal to the
     original `im` multiplied by `(1+alpha*log10(im/exp_time))`, where the parameter `alpha` and the
-    exposure time are given as keyword arguments.
+    exposure time are given as keyword arguments.  Because of how this function is defined, the
+    input image must have strictly positive pixel values.
 
     The image should be in units of electrons (not ADU), and should include both the signal from
     the astronomical objects as well as the background level.  The addition of nonlinearity should
-    occur after reciprocity failure.
+    occur after including the effect of reciprocity failure.
 
     Calling
     -------
 
-        >>> new_image = img.addRecipFail(exp_time, alpha)
+        >>> new_image = img.addReciprocityFailure(exp_time, alpha)
 
     @param exp_time  The exposure time in seconds, which goes into the expression for reciprocity
                      failure given in the docstring. [default: 200]
@@ -100,7 +103,7 @@ def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
     if not (isinstance(exp_time, float) or isinstance(exp_time, int)) or exp_time < 0.:
         raise ValueError("Invalid value of exp_time, must be float >= 0")
 
-    # Extracting the array out since log won't operate on Image
+    # Extracting the array out since log won't operate on the Image.
     arr_in = self.array
 
     if numpy.any(1.0*arr_in/float(exp_time)<10**(-320)):
@@ -108,6 +111,7 @@ def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
 
     arr_out = arr_in*(1.0 + alpha*numpy.log10(1.0*arr_in/float(exp_time)))
 
+    # Enforce consistency of bounds and scale between input, output Images.
     im_out = galsim.Image(arr_out, xmin=self.xmin, ymin=self.ymin)
     im_out.scale = self.scale
     return im_out
