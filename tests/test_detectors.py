@@ -16,9 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 """Unit tests for inclusion of detector effects (nonlinearity, etc.).
-
-NOTE: THIS IS INCOMPLETE.  WE NEED TO TEST THE CASE WHERE ARGS GET PASSED IN, AND COME UP WITH MORE
-UNIT TESTS (MAYBE).
 """
 
 import numpy as np
