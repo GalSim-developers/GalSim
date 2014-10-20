@@ -502,7 +502,7 @@ class PowerSpectrum(object):
         elif bandlimit == 'soft':
             def bandlimit_func(k, k_max):
                 return self._softening_function(k, k_max)
-        elif bandlimit == None:
+        elif bandlimit is None:
             def bandlimit_func(k, k_max):
                 return 1.0
         else:
@@ -749,7 +749,7 @@ class PowerSpectrum(object):
         elif bandlimit == 'soft':
             def bandlimit_func(k, k_max):
                 return self._softening_function(k, k_max)
-        elif bandlimit == None:
+        elif bandlimit is None:
             def bandlimit_func(k, k_max):
                 return 1.0
         else:

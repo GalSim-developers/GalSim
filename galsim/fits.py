@@ -44,7 +44,7 @@ def _parse_compression(compression, file_name):
     elif compression == 'plio' or compression == 'PLIO_1': pyfits_compress = 'PLIO_1'
     elif compression == 'gzip': file_compress = 'gzip'
     elif compression == 'bzip2': file_compress = 'bzip2'
-    elif compression == 'none' or compression == None: pass
+    elif compression == 'none' or compression is None: pass
     elif compression == 'auto':
         if file_name:
             if file_name.lower().endswith('.fz'): pyfits_compress = 'RICE_1'
@@ -436,7 +436,7 @@ def _get_hdu(hdu_list, hdu, pyfits_compress):
         # Note: Nothing special needs to be done when reading a compressed hdu.
         # However, such compressed hdu's may not be the PrimaryHDU, so if we think we are
         # reading a compressed file, skip to hdu 1.
-        if hdu == None:
+        if hdu is None:
             if pyfits_compress:
                 if len(hdu_list) <= 1:
                     raise IOError('Expecting at least one extension HDU in galsim.read')

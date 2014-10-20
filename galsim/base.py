@@ -1297,7 +1297,7 @@ class GSObject(object):
 
         # Check that the images are consistent, and possibly get the scale from them.
         if re is None:
-            if im != None:
+            if im is not None:
                 raise ValueError("re is None, but im is not None")
         else:
             if im is None:

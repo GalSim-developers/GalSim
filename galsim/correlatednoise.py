@@ -1248,7 +1248,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             cf_image.scale = 1.
 
         # If x_interpolant not specified on input, use bilinear
-        if x_interpolant == None:
+        if x_interpolant is None:
             linear = galsim.Linear(tol=1.e-4)
             x_interpolant = galsim.InterpolantXY(linear)
         else:
@@ -1425,7 +1425,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
         raise ValueError("Input keyword variance must be zero or positive.")
 
     # If x_interpolant not specified on input, use bilinear
-    if x_interpolant == None:
+    if x_interpolant is None:
         linear = galsim.Linear(tol=1.e-4)
         x_interpolant = galsim.InterpolantXY(linear)
     else:
