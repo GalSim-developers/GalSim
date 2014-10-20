@@ -150,7 +150,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             raise RuntimeError("AstropyWCS was unable to read the WCS specification in the header.")
 
         self._wcs = wcs
-        if origin == None:
+        if origin is None:
             self._origin = galsim.PositionD(0,0)
         else:
             self._origin = origin
@@ -399,7 +399,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
                 galsim.fits.FitsHeader(hdu_list=hdu).update(header)
             fc = starlink.Ast.FitsChan( starlink.Atl.PyFITSAdapter(hdu) )
             wcsinfo = fc.read()
-            if wcsinfo == None:
+            if wcsinfo is None:
                 raise RuntimeError("Failed to read WCS information from fits file")
 
         if wcsinfo is None:
@@ -415,7 +415,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             galsim.fits.closeHDUList(hdu_list, fin)
 
         self._wcsinfo = wcsinfo
-        if origin == None:
+        if origin is None:
             self._origin = galsim.PositionD(0,0)
         else:
             self._origin = origin
@@ -574,7 +574,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             raise IOError('wcstools (specifically xy2sky) was unable to read '+file_name)
 
         self._file_name = file_name
-        if origin == None:
+        if origin is None:
             self._origin = galsim.PositionD(0,0)
         else:
             self._origin = origin
@@ -1369,7 +1369,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                  (self.crpix == other.crpix).all() and
                  (self.cd == other.cd).all() and
                  self.center == other.center and
-                 ( (self.pv == None and other.pv == None) or
+                 ( (self.pv is None and other.pv is None) or
                    (self.pv == other.pv).all() ) )
 
     def __repr__(self):

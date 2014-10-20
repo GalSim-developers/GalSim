@@ -437,7 +437,7 @@ class InterpolatedImage(GSObject):
         prof = local_wcs.toWorld(prof)
 
         # If the user specified a flux, then set to that flux value.
-        if flux != None:
+        if flux is not None:
             prof = prof.withFlux(float(flux))
         # If the user specified a surface brightness normalization for the input Image, then
         # need to rescale flux by the pixel area to get proper normalization.
