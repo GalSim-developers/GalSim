@@ -238,7 +238,7 @@ class Image(object):
         if dtype != None and dtype not in Image.valid_dtypes:
             raise ValueError("dtype must be one of "+str(Image.valid_dtypes)+
                              ".  Instead got "+str(dtype))
-        if array != None:
+        if array is not None:
             if array.dtype.type not in Image.cpp_valid_dtypes and dtype == None:
                 raise ValueError("array's dtype.type must be one of "+str(Image.cpp_valid_dtypes)+
                                  ".  Instead got "+str(array.dtype.type)+".  Or can set "+
@@ -261,7 +261,7 @@ class Image(object):
         if (ncol != None or nrow != None):
             if bounds != None:
                 raise TypeError("Cannot specify both ncol/nrow and bounds")
-            if array != None:
+            if array is not None:
                 raise TypeError("Cannot specify both ncol/nrow and array")
             if image != None:
                 raise TypeError("Cannot specify both ncol/nrow and image")
@@ -276,7 +276,7 @@ class Image(object):
             if init_value != None:
                 self.image.fill(init_value)
         elif bounds != None:
-            if array != None:
+            if array is not None:
                 raise TypeError("Cannot specify both bounds and array")
             if image != None:
                 raise TypeError("Cannot specify both bounds and image")
@@ -285,7 +285,7 @@ class Image(object):
             self.image = _galsim.ImageAlloc[self.dtype](bounds)
             if init_value != None:
                 self.image.fill(init_value)
-        elif array != None:
+        elif array is not None:
             if image != None:
                 raise TypeError("Cannot specify both array and image")
             if not isinstance(array, numpy.ndarray):
