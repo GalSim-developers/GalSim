@@ -143,7 +143,7 @@ class LookupTable(object):
 
         @param x        The `x` value(s) for which `f(x)` should be calculated via interpolation on
                         the original `(x,f)` lookup table.  `x` can be a single float/double, or a
-                        tuple, list, or arbitrarily shaped NumPy array.
+                        tuple, list, or arbitrarily shaped 1- or 2-dimensional NumPy array.
 
         @returns the interpolated `f(x)` value(s).
         """
@@ -162,7 +162,7 @@ class LookupTable(object):
                 raise ValueError("Arrays with dimension larger than 2 not allowed!")
             elif dimen == 2:
                 f = np.zeros_like(x)
-                for i in xrange(x.shape[1]):
+                for i in xrange(x.shape[0]):
                     f[i,:] = np.fromiter((self.table(float(q)) for q in x[i,:]), dtype='float')
             else:
                 f = np.fromiter((self.table(float(q)) for q in x), dtype='float')

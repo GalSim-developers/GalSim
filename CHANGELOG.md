@@ -13,6 +13,8 @@ New Features
 - Added magnitudes as a method to set the flux of SED objects. (#547)
 - Added SED.calculateDCRMomentShifts and SED.calculateChromaticSeeingRatio convenience functions
   for estimating chromatic PSF moment shifts. (#547)
+- Added new methods of the image class to simulate two detector effects: nonlinearity and
+  reciprocity failure. (#552)
 - Renamed the GSParams parameter `alias_threshold` to `folding_threshold`, a clearer term for the
   profile image folding in real space that this GSParam controls. (#562)
 - Modified the internals of noise generation by correlated noise models to use Hermitian symmetry,
@@ -38,6 +40,7 @@ Bug Fixes and Improvements
   behavior was unpredictable and platform dependent. (#571)
 - Fixed the Image constructor so that if it is passed a NumPy array with the opposite byteorder
   as the native one on the system, it does not return an Image with different contents. (#594)
+- Fixed bug that prevented calling LookupTables on non-square 2d arrays. (#599)
 
 Updates to config options
 -------------------------
