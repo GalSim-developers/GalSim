@@ -1539,11 +1539,11 @@ class OffsetWCS(UniformWCS):
     def __init__(self, scale, origin=None, world_origin=None):
         self._scale = scale
         self._local_wcs = PixelScale(scale)
-        if origin == None:
+        if origin is None:
             self._origin = galsim.PositionD(0,0)
         else:
             self._origin = origin
-        if world_origin == None:
+        if world_origin is None:
             self._world_origin = galsim.PositionD(0,0)
         else:
             self._world_origin = world_origin
@@ -1626,11 +1626,11 @@ class OffsetShearWCS(UniformWCS):
         # encapsulating in the ShearWCS class.  So here, we just create one of those
         # and we'll pass along any shear calculations to that.
         self._local_wcs = ShearWCS(scale, shear)
-        if origin == None:
+        if origin is None:
             self._origin = galsim.PositionD(0,0)
         else:
             self._origin = origin
-        if world_origin == None:
+        if world_origin is None:
             self._world_origin = galsim.PositionD(0,0)
         else:
             self._world_origin = world_origin
@@ -1722,11 +1722,11 @@ class AffineTransform(UniformWCS):
     def __init__(self, dudx, dudy, dvdx, dvdy, origin=None, world_origin=None):
         # As with OffsetShearWCS, we store a JacobianWCS, rather than reimplement everything.
         self._local_wcs = JacobianWCS(dudx, dudy, dvdx, dvdy)
-        if origin == None:
+        if origin is None:
             self._origin = galsim.PositionD(0,0)
         else:
             self._origin = origin
-        if world_origin == None:
+        if world_origin is None:
             self._world_origin = galsim.PositionD(0,0)
         else:
             self._world_origin = world_origin
@@ -2028,11 +2028,11 @@ class UVFunction(EuclideanWCS):
         else:
             self._yfunc = yfunc
 
-        if origin == None:
+        if origin is None:
             self._origin = galsim.PositionD(0,0)
         else:
             self._origin = origin
-        if world_origin == None:
+        if world_origin is None:
             self._world_origin = galsim.PositionD(0,0)
         else:
             self._world_origin = world_origin
@@ -2182,7 +2182,7 @@ class RaDecFunction(CelestialWCS):
         self._orig_ra_func = ra_func
         self._orig_dec_func = dec_func
 
-        if dec_func == None:
+        if dec_func is None:
             if isinstance(ra_func, basestring):
                 import math
                 import numpy
@@ -2200,7 +2200,7 @@ class RaDecFunction(CelestialWCS):
                 dec_func = eval('lambda x,y : ' + dec_func)
             self._radec_func = lambda x,y : (ra_func(x,y), dec_func(x,y))
 
-        if origin == None:
+        if origin is None:
             self._origin = galsim.PositionD(0,0)
         else:
             self._origin = origin

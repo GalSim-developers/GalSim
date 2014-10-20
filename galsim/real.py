@@ -224,7 +224,7 @@ class RealGalaxy(GSObject):
             logger.debug('RealGalaxy %d: Made original_image',use_index)
 
         # If flux is None, leave flux as given by original image
-        if flux != None:
+        if flux is not None:
             self.original_image = self.original_image.withFlux(flux)
 
         # Calculate the PSF "deconvolution" kernel
@@ -337,7 +337,7 @@ class RealGalaxyCatalog(object):
         # First build full file_name
         if dir is None:
             self.file_name = file_name
-            if image_dir == None:
+            if image_dir is None:
                 self.image_dir = os.path.dirname(file_name)
             elif os.path.dirname(image_dir) == '':
                 self.image_dir = os.path.join(os.path.dirname(self.file_name),image_dir)
@@ -345,7 +345,7 @@ class RealGalaxyCatalog(object):
                 self.image_dir = image_dir
         else:
             self.file_name = os.path.join(dir,file_name)
-            if image_dir == None:
+            if image_dir is None:
                 self.image_dir = dir
             else:
                 self.image_dir = os.path.join(dir,image_dir)
@@ -620,7 +620,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
         target_PSF = galsim.InterpolatedImage(target_PSF, scale=target_pixel_scale)
     if not isinstance(target_PSF, galsim.GSObject):
         raise RuntimeError("Error: target PSF is not an Image or GSObject!")
-    if rotation_angle != None and not isinstance(rotation_angle, galsim.Angle):
+    if rotation_angle is not None and not isinstance(rotation_angle, galsim.Angle):
         raise RuntimeError("Error: specified rotation angle is not an Angle instance!")
     if (target_pixel_scale < real_galaxy.pixel_scale):
         import warnings
@@ -635,10 +635,10 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     target_PSF = target_PSF.withFlux(1.0)
 
     # rotate
-    if rotation_angle != None:
+    if rotation_angle is not None:
         real_galaxy = real_galaxy.rotate(rotation_angle)
-    elif rotation_angle == None and rand_rotate == True:
-        if rng == None:
+    elif rotation_angle is None and rand_rotate == True:
+        if rng is None:
             uniform_deviate = galsim.UniformDeviate()
         elif isinstance(rng,galsim.BaseDeviate):
             uniform_deviate = galsim.UniformDeviate(rng)
