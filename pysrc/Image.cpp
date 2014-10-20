@@ -73,8 +73,13 @@ struct PyImage {
     static bp::object GetArrayImpl(bp::object self, bool isConst) 
     {
         // --- Try to get cached array ---
-        if (PyObject_HasAttrString(self.ptr(), "_array") && self.attr("_array") != bp::object()) 
+        // NB: self.attr("_array") != bp::object() no longer works, since it calls the numpy
+        //     overload of _array != None, which compares term by term rather than checking
+        //     if _array is not None.  An equivalent of what we want is to see if the ptr == 0.
+        if (PyObject_HasAttrString(self.ptr(), "_array") 
+            && bp::object(self.attr("_array")).ptr() != 0) {
             return self.attr("_array");
+        }
 
         const BaseImage<T>& image = bp::extract<const BaseImage<T>&>(self);
 
