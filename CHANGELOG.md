@@ -39,6 +39,8 @@ Bug Fixes and Improvements
 - Fixed the Image constructor so that if it is passed a NumPy array with the opposite byteorder
   as the native one on the system, it does not return an Image with different contents. (#594)
 - Fixed bug that prevented calling LookupTables on non-square 2d arrays. (#599)
+- Updated the code to account for a planned change in NumPy that `array == None` will be an
+  element-wise comparison rather than equivalent to `array is None`. (#604)
 
 Updates to config options
 -------------------------
