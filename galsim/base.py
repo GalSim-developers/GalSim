@@ -741,14 +741,17 @@ class GSObject(object):
 
 
     # Make sure the image is defined with the right size and wcs for drawImage()
-    def _setup_image(self, image, wmult, add_to_image, dtype):
+    def _setup_image(self, image, nx, ny, wmult, add_to_image, dtype):
         # Make image if necessary
         if image is None:
             # Can't add to image if none is provided.
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image is None")
-            N = self.SBProfile.getGoodImageSize(1.0,wmult)
-            image = galsim.Image(N,N,dtype=dtype)
+            if nx is None and ny is None:
+                nx = ny = self.SBProfile.getGoodImageSize(1.0, wmult)
+            if (nx is None and ny is not None) or (ny is None and nx is not None):
+                raise ValueError("Must set either both or neither of nx and ny")
+            image = galsim.Image(nx, ny, dtype=dtype)
 
         # Resize the given image if necessary
         elif not image.bounds.isDefined():
@@ -757,8 +760,11 @@ class GSObject(object):
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
             if dtype is not None:
                 raise ValueError("Cannot specify dtype if image is provided")
-            N = self.SBProfile.getGoodImageSize(1.0,wmult)
-            bounds = galsim.BoundsI(1,N,1,N)
+            if nx is None and ny is None:
+                nx = ny = self.SBProfile.getGoodImageSize(1.0, wmult)
+            if (nx is None and ny is not None) or (ny is None and nx is not None):
+                raise ValueError("Must set either both or neither of nx and ny")
+            bounds = galsim.BoundsI(1,nx,1,ny)
             image.resize(bounds)
             image.setZero()
 
@@ -855,9 +861,9 @@ class GSObject(object):
 
         return wcs
 
-    def drawImage(self, image=None, scale=None, wcs=None, dtype=None, method='auto',
-                  gain=1., wmult=1., add_to_image=False, use_true_center=True, offset=None,
-                  n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None,
+    def drawImage(self, image=None, nx=None, ny=None, scale=None, wcs=None, dtype=None,
+                  method='auto', gain=1., wmult=1., add_to_image=False, use_true_center=True,
+                  offset=None, n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None,
                   setup_only=False, dx=None):
         """Draws an Image of the object.
 
@@ -984,7 +990,7 @@ class GSObject(object):
         `folding_threshold`; see `help(galsim.GSParams)` for more information.
 
         @param image        If provided, this will be the image on which to draw the profile.
-                            If `image = None`, then an automatically-sized Image will be created.
+                            If `image == None`, then an automatically-sized Image will be created.
                             If `image != None`, but its bounds are undefined (e.g. if it was
                             constructed with `image = galsim.Image()`), then it will be resized
                             appropriately based on the profile's size [default: None].
@@ -1164,7 +1170,7 @@ class GSObject(object):
         prof = prof._fix_center(image, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
-        image = prof._setup_image(image, wmult, add_to_image, dtype)
+        image = prof._setup_image(image, nx, ny, wmult, add_to_image, dtype)
         image.wcs = wcs
 
         if setup_only:
@@ -1232,8 +1238,8 @@ class GSObject(object):
             gain *= local_wcs.pixelArea()
             return self.drawImage(*args, method='phot', gain=gain, **kwargs)
 
-    def drawKImage(self, re=None, im=None, scale=None, dtype=None, gain=1., wmult=1.,
-                   add_to_image=False, dk=None):
+    def drawKImage(self, re=None, im=None, nx=None, ny=None, scale=None, dtype=None, gain=1.,
+                   wmult=1., add_to_image=False, dk=None):
         """Draws the k-space Image (both real and imaginary parts) of the object, with bounds
         optionally set by input Image instances.
 
@@ -1327,8 +1333,8 @@ class GSObject(object):
         # do that, but only if the profile is in image coordinates for the real space image.
         # So make that profile.
         real_prof = galsim.PixelScale(dx).toImage(self)
-        re = real_prof._setup_image(re, wmult, add_to_image, dtype)
-        im = real_prof._setup_image(im, wmult, add_to_image, dtype)
+        re = real_prof._setup_image(re, nx, ny, wmult, add_to_image, dtype)
+        im = real_prof._setup_image(im, nx, ny, wmult, add_to_image, dtype)
 
         # Set the wcs of the images to use the dk scale size
         re.scale = dk
