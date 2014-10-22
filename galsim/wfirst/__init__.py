@@ -89,12 +89,15 @@ This module also contains the following routines:
                >>>> im_nl = im.applyNonlinearity(galsim.wfirst.NLfunc)
 
 TODO:
- - WCS stuff
- - PSF stuff
- - sky background
- - stray light
+ - obscuration - just get the number and stick it here
+ - zero points - fix the issue with effective diameter in the code
+ - sky background - implement the integration over the zodi, which is going to involve adapting the
+ tables and algorithm from the WFIRST ETC, and writing a converter to ecliptic coordinates for the
+ CelestialCoord class.
+ - stray light - put a simple fraction of sky background for now
+ - WCS stuff - add the data from Jeff and port his WCS-builder to python
+ - PSF stuff - finish pupil plane work, then wait for data from WCS optics team.
  - things related to IPC, persistence
- - obscuration
 """
 
 gain = 1.0
