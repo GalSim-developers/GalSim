@@ -194,8 +194,8 @@ def test_fluxconservation():
 
     flat = galsim.Image(size, size, dtype=np.float64, init_value=1.)
     cd = PowerLawCD(
-        2, shiftcoeff, shiftcoeff, shiftcoeff/2., shiftcoeff/2., shiftcoeff/2., shiftcoeff/2.,
-        alpha)
+        2, shiftcoeff, 0.94 * shiftcoeff, shiftcoeff/2.4, shiftcoeff/5., shiftcoeff/3.7,
+        shiftcoeff/1.8, alpha)
     imagecd = cd.applyForward(image)
     flatcd  = cd.applyForward(flat)
     
