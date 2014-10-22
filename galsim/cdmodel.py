@@ -126,10 +126,6 @@ def _modelShiftCoeffR(x, y, r0, t0, rx, tx, r, t, alpha):
     """Calculate the model shift coeff of right pixel border as a function of int pixel position
     (x, y).
     """
-    if not isinstance(x, (int, long)):
-        raise ValueError("Input x coordinate must be an int or long")
-    if not isinstance(y, (int, long)):
-        raise ValueError("Input y coordinate must be an int or long")
     # Invoke symmetry
     if y < 0: return _modelShiftCoeffR(x, -y, r0, t0, rx, tx, r, t, alpha)
     if x < 0: return -_modelShiftCoeffR(1 - x, y, r0, t0, rx, tx, r, t, alpha)
@@ -155,10 +151,6 @@ def _modelShiftCoeffT(x, y, r0, t0, rx, tx, r, t, alpha):
     """Calculate the model shift coeff of top pixel border as a function of int pixel
     position (x, y).
     """
-    if not isinstance(x, (int, long)):
-        raise ValueError("Input x coordinate must be an int or long")
-    if not isinstance(y, (int, long)):
-        raise ValueError("Input y coordinate must be an int or long")
     # Invoke symmetry
     if x < 0: return _modelShiftCoeffT(-x, y, r0, t0, rx, tx, r, t, alpha)
     if y < 0: return -_modelShiftCoeffT(x, 1 - y, r0, t0, rx, tx, r, t, alpha)
@@ -214,20 +206,23 @@ class PowerLawCD(BaseCDModel):
         @param alpha  power-law exponent for deflection from further away
         
         """
-        # First define x and y coordinates in a square grid of shape (2n + 1) * (2n + 1)
+        if not isinstance(n, (int, long)):
+            raise ValueError("Input separation n must be an int or long")
+        # First define x and y coordinates in a square grid of ints of shape (2n + 1) * (2n + 1)
         x, y = np.meshgrid(np.arange(2 * n + 1) - n, np.arange(2 * n + 1) - n)
 
         # prepare a_* matrices
-        a_l = np.zeros((2 * n + 1, 2 * n + 1))
-        a_r = np.zeros((2 * n + 1, 2 * n + 1))
-        a_b = np.zeros((2 * n + 1, 2 * n + 1))
-        a_t = np.zeros((2 * n + 1, 2 * n + 1))
+        a_l = np.zeros((2 * n + 1, 2 * n + 1), dtype=np.float64)
+        a_r = np.zeros((2 * n + 1, 2 * n + 1), dtype=np.float64)
+        a_b = np.zeros((2 * n + 1, 2 * n + 1), dtype=np.float64)
+        a_t = np.zeros((2 * n + 1, 2 * n + 1), dtype=np.float64)
 
         # fill with power law model (slightly clunky loop but not likely a big time sink)
-        for ix in np.arange(0, 2*n + 1):
+        for ix in np.arange(0, 2 * n + 1):
 
-            for iy in np.arange(0, 2*n + 1):
-	        if(ix<2*n): # need to keep the other elements zero for flux conservation
+            for iy in np.arange(0, 2 * n + 1):
+
+                if(ix<2*n): # need to keep the other elements zero for flux conservation
                   a_l[iy, ix] = _modelShiftCoeffL(ix-n, iy-n, r0, t0, rx, tx, r, t, alpha)
                 if(ix>0):
                   a_r[iy, ix] = _modelShiftCoeffR(ix-n, iy-n, r0, t0, rx, tx, r, t, alpha)
