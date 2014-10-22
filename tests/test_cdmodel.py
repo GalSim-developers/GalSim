@@ -296,7 +296,7 @@ def test_exampleimage():
                                                               # other library
     # Calculate the test image
     image_plcd  = cd.applyForward(image_orig)
-    # For debugging (remove at end of PR?): make if True in block below to output difference image.
+    # For debugging: make if True in block below to output difference image.
     # Compare to fits_files/cdtest[1-2].fits above
     if False:
         import pyfits
