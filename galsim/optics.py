@@ -283,15 +283,23 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees):
     Bools used to specify where in the pupil plane described by `rho` is illuminated.  See also 
     wavefront().
     """
+    # Sanity checks
+    if pupil_plane_im.array.shape[0] != pupil_plane_im.array.shape[1]:
+        raise ValueError("We require square input pupil plane arrays!")
+
     # Deal with rotations if necessary.
     if pupil_angle == 0.*galsim.degrees:
         pp_arr = pupil_plane_im.array
     else:
-        # Rotate the pupil plane image as required based on the `pupil_angle`.
-        int_im = galsim.InterpolatedImage(pupil_plane_im, x_interpolant='linear', calculate_stepk=False,
+        # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to
+        # ensure that the image is one of the allowed types.  We ignore the scale for now.
+        int_im = galsim.InterpolatedImage(galsim.Image(pupil_plane_im, scale=1., dtype=np.float64),
+                                          x_interpolant='linear', calculate_stepk=False,
                                           calculate_maxk=False)
         int_im = int_im.rotate(pupil_angle)
-        pp_arr = int_im.array
+        new_im = galsim.ImageF(pupil_plane_im.array.shape[0], pupil_plane_im.array.shape[0])
+        new_im = int_im.draw(image=new_im, scale=1.)
+        pp_arr = new_im.array
         # Restore hard edges that might have been lost during the interpolation.  To do this, we
         # check the maximum value of the entries.  Values after interpolation that are >half that
         # value get kept as nonzero (will be True), but those that are <half that are set to zero
@@ -299,6 +307,7 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees):
         max_pp_val = np.max(pp_arr)
         pp_arr[pp_arr<0.5*max_pp_val] = 0.
 
+    #galsim.ImageF(np.ascontiguousarray(pp_arr)).write('pp_arr_rotated.fits')
     # Turn it into a boolean type, so all values >0 are True (doesn't matter what their value is)
     # and all values==0 are False.
     pp_arr = pp_arr.astype(bool)
@@ -306,6 +315,7 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees):
     # We need to figure out the rho array.  So, first we roll the pupil plane image so the center is
     # in the corner, just like the outputs of `generate_pupil_plane`.
     pp_arr = utilities.roll2d(pp_arr, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2)) 
+    #galsim.ImageF(np.ascontiguousarray(pp_arr).astype(np.float32)).write('pp_arr_rolled.fits')
 
     # Then we figure out how far out is in the pupil.  That sets where |k|^2 should be <1.  To do
     # this, we'll just use the first row, assuming that it might start out as False (if there is
@@ -320,18 +330,20 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees):
     if max_in_pupil < 0:
         raise ValueError("Do not understand how to find the size of the illuminated part of pupil!")
 
-    # Then set up the k array appropriately.  When thinking about this along a line, we want it to
-    # be the case that the left edge of the leftmost pixel (indexed 0) corresponds to k_x = 0, and
-    # the right edge of the pixel with index `max_in_pupil` corresponds to k_x = 1.  We can
-    # therefore figure out dk:
-    dk = 1.0 / max_in_pupil
-    k_vec = np.linspace(0.5*dk, dk*pp_arr.shape[0]-0.5*dk, num=pp_arr.shape[0])
-    k_x, k_y = np.meshgrid(k_vec, k_vec)
-    assert k_x.shape == pp_arr.shape
-    assert k_y.shape == pp_arr.shape
-    k_x = utilities.roll2d(k_x, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
-    k_y = utilities.roll2d(k_y, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
-    rho = k_x + 1j * k_y
+    # Then set up the rho array appropriately.  When thinking about this along a line, we want it to
+    # be the case that the left edge of the leftmost pixel (indexed 0) corresponds to rho_x = 0, and
+    # the right edge of the pixel with index `max_in_pupil` corresponds to rho_x = 1.  We can
+    # therefore figure out drho:
+    drho = 1.0 / (max_in_pupil+1)
+    # And then we want rho to go from negative to positive values before we roll it.
+    rho_vec = np.linspace(-0.5*pp_arr.shape[0]*drho+0.5*drho,
+                           0.5*pp_arr.shape[0]*drho-0.5*drho, num=pp_arr.shape[0])
+    rho_x, rho_y = np.meshgrid(rho_vec, rho_vec)
+    assert rho_x.shape == pp_arr.shape
+    assert rho_y.shape == pp_arr.shape
+    rho_x = utilities.roll2d(rho_x, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
+    rho_y = utilities.roll2d(rho_y, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
+    rho = rho_x + 1j * rho_y
 
     return rho, pp_arr
 
@@ -426,7 +438,8 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
     Noll, J. Opt. Soc. Am. 66, 207-211(1976). For a brief summary of the polynomials, refer to
     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
 
-    @param array_shape     The NumPy array shape desired for the output array.
+    @param array_shape     The NumPy array shape desired for the output array.  Will not be used if
+                           `pupil_plane_im` is supplied.
     @param scale           Grid spacing of PSF in real space units
     @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale` 
                            (user responsible for consistency).
@@ -468,8 +481,13 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
             circular_pupil=circular_pupil, obscuration=obscuration,
             nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle)
 
+    #galsim.Image(np.ascontiguousarray(rho_all.real)).write('rho_real.fits')
+    #galsim.Image(np.ascontiguousarray(rho_all.imag)).write('rho_im.fits')
+    #foo = utilities.roll2d(in_pupil, (in_pupil.shape[0] / 2, in_pupil.shape[1] / 2))
+    #galsim.Image(np.ascontiguousarray(foo).astype(np.int32)).write('pupil_rolled.fits')
+
     # Then make wavefront image
-    wf = np.zeros(array_shape, dtype=complex)
+    wf = np.zeros(in_pupil.shape, dtype=complex)
 
     # It is much faster to pull out the elements we will use once, rather than use the 
     # subscript each time.  At the end we will fill the appropriate part of wf with the
@@ -594,7 +612,8 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
 
     Ouput NumPy array is C-contiguous.
 
-    @param array_shape     The NumPy array shape desired for the output array.
+    @param array_shape     The NumPy array shape desired for the output array.  This will be
+                           overridden if `pupil_plane_im` is used.
     @param scale           Grid spacing of PSF in real space units
     @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale`
                            (user responsible for consistency).
@@ -641,7 +660,7 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
     im = np.abs(ftwf)**2
 
     # The roll operation below restores the c_contiguous flag, so no need for a direct action
-    im = utilities.roll2d(im, (array_shape[0] / 2, array_shape[1] / 2)) 
+    im = utilities.roll2d(im, (im.shape[0] / 2, im.shape[1] / 2)) 
     im *= (flux / (im.sum() * scale**2))
 
     return im
