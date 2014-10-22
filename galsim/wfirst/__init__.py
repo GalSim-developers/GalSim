@@ -94,6 +94,7 @@ TODO:
  - sky background
  - stray light
  - things related to IPC, persistence
+ - obscuration
 """
 
 gain = 1.0
@@ -104,7 +105,11 @@ exptime = 168.1
 dark_current = 0.015
 nonlinearity_beta = -3.57e-7
 n_dithers = 6
-thermal_backgrounds = {'J129': 0.06, 'F184': 1.18, 'Y106': 0.06, 'Z087': 0.06, 'H158': 0.08}
+thermal_backgrounds = {'J129': 0.06,
+                       'F184': 1.18, 
+                       'Y106': 0.06,
+                       'Z087': 0.06,
+                       'H158': 0.08}
 
 from wfirst_bandpass import *
 
