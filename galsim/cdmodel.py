@@ -71,7 +71,7 @@ class BaseCDModel(object):
             if a.shape[0] != a_l.shape[0]:
                 raise ValueError("Input arrays not all the same dimensions")
         # Save the relevant dimension and the matrices storing deflection coefficients
-        self.n = a_l.shape[0] / 2
+        self.n = a_l.shape[0] // 2
         self.a_l = a_l
         self.a_r = a_r
         self.a_b = a_b
