@@ -306,14 +306,12 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
         # If requested array shape is smaller than the input one, then take a subimage.
         if array_shape[0] < pupil_plane_im.array.shape[0]:
             border_size = int(0.5*(pupil_plane_im.array.shape[0] - array_shape[0]))
-            print border_size
             new_bounds = pupil_plane_im.bounds
             new_bounds.xmin += border_size
             new_bounds.xmax -= border_size
             new_bounds.ymin += border_size
             new_bounds.ymax -= border_size
-            print new_bounds, pupil_plane_im.bounds
-            pupil_plane_im.resize(new_bounds)
+            pupil_plane_im = pupil_plane_im[new_bounds]
 
     # Deal with rotations if necessary.
     if pupil_angle == 0.*galsim.degrees:
