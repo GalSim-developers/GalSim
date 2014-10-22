@@ -19,6 +19,8 @@ New Features
   for greater efficiency. (#563)
 - Extended to the `rotate`, `shear`, and `transform` methods of ChromaticObject the ability
   to take functions of wavelength for the arguments. (#581)
+- Make it possible for OpticalPSF to model non-trivially complicated obscuration and/or struts
+  but allowing it to take an optional image of the pupil plane. (#601)
 
 Bug Fixes and Improvements
 --------------------------
