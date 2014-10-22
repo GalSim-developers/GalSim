@@ -233,7 +233,7 @@ def test_forwardbackward():
 
     image.addNoise(galsim.GaussianNoise(sigma=noise))    
     cd = PowerLawCD(
-        2, shiftcoeff, 2.*shiftcoeff, shiftcoeff/2., 2.*shiftcoeff/3., shiftcoeff/2.,
+        2, shiftcoeff, 2.*shiftcoeff, shiftcoeff/2.6, 2.*shiftcoeff/3.8, shiftcoeff/1.7,
         shiftcoeff/3., alpha)
     
     imagecd = cd.applyForward(image)
