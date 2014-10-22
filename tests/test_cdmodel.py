@@ -223,9 +223,9 @@ def test_forwardbackward():
 
     gal = galsim.Gaussian(flux=galflux, sigma=galsigma)
     maxflux = gal.xValue(0,0)
-    image = gal.drawImage(scale=1.,dtype=np.float64)
+    image = gal.drawImage(scale=1., dtype=np.float64)
     
-    cimage = galsim.Image(image.getBounds(),dtype=np.float64) 
+    cimage = galsim.Image(image.getBounds(), dtype=np.float64) 
     # used for normalization later, we expect residual to be of this order
     cimage.fill(1.e-3)
     cimage = cimage+image
