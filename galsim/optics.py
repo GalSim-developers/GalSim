@@ -286,6 +286,8 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees):
     # Sanity checks
     if pupil_plane_im.array.shape[0] != pupil_plane_im.array.shape[1]:
         raise ValueError("We require square input pupil plane arrays!")
+    if pupil_plane_im.array.shape[0] % 2 == 1:
+        raise ValueError("Even-sized input arrays are required for the pupil plane!")
 
     # Deal with rotations if necessary.
     if pupil_angle == 0.*galsim.degrees:
