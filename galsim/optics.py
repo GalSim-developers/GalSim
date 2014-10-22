@@ -118,7 +118,9 @@ class OpticalPSF(GSObject):
                             `spher`. [default: None]
     @param circular_pupil   Adopt a circular pupil?  [default: True]
     @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
-                            dimension, [0., 1.). [default: 0]
+                            dimension, [0., 1.). This should be specified even if you are providing
+                            a `pupil_plane_im`, since we need an initial value of obscuration to use
+                            to figure out the necessary image sampling. [default: 0]
     @param interpolant      Either an Interpolant2d (or Interpolant) instance or a string indicating
                             which interpolant should be used.  Options are 'nearest', 'sinc', 
                             'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
@@ -149,8 +151,11 @@ class OpticalPSF(GSObject):
     @param strut_angle      Angle made between the vertical and the strut starting closest to it,
                             defined to be positive in the counter-clockwise direction; must be an
                             Angle instance. [default: 0. * galsim.degrees]
-    @param pupil_plane_im   A GalSim.Image to use for the pupil plane image, instead of generating
-                            one based on the obscuration and strut parameters.  [default: None]
+    @param pupil_plane_im   The GalSim.Image, NumPy array, or name of file containing the pupil
+                            plane image, to be used instead of generating one based on the
+                            obscuration and strut parameters.  Note that if the image is saved as
+                            unsigned integers, you will get a warning about conversion to floats,
+                            which is harmless. [default: None]
     @param pupil_angle      If `pupil_plane_im` is not None, rotation angle for the pupil plane
                             (positive in the counter-clockwise direction).  Must be an Angle
                             instance. [default: None]
@@ -290,7 +295,9 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
 
     This routine also has to set up the array for the rho values associated with that image.
 
-    @param pupil_plane_im  The GalSim.Image containing the pupil plane image.
+    @param pupil_plane_im  The GalSim.Image, NumPy array, or name of file containing the pupil plane
+                           image.  Note that if the image is saved as unsigned integers, you will
+                           get a warning about conversion to floats, which is harmless.
     @param pupil_angle     Rotation angle for the pupil plane (positive in the counter-clockwise
                            direction).  Must be an Angle instance. [default: 0.*galsim.degrees]
     @param array_shape     The NumPy array shape required for the output image.  If None, then use
@@ -302,8 +309,16 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
     Bools used to specify where in the pupil plane described by `rho` is illuminated.  See also 
     wavefront().
     """
-    # Make sure not to overwrite input image
-    pupil_plane_im = pupil_plane_im.copy()
+    # Handle multiple types of input: NumPy array, galsim.Image, or string for filename with image.
+    if isinstance(pupil_plane_im, np.ndarray):
+        # Make it into an image.
+        pupil_plane_im = galsim.Image(pupil_plane_im)
+    elif isinstance(pupil_plane_im, galsim.Image):
+        # Make sure not to overwrite input image.
+        pupil_plane_im = pupil_plane_im.copy()
+    else:
+        # Read in image of pupil plane from file.
+        pupil_plane_im = galsim.fits.read(pupil_plane_im)
 
     # Sanity checks
     if pupil_plane_im.array.shape[0] != pupil_plane_im.array.shape[1]:
@@ -501,8 +516,11 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
     @param strut_angle     Angle made between the vertical and the strut starting closest to it,
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
-    @param pupil_plane_im  A GalSim.Image to use for the pupil plane image, instead of generating
-                           one based on the obscuration and strut parameters.  [default: None]
+    @param pupil_plane_im  The GalSim.Image, NumPy array, or name of file containing the pupil
+                           plane image, to be used instead of generating one based on the
+                           obscuration and strut parameters.  Note that if the image is saved as
+                           unsigned integers, you will get a warning about conversion to floats,
+                           which is harmless. [default: None]
     @param pupil_angle     If `pupil_plane_im` is not None, rotation angle for the pupil plane
                            (positive in the counter-clockwise direction).  Must be an Angle
                            instance. [default: None]
@@ -675,8 +693,11 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     @param flux            Total flux of the profile. [default: 1.]
-    @param pupil_plane_im  A GalSim.Image to use for the pupil plane image, instead of generating
-                           one based on the obscuration and strut parameters.  [default: None]
+    @param pupil_plane_im  The GalSim.Image, NumPy array, or name of file containing the pupil
+                           plane image, to be used instead of generating one based on the
+                           obscuration and strut parameters.  Note that if the image is saved as
+                           unsigned integers, you will get a warning about conversion to floats,
+                           which is harmless. [default: None]
     @param pupil_angle     If `pupil_plane_im` is not None, rotation angle for the pupil plane
                            (positive in the counter-clockwise direction).  Must be an Angle
                            instance. [default: None]
@@ -741,8 +762,11 @@ def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     @param flux            Total flux of the profile. [default flux=1.]
-    @param pupil_plane_im  A NumPy array to use for the pupil plane image, instead of generating
-                           one based on the obscuration and strut parameters. [default: None]
+    @param pupil_plane_im  The GalSim.Image, NumPy array, or name of file containing the pupil
+                           plane image, to be used instead of generating one based on the
+                           obscuration and strut parameters.  Note that if the image is saved as
+                           unsigned integers, you will get a warning about conversion to floats,
+                           which is harmless. [default: None]
     @param pupil_angle     If `pupil_plane_im` is not None, rotation angle for the pupil plane
                            (positive in the counter-clockwise direction).  Must be an Angle
                            instance. [default: None]
