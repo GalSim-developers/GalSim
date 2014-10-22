@@ -72,6 +72,13 @@ def getBandpasses(AB_zeropoint=True, exptime=None):
     wave_ind = first_line.index('Wave')
     wave = 1000.*data[wave_ind,:]
 
+
+    if AB_zeropoint:
+        # Note that withZeropoint wants an effective diameter in cm, not m.  Also, the effective
+        # diameter has to take into account the central obscuration, so d_eff = d sqrt(1 -
+        # obs^2).
+        d_eff = 100. * galsim.wfirst.diameter * np.sqrt(1.-galsim.wfirst.obscuration**2)
+
     # Set up a dictionary.
     bandpass_dict = {}
     # Loop over the bands.
@@ -86,9 +93,7 @@ def getBandpasses(AB_zeropoint=True, exptime=None):
         if AB_zeropoint:
             if exptime is None:
                 exptime = galsim.wfirst.exptime
-            # Note that withZeropoint wants a diameter in cm, not m.
-            bp = bp.withZeropoint('AB', effective_diameter=100.*galsim.wfirst.effective_diameter,
-                                  exptime=exptime)
+            bp = bp.withZeropoint('AB', effective_diameter=d_eff, exptime=exptime)
 
         # Add it to the dictionary.
         bandpass_dict[first_line[index]] = bp

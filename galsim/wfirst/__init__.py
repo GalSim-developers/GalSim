@@ -33,7 +33,9 @@ following numbers:
 
     read_noise - The value of read noise in electrons.  (Band?)
 
-    effective_diameter - The effective telescope diameter in meters.
+    diameter - The telescope diameter in meters.
+
+    obscuration - The linear obscuration of the telescope, in terms of fraction of the diameter.
 
     exptime - The typical exposure time in units of seconds.  The number that is stored is for a
               single dither.  Each location within the survey will be observed with a total of 5-7
@@ -103,7 +105,8 @@ TODO:
 gain = 1.0
 pixel_scale = 0.11
 dark_current = 0.01
-effective_diameter = 2.4
+diameter = 2.4
+obscuration = 0.3
 exptime = 168.1
 dark_current = 0.015
 nonlinearity_beta = -3.57e-7
