@@ -25,7 +25,7 @@ import galsim
 import numpy as np
 import os
 
-def getBandpasses():
+def getBandpasses(AB_zeropoint=True, exptime=None):
     """Utility to get a dictionary containing the WFIRST bandpasses.
 
     This routine reads in a file containing a list of wavelengths and throughput for all WFIRST
@@ -40,12 +40,24 @@ def getBandpasses():
     Currently the bandpasses are not truncated or thinned in any way.  We leave it to the user to
     decide whether they wish to do either of those operations.
 
+    By default, the routine will set an AB zeropoint using the WFIRST effective diameter and default
+    exposure time.  Setting the zeropoint can be avoided by setting `AB_zeropoint=False`; changing
+    the exposure time that is used for the calculation can be used by setting the `exptime`
+    keyword.
+
     Example usage
     -------------
 
         >>> wfirst_bandpasses = galsim.wfirst.getBandpasses()
         >>> f184 = wfirst_bandpasses['F184']
 
+    @param AB_zeropoint     Should the routine set an AB zeropoint before returning the bandpass?
+                            If False, then it is up to the user to set a zero point.  [default:
+                            True]
+    @param exptime          Exposure time to use for setting the zeropoint; if None, use the default
+                            WFIRST exposure time, taken from galsim.wfirst.exptime.  [default: None]
+
+    @returns A dictionary containing bandpasses for all WFIRST filters and grisms.
     """
     # Begin by reading in the file containing the info.
     datafile = os.path.join(galsim.meta_data.share_dir, "afta_throughput.txt")
@@ -70,6 +82,13 @@ def getBandpasses():
 
         # Initialize the bandpass object.
         bp = galsim.Bandpass(galsim.LookupTable(wave, data[index,:]), wave_type='nm')
+        # Set the zeropoint if requested by the user:
+        if AB_zeropoint:
+            if exptime is None:
+                exptime = galsim.wfirst.exptime
+            # Note that withZeropoint wants a diameter in cm, not m.
+            bp = bp.withZeropoint('AB', effective_diameter=100.*galsim.wfirst.effective_diameter,
+                                  exptime=exptime)
 
         # Add it to the dictionary.
         bandpass_dict[first_line[index]] = bp

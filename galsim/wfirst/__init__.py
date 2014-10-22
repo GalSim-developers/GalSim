@@ -35,6 +35,10 @@ following numbers:
 
     read_noise - The value of read noise in electrons.  (Band?)
 
+    effective_diameter - The effective telescope diameter in meters.
+
+    exptime - The typical exposure time in units of seconds.
+
     ... also values related to nonlinearity, etc. ...
 
 For example, to get the gain value, use galsim.wfirst.gain.
@@ -49,5 +53,7 @@ This module also contains the following routines:
 gain = 1.0
 pixel_scale = 0.11
 dark_current = 0.01
+effective_diameter = 2.4
+exptime = 168.1
 
 from wfirst_bandpass import *
