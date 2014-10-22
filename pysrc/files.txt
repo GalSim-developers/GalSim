@@ -25,3 +25,4 @@ Table.cpp
 Interpolant.cpp
 CorrelatedNoise.cpp
 Bessel.cpp
+CDModel.cpp
