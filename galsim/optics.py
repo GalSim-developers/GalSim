@@ -67,8 +67,17 @@ class OpticalPSF(GSObject):
     for example if the struts are not evenly spaced or are not radially directed, as is assumed by
     the simple model for struts described above.  In this case, keywords related to struts are
     ignored; moreover, the `obscuration` keyword is used to ensure that the images are properly
-    sampled (so it is still needed), but the keyword is then ignored when generating the image of
-    the pupil plane.
+    sampled (so it is still needed), but the keyword is then ignored when using the supplied image
+    of the pupil plane.  The `pupil_plane_im` that is passed in can be rotated during internal
+    calculations by specifying a `pupil_angle` keyword.
+
+    If you choose to pass in a pupil plane image, it must be a square array that in which the image
+    of the pupil is centered.  The areas that are illuminated should have some value >0, and the
+    other areas should have a value of precisely zero.  Based on what the OpticalPSF class thinks
+    is the required sampling to make the PSF image, the image that is passed in of the pupil plane
+    might be trimmed or zero-padded during internal calculations.  If the pupil plane image has a
+    scale associated with it, that scale will be completely ignored; the scale is determined
+    internally based on basic physical considerations.
 
     Initialization
     --------------
