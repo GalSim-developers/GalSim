@@ -311,7 +311,7 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
     if pupil_plane_im.array.shape[0] % 2 == 1:
         raise ValueError("Even-sized input arrays are required for the pupil plane!")
 
-    galsim.ImageF(np.ascontiguousarray(pupil_plane_im.array)).write('pp_arr_prepad.fits')
+    #galsim.ImageF(np.ascontiguousarray(pupil_plane_im.array)).write('pp_arr_prepad.fits')
     # Pad / chop image if necessary given the requested array shape
     if array_shape is not None:
 
@@ -350,7 +350,7 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
         max_pp_val = np.max(pp_arr)
         pp_arr[pp_arr<0.5*max_pp_val] = 0.
 
-    galsim.ImageF(np.ascontiguousarray(pp_arr)).write('new_pp_arr_rotated.fits')
+    #galsim.ImageF(np.ascontiguousarray(pp_arr)).write('new_pp_arr_rotated.fits')
     # Turn it into a boolean type, so all values >0 are True (doesn't matter what their value is)
     # and all values==0 are False.
     pp_arr = pp_arr.astype(bool)
