@@ -268,7 +268,7 @@ class OpticalPSF(GSObject):
                     "Using pad_factor >= %f is recommended."%(pad_factor * stepk / final_stepk))
 
 
-def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees):
+def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=None):
     """Set up the pupil plane based on using or loading a previously generated image.
 
     This routine also has to set up the array for the rho values associated with that image.
@@ -276,6 +276,8 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees):
     @param pupil_plane_im  The GalSim.Image containing the pupil plane image.
     @param pupil_angle     Rotation angle for the pupil plane (positive in the counter-clockwise
                            direction).  Must be an Angle instance. [default: 0.*galsim.degrees]
+    @param array_shape     The NumPy array shape required for the output image.  If None, then use
+                           the shape of the input `pupil_plane_im`.  [default: None]
 
     @returns a tuple `(rho, in_pupil)`, the first of which is the coordinate of the pupil
     in unit disc-scaled coordinates for use by Zernike polynomials (as a complex number)
@@ -283,11 +285,35 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees):
     Bools used to specify where in the pupil plane described by `rho` is illuminated.  See also 
     wavefront().
     """
+    # Make sure not to overwrite input image
+    pupil_plane_im = pupil_plane_im.copy()
+
     # Sanity checks
     if pupil_plane_im.array.shape[0] != pupil_plane_im.array.shape[1]:
         raise ValueError("We require square input pupil plane arrays!")
     if pupil_plane_im.array.shape[0] % 2 == 1:
         raise ValueError("Even-sized input arrays are required for the pupil plane!")
+
+    galsim.ImageF(np.ascontiguousarray(pupil_plane_im.array)).write('pp_arr_prepad.fits')
+    # Pad / chop image if necessary given the requested array shape
+    if array_shape is not None:
+
+        # If requested array shape is larger than the input one, then add some zero-padding to the input image.
+        if array_shape[0] > pupil_plane_im.array.shape[0]:
+            border_size = int(0.5*(array_shape[0] - pupil_plane_im.array.shape[0]))
+            pupil_plane_im.addBorder(border_size)
+
+        # If requested array shape is smaller than the input one, then take a subimage.
+        if array_shape[0] < pupil_plane_im.array.shape[0]:
+            border_size = int(0.5*(pupil_plane_im.array.shape[0] - array_shape[0]))
+            print border_size
+            new_bounds = pupil_plane_im.bounds
+            new_bounds.xmin += border_size
+            new_bounds.xmax -= border_size
+            new_bounds.ymin += border_size
+            new_bounds.ymax -= border_size
+            print new_bounds, pupil_plane_im.bounds
+            pupil_plane_im.resize(new_bounds)
 
     # Deal with rotations if necessary.
     if pupil_angle == 0.*galsim.degrees:
@@ -309,7 +335,7 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees):
         max_pp_val = np.max(pp_arr)
         pp_arr[pp_arr<0.5*max_pp_val] = 0.
 
-    #galsim.ImageF(np.ascontiguousarray(pp_arr)).write('pp_arr_rotated.fits')
+    galsim.ImageF(np.ascontiguousarray(pp_arr)).write('new_pp_arr_rotated.fits')
     # Turn it into a boolean type, so all values >0 are True (doesn't matter what their value is)
     # and all values==0 are False.
     pp_arr = pp_arr.astype(bool)
@@ -440,8 +466,7 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
     Noll, J. Opt. Soc. Am. 66, 207-211(1976). For a brief summary of the polynomials, refer to
     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
 
-    @param array_shape     The NumPy array shape desired for the output array.  Will not be used if
-                           `pupil_plane_im` is supplied.
+    @param array_shape     The NumPy array shape desired for the output array.
     @param scale           Grid spacing of PSF in real space units
     @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale` 
                            (user responsible for consistency).
@@ -475,7 +500,7 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
         if pupil_angle is None:
             pupil_angle = 0.*galsim.degrees
 
-        rho_all, in_pupil = load_pupil_plane(pupil_plane_im, pupil_angle)
+        rho_all, in_pupil = load_pupil_plane(pupil_plane_im, pupil_angle, array_shape=array_shape)
 
     else:
         rho_all, in_pupil = generate_pupil_plane(
@@ -614,8 +639,7 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
 
     Ouput NumPy array is C-contiguous.
 
-    @param array_shape     The NumPy array shape desired for the output array.  This will be
-                           overridden if `pupil_plane_im` is used.
+    @param array_shape     The NumPy array shape desired for the output array.
     @param scale           Grid spacing of PSF in real space units
     @param lam_over_diam   Lambda / telescope diameter in the physical units adopted for `scale`
                            (user responsible for consistency).
