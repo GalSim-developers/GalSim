@@ -493,6 +493,23 @@ def test_OpticalPSF_flux_scaling():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_OpticalPSF_pupil_plane():
+    """Test the ability to generate a PSF using an image of the pupil plane.
+    """
+    import time
+    t1 = time.time()
+
+# to check for pupil plane option:
+# * decent agreement with case for which a pupil plane was stored for test purposes:
+#   * check output size, image itself at some tolerance
+# * check image vs. array vs. filename usage
+# * check rotation: consider test case vs. rotated one, generating
+#   from scratch and using rotation option.
+# * check for exceptions given bad input
+# * check for appropriate padding, chopping
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_check_all_contiguous()
@@ -511,3 +528,4 @@ if __name__ == "__main__":
     test_OpticalPSF_aberrations_struts()
     test_OpticalPSF_aberrations_kwargs()
     test_OpticalPSF_flux_scaling()
+    test_OpticalPSF_pupil_plane()
