@@ -66,6 +66,13 @@ def test_table():
         np.testing.assert_almost_equal(testvals1[3], vals1[3], DECIMAL,
                 err_msg="Interpolated value for exact arg entry does not match val entry")
 
+        # Compare the results in testvals1 with the results if we reshape the input array to be
+        # 2-dimensional.
+        np.testing.assert_array_almost_equal(
+            np.array(testvals1).reshape((2,3)), table1(np.array(testargs1).reshape((2,3))),
+            DECIMAL,
+            err_msg="Interpolated values do not match when input array shape changes")
+
         # Do a full regression test based on a version of the code thought to be working.
         ref1 = np.loadtxt(os.path.join(TESTDIR, 'table_test1_%s.txt'%interp))
         np.testing.assert_array_almost_equal(ref1, testvals1, DECIMAL,
@@ -104,6 +111,10 @@ def test_table():
         table1(np.zeros(3)+args1[0]+0.01)
         table1((args1[0]+0.01,args1[0]+0.01))
         table1([args1[0]+0.01,args1[0]+0.01])
+        # Check 2d arrays (square)
+        table1(np.zeros((3,3))+args1[0])
+        # Check 2d arrays (non-square)
+        table1(np.array(testargs1).reshape((2,3)))
 
         # Check that a LookupTable is picklable.
         p1 = pickle.dumps(table1)
