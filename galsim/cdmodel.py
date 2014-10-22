@@ -90,20 +90,6 @@ class BaseCDModel(object):
         self._a_t_flat = galsim.Image(
             np.reshape(a_t.flatten(), (1, np.product(a_t.shape))), dtype=np.float64,
             make_const=True)
-            
-        # Also save inverse this once, otherwise we'll run into a const cast later
-        self._a_l_flat_inv = galsim.Image(
-            np.reshape((-a_l).flatten(), (1, np.product(a_l.shape))), dtype=np.float64,
-            make_const=True)
-        self._a_r_flat_inv = galsim.Image(
-            np.reshape((-a_r).flatten(), (1, np.product(a_r.shape))), dtype=np.float64,
-            make_const=True)
-        self._a_b_flat_inv = galsim.Image(
-            np.reshape((-a_b).flatten(), (1, np.product(a_b.shape))), dtype=np.float64,
-            make_const=True)
-        self._a_t_flat_inv = galsim.Image(
-            np.reshape((-a_t).flatten(), (1, np.product(a_t.shape))), dtype=np.float64,
-            make_const=True)
 
     def applyForward(self, image, gain_ratio=1.):
         """Apply the charge deflection model in the forward direction.
@@ -132,11 +118,7 @@ class BaseCDModel(object):
                            flat fields; default value is 1., which assumes the common case that your
                            flat and science images have the same gain value
         """
-        retimage = galsim.Image(
-            image=galsim._galsim._ApplyCD(
-                image.image, self._a_l_flat_inv.image, self._a_r_flat_inv.image,
-                self._a_b_flat_inv.image, self._a_t_flat_inv.image, int(self.n), float(gain_ratio)),
-            wcs=image.wcs)
+        retimage = self.applyForward(image, gain_ratio=-gain_ratio)
         return retimage
 
 # The _modelShiftCoeffX functions are used by the PowerLawCD class
