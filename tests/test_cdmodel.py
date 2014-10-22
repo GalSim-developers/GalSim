@@ -208,7 +208,7 @@ def test_fluxconservation():
         "Flat image flux is not left invariant by charge deflection")
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
-    
+
 def test_forwardbackward():
     """Test invariance (to first order) under forward-backward transformation.
     """
@@ -246,8 +246,7 @@ def test_forwardbackward():
     assert minres>-10, ("maximum negative residual of forward-backward transformation is too large")
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
-    
-    
+
 def test_gainratio():
     """Test gain ratio functionality
     """
@@ -279,9 +278,7 @@ def test_gainratio():
                                    "images with different gain not transformed equally")
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
-    
-    
-    
+
 def test_exampleimage():
     """Test application of model compared to an independent implementation that was run on the
     example image.
