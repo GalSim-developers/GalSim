@@ -62,9 +62,9 @@ namespace galsim {
      *  gain_ratio is gain_img/gain_flat when 'aX' matrices were derived from flat field images with
      *  a gain differing from that in the supplied image.
      */
-    ImageAlloc<T> ApplyCD(BaseImage<T> image, ConstImageView<double> aL, ConstImageView<double> aR, 
-                          ConstImageView<double> aB, ConstImageView<double> aT, const int dmax,
-                          const double gain_ratio) const;
+    ImageAlloc<T> ApplyCD(const BaseImage<T> image, ConstImageView<double> aL,
+                          ConstImageView<double> aR, ConstImageView<double> aB,
+                          ConstImageView<double> aT, const int dmax, const double gain_ratio);
 
 }
 #endif

@@ -44,9 +44,9 @@ int verbose_level = 2;
 namespace galsim {
 
 template <typename T>
-ImageAlloc<T> ApplyCD(BaseImage<T> image, ConstImageView<double> aL, ConstImageView<double> aR, 
-                      ConstImageView<double> aB, ConstImageView<double> aT, const int dmax,
-                      const double gain_ratio) const
+ImageAlloc<T> ApplyCD(const BaseImage<T> image, ConstImageView<double> aL,
+                      ConstImageView<double> aR, ConstImageView<double> aB,
+                      ConstImageView<double> aT, const int dmax, const double gain_ratio)
 {
     // images aL, aR, aB, aT contain shift coefficients for left, right, bottom and top border 
     // dmax is maximum separation considered
@@ -119,11 +119,9 @@ ImageAlloc<T> ApplyCD(BaseImage<T> image, ConstImageView<double> aL, ConstImageV
 
 // instantiate template functions for expected types: float and double currently
 template ImageAlloc<float> ApplyCD(
-    BaseImage<float> image, ConstImageView<double> aL, ConstImageView<double> aR,
-    ConstImageView<double> aB, ConstImageView<double> aT, const int dmax, const double gain_ratio)
-    const;
+    const BaseImage<float> image, ConstImageView<double> aL, ConstImageView<double> aR,
+    ConstImageView<double> aB, ConstImageView<double> aT, const int dmax, const double gain_ratio);
 template ImageAlloc<double> ApplyCD(
-    BaseImage<double> image, ConstImageView<double> aL, ConstImageView<double> aR,
-    ConstImageView<double> aB, ConstImageView<double> aT, const int dmax, const double gain_ratio)
-    const;
+    const BaseImage<double> image, ConstImageView<double> aL, ConstImageView<double> aR,
+    ConstImageView<double> aB, ConstImageView<double> aT, const int dmax, const double gain_ratio);
 }
