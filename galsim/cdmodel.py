@@ -204,7 +204,6 @@ class PowerLawCD(BaseCDModel):
         @param r      power-law amplitude for contribution to deflection along x from further away
         @param t      power-law amplitude for contribution to deflection along y from further away
         @param alpha  power-law exponent for deflection from further away
-        
         """
         if not isinstance(n, (int, long)):
             raise ValueError("Input separation n must be an int or long")
