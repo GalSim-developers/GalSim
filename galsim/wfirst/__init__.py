@@ -91,8 +91,6 @@ This module also contains the following routines:
                >>>> im_nl = im.applyNonlinearity(galsim.wfirst.NLfunc)
 
 TODO:
- - obscuration - just get the number and stick it here
- - zero points - fix the issue with effective diameter in the code
  - sky background - implement the integration over the zodi, which is going to involve adapting the
  tables and algorithm from the WFIRST ETC, and writing a converter to ecliptic coordinates for the
  CelestialCoord class.
