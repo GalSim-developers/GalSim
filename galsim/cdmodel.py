@@ -105,37 +105,37 @@ class BaseCDModel(object):
             np.reshape((-a_t).flatten(), (1, np.product(a_t.shape))), dtype=np.float64,
             make_const=True)
 
-    def applyForward(self, image, gain_ratio=1):
+    def applyForward(self, image, gain_ratio=1.):
         """Apply the charge deflection model in the forward direction.
 
         Returns an image with the forward charge deflection transformation applied.  The input image
         is not modified, but its WCS is included in the returned image.
 
         @param gain_ratio  Ratio of gain_image/gain_flat when shift coefficients were derived from 
-                           flat fields; default value is 1, which assumes the common case that your
+                           flat fields; default value is 1., which assumes the common case that your
                            flat and science images have the same gain value
         """
         retimage = galsim.Image(
-            image=galsim._galsim.ApplyCD(
-                image, self._a_l_flat.image, self._a_r_flat.image,
-                self._a_b_flat.image, self._a_t_flat.image, self.n, gain_ratio),
+            image=galsim._galsim._ApplyCD(
+                image.image, self._a_l_flat.image, self._a_r_flat.image,
+                self._a_b_flat.image, self._a_t_flat.image, int(self.n), float(gain_ratio)),
             wcs=image.wcs)
         return retimage
 
-    def applyBackward(self, image, gain_ratio=1):
+    def applyBackward(self, image, gain_ratio=1.):
         """Apply the charge deflection model in the backward direction (accurate to linear order).
 
         Returns an image with the backward charge deflection transformation applied.  The input
         image is not modified, but its WCS is included in the returned image.
 
         @param gain_ratio  Ratio of gain_image/gain_flat when shift coefficients were derived from 
-                           flat fields; default value is 1, which assumes the common case that your
+                           flat fields; default value is 1., which assumes the common case that your
                            flat and science images have the same gain value
         """
         retimage = galsim.Image(
-            image=galsim._galsim.ApplyCD(
-                image, self._a_l_flat_inv.image, self._a_r_flat_inv.image,
-                self._a_b_flat_inv.image, self._a_t_flat_inv.image, self.n, gain_ratio),
+            image=galsim._galsim._ApplyCD(
+                image.image, self._a_l_flat_inv.image, self._a_r_flat_inv.image,
+                self._a_b_flat_inv.image, self._a_t_flat_inv.image, int(self.n), float(gain_ratio)),
             wcs=image.wcs)
         return retimage
 
