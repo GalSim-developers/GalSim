@@ -116,8 +116,8 @@ class BaseCDModel(object):
                            flat and science images have the same gain value
         """
         retimage = galsim.Image(
-            image=image.image.applyCD(
-                self._a_l_flat.image, self._a_r_flat.image, 
+            image=galsim._galsim.ApplyCD(
+                image, self._a_l_flat.image, self._a_r_flat.image,
                 self._a_b_flat.image, self._a_t_flat.image, self.n, gain_ratio),
             wcs=image.wcs)
         return retimage
@@ -133,8 +133,8 @@ class BaseCDModel(object):
                            flat and science images have the same gain value
         """
         retimage = galsim.Image(
-            image=image.image.applyCD(
-                self._a_l_flat_inv.image, self._a_r_flat_inv.image, 
+            image=galsim._galsim.ApplyCD(
+                image, self._a_l_flat_inv.image, self._a_r_flat_inv.image,
                 self._a_b_flat_inv.image, self._a_t_flat_inv.image, self.n, gain_ratio),
             wcs=image.wcs)
         return retimage
