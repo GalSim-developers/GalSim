@@ -192,8 +192,7 @@ def test_fluxconservation():
     image = gal.drawImage(scale=1.,dtype=np.float64)
     image.addNoise(galsim.GaussianNoise(sigma=noise))
 
-    flat = galsim.Image(size, size, dtype=np.float64, init_value=0)
-    flat.fill(1.)
+    flat = galsim.Image(size, size, dtype=np.float64, init_value=1.)
     cd = PowerLawCD(
         2, shiftcoeff, shiftcoeff, shiftcoeff/2., shiftcoeff/2., shiftcoeff/2., shiftcoeff/2.,
         alpha)
