@@ -45,17 +45,17 @@ def test_simplegeometry():
     shiftcoeff = 0.1
     
     # create otherwise empty image with central pixel at one
-    i0 = galsim.Image(size,size,dtype=np.float64,init_value=0)
+    i0 = galsim.Image(size,size, dtype=np.float64, init_value=0)
     i0.setValue(center,center,1)
     
     # create otherwise empty image with three central pixels at one
     # central row
-    ir = galsim.Image(size,size,dtype=np.float64,init_value=0)
+    ir = galsim.Image(size,size, dtype=np.float64, init_value=0)
     ir.setValue(center-1,center,1)
     ir.setValue(center  ,center,1)
     ir.setValue(center+1,center,1)
     # central column
-    it = galsim.Image(size,size,dtype=np.float64,init_value=0)
+    it = galsim.Image(size,size, dtype=np.float64, init_value=0)
     it.setValue(center,center-1,1)
     it.setValue(center,center  ,1)
     it.setValue(center,center+1,1)
@@ -231,9 +231,10 @@ def test_forwardbackward():
     cimage = cimage+image
     cimage = cimage*maxflux*maxflux*shiftcoeff*shiftcoeff
 
-    image.addNoise(galsim.GaussianNoise(sigma=noise))    
+    image.addNoise(galsim.GaussianNoise(sigma=noise))  
     cd = PowerLawCD(
-        2, 0.0234, 0.05234, 0.01312, 0.00823, 0.07216, 0.01934, alpha)
+        2, shiftcoeff * 0.0234, shiftcoeff * 0.05234, shiftcoeff * 0.01312, shiftcoeff * 0.00823,
+        shiftcoeff * 0.07216, shiftcoeff * 0.01934, alpha)
     
     imagecd = cd.applyForward(image)
     imagecddc = cd.applyBackward(imagecd)
