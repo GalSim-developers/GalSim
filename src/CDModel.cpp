@@ -44,7 +44,7 @@ int verbose_level = 2;
 namespace galsim {
 
 template <typename T>
-ImageAlloc<T> ApplyCD(const BaseImage<T> image, ConstImageView<double> aL,
+ImageAlloc<T> ApplyCD(const BaseImage<T> &image, ConstImageView<double> aL,
                       ConstImageView<double> aR, ConstImageView<double> aB,
                       ConstImageView<double> aT, const int dmax, const double gain_ratio)
 {
@@ -119,9 +119,9 @@ ImageAlloc<T> ApplyCD(const BaseImage<T> image, ConstImageView<double> aL,
 
 // instantiate template functions for expected types: float and double currently
 template ImageAlloc<float> ApplyCD(
-    const BaseImage<float> image, ConstImageView<double> aL, ConstImageView<double> aR,
+    const BaseImage<float> &image, ConstImageView<double> aL, ConstImageView<double> aR,
     ConstImageView<double> aB, ConstImageView<double> aT, const int dmax, const double gain_ratio);
 template ImageAlloc<double> ApplyCD(
-    const BaseImage<double> image, ConstImageView<double> aL, ConstImageView<double> aR,
+    const BaseImage<double> &image, ConstImageView<double> aL, ConstImageView<double> aR,
     ConstImageView<double> aB, ConstImageView<double> aT, const int dmax, const double gain_ratio);
 }
