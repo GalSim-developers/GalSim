@@ -802,7 +802,7 @@ class GSObject(object):
             return wcs.local()
         elif image is None:
             # Should have already checked for this, but just to be safe, repeat the check here.
-            raise ValueError("Cannot provide non-local wcs when image == None")
+            raise ValueError("Cannot provide non-local wcs when image is None")
         elif not image.bounds.isDefined():
             raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
         elif use_true_center:
@@ -860,7 +860,7 @@ class GSObject(object):
                 raise ValueError("Cannot provide both wcs and scale")
             if not wcs.isUniform():
                 if image is None:
-                    raise ValueError("Cannot provide non-local wcs when image == None")
+                    raise ValueError("Cannot provide non-local wcs when image is None")
                 if not image.bounds.isDefined():
                     raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
             if not isinstance(wcs, galsim.BaseWCS):
@@ -1030,8 +1030,8 @@ class GSObject(object):
         `folding_threshold`; see `help(galsim.GSParams)` for more information.
 
         @param image        If provided, this will be the image on which to draw the profile.
-                            If `image == None`, then an automatically-sized Image will be created.
-                            If `image != None`, but its bounds are undefined (e.g. if it was
+                            If `image` is None, then an automatically-sized Image will be created.
+                            If `image` is given, but its bounds are undefined (e.g. if it was
                             constructed with `image = galsim.Image()`), then it will be resized
                             appropriately based on the profile's size [default: None].
         @param nx           If provided, use to set the x-direction size of the image.  Must be
@@ -1040,15 +1040,15 @@ class GSObject(object):
                             accompanied by `nx`.
         @param bounds       If provided, use to set the bounds of the image.
         @param scale        If provided, use this as the pixel scale for the image.
-                            If `scale` is `None` and `image != None`, then take the provided
+                            If `scale` is None and `image` is given, then take the provided
                             image's pixel scale.
-                            If `scale` is `None` and `image == None`, then use the Nyquist scale.
+                            If `scale` is None and `image` is None, then use the Nyquist scale.
                             If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
                             [default: None]
         @param wcs          If provided, use this as the wcs for the image.  At most one of `scale`
                             or `wcs` may be provided. [default: None]
         @param dtype        The data type to use for an automatically constructed image.  Only
-                            valid if `image = None`. [default: None, which means to use
+                            valid if `image` is None. [default: None, which means to use
                             numpy.float32]
         @param method       Which method to use for rendering the image.  See discussion above
                             for the various options and what they do. [default: 'auto']
@@ -1088,8 +1088,9 @@ class GSObject(object):
                             (usually due to interpolants).
                             [default: 0]
         @param rng          If provided, a random number generator to use for photon shooting,
-                            which may be any kind of BaseDeviate object.  If `rng=None`, one will
-                            be automatically created, using the time as a seed.  [default: None]
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
         @param max_extra_noise  If provided, the allowed extra noise in each pixel when photon
                             shooting.  This is only relevant if `n_photons=0`, so the number of
                             photons is being automatically calculated.  In that case, if the image
@@ -1300,24 +1301,22 @@ class GSObject(object):
         transform of the surface brightness profile.
 
         @param re           If provided, this will be the real part of the k-space image.
-                            If `re = None`, then an automatically-sized image will be created.
-                            If `re != None`, but its bounds are undefined (e.g. if it was
-                            constructed with `re = galsim.Image()`), then it will be resized
-                            appropriately based on the profile's size. [default: None]
+                            If `re` and `im` are None, then automatically-sized images will be
+                            created.  If they are given, but their bounds are undefined, then they
+                            will be resized appropriately based on the profile's size.
+                            [default: None]
         @param im           If provided, this will be the imaginary part of the k-space image.
                             A provided `im` must match the size and scale of `re`.
-                            If `im = None`, then an automatically-sized image will be created.
-                            If `im != None`, but its bounds are undefined (e.g. if it was
-                            constructed with `im = galsim.Image()`), then it will be resized
-                            appropriately based on the profile's size. [default: None]
+                            If `im` is None, then `re` must also be None. [default: None]
         @param scale        If provided, use this as the pixel scale, dk, for the images.
-                            If `scale` is `None` and `re, im != None`, then take the provided
+                            If `scale` is None and `re` and `im` are given, then take the provided
                             images' pixel scale (which must be equal).
-                            If `scale` is `None` and `re, im == None`, then use the Nyquist scale.
+                            If `scale` is None and `re` and `im` are None, then use the Nyquist
+                            scale.
                             If `scale <= 0` (regardless of `re`, `im`), then use the Nyquist scale.
                             [default: None]
         @param dtype        The data type to use for automatically constructed images.  Only
-                            valid if `re = None` and `im = None`. [default: None, which means to
+                            valid if `re` and `im` are None. [default: None, which means to
                             use numpy.float32]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD).  [default: 1.]
@@ -1326,8 +1325,8 @@ class GSObject(object):
                             construct the images for you.  [default: 1]
         @param add_to_image Whether to add to the existing images rather than clear out
                             anything in the image before drawing.
-                            Note: This requires that images be provided (i.e. `re`, `im` are
-                            not `None`) and that they have defined bounds. [default: False]
+                            Note: This requires that `re` and `im` be provided and that they have
+                            defined bounds. [default: False]
 
         @returns the tuple of Image instances, `(re, im)` (created if necessary)
         """

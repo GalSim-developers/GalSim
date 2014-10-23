@@ -254,6 +254,8 @@ class Image(object):
             self.dtype = array.dtype.type
         elif dtype is not None:
             self.dtype = dtype
+        elif image is not None:
+            self.dtype = image.array.dtype.type
         else:
             self.dtype = numpy.float32
 
@@ -376,6 +378,11 @@ class Image(object):
 
     def resize(self, bounds):
         """Resize the image to have a new bounds (must be a BoundsI instance)
+
+        Note that the resized image will have uninitialized data.  If you want to preserve
+        the existing data values, you should either use `subImage` (if you want a smaller
+        portion of the current Image) or make a new Image and copy over the current values
+        into a portion of the new image (if you are resizing to a larger Image).
         """
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
