@@ -75,9 +75,9 @@ struct PyImage {
         // --- Try to get cached array ---
         // NB: self.attr("_array") != bp::object() no longer works, since it calls the numpy
         //     overload of _array != None, which compares term by term rather than checking
-        //     if _array is not None.  An equivalent of what we want is to see if the ptr == 0.
+        //     if _array is not None.  Instead check if the attribute exists and is not None.
         if (PyObject_HasAttrString(self.ptr(), "_array") 
-            && bp::object(self.attr("_array")).ptr() != 0) {
+            && bp::object(self.attr("_array")).ptr() != Py_None) {
             return self.attr("_array");
         }
 
