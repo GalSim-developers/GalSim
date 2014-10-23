@@ -42,23 +42,24 @@ def test_simplegeometry():
     t1 = time.time()
     size = 50
     center = 25
-    shiftcoeff = 0.1
+    shiftcoeff = 1.e-7
+    level = 1.e5
     
     # create otherwise empty image with central pixel at one
     i0 = galsim.Image(size,size, dtype=np.float64, init_value=0)
-    i0.setValue(center,center,1)
+    i0.setValue(center,center,level)
     
     # create otherwise empty image with three central pixels at one
     # central row
     ir = galsim.Image(size,size, dtype=np.float64, init_value=0)
-    ir.setValue(center-1,center,1)
-    ir.setValue(center  ,center,1)
-    ir.setValue(center+1,center,1)
+    ir.setValue(center-1,center,level)
+    ir.setValue(center  ,center,level)
+    ir.setValue(center+1,center,level)
     # central column
     it = galsim.Image(size,size, dtype=np.float64, init_value=0)
-    it.setValue(center,center-1,1)
-    it.setValue(center,center  ,1)
-    it.setValue(center,center+1,1)
+    it.setValue(center,center-1,level)
+    it.setValue(center,center  ,level)
+    it.setValue(center,center+1,level)
 
     # set up models, images
     cdr0   = PowerLawCD(2,shiftcoeff,0,0,0,0,0,0)
@@ -77,63 +78,63 @@ def test_simplegeometry():
     ircdrx = cdrx.applyForward(ir)
     
     # R0, T0
-    np.testing.assert_almost_equal(i0cdr0.at(center,center), 1.-shiftcoeff, 10,
+    np.testing.assert_almost_equal(i0cdr0.at(center,center), level*(1.-shiftcoeff), 10,
                                    "Central pixel wrong in test_onepixel R0")
-    np.testing.assert_almost_equal(i0cdt0.at(center,center), 1.-shiftcoeff, 10,
+    np.testing.assert_almost_equal(i0cdt0.at(center,center), level*(1.-shiftcoeff), 10,
                                    "Central pixel wrong in test_onepixel T0")
     
-    np.testing.assert_almost_equal(i0cdr0.at(center+1,center), shiftcoeff/2., 10,
+    np.testing.assert_almost_equal(i0cdr0.at(center+1,center), level*(shiftcoeff/2.), 10,
                                    "Off-center pixel wrong in test_onepixel R0")
-    np.testing.assert_almost_equal(i0cdr0.at(center-1,center), shiftcoeff/2., 10,
+    np.testing.assert_almost_equal(i0cdr0.at(center-1,center), level*(shiftcoeff/2.), 10,
                                    "Off-center pixel wrong in test_onepixel R0")
     
-    np.testing.assert_almost_equal(i0cdt0.at(center,center+1), shiftcoeff/2., 10,
+    np.testing.assert_almost_equal(i0cdt0.at(center,center+1), level*(shiftcoeff/2.), 10,
                                    "Off-center pixel wrong in test_onepixel T0")
-    np.testing.assert_almost_equal(i0cdt0.at(center,center-1), shiftcoeff/2., 10,
+    np.testing.assert_almost_equal(i0cdt0.at(center,center-1), level*(shiftcoeff/2.), 10,
                                    "Off-center pixel wrong in test_onepixel T0")
     
     # Tx
-    np.testing.assert_almost_equal(ircdtx.at(center,center), 1.-2.*shiftcoeff, 10,
+    np.testing.assert_almost_equal(ircdtx.at(center,center), level*(1.-2.*shiftcoeff), 10,
                                    "Central pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center-1,center), 1.-shiftcoeff, 10,
+    np.testing.assert_almost_equal(ircdtx.at(center-1,center), level*(1.-shiftcoeff), 10,
                                    "Off-center pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center+1,center), 1.-shiftcoeff, 10,
+    np.testing.assert_almost_equal(ircdtx.at(center+1,center), level*(1.-shiftcoeff), 10,
                                    "Off-center pixel wrong in test_onepixel TX")
                                        
-    np.testing.assert_almost_equal(ircdtx.at(center,center+1), shiftcoeff, 10,
+    np.testing.assert_almost_equal(ircdtx.at(center,center+1), level*shiftcoeff, 10,
                                    "Central pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center-1,center+1), shiftcoeff/2., 10,
+    np.testing.assert_almost_equal(ircdtx.at(center-1,center+1), level*shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center+1,center+1), shiftcoeff/2., 10,
+    np.testing.assert_almost_equal(ircdtx.at(center+1,center+1), level*shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel TX")
                                    
-    np.testing.assert_almost_equal(ircdtx.at(center,center-1), shiftcoeff, 10,
+    np.testing.assert_almost_equal(ircdtx.at(center,center-1), level*shiftcoeff, 10,
                                    "Central pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center-1,center-1), shiftcoeff/2., 10,
+    np.testing.assert_almost_equal(ircdtx.at(center-1,center-1), level*shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center+1,center-1), shiftcoeff/2., 10,
+    np.testing.assert_almost_equal(ircdtx.at(center+1,center-1), level*shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel TX")
                                    
     # Rx
-    np.testing.assert_almost_equal(itcdrx.at(center,center), 1.-2.*shiftcoeff, 10,
+    np.testing.assert_almost_equal(itcdrx.at(center,center), level*(1.-2.*shiftcoeff), 10,
                                    "Central pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center,center-1), 1.-shiftcoeff, 10,
+    np.testing.assert_almost_equal(itcdrx.at(center,center-1), level*(1.-shiftcoeff), 10,
                                    "Off-center pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center,center+1), 1.-shiftcoeff, 10,
+    np.testing.assert_almost_equal(itcdrx.at(center,center+1), level*(1.-shiftcoeff), 10,
                                    "Off-center pixel wrong in test_onepixel RX")
                                        
-    np.testing.assert_almost_equal(itcdrx.at(center+1,center), shiftcoeff, 10,
+    np.testing.assert_almost_equal(itcdrx.at(center+1,center), level*shiftcoeff, 10,
                                    "Central pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center+1,center-1), shiftcoeff/2., 10,
+    np.testing.assert_almost_equal(itcdrx.at(center+1,center-1), level*shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center+1,center+1), shiftcoeff/2., 10,
+    np.testing.assert_almost_equal(itcdrx.at(center+1,center+1), level*shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel RX")
                                    
-    np.testing.assert_almost_equal(itcdrx.at(center-1,center), shiftcoeff, 10,
+    np.testing.assert_almost_equal(itcdrx.at(center-1,center), level*shiftcoeff, 10,
                                    "Central pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center-1,center-1), shiftcoeff/2., 10,
+    np.testing.assert_almost_equal(itcdrx.at(center-1,center-1), level*shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center-1,center+1), shiftcoeff/2., 10,
+    np.testing.assert_almost_equal(itcdrx.at(center-1,center+1), level*shiftcoeff/2., 10,
                                    "Off-center pixel wrong in test_onepixel RX")
     
     # a model that should not change anything here
@@ -181,10 +182,10 @@ def test_fluxconservation():
     """
     import time
     t1 = time.time()
-    galflux = 30.
+    galflux = 30000.
     galsigma = 3.
-    noise = 0.01
-    shiftcoeff = 5.e-2
+    noise = 10.
+    shiftcoeff = 1.e-7
     alpha = 0.3
     size = 50
 
@@ -214,10 +215,10 @@ def test_forwardbackward():
     """
     import time
     t1 = time.time()
-    galflux = 30.
+    galflux = 3000.
     galsigma = 3.
-    noise = 0.01
-    shiftcoeff = 1.e-5
+    noise = 1.
+    shiftcoeff = 1.e-7
     alpha = 0.3
     size = 50
 
@@ -253,10 +254,10 @@ def test_gainratio():
     """
     import time
     t1 = time.time()
-    galflux = 30.
+    galflux = 3000.
     galsigma = 3.
-    noise = 0.01
-    shiftcoeff = 1.e-5
+    noise = 1.
+    shiftcoeff = 1.e-7
     alpha = 0.3
     size = 50
 
