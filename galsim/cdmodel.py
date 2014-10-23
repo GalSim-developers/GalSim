@@ -72,7 +72,7 @@ class BaseCDModel(object):
                 raise ValueError("Input arrays not all the same dimensions")
         # Save the relevant dimension and the matrices storing deflection coefficients
         self.n = a_l.shape[0] // 2
-        if(self.n<1):
+        if (self.n < 1):
             raise ValueError("Input arrays must be at least 3x3")
         
         self.a_l = galsim.Image(a_l, dtype=np.float64, make_const=True)
