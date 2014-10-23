@@ -190,9 +190,12 @@ def test_fluxconservation():
     alpha = 0.3
     size = 50
 
+    # Define a consistent rng for repeatability
+    urng = galsim.UniformDeviate(rseed)
+
     gal = galsim.Gaussian(flux=galflux, sigma=galsigma)
     image = gal.drawImage(scale=1.,dtype=np.float64)
-    image.addNoise(galsim.GaussianNoise(sigma=noise))
+    image.addNoise(galsim.GaussianNoise(sigma=noise, rng=urng))
 
     flat = galsim.Image(size, size, dtype=np.float64, init_value=1.)
     cd = PowerLawCD(
@@ -233,7 +236,9 @@ def test_forwardbackward():
     cimage = cimage+image
     cimage = cimage*maxflux*maxflux*shiftcoeff*shiftcoeff
 
-    image.addNoise(galsim.GaussianNoise(sigma=noise))  
+    # Define a consistent rng for repeatability
+    urng = galsim.UniformDeviate(rseed)
+    image.addNoise(galsim.GaussianNoise(sigma=noise, rng=urng))  
     cd = PowerLawCD(
         2, shiftcoeff * 0.0234, shiftcoeff * 0.05234, shiftcoeff * 0.01312, shiftcoeff * 0.00823,
         shiftcoeff * 0.07216, shiftcoeff * 0.01934, alpha)
