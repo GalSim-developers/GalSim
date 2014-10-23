@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef BESSELROOTS_H
-#define BESSELROOTS_H
+#ifndef GalSim_BesselRoots_H
+#define GalSim_BesselRoots_H
 /** 
  * @file bessel/Roots.h 
  * @brief Contains a list of the first several roots of J0(x)

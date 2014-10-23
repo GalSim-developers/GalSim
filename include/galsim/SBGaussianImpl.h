@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBGAUSSIAN_IMPL_H
-#define SBGAUSSIAN_IMPL_H
+#ifndef GalSim_SBGaussianImpl_H
+#define GalSim_SBGaussianImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBGaussian.h"
@@ -95,5 +95,5 @@ namespace galsim {
     };
 }
 
-#endif // SBGAUSSIAN_IMPL_H
+#endif
 

@@ -17,6 +17,9 @@
  *    and/or other materials provided with the distribution.
  */
 
+#ifndef GalSim_IntGKP10_H
+#define GalSim_IntGKP10_H
+
 /**
  * @file IntGKPData10.h
  *
@@ -425,3 +428,5 @@ namespace integ {
     }
 
 }}
+
+#endif

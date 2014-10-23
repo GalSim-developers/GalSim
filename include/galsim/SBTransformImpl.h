@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBTRANSFORM_IMPL_H
-#define SBTRANSFORM_IMPL_H
+#ifndef GalSim_SBTransformImpl_H
+#define GalSim_SBTransformImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBTransform.h"
@@ -170,5 +170,5 @@ namespace galsim {
     };
 }
 
-#endif // SBTRANSFORM_IMPL_H
+#endif
 

@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef GSPARAMS_H
-#define GSPARAMS_H
+#ifndef GalSim_GSParams_H
+#define GalSim_GSParams_H
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include <boost/shared_ptr.hpp>
@@ -301,5 +301,5 @@ namespace galsim {
 
 }
 
-#endif // GSPARAMS_H
+#endif
 

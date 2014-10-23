@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBAIRY_H
-#define SBAIRY_H
+#ifndef GalSim_SBAiry_H
+#define GalSim_SBAiry_H
 /** 
  * @file SBAiry.h @brief SBProfile of an Airy function with an optional obscuration.
  */
@@ -84,5 +84,5 @@ namespace galsim {
 
 }
 
-#endif // SBAIRY_H
+#endif
 

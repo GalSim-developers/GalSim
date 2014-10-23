@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBEXPONENTIAL_H
-#define SBEXPONENTIAL_H
+#ifndef GalSim_SBExponential_H
+#define GalSim_SBExponential_H
 /** 
  * @file SBExponential.h @brief SBProfile that implements a 2-d exponential profile.
  */
@@ -76,5 +76,5 @@ namespace galsim {
 
 }
 
-#endif // SBEXPONENTIAL_H
+#endif
 

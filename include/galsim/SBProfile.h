@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBPROFILE_H
-#define SBPROFILE_H
+#ifndef GalSim_SBProfile_H
+#define GalSim_SBProfile_H
 /** 
  * @file SBProfile.h @brief Contains a class definition for two-dimensional Surface Brightness 
  * Profiles.
@@ -542,5 +542,5 @@ namespace galsim {
 
 }
 
-#endif // SBPROFILE_H
+#endif
 
