@@ -202,7 +202,9 @@ class PowerLawCD(BaseCDModel):
         a_b = np.zeros((2 * n + 1, 2 * n + 1), dtype=np.float64)
         a_t = np.zeros((2 * n + 1, 2 * n + 1), dtype=np.float64)
 
-        # fill with power law model (slightly clunky loop but not likely a big time sink)
+        # Fill with power law model (slightly clunky loop but not likely a big time sink)
+        # See https://github.com/GalSim-developers/GalSim/pull/592#discussion_r17027766 for a
+        # discussion of the speeding up possibilities / timing results for this loop
         for ix in np.arange(0, 2 * n + 1):
 
             for iy in np.arange(0, 2 * n + 1):
