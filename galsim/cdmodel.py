@@ -57,10 +57,10 @@ class BaseCDModel(object):
         images is different, this can be accounted for with the gain_ratio parameter when calling
         applyForward or applyBackward.
 
-        @param a_l  Array containing matrix of deflection coefficients of left pixel border
-        @param a_r  Array containing matrix of deflection coefficients of right pixel border
-        @param a_b  Array containing matrix of deflection coefficients of bottom pixel border
-        @param a_t  Array containing matrix of deflection coefficients of top pixel border
+        @param a_l  NumPy array containing matrix of deflection coefficients of left pixel border
+        @param a_r  NumPy array containing matrix of deflection coefficients of right pixel border
+        @param a_b  NumPy array containing matrix of deflection coefficients of bottom pixel border
+        @param a_t  NumPy array containing matrix of deflection coefficients of top pixel border
         """
         # Some basic sanity checking
         if (a_l.shape[0] % 2 != 1):
