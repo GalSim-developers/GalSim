@@ -89,8 +89,8 @@ class BaseCDModel(object):
         """
         retimage = galsim.Image(
             image=galsim._galsim._ApplyCD(
-                image.image, self.a_l, self.a_r, self.a_b, self.a_t, int(self.n),
-                float(gain_ratio)),
+                image.image, self.a_l.image, self.a_r.image, self.a_b.image, self.a_t.image,
+                int(self.n), float(gain_ratio)),
             wcs=image.wcs)
         return retimage
 
