@@ -59,15 +59,25 @@ ImageAlloc<T> ApplyCD(const BaseImage<T> &image, ConstImageView<double> aL,
     ImageAlloc<T> output(image.getBounds());  
     // working version of image, which we later return
     
+    // compare eqn. 4.5 in Antilogus+2014
+    // output is 
+    //        (1)   input + 
+    //        (2)   interpolated version of image at pixel borders * 
+    //        (3)   image convolved with shift coefficients 
+    
     for(int x=image.getXMin(); x<=image.getXMax(); x++){
         for(int y=image.getYMin(); y<=image.getYMax(); y++){
 
-            double f = image.at(x, y);
+            // (1) input image
+            double f = image.at(x, y); 
+
+            // (2) interpolated version of image at pixel borders
             double fT = 0.; if(y < image.getYMax()) fT = (f + image.at(x, y + 1)) / 2.;
             double fB = 0.; if(y > image.getYMin()) fB = (f + image.at(x, y - 1)) / 2.;
             double fR = 0.; if(x < image.getXMax()) fR = (f + image.at(x + 1, y)) / 2.;
             double fL = 0.; if(x > image.getXMin()) fL = (f + image.at(x - 1, y)) / 2.;
 
+            // (3) convolution of image with shift coefficient matrix
             for(int iy=-dmax; iy<=dmax; iy++){
                 for(int ix=-dmax; ix<=dmax; ix++){
 
