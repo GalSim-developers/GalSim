@@ -1565,28 +1565,48 @@ def test_Image_resize():
 
     for i in xrange(ntypes):
 
-        # im1 starts with basic constructor with a given size
-        array_type = types[i]
-        im1 = galsim.Image(5,5, dtype=array_type)
-
-        # im2 stars with null constructor
-        im2 = galsim.Image(dtype=array_type)
-
         # Resize to a bunch of different shapes (larger and smaller) to test reallocations
         for shape in [ (10,10), (3,20), (21,8), (1,3), (13,30) ]:
+
+            # im1 starts with basic constructor with a given size
+            array_type = types[i]
+            im1 = galsim.Image(5,5, dtype=array_type)
+
+            # im2 stars with null constructor
+            im2 = galsim.Image(dtype=array_type)
+
+            # im3 is a view into a larger image
+            im3_full = galsim.Image(10,10, dtype=array_type, init_value=23)
+            im3 = im3_full.subImage(galsim.BoundsI(1,6,1,6))
+
+            # Make sure at least one of the _arrays is instantiated.  This isn't required,
+            # but we used to have bugs if the array was instantiated before resizing.
+            # So test im1 and im3 being instantiated and im2 not instantiated.
+            np.testing.assert_array_equal(im1.array, 0, "im1 is not initially all 0.")
+            np.testing.assert_array_equal(im3.array, 23, "im3 is not initially all 23.")
+
             # Have the xmin, ymin value be random numbers from -100..100:
             xmin = int(ud() * 200) - 100
             ymin = int(ud() * 200) - 100
-            xmax = xmin + shape[0] - 1
-            ymax = ymin + shape[1] - 1
+            xmax = xmin + shape[1] - 1
+            ymax = ymin + shape[0] - 1
             b = galsim.BoundsI(xmin, xmax, ymin, ymax)
             im1.resize(b)
             im2.resize(b)
+            im3.resize(b)
 
             np.testing.assert_equal(
                 b, im1.bounds, err_msg="im1 has wrong bounds after resize to b = %s"%b)
             np.testing.assert_equal(
                 b, im2.bounds, err_msg="im2 has wrong bounds after resize to b = %s"%b)
+            np.testing.assert_equal(
+                b, im3.bounds, err_msg="im3 has wrong bounds after resize to b = %s"%b)
+            np.testing.assert_array_equal(
+                im1.array.shape, shape, err_msg="im1.array.shape wrong after resize")
+            np.testing.assert_array_equal(
+                im2.array.shape, shape, err_msg="im2.array.shape wrong after resize")
+            np.testing.assert_array_equal(
+                im3.array.shape, shape, err_msg="im3.array.shape wrong after resize")
             
             # Fill the images with random numbers
             for x in range(xmin,xmax+1):
@@ -1594,12 +1614,22 @@ def test_Image_resize():
                     val = simple_types[i](ud()*500)
                     im1.setValue(x,y,val)
                     im2.setValue(x,y,val)
+                    im3.setValue(x,y,val)
 
             # They should be equal now.  This doesn't completely guarantee that nothing is
             # wrong, but hopefully if we are misallocating memory here, something will be 
             # clobbered or we will get a seg fault.
             np.testing.assert_array_equal(
                 im1.array, im2.array, err_msg="im1 != im2 after resize to b = %s"%b)
+            np.testing.assert_array_equal(
+                im1.array, im3.array, err_msg="im1 != im3 after resize to b = %s"%b)
+            np.testing.assert_array_equal(
+                im2.array, im3.array, err_msg="im2 != im3 after resize to b = %s"%b)
+
+            # Also, since the view was resized, it should no longer be coupled to the original.
+            np.testing.assert_array_equal(
+                im3_full.array, 23, err_msg="im3_full changed")
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
