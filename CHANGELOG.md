@@ -43,6 +43,8 @@ Bug Fixes and Improvements
 - Fixed bug that prevented calling LookupTables on non-square 2d arrays. (#599)
 - Updated the code to account for a planned change in NumPy that `array == None` will be an
   element-wise comparison rather than equivalent to `array is None`. (#604)
+- Fixed a bug where the dtype of an Image could change when resizing, which should not be the
+  case.  (#604)
 
 Updates to config options
 -------------------------
