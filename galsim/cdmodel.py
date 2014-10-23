@@ -72,24 +72,10 @@ class BaseCDModel(object):
                 raise ValueError("Input arrays not all the same dimensions")
         # Save the relevant dimension and the matrices storing deflection coefficients
         self.n = a_l.shape[0] // 2
-        self.a_l = a_l
-        self.a_r = a_r
-        self.a_b = a_b
-        self.a_t = a_t
-        # Also save all these arrays in flattened format as Image instance (dtype=float) for easy
-        # passing to C++ via Python wrapping code
-        self._a_l_flat = galsim.Image(
-            np.reshape(a_l.flatten(), (1, np.product(a_l.shape))), dtype=np.float64,
-            make_const=True)
-        self._a_r_flat = galsim.Image(
-            np.reshape(a_r.flatten(), (1, np.product(a_r.shape))), dtype=np.float64,
-            make_const=True)
-        self._a_b_flat = galsim.Image(
-            np.reshape(a_b.flatten(), (1, np.product(a_b.shape))), dtype=np.float64,
-            make_const=True)
-        self._a_t_flat = galsim.Image(
-            np.reshape(a_t.flatten(), (1, np.product(a_t.shape))), dtype=np.float64,
-            make_const=True)
+        self.a_l = galsim.Image(a_l, dtype=np.float64, make_const=True)
+        self.a_r = galsim.Image(a_r, dtype=np.float64, make_const=True)
+        self.a_b = galsim.Image(a_b, dtype=np.float64, make_const=True)
+        self.a_t = galsim.Image(a_t, dtype=np.float64, make_const=True)
 
     def applyForward(self, image, gain_ratio=1.):
         """Apply the charge deflection model in the forward direction.
@@ -103,8 +89,8 @@ class BaseCDModel(object):
         """
         retimage = galsim.Image(
             image=galsim._galsim._ApplyCD(
-                image.image, self._a_l_flat.image, self._a_r_flat.image,
-                self._a_b_flat.image, self._a_t_flat.image, int(self.n), float(gain_ratio)),
+                image.image, self.a_l, self.a_r, self.a_b, self.a_t, int(self.n),
+                float(gain_ratio)),
             wcs=image.wcs)
         return retimage
 
