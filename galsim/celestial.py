@@ -85,7 +85,7 @@ class CelestialCoord(object):
             self._cosra = math.cos(self._ra.rad())
             self._sinra = math.sin(self._ra.rad())
             self._x = self._cosdec * self._cosra
-            self._y = -self._cosdec * self._sinra
+            self._y = self._cosdec * self._sinra
             self._z = self._sindec
 
     def distanceTo(self, other):
@@ -119,6 +119,10 @@ class CelestialCoord(object):
 
     def angleBetween(self, coord1, coord2):
         """Find the open angle at the location of the current coord between `coord1` and `coord2`.
+
+        Note that this returns a signed angle.  The angle is positive if the sweep direction from
+        coord1 to coord2 is counter-clockwise (as observed from Earth).  It is negative if
+        the direction is clockwise.
         """
         # Call A = coord1, B = coord2, C = self
         # Then we are looking for the angle ACB.
@@ -534,14 +538,13 @@ class CelestialCoord(object):
         zz = cosc
 
         # Perform the rotation:
-        # And note that Lieske defines y with the opposite sign of our convention.
         self._set_aux()
-        x2 = xx*self._x - yx*self._y + zx*self._z
-        y2 = -xy*self._x + yy*self._y - zy*self._z
-        z2 = xz*self._x - yz*self._y + zz*self._z
+        x2 = xx*self._x + yx*self._y + zx*self._z
+        y2 = xy*self._x + yy*self._y + zy*self._z
+        z2 = xz*self._x + yz*self._y + zz*self._z
 
         new_dec = math.atan2(z2,math.sqrt(x2**2+y2**2)) * galsim.radians
-        new_ra = math.atan2(-y2,x2) * galsim.radians
+        new_ra = math.atan2(y2,x2) * galsim.radians
         new_coord = CelestialCoord(new_ra,new_dec)
         return new_coord
 

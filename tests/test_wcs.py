@@ -1433,9 +1433,9 @@ def test_radecfunction():
                     # of the full jacobian that should be accurate to 5 digits.
                     # If A = coord, B = center, and C = the north pole, then the rotation angle is
                     # 180 deg - A - B.
-                    A = coord.angleBetween(north_pole, center)
-                    B = center.angleBetween(coord, north_pole)
-                    C = north_pole.angleBetween(center, coord)
+                    A = coord.angleBetween(center, north_pole)
+                    B = center.angleBetween(north_pole, coord)
+                    C = north_pole.angleBetween(coord, center)
                     # The angle C should equal coord.ra - cneter.ra, so use this as a unit test of
                     # the angleBetween function:
                     np.testing.assert_almost_equal(

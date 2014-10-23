@@ -106,17 +106,17 @@ def test_angle():
     north_pole = galsim.CelestialCoord(0. * galsim.radians, pi/2. * galsim.radians)  # north pole
     south_pole = galsim.CelestialCoord(0. * galsim.radians, -pi/2. * galsim.radians) # south pole
 
-    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq1,eq2).rad(), 1.)
-    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq2,eq1).rad(), -1.)
-    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq2,eq3).rad(), pi-1.)
-    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq3,eq2).rad(), 1.-pi)
-    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq1,eq2).rad(), -1.)
-    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq2,eq1).rad(), 1.)
-    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq2,eq3).rad(), 1.-pi)
-    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq3,eq2).rad(), pi-1.)
+    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq1,eq2).rad(), -1.)
+    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq2,eq1).rad(), 1.)
+    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq2,eq3).rad(), 1.-pi)
+    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq3,eq2).rad(), pi-1.)
+    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq1,eq2).rad(), 1.)
+    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq2,eq1).rad(), -1.)
+    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq2,eq3).rad(), pi-1.)
+    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq3,eq2).rad(), 1.-pi)
 
-    numpy.testing.assert_almost_equal(eq1.angleBetween(north_pole,eq2).rad(), -pi/2.)
-    numpy.testing.assert_almost_equal(eq2.angleBetween(north_pole,eq1).rad(), pi/2.)
+    numpy.testing.assert_almost_equal(eq1.angleBetween(north_pole,eq2).rad(), pi/2.)
+    numpy.testing.assert_almost_equal(eq2.angleBetween(north_pole,eq1).rad(), -pi/2.)
 
     numpy.testing.assert_almost_equal(north_pole.area(eq1,eq2), 1.)
     numpy.testing.assert_almost_equal(north_pole.area(eq2,eq1), 1.)

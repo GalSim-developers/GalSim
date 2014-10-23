@@ -38,6 +38,9 @@ Bug Fixes and Improvements
 - Fixed the `dtype=` kwarg used when initializing `Image` instances to interpret the aliases `int`
   and `float` as the `numpy.int32` and `numpy.float64` data types, respectively.  Previously the
   behavior was unpredictable and platform dependent. (#571)
+- Switched the sign of the angle returned by `CelestialCoord.angleBetween`.  The sign is now
+  positive when the angle as seen from the ground sweeps in the counter-clockwise direction,
+  which is a more sensible definition than what it had used. (#590)
 - Fixed the Image constructor so that if it is passed a NumPy array with the opposite byteorder
   as the native one on the system, it does not return an Image with different contents. (#594)
 - Fixed bug that prevented calling LookupTables on non-square 2d arrays. (#599)
