@@ -964,6 +964,7 @@ class ChromaticSum(ChromaticObject):
         for obj in self.objlist[1:]:
             image = obj.drawImage(
                     bandpass, image=image, add_to_image=True, **kwargs)
+        return image
 
     def withScaledFlux(self, flux_ratio):
         """Multiply the flux of the object by `flux_ratio`

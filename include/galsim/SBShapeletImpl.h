@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBSHAPELET_IMPL_H
-#define SBSHAPELET_IMPL_H
+#ifndef GalSim_SBShapeletImpl_H
+#define GalSim_SBShapeletImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBShapelet.h"
@@ -86,5 +86,5 @@ namespace galsim {
 
 }
 
-#endif // SBSHAPELET_IMPL_H
+#endif
 

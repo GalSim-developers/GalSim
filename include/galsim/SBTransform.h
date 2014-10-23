@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBTRANSFORM_H
-#define SBTRANSFORM_H
+#ifndef GalSim_SBTransform_H
+#define GalSim_SBTransform_H
 /** 
  * @file SBTransform.h @brief SBProfile adapter that transforms another SBProfile.
  * Includes shear, dilation, rotation, translation, and flux scaling.
@@ -80,5 +80,5 @@ namespace galsim {
 
 }
 
-#endif // SBTRANSFORM_H
+#endif 
 

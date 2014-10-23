@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef ELLIPSE_H
-#define ELLIPSE_H
+#ifndef GalSim_Ellipse_H
+#define GalSim_Ellipse_H
 /**
  * @file CppEllipse.h Contains a class definition for CppEllipse.
  *

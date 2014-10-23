@@ -18,6 +18,9 @@
  */
 
 
+#ifndef GalSim_Int_H
+#define GalSim_Int_H
+
 /** 
  * @file Int.h
  *
@@ -141,9 +144,6 @@
  *
  */
 
-
-#ifndef INT_H
-#define INT_H
 
 #include <functional>
 #include <vector>
