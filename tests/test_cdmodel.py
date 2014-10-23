@@ -269,8 +269,8 @@ def test_gainratio():
     gal2   = galsim.Gaussian(flux=0.5*galflux, sigma=galsigma)    
     image2 = gal2.drawImage(scale=1.,dtype=np.float64)   
     
-    cd = PowerLawCD(2, shiftcoeff, 2.*shiftcoeff, shiftcoeff/2., 2.*shiftcoeff/3., shiftcoeff/2.,
-        shiftcoeff/3., alpha)
+    cd = PowerLawCD(2, shiftcoeff, 1.389*shiftcoeff, shiftcoeff/7.23, 2.*shiftcoeff/2.4323,
+        shiftcoeff/1.8934, shiftcoeff/3.1, alpha)
         
     image_cd  = cd.applyForward(image)
     image2_cd = cd.applyForward(image2,gain_ratio=2.)
@@ -287,8 +287,13 @@ def test_exampleimage():
     """
     import time
     t1 = time.time()
+    shiftcoeff = 1.e-7 # This value is more (?) appropriate for the gain levels in the simulated
+                       # example image than the 1.e-5 shiftcoeff used elsewhere (TODO: Edit as re
+                       # required please Daniel!)
     #n, r0, t0, rx, tx, r, t, alpha
-    cd = PowerLawCD(5, 2.e-7, 1.e-7, 1.25e-7, 1.25e-7, 0.75e-7, 0.5e-7, 0.3)
+    cd = PowerLawCD(
+        5, 2. * shiftcoeff, shiftcoeff, 1.25 * shiftcoeff, 1.25 * shiftcoeff, 0.75 * shiftcoeff,
+        0.5 * shiftcoeff, 0.3)
     # model used externally to bring cdtest1 to cdtest2
     image_orig  = galsim.fits.read("fits_files/cdtest1.fits") # unprocessed image
     image_proc  = galsim.fits.read("fits_files/cdtest2.fits") # image with cd model applied with
