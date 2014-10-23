@@ -742,50 +742,56 @@ class GSObject(object):
 
     # Make sure the image is defined with the right size and wcs for drawImage()
     def _setup_image(self, image, nx, ny, bounds, wmult, add_to_image, dtype):
-        # Make image if necessary
-        if image is None:
-            # Can't add to image if none is provided.
+        # Always attempt to respect bounds and nx, ny
+        if bounds is not None:
             if add_to_image:
-                raise ValueError("Cannot add_to_image if image is None")
-            if bounds is not None:
-                if nx is not None or ny is not None:
-                    raise ValueError("Cannot set both bounds and nx, ny")
+                raise ValueError("Cannot add_to_image if bounds is not None")
+            if nx is not None or ny is not None:
+                raise ValueError("Cannot set both bounds and nx, ny")
+            if image is None:
                 image = galsim.Image(bounds, dtype=dtype)
             else:
-                if (nx is None and ny is not None) or (ny is None and nx is not None):
-                    raise ValueError("Must set either both or neither of nx and ny")
-                if nx is None and ny is None:
-                    nx = ny = self.SBProfile.getGoodImageSize(1.0, wmult)
-                image = galsim.Image(nx, ny, dtype=dtype)
-
-        # Resize the given image if necessary
-        elif not image.bounds.isDefined():
-            # Can't add to image if need to resize
-            if add_to_image:
-                raise ValueError("Cannot add_to_image if image bounds are not defined")
-            if dtype is not None:
-                raise ValueError("Cannot specify dtype if image is provided")
-            if bounds is not None:
-                if nx is not None or ny is not None:
-                    raise ValueError("Cannot set both bounds and nx, ny")
                 image.resize(bounds)
                 image.setZero()
+        elif nx is not None or ny is not None:
+            if add_to_image:
+                raise ValueError("Cannot add_to_image if nx or ny is not None")
+            if nx is None or ny is None:
+                raise ValueError("Must set either both or neither of nx, ny")
+            if image is None:
+                image = galsim.Image(nx, ny, dtype=dtype)
             else:
-                if (nx is None and ny is not None) or (ny is None and nx is not None):
-                    raise ValueError("Must set either both or neither of nx and ny")
-                if nx is None and ny is None:
-                    nx = ny = self.SBProfile.getGoodImageSize(1.0, wmult)
                 bounds = galsim.BoundsI(1,nx,1,ny)
                 image.resize(bounds)
                 image.setZero()
-
-        # Else use the given image as is
         else:
-            # Clear the image if we are not adding to it.
-            if dtype is not None:
-                raise ValueError("Cannot specify dtype if image is provided")
-            if not add_to_image:
+            # Make image if necessary
+            if image is None:
+                # Can't add to image if none is provided.
+                if add_to_image:
+                    raise ValueError("Cannot add_to_image if image is None")
+                N = self.SBProfile.getGoodImageSize(1.0, wmult)
+                image = galsim.Image(N, N, dtype=dtype)
+
+            # Resize the given image if necessary
+            elif not image.bounds.isDefined():
+                # Can't add to image if need to resize
+                if add_to_image:
+                    raise ValueError("Cannot add_to_image if image bounds are not defined")
+                if dtype is not None:
+                    raise ValueError("Cannot specify dtype if image is provided")
+                N = self.SBProfile.getGoodImageSize(1.0, wmult)
+                bounds = galsim.BoundsI(1,N,1,N)
+                image.resize(bounds)
                 image.setZero()
+
+            # Else use the given image as is
+            else:
+                # Clear the image if we are not adding to it.
+                if dtype is not None:
+                    raise ValueError("Cannot specify dtype if image is provided")
+                if not add_to_image:
+                    image.setZero()
 
         return image
 
@@ -884,15 +890,38 @@ class GSObject(object):
         optionally add to the given Image if `add_to_image = True`, but the default is to replace
         the current contents with new values.
 
-        If drawImage() will be creating the image from scratch for you, it will decide a good size
-        to use based on the size of the object being drawn.  Basically, it will try to use an area
-        large enough to include at least 99.5% of the flux.  (Note: the value 0.995 is really
-        `1 - folding_threshold`.  You can change the value of `folding_threshold` for any object via
-        GSParams.  See `help(GSParams)` for more details.)  You can set the pixel scale of the
-        constructed image with the `scale` parameter, or set a WCS function with `wcs`.  If you do
-        not provide either `scale` or `wcs`, then drawImage() will default to using the Nyquist
-        scale for the current object.  You can also set the data type used in the new Image with
-        the `dtype` parameter that has the same options as for the Image constructor.
+        Note that if you provide an `image` parameter, it is the image onto which the profile
+        will be drawn.  The provided image *will be modified*.  A reference to the same image
+        is also returned to provide a parallel return behavior to when `image` is `None`
+        (described above).
+
+        This option is useful in practice because you may want to construct the image first and
+        then draw onto it, perhaps multiple times. For example, you might be drawing onto a
+        subimage of a larger image. Or you may want to draw different components of a complex
+        profile separately.  In this case, the returned value is typically ignored.  For example:
+
+                >>> im1 = bulge.drawImage()
+                >>> im2 = disk.drawImage(image=im1, add_to_image=True)
+                >>> assert im1 is im2
+
+                >>> full_image = galsim.Image(2048, 2048, scale=pixel_scale)
+                >>> b = galsim.BoundsI(x-32, x+32, y-32, y+32)
+                >>> stamp = obj.drawImage(image = full_image[b])
+                >>> assert (stamp.array == full_image[b].array).all()
+
+        If drawImage() will be creating the image from scratch for you, then there are several
+        ways to control the size of the new image.  If the `nx` and `ny` keywords are present, then
+        an image with these numbers of pixels on a side will be created.  Similarly, if the `bounds`
+        keyword is present, then an image with the specified bounds will be created.  In the absence
+        of `nx`, `ny`, and `bounds`, drawImage will decide a good size to use based on the size of
+        the object being drawn.  Basically, it will try to use an area large enough to include at
+        least 99.5% of the flux.  (Note: the value 0.995 is really `1 - folding_threshold`.  You can
+        change the value of `folding_threshold` for any object via GSParams.  See `help(GSParams)`
+        for more details.)  You can set the pixel scale of the constructed image with the `scale`
+        parameter, or set a WCS function with `wcs`.  If you do not provide either `scale` or `wcs`,
+        then drawImage() will default to using the Nyquist scale for the current object.  You can
+        also set the data type used in the new Image with the `dtype` parameter that has the same
+        options as for the Image constructor.
 
         There are several different possible methods drawImage() can use for rendering the image.
         This is set by the `method` parameter.  The options are:
@@ -1005,6 +1034,11 @@ class GSObject(object):
                             If `image != None`, but its bounds are undefined (e.g. if it was
                             constructed with `image = galsim.Image()`), then it will be resized
                             appropriately based on the profile's size [default: None].
+        @param nx           If provided, use to set the x-direction size of the image.  Must be
+                            accompanied by `ny`.
+        @param ny           If provided, use to set the y-direction size of the image.  Must be
+                            accompanied by `nx`.
+        @param bounds       If provided, use to set the bounds of the image.
         @param scale        If provided, use this as the pixel scale for the image.
                             If `scale` is `None` and `image != None`, then take the provided
                             image's pixel scale.
