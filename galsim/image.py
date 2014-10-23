@@ -254,6 +254,8 @@ class Image(object):
             self.dtype = array.dtype.type
         elif dtype is not None:
             self.dtype = dtype
+        elif image is not None:
+            self.dtype = image.array.dtype.type
         else:
             self.dtype = numpy.float32
 
