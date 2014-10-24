@@ -499,14 +499,91 @@ def test_OpticalPSF_pupil_plane():
     import time
     t1 = time.time()
 
-# to check for pupil plane option:
-# * decent agreement with case for which a pupil plane was stored for test purposes:
-#   * check output size, image itself at some tolerance
-# * check image vs. array vs. filename usage
-# * check rotation: consider test case vs. rotated one, generating
-#   from scratch and using rotation option.
-# * check for exceptions given bad input
-# * check for appropriate padding, chopping
+    # Test case: lam/diam = 0.12, obscuration=0.18, 4 struts of the default width and with rotation
+    # from the vertical of -15 degrees.  We are going to do this test without aberrations, just
+    # generate an OpticalPSF directly and then make sure that if we make one from a saved pupil
+    # plane for this case, that the results are consistent.
+    # To generate the pupil plane that was saved for this case, I did the following:
+    # - Temporarily edited galsim/optics.py right after the call to generate_pupil_plane() in the
+    #   wavefront() method, adding the following lines:
+    #   tmp_im = utilities.roll2d(in_pupil, (in_pupil.shape[0] / 2, in_pupil.shape[1] / 2))
+    #   tmp_im = galsim.Image(np.ascontiguousarray(tmp_im).astype(np.int32))
+    #   tmp_im.write('tests/Optics_comparison_images/sample_pupil_rolled.fits')
+    # - Executed the following command:
+    #   galsim.OpticalPSF(0.12, obscuration=0.18, nstruts=4, strut_angle=-15.*galsim.degrees)
+    # This resulted in creation of the desired OpticalPSF, storing the pupil plane image centered
+    # with rho=0=k_x=k_y at the center in Optics_comparison_images/sample_pupil_rolled.fits.
+    #
+    # First test: should get really excellent agreement between that particular OpticalPSF with
+    # specified options and one from loading the pupil plane image.  Note that this won't work if
+    # you change the optical PSF parameters, unless you also regenerate the test image.
+    lam_over_diam = 0.12
+    obscuration = 0.18
+    nstruts = 4
+    strut_angle = -15.*galsim.degrees
+    scale = 0.055
+    ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
+                                strut_angle=strut_angle)
+    im = galsim.fits.read(os.path.join(imgdir, 'sample_pupil_rolled.fits'))
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im)
+    im_ref_psf = ref_psf.drawImage(scale=scale)
+    im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+    im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    np.testing.assert_array_almost_equal(
+        im_test_psf.array, im_ref_psf.array, decimal=decimal,
+        err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane.")
+
+    # Second test (less trivial):
+    # Rotate the struts by +27 degrees, and check that agreement is good.
+    rot_angle = 27.*galsim.degrees
+    ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
+                                strut_angle=strut_angle+rot_angle)
+    im = galsim.fits.read(os.path.join(imgdir, 'sample_pupil_rolled.fits'))
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
+                                 pupil_angle=rot_angle)
+    im_ref_psf = ref_psf.drawImage(scale=scale)
+    im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+    im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    # We are slightly less stringent here since it should not be exact.
+    np.testing.assert_array_almost_equal(
+        im_test_psf.array, im_ref_psf.array, decimal=decimal-2,
+        err_msg="Inconsistent OpticalPSF image for rotated model after loading pupil plane.")
+
+    # Third test (also less trivial):
+    # Include aberrations.  Here, unlike in the previous case, we are testing the ability to figure
+    # out the rho values appropriately.  Those get fed into the routine for making the aberrations.
+    defocus = -0.03
+    coma1 = 0.03
+    spher = -0.02
+    ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
+                                strut_angle=strut_angle, defocus=defocus, coma1=coma1, spher=spher)
+    im = galsim.fits.read(os.path.join(imgdir, 'sample_pupil_rolled.fits'))
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
+                                 defocus=defocus, coma1=coma1, spher=spher)
+    im_ref_psf = ref_psf.drawImage(scale=scale)
+    im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+    im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    # We are slightly less stringent here since it should not be exact.   This case is even harder
+    # than the previous one.
+    np.testing.assert_array_almost_equal(
+        im_test_psf.array, im_ref_psf.array, decimal=decimal_dft,
+        err_msg="Inconsistent OpticalPSF image for aberrated model after loading pupil plane.")
+
+    # Minor test: same answer if we use image, array, or filename for reading in array.
+    im = galsim.fits.read(os.path.join(imgdir, 'sample_pupil_rolled.fits'))
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im)
+    im_test_psf = test_psf.drawImage(scale=scale)
+    test_psf_2 = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im.array)
+    im_test_psf_2 = test_psf_2.drawImage(scale=scale)
+    test_psf_3 = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
+                                   pupil_plane_im=os.path.join(imgdir, 'sample_pupil_rolled.fits'))
+    im_test_psf_3 = test_psf_3.drawImage(scale=scale)
+    np.testing.assert_array_almost_equal(
+        im_test_psf.array, im_test_psf_2.array, decimal=decimal,
+        err_msg="Inconsistent OpticalPSF image from Image vs. array.")
+    np.testing.assert_array_almost_equal(
+        im_test_psf.array, im_test_psf_3.array, decimal=decimal,
+        err_msg="Inconsistent OpticalPSF image from Image vs. file read-in.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
