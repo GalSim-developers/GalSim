@@ -402,9 +402,9 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
 
     # Then set up the rho array appropriately.  When thinking about this along a line, we want it to
     # be the case that the left edge of the leftmost pixel (indexed 0) corresponds to rho_x = 0, and
-    # the right edge of the pixel with index `max_in_pupil` corresponds to rho_x = 1.  We can
+    # the center of the pixel with index `max_in_pupil` corresponds to rho_x = 1.  We can
     # therefore figure out drho:
-    drho = 1.0 / (max_in_pupil+1)
+    drho = 1.0 / (float(max_in_pupil)+0.5)
     # And then we want rho to go from negative to positive values before we roll it.
     rho_vec = np.linspace(-0.5*pp_arr.shape[0]*drho+0.5*drho,
                            0.5*pp_arr.shape[0]*drho-0.5*drho, num=pp_arr.shape[0])
@@ -423,7 +423,7 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
         # that position.  Knowing how many pixels that is from the edge of the pupil plane image, we
         # therefore know Delta k (the k-space sampling):
         kmax_internal = 2.*np.pi / lam_over_diam
-        delta_k = 0.5*kmax_internal / (max_in_pupil+1)
+        delta_k = 0.5*kmax_internal / (max_in_pupil+0.5)
         # We can compare this with the ideal spacing for an Airy with this lam/diam and obscuration:
         airy = galsim.Airy(lam_over_diam = lam_over_diam, obscuration = obscuration)
         stepk_airy = airy.stepK() # This has the same units as those for kmax_internal and delta_k
