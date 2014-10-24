@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBEXPONENTIAL_IMPL_H
-#define SBEXPONENTIAL_IMPL_H
+#ifndef GalSim_SBExponentialImpl_H
+#define GalSim_SBExponentialImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBExponential.h"
@@ -163,5 +163,5 @@ namespace galsim {
 
 }
 
-#endif // SBEXPONENTIAL_IMPL_H
+#endif
 

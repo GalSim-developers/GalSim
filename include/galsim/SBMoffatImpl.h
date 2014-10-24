@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBMOFFAT_IMPL_H
-#define SBMOFFAT_IMPL_H
+#ifndef GalSim_SBMoffatImpl_H
+#define GalSim_SBMoffatImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBMoffat.h"
@@ -148,5 +148,5 @@ namespace galsim {
 
 }
 
-#endif // SBMOFFAT_IMPL_H
+#endif
 

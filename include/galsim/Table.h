@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef TABLE_H
-#define TABLE_H
+#ifndef GalSim_Table_H
+#define GalSim_Table_H
 
 #include <vector>
 #include <algorithm>

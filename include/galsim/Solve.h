@@ -20,8 +20,8 @@
 // Template to find the zero of an equation
 // Currently uses bisection method, no solution caching.
 
-#ifndef SOLVE_H
-#define SOLVE_H
+#ifndef GalSim_Solve_H
+#define GalSim_Solve_H
 
 #include <cmath>
 #include <limits>

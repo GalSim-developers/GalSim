@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef ImageArith_H
-#define ImageArith_H
+#ifndef GalSim_ImageArith_H
+#define GalSim_ImageArith_H
 
 namespace galsim {
 

@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef CORRELATEDNOISE_H
-#define CORRELATEDNOISE_H
+#ifndef GalSim_CorrelatedNoise_H
+#define GalSim_CorrelatedNoise_H
 
 //#define DEBUGLOGGING
 

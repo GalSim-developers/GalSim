@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBGAUSSIAN_H
-#define SBGAUSSIAN_H
+#ifndef GalSim_SBGaussian_H
+#define GalSim_SBGaussian_H
 /** 
  * @file SBGaussian.h @brief SBProfile that implements a 2-d Gaussian profile.
  */
@@ -70,5 +70,5 @@ namespace galsim {
 
 }
 
-#endif // SBGAUSSIAN_H
+#endif
 

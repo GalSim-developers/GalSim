@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBMOFFAT_H
-#define SBMOFFAT_H
+#ifndef GalSim_SBMoffat_H
+#define GalSim_SBMoffat_H
 /** 
  * @file SBMoffat.h @brief SBProfile that implements a Moffat profile.
  */
@@ -90,5 +90,5 @@ namespace galsim {
 
 }
 
-#endif // SBMOFFAT_H
+#endif
 
