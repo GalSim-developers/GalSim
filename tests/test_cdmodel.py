@@ -79,63 +79,63 @@ def test_simplegeometry():
     ircdrx = cdrx.applyForward(ir)
     
     # R0, T0
-    np.testing.assert_almost_equal(i0cdr0.at(center,center), level*(1.-level*shiftcoeff), 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(i0cdr0.at(center,center), level*(1.-level*shiftcoeff), 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel R0")
-    np.testing.assert_almost_equal(i0cdt0.at(center,center), level*(1.-level*shiftcoeff), 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(i0cdt0.at(center,center), level*(1.-level*shiftcoeff), 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel T0")
     
-    np.testing.assert_almost_equal(i0cdr0.at(center+1,center), level*(level*shiftcoeff/2.), 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(i0cdr0.at(center+1,center), level*(level*shiftcoeff/2.), 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel R0")
-    np.testing.assert_almost_equal(i0cdr0.at(center-1,center), level*(level*shiftcoeff/2.), 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(i0cdr0.at(center-1,center), level*(level*shiftcoeff/2.), 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel R0")
     
-    np.testing.assert_almost_equal(i0cdt0.at(center,center+1), level*(level*shiftcoeff/2.), 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(i0cdt0.at(center,center+1), level*(level*shiftcoeff/2.), 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel T0")
-    np.testing.assert_almost_equal(i0cdt0.at(center,center-1), level*(level*shiftcoeff/2.), 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(i0cdt0.at(center,center-1), level*(level*shiftcoeff/2.), 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel T0")
     
     # Tx
-    np.testing.assert_almost_equal(ircdtx.at(center,center), level*(1.-2.*level*shiftcoeff), 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(ircdtx.at(center,center), level*(1.-2.*level*shiftcoeff), 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center-1,center), level*(1.-level*shiftcoeff), 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(ircdtx.at(center-1,center), level*(1.-level*shiftcoeff), 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center+1,center), level*(1.-level*shiftcoeff), 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(ircdtx.at(center+1,center), level*(1.-level*shiftcoeff), 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel TX")
                                        
-    np.testing.assert_almost_equal(ircdtx.at(center,center+1), level*level*shiftcoeff, 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(ircdtx.at(center,center+1), level*level*shiftcoeff, 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center-1,center+1), level*level*shiftcoeff/2., 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(ircdtx.at(center-1,center+1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center+1,center+1), level*level*shiftcoeff/2., 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(ircdtx.at(center+1,center+1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel TX")
                                    
-    np.testing.assert_almost_equal(ircdtx.at(center,center-1), level*level*shiftcoeff, 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(ircdtx.at(center,center-1), level*level*shiftcoeff, 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center-1,center-1), level*level*shiftcoeff/2., 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(ircdtx.at(center-1,center-1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel TX")
-    np.testing.assert_almost_equal(ircdtx.at(center+1,center-1), level*level*shiftcoeff/2., 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(ircdtx.at(center+1,center-1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel TX")
                                    
     # Rx
-    np.testing.assert_almost_equal(itcdrx.at(center,center), level*(1.-2.*level*shiftcoeff), 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(itcdrx.at(center,center), level*(1.-2.*level*shiftcoeff), 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center,center-1), level*(1.-level*shiftcoeff), 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(itcdrx.at(center,center-1), level*(1.-level*shiftcoeff), 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center,center+1), level*(1.-level*shiftcoeff), 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(itcdrx.at(center,center+1), level*(1.-level*shiftcoeff), 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel RX")
                                        
-    np.testing.assert_almost_equal(itcdrx.at(center+1,center), level*level*shiftcoeff, 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(itcdrx.at(center+1,center), level*level*shiftcoeff, 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center+1,center-1), level*level*shiftcoeff/2., 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(itcdrx.at(center+1,center-1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center+1,center+1), level*level*shiftcoeff/2., 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(itcdrx.at(center+1,center+1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel RX")
                                    
-    np.testing.assert_almost_equal(itcdrx.at(center-1,center), level*level*shiftcoeff, 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(itcdrx.at(center-1,center), level*level*shiftcoeff, 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center-1,center-1), level*level*shiftcoeff/2., 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(itcdrx.at(center-1,center-1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel RX")
-    np.testing.assert_almost_equal(itcdrx.at(center-1,center+1), level*level*shiftcoeff/2., 15-int(np.log10(level)),
+    np.testing.assert_almost_equal(itcdrx.at(center-1,center+1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel RX")
     
     # a model that should not change anything here
@@ -206,10 +206,10 @@ def test_fluxconservation():
     
     # Then test
     np.testing.assert_almost_equal(
-        image.array.sum(), imagecd.array.sum(), 15-int(np.log10(galflux)),
+        image.array.sum(), imagecd.array.sum(), 13-int(np.log10(galflux)),
         "Galaxy image flux is not left invariant by charge deflection")
     np.testing.assert_almost_equal(
-        flat.array.sum(), flatcd.array.sum(), 15-int(np.log10(galflux)),
+        flat.array.sum(), flatcd.array.sum(), 13-int(np.log10(galflux)),
         "Flat image flux is not left invariant by charge deflection")
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
@@ -282,7 +282,7 @@ def test_gainratio():
     image2_cd = cd.applyForward(image2,gain_ratio=2.)
     
     imageres = (2.*image2_cd - image_cd)
-    np.testing.assert_array_almost_equal(2.*image2_cd.array, image_cd.array, 15-int(np.log10(galflux)),
+    np.testing.assert_array_almost_equal(2.*image2_cd.array, image_cd.array, 13-int(np.log10(galflux)),
                                    "images with different gain not transformed equally")
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
