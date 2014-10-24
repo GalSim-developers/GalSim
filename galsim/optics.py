@@ -290,10 +290,16 @@ class OpticalPSF(GSObject):
                     "Using pad_factor >= %f is recommended."%(pad_factor * stepk / final_stepk))
 
 
-def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=None):
+def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=None,
+                     lam_over_diam=None, obscuration=None):
     """Set up the pupil plane based on using or loading a previously generated image.
 
     This routine also has to set up the array for the rho values associated with that image.
+
+    If you want the routine to do an automated, approximate check for sufficient sampling, you
+    should supply it with `lam_over_diam` and `obscuration` keywords that it can use.  Even so, this
+    check does not check for adequate sampling of the struts, just the basic features like the
+    obscuration.
 
     @param pupil_plane_im  The GalSim.Image, NumPy array, or name of file containing the pupil plane
                            image.  Note that if the image is saved as unsigned integers, you will
@@ -302,6 +308,12 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
                            direction).  Must be an Angle instance. [default: 0.*galsim.degrees]
     @param array_shape     The NumPy array shape required for the output image.  If None, then use
                            the shape of the input `pupil_plane_im`.  [default: None]
+    @param lam_over_diam   The lam/diam defining the diffraction-limited PSF, to use for checks of
+                           sampling as described in the docstring.  If not supplied, the tests will
+                           not be carried out. [default: None]
+    @param obscuration     The obscuration defining the diffraction-limited PSF, to use for checks of
+                           sampling as described in the docstring.  If not supplied, the tests will
+                           not be carried out. [default: None]
 
     @returns a tuple `(rho, in_pupil)`, the first of which is the coordinate of the pupil
     in unit disc-scaled coordinates for use by Zernike polynomials (as a complex number)
@@ -402,6 +414,24 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
     rho_x = utilities.roll2d(rho_x, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
     rho_y = utilities.roll2d(rho_y, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
     rho = rho_x + 1j * rho_y
+
+    if obscuration is not None and lam_over_diam is not None:
+        # We do a basic check of the sampling now that we have rho, which tells us something about
+        # the k spacing.  First, we use the fact that (from generate_pupil_plane), the right edge of
+        # the pupil should have rho_x=1, rho_y=0, which implies k_x = 0.5*(k_{max,int}).  We can
+        # calculate k_{max,int} based on the Airy parameters, which tells us the value of k_x at
+        # that position.  Knowing how many pixels that is from the edge of the pupil plane image, we
+        # therefore know Delta k (the k-space sampling):
+        kmax_internal = 2.*np.pi / lam_over_diam
+        delta_k = 0.5*kmax_internal / (max_in_pupil+1)
+        # We can compare this with the ideal spacing for an Airy with this lam/diam and obscuration:
+        airy = galsim.Airy(lam_over_diam = lam_over_diam, obscuration = obscuration)
+        stepk_airy = airy.stepK() # This has the same units as those for kmax_internal and delta_k
+        print delta_k, stepk_airy
+        if delta_k > stepk_airy:
+            import warnings
+            r = delta_k / stepk_airy
+            warnings.warn("Input image may not be sampled enough! Consider increasing by %f"%r)
 
     return rho, pp_arr
 
@@ -533,7 +563,8 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
         if pupil_angle is None:
             pupil_angle = 0.*galsim.degrees
 
-        rho_all, in_pupil = load_pupil_plane(pupil_plane_im, pupil_angle, array_shape=array_shape)
+        rho_all, in_pupil = load_pupil_plane(pupil_plane_im, pupil_angle, array_shape=array_shape,
+                                             lam_over_diam=lam_over_diam, obscuration=obscuration)
 
     else:
         rho_all, in_pupil = generate_pupil_plane(
