@@ -377,7 +377,7 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
         max_pp_val = np.max(pp_arr)
         pp_arr[pp_arr<0.5*max_pp_val] = 0.
 
-    #galsim.ImageF(np.ascontiguousarray(pp_arr)).write('new_pp_arr_rotated.fits')
+    galsim.ImageF(np.ascontiguousarray(pp_arr)).write('new_pp_arr_rotated.fits')
     # Turn it into a boolean type, so all values >0 are True (doesn't matter what their value is)
     # and all values==0 are False.
     pp_arr = pp_arr.astype(bool)
@@ -393,8 +393,11 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
     # that is True.
     tmp_arr = pp_arr[0,:]
     max_in_pupil = -10
-    for ind in range(len(tmp_arr)/2):
-        if tmp_arr[ind]==True and tmp_arr[ind+1]==False:
+    for ind in range(len(tmp_arr)/2-1):
+        # Note, if we just do the first two checks then in the case of minor numerical errors after
+        # rotating the pupil plane, we might find the edge incorrectly due to noise in interpolation
+        # at edge of obscuration disk.
+        if tmp_arr[ind]==True and tmp_arr[ind+1]==False and tmp_arr[ind+2]==False:
             max_in_pupil = ind
             break
     if max_in_pupil < 0:
@@ -427,7 +430,6 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
         # We can compare this with the ideal spacing for an Airy with this lam/diam and obscuration:
         airy = galsim.Airy(lam_over_diam = lam_over_diam, obscuration = obscuration)
         stepk_airy = airy.stepK() # This has the same units as those for kmax_internal and delta_k
-        print delta_k, stepk_airy
         if delta_k > stepk_airy:
             import warnings
             r = delta_k / stepk_airy
