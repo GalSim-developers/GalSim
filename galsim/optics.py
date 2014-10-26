@@ -265,7 +265,7 @@ class OpticalPSF(GSObject):
             lam_over_diam=lam_over_diam, scale=scale_lookup, array_shape=(npix, npix),
             aberrations=aberrations, circular_pupil=circular_pupil, obscuration=obscuration,
             flux=flux, nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
-            pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle)
+            pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle, oversampling=oversampling)
         
         # Initialize the GSObject (InterpolatedImage)
         GSObject.__init__(
@@ -339,23 +339,13 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
         raise ValueError("Even-sized input arrays are required for the pupil plane!")
 
     #galsim.ImageF(np.ascontiguousarray(pupil_plane_im.array)).write('pp_arr_prepad.fits')
-    # Pad / chop image if necessary given the requested array shape
+    # Pad image if necessary given the requested array shape
     if array_shape is not None:
 
         # If requested array shape is larger than the input one, then add some zero-padding to the input image.
         if array_shape[0] > pupil_plane_im.array.shape[0]:
             border_size = int(0.5*(array_shape[0] - pupil_plane_im.array.shape[0]))
             pupil_plane_im.addBorder(border_size)
-
-        # If requested array shape is smaller than the input one, then take a subimage.
-        if array_shape[0] < pupil_plane_im.array.shape[0]:
-            border_size = int(0.5*(pupil_plane_im.array.shape[0] - array_shape[0]))
-            new_bounds = pupil_plane_im.bounds
-            new_bounds.xmin += border_size
-            new_bounds.xmax -= border_size
-            new_bounds.ymin += border_size
-            new_bounds.ymax -= border_size
-            pupil_plane_im = pupil_plane_im[new_bounds]
 
     # Deal with rotations if necessary.
     if pupil_angle == 0.*galsim.degrees:
@@ -392,8 +382,9 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
     # obscuration), then become True, then False again.  We want to find the maximum pixel index
     # that is True.
     tmp_arr = pp_arr[0,:]
+    #print len(tmp_arr),tmp_arr.astype(np.int64)
     max_in_pupil = -10
-    for ind in range(len(tmp_arr)/2-1):
+    for ind in range(1,len(tmp_arr)/2-1):
         # Note, if we just do the first two checks then in the case of minor numerical errors after
         # rotating the pupil plane, we might find the edge incorrectly due to noise in interpolation
         # at edge of obscuration disk.
@@ -411,6 +402,8 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
     # And then we want rho to go from negative to positive values before we roll it.
     rho_vec = np.linspace(-0.5*pp_arr.shape[0]*drho+0.5*drho,
                            0.5*pp_arr.shape[0]*drho-0.5*drho, num=pp_arr.shape[0])
+    effective_oversampling = (np.max(rho_vec)+drho)/2.
+    #print effective_oversampling
     rho_x, rho_y = np.meshgrid(rho_vec, rho_vec)
     assert rho_x.shape == pp_arr.shape
     assert rho_y.shape == pp_arr.shape
@@ -430,12 +423,13 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
         # We can compare this with the ideal spacing for an Airy with this lam/diam and obscuration:
         airy = galsim.Airy(lam_over_diam = lam_over_diam, obscuration = obscuration)
         stepk_airy = airy.stepK() # This has the same units as those for kmax_internal and delta_k
+        #print kmax_internal, max_in_pupil, delta_k, stepk_airy
         if delta_k > stepk_airy:
             import warnings
             r = delta_k / stepk_airy
             warnings.warn("Input image may not be sampled enough! Consider increasing by %f"%r)
 
-    return rho, pp_arr
+    return rho, pp_arr, effective_oversampling
 
 def generate_pupil_plane(array_shape=(256, 256), scale=1., lam_over_diam=2., circular_pupil=True,
                          obscuration=0., nstruts=0, strut_thick=0.05, 
@@ -565,15 +559,18 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
         if pupil_angle is None:
             pupil_angle = 0.*galsim.degrees
 
-        rho_all, in_pupil = load_pupil_plane(pupil_plane_im, pupil_angle, array_shape=array_shape,
-                                             lam_over_diam=lam_over_diam, obscuration=obscuration)
+        rho_all, in_pupil, effective_oversampling = \
+            load_pupil_plane(pupil_plane_im, pupil_angle, array_shape=array_shape,
+                             lam_over_diam=lam_over_diam, obscuration=obscuration)
 
     else:
         rho_all, in_pupil = generate_pupil_plane(
             array_shape=array_shape, scale=scale, lam_over_diam=lam_over_diam,
             circular_pupil=circular_pupil, obscuration=obscuration,
             nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle)
+        effective_oversampling = None
 
+    #print np.max(rho_all.real), np.max(rho_all.imag)
     #galsim.Image(np.ascontiguousarray(rho_all.real)).write('rho_real.fits')
     #galsim.Image(np.ascontiguousarray(rho_all.imag)).write('rho_im.fits')
     #foo = utilities.roll2d(in_pupil, (in_pupil.shape[0] / 2, in_pupil.shape[1] / 2))
@@ -631,7 +628,7 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
 
     wf[in_pupil] = np.exp(2j * np.pi * temp)
 
-    return wf
+    return wf, effective_oversampling
 
 def wavefront_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
                     circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
@@ -678,7 +675,7 @@ def wavefront_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrati
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    array = wavefront(
+    array, effective_oversampling = wavefront(
         array_shape=array_shape, scale=scale, lam_over_diam=lam_over_diam, aberrations=aberrations,
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
         strut_thick=strut_thick, strut_angle=strut_angle)
@@ -690,7 +687,7 @@ def wavefront_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrati
     scale = 2. * np.pi / array_shape[0]
     imreal = galsim.Image(np.ascontiguousarray(array.real.astype(np.float64)), scale=scale)
     imimag = galsim.Image(np.ascontiguousarray(array.imag.astype(np.float64)), scale=scale)
-    return (imreal, imimag)
+    return (imreal, imimag), effective_oversampling
 
 def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
         circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
@@ -735,7 +732,7 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
                            (positive in the counter-clockwise direction).  Must be an Angle
                            instance. [default: None]
     """
-    wf = wavefront(
+    wf, effective_oversampling = wavefront(
         array_shape=array_shape, scale=scale, lam_over_diam=lam_over_diam, aberrations=aberrations,
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
         strut_thick=strut_thick, strut_angle=strut_angle, pupil_plane_im=pupil_plane_im,
@@ -758,11 +755,12 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
     im = utilities.roll2d(im, (im.shape[0] / 2, im.shape[1] / 2)) 
     im *= (flux / (im.sum() * scale**2))
 
-    return im
+    return im, effective_oversampling
 
 def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
               circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
-              strut_angle=0.*galsim.degrees, flux=1., pupil_plane_im=None, pupil_angle=None):
+              strut_angle=0.*galsim.degrees, flux=1., pupil_plane_im=None, pupil_angle=None,
+              oversampling=1.5):
     """Return circular (default) or square pupil PSF with low-order aberrations as an Image.
 
     The PSF is centred on the `array[array_shape[0] / 2, array_shape[1] / 2] pixel` by default, and
@@ -803,13 +801,22 @@ def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
     @param pupil_angle     If `pupil_plane_im` is not None, rotation angle for the pupil plane
                            (positive in the counter-clockwise direction).  Must be an Angle
                            instance. [default: None]
+    @param oversampling    Effective level of oversampling requested.
     """
-    array = psf(
+    array, effective_oversampling = psf(
         array_shape=array_shape, scale=scale, lam_over_diam=lam_over_diam, aberrations=aberrations,
         circular_pupil=circular_pupil, obscuration=obscuration, flux=flux, nstruts=nstruts,
         strut_thick=strut_thick, strut_angle=strut_angle, pupil_plane_im=pupil_plane_im,
         pupil_angle=pupil_angle)
-    im = galsim.Image(array.astype(np.float64), scale=scale)
+
+    if effective_oversampling is not None:
+        oversamp_ratio = effective_oversampling / oversampling
+        tmp_im = galsim.Image(array.astype(np.float64), scale=scale/oversamp_ratio)
+        int_im = galsim.InterpolatedImage(tmp_im, calculate_stepk=False, calculate_maxk=False)
+        im = galsim.Image(array_shape[0], array_shape[1])
+        im = int_im.draw(image=im, scale=scale)
+    else:
+        im = galsim.Image(array.astype(np.float64), scale=scale)
     return im
 
 def otf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
