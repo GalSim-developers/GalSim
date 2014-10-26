@@ -269,7 +269,7 @@ class OpticalPSF(GSObject):
         
         # Initialize the GSObject (InterpolatedImage)
         GSObject.__init__(
-            self, galsim.InterpolatedImage(optimage, x_interpolant=interpolant, scale=scale_lookup,
+            self, galsim.InterpolatedImage(optimage, x_interpolant=interpolant,
                                            calculate_stepk=True, calculate_maxk=True,
                                            use_true_center=False, normalization='sb',
                                            gsparams=gsparams))
@@ -811,10 +811,7 @@ def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
 
     if effective_oversampling is not None:
         oversamp_ratio = effective_oversampling / oversampling
-        tmp_im = galsim.Image(array.astype(np.float64), scale=scale/oversamp_ratio)
-        int_im = galsim.InterpolatedImage(tmp_im, calculate_stepk=False, calculate_maxk=False)
-        im = galsim.Image(array_shape[0], array_shape[1])
-        im = int_im.draw(image=im, scale=scale)
+        im = galsim.Image(array.astype(np.float64), scale=scale/oversamp_ratio)
     else:
         im = galsim.Image(array.astype(np.float64), scale=scale)
     return im
