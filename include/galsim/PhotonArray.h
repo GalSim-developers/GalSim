@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef PHOTON_ARRAY_H
-#define PHOTON_ARRAY_H
+#ifndef GalSim_PhotonArray_H
+#define GalSim_PhotonArray_H
 
 /** 
  * @file PhotonArray.h @brief Contains a class definition for lists of photons from "shooting."

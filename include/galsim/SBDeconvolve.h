@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBDECONVOLVE_H
-#define SBDECONVOLVE_H
+#ifndef GalSim_SBDeconvolve_H
+#define GalSim_SBDeconvolve_H
 /** 
  * @file SBDeconvolve.h @brief SBProfile adapter which inverts its subject in k space to effect a
  * deconvolution.
@@ -59,4 +59,4 @@ namespace galsim {
 
 }
 
-#endif // SBDECONVOLVE_H
+#endif

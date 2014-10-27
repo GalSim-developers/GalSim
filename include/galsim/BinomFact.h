@@ -22,8 +22,8 @@
 // it for future use.  So if you are doing a lot of these, they become effectively
 // constant time functions rather than linear in the value of i.
 
-#ifndef BinomFactH
-#define BinomFactH
+#ifndef GalSim_BinomFactH
+#define GalSim_BinomFactH
 
 namespace galsim {
 

@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBKOLMOGOROV_IMPL_H
-#define SBKOLMOGOROV_IMPL_H
+#ifndef GalSim_SBKolmogorovImpl_H
+#define GalSim_SBKolmogorovImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBKolmogorov.h"
@@ -158,5 +158,5 @@ namespace galsim {
 
 }
 
-#endif // SBKOLMOGOROV_IMPL_H
+#endif
 

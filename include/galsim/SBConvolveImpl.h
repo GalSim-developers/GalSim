@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBCONVOLVE_IMPL_H
-#define SBCONVOLVE_IMPL_H
+#ifndef GalSim_SBConvolveImpl_H
+#define GalSim_SBConvolveImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBConvolve.h"
@@ -248,4 +248,4 @@ namespace galsim {
 
 }
 
-#endif // SBCONVOLVE_IMPL_H
+#endif

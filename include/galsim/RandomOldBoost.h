@@ -20,8 +20,8 @@
 // This is a version of Random.h that works with Boost releases <=1.47.  Is not being used right now
 // But I am putting it into repository just in case something comes up later.
 
-#ifndef RANDOM_H
-#define RANDOM_H
+#ifndef GalSim_Random_H
+#define GalSim_Random_H
 
 #include <sys/time.h>
 

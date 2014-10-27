@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef PROBABILITY_TREE_H
-#define PROBABILITY_TREE_H
+#ifndef GalSim_ProbabilityTree_H
+#define GalSim_ProbabilityTree_H
 
 #include <vector>
 
