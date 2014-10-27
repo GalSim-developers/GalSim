@@ -282,8 +282,8 @@ def test_draw():
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj2.draw(nx=200, ny=100) produced image with wrong flux")
 
-    # Test if we provide nx, ny, and an existing image.  It should:
-    #  - resize the existing image
+    # Test if we provide nx, ny, and an existing image (without defined bounds).  It should:
+    #  - define the size of the existing image
     #  - set the scale to obj2.nyquistDx()
     im10 = galsim.ImageF()
     obj2.draw(image=im10, nx=200, ny=100)
@@ -292,6 +292,34 @@ def test_draw():
     np.testing.assert_almost_equal(im10.array.shape[1], 200, 9, (
         "obj2.draw(image=im10, nx=200, ny=100) produced image with wrong size"))
     np.testing.assert_almost_equal(im10.scale, dx_nyq, 9, (
+        "obj2.draw(image=im10, nx=200, ny=100) produced image with wrong scale"))
+    np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4, (
+        "obj2.draw(image=im10, nx=200, ny=100) produced image with wrong flux"))
+
+    # Test if we provide nx, ny, and an existing image (with defined bounds).  It should:
+    #  - resize the existing image
+    #  - set the scale to obj2.nyquistDx()
+    im10 = galsim.ImageF(32, 32)
+    obj2.draw(image=im10, nx=200, ny=100)
+    np.testing.assert_almost_equal(im10.array.shape[0], 100, 9, (
+        "obj2.draw(image=im10, nx=200, ny=100) produced image with wrong size"))
+    np.testing.assert_almost_equal(im10.array.shape[1], 200, 9, (
+        "obj2.draw(image=im10, nx=200, ny=100) produced image with wrong size"))
+    np.testing.assert_almost_equal(im10.scale, dx_nyq, 9, (
+        "obj2.draw(image=im10, nx=200, ny=100) produced image with wrong scale"))
+    np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4, (
+        "obj2.draw(image=im10, nx=200, ny=100) produced image with wrong flux"))
+
+    # Test if we provide nx, ny, an existing image, and a scale.  It should:
+    #  - resize the existing image
+    #  - set the scale
+    im10 = galsim.ImageF(32, 32)
+    obj2.draw(image=im10, nx=200, ny=100, scale=0.5)
+    np.testing.assert_almost_equal(im10.array.shape[0], 100, 9, (
+        "obj2.draw(image=im10, nx=200, ny=100) produced image with wrong size"))
+    np.testing.assert_almost_equal(im10.array.shape[1], 200, 9, (
+        "obj2.draw(image=im10, nx=200, ny=100) produced image with wrong size"))
+    np.testing.assert_almost_equal(im10.scale, 0.5, 9, (
         "obj2.draw(image=im10, nx=200, ny=100) produced image with wrong scale"))
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4, (
         "obj2.draw(image=im10, nx=200, ny=100) produced image with wrong flux"))
@@ -310,8 +338,8 @@ def test_draw():
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4, (
         "obj2.draw(bounds=galsim.Bounds(1,200,1,100)) produced image with wrong flux"))
 
-    # Test if we provide bounds and an existing image.  It should:
-    #  - resize the existing image
+    # Test if we provide bounds and an existing image (without defined bounds).  It should:
+    #  - define the size of the existing image
     #  - set the scale to obj2.nyquistDx()
     im10 = galsim.ImageF()
     obj2.draw(image=im10, bounds=bounds)
@@ -320,6 +348,34 @@ def test_draw():
     np.testing.assert_almost_equal(im10.array.shape[1], 200, 9, (
         "obj2.draw(image=im10, bounds=galsim.Bounds(1,200,1,100)) produced image with wrong size"))
     np.testing.assert_almost_equal(im10.scale, dx_nyq, 9, (
+        "obj2.draw(image=im10, bounds=galsim.Bounds(1,200,1,100)) produced image with wrong scale"))
+    np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4, (
+        "obj2.draw(image=im10, bounds=galsim.Bounds(1,200,1,100)) produced image with wrong flux"))
+
+    # Test if we provide bounds and an existing image (with defined bounds).  It should:
+    #  - resize the existing image
+    #  - set the scale to obj2.nyquistDx()
+    im10 = galsim.ImageF(32, 32)
+    obj2.draw(image=im10, bounds=bounds)
+    np.testing.assert_almost_equal(im10.array.shape[0], 100, 9, (
+        "obj2.draw(image=im10, bounds=galsim.Bounds(1,200,1,100)) produced image with wrong size"))
+    np.testing.assert_almost_equal(im10.array.shape[1], 200, 9, (
+        "obj2.draw(image=im10, bounds=galsim.Bounds(1,200,1,100)) produced image with wrong size"))
+    np.testing.assert_almost_equal(im10.scale, dx_nyq, 9, (
+        "obj2.draw(image=im10, bounds=galsim.Bounds(1,200,1,100)) produced image with wrong scale"))
+    np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4, (
+        "obj2.draw(image=im10, bounds=galsim.Bounds(1,200,1,100)) produced image with wrong flux"))
+
+    # Test if we provide bounds, an existing image, and a scale.  It should:
+    #  - resize the existing image
+    #  - set the scale
+    im10 = galsim.ImageF(32, 32)
+    obj2.draw(image=im10, bounds=bounds, scale=0.5)
+    np.testing.assert_almost_equal(im10.array.shape[0], 100, 9, (
+        "obj2.draw(image=im10, bounds=galsim.Bounds(1,200,1,100)) produced image with wrong size"))
+    np.testing.assert_almost_equal(im10.array.shape[1], 200, 9, (
+        "obj2.draw(image=im10, bounds=galsim.Bounds(1,200,1,100)) produced image with wrong size"))
+    np.testing.assert_almost_equal(im10.scale, 0.5, 9, (
         "obj2.draw(image=im10, bounds=galsim.Bounds(1,200,1,100)) produced image with wrong scale"))
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4, (
         "obj2.draw(image=im10, bounds=galsim.Bounds(1,200,1,100)) produced image with wrong flux"))

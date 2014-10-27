@@ -747,7 +747,7 @@ class GSObject(object):
             if add_to_image:
                 raise ValueError("Cannot add_to_image if bounds is not None")
             if nx is not None or ny is not None:
-                raise ValueError("Cannot set both bounds and nx, ny")
+                raise ValueError("Cannot set both bounds and (nx, ny)")
             if image is None:
                 image = galsim.Image(bounds, dtype=dtype)
             else:
@@ -755,7 +755,7 @@ class GSObject(object):
                 image.setZero()
         elif nx is not None or ny is not None:
             if add_to_image:
-                raise ValueError("Cannot add_to_image if nx or ny is not None")
+                raise ValueError("Cannot add_to_image if nx is not None or ny is not None")
             if nx is None or ny is None:
                 raise ValueError("Must set either both or neither of nx, ny")
             if image is None:
