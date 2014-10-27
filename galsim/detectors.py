@@ -23,6 +23,7 @@ failure, interpixel capacitance, etc.
 
 import galsim
 import numpy
+import sys
 
 def applyNonlinearity(self, NLfunc, args=None):
     """
@@ -106,8 +107,9 @@ def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
     # Extracting the array out since log won't operate on the Image.
     arr_in = 1.0*self.array/float(exp_time)
 
-    if numpy.any(arr_in < 10**(-320)):
-	raise ValueError("At least one pixel value is too close to 0 or negative.")
+    if numpy.any(arr_in < sys.float_info.min):
+	import warnings
+	warnings.warn("At least one element of image/exp_time is too close to 0 or negative. Floating point errors might occur.")
 
     arr_out = self.array*(1.0 + alpha*numpy.log10(arr_in))
 
