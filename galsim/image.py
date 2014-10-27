@@ -235,15 +235,15 @@ class Image(object):
 
         # Figure out what dtype we want:
         if dtype in Image.alias_dtypes: dtype = Image.alias_dtypes[dtype]
-        if dtype != None and dtype not in Image.valid_dtypes:
+        if dtype is not None and dtype not in Image.valid_dtypes:
             raise ValueError("dtype must be one of "+str(Image.valid_dtypes)+
                              ".  Instead got "+str(dtype))
-        if array != None:
-            if array.dtype.type not in Image.cpp_valid_dtypes and dtype == None:
+        if array is not None:
+            if array.dtype.type not in Image.cpp_valid_dtypes and dtype is None:
                 raise ValueError("array's dtype.type must be one of "+str(Image.cpp_valid_dtypes)+
                                  ".  Instead got "+str(array.dtype.type)+".  Or can set "+
                                  "dtype explicitly.")
-            if dtype != None and dtype != array.dtype.type:
+            if dtype is not None and dtype != array.dtype.type:
                 array = array.astype(dtype)
             # Be careful here: we have to watch out for little-endian / big-endian issues.
             # The path of least resistance is to check whether the array.dtype is equal to the
@@ -252,20 +252,22 @@ class Image(object):
             if not array.dtype.isnative:
                 array = array.astype(array.dtype.newbyteorder('='))
             self.dtype = array.dtype.type
-        elif dtype != None:
+        elif dtype is not None:
             self.dtype = dtype
+        elif image is not None:
+            self.dtype = image.array.dtype.type
         else:
             self.dtype = numpy.float32
 
         # Construct the image attribute
-        if (ncol != None or nrow != None):
-            if bounds != None:
+        if (ncol is not None or nrow is not None):
+            if bounds is not None:
                 raise TypeError("Cannot specify both ncol/nrow and bounds")
-            if array != None:
+            if array is not None:
                 raise TypeError("Cannot specify both ncol/nrow and array")
-            if image != None:
+            if image is not None:
                 raise TypeError("Cannot specify both ncol/nrow and image")
-            if ncol == None or nrow == None:
+            if ncol is None or nrow is None:
                 raise TypeError("Both nrow and ncol must be provided")
             try:
                 ncol = int(ncol)
@@ -273,20 +275,20 @@ class Image(object):
             except:
                 raise TypeError("Cannot parse ncol, nrow as integers")
             self.image = _galsim.ImageAlloc[self.dtype](ncol, nrow)
-            if init_value != None:
+            if init_value is not None:
                 self.image.fill(init_value)
-        elif bounds != None:
-            if array != None:
+        elif bounds is not None:
+            if array is not None:
                 raise TypeError("Cannot specify both bounds and array")
-            if image != None:
+            if image is not None:
                 raise TypeError("Cannot specify both bounds and image")
             if not isinstance(bounds, galsim.BoundsI):
                 raise TypeError("bounds must be a galsim.BoundsI instance")
             self.image = _galsim.ImageAlloc[self.dtype](bounds)
-            if init_value != None:
+            if init_value is not None:
                 self.image.fill(init_value)
-        elif array != None:
-            if image != None:
+        elif array is not None:
+            if image is not None:
                 raise TypeError("Cannot specify both array and image")
             if not isinstance(array, numpy.ndarray):
                 raise TypeError("array must be a numpy.ndarray instance")
@@ -294,9 +296,9 @@ class Image(object):
                 self.image = _galsim.ConstImageView[self.dtype](array, xmin, ymin)
             else:
                 self.image = _galsim.ImageView[self.dtype](array, xmin, ymin)
-            if init_value != None:
+            if init_value is not None:
                 raise TypeError("Cannot specify init_value with array")
-        elif image != None:
+        elif image is not None:
             if isinstance(image, Image):
                 image = image.image
             self.image = None
@@ -304,7 +306,7 @@ class Image(object):
                 if ( isinstance(image,_galsim.ImageAlloc[im_dtype]) or
                      isinstance(image,_galsim.ImageView[im_dtype]) or
                      isinstance(image,_galsim.ConstImageView[im_dtype]) ):
-                    if dtype != None and im_dtype != dtype:
+                    if dtype is not None and im_dtype != dtype:
                         # Allow dtype to force a retyping of the provided image
                         # e.g. im = ImageF(...)
                         #      im2 = ImageD(im)
@@ -312,14 +314,14 @@ class Image(object):
                     else:
                         self.image = image
                     break
-            if self.image == None:
+            if self.image is None:
                 # Then never found the dtype above:
                 raise TypeError("image must be an Image or BaseImage type")
-            if init_value != None:
+            if init_value is not None:
                 raise TypeError("Cannot specify init_value with image")
         else:
             self.image = _galsim.ImageAlloc[self.dtype]()
-            if init_value != None:
+            if init_value is not None:
                 raise TypeError("Cannot specify init_value without setting an initial size")
 
         # Construct the wcs attribute
@@ -376,6 +378,11 @@ class Image(object):
 
     def resize(self, bounds):
         """Resize the image to have a new bounds (must be a BoundsI instance)
+
+        Note that the resized image will have uninitialized data.  If you want to preserve
+        the existing data values, you should either use `subImage` (if you want a smaller
+        portion of the current Image) or make a new Image and copy over the current values
+        into a portion of the new image (if you are resizing to a larger Image).
         """
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")

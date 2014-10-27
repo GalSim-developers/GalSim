@@ -668,18 +668,18 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         Also, not all the normal parameters of the GSObject method are available.
 
         @param image        If provided, this will be the image on which to draw the profile.
-                            If `image = None`, then an automatically-sized Image will be created.
-                            If `image != None`, but its bounds are undefined (e.g. if it was
+                            If `image` is None, then an automatically-sized Image will be created.
+                            If `image` is given, but its bounds are undefined (e.g. if it was
                             constructed with `image = galsim.Image()`), then it will be resized
                             appropriately based on the profile's size [default: None].
         @param scale        If provided, use this as the pixel scale for the image.
-                            If `scale` is `None` and `image != None`, then take the provided
+                            If `scale` is None and image is given, then take the provided
                             image's pixel scale.
-                            If `scale` is `None` and `image == None`, then use the Nyquist scale.
+                            If `scale` is None and image is None, then use the Nyquist scale.
                             If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
                             [default: None]
         @param dtype        The data type to use for an automatically constructed image.  Only
-                            valid if `image = None`. [default: None, which means to use
+                            valid if `image` is None. [default: None, which means to use
                             numpy.float32]
         @param wmult        A multiplicative factor by which to enlarge (in each direction) the
                             default automatically calculated FFT grid size used for any
@@ -1248,7 +1248,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             cf_image.scale = 1.
 
         # If x_interpolant not specified on input, use bilinear
-        if x_interpolant == None:
+        if x_interpolant is None:
             linear = galsim.Linear(tol=1.e-4)
             x_interpolant = galsim.InterpolantXY(linear)
         else:
@@ -1425,7 +1425,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
         raise ValueError("Input keyword variance must be zero or positive.")
 
     # If x_interpolant not specified on input, use bilinear
-    if x_interpolant == None:
+    if x_interpolant is None:
         linear = galsim.Linear(tol=1.e-4)
         x_interpolant = galsim.InterpolantXY(linear)
     else:
