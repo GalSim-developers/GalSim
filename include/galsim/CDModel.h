@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef CDMODEL_H
-#define CDMODEL_H
+#ifndef GalSim_CDModel_H
+#define GalSim_CDModel_H
 
 //#define DEBUGLOGGING
 
