@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef ONE_DIMENSIONAL_DEVIATE_H
-#define ONE_DIMENSIONAL_DEVIATE_H
+#ifndef GalSim_OneDimensionalDeviate_H
+#define GalSim_OneDimensionalDeviate_H
 
 #include <list>
 #include <vector>

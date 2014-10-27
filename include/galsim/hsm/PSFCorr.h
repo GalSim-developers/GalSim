@@ -17,6 +17,9 @@
  *    and/or other materials provided with the distribution.
  */
 
+#ifndef GalSim_PsfCorr_H
+#define GalSim_PsfCorr_H
+
 /**
  * @file PSFCorr.h 
  *
@@ -480,3 +483,4 @@ namespace hsm {
   
 }
 }
+#endif

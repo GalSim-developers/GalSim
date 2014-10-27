@@ -19,8 +19,8 @@
 
 // Include file with common "magic numbers" for Astronomy
 
-#ifndef ASTROCONST_H
-#define ASTROCONST_H
+#ifndef GalSim_AstroConst_H
+#define GalSim_AstroConst_H
 
 #ifndef PI
 #define PI 3.14159265358979323
@@ -66,5 +66,5 @@ const double EarthMass        = 3.00349e-6; //Earth mass in Solar units
 const double MJD0             = 2400000.5; //Offset for modified Julian dates
 
 
-#endif  // ASTROCONST_H
+#endif
 

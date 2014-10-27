@@ -339,8 +339,11 @@ class Bandpass(object):
         observation are also required.
 
         @param zeropoint            see above for valid input options
-        @param effective_diameter   Effective diameter of telescope aperture in cm^2. [default:
-                                    None, but required if zeropoint is 'AB', 'Vega', or 'ST'].
+        @param effective_diameter   Effective diameter of telescope aperture in cm. This number must
+                                    account for any central obscuration, i.e. for a diameter d and
+                                    linear obscuration fraction obs, the effective diameter is
+                                    d*sqrt(1-obs^2). [default: None, but required if zeropoint is
+                                    'AB', 'Vega', or 'ST'].
         @param exptime              Exposure time in seconds. [default: None, but required if
                                     zeropoint is 'AB', 'Vega', or 'ST'].
         @returns new Bandpass with zeropoint set.

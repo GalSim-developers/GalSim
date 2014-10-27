@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef LRUCACHE_H
-#define LRUCACHE_H
+#ifndef GalSim_LRUCache_H
+#define GalSim_LRUCache_H
 
 #include <list>
 #include <map>
@@ -166,5 +166,5 @@ namespace galsim {
 
 }
 
-#endif // LRUCACHE_H
+#endif
 
