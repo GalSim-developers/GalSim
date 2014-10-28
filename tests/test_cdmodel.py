@@ -43,6 +43,9 @@ def test_simplegeometry():
     size = 50
     center = 25
     shiftcoeff = 1.e-7
+    # shift coefficients in DECam are of that order
+    # note that this is fully degenerate with the gain, i.e. the flux level in the simulations
+
     level = 1.e5
     
     # create otherwise empty image with central pixel at one
@@ -293,9 +296,8 @@ def test_exampleimage():
     """
     import time
     t1 = time.time()
-    shiftcoeff = 1.e-7 # This value is more (?) appropriate for the gain levels in the simulated
-                       # example image than the 1.e-5 shiftcoeff used elsewhere (TODO: Edit as re
-                       # required please Daniel!)
+    shiftcoeff = 1.e-7 
+
     #n, r0, t0, rx, tx, r, t, alpha
     cd = PowerLawCD(
         5, 2. * shiftcoeff, shiftcoeff, 1.25 * shiftcoeff, 1.25 * shiftcoeff, 0.75 * shiftcoeff,
