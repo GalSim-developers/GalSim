@@ -27,44 +27,45 @@ import sys
 
 def applyNonlinearity(self, NLfunc, args=None):
     """
-    Applies the given non-linearity function (`NLfunc`) to the image, and returns a new image of the
-    same datatype.
+    Applies the given non-linearity function (`NLfunc`) to the image, and returns a new image of
+    the same datatype.
 
-    The image should be in units of electrons (not ADU), and should include both the signal from the
-    astronomical objects as well as the background level.  Other detectors effects such as dark
-    current and persistence (not currently included in GalSim) would also occur before the inclusion
-    of nonlinearity.
+    The image should be in units of electrons (not ADU), and should include both the signal from
+    the astronomical objects as well as the background level.  Other detectors effects such as dark
+    current and persistence (not currently included in GalSim) would also occur before the
+    inclusion of nonlinearity.
 
     The argument `NLfunc` is a callable function (for example a lambda function, a
     galsim.LookupTable, or a user-defined function), possibly with arguments that need to be given
-    as input using the `args` keyword.  If the `NLfunc` has more than one parameter to be specified, 
-    then those parameter values need to be given as a list to applyNonlinearity. `NLfunc` should be able to take a 2d NumPy array as 
-    input, and return a NumPy array of the same shape.  It should be defined such that it outputs the
-    final image with nonlinearity included (i.e., in the limit that there is no nonlinearity, the 
-    function should return the original image, NOT zero).
+    as input using the `args` keyword.  If the `NLfunc` has more than one parameter to be
+    specified, then those parameter values need to be given as a list to applyNonlinearity.
+    `NLfunc` should be able to take a 2d NumPy array as input, and return a NumPy array of the
+    same shape.  It should be defined such that it outputs the final image with nonlinearity
+    included (i.e., in the limit that there is no nonlinearity, the function should return the
+    original image, NOT zero).
 
     Calling with no parameter
     -------
 
-	>>> f = lambda x: x + (1e-7)*(x**2)
-	>>> imgNL = img.applyNonlinearity(f)
+        >>> f = lambda x: x + (1e-7)*(x**2)
+        >>> imgNL = img.applyNonlinearity(f)
 
     Calling with 1 parameter
     ------
--
-	>>> f = lambda x,beta: x + beta*(x**2)
-	>>> beta = 1e-7
-	>>> imgNL = img.applyNonlinearity(f,beta)
+
+        >>> f = lambda x,beta: x + beta*(x**2)
+        >>> beta = 1e-7
+        >>> imgNL = img.applyNonlinearity(f,beta)
 
     Calling with 1 or more parameters
     -------
 
-	>>> f = lambda x, beta1, beta2: x - beta1*x*x + beta2*x*x*x
-	>>> args = [1e-7,1e-10]
-	>>> imgNL = img.applyNonlinearity(f, *args)
+        >>> f = lambda x, beta1, beta2: x - beta1*x*x + beta2*x*x*x
+        >>> args = [1e-7,1e-10]
+        >>> imgNL = img.applyNonlinearity(f, *args)
 
-    On output, the Image instance `imgNL` is the transformation of the Image instance `img` given by the 
-    user-defined function `f` with user-defined parameters of 1e-7 and 1e-10.
+    On output, the Image instance `imgNL` is the transformation of the Image instance `img` given
+    by the user-defined function `f` with user-defined parameters of 1e-7 and 1e-10.
 
     @param NLfunc    The function that maps the input image pixel values to the output image pixel
                      values. 
@@ -80,7 +81,7 @@ def applyNonlinearity(self, NLfunc, args=None):
     elif type(args) if list or type(args) is tuple:    # 1 or more parameter
         img_nl = NLfunc(self.array,*args)
     else:                                              # 1 parameter
-	img_nl = NLfunc(self.array,args)
+        img_nl = NLfunc(self.array,args)
 
     if not isinstance(img_nl, numpy.ndarray) or self.array.shape != img_nl.shape:
         raise ValueError("Image shapes are inconsistent after applying nonlinearity function!")
@@ -124,8 +125,9 @@ def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
     arr_in = 1.0*self.array/float(exp_time)
 
     if numpy.any(arr_in < sys.float_info.min):
-	import warnings
-	warnings.warn("At least one element of image/exp_time is too close to 0 or negative. Floating point errors might occur.")
+        import warnings
+        warnings.warn("At least one element of image/exp_time is too close to 0 or negative.")
+        warnings.warn("Floating point errors might occur.")
 
     arr_out = self.array*(1.0 + alpha*numpy.log10(arr_in))
 
