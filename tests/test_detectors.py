@@ -59,6 +59,16 @@ def test_nonlinearity_basic():
         im_save.array, im.array,
         err_msg = 'Input image was modified after addition of nonlinearity')
 
+    # Check that calling a NLfunc with no parameter works
+    NLfunc = lambda x: x + 0.001*(x**2)
+    im_new = im.applyNonlinearity(NLfunc)
+    assert im_new.scale == im.scale
+    assert im_new.dtype == im.dtype
+    assert im_new.bounds == im.bounds
+    np.testing.assert_array_equal(
+        im_new.array, im.array+0.001*((im_array)**2),
+        err_msg = 'Nonlinearity function with no argument does not function as desired.')
+
     # Check that calling a NLfunc with a parameter works
     NLfunc = lambda x, beta: x + beta*(x**2)
     im_new = im.applyNonlinearity(NLfunc, 0.001)
