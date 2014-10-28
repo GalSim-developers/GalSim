@@ -38,16 +38,30 @@ def applyNonlinearity(self, NLfunc, args=None):
     The argument `NLfunc` is a callable function (for example a lambda function, a
     galsim.LookupTable, or a user-defined function), possibly with arguments that need to be given
     as input using the `args` keyword.  If the `NLfunc` has more than one parameter to be specified, 
-    then it must take its arguments as a tuple. `NLfunc` should be able to take a 2d NumPy array as 
+    then those parameter values need to be given as a list to applyNonlinearity. `NLfunc` should be able to take a 2d NumPy array as 
     input, and return a NumPy array of the same shape.  It should be defined such that it outputs the
     final image with nonlinearity included (i.e., in the limit that there is no nonlinearity, the 
     function should return the original image, NOT zero).
 
-    Calling
+    Calling with no parameter
     -------
 
-	>>> f = lambda x, (beta1, beta2): x - beta1*x*x + beta2*x*x*x
-	>>> imgNL = img.applyNonlinearity(f, args=(1e-7,1e-10))
+	>>> f = lambda x: x + (1e-7)*(x**2)
+	>>> imgNL = img.applyNonlinearity(f)
+
+    Calling with 1 parameter
+    ------
+-
+	>>> f = lambda x,beta: x + beta*(x**2)
+	>>> beta = 1e-7
+	>>> imgNL = img.applyNonlinearity(f,beta)
+
+    Calling with 1 or more parameters
+    -------
+
+	>>> f = lambda x, beta1, beta2: x - beta1*x*x + beta2*x*x*x
+	>>> args = [1e-7,1e-10]
+	>>> imgNL = img.applyNonlinearity(f, *args)
 
     On output, the Image instance `imgNL` is the transformation of the Image instance `img` given by the 
     user-defined function `f` with user-defined parameters of 1e-7 and 1e-10.
@@ -61,10 +75,12 @@ def applyNonlinearity(self, NLfunc, args=None):
     """
 
     # Extract out the array from Image since not all functions can act directly on Images
-    if args != None:
-        img_nl = NLfunc(self.array, args) 
-    else:
-        img_nl = NLfunc(self.array)
+    if args == None:                                   #no parameter
+        img_nl = NLfunc(self.array) 
+    elif type(args) if list or type(args) is tuple:    # 1 or more parameter
+        img_nl = NLfunc(self.array,*args)
+    else:                                              # 1 parameter
+	img_nl = NLfunc(self.array,args)
 
     if not isinstance(img_nl, numpy.ndarray) or self.array.shape != img_nl.shape:
         raise ValueError("Image shapes are inconsistent after applying nonlinearity function!")
