@@ -25,7 +25,7 @@ import galsim
 import numpy
 import sys
 
-def applyNonlinearity(self, NLfunc, args=None):
+def applyNonlinearity(self, NLfunc, *args):
     """
     Applies the given non-linearity function (`NLfunc`) to the image, and returns a new image of
     the same datatype.
@@ -37,8 +37,7 @@ def applyNonlinearity(self, NLfunc, args=None):
 
     The argument `NLfunc` is a callable function (for example a lambda function, a
     galsim.LookupTable, or a user-defined function), possibly with arguments that need to be given
-    as input using the `args` keyword.  If the `NLfunc` has more than one parameter to be
-    specified, then those parameter values need to be given as a list to applyNonlinearity.
+    as subsequent arguments given to the `applyNonlinearity` function (after the `NLfunc` argument.
     `NLfunc` should be able to take a 2d NumPy array as input, and return a NumPy array of the
     same shape.  It should be defined such that it outputs the final image with nonlinearity
     included (i.e., in the limit that there is no nonlinearity, the function should return the
@@ -50,38 +49,24 @@ def applyNonlinearity(self, NLfunc, args=None):
         >>> f = lambda x: x + (1e-7)*(x**2)
         >>> imgNL = img.applyNonlinearity(f)
 
-    Calling with 1 parameter
-    ------
-
-        >>> f = lambda x,beta: x + beta*(x**2)
-        >>> beta = 1e-7
-        >>> imgNL = img.applyNonlinearity(f,beta)
-
     Calling with 1 or more parameters
     -------
 
         >>> f = lambda x, beta1, beta2: x - beta1*x*x + beta2*x*x*x
-        >>> args = [1e-7,1e-10]
-        >>> imgNL = img.applyNonlinearity(f, *args)
+        >>> imgNL = img.applyNonlinearity(f, 1.e-7, 1.e-10)
 
     On output, the Image instance `imgNL` is the transformation of the Image instance `img` given
-    by the user-defined function `f` with user-defined parameters of 1e-7 and 1e-10.
+    by the user-defined function `f` with `beta1` = 1.e-7 and `beta2` = 1.e-10.
 
     @param NLfunc    The function that maps the input image pixel values to the output image pixel
                      values. 
-    @param args      Any necessary arguments required by `NLfunc`, which must take either a single
-                     non-iterable argument or a tuple containing multiple parameters.
+    @param *args     Any subsequent arguments are passed along to the NLfunc function.
 
     @returns a new Image with the nonlinearity effects included.
     """
 
     # Extract out the array from Image since not all functions can act directly on Images
-    if args == None:                                   #no parameter
-        img_nl = NLfunc(self.array) 
-    elif type(args) if list or type(args) is tuple:    # 1 or more parameter
-        img_nl = NLfunc(self.array,*args)
-    else:                                              # 1 parameter
-        img_nl = NLfunc(self.array,args)
+    img_nl = NLfunc(self.array, *args)
 
     if not isinstance(img_nl, numpy.ndarray) or self.array.shape != img_nl.shape:
         raise ValueError("Image shapes are inconsistent after applying nonlinearity function!")

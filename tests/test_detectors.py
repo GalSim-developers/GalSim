@@ -70,15 +70,15 @@ def test_nonlinearity_basic():
         err_msg = 'Nonlinearity function with one argument does not function as desired.')
 
     # Check that calling a NLfunc with multiple parameters works
-    NLfunc = lambda x, (beta1, beta2): x + beta1*(x**2) + beta2*(x**3)
-    im_new = im.applyNonlinearity(NLfunc, args=(0.001,-0.0001))
+    NLfunc = lambda x, beta1, beta2: x + beta1*(x**2) + beta2*(x**3)
+    im_new = im.applyNonlinearity(NLfunc, 0.001, -0.0001)
     assert im_new.scale == im.scale
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
     np.testing.assert_array_equal(
         im_new.array, im.array + 0.001*((im.array)**2) -0.0001*((im.array)**3),
         err_msg = 'Nonlinearity function with multiple arguments does not function as desired')
-	
+
     # Check for preservation for certain NLfunc.
     im_new = im.applyNonlinearity(lambda x : x)
     np.testing.assert_array_almost_equal(
