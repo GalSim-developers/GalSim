@@ -21,6 +21,8 @@ New Features
   for greater efficiency. (#563)
 - Extended to the `rotate`, `shear`, and `transform` methods of ChromaticObject the ability
   to take functions of wavelength for the arguments. (#581)
+- Added a module to describe charge deflection in CCD pixels (also known as the "brighter-fatter"
+  effect) following the model of Antilogus et al (2014). (#524)
 
 Bug Fixes and Improvements
 --------------------------
