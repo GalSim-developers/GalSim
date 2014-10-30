@@ -538,7 +538,6 @@ def test_OpticalPSF_pupil_plane():
     rot_angle = 27.*galsim.degrees
     ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
                                 strut_angle=strut_angle+rot_angle)
-    im = galsim.fits.read(os.path.join(imgdir, 'sample_pupil_rolled.fits'))
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
                                  pupil_angle=rot_angle)
     im_ref_psf = ref_psf.drawImage(scale=scale)
@@ -557,7 +556,6 @@ def test_OpticalPSF_pupil_plane():
     spher = -0.02
     ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
                                 strut_angle=strut_angle, defocus=defocus, coma1=coma1, spher=spher)
-    im = galsim.fits.read(os.path.join(imgdir, 'sample_pupil_rolled.fits'))
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
                                  defocus=defocus, coma1=coma1, spher=spher)
     im_ref_psf = ref_psf.drawImage(scale=scale)
@@ -569,8 +567,49 @@ def test_OpticalPSF_pupil_plane():
         im_test_psf.array, im_ref_psf.array, decimal=decimal_dft,
         err_msg="Inconsistent OpticalPSF image for aberrated model after loading pupil plane.")
 
+    # Yet another test:
+    # Supply the pupil plane at higher resolution, and make sure that the routine figures out the
+    # sampling and gets the right image scale etc.
+    ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
+                                strut_angle=strut_angle)
+    # Make higher resolution pupil plane image via interpolation
+    rescale_fac = 0.62
+    int_im = galsim.InterpolatedImage(im, calculate_maxk=False, calculate_stepk=False)
+    new_im = int_im.draw(scale=rescale_fac*im.scale)
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
+                                 pupil_plane_im=new_im)
+    im_ref_psf = ref_psf.drawImage(scale=scale)
+    im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+    im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    np.testing.assert_array_almost_equal(
+        im_test_psf.array, im_ref_psf.array, decimal=decimal,
+        err_msg="Inconsistent OpticalPSF image for basic model after loading high-res pupil plane.")
+
+    # Now supply the pupil plane at the original resolution, but remove some of the padding.  We
+    # want it to properly recognize that it needs more padding, and include it.
+    remove_pad = -23
+    sub_im = im[im.bounds.addBorder(remove_pad)]
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
+                                 pupil_plane_im=sub_im)
+    im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+    im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    np.testing.assert_array_almost_equal(
+        im_test_psf.array, im_ref_psf.array, decimal=decimal,
+        err_msg="Inconsistent OpticalPSF image for basic model after loading less padded pupil plane.")
+
+    # Now supply the pupil plane at the original resolution, with extra padding.
+    new_pad = 76
+    big_im = galsim.Image(im.bounds.addBorder(new_pad))
+    big_im[im.bounds] = im
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
+                                 pupil_plane_im=big_im)
+    im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+    im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    np.testing.assert_array_almost_equal(
+        im_test_psf.array, im_ref_psf.array, decimal=decimal,
+        err_msg="Inconsistent OpticalPSF image for basic model after loading more padded pupil plane.")
+
     # Minor test: same answer if we use image, array, or filename for reading in array.
-    im = galsim.fits.read(os.path.join(imgdir, 'sample_pupil_rolled.fits'))
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im)
     im_test_psf = test_psf.drawImage(scale=scale)
     test_psf_2 = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im.array)

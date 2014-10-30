@@ -810,7 +810,7 @@ def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
         pupil_angle=pupil_angle)
 
     if effective_oversampling is not None:
-        oversamp_ratio = effective_oversampling / oversampling
+        oversamp_ratio = effective_oversampling / oversampling 
         im = galsim.Image(array.astype(np.float64), scale=scale/oversamp_ratio)
     else:
         im = galsim.Image(array.astype(np.float64), scale=scale)
