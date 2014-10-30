@@ -850,7 +850,7 @@ def otf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    wf = wavefront(
+    wf, _ = wavefront(
         array_shape=array_shape, scale=scale, lam_over_diam=lam_over_diam, aberrations=aberrations, 
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
         strut_thick=strut_thick, strut_angle=strut_angle)
