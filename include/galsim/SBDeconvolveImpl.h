@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBDECONVOLVE_IMPL_H
-#define SBDECONVOLVE_IMPL_H
+#ifndef GalSim_SBDeconvolveImpl_H
+#define GalSim_SBDeconvolveImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBDeconvolve.h"
@@ -73,4 +73,4 @@ namespace galsim {
 
 }
 
-#endif // SBDECONVOLVE_IMPL_H
+#endif 

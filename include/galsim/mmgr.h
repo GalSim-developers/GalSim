@@ -29,8 +29,8 @@
 // [NOTE: Best when viewed with 8-character tabs]
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-#ifndef _H_MMGR
-#define _H_MMGR
+#ifndef GalSim_MMGR_H
+#define GalSim_MMGR_H
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // For systems that don't have the __FUNCTION__ variable, we can just define it here

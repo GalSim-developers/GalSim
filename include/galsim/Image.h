@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef Image_H
-#define Image_H
+#ifndef GalSim_Image_H
+#define GalSim_Image_H
 
 #include <algorithm>
 #include <functional>

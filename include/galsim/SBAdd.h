@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBADD_H
-#define SBADD_H
+#ifndef GalSim_SBAdd_H
+#define GalSim_SBAdd_H
 /** 
  * @file SBAdd.h @brief SBProfile adapter that is the sum of 2 or more other SBProfiles.
  */
@@ -61,5 +61,5 @@ namespace galsim {
     };
 }
 
-#endif // SBPROFILE_H
+#endif
 

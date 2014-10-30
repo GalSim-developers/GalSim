@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef RANDOM_H
-#define RANDOM_H
+#ifndef GalSim_Random_H
+#define GalSim_Random_H
 /**
  * @file Random.h 
  * 

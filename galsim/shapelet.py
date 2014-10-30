@@ -264,7 +264,7 @@ def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams
 
     bvec = LVector(order)
 
-    if image.wcs != None and not image.wcs.isPixelScale():
+    if image.wcs is not None and not image.wcs.isPixelScale():
         # TODO: Add ability for ShapeletFitImage to take jacobian matrix.
         raise NotImplementedError("Sorry, cannot (yet) fit a shapelet model to an image "+
                                     "with a non-trivial WCS.")

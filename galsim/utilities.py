@@ -238,7 +238,7 @@ def rand_arr(shape, deviate):
 def convert_interpolant_to_2d(interpolant):
     """Convert a given interpolant to an Interpolant2d if it is given as a string or 1-d.
     """
-    if interpolant == None:
+    if interpolant is None:
         return None  # caller is responsible for setting a default if desired.
     elif isinstance(interpolant, galsim.Interpolant2d):
         return interpolant

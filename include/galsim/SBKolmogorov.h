@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBKOLMOGOROV_H
-#define SBKOLMOGOROV_H
+#ifndef GalSim_SBKolmogorov_H
+#define GalSim_SBKolmogorov_H
 /** 
  * @file SBKolmogorov.h @brief SBProfile of an Kolmogorov function
  */
@@ -77,5 +77,5 @@ namespace galsim {
 
 }
 
-#endif // SBKOLMOGOROV_H
+#endif
 

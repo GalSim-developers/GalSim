@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBADD_IMPL_H
-#define SBADD_IMPL_H
+#ifndef GalSim_SBAddImpl_H
+#define GalSim_SBAddImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBAdd.h"
@@ -167,5 +167,5 @@ namespace galsim {
 
 }
 
-#endif // SBADD_IMPL_H
+#endif
 

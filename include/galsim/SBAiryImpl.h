@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBAIRY_IMPL_H
-#define SBAIRY_IMPL_H
+#ifndef GalSim_SBAiryImpl_H
+#define GalSim_SBAiryImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBAiry.h"
@@ -266,5 +266,5 @@ namespace galsim {
     };
 }
 
-#endif // SBAIRY_IMPL_H
+#endif
 

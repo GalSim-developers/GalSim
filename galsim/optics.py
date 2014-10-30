@@ -217,7 +217,7 @@ class OpticalPSF(GSObject):
         
         # Check the desired image size against max_size if provided
         twoR = 2. * np.pi / stepk  # The desired image size in arcsec
-        if max_size != None and twoR > max_size:
+        if max_size is not None and twoR > max_size:
             twoR = max_size
 
         # Get a good FFT size.  i.e. 2^n or 3 * 2^n.

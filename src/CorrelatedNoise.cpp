@@ -17,29 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-//#define DEBUGLOGGING
-
 #include "CorrelatedNoise.h"
-
-#ifdef DEBUGLOGGING
-#include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
-/*
- * There are three levels of verbosity which can be helpful when debugging, which are written as
- * dbg, xdbg, xxdbg (all defined in Std.h).
- * It's Mike's way to have debug statements in the code that are really easy to turn on and off.
- *
- * If DEBUGLOGGING is #defined, then these write out to *dbgout, according to the value of 
- * verbose_level.
- * dbg requires verbose_level >= 1
- * xdbg requires verbose_level >= 2
- * xxdbg requires verbose_level >= 3
- * If DEBUGLOGGING is not defined, the all three becomes just `if (false) std::cerr`,
- * so the compiler parses the statement fine, but trivially optimizes the code away, so there is no
- * efficiency hit from leaving them in the code.
- */
-#endif
 
 namespace galsim {
 
@@ -55,7 +33,7 @@ namespace galsim {
         int jdim = 1 + bounds.getYMax() - bounds.getYMin();
         int covdim = idim * jdim;
         tmv::SymMatrix<double,
-        tmv::FortranStyle|tmv::Upper> symcov = calculateCovarianceSymMatrix(sbp, bounds, dx);
+            tmv::FortranStyle|tmv::Upper> symcov = calculateCovarianceSymMatrix(sbp, bounds, dx);
         ImageAlloc<double> cov = ImageAlloc<double>(covdim, covdim, 0.);
 
         for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and 
@@ -71,7 +49,7 @@ namespace galsim {
     tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> calculateCovarianceSymMatrix(
         const SBProfile& sbp, const Bounds<int>& bounds, double dx)
     {
-         // Calculate the required dimensions
+        // Calculate the required dimensions
         int idim = 1 + bounds.getXMax() - bounds.getXMin();
         int jdim = 1 + bounds.getYMax() - bounds.getYMin();
         int covdim = idim * jdim;
@@ -87,8 +65,8 @@ namespace galsim {
                                        // start from 1!!
             for (int j=i; j<=covdim; j++){
 
-            k = ((j - 1) / jdim) - ((i - 1) / idim);  // using integer division rules here
-            ell = ((j - 1) % jdim) - ((i - 1) % idim);
+                k = ((j - 1) / jdim) - ((i - 1) / idim);  // using integer division rules here
+                ell = ((j - 1) % jdim) - ((i - 1) % idim);
                 x_k = double(k) * dx;
                 y_ell = double(ell) * dx;
                 Position<double> p = Position<double>(x_k, y_ell);

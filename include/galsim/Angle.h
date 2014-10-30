@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef ANGLE_H
-#define ANGLE_H
+#ifndef GalSim_Angle_H
+#define GalSim_Angle_H
 
 /**
  *  @file Angle.h 

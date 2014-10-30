@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBINTERPOLATED_IMAGE_H
-#define SBINTERPOLATED_IMAGE_H
+#ifndef GalSim_SBInterpolatedImage_H
+#define GalSim_SBInterpolatedImage_H
 /** 
  * @file SBInterpolatedImage.h @brief SBProfile that interpolates a given image.
  */
@@ -248,4 +248,4 @@ namespace galsim {
     };
 }
 
-#endif // SBINTERPOLATED_IMAGE_H
+#endif
