@@ -27,8 +27,7 @@ import sys
 
 def applyNonlinearity(self, NLfunc, *args):
     """
-    Applies the given non-linearity function (`NLfunc`) to the image, and returns a new image of
-    the same datatype.
+    Applies the given non-linearity function (`NLfunc`) to the image.
 
     The image should be in units of electrons (not ADU), and should include both the signal from
     the astronomical objects as well as the background level.  Other detectors effects such as dark
@@ -47,13 +46,13 @@ def applyNonlinearity(self, NLfunc, *args):
     -------
 
         >>> f = lambda x: x + (1e-7)*(x**2)
-        >>> imgNL = img.applyNonlinearity(f)
+        >>> img.applyNonlinearity(f)
 
     Calling with 1 or more parameters
     -------
 
         >>> f = lambda x, beta1, beta2: x - beta1*x*x + beta2*x*x*x
-        >>> imgNL = img.applyNonlinearity(f, 1.e-7, 1.e-10)
+        >>> img.applyNonlinearity(f, 1.e-7, 1.e-10)
 
     On output, the Image instance `imgNL` is the transformation of the Image instance `img` given
     by the user-defined function `f` with `beta1` = 1.e-7 and `beta2` = 1.e-10.
@@ -62,19 +61,11 @@ def applyNonlinearity(self, NLfunc, *args):
                      values. 
     @param *args     Any subsequent arguments are passed along to the NLfunc function.
 
-    @returns a new Image with the nonlinearity effects included.
     """
 
     # Extract out the array from Image since not all functions can act directly on Images
-    img_nl = NLfunc(self.array, *args)
+    self.array[:,:] = (NLfunc(self.array, *args))[:,:]
 
-    if not isinstance(img_nl, numpy.ndarray) or self.array.shape != img_nl.shape:
-        raise ValueError("Image shapes are inconsistent after applying nonlinearity function!")
-
-    # Enforce consistency of bounds and scale between input, output Images.
-    img_nl = galsim.Image(img_nl, xmin=self.xmin, ymin=self.ymin)
-    img_nl.scale = self.scale
-    return img_nl
 
 def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
     """
@@ -92,34 +83,31 @@ def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
     Calling
     -------
 
-        >>> new_image = img.addReciprocityFailure(exp_time, alpha)
+        >>>  img.addReciprocityFailure(exp_time, alpha)
 
     @param exp_time  The exposure time in seconds, which goes into the expression for reciprocity
                      failure given in the docstring. [default: 200]
     @param alpha     The alpha parameter in the expression for reciprocity failure.
                      [default: 0.0065]
-
-    @returns a new Image with the effects of reciprocity failure included.
+    
+    @returns None
     """
     if not isinstance(alpha, float) or alpha < 0.:
         raise ValueError("Invalid value of alpha, must be float >= 0")
     if not (isinstance(exp_time, float) or isinstance(exp_time, int)) or exp_time < 0.:
         raise ValueError("Invalid value of exp_time, must be float >= 0")
 
-    # Extracting the array out since log won't operate on the Image.
-    arr_in = 1.0*self.array/float(exp_time)
-
-    if numpy.any(arr_in < sys.float_info.min):
+    if numpy.any(self.array < sys.float_info.min*float(exp_time)):
         import warnings
         warnings.warn("At least one element of image/exp_time is too close to 0 or negative.")
         warnings.warn("Floating point errors might occur.")
 
-    arr_out = self.array*(1.0 + alpha*numpy.log10(arr_in))
+    self.array[:,:] = (self.array*(1.0 + alpha*numpy.log10(self.array/float(exp_time))))[:,:]
 
-    # Enforce consistency of bounds and scale between input, output Images.
-    im_out = galsim.Image(arr_out, xmin=self.xmin, ymin=self.ymin)
-    im_out.scale = self.scale
-    return im_out
+    ## Enforce consistency of bounds and scale between input, output Images.
+    #im_out = galsim.Image(arr_out, xmin=self.xmin, ymin=self.ymin)
+    #im_out.scale = self.scale
+    #return im_out
 
 
 galsim.Image.applyNonlinearity = applyNonlinearity
