@@ -175,5 +175,5 @@ def test_recipfail_basic():
 
 
 if __name__ == "__main__":
-	test_nonlinearity_basic()
-test_recipfail_basic()
+    test_nonlinearity_basic()
+    test_recipfail_basic()
