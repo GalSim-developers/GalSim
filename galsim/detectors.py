@@ -64,7 +64,7 @@ def applyNonlinearity(self, NLfunc, *args):
     """
 
     # Extract out the array from Image since not all functions can act directly on Images
-    self.array[:,:] = (NLfunc(self.array, *args))[:,:]
+    self.array[:,:] = (NLfunc(self.array, *args))
 
 
 def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
@@ -102,7 +102,7 @@ def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
         warnings.warn("At least one element of image/exp_time is too close to 0 or negative.")
         warnings.warn("Floating point errors might occur.")
 
-    self.array[:,:] = (self.array*(1.0 + alpha*numpy.log10(self.array/float(exp_time))))[:,:]
+    self.array[:,:] = (self.array*(1.0 + alpha*numpy.log10(self.array/float(exp_time))))
 
     ## Enforce consistency of bounds and scale between input, output Images.
     #im_out = galsim.Image(arr_out, xmin=self.xmin, ymin=self.ymin)
