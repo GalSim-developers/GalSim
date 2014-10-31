@@ -345,39 +345,18 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
         # If requested array shape is larger than the input one, then add some zero-padding to the input image.
         if array_shape[0] > pupil_plane_im.array.shape[0]:
             border_size = int(0.5*(array_shape[0] - pupil_plane_im.array.shape[0]))
-            pupil_plane_im.addBorder(border_size)
+            new_im = galsim.Image(pupil_plane_im.bounds.addBorder(border_size))
+            new_im[pupil_plane_im.bounds] = pupil_plane_im
 
-    # Deal with rotations if necessary.
-    if pupil_angle == 0.*galsim.degrees:
-        pp_arr = pupil_plane_im.array
-    else:
-        # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to
-        # ensure that the image is one of the allowed types.  We ignore the scale for now.
-        int_im = galsim.InterpolatedImage(galsim.Image(pupil_plane_im, scale=1., dtype=np.float64),
-                                          x_interpolant='linear', calculate_stepk=False,
-                                          calculate_maxk=False)
-        int_im = int_im.rotate(pupil_angle)
-        new_im = galsim.ImageF(pupil_plane_im.array.shape[0], pupil_plane_im.array.shape[0])
-        new_im = int_im.draw(image=new_im, scale=1.)
-        pp_arr = new_im.array
-        # Restore hard edges that might have been lost during the interpolation.  To do this, we
-        # check the maximum value of the entries.  Values after interpolation that are >half that
-        # value get kept as nonzero (will be True), but those that are <half that are set to zero
-        # (will be False).
-        max_pp_val = np.max(pp_arr)
-        pp_arr[pp_arr<0.5*max_pp_val] = 0.
-
-    galsim.ImageF(np.ascontiguousarray(pp_arr)).write('new_pp_arr_rotated.fits')
-    # Turn it into a boolean type, so all values >0 are True (doesn't matter what their value is)
-    # and all values==0 are False.
-    pp_arr = pp_arr.astype(bool)
-
-    # We need to figure out the rho array.  So, first we roll the pupil plane image so the center is
-    # in the corner, just like the outputs of `generate_pupil_plane`.
+    # Figure out the rho array parameters here.  We do this now, before possibly rotating the array,
+    # which can lead to small interpolation errors.  First, turn it into a boolean type, so all
+    # values >0 are True (doesn't matter what their value is) and all values==0 are False.
+    pp_arr = pupil_plane_im.array.astype(bool)
+    # Roll the pupil plane image so the center is in the corner, just like the outputs of
+    # `generate_pupil_plane`.
     pp_arr = utilities.roll2d(pp_arr, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2)) 
     #galsim.ImageF(np.ascontiguousarray(pp_arr).astype(np.float32)).write('pp_arr_rolled.fits')
-
-    # Then we figure out how far out is in the pupil.  That sets where |k|^2 should be <1.  To do
+    # Then we figure out how far out is in the pupil.  That sets where |rho|^2 should be <1.  To do
     # this, we'll just use the first row, assuming that it might start out as False (if there is
     # obscuration), then become True, then False again.  We want to find the maximum pixel index
     # that is True.
@@ -394,16 +373,50 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
     if max_in_pupil < 0:
         raise ValueError("Do not understand how to find the size of the illuminated part of pupil!")
 
+    # Now that we have this information, we can deal with rotations if necessary.
+    if pupil_angle == 0.*galsim.degrees:
+        pp_arr = pupil_plane_im.array
+    else:
+        # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to
+        # ensure that the image is one of the allowed types.  We ignore the scale for now.
+        int_im = galsim.InterpolatedImage(galsim.Image(pupil_plane_im, scale=1., dtype=np.float64),
+                                          x_interpolant='linear', calculate_stepk=False,
+                                          calculate_maxk=False)
+        int_im = int_im.rotate(pupil_angle)
+        new_im = galsim.ImageF(pupil_plane_im.array.shape[0], pupil_plane_im.array.shape[0])
+        new_im = int_im.drawImage(image=new_im, scale=1., method='sb')
+        #print np.max(new_im.array)
+        pp_arr = new_im.array
+        # Restore hard edges that might have been lost during the interpolation.  To do this, we
+        # check the maximum value of the entries.  Values after interpolation that are >half that
+        # value get kept as nonzero (will be True), but those that are <half that are set to zero
+        # (will be False).
+        max_pp_val = np.max(pp_arr)
+        pp_arr[pp_arr<0.5*max_pp_val] = 0.
+
+    #galsim.ImageF(np.ascontiguousarray(pp_arr)).write('new_pp_arr_rotated.fits')
+    # Turn it into a boolean type, so all values >0 are True (doesn't matter what their value is)
+    # and all values==0 are False.
+    pp_arr = pp_arr.astype(bool)
+    # Roll the pupil plane image so the center is in the corner, just like the outputs of
+    # `generate_pupil_plane`.
+    pp_arr = utilities.roll2d(pp_arr, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2)) 
+    #galsim.ImageF(np.ascontiguousarray(pp_arr).astype(np.float32)).write('pp_arr_rolled.fits')
+
     # Then set up the rho array appropriately.  When thinking about this along a line, we want it to
     # be the case that the left edge of the leftmost pixel (indexed 0) corresponds to rho_x = 0, and
     # the center of the pixel with index `max_in_pupil` corresponds to rho_x = 1.  We can
     # therefore figure out drho:
-    drho = 1.0 / (float(max_in_pupil)+0.5)
+    drho = 1.0 / (float(max_in_pupil)+1.)
+    #print drho
+    #print -0.5*pp_arr.shape[0]*drho+0.5*drho
+    #print 0.5*pp_arr.shape[0]*drho-0.5*drho
+    #print pp_arr.shape[0]
     # And then we want rho to go from negative to positive values before we roll it.
-    rho_vec = np.linspace(-0.5*pp_arr.shape[0]*drho+0.5*drho,
-                           0.5*pp_arr.shape[0]*drho-0.5*drho, num=pp_arr.shape[0])
+    rho_vec = np.linspace(-0.5*pp_arr.shape[0]*drho,
+                           0.5*pp_arr.shape[0]*drho-drho, num=pp_arr.shape[0])
     effective_oversampling = (np.max(rho_vec)+drho)/2.
-    #print effective_oversampling
+    print effective_oversampling
     rho_x, rho_y = np.meshgrid(rho_vec, rho_vec)
     assert rho_x.shape == pp_arr.shape
     assert rho_y.shape == pp_arr.shape
@@ -570,6 +583,10 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
             nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle)
         effective_oversampling = None
 
+    #tmp_im = utilities.roll2d(in_pupil, (in_pupil.shape[0] / 2, in_pupil.shape[1] / 2))
+    #tmp_im = galsim.Image(np.ascontiguousarray(tmp_im).astype(np.int32))
+    #tmp_im.write('pupil_rolled.fits')
+
     #print np.max(rho_all.real), np.max(rho_all.imag)
     #galsim.Image(np.ascontiguousarray(rho_all.real)).write('rho_real.fits')
     #galsim.Image(np.ascontiguousarray(rho_all.imag)).write('rho_im.fits')
@@ -578,6 +595,11 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
 
     # Then make wavefront image
     wf = np.zeros(in_pupil.shape, dtype=complex)
+    print np.max(rho_all.real), np.min(rho_all.real)
+    print np.max(rho_all.imag), np.min(rho_all.imag)
+    print len(rho_all[in_pupil])
+    print np.max(rho_all[in_pupil].real), np.min(rho_all[in_pupil].real)
+    print np.max(rho_all[in_pupil].imag), np.min(rho_all[in_pupil].imag)
 
     # It is much faster to pull out the elements we will use once, rather than use the 
     # subscript each time.  At the end we will fill the appropriate part of wf with the
