@@ -27,7 +27,7 @@ import sys
 
 def applyNonlinearity(self, NLfunc, *args):
     """
-    Applies the given non-linearity function (`NLfunc`) to the image.
+    Applies the given non-linearity function (`NLfunc`) on the Image instance directly.
 
     The image should be in units of electrons (not ADU), and should include both the signal from
     the astronomical objects as well as the background level.  Other detectors effects such as dark
@@ -54,8 +54,7 @@ def applyNonlinearity(self, NLfunc, *args):
         >>> f = lambda x, beta1, beta2: x - beta1*x*x + beta2*x*x*x
         >>> img.applyNonlinearity(f, 1.e-7, 1.e-10)
 
-    On output, the Image instance `imgNL` is the transformation of the Image instance `img` given
-    by the user-defined function `f` with `beta1` = 1.e-7 and `beta2` = 1.e-10.
+    On calling the method, the Image instance `img` is transformed by the user-defined function `f` with `beta1` = 1.e-7 and `beta2` = 1.e-10.
 
     @param NLfunc    The function that maps the input image pixel values to the output image pixel
                      values. 
@@ -69,12 +68,12 @@ def applyNonlinearity(self, NLfunc, *args):
 
 def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
     """
-    For the given image, returns a new image that includes the effects of reciprocity failure.
+    Accounts for the reciprocity failure and corrects the original Image for it directly.
 
     The reciprocity failure results in mapping the original image to a new one that is equal to the
     original `im` multiplied by `(1+alpha*log10(im/exp_time))`, where the parameter `alpha` and the
     exposure time are given as keyword arguments.  Because of how this function is defined, the
-    input image must have strictly positive pixel values.
+    input image must have strictly positive pixel values for the resulting image to be well defined.
 
     The image should be in units of electrons (not ADU), and should include both the signal from
     the astronomical objects as well as the background level.  The addition of nonlinearity should
