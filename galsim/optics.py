@@ -833,7 +833,7 @@ def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
 
     if effective_oversampling is not None:
         oversamp_ratio = effective_oversampling / oversampling
-        if oversamp_ratio < 0.95:
+        if oversamp_ratio < 0.9:
             raise RuntimeError("Supplied pupil plane image results in inadequate sampling")
         im = galsim.Image(array.astype(np.float64), scale=scale/oversamp_ratio)
     else:
