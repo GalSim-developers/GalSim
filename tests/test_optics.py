@@ -550,6 +550,23 @@ def test_OpticalPSF_pupil_plane():
         im_test_psf.array, im_ref_psf.array, decimal=decimal,
         err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane.")
 
+    # It is supposed to be able to figure this out even if we *don't* tell it the pad factor.  We
+    # won't always know this.  So make sure that it still works even if we don't tell it that
+    # value.  (On the other hand, the result could be different if we don't tell it the level of
+    # oversampling.)
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
+                                 oversampling=oversampling)
+    #assert 0==1
+    im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+    im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    foo = im_test_psf.FindAdaptiveMom()
+    bar = im_ref_psf.FindAdaptiveMom()
+    print foo.moments_sigma, bar.moments_sigma
+    np.testing.assert_array_almost_equal(
+        im_test_psf.array, im_ref_psf.array, decimal=decimal,
+        err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane without "
+        "specifying parameters.")
+
     # Second test (less trivial):
     # Rotate the struts by +27 degrees, and check that agreement is good.
     rot_angle = 27.*galsim.degrees
