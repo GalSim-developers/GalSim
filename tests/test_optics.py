@@ -552,8 +552,7 @@ def test_OpticalPSF_pupil_plane():
 
     # It is supposed to be able to figure this out even if we *don't* tell it the pad factor.  We
     # won't always know this.  So make sure that it still works even if we don't tell it that
-    # value.  (On the other hand, the result could be different if we don't tell it the level of
-    # oversampling.)
+    # value.
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
                                  oversampling=oversampling)
     #assert 0==1
@@ -650,27 +649,27 @@ def test_OpticalPSF_pupil_plane():
     # Supply the pupil plane at higher resolution, and make sure that the routine figures out the
     # sampling and gets the right image scale etc.
     rescale_fac = 0.77
+    print "High res test"
     ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
-                                strut_angle=strut_angle, oversampling=oversampling/rescale_fac,
-                                pad_factor=pad_factor)
+                                strut_angle=strut_angle, oversampling=oversampling,
+                                pad_factor=pad_factor/rescale_fac)
     # Make higher resolution pupil plane image via interpolation
     #print type(im), im.array.dtype
     im.scale = 1. # this doesn't matter, just put something so the next line works
-    int_im = galsim.InterpolatedImage(galsim.Image(im, scale=1., dtype=np.float32),
+    int_im = galsim.InterpolatedImage(galsim.Image(im, scale=im.scale, dtype=np.float32),
                                       calculate_maxk=False, calculate_stepk=False)
     new_im = int_im.drawImage(scale=rescale_fac*im.scale, method='sb')
     #print np.max(im.array), np.max(new_im.array)
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
-                                 pupil_plane_im=new_im, oversampling=oversampling,
-                                 pad_factor=pad_factor/rescale_fac)
+                                 pupil_plane_im=new_im, oversampling=oversampling)
     im_ref_psf = ref_psf.drawImage(scale=scale)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
     foo = im_test_psf.FindAdaptiveMom()
     bar = im_ref_psf.FindAdaptiveMom()
     print foo.moments_sigma, bar.moments_sigma
-    np.testing.assert_array_almost_equal(
-        im_test_psf.array, im_ref_psf.array, decimal=decimal-1,
+    np.testing.assert_almost_equal(
+        foo.moments_sigma/bar.moments_sigma-1., 0, decimal=2,
         err_msg="Inconsistent OpticalPSF image for basic model after loading high-res pupil plane.")
 
     # Now supply the pupil plane at the original resolution, but remove some of the padding.  We
@@ -682,8 +681,11 @@ def test_OpticalPSF_pupil_plane():
                                  pad_factor=pad_factor)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
-    np.testing.assert_array_almost_equal(
-        im_test_psf.array, im_ref_psf.array, decimal=decimal,
+    foo = im_test_psf.FindAdaptiveMom()
+    bar = im_ref_psf.FindAdaptiveMom()
+    print foo.moments_sigma, bar.moments_sigma
+    np.testing.assert_almost_equal(
+        foo.moments_sigma/bar.moments_sigma-1., 0, decimal=decimal-3,
         err_msg="Inconsistent OpticalPSF image for basic model after loading less padded pupil plane.")
 
     # Now supply the pupil plane at the original resolution, with extra padding.
@@ -695,9 +697,13 @@ def test_OpticalPSF_pupil_plane():
                                  pad_factor=pad_factor)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    foo = im_test_psf.FindAdaptiveMom()
+    bar = im_ref_psf.FindAdaptiveMom()
+    print foo.moments_sigma, bar.moments_sigma
     np.testing.assert_array_almost_equal(
-        im_test_psf.array, im_ref_psf.array, decimal=decimal,
-        err_msg="Inconsistent OpticalPSF image for basic model after loading more padded pupil plane.")
+        foo.moments_sigma, bar.moments_sigma, decimal=decimal-2,
+        err_msg="Inconsistent OpticalPSF image size for basic model "
+        "after loading more padded pupil plane.")
 
     # Minor test: same answer if we use image, array, or filename for reading in array.
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
