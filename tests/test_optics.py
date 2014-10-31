@@ -48,7 +48,7 @@ decimal_dft = 3  # Last decimal place used for checking near equality of DFT pro
 # `scons tests`, you will get faster and less stringent tests.
 if __name__ == "__main__":
     pp_decimal = 6
-    pp_file = 'sample_pupil_rolled_oversample.fits'
+    pp_file = 'sample_pupil_rolled_oversample.fits.gz'
     pp_oversampling = 4.
     pp_pad_factor = 4.
     test_type = 'image'
