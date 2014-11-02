@@ -365,7 +365,9 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
     # Then we figure out how far out from the center the True values go, since that sets where
     # |rho|^2 should be <1.  To do this, we'll just use the first row, assuming that it might start
     # out as False (if there is obscuration), then become True, then False again.  Our goal is to
-    # find the maximum pixel index that is True.
+    # find the maximum pixel index that is True.  Note that this algorithm could fail if there is a
+    # strut located precisely along the axis we are using for this test.  Possible TODO: generalize
+    # algorithm to look in all directions?
     tmp_arr = pp_arr[0,:]
     max_in_pupil = -1
     for ind in range(1, len(tmp_arr)/2-1):
