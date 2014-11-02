@@ -340,109 +340,100 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
     if pupil_plane_im.array.shape[0] % 2 == 1:
         raise ValueError("Even-sized input arrays are required for the pupil plane!")
 
-    #galsim.ImageF(np.ascontiguousarray(pupil_plane_im.array)).write('pp_arr_prepad.fits')
     # Pad image if necessary given the requested array shape
     if array_shape is not None:
 
-        # If requested array shape is larger than the input one, then add some zero-padding to the input image.
+        # If requested array shape is larger than the input one, then add some zero-padding to the
+        # input image.
         if array_shape[0] > pupil_plane_im.array.shape[0]:
             border_size = int(0.5*(array_shape[0] - pupil_plane_im.array.shape[0]))
             new_im = galsim.Image(pupil_plane_im.bounds.addBorder(border_size))
             new_im[pupil_plane_im.bounds] = pupil_plane_im
+        # If the requested shape is smaller than the input one, we do nothing at this stage.  All
+        # internal calculations done by this routine will be carried out at higher resolution, only
+        # returning to lower resolution once we have completely specified the wavefront (aberrations
+        # etc.)
 
-    # Figure out the rho array parameters here.  We do this now, before possibly rotating the array,
-    # which can lead to small interpolation errors.  First, turn it into a boolean type, so all
-    # values >0 are True (doesn't matter what their value is) and all values==0 are False.
+    # Figure out the rho array parameters here.  We do this now, before rotating the input image,
+    # since the rotation can lead to small interpolation errors.
+    # First, turn the array into a boolean type, so all values >0 are True (doesn't matter what
+    # their value is) and all values==0 are False.
     pp_arr = pupil_plane_im.array.astype(bool)
     # Roll the pupil plane image so the center is in the corner, just like the outputs of
     # `generate_pupil_plane`.
-    pp_arr = utilities.roll2d(pp_arr, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2)) 
-    #galsim.ImageF(np.ascontiguousarray(pp_arr).astype(np.float32)).write('pp_arr_rolled.fits')
-    # Then we figure out how far out is in the pupil.  That sets where |rho|^2 should be <1.  To do
-    # this, we'll just use the first row, assuming that it might start out as False (if there is
-    # obscuration), then become True, then False again.  We want to find the maximum pixel index
-    # that is True.
+    pp_arr = utilities.roll2d(pp_arr, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
+    # Then we figure out how far out from the center the True values go, since that sets where
+    # |rho|^2 should be <1.  To do this, we'll just use the first row, assuming that it might start
+    # out as False (if there is obscuration), then become True, then False again.  Our goal is to
+    # find the maximum pixel index that is True.
     tmp_arr = pp_arr[0,:]
-    #print len(tmp_arr),tmp_arr.astype(np.int64)
-    max_in_pupil = -10
-    for ind in range(1,len(tmp_arr)/2-1):
-        # Note, if we just do the first two checks then in the case of minor numerical errors after
-        # rotating the pupil plane, we might find the edge incorrectly due to noise in interpolation
-        # at edge of obscuration disk.
+    max_in_pupil = -1
+    for ind in range(1, len(tmp_arr)/2-1):
+        # Note, if we just do the first two checks then in the case of minor numerical errors when
+        # generating the pupil plane, we might find the edge incorrectly.
         if tmp_arr[ind]==True and tmp_arr[ind+1]==False and tmp_arr[ind+2]==False:
             max_in_pupil = ind
             break
     if max_in_pupil < 0:
-        raise ValueError("Do not understand how to find the size of the illuminated part of pupil!")
+        raise ValueError("Cannot find the edge of the illuminated part of pupil!")
 
-    # Now that we have this information, we can deal with rotations if necessary.
+    # Next, deal with any requested rotations.
     if pupil_angle == 0.*galsim.degrees:
         pp_arr = pupil_plane_im.array
     else:
         # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to
-        # ensure that the image is one of the allowed types.  We ignore the scale for now.
+        # ensure that the image is one of the allowed types.  We ignore the scale.
         int_im = galsim.InterpolatedImage(galsim.Image(pupil_plane_im, scale=1., dtype=np.float64),
                                           x_interpolant='linear', calculate_stepk=False,
                                           calculate_maxk=False)
         int_im = int_im.rotate(pupil_angle)
         new_im = galsim.ImageF(pupil_plane_im.array.shape[0], pupil_plane_im.array.shape[0])
-        new_im = int_im.drawImage(image=new_im, scale=1., method='sb')
-        #print np.max(new_im.array)
+        new_im = int_im.drawImage(image=new_im, scale=1., method='no_pixel')
         pp_arr = new_im.array
         # Restore hard edges that might have been lost during the interpolation.  To do this, we
         # check the maximum value of the entries.  Values after interpolation that are >half that
-        # value get kept as nonzero (will be True), but those that are <half that are set to zero
-        # (will be False).
+        # maximum value are kept as nonzero (True), but those that are <half the maximum value are
+        # set to zero (False).
         max_pp_val = np.max(pp_arr)
         pp_arr[pp_arr<0.5*max_pp_val] = 0.
 
-    #galsim.ImageF(np.ascontiguousarray(pp_arr)).write('new_pp_arr_rotated.fits')
-    # Turn it into a boolean type, so all values >0 are True (doesn't matter what their value is)
-    # and all values==0 are False.
+    # Turn it into a boolean type, so all values >0 are True and all values==0 are False.
     pp_arr = pp_arr.astype(bool)
     # Roll the pupil plane image so the center is in the corner, just like the outputs of
     # `generate_pupil_plane`.
     pp_arr = utilities.roll2d(pp_arr, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2)) 
-    #galsim.ImageF(np.ascontiguousarray(pp_arr).astype(np.float32)).write('pp_arr_rolled.fits')
 
-    # Then set up the rho array appropriately.  When thinking about this along a line, we want it to
-    # be the case that the left edge of the leftmost pixel (indexed 0) corresponds to rho_x = 0, and
-    # the center of the pixel with index `max_in_pupil` corresponds to rho_x = 1.  We can
-    # therefore figure out drho:
+    # Then set up the rho array appropriately.  The left edge of the leftmost pixel (indexed 0)
+    # should have rho_x = 0, and the edge of the pixel with index `max_in_pupil` should have rho_x =
+    # 1.  We can therefore figure out drho:
     drho = 1.0 / (float(max_in_pupil)+1.)
-    #print drho
-    #print -0.5*pp_arr.shape[0]*drho+0.5*drho
-    #print 0.5*pp_arr.shape[0]*drho-0.5*drho
-    #print pp_arr.shape[0]
-    # And then we want rho to go from negative to positive values before we roll it.
-    rho_vec = np.linspace(-0.5*pp_arr.shape[0]*drho,
-                           0.5*pp_arr.shape[0]*drho-drho, num=pp_arr.shape[0])
+    # We want rho to go from negative to positive values before we roll it.
+    rho_vec = np.linspace(-0.5*pp_arr.shape[0]*drho, 0.5*pp_arr.shape[0]*drho-drho,
+                           num=pp_arr.shape[0])
     effective_oversampling = (np.max(rho_vec)+drho)/2.
-    print effective_oversampling
     rho_x, rho_y = np.meshgrid(rho_vec, rho_vec)
     assert rho_x.shape == pp_arr.shape
     assert rho_y.shape == pp_arr.shape
+    # Then roll it, consistent with the convention in `generate_pupil_plane`.
     rho_x = utilities.roll2d(rho_x, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
     rho_y = utilities.roll2d(rho_y, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
     rho = rho_x + 1j * rho_y
 
     if obscuration is not None and lam_over_diam is not None:
-        # We do a basic check of the sampling now that we have rho, which tells us something about
-        # the k spacing.  First, we use the fact that (from generate_pupil_plane), the right edge of
-        # the pupil should have rho_x=1, rho_y=0, which implies k_x = 0.5*(k_{max,int}).  We can
-        # calculate k_{max,int} based on the Airy parameters, which tells us the value of k_x at
-        # that position.  Knowing how many pixels that is from the edge of the pupil plane image, we
-        # therefore know Delta k (the k-space sampling):
+        # We do a basic check of the sampling now that we have rho.  First, we use the fact that the
+        # right edge of the pupil should have rho_x=1, rho_y=0, which implies k_x =
+        # 0.5*(k_{max,int}).  We can calculate k_{max,int} based on the Airy parameters, which tells
+        # us the value of k_x at that position.  Knowing how many pixels that is from the edge of
+        # the pupil plane image, we therefore know Delta k (the k-space sampling):
         kmax_internal = 2.*np.pi / lam_over_diam
-        delta_k = 0.5*kmax_internal / (max_in_pupil+0.5)
+        delta_k = 0.5*kmax_internal / (float(max_in_pupil)+1.)
         # We can compare this with the ideal spacing for an Airy with this lam/diam and obscuration:
-        airy = galsim.Airy(lam_over_diam = lam_over_diam, obscuration = obscuration)
+        airy = galsim.Airy(lam_over_diam=lam_over_diam, obscuration=obscuration)
         stepk_airy = airy.stepK() # This has the same units as those for kmax_internal and delta_k
-        #print kmax_internal, max_in_pupil, delta_k, stepk_airy
         if delta_k > stepk_airy:
             import warnings
-            r = delta_k / stepk_airy
-            warnings.warn("Input image may not be sampled enough! Consider increasing by %f"%r)
+            ratio = delta_k / stepk_airy
+            warnings.warn("Input image may not be sampled enough! Consider increasing by %f."%ratio)
 
     return rho, pp_arr, effective_oversampling
 
@@ -568,7 +559,7 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
 
     @returns the wavefront for `kx, ky` locations corresponding to `kxky(array_shape)`.
     """
-    # Define the pupil coordinates and non-zero regions based on input kwargs.  This is either
+    # Define the pupil coordinates and non-zero regions based on input kwargs.  These are either
     # generated automatically, or taken from an input image.
     if pupil_plane_im is not None:
         if pupil_angle is None:
@@ -585,23 +576,8 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
             nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle)
         effective_oversampling = None
 
-    #tmp_im = utilities.roll2d(in_pupil, (in_pupil.shape[0] / 2, in_pupil.shape[1] / 2))
-    #tmp_im = galsim.Image(np.ascontiguousarray(tmp_im).astype(np.int32))
-    #tmp_im.write('pupil_rolled.fits')
-
-    #print np.max(rho_all.real), np.max(rho_all.imag)
-    #galsim.Image(np.ascontiguousarray(rho_all.real)).write('rho_real.fits')
-    #galsim.Image(np.ascontiguousarray(rho_all.imag)).write('rho_im.fits')
-    #foo = utilities.roll2d(in_pupil, (in_pupil.shape[0] / 2, in_pupil.shape[1] / 2))
-    #galsim.Image(np.ascontiguousarray(foo).astype(np.int32)).write('pupil_rolled.fits')
-
     # Then make wavefront image
     wf = np.zeros(in_pupil.shape, dtype=complex)
-    print np.max(rho_all.real), np.min(rho_all.real)
-    print np.max(rho_all.imag), np.min(rho_all.imag)
-    print len(rho_all[in_pupil])
-    print np.max(rho_all[in_pupil].real), np.min(rho_all[in_pupil].real)
-    print np.max(rho_all[in_pupil].imag), np.min(rho_all[in_pupil].imag)
 
     # It is much faster to pull out the elements we will use once, rather than use the 
     # subscript each time.  At the end we will fill the appropriate part of wf with the
@@ -836,7 +812,8 @@ def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
     if effective_oversampling is not None:
         oversamp_ratio = effective_oversampling / oversampling
         if oversamp_ratio < 0.9:
-            raise RuntimeError("Supplied pupil plane image results in inadequate sampling")
+            raise RuntimeError("Supplied pupil plane image results in inadequate sampling "
+                               "by factor of %f"%oversamp_ratio)
         im = galsim.Image(array.astype(np.float64), scale=scale/oversamp_ratio)
     else:
         im = galsim.Image(array.astype(np.float64), scale=scale)
