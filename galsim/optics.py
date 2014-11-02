@@ -55,29 +55,31 @@ class OpticalPSF(GSObject):
     Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
 
-    There are two ways to specify the geometry of the pupil plane, i.e., the areas that will be
-    illuminated outside of the obscuration disk.  The first way is to use keywords that specify that
-    the secondary mirror (or prime focus cage, etc.) are held by some number of support struts.
-    These are taken to be rectangular obscurations extending from the outer edge of the pupil to the
-    outer edge of the obscuration disk (or the pupil center if `obscuration = 0.`).  You can specify
-    how many struts there are (evenly spaced in angle), how thick they are as a fraction of the
-    pupil diameter, and what angle they start at relative to the positive y direction.
+    There are two ways to specify the geometry of the pupil plane, i.e., the obscuration disk size
+    and the areas that will be illuminated outside of it.  The first way is to use keywords that
+    specify the size of the obscuration, and the nature of the support struts holding up the
+    secondary mirror (or prime focus cage, etc.).  These are taken to be rectangular obscurations
+    extending from the outer edge of the pupil to the outer edge of the obscuration disk (or the
+    pupil center if `obscuration = 0.`).  You can specify how many struts there are (evenly spaced
+    in angle), how thick they are as a fraction of the pupil diameter, and what angle they start at
+    relative to the positive y direction.
 
-    The second way to specify the pupil plane is by passing in an Image of it.  This can be useful
-    for example if the struts are not evenly spaced or are not radially directed, as is assumed by
-    the simple model for struts described above.  In this case, keywords related to struts are
-    ignored; moreover, the `obscuration` keyword is used to ensure that the images are properly
-    sampled (so it is still needed), but the keyword is then ignored when using the supplied image
-    of the pupil plane.  The `pupil_plane_im` that is passed in can be rotated during internal
-    calculations by specifying a `pupil_angle` keyword.
+    The second way to specify the pupil plane configuration is by passing in an image of it.  This
+    can be useful for example if the struts are not evenly spaced or are not radially directed, as
+    is assumed by the simple model for struts described above.  In this case, keywords related to
+    struts are ignored; moreover, the `obscuration` keyword is used to ensure that the images are
+    properly sampled (so it is still needed), but the keyword is then ignored when using the
+    supplied image of the pupil plane.  The `pupil_plane_im` that is passed in can be rotated during
+    internal calculations by specifying a `pupil_angle` keyword.
 
-    If you choose to pass in a pupil plane image, it must be a square array that in which the image
-    of the pupil is centered.  The areas that are illuminated should have some value >0, and the
-    other areas should have a value of precisely zero.  Based on what the OpticalPSF class thinks
-    is the required sampling to make the PSF image, the image that is passed in of the pupil plane
-    might be trimmed or zero-padded during internal calculations.  If the pupil plane image has a
-    scale associated with it, that scale will be completely ignored; the scale is determined
-    internally based on basic physical considerations.
+    If you choose to pass in a pupil plane image, it must be a square array in which the image of
+    the pupil is centered.  The areas that are illuminated should have some value >0, and the other
+    areas should have a value of precisely zero.  Based on what the OpticalPSF class thinks is the
+    required sampling to make the PSF image, the image that is passed in of the pupil plane might be
+    zero-padded during internal calculations.  If the pupil plane image has a scale associated with
+    it, that scale will be completely ignored; the scale is determined internally using basic
+    physical considerations.  Finally, to ensure accuracy of calculations using a pupil plane image,
+    we recommend sampling it as finely as possible.
 
     Initialization
     --------------
