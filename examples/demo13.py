@@ -30,7 +30,7 @@ def main(argv):
     # read in SEDs
     SED_names = ['CWW_E_ext', 'CWW_Sbc_ext', 'CWW_Scd_ext', 'CWW_Im_ext']
     SEDs = {}
-    mag_norm = -22.0
+    mag_norm = -7.0
     for SED_name in SED_names:
         SED_filename = os.path.join(datapath, '{0}.sed'.format(SED_name))
         # Here we create some galsim.SED objects to hold star or galaxy spectra.  The most
@@ -72,13 +72,11 @@ def main(argv):
     # ... and then combine them.
     bdgal = 0.8*bulge+4*disk
 
-    #Convolve with PSF to make final profile
-    PSF = galsim.Moffat(fwhm=0.6, beta=2.5)
-    bdconv = galsim.Convolve([bdgal, PSF])
     # Note that at this stage, our galaxy is chromatic but our PSF is still achromatic.  
     logger.debug('Created bulge+disk galaxy final profile')
 
     #sky_level in photons / m^2 / s / arcsec^2
+    # hardcoded for now
     sky_level = {'J129':6.509083, 'SNPrism':25.564653, 'F184':3.478826, 'W149':18.577768, 'Y106':6.346696, 'BAO-Grism':6.269559, 'Z087':5.401184, 'H158':6.121490}
 
     #Read Noise:
@@ -87,6 +85,16 @@ def main(argv):
     # draw profile through WFIRST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02/10.)
     for filter_name, filter_ in filters.iteritems():
+        
+        # Obtaining parameters for Airy PSF
+        effective_wavelength = 1e7*filters[filter_name].effective_wavelength # now in cm
+        effective_diameter = wfirst.diameter*numpy.sqrt(1-wfirst.obscuration**2) 
+        lam_over_diam = (effective_wavelength/wfirst.diameter)*206265 # in arcsec
+
+        #Convolve with PSF
+        PSF = galsim.Airy(obscuration=wfirst.obscuration, lam_over_diam=lam_over_diam)
+        bdconv = galsim.Convolve([bdgal, PSF])
+
     	img = galsim.ImageF(64,64,scale=pixel_scale) # 64, 64
     	bdconv.drawImage(filter_,image=img)
 
@@ -94,7 +102,7 @@ def main(argv):
 
         #Adding Poisson Noise
         diameter = 2.4; obscuration=0.3;
-        sky_level_pix = sky_level[filter_name]*(numpy.pi)*((wfirst.diameter/2)**2)*(1-wfirst.obscuration**2)*exptime*(pixel_scale**2) #background level
+        sky_level_pix = sky_level[filter_name]*(numpy.pi)*((effective_diameter/2)**2)*exptime*(pixel_scale**2) #background level
         poisson_noise = galsim.PoissonNoise(rng, sky_level = 0.001*sky_level_pix)        
     	#img.addNoiseSNR(poisson_noise,snr=1000)
         logger.debug('Created {0}-band image'.format(filter_name))
