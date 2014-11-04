@@ -21,6 +21,10 @@ New Features
   for greater efficiency. (#563)
 - Extended to the `rotate`, `shear`, and `transform` methods of ChromaticObject the ability
   to take functions of wavelength for the arguments. (#581)
+- Added a module to describe charge deflection in CCD pixels (also known as the "brighter-fatter"
+  effect) following the model of Antilogus et al (2014). (#524)
+- Make it possible for OpticalPSF to model non-trivially complicated obscuration and/or struts
+  by allowing it to take an optional image of the pupil plane. (#601)
 
 Bug Fixes and Improvements
 --------------------------
@@ -44,6 +48,10 @@ Bug Fixes and Improvements
 - Fixed the Image constructor so that if it is passed a NumPy array with the opposite byteorder
   as the native one on the system, it does not return an Image with different contents. (#594)
 - Fixed bug that prevented calling LookupTables on non-square 2d arrays. (#599)
+- Updated the code to account for a planned change in NumPy that `array == None` will be an
+  element-wise comparison rather than equivalent to `array is None`. (#604)
+- Fixed a bug where the dtype of an Image could change when resizing, which should not be the
+  case.  (#604)
 
 Updates to config options
 -------------------------

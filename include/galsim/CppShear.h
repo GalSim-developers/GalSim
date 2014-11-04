@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SHEAR_H
-#define SHEAR_H
+#ifndef GalSim_Shear_H
+#define GalSim_Shear_H
 /**
  * @file CppShear.h Contains a class definition for CppShear.
  *
@@ -316,4 +316,4 @@ namespace galsim {
 
 }
 
-#endif // SHEAR_H
+#endif

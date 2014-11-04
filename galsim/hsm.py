@@ -173,7 +173,7 @@ def _convertMask(image, weight = None, badpix = None):
     This is used by EstimateShear() and FindAdaptiveMom().
     """
     # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
-    if weight == None:
+    if weight is None:
         mask = galsim.ImageI(bounds=image.bounds, init_value=1)
 
     else:
@@ -202,7 +202,7 @@ def _convertMask(image, weight = None, badpix = None):
 
     # if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight
     # image; also check bounds
-    if badpix != None:
+    if badpix is not None:
         if badpix.bounds != image.bounds:
             raise ValueError("Badpix image does not have the same bounds as the input Image!")
         import numpy as np

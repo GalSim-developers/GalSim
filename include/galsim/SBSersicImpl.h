@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBSERSIC_IMPL_H
-#define SBSERSIC_IMPL_H
+#ifndef GalSim_SBSersicImpl_H
+#define GalSim_SBSersicImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBSersic.h"
@@ -228,5 +228,5 @@ namespace galsim {
     };
 }
 
-#endif // SBSERSIC_IMPL_H
+#endif
 

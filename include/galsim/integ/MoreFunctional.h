@@ -17,6 +17,9 @@
  *    and/or other materials provided with the distribution.
  */
 
+#ifndef GalSim_MoreFunc_H
+#define GalSim_MoreFunc_H
+
 /**
  * @file MoreFunctional.h
  *
@@ -24,9 +27,6 @@
  *        "<functional>" but should be.
  */
 
-
-#ifndef MoreFuncH
-#define MoreFuncH
 
 #include <functional>
 
