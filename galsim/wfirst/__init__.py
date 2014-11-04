@@ -15,6 +15,10 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+import os
+import galsim
+
 """
 The galsim.wfirst module, containing information GalSim needs to simulate images for the WFIRST-AFTA
 project.
@@ -73,6 +77,8 @@ following numbers:
                           bandpasses can be obtained using the getBandpasses() routine described
                           below).
 
+    pupil_plane_file - The name of the file containing the image of the pupil plane for WFIRST-AFTA,
+                       to be used when constructing PSFs.
 
 For example, to get the gain value, use galsim.wfirst.gain.  Some of the numbers related to the
 nature of the detectors are subject to change as further lab tests are done.
@@ -91,13 +97,13 @@ This module also contains the following routines:
                >>>> im_nl = im.applyNonlinearity(galsim.wfirst.NLfunc)
 
 TODO:
- - sky background - implement the integration over the zodi, which is going to involve adapting the
- tables and algorithm from the WFIRST ETC, and writing a converter to ecliptic coordinates for the
- CelestialCoord class.
+ - sky background - make code to interpolate over the tables from the ETC
+ (galsim/wfirst/wfirst_backgrounds.py), and use the new ecliptic
+ coordinate converter.
  - stray light - put a simple fraction of sky background for now
  - WCS stuff - add the data from Jeff and port his WCS-builder to python
- - PSF stuff - finish pupil plane work, then wait for data from WCS optics team.
- - things related to IPC, persistence
+ - PSF stuff - include data from WCS optics team.
+ - numbers related to IPC, persistence
 """
 
 gain = 1.0
@@ -114,6 +120,7 @@ thermal_backgrounds = {'J129': 0.06,
                        'Y106': 0.06,
                        'Z087': 0.06,
                        'H158': 0.08}
+pupil_plane_file = os.path.join(galsim.meta_data.share_dir, "WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz")
 
 from wfirst_bandpass import *
 
