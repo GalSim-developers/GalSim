@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBSHAPELET_H
-#define SBSHAPELET_H
+#ifndef GalSim_SBShapelet_H
+#define GalSim_SBShapelet_H
 /** 
  * @file SBShapelet.h @brief SBProfile that implements a polar shapelet profile 
  */
@@ -65,5 +65,5 @@ namespace galsim {
                           double image_scale, const Position<double>& center);
 }
 
-#endif // SBSHAPELET_H
+#endif
 

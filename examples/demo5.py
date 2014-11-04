@@ -226,9 +226,12 @@ def main(argv):
                 rsq = dx**2 + dy**2
 
             this_gal = this_gal.shift(dx,dy)
+            # Note that the shifted psf that we create here is purely for the purpose of being able
+            # to draw a separate, shifted psf image.  We do not use it when convolving the galaxy
+            # with the psf.
             this_psf = psf.shift(dx,dy)
 
-            # Make the final image, convolving with the psf
+            # Make the final image, convolving with the (unshifted) psf
             final_gal = galsim.Convolve([psf,this_gal])
 
             # Draw the image

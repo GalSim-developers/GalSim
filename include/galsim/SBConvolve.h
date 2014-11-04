@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBCONVOLVE_H
-#define SBCONVOLVE_H
+#ifndef GalSim_SBConvolve_H
+#define GalSim_SBConvolve_H
 /** 
  * @file SBConvolve.h @brief SBProfile adapter which convolves 2 or more other SBProfiles.
  */
@@ -158,5 +158,5 @@ namespace galsim {
 
 }
 
-#endif // SBCONVOLVE_H
+#endif
 

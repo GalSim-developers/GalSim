@@ -16,8 +16,8 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
-#ifndef FFT_H
-#define FFT_H
+#ifndef GalSim_FFT_H
+#define GalSim_FFT_H
 
 /**
  * @file FFT.h

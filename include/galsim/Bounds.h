@@ -18,8 +18,8 @@
  */
 /// @file Bounds.h @brief Classes defining 2d positions and rectangles.
 
-#ifndef Bounds_H
-#define Bounds_H
+#ifndef GalSim_Bounds_H
+#define GalSim_Bounds_H
 
 #include <vector>
 #include <iostream>

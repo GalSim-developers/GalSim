@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef NOISE_H
-#define NOISE_H
+#ifndef GalSim_Noise_H
+#define GalSim_Noise_H
 
 /** 
  * @file Noise.h @brief Add noise to image using various noise models

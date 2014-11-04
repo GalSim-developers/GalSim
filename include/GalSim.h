@@ -18,8 +18,8 @@
  */
 // This just includes the relevant header files from the galsim directory.
 
-#ifndef GALSIM_H
-#define GALSIM_H
+#ifndef GalSim_H
+#define GalSim_H
 
 // The basic SBProfile stuff:
 #include "galsim/SBProfile.h"

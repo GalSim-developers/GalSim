@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef INTERPOLANT_H
-#define INTERPOLANT_H
+#ifndef GalSim_Interpolant_H
+#define GalSim_Interpolant_H
 
 #include <cmath>
 #define BOOST_NO_CXX11_SMART_PTR
@@ -591,4 +591,4 @@ namespace galsim {
 
 }
 
-#endif //INTERPOLANT_H
+#endif

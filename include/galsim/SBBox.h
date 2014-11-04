@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBBOX_H
-#define SBBOX_H
+#ifndef GalSim_SBBox_H
+#define GalSim_SBBox_H
 /** 
  * @file SBBox.h @brief SBProfile of a 2-d tophat profile.
  */
@@ -71,5 +71,5 @@ namespace galsim {
     };
 }
 
-#endif // SBBOX_H
+#endif
 

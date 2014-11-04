@@ -48,7 +48,7 @@ you are using the right Python" Section below.
 
 ### Getting Python and required modules ###
 
-For a list of places to download Python, see http://www.python.org/getit/.
+For a list of places to download Python, see http://www.python.org/download/.
 
 The GalSim package also requires
 
@@ -72,7 +72,7 @@ The GalSim package also requires
   for the Starlink AST astrometry code.  It seems to support pretty much 
   every WCS encoding there is.  (At least every one we tried.)  Their 
   preferred installation method is via pip:
-      pip install startlink-pyast
+      pip install starlink-pyast
   For more information, see their website:
       https://pypi.python.org/pypi/starlink-pyast/
   With this installed, you can use the galsim.PyAstWCS class, which in 
@@ -150,7 +150,7 @@ to these issues is described here:
 https://github.com/GalSim-developers/GalSim/wiki/Installation-FAQ#wiki-canopy
 
 Other re-packaged Python downloads can be found at
-http://www.python.org/getit/.
+http://www.python.org/download/.
 
 ### Making sure you are using the right Python ###
 

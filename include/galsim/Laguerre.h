@@ -19,8 +19,8 @@
 
 // Manipulation of Laguerr-decomposition-vector representation of images.
 
-#ifndef LAGUERRE_H
-#define LAGUERRE_H
+#ifndef GalSim_Laguerre_H
+#define GalSim_Laguerre_H
 
 #include <string>
 #include <iostream>

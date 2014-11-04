@@ -42,7 +42,29 @@ decimal_dft = 3  # Last decimal place used for checking near equality of DFT pro
                  # not precisely equivalent to its continuous counterpart.
            # See http://en.wikipedia.org/wiki/File:From_Continuous_To_Discrete_Fourier_Transform.gif
 
-
+# The lines below control the behavior of the tests that involve making PSFs from pupil plane
+# images.  The best tests involve very high resolution images, but these are slow.  So, when running
+# test_optics.py directly, you will get the slow tests (~5 minutes for all of them).  When running
+# `scons tests`, you will get faster, less stringent tests.
+if __name__ == "__main__":
+    pp_decimal = 6
+    pp_file = 'sample_pupil_rolled_oversample.fits.gz'
+    pp_oversampling = 4.
+    pp_pad_factor = 4.
+    # In this case, we test the entire images.
+    pp_test_type = 'image'
+else:
+    pp_decimal = 4
+    pp_file = 'sample_pupil_rolled.fits'
+    pp_oversampling = 1.5
+    pp_pad_factor = 1.5
+    # In the less stringent tests, we may opt to test only the 2nd moments rather than the images
+    # themselves.  This is because when the original tests were set up, I found low-level artifacts
+    # that made it hard to get image-based tests to pass, yet the adaptive moments agreed quite
+    # well.  Given that there were no such problems in the image-based tests with high-res inputs, I
+    # believe these artifacts in the low-res tests should be ignored (by doing moments-based tests
+    # only).
+    pp_test_type = 'moments'
 
 def test_check_all_contiguous():
     """Test all galsim.optics outputs are C-contiguous as required by the galsim.Image class.
@@ -51,8 +73,10 @@ def test_check_all_contiguous():
     t1 = time.time()
     # Check basic outputs from wavefront, psf and mtf (array contents won't matter, so we'll use
     # a pure circular pupil)
-    assert galsim.optics.wavefront(array_shape=testshape).flags.c_contiguous
-    assert galsim.optics.psf(array_shape=testshape).flags.c_contiguous
+    test_obj, _ = galsim.optics.wavefront(array_shape=testshape)
+    assert test_obj.flags.c_contiguous
+    test_obj, _ = galsim.optics.psf(array_shape=testshape)
+    assert test_obj.flags.c_contiguous
     assert galsim.optics.otf(array_shape=testshape).flags.c_contiguous
     assert galsim.optics.mtf(array_shape=testshape).flags.c_contiguous
     assert galsim.optics.ptf(array_shape=testshape).flags.c_contiguous
@@ -74,7 +98,7 @@ def test_simple_wavefront():
     wf_true = np.zeros(kmag.shape)
     wf_true[in_pupil] = 1.
     # Compare
-    wf = galsim.optics.wavefront(array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
+    wf, _ = galsim.optics.wavefront(array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
     np.testing.assert_array_almost_equal(wf, wf_true, decimal=decimal)
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -124,7 +148,7 @@ def test_consistency_psf_mtf():
     dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
     lod_test = 8. # }
     kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code 
-    psf = galsim.optics.psf(array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
+    psf, _ = galsim.optics.psf(array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
     psf *= dx_test**2 # put the PSF into flux units rather than SB for comparison
     mtf_test = np.abs(np.fft.fft2(psf))
     # Compare
@@ -138,8 +162,8 @@ def test_wavefront_image_view():
     """
     import time
     t1 = time.time()
-    array = galsim.optics.wavefront(array_shape=testshape)
-    (real, imag) = galsim.optics.wavefront_image(array_shape=testshape)
+    array, _ = galsim.optics.wavefront(array_shape=testshape)
+    (real, imag), _ = galsim.optics.wavefront_image(array_shape=testshape)
     np.testing.assert_array_almost_equal(array.real.astype(np.float32), real.array, decimal)
     np.testing.assert_array_almost_equal(array.imag.astype(np.float32), imag.array, decimal)
     t2 = time.time()
@@ -150,7 +174,7 @@ def test_psf_image_view():
     """
     import time
     t1 = time.time()
-    array = galsim.optics.psf(array_shape=testshape)
+    array, _ = galsim.optics.psf(array_shape=testshape)
     image = galsim.optics.psf_image(array_shape=testshape)
     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array, decimal)
     t2 = time.time()
@@ -493,6 +517,260 @@ def test_OpticalPSF_flux_scaling():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_OpticalPSF_pupil_plane():
+    """Test the ability to generate a PSF using an image of the pupil plane.
+    """
+    import time
+    t1 = time.time()
+
+    # Test case: lam/diam=0.12, obscuration=0.18, 4 struts of the default width and with rotation
+    # from the vertical of -15 degrees.  There are two versions of these tests at different
+    # oversampling levels.
+    #
+    # To generate the pupil plane that was saved for this case, I did the following:
+    # - Temporarily edited galsim/optics.py right after the call to generate_pupil_plane() in the
+    #   wavefront() method, adding the following lines:
+    #   tmp_im = utilities.roll2d(in_pupil, (in_pupil.shape[0] / 2, in_pupil.shape[1] / 2))
+    #   tmp_im = galsim.Image(np.ascontiguousarray(tmp_im).astype(np.int32))
+    #   tmp_im.write('tests/Optics_comparison_images/sample_pupil_rolled.fits')
+    # - Executed the following command:
+    #   oversampling = 1.5
+    #   pad_factor = 1.5
+    #   galsim.OpticalPSF(0.12, obscuration=0.18, nstruts=4, strut_angle=-15.*galsim.degrees,
+    #                     oversampling=oversampling, pad_factor=pad_factor)
+    # - Then I made it write to
+    #   tests/Optics_comparison_images/sample_pupil_rolled_oversample.fits.gz, and reran the command
+    #   with oversampling = 4. and pad_factor = 4.
+    #
+    # First test: should get excellent agreement between that particular OpticalPSF with specified
+    # options and one from loading the pupil plane image.  Note that this won't work if you change
+    # the optical PSF parameters, unless you also regenerate the test image.
+    lam_over_diam = 0.12
+    obscuration = 0.18
+    nstruts = 4
+    strut_angle = -15.*galsim.degrees
+    scale = 0.055
+    ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
+                                oversampling=pp_oversampling, strut_angle=strut_angle,
+                                pad_factor=pp_pad_factor)
+    im = galsim.fits.read(os.path.join(imgdir, pp_file))
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
+                                 oversampling=pp_oversampling, pupil_plane_im=im,
+                                 pad_factor=pp_pad_factor)
+    im_ref_psf = ref_psf.drawImage(scale=scale)
+    im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+    im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    if pp_test_type == 'image':
+        np.testing.assert_array_almost_equal(
+            im_test_psf.array, im_ref_psf.array, decimal=pp_decimal,
+            err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane.")
+    else:
+        test_moments = im_test_psf.FindAdaptiveMom()
+        ref_moments = im_ref_psf.FindAdaptiveMom()
+        np.testing.assert_almost_equal(
+            test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal-3,
+            err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane.")
+
+    # It is supposed to be able to figure this out even if we *don't* tell it the pad factor. So
+    # make sure that it still works even if we don't tell it that value.
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
+                                 oversampling=pp_oversampling)
+    im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+    im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    if pp_test_type == 'image':
+        np.testing.assert_array_almost_equal(
+            im_test_psf.array, im_ref_psf.array, decimal=pp_decimal,
+            err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane without "
+            "specifying parameters.")
+    else:
+        test_moments = im_test_psf.FindAdaptiveMom()
+        ref_moments = im_ref_psf.FindAdaptiveMom()
+        np.testing.assert_almost_equal(
+            test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal-3,
+            err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane without "
+            "specifying parameters.")
+
+    # Next test (less trivial): Rotate the struts by +27 degrees, and check that agreement is
+    # good. This is making sure that the linear interpolation that is done when rotating does not
+    # result in significant loss of accuracy.
+    rot_angle = 27.*galsim.degrees
+    ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
+                                strut_angle=strut_angle+rot_angle, oversampling=pp_oversampling,
+                                pad_factor=pp_pad_factor)
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
+                                 pupil_angle=rot_angle, oversampling=pp_oversampling,
+                                 pad_factor=pp_pad_factor)
+    im_ref_psf = ref_psf.drawImage(scale=scale)
+    im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+    im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    # We are slightly less stringent here since it should not be exact.
+    if pp_test_type == 'image':
+        np.testing.assert_array_almost_equal(
+            im_test_psf.array, im_ref_psf.array, decimal=pp_decimal-1,
+            err_msg="Inconsistent OpticalPSF image for rotated model after loading pupil plane.")
+    else:
+        test_moments = im_test_psf.FindAdaptiveMom()
+        ref_moments = im_ref_psf.FindAdaptiveMom()
+        np.testing.assert_almost_equal(
+            test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal-3,
+            err_msg="Inconsistent OpticalPSF image for rotated model after loading pupil plane.")
+
+    # Now include aberrations.  Here we are testing the ability to figure out the pupil plane extent
+    # and sampling appropriately.  Those get fed into the routine for making the aberrations.
+    defocus = -0.03
+    coma1 = 0.03
+    spher = -0.02
+    ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
+                                strut_angle=strut_angle, defocus=defocus, coma1=coma1, spher=spher,
+                                oversampling=pp_oversampling, pad_factor=pp_pad_factor)
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
+                                 defocus=defocus, coma1=coma1, spher=spher,
+                                 oversampling=pp_oversampling, pad_factor=pp_pad_factor)
+    im_ref_psf = ref_psf.drawImage(scale=scale)
+    im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+    im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    if pp_test_type == 'image':
+        np.testing.assert_array_almost_equal(
+            im_test_psf.array, im_ref_psf.array, decimal=pp_decimal,
+            err_msg="Inconsistent OpticalPSF image for aberrated model after loading pupil plane.")
+    else:
+        test_moments = im_test_psf.FindAdaptiveMom()
+        ref_moments = im_ref_psf.FindAdaptiveMom()
+        np.testing.assert_almost_equal(
+            test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal-2,
+            err_msg="Inconsistent OpticalPSF image for aberrated model after loading pupil plane.")
+
+    # Test for preservation of symmetries: the result should be the same if the pupil plane is
+    # rotated by integer multiples of 2pi/(nstruts).
+    ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
+                                strut_angle=strut_angle, oversampling=pp_oversampling,
+                                pad_factor=pp_pad_factor)
+    im_ref_psf = ref_psf.drawImage(scale=scale)
+    for ind in range(1,nstruts):
+        rot_angle = ind*2.*np.pi/nstruts
+        test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
+                                     pupil_angle=rot_angle*galsim.radians,
+                                     oversampling=pp_oversampling, pad_factor=pp_pad_factor)
+        im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+        im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+        if pp_test_type == 'image':
+            np.testing.assert_array_almost_equal(
+                im_test_psf.array, im_ref_psf.array, decimal=pp_decimal,
+                err_msg="Inconsistent OpticalPSF image after rotating pupil plane by invariant "
+                "angle.")
+        else:
+            test_moments = im_test_psf.FindAdaptiveMom()
+            ref_moments = im_test_psf.FindAdaptiveMom()
+            np.testing.assert_almost_equal(
+                test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal,
+                err_msg="Inconsistent OpticalPSF image after rotating pupil plane by invariant "
+                "angle.")
+
+
+    # Test that if we rotate pupil plane with no aberrations, that's equivalent to rotating the PSF
+    # itself.  Use rotation angle of 90 degrees so numerical issues due to the interpolation should
+    # be minimal.
+    rot_angle = 90.*galsim.degrees
+    psf_1 = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
+                              oversampling=pp_oversampling, pad_factor=pp_pad_factor)
+    rot_psf_1 = psf_1.rotate(rot_angle)
+    psf_2 = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
+                              pupil_angle=rot_angle, oversampling=pp_oversampling,
+                              pad_factor=pp_pad_factor)
+    im_1 = psf_1.drawImage(scale=scale)
+    im_2 = galsim.ImageD(im_1.array.shape[0], im_1.array.shape[1])
+    im_2 = psf_2.drawImage(image=im_2, scale=scale)
+    if pp_test_type == 'image':
+        np.testing.assert_array_almost_equal(
+            im_1.array, im_2.array, decimal=pp_decimal,
+            err_msg="Inconsistent OpticalPSF image after rotating pupil plane vs. rotating PSF.")
+    else:
+        test_moments = im_1.FindAdaptiveMom()
+        ref_moments = im_2.FindAdaptiveMom()
+        np.testing.assert_almost_equal(
+            test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal,
+            err_msg="Inconsistent OpticalPSF image after rotating pupil plane vs. rotating PSF.")
+
+    # Supply the pupil plane at higher resolution, and make sure that the routine figures out the
+    # sampling and gets the right image scale etc.
+    rescale_fac = 0.77
+    ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
+                                strut_angle=strut_angle, oversampling=pp_oversampling,
+                                pad_factor=pp_pad_factor/rescale_fac)
+    # Make higher resolution pupil plane image via interpolation
+    im.scale = 1. # this doesn't matter, just put something so the next line works
+    int_im = galsim.InterpolatedImage(galsim.Image(im, scale=im.scale, dtype=np.float32),
+                                      calculate_maxk=False, calculate_stepk=False,
+                                      x_interpolant='linear')
+    new_im = int_im.drawImage(scale=rescale_fac*im.scale, method='no_pixel')
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
+                                 pupil_plane_im=new_im, oversampling=pp_oversampling)
+    im_ref_psf = ref_psf.drawImage(scale=scale)
+    im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+    im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    test_moments = im_test_psf.FindAdaptiveMom()
+    ref_moments = im_ref_psf.FindAdaptiveMom()
+    if pp_test_type == 'image':
+        np.testing.assert_almost_equal(
+            test_moments.moments_sigma/ref_moments.moments_sigma-1., 0, decimal=2,
+            err_msg="Inconsistent OpticalPSF image for basic model after loading high-res pupil plane.")
+    else:
+        np.testing.assert_almost_equal(
+            test_moments.moments_sigma/ref_moments.moments_sigma-1., 0, decimal=1,
+            err_msg="Inconsistent OpticalPSF image for basic model after loading high-res pupil plane.")
+
+    # Now supply the pupil plane at the original resolution, but remove some of the padding.  We
+    # want it to properly recognize that it needs more padding, and include it.
+    remove_pad = -23
+    sub_im = im[im.bounds.addBorder(remove_pad)]
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
+                                 pupil_plane_im=sub_im, oversampling=pp_oversampling,
+                                 pad_factor=pp_pad_factor)
+    im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+    im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    test_moments = im_test_psf.FindAdaptiveMom()
+    ref_moments = im_ref_psf.FindAdaptiveMom()
+    np.testing.assert_almost_equal(
+        test_moments.moments_sigma/ref_moments.moments_sigma-1., 0, decimal=pp_decimal-3,
+        err_msg="Inconsistent OpticalPSF image for basic model after loading less padded pupil plane.")
+
+    # Now supply the pupil plane at the original resolution, with extra padding.
+    new_pad = 76
+    big_im = galsim.Image(im.bounds.addBorder(new_pad))
+    big_im[im.bounds] = im
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
+                                 pupil_plane_im=big_im, oversampling=pp_oversampling,
+                                 pad_factor=pp_pad_factor)
+    im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
+    im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+    test_moments = im_test_psf.FindAdaptiveMom()
+    ref_moments = im_ref_psf.FindAdaptiveMom()
+    np.testing.assert_almost_equal(
+        test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal-2,
+        err_msg="Inconsistent OpticalPSF image size for basic model "
+        "after loading more padded pupil plane.")
+
+    # Check for same answer if we use image, array, or filename for reading in array.
+    test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
+                                 oversampling=pp_oversampling, pad_factor=pp_pad_factor)
+    im_test_psf = test_psf.drawImage(scale=scale)
+    test_psf_2 = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im.array,
+                                   oversampling=pp_oversampling, pad_factor=pp_pad_factor)
+    im_test_psf_2 = test_psf_2.drawImage(scale=scale)
+    test_psf_3 = galsim.OpticalPSF(
+        lam_over_diam, obscuration=obscuration, oversampling=pp_oversampling,
+        pupil_plane_im=os.path.join(imgdir, pp_file),
+        pad_factor=pp_pad_factor)
+    im_test_psf_3 = test_psf_3.drawImage(scale=scale)
+    np.testing.assert_almost_equal(
+        im_test_psf.array, im_test_psf_2.array, decimal=pp_decimal,
+        err_msg="Inconsistent OpticalPSF image from Image vs. array.")
+    np.testing.assert_almost_equal(
+        im_test_psf.array, im_test_psf_3.array, decimal=pp_decimal,
+        err_msg="Inconsistent OpticalPSF image from Image vs. file read-in.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_check_all_contiguous()
@@ -511,3 +789,4 @@ if __name__ == "__main__":
     test_OpticalPSF_aberrations_struts()
     test_OpticalPSF_aberrations_kwargs()
     test_OpticalPSF_flux_scaling()
+    test_OpticalPSF_pupil_plane()

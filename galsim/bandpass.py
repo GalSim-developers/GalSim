@@ -349,7 +349,7 @@ class Bandpass(object):
         @returns new Bandpass with zeropoint set.
         """
         if isinstance(zeropoint, basestring):
-            if effective_diameter == None or exptime == None:
+            if effective_diameter is None or exptime is None:
                 raise ValueError("Cannot calculate Zeropoint from string {0} without "
                                  +"telescope effective diameter or exposure time.")
             if zeropoint.upper()=='AB':

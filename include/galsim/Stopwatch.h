@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef STOPWATCH_H
-#define STOPWATCH_H
+#ifndef GalSim_Stopwatch_H
+#define GalSim_Stopwatch_H
 
 #include <sys/time.h>
 

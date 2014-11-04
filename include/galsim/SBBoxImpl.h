@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef SBBOX_IMPL_H
-#define SBBOX_IMPL_H
+#ifndef GalSim_SBBoxImpl_H
+#define GalSim_SBBoxImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBBox.h"
@@ -90,5 +90,5 @@ namespace galsim {
 
 }
 
-#endif // SBBOX_IMPL_H
+#endif 
 
