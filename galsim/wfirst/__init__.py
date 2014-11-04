@@ -80,6 +80,11 @@ following numbers:
     pupil_plane_file - The name of the file containing the image of the pupil plane for WFIRST-AFTA,
                        to be used when constructing PSFs.
 
+    stray_light_fraction - The fraction of the sky background that is allowed to contribute as stray
+                           light.  Currently this is required to be <10% of the background due to
+                           zodiacal light, so its value is set to 0.1 (assuming a worst-case).  This
+                           could be used to get a total background including stray light.
+
 For example, to get the gain value, use galsim.wfirst.gain.  Some of the numbers related to the
 nature of the detectors are subject to change as further lab tests are done.
 
@@ -100,7 +105,6 @@ TODO:
  - sky background - make code to interpolate over the tables from the ETC
  (galsim/wfirst/wfirst_backgrounds.py), and use the new ecliptic
  coordinate converter.
- - stray light - put a simple fraction of sky background for now
  - WCS stuff - add the data from Jeff and port his WCS-builder to python
  - PSF stuff - include data from WCS optics team.
  - numbers related to IPC, persistence
@@ -120,7 +124,9 @@ thermal_backgrounds = {'J129': 0.06,
                        'Y106': 0.06,
                        'Z087': 0.06,
                        'H158': 0.08}
-pupil_plane_file = os.path.join(galsim.meta_data.share_dir, "WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz")
+pupil_plane_file = os.path.join(galsim.meta_data.share_dir,
+                                "WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz")
+stray_light_fraction = 0.1
 
 from wfirst_bandpass import *
 
