@@ -66,7 +66,7 @@ def applyNonlinearity(self, NLfunc, *args):
     self.array[:,:] = (NLfunc(self.array, *args))
 
 
-def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
+def addReciprocityFailure(self, exp_time, alpha):
     """
     Accounts for the reciprocity failure and corrects the original Image for it directly.
 
@@ -84,8 +84,8 @@ def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
 
         >>>  img.addReciprocityFailure(exp_time, alpha)
 
-    @param exp_time  The exposure time in seconds, which goes into the expression for reciprocity failure given in the docstring. [default: 200]
-    @param alpha     The alpha parameter in the expression for reciprocity failure, in units of 'per decade'. [default: 0.0065]
+    @param exp_time  The exposure time in seconds, which goes into the expression for reciprocity failure given in the docstring. 
+    @param alpha     The alpha parameter in the expression for reciprocity failure, in units of 'per decade'. 
     
     @returns None
     """
