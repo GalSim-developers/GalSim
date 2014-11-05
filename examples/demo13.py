@@ -20,8 +20,9 @@ def main(argv):
     rng = galsim.BaseDeviate(random_seed)
 
     # read in the WFIRST filters
-    filters = wfirst.getBandpasses();
+    filters = wfirst.getBandpasses(AB_zeropoint=True);
     logger.debug('Read in filters')
+    print 
 
     # filter has redder red limit
     for filter in filters:
@@ -30,7 +31,7 @@ def main(argv):
     # read in SEDs
     SED_names = ['CWW_E_ext', 'CWW_Sbc_ext', 'CWW_Scd_ext', 'CWW_Im_ext']
     SEDs = {}
-    mag_norm = -7.0
+    mag_norm = 22.0
     for SED_name in SED_names:
         SED_filename = os.path.join(datapath, '{0}.sed'.format(SED_name))
         # Here we create some galsim.SED objects to hold star or galaxy spectra.  The most
@@ -45,7 +46,8 @@ def main(argv):
         bandpass = filters['W149']
         print "SED's redlimit = ", SED.red_limit
         bandpass.red_limit = SED.red_limit
-        SEDs[SED_name] = SED.withFlux(target_flux=10.0**(-0.4*(mag_norm)), bandpass=filters['W149'])
+        print "Current flux = ", SED.calculateFlux(bandpass=filters['W149'])
+        SEDs[SED_name] = SED.withFlux(target_flux=10.0**(-0.4*(mag_norm-bandpass.zeropoint)), bandpass=filters['W149'])
 
     logger.debug('Successfully read in SEDs')
 
@@ -87,24 +89,31 @@ def main(argv):
     for filter_name, filter_ in filters.iteritems():
         
         # Obtaining parameters for Airy PSF
-        effective_wavelength = 1e7*filters[filter_name].effective_wavelength # now in cm
+        effective_wavelength = (1e-9)*filters[filter_name].effective_wavelength # now in cm
         effective_diameter = wfirst.diameter*numpy.sqrt(1-wfirst.obscuration**2) 
-        lam_over_diam = (effective_wavelength/wfirst.diameter)*206265 # in arcsec
+        lam_over_diam = (1.0*effective_wavelength/wfirst.diameter)*206265.0 # in arcsec
 
         #Convolve with PSF
         PSF = galsim.Airy(obscuration=wfirst.obscuration, lam_over_diam=lam_over_diam)
+        #PSF = galsim.Moffat(fwhm=0.6,beta=2.5)
         bdconv = galsim.Convolve([bdgal, PSF])
 
-    	img = galsim.ImageF(64,64,scale=pixel_scale) # 64, 64
+    	img = galsim.ImageF(512*2,512*2,scale=pixel_scale) # 64, 64
     	bdconv.drawImage(filter_,image=img)
+        #print "A1: ", img.array
+        print "F1: ", numpy.sum(img.array), numpy.mean(img.array)
 
     	print "S =", (numpy.sum(img.array**2)-(numpy.sum(img.array))**2/(64**2))/(64**2)
 
-        #Adding Poisson Noise
-        diameter = 2.4; obscuration=0.3;
+        #Adding sky level
         sky_level_pix = sky_level[filter_name]*(numpy.pi)*((effective_diameter/2)**2)*exptime*(pixel_scale**2) #background level
-        poisson_noise = galsim.PoissonNoise(rng, sky_level = 0.001*sky_level_pix)        
-    	#img.addNoiseSNR(poisson_noise,snr=1000)
+        #Check units
+        img.array[:,:] += sky_level_pix
+        print "sky_level_pix = ", sky_level_pix
+
+        #Adding Poisson Noise
+        poisson_noise = galsim.PoissonNoise(rng)        
+    	#img.addNoise(poisson_noise)
         logger.debug('Created {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_{0}.fits'.format(filter_name))
         galsim.fits.write(img,out_filename)
@@ -118,7 +127,7 @@ def main(argv):
         def NLfunc(x,beta):
             return x + beta*(x**2)
     	#NLfunc = wfirst.NLfunc
-    	img.applyNonlinearity(NLfunc,beta)
+    	#img.applyNonlinearity(NLfunc,beta)
     	logger.debug('Applied Nonlinearity to {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_NL_{0}.fits'.format(filter_name))
         galsim.fits.write(img,out_filename)
@@ -137,7 +146,7 @@ def main(argv):
         #Adding Read Noise
     	read_noise = galsim.CCDNoise(rng)
         read_noise.setReadNoise(read_noise_rms)
-        img.addNoise(read_noise)
+        #img.addNoise(read_noise)
         logger.debug('Added Readnoise for {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_ReadNoise_{0}.fits'.format(filter_name))
         galsim.fits.write(img,out_filename)
