@@ -93,11 +93,16 @@ def test_nonlinearity_basic():
         im_new.array, im.array + 0.001*((im.array)**2) -0.0001*((im.array)**3),
         err_msg = 'Nonlinearity function with multiple arguments does not function as desired')
 
-    # Check for preservation for certain NLfunc.
+    # Check for preservation for identity function as NLfunc.
     im_new = im.copy()
     im_new.applyNonlinearity(lambda x : x)
     np.testing.assert_array_equal(
-        im_new.array, im.array, err_msg='Image not preserved when applying null nonlinearity function')
+        im_new.array, im.array, err_msg='Image not preserved when applying identity nonlinearity function')
+
+    # Check for constant function as NLfunc
+    im_new = im.copy()
+    im_new.applyNonlinearity(lambda x: 1.0)
+    np.testing.assert_array_equal(im_new.array,np.ones_like(im),err_msg='Image not constant when the nonlinearity function is constant')
 
     # Check that lambda func vs. LookupTable agree.
     max_val = np.max(im.array)
