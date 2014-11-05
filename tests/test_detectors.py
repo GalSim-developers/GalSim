@@ -96,9 +96,8 @@ def test_nonlinearity_basic():
     # Check for preservation for certain NLfunc.
     im_new = im.copy()
     im_new.applyNonlinearity(lambda x : x)
-    np.testing.assert_array_almost_equal(
-        im_new.array, im.array, DECIMAL,
-        err_msg='Image not preserved when applying null nonlinearity function')
+    np.testing.assert_array_equal(
+        im_new.array, im.array, err_msg='Image not preserved when applying null nonlinearity function')
 
     # Check that lambda func vs. LookupTable agree.
     max_val = np.max(im.array)
