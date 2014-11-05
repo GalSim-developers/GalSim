@@ -84,13 +84,12 @@ def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
 
         >>>  img.addReciprocityFailure(exp_time, alpha)
 
-    @param exp_time  The exposure time in seconds, which goes into the expression for reciprocity
-                     failure given in the docstring. [default: 200]
-    @param alpha     The alpha parameter in the expression for reciprocity failure.
-                     [default: 0.0065]
+    @param exp_time  The exposure time in seconds, which goes into the expression for reciprocity failure given in the docstring. [default: 200]
+    @param alpha     The alpha parameter in the expression for reciprocity failure, in units of 'per decade'. [default: 0.0065]
     
     @returns None
     """
+
     if not isinstance(alpha, float) or alpha < 0.:
         raise ValueError("Invalid value of alpha, must be float >= 0")
     if not (isinstance(exp_time, float) or isinstance(exp_time, int)) or exp_time < 0.:
@@ -101,13 +100,7 @@ def addReciprocityFailure(self, exp_time=200., alpha=0.0065):
         warnings.warn("At least one element of image/exp_time is too close to 0 or negative.")
         warnings.warn("Floating point errors might occur.")
 
-    self.array[:,:] = (self.array*(1.0 + alpha*numpy.log10(self.array/float(exp_time))))
-
-    ## Enforce consistency of bounds and scale between input, output Images.
-    #im_out = galsim.Image(arr_out, xmin=self.xmin, ymin=self.ymin)
-    #im_out.scale = self.scale
-    #return im_out
-
+    self.array[:,:] = self.array*(1.0 + alpha*numpy.log10(self.array/float(exp_time)))
 
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
