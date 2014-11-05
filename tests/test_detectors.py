@@ -149,9 +149,8 @@ def test_recipfail_basic():
     # Check for preservation for certain alpha.
     im_new = im.copy()
     im_new.addReciprocityFailure(alpha=0.0)
-    np.testing.assert_array_almost_equal(
-        im_new.array, im.array, DECIMAL,
-        err_msg='Image not preserved when applying null reciprocity failure')
+    np.testing.assert_array_equal(
+        im_new.array, im.array, err_msg='Image not preserved when applying null reciprocity failure')
 
     # Check for proper scaling with alpha
     alpha1 = 0.006
