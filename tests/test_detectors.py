@@ -171,10 +171,11 @@ def test_recipfail_basic():
         err_msg='Did not get expected change in reciprocity failure when varying alpha')
 
     #Check math is right
-    alpha = 0.0065
+    alpha, exp_time = 0.0065, 1.0
     im_new = im.copy()
-    np.testing_assert_array_equal(im_new.array-im.array,alpha*np.log10(im.array),err_msg='Difference in images is not alpha times the log of original')
-    
+    im_new.addReciprocityFailure(alpha=alpha,exp_time=exp_time)
+    np.testing.assert_array_almost_equal((im_new.array-im.array),alpha*im.array*np.log10(im.array/exp_time),int(DECIMAL/2),err_msg='Difference in images is not alpha times the log of original')
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
