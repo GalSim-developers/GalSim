@@ -44,14 +44,15 @@ def test_nonlinearity_basic():
     im.shift(dx=-5, dy=3)
     im_save = im.copy()
 
-    # Basic - exceptions / bad usage (invalid function, does not return NumPy array).
-    try:
-        np.testing.assert_raises(ValueError, im.applyNonlinearity, lambda x : 1.0)
-    except ImportError:
-        print 'The assert_raises tests require nose'
+    ## Basic - exceptions / bad usage (invalid function, does not return NumPy array).
+    #try:
+    #    np.testing.assert_raises(ValueError, im.applyNonlinearity, lambda x : 1.0)
+    #except ImportError:
+    #    print 'The assert_raises tests require nose'
 
     # Preservation of data type / scale / bounds / input image
-    im_new = im.applyNonlinearity(lambda x : x + 0.001*(x**2))
+    im_new = im.copy()
+    im_new.applyNonlinearity(lambda x : x + 0.001*(x**2))
     assert im_new.scale == im.scale
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
@@ -59,9 +60,21 @@ def test_nonlinearity_basic():
         im_save.array, im.array,
         err_msg = 'Input image was modified after addition of nonlinearity')
 
+    # Check that calling a NLfunc with no parameter works
+    NLfunc = lambda x: x + 0.001*(x**2)
+    im_new = im.copy()
+    im_new.applyNonlinearity(NLfunc)
+    assert im_new.scale == im.scale
+    assert im_new.dtype == im.dtype
+    assert im_new.bounds == im.bounds
+    np.testing.assert_array_equal(
+        im_new.array, im.array+0.001*((im.array)**2),
+        err_msg = 'Nonlinearity function with no argument does not function as desired.')
+
     # Check that calling a NLfunc with a parameter works
     NLfunc = lambda x, beta: x + beta*(x**2)
-    im_new = im.applyNonlinearity(NLfunc, 0.001)
+    im_new = im.copy()
+    im_new.applyNonlinearity(NLfunc, 0.001)
     assert im_new.scale == im.scale
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
@@ -70,28 +83,36 @@ def test_nonlinearity_basic():
         err_msg = 'Nonlinearity function with one argument does not function as desired.')
 
     # Check that calling a NLfunc with multiple parameters works
-    NLfunc = lambda x, (beta1, beta2): x + beta1*(x**2) + beta2*(x**3)
-    im_new = im.applyNonlinearity(NLfunc, args=(0.001,-0.0001))
+    NLfunc = lambda x, beta1, beta2: x + beta1*(x**2) + beta2*(x**3)
+    im_new = im.copy()
+    im_new.applyNonlinearity(NLfunc, 0.001, -0.0001)
     assert im_new.scale == im.scale
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
     np.testing.assert_array_equal(
         im_new.array, im.array + 0.001*((im.array)**2) -0.0001*((im.array)**3),
         err_msg = 'Nonlinearity function with multiple arguments does not function as desired')
-	
-    # Check for preservation for certain NLfunc.
-    im_new = im.applyNonlinearity(lambda x : x)
-    np.testing.assert_array_almost_equal(
-        im_new.array, im.array, DECIMAL,
-        err_msg='Image not preserved when applying null nonlinearity function')
+
+    # Check for preservation for identity function as NLfunc.
+    im_new = im.copy()
+    im_new.applyNonlinearity(lambda x : x)
+    np.testing.assert_array_equal(
+        im_new.array, im.array, err_msg='Image not preserved when applying identity nonlinearity function')
+
+    # Check for constant function as NLfunc
+    im_new = im.copy()
+    im_new.applyNonlinearity(lambda x: 1.0)
+    np.testing.assert_array_equal(im_new.array,np.ones_like(im),err_msg='Image not constant when the nonlinearity function is constant')
 
     # Check that lambda func vs. LookupTable agree.
     max_val = np.max(im.array)
     x_vals = np.linspace(0.0, max_val, num=500)
     f_vals = x_vals + 0.1*(x_vals**2)
     lut = galsim.LookupTable(x=x_vals, f=f_vals)
-    im1 = im.applyNonlinearity(lambda x : x + 0.1*(x**2))
-    im2 = im.applyNonlinearity(lut)
+    im1 = im.copy()
+    im2 = im.copy()
+    im1.applyNonlinearity(lambda x : x + 0.1*(x**2))
+    im2.applyNonlinearity(lut)
     # Note, don't be quite as stringent as in previous test; there can be small interpolation
     # errors.
     np.testing.assert_array_almost_equal(
@@ -113,14 +134,15 @@ def test_recipfail_basic():
     im.shift(dx=-5, dy=3)
     im_save = im.copy()
 
-    # Basic - exceptions / bad usage.
-    try:
-        np.testing.assert_raises(ValueError, im.addReciprocityFailure, -1.0)
-    except ImportError:
-        print 'The assert_raises tests require nose'
+    ## Basic - exceptions / bad usage.
+    #try:
+    #    np.testing.assert_raises(ValueError, im.addReciprocityFailure, -1.0)
+    #except ImportError:
+    #    print 'The assert_raises tests require nose'
 
     # Preservation of data type / scale / bounds
-    im_new = im.addReciprocityFailure()
+    im_new = im.copy()
+    im_new.addReciprocityFailure(exp_time=200.,alpha=0.0065)
     assert im_new.scale == im.scale
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
@@ -129,16 +151,18 @@ def test_recipfail_basic():
         err_msg = 'Input image was modified after addition of reciprocity failure')
 
     # Check for preservation for certain alpha.
-    im_new = im.addReciprocityFailure(alpha=0.0)
-    np.testing.assert_array_almost_equal(
-        im_new.array, im.array, DECIMAL,
-        err_msg='Image not preserved when applying null reciprocity failure')
+    im_new = im.copy()
+    im_new.addReciprocityFailure(exp_time=200.,alpha=0.0)
+    np.testing.assert_array_equal(
+        im_new.array, im.array, err_msg='Image not preserved when applying null reciprocity failure')
 
     # Check for proper scaling with alpha
     alpha1 = 0.006
     alpha2 = 0.007
-    im1 = im.addReciprocityFailure(alpha=alpha1)
-    im2 = im.addReciprocityFailure(alpha=alpha2)
+    im1 = im.copy()
+    im2 = im.copy()
+    im1.addReciprocityFailure(exp_time=200.,alpha=alpha1)
+    im2.addReciprocityFailure(exp_time=200.,alpha=alpha2)
     dim1 = im1.array-im.array
     dim2 = im2.array-im.array
     # We did new - old image, which should equal (old image)*alpha*log(...).
@@ -148,6 +172,12 @@ def test_recipfail_basic():
     np.testing.assert_array_almost_equal(
         dim2/dim1, expected_ratio, int(DECIMAL/3),
         err_msg='Did not get expected change in reciprocity failure when varying alpha')
+
+    #Check math is right
+    alpha, exp_time = 0.0065, 1.0
+    im_new = im.copy()
+    im_new.addReciprocityFailure(alpha=alpha,exp_time=exp_time)
+    np.testing.assert_array_almost_equal((im_new.array-im.array),alpha*im.array*np.log10(im.array/exp_time),int(DECIMAL/2),err_msg='Difference in images is not alpha times the log of original')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
