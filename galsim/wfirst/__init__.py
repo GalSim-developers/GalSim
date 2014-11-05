@@ -118,6 +118,8 @@ obscuration = 0.3
 exptime = 168.1
 dark_current = 0.015
 nonlinearity_beta = -3.57e-7
+reciprocity_alpha = 0.0065
+read_noise = 10.0
 n_dithers = 6
 thermal_backgrounds = {'J129': 0.06,
                        'F184': 1.18, 
@@ -127,6 +129,7 @@ thermal_backgrounds = {'J129': 0.06,
 pupil_plane_file = os.path.join(galsim.meta_data.share_dir,
                                 "WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz")
 stray_light_fraction = 0.1
+
 
 from wfirst_bandpass import *
 
