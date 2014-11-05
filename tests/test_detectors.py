@@ -142,7 +142,7 @@ def test_recipfail_basic():
 
     # Preservation of data type / scale / bounds
     im_new = im.copy()
-    im_new.addReciprocityFailure()
+    im_new.addReciprocityFailure(exp_time=200.,alpha=0.0065)
     assert im_new.scale == im.scale
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
@@ -152,7 +152,7 @@ def test_recipfail_basic():
 
     # Check for preservation for certain alpha.
     im_new = im.copy()
-    im_new.addReciprocityFailure(alpha=0.0)
+    im_new.addReciprocityFailure(exp_time=200.,alpha=0.0)
     np.testing.assert_array_equal(
         im_new.array, im.array, err_msg='Image not preserved when applying null reciprocity failure')
 
@@ -161,8 +161,8 @@ def test_recipfail_basic():
     alpha2 = 0.007
     im1 = im.copy()
     im2 = im.copy()
-    im1.addReciprocityFailure(alpha=alpha1)
-    im2.addReciprocityFailure(alpha=alpha2)
+    im1.addReciprocityFailure(exp_time=200.,alpha=alpha1)
+    im2.addReciprocityFailure(exp_time=200.,alpha=alpha2)
     dim1 = im1.array-im.array
     dim2 = im2.array-im.array
     # We did new - old image, which should equal (old image)*alpha*log(...).
