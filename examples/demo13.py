@@ -106,8 +106,7 @@ def main(argv):
     	print "S =", (numpy.sum(img.array**2)-(numpy.sum(img.array))**2/(64**2))/(64**2)
 
         #Adding sky level
-        sky_level_pix = sky_level[filter_name]*(numpy.pi)*((effective_diameter/2)**2)*exptime*(pixel_scale**2) #background level
-        #Check units
+        sky_level_pix = wfirst.getSkyLevel(filters[filter_name],exp_time=wfirst.exptime)
         img.array[:,:] += sky_level_pix
         print "sky_level_pix = ", sky_level_pix
 
