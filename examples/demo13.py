@@ -47,7 +47,7 @@ def main(argv):
         print "SED's redlimit = ", SED.red_limit
         bandpass.red_limit = SED.red_limit
         print "Current flux = ", SED.calculateFlux(bandpass=filters['W149'])
-        SEDs[SED_name] = SED.withFlux(target_flux=10.0**(-0.4*(mag_norm-bandpass.zeropoint)), bandpass=filters['W149'])
+        SEDs[SED_name] = SED.withMagnitude(target_magnitude=mag_norm, bandpass=filters['W149'])
 
     logger.debug('Successfully read in SEDs')
 
