@@ -45,6 +45,10 @@ def getBandpasses(AB_zeropoint=True, exptime=None):
     the exposure time that is used for the calculation can be used by setting the `exptime`
     keyword.
 
+    This routine also loads information about sky backgrounds in each filter, to be used by the
+    galsim.wfirst.getSkyLevel() routine.  The sky background information is saved as an attribute in
+    each Bandpass object.
+
     Example usage
     -------------
 
@@ -72,15 +76,21 @@ def getBandpasses(AB_zeropoint=True, exptime=None):
     wave_ind = first_line.index('Wave')
     wave = 1000.*data[wave_ind,:]
 
-
     if AB_zeropoint:
         # Note that withZeropoint wants an effective diameter in cm, not m.  Also, the effective
         # diameter has to take into account the central obscuration, so d_eff = d sqrt(1 -
         # obs^2).
         d_eff = 100. * galsim.wfirst.diameter * np.sqrt(1.-galsim.wfirst.obscuration**2)
 
+    # Read in and manipulate the sky background info.
+    sky_file = os.path.join(galsim.meta_data.share_dir, "wfirst_sky_backgrounds.txt")
+    sky_data = np.loadtxt(sky_file).transpose()
+    ecliptic_lat = sky_data[0, :]
+    ecliptic_lon = sky_data[1, :]
+
     # Set up a dictionary.
     bandpass_dict = {}
+    i_band = 0
     # Loop over the bands.
     for index in range(len(first_line)):
         # Need to skip the entry for wavelength.
@@ -95,8 +105,14 @@ def getBandpasses(AB_zeropoint=True, exptime=None):
                 exptime = galsim.wfirst.exptime
             bp = bp.withZeropoint('AB', effective_diameter=d_eff, exptime=exptime)
 
+        # Store the sky level information as an attribute.
+        bp._ecliptic_lat = ecliptic_lat
+        bp._ecliptic_lon = ecliptic_lon
+        bp._sky_level = sky_data[2+i_band, :]
+
         # Add it to the dictionary.
         bandpass_dict[first_line[index]] = bp
+        i_band += 1
 
     return bandpass_dict
 

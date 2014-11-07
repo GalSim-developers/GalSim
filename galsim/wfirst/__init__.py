@@ -95,6 +95,10 @@ This module also contains the following routines:
                       for the WFIRST-AFTA effective diameter and typical exposure time.  For more
                       detail, do help(galsim.wfirst.getBandpasses).
 
+    getSkyLevel() - A utility to find the expected sky level due to zodiacal light at a given
+                    position, in a given band.  For more detail, do
+                    help(galsim.wfirst.getSkyLevel).
+
     NLfunc() - A function to take an input image and simulate detector nonlinearity.  This will
                ordinarily be used as an input to GalSim routines for applying nonlinearity, i.e., if
                you have an image `im` then you would do
@@ -102,9 +106,7 @@ This module also contains the following routines:
                >>>> im_nl = im.applyNonlinearity(galsim.wfirst.NLfunc)
 
 TODO:
- - sky background - make code to interpolate over the tables from the ETC
- (galsim/wfirst/wfirst_backgrounds.py), and use the new ecliptic
- coordinate converter.
+ - unit tests for new stuff
  - WCS stuff - add the data from Jeff and port his WCS-builder to python
  - PSF stuff - include data from WCS optics team.
  - numbers related to IPC, persistence
@@ -113,11 +115,13 @@ TODO:
 gain = 1.0
 pixel_scale = 0.11
 dark_current = 0.01
-diameter = 2.4
+diameter = 2.36
 obscuration = 0.3
 exptime = 168.1
 dark_current = 0.015
 nonlinearity_beta = -3.57e-7
+reciprocity_alpha = 0.0065
+read_noise = 10.0
 n_dithers = 6
 thermal_backgrounds = {'J129': 0.06,
                        'F184': 1.18, 
@@ -128,7 +132,9 @@ pupil_plane_file = os.path.join(galsim.meta_data.share_dir,
                                 "WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz")
 stray_light_fraction = 0.1
 
+
 from wfirst_bandpass import *
+from wfirst_backgrounds import *
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)
