@@ -19,6 +19,7 @@
 """
 
 import numpy as np
+from scipy import interpolate
 
 from galsim_test_helpers import *
 
@@ -118,6 +119,19 @@ def test_nonlinearity_basic():
     np.testing.assert_array_almost_equal(
         im1.array, im2.array, int(0.5*DECIMAL),
         err_msg='Image differs when using LUT vs. lambda function')
+
+    # Check that lambda func vs. interpolated function from SciPy agree
+    # This is NOT the preferred way to construct smooth functions from tables but our routine can handle it anyway.
+    max_val = np.max(im.array)
+    x_vals = np.linspace(0.0,max_val,num=500)
+    f_vals = x_vals + 0.1*(x_vals**2)
+    lut = interpolate.interp1d(x=x_vals,y=f_vals)
+    im1 = im.copy()
+    im2 = im.copy()
+    im1.applyNonlinearity(lambda x: x + 0.1*(x**2))
+    im2.applyNonlinearity(lut)
+    # Note, don't be quite as stringent as in previous test; there can be small interpolation errors.
+    np.testing.assert_array_almost_equal(im1.array,im2.array,int(0.5*DECIMAL),err_msg="Image differs when using SciPy's interpolation vs. lambda function")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
