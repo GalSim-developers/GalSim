@@ -102,5 +102,8 @@ def addReciprocityFailure(self, exp_time, alpha):
 
     self.array[:,:] = self.array*(1.0 + alpha*numpy.log10(self.array/float(exp_time)))
 
+def applyIPC():
+    # applies IPC    
+
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
