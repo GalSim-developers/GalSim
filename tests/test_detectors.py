@@ -124,8 +124,8 @@ def test_nonlinearity_basic():
     # This is NOT the preferred way to construct smooth functions from tables but our routine can handle it anyway.
     max_val = np.max(im.array)
     x_vals = np.linspace(0.0,max_val,num=500)
-    f_vals = x_vals + 0.1*(x_vals**2)
-    lut = interpolate.interp1d(x=x_vals,y=f_vals)
+    y_vals = x_vals + 0.1*(x_vals**2)
+    lut = interpolate.interp1d(x=x_vals,y=y_vals)
     im1 = im.copy()
     im2 = im.copy()
     im1.applyNonlinearity(lambda x: x + 0.1*(x**2))

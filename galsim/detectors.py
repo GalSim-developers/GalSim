@@ -45,7 +45,7 @@ def applyNonlinearity(self, NLfunc, *args):
     Calling with no parameter
     -------
 
-        >>> f = lambda x: x + (1e-7)*(x**2)
+        >>> f = lambda x: x + (1.e-7)*(x**2)
         >>> img.applyNonlinearity(f)
 
     Calling with 1 or more parameters
