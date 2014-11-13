@@ -96,7 +96,7 @@ def addReciprocityFailure(self, exp_time, alpha):
     if not isinstance(alpha, float) or alpha < 0.:
         raise ValueError("Invalid value of alpha, must be float >= 0")
     if not (isinstance(exp_time, float) or isinstance(exp_time, int)) or exp_time < 0.:
-        raise ValueError("Invalid value of exp_time, must be float >= 0")
+        raise ValueError("Invalid value of exp_time, must be float or int >= 0")
 
     if numpy.any(self.array < sys.float_info.min*float(exp_time)):
         import warnings
