@@ -85,8 +85,10 @@ def addReciprocityFailure(self, exp_time, alpha):
 
         >>>  img.addReciprocityFailure(exp_time, alpha)
 
-    @param exp_time  The exposure time in seconds, which goes into the expression for reciprocity failure given in the docstring. 
-    @param alpha     The alpha parameter in the expression for reciprocity failure, in units of 'per decade'. 
+    @param exp_time  The exposure time in seconds, which goes into the expression for reciprocity
+                     failure given in the docstring. 
+    @param alpha     The alpha parameter in the expression for reciprocity failure, in units of 'per
+                     decade'. 
     
     @returns None
     """
