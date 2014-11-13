@@ -53,6 +53,7 @@ def test_nonlinearity_basic():
     im_new = im.copy()
     im_new.applyNonlinearity(lambda x : x + 0.001*(x**2))
     assert im_new.scale == im.scale
+    assert im_new.wcs == im.wcs
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
     np.testing.assert_array_equal(
@@ -64,6 +65,7 @@ def test_nonlinearity_basic():
     im_new = im.copy()
     im_new.applyNonlinearity(NLfunc)
     assert im_new.scale == im.scale
+    assert im_new.wcs == im.wcs
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
     np.testing.assert_array_equal(
@@ -75,6 +77,7 @@ def test_nonlinearity_basic():
     im_new = im.copy()
     im_new.applyNonlinearity(NLfunc, 0.001)
     assert im_new.scale == im.scale
+    assert im_new.wcs == im.wcs
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
     np.testing.assert_array_equal(
@@ -86,6 +89,7 @@ def test_nonlinearity_basic():
     im_new = im.copy()
     im_new.applyNonlinearity(NLfunc, 0.001, -0.0001)
     assert im_new.scale == im.scale
+    assert im_new.wcs == im.wcs
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
     np.testing.assert_array_equal(
@@ -95,6 +99,10 @@ def test_nonlinearity_basic():
     # Check for preservation for identity function as NLfunc.
     im_new = im.copy()
     im_new.applyNonlinearity(lambda x : x)
+    assert im_new.scale == im.scale
+    assert im_new.wcs == im.wcs
+    assert im_new.dtype == im.dtype
+    assert im_new.bounds == im.bounds
     np.testing.assert_array_equal(
         im_new.array, im.array, err_msg='Image not preserved when applying identity nonlinearity function')
 
@@ -102,6 +110,10 @@ def test_nonlinearity_basic():
     im_new = im.copy()
     im_new.applyNonlinearity(lambda x: 1.0)
     np.testing.assert_array_equal(im_new.array,np.ones_like(im),err_msg='Image not constant when the nonlinearity function is constant')
+    assert im_new.scale == im.scale
+    assert im_new.wcs == im.wcs
+    assert im_new.dtype == im.dtype
+    assert im_new.bounds == im.bounds
 
     # Check that lambda func vs. LookupTable agree.
     max_val = np.max(im.array)
@@ -112,6 +124,16 @@ def test_nonlinearity_basic():
     im2 = im.copy()
     im1.applyNonlinearity(lambda x : x + 0.1*(x**2))
     im2.applyNonlinearity(lut)
+    
+    assert im1.scale == im.scale
+    assert im1.wcs == im.wcs
+    assert im1.dtype == im.dtype
+    assert im1.bounds == im.bounds
+
+    assert im2.scale == im.scale
+    assert im2.wcs == im.wcs
+    assert im2.dtype == im.dtype
+    assert im2.bounds == im.bounds
     # Note, don't be quite as stringent as in previous test; there can be small interpolation
     # errors.
     np.testing.assert_array_almost_equal(
@@ -173,6 +195,7 @@ def test_recipfail_basic():
     im_new = im.copy()
     im_new.addReciprocityFailure(exp_time=200.,alpha=0.0065)
     assert im_new.scale == im.scale
+    assert im_new.wcs == im.wcs
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
     np.testing.assert_array_equal(
@@ -182,6 +205,10 @@ def test_recipfail_basic():
     # Check for preservation for certain alpha.
     im_new = im.copy()
     im_new.addReciprocityFailure(exp_time=200.,alpha=0.0)
+    assert im_new.scale == im.scale
+    assert im_new.wcs == im.wcs
+    assert im_new.dtype == im.dtype
+    assert im_new.bounds == im.bounds
     np.testing.assert_array_equal(
         im_new.array, im.array, err_msg='Image not preserved when applying null reciprocity failure')
 
@@ -198,6 +225,17 @@ def test_recipfail_basic():
     # The old image is the same, as is the factor inside the log.  So the ratio dim2/dim1 should
     # just be alpha2/alpha1.
     expected_ratio = np.zeros(im.array.shape) + alpha2/alpha1
+
+    assert im1.scale == im.scale
+    assert im1.wcs == im.wcs
+    assert im1.dtype == im.dtype
+    assert im1.bounds == im.bounds
+
+    assert im2.scale == im.scale
+    assert im2.wcs == im.wcs
+    assert im2.dtype == im.dtype
+    assert im2.bounds == im.bounds
+
     np.testing.assert_array_almost_equal(
         dim2/dim1, expected_ratio, int(DECIMAL/3),
         err_msg='Did not get expected change in reciprocity failure when varying alpha')
@@ -207,6 +245,10 @@ def test_recipfail_basic():
     im_new = im.copy()
     im_new.addReciprocityFailure(alpha=alpha,exp_time=exp_time)
     np.testing.assert_array_almost_equal((im_new.array-im.array),alpha*im.array*np.log10(im.array/exp_time),int(DECIMAL/2),err_msg='Difference in images is not alpha times the log of original')
+    assert im_new.scale == im.scale
+    assert im_new.wcs == im.wcs
+    assert im_new.dtype == im.dtype
+    assert im_new.bounds == im.bounds
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
