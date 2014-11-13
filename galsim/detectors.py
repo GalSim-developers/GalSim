@@ -29,10 +29,9 @@ def applyNonlinearity(self, NLfunc, *args):
     """
     Applies the given non-linearity function (`NLfunc`) on the Image instance directly.
 
-    The image should be in units of electrons (not ADU), and should include both the signal from
-    the astronomical objects as well as the background level.  Other detectors effects such as dark
-    current and persistence (not currently included in GalSim) would also occur before the
-    inclusion of nonlinearity.
+    The image should include both the signal from the astronomical objects as well as the
+    background level.  Other detectors effects such as dark current and persistence (not
+    currently included in GalSim) would also occur before the inclusion of nonlinearity.
 
     The argument `NLfunc` is a callable function (for example a lambda function, a
     galsim.LookupTable, or a user-defined function), possibly with arguments that need to be given
@@ -40,7 +39,8 @@ def applyNonlinearity(self, NLfunc, *args):
     `NLfunc` should be able to take a 2d NumPy array as input, and return a NumPy array of the
     same shape.  It should be defined such that it outputs the final image with nonlinearity
     included (i.e., in the limit that there is no nonlinearity, the function should return the
-    original image, NOT zero).
+    original image, NOT zero). The functional form of `NLfunc` must be such that it can operate
+    on the Image instance in whatever units (ADU or e-) it is specified in.
 
     Calling with no parameter:
     -------------------------
