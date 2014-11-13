@@ -19,8 +19,6 @@
 """
 
 import numpy as np
-from scipy import interpolate
-
 from galsim_test_helpers import *
 
 try:
@@ -121,17 +119,34 @@ def test_nonlinearity_basic():
         err_msg='Image differs when using LUT vs. lambda function')
 
     # Check that lambda func vs. interpolated function from SciPy agree
-    # This is NOT the preferred way to construct smooth functions from tables but our routine can handle it anyway.
-    max_val = np.max(im.array)
-    x_vals = np.linspace(0.0,max_val,num=500)
-    y_vals = x_vals + 0.1*(x_vals**2)
-    lut = interpolate.interp1d(x=x_vals,y=y_vals)
-    im1 = im.copy()
-    im2 = im.copy()
-    im1.applyNonlinearity(lambda x: x + 0.1*(x**2))
-    im2.applyNonlinearity(lut)
-    # Note, don't be quite as stringent as in previous test; there can be small interpolation errors.
-    np.testing.assert_array_almost_equal(im1.array,im2.array,int(0.5*DECIMAL),err_msg="Image differs when using SciPy's interpolation vs. lambda function")
+    # GalSim doesn't have SciPy dependence and this is NOT the preferred way to construct smooth functions from tables but our routine can handle it anyway.
+    try:
+        from scipy import interpolate
+        max_val = np.max(im.array)
+        x_vals = np.linspace(0.0,max_val,num=500)
+        y_vals = x_vals + 0.1*(x_vals**2)
+        lut = interpolate.interp1d(x=x_vals,y=y_vals)
+        im1 = im.copy()
+        im2 = im.copy()
+        im1.applyNonlinearity(lambda x: x + 0.1*(x**2))
+        im2.applyNonlinearity(lut)
+
+        assert im1.scale == im.scale
+        assert im1.wcs == im.wcs
+        assert im1.dtype == im.dtype
+        assert im1.bounds == im.bounds
+
+        assert im2.scale == im.scale
+        assert im2.wcs == im.wcs
+        assert im2.dtype == im.dtype
+        assert im2.bounds == im.bounds
+        # Note, don't be quite as stringent as in previous test; there can be small interpolation errors.
+        np.testing.assert_array_almost_equal(
+            im1.array, im2.array, int(0.5*DECIMAL), 
+            err_msg="Image differs when using SciPy's interpolation vs. lambda function")
+    except:
+        pass
+        # GalSim doesn't have SciPy dependence. So if SciPy is not installed, then this test is skipped
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
