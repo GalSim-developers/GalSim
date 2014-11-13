@@ -43,11 +43,11 @@ def test_nonlinearity_basic():
     im.shift(dx=-5, dy=3)
     im_save = im.copy()
 
-    ## Basic - exceptions / bad usage (invalid function, does not return NumPy array).
-    #try:
-    #    np.testing.assert_raises(ValueError, im.applyNonlinearity, lambda x : 1.0)
-    #except ImportError:
-    #    print 'The assert_raises tests require nose'
+    # Basic - exceptions / bad usage (invalid function, does not return NumPy array).
+    try:
+        np.testing.assert_raises(ValueError, im.applyNonlinearity, lambda x : 1.0)
+    except ImportError:
+        print 'The assert_raises tests require nose'
 
     # Preservation of data type / scale / bounds / input image
     im_new = im.copy()
@@ -185,11 +185,11 @@ def test_recipfail_basic():
     im.shift(dx=-5, dy=3)
     im_save = im.copy()
 
-    ## Basic - exceptions / bad usage.
-    #try:
-    #    np.testing.assert_raises(ValueError, im.addReciprocityFailure, -1.0)
-    #except ImportError:
-    #    print 'The assert_raises tests require nose'
+    # Basic - exceptions / bad usage.
+    try:
+        np.testing.assert_raises(ValueError, im.addReciprocityFailure, -1.0, 200)
+    except ImportError:
+        print 'The assert_raises tests require nose'
 
     # Preservation of data type / scale / bounds
     im_new = im.copy()
