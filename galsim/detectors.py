@@ -78,9 +78,10 @@ def addReciprocityFailure(self, exp_time, alpha):
     as keyword arguments.  Because of how this function is defined, the input image must have
     strictly positive pixel values for the resulting image to be well defined.
 
-    The image should be in units of electrons (not ADU), and should include both the signal from
-    the astronomical objects as well as the background level.  The addition of nonlinearity should
-    occur after including the effect of reciprocity failure.
+    The image should be in units of electrons or if it is in ADU, then the value passed to
+    exp_time should be the exposure time divided by the gain. The image should include both the
+    signal from the astronomical objects as well as the background level.  The addition of
+    nonlinearity should occur after including the effect of reciprocity failure.
 
     Calling
     -------
