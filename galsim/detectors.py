@@ -71,10 +71,12 @@ def addReciprocityFailure(self, exp_time, alpha):
     """
     Accounts for the reciprocity failure and corrects the original Image for it directly.
 
-    The reciprocity failure results in mapping the original image to a new one that is equal to the
-    original `im` multiplied by `(1+alpha*log10(im/exp_time))`, where the parameter `alpha` and the
-    exposure time are given as keyword arguments.  Because of how this function is defined, the
-    input image must have strictly positive pixel values for the resulting image to be well defined.
+    Reciprocity failure is identified as a change in the rate of charge accumulation with photon
+    flux, resulting in loss of sensitivity at low signal levels. The reciprocity failure results
+    in mapping the original image to a new one that is equal to the original `im` multiplied by
+    `(1+alpha*log10(im/exp_time))`, where the parameter `alpha` and the exposure time are given
+    as keyword arguments.  Because of how this function is defined, the input image must have
+    strictly positive pixel values for the resulting image to be well defined.
 
     The image should be in units of electrons (not ADU), and should include both the signal from
     the astronomical objects as well as the background level.  The addition of nonlinearity should
