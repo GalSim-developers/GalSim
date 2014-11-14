@@ -102,8 +102,45 @@ def addReciprocityFailure(self, exp_time, alpha):
 
     self.array[:,:] = self.array*(1.0 + alpha*numpy.log10(self.array/float(exp_time)))
 
-def applyIPC():
-    # applies IPC    
+def applyIPC(self, IPC_kernel, edge_effects=None):
+    """
+    docstring
+    """
+
+    # IPC kernel has to be a 3x3 numpy array
+    if not isinstance(IPC_kernel,numpy.ndarray):
+        raise ValueError("IPC_kernel must be a NumPy array.")
+    if not len(IPC_kernel) is 3 or IPC_kernel.size is 9:
+        raise ValueError("IPC kernel must be a NumPy array of size 3x3.")
+
+    # Warning the user about default edge effect handling
+    if edge_effects is None:
+        import warnings
+        warnings.warn("No value for edge_effects specified. Choosing the default option 'crop'. The size of the Image instance will remain unchanged. ")
+        edge_effects = 'crop'
+
+    # edge_effects can be 'extend', 'warp' or 'crop'
+    else if not edge_effects is 'extend' or edge_effects is 'warp' or edge_effects is 'crop':
+        raise ValueError("edge_effects has to be one of 'extend', 'warp' or 'crop'. ")
+
+    center = self.array[1:-1,1:-1]
+    top = self.array[:-2,1:-1]
+    bottom = self.array[2:,1:-1]
+    left = self.array[1:-1,:-2]
+    right = self.array[1:-1,2:]
+    topleft = self.array[:-2,:-2]
+    bottomright = self.array[2:,2:]
+    topright = self.array[:-2,2:]
+    bottomleft = self.array[2:,:-2]
+
+    self.array[1:-1,1:-1] = IPC_kernel[0,0]*topleft + IPC_kernel[0,1]*top + IPC_kernel[0,2]*topright + IPC_kernel[1,0]*left + IPC_kernel[1,1]*center + IPC_kernel[1,2]*right + IPC_kernel[2,0]*bottomleft + IPC_kernel[2,1]*bottom + IPC_kernel[2,2]*bottomright
+
+    #Edges
+    # OTHER OPTIONS WILL BE ADDED AFTER TESTING THE EFFICIENCY
+    self.array[0,:] = 0.0
+    self.array[-1,:] = 0.0
+    self.array[:,0] = 0.0
+    self.array[:,-1] = 0.0
 
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
