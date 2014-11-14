@@ -120,7 +120,7 @@ def applyIPC(self, IPC_kernel, edge_effects=None):
         edge_effects = 'crop'
 
     # edge_effects can be 'extend', 'warp' or 'crop'
-    else if not edge_effects is 'extend' or edge_effects is 'warp' or edge_effects is 'crop':
+    elif not edge_effects is 'extend' or edge_effects is 'warp' or edge_effects is 'crop':
         raise ValueError("edge_effects has to be one of 'extend', 'warp' or 'crop'. ")
 
     center = self.array[1:-1,1:-1]
