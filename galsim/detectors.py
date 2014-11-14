@@ -144,3 +144,4 @@ def applyIPC(self, IPC_kernel, edge_effects=None):
 
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
+galsim.Image.applyIPC = applyIPC
