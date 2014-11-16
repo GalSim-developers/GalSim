@@ -107,6 +107,8 @@ def applyIPC(self, IPC_kernel, edge_effects=None):
     docstring
     """
 
+    # CHECK FOR KERNEL NORMALIZATION ???
+
     # IPC kernel has to be a 3x3 numpy array
     if not isinstance(IPC_kernel,numpy.ndarray):
         raise ValueError("IPC_kernel must be a NumPy array.")
