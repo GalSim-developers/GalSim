@@ -218,7 +218,8 @@ def test_IPC_basic():
     np.testing.assert_array_equal(im_new.array, im.array, err_msg="Image is altered for no IPC with edge_effects = 'warp'" )
 
     im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='crop')
-    np.testing.assert_array_almost_equal(im_new.array, im.array, err_msg="Image is altered for no IPC with edge_effects = 'crop'" )
+    #Input arrays and output arrays will differ at the edges for this option
+    np.testing.assert_array_equal(im_new.array[1:-1,1:-1], im.array[1:-1,1:-1], err_msg="Image is altered for no IPC with edge_effects = 'crop'" )
 
     try:
         from scipy import signal
