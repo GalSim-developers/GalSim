@@ -209,7 +209,6 @@ def test_IPC_basic():
     # Check for no IPC
     ipc_kernel = np.zeros((3,3))
     ipc_kernel[1,1] = 1.0
-    print "ipc_kernel ka shape", ipc_kernel.shape
     im_new = im.copy()
 
     im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='extend')
@@ -223,6 +222,7 @@ def test_IPC_basic():
 
     try:
         from scipy import signal
+        print "SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`...."
         im_new = im.copy()
         im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='extend')
         np.testing/assert_array_almost_equal(im_new, signal.convolve2d(im, ipc_kernel, mode='same', boundary='fill')[1:-1,1:-1], DECIMAL, err_msg="Image differs from SciPy's result using `mode='same'` and `boundary='fill`.")
