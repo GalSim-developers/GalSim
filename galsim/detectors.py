@@ -125,24 +125,43 @@ def applyIPC(self, IPC_kernel, edge_effects=None):
     elif edge_effects is not 'extend' and  edge_effects is not 'warp' and edge_effects is not 'crop':
         raise ValueError("edge_effects has to be one of 'extend', 'warp' or 'crop'. ")
 
-    center = self.array[1:-1,1:-1]
-    top = self.array[:-2,1:-1]
-    bottom = self.array[2:,1:-1]
-    left = self.array[1:-1,:-2]
-    right = self.array[1:-1,2:]
-    topleft = self.array[:-2,:-2]
-    bottomright = self.array[2:,2:]
-    topright = self.array[:-2,2:]
-    bottomleft = self.array[2:,:-2]
+    if edge_effects is 'crop':
+        # Simply re-label the array of the Image instance
+        pad_array = self.array
+    elif edge_effects is 'extend':
+        # Copy the array of the Image instance and pad with zeros
+        pad_array = numpy.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
+        pad_array[1:-1,1:-1] = self.array
+    else:
+        #edge_effects = 'warp'
+        pad_array = numpy.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
+        pad_array[1:-1,1:-1] = self.array
+        #Warping the edges
+        pad_array[0,:] = pad_array[-2,:]
+        pad_array[-1,:] = pad_array[1,:]
+        pad_array[:,0] = pad_array[:,-2]
+        pad_array[:,-1] = pad_array[:,1]
 
-    self.array[1:-1,1:-1] = IPC_kernel[0,0]*topleft + IPC_kernel[0,1]*top + IPC_kernel[0,2]*topright + IPC_kernel[1,0]*left + IPC_kernel[1,1]*center + IPC_kernel[1,2]*right + IPC_kernel[2,0]*bottomleft + IPC_kernel[2,1]*bottom + IPC_kernel[2,2]*bottomright
+    center = pad_array[1:-1,1:-1]
+    top = pad_array[:-2,1:-1]
+    bottom = pad_array[2:,1:-1]
+    left = pad_array[1:-1,:-2]
+    right = pad_array[1:-1,2:]
+    topleft = pad_array[:-2,:-2]
+    bottomright = pad_array[2:,2:]
+    topright = pad_array[:-2,2:]
+    bottomleft = pad_array[2:,:-2]
 
-    #Edges
-    # OTHER OPTIONS WILL BE ADDED AFTER TESTING THE EFFICIENCY
-    self.array[0,:] = 0.0
-    self.array[-1,:] = 0.0
-    self.array[:,0] = 0.0
-    self.array[:,-1] = 0.0
+    out_array = IPC_kernel[0,0]*topleft + IPC_kernel[0,1]*top + IPC_kernel[0,2]*topright + IPC_kernel[1,0]*left + IPC_kernel[1,1]*center + IPC_kernel[1,2]*right + IPC_kernel[2,0]*bottomleft + IPC_kernel[2,1]*bottom + IPC_kernel[2,2]*bottomright
+
+    if edge_effects is 'crop':
+        self.array[1:-1,1:-1] = out_array
+        self.array[0,:] = 0.0
+        self.array[-1,:] = 0.0
+        self.array[:,0] = 0.0
+        self.array[:,-1] = 0.0
+    else:
+        self.array[:,:] = out_array
 
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
