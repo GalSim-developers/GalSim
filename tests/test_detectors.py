@@ -196,7 +196,51 @@ def test_recipfail_basic():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_IPC_basic():
+    import time
+    t1 = time.time()
+
+    # Make an image with non-trivially interesting scale and bounds.
+    g = galsim.Gaussian(sigma=3.7)
+    im = g.draw(scale=0.25)
+    im.shift(dx=-5, dy=3)
+    im_save = im.copy()
+
+    # Check for no IPC
+    ipc_kernel = np.zeros((3,3))
+    ipc_kernel[1,1] = 1.0
+    print "ipc_kernel ka shape", ipc_kernel.shape
+    im_new = im.copy()
+
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='extend')
+    np.testing.assert_array_equal(im_new.array, im.array, err_msg="Image is altered for no IPC with edge_effects = 'extend'" )
+
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='warp')
+    np.testing.assert_array_equal(im_new.array, im.array, err_msg="Image is altered for no IPC with edge_effects = 'warp'" )
+
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='crop')
+    np.testing.assert_array_almost_equal(im_new.array, im.array, err_msg="Image is altered for no IPC with edge_effects = 'crop'" )
+
+    try:
+        from scipy import signal
+        im_new = im.copy()
+        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='extend')
+        np.testing/assert_array_almost_equal(im_new, signal.convolve2d(im, ipc_kernel, mode='same', boundary='fill')[1:-1,1:-1], DECIMAL, err_msg="Image differs from SciPy's result using `mode='same'` and `boundary='fill`.")
+
+        im_new = im.copy()
+        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='crop')
+        np.testing.assert_array_almost_equal(im_new[1:-1], signal.convolve2d(im, ipc_kernel, mode='valid', boundary = 'fill'), DECIMAL, err_msg="Image differs from SciPy's result using `mode=valid'` and `boundary='fill'`.")
+
+        im_new = im.copy()
+        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='warp')
+        np.testing.assert_array_almost_equal(im_new, signal.convolve2d(im, ipc_kernel, mode='same', boundary='wrap'), DECIMAL, err_msg="Image differs from SciPy's result using `mode=same'` and `boundary='wrap'`.")
+    except:
+        pass
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_nonlinearity_basic()
     test_recipfail_basic()
+    test_IPC_basic()
