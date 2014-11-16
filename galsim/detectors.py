@@ -110,7 +110,7 @@ def applyIPC(self, IPC_kernel, edge_effects=None):
     # IPC kernel has to be a 3x3 numpy array
     if not isinstance(IPC_kernel,numpy.ndarray):
         raise ValueError("IPC_kernel must be a NumPy array.")
-    if not len(IPC_kernel) is 3 or IPC_kernel.size is 9:
+    if not IPC_kernel.shape==(3,3):
         raise ValueError("IPC kernel must be a NumPy array of size 3x3.")
 
     # Warning the user about default edge effect handling
