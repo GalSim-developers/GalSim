@@ -104,10 +104,35 @@ def addReciprocityFailure(self, exp_time, alpha):
 
 def applyIPC(self, IPC_kernel, edge_effects=None):
     """
-    docstring
+    Applies the effect of interpixel capacitance to the Image instance.
+
+    The interpixel capacitance is approximated as a linear effect that can be described by a 3x3
+    kernel that is convolved with the image. The kernel could be intrinsically anisotropic. A
+    sensible kernel must have non-negative entries and must be normalized such that the sum of the
+    elements is 1, in order to conserve the total charge.
+
+    The argument 'edge_effects' specifies how the edges of the image should be treated, which
+    could be in one of the three ways:
+    
+    1. 'extend': The kernel is convolved with the zero-padded image, leading to a larger intermediate image. The central portion of this image is returned.  [default]
+    2. 'crop': The kernel is convoved with the image, with the kernel inside the image completely. Pixels at the edges, where the center of the kernel could not be placed, are set to zero.
+        They should be considered as invalid.
+    3. 'warp': The kernel is convolved with the image, assuming periodic boundary conditions.
+
+    The size of the image array remains unchanged in all three cases.
+
+    Calling
+    -------
+
+        >>> img.applyIPC(IPC_kernel=ipc_kernel, edge_effects='crop')
+
+    @param IPC_kernel    A 3x3 NumPy array that is convolved with the Image instance
+    @param edge_effects    Specifies the method of handling edges and should be one of 'crop', 'extend' or 'warp'. See above for details.
+
+    @returns None
     """
 
-    # CHECK FOR KERNEL NORMALIZATION ???
+    # CHECK FOR KERNEL NORMALIZATION & NON-NEGATIVITY ???
 
     # IPC kernel has to be a 3x3 numpy array
     if not isinstance(IPC_kernel,numpy.ndarray):
