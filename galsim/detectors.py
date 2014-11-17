@@ -143,8 +143,8 @@ def applyIPC(self, IPC_kernel, edge_effects=None):
     # Warning the user about default edge effect handling
     if edge_effects is None:
         import warnings
-        warnings.warn("No value for edge_effects specified. Choosing the default option 'crop'. The size of the Image instance will remain unchanged. ")
-        edge_effects = 'crop'
+        warnings.warn("No value for edge_effects specified. Choosing the default option 'extend'. The size of the Image instance will remain unchanged. ")
+        edge_effects = 'extend'
 
     # edge_effects can be 'extend', 'warp' or 'crop'
     elif edge_effects is not 'extend' and  edge_effects is not 'warp' and edge_effects is not 'crop':
