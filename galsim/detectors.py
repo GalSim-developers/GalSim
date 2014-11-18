@@ -102,7 +102,7 @@ def addReciprocityFailure(self, exp_time, alpha):
 
     self.array[:,:] = self.array*(1.0 + alpha*numpy.log10(self.array/float(exp_time)))
 
-def applyIPC(self, IPC_kernel, edge_effects=None):
+def applyIPC(self, IPC_kernel, edge_effects=None, kernel_nonnegativity=True, kernel_normalization=True):
     """
     Applies the effect of interpixel capacitance to the Image instance.
 
@@ -124,21 +124,33 @@ def applyIPC(self, IPC_kernel, edge_effects=None):
     Calling
     -------
 
-        >>> img.applyIPC(IPC_kernel=ipc_kernel, edge_effects='crop')
+        >>> img.applyIPC(IPC_kernel=ipc_kernel, edge_effects='extend', kernel_nonnegativity=True, kernel_normalization=True)
 
-    @param IPC_kernel    A 3x3 NumPy array that is convolved with the Image instance
-    @param edge_effects    Specifies the method of handling edges and should be one of 'crop', 'extend' or 'warp'. See above for details.
+    @param IPC_kernel              A 3x3 NumPy array that is convolved with the Image instance
+    @param edge_effects            Specifies the method of handling edges and should be one of 'crop', 'extend' or 'warp'. See above for details. [default: 'extend']
+    @param kernel_nonnegativity    Specify whether the kernel should have only non-negative entries. [default: True]
+    @param kernel_normalization    Specify whether to check and enforce correct normalization for the kernel.  [default: True]
 
     @returns None
     """
-
-    # CHECK FOR KERNEL NORMALIZATION & NON-NEGATIVITY ???
 
     # IPC kernel has to be a 3x3 numpy array
     if not isinstance(IPC_kernel,numpy.ndarray):
         raise ValueError("IPC_kernel must be a NumPy array.")
     if not IPC_kernel.shape==(3,3):
         raise ValueError("IPC kernel must be a NumPy array of size 3x3.")
+
+    # Check for non-negativity of the kernel
+    if kernel_nonnegativity is True:
+        if (ipc_kernel<0).any() is True:
+            raise ValueError("IPC kernel must not contain negative entries")
+
+    # Check and enforce correct normalization for the kernel
+    if kernel_normalization is True:
+        if ipc_kernel.sum() is not 1.0:
+            import warnings
+            warnings.warn("The entries in the kernel did not sum to 1. Scaling the kernel to ensure correct normalization.")
+            ipc_kernel = ipc_kernel/ipc_kernel.sum()
 
     # Warning the user about default edge effect handling
     if edge_effects is None:
