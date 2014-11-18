@@ -102,7 +102,7 @@ def addReciprocityFailure(self, exp_time, alpha):
 
     self.array[:,:] = self.array*(1.0 + alpha*numpy.log10(self.array/float(exp_time)))
 
-def applyIPC(self, IPC_kernel, edge_effects=None, kernel_nonnegativity=True, kernel_normalization=True):
+def applyIPC(self, IPC_kernel, edge_effects='extend', kernel_nonnegativity=True, kernel_normalization=True):
     """
     Applies the effect of interpixel capacitance to the Image instance.
 
@@ -151,12 +151,6 @@ def applyIPC(self, IPC_kernel, edge_effects=None, kernel_nonnegativity=True, ker
             import warnings
             warnings.warn("The entries in the kernel did not sum to 1. Scaling the kernel to ensure correct normalization.")
             ipc_kernel = ipc_kernel/ipc_kernel.sum()
-
-    # Warning the user about default edge effect handling
-    if edge_effects is None:
-        import warnings
-        warnings.warn("No value for edge_effects specified. Choosing the default option 'extend'. The size of the Image instance will remain unchanged. ")
-        edge_effects = 'extend'
 
     # edge_effects can be 'extend', 'warp' or 'crop'
     elif edge_effects is not 'extend' and  edge_effects is not 'warp' and edge_effects is not 'crop':
