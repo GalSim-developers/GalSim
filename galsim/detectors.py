@@ -18,8 +18,7 @@
 """@file detectors.py
 
 Module with routines to simulate CCD and NIR detector effects like nonlinearity, reciprocity
-failure, interpixel capacitance, etc.
-"""
+failure, interpixel capacitance, etc. """
 
 import galsim
 import numpy
@@ -115,7 +114,7 @@ def applyIPC(self, IPC_kernel, edge_effects='extend', kernel_nonnegativity=True,
     could be in one of the three ways:
     
     1. 'extend': The kernel is convolved with the zero-padded image, leading to a larger intermediate image. The central portion of this image is returned.  [default]
-    2. 'crop': The kernel is convoved with the image, with the kernel inside the image completely. Pixels at the edges, where the center of the kernel could not be placed, are set to zero.
+    2. 'crop': The kernel is convolved with the image, with the kernel inside the image completely. Pixels at the edges, where the center of the kernel could not be placed, are set to zero.
         They should be considered as invalid.
     3. 'warp': The kernel is convolved with the image, assuming periodic boundary conditions.
 
