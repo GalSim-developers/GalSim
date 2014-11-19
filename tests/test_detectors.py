@@ -144,7 +144,8 @@ def test_nonlinearity_basic():
         err_msg='Image differs when using LUT vs. lambda function')
 
     # Check that lambda func vs. interpolated function from SciPy agree
-    # GalSim doesn't have SciPy dependence and this is NOT the preferred way to construct smooth functions from tables but our routine can handle it anyway.
+    # GalSim doesn't have SciPy dependence and this is NOT the preferred way to construct smooth
+    # functions from tables but our routine can handle it anyway.
     try:
         from scipy import interpolate
         max_val = np.max(im.array)
@@ -165,13 +166,15 @@ def test_nonlinearity_basic():
         assert im2.wcs == im.wcs
         assert im2.dtype == im.dtype
         assert im2.bounds == im.bounds
-        # Note, don't be quite as stringent as in previous test; there can be small interpolation errors.
+        # Note, don't be quite as stringent as in previous test; there can be small interpolation
+        # errors.
         np.testing.assert_array_almost_equal(
             im1.array, im2.array, int(0.5*DECIMAL),
             err_msg="Image differs when using SciPy's interpolation vs. lambda function")
     except:
         pass
-        # GalSim doesn't have SciPy dependence. So if SciPy is not installed, then this test is skipped
+        # GalSim doesn't have SciPy dependence. So if SciPy is not installed, then this test is
+        # skipped
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -253,7 +256,8 @@ def test_recipfail_basic():
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
     np.testing.assert_array_almost_equal(
-        (im_new.array-im.array), alpha*im.array*np.log10(im.array/exp_time), int(DECIMAL/2), err_msg='Difference in images is not alpha times the log of original')
+        (im_new.array-im.array), alpha*im.array*np.log10(im.array/exp_time), int(DECIMAL/2),
+        err_msg='Difference in images is not alpha times the log of original')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2-t1)
