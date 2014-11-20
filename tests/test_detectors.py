@@ -107,17 +107,6 @@ def test_nonlinearity_basic():
         im_new.array, im.array,
         err_msg='Image not preserved when applying identity nonlinearity function')
 
-    # Check for constant function as NLfunc
-    im_new = im.copy()
-    im_new.applyNonlinearity(lambda x: 1.0)
-    assert im_new.scale == im.scale
-    assert im_new.wcs == im.wcs
-    assert im_new.dtype == im.dtype
-    assert im_new.bounds == im.bounds
-    np.testing.assert_array_equal(
-        im_new.array, np.ones_like(im),
-        err_msg='Image not constant when the nonlinearity function is constant')
-
     # Check that lambda func vs. LookupTable agree.
     max_val = np.max(im.array)
     x_vals = np.linspace(0.0, max_val, num=500)
