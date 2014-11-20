@@ -101,6 +101,10 @@ def addReciprocityFailure(self, exp_time, alpha):
     as keyword arguments.  Because of how this function is defined, the input image must have
     strictly positive pixel values for the resulting image to be well defined.
 
+    The functional form for the reciprocity failure is motivated empirically from the tests
+    carried out on H2RG detectors. See Fig. 1 and Fig. 2 of http://arxiv.org/abs/1106.1090
+    for reference.
+
     The image should be in units of electrons or if it is in ADU, then the value passed to
     exp_time should be the exposure time divided by the gain. The image should include both the
     signal from the astronomical objects as well as the background level.  The addition of
