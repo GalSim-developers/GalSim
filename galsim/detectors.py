@@ -63,6 +63,11 @@ def applyNonlinearity(self, NLfunc, *args):
 
     """
 
+    # Check if NLfunc is sensible
+    if float(NLfunc(0.0,*args)) is not 0.0:
+        import warnings
+        warnings.warn("NLfunc provided has a non-zero offset!")
+
     # Extract out the array from Image since not all functions can act directly on Images
     self.array[:,:] = (NLfunc(self.array, *args))
 
