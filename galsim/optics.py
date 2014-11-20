@@ -435,7 +435,9 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
         if delta_k > stepk_airy:
             import warnings
             ratio = delta_k / stepk_airy
-            warnings.warn("Input image may not be sampled enough! Consider increasing by %f."%ratio)
+            warnings.warn("Input pupil plane image may not be sampled well enough!\n"
+                          "Consider increasing sampling by a factor %f, and/or check OpticalPSF "
+                          "outputs for signs of folding in real space."%ratio)
 
     return rho, pp_arr, effective_oversampling
 
