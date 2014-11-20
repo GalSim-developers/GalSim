@@ -24,14 +24,13 @@ def main(argv):
     logger.debug('Read in filters')
     print 
 
-    # filter has redder red limit
+    # TEMPORARY - filter has redder red limit
     for filter in filters:
         filters[filter].red_limit = 1197.5 
 
     # read in SEDs
     SED_names = ['CWW_E_ext', 'CWW_Sbc_ext', 'CWW_Scd_ext', 'CWW_Im_ext']
     SEDs = {}
-    mag_norm = 22.0
     for SED_name in SED_names:
         SED_filename = os.path.join(datapath, '{0}.sed'.format(SED_name))
         # Here we create some galsim.SED objects to hold star or galaxy spectra.  The most
@@ -42,17 +41,18 @@ def main(argv):
         # `wave_type = 'Ang'`.
         SED = galsim.SED(SED_filename, wave_type='Ang')
         # The normalization of SEDs affects how many photons are eventually drawn into an image.
-        # One way to control this normalization is to specify the flux in a given bandpass
+        # One way to control this normalization is to specify the flux in a given bandpass filter. We pick for example, W149 and enforce the flux through the filter to be of magnitude specified by 'mag_norm'
         bandpass = filters['W149']
+        mag_norm = 22.0
+        
+        # TEMPORARY till the new SEDs are deployed
         print "SED's redlimit = ", SED.red_limit
         bandpass.red_limit = SED.red_limit
         print "Current flux = ", SED.calculateFlux(bandpass=filters['W149'])
+        
         SEDs[SED_name] = SED.withMagnitude(target_magnitude=mag_norm, bandpass=filters['W149'])
 
     logger.debug('Successfully read in SEDs')
-
-    pixel_scale = wfirst.pixel_scale # 0.11 arcseconds
-    exptime = wfirst.exptime # 168.1 seconds
 
     logger.info('')
     logger.info('Simulating a chromatic bulge+disk galaxy')
@@ -61,7 +61,6 @@ def main(argv):
     # make a bulge ...
     mono_bulge = galsim.DeVaucouleurs(half_light_radius=0.5)
     bulge_SED = SEDs['CWW_E_ext'].atRedshift(redshift)
-    # The `*` operator can be used as a shortcut for creating a chromatic version of a GSObject:
     bulge = mono_bulge * bulge_SED
     bulge = bulge.shear(g1=0.12, g2=0.07)
     logger.debug('Created bulge component')
@@ -77,35 +76,28 @@ def main(argv):
     # Note that at this stage, our galaxy is chromatic but our PSF is still achromatic.  
     logger.debug('Created bulge+disk galaxy final profile')
 
-    #sky_level in photons / m^2 / s / arcsec^2
-    # hardcoded for now
-    sky_level = {'J129':6.509083, 'SNPrism':25.564653, 'F184':3.478826, 'W149':18.577768, 'Y106':6.346696, 'BAO-Grism':6.269559, 'Z087':5.401184, 'H158':6.121490}
-
-    #Read Noise:
-    read_noise_rms = 0.0
+    # Load WFIRST parameters
+    pixel_scale = wfirst.pixel_scale # 0.11 arcseconds
+    exptime = wfirst.exptime # 168.1 seconds
 
     # draw profile through WFIRST filters
-    gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02/10.)
     for filter_name, filter_ in filters.iteritems():
         
         # Obtaining parameters for Airy PSF
+        # TEMPORARY - WFIRST PSF is on it's way
         effective_wavelength = (1e-9)*filters[filter_name].effective_wavelength # now in cm
         effective_diameter = wfirst.diameter*numpy.sqrt(1-wfirst.obscuration**2) 
-        lam_over_diam = (1.0*effective_wavelength/wfirst.diameter)*206265.0 # in arcsec
+        lam_over_diam = (1.0*effective_wavelength/wfirst.diameter)*206265.0 # in arcsec      
+        PSF = galsim.Airy(obscuration=wfirst.obscuration, lam_over_diam=lam_over_diam)
 
         #Convolve with PSF
-        PSF = galsim.Airy(obscuration=wfirst.obscuration, lam_over_diam=lam_over_diam)
-        #PSF = galsim.Moffat(fwhm=0.6,beta=2.5)
         bdconv = galsim.Convolve([bdgal, PSF])
 
     	img = galsim.ImageF(512*2,512*2,scale=pixel_scale) # 64, 64
     	bdconv.drawImage(filter_,image=img)
-        #print "A1: ", img.array
-        print "F1: ", numpy.sum(img.array), numpy.mean(img.array)
 
-    	print "S =", (numpy.sum(img.array**2)-(numpy.sum(img.array))**2/(64**2))/(64**2)
 
-        #Adding sky level
+        #Adding sky level to the images. 
         sky_level_pix = wfirst.getSkyLevel(filters[filter_name],exp_time=wfirst.exptime)
         img.array[:,:] += sky_level_pix
         print "sky_level_pix = ", sky_level_pix
@@ -119,32 +111,32 @@ def main(argv):
         logger.debug('Wrote {0}-band image to disk'.format(filter_name))
 
         #print "After adding noise", img.array.min(), img.array.max()
-        print "N = ", poisson_noise.getVariance()
 
-    	#Applying a quadratic non-linearity
-        beta = -3.57*1e-7
-        def NLfunc(x,beta):
-            return x + beta*(x**2)
-    	#NLfunc = wfirst.NLfunc
+        # Accounting Reciprocity Failure
+        #  Reciprocity failure is identified as a change in the rate of charge accumulation with photon flux, resulting in loss of sensitivity at low signal levels. This is a non-ideal feature of the detector that is dependent on the charge present at the pixel and the duration of exposure.
+
+        #img.addReciprocityFailure(exp_time=exptime,alpha=wfirst.reciprocity_alpha)
+
+    	# Applying a quadratic non-linearity
+        # In order to convert the units from electrons to ADU, we must multiply the image by a gain factor. The gain has a weak dependency on the charge present in each pixel. This dependency is accounted for by changing the pixel values (in electrons) and applying a constant gain later
+
+    	NLfunc = wfirst.NLfunc
     	#img.applyNonlinearity(NLfunc,beta)
     	logger.debug('Applied Nonlinearity to {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_NL_{0}.fits'.format(filter_name))
         galsim.fits.write(img,out_filename)
         logger.debug('Wrote {0}-band image with Nonlinearity to disk'.format(filter_name))
 
-    	#Accounting Reciprocity Failure
-    	alpha = 0.0065 
-        # NOTE: not yet in the module
-
-    	#img.addReciprocityFailure(exp_time=exptime,alpha=alpha)
-    	logger.debug('Accounted for Recip. Failure in {0}-band image'.format(filter_name))
+    	logger.debug('Accounted for Reciprocity Failure in {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_RecipFail_{0}.fits'.format(filter_name))
         galsim.fits.write(img,out_filename)
         logger.debug('Wrote {0}-band image  after accounting for Recip. Failure to disk'.format(filter_name))
 
-        #Adding Read Noise
+        # Adding Interpixel Capacitance
+
+        # Adding Read Noise
     	read_noise = galsim.CCDNoise(rng)
-        read_noise.setReadNoise(read_noise_rms)
+        read_noise.setReadNoise(wfirst.read_noise)
         #img.addNoise(read_noise)
         logger.debug('Added Readnoise for {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_ReadNoise_{0}.fits'.format(filter_name))
