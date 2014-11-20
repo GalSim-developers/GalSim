@@ -49,16 +49,16 @@ def test_nonlinearity_basic():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-    # Preservation of data type / scale / bounds / input image
+    # Check for constant function as NLfunc
     im_new = im.copy()
-    im_new.applyNonlinearity(lambda x : x + 0.001*(x**2))
+    im_new.applyNonlinearity(lambda x: x**0.0)
     assert im_new.scale == im.scale
     assert im_new.wcs == im.wcs
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
     np.testing.assert_array_equal(
-        im_save.array, im.array,
-        err_msg = 'Input image was modified after addition of nonlinearity')
+        im_new.array, np.ones_like(im),
+        err_msg='Image not constant when the nonlinearity function is constant')
 
     # Check that calling a NLfunc with no parameter works
     NLfunc = lambda x: x + 0.001*(x**2)

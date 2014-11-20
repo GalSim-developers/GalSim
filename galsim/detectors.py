@@ -74,9 +74,9 @@ def applyNonlinearity(self, NLfunc, *args):
     try:
         h = sys.float_info.epsilon
         f_prime = (NLfunc(h,*args)-NLfunc(-h,*args))/(2*h)
-        if (f_prime-1.0) > sys.float_info.epsilon:
+        if abs(f_prime-1.0) > sys.float_info.epsilon:
             import warnings
-            warnings.warn("A sensible NLfunc must have a slope 1 at the origin. Provided NLfunc"
+            warnings.warn("A sensible NLfunc must have a slope 1 at the origin. Provided NLfunc "
             "has the derivative at origin as "+str(f_prime))
     except ZeroDivisionError:
         print "ZeroDivisionError occurred while checking for the slope of NLfunc at the origin"
