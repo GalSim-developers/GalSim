@@ -63,24 +63,6 @@ def applyNonlinearity(self, NLfunc, *args):
 
     """
 
-    # Check if NLfunc is sensible
-    # Check for offset
-    if abs(float(NLfunc(0.0,*args))) > sys.float_info.epsilon :
-        import warnings
-        warnings.warn("A sensible NLfunc must have zero offset. Provided NLfunc has an offset of "+
-        str(NLfunc(0.0,*args)))
-
-    # Check if NLfunc = x + perturbations by taking the derivative at x=0
-    try:
-        h = sys.float_info.epsilon
-        f_prime = (NLfunc(h,*args)-NLfunc(-h,*args))/(2*h)
-        if abs(f_prime-1.0) > sys.float_info.epsilon:
-            import warnings
-            warnings.warn("A sensible NLfunc must have a slope 1 at the origin. Provided NLfunc "
-            "has the derivative at origin as "+str(f_prime))
-    except ZeroDivisionError:
-        print "ZeroDivisionError occurred while checking for the slope of NLfunc at the origin"
-
     # Extract out the array from Image since not all functions can act directly on Images
     result = NLfunc(self.array,*args)
     if not isinstance(result,numpy.ndarray):
