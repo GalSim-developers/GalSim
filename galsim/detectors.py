@@ -67,7 +67,8 @@ def applyNonlinearity(self, NLfunc, *args):
     # Check for offset
     if abs(float(NLfunc(0.0,*args))) > sys.float_info.epsilon :
         import warnings
-        warnings.warn("A sensible NLfunc must have zero offset. Provided NLfunc has an offset of "+str(NLfunc(0.0,*args)))
+        warnings.warn("A sensible NLfunc must have zero offset. Provided NLfunc has an offset of "+
+        str(NLfunc(0.0,*args)))
 
     # Check if NLfunc = x + perturbations by taking the derivative at x=0
     try:
@@ -75,7 +76,8 @@ def applyNonlinearity(self, NLfunc, *args):
         f_prime = (NLfunc(h,*args)-NLfunc(-h,*args))/(2*h)
         if (f_prime-1.0) > sys.float_info.epsilon:
             import warnings
-            warnings.warn("A sensible NLfunc must have a slope 1 at the origin. Provided NLfunc has the derivative at origin as "+str(f_prime))
+            warnings.warn("A sensible NLfunc must have a slope 1 at the origin. Provided NLfunc"
+            "has the derivative at origin as "+str(f_prime))
     except ZeroDivisionError:
         print "ZeroDivisionError occurred while checking for the slope of NLfunc at the origin"
 
@@ -111,8 +113,8 @@ def addReciprocityFailure(self, exp_time, alpha):
 
     @param exp_time  The exposure time in seconds, which goes into the expression for reciprocity
                      failure given in the docstring. 
-    @param alpha     The alpha parameter in the expression for reciprocity failure, in units of 'per
-                     decade'. 
+    @param alpha     The alpha parameter in the expression for reciprocity failure, in units of
+                     'per decade'.
     
     @returns None
     """
