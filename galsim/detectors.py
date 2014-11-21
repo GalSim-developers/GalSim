@@ -65,7 +65,7 @@ def applyNonlinearity(self, NLfunc, *args):
 
     # Extract out the array from Image since not all functions can act directly on Images
     result = NLfunc(self.array,*args)
-    if not isinstance(result,numpy.ndarray):
+    if not isinstance(result, numpy.ndarray):
         raise ValueError("NLfunc does not return a NumPy array.")
     if self.array.shape != result.shape:
         raise ValueError("NLfunc does not return a NumPy array of the same shape as input!")
