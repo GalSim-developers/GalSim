@@ -9,8 +9,7 @@
 # conditions are met:
 #
 # 1. Redistributions of source code must retain the above copyright notice, this
-# list of conditions, and the disclaimer given in the accompanying LICENSE
-# file.
+# list of conditions, and the disclaimer given in the accompanying LICENSE file.
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 # this list of conditions, and the disclaimer given in the documentation
 # and/or other materials provided with the distribution.
@@ -29,9 +28,9 @@ def applyNonlinearity(self, NLfunc, *args):
     """
     Applies the given non-linearity function (`NLfunc`) on the Image instance directly.
 
-    The image should include both the signal from the astronomical objects as well as the background
-    level.  Other detectors effects such as dark current and persistence (not currently included in
-    GalSim) would also occur before the inclusion of nonlinearity.
+    The image should include both the signal from the astronomical objects as well as the
+    background level.  Other detectors effects such as dark current and persistence (not currently
+    included in GalSim) would also occur before the inclusion of nonlinearity.
 
     The argument `NLfunc` is a callable function (for example a lambda function, a
     galsim.LookupTable, or a user-defined function), possibly with arguments that need to be given
@@ -79,18 +78,19 @@ def addReciprocityFailure(self, exp_time, alpha, unity_gain_flux = 1.0):
     Reciprocity failure is identified as a change in the rate of charge accumulation with photon
     flux, resulting in loss of sensitivity at low signal levels. The reciprocity failure results
     in mapping the original image to a new one that is equal to the original `im` multiplied by
-    `(1+alpha*log10((im/exp_time)-alpha*log10(unity_gain_flux))`, where the parameters `alpha`, `exp_time` and `unity_gain_flux` are given as keyword arguments.  Because of how this function is defined, the
-    input image must have strictly positive pixel values for the resulting image to be well defined
-    .
-
-    The functional form for the reciprocity failure is motivated empirically from the tests
-    carried out on H2RG detectors. See Fig. 1 and Fig. 2 of http://arxiv.org/abs/1106.1090
-    for reference.
+    `(1+alpha*log10((im/exp_time)-alpha*log10(unity_gain_flux))`, where the parameters `alpha`,
+    `exp_time` and `unity_gain_flux` are given as keyword arguments.  Because of how this function
+    is defined, the input image must have strictly positive pixel values for the resulting image
+    to be well defined.
 
     The image should be in units of electrons or if it is in ADU, then the value passed to
     exp_time should be the exposure time divided by the gain. The image should include both the
     signal from the astronomical objects as well as the background level.  The addition of
     nonlinearity should occur after including the effect of reciprocity failure.
+
+    The functional form for the reciprocity failure is motivated empirically from the tests
+    carried out on H2RG detectors. See Fig. 1 and Fig. 2 of http://arxiv.org/abs/1106.1090
+    for reference.
 
     Calling
     -------
@@ -101,7 +101,8 @@ def addReciprocityFailure(self, exp_time, alpha, unity_gain_flux = 1.0):
                      failure given in the docstring. 
     @param alpha     The alpha parameter in the expression for reciprocity failure, in units of
                      'per decade'.
-    @param unity_gain_flux The flux the gain is normalized to unity for reciprocity measurements [default: 1.0]
+    @param unity_gain_flux The flux the gain is normalized to unity for reciprocity measurements
+    [default: 1.0]
     
     @returns None
     """
@@ -116,7 +117,8 @@ def addReciprocityFailure(self, exp_time, alpha, unity_gain_flux = 1.0):
         warnings.warn("At least one element of image/exp_time is too close to 0 or negative.")
         warnings.warn("Floating point errors might occur.")
 
-    self.array[:,:] = self.array*(1.0 + alpha*numpy.log10(self.array/(float(exp_time))) - alpha*numpy.log10(float(unity_gain_flux)))
+    self.array[:,:] = self.array*(1.0 + alpha*numpy.log10(self.array/(float(exp_time))) - alpha*
+    numpy.log10(float(unity_gain_flux)))
 
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
