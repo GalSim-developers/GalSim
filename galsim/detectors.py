@@ -72,15 +72,14 @@ def applyNonlinearity(self, NLfunc, *args):
     self.array[:,:] = result
 
 
-def addReciprocityFailure(self, exp_time, alpha, base_flux = 1.0):
+def addReciprocityFailure(self, exp_time, alpha, unity_gain_flux = 1.0):
     """
     Accounts for the reciprocity failure and corrects the original Image for it directly.
 
     Reciprocity failure is identified as a change in the rate of charge accumulation with photon
     flux, resulting in loss of sensitivity at low signal levels. The reciprocity failure results
     in mapping the original image to a new one that is equal to the original `im` multiplied by
-    `(1+alpha*log10((im/exp_time)/base_flux)`, where the parameter `alpha`, `base_flux` and the
-    exposure time are given as keyword arguments.  Because of how this function is defined, the
+    `(1+alpha*log10((im/exp_time)-alpha*log10(unity_gain_flux))`, where the parameters `alpha`, `exp_time` and `unity_gain_flux` are given as keyword arguments.  Because of how this function is defined, the
     input image must have strictly positive pixel values for the resulting image to be well defined
     .
 
@@ -96,13 +95,13 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux = 1.0):
     Calling
     -------
 
-        >>>  img.addReciprocityFailure(exp_time, alpha)
+        >>>  img.addReciprocityFailure(exp_time, alpha, unity_gain_flux)
 
     @param exp_time  The exposure time in seconds, which goes into the expression for reciprocity
                      failure given in the docstring. 
     @param alpha     The alpha parameter in the expression for reciprocity failure, in units of
                      'per decade'.
-    @param base_flux The flux??? with respect to which flux is normalized [default: 1.0]
+    @param unity_gain_flux The flux the gain is normalized to unity for reciprocity measurements [default: 1.0]
     
     @returns None
     """
@@ -112,13 +111,12 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux = 1.0):
     if not (isinstance(exp_time, float) or isinstance(exp_time, int)) or exp_time < 0.:
         raise ValueError("Invalid value of exp_time, must be float or int >= 0")
 
-    if numpy.any(self.array < sys.float_info.min*float(exp_time)*float(base_flux)):
+    if numpy.any(self.array < sys.float_info.min*float(exp_time)*float(unity_gain_flux)):
         import warnings
         warnings.warn("At least one element of image/exp_time is too close to 0 or negative.")
         warnings.warn("Floating point errors might occur.")
 
-    self.array[:,:] = self.array*(1.0 + alpha*numpy.log10(self.array/(float(exp_time)*float(
-    base_flux)))
+    self.array[:,:] = self.array*(1.0 + alpha*numpy.log10(self.array/(float(exp_time))) - alpha*numpy.log10(float(unity_gain_flux)))
 
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
