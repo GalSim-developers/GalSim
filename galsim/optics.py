@@ -70,7 +70,10 @@ class OpticalPSF(GSObject):
     struts are ignored; moreover, the `obscuration` keyword is used to ensure that the images are
     properly sampled (so it is still needed), but the keyword is then ignored when using the
     supplied image of the pupil plane.  The `pupil_plane_im` that is passed in can be rotated during
-    internal calculations by specifying a `pupil_angle` keyword.
+    internal calculations by specifying a `pupil_angle` keyword.  Also note that given how the
+    `obscuration` keyword is used, the obscuration in the supplied pupil plane image should indeed
+    be reasonably circular rather than having an arbitrary shape; however, minor deviations from a
+    perfect circle do not cause significant problems.
 
     If you choose to pass in a pupil plane image, it must be a square array in which the image of
     the pupil is centered.  The areas that are illuminated should have some value >0, and the other
