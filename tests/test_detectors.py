@@ -157,7 +157,8 @@ def test_nonlinearity_basic():
         assert im2.bounds == im.bounds
 
         #Let the user know that this test happened
-        print "SciPy was found installed. Using SciPy modules in the unit test for 'applyNonlinearity'"
+        print "SciPy was found installed. Using SciPy modules in the unit test for",
+        "'applyNonlinearity'"
         # Note, don't be quite as stringent as in previous test; there can be small interpolation
         # errors.
         np.testing.assert_array_almost_equal(
@@ -218,12 +219,12 @@ def test_recipfail_basic():
     im2 = im.copy()
     im1.addReciprocityFailure(exp_time=200.,alpha=alpha1)
     im2.addReciprocityFailure(exp_time=200.,alpha=alpha2)
-    dim1 = im1.array-im.array
-    dim2 = im2.array-im.array
-    # We did new - old image, which should equal (old image)*alpha*log(...).
-    # The old image is the same, as is the factor inside the log.  So the ratio dim2/dim1 should
-    # just be alpha2/alpha1.
-    expected_ratio = np.zeros(im.array.shape) + alpha2/alpha1
+    dim1 = im1.array/im.array
+    dim2 = im2.array/im.array
+    # We did new / old image, which should equal (old_image/normalization)^alpha.
+    # The old image is the same, as is the factor inside the log.  So the log ratio log(dim2)/log(
+    # dim1) should just be alpha2/alpha1
+    expected_ratio = np.zeros(im.array.shape) + (alpha2/alpha1)
 
     assert im1.scale == im.scale
     assert im1.wcs == im.wcs
@@ -236,7 +237,7 @@ def test_recipfail_basic():
     assert im2.bounds == im.bounds
 
     np.testing.assert_array_almost_equal(
-        dim2/dim1, expected_ratio, int(DECIMAL/3),
+        np.log(dim2)/np.log(dim1), expected_ratio, int(DECIMAL/3),
         err_msg='Did not get expected change in reciprocity failure when varying alpha')
 
     #Check math is right
@@ -248,8 +249,8 @@ def test_recipfail_basic():
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
     np.testing.assert_array_almost_equal(
-        (im_new.array-im.array), alpha*im.array*np.log10(im.array/exp_time), int(DECIMAL/2),
-        err_msg='Difference in images is not alpha times the log of original')
+        (np.log10(im_new.array)-np.log10(im.array)), (alpha/np.log(10))*np.log10(im.array/exp_time)
+        ,int(DECIMAL/3), err_msg='Difference in images is not alpha times the log of original')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2-t1)

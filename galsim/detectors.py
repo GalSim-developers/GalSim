@@ -111,14 +111,30 @@ def addReciprocityFailure(self, exp_time, alpha, unity_gain_flux = 1.0):
         raise ValueError("Invalid value of alpha, must be float >= 0")
     if not (isinstance(exp_time, float) or isinstance(exp_time, int)) or exp_time < 0.:
         raise ValueError("Invalid value of exp_time, must be float or int >= 0")
+    if not (isinstance(unity_gain_flux, float) or isinstance(unity_gain_flux,int)) or \
+        unity_gain_flux < 0.:
+        raise ValueError("Invalid value of unity_gain_flux, must be float or int >= 0")
 
-    if numpy.any(self.array < sys.float_info.min*float(exp_time)*float(unity_gain_flux)):
+    # Old log formalism
+    # -----------------
+    # if numpy.any(self.array < sys.float_info.min*float(exp_time)*float(unity_gain_flux)):
+    #     import warnings
+    #     warnings.warn("At least one element of image/exp_time is too close to 0 or negative.")
+    #     warnings.warn("Floating point errors might occur.")
+
+    # self.array[:,:] = self.array*(1.0 + alpha*numpy.log10(self.array/(float(exp_time))) - alpha*
+    # numpy.log10(float(unity_gain_flux)))
+
+    # Old formalism: pR = p*(1+alpha*log10(p/T)-alpha*log10(p'/T'))
+    # New formalism: (pR-p)/p ~ log10((pR-p)/p)*ln(10) = log10((p/T)/(p'/T'))^alpha
+    #                (or) (pR-p)/p = ((p/T)/(p'/T'))^(alpha/ln(10))
+
+    if numpy.any(self.array<0):
         import warnings
-        warnings.warn("At least one element of image/exp_time is too close to 0 or negative.")
-        warnings.warn("Floating point errors might occur.")
+        warnings.warn("One or more pixel values are negative and will be set as 'nan'.")
 
-    self.array[:,:] = self.array*(1.0 + alpha*numpy.log10(self.array/(float(exp_time))) - alpha*
-    numpy.log10(float(unity_gain_flux)))
+    p = self.array
+    self.array[:,:] = p*(((p/exp_time)/unity_gain_flux)**(alpha/numpy.log(10)))
 
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
