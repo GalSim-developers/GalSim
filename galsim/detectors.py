@@ -97,12 +97,12 @@ def addReciprocityFailure(self, exp_time, alpha, unity_gain_flux = 1.0):
 
         >>>  img.addReciprocityFailure(exp_time, alpha, unity_gain_flux)
 
-    @param exp_time  The exposure time in seconds, which goes into the expression for reciprocity
-                     failure given in the docstring. 
-    @param alpha     The alpha parameter in the expression for reciprocity failure, in units of
-                     'per decade'.
-    @param unity_gain_flux The flux the gain is normalized to unity for reciprocity measurements
-    [default: 1.0]
+    @param exp_time         The exposure time in seconds, which goes into the expression for
+                            reciprocity failure given in the docstring.
+    @param alpha            The alpha parameter in the expression for reciprocity failure, in
+                            units of 'per decade'.
+    @param unity_gain_flux  The flux at which the gain is normalized to unity for reciprocity
+                            failure measurements [default: 1.0]
     
     @returns None
     """
@@ -126,7 +126,8 @@ def addReciprocityFailure(self, exp_time, alpha, unity_gain_flux = 1.0):
     # numpy.log10(float(unity_gain_flux)))
 
     # Old formalism: pR = p*(1+alpha*log10(p/T)-alpha*log10(p'/T'))
-    # New formalism: (pR-p)/p ~ log10((pR-p)/p)*ln(10) = log10((p/T)/(p'/T'))^alpha
+    #               (or) (pR/p) = 1 + alpha*log10(p/T)-alpha*log10(p'/T'))
+    # New formalism: (pR-p)/p ~ log10(pR/p)*ln(10) = log10((p/T)/(p'/T'))^alpha
     #                (or) (pR-p)/p = ((p/T)/(p'/T'))^(alpha/ln(10))
 
     if numpy.any(self.array<0):
