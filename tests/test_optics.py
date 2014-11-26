@@ -47,7 +47,7 @@ decimal_dft = 3  # Last decimal place used for checking near equality of DFT pro
 # test_optics.py directly, you will get the slow tests (~5 minutes for all of them).  When running
 # `scons tests`, you will get faster, less stringent tests.
 if __name__ == "__main__":
-    pp_decimal = 6
+    pp_decimal = 5
     pp_file = 'sample_pupil_rolled_oversample.fits.gz'
     pp_oversampling = 4.
     pp_pad_factor = 4.
@@ -568,7 +568,7 @@ def test_OpticalPSF_pupil_plane():
         test_moments = im_test_psf.FindAdaptiveMom()
         ref_moments = im_ref_psf.FindAdaptiveMom()
         np.testing.assert_almost_equal(
-            test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal-3,
+            test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal,
             err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane.")
 
     # It is supposed to be able to figure this out even if we *don't* tell it the pad factor. So
@@ -586,7 +586,7 @@ def test_OpticalPSF_pupil_plane():
         test_moments = im_test_psf.FindAdaptiveMom()
         ref_moments = im_ref_psf.FindAdaptiveMom()
         np.testing.assert_almost_equal(
-            test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal-3,
+            test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal,
             err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane without "
             "specifying parameters.")
 
@@ -612,7 +612,7 @@ def test_OpticalPSF_pupil_plane():
         test_moments = im_test_psf.FindAdaptiveMom()
         ref_moments = im_ref_psf.FindAdaptiveMom()
         np.testing.assert_almost_equal(
-            test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal-3,
+            test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal-1,
             err_msg="Inconsistent OpticalPSF image for rotated model after loading pupil plane.")
 
     # Now include aberrations.  Here we are testing the ability to figure out the pupil plane extent
@@ -637,7 +637,7 @@ def test_OpticalPSF_pupil_plane():
         test_moments = im_test_psf.FindAdaptiveMom()
         ref_moments = im_ref_psf.FindAdaptiveMom()
         np.testing.assert_almost_equal(
-            test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal-2,
+            test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal,
             err_msg="Inconsistent OpticalPSF image for aberrated model after loading pupil plane.")
 
     # Test for preservation of symmetries: the result should be the same if the pupil plane is

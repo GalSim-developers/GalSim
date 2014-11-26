@@ -70,7 +70,10 @@ class OpticalPSF(GSObject):
     struts are ignored; moreover, the `obscuration` keyword is used to ensure that the images are
     properly sampled (so it is still needed), but the keyword is then ignored when using the
     supplied image of the pupil plane.  The `pupil_plane_im` that is passed in can be rotated during
-    internal calculations by specifying a `pupil_angle` keyword.
+    internal calculations by specifying a `pupil_angle` keyword.  Also note that given how the
+    `obscuration` keyword is used, the obscuration in the supplied pupil plane image should indeed
+    be reasonably circular rather than having an arbitrary shape; however, minor deviations from a
+    perfect circle do not cause significant problems.
 
     If you choose to pass in a pupil plane image, it must be a square array in which the image of
     the pupil is centered.  The areas that are illuminated should have some value >0, and the other
@@ -349,35 +352,23 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
             border_size = int(0.5*(array_shape[0] - pupil_plane_im.array.shape[0]))
             new_im = galsim.Image(pupil_plane_im.bounds.addBorder(border_size))
             new_im[pupil_plane_im.bounds] = pupil_plane_im
+            pupil_plane_im = new_im.copy()
         # If the requested shape is smaller than the input one, we do nothing at this stage.  All
         # internal calculations done by this routine will be carried out at higher resolution, only
         # returning to lower resolution once we have completely specified the wavefront (aberrations
         # etc.)
 
     # Figure out the rho array parameters here.  We do this now, before rotating the input image,
-    # since the rotation can lead to small interpolation errors.
-    # First, turn the array into a boolean type, so all values >0 are True (doesn't matter what
-    # their value is) and all values==0 are False.
-    pp_arr = pupil_plane_im.array.astype(bool)
-    # Roll the pupil plane image so the center is in the corner, just like the outputs of
-    # `generate_pupil_plane`.
-    pp_arr = utilities.roll2d(pp_arr, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
-    # Then we figure out how far out from the center the True values go, since that sets where
-    # |rho|^2 should be <1.  To do this, we'll just use the first row, assuming that it might start
-    # out as False (if there is obscuration), then become True, then False again.  Our goal is to
-    # find the maximum pixel index that is True.  Note that this algorithm could fail if there is a
-    # strut located precisely along the axis we are using for this test.  Possible TODO: generalize
-    # algorithm to look in all directions?
-    tmp_arr = pp_arr[0,:]
-    max_in_pupil = -1
-    for ind in range(1, len(tmp_arr)/2-1):
-        # Note, if we just do the first two checks then in the case of minor numerical errors when
-        # generating the pupil plane, we might find the edge incorrectly.
-        if tmp_arr[ind]==True and tmp_arr[ind+1]==False and tmp_arr[ind+2]==False:
-            max_in_pupil = ind
-            break
-    if max_in_pupil < 0:
-        raise ValueError("Cannot find the edge of the illuminated part of pupil!")
+    # since the rotation can lead to small interpolation errors.  The basic idea is to find how far
+    # from the center is the farthest pixel that is non-zero (i.e., that is illuminated).  This is
+    # used to define the unit disk when setting the rho parameters.
+    kx, ky = utilities.kxky(pupil_plane_im.array.shape)
+    delta_k = (np.max(kx)-np.min(kx))/(pupil_plane_im.array.shape[0]-1)
+    kx = (kx) * pupil_plane_im.array.shape[0]/(2.*np.pi)
+    ky = (ky) * pupil_plane_im.array.shape[1]/(2.*np.pi)
+    tot_k = np.sqrt(kx**2 + ky**2)
+    tot_k = utilities.roll2d(tot_k, (tot_k.shape[0] / 2, tot_k.shape[1] / 2))
+    max_in_pupil = max(tot_k[pupil_plane_im.array>0])
 
     # Next, deal with any requested rotations.
     if pupil_angle == 0.*galsim.degrees:
@@ -405,10 +396,9 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
     # `generate_pupil_plane`.
     pp_arr = utilities.roll2d(pp_arr, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2)) 
 
-    # Then set up the rho array appropriately.  The left edge of the leftmost pixel (indexed 0)
-    # should have rho_x = 0, and the edge of the pixel with index `max_in_pupil` should have rho_x =
-    # 1.  We can therefore figure out drho:
-    drho = 1.0 / (float(max_in_pupil)+1.)
+    # Then set up the rho array appropriately. Given our estimate above for `max_in_pupil`, we can
+    # get delta rho:
+    drho = 1.0 / max_in_pupil
     # We want rho to go from negative to positive values before we roll it.
     rho_vec = np.linspace(-0.5*pp_arr.shape[0]*drho, 0.5*pp_arr.shape[0]*drho-drho,
                            num=pp_arr.shape[0])
@@ -435,7 +425,9 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
         if delta_k > stepk_airy:
             import warnings
             ratio = delta_k / stepk_airy
-            warnings.warn("Input image may not be sampled enough! Consider increasing by %f."%ratio)
+            warnings.warn("Input pupil plane image may not be sampled well enough!\n"
+                          "Consider increasing sampling by a factor %f, and/or check OpticalPSF "
+                          "outputs for signs of folding in real space."%ratio)
 
     return rho, pp_arr, effective_oversampling
 
@@ -813,6 +805,12 @@ def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
 
     if effective_oversampling is not None:
         oversamp_ratio = effective_oversampling / oversampling
+        # Here we compare the effective oversampling inferred from the image with the oversampling
+        # that was requested by the user.  We do not place a scrict cut at 1.0 because the routine
+        # doesn't start to immediately fail catastrophically the instant this ratio goes below 1,
+        # particularly if the user has requested an oversampling above 1 (like the default 1.5) to
+        # begin with.  But once the ratio gets below 0.9, this could get problematic, and anyway it
+        # might mean the user supplied the wrong image by mistake, so we raise an exception.
         if oversamp_ratio < 0.9:
             raise RuntimeError("Supplied pupil plane image results in inadequate sampling "
                                "by factor of %f"%oversamp_ratio)
