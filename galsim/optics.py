@@ -371,7 +371,7 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
     max_in_pupil = max(tot_k[pupil_plane_im.array>0])
 
     # Next, deal with any requested rotations.
-    if pupil_angle == 0.*galsim.degrees:
+    if pupil_angle.rad() == 0.:
         pp_arr = pupil_plane_im.array
     else:
         # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to
