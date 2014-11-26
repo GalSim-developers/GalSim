@@ -81,9 +81,9 @@ def addReciprocityFailure(self, exp_time, alpha, unity_gain_flux = 1.0):
     `(1+alpha*log10((im/exp_time)-alpha*log10(unity_gain_flux))`, where the parameters `alpha`,
     `exp_time` and `unity_gain_flux` are given as keyword arguments.  Because of how this function
     is defined, the input image must have strictly positive pixel values for the resulting image
-    to be well defined.
+    to be well-defined.
 
-    The image should be in units of electrons or if it is in ADU, then the value passed to
+    The image should be in units of electrons, or if it is in ADU, then the value passed to
     exp_time should be the exposure time divided by the gain. The image should include both the
     signal from the astronomical objects as well as the background level.  The addition of
     nonlinearity should occur after including the effect of reciprocity failure.
