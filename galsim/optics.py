@@ -163,7 +163,7 @@ class OpticalPSF(GSObject):
                             which is harmless. [default: None]
     @param pupil_angle      If `pupil_plane_im` is not None, rotation angle for the pupil plane
                             (positive in the counter-clockwise direction).  Must be an Angle
-                            instance. [default: None]
+                            instance. [default: 0. * galsim.degrees]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -205,7 +205,7 @@ class OpticalPSF(GSObject):
                  circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
                  pad_factor=1.5, suppress_warning=False, max_size=None, flux=1.,
                  nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
-                 pupil_plane_im=None, pupil_angle=None, gsparams=None):
+                 pupil_plane_im=None, pupil_angle=0.*galsim.degrees, gsparams=None):
 
         
         # Choose scale for lookup table using Nyquist for optical aperture and the specified
@@ -504,7 +504,7 @@ def generate_pupil_plane(array_shape=(256, 256), scale=1., lam_over_diam=2., cir
 
 def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
               circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
-              strut_angle=0.*galsim.degrees, pupil_plane_im=None, pupil_angle=None):
+              strut_angle=0.*galsim.degrees, pupil_plane_im=None, pupil_angle=0.*galsim.degrees):
     """Return a complex, aberrated wavefront across a circular (default) or square pupil.
     
     Outputs a complex image (shape=`array_shape`) of a circular pupil wavefront of unit amplitude
@@ -549,16 +549,13 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
                            which is harmless. [default: None]
     @param pupil_angle     If `pupil_plane_im` is not None, rotation angle for the pupil plane
                            (positive in the counter-clockwise direction).  Must be an Angle
-                           instance. [default: None]
+                           instance. [default: 0. * galsim.degrees]
 
     @returns the wavefront for `kx, ky` locations corresponding to `kxky(array_shape)`.
     """
     # Define the pupil coordinates and non-zero regions based on input kwargs.  These are either
     # generated automatically, or taken from an input image.
     if pupil_plane_im is not None:
-        if pupil_angle is None:
-            pupil_angle = 0.*galsim.degrees
-
         rho_all, in_pupil, effective_oversampling = \
             load_pupil_plane(pupil_plane_im, pupil_angle, array_shape=array_shape,
                              lam_over_diam=lam_over_diam, obscuration=obscuration)
@@ -685,7 +682,7 @@ def wavefront_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrati
 
 def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
         circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
-        strut_angle=0.*galsim.degrees, flux=1., pupil_plane_im=None, pupil_angle=None):
+        strut_angle=0.*galsim.degrees, flux=1., pupil_plane_im=None, pupil_angle=0.*galsim.degrees):
     """Return NumPy array containing circular (default) or square pupil PSF with low-order 
     aberrations.
 
@@ -724,7 +721,7 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
                            which is harmless. [default: None]
     @param pupil_angle     If `pupil_plane_im` is not None, rotation angle for the pupil plane
                            (positive in the counter-clockwise direction).  Must be an Angle
-                           instance. [default: None]
+                           instance. [default: 0. * galsim.degrees]
     """
     wf, effective_oversampling = wavefront(
         array_shape=array_shape, scale=scale, lam_over_diam=lam_over_diam, aberrations=aberrations,
@@ -753,8 +750,8 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
 
 def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
               circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
-              strut_angle=0.*galsim.degrees, flux=1., pupil_plane_im=None, pupil_angle=None,
-              oversampling=1.5):
+              strut_angle=0.*galsim.degrees, flux=1., pupil_plane_im=None,
+              pupil_angle=0.*galsim.degrees, oversampling=1.5):
     """Return circular (default) or square pupil PSF with low-order aberrations as an Image.
 
     The PSF is centred on the `array[array_shape[0] / 2, array_shape[1] / 2] pixel` by default, and
@@ -794,7 +791,7 @@ def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
                            which is harmless. [default: None]
     @param pupil_angle     If `pupil_plane_im` is not None, rotation angle for the pupil plane
                            (positive in the counter-clockwise direction).  Must be an Angle
-                           instance. [default: None]
+                           instance. [default: 0. * galsim.degrees]
     @param oversampling    Effective level of oversampling requested.
     """
     array, effective_oversampling = psf(
