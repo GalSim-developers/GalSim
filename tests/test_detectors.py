@@ -243,7 +243,7 @@ def test_recipfail_basic():
     #Check math is right
     alpha, exp_time = 0.0065, 1.0
     im_new = im.copy()
-    im_new.addReciprocityFailure(alpha=alpha,exp_time=exp_time)
+    im_new.addReciprocityFailure(alpha=alpha, exp_time=exp_time)
     assert im_new.scale == im.scale
     assert im_new.wcs == im.wcs
     assert im_new.dtype == im.dtype
@@ -251,6 +251,18 @@ def test_recipfail_basic():
     np.testing.assert_array_almost_equal(
         (np.log10(im_new.array)-np.log10(im.array)), (alpha/np.log(10))*np.log10(im.array/exp_time)
         ,int(DECIMAL/3), err_msg='Difference in images is not alpha times the log of original')
+
+    # Check power law against logarithmic behavior
+    alpha, exp_time = 0.0065, 1.0
+    im_new = im.copy()
+    im_new.addReciprocityFailure(alpha=alpha, exp_time=exp_time)
+    assert im_new.scale == im.scale
+    assert im_new.wcs == im.wcs
+    assert im_new.dtype == im.dtype
+    assert im_new.bounds == im.bounds
+    np.testing.assert_array_almost_equal(
+        im_new.array,im.array*(1+alpha*np.log10(im.array/exp_time)),int(DECIMAL/3),
+        err_msg='Difference between power law and log behavior')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2-t1)
