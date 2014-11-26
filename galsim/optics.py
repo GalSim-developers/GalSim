@@ -805,6 +805,12 @@ def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
 
     if effective_oversampling is not None:
         oversamp_ratio = effective_oversampling / oversampling
+        # Here we compare the effective oversampling inferred from the image with the oversampling
+        # that was requested by the user.  We do not place a scrict cut at 1.0 because the routine
+        # doesn't start to immediately fail catastrophically the instant this ratio goes below 1,
+        # particularly if the user has requested an oversampling above 1 (like the default 1.5) to
+        # begin with.  But once the ratio gets below 0.9, this could get problematic, and anyway it
+        # might mean the user supplied the wrong image by mistake, so we raise an exception.
         if oversamp_ratio < 0.9:
             raise RuntimeError("Supplied pupil plane image results in inadequate sampling "
                                "by factor of %f"%oversamp_ratio)
