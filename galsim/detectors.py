@@ -77,7 +77,7 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
 
     Reciprocity, in the context of photography, is the inverse relationship between the incident
     flux (I) of a source object and the exposure time (T) required to produce a given response (E)
-    in the detector, i.e., E = I*t. At very low (also at high) levels of incident flux, deviation
+    in the detector, i.e., E = I*T. At very low (also at high) levels of incident flux, deviation
     from this relation is observed, leading to reduced sensitivity at low flux levels. The pixel
     response to a high flux is larger than its response to a low flux. This flux-dependent non-
     linearity is known as 'Reciprocity Failure' and is known to happen in photographic films since
