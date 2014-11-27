@@ -191,10 +191,12 @@ class OpticalPSF(GSObject):
         "suppress_warning" : bool ,
         "max_size" : float ,
         "interpolant" : str ,
-        "flux" : float,
-        "nstruts" : int,
-        "strut_thick" : float,
-        "strut_angle" : galsim.Angle }
+        "flux" : float ,
+        "nstruts" : int ,
+        "strut_thick" : float ,
+        "strut_angle" : galsim.Angle ,
+        "pupil_plane_im" : str ,
+        "pupil_angle" : galsim.Angle}
     _single_params = []
     _takes_rng = False
     _takes_logger = False
