@@ -186,13 +186,13 @@ def test_recipfail_basic():
 
     # Basic - exceptions / bad usage.
     try:
-        np.testing.assert_raises(ValueError, im.addReciprocityFailure, -1.0, 200)
+        np.testing.assert_raises(ValueError, im.addReciprocityFailure, -1.0, 200, 1.0)
     except ImportError:
         print 'The assert_raises tests require nose'
 
     # Preservation of data type / scale / bounds
     im_new = im.copy()
-    im_new.addReciprocityFailure(exp_time=200., alpha=0.0065)
+    im_new.addReciprocityFailure(exp_time=200., alpha=0.0065, base_flux=1.0)
     assert im_new.scale == im.scale
     assert im_new.wcs == im.wcs
     assert im_new.dtype == im.dtype
@@ -203,7 +203,7 @@ def test_recipfail_basic():
 
     # Check for preservation for certain alpha.
     im_new = im.copy()
-    im_new.addReciprocityFailure(exp_time=200.,alpha=0.0)
+    im_new.addReciprocityFailure(exp_time=200., alpha=0.0, base_flux=1.0)
     assert im_new.scale == im.scale
     assert im_new.wcs == im.wcs
     assert im_new.dtype == im.dtype
@@ -217,8 +217,8 @@ def test_recipfail_basic():
     alpha2 = 0.007
     im1 = im.copy()
     im2 = im.copy()
-    im1.addReciprocityFailure(exp_time=200.,alpha=alpha1)
-    im2.addReciprocityFailure(exp_time=200.,alpha=alpha2)
+    im1.addReciprocityFailure(exp_time=200.,alpha=alpha1, base_flux=1.0)
+    im2.addReciprocityFailure(exp_time=200.,alpha=alpha2, base_flux=1.0)
     dim1 = im1.array/im.array
     dim2 = im2.array/im.array
     # We did new / old image, which should equal (old_image/normalization)^alpha.
@@ -241,9 +241,9 @@ def test_recipfail_basic():
         err_msg='Did not get expected change in reciprocity failure when varying alpha')
 
     #Check math is right
-    alpha, exp_time = 0.0065, 1.0
+    alpha, exp_time, base_flux = 0.0065, 1.0, 1.0
     im_new = im.copy()
-    im_new.addReciprocityFailure(alpha=alpha, exp_time=exp_time)
+    im_new.addReciprocityFailure(alpha=alpha, exp_time=exp_time, base_flux=base_flux)
     assert im_new.scale == im.scale
     assert im_new.wcs == im.wcs
     assert im_new.dtype == im.dtype
@@ -253,9 +253,9 @@ def test_recipfail_basic():
         ,int(DECIMAL/3), err_msg='Difference in images is not alpha times the log of original')
 
     # Check power law against logarithmic behavior
-    alpha, exp_time = 0.0065, 1.0
+    alpha, exp_time, base_flux = 0.0065, 1.0, 1.0
     im_new = im.copy()
-    im_new.addReciprocityFailure(alpha=alpha, exp_time=exp_time)
+    im_new.addReciprocityFailure(alpha=alpha, exp_time=exp_time, base_flux=base_flux)
     assert im_new.scale == im.scale
     assert im_new.wcs == im.wcs
     assert im_new.dtype == im.dtype
