@@ -101,7 +101,7 @@ def addReciprocityFailure(self, exp_time, alpha):
 
     self.array[:,:] = self.array*(1.0 + alpha*numpy.log10(self.array/float(exp_time)))
 
-def applyIPC(self, IPC_kernel, edge_effects='extend', kernel_nonnegativity=True, kernel_normalization=True):
+def applyIPC(self, IPC_kernel, edge_treatment='extend', kernel_nonnegativity=True, kernel_normalization=True):
     """
     Applies the effect of interpixel capacitance to the Image instance.
 
@@ -110,23 +110,23 @@ def applyIPC(self, IPC_kernel, edge_effects='extend', kernel_nonnegativity=True,
     sensible kernel must have non-negative entries and must be normalized such that the sum of the
     elements is 1, in order to conserve the total charge.
 
-    The argument 'edge_effects' specifies how the edges of the image should be treated, which
+    The argument 'edge_treatment' specifies how the edges of the image should be treated, which
     could be in one of the three ways:
     
     1. 'extend': The kernel is convolved with the zero-padded image, leading to a larger intermediate image. The central portion of this image is returned.  [default]
     2. 'crop': The kernel is convolved with the image, with the kernel inside the image completely. Pixels at the edges, where the center of the kernel could not be placed, are set to zero.
         They should be considered as invalid.
-    3. 'warp': The kernel is convolved with the image, assuming periodic boundary conditions.
+    3. 'wrap': The kernel is convolved with the image, assuming periodic boundary conditions.
 
     The size of the image array remains unchanged in all three cases.
 
     Calling
     -------
 
-        >>> img.applyIPC(IPC_kernel=ipc_kernel, edge_effects='extend', kernel_nonnegativity=True, kernel_normalization=True)
+        >>> img.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_nonnegativity=True, kernel_normalization=True)
 
     @param IPC_kernel              A 3x3 NumPy array that is convolved with the Image instance
-    @param edge_effects            Specifies the method of handling edges and should be one of 'crop', 'extend' or 'warp'. See above for details. [default: 'extend']
+    @param edge_treatment          Specifies the method of handling edges and should be one of 'crop', 'extend' or 'wrap'. See above for details. [default: 'extend']
     @param kernel_nonnegativity    Specify whether the kernel should have only non-negative entries. [default: True]
     @param kernel_normalization    Specify whether to check and enforce correct normalization for the kernel.  [default: True]
 
@@ -149,25 +149,25 @@ def applyIPC(self, IPC_kernel, edge_effects='extend', kernel_nonnegativity=True,
         if ipc_kernel.sum() is not 1.0:
             import warnings
             warnings.warn("The entries in the kernel did not sum to 1. Scaling the kernel to ensure correct normalization.")
-            ipc_kernel = ipc_kernel/ipc_kernel.sum()
+            ipc_kernel = ipc_kernel/ipc_kernel.sum() 
 
-    # edge_effects can be 'extend', 'warp' or 'crop'
-    elif edge_effects is not 'extend' and  edge_effects is not 'warp' and edge_effects is not 'crop':
-        raise ValueError("edge_effects has to be one of 'extend', 'warp' or 'crop'. ")
+    # edge_treatment can be 'extend', 'wrap' or 'crop'
+    elif edge_treatment is not 'extend' and  edge_treatment is not 'wrap' and edge_treatment is not 'crop':
+        raise ValueError("edge_treatment has to be one of 'extend', 'wrap' or 'crop'. ")
 
-    if edge_effects is 'crop':
+    if edge_treatment is 'crop':
         # Simply re-label the array of the Image instance
         pad_array = self.array
-    elif edge_effects is 'extend':
+    elif edge_treatment is 'extend':
         # Copy the array of the Image instance and pad with zeros
         pad_array = numpy.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
         pad_array[1:-1,1:-1] = self.array
     else:
-        #edge_effects = 'warp'
+        #edge_treatment = 'wrap'
         # Copy the array of the Image instance and pad with zeros
         pad_array = numpy.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
         pad_array[1:-1,1:-1] = self.array
-        #Warping the edges
+        #wraping the edges
         pad_array[0,:] = pad_array[-2,:]
         pad_array[-1,:] = pad_array[1,:]
         pad_array[:,0] = pad_array[:,-2]
@@ -187,7 +187,7 @@ def applyIPC(self, IPC_kernel, edge_effects='extend', kernel_nonnegativity=True,
     #Generating the output array, with 2 rows and 2 columns lesser than the padded array
     out_array = IPC_kernel[0,0]*topleft + IPC_kernel[0,1]*top + IPC_kernel[0,2]*topright + IPC_kernel[1,0]*left + IPC_kernel[1,1]*center + IPC_kernel[1,2]*right + IPC_kernel[2,0]*bottomleft + IPC_kernel[2,1]*bottom + IPC_kernel[2,2]*bottomright
 
-    if edge_effects is 'crop':
+    if edge_treatment is 'crop':
         self.array[1:-1,1:-1] = out_array
         #Explicit edge effects handling with filling the edges with zeros
         self.array[0,:] = 0.0
