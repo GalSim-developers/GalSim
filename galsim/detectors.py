@@ -75,22 +75,40 @@ def addReciprocityFailure(self, exp_time, alpha, unity_gain_flux = 1.0):
     """
     Accounts for the reciprocity failure and corrects the original Image for it directly.
 
-    Reciprocity failure is identified as a change in the rate of charge accumulation with photon
-    flux, resulting in loss of sensitivity at low signal levels. The reciprocity failure results
-    in mapping the original image to a new one that is equal to the original `im` multiplied by
-    `(1+alpha*log10((im/exp_time)-alpha*log10(unity_gain_flux))`, where the parameters `alpha`,
-    `exp_time` and `unity_gain_flux` are given as keyword arguments.  Because of how this function
-    is defined, the input image must have strictly positive pixel values for the resulting image
-    to be well-defined.
+    Reciprocity, in the context of photography, is the inverse relationship between the incident
+    flux (I) of a source object and the exposure time (T) required to produce a given response (E)
+    in the detector, i.e., E = I*t. At very low (also at high) levels of incident flux, deviation
+    from this relation is observed, leading to reduced sensitivity at low flux levels. The pixel
+    response to a high flux is larger than its response to a low flux. This flux-dependent non-
+    linearity is known as 'Reciprocity Failure' and is known to happen in photographic films since
+    1893. Interested users can refer to http://en.wikipedia.org/wiki/Reciprocity_(photography)
 
+    CCDs are not known to suffer from this effect. HgCdTe detectors that are used for near infrared
+    astrometry, although to an extent much lesser than the photographic films, are found to
+    exhibit reciprocity failure at low flux levels. The exact mechanism of this effect is unknown
+    and hence we lack a good theoretical model. Many models that fit the empirical data exist and
+    a common relation is
+
+            pR/p = (1 + alpha*log10(p/T) - alpha*log10(p'/T'))
+
+    where T is the exposure time (in units of seconds), p is the pixel response (in units of
+    electrons) and pR is the response if the reciprocity relation were to hold. p'/T' is count
+    rate (in electrons/second) corresponding to the photon flux (base flux) at which the detector
+    is calibrated to have its nominal gain. alpha is the parameter in the model, measured in units
+    of per decade. The functional form for the reciprocity failure is motivated empirically from
+    the tests carried out on H2RG detectors. See for reference Fig. 1 and Fig. 2 of
+    http://arxiv.org/abs/1106.1090. Since pR/p remains close to unity over a wide range of flux,
+    we convert this relation to a power law by approximating (pR/p)-1 ~ log(pR/p). This gives a
+    relation that is better behaved than the logarithmic relation at low flux levels.
+
+            pR/p = ((p/T)/(p'/T'))^(alpha/log(10)).
+
+    Because of how this function is defined, the input image must have strictly positive pixel
+    values for the resulting image to be well-defined. Negative pixel values result in 'nan's.
     The image should be in units of electrons, or if it is in ADU, then the value passed to
-    exp_time should be the exposure time divided by the gain. The image should include both the
-    signal from the astronomical objects as well as the background level.  The addition of
+    exp_time should be the exposure time divided by the nominal gain. The image should include
+    both the signal from the astronomical objects as well as the background level.  The addition of
     nonlinearity should occur after including the effect of reciprocity failure.
-
-    The functional form for the reciprocity failure is motivated empirically from the tests
-    carried out on H2RG detectors. See Fig. 1 and Fig. 2 of http://arxiv.org/abs/1106.1090
-    for reference.
 
     Calling
     -------
@@ -101,8 +119,7 @@ def addReciprocityFailure(self, exp_time, alpha, unity_gain_flux = 1.0):
                             reciprocity failure given in the docstring.
     @param alpha            The alpha parameter in the expression for reciprocity failure, in
                             units of 'per decade'.
-    @param unity_gain_flux  The flux at which the gain is normalized to unity for reciprocity
-                            failure measurements [default: 1.0]
+    @param unity_gain_flux  The flux at which the gain is calibrated to have its nominal value.
     
     @returns None
     """
