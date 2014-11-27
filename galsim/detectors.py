@@ -28,7 +28,7 @@ def applyNonlinearity(self, NLfunc, *args):
     """
     Applies the given non-linearity function (`NLfunc`) on the Image instance directly.
 
-    Voltage non-linearity, also sometimes known as 'classical non-linearity', occurs due to the non
+    Voltage non-linearity, also sometimes known as 'classical non-linearity', refers to the non
     -linearity in charge-to-voltage conversion process. This arises as charge gets integrated at
     the junction capacitance of the pixel node. Voltage non-linearity decreases signals at higher
     signal levels, causing the attenuation of brighter pixels. The image should include both the
@@ -98,11 +98,12 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
     electrons) and pR is the response if the reciprocity relation were to hold. p'/T' is count
     rate (in electrons/second) corresponding to the photon flux (base flux) at which the detector
     is calibrated to have its nominal gain. alpha is the parameter in the model, measured in units
-    of per decade. The functional form for the reciprocity failure is motivated empirically from
-    the tests carried out on H2RG detectors. See for reference Fig. 1 and Fig. 2 of
-    http://arxiv.org/abs/1106.1090. Since pR/p remains close to unity over a wide range of flux,
-    we convert this relation to a power law by approximating (pR/p)-1 ~ log(pR/p). This gives a
-    relation that is better behaved than the logarithmic relation at low flux levels.
+    of per decade and varies with detectors and the operating temperature. The functional form for
+    the reciprocity failure is motivated empirically from the tests carried out on H2RG detectors.
+    See for reference Fig. 1 and Fig. 2 of http://arxiv.org/abs/1106.1090. Since pR/p remains
+    close to unity over a wide range of flux, we convert this relation to a power law by
+    approximating (pR/p)-1 ~ log(pR/p). This gives a relation that is better behaved than the
+    logarithmic relation at low flux levels.
 
             pR/p = ((p/T)/(p'/T'))^(alpha/log(10)).
 
