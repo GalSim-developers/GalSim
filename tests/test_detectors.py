@@ -98,12 +98,14 @@ def test_nonlinearity_basic():
     im_new = im.copy()
     im_new.applyNonlinearity(lambda x : x)
     np.testing.assert_array_equal(
-        im_new.array, im.array, err_msg='Image not preserved when applying identity nonlinearity function')
+        im_new.array, im.array, err_msg='Image not preserved when applying identity nonlinearity '
+        'function')
 
     # Check for constant function as NLfunc
     im_new = im.copy()
     im_new.applyNonlinearity(lambda x: 1.0)
-    np.testing.assert_array_equal(im_new.array,np.ones_like(im),err_msg='Image not constant when the nonlinearity function is constant')
+    np.testing.assert_array_equal(im_new.array,np.ones_like(im),err_msg='Image not constant when '
+        'the nonlinearity function is constant')
 
     # Check that lambda func vs. LookupTable agree.
     max_val = np.max(im.array)
@@ -121,7 +123,8 @@ def test_nonlinearity_basic():
         err_msg='Image differs when using LUT vs. lambda function')
 
     # Check that lambda func vs. interpolated function from SciPy agree
-    # This is NOT the preferred way to construct smooth functions from tables but our routine can handle it anyway.
+    # This is NOT the preferred way to construct smooth functions from tables but our routine can
+    # handle it anyway.
     max_val = np.max(im.array)
     x_vals = np.linspace(0.0,max_val,num=500)
     f_vals = x_vals + 0.1*(x_vals**2)
@@ -130,8 +133,11 @@ def test_nonlinearity_basic():
     im2 = im.copy()
     im1.applyNonlinearity(lambda x: x + 0.1*(x**2))
     im2.applyNonlinearity(lut)
-    # Note, don't be quite as stringent as in previous test; there can be small interpolation errors.
-    np.testing.assert_array_almost_equal(im1.array,im2.array,int(0.5*DECIMAL),err_msg="Image differs when using SciPy's interpolation vs. lambda function")
+    # Note, don't be quite as stringent as in previous test; there can be small interpolation
+    # errors.
+    np.testing.assert_array_almost_equal(
+        im1.array,im2.array,int(0.5*DECIMAL),
+        err_msg="Image differs when using SciPy's interpolation vs. lambda function")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -168,7 +174,8 @@ def test_recipfail_basic():
     im_new = im.copy()
     im_new.addReciprocityFailure(exp_time=200.,alpha=0.0)
     np.testing.assert_array_equal(
-        im_new.array, im.array, err_msg='Image not preserved when applying null reciprocity failure')
+        im_new.array, im.array, 
+        err_msg='Image not preserved when applying null reciprocity failure')
 
     # Check for proper scaling with alpha
     alpha1 = 0.006
@@ -191,7 +198,9 @@ def test_recipfail_basic():
     alpha, exp_time = 0.0065, 1.0
     im_new = im.copy()
     im_new.addReciprocityFailure(alpha=alpha,exp_time=exp_time)
-    np.testing.assert_array_almost_equal((im_new.array-im.array),alpha*im.array*np.log10(im.array/exp_time),int(DECIMAL/2),err_msg='Difference in images is not alpha times the log of original')
+    np.testing.assert_array_almost_equal(
+        (im_new.array-im.array),alpha*im.array*np.log10(im.array/exp_time),int(DECIMAL/2),
+        err_msg='Difference in images is not alpha times the log of original')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -211,31 +220,52 @@ def test_IPC_basic():
     ipc_kernel[1,1] = 1.0
     im_new = im.copy()
 
-    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='extend')
-    np.testing.assert_array_equal(im_new.array, im.array, err_msg="Image is altered for no IPC with edge_effects = 'extend'" )
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend')
+    np.testing.assert_array_equal(
+        im_new.array, im.array,
+        err_msg="Image is altered for no IPC with edge_treatment = 'extend'" )
 
-    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='warp')
-    np.testing.assert_array_equal(im_new.array, im.array, err_msg="Image is altered for no IPC with edge_effects = 'warp'" )
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap')
+    np.testing.assert_array_equal(
+        im_new.array, im.array,
+        err_msg="Image is altered for no IPC with edge_treatment = 'wrap'" )
 
-    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='crop')
-    #Input arrays and output arrays will differ at the edges for this option
-    np.testing.assert_array_equal(im_new.array[1:-1,1:-1], im.array[1:-1,1:-1], err_msg="Image is altered for no IPC with edge_effects = 'crop'" )
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop')
+    #Input arrays and output arrays will differ at the edges for this option. 
+    np.testing.assert_array_equal(
+        im_new.array[1:-1,1:-1], im.array[1:-1,1:-1],
+        err_msg="Image is altered for no IPC with edge_treatment = 'crop'" )
 
     try:
         from scipy import signal
-        print "SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`...."
+        print "SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`"
+
+        # Generate an arbitrary kernel
+        ipc_kernel = abs(np.random.randn(3,3))
+        
         im_new = im.copy()
-        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='extend')
-        np.testing/assert_array_almost_equal(im_new, signal.convolve2d(im, ipc_kernel, mode='same', boundary='fill')[1:-1,1:-1], DECIMAL, err_msg="Image differs from SciPy's result using `mode='same'` and `boundary='fill`.")
+        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=False)
+        np.testing.assert_array_almost_equal(
+            im_new.array, signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel)),
+                                            mode='same', boundary='fill'), int(DECIMAL/2),
+            err_msg="Image differs from SciPy's result using `mode='same'` and `boundary='fill`.")
 
         im_new = im.copy()
-        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='crop')
-        np.testing.assert_array_almost_equal(im_new[1:-1], signal.convolve2d(im, ipc_kernel, mode='valid', boundary = 'fill'), DECIMAL, err_msg="Image differs from SciPy's result using `mode=valid'` and `boundary='fill'`.")
+        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop', kernel_normalization=False)
+        np.testing.assert_array_almost_equal(
+            im_new.array[1:-1,1:-1], signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel)),
+                                            mode='valid', boundary = 'fill'), int(DECIMAL/2),
+            err_msg="Image differs from SciPy's result using `mode=valid'` and `boundary='fill'`.")
 
         im_new = im.copy()
-        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_effects='warp')
-        np.testing.assert_array_almost_equal(im_new, signal.convolve2d(im, ipc_kernel, mode='same', boundary='wrap'), DECIMAL, err_msg="Image differs from SciPy's result using `mode=same'` and `boundary='wrap'`.")
-    except:
+        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap', kernel_normalization=False)
+        np.testing.assert_array_almost_equal(
+            im_new.array, signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel)),
+                                            mode='same', boundary='wrap'), int(DECIMAL/2),
+            err_msg="Image differs from SciPy's result using `mode=same'` and `boundary='wrap'`.")
+
+    except ImportError:
+        # Skip without any warning if SciPy is not installed
         pass
 
     t2 = time.time()
