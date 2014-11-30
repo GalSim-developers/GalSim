@@ -206,9 +206,9 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     bottomleft = pad_array[2:,:-2]
 
     #Generating the output array, with 2 rows and 2 columns lesser than the padded array
-    out_array = IPC_kernel[0,0]*topleft + IPC_kernel[0,1]*top + IPC_kernel[0,2]*topright +
-        IPC_kernel[1,0]*left + IPC_kernel[1,1]*center + IPC_kernel[1,2]*right + IPC_kernel[2,0]*
-        bottomleft + IPC_kernel[2,1]*bottom + IPC_kernel[2,2]*bottomright
+    out_array = IPC_kernel[0,0]*topleft + IPC_kernel[0,1]*top + IPC_kernel[0,2]*topright + \
+        IPC_kernel[1,0]*left + IPC_kernel[1,1]*center + IPC_kernel[1,2]*right + \
+        IPC_kernel[2,0]*bottomleft + IPC_kernel[2,1]*bottom + IPC_kernel[2,2]*bottomright
 
     if edge_treatment is 'crop':
         self.array[1:-1,1:-1] = out_array
