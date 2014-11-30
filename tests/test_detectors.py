@@ -246,8 +246,12 @@ def test_IPC_basic():
     im_new.array[:,-1] = 0.0
     im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=True)
     if abs(im_new.array.sum()-im.array[1:-1,1:-1].sum()) < 10**(-(int(DECIMAL))):
-        raise ValueError("Normalized kernel does not conserve the total flux")
+        raise ValueError("Normalized kernel does not conserve the total flux for 'extend' option.")
 
+    im_new = im.copy()
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap', kernel_normalization=True)
+    if abs(im_new.array.sum()-im.array.sum()) < 10**(-int(DECIMAL)):
+        raise ValueError("Normalized kernel does not conserve the total flux for 'wrap' option.")
     try:
         from scipy import signal
         print "SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`"
