@@ -236,6 +236,18 @@ def test_IPC_basic():
         im_new.array[1:-1,1:-1], im.array[1:-1,1:-1],
         err_msg="Image is altered for no IPC with edge_treatment = 'crop'" )
 
+    # Testing for flux conservation
+    ipc_kernel = abs(np.random.randn(3,3)) # a random kernel
+    im_new = im.copy()
+    # Set edges to zero since flux is not conserved at the edges otherwise
+    im_new.array[0,:] = 0.0
+    im_new.array[-1,:] = 0.0
+    im_new.array[:,0] = 0.0
+    im_new.array[:,-1] = 0.0
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=True)
+    if abs(im_new.array.sum()-im.array[1:-1,1:-1].sum()) < 10**(-(int(DECIMAL))):
+        raise ValueError("Normalized kernel does not conserve the total flux")
+
     try:
         from scipy import signal
         print "SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`"
