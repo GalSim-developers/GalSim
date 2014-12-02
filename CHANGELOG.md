@@ -21,6 +21,8 @@ New Features
   to take functions of wavelength for the arguments. (#581)
 - Added a module to describe charge deflection in CCD pixels (also known as the "brighter-fatter"
   effect) following the model of Antilogus et al (2014). (#524)
+- Make it possible for OpticalPSF to model non-trivially complicated obscuration and/or struts
+  by allowing it to take an optional image of the pupil plane. (#601)
 
 Bug Fixes and Improvements
 --------------------------
