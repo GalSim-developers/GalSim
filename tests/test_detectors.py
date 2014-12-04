@@ -241,7 +241,7 @@ def test_recipfail_basic():
         err_msg='Did not get expected change in reciprocity failure when varying alpha')
 
     #Check math is right
-    alpha, exp_time, base_flux = 0.0065, 1.0, 1.0
+    alpha, exp_time, base_flux = 0.0065, 10.0, 5.0
     im_new = im.copy()
     im_new.addReciprocityFailure(alpha=alpha, exp_time=exp_time, base_flux=base_flux)
     assert im_new.scale == im.scale
@@ -249,11 +249,12 @@ def test_recipfail_basic():
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
     np.testing.assert_array_almost_equal(
-        (np.log10(im_new.array)-np.log10(im.array)), (alpha/np.log(10))*np.log10(im.array/exp_time)
+        (np.log10(im_new.array)-np.log10(im.array)), (alpha/np.log(10))*np.log10(im.array/ \
+            (exp_time*base_flux))
         ,int(DECIMAL/3), err_msg='Difference in images is not alpha times the log of original')
 
     # Check power law against logarithmic behavior
-    alpha, exp_time, base_flux = 0.0065, 1.0, 1.0
+    alpha, exp_time, base_flux = 0.0065, 2.0, 4.0
     im_new = im.copy()
     im_new.addReciprocityFailure(alpha=alpha, exp_time=exp_time, base_flux=base_flux)
     assert im_new.scale == im.scale
