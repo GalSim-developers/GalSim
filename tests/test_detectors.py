@@ -262,7 +262,7 @@ def test_recipfail_basic():
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
     np.testing.assert_array_almost_equal(
-        im_new.array,im.array*(1+alpha*np.log10(im.array/exp_time)),int(DECIMAL/3),
+        im_new.array,im.array*(1+alpha*np.log10(im.array/(exp_time*base_flux))),int(DECIMAL/3),
         err_msg='Difference between power law and log behavior')
 
     t2 = time.time()
