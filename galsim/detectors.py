@@ -144,8 +144,9 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
         import warnings
         warnings.warn("One or more pixel values are negative and will be set as 'nan'.")
 
-    p = self.array
-    self.array[:,:] = p*(((p/exp_time)/base_flux)**(alpha/numpy.log(10)))
+    p0 = exp_time*base_flux
+    a = alpha/numpy.log(10)
+    self.applyNonlinearity(lambda x,x0,a: (x**(a+1))/(x0**a), p0, a)
 
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
