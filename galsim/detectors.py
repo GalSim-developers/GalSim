@@ -83,8 +83,8 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
     Accounts for the reciprocity failure and corrects the original Image for it directly.
 
     Reciprocity, in the context of photography, is the inverse relationship between the incident
-    flux (I) of a source object and the exposure time (T) required to produce a given response (E)
-    in the detector, i.e., E = I*T. At very low (also at high) levels of incident flux, deviation
+    flux (I) of a source object and the exposure time (t) required to produce a given response (p)
+    in the detector, i.e., p = I*t. At very low (also at high) levels of incident flux, deviation
     from this relation is observed, leading to reduced sensitivity at low flux levels. The pixel
     response to a high flux is larger than its response to a low flux. This flux-dependent non-
     linearity is known as 'Reciprocity Failure' and is known to happen in photographic films since
@@ -96,7 +96,7 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
     and hence we lack a good theoretical model. Many models that fit the empirical data exist and
     a common relation is
 
-            pR/p = (1 + alpha*log10(p/T) - alpha*log10(p'/T'))
+            pR/p = (1 + alpha*log10(p/t) - alpha*log10(p'/t'))
 
     where T is the exposure time (in units of seconds), p is the pixel response (in units of
     electrons) and pR is the response if the reciprocity relation were to hold. p'/T' is count
@@ -109,9 +109,9 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
     approximating (pR/p)-1 ~ log(pR/p). This gives a relation that is better behaved than the
     logarithmic relation at low flux levels.
 
-            pR/p = ((p/T)/(p'/T'))^(alpha/log(10)).
+            pR/p = ((p/t)/(p'/t'))^(alpha/log(10)).
 
-    Because of how this function is defined, the input image must have strictly positive pixel
+    Because of how this function is defined, the input image must have non-negative pixel
     values for the resulting image to be well-defined. Negative pixel values result in 'nan's.
     The image should be in units of electrons, or if it is in ADU, then the value passed to
     exp_time should be the exposure time divided by the nominal gain. The image should include
@@ -123,11 +123,11 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
 
         >>>  img.addReciprocityFailure(exp_time, alpha, base_flux)
 
-    @param exp_time         The exposure time in seconds, which goes into the expression for
+    @param exp_time         The exposure time (t) in seconds, which goes into the expression for
                             reciprocity failure given in the docstring.
     @param alpha            The alpha parameter in the expression for reciprocity failure, in
                             units of 'per decade'.
-    @param base_flux        The flux (p'/T') at which the gain is calibrated to have its nominal
+    @param base_flux        The flux (p'/t') at which the gain is calibrated to have its nominal
                             value.
     
     @returns None
