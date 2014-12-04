@@ -28,11 +28,13 @@ def applyNonlinearity(self, NLfunc, *args):
     """
     Applies the given non-linearity function (`NLfunc`) on the Image instance directly.
 
-    Voltage non-linearity, also sometimes known as 'classical non-linearity', refers to the non
-    -linearity in charge-to-voltage conversion process. This arises as charge gets integrated at
-    the junction capacitance of the pixel node. Voltage non-linearity decreases signals at higher
-    signal levels, causing the attenuation of brighter pixels. The image should include both the
-    signal from the astronomical objects as well as the background level.  Other detectors effects
+    This routine can transform the image in a non-linear manner specified by the user. However,
+    the typical kind of non-linearity one sees in astronomical images is voltage non-linearity,
+    also sometimes known as 'classical non-linearity', refers to the non-linearity in
+    charge-to-voltage conversion process. This arises as charge gets integrated at the junction
+    capacitance of the pixel node. Voltage non-linearity decreases signals at higher signal
+    levels, causing the attenuation of brighter pixels. The image should include both the
+    signal from the astronomical objects as well as the background level. Other detectors effects
     such as dark current and persistence (not currently included in GalSim) would also occur
     before the inclusion of nonlinearity.
 
@@ -42,7 +44,9 @@ def applyNonlinearity(self, NLfunc, *args):
     `NLfunc` should be able to take a 2d NumPy array as input, and return a NumPy array of the same
     shape.  It should be defined such that it outputs the final image with nonlinearity included
     (i.e., in the limit that there is no nonlinearity, the function should return the original
-    image, NOT zero). The image should be in units of electrons.
+    image, NOT zero). The image should be in units of electrons when this routine is being used
+    to generate classical non-linearity. When used for other purposes, the units can be in
+    electrons or in ADU, as found appropriate by the user.
 
     Calling with no parameter:
     -------------------------
