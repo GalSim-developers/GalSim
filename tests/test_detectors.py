@@ -172,7 +172,6 @@ def test_nonlinearity_basic():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
 def test_recipfail_basic():
     """Check for overall sensible behavior of the reciprocity failure routine."""
     import time
@@ -268,7 +267,89 @@ def test_recipfail_basic():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2-t1)
 
+def test_IPC_basic():
+    import time
+    t1 = time.time()
+
+    # Make an image with non-trivially interesting scale and bounds.
+    g = galsim.Gaussian(sigma=3.7)
+    im = g.draw(scale=0.25)
+    im.shift(dx=-5, dy=3)
+    im_save = im.copy()
+
+    # Check for no IPC
+    ipc_kernel = np.zeros((3,3))
+    ipc_kernel[1,1] = 1.0
+    im_new = im.copy()
+
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend')
+    np.testing.assert_array_equal(
+        im_new.array, im.array,
+        err_msg="Image is altered for no IPC with edge_treatment = 'extend'" )
+
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap')
+    np.testing.assert_array_equal(
+        im_new.array, im.array,
+        err_msg="Image is altered for no IPC with edge_treatment = 'wrap'" )
+
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop')
+    #Input arrays and output arrays will differ at the edges for this option. 
+    np.testing.assert_array_equal(
+        im_new.array[1:-1,1:-1], im.array[1:-1,1:-1],
+        err_msg="Image is altered for no IPC with edge_treatment = 'crop'" )
+
+    # Testing for flux conservation
+    ipc_kernel = abs(np.random.randn(3,3)) # a random kernel
+    im_new = im.copy()
+    # Set edges to zero since flux is not conserved at the edges otherwise
+    im_new.array[0,:] = 0.0
+    im_new.array[-1,:] = 0.0
+    im_new.array[:,0] = 0.0
+    im_new.array[:,-1] = 0.0
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=True)
+    if abs(im_new.array.sum()-im.array[1:-1,1:-1].sum()) < 10**(-(int(DECIMAL))):
+        raise ValueError("Normalized kernel does not conserve the total flux for 'extend' option.")
+
+    im_new = im.copy()
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap', kernel_normalization=True)
+    if abs(im_new.array.sum()-im.array.sum()) < 10**(-int(DECIMAL)):
+        raise ValueError("Normalized kernel does not conserve the total flux for 'wrap' option.")
+    try:
+        from scipy import signal
+        print "SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`"
+
+        # Generate an arbitrary kernel
+        ipc_kernel = abs(np.random.randn(3,3))
+        
+        im_new = im.copy()
+        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=False)
+        np.testing.assert_array_almost_equal(
+            im_new.array, signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel)),
+                                            mode='same', boundary='fill'), int(DECIMAL/2),
+            err_msg="Image differs from SciPy's result using `mode='same'` and `boundary='fill`.")
+
+        im_new = im.copy()
+        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop', kernel_normalization=False)
+        np.testing.assert_array_almost_equal(
+            im_new.array[1:-1,1:-1], signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel)),
+                                            mode='valid', boundary = 'fill'), int(DECIMAL/2),
+            err_msg="Image differs from SciPy's result using `mode=valid'` and `boundary='fill'`.")
+
+        im_new = im.copy()
+        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap', kernel_normalization=False)
+        np.testing.assert_array_almost_equal(
+            im_new.array, signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel)),
+                                            mode='same', boundary='wrap'), int(DECIMAL/2),
+            err_msg="Image differs from SciPy's result using `mode=same'` and `boundary='wrap'`.")
+
+    except ImportError:
+        # Skip without any warning if SciPy is not installed
+        pass
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_nonlinearity_basic()
     test_recipfail_basic()
+    test_IPC_basic()
