@@ -148,6 +148,7 @@ from nfw_halo import NFWHalo, Cosmology
 # Detector effects
 from detectors import applyNonlinearity
 from detectors import addReciprocityFailure
+from detectors import applyIPC
 
 # Packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)
 from . import fits
