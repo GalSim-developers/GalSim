@@ -157,7 +157,7 @@ def test_nonlinearity_basic():
         assert im2.bounds == im.bounds
 
         #Let the user know that this test happened
-        print "SciPy was found installed. Using SciPy modules in the unit test for",
+        print "SciPy was found installed. Using SciPy modules in the unit test for",\
         "'applyNonlinearity'"
         # Note, don't be quite as stringent as in previous test; there can be small interpolation
         # errors.
