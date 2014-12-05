@@ -164,7 +164,7 @@ def test_nonlinearity_basic():
         np.testing.assert_array_almost_equal(
             im1.array, im2.array, int(0.5*DECIMAL),
             err_msg="Image differs when using SciPy's interpolation vs. lambda function")
-    except:
+    except ImportError:
         pass
         # GalSim doesn't have SciPy dependence. So if SciPy is not installed, then this test is
         # skipped. The user is not alerted.
