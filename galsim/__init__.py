@@ -145,6 +145,10 @@ from fitswcs import AstropyWCS, PyAstWCS, WcsToolsWCS, GSFitsWCS, FitsWCS, TanWC
 from lensing_ps import PowerSpectrum
 from nfw_halo import NFWHalo, Cosmology
 
+# Detector effects
+from detectors import applyNonlinearity
+from detectors import addReciprocityFailure
+
 # Packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)
 from . import fits
 from . import config
@@ -155,3 +159,4 @@ from . import hsm
 from . import deprecated
 from . import dcr
 from . import meta_data
+from . import cdmodel

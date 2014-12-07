@@ -309,7 +309,12 @@ def test_opticalpsf():
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } 
-                 }
+                 },
+        'gal5' : { 'type': 'OpticalPSF' , 'lam_over_diam' : 0.12, 'flux' : 1.8,
+                   'defocus' : 0.1, 'obscuration' : 0.18,
+                   'pupil_plane_im' : \
+                       os.path.join(".","Optics_comparison_images","sample_pupil_rolled.fits"),
+                   'pupil_angle' : 27.*galsim.degrees }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -342,6 +347,13 @@ def test_opticalpsf():
     gal4b.applyShear(g1 = 0.03, g2 = -0.05)
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
+
+    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    gal5b = galsim.OpticalPSF(
+        lam_over_diam=0.12, flux=1.8, defocus=0.1, obscuration=0.18,
+        pupil_plane_im=os.path.join(".","Optics_comparison_images","sample_pupil_rolled.fits"),
+        pupil_angle=27.*galsim.degrees)
+    gsobject_compare(gal5a, gal5b)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

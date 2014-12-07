@@ -13,12 +13,18 @@ New Features
 - Added magnitudes as a method to set the flux of SED objects. (#547)
 - Added SED.calculateDCRMomentShifts and SED.calculateChromaticSeeingRatio convenience functions
   for estimating chromatic PSF moment shifts. (#547)
+- Added new methods of the image class to simulate two detector effects: nonlinearity and
+  reciprocity failure. (#552)
 - Renamed the GSParams parameter `alias_threshold` to `folding_threshold`, a clearer term for the
   profile image folding in real space that this GSParam controls. (#562)
 - Modified the internals of noise generation by correlated noise models to use Hermitian symmetry,
   for greater efficiency. (#563)
 - Extended to the `rotate`, `shear`, and `transform` methods of ChromaticObject the ability
   to take functions of wavelength for the arguments. (#581)
+- Added a module to describe charge deflection in CCD pixels (also known as the "brighter-fatter"
+  effect) following the model of Antilogus et al (2014). (#524)
+- Make it possible for OpticalPSF to model non-trivially complicated obscuration and/or struts
+  by allowing it to take an optional image of the pupil plane. (#601)
 
 Bug Fixes and Improvements
 --------------------------
