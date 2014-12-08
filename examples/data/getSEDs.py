@@ -43,9 +43,9 @@ for sedname in sednames:
     file_ = t.extractfile(sedname)
     base = os.path.basename(sedname)
     x,f = np.loadtxt(file_, unpack=True)
-    w = x<25000 # Angstroms
-    x=x[w]
-    f=f[w]
+    w = x<22000 # Angstroms
+    x = x[w]
+    f = f[w]
     x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5)
     x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4)
     x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3)
