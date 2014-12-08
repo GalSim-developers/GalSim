@@ -1436,7 +1436,7 @@ def test_radecfunction():
                     A = coord.angleBetween(center, north_pole)
                     B = center.angleBetween(north_pole, coord)
                     C = north_pole.angleBetween(coord, center)
-                    # The angle C should equal coord.ra - cneter.ra, so use this as a unit test of
+                    # The angle C should equal coord.ra - center.ra, so use this as a unit test of
                     # the angleBetween function:
                     np.testing.assert_almost_equal(
                             C / galsim.degrees, (coord.ra - center.ra) / galsim.degrees, digits,
