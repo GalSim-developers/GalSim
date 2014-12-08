@@ -18,11 +18,11 @@ def main(argv):
     # initialize (pseudo-)random number generator
     random_seed = 1234567
     rng = galsim.BaseDeviate(random_seed)
+    poisson_noise = galsim.PoissonNoise(rng) 
 
     # read in the WFIRST filters
     filters = wfirst.getBandpasses(AB_zeropoint=True);
     logger.debug('Read in filters')
-    print 
 
     # TEMPORARY - filter has redder red limit
     for filter in filters:
@@ -81,8 +81,7 @@ def main(argv):
     exptime = wfirst.exptime # 168.1 seconds
 
     # draw profile through WFIRST filters
-    for filter_name, filter_ in filters.iteritems():
-        
+    for filter_name, filter_ in filters.iteritems():        
         # Obtaining parameters for Airy PSF
         # TEMPORARY - WFIRST PSF is on it's way
         effective_wavelength = (1e-9)*filters[filter_name].effective_wavelength # now in cm
@@ -96,15 +95,14 @@ def main(argv):
     	img = galsim.ImageF(512*2,512*2,scale=pixel_scale) # 64, 64
     	bdconv.drawImage(filter_,image=img)
 
-
         #Adding sky level to the images. 
         sky_level_pix = wfirst.getSkyLevel(filters[filter_name],exp_time=wfirst.exptime)
         img.array[:,:] += sky_level_pix
         print "sky_level_pix = ", sky_level_pix
 
-        #Adding Poisson Noise
-        poisson_noise = galsim.PoissonNoise(rng)        
-    	#img.addNoise(poisson_noise)
+        #Adding Poisson Noise       
+    	img.addNoise(poisson_noise)
+
         logger.debug('Created {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_{0}.fits'.format(filter_name))
         galsim.fits.write(img,out_filename)
@@ -113,31 +111,30 @@ def main(argv):
         #print "After adding noise", img.array.min(), img.array.max()
 
         # Accounting Reciprocity Failure
-        #  Reciprocity failure is identified as a change in the rate of charge accumulation with photon flux, resulting in loss of sensitivity at low signal levels. This is a non-ideal feature of the detector that is dependent on the charge present at the pixel and the duration of exposure.
+        # Reciprocity failure is identified as a change in the rate of charge accumulation with photon flux, resulting in loss of sensitivity at low signal levels. This is a non-ideal feature of the detector that is dependent on the charge present at the pixel and the duration of exposure.
 
-        #img.addReciprocityFailure(exp_time=exptime,alpha=wfirst.reciprocity_alpha)
+        img.addReciprocityFailure(exp_time=exptime,alpha=wfirst.reciprocity_alpha)
+        logger.debug('Accounted for Reciprocity Failure in {0}-band image'.format(filter_name))
+        out_filename = os.path.join(outpath, 'demo13_RecipFail_{0}.fits'.format(filter_name))
+        galsim.fits.write(img,out_filename)
+        logger.debug('Wrote {0}-band image  after accounting for Recip. Failure to disk'.format(filter_name))
 
     	# Applying a quadratic non-linearity
         # In order to convert the units from electrons to ADU, we must multiply the image by a gain factor. The gain has a weak dependency on the charge present in each pixel. This dependency is accounted for by changing the pixel values (in electrons) and applying a constant gain later
 
     	NLfunc = wfirst.NLfunc
-    	#img.applyNonlinearity(NLfunc,beta)
+    	img.applyNonlinearity(NLfunc)
     	logger.debug('Applied Nonlinearity to {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_NL_{0}.fits'.format(filter_name))
         galsim.fits.write(img,out_filename)
         logger.debug('Wrote {0}-band image with Nonlinearity to disk'.format(filter_name))
-
-    	logger.debug('Accounted for Reciprocity Failure in {0}-band image'.format(filter_name))
-        out_filename = os.path.join(outpath, 'demo13_RecipFail_{0}.fits'.format(filter_name))
-        galsim.fits.write(img,out_filename)
-        logger.debug('Wrote {0}-band image  after accounting for Recip. Failure to disk'.format(filter_name))
 
         # Adding Interpixel Capacitance
 
         # Adding Read Noise
     	read_noise = galsim.CCDNoise(rng)
         read_noise.setReadNoise(wfirst.read_noise)
-        #img.addNoise(read_noise)
+        img.addNoise(read_noise)
         logger.debug('Added Readnoise for {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_ReadNoise_{0}.fits'.format(filter_name))
         galsim.fits.write(img,out_filename)
