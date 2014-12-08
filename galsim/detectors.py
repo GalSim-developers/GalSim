@@ -17,8 +17,7 @@
 """@file detectors.py
 
 Module with routines to simulate CCD and NIR detector effects like nonlinearity, reciprocity
-failure, interpixel capacitance, etc.
-"""
+failure, interpixel capacitance, etc. """
 
 import galsim
 import numpy
@@ -148,5 +147,123 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
     a = alpha/numpy.log(10)
     self.applyNonlinearity(lambda x,x0,a: (x**(a+1))/(x0**a), p0, a)
 
+def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_nonnegativity=True,
+    kernel_normalization=True):
+    """
+    Applies the effect of interpixel capacitance to the Image instance.
+
+    In NIR detectors, the quantity that is sensed is not the charge as in CCDs, but a voltage that
+    relates to the charge present within each pixel. The voltage read at a given pixel location is
+    influenced by the charges present in the neighboring pixel locations due to capacitive
+    coupling of sense nodes.
+
+    This interpixel capacitance is approximated as a linear effect that can be described by a 3x3
+    kernel that is convolved with the image. The kernel could be intrinsically anisotropic. A
+    sensible kernel must have non-negative entries and must be normalized such that the sum of the
+    elements is 1, in order to conserve the total charge.
+
+    The argument 'edge_treatment' specifies how the edges of the image should be treated, which
+    could be in one of the three ways:
+    
+    1. 'extend': The kernel is convolved with the zero-padded image, leading to a larger
+        intermediate image. The central portion of this image is returned.  [default]
+    2. 'crop': The kernel is convolved with the image, with the kernel inside the image completely.
+        Pixels at the edges, where the center of the kernel could not be placed, are set to the
+        value specified by 'fill_value'. If 'fill_value' is not specified or set to 'None', then
+        the pixel values in the original image are retained. The user can make the edges invalid
+        by setting fill_value to numpy.nan.
+    3. 'wrap': The kernel is convolved with the image, assuming periodic boundary conditions.
+
+    The size of the image array remains unchanged in all three cases.
+
+    Calling
+    -------
+
+        >>> img.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend',
+            kernel_nonnegativity=True, kernel_normalization=True)
+
+    @param IPC_kernel              A 3x3 NumPy array that is convolved with the Image instance
+    @param edge_treatment          Specifies the method of handling edges and should be one of
+                                   'crop', 'extend' or 'wrap'. See above for details.
+                                   [default: 'extend']
+    @param fill_value              Specifies the value (including nan) to fill the edges with when
+                                   edge_treatment is 'crop'. If unspecified or set to 'None', the
+                                   original pixel values are retained at the edges. If
+                                   edge_treatment is not 'crop', then this is ignored.
+    @param kernel_nonnegativity    Specify whether the kernel should have only non-negative
+                                   entries.  [default: True]
+    @param kernel_normalization    Specify whether to check and enforce correct normalization for
+                                   the kernel.  [default: True]
+
+    @returns None
+    """
+
+    # IPC kernel has to be a 3x3 numpy array
+    if not isinstance(IPC_kernel,numpy.ndarray):
+        raise ValueError("IPC_kernel must be a NumPy array.")
+    if not IPC_kernel.shape==(3,3):
+        raise ValueError("IPC kernel must be a NumPy array of size 3x3.")
+
+    # Check for non-negativity of the kernel
+    if kernel_nonnegativity is True:
+        if (IPC_kernel<0).any() is True:
+            raise ValueError("IPC kernel must not contain negative entries")
+
+    # Check and enforce correct normalization for the kernel
+    if kernel_normalization is True:
+        if IPC_kernel.sum() != 1.0:
+            import warnings
+            warnings.warn("The entries in the kernel did not sum to 1. Scaling the kernel to "
+                "ensure correct normalization.")
+            IPC_kernel = IPC_kernel/IPC_kernel.sum() 
+
+    # edge_treatment can be 'extend', 'wrap' or 'crop'
+    if edge_treatment is 'crop':
+        # Simply re-label the array of the Image instance
+        pad_array = self.array
+    elif edge_treatment is 'extend':
+        # Copy the array of the Image instance and pad with zeros
+        pad_array = numpy.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
+        pad_array[1:-1,1:-1] = self.array
+    elif edge_treatment is 'wrap':
+        # Copy the array of the Image instance and pad with zeros initially
+        pad_array = numpy.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
+        pad_array[1:-1,1:-1] = self.array
+        # and wrap around the edges
+        pad_array[0,:] = pad_array[-2,:]
+        pad_array[-1,:] = pad_array[1,:]
+        pad_array[:,0] = pad_array[:,-2]
+        pad_array[:,-1] = pad_array[:,1]
+    else:
+        raise ValueError("edge_treatment has to be one of 'extend', 'wrap' or 'crop'. ")
+
+    #Generating different segments of the padded array
+    center = pad_array[1:-1,1:-1]
+    top = pad_array[:-2,1:-1]
+    bottom = pad_array[2:,1:-1]
+    left = pad_array[1:-1,:-2]
+    right = pad_array[1:-1,2:]
+    topleft = pad_array[:-2,:-2]
+    bottomright = pad_array[2:,2:]
+    topright = pad_array[:-2,2:]
+    bottomleft = pad_array[2:,:-2]
+
+    #Generating the output array, with 2 rows and 2 columns lesser than the padded array
+    out_array = IPC_kernel[0,0]*topleft + IPC_kernel[0,1]*top + IPC_kernel[0,2]*topright + \
+        IPC_kernel[1,0]*left + IPC_kernel[1,1]*center + IPC_kernel[1,2]*right + \
+        IPC_kernel[2,0]*bottomleft + IPC_kernel[2,1]*bottom + IPC_kernel[2,2]*bottomright
+
+    if edge_treatment is 'crop':
+        self.array[1:-1,1:-1] = out_array
+        #Explicit edge effects handling with filling the edges with the value given in fill_value
+        if fill_value is not None:
+            self.array[0,:] = fill_value
+            self.array[-1,:] = fill_value
+            self.array[:,0] = fill_value
+            self.array[:,-1] = fill_value
+    else:
+        self.array[:,:] = out_array
+
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
+galsim.Image.applyIPC = applyIPC
