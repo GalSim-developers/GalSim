@@ -63,7 +63,10 @@ def main(argv):
     # initialize (pseudo-)random number generator
     random_seed = 1234567
     rng = galsim.BaseDeviate(random_seed)
+
+    # Generate a Poisson noise model
     poisson_noise = galsim.PoissonNoise(rng) 
+    logger.info('Poisson Noise model created')
 
     # read in the WFIRST filters
     filters = wfirst.getBandpasses(AB_zeropoint=True);
@@ -165,9 +168,9 @@ def main(argv):
         logger.debug('Wrote {0}-band image  after accounting for Recip. Failure to disk'.format(filter_name))
 
     	# Applying a quadratic non-linearity
-        # In order to convert the units from electrons to ADU, we must multiply the image by a gain factor. The gain has a weak dependency on the charge present in each pixel. This dependency is accounted for by changing the pixel values (in electrons) and applying a constant gain later
+        # In order to convert the units from electrons to ADU, we must multiply the image by a gain factor. The gain has a weak dependency on the charge present in each pixel. This dependency is accounted for by changing the pixel values (in electrons) and applying a constant nominal gain later, which is unity in our demo.
 
-    	NLfunc = wfirst.NLfunc
+    	NLfunc = wfirst.NLfunc # a quadratic non-linearity
     	img.applyNonlinearity(NLfunc)
     	logger.debug('Applied Nonlinearity to {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_NL_{0}.fits'.format(filter_name))
