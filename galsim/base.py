@@ -742,56 +742,48 @@ class GSObject(object):
 
     # Make sure the image is defined with the right size and wcs for drawImage()
     def _setup_image(self, image, nx, ny, bounds, wmult, add_to_image, dtype):
-        # Always attempt to respect bounds and nx, ny
-        if bounds is not None:
-            if add_to_image:
-                raise ValueError("Cannot add_to_image if bounds is not None")
+        # Check validity of nx,ny,bounds:
+        if image is not None:
+            if bounds is not None:
+                raise ValueError("Cannot provide bounds if image is provided")
             if nx is not None or ny is not None:
-                raise ValueError("Cannot set both bounds and (nx, ny)")
-            if image is None:
-                image = galsim.Image(bounds, dtype=dtype)
-            else:
-                image.resize(bounds)
-                image.setZero()
-        elif nx is not None or ny is not None:
+                raise ValueError("Cannot provide nx,ny if image is provided")
+            if dtype is not None:
+                raise ValueError("Cannot specify dtype if image is provided")
+
+        # Make image if necessary
+        if image is None:
+            # Can't add to image if none is provided.
             if add_to_image:
-                raise ValueError("Cannot add_to_image if nx is not None or ny is not None")
-            if nx is None or ny is None:
-                raise ValueError("Must set either both or neither of nx, ny")
-            if image is None:
+                raise ValueError("Cannot add_to_image if image is None")
+            # Use bounds or nx,ny if provided
+            if bounds is not None:
+                if nx is not None or ny is not None:
+                    raise ValueError("Cannot set both bounds and (nx, ny)")
+                image = galsim.Image(bounds=bounds, dtype=dtype)
+            elif nx is not None or ny is not None:
+                if nx is None or ny is None:
+                    raise ValueError("Must set either both or neither of nx, ny")
                 image = galsim.Image(nx, ny, dtype=dtype)
             else:
-                bounds = galsim.BoundsI(1,nx,1,ny)
-                image.resize(bounds)
-                image.setZero()
-        else:
-            # Make image if necessary
-            if image is None:
-                # Can't add to image if none is provided.
-                if add_to_image:
-                    raise ValueError("Cannot add_to_image if image is None")
                 N = self.SBProfile.getGoodImageSize(1.0, wmult)
                 image = galsim.Image(N, N, dtype=dtype)
 
-            # Resize the given image if necessary
-            elif not image.bounds.isDefined():
-                # Can't add to image if need to resize
-                if add_to_image:
-                    raise ValueError("Cannot add_to_image if image bounds are not defined")
-                if dtype is not None:
-                    raise ValueError("Cannot specify dtype if image is provided")
-                N = self.SBProfile.getGoodImageSize(1.0, wmult)
-                bounds = galsim.BoundsI(1,N,1,N)
-                image.resize(bounds)
-                image.setZero()
+        # Resize the given image if necessary
+        elif not image.bounds.isDefined():
+            # Can't add to image if need to resize
+            if add_to_image:
+                raise ValueError("Cannot add_to_image if image bounds are not defined")
+            N = self.SBProfile.getGoodImageSize(1.0, wmult)
+            bounds = galsim.BoundsI(1,N,1,N)
+            image.resize(bounds)
+            image.setZero()
 
-            # Else use the given image as is
-            else:
-                # Clear the image if we are not adding to it.
-                if dtype is not None:
-                    raise ValueError("Cannot specify dtype if image is provided")
-                if not add_to_image:
-                    image.setZero()
+        # Else use the given image as is
+        else:
+            # Clear the image if we are not adding to it.
+            if not add_to_image:
+                image.setZero()
 
         return image
 
