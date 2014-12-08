@@ -1,3 +1,48 @@
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+"""
+Demo #13
+
+The thirteenth script in our tutorial about using Galsim in python scripts: examples/demo*.py.
+(This file is designed to be viewed in a window 100 characters wide.)
+
+This script currently doesn't have an equivalent demo*.yaml or demo*.json file.
+
+This script introduces the non-idealities arising from the (NIR) detectors, in particular those that will be observed and accounted for in the WFIRST surveys. Five such non-ideal effects are demonstrated, in the order in which they are introduced in the detectors:
+
+1) Reciprocity Failure
+2) Dark current
+3) Non-linearity
+4) Interpixel Capacitance
+5) Read noise
+
+After each effect, suggested parameters for viewing the intermediate and difference images in ds9 are also included.
+
+New feautres introduced in this demo:
+- Adding sky level and introducing Poisson Noise
+- Dark Current
+- image.addReciprocityFailure(exp_time, alpha, base_flux)
+- image.applyNonlinearity(NLfunc,*args)
+- IPC
+- readnoise = galsim.CCDNoise(rng)
+- readnoise.setReadNoise(readnoise_level)
+"""
+
 import numpy
 import sys, os
 import math
