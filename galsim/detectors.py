@@ -152,7 +152,7 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     """
     Applies the effect of interpixel capacitance to the Image instance.
 
-    In NIR detectors, the quantity that is sensed in not the charge as in CCDs, but a voltage that
+    In NIR detectors, the quantity that is sensed is not the charge as in CCDs, but a voltage that
     relates to the charge present within each pixel. The voltage read at a given pixel location is
     influenced by the charges present in the neighboring pixel locations due to capacitive
     coupling of sense nodes.
