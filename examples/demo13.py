@@ -92,7 +92,7 @@ def main(argv):
         #Convolve with PSF
         bdconv = galsim.Convolve([bdgal, PSF])
 
-    	img = galsim.ImageF(512*2,512*2,scale=pixel_scale) # 64, 64
+    	img = galsim.ImageF(512,512,scale=pixel_scale) # 64, 64
     	bdconv.drawImage(filter_,image=img)
 
         #Adding sky level to the images. 
