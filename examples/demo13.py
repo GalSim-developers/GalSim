@@ -188,6 +188,10 @@ def main(argv):
         logger.debug('Wrote {0}-band image with Nonlinearity to disk'.format(filter_name))
 
         # Adding Interpixel Capacitance
+        # The voltage read at a given pixel location is influenced by the charges present in the neighboring pixel locations due to capacitive coupling of sense nodes. This interpixel capacitance effect is modelled as a linear effect that is described as a convolution of a 3x3 kernel with the image. The WFIRST kernel is not normalized to have the entries add to unity and hence must be normalized inside the routine. 
+        img.applyIPC(IPC_kernel=wfirst.ipc_kernel,edge_treatment='extend', \
+                     kernel_normalization=True)
+        # Here, we use `edge_treatment='extend'`, which pads the image with zeros before applying the kernel. The central part of the image is retained.
 
         # Adding Read Noise
     	read_noise = galsim.CCDNoise(rng)
