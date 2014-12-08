@@ -190,8 +190,8 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
                                    edge_treatment is 'crop'. If unspecified or set to 'None', the
                                    original pixel values are retained at the edges. If
                                    edge_treatment is not 'crop', then this is ignored.
-    @param kernel_nonnegativity    Specify whether the kernel should have only non-negative entries
-                                   . [default: True]
+    @param kernel_nonnegativity    Specify whether the kernel should have only non-negative
+                                   entries.  [default: True]
     @param kernel_normalization    Specify whether to check and enforce correct normalization for
                                    the kernel.  [default: True]
 
