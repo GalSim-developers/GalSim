@@ -18,6 +18,7 @@
 
 import os
 import galsim
+import numpy
 
 """
 The galsim.wfirst module, containing information GalSim needs to simulate images for the WFIRST-AFTA
@@ -109,7 +110,7 @@ TODO:
  - unit tests for new stuff
  - WCS stuff - add the data from Jeff and port his WCS-builder to python
  - PSF stuff - include data from WCS optics team.
- - numbers related to IPC, persistence
+ - numbers related to persistence
 """
 
 gain = 1.0
@@ -138,3 +139,8 @@ from wfirst_backgrounds import *
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)
+
+# IPC kernel is unnormalized
+ipc_kernel = numpy.array([ [0.001269938, 0.015399776, 0.001199862], \
+                           [0.013800177, 1.0, 0.015600367], \
+                           [0.001270391, 0.016129619, 0.001200137] ])
