@@ -282,17 +282,20 @@ def test_draw():
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj2.draw(nx=200, ny=100) produced image with wrong flux")
 
-    # Test if we provide nx, ny, and no scale.  It should:
-    #   - raise a ValueError
-    im10 = galsim.ImageF()
-    kwargs = {'nx':200, 'ny':100}
-    np.testing.assert_raises(ValueError, obj2.draw, kwargs)
+    try:
+        # Test if we provide nx, ny, and no scale.  It should:
+        #   - raise a ValueError
+        im10 = galsim.ImageF()
+        kwargs = {'nx':200, 'ny':100}
+        np.testing.assert_raises(ValueError, obj2.draw, kwargs)
 
-    # Test if we provide nx, ny, scale, and an existing image.  It should:
-    #   - raise a ValueError
-    im10 = galsim.ImageF()
-    kwargs = {'nx':200, 'ny':100, 'scale':dx_nyq, 'image':im10}
-    np.testing.assert_raises(ValueError, obj2.draw, kwargs)
+        # Test if we provide nx, ny, scale, and an existing image.  It should:
+        #   - raise a ValueError
+        im10 = galsim.ImageF()
+        kwargs = {'nx':200, 'ny':100, 'scale':dx_nyq, 'image':im10}
+        np.testing.assert_raises(ValueError, obj2.draw, kwargs)
+    except ImportError:
+        print 'The assert_raises tests require nose'
 
     # Test if we provide bounds and scale.  It should:
     #   - create a new image with the right size
@@ -308,17 +311,20 @@ def test_draw():
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4, (
         "obj2.draw(bounds=galsim.Bounds(1,200,1,100)) produced image with wrong flux"))
 
-    # Test if we provide bounds and no scale.  It should:
-    #   - raise a ValueError
-    bounds = galsim.BoundsI(1,200,1,100)
-    kwargs = {'bounds':bounds}
-    np.testing.assert_raises(ValueError, obj2.draw, kwargs)
+    try:
+        # Test if we provide bounds and no scale.  It should:
+        #   - raise a ValueError
+        bounds = galsim.BoundsI(1,200,1,100)
+        kwargs = {'bounds':bounds}
+        np.testing.assert_raises(ValueError, obj2.draw, kwargs)
 
-    # Test if we provide bounds, scale, and an existing image.  It should:
-    #   - raise a ValueError
-    bounds = galsim.BoundsI(1,200,1,100)
-    kwargs = {'bounds':bounds, 'scale':dx_nyq, 'image':im10}
-    np.testing.assert_raises(ValueError, obj2.draw, kwargs)
+        # Test if we provide bounds, scale, and an existing image.  It should:
+        #   - raise a ValueError
+        bounds = galsim.BoundsI(1,200,1,100)
+        kwargs = {'bounds':bounds, 'scale':dx_nyq, 'image':im10}
+        np.testing.assert_raises(ValueError, obj2.draw, kwargs)
+    except ImportError:
+        print 'The assert_raises tests require nose'
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
