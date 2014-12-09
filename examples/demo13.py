@@ -27,10 +27,11 @@ This script introduces the non-idealities arising from the (NIR) detectors, in p
 that will be observed and accounted for in the WFIRST surveys. Four such non-ideal effects are
 demonstrated, in the order in which they are introduced in the detectors:
 
-1) Reciprocity Failure
-2) Dark current
-3) Non-linearity
-4) Interpixel Capacitance
+1) Reciprocity Failure: Flux dependent sensitivity of the detector
+2) Dark current: Constant response to zero flux, due to thermal generation of electron-hole pairs.
+3) Non-linearity: Charge dependent gain in converting from units of electrons to ADU.
+4) Interpixel Capacitance: Influence of charge in a pixel on the voltage reading of neighboring
+   ones.
 
 The purpose of the demo is two-fold: to show the effects of detector non-idealities in the full
 context of the entire image generation process., including all sources of noise and skylevel added
