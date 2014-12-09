@@ -2116,6 +2116,64 @@ class DeVaucouleurs(GSObject):
         return self.SBProfile.getScaleRadius()
 
 
+class Spergel(GSObject):
+    """A class describing a Spergel profile.
+
+    The Spergel surface brightness profile is characterized by three properties: its Spergel index
+    `nu`, its `flux`, and the `scale_radius`.  Given these properties, the surface brightness 
+    profile scales as I(r) ~ r^{nu} * K_{nu}(r), where K_{nu} is the modified Bessel function of 
+    the second kind.
+
+    For more information, refer to
+
+        D. N. Spergel, "ANALYTICAL GALAXY PROFILES FOR PHOTOMETRIC AND LENSING ANALYSIS,"
+        ASTROPHYS J SUPPL S 191(1), 58-65 (2010) [doi:10.1088/0067-0049/191/1/58].
+
+    Initialization
+    --------------
+
+    The allowed range of values for the `nu` parameter is -0.90 <= n <= 0.85.  An exception will be
+    thrown if you provide a value outside that range.
+
+    @param nu               The Spergel index, nu.
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    In addition to the usual GSObject methods, Spergel has the following access methods:
+
+        >>> nu = spergel_obj.getNu()
+        >>> r0 = spergel_obj.getScaleRadius()
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "nu" : float }
+    _opt_params = { "flux" : float}
+    _single_params = [ { "scale_radius" : float } ]
+    _takes_rng = False
+    _takes_logger = False
+
+    # --- Public Class methods ---
+    def __init__(self, nu, scale_radius=1., flux=1., gsparams=None):
+        GSObject.__init__(
+            self, galsim._galsim.SBSpergel(nu, scale_radius=scale_radius, flux=flux,
+                                          gsparams=gsparams))
+
+    def getNu(self):
+        """Return the Spergel index `nu` for this profile.
+        """
+        return self.SBProfile.getNu()
+
+    def getScaleRadius(self):
+        """Return the scale radius for this Sersic profile.
+        """
+        return self.SBProfile.getScaleRadius()
+
+
 # GSParams is defined in C++ and wrapped.  But we want to modify it here slightly to add
 # the obsolete name alias_threshold as a valid synonym for folding_threshold
 GSParams.alias_threshold = property(lambda self: self.folding_threshold,
