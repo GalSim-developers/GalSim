@@ -1125,7 +1125,7 @@ class GSObject(object):
         if wmult <= 0:
             raise ValueError("Invalid wmult <= 0.")
 
-        if method not in ['auto', 'fft', 'real_space', 'phot', 'no_pixel', 'sb' ]:
+        if method not in ['auto', 'fft', 'real_space', 'phot', 'no_pixel', 'sb']:
             raise ValueError("Invalid method name = %s"%method)
 
         # Some checks that are only relevant for method == 'phot'
@@ -1181,6 +1181,11 @@ class GSObject(object):
                     "convolution yourself, you can use method=no_pixel.  Or if you really meant "
                     "for your profile to include the Pixel and also have GalSim convolve by"
                     "an _additional_ Pixel, you can suppress this warning by using method=fft.")
+
+        # Check for scale if using nx, ny, or bounds
+        if (scale is None and wcs is None and
+            (nx is not None or ny is not None or bounds is not None)):
+            raise ValueError("Must provide scale if providing nx,ny or bounds")
 
         # Figure out what wcs we are going to use.
         wcs = self._determine_wcs(scale, wcs, image)
