@@ -1041,7 +1041,7 @@ class GSObject(object):
                             the value given as a keyword.
                             [default: None]
         @param wcs          If provided, use this as the wcs for the image (possibly overriding any
-                            existing `image.wcs`.  At most one of `scale` or `wcs` may be provided.
+                            existing `image.wcs`).  At most one of `scale` or `wcs` may be provided.
                             [default: None]
         @param dtype        The data type to use for an automatically constructed image.  Only
                             valid if `image` is None. [default: None, which means to use
