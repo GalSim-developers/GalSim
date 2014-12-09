@@ -146,10 +146,16 @@ def main(argv):
     	img = galsim.ImageF(512,512,scale=pixel_scale) # 64, 64
     	bdconv.drawImage(filter_,image=img)
 
-        # Adding sky level to the images in order to get the Poisson noise and the non-linearities # correctly.
+        # Adding sky level to the image
         sky_level_pix = wfirst.getSkyLevel(filters[filter_name],exp_time=wfirst.exptime)
         img.array[:,:] += sky_level_pix
         print "sky_level_pix = ", sky_level_pix
+
+        # Adding dark current to the image
+        #
+        img.array[:,:] += wfirst.dark_current*wfirst.exptime
+
+        # NOTE: Sky level and dark current might appear like a constant background that can be simply subtracted. But these contribute to the shot noise and matter for the non-linear effects that follow. Hence, these must be included.
 
         #Adding Poisson Noise       
     	img.addNoise(poisson_noise)
