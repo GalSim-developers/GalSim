@@ -1346,6 +1346,11 @@ class GSObject(object):
         if wmult <= 0:
             raise ValueError("Invalid wmult <= 0.")
 
+        # Check for scale if using nx, ny, or bounds
+        if (scale is None and
+            (nx is not None or ny is not None or bounds is not None)):
+            raise ValueError("Must provide scale if providing nx,ny or bounds")
+
         # Check that the images are consistent, and possibly get the scale from them.
         if re is None:
             if im is not None:
