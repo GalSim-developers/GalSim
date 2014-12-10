@@ -94,7 +94,7 @@ def main(argv):
         bandpass = filters['W149']
         mag_norm = 22.0
 
-        SEDs[SED_name] = SED.withMagnitude(target_magnitude=mag_norm, bandpass=filters['W149'])
+        SEDs[SED_name] = SED.withMagnitude(target_magnitude=mag_norm, bandpass=bandpass)
 
     logger.debug('Successfully read in SEDs')
 
