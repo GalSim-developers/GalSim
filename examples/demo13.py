@@ -168,10 +168,15 @@ def main(argv):
         # response to a low flux. This flux-dependent non-linearity is known as 'Reciprocity
         # Failure'.
 
+        # Save the image before applying the transformation to see the difference
+        img_old = img.copy()
+
         img.addReciprocityFailure(exp_time=exptime,alpha=wfirst.reciprocity_alpha,base_flux=1.0)
         logger.debug('Accounted for Reciprocity Failure in {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_RecipFail_{0}.fits'.format(filter_name))
         galsim.fits.write(img,out_filename)
+        out_filename = os.path.join(outpath, 'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
+        galsim.fits.write(img-img_old,out_filename)
         logger.debug('Wrote {0}-band image  after Recip. Failure to disk'.format(filter_name))
 
         # Adding dark current to the image
@@ -188,36 +193,58 @@ def main(argv):
         # dependency is accounted for by changing the pixel values (in electrons) and applying a
         # constant nominal gain later, which is unity in our demo.
 
+        # Save the image before applying the transformation to see the difference
+        img_old = img.copy()
+
         NLfunc = wfirst.NLfunc        # a quadratic non-linear function
         img.applyNonlinearity(NLfunc)
         logger.debug('Applied Nonlinearity to {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_NL_{0}.fits'.format(filter_name))
         galsim.fits.write(img,out_filename)
+        out_filename = os.path.join(outpath, 'demo13_diff_NL_{0}.fits'.format(filter_name))
+        galsim.fits.write(img-img_old,out_filename)
         logger.debug('Wrote {0}-band image with Nonlinearity to disk'.format(filter_name))
 
         # Adding Interpixel Capacitance
         # The voltage read at a given pixel location is influenced by the charges present in the neighboring pixel locations due to capacitive coupling of sense nodes. This interpixel capacitance effect is modelled as a linear effect that is described as a convolution of a 3x3 kernel with the image. The WFIRST kernel is not normalized to have the entries add to unity and hence must be normalized inside the routine. 
+
+        # Save the image before applying the transformation to see the difference
+        img_old = img.copy()
+
         img.applyIPC(IPC_kernel=wfirst.ipc_kernel,edge_treatment='extend', \
                      kernel_normalization=True)
         # Here, we use `edge_treatment='extend'`, which pads the image with zeros before applying the kernel. The central part of the image is retained.
+        logger.debug('Applied interpixel capacitance to {0}-band image'.format(filter_name))
+        out_filename = os.path.join(outpath, 'demo13_IPC_{0}.fits'.format(filter_name))
+        galsim.fits.write(img,out_filename)
+        out_filename = os.path.join(outpath, 'demo13_diff_IPC_{0}.fits'.format(filter_name))
+        galsim.fits.write(img-img_old,out_filename)
+        logger.debug('Wrote {0}-band image with IPC to disk'.format(filter_name))
 
         # Adding Read Noise
         read_noise = galsim.CCDNoise(rng)
         read_noise.setReadNoise(wfirst.read_noise)
         img.addNoise(read_noise)
-        logger.debug('Added Readnoise for {0}-band image'.format(filter_name))
+
+        logger.debug('Added Readnoise to {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_ReadNoise_{0}.fits'.format(filter_name))
         galsim.fits.write(img,out_filename)
-        logger.debug('Wrote {0}-band image after adding readnoise to disk'.format(filter_name))
+        logger.debug('Wrote {0}-band image with readnoise to disk'.format(filter_name))
 
         # Subtracting backgrounds
         img -= sky_level_pix
         img -= wfirst.dark_current*wfirst.exptime
 
+        logger.debug('Added Readnoise for {0}-band image'.format(filter_name))
+        out_filename = os.path.join(outpath, 'demo13_{0}.fits'.format(filter_name))
+        galsim.fits.write(img,out_filename)
+        logger.debug('Wrote the final {0}-band image after subtracting backgrounds to disk'.\
+                     format(filter_name))
+
     logger.info('You can display the output in ds9 with a command line that looks something like:')
-    logger.info('ds9 -rgb -blue -scale limits -0.2 0.8 output/demo13_ReadNoise_J129.fits -green '
-        +'-scale limits'+' -0.25 1.0 output/demo13_ReadNoise_W149.fits -red -scale limits -0.25'
-        +' 1.0 output/demo13_ReadNoise_Z087.fits -zoom 2 &')
+    logger.info('ds9 -rgb -blue -scale limits -0.2 0.8 output/demo13_J129.fits -green '
+        +'-scale limits'+' -0.25 1.0 output/demo13_W149.fits -red -scale limits -0.25'
+        +' 1.0 output/demo13_Z087.fits -zoom 2 &')
 
 if __name__ == "__main__":
     main(sys.argv)
