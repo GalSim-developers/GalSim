@@ -140,6 +140,12 @@ def main(argv):
         lam_over_diam = (1.0*effective_wavelength/wfirst.diameter)*206265.0 # in arcsec      
         PSF = galsim.Airy(obscuration=wfirst.obscuration, lam_over_diam=lam_over_diam)
 
+        # Drawing PSF
+        out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
+        img_psf = PSF.drawImage(scale=pixel_scale)
+        galsim.fits.write(img_psf,out_filename)
+        logger.debug('Created PSF for {0}-band'.format(filter_name))
+
         #Convolve with PSF
         bdconv = galsim.Convolve([bdgal, PSF])
 
