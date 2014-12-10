@@ -39,11 +39,12 @@ at appropriate stages. After each effect, suggested parameters for viewing the i
 difference images in ds9 are also included.
 
 New feautres introduced in this demo:
-- Adding sky level and introducing Poisson Noise
-- Dark Current
+- Adding sky level and dark current
+- poisson_noise = galsim.PoissonNoise(rng)
 - image.addReciprocityFailure(exp_time, alpha, base_flux)
 - image.applyNonlinearity(NLfunc,*args)
-- IPC
+- image.applyIPC(IPC_kernel, edge_treatment, fill_value, kernel_nonnegativity,
+                 kernel_normalization)
 - readnoise = galsim.CCDNoise(rng)
 - readnoise.setReadNoise(readnoise_level)
 """
@@ -76,10 +77,6 @@ def main(argv):
     # read in the WFIRST filters
     filters = wfirst.getBandpasses(AB_zeropoint=True);
     logger.debug('Read in filters')
-
-    ## TEMPORARY - filter has redder red limit
-    #for filter in filters:
-    #    filters[filter].red_limit = 2155.5
 
     # read in SEDs
     SED_names = ['CWW_E_ext', 'CWW_Sbc_ext', 'CWW_Scd_ext', 'CWW_Im_ext']
@@ -165,7 +162,7 @@ def main(argv):
         galsim.fits.write(img,out_filename)
         logger.debug('Wrote {0}-band image to disk'.format(filter_name))
 
-        #print "After adding noise", img.array.min(), img.array.max()
+        # The subsequent steps account for the non-ideality of the detectors
 
         # Accounting Reciprocity Failure:
         # Reciprocity, in the context of photography, is the inverse relationship between the
