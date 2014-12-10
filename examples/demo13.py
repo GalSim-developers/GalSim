@@ -154,7 +154,7 @@ def main(argv):
 
         # Adding sky level to the image
         sky_level_pix = wfirst.getSkyLevel(filters[filter_name],exp_time=wfirst.exptime)
-        img.array[:,:] += sky_level_pix
+        img += sky_level_pix
         print "sky_level_pix = ", sky_level_pix
 
         # Adding dark current to the image
@@ -215,6 +215,10 @@ def main(argv):
         galsim.fits.write(img,out_filename)
         logger.debug('Wrote {0}-band image after adding readnoise to disk'.format(filter_name))
 
+        # Subtracting backgrounds
+        img -= sky_level_pix
+        img -= wfirst.dark_current*wfirst.exptime
+
     logger.info('You can display the output in ds9 with a command line that looks something like:')
     logger.info('ds9 -rgb -blue -scale limits -0.2 0.8 output/demo13_ReadNoise_J129.fits -green '
         +'-scale limits'+' -0.25 1.0 output/demo13_ReadNoise_W149.fits -red -scale limits -0.25'
@@ -222,4 +226,3 @@ def main(argv):
 
 if __name__ == "__main__":
 	main(sys.argv)
-
