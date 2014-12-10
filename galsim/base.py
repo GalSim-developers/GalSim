@@ -901,20 +901,20 @@ class GSObject(object):
                 >>> stamp = obj.drawImage(image = full_image[b])
                 >>> assert (stamp.array == full_image[b].array).all()
 
-        If drawImage() will be creating the image from scratch for you, then there are several
-        ways to control the size of the new image.  If the `nx` and `ny` keywords are present, then
-        an image with these numbers of pixels on a side will be created.  Similarly, if the `bounds`
+        If drawImage() will be creating the image from scratch for you, then there are several ways
+        to control the size of the new image.  If the `nx` and `ny` keywords are present, then an
+        image with these numbers of pixels on a side will be created.  Similarly, if the `bounds`
         keyword is present, then an image with the specified bounds will be created.  Note that it
-        is an error to provide existing Image when also specifying `nx`, `ny`, or `bounds`. In the
-        absence of `nx`, `ny`, and `bounds`, drawImage will decide a good size to use based on the
-        size of the object being drawn.  Basically, it will try to use an area large enough to
-        include at least 99.5% of the flux.  (Note: the value 0.995 is really
-        `1 - folding_threshold`.  You can change the value of `folding_threshold` for any object via
+        is an error to provide an existing Image when also specifying `nx`, `ny`, or `bounds`. In
+        the absence of `nx`, `ny`, and `bounds`, drawImage will decide a good size to use based on
+        the size of the object being drawn.  Basically, it will try to use an area large enough to
+        include at least 99.5% of the flux.  (Note: the value 0.995 is really `1 -
+        folding_threshold`.  You can change the value of `folding_threshold` for any object via
         GSParams.  See `help(GSParams)` for more details.)  You can set the pixel scale of the
         constructed image with the `scale` parameter, or set a WCS function with `wcs`.  If you do
         not provide either `scale` or `wcs`, then drawImage() will default to using the Nyquist
-        scale for the current object.  You can also set the data type used in the new Image with
-        the `dtype` parameter that has the same options as for the Image constructor.
+        scale for the current object.  You can also set the data type used in the new Image with the
+        `dtype` parameter that has the same options as for the Image constructor.
 
         There are several different possible methods drawImage() can use for rendering the image.
         This is set by the `method` parameter.  The options are:
