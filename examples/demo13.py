@@ -157,12 +157,6 @@ def main(argv):
         img += sky_level_pix
         print "sky_level_pix = ", sky_level_pix
 
-        # Adding dark current to the image
-        #
-        img.array[:,:] += wfirst.dark_current*wfirst.exptime
-
-        # NOTE: Sky level and dark current might appear like a constant background that can be simply subtracted. But these contribute to the shot noise and matter for the non-linear effects that follow. Hence, these must be included.
-
         #Adding Poisson Noise       
     	img.addNoise(poisson_noise)
 
@@ -186,6 +180,14 @@ def main(argv):
         out_filename = os.path.join(outpath, 'demo13_RecipFail_{0}.fits'.format(filter_name))
         galsim.fits.write(img,out_filename)
         logger.debug('Wrote {0}-band image  after Recip. Failure to disk'.format(filter_name))
+
+        # Adding dark current to the image
+        # Even when the detector is unexposed to any radiation, the electron-hole pairs that are generated within the depletion region due to finite temperature are swept by the high electric field at the junction of the photodiode. This small reverse bias leakage current is referred to as 'Dark current'. It is specified by the average number of electrons reaching the detectors per unit time and has an associated Poisson noise since it's a random event.
+        dark_img = galsim.ImageF(bounds=img.bounds, init_value=wfirst.dark_current*wfirst.exptime)
+        dark_img.addNoise(poisson_noise)
+        img += dark_img
+
+        # NOTE: Sky level and dark current might appear like a constant background that can be simply subtracted. However, these contribute to the shot noise and matter for the non-linear effects that follow. Hence, these must be included at this stage of the image generation process. We subtract these backgrounds in the end.
 
     	# Applying a quadratic non-linearity
         # In order to convert the units from electrons to ADU, we must multiply the image by a
