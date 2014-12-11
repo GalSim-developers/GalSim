@@ -180,12 +180,20 @@ def main(argv):
         logger.debug('Wrote {0}-band image  after Recip. Failure to disk'.format(filter_name))
 
         # Adding dark current to the image
-        # Even when the detector is unexposed to any radiation, the electron-hole pairs that are generated within the depletion region due to finite temperature are swept by the high electric field at the junction of the photodiode. This small reverse bias leakage current is referred to as 'Dark current'. It is specified by the average number of electrons reaching the detectors per unit time and has an associated Poisson noise since it's a random event.
+        # Even when the detector is unexposed to any radiation, the electron-hole pairs that are
+        # generated within the depletion region due to finite temperature are swept by the high
+        # electric field at the junction of the photodiode. This small reverse bias leakage current
+        # is referred to as 'Dark current'. It is specified by the average number of electrons
+        # reaching the detectors per unit time and has an associated Poisson noise since it's a
+        # random event.
         dark_img = galsim.ImageF(bounds=img.bounds, init_value=wfirst.dark_current*wfirst.exptime)
         dark_img.addNoise(poisson_noise)
         img += dark_img
 
-        # NOTE: Sky level and dark current might appear like a constant background that can be simply subtracted. However, these contribute to the shot noise and matter for the non-linear effects that follow. Hence, these must be included at this stage of the image generation process. We subtract these backgrounds in the end.
+        # NOTE: Sky level and dark current might appear like a constant background that can be
+        # simply subtracted. However, these contribute to the shot noise and matter for the
+        # non-linear effects that follow. Hence, these must be included at this stage of the image
+        # generation process. We subtract these backgrounds in the end.
 
         # Applying a quadratic non-linearity
         # In order to convert the units from electrons to ADU, we must multiply the image by a
@@ -206,14 +214,19 @@ def main(argv):
         logger.debug('Wrote {0}-band image with Nonlinearity to disk'.format(filter_name))
 
         # Adding Interpixel Capacitance
-        # The voltage read at a given pixel location is influenced by the charges present in the neighboring pixel locations due to capacitive coupling of sense nodes. This interpixel capacitance effect is modelled as a linear effect that is described as a convolution of a 3x3 kernel with the image. The WFIRST kernel is not normalized to have the entries add to unity and hence must be normalized inside the routine. 
+        # The voltage read at a given pixel location is influenced by the charges present in the
+        # neighboring pixel locations due to capacitive coupling of sense nodes. This interpixel
+        # capacitance effect is modelled as a linear effect that is described as a convolution of a
+        # 3x3 kernel with the image. The WFIRST kernel is not normalized to have the entries add to
+        # unity and hence must be normalized inside the routine.
 
         # Save the image before applying the transformation to see the difference
         img_old = img.copy()
 
-        img.applyIPC(IPC_kernel=wfirst.ipc_kernel,edge_treatment='extend', \
+        img.applyIPC(IPC_kernel=wfirst.ipc_kernel,edge_treatment='extend',
                      kernel_normalization=True)
-        # Here, we use `edge_treatment='extend'`, which pads the image with zeros before applying the kernel. The central part of the image is retained.
+        # Here, we use `edge_treatment='extend'`, which pads the image with zeros before applying
+        # the kernel. The central part of the image is retained.
         logger.debug('Applied interpixel capacitance to {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_IPC_{0}.fits'.format(filter_name))
         galsim.fits.write(img,out_filename)
