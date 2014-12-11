@@ -133,7 +133,8 @@ namespace galsim {
 
     double SpergelInfo::maxK() const
     {
-        if (_maxk == 0.) buildFT();
+        // TODO: Calculate maxk
+        _maxk = 1.0;
         return _maxk;
     }
 
@@ -141,11 +142,6 @@ namespace galsim {
     {
         if (_re == 0.) calculateHLR();
         return _re;
-    }
-
-    void SpergelInfo::buildFT() const
-    {
-        /// TODO: Implement buildFT for Spergel profile
     }
 
     void SpergelInfo::calculateHLR() const

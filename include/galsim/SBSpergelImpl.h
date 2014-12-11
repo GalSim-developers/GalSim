@@ -73,7 +73,6 @@ namespace galsim {
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;   
 
         // Helper functions used internally:
-        void buildFT() const;
         void calculateHLR() const;
         double calculateMissingFluxRadius(double missing_flux_frac) const;
     };
