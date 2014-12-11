@@ -265,6 +265,22 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
         self.array[:,:] = out_array
 
 def addPersistence(self,imgs,coeffs):
+    """
+    Adds the effects of persistence to the Image instance.
+
+    Persistence refers to the retention of a small fraction of the signal after resetting the imager pixel elements. The persistence signal of a previous image is left in the pixel even after several detector resets. This effect is most likely due to charge traps in the material. The laboratory tests show that if exposures and readouts are taken in a fixed cadence, the persistence signal can be given as a linear combination of prior pixel values that can be added to the current image.
+
+    Calling
+    -------
+
+        >>> img.addPersistence(imgs=img_list, coeffs=coeffs_list)
+
+    @ param imgs:       list of previous Image instances that still persist
+    @ param coeffs:     list of corresponding weights for each of the Image instances
+
+    @ returns None
+    """
+
     if isinstance(imgs,list) and (isinstance(coeffs,list) or isinstance(coeffs,numpy.ndarray)):
         if not len(imgs)==len(coeffs):
             raise TypeError("The length of 'imgs' and 'coeffs' must be the same, if passed as a \
