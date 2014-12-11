@@ -75,7 +75,10 @@ def main(argv):
     logger.info('Poisson Noise model created')
 
     # read in the WFIRST filters
-    filters = wfirst.getBandpasses(AB_zeropoint=True);
+    filters = wfirst.getBandpasses(AB_zeropoint=True)
+    # Really we do not care about the prism and grism for optical imaging, so let's remove them:
+    del filters['SNPrism']
+    del filters['BAO-Grism']
     logger.debug('Read in filters')
 
     # read in SEDs
@@ -126,12 +129,16 @@ def main(argv):
 
     # draw profile through WFIRST filters
     for filter_name, filter_ in filters.iteritems():        
-        # Obtaining parameters for Airy PSF
-        # TEMPORARY - WFIRST PSF is on it's way
-        effective_wavelength = (1e-9)*filters[filter_name].effective_wavelength # now in cm
-        effective_diameter = wfirst.diameter*numpy.sqrt(1-wfirst.obscuration**2) 
-        lam_over_diam = (1.0*effective_wavelength/wfirst.diameter)*206265.0 # in arcsec      
-        PSF = galsim.Airy(obscuration=wfirst.obscuration, lam_over_diam=lam_over_diam)
+        # Obtaining parameters for PSF
+        # Here we are defining an optical PSF using the telescope diameter and obscuration, the
+        # effective wavelength of this filter, and an image of the WFIRST pupil plane.  Once we have
+        # a ChromaticOpticalPSF class, we will include chromaticity of the WFIRST PSF, but for now
+        # we ignore it.  Currently there are no aberrations, but those will (eventually) be included
+        # too.
+        effective_wavelength = (1e-9)*filters[filter_name].effective_wavelength # now in m
+        lam_over_diam = (1.0*effective_wavelength/wfirst.diameter)*206265.0 # in arcsec
+        PSF = galsim.OpticalPSF(lam_over_diam=lam_over_diam, obscuration=wfirst.obscuration,
+                                pupil_plane_im=wfirst.pupil_plane_file, oversampling=1.2, pad_factor=2.)
 
         # Drawing PSF
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
@@ -180,12 +187,20 @@ def main(argv):
         logger.debug('Wrote {0}-band image  after Recip. Failure to disk'.format(filter_name))
 
         # Adding dark current to the image
-        # Even when the detector is unexposed to any radiation, the electron-hole pairs that are generated within the depletion region due to finite temperature are swept by the high electric field at the junction of the photodiode. This small reverse bias leakage current is referred to as 'Dark current'. It is specified by the average number of electrons reaching the detectors per unit time and has an associated Poisson noise since it's a random event.
+        # Even when the detector is unexposed to any radiation, the electron-hole pairs that are
+        # generated within the depletion region due to finite temperature are swept by the high
+        # electric field at the junction of the photodiode. This small reverse bias leakage current
+        # is referred to as 'Dark current'. It is specified by the average number of electrons
+        # reaching the detectors per unit time and has an associated Poisson noise since it's a
+        # random event.
         dark_img = galsim.ImageF(bounds=img.bounds, init_value=wfirst.dark_current*wfirst.exptime)
         dark_img.addNoise(poisson_noise)
         img += dark_img
 
-        # NOTE: Sky level and dark current might appear like a constant background that can be simply subtracted. However, these contribute to the shot noise and matter for the non-linear effects that follow. Hence, these must be included at this stage of the image generation process. We subtract these backgrounds in the end.
+        # NOTE: Sky level and dark current might appear like a constant background that can be
+        # simply subtracted. However, these contribute to the shot noise and matter for the
+        # non-linear effects that follow. Hence, these must be included at this stage of the image
+        # generation process. We subtract these backgrounds in the end.
 
         # Applying a quadratic non-linearity
         # In order to convert the units from electrons to ADU, we must multiply the image by a
@@ -206,14 +221,19 @@ def main(argv):
         logger.debug('Wrote {0}-band image with Nonlinearity to disk'.format(filter_name))
 
         # Adding Interpixel Capacitance
-        # The voltage read at a given pixel location is influenced by the charges present in the neighboring pixel locations due to capacitive coupling of sense nodes. This interpixel capacitance effect is modelled as a linear effect that is described as a convolution of a 3x3 kernel with the image. The WFIRST kernel is not normalized to have the entries add to unity and hence must be normalized inside the routine. 
+        # The voltage read at a given pixel location is influenced by the charges present in the
+        # neighboring pixel locations due to capacitive coupling of sense nodes. This interpixel
+        # capacitance effect is modelled as a linear effect that is described as a convolution of a
+        # 3x3 kernel with the image. The WFIRST kernel is not normalized to have the entries add to
+        # unity and hence must be normalized inside the routine.
 
         # Save the image before applying the transformation to see the difference
         img_old = img.copy()
 
-        img.applyIPC(IPC_kernel=wfirst.ipc_kernel,edge_treatment='extend', \
+        img.applyIPC(IPC_kernel=wfirst.ipc_kernel,edge_treatment='extend',
                      kernel_normalization=True)
-        # Here, we use `edge_treatment='extend'`, which pads the image with zeros before applying the kernel. The central part of the image is retained.
+        # Here, we use `edge_treatment='extend'`, which pads the image with zeros before applying
+        # the kernel. The central part of the image is retained.
         logger.debug('Applied interpixel capacitance to {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_IPC_{0}.fits'.format(filter_name))
         galsim.fits.write(img,out_filename)
