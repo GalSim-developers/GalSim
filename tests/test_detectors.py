@@ -360,20 +360,18 @@ def test_Persistence_basic():
     im_save = im.copy()
 
     # Make 3 more images to act as previous images
-    sigma = [2.9, 3.4, 4.2]
     dx = [0.0, 1.0, -4.0]
     dy = [-1.0, 0.0, 2.0]
     im_prev = []
     for i in xrange(3):
         g = galsim.Gaussian(sigma=3.7)
         im_prev += [g.draw(scale=0.25)]
-        #im_prev[i].shift(dx=-5,dy=3)
         im_prev[i].shift(dx=dx[i],dy=dy[i])
 
     # Test for zero coefficient
     im_new = im.copy()
     im_new.addPersistence(imgs=im_prev,coeffs=0.0)
-    np.testing.assert_array_equal(im_new, im,
+    np.testing.assert_array_equal(im_new.array, im.array,
         err_msg="Images do not agree when the persistence coefficients are all zeros.")
 
     # Test for a float coeff and constant array
@@ -381,13 +379,13 @@ def test_Persistence_basic():
     im2 = im.copy()
     im1.addPersistence(imgs=im_prev, coeffs=0.1)
     im2.addPersistence(imgs=im_prev, coeffs=0.1*np.ones_like(im_prev))
-    np.testing.assert_array_equal(im1, im2,
+    np.testing.assert_array_equal(im1.array, im2.array,
         err_msg="Images differ when the persistence coefficient is a float.")
 
     # Test for a single previous image
     im_new = im.copy()
     im_new.addPersistence(imgs=im_prev[0], coeffs=0.4)
-    np.testing.assert_array_equal(im_new, im+0.4*im_prev[0],
+    np.testing.assert_array_equal(im_new.array, im.array+0.4*im_prev[0].array,
             err_msg="Images differ for persistence length is 1.")
 
     # Test for different lengths of imgs and coeffs
@@ -410,7 +408,7 @@ def test_Persistence_basic():
     im1.addPersistence(imgs=im_prev, coeffs=np.linspace(1,len(im_prev), len(im_prev)))
     for i in xrange(len(im_prev)):
         im2 += (i+1)*im_prev[i]
-    np.testing.assert_array_equal(im1, im2,
+    np.testing.assert_array_equal(im1.array, im2.array,
         err_msg="Something gone wrong with the math in addPersistence routine.")
 
     t2 = time.time()
