@@ -27,34 +27,34 @@
 #include "boost/python/stl_iterator.hpp"
 
 #include "SBSpergel.h"
-#include "RadiusHelper.h"
+//#include "RadiusHelper.h"
 
 namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBSpergel 
+    struct PySBSpergel
     {
 
         static SBSpergel* construct(
             double nu, double scale_radius, double flux,
-            boost::shared_ptr<GSParams> gsparams) 
+            boost::shared_ptr<GSParams> gsparams)
         {
             return new SBSpergel(nu, scale_radius, flux, gsparams);
         }
 
-        static void wrap() 
+        static void wrap()
         {
             bp::class_<SBSpergel,bp::bases<SBProfile> >(
                 "SBSpergel",
                 "SBSpergel(nu=0.5, scale_radius=1., flux=1.)\n\n"
                 "Construct a Spergel profile with the given flux and scale length.",
                 bp::no_init)
-                .def("__init__", 
+                .def("__init__",
                      bp::make_constructor(
                         &construct, bp::default_call_policies(),
                         (bp::arg("nu"),
-                         bp::arg("scale_radius")=1., 
+                         bp::arg("scale_radius")=1.,
                          bp::arg("flux")=1.,
                          bp::arg("gsparams")=bp::object()))
                 )
@@ -65,7 +65,7 @@ namespace galsim {
         }
     };
 
-    void pyExportSBSpergel() 
+    void pyExportSBSpergel()
     {
         PySBSpergel::wrap();
     }
