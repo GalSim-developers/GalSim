@@ -213,8 +213,8 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     if kernel_normalization is True:
         if IPC_kernel.sum() != 1.0:
             import warnings
-            warnings.warn("The entries in the kernel did not sum to 1. Scaling the kernel to "
-                "ensure correct normalization.")
+            warnings.warn("The entries in the IPC kernel did not sum to 1. Scaling the kernel to "\
+                +"ensure correct normalization.")
             IPC_kernel = IPC_kernel/IPC_kernel.sum() 
 
     # edge_treatment can be 'extend', 'wrap' or 'crop'
