@@ -129,7 +129,6 @@ def main(argv):
         # Obtaining parameters for Airy PSF
         # TEMPORARY - WFIRST PSF is on it's way
         effective_wavelength = (1e-9)*filters[filter_name].effective_wavelength # now in m
-        effective_diameter = wfirst.diameter*numpy.sqrt(1-wfirst.obscuration**2) 
         lam_over_diam = (1.0*effective_wavelength/wfirst.diameter)*206265.0 # in arcsec
         PSF = galsim.Airy(obscuration=wfirst.obscuration, lam_over_diam=lam_over_diam)
 
