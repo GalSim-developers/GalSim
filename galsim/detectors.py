@@ -264,6 +264,30 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     else:
         self.array[:,:] = out_array
 
+def addPersistence(self,imgs,coeffs):
+    if isinstance(imgs,list) and (isinstance(coeffs,list) or isinstance(coeffs,numpy.ndarray)):
+        if not len(imgs)==len(coeffs):
+            raise TypeError("The length of 'imgs' and 'coeffs' must be the same, if passed as a \
+                list")
+            # If this error is not raised, then the images are added as long as one of the list is
+            # exhausted.
+        else:
+            for img,coeff in zip(imgs,coeffs):
+                self += coeff*img
+
+    elif isinstance(imgs,list) and (isinstance(coeffs,float) or isinstance(coeffs,int)):
+        for img in imgs:
+            self += coeffs*img
+
+    elif isinstance(imgs,galsim.Image) and (isinstance(coeffs,float) or isinstance(coeffs,int)):
+        self += coeffs*imgs
+
+    else:
+        raise TypeError("Type mismatch between 'imgs' and 'coeffs'. 'imgs' must be a list of \
+            Image objects and 'coeffs' must be a list of float or int or a NumPy array of the \
+            same size. ")
+
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
 galsim.Image.applyIPC = applyIPC
+galsim.Image.addPersistence = addPersistence
