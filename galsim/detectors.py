@@ -268,7 +268,17 @@ def addPersistence(self,imgs,coeffs):
     """
     Adds the effects of persistence to the Image instance.
 
-    Persistence refers to the retention of a small fraction of the signal after resetting the imager pixel elements. The persistence signal of a previous image is left in the pixel even after several detector resets. This effect is most likely due to charge traps in the material. The laboratory tests show that if exposures and readouts are taken in a fixed cadence, the persistence signal can be given as a linear combination of prior pixel values that can be added to the current image.
+    Persistence refers to the retention of a small fraction of the signal after resetting the
+    imager pixel elements. The persistence signal of a previous image is left in the pixel even
+    after several detector resets. This effect is most likely due to charge traps in the material.
+    The laboratory tests show that if exposures and readouts are taken in a fixed cadence, the
+    persistence signal can be given as a linear combination of prior pixel values that can be
+    added to the current image.
+
+    During the image generation process, the user has to maintain a list of previous Image
+    instances (img_list) outside the routine by inserting the latest image in the beginning of the
+    list and deleting the oldest image. The values in 'coeffs' tell how much of each Image is to
+    be added. This usually remains constant in the image generation process.
 
     Calling
     -------
