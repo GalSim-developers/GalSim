@@ -76,6 +76,9 @@ def main(argv):
 
     # read in the WFIRST filters
     filters = wfirst.getBandpasses(AB_zeropoint=True)
+    # Really we do not care about the prism and grism for optical imaging, so let's remove them:
+    del filters['SNPrism']
+    del filters['BAO-Grism']
     logger.debug('Read in filters')
 
     # read in SEDs
