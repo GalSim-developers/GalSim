@@ -75,7 +75,7 @@ def main(argv):
     logger.info('Poisson Noise model created')
 
     # read in the WFIRST filters
-    filters = wfirst.getBandpasses(AB_zeropoint=True);
+    filters = wfirst.getBandpasses(AB_zeropoint=True)
     logger.debug('Read in filters')
 
     # read in SEDs
@@ -126,11 +126,16 @@ def main(argv):
 
     # draw profile through WFIRST filters
     for filter_name, filter_ in filters.iteritems():        
-        # Obtaining parameters for Airy PSF
-        # TEMPORARY - WFIRST PSF is on it's way
+        # Obtaining parameters for PSF
+        # Here we are defining an optical PSF using the telescope diameter and obscuration, the
+        # effective wavelength of this filter, and an image of the WFIRST pupil plane.  Once we have
+        # a ChromaticOpticalPSF class, we will include chromaticity of the WFIRST PSF, but for now
+        # we ignore it.  Currently there are no aberrations, but those will (eventually) be included
+        # too.
         effective_wavelength = (1e-9)*filters[filter_name].effective_wavelength # now in m
         lam_over_diam = (1.0*effective_wavelength/wfirst.diameter)*206265.0 # in arcsec
-        PSF = galsim.Airy(obscuration=wfirst.obscuration, lam_over_diam=lam_over_diam)
+        PSF = galsim.OpticalPSF(lam_over_diam=lam_over_diam, obscuration=wfirst.obscuration,
+                                pupil_plane_im=wfirst.pupil_plane_file, oversampling=1.2, pad_factor=2.)
 
         # Drawing PSF
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
