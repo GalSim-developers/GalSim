@@ -160,7 +160,9 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     This interpixel capacitance is approximated as a linear effect that can be described by a 3x3
     kernel that is convolved with the image. The kernel could be intrinsically anisotropic. A
     sensible kernel must have non-negative entries and must be normalized such that the sum of the
-    elements is 1, in order to conserve the total charge.
+    elements is 1, in order to conserve the total charge. The (0,0) element of the kernel is the
+    contribution to the voltage read at a pixel from the electrons in the pixel to its top-left,
+    the (1,0) element of the kernel is the contribution from the charges to its left and so on.
 
     The argument 'edge_treatment' specifies how the edges of the image should be treated, which
     could be in one of the three ways:
