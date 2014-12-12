@@ -220,14 +220,14 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
             IPC_kernel = IPC_kernel/IPC_kernel.sum() 
 
     # edge_treatment can be 'extend', 'wrap' or 'crop'
-    if edge_treatment is 'crop':
+    if edge_treatment=='crop':
         # Simply re-label the array of the Image instance
         pad_array = self.array
-    elif edge_treatment is 'extend':
+    elif edge_treatment=='extend':
         # Copy the array of the Image instance and pad with zeros
         pad_array = numpy.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
         pad_array[1:-1,1:-1] = self.array
-    elif edge_treatment is 'wrap':
+    elif edge_treatment=='wrap':
         # Copy the array of the Image instance and pad with zeros initially
         pad_array = numpy.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
         pad_array[1:-1,1:-1] = self.array
@@ -255,7 +255,7 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
         IPC_kernel[1,0]*left + IPC_kernel[1,1]*center + IPC_kernel[1,2]*right + \
         IPC_kernel[2,0]*bottomleft + IPC_kernel[2,1]*bottom + IPC_kernel[2,2]*bottomright
 
-    if edge_treatment is 'crop':
+    if edge_treatment=='crop':
         self.array[1:-1,1:-1] = out_array
         #Explicit edge effects handling with filling the edges with the value given in fill_value
         if fill_value is not None:
