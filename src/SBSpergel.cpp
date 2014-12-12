@@ -40,9 +40,9 @@
 
 namespace galsim {
 
-    SBSpergel::SBSpergel(double nu, double r0, double flux,
+    SBSpergel::SBSpergel(double nu, double size, RadiusType rType, double flux,
                                  const GSParamsPtr& gsparams) :
-        SBProfile(new SBSpergelImpl(nu, r0, flux, gsparams)) {}
+        SBProfile(new SBSpergelImpl(nu, size, rType, flux, gsparams)) {}
 
     SBSpergel::SBSpergel(const SBSpergel& rhs) : SBProfile(rhs) {}
 
@@ -60,23 +60,84 @@ namespace galsim {
         return static_cast<const SBSpergelImpl&>(*_pimpl).getScaleRadius();
     }
 
+    double SBSpergel::getHalfLightRadius() const
+    {
+        assert(dynamic_cast<const SBSpergelImpl*>(_pimpl.get()));
+        return static_cast<const SBSpergelImpl&>(*_pimpl).getHalfLightRadius();
+    }
+
     LRUCache<boost::tuple< double, GSParamsPtr >, SpergelInfo> SBSpergel::SBSpergelImpl::cache(
         sbp::max_spergel_cache);
 
-    SBSpergel::SBSpergelImpl::SBSpergelImpl(
-        double nu, double r0, double flux, const GSParamsPtr& gsparams) :
+    class SpergelScaleRadiusFunc
+    {
+    public:
+        SpergelScaleRadiusFunc(double re, double nu) :
+            _re(re), _nu(nu) {}
+        double operator()(double rd) const
+        {
+            //double fre = 1.-std::pow(1.+(_re*_re)/(rd*rd), 1.-_beta);
+            //double frm = 1.-std::pow(1.+(_rm*_rm)/(rd*rd), 1.-_beta);
+            //xdbg<<"func("<<rd<<") = 2*"<<fre<<" - "<<frm<<" = "<<2.*fre-frm<<std::endl;
+            //return 2.*fre-frm;
+            return 0;
+        }
+    private:
+        double _re,_nu;
+    };
+
+    double SpergelCalculateScaleRadiusFromHLR(double re, double nu)
+    {
+        dbg<<"Start SpergelCalculateScaleRadiusFromHLR\n";
+        MoffatScaleRadiusFunc func(re,nu);
+        // For the lower bound of rd, we can use the untruncated value:
+        double r1 = re / std::sqrt( std::pow(0.5, 1./(1.-beta)) - 1.);
+        xdbg<<"r1 = "<<r1<<std::endl;
+        // For the upper bound, we don't really have a good choice, so start with 2*r1
+        // and we'll expand it if necessary.
+        double r2 = 2. * r1;
+        xdbg<<"r2 = "<<r2<<std::endl;
+        Solve<MoffatScaleRadiusFunc> solver(func,r1,r2);
+        solver.setMethod(Brent);
+        solver.bracketUpper();
+        xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
+            solver.getUpperBound()<<std::endl;
+        double rd = solver.root();
+        xdbg<<"Root is "<<rd<<std::endl;
+        return rd;
+    }
+
+    SBSpergel::SBSpergelImpl::SBSpergelImpl(double nu, double size, RadiusType rType,
+                                            double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _nu(nu), _flux(flux), _r0(r0), _r0_sq(_r0*_r0),
+        _nu(nu), _flux(flux),
         _info(cache.get(boost::make_tuple(_nu, this->gsparams.duplicate())))
     {
         dbg<<"Start SBSpergel constructor:\n";
         dbg<<"nu = "<<_nu<<std::endl;
-        dbg<<"r0 = "<<_r0<<std::endl;
+        dbg<<"size = "<<size<<"  rType = "<<rType<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
         dbg<<"maxK() = "<<maxK()<<std::endl;
         dbg<<"stepK() = "<<stepK()<<std::endl;
 
         _flux_over_2pi = _flux / (2. * M_PI);
+
+        switch(rType) {
+          case HALF_LIGHT_RADIUS:
+              {
+                  _hlr = size;
+                  _r0 = _hlr / getHLR()
+              }
+              break;
+          case SCALE_RADIUS:
+              {
+                  _r0 = size;
+                  _hlr = _r0 * getHLR()
+              }
+              break;
+          default:
+              throw SBError("Unknown SBSpergel::RadiusType");
+        }
 
         _r0_sq = _r0 * _r0;
         _inv_r0 = 1. / _r0;

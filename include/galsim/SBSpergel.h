@@ -19,7 +19,7 @@
 
 #ifndef GalSim_SBSpergel_H
 #define GalSim_SBSpergel_H
-/** 
+/**
  * @file SBSpergel.h @brief SBProfile that implements a 2-d Spergel profile.
  */
 
@@ -40,34 +40,42 @@ namespace galsim {
 
     }
 
-    /** 
-     * @brief Spergel Surface Brightness Profile.  
+    /**
+     * @brief Spergel Surface Brightness Profile.
      *
-     * Surface brightness profile with `I(r) propto (r/r_c)^{nu} K_{nu}(r/r_c)` for some 
-     * scale-length `r_c = r_0 / c_{nu}`, where `K_{nu}(u)` is the modified Bessel function of the 
-     * second kind (also confusingly referred to as the 'spherical modified Bessel function of the 
+     * Surface brightness profile with `I(r) propto (r/r_c)^{nu} K_{nu}(r/r_c)` for some
+     * scale-length `r_c = r_0 / c_{nu}`, where `K_{nu}(u)` is the modified Bessel function of the
+     * second kind (also confusingly referred to as the 'spherical modified Bessel function of the
      * third kind') and `nu > -1`. For different parameters `nu` this profile can approximate Sersic
      * profiles with different indices.
      *
-     * Reference: 
+     * Reference:
      *   D. N. Spergel, "ANALYTICAL GALAXY PROFILES FOR PHOTOMETRIC AND LENSING ANALYSIS,""
      *   ASTROPHYS J SUPPL S 191(1), 58-65 (2010) [doi:10.1088/0067-0049/191/1/58].
      */
-    class SBSpergel : public SBProfile 
+    class SBSpergel : public SBProfile
     {
     public:
-        /** 
-         * @brief Constructor - note that `r0` is scale length, NOT half-light radius `re` as in 
+        enum  RadiusType
+        {
+            HALF_LIGHT_RADIUS,
+            SCALE_RADIUS
+        };
+
+        /**
+         * @brief Constructor - note that `r0` is scale length, NOT half-light radius `re` as in
          * SBSersic.
          *
          * @param[in] nu       index parameter setting the logarithmic slope of the profile.
-         * @param[in] r0       scale length for the profile, NOT the half-light radius 
-                               `re = c_nu r0`. (re here == r0 in Spergel 2010 notation).
+         * @param[in] size              Size specification.
+         * @param[in] rType             Kind of size being specified (HALF_LIGHT_RADIUS or
+         *                              SCALE_RADIUS).
          * @param[in] flux     flux.
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
-        SBSpergel(double nu, double r0, double flux, const GSParamsPtr& gsparams);
+        SBSpergel(double nu, double size, RadiusType rType, double flux,
+                  const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBSpergel(const SBSpergel& rhs);
@@ -81,6 +89,9 @@ namespace galsim {
         /// @brief Returns the scale radius of the Spergel profile.
         double getScaleRadius() const;
 
+        /// @brief Returns the half light radius of the Spergel profile.
+        double getHalfLightRadius() const;
+
     protected:
 
         class SBSpergelImpl;
@@ -93,4 +104,3 @@ namespace galsim {
 }
 
 #endif
-

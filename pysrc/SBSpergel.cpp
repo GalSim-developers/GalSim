@@ -27,7 +27,7 @@
 #include "boost/python/stl_iterator.hpp"
 
 #include "SBSpergel.h"
-//#include "RadiusHelper.h"
+#include "RadiusHelper.h"
 
 namespace bp = boost::python;
 
@@ -37,10 +37,21 @@ namespace galsim {
     {
 
         static SBSpergel* construct(
-            double nu, double scale_radius, double flux,
+            double nu, const bp::object & scale_radius, const bp::object & half_light_radius,
+            double flux,
             boost::shared_ptr<GSParams> gsparams)
         {
-            return new SBSpergel(nu, scale_radius, flux, gsparams);
+            double s = 1.0;
+            checkRadii(half_light_radius, scale_radius, bp::object());
+            SBSpergel::RadiusType rType = SBSpergel::HALF_LIGHT_RADIUS;
+            if (half_light_radius.ptr() != Py_None) {
+                s = bp::extract<double>(half_light_radius);
+            }
+            if (scale_radius.ptr() != Py_None) {
+                s = bp::extract<double>(scale_radius);
+                rType = SBSpergel::SCALE_RADIUS;
+            }
+            return new SBSpergel(nu, s, rType, flux, gsparams);
         }
 
         static void wrap()
@@ -60,6 +71,7 @@ namespace galsim {
                 )
                 .def(bp::init<const SBSpergel &>())
                 .def("getNu", &SBSpergel::getNu)
+                .def("getHalfLightRadius", &SBSpergel::getHalfLightRadius)
                 .def("getScaleRadius", &SBSpergel::getScaleRadius)
                 ;
         }
