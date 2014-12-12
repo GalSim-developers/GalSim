@@ -22,7 +22,7 @@ import sys
 from galsim_test_helpers import *
 
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
-                                                          # images. 
+                                                          # images.
 
 try:
     import galsim
@@ -40,6 +40,8 @@ test_scale = [1.8, 0.05, 0.002, 0.002]
 test_sersic_trunc = [0., 8.5]
 test_flux = 1.8
 
+test_spergel_nu = [-0.9, 0.0, 0.85]
+
 if __name__ == "__main__":
     # If doing a nosetests run, we don't actually need to do all 4 sersic n values.
     # Two should be enough to notice if there is a problem, and the full list will be tested
@@ -47,7 +49,7 @@ if __name__ == "__main__":
     test_sersic_n = [1.5, -4]
     test_scale = [1.8, 0.002]
 
-# These are the default GSParams used when unspecified.  We'll check that specifying 
+# These are the default GSParams used when unspecified.  We'll check that specifying
 # these explicitly produces the same results.
 default_params = galsim.GSParams(
         minimum_fft_size = 128,
@@ -159,7 +161,7 @@ def test_gaussian_radii():
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
-    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(
@@ -168,7 +170,7 @@ def test_gaussian_radii():
 
     # test that getSigma() method provides correct sigma
     got_sigma = test_gal.getSigma()
-    test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) / 
+    test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'sigma ratio = ', test_sigma_ratio
     np.testing.assert_almost_equal(
@@ -194,7 +196,7 @@ def test_gaussian_radii():
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
-    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(
@@ -220,7 +222,7 @@ def test_gaussian_radii():
 
     # test that getSigma() method provides correct sigma
     got_sigma = test_gal.getSigma()
-    test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) / 
+    test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'sigma ratio = ', test_sigma_ratio
     np.testing.assert_almost_equal(
@@ -352,7 +354,7 @@ def test_gaussian_flux_scaling():
 
 
 def test_exponential():
-    """Test the generation of a specific exp profile using SBProfile against a known result. 
+    """Test the generation of a specific exp profile using SBProfile against a known result.
     """
     import time
     t1 = time.time()
@@ -424,7 +426,7 @@ def test_exponential_radii():
     """Test initialization of Exponential with different types of radius specification.
     """
     import time
-    t1 = time.time() 
+    t1 = time.time()
     import math
     # Test constructor using half-light-radius:
     test_gal = galsim.Exponential(flux = 1., half_light_radius = test_hlr)
@@ -523,7 +525,7 @@ def test_exponential_flux_scaling():
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __div__ (result).")   
+        err_msg="Flux param inconsistent after __div__ (result).")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -973,7 +975,7 @@ def test_airy_radii():
     """Test Airy half light radius and FWHM correctly set and match image.
     """
     import time
-    t1 = time.time() 
+    t1 = time.time()
     import math
     # Test constructor using lam_over_diam: (only option for Airy)
     test_gal = galsim.Airy(lam_over_diam= 1./0.8, flux=1.)
@@ -1114,8 +1116,8 @@ def test_moffat():
     # Code was formerly:
     # moffat = galsim.Moffat(beta=2, truncationFWHM=5, flux=1, half_light_radius=1)
     #
-    # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
-    # physical units.  However, the same profile can be constructed using 
+    # ...but this is no longer quite so simple since we changed the handling of trunc to be in
+    # physical units.  However, the same profile can be constructed using
     # fwhm=1.3178976627539716
     # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.3178976627539716
@@ -1126,13 +1128,13 @@ def test_moffat():
             err_msg="Using GSObject Moffat disagrees with expected result")
 
     # Check with default_params
-    moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1, 
+    moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1,
                            gsparams=default_params)
     moffat.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat with default_params disagrees with expected result")
-    moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1, 
+    moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1,
                            gsparams=galsim.GSParams())
     moffat.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
@@ -1145,7 +1147,7 @@ def test_moffat():
     # Test kvalues
     do_kvalue(moffat, "Moffat")
 
-    # The code for untruncated Moffat profiles is specialized for particular beta values, so 
+    # The code for untruncated Moffat profiles is specialized for particular beta values, so
     # test each of these:
     for beta in [ 1.5, 2, 2.5, 3, 3.5, 4, 2.3 ]:  # The one last is for the generic case.
         moffat = galsim.Moffat(beta=beta, half_light_radius=0.7, flux=test_flux)
@@ -1165,9 +1167,9 @@ def test_moffat_properties():
     # Code was formerly:
     # psf = galsim.Moffat(beta=2.0, truncationFWHM=2, flux=test_flux, half_light_radius=1)
     #
-    # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
-    # physical units.  However, the same profile can be constructed using 
-    # fwhm=1.4686232496771867, 
+    # ...but this is no longer quite so simple since we changed the handling of trunc to be in
+    # physical units.  However, the same profile can be constructed using
+    # fwhm=1.4686232496771867,
     # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.4686232496771867
     psf = galsim.Moffat(beta=2.0, fwhm=fwhm_backwards_compatible,
@@ -1208,7 +1210,7 @@ def test_moffat_properties():
 def test_moffat_radii():
     """Test initialization of Moffat with different types of radius specification.
     """
-    import time 
+    import time
     t1 = time.time()
     import math
 
@@ -1224,7 +1226,7 @@ def test_moffat_radii():
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
-    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(
@@ -1233,7 +1235,7 @@ def test_moffat_radii():
 
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
-    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
+    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'scale ratio = ', test_scale_ratio
     np.testing.assert_almost_equal(
@@ -1259,7 +1261,7 @@ def test_moffat_radii():
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
-    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(
@@ -1284,7 +1286,7 @@ def test_moffat_radii():
             err_msg="Error in half light radius for Moffat initialized with FWHM.")
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
-    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
+    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'scale ratio = ', test_scale_ratio
     np.testing.assert_almost_equal(
@@ -1304,7 +1306,7 @@ def test_moffat_radii():
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
-    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(
@@ -1313,7 +1315,7 @@ def test_moffat_radii():
 
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
-    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
+    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'scale ratio = ', test_scale_ratio
     np.testing.assert_almost_equal(
@@ -1341,7 +1343,7 @@ def test_moffat_radii():
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
-    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(
@@ -1368,7 +1370,7 @@ def test_moffat_radii():
 
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
-    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
+    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'scale ratio = ', test_scale_ratio
     np.testing.assert_almost_equal(
@@ -1547,7 +1549,7 @@ def test_kolmogorov_properties():
 def test_kolmogorov_radii():
     """Test initialization of Kolmogorov with different types of radius specification.
     """
-    import time 
+    import time
     t1 = time.time()
     import math
     # Test constructor using lambda/r0
@@ -1563,7 +1565,7 @@ def test_kolmogorov_radii():
         # test that getFWHM() method provides correct FWHM
         got_fwhm = test_gal.getFWHM()
         print 'got_fwhm = ',got_fwhm
-        test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+        test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
         print 'fwhm ratio = ', test_fwhm_ratio
         np.testing.assert_almost_equal(
@@ -1590,7 +1592,7 @@ def test_kolmogorov_radii():
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
     print 'got_fwhm = ',got_fwhm
-    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                     test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(
@@ -1687,6 +1689,32 @@ def test_kolmogorov_flux_scaling():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+def test_spergel():
+    """Test the generation of a specific Spergel profile using SBProfile against a known result.
+    """
+    import time
+    t1 = time.time()
+
+    for nu in test_spergel_nu:
+        filename = "spergel_nu{:.2f}.fits".format(nu)
+        savedImg = galsim.fits.read(os.path.join(imgdir, filename))
+        savedImg.setCenter(0,0)
+        dx = 0.2
+        myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+        myImg.setCenter(0,0)
+
+        spergel = galsim.Spergel(nu=nu, half_light_radius=1.0)
+        # Reference images were made with old centering, which is equivalent to use_true_center=False.
+        myImg = spergel.draw(myImg, scale=dx, normalization="surface brightness",
+                             use_true_center=False)
+        np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject Spergel disagrees with expected result")
+        np.testing.assert_almost_equal(
+            myImg.array.sum() *dx**2, myImg.added_flux, 5,
+            err_msg="Spergel profile GSObject::draw returned wrong added_flux")
+
+
 
 if __name__ == "__main__":
     test_gaussian()
@@ -1714,4 +1742,4 @@ if __name__ == "__main__":
     test_kolmogorov_properties()
     test_kolmogorov_radii()
     test_kolmogorov_flux_scaling()
-
+    test_spergel()
