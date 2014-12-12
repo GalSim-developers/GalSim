@@ -307,12 +307,12 @@ def test_IPC_basic():
     im_new.array[:,0] = 0.0
     im_new.array[:,-1] = 0.0
     im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=True)
-    np.testing.assert_almost_equal(im_new.array.sum(), im.array[1:-1,1:-1].sum(), DECIMAL
+    np.testing.assert_almost_equal(im_new.array.sum(), im.array[1:-1,1:-1].sum(), int(DECIMAL/3),
         err_msg="Normalized IPC kernel does not conserve the total flux for 'extend' option.")
 
     im_new = im.copy()
     im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap', kernel_normalization=True)
-    np.testing.assert_almost_equal(im_new.array.sum(), im.array.sum(), DECIMAL,
+    np.testing.assert_almost_equal(im_new.array.sum(), im.array.sum(), int(DECIMAL/3),
         err_msg="Normalized IPC kernel does not conserve the total flux for 'wrap' option.")
 
     try:
