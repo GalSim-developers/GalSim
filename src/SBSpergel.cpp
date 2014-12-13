@@ -23,6 +23,7 @@
 #include "SBSpergelImpl.h"
 #include <boost/math/special_functions/bessel.hpp>
 #include <boost/math/special_functions/gamma.hpp>
+#include "Solve.h"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
 // drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit
@@ -42,7 +43,7 @@ namespace galsim {
 
     SBSpergel::SBSpergel(double nu, double size, RadiusType rType, double flux,
                                  const GSParamsPtr& gsparams) :
-        SBProfile(new SBSpergelImpl(nu, size, rType, flux, gsparams)) {}
+    SBProfile(new SBSpergelImpl(nu, r0, flux, gsparams)) {}
 
     SBSpergel::SBSpergel(const SBSpergel& rhs) : SBProfile(rhs) {}
 
@@ -215,10 +216,33 @@ namespace galsim {
         _re = 1.0;
     }
 
+    class SpergelMissingFlux
+    {
+    public:
+        SpergelMissingFlux(double nu, double missing_flux) : _target(missing_flux) {}
+
+        double operator()(double z) const
+        {
+            double fnu = boost::math::cyl_bessel_k(_nu+1, u) * std::pow(z / 2., _nu+1);
+            double f = 1.0 - 2.0 * (1+_nu)*fnu;
+            return f - _target;
+        }
+    private:
+        double _target;
+    };
+
     double SpergelInfo::calculateMissingFluxRadius(double missing_flux_frac) const
     {
-        /// TODO: Implement missing flux calculation
-        return 0.0;
+        // Calcute r such that L(r) / L_tot < (1 - missing_flux_frac)
+        
+        /// TODO: set z1, z2 to initialize solvers
+        SpergelMissingFlux func(_nu, missing_flux);
+        Solve<SpergelMissingFlux> solver(func, z1, z2);
+        solver.setMethod(Brent);
+        solver.bracketUpper();
+        z = solver.root()
+        double R = z;
+        return R;
     }
 
     class SpergelRadialFunction: public FluxDensity
