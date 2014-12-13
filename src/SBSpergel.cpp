@@ -158,15 +158,18 @@ namespace galsim {
     class SpergelMissingFlux
     {
     public:
-        SpergelMissingFlux(double nu, double missing_flux) : _target(missing_flux) {}
+        SpergelMissingFlux(double nu, double missing_flux) : _nu(nu), _target(missing_flux) {}
 
-        double operator()(double z) const
+        double operator()(double u) const
         {
-            double fnu = boost::math::cyl_bessel_k(_nu+1, u) * std::pow(z / 2., _nu+1);
-            double f = 1.0 - 2.0 * (1+_nu)*fnu;
+            double fnup1 = std::pow(u / 2., _nu+1)
+                * boost::math::cyl_bessel_k(_nu+1, u)
+                / boost::math::tgamma(_nu + 2.);
+            double f = 1.0 - 2.0 * (1+_nu)*fnup1;
             return f - _target;
         }
     private:
+        double _nu;
         double _target;
     };
 
@@ -175,12 +178,15 @@ namespace galsim {
         // Calcute r such that L(r) / L_tot < (1 - missing_flux_frac)
 
         /// TODO: set z1, z2 to initialize solvers
-        SpergelMissingFlux func(_nu, missing_flux);
+        double z1=0.03;
+        double z2=10.0;
+        SpergelMissingFlux func(_nu, missing_flux_frac);
         Solve<SpergelMissingFlux> solver(func, z1, z2);
         solver.setMethod(Brent);
         solver.bracketUpper();
-        z = solver.root()
-        double R = z;
+        double R = solver.root();
+        dbg<<"missing_flux_frac = "<<missing_flux_frac<<std::endl;
+        dbg<<"R = "<<R<<std::endl;
         return R;
     }
 
