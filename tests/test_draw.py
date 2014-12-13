@@ -269,7 +269,7 @@ def test_draw():
                                    "Measured wrong scale after obj2.draw(im9,scale=0)")
 
 
-    # Test if we provide nx, ny and scale.  It should:
+    # Test if we provide nx, ny, and scale.  It should:
     #   - create a new image with the right size
     #   - set the scale
     im10 = obj2.draw(nx=200, ny=100, scale=dx_nyq)
@@ -662,6 +662,35 @@ def test_drawK():
                                    "obj.drawK(re3,im3,scale=0) produced non-zero imaginary image")
     np.testing.assert_almost_equal(CalculateScale(re3), 2, 1,
                                    "Measured wrong scale after obj.drawK(re3,im3,scale=0)")
+
+    # Test if we provide nx, ny, and scale.  It should:
+    #   - create a new image with the right size
+    #   - set the scale
+    re4, im4 = obj.drawK(nx=200, ny=100, scale=stepk)
+    np.testing.assert_almost_equal(re4.scale, stepk, 9,
+                                   "obj.drawK(nx,ny,scale) produced real image with wrong scale")
+    np.testing.assert_almost_equal(im4.scale, stepk, 9,
+                                   "obj.drawK(nx,ny,scale) produced imag image with wrong scale")
+    np.testing.assert_almost_equal(re4.array.shape, (100, 200), 9,
+                                   "obj.drawK(nx,ny,scale) produced real image with wrong shape")
+    np.testing.assert_almost_equal(im4.array.shape, (100, 200), 9,
+                                   "obj.drawK(nx,ny,scale) produced imag image with wrong shape")
+
+    # Test if we provide bounds and scale.  It should:
+    #   - create a new image with the right size
+    #   - set the scale
+    bounds = galsim.BoundsI(1,200,1,100)
+    re4, im4 = obj.drawK(bounds=bounds, scale=stepk)
+    np.testing.assert_almost_equal(re4.scale, stepk, 9,
+                                   "obj.drawK(bounds,scale) produced real image with wrong scale")
+    np.testing.assert_almost_equal(im4.scale, stepk, 9,
+                                   "obj.drawK(bounds,scale) produced imag image with wrong scale")
+    np.testing.assert_almost_equal(re4.array.shape, (100, 200), 9,
+                                   "obj.drawK(bounds,scale) produced real image with wrong shape")
+    np.testing.assert_almost_equal(im4.array.shape, (100, 200), 9,
+                                   "obj.drawK(bounds,scale) produced imag image with wrong shape")
+
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
