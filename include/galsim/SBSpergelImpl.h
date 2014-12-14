@@ -131,6 +131,7 @@ namespace galsim {
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
 
+        double calculateFluxRadius(const double& flux_frac) const;
     private:
         double _nu;    ///< Spergel index.
         double _flux;  ///< Actual flux (may differ from that specified at the constructor).

@@ -66,8 +66,9 @@ namespace galsim {
          * SBSersic.
          *
          * @param[in] nu       index parameter setting the logarithmic slope of the profile.
-         * @param[in] r0       scale length for the profile, NOT the half-light radius
-                               `re = c_nu r0`. (re here == r0 in Spergel 2010 notation).
+         * @param[in] size     Size specification.
+         * @param[in] rType    Kind of size being specified (HALF_LIGHT_RADIUS or
+         *                     SCALE_RADIUS).
          * @param[in] flux     flux.
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.

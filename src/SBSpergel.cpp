@@ -64,12 +64,14 @@ namespace galsim {
     LRUCache<boost::tuple< double, GSParamsPtr >, SpergelInfo> SBSpergel::SBSpergelImpl::cache(
         sbp::max_spergel_cache);
 
-    class SpergelMissingFlux
+    class SpergelIntegratedFlux
     {
     public:
-        SpergelMissingFlux(double nu, double missing_flux) : _nu(nu), _target(missing_flux) {}
+        SpergelIntegratedFlux(double nu, double flux_frac=0.0) : _nu(nu), _target(flux_frac) {}
 
         double operator()(double u) const
+        // Return flux integrated up to radius `u` in units of r0, minus `flux_frac`
+        // (i.e., make a residual so this can be used to search for a target flux.
         {
             double fnup1 = std::pow(u / 2., _nu+1)
                 * boost::math::cyl_bessel_k(_nu+1, u)
@@ -82,6 +84,23 @@ namespace galsim {
         double _target;
     };
 
+    double SBSpergel::SBSpergelImpl::calculateFluxRadius(const double& flux_frac) const
+    {
+        // Calcute r such that L(r/r0) / L_tot == flux_frac
+
+        // These seem to bracket pretty much every reasonable possibility
+        // that I checked in Mathematica.
+        double z1=0.001;
+        double z2=25.0;
+        SpergelIntegratedFlux func(_nu, flux_frac);
+        Solve<SpergelIntegratedFlux> solver(func, z1, z2);
+        solver.setMethod(Brent);
+        double R = solver.root();
+        dbg<<"flux_frac = "<<flux_frac<<std::endl;
+        dbg<<"r/r0 = "<<R<<std::endl;
+        return R;
+    }
+
     SBSpergel::SBSpergelImpl::SBSpergelImpl(double nu, double size, RadiusType rType,
                                             double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
@@ -91,19 +110,10 @@ namespace galsim {
         dbg<<"Start SBSpergel constructor:\n";
         dbg<<"nu = "<<_nu<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
-        dbg<<"maxK() = "<<maxK()<<std::endl;
-        dbg<<"stepK() = "<<stepK()<<std::endl;
 
         _flux_over_2pi = _flux / (2. * M_PI);
 
-        // These z1, z2 span the range of cv
-        double z1=0.03;
-        double z2=2.0;
-        SpergelMissingFlux func(_nu, 0.5);
-        Solve<SpergelMissingFlux> solver(func, z1, z2);
-        solver.setMethod(Brent);
-        solver.bracketUpper();
-        _cnu = solver.root();
+        _cnu = calculateFluxRadius(0.5);
 
         switch(rType) {
         case HALF_LIGHT_RADIUS:
@@ -122,20 +132,20 @@ namespace galsim {
 
         _r0_sq = _r0 * _r0;
         _inv_r0 = 1. / _r0;
+        _norm = _flux / _r0_sq / boost::math::tgamma(_nu + 1.);
 
         dbg<<"scale radius ="<<_r0<<std::endl;
         dbg<<"C_nu = "<<_cnu<<std::endl;
         dbg<<"HLR = "<<_re<<std::endl;
-
-        //_re = _info->getHLR(); // getHLR() is in units of r0.
-
-        _norm = _flux / _r0_sq / boost::math::tgamma(_nu + 1.);
+        //dbg<<"maxK() = "<<maxK()<<std::endl;
+        //dbg<<"stepK() = "<<stepK()<<std::endl;
     }
 
     double SBSpergel::SBSpergelImpl::maxK() const
     { return _info->maxK() * _inv_r0; }
     double SBSpergel::SBSpergelImpl::stepK() const
-    { return _info->stepK() * _inv_r0; }
+    //{ return _info->stepK() * _inv_r0; }
+    { return 1.0 * _inv_r0; }
 
     // Equations (3, 4) of Spergel (2010)
     double SBSpergel::SBSpergelImpl::xValue(const Position<double>& p) const
@@ -163,20 +173,20 @@ namespace galsim {
             throw SBError("Requested Spergel index out of range");
     }
 
-    double SpergelInfo::stepK() const
-    {
-        if (_stepk == 0.) {
-            // How far should the profile extend, if not truncated?
-            // Estimate number of effective radii needed to enclose (1-folding_threshold) of flux
-            double R = calculateMissingFluxRadius(_gsparams->folding_threshold);
-            // Go to at least 5*re
-            R = std::max(R,_gsparams->stepk_minimum_hlr);
-            dbg<<"R => "<<R<<std::endl;
-            _stepk = M_PI / R;
-            dbg<<"stepk = "<<_stepk<<std::endl;
-        }
-        return _stepk;
-    }
+    // double SpergelInfo::stepK() const
+    // {
+    //     if (_stepk == 0.) {
+    //         // How far should the profile extend, if not truncated?
+    //         // Estimate number of effective radii needed to enclose (1-folding_threshold) of flux
+    //         double R = calculateMissingFluxRadius(_gsparams->folding_threshold);
+    //         // Go to at least 5*re
+    //         R = std::max(R,_gsparams->stepk_minimum_hlr);
+    //         dbg<<"R => "<<R<<std::endl;
+    //         _stepk = M_PI / R;
+    //         dbg<<"stepk = "<<_stepk<<std::endl;
+    //     }
+    //     return _stepk;
+    // }
 
     double SpergelInfo::maxK() const
     {
@@ -201,22 +211,21 @@ namespace galsim {
         _re = 1.0;
     }
 
-    double SpergelInfo::calculateMissingFluxRadius(double missing_flux_frac) const
-    {
-        // Calcute r such that L(r) / L_tot < (1 - missing_flux_frac)
+    // double SpergelInfo::calculateMissingFluxRadius(double missing_flux_frac) const
+    // {
+    //     // Calcute r such that L(r) / L_tot < (1 - missing_flux_frac)
 
-        /// TODO: set z1, z2 to initialize solvers
-        double z1=0.03;
-        double z2=10.0;
-        SpergelMissingFlux func(_nu, missing_flux_frac);
-        Solve<SpergelMissingFlux> solver(func, z1, z2);
-        solver.setMethod(Brent);
-        solver.bracketUpper();
-        double R = solver.root();
-        dbg<<"missing_flux_frac = "<<missing_flux_frac<<std::endl;
-        dbg<<"R = "<<R<<std::endl;
-        return R;
-    }
+    //     /// TODO: set z1, z2 to initialize solvers
+    //     double z1=0.001;
+    //     double z2=25.0;
+    //     SpergelMissingFlux func(_nu, missing_flux_frac);
+    //     Solve<SpergelMissingFlux> solver(func, z1, z2);
+    //     solver.setMethod(Brent);
+    //     double R = solver.root();
+    //     dbg<<"missing_flux_frac = "<<missing_flux_frac<<std::endl;
+    //     dbg<<"R = "<<R<<std::endl;
+    //     return R;
+    // }
 
     class SpergelRadialFunction: public FluxDensity
     {
@@ -236,7 +245,8 @@ namespace galsim {
             // Set up the classes for photon shooting
             _radial.reset(new SpergelRadialFunction(_nu));
             std::vector<double> range(2,0.);
-            double shoot_maxr = calculateMissingFluxRadius(_gsparams->shoot_accuracy);
+            //double shoot_maxr = calculateMissingFluxRadius(_gsparams->shoot_accuracy);
+            double shoot_maxr = 1.0;
             range[1] = shoot_maxr;
             _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, _gsparams));
         }
