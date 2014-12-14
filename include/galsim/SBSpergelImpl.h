@@ -145,6 +145,8 @@ namespace galsim {
         double _inv_r0;
         double _flux_over_2pi;
         double _norm;
+        mutable double _stepk;
+        mutable double _maxk;
 
         boost::shared_ptr<SpergelInfo> _info; ///< Points to info structure for this nu
 
