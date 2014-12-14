@@ -1038,7 +1038,7 @@ class GSObject(object):
                             [default: 0]
         @param rng          If provided, a random number generator to use for photon shooting,
                             which may be any kind of BaseDeviate object.  If `rng` is None, one
-                            will be automatically created, using the time as a seed. 
+                            will be automatically created, using the time as a seed.
                             [default: None]
         @param max_extra_noise  If provided, the allowed extra noise in each pixel when photon
                             shooting.  This is only relevant if `n_photons=0`, so the number of
@@ -2120,8 +2120,8 @@ class Spergel(GSObject):
     """A class describing a Spergel profile.
 
     The Spergel surface brightness profile is characterized by three properties: its Spergel index
-    `nu`, its `flux`, and the `scale_radius`.  Given these properties, the surface brightness 
-    profile scales as I(r) ~ r^{nu} * K_{nu}(r), where K_{nu} is the modified Bessel function of 
+    `nu`, its `flux`, and the `scale_radius`.  Given these properties, the surface brightness
+    profile scales as I(r) ~ r^{nu} * K_{nu}(r), where K_{nu} is the modified Bessel function of
     the second kind.
 
     For more information, refer to
@@ -2153,15 +2153,16 @@ class Spergel(GSObject):
     # Initialization parameters of the object, with type information
     _req_params = { "nu" : float }
     _opt_params = { "flux" : float}
-    _single_params = [ { "scale_radius" : float } ]
+    _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, nu, scale_radius=1., flux=1., gsparams=None):
+    def __init__(self, nu, half_light_radius=None, scale_radius=None, flux=1., gsparams=None):
         GSObject.__init__(
-            self, galsim._galsim.SBSpergel(nu, scale_radius=scale_radius, flux=flux,
-                                          gsparams=gsparams))
+            self, galsim._galsim.SBSpergel(nu, half_light_radius=half_light_radius,
+                                           scale_radius=scale_radius, flux=flux,
+                                           gsparams=gsparams))
 
     def getNu(self):
         """Return the Spergel index `nu` for this profile.
@@ -2169,7 +2170,7 @@ class Spergel(GSObject):
         return self.SBProfile.getNu()
 
     def getScaleRadius(self):
-        """Return the scale radius for this Sersic profile.
+        """Return the scale radius for this Spergel profile.
         """
         return self.SBProfile.getScaleRadius()
 

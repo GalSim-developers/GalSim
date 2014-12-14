@@ -41,9 +41,9 @@
 
 namespace galsim {
 
-    SBSpergel::SBSpergel(double nu, double r0, double flux,
-                                 const GSParamsPtr& gsparams) :
-        SBProfile(new SBSpergelImpl(nu, r0, flux, gsparams)) {}
+    SBSpergel::SBSpergel(double nu, double size, RadiusType rType, double flux,
+                         const GSParamsPtr& gsparams) :
+        SBProfile(new SBSpergelImpl(nu, size, rType, flux, gsparams)) {}
 
     SBSpergel::SBSpergel(const SBSpergel& rhs) : SBProfile(rhs) {}
 
@@ -82,23 +82,19 @@ namespace galsim {
         double _target;
     };
 
-    SBSpergel::SBSpergelImpl::SBSpergelImpl(
-        double nu, double r0, double flux, const GSParamsPtr& gsparams) :
+    SBSpergel::SBSpergelImpl::SBSpergelImpl(double nu, double size, RadiusType rType,
+                                            double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _nu(nu), _flux(flux), _r0(r0), _r0_sq(_r0*_r0),
+        _nu(nu), _flux(flux),
         _info(cache.get(boost::make_tuple(_nu, this->gsparams.duplicate())))
     {
         dbg<<"Start SBSpergel constructor:\n";
         dbg<<"nu = "<<_nu<<std::endl;
-        dbg<<"r0 = "<<_r0<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
         dbg<<"maxK() = "<<maxK()<<std::endl;
         dbg<<"stepK() = "<<stepK()<<std::endl;
 
         _flux_over_2pi = _flux / (2. * M_PI);
-
-        _r0_sq = _r0 * _r0;
-        _inv_r0 = 1. / _r0;
 
         // These z1, z2 span the range of cv
         double z1=0.03;
@@ -108,7 +104,26 @@ namespace galsim {
         solver.setMethod(Brent);
         solver.bracketUpper();
         _cnu = solver.root();
-        _re = _cnu * _r0;
+
+        switch(rType) {
+        case HALF_LIGHT_RADIUS:
+            {
+                _re = size;
+                _r0 = _re / _cnu;
+            }
+            break;
+        case SCALE_RADIUS:
+            {
+                _r0 = size;
+                _re = _r0 * _cnu;
+            }
+            break;
+        }
+
+        _r0_sq = _r0 * _r0;
+        _inv_r0 = 1. / _r0;
+
+        dbg<<"scale radius ="<<_r0<<std::endl;
         dbg<<"C_nu = "<<_cnu<<std::endl;
         dbg<<"HLR = "<<_re<<std::endl;
 

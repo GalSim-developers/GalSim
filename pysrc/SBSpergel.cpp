@@ -27,7 +27,7 @@
 #include "boost/python/stl_iterator.hpp"
 
 #include "SBSpergel.h"
-//#include "RadiusHelper.h"
+#include "RadiusHelper.h"
 
 namespace bp = boost::python;
 
@@ -37,24 +37,31 @@ namespace galsim {
     {
 
         static SBSpergel* construct(
-            double nu, double scale_radius, double flux,
-            boost::shared_ptr<GSParams> gsparams)
+            double nu, const bp::object & scale_radius, const bp::object & half_light_radius,
+            double flux, boost::shared_ptr<GSParams> gsparams)
         {
-            return new SBSpergel(nu, scale_radius, flux, gsparams);
+            double s = 1.0;
+            checkRadii(half_light_radius, scale_radius, bp::object());
+            SBSpergel::RadiusType rType = SBSpergel::HALF_LIGHT_RADIUS;
+            if (half_light_radius.ptr() != Py_None) {
+                s = bp::extract<double>(half_light_radius);
+            }
+            if (scale_radius.ptr() != Py_None) {
+                s = bp::extract<double>(scale_radius);
+                rType = SBSpergel::SCALE_RADIUS;
+            }
+            return new SBSpergel(nu, s, rType, flux, gsparams);
         }
 
         static void wrap()
         {
-            bp::class_<SBSpergel,bp::bases<SBProfile> >(
-                "SBSpergel",
-                "SBSpergel(nu=0.5, scale_radius=1., flux=1.)\n\n"
-                "Construct a Spergel profile with the given flux and scale length.",
-                bp::no_init)
+            bp::class_<SBSpergel,bp::bases<SBProfile> >("SBSpergel",bp::no_init)
                 .def("__init__",
                      bp::make_constructor(
                         &construct, bp::default_call_policies(),
                         (bp::arg("nu"),
-                         bp::arg("scale_radius")=1.,
+                         bp::arg("scale_radius")=bp::object(),
+                         bp::arg("half_light_radius")=bp::object(),
                          bp::arg("flux")=1.,
                          bp::arg("gsparams")=bp::object()))
                 )

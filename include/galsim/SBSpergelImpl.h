@@ -80,8 +80,8 @@ namespace galsim {
     class SBSpergel::SBSpergelImpl : public SBProfileImpl
     {
     public:
-        SBSpergelImpl(double nu, double r0, double flux,
-                     const GSParamsPtr& gsparams);
+        SBSpergelImpl(double nu, double size, RadiusType rType,
+                      double flux, const GSParamsPtr& gsparams);
 
         ~SBSpergelImpl() {}
 
