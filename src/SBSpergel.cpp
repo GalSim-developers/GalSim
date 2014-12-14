@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "SBSpergel.h"
 #include "SBSpergelImpl.h"
@@ -143,7 +143,11 @@ namespace galsim {
     double SBSpergel::SBSpergelImpl::maxK() const
     {
         if(_maxk == 0.) {
-            _maxk = std::sqrt(std::pow(gsparams->maxk_threshold, -1./(1+_nu))-1.0) * _inv_r0;
+            // Solving (1+k^2)^(-1-nu) = maxk_threshold for k
+            // exact:
+            //_maxk = std::sqrt(std::pow(gsparams->maxk_threshold, -1./(1+_nu))-1.0) * _inv_r0;
+            // approximate 1+k^2 ~ k^2 => good enough:
+            _maxk = std::pow(gsparams->maxk_threshold, -1./(2*(1+_nu))) * _inv_r0;
         }
         return _maxk;
     }
@@ -172,7 +176,7 @@ namespace galsim {
     std::complex<double> SBSpergel::SBSpergelImpl::kValue(const Position<double>& k) const
     {
         double ksq = (k.x*k.x + k.y*k.y)*_r0_sq;
-        return _flux_over_2pi / std::pow(1. + ksq, 1. + _nu);
+        return _flux / std::pow(1. + ksq, 1. + _nu);
     }
 
     SpergelInfo::SpergelInfo(double nu, const GSParamsPtr& gsparams) :
