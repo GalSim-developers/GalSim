@@ -27,7 +27,7 @@
 namespace galsim {
 
     /// @brief A private class that caches the needed parameters for each Spergel index `nu`.
-    class SpergelInfo 
+    class SpergelInfo
     {
     public:
         /// @brief Constructor
@@ -51,7 +51,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;        
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
     private:
 
@@ -69,8 +69,8 @@ namespace galsim {
         mutable double _flux;    ///< Flux relative to the untruncated profile.
 
         /// Classes used for photon shooting
-        mutable boost::shared_ptr<FluxDensity> _radial;  
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;   
+        mutable boost::shared_ptr<FluxDensity> _radial;
+        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
 
         // Helper functions used internally:
         void calculateHLR() const;
@@ -92,19 +92,19 @@ namespace galsim {
         double stepK() const;
 
 
-        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
             xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF;
         }
 
-        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
             ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF;
         }
 
-        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
         {
             ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF;
             if (std::abs(x/_re) < 1.e-2) splits.push_back(0.);
@@ -115,7 +115,7 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        Position<double> centroid() const 
+        Position<double> centroid() const
         { return Position<double>(0., 0.); }
 
         /// @brief Returns the true flux (may be different from the specified flux)
@@ -138,6 +138,7 @@ namespace galsim {
 
         double _shootnorm; ///< Normalization for photon shooting.
 
+        double _cnu;
         double _re;
         double _r0_sq;
         double _inv_r0;
@@ -156,4 +157,3 @@ namespace galsim {
 }
 
 #endif
-

@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBSpergel.h"
 #include "SBSpergelImpl.h"
@@ -64,6 +64,24 @@ namespace galsim {
     LRUCache<boost::tuple< double, GSParamsPtr >, SpergelInfo> SBSpergel::SBSpergelImpl::cache(
         sbp::max_spergel_cache);
 
+    class SpergelMissingFlux
+    {
+    public:
+        SpergelMissingFlux(double nu, double missing_flux) : _nu(nu), _target(missing_flux) {}
+
+        double operator()(double u) const
+        {
+            double fnup1 = std::pow(u / 2., _nu+1)
+                * boost::math::cyl_bessel_k(_nu+1, u)
+                / boost::math::tgamma(_nu + 2.);
+            double f = 1.0 - 2.0 * (1+_nu)*fnup1;
+            return f - _target;
+        }
+    private:
+        double _nu;
+        double _target;
+    };
+
     SBSpergel::SBSpergelImpl::SBSpergelImpl(
         double nu, double r0, double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
@@ -81,7 +99,20 @@ namespace galsim {
 
         _r0_sq = _r0 * _r0;
         _inv_r0 = 1. / _r0;
-        _re = _info->getHLR(); // getHLR() is in units of r0.
+
+        // These z1, z2 span the range of cv
+        double z1=0.03;
+        double z2=2.0;
+        SpergelMissingFlux func(_nu, 0.5);
+        Solve<SpergelMissingFlux> solver(func, z1, z2);
+        solver.setMethod(Brent);
+        solver.bracketUpper();
+        _cnu = solver.root();
+        _re = _cnu * _r0;
+        dbg<<"C_nu = "<<_cnu<<std::endl;
+        dbg<<"HLR = "<<_re<<std::endl;
+
+        //_re = _info->getHLR(); // getHLR() is in units of r0.
 
         _norm = _flux / _r0_sq / boost::math::tgamma(_nu + 1.);
     }
@@ -154,24 +185,6 @@ namespace galsim {
         /// For now, just set _re to _r0 in units of r0:
         _re = 1.0;
     }
-
-    class SpergelMissingFlux
-    {
-    public:
-        SpergelMissingFlux(double nu, double missing_flux) : _nu(nu), _target(missing_flux) {}
-
-        double operator()(double u) const
-        {
-            double fnup1 = std::pow(u / 2., _nu+1)
-                * boost::math::cyl_bessel_k(_nu+1, u)
-                / boost::math::tgamma(_nu + 2.);
-            double f = 1.0 - 2.0 * (1+_nu)*fnup1;
-            return f - _target;
-        }
-    private:
-        double _nu;
-        double _target;
-    };
 
     double SpergelInfo::calculateMissingFluxRadius(double missing_flux_frac) const
     {
