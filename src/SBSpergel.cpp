@@ -67,7 +67,8 @@ namespace galsim {
     class SpergelIntegratedFlux
     {
     public:
-        SpergelIntegratedFlux(double nu, double flux_frac=0.0) : _nu(nu), _target(flux_frac) {}
+        SpergelIntegratedFlux(double nu, double gamma_nup2, double flux_frac=0.0)
+            : _nu(nu), _gamma_nup2(gamma_nup2),  _target(flux_frac) {}
 
         double operator()(double u) const
         // Return flux integrated up to radius `u` in units of r0, minus `flux_frac`
@@ -75,12 +76,13 @@ namespace galsim {
         {
             double fnup1 = std::pow(u / 2., _nu+1)
                 * boost::math::cyl_bessel_k(_nu+1, u)
-                / boost::math::tgamma(_nu + 2.);
+                / _gamma_nup2;
             double f = 1.0 - 2.0 * (1+_nu)*fnup1;
             return f - _target;
         }
     private:
         double _nu;
+        double _gamma_nup2;
         double _target;
     };
 
@@ -92,7 +94,7 @@ namespace galsim {
         // that I checked in Mathematica.
         double z1=0.001;
         double z2=25.0;
-        SpergelIntegratedFlux func(_nu, flux_frac);
+        SpergelIntegratedFlux func(_nu, _gamma_nup2, flux_frac);
         Solve<SpergelIntegratedFlux> solver(func, z1, z2);
         solver.setMethod(Brent);
         double R = solver.root();
@@ -105,16 +107,16 @@ namespace galsim {
                                             double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _nu(nu), _flux(flux),
+        _gamma_nup1(boost::math::tgamma(_nu+1.0)),
+        _gamma_nup2(_gamma_nup1 * (_nu+1.)),
+        _cnu(calculateFluxRadius(0.5)),
         _stepk(0.0), _maxk(0.0),
         _info(cache.get(boost::make_tuple(_nu, this->gsparams.duplicate())))
     {
         dbg<<"Start SBSpergel constructor:\n";
         dbg<<"nu = "<<_nu<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
-
-        _flux_over_2pi = _flux / (2. * M_PI);
-
-        _cnu = calculateFluxRadius(0.5);
+        dbg<<"C_nu = "<<_cnu<<std::endl;
 
         switch(rType) {
         case HALF_LIGHT_RADIUS:
@@ -133,10 +135,9 @@ namespace galsim {
 
         _r0_sq = _r0 * _r0;
         _inv_r0 = 1. / _r0;
-        _norm = _flux / _r0_sq / boost::math::tgamma(_nu + 1.);
+        _norm = _flux / _r0_sq / _gamma_nup1 / (2.0 * M_PI);
 
         dbg<<"scale radius = "<<_r0<<std::endl;
-        dbg<<"C_nu = "<<_cnu<<std::endl;
         dbg<<"HLR = "<<_re<<std::endl;
     }
 

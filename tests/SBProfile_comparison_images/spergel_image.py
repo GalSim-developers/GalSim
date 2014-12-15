@@ -13,7 +13,7 @@ def c(nu):
 
 def radial_profile(nu, r0):
     cnu = c(nu)
-    return lambda r: (cnu**2 / r0**2 * f(nu)(cnu * r/r0))
+    return lambda r: (cnu**2 / r0**2 / (2*np.pi) * f(nu)(cnu * r/r0))
 
 #make some images
 stamp_size = 31
@@ -25,7 +25,7 @@ hlr = 1.0
 
 hdulist = fits.HDUList()
 
-for nu in [-0.9, 0.00, 0.85]:
+for nu in [-0.9, -0.3, 0.0, 0.85]:
     img = radial_profile(nu, hlr)(np.sqrt(xs**2 + ys**2))
     print nu, c(nu)
     output_file = "spergel_nu{:.2f}.fits".format(nu)

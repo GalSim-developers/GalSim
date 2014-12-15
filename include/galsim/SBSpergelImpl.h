@@ -139,8 +139,10 @@ namespace galsim {
 
         double _shootnorm; ///< Normalization for photon shooting.
 
-        double _cnu;
-        double _re;
+        double _gamma_nup1; // Gamma(nu + 1)
+        double _gamma_nup2; // Gamma(nu + 2)
+        double _cnu;        // Factor relating HLR and scale radius: r0 = re / cnu
+        double _re;         // half-light-radius
         double _r0_sq;
         double _inv_r0;
         double _flux_over_2pi;

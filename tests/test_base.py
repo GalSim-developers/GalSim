@@ -21,13 +21,13 @@ import sys
 
 from galsim_test_helpers import *
 
-imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
-                                                          # images.
+path, filename = os.path.split(__file__)
+imgdir = os.path.join(path, "SBProfile_comparison_images") # Directory containing the reference
+                                                           # images.
 
 try:
     import galsim
 except ImportError:
-    path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
@@ -40,7 +40,7 @@ test_scale = [1.8, 0.05, 0.002, 0.002]
 test_sersic_trunc = [0., 8.5]
 test_flux = 1.8
 
-test_spergel_nu = [-0.9, 0.0, 0.85]
+test_spergel_nu = [-0.9, -0.3, 0.0, 0.85]
 
 if __name__ == "__main__":
     # If doing a nosetests run, we don't actually need to do all 4 sersic n values.
@@ -1717,6 +1717,9 @@ def test_spergel():
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Spergel disagrees with expected result")
+
+        if nu >= -0.3:
+            do_kvalue(spergel, "Spergel(nu={:1}) ".format(nu))
         # np.testing.assert_almost_equal(
         #     myImg.array.sum()*dx**2, myImg.added_flux, 5,
         #     err_msg="Spergel profile GSObject::draw returned wrong added_flux")
@@ -1724,29 +1727,29 @@ def test_spergel():
 
 
 if __name__ == "__main__":
-    test_gaussian()
-    test_gaussian_properties()
-    test_gaussian_radii()
-    test_gaussian_flux_scaling()
-    test_exponential()
-    test_exponential_properties()
-    test_exponential_radii()
-    test_exponential_flux_scaling()
-    test_sersic()
-    test_sersic_radii()
-    test_sersic_flux_scaling()
-    test_sersic_05()
-    test_sersic_1()
-    test_airy()
-    test_airy_radii()
-    test_airy_flux_scaling()
-    test_box()
-    test_moffat()
-    test_moffat_properties()
-    test_moffat_radii()
-    test_moffat_flux_scaling()
-    test_kolmogorov()
-    test_kolmogorov_properties()
-    test_kolmogorov_radii()
-    test_kolmogorov_flux_scaling()
+    # test_gaussian()
+    # test_gaussian_properties()
+    # test_gaussian_radii()
+    # test_gaussian_flux_scaling()
+    # test_exponential()
+    # test_exponential_properties()
+    # test_exponential_radii()
+    # test_exponential_flux_scaling()
+    # test_sersic()
+    # test_sersic_radii()
+    # test_sersic_flux_scaling()
+    # test_sersic_05()
+    # test_sersic_1()
+    # test_airy()
+    # test_airy_radii()
+    # test_airy_flux_scaling()
+    # test_box()
+    # test_moffat()
+    # test_moffat_properties()
+    # test_moffat_radii()
+    # test_moffat_flux_scaling()
+    # test_kolmogorov()
+    # test_kolmogorov_properties()
+    # test_kolmogorov_radii()
+    # test_kolmogorov_flux_scaling()
     test_spergel()
