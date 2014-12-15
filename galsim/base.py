@@ -2174,6 +2174,11 @@ class Spergel(GSObject):
         """
         return self.SBProfile.getScaleRadius()
 
+    def getHalfLightRadius(self):
+        """Return the half light radius for this Spergel profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
+
 
 # GSParams is defined in C++ and wrapped.  But we want to modify it here slightly to add
 # the obsolete name alias_threshold as a valid synonym for folding_threshold

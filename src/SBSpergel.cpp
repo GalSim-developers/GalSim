@@ -61,6 +61,12 @@ namespace galsim {
         return static_cast<const SBSpergelImpl&>(*_pimpl).getScaleRadius();
     }
 
+    double SBSpergel::getHalfLightRadius() const
+    {
+        assert(dynamic_cast<const SBSpergelImpl*>(_pimpl.get()));
+        return static_cast<const SBSpergelImpl&>(*_pimpl).getHalfLightRadius();
+    }
+
     LRUCache<boost::tuple< double, GSParamsPtr >, SpergelInfo> SBSpergel::SBSpergelImpl::cache(
         sbp::max_spergel_cache);
 

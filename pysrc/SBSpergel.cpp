@@ -68,6 +68,7 @@ namespace galsim {
                 .def(bp::init<const SBSpergel &>())
                 .def("getNu", &SBSpergel::getNu)
                 .def("getScaleRadius", &SBSpergel::getScaleRadius)
+                .def("getHalfLightRadius", &SBSpergel::getHalfLightRadius)
                 ;
         }
     };

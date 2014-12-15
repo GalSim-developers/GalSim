@@ -88,6 +88,9 @@ namespace galsim {
         /// @brief Returns the scale radius of the Spergel profile.
         double getScaleRadius() const;
 
+        /// @brief Returns the half light radius of the Spergel profile.
+        double getHalfLightRadius() const;
+
     protected:
 
         class SBSpergelImpl;

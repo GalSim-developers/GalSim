@@ -36,12 +36,6 @@ namespace galsim {
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~SpergelInfo() {}
 
-        double maxK() const;
-        double stepK() const;
-
-        /// @brief The half-light radius in units of r0.
-        double getHLR() const;
-
         /**
          * @brief Shoot photons through unit-size, unnormalized profile
          * Spergel profiles are sampled with a numerical method, using class
@@ -71,10 +65,6 @@ namespace galsim {
         /// Classes used for photon shooting
         mutable boost::shared_ptr<FluxDensity> _radial;
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
-
-        // Helper functions used internally:
-        void calculateHLR() const;
-        double calculateMissingFluxRadius(double missing_flux_frac) const;
     };
 
     class SBSpergel::SBSpergelImpl : public SBProfileImpl
@@ -90,7 +80,6 @@ namespace galsim {
 
         double maxK() const;
         double stepK() const;
-
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
         {
@@ -118,7 +107,7 @@ namespace galsim {
         Position<double> centroid() const
         { return Position<double>(0., 0.); }
 
-        /// @brief Returns the true flux (may be different from the specified flux)
+        /// @brief Returns the flux
         double getFlux() const { return _flux; }
 
         /// @brief Spergel photon shooting done by rescaling photons from appropriate `SpergelInfo`
@@ -126,16 +115,16 @@ namespace galsim {
 
         /// @brief Returns the Spergel index nu
         double getNu() const { return _nu; }
-        /// @brief Returns the true half-light radius (may be different from the specified value)
+        /// @brief Returns the half-light radius
         double getHalfLightRadius() const { return _re; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
 
         double calculateFluxRadius(const double& flux_frac) const;
     private:
-        double _nu;    ///< Spergel index.
-        double _flux;  ///< Actual flux (may differ from that specified at the constructor).
-        double _r0;    ///< Scale radius specified at the constructor.
+        double _nu;    ///< Spergel index
+        double _flux;  ///< Flux
+        double _r0;    ///< Scale radius
 
         double _shootnorm; ///< Normalization for photon shooting.
 
@@ -145,7 +134,6 @@ namespace galsim {
         double _re;         // half-light-radius
         double _r0_sq;
         double _inv_r0;
-        double _flux_over_2pi;
         double _norm;
         mutable double _stepk;
         mutable double _maxk;
@@ -157,7 +145,6 @@ namespace galsim {
         void operator=(const SBSpergelImpl& rhs);
 
         static LRUCache<boost::tuple< double, GSParamsPtr >, SpergelInfo> cache;
-
     };
 }
 
