@@ -315,6 +315,25 @@ def test_IPC_basic():
     np.testing.assert_almost_equal(im_new.array.sum(), im.array.sum(), int(DECIMAL/3),
         err_msg="Normalized IPC kernel does not conserve the total flux for 'wrap' option.")
 
+    # Checking directionality
+    ipc_kernel = np.zeros((3,3))
+    ipc_kernel[1,1] = 0.875
+    ipc_kernel[0,1] = 0.125
+    # This kernel should correspond to each pixel contributing to the pixel beneath it
+    im_new = im.copy()
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
+    np.testing.assert_array_almost_equal(0.875*im.array[1:-1,1:-1]+0.125*im.array[0:-2,1:-1],
+        im_new.array[1:-1,1:-1], int(DECIMAL), err_msg="Difference in directionality.")
+
+    ipc_kernel = np.zeros((3,3))
+    ipc_kernel[1,1] = 0.875
+    ipc_kernel[1,0] = 0.125
+    # This kernel should correspond to each pixel contributing to the pixel to its right
+    im_new = im.copy()
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
+    np.testing.assert_array_almost_equal(0.875*im.array[1:-1,1:-1]+0.125*im.array[1:-1,0:-2],
+        im_new.array[1:-1,1:-1], int(DECIMAL), err_msg="Difference in directionality.")
+
     try:
         from scipy import signal
         print "SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`"
