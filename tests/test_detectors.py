@@ -293,10 +293,30 @@ def test_IPC_basic():
         err_msg="Image is altered for no IPC with edge_treatment = 'wrap'" )
 
     im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop')
-    #Input arrays and output arrays will differ at the edges for this option. 
+    np.testing.assert_array_equal(
+        im_new.array, im.array,
+        err_msg="Image is altered for no IPC with edge_treatment = 'crop'" )
+
+    # Test with a scalar fill_value
+    fill_value = np.pi # a non-trivial one #np.random.randn(im_new.array.shape[0])
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',fill_value=fill_value)
+    #Input arrays and output arrays will differ at the edges for this option.
     np.testing.assert_array_equal(
         im_new.array[1:-1,1:-1], im.array[1:-1,1:-1],
-        err_msg="Image is altered for no IPC with edge_treatment = 'crop'" )
+        err_msg="Image is altered for no IPC with edge_treatment = 'crop' and with a fill_value" )
+
+    np.testing.assert_array_equal(
+        im_new.array[0,:], fill_value,
+        err_msg="Top edge is not filled with the correct value")
+    np.testing.assert_array_equal(
+        im_new.array[-1,:], fill_value,
+        err_msg="Bottom edge is not filled with the correct value")
+    np.testing.assert_array_equal(
+        im_new.array[:,0], fill_value,
+        err_msg="Left edge is not filled with the correct value")
+    np.testing.assert_array_equal(
+        im_new.array[:,-1], fill_value,
+        err_msg="Left edge is not filled with the correct value")
 
     # Testing for flux conservation
     ipc_kernel = abs(np.random.randn(3,3)) # a random kernel
