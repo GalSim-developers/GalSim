@@ -39,7 +39,7 @@ def test_nonlinearity_basic():
 
     # Make an image with non-trivially interesting scale and bounds.
     g = galsim.Gaussian(sigma=3.7)
-    im = g.draw(scale=0.25)
+    im = g.drawImage(scale=0.25)
     im.shift(dx=-5, dy=3)
     im_save = im.copy()
 
@@ -179,7 +179,7 @@ def test_recipfail_basic():
 
     # Make an image with non-trivially interesting scale and bounds.
     g = galsim.Gaussian(sigma=3.7)
-    im = g.draw(scale=0.25)
+    im = g.drawImage(scale=0.25)
     im.shift(dx=-5, dy=3)
     im_save = im.copy()
 
@@ -273,7 +273,7 @@ def test_IPC_basic():
 
     # Make an image with non-trivially interesting scale and bounds.
     g = galsim.Gaussian(sigma=3.7)
-    im = g.draw(scale=0.25)
+    im = g.drawImage(scale=0.25)
     im.shift(dx=-5, dy=3)
     im_save = im.copy()
 
