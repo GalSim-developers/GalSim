@@ -30,8 +30,6 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-DECIMAL = 14
-
 def test_nonlinearity_basic():
     """Check for overall sensible behavior of the nonlinearity routine."""
     import time
@@ -129,7 +127,7 @@ def test_nonlinearity_basic():
     # Note, don't be quite as stringent as in previous test; there can be small interpolation
     # errors.
     np.testing.assert_array_almost_equal(
-        im1.array, im2.array, int(0.5*DECIMAL),
+        im1.array, im2.array, 7,
         err_msg='Image differs when using LUT vs. lambda function')
 
     # Check that lambda func vs. interpolated function from SciPy agree
@@ -162,7 +160,7 @@ def test_nonlinearity_basic():
         # Note, don't be quite as stringent as in previous test; there can be small interpolation
         # errors.
         np.testing.assert_array_almost_equal(
-            im1.array, im2.array, int(0.5*DECIMAL),
+            im1.array, im2.array, 7,
             err_msg="Image differs when using SciPy's interpolation vs. lambda function")
     except ImportError:
         pass
@@ -236,7 +234,7 @@ def test_recipfail_basic():
     assert im2.bounds == im.bounds
 
     np.testing.assert_array_almost_equal(
-        np.log(dim2)/np.log(dim1), expected_ratio, int(DECIMAL/3),
+        np.log(dim2)/np.log(dim1), expected_ratio, 5,
         err_msg='Did not get expected change in reciprocity failure when varying alpha')
 
     #Check math is right
@@ -249,8 +247,8 @@ def test_recipfail_basic():
     assert im_new.bounds == im.bounds
     np.testing.assert_array_almost_equal(
         (np.log10(im_new.array)-np.log10(im.array)), (alpha/np.log(10))*np.log10(im.array/ \
-            (exp_time*base_flux))
-        ,int(DECIMAL/3), err_msg='Difference in images is not alpha times the log of original')
+            (exp_time*base_flux)), 5,
+        err_msg='Difference in images is not alpha times the log of original')
 
     # Check power law against logarithmic behavior
     alpha, exp_time, base_flux = 0.0065, 2.0, 4.0
@@ -261,7 +259,7 @@ def test_recipfail_basic():
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
     np.testing.assert_array_almost_equal(
-        im_new.array,im.array*(1+alpha*np.log10(im.array/(exp_time*base_flux))),int(DECIMAL/3),
+        im_new.array,im.array*(1+alpha*np.log10(im.array/(exp_time*base_flux))),6,
         err_msg='Difference between power law and log behavior')
 
     t2 = time.time()
@@ -343,10 +341,9 @@ def test_IPC_basic():
     im_new = im.copy()
     im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
     np.testing.assert_array_almost_equal(0.875*im.array[1:-1,1:-1]+0.125*im.array[2:,1:-1],
-        im_new.array[1:-1,1:-1], int(DECIMAL), err_msg="Difference in directionality for down\
-        kernel.")
+        im_new.array[1:-1,1:-1], 7, err_msg="Difference in directionality for down kernel.")
     # Checking for one pixel in the central bulk
-    np.testing.assert_almost_equal(im_new(2,2), 0.875*im(2,2)+0.125*im(2,3), int(DECIMAL),
+    np.testing.assert_almost_equal(im_new(2,2), 0.875*im(2,2)+0.125*im(2,3), 7,
         err_msg="Direction is not as intended for down kernel.")
 
     ipc_kernel = np.zeros((3,3))
