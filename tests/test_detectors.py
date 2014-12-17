@@ -338,25 +338,49 @@ def test_IPC_basic():
     ipc_kernel[1,1] = 0.875
     ipc_kernel[0,1] = 0.125
     # This kernel should correspond to each pixel contributing to the pixel beneath it
-    im_new = im.copy()
-    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
+    im1 = im.copy()
+    im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
     np.testing.assert_array_almost_equal(0.875*im.array[1:-1,1:-1]+0.125*im.array[2:,1:-1],
-        im_new.array[1:-1,1:-1], 7, err_msg="Difference in directionality for down kernel.")
+        im1.array[1:-1,1:-1], 7, err_msg="Difference in directionality for down kernel.")
+
     # Checking for one pixel in the central bulk
-    np.testing.assert_almost_equal(im_new(2,2), 0.875*im(2,2)+0.125*im(2,3), 7,
+    np.testing.assert_almost_equal(im1(2,2), 0.875*im(2,2)+0.125*im(2,3), 7,
         err_msg="Direction is not as intended for down kernel.")
+
+    # Check using GalSim's native Convolve routine for GSObjects
+    ipc_kernel_im = galsim.ImageF(np.fliplr(ipc_kernel))
+    ipc_kernel_intim = galsim.InterpolatedImage(ipc_kernel_im,x_interpolant='nearest',
+        scale=im.scale)
+    im_int = galsim.InterpolatedImage(im,x_interpolant='nearest')
+    im2_int = galsim.Convolve(im_int,ipc_kernel_intim,real_space=True)
+    im2 = im.copy() # needed for arrays to be of same size
+    im2_int.drawImage(image=im2, scale=im.scale)
+    np.testing.assert_array_almost_equal(0.875*im.array[1:-1,1:-1]+0.125*im.array[2:,1:-1],
+        im2.array[1:-1,1:-1], 6,
+        err_msg="Difference in directionality for down kernel with InterpolatedImage.")
 
     ipc_kernel = np.zeros((3,3))
     ipc_kernel[1,1] = 0.875
     ipc_kernel[1,0] = 0.125
     # This kernel should correspond to each pixel contributing to the pixel to its right
-    im_new = im.copy()
-    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
-    np.testing.assert_array_almost_equal(0.875*im.array[1:-1,1:-1]+0.125*im.array[1:-1,0:-2],
-        im_new.array[1:-1,1:-1], 7, err_msg="Difference in directionality for right kernel.")
+    im1 = im.copy()
+    im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
+    np.testing.assert_array_almost_equal(im1.array[1:-1,1:-1], im1.array[1:-1,1:-1], 7,
+        err_msg="Difference in directionality for right kernel.")
     # Checking for one pixel in the central bulk
-    np.testing.assert_almost_equal(im_new(2,3), 0.875*im(2,3)+0.125*im(2,2), 7,
+    np.testing.assert_almost_equal(im1(2,3), 0.875*im(2,3)+0.125*im(2,2), 7,
         err_msg="Direction is not as intended for right kernel.")
+
+    # Check using GalSim's native Convolve routine for GSObjects
+    ipc_kernel_im = galsim.ImageF(np.fliplr(ipc_kernel))
+    ipc_kernel_intim = galsim.InterpolatedImage(ipc_kernel_im,x_interpolant='nearest',
+        scale=im.scale)
+    im_int = galsim.InterpolatedImage(im,x_interpolant='nearest')
+    im2_int = galsim.Convolve(im_int,ipc_kernel_intim,real_space=True)
+    im2 = im.copy() # needed for arrays to be of same size
+    im2_int.drawImage(image=im2, scale=im.scale)
+    np.testing.assert_array_almost_equal(im1.array[1:-1,1:-1], im2.array[1:-1,1:-1], 6,
+        err_msg="Difference in directionality for right kernel with InterpolatedImage.")
 
     try:
         from scipy import signal
