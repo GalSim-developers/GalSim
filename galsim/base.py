@@ -1027,11 +1027,11 @@ class GSObject(object):
                             If `image` is given, but its bounds are undefined (e.g. if it was
                             constructed with `image = galsim.Image()`), then it will be resized
                             appropriately based on the profile's size [default: None].
-        @param nx           If provided, use to set the x-direction size of the image.  Must be
-                            accompanied by `ny`.
-        @param ny           If provided, use to set the y-direction size of the image.  Must be
-                            accompanied by `nx`.
-        @param bounds       If provided, use to set the bounds of the image.
+        @param nx           If provided and `image` is None, use to set the x-direction size of the
+                            image.  Must be accompanied by `ny`.
+        @param ny           If provided and `image` is None, use to set the y-direction size of the
+                            image.  Must be accompanied by `nx`.
+        @param bounds       If provided and `image` is None, use to set the bounds of the image.
         @param scale        If provided, use this as the pixel scale for the image.
                             If `scale` is None and `image` is given, then take the provided
                             image's pixel scale.
