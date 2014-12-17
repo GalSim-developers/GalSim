@@ -239,16 +239,16 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     else:
         raise ValueError("edge_treatment has to be one of 'extend', 'wrap' or 'crop'. ")
 
-    #Generating different segments of the padded array
+    # Generating different segments of the padded array
     center = pad_array[1:-1,1:-1]
-    top = pad_array[:-2,1:-1]
-    bottom = pad_array[2:,1:-1]
+    top = pad_array[2:,1:-1]
+    bottom = pad_array[:-2,1:-1]
     left = pad_array[1:-1,:-2]
     right = pad_array[1:-1,2:]
-    topleft = pad_array[:-2,:-2]
-    bottomright = pad_array[2:,2:]
-    topright = pad_array[:-2,2:]
-    bottomleft = pad_array[2:,:-2]
+    topleft = pad_array[2:,:-2]
+    bottomright = pad_array[:-2,2:]
+    topright = pad_array[2:,2:]
+    bottomleft = pad_array[:-2,:-2]
 
     #Generating the output array, with 2 rows and 2 columns lesser than the padded array
     out_array = IPC_kernel[0,0]*topleft + IPC_kernel[0,1]*top + IPC_kernel[0,2]*topright + \

@@ -271,10 +271,9 @@ def test_IPC_basic():
     import time
     t1 = time.time()
 
-    # Make an image with non-trivially interesting scale and bounds.
+    # Make an image with non-trivially interesting scale.
     g = galsim.Gaussian(sigma=3.7)
     im = g.drawImage(scale=0.25)
-    im.shift(dx=-5, dy=3)
     im_save = im.copy()
 
     # Check for no IPC
@@ -336,14 +335,19 @@ def test_IPC_basic():
         err_msg="Normalized IPC kernel does not conserve the total flux for 'wrap' option.")
 
     # Checking directionality
+    # -----------------------
     ipc_kernel = np.zeros((3,3))
     ipc_kernel[1,1] = 0.875
     ipc_kernel[0,1] = 0.125
     # This kernel should correspond to each pixel contributing to the pixel beneath it
     im_new = im.copy()
     im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
-    np.testing.assert_array_almost_equal(0.875*im.array[1:-1,1:-1]+0.125*im.array[0:-2,1:-1],
-        im_new.array[1:-1,1:-1], int(DECIMAL), err_msg="Difference in directionality.")
+    np.testing.assert_array_almost_equal(0.875*im.array[1:-1,1:-1]+0.125*im.array[2:,1:-1],
+        im_new.array[1:-1,1:-1], int(DECIMAL), err_msg="Difference in directionality for down\
+        kernel.")
+    # Checking for one pixel in the central bulk
+    np.testing.assert_almost_equal(im_new(2,2), 0.875*im(2,2)+0.125*im(2,3), int(DECIMAL),
+        err_msg="Direction is not as intended for down kernel.")
 
     ipc_kernel = np.zeros((3,3))
     ipc_kernel[1,1] = 0.875
@@ -352,7 +356,10 @@ def test_IPC_basic():
     im_new = im.copy()
     im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
     np.testing.assert_array_almost_equal(0.875*im.array[1:-1,1:-1]+0.125*im.array[1:-1,0:-2],
-        im_new.array[1:-1,1:-1], 7, err_msg="Difference in directionality.")
+        im_new.array[1:-1,1:-1], 7, err_msg="Difference in directionality for right kernel.")
+    # Checking for one pixel in the central bulk
+    np.testing.assert_almost_equal(im_new(2,3), 0.875*im(2,3)+0.125*im(2,2), 7,
+        err_msg="Direction is not as intended for right kernel.")
 
     try:
         from scipy import signal
@@ -361,24 +368,28 @@ def test_IPC_basic():
         # Generate an arbitrary kernel
         ipc_kernel = abs(np.random.randn(3,3))
         
+        # Convolution requires the kernel to be flipped up-down and left-right.
+        # Since the Image has (x,y) convention, it is already flipped up-down.
+        # It therefore suffices to flip the kernel left-right to check equality.
+
         im_new = im.copy()
         im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=False)
         np.testing.assert_array_almost_equal(
-            im_new.array, signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel)),
+            im_new.array, signal.convolve2d(im.array, np.fliplr(ipc_kernel),
                                             mode='same', boundary='fill'), 6,
             err_msg="Image differs from SciPy's result using `mode='same'` and `boundary='fill`.")
 
         im_new = im.copy()
         im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop', kernel_normalization=False)
         np.testing.assert_array_almost_equal(
-            im_new.array[1:-1,1:-1], signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel)),
+            im_new.array[1:-1,1:-1], signal.convolve2d(im.array, np.fliplr(ipc_kernel),
                                             mode='valid', boundary = 'fill'), 6,
             err_msg="Image differs from SciPy's result using `mode=valid'` and `boundary='fill'`.")
 
         im_new = im.copy()
         im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap', kernel_normalization=False)
         np.testing.assert_array_almost_equal(
-            im_new.array, signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel)),
+            im_new.array, signal.convolve2d(im.array, np.fliplr(ipc_kernel),
                                             mode='same', boundary='wrap'), 6,
             err_msg="Image differs from SciPy's result using `mode=same'` and `boundary='wrap'`.")
 
