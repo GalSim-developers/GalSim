@@ -327,12 +327,12 @@ def test_IPC_basic():
     im_new.array[:,0] = 0.0
     im_new.array[:,-1] = 0.0
     im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=True)
-    np.testing.assert_almost_equal(im_new.array.sum(), im.array[1:-1,1:-1].sum(), int(DECIMAL/3),
+    np.testing.assert_almost_equal(im_new.array.sum(), im.array[1:-1,1:-1].sum(), 4,
         err_msg="Normalized IPC kernel does not conserve the total flux for 'extend' option.")
 
     im_new = im.copy()
     im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap', kernel_normalization=True)
-    np.testing.assert_almost_equal(im_new.array.sum(), im.array.sum(), int(DECIMAL/3),
+    np.testing.assert_almost_equal(im_new.array.sum(), im.array.sum(), 4,
         err_msg="Normalized IPC kernel does not conserve the total flux for 'wrap' option.")
 
     # Checking directionality
@@ -352,7 +352,7 @@ def test_IPC_basic():
     im_new = im.copy()
     im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
     np.testing.assert_array_almost_equal(0.875*im.array[1:-1,1:-1]+0.125*im.array[1:-1,0:-2],
-        im_new.array[1:-1,1:-1], int(DECIMAL), err_msg="Difference in directionality.")
+        im_new.array[1:-1,1:-1], 7, err_msg="Difference in directionality.")
 
     try:
         from scipy import signal
@@ -365,21 +365,21 @@ def test_IPC_basic():
         im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=False)
         np.testing.assert_array_almost_equal(
             im_new.array, signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel)),
-                                            mode='same', boundary='fill'), int(DECIMAL/2),
+                                            mode='same', boundary='fill'), 6,
             err_msg="Image differs from SciPy's result using `mode='same'` and `boundary='fill`.")
 
         im_new = im.copy()
         im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop', kernel_normalization=False)
         np.testing.assert_array_almost_equal(
             im_new.array[1:-1,1:-1], signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel)),
-                                            mode='valid', boundary = 'fill'), int(DECIMAL/2),
+                                            mode='valid', boundary = 'fill'), 6,
             err_msg="Image differs from SciPy's result using `mode=valid'` and `boundary='fill'`.")
 
         im_new = im.copy()
         im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap', kernel_normalization=False)
         np.testing.assert_array_almost_equal(
             im_new.array, signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel)),
-                                            mode='same', boundary='wrap'), int(DECIMAL/2),
+                                            mode='same', boundary='wrap'), 6,
             err_msg="Image differs from SciPy's result using `mode=same'` and `boundary='wrap'`.")
 
     except ImportError:
