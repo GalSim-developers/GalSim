@@ -137,8 +137,18 @@ def main(argv):
         # too.
         effective_wavelength = (1e-9)*filters[filter_name].effective_wavelength # now in m
         lam_over_diam = (1.0*effective_wavelength/wfirst.diameter)*206265.0 # in arcsec
-        PSF = galsim.OpticalPSF(lam_over_diam=lam_over_diam, obscuration=wfirst.obscuration,
-                                pupil_plane_im=wfirst.pupil_plane_file, oversampling=1.2, pad_factor=2.)
+        try:
+            PSF = galsim.OpticalPSF(lam_over_diam=lam_over_diam, obscuration=wfirst.obscuration,
+                                pupil_plane_im=wfirst.pupil_plane_file, oversampling=1.2,
+                                pad_factor=2.)
+        except MemoryError:
+            logger.debug('MemoryError encountered while using pupil_plane_im for {0}-band'.format(
+                filter_name))
+            import warnings
+            warnings.warn('MemoryError encountered while using pupil_plane_im for {0}-band'.format(
+                filter_name))
+            PSF = galsim.OpticalPSF(lam_over_diam=lam_over_diam, obscuration=wfirst.obscuration,
+                                oversampling=1.2, pad_factor=2.)
 
         # Drawing PSF
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
