@@ -1724,6 +1724,40 @@ def test_spergel():
         #     myImg.array.sum()*dx**2, myImg.added_flux, 5,
         #     err_msg="Spergel profile GSObject::draw returned wrong added_flux")
 
+def test_spergel_05():
+    """Test the equivalence of Spergel with nu=0.5 and Exponential
+    """
+    # cf test_exponential()
+    re = 1.0
+    r0 = re/1.67839
+    # The real value of re/r0 = 1.6783469900166605
+    hlr_r0 =  1.6783469900166605
+    savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
+    dx = 0.2
+    myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    spergel = galsim.Spergel(nu=0.5, flux=1., half_light_radius=r0 * hlr_r0)
+    spergel.draw(myImg, normalization="surface brightness", use_true_center=False)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using Spergel nu=0.5 disagrees with expected result for Exponential")
+
+    do_kvalue(spergel,"nu=0.5 Spergel")
+
+    # cf test_exponential_properties()
+    spergel = galsim.Spergel(nu=0.5, flux=test_flux, half_light_radius=test_scale[0] * hlr_r0)
+    cen = galsim.PositionD(0, 0)
+    np.testing.assert_equal(spergel.centroid(), cen)
+    np.testing.assert_equal(spergel.kValue(cen), (1+0j) * test_flux)
+    # import math
+    # np.testing.assert_almost_equal(spergel.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2,
+    #                                decimal=5)
+
+    # Also test some random values other than the center:
+    expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])
+    for (x,y) in [ (0.1,0.2), (-0.5, 0.4), (0, 0.9), (1.2, 0.1), (2,2) ]:
+        pos = galsim.PositionD(x,y)
+        np.testing.assert_almost_equal(spergel.xValue(pos), expon.xValue(pos), decimal=5)
+        np.testing.assert_almost_equal(spergel.kValue(pos), expon.kValue(pos), decimal=5)
 
 
 if __name__ == "__main__":
@@ -1753,3 +1787,4 @@ if __name__ == "__main__":
     # test_kolmogorov_radii()
     # test_kolmogorov_flux_scaling()
     test_spergel()
+    test_spergel_05()
