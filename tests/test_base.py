@@ -1724,6 +1724,7 @@ def test_spergel():
         #     myImg.array.sum()*dx**2, myImg.added_flux, 5,
         #     err_msg="Spergel profile GSObject::draw returned wrong added_flux")
 
+
 def test_spergel_radii():
     """Test initialization of Spergel with different types of radius specification.
     """
@@ -1804,6 +1805,66 @@ def test_spergel_radii():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_spergel_flux_scaling():
+    """Test flux scaling for Spergel.
+    """
+    import time
+    t1 = time.time()
+
+    # decimal point to go to for parameter value comparisons
+    param_decimal = 12
+
+    # loop through sersic n
+    for test_nu in test_spergel_nu:
+        # init with hlr and flux only (should be ok given last tests)
+        # n=-4 is code to use explicit DeVaucouleurs rather than Sersic(n=4).
+        # It should be identical.
+        init_obj = galsim.Spergel(test_nu, half_light_radius=test_hlr, flux=test_flux)
+
+        # Test in place *= and /=
+        obj = init_obj.copy()
+        obj *= 2.
+        np.testing.assert_almost_equal(
+            obj.getFlux(), test_flux * 2., decimal=param_decimal,
+            err_msg="Flux param inconsistent after __imul__.")
+        np.testing.assert_almost_equal(
+            init_obj.getFlux(), test_flux, decimal=param_decimal,
+            err_msg="obj.copy() didn't produce a separate copy.")
+        obj = init_obj.copy()
+        obj /= 2.
+        np.testing.assert_almost_equal(
+            obj.getFlux(), test_flux / 2., decimal=param_decimal,
+            err_msg="Flux param inconsistent after __idiv__.")
+
+        obj2 = init_obj * 2.
+        np.testing.assert_almost_equal(
+            init_obj.getFlux(), test_flux, decimal=param_decimal,
+            err_msg="Flux param inconsistent after __rmul__ (original).")
+        np.testing.assert_almost_equal(
+            obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+            err_msg="Flux param inconsistent after __rmul__ (result).")
+
+        obj2 = 2. * init_obj
+        np.testing.assert_almost_equal(
+            init_obj.getFlux(), test_flux, decimal=param_decimal,
+            err_msg="Flux param inconsistent after __mul__ (original).")
+        np.testing.assert_almost_equal(
+            obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+            err_msg="Flux param inconsistent after __mul__ (result).")
+
+        obj2 = init_obj / 2.
+        np.testing.assert_almost_equal(
+             init_obj.getFlux(), test_flux, decimal=param_decimal,
+             err_msg="Flux param inconsistent after __div__ (original).")
+        np.testing.assert_almost_equal(
+            obj2.getFlux(), test_flux / 2., decimal=param_decimal,
+            err_msg="Flux param inconsistent after __div__ (result).")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 def test_spergel_05():
     """Test the equivalence of Spergel with nu=0.5 and Exponential
     """
@@ -1868,4 +1929,5 @@ if __name__ == "__main__":
     # test_kolmogorov_flux_scaling()
     test_spergel()
     test_spergel_radii()
+    test_spergel_flux_scaling()
     test_spergel_05()
