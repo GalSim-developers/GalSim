@@ -1725,6 +1725,30 @@ def test_spergel():
         #     err_msg="Spergel profile GSObject::draw returned wrong added_flux")
 
 
+def test_spergel_properties():
+    """Test some basic properties of the SBSpergel profile.
+    """
+    import time
+    t1 = time.time()
+    spergel = galsim.Spergel(nu=0.0, flux=test_flux, scale_radius=1.0)
+    # Check that we are centered on (0, 0)
+    cen = galsim.PositionD(0, 0)
+    np.testing.assert_equal(spergel.centroid(), cen)
+    # # Check Fourier properties
+    # np.testing.assert_almost_equal(gauss.maxK(), 3.7169221888498383 / test_sigma)
+    # np.testing.assert_almost_equal(gauss.stepK(), 0.533644625664 / test_sigma)
+    np.testing.assert_equal(spergel.kValue(cen), (1+0j) * test_flux)
+    import math
+    # np.testing.assert_almost_equal(gauss.xValue(cen), 1./(2.*math.pi) * test_flux / test_sigma**2)
+    # Check input flux vs output flux
+    for inFlux in np.logspace(-2, 2, 10):
+        spergel = galsim.Spergel(nu=0.0, flux=inFlux, scale_radius=1.0)
+        outFlux = spergel.getFlux()
+        np.testing.assert_almost_equal(outFlux, inFlux)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 def test_spergel_radii():
     """Test initialization of Spergel with different types of radius specification.
     """
@@ -1928,6 +1952,7 @@ if __name__ == "__main__":
     # test_kolmogorov_radii()
     # test_kolmogorov_flux_scaling()
     test_spergel()
+    test_spergel_properties()
     test_spergel_radii()
     test_spergel_flux_scaling()
     test_spergel_05()
