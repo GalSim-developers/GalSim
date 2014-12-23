@@ -1260,7 +1260,7 @@ class GSObject(object):
             return self.drawImage(*args, method='sb', **kwargs)
 
     def drawShoot(self, *args, **kwargs):
-        """An obsolete synonym for obj.drawImage(methos='phot')
+        """An obsolete synonym for obj.drawImage(method='phot')
         """
         normalization = kwargs.pop('normalization','f')
         if normalization in ['flux','f']:

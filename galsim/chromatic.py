@@ -51,7 +51,7 @@ class ChromaticObject(object):
     -------
 
     gsobj = chrom_obj.evaluateAtWavelength(lambda) returns the monochromatic surface brightness
-    profile (as a GSObject) ad a given wavelength (in nanometers).
+    profile (as a GSObject) at a given wavelength (in nanometers).
 
     Also, ChromaticObject has most of the same methods as GSObjects with the following exceptions:
 
