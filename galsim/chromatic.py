@@ -843,7 +843,10 @@ class Chromatic(ChromaticObject):
 
         @returns the monochromatic object at the given wavelength.
         """
-        return self.SED(wave) * self.obj
+        if isinstance(self.obj, InterpolatedChromaticObject):
+            return self.SED(wave) * self.obj.evaluateAtWavelength(wave)
+        else:
+            return self.SED(wave) * self.obj
 
 
 class ChromaticSum(ChromaticObject):
@@ -1375,6 +1378,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         self.separable = False
         self.SED = lambda w: 1.0
         self.wave_list = np.array([], dtype=float)
+        self.base_norm = 1.0
 
         if self.waves is not None:
             self.waves = np.sort(self.waves)
@@ -1399,7 +1403,7 @@ class InterpolatedChromaticObject(ChromaticObject):
             im, stepk, maxk = self._image_at_wavelength(wave)
             return galsim.InterpolatedImage(im, _force_stepk = stepk*self.dx, _force_maxk = maxk*self.dx)
         else:
-            return self.simpleEvaluateAtWavelength(wave)
+            return self.base_norm*self.simpleEvaluateAtWavelength(wave)
 
     def _image_at_wavelength(self, wave):
         if self.waves is None:
@@ -1411,7 +1415,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         im = frac*self.ims[lower_idx+1] + (1.0-frac)*self.ims[lower_idx]
         stepk = frac*self.stepK_vals[lower_idx+1] + (1.0-frac)*self.stepK_vals[lower_idx]
         maxk = frac*self.maxK_vals[lower_idx+1] + (1.0-frac)*self.maxK_vals[lower_idx]
-        return im, stepk, maxk
+        return self.base_norm*im, stepk, maxk
 
     def drawImage(self, bandpass, force_eval=False, image=None, **kwargs):
         if (self.waves is None) or force_eval:
@@ -1476,4 +1480,9 @@ class ChromaticOpticalPSF(InterpolatedChromaticObject):
         lam_over_diam = 1.e-9 * (wave / self.diam) * (galsim.radians / galsim.arcsec)
         aberrations = self.aberrations / wave
         ret = galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
+        return ret
+
+    def withScaledFlux(self, flux_ratio):
+        ret = self.copy()
+        ret.base_norm *= flux_ratio
         return ret
