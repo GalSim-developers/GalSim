@@ -235,6 +235,9 @@ namespace galsim {
          */
         void calculateMaxK(double max_maxk=0.) const;
 
+        void forceStepK(double stepk) const;
+        void forceMaxK(double maxk) const;
+
     protected:
 
         class SBInterpolatedImageImpl;

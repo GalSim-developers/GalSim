@@ -253,7 +253,8 @@ class InterpolatedImage(GSObject):
     def __init__(self, image, x_interpolant=None, k_interpolant=None, normalization='flux',
                  scale=None, wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0.,
                  rng=None, pad_image=None, calculate_stepk=True, calculate_maxk=True,
-                 use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None):
+                 use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None,
+                 _force_stepk=None, _force_maxk=None):
         # Check for obsolete dx parameter
         if dx is not None and scale is None: scale = dx
 
@@ -409,6 +410,12 @@ class InterpolatedImage(GSObject):
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
         # input image.  So it is usually worth it to do a manual calculation here.
+        if _force_stepk is not None:
+            calculate_stepk = False
+            sbinterpolatedimage.forceStepK(_force_stepk)
+        if _force_maxk is not None:
+            calculate_maxk = False
+            sbinterpolatedimage.forceMaxK(_force_maxk)
         if calculate_stepk:
             if calculate_stepk is True:
                 sbinterpolatedimage.calculateStepK()
