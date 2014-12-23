@@ -1377,6 +1377,8 @@ class InterpolatedChromaticObject(ChromaticObject):
         self.wave_list = np.array([], dtype=float)
 
         if self.waves is not None:
+            self.waves = np.sort(self.waves)
+
             # Make the objects and their images between which we are going to interpolate.
             self.objs = [ self.simpleEvaluateAtWavelength(wave) for wave in waves ]
 
