@@ -295,13 +295,14 @@ def test_IPC_basic():
         err_msg="Image is altered for no IPC with edge_treatment = 'crop'" )
 
     # Test with a scalar fill_value
-    fill_value = np.pi # a non-trivial one #np.random.randn(im_new.array.shape[0])
+    fill_value = np.pi # a non-trivial one
     im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',fill_value=fill_value)
+
     #Input arrays and output arrays will differ at the edges for this option.
     np.testing.assert_array_equal(
         im_new.array[1:-1,1:-1], im.array[1:-1,1:-1],
         err_msg="Image is altered for no IPC with edge_treatment = 'crop' and with a fill_value" )
-
+    # Check if the edges are filled with fill_value
     np.testing.assert_array_equal(
         im_new.array[0,:], fill_value,
         err_msg="Top edge is not filled with the correct value")
@@ -333,7 +334,6 @@ def test_IPC_basic():
         err_msg="Normalized IPC kernel does not conserve the total flux for 'wrap' option.")
 
     # Checking directionality
-    # -----------------------
     ipc_kernel = galsim.Image(3,3)
     ipc_kernel.setValue(2,2,0.875)
     ipc_kernel.setValue(2,3,0.125)
@@ -358,42 +358,18 @@ def test_IPC_basic():
     np.testing.assert_almost_equal(im1(2,3), 0.875*im(2,3)+0.125*im(2,2), 7,
         err_msg="Direction is not as intended for left kernel.")
 
-    # # Check using GalSim's native Convolve routine for GSObjects for a simple kernel
-    # ipc_kernel = galsim.Image(3,3)
-    # ipc_kernel.setValue(2,2,0.875)
-    # ipc_kernel.setValue(1,2,0.125)
-    # im1 = im.copy()
-    # im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop', kernel_normalization=False)
-    # ipc_kernel_im = galsim.Image(np.array(np.fliplr(ipc_kernel.array)))
-    # ipc_kernel_intim = galsim.InterpolatedImage(ipc_kernel_im,x_interpolant='nearest',
-    #     scale=im.scale)
-    # im_int = galsim.InterpolatedImage(im,x_interpolant='nearest')
-    # im2_int = galsim.Convolve(im_int,ipc_kernel_intim,real_space=True)
-    # im2 = im.copy() # needed for arrays to be of same size
-    # im2_int.drawImage(image=im2, scale=im.scale)
-    # print "maxs =", im1.array.max(), im2.array.max()
-    # np.testing.assert_array_almost_equal(im1.array[1:-1,1:-1], im2.array[1:-1,1:-1], 6,
-    #     err_msg="Difference in directionality for up kernel with InterpolatedImage.")
-
-    # # Check using GalSim's native Convolve routine for GSObjects for a generic kernel
-    # #ipc_kernel = galsim.Image(abs(np.random.randn(3,3)))
-    # ipc_kernel.setValue(2,2,0.0); ipc_kernel.setValue(1,2,1.0);
-    # ipc_kernel_im = galsim.Image(np.array(((ipc_kernel.array))))
-    # ipc_kernel_intim = galsim.InterpolatedImage(ipc_kernel_im,x_interpolant='nearest',
-    #     scale=0.01)
-    # ipc_kernel_rec = ipc_kernel.copy()
-    # ipc_kernel_intim.drawImage(image=ipc_kernel_rec, scale=im_save.scale)
-    # print "ipc rec =", "\n", ipc_kernel_rec.array, "\n", ipc_kernel.array
-    # im = galsim.Image((np.random.randn(176,176)),scale=im_save.scale)
-    # im_int = galsim.InterpolatedImage(im,x_interpolant='nearest')
-    # im2_int = galsim.Convolve(im_int,ipc_kernel_intim,real_space=True)
-    # im2 = im.copy() # needed for arrays to be of same size
-    # im2_int.drawImage(image=im2, scale=im.scale)
-    # im1 = im.copy()
-    # im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=False)
-    # print "arr =", "\n", im2.array[63:68,63:68], "\n", im1.array[63:68,63:68]
-    # np.testing.assert_array_almost_equal(im1.array[1:-1,1:-1], im2.array[1:-1,1:-1], 4,
-    #     err_msg="Difference in directionality for left kernel with InterpolatedImage.")
+    # Check using GalSim's native Convolve routine for GSObjects for a generic kernel
+    ipc_kernel = galsim.Image(abs(np.random.randn(3,3)))
+    ipc_kernel_int = galsim.InterpolatedImage(ipc_kernel,x_interpolant='nearest',scale=im.scale)
+    im1 = im.copy()
+    im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
+    im2 = im.copy()
+    im2_int = galsim.InterpolatedImage(im2,x_interpolant='nearest')
+    ipc_kernel_int = galsim.InterpolatedImage(ipc_kernel,x_interpolant='nearest',scale=im.scale)
+    im_int = galsim.Convolve(ipc_kernel_int,im2_int,real_space=True)
+    im_int.drawImage(im2,method='no_pixel',scale=im.scale)
+    np.testing.assert_array_almost_equal(im1.array,im2.array,7,
+        err_msg="Does not match the output from Convolve")
 
     try:
         from scipy import signal
