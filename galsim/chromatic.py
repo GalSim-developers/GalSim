@@ -1373,10 +1373,13 @@ class ChromaticAutoCorrelation(ChromaticObject):
             return ChromaticObject(self).withScaledFlux(flux_ratio)
 
 class InterpolatedChromaticObject(ChromaticObject):
-    def __init__(self, waves):
+    def __init__(self, waves, sed = None):
         self.waves = waves
         self.separable = False
-        self.SED = lambda w: 1.0
+        if sed is None:
+            self.SED = lambda w: 1.0
+        else:
+            self.SED = sed
         self.wave_list = np.array([], dtype=float)
         self.base_norm = 1.0
 
@@ -1398,12 +1401,15 @@ class InterpolatedChromaticObject(ChromaticObject):
             self.dx = use_dx
             self.n_im = use_n
 
+    def withSED(self, sed):
+        self.SED = sed
+
     def evaluateAtWavelength(self, wave, force_eval = False):
         if self.waves is not None and not force_eval:
             im, stepk, maxk = self._image_at_wavelength(wave)
             return galsim.InterpolatedImage(im, _force_stepk = stepk*self.dx, _force_maxk = maxk*self.dx)
         else:
-            return self.base_norm*self.simpleEvaluateAtWavelength(wave)
+            return self.base_norm*self.SED(wave)*self.simpleEvaluateAtWavelength(wave)
 
     def _image_at_wavelength(self, wave):
         if self.waves is None:
@@ -1415,7 +1421,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         im = frac*self.ims[lower_idx+1] + (1.0-frac)*self.ims[lower_idx]
         stepk = frac*self.stepK_vals[lower_idx+1] + (1.0-frac)*self.stepK_vals[lower_idx]
         maxk = frac*self.maxK_vals[lower_idx+1] + (1.0-frac)*self.maxK_vals[lower_idx]
-        return self.base_norm*im, stepk, maxk
+        return self.base_norm*self.SED(wave)*im, stepk, maxk
 
     def drawImage(self, bandpass, force_eval=False, image=None, **kwargs):
         if (self.waves is None) or force_eval:
