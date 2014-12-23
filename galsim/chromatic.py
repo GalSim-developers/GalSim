@@ -1402,6 +1402,8 @@ class InterpolatedChromaticObject(ChromaticObject):
     def _image_at_wavelength(self, wave):
         if self.waves is None:
             raise RuntimeError("Requested image at some wavelength when doing direct calculation!")
+        if wave < min(self.waves) or wave > max(self.waves):
+            raise RuntimeError("Requested wavelength is outside the allowed range: %f to %f nm"%(min(self.waves),max(self.waves)))
         lower_idx = np.searchsorted(self.waves, wave) - 1
         frac = (wave - self.waves[lower_idx]) / (self.waves[lower_idx+1] - self.waves[lower_idx])
         im = frac*self.ims[lower_idx+1] + (1.0-frac)*self.ims[lower_idx]
