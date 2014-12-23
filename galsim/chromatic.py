@@ -182,10 +182,7 @@ class ChromaticObject(object):
         if 'wcs' in kwargs: kwargs.pop('wcs')
 
         # determine combined self.wave_list and bandpass.wave_list
-        wave_list = bandpass.wave_list
-        wave_list = np.union1d(wave_list, self.wave_list)
-        wave_list = wave_list[wave_list <= bandpass.red_limit]
-        wave_list = wave_list[wave_list >= bandpass.blue_limit]
+        wave_list = self._getCombinedWaveList(bandpass)
 
         if self.separable:
             if len(wave_list) > 0:
@@ -226,6 +223,13 @@ class ChromaticObject(object):
             image.setZero()
         image += integral
         return image
+
+    def _getCombinedWaveList(self, bandpass):
+        wave_list = bandpass.wave_list
+        wave_list = np.union1d(wave_list, self.wave_list)
+        wave_list = wave_list[wave_list <= bandpass.red_limit]
+        wave_list = wave_list[wave_list >= bandpass.blue_limit]
+        return wave_list
 
     def draw(self, *args, **kwargs):
         """An obsolete synonym for obj.drawImage(method='no_pixel')
@@ -1190,7 +1194,12 @@ class ChromaticConvolution(ChromaticObject):
         # If there's only one inseparable profile, let it draw itself.
         wmult = kwargs.get('wmult', 1)
         if len(insep_profs) == 1:
-            effective_prof_image = insep_profs[0].drawImage(
+            if isinstance(insep_profs[0], InterpolatedChromaticObject):
+                effective_prof_image = insep_profs[0].drawImage(
+                    effective_bandpass, wmult=wmult, scale=iiscale,
+                    method='no_pixel')
+            else:
+                effective_prof_image = insep_profs[0].drawImage(
                     effective_bandpass, wmult=wmult, scale=iiscale, integrator=integrator,
                     method='no_pixel')
         # Otherwise, use superclass ChromaticObject to draw convolution of inseparable profiles.
@@ -1359,3 +1368,108 @@ class ChromaticAutoCorrelation(ChromaticObject):
             return ChromaticAutoCorrelation( self.obj * math.sqrt(flux_ratio), **self.kwargs )
         else:
             return ChromaticObject(self).withScaledFlux(flux_ratio)
+
+class InterpolatedChromaticObject(ChromaticObject):
+    def __init__(self, waves):
+        self.waves = waves
+        self.separable = False
+        self.SED = lambda w: 1.0
+        self.wave_list = np.array([], dtype=float)
+
+        if self.waves is not None:
+            # Make the objects and their images between which we are going to interpolate.
+            self.objs = [ self.simpleEvaluateAtWavelength(wave) for wave in waves ]
+
+            nyquist_dx_vals = [ obj.nyquistScale() for obj in self.objs ]
+            use_dx = min(nyquist_dx_vals)
+
+            possible_im_sizes = [ obj.SBProfile.getGoodImageSize(use_dx, 1.0) for obj in self.objs ]
+            use_n = max(possible_im_sizes)
+
+            self.stepK_vals = [obj.stepK() for obj in self.objs ]
+            self.maxK_vals = [obj.maxK() for obj in self.objs ]
+            self.ims = [ obj.drawImage(scale=use_dx, nx=use_n, ny=use_n, method='no_pixel') for obj in self.objs ]
+            self.dx = use_dx
+            self.n_im = use_n
+
+    def evaluateAtWavelength(self, wave, force_eval = False):
+        if self.waves is not None and not force_eval:
+            im, stepk, maxk = self._image_at_wavelength(wave)
+            return galsim.InterpolatedImage(im, _force_stepk = stepk*self.dx, _force_maxk = maxk*self.dx)
+        else:
+            return self.simpleEvaluateAtWavelength(wave)
+
+    def _image_at_wavelength(self, wave):
+        if self.waves is None:
+            raise RuntimeError("Requested image at some wavelength when doing direct calculation!")
+        lower_idx = np.searchsorted(self.waves, wave) - 1
+        frac = (wave - self.waves[lower_idx]) / (self.waves[lower_idx+1] - self.waves[lower_idx])
+        im = frac*self.ims[lower_idx+1] + (1.0-frac)*self.ims[lower_idx]
+        stepk = frac*self.stepK_vals[lower_idx+1] + (1.0-frac)*self.stepK_vals[lower_idx]
+        maxk = frac*self.maxK_vals[lower_idx+1] + (1.0-frac)*self.maxK_vals[lower_idx]
+        return im, stepk, maxk
+
+    def drawImage(self, bandpass, force_eval=False, image=None, **kwargs):
+        if (self.waves is None) or force_eval:
+            return ChromaticObject.drawImage(self, bandpass, image=image, **kwargs)
+
+        # setup output image (semi-arbitrarily using the bandpass effective wavelength)
+        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength) # should use simpleEvaluateAtWavelength?
+        image = prof0.drawImage(image=image, setup_only=True, **kwargs)
+        # Remove from kwargs anything that is only used for setting up image:
+        if 'dtype' in kwargs: kwargs.pop('dtype')
+        if 'scale' in kwargs: kwargs.pop('scale')
+        if 'wcs' in kwargs: kwargs.pop('wcs')
+
+        # determine combined self.wave_list and bandpass.wave_list
+        wave_list = self._getCombinedWaveList(bandpass)
+
+        # decide on integrator
+        integrator = galsim.integ.DirectImageIntegrator(galsim.integ.midpt)
+
+        # merge self.wave_list into bandpass.wave_list if using a sampling integrator
+        bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
+                                                      interpolant='linear'))
+
+        import time
+        t1 = time.time()
+        integral, stepk, maxk = integrator(self._image_at_wavelength, bandpass)
+        t2 = time.time()
+        # For now, pretend we have no information about the maxk and stepk that should be used.
+        int_im = galsim.InterpolatedImage(integral, _force_stepk = stepk*self.dx,
+                                          _force_maxk = maxk*self.dx)
+        t3 = time.time()
+
+        # For performance profiling, store the number of evaluations used for the last integration
+        # performed.  Note that this might not be very useful for ChromaticSum instances, which are
+        # drawn one profile at a time, and hence _last_n_eval will only represent the final
+        # component drawn.
+        self._last_n_eval = integrator.last_n_eval
+
+        # Apply integral to the initial image appropriately.
+        # Note: Don't do image = integral and return that for add_to_image==False.
+        #       Remember that python doesn't actually do assignments, so this won't update the
+        #       original image if the user provided one.  The following procedure does work.
+        image = int_im.drawImage(image=image, **kwargs)
+        return image
+
+
+class ChromaticOpticalPSF(InterpolatedChromaticObject):
+    def __init__(self, diam, aberrations, min_wave, max_wave, n_wave, **kwargs):
+        # First, take the basic info.
+        self.diam = diam
+        self.aberrations = aberrations
+        self.kwargs = kwargs
+
+        # Take user-specified choice for number of wavelengths to use for initial calculation.
+        if n_wave is not None:
+            waves = np.linspace(min_wave, max_wave, n_wave)
+        else:
+            waves = None
+        super(ChromaticOpticalPSF, self).__init__(waves)
+
+    def simpleEvaluateAtWavelength(self, wave):
+        lam_over_diam = 1.e-9 * (wave / self.diam) * (galsim.radians / galsim.arcsec)
+        aberrations = self.aberrations / wave
+        ret = galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
+        return ret

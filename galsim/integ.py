@@ -100,6 +100,34 @@ class ImageIntegrator(object):
             images.append(prof.drawImage(image=image.copy(), **drawImageKwargs))
         return self.rule(images, waves)
 
+class DirectImageIntegrator(object):
+    def __init__(self, rule):
+        self.rule = rule
+    def __call__(self, imageAtWavelength, bandpass):
+        """
+        @param imageAtWavelength    Function that returns an Image of the monochromatic surface
+                                    brightness profile as a function of wavelength.
+        @param bandpass             Bandpass object representing the filter being imaged through.
+
+        @returns the result of integral as an Image
+        """
+        images = []
+        stepk = []
+        maxk = []
+        waves = self.calculateWaves(bandpass)
+        self.last_n_eval = len(waves)
+        for w in waves:
+            ret_val, tmp_stepk, tmp_maxk = imageAtWavelength(w)
+            images.append(ret_val)
+            stepk.append(tmp_stepk)
+            maxk.append(tmp_maxk)
+        return self.rule(images, waves), min(stepk), max(maxk)
+    def calculateWaves(self, bandpass):
+        if len(bandpass.wave_list) < 0:
+            raise AttributeError("Bandpass does not have attribute `wave_list` needed by " +
+                                 "midpt_sample_integrator.")
+        return bandpass.wave_list
+
 class SampleIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over
     wavelength using a Bandpass as a weight function.
