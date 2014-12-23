@@ -803,11 +803,11 @@ class Chromatic(ChromaticObject):
     Then the `flux` attribute of the GSObject should just be the _relative_ flux scaling of the
     current object compared to that normalization.  This implies (at least) two possible
     conventions.
-    1. You can normalize the SED to have unit flux with `sed = sed.withFlux(bandpass, 1.0)`. Then
+    1. You can normalize the SED to have unit flux with `sed = sed.withFlux(1.0, bandpass)`. Then
     the `flux` of each GSObject would be the actual flux in photons when observed in the given
     bandpass.
     2. You can leave the object flux as 1 (the default for most types when you construct them) and
-    set the flux in the SED with `sed = sed.withFlux(bandpass, flux)`.  Then if the object had
+    set the flux in the SED with `sed = sed.withFlux(flux, bandpass)`.  Then if the object had
     `flux` attribute different from 1, it would just refer to the factor by which that particular
     object is brighter than the value given in the normalization command.
 
