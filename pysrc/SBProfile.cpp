@@ -103,7 +103,7 @@ namespace galsim {
                       bp::arg("poisson_flux")=true, bp::arg("add_to_image")=false),
                      "Draw object into existing image using photon shooting.\n"
                      "\n"
-                     "Setting optional integer arg possionFlux != 0 allows profile flux to vary\n"
+                     "Setting optional integer arg poissonFlux != 0 allows profile flux to vary\n"
                      "according to Poisson statistics for N samples.\n"
                      "\n"
                      "Returns total flux of photons that landed inside image bounds.")
@@ -122,7 +122,7 @@ namespace galsim {
         static void wrap() {
             static char const * doc = 
                 "\n"
-                "SBProfile is an abstract base class represented all of the 2d surface\n"
+                "SBProfile is an abstract base class representing all of the 2d surface\n"
                 "brightness that we know how to draw.  Every SBProfile knows how to\n"
                 "draw an Image<float> of itself in real and k space.  Each also knows\n"
                 "what is needed to prevent aliasing or truncation of itself when drawn.\n"
