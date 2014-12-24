@@ -1387,17 +1387,17 @@ class InterpolatedChromaticObject(ChromaticObject):
             self.waves = np.sort(np.array(self.waves))
 
             # Make the objects and their images between which we are going to interpolate.
-            self.objs = [ self.simpleEvaluateAtWavelength(wave) for wave in waves ]
+            objs = [ self.simpleEvaluateAtWavelength(wave) for wave in waves ]
 
-            nyquist_dx_vals = [ obj.nyquistScale() for obj in self.objs ]
+            nyquist_dx_vals = [ obj.nyquistScale() for obj in objs ]
             use_dx = min(nyquist_dx_vals)
 
-            possible_im_sizes = [ obj.SBProfile.getGoodImageSize(use_dx, 1.0) for obj in self.objs ]
+            possible_im_sizes = [ obj.SBProfile.getGoodImageSize(use_dx, 1.0) for obj in objs ]
             use_n = max(possible_im_sizes)
 
-            self.stepK_vals = [ obj.stepK() for obj in self.objs ]
-            self.maxK_vals = [ obj.maxK() for obj in self.objs ]
-            self.ims = [ obj.drawImage(scale=use_dx, nx=use_n, ny=use_n, method='no_pixel') for obj in self.objs ]
+            self.stepK_vals = [ obj.stepK() for obj in objs ]
+            self.maxK_vals = [ obj.maxK() for obj in objs ]
+            self.ims = [ obj.drawImage(scale=use_dx, nx=use_n, ny=use_n, method='no_pixel') for obj in objs ]
             self.dx = use_dx
             self.n_im = use_n
 
