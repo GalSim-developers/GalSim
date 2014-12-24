@@ -1463,16 +1463,19 @@ class InterpolatedChromaticObject(ChromaticObject):
 
     def withSED(self, sed='flat'):
         """
-        Assign a new SED for this InterpolatedChromaticObject.
+        Make a new InterpolatedChromaticObject with the requested SED.
 
         @param sed    Either a galsim.SED object to assign to this object as its SED, or a string
                      'flat' which means a flat SED (equal weight to all wavelengths).
                      [default: 'flat']
+        @return a new InterpolatedChromaticObject
         """
+        new = self.copy()
         if sed == 'flat':
-            self.SED = lambda w: 1.0
+            new.SED = lambda w: 1.0
         else:
-            self.SED = sed
+            new.SED = sed
+        return new
 
     def evaluateAtWavelength(self, wave, force_eval = False):
         """
