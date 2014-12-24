@@ -1439,7 +1439,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         wave_list = self._getCombinedWaveList(bandpass)
 
         # decide on integrator
-        integrator = galsim.integ.DirectImageIntegrator(galsim.integ.midpt)
+        integrator = galsim.integ.DirectSampleIntegrator(galsim.integ.midpt)
 
         # merge self.wave_list into bandpass.wave_list if using a sampling integrator
         bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
