@@ -31,7 +31,7 @@ import copy
 import galsim
 
 class ChromaticObject(object):
-    """Base class for defining wavelength dependent objects.
+    """Base class for defining wavelength-dependent objects.
 
     This class primarily serves as the base class for chromatic subclasses, including Chromatic,
     ChromaticSum, and ChromaticConvolution.  See the docstrings for these classes for more details.
@@ -1373,6 +1373,53 @@ class ChromaticAutoCorrelation(ChromaticObject):
             return ChromaticObject(self).withScaledFlux(flux_ratio)
 
 class InterpolatedChromaticObject(ChromaticObject):
+    """Class for defining wavelength-dependent objects that can be described in terms of
+    combinations of GSObjects with wavelength-dependent keywords.
+
+    This class inherits from ChromaticObject, and subclasses of it could be defined to describe (for
+    example) chromatic PSFs.  See, for example, the subclass ChromaticOpticalPSF.  In addition to
+    the required classes for ChromatiObjects, the subclasses of InterpolatedChromaticObject are
+    required to have a method called `simpleEvaluateAtWavelength`, which is functionally the
+    equivalent of `evaluateAtWavelength` for ChromaticObjects (i.e., it's a way to directly
+    instantiate the GSObject at that wavelength, without doing any interpolation).
+
+    There are two possible ways to use this class.  The first (the purpose for which it is intended)
+    is to expedite calculations using objects that have to be built up as sums of GSObjects with
+    different parameters at each wavelength, by interpolating between Images at each wavelength
+    instead of making a more costly instantiation of the relevant GSObject at each value of
+    wavelength at which the bandpass is defined.  In order to carry out this interpolation, there is
+    a costly initialization process to build up a grid of images to be used for the interpolation
+    later on.  However, the object can get reused with different SEDs and bandpasses, so there
+    should not be any need to make many versions of any particular type of
+    InterpolatedChromaticObject, and there is a significant savings each time it is called.  Note
+    that the interpolation scheme is simple linear interpolation in wavelength, and no extrapolation
+    beyond the original range of wavelengths is permitted.
+
+    The second way to use this class is to override the interpolation and go back to the default of
+    instantiating a new object at each value of wavelength.  This is slower, but should be more
+    accurate.  The calling sequence for this mode is nearly identical to the first mode, except for
+    one keyword argument (waves, see below).  For use cases requiring a high level of precision, we
+    recommend using a comparison between the interpolated and the more accurate calculation for at
+    least one case, to ensure that the required precision has been reached.
+
+    The input parameter `waves` determines the input grid on which images are precomputed.  It is
+    difficult to give completely general guidance as to how many wavelengths to choose or how they
+    should be spaced; some experimentation compared with the exact calculation (`waves`=None) is
+    warranted for each particular application.
+
+    @param waves       The list, tuple, or NumPy array of wavelengths to be used when building up
+                       the grid of images for interpolation.  The wavelengths should be given in
+                       nanometers, and they should span the full range of wavelengths covered by any
+                       bandpass to be used for drawing Images (i.e., this class will not extrapolate
+                       beyond the given range of wavelengths).  If None, then the
+                       InterpolatedChromaticObject will do the costlier, more exact calculation
+                       instead of interpolating between Images defined at specific wavelengths.
+    @param SED         A galsim.SED for the object.  If None, a flat SED is used.  When using the
+                       object as a PSF to be convolved by a chromatic object, a flat SED should be
+                       used, whereas when using the object as a star to make a PSF image, an
+                       appropriate SED should be assigned. Note that the SED can be changed later on
+                       using the `withSED` method.  [default: None]
+    """
     def __init__(self, waves, sed = None):
         self.waves = waves
         self.separable = False
@@ -1383,28 +1430,60 @@ class InterpolatedChromaticObject(ChromaticObject):
         self.wave_list = np.array([], dtype=float)
         self.base_norm = 1.0
 
+        # Set up the interpolation (which can be a costly step, depending on the length of `waves`.
         if self.waves is not None:
+            # This line makes it possible to take a potentially disordered list, tuple, or NumPy
+            # array of values:
             self.waves = np.sort(np.array(self.waves))
 
-            # Make the objects and their images between which we are going to interpolate.
+            # Make the objects between which we are going to interpolate.  Note that these do not
+            # have to be saved for later, unlike the images.
             objs = [ self.simpleEvaluateAtWavelength(wave) for wave in waves ]
 
+            # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for
+            # the array of images that is being stored.
             nyquist_dx_vals = [ obj.nyquistScale() for obj in objs ]
             use_dx = min(nyquist_dx_vals)
+            self.dx = use_dx
 
+            # Find the suggested image size for each object given the choice of scale, and use the
+            # maximum just to be safe.
             possible_im_sizes = [ obj.SBProfile.getGoodImageSize(use_dx, 1.0) for obj in objs ]
             use_n = max(possible_im_sizes)
-
-            self.stepK_vals = [ obj.stepK() for obj in objs ]
-            self.maxK_vals = [ obj.maxK() for obj in objs ]
-            self.ims = [ obj.drawImage(scale=use_dx, nx=use_n, ny=use_n, method='no_pixel') for obj in objs ]
-            self.dx = use_dx
             self.n_im = use_n
 
-    def withSED(self, sed):
-        self.SED = sed
+            # Find the stepK and maxK values for each object.  These will be used later on, so that
+            # we can force these values when instantiating InterpolatedImages before drawing.
+            self.stepK_vals = [ obj.stepK() for obj in objs ]
+            self.maxK_vals = [ obj.maxK() for obj in objs ]
+
+            # Finally, now that we have an image scale and size, draw all the images.  Note that
+            # `no_pixel` is used (we want the object on its own, without a pixel response).
+            self.ims = [ obj.drawImage(scale=use_dx, nx=use_n, ny=use_n, method='no_pixel') for obj in objs ]
+
+    def withSED(self, sed='flat'):
+        """
+        Assign a new SED for this InterpolatedChromaticObject.
+
+        @param sed    Either a galsim.SED object to assign to this object as its SED, or a string
+                     'flat' which means a flat SED (equal weight to all wavelengths).
+                     [default: 'flat']
+        """
+        if sed == 'flat':
+            self.SED = lambda w: 1.0
+        else:
+            self.SED = sed
 
     def evaluateAtWavelength(self, wave, force_eval = False):
+        """
+        Evaluate this InterpolatedChromaticObject at a particular wavelength, either using
+        interpolation or via direct calculation, depending on how the object was originally
+        instantiated.
+
+        @param wave     Wavelength in nanometers.
+
+        @returns the monochromatic object at the given wavelength, as an InterpolatedImage.
+        """
         if self.waves is not None and not force_eval:
             im, stepk, maxk = self._image_at_wavelength(wave)
             return galsim.InterpolatedImage(im, _force_stepk = stepk, _force_maxk = maxk)
@@ -1412,18 +1491,49 @@ class InterpolatedChromaticObject(ChromaticObject):
             return self.base_norm*self.SED(wave)*self.simpleEvaluateAtWavelength(wave)
 
     def _image_at_wavelength(self, wave):
+        """
+        Get an image of the object at a particular wavelength, using linear interpolation between
+        the originally-stored images.
+        """
+        # First, some wavelength-related sanity checks.
         if self.waves is None:
             raise RuntimeError("Requested image at some wavelength when doing direct calculation!")
         if wave < min(self.waves) or wave > max(self.waves):
-            raise RuntimeError("Requested wavelength is outside the allowed range: %f to %f nm"%(min(self.waves),max(self.waves)))
-        lower_idx = np.searchsorted(self.waves, wave) - 1
-        frac = (wave - self.waves[lower_idx]) / (self.waves[lower_idx+1] - self.waves[lower_idx])
+            raise RuntimeError("Requested wavelength is outside the allowed range: %f to %f nm"%
+                               (min(self.waves), max(self.waves)))
+
+        # Figure out where the supplied wavelength is compared to the list of wavelengths on which
+        # images were originally tabulated.
+        lower_idx = np.searchsorted(self.waves, wave)-1
+        frac = (wave-self.waves[lower_idx]) / (self.waves[lower_idx+1]-self.waves[lower_idx])
+
+        # Actually do the linear interpolation for the image, stepK, and maxK.
         im = frac*self.ims[lower_idx+1] + (1.0-frac)*self.ims[lower_idx]
         stepk = frac*self.stepK_vals[lower_idx+1] + (1.0-frac)*self.stepK_vals[lower_idx]
         maxk = frac*self.maxK_vals[lower_idx+1] + (1.0-frac)*self.maxK_vals[lower_idx]
         return self.base_norm*self.SED(wave)*im, stepk, maxk
 
     def drawImage(self, bandpass, force_eval=False, image=None, **kwargs):
+        """Draw method adapted to work for InterpolatedChromaticImage instances.
+
+        This method has a number of optimizations compared to brute force drawing.  It uses the set
+        of interpolated images at each wavelength to carry out the integration, only carrying out
+        the GSObject instantation and convolution with pixel response at the very end.
+
+        Currently there is only one image integrator for direct integration of the interpolated
+        images, so there is no keyword argument to select one, unlike for
+        ChromaticObject.drawImage().
+
+        @param bandpass         A Bandpass object representing the filter against which to
+                                integrate.
+        @param force_eval       Option to force image rendering to take the brute-force evaluation
+                                of images instead of relying on interpolation.  [default: False]
+        @param image            Optionally, the Image to draw onto.  (See GSObject.drawImage()
+                                for details.)  [default: None]
+        @param **kwargs         For all other kwarg options, see GSObject.drawImage()
+
+        @returns the drawn Image.
+        """
         if (self.waves is None) or force_eval:
             return ChromaticObject.drawImage(self, bandpass, image=image, **kwargs)
 
@@ -1464,20 +1574,42 @@ class InterpolatedChromaticObject(ChromaticObject):
 
 
 class ChromaticOpticalPSF(InterpolatedChromaticObject):
-    def __init__(self, diam, aberrations, min_wave, max_wave, n_wave, **kwargs):
+    """A subclass of InterpolatedChromaticObject meant to represent chromatic optical PSFs.
+
+    This class is a way of including chromatic effects on optical PSFs.  Chromaticity plays two
+    roles: First, it determines the diffraction limit, via the wavelength/diameter factor.  Second,
+    aberrations such as defocus, coma, etc. are typically defined in physical distances, but their
+    impact on the PSF depends on their size in units of wavelength.  Other aspects of the optical
+    PSF are achromatic, e.g., the obscuration and struts.
+
+    @param   diam          Telescope diameter in meters.
+    @param   aberrations   An array of aberrations, in nanometers.  The size and format of this
+                           array is described in the OpticalPSF docstring.
+    @param   waves         Set of wavelengths defining the grid for interpolation, in nanometers. If
+                           None, then no interpolation will be done and the more costly exact
+                           calculation will be done.  Note that `waves` can be spaced in any way
+                           (i.e. it does not have to be linearly, logarithmic, or regular according
+                           to any scheme), but the interpolation between wavelengths is strictly
+                           linear.
+    @param   **kwargs      Any other keyword arguments to be passed to OpticalPSF, for example,
+                           related to struts, obscuration, oversampling, etc.
+    """
+    def __init__(self, diam, aberrations, waves, **kwargs):
         # First, take the basic info.
         self.diam = diam
         self.aberrations = aberrations
         self.kwargs = kwargs
 
         # Take user-specified choice for number of wavelengths to use for initial calculation.
-        if n_wave is not None:
-            waves = np.linspace(min_wave, max_wave, n_wave)
-        else:
-            waves = None
         super(ChromaticOpticalPSF, self).__init__(waves)
 
     def simpleEvaluateAtWavelength(self, wave):
+        """
+        Method to directly instantiate a monochromatic instance of this object, without any
+        interpolation.
+
+        @param  wave   Wavelength in nanometers.
+        """
         lam_over_diam = 1.e-9 * (wave / self.diam) * (galsim.radians / galsim.arcsec)
         aberrations = self.aberrations / wave
         ret = galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
