@@ -410,12 +410,20 @@ class InterpolatedImage(GSObject):
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
         # input image.  So it is usually worth it to do a manual calculation here.
+        #
+        # However, there is also a hidden option to force it to use specific values of stepK and
+        # maxK (caveat user!).  The values of _force_stepk and _force_maxk should be provided in
+        # terms of physical scale, e.g., for images that have a scale length of 0.1 arcsec, the
+        # stepK and maxK should be provided in units of 1/arcsec.  Then we convert to the 1/pixel
+        # units required by the C++ layer below.  Also note that profile recentering for even-sized
+        # images (see the ._fix_center step below) leads to automatic reduction of stepK slightly
+        # below what is provided here, while maxK is preserved.
         if _force_stepk is not None:
             calculate_stepk = False
-            sbinterpolatedimage.forceStepK(_force_stepk)
+            sbinterpolatedimage.forceStepK(_force_stepk*image.scale)
         if _force_maxk is not None:
             calculate_maxk = False
-            sbinterpolatedimage.forceMaxK(_force_maxk)
+            sbinterpolatedimage.forceMaxK(_force_maxk*image.scale)
         if calculate_stepk:
             if calculate_stepk is True:
                 sbinterpolatedimage.calculateStepK()

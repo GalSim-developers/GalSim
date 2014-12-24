@@ -888,7 +888,7 @@ def test_stepk_maxk():
     import numpy
 
     scale = 0.18
-    n = 101 # use an odd number so profile doesn't get recentered at all
+    n = 101 # use an odd number so profile doesn't get recentered at all, modifying stepk
 
     obj = galsim.Exponential(half_light_radius=2.*scale)
     im = galsim.Image(n, n)
@@ -899,8 +899,8 @@ def test_stepk_maxk():
     max_k_val = int_im.maxK()
 
     # Note scale needed here.
-    new_int_im = galsim.InterpolatedImage(im, _force_stepk=0.9*step_k_val*scale,
-                                          _force_maxk=0.9*max_k_val*scale)
+    new_int_im = galsim.InterpolatedImage(im, _force_stepk=0.9*step_k_val,
+                                          _force_maxk=0.9*max_k_val)
     numpy.testing.assert_almost_equal(
         new_int_im.stepK(), 0.9*step_k_val, decimal=7,
         err_msg='InterpolatedImage did not adopt forced minimum value for stepK')

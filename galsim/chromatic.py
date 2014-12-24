@@ -1407,7 +1407,7 @@ class InterpolatedChromaticObject(ChromaticObject):
     def evaluateAtWavelength(self, wave, force_eval = False):
         if self.waves is not None and not force_eval:
             im, stepk, maxk = self._image_at_wavelength(wave)
-            return galsim.InterpolatedImage(im, _force_stepk = stepk*self.dx, _force_maxk = maxk*self.dx)
+            return galsim.InterpolatedImage(im, _force_stepk = stepk, _force_maxk = maxk)
         else:
             return self.base_norm*self.SED(wave)*self.simpleEvaluateAtWavelength(wave)
 
@@ -1445,14 +1445,9 @@ class InterpolatedChromaticObject(ChromaticObject):
         bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
                                                       interpolant='linear'))
 
-        import time
-        t1 = time.time()
         integral, stepk, maxk = integrator(self._image_at_wavelength, bandpass)
-        t2 = time.time()
         # For now, pretend we have no information about the maxk and stepk that should be used.
-        int_im = galsim.InterpolatedImage(integral, _force_stepk = stepk*self.dx,
-                                          _force_maxk = maxk*self.dx)
-        t3 = time.time()
+        int_im = galsim.InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
 
         # For performance profiling, store the number of evaluations used for the last integration
         # performed.  Note that this might not be very useful for ChromaticSum instances, which are
