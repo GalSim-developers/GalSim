@@ -1395,8 +1395,8 @@ class InterpolatedChromaticObject(ChromaticObject):
             possible_im_sizes = [ obj.SBProfile.getGoodImageSize(use_dx, 1.0) for obj in self.objs ]
             use_n = max(possible_im_sizes)
 
-            self.stepK_vals = [obj.stepK() for obj in self.objs ]
-            self.maxK_vals = [obj.maxK() for obj in self.objs ]
+            self.stepK_vals = [ obj.stepK() for obj in self.objs ]
+            self.maxK_vals = [ obj.maxK() for obj in self.objs ]
             self.ims = [ obj.drawImage(scale=use_dx, nx=use_n, ny=use_n, method='no_pixel') for obj in self.objs ]
             self.dx = use_dx
             self.n_im = use_n

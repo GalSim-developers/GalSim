@@ -880,6 +880,36 @@ def test_conserve_dc():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_stepk_maxk():
+    """Test options to specify (or not) stepk and maxk.
+    """
+    import time
+    t1 = time.time()
+    import numpy
+
+    scale = 0.18
+    n = 101 # use an odd number so profile doesn't get recentered at all
+
+    obj = galsim.Exponential(half_light_radius=2.*scale)
+    im = galsim.Image(n, n)
+    im = obj.drawImage(image=im, scale=scale)
+    int_im = galsim.InterpolatedImage(im)
+
+    step_k_val = int_im.stepK()
+    max_k_val = int_im.maxK()
+
+    # Note scale needed here.
+    new_int_im = galsim.InterpolatedImage(im, _force_stepk=0.9*step_k_val*scale,
+                                          _force_maxk=0.9*max_k_val*scale)
+    numpy.testing.assert_almost_equal(
+        new_int_im.stepK(), 0.9*step_k_val, decimal=7,
+        err_msg='InterpolatedImage did not adopt forced minimum value for stepK')
+    numpy.testing.assert_almost_equal(
+        new_int_im.maxK(), 0.9*max_k_val, decimal=7,
+        err_msg='InterpolatedImage did not adopt forced minimum value for maxK')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_roundtrip()
@@ -896,4 +926,5 @@ if __name__ == "__main__":
     test_Lanczos5_ref()
     test_Lanczos7_ref()
     test_conserve_dc()
+    test_stepk_maxk()
 
