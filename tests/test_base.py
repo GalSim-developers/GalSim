@@ -153,7 +153,7 @@ def test_gaussian_radii():
     import math
     # Test constructor using half-light-radius:
     test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
-    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -188,7 +188,7 @@ def test_gaussian_radii():
 
     # then test that image indeed has the correct HLR properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (profile initialized with sigma) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -214,7 +214,7 @@ def test_gaussian_radii():
 
     # then test that image indeed has the correct HLR properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (profile initialized with fwhm) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -430,7 +430,7 @@ def test_exponential_radii():
     import math
     # Test constructor using half-light-radius:
     test_gal = galsim.Exponential(flux = 1., half_light_radius = test_hlr)
-    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -455,7 +455,7 @@ def test_exponential_radii():
 
     # then test that image indeed has the correct HLR properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (profile initialized with scale_radius) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -680,7 +680,7 @@ def test_sersic_radii():
             print 'scale = ',test_gal.getScaleRadius()
             got_hlr = test_gal.getHalfLightRadius()
             got_flux = test_gal.getFlux()
-            hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+            hlr_sum = radial_integrate(test_gal, 0., got_hlr)
             print 'hlr_sum = ',hlr_sum
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5*got_flux, decimal=4,
@@ -762,7 +762,7 @@ def test_sersic_radii():
         for test_gal, label in zip(gal_list, gal_labels):
             got_hlr = test_gal.getHalfLightRadius()
             got_flux = test_gal.getFlux()
-            hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+            hlr_sum = radial_integrate(test_gal, 0., got_hlr)
             print 'hlr_sum = ',hlr_sum
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5*got_flux, decimal=4,
@@ -981,7 +981,7 @@ def test_airy_radii():
     test_gal = galsim.Airy(lam_over_diam= 1./0.8, flux=1.)
     # test half-light-radius getter
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -1218,7 +1218,7 @@ def test_moffat_radii():
 
     # Test constructor using half-light-radius:
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius = test_hlr)
-    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -1253,7 +1253,7 @@ def test_moffat_radii():
 
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (profile initialized with scale_radius) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -1279,7 +1279,7 @@ def test_moffat_radii():
 
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (profile initialized with FWHM) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -1298,7 +1298,7 @@ def test_moffat_radii():
     # Test constructor using half-light-radius:
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius = test_hlr,
                              trunc=2*test_hlr)
-    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -1334,7 +1334,7 @@ def test_moffat_radii():
 
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (truncated profile initialized with scale_radius) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -1362,7 +1362,7 @@ def test_moffat_radii():
 
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (truncated profile initialized with FWHM) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -1575,7 +1575,7 @@ def test_kolmogorov_radii():
         # then test that image indeed has the correct HLR properties when radially integrated
         got_hlr = test_gal.getHalfLightRadius()
         print 'got_hlr = ',got_hlr
-        hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+        hlr_sum = radial_integrate(test_gal, 0., got_hlr)
         print 'hlr_sum = ',hlr_sum
         np.testing.assert_almost_equal(
                 hlr_sum, 0.5, decimal=3,
@@ -1583,7 +1583,7 @@ def test_kolmogorov_radii():
 
     # Test constructor using half-light-radius:
     test_gal = galsim.Kolmogorov(flux=1., half_light_radius = test_hlr)
-    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=3,
@@ -1611,7 +1611,7 @@ def test_kolmogorov_radii():
     # then test that image indeed has the correct HLR properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
     print 'got_hlr = ',got_hlr
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (profile initialized with fwhm) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=3,
@@ -1778,7 +1778,7 @@ def test_spergel_radii():
         got_hlr = test_gal.getHalfLightRadius()
         got_flux = test_gal.getFlux()
         if nu != -0.9:
-            hlr_sum = radial_integrate(test_gal, 1e-4, got_hlr, 1.e-4)
+            hlr_sum = radial_integrate(test_gal, 0.0, got_hlr)
             print 'hlr_sum = ',hlr_sum
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5*got_flux, decimal=4,
@@ -1804,8 +1804,8 @@ def test_spergel_radii():
         # (test half-light radius)
         got_hlr = test_gal.getHalfLightRadius()
         got_flux = test_gal.getFlux()
-        if nu > -0.5:
-            hlr_sum = radial_integrate(test_gal, 1.e-4, got_hlr, 1.e-4)
+        if nu > -0.9:
+            hlr_sum = radial_integrate(test_gal, 0.0, got_hlr)
             print 'hlr_sum = ',hlr_sum
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5*got_flux, decimal=4,
@@ -1926,31 +1926,31 @@ def test_spergel_05():
 
 
 if __name__ == "__main__":
-    # test_gaussian()
-    # test_gaussian_properties()
-    # test_gaussian_radii()
-    # test_gaussian_flux_scaling()
-    # test_exponential()
-    # test_exponential_properties()
-    # test_exponential_radii()
-    # test_exponential_flux_scaling()
-    # test_sersic()
-    # test_sersic_radii()
-    # test_sersic_flux_scaling()
-    # test_sersic_05()
-    # test_sersic_1()
-    # test_airy()
-    # test_airy_radii()
-    # test_airy_flux_scaling()
-    # test_box()
-    # test_moffat()
-    # test_moffat_properties()
-    # test_moffat_radii()
-    # test_moffat_flux_scaling()
-    # test_kolmogorov()
-    # test_kolmogorov_properties()
-    # test_kolmogorov_radii()
-    # test_kolmogorov_flux_scaling()
+    test_gaussian()
+    test_gaussian_properties()
+    test_gaussian_radii()
+    test_gaussian_flux_scaling()
+    test_exponential()
+    test_exponential_properties()
+    test_exponential_radii()
+    test_exponential_flux_scaling()
+    test_sersic()
+    test_sersic_radii()
+    test_sersic_flux_scaling()
+    test_sersic_05()
+    test_sersic_1()
+    test_airy()
+    test_airy_radii()
+    test_airy_flux_scaling()
+    test_box()
+    test_moffat()
+    test_moffat_properties()
+    test_moffat_radii()
+    test_moffat_flux_scaling()
+    test_kolmogorov()
+    test_kolmogorov_properties()
+    test_kolmogorov_radii()
+    test_kolmogorov_flux_scaling()
     test_spergel()
     test_spergel_properties()
     test_spergel_radii()
