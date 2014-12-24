@@ -186,6 +186,138 @@ namespace galsim {
         return _flux / std::pow(1. + ksq, 1. + _nu);
     }
 
+    void SBSpergel::SBSpergelImpl::fillXValue(tmv::MatrixView<double> val,
+                                              double x0, double dx, int ix_zero,
+                                              double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBSpergel fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        if (ix_zero != 0 || iy_zero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+            x0 *= _inv_r0;
+            dx *= _inv_r0;
+            y0 *= _inv_r0;
+            dy *= _inv_r0;
+
+            for (int j=0;j<n;++j,y0+=dy) {
+                double x = x0;
+                double ysq = y0*y0;
+                It valit = val.col(j).begin();
+                for (int i=0;i<m;++i,x+=dx) {
+                    double r = sqrt(x*x + ysq);
+                    *valit++ = _norm * boost::math::cyl_bessel_k(_nu, r) * std::pow(r / 2., _nu);
+                }
+            }
+        }
+    }
+
+    void SBSpergel::SBSpergelImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                            double x0, double dx, int ix_zero,
+                                            double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBSpergel fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        if (ix_zero != 0 || iy_zero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+            x0 *= _r0;
+            dx *= _r0;
+            y0 *= _r0;
+            dy *= _r0;
+
+            for (int j=0;j<n;++j,y0+=dy) {
+                double x = x0;
+                double ysq = y0*y0;
+                It valit(val.col(j).begin().getP(),1);
+                for (int i=0;i<m;++i,x+=dx) {
+                    double ksq = x*x + ysq;
+                    *valit++ = _flux / std::pow(1. + ksq, 1. + _nu);
+                }
+            }
+        }
+    }
+
+    void SBSpergel::SBSpergelImpl::fillXValue(tmv::MatrixView<double> val,
+                                            double x0, double dx, double dxy,
+                                            double y0, double dy, double dyx) const
+    {
+        dbg<<"SBSpergel fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+        x0 *= _inv_r0;
+        dx *= _inv_r0;
+        dxy *= _inv_r0;
+        y0 *= _inv_r0;
+        dy *= _inv_r0;
+        dyx *= _inv_r0;
+
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            It valit = val.col(j).begin();
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
+                double r = sqrt(x*x + y*y);
+                *valit++ = _norm * boost::math::cyl_bessel_k(_nu, r) * std::pow(r / 2., _nu);
+            }
+        }
+    }
+
+    void SBSpergel::SBSpergelImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                            double x0, double dx, double dxy,
+                                            double y0, double dy, double dyx) const
+    {
+        dbg<<"SBSpergel fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+        x0 *= _r0;
+        dx *= _r0;
+        dxy *= _r0;
+        y0 *= _r0;
+        dy *= _r0;
+        dyx *= _r0;
+
+        It valit(val.linearView().begin().getP());
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            It valit(val.col(j).begin().getP(),1);
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
+                double ksq = x*x + y*y;
+                *valit++ = _flux / std::pow(1. + ksq, 1. + _nu);
+            }
+        }
+    }
+
     SpergelInfo::SpergelInfo(double nu, const GSParamsPtr& gsparams) :
         _nu(nu), _gsparams(gsparams),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.)
