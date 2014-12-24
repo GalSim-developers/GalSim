@@ -358,17 +358,20 @@ def test_IPC_basic():
     np.testing.assert_almost_equal(im1(2,3), 0.875*im(2,3)+0.125*im(2,2), 7,
         err_msg="Direction is not as intended for left kernel.")
 
-    # Check using GalSim's native Convolve routine for GSObjects for a generic kernel
-    ipc_kernel = galsim.Image(abs(np.random.randn(3,3)))
+    # Check using GalSim's native Convolve routine for GSObjects for a realisitic kernel
+    ipc_kernel = galsim.Image(np.array(
+        [[0.01,0.1,0.01],
+         [0.1,1.0,0.1],
+         [0.01,0.1,0.01]]))
     ipc_kernel_int = galsim.InterpolatedImage(ipc_kernel,x_interpolant='nearest',scale=im.scale)
     im1 = im.copy()
     im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
     im2 = im.copy()
     im2_int = galsim.InterpolatedImage(im2,x_interpolant='nearest')
     ipc_kernel_int = galsim.InterpolatedImage(ipc_kernel,x_interpolant='nearest',scale=im.scale)
-    im_int = galsim.Convolve(ipc_kernel_int,im2_int,real_space=True)
+    im_int = galsim.Convolve(ipc_kernel_int,im2_int,real_space=False)
     im_int.drawImage(im2,method='no_pixel',scale=im.scale)
-    np.testing.assert_array_almost_equal(im1.array,im2.array,7,
+    np.testing.assert_array_almost_equal(im1.array,im2.array,6,
         err_msg="Does not match the output from Convolve")
 
     try:
