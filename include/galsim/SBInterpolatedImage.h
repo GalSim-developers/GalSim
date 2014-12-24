@@ -228,14 +228,31 @@ namespace galsim {
         void calculateStepK(double max_stepk=0.) const;
 
         /**
-         * @brief Refine the value of stepK if the input image had a smaller scale than necessary.
+         * @brief Refine the value of maxK if the input image had a smaller scale than necessary.
          *
          * @param[in] max_maxk  Optional maximum value of maxk if you have some a priori
          *                      knowledge about an appropriate maximum. 
          */
         void calculateMaxK(double max_maxk=0.) const;
 
+        /**
+         * @brief Force the adoption of a particular value of stepK if the input image was larger
+         *        than necessary.
+         *
+         * @param[in] stepk  Value of stepk, if you have some a priori knowledge about an
+         *                   appropriate value.  Note that the code does *not* do a calculation to
+         *                   validate this choice!
+         */
         void forceStepK(double stepk) const;
+
+        /**
+         * @brief Force the adoption of a particular value of maxK if the input image had a smaller
+         *        scale than necessary.
+         *
+         * @param[in] maxk   Value of maxk, if you have some a priori knowledge about an appropriate
+         *                   value.  Note that the code does *not* do a calculation to validate this
+         *                   choice!
+         */
         void forceMaxK(double maxk) const;
 
     protected:
