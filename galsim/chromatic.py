@@ -1575,6 +1575,10 @@ class InterpolatedChromaticObject(ChromaticObject):
         image = int_im.drawImage(image=image, **kwargs)
         return image
 
+    def withScaledFlux(self, flux_ratio):
+        ret = self.copy()
+        ret.base_norm *= flux_ratio
+        return ret
 
 class ChromaticOpticalPSF(InterpolatedChromaticObject):
     """A subclass of InterpolatedChromaticObject meant to represent chromatic optical PSFs.
@@ -1616,9 +1620,4 @@ class ChromaticOpticalPSF(InterpolatedChromaticObject):
         lam_over_diam = 1.e-9 * (wave / self.diam) * (galsim.radians / galsim.arcsec)
         aberrations = self.aberrations / wave
         ret = galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
-        return ret
-
-    def withScaledFlux(self, flux_ratio):
-        ret = self.copy()
-        ret.base_norm *= flux_ratio
         return ret
