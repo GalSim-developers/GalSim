@@ -173,10 +173,12 @@ namespace galsim {
     // Equations (3, 4) of Spergel (2010)
     double SBSpergel::SBSpergelImpl::xValue(const Position<double>& p) const
     {
-        double r = sqrt(p.x * p.x + p.y * p.y);
-        double u = r * _inv_r0;
-        double f = boost::math::cyl_bessel_k(_nu, u) * std::pow(u / 2., _nu);
-        return _norm * f;
+        double r = sqrt(p.x * p.x + p.y * p.y) * _inv_r0;
+        if (r == 0.) {
+            if (_nu > 0) return _norm * _gamma_nup1 / (2. * _nu);
+            else return INFINITY;
+        }
+        return _norm * boost::math::cyl_bessel_k(_nu, r) * std::pow(r / 2., _nu);
     }
 
     // Equation (2) of Spergel (2010)
@@ -214,7 +216,11 @@ namespace galsim {
                 It valit = val.col(j).begin();
                 for (int i=0;i<m;++i,x+=dx) {
                     double r = sqrt(x*x + ysq);
-                    *valit++ = _norm * boost::math::cyl_bessel_k(_nu, r) * std::pow(r / 2., _nu);
+                    if (r == 0.) {
+                        if (_nu > 0.) *valit++ = _norm * _gamma_nup1 / (2. * _nu);
+                        else *valit++ = INFINITY;
+                    }
+                    else *valit++ = _norm * boost::math::cyl_bessel_k(_nu, r) * std::pow(r / 2., _nu);
                 }
             }
         }
@@ -281,7 +287,11 @@ namespace galsim {
             It valit = val.col(j).begin();
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double r = sqrt(x*x + y*y);
-                *valit++ = _norm * boost::math::cyl_bessel_k(_nu, r) * std::pow(r / 2., _nu);
+                if (r == 0.) {
+                    if (_nu > 0.) *valit++ = _norm * _gamma_nup1 / (2. * _nu);
+                    else *valit++ = INFINITY;
+                }
+                else *valit++ = _norm * boost::math::cyl_bessel_k(_nu, r) * std::pow(r / 2., _nu);
             }
         }
     }

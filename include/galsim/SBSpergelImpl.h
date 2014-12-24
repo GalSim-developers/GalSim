@@ -23,6 +23,8 @@
 #include "SBProfileImpl.h"
 #include "SBSpergel.h"
 #include "LRUCache.h"
+//#include <limits>
+//#define INFINITY std::numeric_limits::<double>::infinity()
 
 namespace galsim {
 

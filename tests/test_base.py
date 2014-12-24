@@ -1709,20 +1709,18 @@ def test_spergel():
         myImg = spergel.draw(myImg, scale=dx, normalization="surface brightness",
                              use_true_center=False)
 
-        # Excise central pixel which can diverge
-        center = [(s-1)/2 for s in savedImg.array.shape]
-        savedImg.array[center] = 0.0
-        myImg.array[center] = 0.0
-
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Spergel disagrees with expected result")
 
+        # Only nu >= 0.3 give reasonably sized FFTs
         if nu >= -0.3:
             do_kvalue(spergel, "Spergel(nu={:1}) ".format(nu))
-        # np.testing.assert_almost_equal(
-        #     myImg.array.sum()*dx**2, myImg.added_flux, 5,
-        #     err_msg="Spergel profile GSObject::draw returned wrong added_flux")
+        # s.b. finite at origin iff nu > 0
+        if nu > 0.0:
+            np.testing.assert_almost_equal(
+                myImg.array.sum()*dx**2, myImg.added_flux, 5,
+                err_msg="Spergel profile GSObject::draw returned wrong added_flux")
 
 
 def test_spergel_properties():
@@ -1777,6 +1775,8 @@ def test_spergel_radii():
         print 'scale = ',test_gal.getScaleRadius()
         got_hlr = test_gal.getHalfLightRadius()
         got_flux = test_gal.getFlux()
+
+        # nu = 0.9 is too difficult to numerically integrate
         if nu != -0.9:
             hlr_sum = radial_integrate(test_gal, 0.0, got_hlr)
             print 'hlr_sum = ',hlr_sum
@@ -1804,6 +1804,8 @@ def test_spergel_radii():
         # (test half-light radius)
         got_hlr = test_gal.getHalfLightRadius()
         got_flux = test_gal.getFlux()
+
+        # nu = 0.9 is too difficult to numerically integrate
         if nu > -0.9:
             hlr_sum = radial_integrate(test_gal, 0.0, got_hlr)
             print 'hlr_sum = ',hlr_sum
@@ -1913,9 +1915,9 @@ def test_spergel_05():
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(spergel.centroid(), cen)
     np.testing.assert_equal(spergel.kValue(cen), (1+0j) * test_flux)
-    # import math
-    # np.testing.assert_almost_equal(spergel.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2,
-    #                                decimal=5)
+    import math
+    np.testing.assert_almost_equal(spergel.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2,
+                                   decimal=5)
 
     # Also test some random values other than the center:
     expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])
