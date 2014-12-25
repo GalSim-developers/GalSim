@@ -1379,18 +1379,19 @@ class ChromaticAutoCorrelation(ChromaticObject):
 
 class InterpolatedChromaticObject(ChromaticObject):
     """Class for defining wavelength-dependent objects that can be described in terms of
-    combinations of GSObjects with wavelength-dependent keywords.
+    combinations of GSObjects with wavelength-dependent keywords or transformations (shifts, shears,
+    etc.).
 
-    This class inherits from ChromaticObject, and subclasses of it could be defined to describe (for
-    example) chromatic PSFs.  See, for example, the subclass ChromaticOpticalPSF.  In addition to
-    the required classes for ChromatiObjects, the subclasses of InterpolatedChromaticObject are
-    required to have a method called `simpleEvaluateAtWavelength`, which is functionally the
-    equivalent of `evaluateAtWavelength` for ChromaticObjects (i.e., it's a way to directly
-    instantiate the GSObject at that wavelength, without doing any interpolation).  Note that since
-    InterpolatedChromaticObjects can include an SED, for cases where they are going to be drawn on
-    their own without convolution by anything else, the `simpleEvaluateAtWavelength` method needs to
-    include proper flux normalization for that wavelength, i.e., it should always include
-    multiplication by `self.SED(wave)`.
+    This class inherits from ChromaticObject, and subclasses of it could be defined to describe
+    objects like chromatic PSFs.  See, for example, the subclass ChromaticOpticalPSF.  Subclasses of
+    InterpolatedChromaticObject must have a method called `simpleEvaluateAtWavelength`, which is
+    functionally the equivalent of `evaluateAtWavelength` for ChromaticObjects (i.e., it's a way to
+    directly instantiate a GSObject at a single wavelength, without doing any interpolation).  Note
+    that since InterpolatedChromaticObjects can include an SED, for cases where they are going to be
+    drawn on their own without convolution by anything else, the `simpleEvaluateAtWavelength` method
+    must include proper flux normalization for that wavelength (see ChromaticOpticalPSF for an
+    example of how this works).  However, if the InterpolatedChromaticObject is only going to be
+    drawn when convolved by another object with an SED, then this is unnecessary.
 
     There are two possible ways to use this class.  The first (the purpose for which it is intended)
     is to expedite calculations using objects that have to be built up as sums of GSObjects with
@@ -1404,17 +1405,18 @@ class InterpolatedChromaticObject(ChromaticObject):
     that the interpolation scheme is simple linear interpolation in wavelength, and no extrapolation
     beyond the original range of wavelengths is permitted.
 
-    The second way to use this class is to override the interpolation and go back to the default of
-    instantiating a new object at each value of wavelength.  This is slower, but should be more
-    accurate.  The calling sequence for this mode is nearly identical to the first mode, except for
-    one keyword argument (waves, see below).  For use cases requiring a high level of precision, we
-    recommend using a comparison between the interpolated and the more accurate calculation for at
-    least one case, to ensure that the required precision has been reached.
+    The second way to use this class is to override the interpolation and instantiate a new GSObject
+    at each value of wavelength.  This is slower, but should be more accurate.  The calling sequence
+    for this mode is nearly identical to the first mode, except for one keyword argument (`waves`,
+    see below).  For use cases requiring a high level of precision, we recommend a comparison
+    between the interpolated and the more accurate calculation for at least one case, to ensure that
+    the required precision has been reached.
 
     The input parameter `waves` determines the input grid on which images are precomputed.  It is
     difficult to give completely general guidance as to how many wavelengths to choose or how they
     should be spaced; some experimentation compared with the exact calculation (`waves`=None) is
-    warranted for each particular application.
+    warranted for each particular application.  The best choice of settings might depend on how
+    strongly the parameters of the object depend on wavelength.
 
     @param waves            The list, tuple, or NumPy array of wavelengths to be used when building
                             up the grid of images for interpolation.  The wavelengths should be
@@ -1427,11 +1429,14 @@ class InterpolatedChromaticObject(ChromaticObject):
     @param SED              A galsim.SED for the object.  If None, a flat SED is used.  When using
                             the object as a PSF to be convolved by a chromatic object, a flat SED
                             should be used, whereas when using the object as a star to make a PSF
-                            image, an appropriate SED should be assigned. Note that the SED can be
-                            changed later on using the `withSED` method.  [default: None]
+                            image, an appropriate SED should be assigned. Note that a new
+                            InterpolatedChromatic object can be instantiated from an existing one
+                            with a new SED using the `withSED` method without any significant
+                            overhead, so when in doubt, constructing the object with a flat SED is
+                            not a problem.  [default: None]
     @param oversample_fac   Factor by which to oversample the stored profiles compared to the
                             default, which is to sample them at the Nyquist frequency for whichever
-                            wavelength has the smallest Nyquist frequency.  `oversample_fac`>1
+                            wavelength has the highest Nyquist frequency.  `oversample_fac`>1
                             results in higher accuracy. [default: 1]
     """
     def __init__(self, waves, sed=None, oversample_fac=1.):
@@ -1442,7 +1447,6 @@ class InterpolatedChromaticObject(ChromaticObject):
         else:
             self.SED = sed
         self.wave_list = np.array([], dtype=float)
-        self.base_norm = 1.0
 
         # Set up the interpolation (which can be a costly step, depending on the length of `waves`.
         if self.waves is not None:
@@ -1506,7 +1510,7 @@ class InterpolatedChromaticObject(ChromaticObject):
             im, stepk, maxk = self._image_at_wavelength(wave)
             return galsim.InterpolatedImage(im, _force_stepk=stepk, _force_maxk=maxk)
         else:
-            return self.base_norm*self.SED(wave)*self.simpleEvaluateAtWavelength(wave)
+            return self.simpleEvaluateAtWavelength(wave)
 
     def _image_at_wavelength(self, wave):
         """
@@ -1534,7 +1538,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         im = frac*self.ims[lower_idx+1] + (1.0-frac)*self.ims[lower_idx]
         stepk = frac*self.stepK_vals[lower_idx+1] + (1.0-frac)*self.stepK_vals[lower_idx]
         maxk = frac*self.maxK_vals[lower_idx+1] + (1.0-frac)*self.maxK_vals[lower_idx]
-        return self.base_norm*self.SED(wave)*im, stepk, maxk
+        return self.SED(wave)*im, stepk, maxk
 
     def drawImage(self, bandpass, force_eval=False, image=None, **kwargs):
         """Draw method adapted to work for InterpolatedChromaticImage instances.
@@ -1597,7 +1601,7 @@ class InterpolatedChromaticObject(ChromaticObject):
 
     def withScaledFlux(self, flux_ratio):
         ret = self.copy()
-        ret.base_norm *= flux_ratio
+        ret.SED *= flux_ratio
         return ret
 
 class ChromaticOpticalPSF(InterpolatedChromaticObject):
@@ -1651,6 +1655,6 @@ class ChromaticOpticalPSF(InterpolatedChromaticObject):
         """
         lam_over_diam = 1.e-9 * (wave / self.diam) * (galsim.radians / galsim.arcsec)
         aberrations = self.aberrations / wave
-        ret = self.SED(wave) * \
+        ret = self.SED(wave)* \
             galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
         return ret
