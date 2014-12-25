@@ -1609,6 +1609,13 @@ class ChromaticOpticalPSF(InterpolatedChromaticObject):
     impact on the PSF depends on their size in units of wavelength.  Other aspects of the optical
     PSF are achromatic, e.g., the obscuration and struts.
 
+    For high accuracy calculations, setting `waves` to include ~10-15 samples across any given
+    bandpass should be sufficient.  For moderate accuracy, 5 is often sufficient.  Likewise, for
+    high accuracy, `oversample_fac` should be in the range 1.5-2, whereas for moderate accuracy, 1
+    is often sufficient.  All of these statements assume that aberrations are not very large
+    (typically <~0.25 waves, which is commonly satisfied by space telescopes); if they are larger
+    than that, then more stringent settings are required.
+
     @param   diam          Telescope diameter in meters.
     @param   aberrations   An array of aberrations, in nanometers.  The size and format of this
                            array is described in the OpticalPSF docstring.
@@ -1620,10 +1627,11 @@ class ChromaticOpticalPSF(InterpolatedChromaticObject):
                            linear.
     @param oversample_fac  Factor by which to oversample the stored profiles compared to the
                            default, which is to sample them at the Nyquist frequency for whichever
-                           wavelength has the smallest Nyquist frequency.  `oversample_fac`>1
+                           wavelength has the highest Nyquist frequency.  `oversample_fac`>1
                            results in higher accuracy, but slower calculations. [default: 1]
     @param   **kwargs      Any other keyword arguments to be passed to OpticalPSF, for example,
-                           related to struts, obscuration, oversampling, etc.
+                           related to struts, obscuration, oversampling, etc.  See OpticalPSF
+                           docstring for a complete list of options.
     """
     def __init__(self, diam, aberrations, waves, oversample_fac=1., **kwargs):
         # First, take the basic info.
