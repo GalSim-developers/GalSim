@@ -131,6 +131,7 @@ from compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelati
 from chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum
 from chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
 from chromatic import ChromaticAutoCorrelation
+from chromatic import InterpolatedChromaticObject, ChromaticOpticalPSF
 from sed import SED
 from bandpass import Bandpass
 
