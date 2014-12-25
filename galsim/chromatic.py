@@ -1473,7 +1473,8 @@ class InterpolatedChromaticObject(ChromaticObject):
 
             # Finally, now that we have an image scale and size, draw all the images.  Note that
             # `no_pixel` is used (we want the object on its own, without a pixel response).
-            self.ims = [ obj.drawImage(scale=use_dx, nx=use_n, ny=use_n, method='no_pixel') for obj in objs ]
+            self.ims = [ obj.drawImage(scale=use_dx, nx=use_n, ny=use_n, method='no_pixel')
+                         for obj in objs ]
 
     def withSED(self, sed='flat'):
         """
@@ -1516,8 +1517,8 @@ class InterpolatedChromaticObject(ChromaticObject):
         if self.waves is None:
             raise RuntimeError("Requested image at some wavelength when doing direct calculation!")
         if wave < min(self.waves) or wave > max(self.waves):
-            raise RuntimeError("Requested wavelength %.1f is outside the allowed range: %.1f to %.1f nm"%
-                               (wave, min(self.waves), max(self.waves)))
+            raise RuntimeError("Requested wavelength %.1f is outside the allowed range:"
+                               " %.1f to %.1f nm"%(wave, min(self.waves), max(self.waves)))
 
         # Figure out where the supplied wavelength is compared to the list of wavelengths on which
         # images were originally tabulated.
@@ -1560,7 +1561,7 @@ class InterpolatedChromaticObject(ChromaticObject):
             return ChromaticObject.drawImage(self, bandpass, image=image, **kwargs)
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
-        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength) # should use simpleEvaluateAtWavelength?
+        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
         # Remove from kwargs anything that is only used for setting up image:
         if 'dtype' in kwargs: kwargs.pop('dtype')
@@ -1642,5 +1643,6 @@ class ChromaticOpticalPSF(InterpolatedChromaticObject):
         """
         lam_over_diam = 1.e-9 * (wave / self.diam) * (galsim.radians / galsim.arcsec)
         aberrations = self.aberrations / wave
-        ret = self.SED(wave)*galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
+        ret = self.SED(wave) * \
+            galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
         return ret
