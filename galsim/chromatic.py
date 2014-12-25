@@ -1508,6 +1508,11 @@ class InterpolatedChromaticObject(ChromaticObject):
         # Figure out where the supplied wavelength is compared to the list of wavelengths on which
         # images were originally tabulated.
         lower_idx = np.searchsorted(self.waves, wave)-1
+        # There can be edge issues, so watch out for that:
+        if lower_idx < 0:
+            lower_idx = 0
+        if lower_idx == len(self.waves)-1:
+            lower_idx = len(self.waves)-1
         frac = (wave-self.waves[lower_idx]) / (self.waves[lower_idx+1]-self.waves[lower_idx])
 
         # Actually do the linear interpolation for the image, stepK, and maxK.
