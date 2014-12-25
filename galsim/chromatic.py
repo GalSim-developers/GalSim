@@ -1386,7 +1386,11 @@ class InterpolatedChromaticObject(ChromaticObject):
     the required classes for ChromatiObjects, the subclasses of InterpolatedChromaticObject are
     required to have a method called `simpleEvaluateAtWavelength`, which is functionally the
     equivalent of `evaluateAtWavelength` for ChromaticObjects (i.e., it's a way to directly
-    instantiate the GSObject at that wavelength, without doing any interpolation).
+    instantiate the GSObject at that wavelength, without doing any interpolation).  Note that since
+    InterpolatedChromaticObjects can include an SED, for cases where they are going to be drawn on
+    their own without convolution by anything else, the `simpleEvaluateAtWavelength` method needs to
+    include proper flux normalization for that wavelength, i.e., it should always include
+    multiplication by `self.SED(wave)`.
 
     There are two possible ways to use this class.  The first (the purpose for which it is intended)
     is to expedite calculations using objects that have to be built up as sums of GSObjects with
