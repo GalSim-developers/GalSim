@@ -1461,14 +1461,12 @@ class InterpolatedChromaticObject(ChromaticObject):
             # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for
             # the array of images that is being stored.
             nyquist_dx_vals = [ obj.nyquistScale() for obj in objs ]
-            use_dx = min(nyquist_dx_vals)/oversample_fac
-            self.dx = use_dx
+            self.dx = min(nyquist_dx_vals) / oversample_fac
 
             # Find the suggested image size for each object given the choice of scale, and use the
             # maximum just to be safe.
-            possible_im_sizes = [ obj.SBProfile.getGoodImageSize(use_dx, 1.0) for obj in objs ]
-            use_n = max(possible_im_sizes)
-            self.n_im = use_n
+            possible_im_sizes = [ obj.SBProfile.getGoodImageSize(self.dx, 1.0) for obj in objs ]
+            self.n_im = max(possible_im_sizes)
 
             # Find the stepK and maxK values for each object.  These will be used later on, so that
             # we can force these values when instantiating InterpolatedImages before drawing.
@@ -1477,7 +1475,7 @@ class InterpolatedChromaticObject(ChromaticObject):
 
             # Finally, now that we have an image scale and size, draw all the images.  Note that
             # `no_pixel` is used (we want the object on its own, without a pixel response).
-            self.ims = [ obj.drawImage(scale=use_dx, nx=use_n, ny=use_n, method='no_pixel')
+            self.ims = [ obj.drawImage(scale=self.dx, nx=self.n_im, ny=self.n_im, method='no_pixel')
                          for obj in objs ]
 
     def withSED(self, sed='flat'):
@@ -1485,8 +1483,10 @@ class InterpolatedChromaticObject(ChromaticObject):
         Make a new InterpolatedChromaticObject with the requested SED.
 
         @param sed    Either a galsim.SED object to assign to this object as its SED, or a string
-                     'flat' which means a flat SED (equal weight to all wavelengths).
-                     [default: 'flat']
+                      'flat' which means a flat SED (equal weight to all wavelengths).  'flat' is
+                      what should be used for PSFs, so they do not modify the flux of the objects
+                      with which they are being convolved. 
+                      [default: 'flat']
         @return a new InterpolatedChromaticObject
         """
         new = self.copy()
