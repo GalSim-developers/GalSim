@@ -1434,7 +1434,6 @@ def test_ChromaticOpticalPSF():
                                      obscuration=obscuration, nstruts=nstruts)
     im_r = obj.drawImage(bandpass, scale=scale)
     im_r_ref = galsim.fits.read(os.path.join(refdir, 'r_exact.fits'))
-    im_r.write('r_test.fits')
     # Renormalize so peak is 1.
     im_r /= im_r.array.max()
     im_r_ref /= im_r_ref.array.max()
