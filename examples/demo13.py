@@ -147,8 +147,7 @@ def main(argv):
             import warnings
             warnings.warn('MemoryError encountered while using pupil_plane_im for {0}-band'.format(
                 filter_name))
-            PSF = galsim.OpticalPSF(lam_over_diam=lam_over_diam, obscuration=wfirst.obscuration,
-                                oversampling=1.2, pad_factor=2.)
+            PSF = galsim.OpticalPSF(lam_over_diam=lam_over_diam, obscuration=wfirst.obscuration)
 
         # Drawing PSF
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
