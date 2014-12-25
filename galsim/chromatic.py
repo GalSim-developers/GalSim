@@ -1496,7 +1496,7 @@ class InterpolatedChromaticObject(ChromaticObject):
             new.SED = sed
         return new
 
-    def evaluateAtWavelength(self, wave, force_eval = False):
+    def evaluateAtWavelength(self, wave, force_eval=False):
         """
         Evaluate this InterpolatedChromaticObject at a particular wavelength, either using
         interpolation or via direct calculation, depending on how the object was originally
@@ -1507,12 +1507,12 @@ class InterpolatedChromaticObject(ChromaticObject):
         @returns the monochromatic object at the given wavelength, as an InterpolatedImage.
         """
         if self.waves is not None and not force_eval:
-            im, stepk, maxk = self._image_at_wavelength(wave)
+            im, stepk, maxk = self._imageAtWavelength(wave)
             return galsim.InterpolatedImage(im, _force_stepk=stepk, _force_maxk=maxk)
         else:
             return self.simpleEvaluateAtWavelength(wave)
 
-    def _image_at_wavelength(self, wave):
+    def _imageAtWavelength(self, wave):
         """
         Get an image of the object at a particular wavelength, using linear interpolation between
         the originally-stored images.
@@ -1528,16 +1528,14 @@ class InterpolatedChromaticObject(ChromaticObject):
         # images were originally tabulated.
         lower_idx = np.searchsorted(self.waves, wave)-1
         # There can be edge issues, so watch out for that:
-        if lower_idx < 0:
-            lower_idx = 0
-        if lower_idx == len(self.waves)-1:
-            lower_idx = len(self.waves)-1
+        if lower_idx < 0: lower_idx = 0
+        if lower_idx == len(self.waves)-1: lower_idx = len(self.waves)-1
         frac = (wave-self.waves[lower_idx]) / (self.waves[lower_idx+1]-self.waves[lower_idx])
 
-        # Actually do the linear interpolation for the image, stepK, and maxK.
-        im = frac*self.ims[lower_idx+1] + (1.0-frac)*self.ims[lower_idx]
-        stepk = frac*self.stepK_vals[lower_idx+1] + (1.0-frac)*self.stepK_vals[lower_idx]
-        maxk = frac*self.maxK_vals[lower_idx+1] + (1.0-frac)*self.maxK_vals[lower_idx]
+        # Actually do the interpolation for the image, stepK, and maxK.
+        im = _linearInterp(self.ims, frac, lower_idx)
+        stepk = _linearInterp(self.stepK_vals, frac, lower_idx)
+        maxk = _linearInterp(self.maxK_vals, frac, lower_idx)
         return self.SED(wave)*im, stepk, maxk
 
     def drawImage(self, bandpass, force_eval=False, image=None, **kwargs):
@@ -1582,7 +1580,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
                                                       interpolant='linear'))
 
-        integral, stepk, maxk = integrator(self._image_at_wavelength, bandpass)
+        integral, stepk, maxk = integrator(self._imageAtWavelength, bandpass)
         # For now, pretend we have no information about the maxk and stepk that should be used.
         int_im = galsim.InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
 
@@ -1658,3 +1656,10 @@ class ChromaticOpticalPSF(InterpolatedChromaticObject):
         ret = self.SED(wave)* \
             galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
         return ret
+
+def _linearInterp(list, frac, lower_idx):
+    """Helper routine for linear interpolation between values in lists (which could be lists of
+    images, just not numbers, hence the need to avoid a LookupTable).  Not really worth
+    splitting out on its own now, but could be useful to have separate routines for the
+    interpolation later on if we want to enable something other than linear interpolation."""
+    return frac*list[lower_idx+1] + (1.-frac)*list[lower_idx]
