@@ -57,6 +57,7 @@ shear_g2 = 0.02
 # load a filter
 bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat')).thin()
 bandpass_g = galsim.Bandpass(os.path.join(datapath, 'LSST_g.dat')).thin()
+bandpass_z = galsim.Bandpass(os.path.join(datapath, 'LSST_z.dat')).thin()
 
 # load some spectra
 bulge_SED = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
@@ -1369,6 +1370,12 @@ def test_InterpolatedChromaticObject():
         err_msg='InterpolatedChromaticObject results differ for interpolated vs. exact force'
         ' when convolving with ChromaticSum')
 
+    # Finally, check that the routine is careful not to interpolate outside of its original bounds.
+    try:
+        np.testing.assert_raises(RuntimeError, obj_interp.drawImage, bandpass_z)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1425,7 +1432,6 @@ def test_ChromaticOpticalPSF():
     waves = np.linspace(bandpass.blue_limit, bandpass.red_limit, n_interp)
     obj = galsim.ChromaticOpticalPSF(diam, aberrations, waves, oversample_fac=oversample_fac,
                                      obscuration=obscuration, nstruts=nstruts)
-    t15 = time.time()
     im_r = obj.drawImage(bandpass, scale=scale)
     im_r_ref = galsim.fits.read(os.path.join(refdir, 'r_exact.fits'))
     im_r.write('r_test.fits')
@@ -1437,7 +1443,6 @@ def test_ChromaticOpticalPSF():
     np.testing.assert_array_almost_equal(
         im_r.array, im_r_ref.array, decimal=3,
         err_msg='ChromaticOpticalPSF results disagree with reference in r band')
-    t152 = time.time()
 
     # Then, check that with two very narrow bands, we get what we expect.  We check two bands just
     # to make sure that the expected scaling of the diffraction limit with wavelength is working out
