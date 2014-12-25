@@ -1461,12 +1461,12 @@ class InterpolatedChromaticObject(ChromaticObject):
             # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for
             # the array of images that is being stored.
             nyquist_dx_vals = [ obj.nyquistScale() for obj in objs ]
-            self.dx = min(nyquist_dx_vals) / oversample_fac
+            dx = min(nyquist_dx_vals) / oversample_fac
 
             # Find the suggested image size for each object given the choice of scale, and use the
             # maximum just to be safe.
-            possible_im_sizes = [ obj.SBProfile.getGoodImageSize(self.dx, 1.0) for obj in objs ]
-            self.n_im = max(possible_im_sizes)
+            possible_im_sizes = [ obj.SBProfile.getGoodImageSize(dx, 1.0) for obj in objs ]
+            n_im = max(possible_im_sizes)
 
             # Find the stepK and maxK values for each object.  These will be used later on, so that
             # we can force these values when instantiating InterpolatedImages before drawing.
@@ -1475,7 +1475,7 @@ class InterpolatedChromaticObject(ChromaticObject):
 
             # Finally, now that we have an image scale and size, draw all the images.  Note that
             # `no_pixel` is used (we want the object on its own, without a pixel response).
-            self.ims = [ obj.drawImage(scale=self.dx, nx=self.n_im, ny=self.n_im, method='no_pixel')
+            self.ims = [ obj.drawImage(scale=dx, nx=n_im, ny=n_im, method='no_pixel')
                          for obj in objs ]
 
     def withSED(self, sed='flat'):
