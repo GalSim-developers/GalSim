@@ -1499,7 +1499,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         """
         if self.waves is not None and not force_eval:
             im, stepk, maxk = self._image_at_wavelength(wave)
-            return galsim.InterpolatedImage(im, _force_stepk = stepk, _force_maxk = maxk)
+            return galsim.InterpolatedImage(im, _force_stepk=stepk, _force_maxk=maxk)
         else:
             return self.base_norm*self.SED(wave)*self.simpleEvaluateAtWavelength(wave)
 
@@ -1638,5 +1638,5 @@ class ChromaticOpticalPSF(InterpolatedChromaticObject):
         """
         lam_over_diam = 1.e-9 * (wave / self.diam) * (galsim.radians / galsim.arcsec)
         aberrations = self.aberrations / wave
-        ret = galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
+        ret = self.SED(wave)*galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
         return ret
