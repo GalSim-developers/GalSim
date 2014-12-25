@@ -179,7 +179,7 @@ class DirectImageIntegrator(object):
         self.last_n_eval = len(waves)
         for w in waves:
             ret_val, tmp_stepk, tmp_maxk = imageAtWavelength(w)
-            images.append(ret_val)
+            images.append(bandpass(w)*ret_val)
             stepk.append(tmp_stepk)
             maxk.append(tmp_maxk)
         return self.rule(images, waves), min(stepk), max(maxk)
