@@ -898,14 +898,14 @@ def test_stepk_maxk():
     step_k_val = int_im.stepK()
     max_k_val = int_im.maxK()
 
-    # Note scale needed here.
-    new_int_im = galsim.InterpolatedImage(im, _force_stepk=0.9*step_k_val,
-                                          _force_maxk=0.9*max_k_val)
+    mult_val = 0.9
+    new_int_im = galsim.InterpolatedImage(im, _force_stepk=mult_val*step_k_val,
+                                          _force_maxk=mult_val*max_k_val)
     numpy.testing.assert_almost_equal(
-        new_int_im.stepK(), 0.9*step_k_val, decimal=7,
+        new_int_im.stepK(), mult_val*step_k_val, decimal=7,
         err_msg='InterpolatedImage did not adopt forced minimum value for stepK')
     numpy.testing.assert_almost_equal(
-        new_int_im.maxK(), 0.9*max_k_val, decimal=7,
+        new_int_im.maxK(), mult_val*max_k_val, decimal=7,
         err_msg='InterpolatedImage did not adopt forced minimum value for maxK')
 
     t2 = time.time()
