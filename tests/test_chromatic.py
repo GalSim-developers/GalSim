@@ -1340,7 +1340,7 @@ def test_InterpolatedChromaticObject():
         ' (interpolated calculation)')
     np.testing.assert_array_almost_equal(
         im_interp.array, im_exact.array, decimal=4,
-        err_msg='InterpolatedChromaticObject results differ for interpolated vs. exact force'
+        err_msg='InterpolatedChromaticObject results differ for interpolated vs. exact'
         ' when convolving with ChromaticObject')
 
     # Check that when an InterpolatedChromaticObject is convolved with a ChromaticSum, the flux
@@ -1367,8 +1367,26 @@ def test_InterpolatedChromaticObject():
         ' (interpolated calculation)')
     np.testing.assert_array_almost_equal(
         im_interp.array, im_exact.array, decimal=3,
-        err_msg='InterpolatedChromaticObject results differ for interpolated vs. exact force'
+        err_msg='InterpolatedChromaticObject results differ for interpolated vs. exact'
         ' when convolving with ChromaticSum')
+
+    # Check that we can modify the flux in the usual way.
+    exact_psf_2 = np.pi*exact_psf_1
+    interp_psf_2 = np.pi*interp_psf_1
+    im_exact = exact_psf_2.drawImage(bandpass, scale=scale)
+    im_interp = im_exact.copy()
+    im_interp = interp_psf_2.drawImage(bandpass, image=im_interp, scale=scale)
+    expected_flux = exact_psf_2.SED.calculateFlux(bandpass)
+    frac_diff_exact = abs(im_exact.array.sum()/expected_flux-1.0)
+    frac_diff_interp = abs(im_interp.array.sum()/expected_flux-1.0)
+    np.testing.assert_almost_equal(
+        frac_diff_exact, 0.0, decimal=2,
+        err_msg='InterpolatedChromaticObject flux is wrong when multiplied to change'
+        ' normalization (exact calculation)')
+    np.testing.assert_almost_equal(
+        frac_diff_interp, 0.0, decimal=2,
+        err_msg='InterpolatedChromaticObject flux is wrong when multiplied to change'
+        ' normalization (interpolated calculation)')
 
     # Finally, check that the routine is careful not to interpolate outside of its original bounds.
     try:
