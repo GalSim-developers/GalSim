@@ -1512,8 +1512,8 @@ class InterpolatedChromaticObject(ChromaticObject):
         if self.waves is None:
             raise RuntimeError("Requested image at some wavelength when doing direct calculation!")
         if wave < min(self.waves) or wave > max(self.waves):
-            raise RuntimeError("Requested wavelength is outside the allowed range: %f to %f nm"%
-                               (min(self.waves), max(self.waves)))
+            raise RuntimeError("Requested wavelength %.1f is outside the allowed range: %.1f to %.1f nm"%
+                               (wave, min(self.waves), max(self.waves)))
 
         # Figure out where the supplied wavelength is compared to the list of wavelengths on which
         # images were originally tabulated.
