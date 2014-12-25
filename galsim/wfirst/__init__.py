@@ -86,6 +86,9 @@ following numbers:
                            zodiacal light, so its value is set to 0.1 (assuming a worst-case).  This
                            could be used to get a total background including stray light.
 
+    ipc_kernel - The 3x3 kernel to be used in simulations of interpixel capacitance (IPC); see
+                 galsim.detectors.applyIPC() for more information.
+
 For example, to get the gain value, use galsim.wfirst.gain.  Some of the numbers related to the
 nature of the detectors are subject to change as further lab tests are done.
 
@@ -132,15 +135,13 @@ thermal_backgrounds = {'J129': 0.06,
 pupil_plane_file = os.path.join(galsim.meta_data.share_dir,
                                 "WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz")
 stray_light_fraction = 0.1
-
+# IPC kernel is unnormalized
+ipc_kernel = numpy.array([ [0.001269938, 0.015399776, 0.001199862], \
+                           [0.013800177, 1.0, 0.015600367], \
+                           [0.001270391, 0.016129619, 0.001200137] ])
 
 from wfirst_bandpass import *
 from wfirst_backgrounds import *
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)
-
-# IPC kernel is unnormalized
-ipc_kernel = numpy.array([ [0.001269938, 0.015399776, 0.001199862], \
-                           [0.013800177, 1.0, 0.015600367], \
-                           [0.001270391, 0.016129619, 0.001200137] ])
