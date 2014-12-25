@@ -131,14 +131,16 @@ thermal_backgrounds = {'J129': 0.06,
                        'F184': 1.18, 
                        'Y106': 0.06,
                        'Z087': 0.06,
-                       'H158': 0.08}
+                       'H158': 0.08,
+                       'W149': 0.06}
 pupil_plane_file = os.path.join(galsim.meta_data.share_dir,
                                 "WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz")
 stray_light_fraction = 0.1
-# IPC kernel is unnormalized
+# IPC kernel is unnormalized at first.  We will normalize it.
 ipc_kernel = numpy.array([ [0.001269938, 0.015399776, 0.001199862], \
                            [0.013800177, 1.0, 0.015600367], \
                            [0.001270391, 0.016129619, 0.001200137] ])
+ipc_kernel /= numpy.sum(ipc_kernel)
 
 from wfirst_bandpass import *
 from wfirst_backgrounds import *
