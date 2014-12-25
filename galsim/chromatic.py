@@ -1576,7 +1576,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         # decide on integrator
         integrator = galsim.integ.DirectSampleIntegrator(galsim.integ.midpt)
 
-        # merge self.wave_list into bandpass.wave_list if using a sampling integrator
+        # merge self.wave_list into bandpass.wave_list since we are using a sampling integrator
         bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
                                                       interpolant='linear'))
 
@@ -1585,15 +1585,11 @@ class InterpolatedChromaticObject(ChromaticObject):
         int_im = galsim.InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
 
         # For performance profiling, store the number of evaluations used for the last integration
-        # performed.  Note that this might not be very useful for ChromaticSum instances, which are
-        # drawn one profile at a time, and hence _last_n_eval will only represent the final
-        # component drawn.
+        # performed.
         self._last_n_eval = integrator.last_n_eval
 
-        # Apply integral to the initial image appropriately.
-        # Note: Don't do image = integral and return that for add_to_image==False.
-        #       Remember that python doesn't actually do assignments, so this won't update the
-        #       original image if the user provided one.  The following procedure does work.
+        # Apply integral to the initial image appropriately.  This will naturally work properly and
+        # take into account the supplied value of `add_to_image`, which will be included in kwargs.
         image = int_im.drawImage(image=image, **kwargs)
         return image
 
