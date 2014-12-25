@@ -158,9 +158,12 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     coupling of sense nodes.
 
     This interpixel capacitance is approximated as a linear effect that can be described by a 3x3
-    kernel that is convolved with the image. The kernel could be intrinsically anisotropic. A
-    sensible kernel must have non-negative entries and must be normalized such that the sum of the
-    elements is 1, in order to conserve the total charge.
+    kernel that is convolved with the image. The kernel must be an Image instance and could be
+    intrinsically anisotropic. A sensible kernel must have non-negative entries and must be
+    normalized such that the sum of the elements is 1, in order to conserve the total charge.
+    The (1,1) element of the kernel is the contribution to the voltage read at a pixel from the
+    electrons in the pixel to its bottom-left, the (1,2) element of the kernel is the contribution
+    from the charges to its left and so on.
 
     The argument 'edge_treatment' specifies how the edges of the image should be treated, which
     could be in one of the three ways:
@@ -179,10 +182,10 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     Calling
     -------
 
-        >>> img.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend',
+        >>> img.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', fill_value=0,
             kernel_nonnegativity=True, kernel_normalization=True)
 
-    @param IPC_kernel              A 3x3 NumPy array that is convolved with the Image instance
+    @param IPC_kernel              A 3x3 Image instance that is convolved with the Image instance
     @param edge_treatment          Specifies the method of handling edges and should be one of
                                    'crop', 'extend' or 'wrap'. See above for details.
                                    [default: 'extend']
@@ -198,34 +201,35 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     @returns None
     """
 
-    # IPC kernel has to be a 3x3 numpy array
-    if not isinstance(IPC_kernel,numpy.ndarray):
-        raise ValueError("IPC_kernel must be a NumPy array.")
-    if not IPC_kernel.shape==(3,3):
-        raise ValueError("IPC kernel must be a NumPy array of size 3x3.")
+    # IPC kernel has to be a 3x3 Image instance
+    if not isinstance(IPC_kernel,galsim.Image):
+        raise ValueError("IPC_kernel must be an Image instance .")
+    ipc_kernel = IPC_kernel.array
+    if not ipc_kernel.shape==(3,3):
+        raise ValueError("IPC kernel must be an Image instance of size 3x3.")
 
     # Check for non-negativity of the kernel
     if kernel_nonnegativity is True:
-        if (IPC_kernel<0).any() is True:
+        if (ipc_kernel<0).any() is True:
             raise ValueError("IPC kernel must not contain negative entries")
 
     # Check and enforce correct normalization for the kernel
     if kernel_normalization is True:
-        if IPC_kernel.sum() != 1.0:
+        if abs(ipc_kernel.sum() - 1.0) > 10.*numpy.finfo(ipc_kernel.dtype.type).eps:
             import warnings
-            warnings.warn("The entries in the kernel did not sum to 1. Scaling the kernel to "
-                "ensure correct normalization.")
-            IPC_kernel = IPC_kernel/IPC_kernel.sum() 
+            warnings.warn("The entries in the IPC kernel did not sum to 1. Scaling the kernel to "\
+                +"ensure correct normalization.")
+            IPC_kernel = IPC_kernel/ipc_kernel.sum()
 
     # edge_treatment can be 'extend', 'wrap' or 'crop'
-    if edge_treatment is 'crop':
+    if edge_treatment=='crop':
         # Simply re-label the array of the Image instance
         pad_array = self.array
-    elif edge_treatment is 'extend':
+    elif edge_treatment=='extend':
         # Copy the array of the Image instance and pad with zeros
         pad_array = numpy.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
         pad_array[1:-1,1:-1] = self.array
-    elif edge_treatment is 'wrap':
+    elif edge_treatment=='wrap':
         # Copy the array of the Image instance and pad with zeros initially
         pad_array = numpy.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
         pad_array[1:-1,1:-1] = self.array
@@ -237,23 +241,24 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     else:
         raise ValueError("edge_treatment has to be one of 'extend', 'wrap' or 'crop'. ")
 
-    #Generating different segments of the padded array
+    # Generating different segments of the padded array
     center = pad_array[1:-1,1:-1]
-    top = pad_array[:-2,1:-1]
-    bottom = pad_array[2:,1:-1]
+    top = pad_array[2:,1:-1]
+    bottom = pad_array[:-2,1:-1]
     left = pad_array[1:-1,:-2]
     right = pad_array[1:-1,2:]
-    topleft = pad_array[:-2,:-2]
-    bottomright = pad_array[2:,2:]
-    topright = pad_array[:-2,2:]
-    bottomleft = pad_array[2:,:-2]
+    topleft = pad_array[2:,:-2]
+    bottomright = pad_array[:-2,2:]
+    topright = pad_array[2:,2:]
+    bottomleft = pad_array[:-2,:-2]
 
-    #Generating the output array, with 2 rows and 2 columns lesser than the padded array
-    out_array = IPC_kernel[0,0]*topleft + IPC_kernel[0,1]*top + IPC_kernel[0,2]*topright + \
-        IPC_kernel[1,0]*left + IPC_kernel[1,1]*center + IPC_kernel[1,2]*right + \
-        IPC_kernel[2,0]*bottomleft + IPC_kernel[2,1]*bottom + IPC_kernel[2,2]*bottomright
+    # Generating the output array, with 2 rows and 2 columns lesser than the padded array
+    # Image values have been used to make the code look more intuitive
+    out_array = IPC_kernel(1,3)*topleft + IPC_kernel(2,3)*top + IPC_kernel(3,3)*topright + \
+        IPC_kernel(1,2)*left + IPC_kernel(2,2)*center + IPC_kernel(3,2)*right + \
+        IPC_kernel(1,1)*bottomleft + IPC_kernel(2,1)*bottom + IPC_kernel(3,1)*bottomright
 
-    if edge_treatment is 'crop':
+    if edge_treatment=='crop':
         self.array[1:-1,1:-1] = out_array
         #Explicit edge effects handling with filling the edges with the value given in fill_value
         if fill_value is not None:
