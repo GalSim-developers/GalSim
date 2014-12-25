@@ -207,7 +207,12 @@ class ChromaticObject(object):
                                                           interpolant='linear'))
 
         add_to_image = kwargs.pop('add_to_image', False)
-        integral = integrator(self.evaluateAtWavelength, bandpass, image, kwargs)
+        # If this is an InterpolatedChromaticObject, and we ended up here, it means that the intent
+        # is to force evaluation of the exact profile using simpleEvaluateAtWavelength
+        if isinstance(self, InterpolatedChromaticObject):
+            integral = integrator(self.simpleEvaluateAtWavelength, bandpass, image, kwargs)
+        else:
+            integral = integrator(self.evaluateAtWavelength, bandpass, image, kwargs)
 
         # For performance profiling, store the number of evaluations used for the last integration
         # performed.  Note that this might not be very useful for ChromaticSum instances, which are
@@ -1407,20 +1412,25 @@ class InterpolatedChromaticObject(ChromaticObject):
     should be spaced; some experimentation compared with the exact calculation (`waves`=None) is
     warranted for each particular application.
 
-    @param waves       The list, tuple, or NumPy array of wavelengths to be used when building up
-                       the grid of images for interpolation.  The wavelengths should be given in
-                       nanometers, and they should span the full range of wavelengths covered by any
-                       bandpass to be used for drawing Images (i.e., this class will not extrapolate
-                       beyond the given range of wavelengths).  If None, then the
-                       InterpolatedChromaticObject will do the costlier, more exact calculation
-                       instead of interpolating between Images defined at specific wavelengths.
-    @param SED         A galsim.SED for the object.  If None, a flat SED is used.  When using the
-                       object as a PSF to be convolved by a chromatic object, a flat SED should be
-                       used, whereas when using the object as a star to make a PSF image, an
-                       appropriate SED should be assigned. Note that the SED can be changed later on
-                       using the `withSED` method.  [default: None]
+    @param waves            The list, tuple, or NumPy array of wavelengths to be used when building
+                            up the grid of images for interpolation.  The wavelengths should be
+                            given in nanometers, and they should span the full range of wavelengths
+                            covered by any bandpass to be used for drawing Images (i.e., this class
+                            will not extrapolate beyond the given range of wavelengths).  If None,
+                            then the InterpolatedChromaticObject will do the costlier, more exact
+                            calculation instead of interpolating between Images defined at specific
+                            wavelengths.
+    @param SED              A galsim.SED for the object.  If None, a flat SED is used.  When using
+                            the object as a PSF to be convolved by a chromatic object, a flat SED
+                            should be used, whereas when using the object as a star to make a PSF
+                            image, an appropriate SED should be assigned. Note that the SED can be
+                            changed later on using the `withSED` method.  [default: None]
+    @param oversample_fac   Factor by which to oversample the stored profiles compared to the
+                            default, which is to sample them at the Nyquist frequency for whichever
+                            wavelength has the smallest Nyquist frequency.  `oversample_fac`>1
+                            results in higher accuracy. [default: 1]
     """
-    def __init__(self, waves, sed = None):
+    def __init__(self, waves, sed=None, oversample_fac=1.):
         self.waves = waves
         self.separable = False
         if sed is None:
@@ -1443,7 +1453,7 @@ class InterpolatedChromaticObject(ChromaticObject):
             # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for
             # the array of images that is being stored.
             nyquist_dx_vals = [ obj.nyquistScale() for obj in objs ]
-            use_dx = min(nyquist_dx_vals)
+            use_dx = min(nyquist_dx_vals)/oversample_fac
             self.dx = use_dx
 
             # Find the suggested image size for each object given the choice of scale, and use the
@@ -1603,17 +1613,21 @@ class ChromaticOpticalPSF(InterpolatedChromaticObject):
                            (i.e. it does not have to be linearly, logarithmic, or regular according
                            to any scheme), but the interpolation between wavelengths is strictly
                            linear.
+    @param oversample_fac  Factor by which to oversample the stored profiles compared to the
+                           default, which is to sample them at the Nyquist frequency for whichever
+                           wavelength has the smallest Nyquist frequency.  `oversample_fac`>1
+                           results in higher accuracy, but slower calculations. [default: 1]
     @param   **kwargs      Any other keyword arguments to be passed to OpticalPSF, for example,
                            related to struts, obscuration, oversampling, etc.
     """
-    def __init__(self, diam, aberrations, waves, **kwargs):
+    def __init__(self, diam, aberrations, waves, oversample_fac=1., **kwargs):
         # First, take the basic info.
         self.diam = diam
         self.aberrations = aberrations
         self.kwargs = kwargs
 
         # Take user-specified choice for number of wavelengths to use for initial calculation.
-        super(ChromaticOpticalPSF, self).__init__(waves)
+        super(ChromaticOpticalPSF, self).__init__(waves, oversample_fac=oversample_fac)
 
     def simpleEvaluateAtWavelength(self, wave):
         """
