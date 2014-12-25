@@ -141,6 +141,7 @@ ipc_kernel = numpy.array([ [0.001269938, 0.015399776, 0.001199862], \
                            [0.013800177, 1.0, 0.015600367], \
                            [0.001270391, 0.016129619, 0.001200137] ])
 ipc_kernel /= numpy.sum(ipc_kernel)
+ipc_kernel = galsim.Image(ipc_kernel)
 
 from wfirst_bandpass import *
 from wfirst_backgrounds import *
