@@ -162,8 +162,15 @@ def main(argv):
         img = galsim.ImageF(512/8,512/8,scale=pixel_scale) # 64, 64
         bdconv.drawImage(filter_,image=img)
 
-        # Adding sky level to the image
+        # Adding sky level to the image.  First we get the amount of zodaical light (where currently
+        # we use the default location on the sky; this value will depend on position).  Since we
+        # have supplied an exposure time, the results will be returned to us in e-/s.  Then we
+        # multiply this by a factor to account for the amount of stray light that is expected.
         sky_level_pix = wfirst.getSkyLevel(filters[filter_name],exp_time=wfirst.exptime)
+        sky_level_pix *= (1.0 + wfirst.stray_light_fraction)
+        # Finally we add the expected thermal backgrounds in this band.  These are provided in
+        # e-/pix/s, so we have to multiply by the exposure time.
+        sky_level_pix += wfirst.thermal_backgrounds[filter_name]*wfirst.exptime
         img += sky_level_pix
         print "sky_level_pix = ", sky_level_pix
 
