@@ -120,8 +120,21 @@ def main(argv):
     # ... and then combine them.
     bdgal = 0.8*bulge+4*disk
 
-    # Note that at this stage, our galaxy is chromatic but our PSF is achromatic within a band.
+    # Note that at this stage, our galaxy is chromatic.
     logger.debug('Created bulge+disk galaxy final profile')
+
+    # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
+    # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
+    # (diameter, bandpasses, obscuration, etc.).  Note that we are going to arbitrarily choose a
+    # single SCA rather than all of them, for faster calculations, and we're going to use a simpler
+    # representation of the struts for faster calculations.  To do a more exact calculation of the
+    # chromaticity and pupil plane configuration, remove the approximate_struts and the n_waves
+    # keyword from this call:
+    use_SCA = 7 # This could be any number from 1...18
+    logger.info('Doing expensive pre-computation of PSF')
+    PSFs = wfirst.getPSF(SCAs=use_SCA, approximate_struts=True, n_waves=25)
+    PSF = PSFs[use_SCA]
+    logger.info('Done precomputation!')
 
     # Load WFIRST parameters
     pixel_scale = wfirst.pixel_scale # 0.11 arcseconds
@@ -129,37 +142,22 @@ def main(argv):
 
     # draw profile through WFIRST filters
     for filter_name, filter_ in filters.iteritems():        
-        # Obtaining parameters for PSF
-        # Here we are defining an optical PSF using the telescope diameter and obscuration, the
-        # effective wavelength of this filter, and an image of the WFIRST pupil plane.  Once we have
-        # a ChromaticOpticalPSF class, we will include chromaticity of the WFIRST PSF, but for now
-        # we ignore it.  Currently there are no aberrations, but those will (eventually) be included
-        # too.
-        effective_wavelength = (1e-9)*filters[filter_name].effective_wavelength # now in m
-        lam_over_diam = (1.0*effective_wavelength/wfirst.diameter)*206265.0 # in arcsec
-        try:
-            PSF = galsim.OpticalPSF(lam_over_diam=lam_over_diam, obscuration=wfirst.obscuration,
-                                pupil_plane_im=wfirst.pupil_plane_file, oversampling=1.2,
-                                pad_factor=2.)
-        except MemoryError:
-            logger.debug('MemoryError encountered while using pupil_plane_im for {0}-band'.format(
-                filter_name))
-            import warnings
-            warnings.warn('MemoryError encountered while using pupil_plane_im for {0}-band'.format(
-                filter_name))
-            PSF = galsim.OpticalPSF(lam_over_diam=lam_over_diam, obscuration=wfirst.obscuration)
-
-        # Drawing PSF
+        # Drawing PSF.  Note that the PSF object intrinsically has a flat SED, so if we convolve it
+        # with a galaxy, it will properly take on the SED of the galaxy.  However, this does mean
+        # that the PSF image being drawn here is not quite the right PSF for the galaxy.  Indeed,
+        # the PSF for the galaxy effectively varies within it, since it differs for the bulge and
+        # the disk.  However, the WFIRST bandpasses are narrow enough that this doesn't matter too
+        # much.
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
-        img_psf = PSF.drawImage(scale=pixel_scale)
-        galsim.fits.write(img_psf,out_filename)
-        logger.debug('Created PSF for {0}-band'.format(filter_name))
+        img_psf = PSF.drawImage(filter_, scale=pixel_scale)
+        galsim.fits.write(img_psf, out_filename)
+        logger.debug('Created PSF with flat SED for {0}-band'.format(filter_name))
 
-        #Convolve with PSF
+        # Convolve galaxy with PSF
         bdconv = galsim.Convolve([bdgal, PSF])
 
-        img = galsim.ImageF(512/8,512/8,scale=pixel_scale) # 64, 64
-        bdconv.drawImage(filter_,image=img)
+        img = galsim.ImageF(512/8,512/8, scale=pixel_scale) # 64, 64
+        bdconv.drawImage(filter_, image=img)
 
         # Adding sky level to the image.  First we get the amount of zodaical light (where currently
         # we use the default location on the sky; this value will depend on position).  Since we
