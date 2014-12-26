@@ -120,13 +120,6 @@ This module also contains the following routines:
 
 All of the above routines have docstrings that can be accessed using
 help(galsim.wfirst.getBandpasses), and so on.
-
-TODO:
- - unit tests for new stuff
- - WCS stuff - add the data from Jeff and port his WCS-builder to python
- - PSF stuff - include data from WFIRST optics team.
- - numbers related to persistence
- - finish demo documentation etc.
 """
 
 gain = 1.0
