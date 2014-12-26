@@ -317,6 +317,7 @@ def test_IPC_basic():
         err_msg="Left edge is not filled with the correct value")
 
     # Testing for flux conservation
+    np.random.seed(1234)
     ipc_kernel = galsim.Image(abs(np.random.randn(3,3))) # a random kernel
     im_new = im.copy()
     # Set edges to zero since flux is not conserved at the edges otherwise
@@ -379,6 +380,7 @@ def test_IPC_basic():
         print "SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`"
 
         # Generate an arbitrary kernel
+        np.random.seed(2345)
         ipc_kernel = galsim.Image(abs(np.random.randn(3,3)))
         # Convolution requires the kernel to be flipped up-down and left-right.
         im_new = im.copy()
