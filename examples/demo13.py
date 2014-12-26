@@ -153,7 +153,7 @@ def main(argv):
         # much.
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
         img_psf = PSF.drawImage(filter_, scale=pixel_scale)
-        galsim.fits.write(img_psf, out_filename)
+        img_psf.write(out_filename)
         logger.debug('Created PSF with flat SED for {0}-band'.format(filter_name))
 
         # Convolve galaxy with PSF
@@ -179,7 +179,7 @@ def main(argv):
 
         logger.debug('Created {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_{0}.fits'.format(filter_name))
-        galsim.fits.write(img,out_filename)
+        img.write(out_filename)
         logger.debug('Wrote {0}-band image to disk'.format(filter_name))
 
         # The subsequent steps account for the non-ideality of the detectors
@@ -198,9 +198,10 @@ def main(argv):
         img.addReciprocityFailure(exp_time=exptime,alpha=wfirst.reciprocity_alpha,base_flux=1.0)
         logger.debug('Accounted for Reciprocity Failure in {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_RecipFail_{0}.fits'.format(filter_name))
-        galsim.fits.write(img,out_filename)
+        img.write(out_filename)
         out_filename = os.path.join(outpath, 'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
-        galsim.fits.write(img-img_old,out_filename)
+        diff = img-img_old
+        diff.write(out_filename)
         logger.debug('Wrote {0}-band image  after Recip. Failure to disk'.format(filter_name))
 
         # Adding dark current to the image
@@ -232,9 +233,10 @@ def main(argv):
         img.applyNonlinearity(NLfunc)
         logger.debug('Applied Nonlinearity to {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_NL_{0}.fits'.format(filter_name))
-        galsim.fits.write(img,out_filename)
+        img.write(out_filename)
         out_filename = os.path.join(outpath, 'demo13_diff_NL_{0}.fits'.format(filter_name))
-        galsim.fits.write(img-img_old,out_filename)
+        diff = img-img_old
+        diff.write(out_filename)
         logger.debug('Wrote {0}-band image with Nonlinearity to disk'.format(filter_name))
 
         # Adding Interpixel Capacitance
@@ -253,9 +255,10 @@ def main(argv):
         # the kernel. The central part of the image is retained.
         logger.debug('Applied interpixel capacitance to {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_IPC_{0}.fits'.format(filter_name))
-        galsim.fits.write(img,out_filename)
+        img.write(out_filename)
         out_filename = os.path.join(outpath, 'demo13_diff_IPC_{0}.fits'.format(filter_name))
-        galsim.fits.write(img-img_old,out_filename)
+        diff = img-img_old
+        diff.write(out_filename)
         logger.debug('Wrote {0}-band image with IPC to disk'.format(filter_name))
 
         # Adding Read Noise
@@ -265,7 +268,7 @@ def main(argv):
 
         logger.debug('Added Readnoise to {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_ReadNoise_{0}.fits'.format(filter_name))
-        galsim.fits.write(img,out_filename)
+        img.write(out_filename)
         logger.debug('Wrote {0}-band image with readnoise to disk'.format(filter_name))
 
         # Subtracting backgrounds
@@ -274,7 +277,7 @@ def main(argv):
 
         logger.debug('Added Readnoise for {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_{0}.fits'.format(filter_name))
-        galsim.fits.write(img,out_filename)
+        img.write(out_filename)
         logger.debug('Wrote the final {0}-band image after subtracting backgrounds to disk'.\
                      format(filter_name))
 
