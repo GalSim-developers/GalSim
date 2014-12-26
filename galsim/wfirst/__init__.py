@@ -34,10 +34,6 @@ following numbers:
 
     dark_current - The dark current in units of e-/s.
 
-    sky_background - The typical sky background flux in e-/pix/s.  (Band?)
-
-    read_noise - The value of read noise in electrons.  (Band?)
-
     diameter - The telescope diameter in meters.
 
     obscuration - The linear obscuration of the telescope, in terms of fraction of the diameter.
@@ -87,7 +83,7 @@ following numbers:
                            could be used to get a total background including stray light.
 
     ipc_kernel - The 3x3 kernel to be used in simulations of interpixel capacitance (IPC); see
-                 galsim.detectors.applyIPC() for more information.
+                 help(galsim.detectors.applyIPC()) for more information.
 
 For example, to get the gain value, use galsim.wfirst.gain.  Some of the numbers related to the
 nature of the detectors are subject to change as further lab tests are done.
@@ -114,6 +110,7 @@ TODO:
  - WCS stuff - add the data from Jeff and port his WCS-builder to python
  - PSF stuff - include data from WCS optics team.
  - numbers related to persistence
+ - finish demo documentation etc.
 """
 
 gain = 1.0
