@@ -70,71 +70,29 @@ namespace galsim {
     LRUCache<boost::tuple< double, GSParamsPtr >, SpergelInfo> SBSpergel::SBSpergelImpl::cache(
         sbp::max_spergel_cache);
 
-    class SpergelIntegratedFlux
-    {
-    public:
-        SpergelIntegratedFlux(double nu, double gamma_nup2, double flux_frac=0.0)
-            : _nu(nu), _gamma_nup2(gamma_nup2),  _target(flux_frac) {}
-
-        double operator()(double u) const
-        // Return flux integrated up to radius `u` in units of r0, minus `flux_frac`
-        // (i.e., make a residual so this can be used to search for a target flux.
-        {
-            double fnup1 = std::pow(u / 2., _nu+1)
-                * boost::math::cyl_bessel_k(_nu+1, u)
-                / _gamma_nup2;
-            double f = 1.0 - 2.0 * (1+_nu)*fnup1;
-            return f - _target;
-        }
-    private:
-        double _nu;
-        double _gamma_nup2;
-        double _target;
-    };
-
-    double SBSpergel::SBSpergelImpl::calculateFluxRadius(const double& flux_frac) const
-    {
-        // Calcute r such that L(r/r0) / L_tot == flux_frac
-
-        // These seem to bracket pretty much every reasonable possibility
-        // that I checked in Mathematica.
-        double z1=0.001;
-        double z2=25.0;
-        SpergelIntegratedFlux func(_nu, _gamma_nup2, flux_frac);
-        Solve<SpergelIntegratedFlux> solver(func, z1, z2);
-        solver.setMethod(Brent);
-        double R = solver.root();
-        dbg<<"flux_frac = "<<flux_frac<<std::endl;
-        dbg<<"r/r0 = "<<R<<std::endl;
-        return R;
-    }
-
     SBSpergel::SBSpergelImpl::SBSpergelImpl(double nu, double size, RadiusType rType,
                                             double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _nu(nu), _flux(flux),
         _gamma_nup1(boost::math::tgamma(_nu+1.0)),
-        _gamma_nup2(_gamma_nup1 * (_nu+1.)),
-        _cnu(calculateFluxRadius(0.5)),
-        _stepk(0.0), _maxk(0.0),
         _info(cache.get(boost::make_tuple(_nu, this->gsparams.duplicate())))
     {
         dbg<<"Start SBSpergel constructor:\n";
         dbg<<"nu = "<<_nu<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
-        dbg<<"C_nu = "<<_cnu<<std::endl;
+        dbg<<"C_nu = "<<_info->getHLR()<<std::endl;
 
         switch(rType) {
         case HALF_LIGHT_RADIUS:
             {
                 _re = size;
-                _r0 = _re / _cnu;
+                _r0 = _re / _info->getHLR();
             }
             break;
         case SCALE_RADIUS:
             {
                 _r0 = size;
-                _re = _r0 * _cnu;
+                _re = _r0 * _info->getHLR();
             }
             break;
         }
@@ -147,28 +105,8 @@ namespace galsim {
         dbg<<"HLR = "<<_re<<std::endl;
     }
 
-    double SBSpergel::SBSpergelImpl::maxK() const
-    {
-        if(_maxk == 0.) {
-            // Solving (1+k^2)^(-1-nu) = maxk_threshold for k
-            // exact:
-            //_maxk = std::sqrt(std::pow(gsparams->maxk_threshold, -1./(1+_nu))-1.0) * _inv_r0;
-            // approximate 1+k^2 ~ k^2 => good enough:
-            _maxk = std::pow(gsparams->maxk_threshold, -1./(2*(1+_nu))) * _inv_r0;
-        }
-        return _maxk;
-    }
-
-    double SBSpergel::SBSpergelImpl::stepK() const
-    {
-        if (_stepk == 0.) {
-            double R = calculateFluxRadius(1.0 - gsparams->folding_threshold);
-            // Go to at least 5*re
-            R = std::max(R,gsparams->stepk_minimum_hlr/_cnu);
-            _stepk = M_PI / R * _inv_r0;
-        }
-        return _stepk;
-    }
+    double SBSpergel::SBSpergelImpl::maxK() const { return _info->maxK() * _inv_r0; }
+    double SBSpergel::SBSpergelImpl::stepK() const { return _info->stepK() * _inv_r0; }
 
     // Equations (3, 4) of Spergel (2010)
     double SBSpergel::SBSpergelImpl::xValue(const Position<double>& p) const
@@ -330,12 +268,82 @@ namespace galsim {
 
     SpergelInfo::SpergelInfo(double nu, const GSParamsPtr& gsparams) :
         _nu(nu), _gsparams(gsparams),
+        _gamma_nup1(boost::math::tgamma(_nu+1.0)),
+        _gamma_nup2(_gamma_nup1 * (_nu+1)),
+        _cnu(calculateFluxRadius(0.5)),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.)
     {
         dbg<<"Start SpergelInfo constructor for nu = "<<_nu<<std::endl;
 
         if (_nu < sbp::minimum_spergel_nu || _nu > sbp::maximum_spergel_nu)
             throw SBError("Requested Spergel index out of range");
+    }
+
+    class SpergelIntegratedFlux
+    {
+    public:
+        SpergelIntegratedFlux(double nu, double gamma_nup2, double flux_frac=0.0)
+            : _nu(nu), _gamma_nup2(gamma_nup2),  _target(flux_frac) {}
+
+        double operator()(double u) const
+        // Return flux integrated up to radius `u` in units of r0, minus `flux_frac`
+        // (i.e., make a residual so this can be used to search for a target flux.
+        {
+            double fnup1 = std::pow(u / 2., _nu+1)
+                * boost::math::cyl_bessel_k(_nu+1, u)
+                / _gamma_nup2;
+            double f = 1.0 - 2.0 * (1+_nu)*fnup1;
+            return f - _target;
+        }
+    private:
+        double _nu;
+        double _gamma_nup2;
+        double _target;
+    };
+
+    double SpergelInfo::calculateFluxRadius(const double& flux_frac) const
+    {
+        // Calcute r such that L(r/r0) / L_tot == flux_frac
+
+        // These seem to bracket pretty much every reasonable possibility
+        // that I checked in Mathematica.
+        double z1=0.001;
+        double z2=25.0;
+        SpergelIntegratedFlux func(_nu, _gamma_nup2, flux_frac);
+        Solve<SpergelIntegratedFlux> solver(func, z1, z2);
+        solver.setMethod(Brent);
+        double R = solver.root();
+        dbg<<"flux_frac = "<<flux_frac<<std::endl;
+        dbg<<"r/r0 = "<<R<<std::endl;
+        return R;
+    }
+
+    double SpergelInfo::stepK() const
+    {
+        if (_stepk == 0.) {
+            double R = calculateFluxRadius(1.0 - _gsparams->folding_threshold);
+            // Go to at least 5*re
+            R = std::max(R,_gsparams->stepk_minimum_hlr/_cnu);
+            _stepk = M_PI / R;
+        }
+        return _stepk;
+    }
+
+    double SpergelInfo::maxK() const
+    {
+        if(_maxk == 0.) {
+            // Solving (1+k^2)^(-1-nu) = maxk_threshold for k
+            // exact:
+            //_maxk = std::sqrt(std::pow(gsparams->maxk_threshold, -1./(1+_nu))-1.0);
+            // approximate 1+k^2 ~ k^2 => good enough:
+            _maxk = std::pow(_gsparams->maxk_threshold, -1./(2*(1+_nu)));
+        }
+        return _maxk;
+    }
+
+    double SpergelInfo::getHLR() const
+    {
+        return _cnu;
     }
 
     class SpergelRadialFunction: public FluxDensity

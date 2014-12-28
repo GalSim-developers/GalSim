@@ -23,8 +23,6 @@
 #include "SBProfileImpl.h"
 #include "SBSpergel.h"
 #include "LRUCache.h"
-//#include <limits>
-//#define INFINITY std::numeric_limits::<double>::infinity()
 
 namespace galsim {
 
@@ -37,6 +35,12 @@ namespace galsim {
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~SpergelInfo() {}
+
+        double maxK() const;
+        double stepK() const;
+
+        /// @brief The half-light radius in units of r0.
+        double getHLR() const;
 
         /**
          * @brief Shoot photons through unit-size, unnormalized profile
@@ -58,11 +62,17 @@ namespace galsim {
         double _nu;       ///< Spergel index.
         const GSParamsPtr _gsparams; ///< The GSParams object.
 
+        // Constants to immediately compute.
+        double _gamma_nup1;
+        double _gamma_nup2;
+        double _cnu;
         // Parameters calculated when they are first needed, and then stored:
         mutable double _maxk;    ///< Value of k beyond which aliasing can be neglected.
         mutable double _stepk;   ///< Sampling in k space necessary to avoid folding.
         mutable double _re;      ///< The HLR in units of r0.
         mutable double _flux;    ///< Flux relative to the untruncated profile.
+
+        double calculateFluxRadius(const double& flux_frac) const;
 
         /// Classes used for photon shooting
         mutable boost::shared_ptr<FluxDensity> _radial;
@@ -82,24 +92,6 @@ namespace galsim {
 
         double maxK() const;
         double stepK() const;
-
-        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
-        {
-            splits.push_back(0.);
-            xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF;
-        }
-
-        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
-        {
-            splits.push_back(0.);
-            ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF;
-        }
-
-        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
-        {
-            ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF;
-            if (std::abs(x/_re) < 1.e-2) splits.push_back(0.);
-        }
 
         bool isAxisymmetric() const { return true; }
         bool hasHardEdges() const { return false; }
@@ -122,7 +114,6 @@ namespace galsim {
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
 
-        double calculateFluxRadius(const double& flux_frac) const;
         // Overrides for better efficiency
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, int ix_zero,
@@ -144,14 +135,10 @@ namespace galsim {
         double _shootnorm; ///< Normalization for photon shooting.
 
         double _gamma_nup1; // Gamma(nu + 1)
-        double _gamma_nup2; // Gamma(nu + 2)
-        double _cnu;        // Factor relating HLR and scale radius: r0 = re / cnu
         double _re;         // half-light-radius
         double _r0_sq;
         double _inv_r0;
         double _norm;
-        mutable double _stepk;
-        mutable double _maxk;
 
         boost::shared_ptr<SpergelInfo> _info; ///< Points to info structure for this nu
 

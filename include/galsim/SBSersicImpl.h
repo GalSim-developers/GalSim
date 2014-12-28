@@ -27,7 +27,7 @@
 namespace galsim {
 
     /// @brief A private class that caches the needed parameters for each Sersic index `n`.
-    class SersicInfo 
+    class SersicInfo
     {
     public:
         /// @brief Constructor
@@ -117,8 +117,8 @@ namespace galsim {
         mutable double _highk_b; ///< Coefficient of 1/k^3 in high-k asymptote
 
         /// Classes used for photon shooting
-        mutable boost::shared_ptr<FluxDensity> _radial;  
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;   
+        mutable boost::shared_ptr<FluxDensity> _radial;
+        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
 
         // Helper functions used internally:
         void buildFT() const;
@@ -141,21 +141,21 @@ namespace galsim {
         double maxK() const;
         double stepK() const;
 
-        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
             if (!_truncated) { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
             else { xmin = -_trunc; xmax = _trunc; }
         }
 
-        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
             if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
             else { ymin = -_trunc; ymax = _trunc; }
         }
 
-        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
         {
             if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
             else if (std::abs(x) >= _trunc) { ymin = 0; ymax = 0; }
@@ -169,7 +169,7 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
 
-        Position<double> centroid() const 
+        Position<double> centroid() const
         { return Position<double>(0., 0.); }
 
         /// @brief Returns the true flux (may be different from the specified flux)
@@ -229,4 +229,3 @@ namespace galsim {
 }
 
 #endif
-
