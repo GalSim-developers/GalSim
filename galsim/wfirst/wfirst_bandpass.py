@@ -37,8 +37,8 @@ def getBandpasses(AB_zeropoint=True, exptime=None):
     - There is a column called 'Wave', containing the wavelengths in microns.
     - The other columns are labeled by the name of the bandpass.
 
-    Currently the bandpasses are not truncated or thinned in any way.  We leave it to the user to
-    decide whether they wish to do either of those operations.
+    Currently the bandpasses are not truncated and are only mildly thinned.  We leave it to the user to
+    decide whether they wish to do either of those operations more aggressively.
 
     By default, the routine will set an AB zeropoint using the WFIRST effective diameter and default
     exposure time.  Setting the zeropoint can be avoided by setting `AB_zeropoint=False`; changing
@@ -98,7 +98,7 @@ def getBandpasses(AB_zeropoint=True, exptime=None):
             continue
 
         # Initialize the bandpass object.
-        bp = galsim.Bandpass(galsim.LookupTable(wave, data[index,:]), wave_type='nm')
+        bp = galsim.Bandpass(galsim.LookupTable(wave, data[index,:]), wave_type='nm').thin()
         # Set the zeropoint if requested by the user:
         if AB_zeropoint:
             if exptime is None:

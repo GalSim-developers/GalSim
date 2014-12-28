@@ -85,6 +85,8 @@ following numbers:
     ipc_kernel - The 3x3 kernel to be used in simulations of interpixel capacitance (IPC); see
                  help(galsim.detectors.applyIPC()) for more information.
 
+    n_sca - The number of SCAs in the focal plane.
+
 For example, to get the gain value, use galsim.wfirst.gain.  Some of the numbers related to the
 nature of the detectors are subject to change as further lab tests are done.
 
@@ -92,12 +94,10 @@ This module also contains the following routines:
 
     getBandpasses() - A utility to get a dictionary containing galsim.Bandpass objects for each of
                       the WFIRST-AFTA bandpasses, which by default will have their zero point set
-                      for the WFIRST-AFTA effective diameter and typical exposure time.  For more
-                      detail, do help(galsim.wfirst.getBandpasses).
+                      for the WFIRST-AFTA effective diameter and typical exposure time.
 
     getSkyLevel() - A utility to find the expected sky level due to zodiacal light at a given
-                    position, in a given band.  For more detail, do
-                    help(galsim.wfirst.getSkyLevel).
+                    position, in a given band..
 
     NLfunc() - A function to take an input image and simulate detector nonlinearity.  This will
                ordinarily be used as an input to GalSim routines for applying nonlinearity, i.e., if
@@ -105,12 +105,21 @@ This module also contains the following routines:
 
                >>>> im_nl = im.applyNonlinearity(galsim.wfirst.NLfunc)
 
-TODO:
- - unit tests for new stuff
- - WCS stuff - add the data from Jeff and port his WCS-builder to python
- - PSF stuff - include data from WCS optics team.
- - numbers related to persistence
- - finish demo documentation etc.
+    getPSF() - A routine to get a chromatic representation of the PSF in each SCAs.  This involves a
+               significant overhead when initializing, though certain keywords can be used to speed
+               up the process.  Actually using the PSFs to draw images is much faster than the
+               initialization.
+
+    tabulatePSFImages() - A routine to take outputs of getPSF() and write them to file as a set of
+                          images in a multi-extension FITS file.  This can be used along with the
+                          next routine for faster calculations.
+
+    getStoredPSF() - A routine to read in an image of the PSF stored by tabulatePSFImages(), and
+                     make objects corresponding to each of them for later use.  This routine has
+                     less overhead than getPSF() but also is less flexible.
+
+All of the above routines have docstrings that can be accessed using
+help(galsim.wfirst.getBandpasses), and so on.
 """
 
 gain = 1.0
@@ -139,9 +148,11 @@ ipc_kernel = numpy.array([ [0.001269938, 0.015399776, 0.001199862], \
                            [0.001270391, 0.016129619, 0.001200137] ])
 ipc_kernel /= numpy.sum(ipc_kernel)
 ipc_kernel = galsim.Image(ipc_kernel)
+n_sca = 18
 
-from wfirst_bandpass import *
-from wfirst_backgrounds import *
+from wfirst_bandpass import getBandpasses
+from wfirst_backgrounds import getSkyLevel
+from wfirst_psfs import getPSF, tabulatePSFImages, getStoredPSF
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)

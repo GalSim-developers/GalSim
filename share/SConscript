@@ -8,7 +8,11 @@ RunUninstall = env['_RunUninstall']
 
 install_subdir = 'share/galsim'
 
-files = [ 'vega.txt', 'acs_I_unrot_sci_20_cf.fits', 'afta_throughput.txt', 'wfirst_sky_backgrounds.txt', 'WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz' ]
+files = [ 'vega.txt', 'acs_I_unrot_sci_20_cf.fits', 'afta_throughput.txt', 'wfirst_sky_backgrounds.txt',
+      'WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz' ]
+
+for N in range(1, 10):
+    files.append('AFTA_WFI_v4-2-5_140326_192nmRMS_NoAps_PLT_Zemax_ZernStanTerm_C0'+str(N)+'_F01_W04.txt')
 
 if 'install' in COMMAND_LINE_TARGETS:
     install_dir = env['FINAL_PREFIX']
