@@ -101,6 +101,9 @@ def main(argv):
 
     logger.debug('Successfully read in SEDs')
 
+    #----------------------------------------------------------------------------------------------
+    # Part A: chromatic bulge+disk galaxy
+
     logger.info('')
     logger.info('Simulating a chromatic bulge+disk galaxy')
     redshift = 0.8
@@ -281,6 +284,116 @@ def main(argv):
     logger.info('ds9 -rgb -blue -scale limits -0.2 0.8 output/demo13_J129.fits -green '
         +'-scale limits'+' -0.25 1.0 output/demo13_W149.fits -red -scale limits -0.25'
         +' 1.0 output/demo13_Z087.fits -zoom 2 &')
+
+    #----------------------------------------------------------------------------------------------
+    # Part B: Reading from a Galaxy catalog
+
+    logger.info('')
+    logger.info('Reading from a catalog')
+    
+    # Read in a galaxy catalog
+    cat_file_name = 'real_galaxy_catalog_example.fits'
+    dir = 'data'
+    real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
+    logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
+
+    # List of IDs to use.  We select 5 particularly bulge galaxies for this demo. 
+    # Then we'll choose randomly from this list.
+    bulge_id_list = [ 106416, 106731, 108402, 116045, 116448 ]
+    disk_id_list = [ 106416, 106731, 108402, 116045, 116448]
+
+    # Make the 5 galaxies we're going to use here rather than remake them each time.
+    # This means the Fourier transforms of the real galaxy images don't need to be recalculated 
+    # each time, so it's a bit more efficient.
+    bulge_gal_list = [ galsim.RealGalaxy(real_galaxy_catalog, id=idx) for idx in bulge_id_list ]
+    disk_gal_list = [ galsim.RealGalaxy(real_galaxy_catalog, id=idx) for idx in disk_id_list ]
+
+    # Define some parameters
+    nx_tiles = 5
+    ny_tiles = 10
+    stamp_size = 48
+    nobj = nx_tiles*ny_tiles
+
+    # Setup the images:
+    bulge_gal_image = galsim.ImageF(stamp_size*nx_tiles, stamp_size*ny_tiles)
+    disk_gal_image = galsim.ImageF(stamp_size*nx_tiles, stamp_size*ny_tiles)
+
+    # We will place the tiles in a random order.  To do this, we make two lists for the 
+    # ix and iy values.  Then we apply a random permutation to the lists (in tandem).
+    ix_list = []
+    iy_list = []
+    for ix in range(nx_tiles):
+        for iy in range(ny_tiles):
+            ix_list.append(ix)
+            iy_list.append(iy)
+    # This next function will use the given random number generator, rng, and use it to
+    # randomly permute any number of lists.  All lists will have the same random permutation
+    # applied.
+    galsim.random.permute(rng, ix_list, iy_list)
+
+    # Build each postage stamp for each filer:
+    for filter_name, filter_ in filters.iteritems():
+        effective_wavelength = (1e-9)*filters[filter_name].effective_wavelength # now in m
+        lam_over_diam = (1.0*effective_wavelength/wfirst.diameter)*206265.0 # in arcsec
+        #try:
+        #    PSF = galsim.OpticalPSF(lam_over_diam=lam_over_diam, obscuration=wfirst.obscuration,
+        #                        pupil_plane_im=wfirst.pupil_plane_file, oversampling=1.2,
+        #                        pad_factor=2.)
+        #except MemoryError:
+        logger.debug('MemoryError encountered while using pupil_plane_im for {0}-band'.format(
+                filter_name))
+        import warnings
+        warnings.warn('MemoryError encountered while using pupil_plane_im for {0}-band'.format(
+                filter_name))
+        PSF = galsim.OpticalPSF(lam_over_diam=lam_over_diam, obscuration=wfirst.obscuration) 
+        img_psf = galsim.ImageF(stamp_size,stamp_size)
+        PSF.drawImage(image=img_psf, scale=pixel_scale)
+        
+        for k in xrange(nobj):
+            # The usual random number generator using a different seed for each galaxy.
+            rng = galsim.BaseDeviate(random_seed+k)
+            # Determine the bounds for this stamp and its center position.
+            ix = ix_list[k]
+            iy = iy_list[k]
+            b = galsim.BoundsI(ix*stamp_size+1 , (ix+1)*stamp_size, 
+                           iy*stamp_size+1 , (iy+1)*stamp_size)
+
+            sub_bulge_gal_image = bulge_gal_image[b]
+            sub_disk_gal_image = disk_gal_image[b]
+
+            # For this demo, we are doing a ring test as in demo10, where the same galaxy profile is drawn at many orientations stepped uniformly in angle.
+            theta = k/20. * 360. * galsim.degrees
+            
+            # The index needs to increment every 20 objects so we use k/20 using integer math.
+            index = k / 20
+            bulge_gal = bulge_gal_list[index]
+            disk_gal = disk_gal_list[index]
+
+            # This makes a new compy so we are not changing the object in the lists
+            bulge_gal = bulge_gal.rotate(theta)
+            disk_gal = disk_gal.rotate(theta)
+
+            # Apply random shears from a uniform distribution
+            ud = galsim.UniformDeviate(rng)
+            # REPORT THIS!
+            g1, g2 = 2,2
+            while ((g1>1) or (g2>1)):
+                g1 = ud()
+                g2 = ud()
+            bulge_gal = bulge_gal.shear(g1=g1/2., g2=g2/2.)
+            g1, g2 = 2,2
+            while ((g1>1) or (g2>1)):
+                g1 = ud()
+                g2 = ud()
+            disk_gal = disk_gal.shear(g1=g1/2., g2=g2/2.)
+
+            # Make the final image, convolving with the psf
+            bulge_final = galsim.Convolve([PSF, bulge_gal])
+            disk_final = galsim.Convolve([PSF, disk_gal])
+
+            # Draw the Image
+            bulge_final.drawImage(sub_bulge_gal_image)
+            disk_final.drawImage(sub_disk_gal_image)
 
 if __name__ == "__main__":
     main(sys.argv)
