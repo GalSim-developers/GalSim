@@ -268,10 +268,13 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
         self.array[1:-1,1:-1] = out_array
         #Explicit edge effects handling with filling the edges with the value given in fill_value
         if fill_value is not None:
-            self.array[0,:] = fill_value
-            self.array[-1,:] = fill_value
-            self.array[:,0] = fill_value
-            self.array[:,-1] = fill_value
+            if isinstance(fill_value, float) or isinstance(fill_value, int):
+                self.array[0,:] = fill_value
+                self.array[-1,:] = fill_value
+                self.array[:,0] = fill_value
+                self.array[:,-1] = fill_value
+            else:
+                raise ValueError("'fill_value' must be either a float or an int")
     else:
         self.array[:,:] = out_array
 
