@@ -76,8 +76,38 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
 
     Usage: <fill in usage example>
 
-    @param    blah blah.
-    @returns  blah blah.
+    @param    SCAs                 Specific SCAs for which the PSF should be loaded.  This can be
+                                   either a single number, a tuple, a NumPy array, or a list.  If
+                                   None, then the PSF will be loaded for all SCAs.  Note that the
+                                   objected that is returned is always a list of the same length,
+                                   regardless of whether `SCAs` is specified or not, but if `SCAs`
+                                   was specified then the list entry will be None for all SCAs that
+                                   were not requested.  [default: None]
+    @param    approximate_struts   Should the routine use an approximate representation of the pupil
+                                   plane, with 6 equally-spaced radial struts, instead of the exact
+                                   representation of the pupil plane?  Setting this parameter to
+                                   True will lead to faster calculations, with a slightly less
+                                   realistic PSFs.  [default: False]
+    @param    n_waves              Number of wavelengths to use for initializing the chromatic PSF
+                                   objects.  If None, then a sensible default is used, corresponding
+                                   to sampling the full wavelength range every 20 nanometers.
+                                   [default: None]
+    @param    extra_aberrations    Array of extra aberrations to include in the PSF model, on top of
+                                   those that are part of the WFIRST design.  These should be
+                                   provided in units of nanometers, as an array of length 12 with
+                                   entries 4 through 11 corresponding to defocus through spherical
+                                   aberrations.  [default: None]
+    @param    wavelength_limits    A tuple or list of the blue and red wavelength limits to use for
+                                   instantiating the chromatic object.  If None, then it uses the
+                                   blue and red limits of all imaging passbands to determine the
+                                   most inclusive wavelength range possible.  But this keyword can
+                                   be used to reduce the range of wavelengths if only one passband
+                                   (or a subset of passbands) is to be used for making the images,
+                                   since the number of precomputations it has to do is reduced.
+                                   [default: None]
+    @returns  A list of ChromaticOpticalPSF objects, one for each SCA.  The SCAs in WFIRST are
+              1-indexed, and the list is indexed according go the SCA, meaning that the 0th object
+              in the list is always None, the 1st is the PSF for SCA 1, and so on.
     """
     # Check which SCAs are to be done.  Default is all.
     # SCAs are 1-indexed, so we make a list that is one longer than needed, with the 0th element
@@ -154,7 +184,7 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
 
     return PSF_list
 
-def tabulatePSFImages(PSF_list, image_filename, data_filename, bandpass_list=default_bandpass_list,
+def tabulatePSFImages(PSF_list, image_filename, data_filename, bandpass_list=None,
                       clobber=False):
     """
     This is a routine to store images of WFIRST PSFs in different bands for each SCA.  It takes an
@@ -165,9 +195,22 @@ def tabulatePSFImages(PSF_list, image_filename, data_filename, bandpass_list=def
 
     Note that the image files can take up space, but if `image_filename` has an extension that
     GalSim recognizes as corresponding to a compressed format, the compression will automatically be
-    done.  See galsim.fits.write documentation for more information about this option.
+    done.
 
-    @param blah
+    @param PSF_list            A list of PSF objects for each SCA, in the same format as output by
+                               the getPSF() routine (though it can take versions that have been
+                               modified, for example in the inclusion of an SED).
+    @param image_filename      The name of the file to which the images should be written, possibly
+                               including extensions for any compression that is to be done.  See
+                               galsim.fits.write documentation for information about compression
+                               options.
+    @param data_filename       The name of the file to which information about the PSF images is to
+                               be written, for use by the getStoredPSF() routine.
+    @param bandpass_list       A list of bandpasses for which images should be generated and
+                               stored.  If None, all WFIRST imaging passbands are used.
+                               [default: None]
+    @param clobber             Should the routine clobber `PSF_list` and `image_filename` (if they
+                               already exist? [default: False]
     """
     # Check for sane input PSF_list.
     if len(PSF_list) != galsim.wfirst.n_sca+1:
@@ -184,12 +227,15 @@ def tabulatePSFImages(PSF_list, image_filename, data_filename, bandpass_list=def
 
     # Check that bandpass list input is okay.  It should be strictly a subset of the default list of
     # bandpasses.
-    if not set(bandpass_list).issubset(default_bandpass_list):
-        err_msg = ''
-        for item in default_bandpass_list:
-            err_msg += item+' '
-        raise ValueError("Bandpass list must be a subset of the default list, containing %s"
-                         %err_msg)
+    if bandpass_list is None:
+        bandpass_list = default_bandpass_list
+    else:
+        if not set(bandpass_list).issubset(default_bandpass_list):
+            err_msg = ''
+            for item in default_bandpass_list:
+                err_msg += item+' '
+            raise ValueError("Bandpass list must be a subset of the default list, containing %s"
+                             %err_msg)
 
     # Get all the WFIRST bandpasses.
     bandpass_dict = galsim.wfirst.getBandpasses()
@@ -228,7 +274,21 @@ def tabulatePSFImages(PSF_list, image_filename, data_filename, bandpass_list=def
 
 def getStoredPSF(image_filename, data_filename):
     """
-    TODO
+    Get an achromatic representation of the WFIRST PSF in each passband.
+
+    If the user has generated WFIRST PSFs and stored their images in each passband using getPSF()
+    followed by tabulatePSF(), then the getStoredPSF() routine can read in those stored images and
+    associated data, and return an InterpolatedImage for each one.  These are intrinsically not
+    chromatic objects themselves, so they can be used only if the user does not care about the
+    variation of the PSF with wavelength within each passband.  In that case, use of getStoredPSF()
+    can represent significant time savings compared to doing the full PSF calculation each time.
+
+    @param  image_filename     Name of file containing the PSF images from tabulatePSF().
+    @param  data_filename      Name of file containing the PSF image-related data from
+                               tabulatePSF().
+    @returns A dict containing the GSObject representing the PSF, where the keys are the bandpasses,
+    and the values are lists containing the PSF for that bandpass in each SCA.  Any entries for
+    which no PSF image was stored will be None.
     """
     # Get the image data.
     im_list = galsim.fits.readMulti(image_filename)

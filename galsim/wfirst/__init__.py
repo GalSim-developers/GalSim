@@ -112,7 +112,9 @@ This module also contains the following routines:
 
     tabulatePSFImages() - A routine to take outputs of getPSF() and write them to file as a set of
                           images in a multi-extension FITS file.  This can be used along with the
-                          next routine for faster calculations.
+                          next routine for faster calculations, as long as the application is one
+                          for which it does not matter if you ignore the variation of the PSF with
+                          wavelength within the passband.
 
     getStoredPSF() - A routine to read in an image of the PSF stored by tabulatePSFImages(), and
                      make objects corresponding to each of them for later use.  This routine has
