@@ -17,7 +17,8 @@
 """@file detectors.py
 
 Module with routines to simulate CCD and NIR detector effects like nonlinearity, reciprocity
-failure, interpixel capacitance, etc. """
+failure, interpixel capacitance, etc.
+"""
 
 import galsim
 import numpy
