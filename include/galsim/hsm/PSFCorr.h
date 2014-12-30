@@ -373,10 +373,7 @@ namespace hsm {
      * @param[in] guess_sig_PSF    Optional argument with an initial guess for the Gaussian sigma of
      *                             the PSF, default 3.0 (pixels).
      * @param[in] precision        The convergence criterion for the moments; default 1e-6.
-     * @param[in] guess_x_centroid Optional argument with an initial guess for the x centroid of the
-     *                             galaxy; if not set, then the code will try the center of the
-     *                             image.
-     * @param[in] guess_y_centroid Optional argument with an initial guess for the y centroid of the
+     * @param[in] guess_centroid   Optional argument with an initial guess for the centroid of the
      *                             galaxy; if not set, then the code will try the center of the
      *                             image.
      * @param[in] hsmparams        Optional argument to specify parameters to be used for shape
@@ -390,7 +387,7 @@ namespace hsm {
         float sky_var = 0.0, const char *shear_est = "REGAUSS",
         const std::string& recompute_flux = "FIT",
         double guess_sig_gal = 5.0, double guess_sig_PSF = 3.0, double precision = 1.0e-6,
-        double guess_x_centroid = -1000.0, double guess_y_centroid = -1000.0,
+        galsim::Position<double> guess_centroid = galsim::Position<double>(-1000.,-1000.),
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
     /**
@@ -410,10 +407,7 @@ namespace hsm {
      * @param[in] guess_sig         Optional argument with an initial guess for the Gaussian sigma
      *                              of the object, default 5.0 (pixels).
      * @param[in] precision         The convergence criterion for the moments; default 1e-6.
-     * @param[in] guess_x_centroid  Optional argument with an initial guess for the x centroid of
-     *                              the galaxy; if not set, then the code will try the center of the
-     *                              image.
-     * @param[in] guess_y_centroid  Optional argument with an initial guess for the y centroid of
+     * @param[in] guess_centroid    Optional argument with an initial guess for the centroid of
      *                              the galaxy; if not set, then the code will try the center of the
      *                              image.
      * @param[in] hsmparams         Optional argument to specify parameters to be used for shape
@@ -423,8 +417,8 @@ namespace hsm {
     template <typename T>
     CppShapeData FindAdaptiveMomView(
         const ImageView<T> &object_image, const ImageView<int> &object_mask_image,
-        double guess_sig = 5.0, double precision = 1.0e-6, double guess_x_centroid = -1000.0,
-        double guess_y_centroid = -1000.0,
+        double guess_sig = 5.0, double precision = 1.0e-6,
+        galsim::Position<double> guess_centroid = galsim::Position<double>(-1000.,-1000.),
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
     /**

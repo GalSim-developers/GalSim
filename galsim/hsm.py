@@ -219,8 +219,8 @@ def _convertMask(image, weight = None, badpix = None):
 
 def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 0.0,
                   shear_est = "REGAUSS", recompute_flux = "FIT", guess_sig_gal = 5.0,
-                  guess_sig_PSF = 3.0, precision = 1.0e-6, guess_x_centroid = -1000.0,
-                  guess_y_centroid = -1000.0, strict = True, hsmparams = None):
+                  guess_sig_PSF = 3.0, precision = 1.0e-6, guess_centroid = None,
+                  strict = True, hsmparams = None):
     """Carry out moments-based PSF correction routines.
 
     Carry out PSF correction using one of the methods of the HSM package (see references in
@@ -296,16 +296,11 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
     @param guess_sig_PSF    Optional argument with an initial guess for the Gaussian sigma of the
                             PSF (in pixels). [default: 3.]
     @param precision        The convergence criterion for the moments. [default: 1e-6]
-    @param guess_x_centroid  An initial guess for the x component of the object centroid (useful in
-                            case it is not located at the center, which is the default
-                            assumption).  The convention for centroids is such that the center of
+    @param guess_centroid   An initial guess for the object centroid (useful in
+                            case it is not located at the center, which is used if this keyword is
+                            not set).  The convention for centroids is such that the center of
                             the lower-left pixel is (image.xmin, image.ymin).
-                            [default: gal_image.trueCenter().x]
-    @param guess_y_centroid  An initial guess for the y component of the object centroid (useful in
-                            case it is not located at the center, which is the default
-                            assumption).  The convention for centroids is such that the center of
-                            the lower-left pixel is (image.xmin, image.ymin).
-                            [default: gal_image.trueCenter().y]
+                            [default: gal_image.trueCenter()]
     @param strict           Whether to require success. If `strict = True`, then there will be a 
                             `RuntimeError` exception if shear estimation fails.  If set to `False`,
                             then information about failures will be silently stored in the output 
@@ -321,6 +316,8 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
     PSF_image_view = PSF_image.image.view()
     weight_view = _convertMask(gal_image, weight=weight, badpix=badpix)
 
+    if guess_centroid is None:
+        guess_centroid = gal_image.trueCenter()
     try:
         result = _galsim._EstimateShearView(gal_image_view, PSF_image_view, weight_view,
                                             sky_var = sky_var,
@@ -329,8 +326,7 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
                                             guess_sig_gal = guess_sig_gal,
                                             guess_sig_PSF = guess_sig_PSF,
                                             precision = precision,
-                                            guess_x_centroid = guess_x_centroid,
-                                            guess_y_centroid = guess_y_centroid,
+                                            guess_centroid = guess_centroid,
                                             hsmparams = hsmparams)
     except RuntimeError as err:
         if (strict == True):
@@ -341,8 +337,7 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
     return ShapeData(result)
 
 def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0, precision = 1.0e-6,
-                    guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True,
-                    hsmparams = None):
+                    guess_centroid = None, strict = True, hsmparams = None):
     """Measure adaptive moments of an object.
 
     This method estimates the best-fit elliptical Gaussian to the object (see Hirata & Seljak 2003
@@ -410,16 +405,11 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     @param guess_sig        Optional argument with an initial guess for the Gaussian sigma of the
                             object (in pixels). [default: 5.0]
     @param precision        The convergence criterion for the moments. [default: 1e-6]
-    @param guess_x_centroid  An initial guess for the x component of the object centroid (useful in
-                            case it is not located at the center, which is the default
-                            assumption).  The convention for centroids is such that the center of
-                            the lower-left pixel is (image.xmin, image.ymin).
-                            [default: gal_image.trueCenter().x]
-    @param guess_y_centroid  An initial guess for the y component of the object centroid (useful in
-                            case it is not located at the center, which is the default
-                            assumption).  The convention for centroids is such that the center of
-                            the lower-left pixel is (image.xmin, image.ymin).
-                            [default: gal_image.trueCenter().y]
+    @param guess_centroid   An initial guess for the object centroid (useful in case it is not
+                            located at the center, which is used if this keyword is not set).  The
+                            convention for centroids is such that the center of the lower-left pixel
+                            is (image.xmin, image.ymin).
+                            [default: object_image.trueCenter()]
     @param strict           Whether to require success. If `strict = True`, then there will be a 
                             `RuntimeError` exception if shear estimation fails.  If set to `False`,
                             then information about failures will be silently stored in the output 
@@ -434,11 +424,13 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     object_image_view = object_image.image.view()
     weight_view = _convertMask(object_image, weight=weight, badpix=badpix)
 
+    if guess_centroid is None:
+        guess_centroid = object_image.trueCenter()
+
     try:
         result = _galsim._FindAdaptiveMomView(object_image_view, weight_view,
                                               guess_sig = guess_sig, precision =  precision,
-                                              guess_x_centroid = guess_x_centroid,
-                                              guess_y_centroid = guess_y_centroid,
+                                              guess_centroid = guess_centroid,
                                               hsmparams = hsmparams)
     except RuntimeError as err:
         if (strict == True):

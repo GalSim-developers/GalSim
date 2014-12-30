@@ -149,19 +149,18 @@ struct PyCppShapeData {
     template <typename U, typename V>
     static void wrapTemplates() {
         typedef CppShapeData (*FAM_func)(const ImageView<U>&, const ImageView<int>&, 
-                                         double, double, double, double,
+                                         double, double, Position<double>,
                                          boost::shared_ptr<HSMParams>);
         bp::def("_FindAdaptiveMomView",
                 FAM_func(&FindAdaptiveMomView),
                 (bp::arg("object_image"), bp::arg("object_mask_image"), bp::arg("guess_sig")=5.0, 
-                 bp::arg("precision")=1.0e-6, bp::arg("guess_x_centroid")=-1000.0, 
-                 bp::arg("guess_y_centroid")=-1000.0,
+                 bp::arg("precision")=1.0e-6, bp::arg("guess_centroid")=Position<double>(0.,0.), 
                  bp::arg("hsmparams")=bp::object()),
                 "Find adaptive moments of an image (with some optional args).");
 
         typedef CppShapeData (*ESH_func)(const ImageView<U>&, const ImageView<V>&, 
                                          const ImageView<int>&, float, const char *,
-                                         const std::string&, double, double, double, double, double,
+                                         const std::string&, double, double, double, Position<double>,
                                          boost::shared_ptr<HSMParams>);
         bp::def("_EstimateShearView",
                 ESH_func(&EstimateShearView),
@@ -169,8 +168,8 @@ struct PyCppShapeData {
                  bp::arg("sky_var")=0.0, bp::arg("shear_est")="REGAUSS",
                  bp::arg("recompute_flux")="FIT",
                  bp::arg("guess_sig_gal")=5.0, bp::arg("guess_sig_PSF")=3.0,
-                 bp::arg("precision")=1.0e-6, bp::arg("guess_x_centroid")=-1000.0,
-                 bp::arg("guess_y_centroid")=-1000.0, bp::arg("hsmparams")=bp::object()),
+                 bp::arg("precision")=1.0e-6, bp::arg("guess_centroid")=Position<double>(0.,0.),
+                 bp::arg("hsmparams")=bp::object()),
                 "Estimate PSF-corrected shear for a galaxy, given a PSF (and some optional args).");
     };
 
