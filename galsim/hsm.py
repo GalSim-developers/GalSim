@@ -233,6 +233,9 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     simple combinations of GSObjects (e.g., a Convolve) must take the additional step of drawing
     their GSObjects into Images.
 
+    This routine assumes that (at least locally) the WCS can be approximated as a PixelScale, with
+    no distortion or non-trivial remapping. Any non-trivial WCS gets completely ignored.
+
     Note that the method will fail if the PSF or galaxy are too point-like to easily fit an
     elliptical Gaussian; when running on batches of many galaxies, it may be preferable to set
     `strict=False` and catch errors explicitly, as in the second example below.
@@ -347,6 +350,9 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     function, and so on until the moments that are measured are the same as those used for the
     weight function.  FindAdaptiveMom() can be used either as a free function, or as a method of the
     Image class.
+
+    This routine assumes that (at least locally) the WCS can be approximated as a PixelScale, with
+    no distortion or non-trivial remapping. Any non-trivial WCS gets completely ignored.
 
     Like EstimateShear(), FindAdaptiveMom() works on Image inputs, and fails if the object is small
     compared to the pixel scale.  For more details, see EstimateShear().
