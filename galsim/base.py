@@ -1886,6 +1886,14 @@ class Sersic(GSObject):
     magnified (at the level of upcoming shear surveys), so we do not recommend extending beyond
     this.  See Issues #325 and #450 for more details.
 
+    Sersic profile calculations take advantage of Hankel transform tables that are precomputed for a
+    given value of n when the Sersic profile is initialized.  Making additional objects with the
+    same n can therefore be many times faster than making objects with different values of n that
+    have not been used before.  Moreover, these Hankel transforms are only cached for a maximum of
+    100 different n values at a time.  For this reason, for large sets of simulations, it is worth
+    considering the use of only discrete n values rather than allowing it to vary continuously.  For
+    more details, see https://github.com/GalSim-developers/GalSim/issues/566.
+
     Note that if you are building many Sersic profiles using truncation, the code will be more
     efficient if the truncation is always the same multiple of `scale_radius`, since it caches
     many calculations that depend on the ratio `trunc/scale_radius`.
