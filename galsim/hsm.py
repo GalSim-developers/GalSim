@@ -76,14 +76,14 @@ class ShapeData(object):
     - observed_shape: a Shear object representing the observed shape based on adaptive
       moments.
 
-    - moments_sigma: size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels; -1 if
+    - moments_sigma: size sigma=(det M)^(1/4) from the adaptive moments, in units of pixels; -1 if
       not measured.
 
     - moments_amp: total image intensity for best-fit elliptical Gaussian from adaptive moments.
       Normally, this field is simply equal to the image flux (for objects that follow a Gaussian
       light distribution, otherwise it is something approximating the flux).  However, if the image
       was drawn using `drawImage(method='sb')` then moments_amp relates to the flux via
-      flux = (moments_amp)*(pixel scale)^2.
+      flux=(moments_amp)*(pixel scale)^2.
 
     - moments_centroid: a PositionD object representing the centroid based on adaptive moments, in
       units of pixels.  The indexing convention is defined with respect to the BoundsI object
@@ -248,19 +248,18 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
 
     Typical application to a single object:
 
-        >>> galaxy = galsim.Gaussian(flux = 1.0, sigma = 1.0)
+        >>> galaxy = galsim.Gaussian(flux=1.0, sigma=1.0)
         >>> galaxy = galaxy.shear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the 
-        >>>                                         # |g| = (a - b)/(a + b) definition
-        >>> psf = galsim.Kolmogorov(flux = 1.0, fwhm = 0.7)
-        >>> final = galsim.Convolve([galaxy, psf])
-        >>> final_image = final.drawImage(dx = 0.2)
-        >>> final_epsf_image = psf.drawImage(dx = 0.2)
+        >>>                                         # |g| = (a-b)/(a+b) definition
+        >>> psf = galsim.Kolmogorov(flux=1.0, fwhm=0.7)
+        >>> final = galsim.Convolve(galaxy, psf)
+        >>> final_image = final.drawImage(scale=0.2)
+        >>> final_epsf_image = psf.drawImage(scale=0.2)
         >>> result = galsim.hsm.EstimateShear(final_image, final_epsf_image)
     
-    After running the above code, `result.observed_shape` ["shape" = distortion, the 
-    (a^2 - b^2)/(a^2 + b^2) definition of ellipticity] is
-    `(0.0438925351523, -1.12519277137e-18)` and `result.corrected_e1`, `result_corrected_e2` are
-    `(0.0993412658572,-1.84832327221e-09)`, compared with the  expected `(0.09975, 0)` for a perfect
+    After running the above code, `result.observed_shape` is a galsim.Shear object with a value of
+    `(0.0438925349133, -2.85747392701e-18)` and `result.corrected_e1`, `result_corrected_e2` are
+    `(0.09934103488922119, -3.746108423463568e-10)`, compared with the expected `(0.09975, 0)` for a perfect
     PSF correction method.
 
     The code below gives an example of how one could run this routine on a large batch of galaxies,
@@ -270,7 +269,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
         >>> n_fail = 0
         >>> for i=0, range(n_image):
         >>>     #...some code defining this_image, this_final_epsf_image...
-        >>>     result = galsim.hsm.EstimateShear(this_image, this_final_epsf_image, strict = False)
+        >>>     result = galsim.hsm.EstimateShear(this_image, this_final_epsf_image, strict=False)
         >>>     if result.error_message != "":
         >>>         n_fail += 1
         >>> print "Number of failures: ", n_fail
@@ -304,7 +303,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
                             not set).  The convention for centroids is such that the center of
                             the lower-left pixel is (image.xmin, image.ymin).
                             [default: gal_image.trueCenter()]
-    @param strict           Whether to require success. If `strict = True`, then there will be a 
+    @param strict           Whether to require success. If `strict=True`, then there will be a 
                             `RuntimeError` exception if shear estimation fails.  If set to `False`,
                             then information about failures will be silently stored in the output 
                             ShapeData object. [default: True]
@@ -360,8 +359,8 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     Example usage
     -------------
 
-        >>> my_gaussian = galsim.Gaussian(flux = 1.0, sigma = 1.0)
-        >>> my_gaussian_image = my_gaussian.drawImage(dx = 0.2, method='no_pixel')
+        >>> my_gaussian = galsim.Gaussian(flux=1.0, sigma=1.0)
+        >>> my_gaussian_image = my_gaussian.drawImage(scale=0.2, method='no_pixel')
         >>> my_moments = galsim.hsm.FindAdaptiveMom(my_gaussian_image)
 
     OR
@@ -370,21 +369,20 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
 
     Assuming a successful measurement, the most relevant pieces of information are
     `my_moments.moments_sigma`, which is `|det(M)|^(1/4)` [=`sigma` for a circular Gaussian] and
-    `my_moments.observed_shape`, which is a Shear.  
+    `my_moments.observed_shape`, which is a Shear.  In this case, `my_moments.moments_sigma` is
+    precisely 5.0 (in units of pixels), and `my_moments.observed_shape` is consistent with zero.
 
-    Methods of the Shear class can be used to get the distortion
-    `(e1, e2) = (a^2 - b^2)/(a^2 + b^2)`, e.g. `my_moments.observed_shape.getE1()`, or to get the
-    shear `g`, the conformal shear `eta`, and so on.
+    Methods of the Shear class can be used to get the distortion `e`, the shear `g`, the conformal
+    shear `eta`, and so on.
 
     As an example of how to use the optional `hsmparams` argument, consider cases where the input
     images have unusual properties, such as being very large.  This could occur when measuring the
     properties of a very over-sampled image such as that generated using
 
-        >>> my_gaussian = galsim.Gaussian(sigma = 5.0)
-        >>> my_gaussian_image = my_gaussian.drawImage(dx = 0.01, method='no_pixel')
+        >>> my_gaussian = galsim.Gaussian(sigma=5.0)
+        >>> my_gaussian_image = my_gaussian.drawImage(scale=0.01, method='no_pixel')
 
-    If the user attempts to measure the moments of this 4000 x 4000 pixel image using the standard
-    syntax,
+    If the user attempts to measure the moments of this very large image using the standard syntax,
 
         >>> my_moments = my_gaussian_image.FindAdaptiveMom()
 
@@ -396,7 +394,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     successful:
 
         >>> new_params = galsim.hsm.HSMParams(max_amoment=5.0e5)
-        >>> my_moments = my_gaussian_image.FindAdaptiveMom(hsmparams = new_params)
+        >>> my_moments = my_gaussian_image.FindAdaptiveMom(hsmparams=new_params)
 
     @param object_image     The Image for the object being measured.
     @param weight           The optional weight image for the object being measured.  Can be an int
@@ -416,7 +414,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
                             convention for centroids is such that the center of the lower-left pixel
                             is (image.xmin, image.ymin).
                             [default: object_image.trueCenter()]
-    @param strict           Whether to require success. If `strict = True`, then there will be a 
+    @param strict           Whether to require success. If `strict=True`, then there will be a 
                             `RuntimeError` exception if shear estimation fails.  If set to `False`,
                             then information about failures will be silently stored in the output 
                             ShapeData object. [default: True]
