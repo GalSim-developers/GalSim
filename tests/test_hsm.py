@@ -152,10 +152,11 @@ def test_shearest_basic():
                 distortion_2 = g2*conversion_factor
                 gal = galsim.Gaussian(flux = 1.0, sigma = sig)
                 psf = galsim.Gaussian(flux = 1.0, sigma = sig)
-                gal.applyShear(g1=g1, g2=g2)
+                gal = gal.shear(g1=g1, g2=g2)
+                psf = psf.shear(g1=0.1*g1, g2=0.05*g2)
                 final = galsim.Convolve([gal, psf])
-                final_image = final.draw(scale = pixel_scale)
-                epsf_image = psf.draw(scale = pixel_scale)
+                final_image = final.drawImage(scale=pixel_scale, method='no_pixel')
+                epsf_image = psf.drawImage(scale=pixel_scale, method='no_pixel')
                 result = galsim.hsm.EstimateShear(final_image, epsf_image)
                 # make sure we find the right e after PSF correction
                 # with regauss, which returns a distortion
@@ -165,6 +166,7 @@ def test_shearest_basic():
                 np.testing.assert_almost_equal(result.corrected_e2,
                                                distortion_2, err_msg = "- incorrect e2",
                                                decimal = decimal_shape)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -183,6 +185,9 @@ def test_shearest_precomputed():
         img -= 1000
         psf = galsim.fits.read(psf_file)
         psf -= 1000
+
+        # get PSF moments for later tests
+        psf_mom = psf.FindAdaptiveMom()
 
         # loop over methods
         for method_index in range(len(correction_methods)):
@@ -213,6 +218,19 @@ def test_shearest_precomputed():
             np.testing.assert_almost_equal(
                 result.corrected_shape_err, sigma_e_expected[index][method_index],
                 decimal = decimal_shape)
+            # Also check that the PSF properties that come out of EstimateShear are the same as
+            # what we would get from measuring directly.
+            np.testing.assert_almost_equal(
+                psf_mom.moments_sigma, result.psf_sigma, decimal=decimal_shape,
+                err_msg = "PSF sizes from FindAdaptiveMom vs. EstimateShear disagree")
+            np.testing.assert_almost_equal(
+                psf_mom.observed_shape.e1, result.psf_shape.e1, decimal=decimal_shape,
+                err_msg = "PSF e1 from FindAdaptiveMom vs. EstimateShear disagree")
+            np.testing.assert_almost_equal(
+                psf_mom.observed_shape.e2, result.psf_shape.e2, decimal=decimal_shape,
+                err_msg = "PSF e2 from FindAdaptiveMom vs. EstimateShear disagree")
+            first = False
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
