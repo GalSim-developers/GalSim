@@ -98,8 +98,8 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
 
             pR/p = (1 + alpha*log10(p/t) - alpha*log10(p'/t'))
 
-    where T is the exposure time (in units of seconds), p is the pixel response (in units of
-    electrons) and pR is the response if the reciprocity relation were to hold. p'/T' is count
+    where t is the exposure time (in units of seconds), p is the pixel response (in units of
+    electrons) and pR is the response if the reciprocity relation fails to hold. p'/t' is count
     rate (in electrons/second) corresponding to the photon flux (base flux) at which the detector
     is calibrated to have its nominal gain. alpha is the parameter in the model, measured in units
     of per decade and varies with detectors and the operating temperature. The functional form for

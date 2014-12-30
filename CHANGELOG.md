@@ -5,7 +5,7 @@ New Features
 ------------
 
 - Changed name of noise whitening routine from noise.applyWhiteningTo(image)
-  to image.whitenNoise(noise), parallel to image.addNoise(noise); use of 
+  to image.whitenNoise(noise), parallel to image.addNoise(noise); use of
   noise.applyWhiteningTo() is deprecated. (#529)
 - Added an option to impose N-fold symmetry (for user-selected even values of
   N>=4) on the noise in images with correlated noise rather than fully whiten
@@ -23,6 +23,9 @@ New Features
   to take functions of wavelength for the arguments. (#581)
 - Added a module to describe charge deflection in CCD pixels (also known as the "brighter-fatter"
   effect) following the model of Antilogus et al (2014). (#524)
+- Make it possible for OpticalPSF to model non-trivially complicated obscuration and/or struts
+  by allowing it to take an optional image of the pupil plane. (#601)
+- Added `nx`, `ny`, and `bounds` keywords to drawImage() and drawKImage() methods. (#603)
 
 Bug Fixes and Improvements
 --------------------------
@@ -55,4 +58,3 @@ Updates to config options
   to being a part of the description of the noise. (#529)
 - Added RandomPoisson, RandomBinomial, RandomWeibull, RandomGamma, and RandomChi2 random number
   generators, corresponding to the random deviate classes in the python layer. (#537)
-
