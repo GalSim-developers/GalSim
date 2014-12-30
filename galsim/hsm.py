@@ -85,9 +85,11 @@ class ShapeData(object):
       was drawn using `drawImage(method='sb')` then moments_amp relates to the flux via
       flux = (moments_amp)*(pixel scale)^2.
 
-    - moments_centroid: a PositionD object representing the centroid based on adaptive
-      moments.  The convention for centroids is such that the center of the lower-left pixel is
-      (0,0).
+    - moments_centroid: a PositionD object representing the centroid based on adaptive moments, in
+      units of pixels.  The indexing convention is defined with respect to the BoundsI object
+      defining the bounds of the input Image, i.e., the center of the lower left pixel is
+      `(image.xmin, image.ymin)`.  An object drawn at the center of the image should generally have
+      moments_centroid equal to image.trueCenter().
 
     - moments_rho4: the weighted radial fourth moment of the image.
 
@@ -297,11 +299,13 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
     @param guess_x_centroid  An initial guess for the x component of the object centroid (useful in
                             case it is not located at the center, which is the default
                             assumption).  The convention for centroids is such that the center of
-                            the lower-left pixel is (0,0). [default: gal_image.trueCenter().x]
+                            the lower-left pixel is (image.xmin, image.ymin).
+                            [default: gal_image.trueCenter().x]
     @param guess_y_centroid  An initial guess for the y component of the object centroid (useful in
                             case it is not located at the center, which is the default
                             assumption).  The convention for centroids is such that the center of
-                            the lower-left pixel is (0,0). [default: gal_image.trueCenter().y]
+                            the lower-left pixel is (image.xmin, image.ymin).
+                            [default: gal_image.trueCenter().y]
     @param strict           Whether to require success. If `strict = True`, then there will be a 
                             `RuntimeError` exception if shear estimation fails.  If set to `False`,
                             then information about failures will be silently stored in the output 
@@ -409,11 +413,13 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     @param guess_x_centroid  An initial guess for the x component of the object centroid (useful in
                             case it is not located at the center, which is the default
                             assumption).  The convention for centroids is such that the center of
-                            the lower-left pixel is (0,0). [default: gal_image.trueCenter().x]
+                            the lower-left pixel is (image.xmin, image.ymin).
+                            [default: gal_image.trueCenter().x]
     @param guess_y_centroid  An initial guess for the y component of the object centroid (useful in
                             case it is not located at the center, which is the default
                             assumption).  The convention for centroids is such that the center of
-                            the lower-left pixel is (0,0). [default: gal_image.trueCenter().y]
+                            the lower-left pixel is (image.xmin, image.ymin).
+                            [default: gal_image.trueCenter().y]
     @param strict           Whether to require success. If `strict = True`, then there will be a 
                             `RuntimeError` exception if shear estimation fails.  If set to `False`,
                             then information about failures will be silently stored in the output 
