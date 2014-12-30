@@ -115,6 +115,11 @@ class ShapeData(object):
     - resolution_factor: Resolution factor R_2;  0 indicates object is consistent with a PSF, 1
       indicates perfect resolution.
 
+    - psf_sigma: size sigma=(det M)^(1/4) of the PSF from the adaptive moments, in units of pixels;
+      -1 if not measured.
+
+    - psf_shape: a Shear object representing the observed PSF shape based on adaptive moments.
+
     - error_message: a string containing any error messages from the attempt to carry out
       PSF-correction.
 
@@ -146,6 +151,8 @@ class ShapeData(object):
             self.corrected_shape_err = args[0].corrected_shape_err
             self.correction_method = args[0].correction_method
             self.resolution_factor = args[0].resolution_factor
+            self.psf_sigma = args[0].psf_sigma
+            self.psf_shape = galsim.Shear(args[0].psf_shape)
             self.error_message = args[0].error_message
         else:
             self.image_bounds = _galsim.BoundsI()
@@ -165,6 +172,8 @@ class ShapeData(object):
             self.corrected_shape_err = -1.0
             self.correction_method = "None"
             self.resolution_factor = -1.0
+            self.psf_sigma = -1.0
+            self.psf_shape = galsim.Shear()
             self.error_message = ""
 
 # A helper function for taking input weight and badpix Images, and returning a weight Image in the

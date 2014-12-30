@@ -330,6 +330,13 @@ namespace hsm {
         /// perfect resolution; default -1
         float resolution_factor;
 
+        /// @brief PSF size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels;
+        /// default -1.
+        float psf_sigma;
+
+        /// @brief galsim::CppShear object representing the PSF shape from the adaptive moments
+        CppShear psf_shape;
+
         /// @brief A string containing any error messages from the attempted measurements, to
         /// facilitate proper error handling in both C++ and python
         std::string error_message;
@@ -340,7 +347,8 @@ namespace hsm {
             moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.), moments_n_iter(0),
             correction_status(-1), corrected_e1(-10.), corrected_e2(-10.), corrected_g1(-10.), 
             corrected_g2(-10.), meas_type("None"), corrected_shape_err(-1.),
-            correction_method("None"), resolution_factor(-1.), error_message("")
+            correction_method("None"), resolution_factor(-1.),
+            psf_sigma(-1.0), psf_shape(galsim::CppShear()), error_message("")
         {}
     };
 

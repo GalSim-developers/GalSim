@@ -231,6 +231,9 @@ namespace hsm {
         results.moments_sigma = gal_data.sigma;
         results.moments_amp = gal_data.flux;
         results.resolution_factor = gal_data.resolution;
+        results.psf_sigma = PSF_data.sigma;
+        results.psf_shape = galsim::CppShear();
+        results.psf_shape.setE1E2(PSF_data.e1, PSF_data.e2);
 
         if (results.resolution_factor <= 0.) {
             throw HSMError("Unphysical situation: galaxy convolved with PSF is smaller than PSF!\n");
@@ -1505,7 +1508,8 @@ namespace hsm {
         ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
         double& e1, double& e2, double& R, unsigned long flags, double& x0_gal,
         double& y0_gal, double& sig_gal, double& x0_psf, double& y0_psf,
-        double& sig_psf, double& flux_gal, boost::shared_ptr<HSMParams> hsmparams) 
+        double& sig_psf, double& e1_psf, double& e2_psf, double& flux_gal,
+        boost::shared_ptr<HSMParams> hsmparams) 
     {
         int num_iter;
         unsigned int status = 0;
@@ -1544,6 +1548,10 @@ namespace hsm {
         Mxypsf = 0.;
         find_ellipmom_2(PSF_image, A_g, x0_psf, y0_psf, Mxxpsf, Mxypsf, Myypsf, rho4psf,
                         1.0e-6, num_iter, hsmparams);
+        sig_psf = std::pow( Mxxpsf * Myypsf - Mxypsf * Mxypsf, 0.25);
+        double T_psf = (Mxxpsf+Myypsf);
+        e1_psf = (Mxxpsf-Myypsf)/T_psf;
+        e2_psf = 2.*Mxypsf/T_psf;
 
         if (num_iter == hsmparams->num_iter_default) {
             x0_psf = x0_old;
@@ -1744,10 +1752,8 @@ namespace hsm {
         double A_gal, Mxx_gal, Mxy_gal, Myy_gal, rho4_gal;
         double A_psf, Mxx_psf, Mxy_psf, Myy_psf, rho4_psf;
 
-        if (shear_est == "BJ" || shear_est == "LINEAR") {
-            /* Bernstein & Jarvis and linear estimator */
-
-            /* Measure the PSF */
+        if (shear_est == "BJ" || shear_est == "LINEAR" || shear_est == "KSB") {
+            /* Measure the PSF so its size and shape can get propagated up to python layer */
             x0 = PSF_data.x0;
             y0 = PSF_data.y0;
             Mxx_psf = Myy_psf = PSF_data.sigma * PSF_data.sigma; Mxy_psf = 0.;
@@ -1759,7 +1765,14 @@ namespace hsm {
                 PSF_data.x0 = x0;
                 PSF_data.y0 = y0;
                 PSF_data.sigma = std::pow( Mxx_psf * Myy_psf - Mxy_psf * Mxy_psf, 0.25);
+                double T_psf = (Mxx_psf+Myy_psf);
+                PSF_data.e1 = (Mxx_psf-Myy_psf)/T_psf;
+                PSF_data.e2 = 2.*Mxy_psf/T_psf;
             }
+        }
+
+        if (shear_est == "BJ" || shear_est == "LINEAR") {
+            /* Bernstein & Jarvis and linear estimator */
 
             /* Measure the galaxy */
             x0 = gal_data.x0;
@@ -1807,7 +1820,8 @@ namespace hsm {
             status = psf_corr_regauss(
                 gal_image, PSF_image, gal_data.e1, gal_data.e2, R,
                 flags, gal_data.x0, gal_data.y0, gal_data.sigma, PSF_data.x0,
-                PSF_data.y0, PSF_data.sigma, gal_data.flux, hsmparams );
+                PSF_data.y0, PSF_data.sigma, PSF_data.e1, PSF_data.e2,
+                gal_data.flux, hsmparams );
             gal_data.meas_type = 'e';
             gal_data.responsivity = 1.;
 

@@ -197,6 +197,8 @@ struct PyCppShapeData {
             .def_readwrite("corrected_shape_err", &CppShapeData::corrected_shape_err)
             .def_readwrite("correction_method", &CppShapeData::correction_method)
             .def_readwrite("resolution_factor", &CppShapeData::resolution_factor)
+            .def_readwrite("psf_sigma", &CppShapeData::psf_sigma)
+            .def_readwrite("psf_shape", &CppShapeData::psf_shape)
             .def_readwrite("error_message", &CppShapeData::error_message)
             ;
 
