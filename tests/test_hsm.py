@@ -187,37 +187,32 @@ def test_shearest_precomputed():
         # loop over methods
         for method_index in range(len(correction_methods)):
             # call PSF correction
-            result = galsim.hsm.EstimateShear(img, psf, sky_var = sky_var[index],
-                                              shear_est = correction_methods[method_index],
-                                              guess_x_centroid = x_centroid[index],
-                                              guess_y_centroid = y_centroid[index])
+            result = galsim.hsm.EstimateShear(
+                img, psf, sky_var = sky_var[index], shear_est = correction_methods[method_index],
+                guess_centroid = galsim.PositionD(x_centroid[index], y_centroid[index]))
 
             # compare results with precomputed
             print result.meas_type, correction_methods[method_index]
             if result.meas_type == 'e':
-                np.testing.assert_almost_equal(result.corrected_e1,
-                                               e1_expected[index][method_index], decimal =
-                                               decimal_shape)
-                np.testing.assert_almost_equal(result.corrected_e2,
-                                               e2_expected[index][method_index], decimal =
-                                               decimal_shape)
+                np.testing.assert_almost_equal(
+                    result.corrected_e1, e1_expected[index][method_index], decimal = decimal_shape)
+                np.testing.assert_almost_equal(
+                    result.corrected_e2, e2_expected[index][method_index], decimal = decimal_shape)
             else:
                 gval = np.sqrt(result.corrected_g1**2 + result.corrected_g2**2)
                 if gval <= 1.0:
                     s = galsim.Shear(g1=result.corrected_g1, g2=result.corrected_g2)
-                    np.testing.assert_almost_equal(s.e1,
-                                                   e1_expected[index][method_index], decimal =
-                                                   decimal_shape)
-                    np.testing.assert_almost_equal(s.e2,
-                                                   e2_expected[index][method_index], decimal =
-                                                   decimal_shape)
+                    np.testing.assert_almost_equal(
+                        s.e1, e1_expected[index][method_index], decimal = decimal_shape)
+                    np.testing.assert_almost_equal(
+                        s.e2, e2_expected[index][method_index], decimal = decimal_shape)
             # also compare resolutions and estimated errors
-            np.testing.assert_almost_equal(result.resolution_factor,
-                                           resolution_expected[index][method_index], decimal =
-                                           decimal_shape)
-            np.testing.assert_almost_equal(result.corrected_shape_err,
-                                           sigma_e_expected[index][method_index], decimal =
-                                           decimal_shape)
+            np.testing.assert_almost_equal(
+                result.resolution_factor, resolution_expected[index][method_index],
+                decimal = decimal_shape)
+            np.testing.assert_almost_equal(
+                result.corrected_shape_err, sigma_e_expected[index][method_index],
+                decimal = decimal_shape)
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -579,9 +574,10 @@ def test_hsmparams_nodefault():
     try:
         np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, tot_gal_image,
                                  tot_psf_image, hsmparams=galsim.hsm.HSMParams(max_amoment = 10.))
-        np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, tot_gal_image,
-                                 tot_psf_image, guess_x_centroid=47.,
-                                 hsmparams=galsim.hsm.HSMParams(max_ashift=0.1))
+        np.testing.assert_raises(
+            RuntimeError, galsim.hsm.EstimateShear, tot_gal_image, tot_psf_image,
+            guess_centroid=galsim.PositionD(47., tot_gal_image.trueCenter().y),
+            hsmparams=galsim.hsm.HSMParams(max_ashift=0.1))
     except ImportError:
         print 'The assert_raises tests require nose'
 
