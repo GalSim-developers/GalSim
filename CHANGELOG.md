@@ -57,6 +57,7 @@ Bug Fixes and Improvements
   element-wise comparison rather than equivalent to `array is None`. (#604)
 - Fixed a bug where the dtype of an Image could change when resizing, which should not be the
   case.  (#604)
+- Defined a hidden `__version__` attribute according to PEP 8 standards.  (#610)
 
 Updates to config options
 -------------------------

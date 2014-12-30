@@ -77,6 +77,12 @@ lost profits, business interruption, or indirect special or consequential
 damages of any kind.
 """
 
+__version__ = '1.2'
+
+# Define the current code version, in addition to the hidden attribute, to be consistent with
+# previous GalSim versions that indicated the version number in this way.
+version = '1.2'
+
 # Two options for pyfits module:
 try:
     import astropy.io.fits as pyfits
@@ -87,9 +93,6 @@ try:
 except:
     import pyfits
     pyfits_version = pyfits.__version__
-
-# Define the current code version
-version = '1.2'
 
 # Import things from other files we want to be in the galsim namespace
 
