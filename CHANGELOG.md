@@ -26,6 +26,8 @@ New Features
 - Make it possible for OpticalPSF to model non-trivially complicated obscuration and/or struts
   by allowing it to take an optional image of the pupil plane. (#601)
 - Added `nx`, `ny`, and `bounds` keywords to drawImage() and drawKImage() methods. (#603)
+- Added information about PSF size and shape to the data structure that is returned by
+  EstimateShear(). (#612)
 
 Bug Fixes and Improvements
 --------------------------
