@@ -132,6 +132,9 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
         if not isinstance(wavelength_limits, tuple):
             raise ValueError("Wavelength limits must be entered as a tuple!")
         blue_limit, red_limit = wavelength_limits
+        if red_limit <= blue_limit:
+            raise ValueError("Wavelength limits must have red_limit > blue_limit."
+                             "Input: blue limit=%f, red limit=%f nanometers"%(blue_limit, red_limit))
     # Decide on the number of linearly spaced wavelengths to use for the ChromaticOpticalPSF:
     if n_waves is None: n_waves = int((red_limit - blue_limit)/20)
 
