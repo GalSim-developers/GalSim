@@ -241,8 +241,8 @@ namespace hsm {
             x0(0.), y0(0.), sigma(0.), flux(0.), e1(0.), e2(0.), responsivity(0.),
             meas_type('\0'), resolution(0.) {}
 
-        double x0; ///< x centroid position within the postage stamp
-        double y0; ///< y centroid position within the postage stamp
+        double x0; ///< x centroid position within the postage stamp, in units of pixels
+        double y0; ///< y centroid position within the postage stamp, in units of pixels
         double sigma; ///< size parameter
         double flux; ///< total flux
         double e1; ///< first ellipticity component
