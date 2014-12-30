@@ -123,8 +123,8 @@ def test_moments_basic():
                 distortion_1 = g1*conversion_factor
                 distortion_2 = g2*conversion_factor
                 gal = galsim.Gaussian(flux = 1.0, sigma = sig)
-                gal.applyShear(g1=g1, g2=g2)
-                gal_image = gal.draw(scale = pixel_scale)
+                gal = gal.shear(g1=g1, g2=g2)
+                gal_image = gal.drawImage(scale = pixel_scale, method='no_pixel')
                 result = gal_image.FindAdaptiveMom()
                 # make sure we find the right Gaussian sigma
                 np.testing.assert_almost_equal(np.fabs(result.moments_sigma-sig/pixel_scale), 0.0,
@@ -247,12 +247,12 @@ def test_masks():
     g = galsim.Gaussian(sigma = my_sigma)
     p = galsim.Gaussian(sigma = my_sigma) # the ePSF is Gaussian (kind of silly but it means we can
                                      # predict results exactly)
-    g.applyShear(g1=my_g1, g2=my_g2)
+    g = g.shear(g1=my_g1, g2=my_g2)
     obj = galsim.Convolve(g, p)
     im = galsim.ImageF(imsize, imsize)
     p_im = galsim.ImageF(imsize, imsize)
-    obj.draw(image = im, scale = my_pixscale)
-    p.draw(image = p_im, scale = my_pixscale)
+    obj.drawImage(image=im, scale=my_pixscale, method='no_pixel')
+    p.drawImage(image=p_im, scale=my_pixscale, method='no_pixel')
 
     # make some screwy weight and badpix images that should cause issues, and check that the
     # exception is thrown
@@ -438,9 +438,9 @@ def test_shearest_shape():
     distortion_1 = g1*conversion_factor
     distortion_2 = g2*conversion_factor
     gal = galsim.Exponential(flux = 1.0, half_light_radius = 1.)
-    gal.applyShear(g1=g1, g2=g2)
+    gal = gal.shear(g1=g1, g2=g2)
     psf = galsim.Kolmogorov(flux = 1.0, fwhm = 0.7)
-    psf.applyShear(e1=e1_psf, e2=e2_psf)
+    psf = psf.shear(e1=e1_psf, e2=e2_psf)
     final = galsim.Convolve([gal, psf])
 
     imsize = [128, 256]
@@ -457,8 +457,8 @@ def test_shearest_shape():
                         final_image = galsim.ImageF(gal_x_imsize, gal_y_imsize)
                         epsf_image = galsim.ImageF(psf_x_imsize, psf_y_imsize)
 
-                        final.draw(image = final_image, scale = pixel_scale)
-                        psf.draw(image = epsf_image, scale = pixel_scale)
+                        final.drawImage(image=final_image, scale=pixel_scale, method='no_pixel')
+                        psf.drawImage(image=epsf_image, scale=pixel_scale, method='no_pixel')
                         result = galsim.hsm.EstimateShear(final_image, epsf_image,
                             shear_est = correction_methods[method_index])
                         e1 = result.corrected_e1
@@ -502,14 +502,12 @@ def test_hsmparams():
                                              failed_moments=-1000.)
     bulge = galsim.DeVaucouleurs(half_light_radius = 0.3)
     disk = galsim.Exponential(half_light_radius = 0.5)
-    disk.applyShear(e1=0.2, e2=-0.3)
+    disk = disk.shear(e1=0.2, e2=-0.3)
     psf = galsim.Kolmogorov(fwhm = 0.6)
-    pix = galsim.Pixel(0.18)
     gal = bulge + disk   # equal weighting, i.e., B/T=0.5
-    tot_gal = galsim.Convolve(gal, psf, pix)
-    tot_psf = galsim.Convolve(psf, pix)
-    tot_gal_image = tot_gal.draw(scale=0.18)
-    tot_psf_image = tot_psf.draw(scale=0.18)
+    tot_gal = galsim.Convolve(gal, psf)
+    tot_gal_image = tot_gal.drawImage(scale=0.18)
+    tot_psf_image = psf.drawImage(scale=0.18)
 
     res = tot_gal_image.FindAdaptiveMom()
     res_def = tot_gal_image.FindAdaptiveMom(hsmparams = default_hsmparams)
@@ -541,14 +539,12 @@ def test_hsmparams_nodefault():
     # First make some profile
     bulge = galsim.DeVaucouleurs(half_light_radius = 0.3)
     disk = galsim.Exponential(half_light_radius = 0.5)
-    disk.applyShear(e1=0.2, e2=-0.3)
+    disk = disk.shear(e1=0.2, e2=-0.3)
     psf = galsim.Kolmogorov(fwhm = 0.6)
-    pix = galsim.Pixel(0.18)
     gal = bulge + disk   # equal weighting, i.e., B/T=0.5
-    tot_gal = galsim.Convolve(gal, psf, pix)
-    tot_psf = galsim.Convolve(psf, pix)
-    tot_gal_image = tot_gal.draw(scale=0.18)
-    tot_psf_image = tot_psf.draw(scale=0.18)
+    tot_gal = galsim.Convolve(gal, psf)
+    tot_gal_image = tot_gal.drawImage(scale=0.18)
+    tot_psf_image = psf.drawImage(scale=0.18)
 
     # Check that recompute_flux changes give results that are as expected
     test_t = time.time()
@@ -563,10 +559,10 @@ def test_hsmparams_nodefault():
     # For this, use Gaussian as galaxy and for ePSF, i.e., no extra pixel response
     p = galsim.Gaussian(fwhm=10.)
     g = galsim.Gaussian(fwhm=20.)
-    g.applyShear(g1=0.5)
+    g = g.shear(g1=0.5)
     obj = galsim.Convolve(g, p)
-    im = obj.draw(scale=1.)
-    psf_im = p.draw(scale=1.)
+    im = obj.drawImage(scale=1., method='no_pixel')
+    psf_im = p.drawImage(scale=1., method='no_pixel')
     test_t1 = time.time()
     g_res = galsim.hsm.EstimateShear(im, psf_im)
     test_t2 = time.time()
