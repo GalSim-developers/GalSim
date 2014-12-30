@@ -169,7 +169,7 @@ class ShapeData(object):
 
 # A helper function for taking input weight and badpix Images, and returning a weight Image in the
 # format that the C++ functions want
-def _convertMask(image, weight = None, badpix = None):
+def _convertMask(image, weight=None, badpix=None):
     """Convert from input weight and badpix images to a single mask image needed by C++ functions.
 
     This is used by EstimateShear() and FindAdaptiveMom().
@@ -217,10 +217,10 @@ def _convertMask(image, weight = None, badpix = None):
     # finally, return the Image for the weight map
     return mask.image.view()
 
-def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 0.0,
-                  shear_est = "REGAUSS", recompute_flux = "FIT", guess_sig_gal = 5.0,
-                  guess_sig_PSF = 3.0, precision = 1.0e-6, guess_centroid = None,
-                  strict = True, hsmparams = None):
+def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
+                  shear_est="REGAUSS", recompute_flux="FIT", guess_sig_gal=5.0,
+                  guess_sig_PSF=3.0, precision=1.0e-6, guess_centroid=None,
+                  strict=True, hsmparams=None):
     """Carry out moments-based PSF correction routines.
 
     Carry out PSF correction using one of the methods of the HSM package (see references in
@@ -336,8 +336,8 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
             result.error_message = str(err)
     return ShapeData(result)
 
-def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0, precision = 1.0e-6,
-                    guess_centroid = None, strict = True, hsmparams = None):
+def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, precision=1.0e-6,
+                    guess_centroid=None, strict=True, hsmparams=None):
     """Measure adaptive moments of an object.
 
     This method estimates the best-fit elliptical Gaussian to the object (see Hirata & Seljak 2003
