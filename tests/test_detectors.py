@@ -410,7 +410,7 @@ def test_IPC_basic():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
-=======
+
 def test_quantize():
     """Check behavior of the image quantization routine."""
     import time

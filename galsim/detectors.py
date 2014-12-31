@@ -146,7 +146,6 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
     a = alpha/numpy.log(10)
     self.applyNonlinearity(lambda x,x0,a: (x**(a+1))/(x0**a), p0, a)
 
-<<<<<<< HEAD
 def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_nonnegativity=True,
     kernel_normalization=True):
     """
@@ -274,10 +273,6 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     else:
         self.array[:,:] = out_array
 
-galsim.Image.applyNonlinearity = applyNonlinearity
-galsim.Image.addReciprocityFailure = addReciprocityFailure
-galsim.Image.applyIPC = applyIPC
-=======
 def quantize(self):
     """
     Rounds the pixel values in an image to integer values, while preserving the type of the data.
@@ -302,5 +297,5 @@ def quantize(self):
 
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
+galsim.Image.applyIPC = applyIPC
 galsim.Image.quantize = quantize
->>>>>>> #558
