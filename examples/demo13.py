@@ -207,6 +207,10 @@ def main(argv):
         diff.write(out_filename)
         logger.debug('Wrote {0}-band image  after Recip. Failure to disk'.format(filter_name))
 
+        # At this point in the image generation process, an integer number of photons gets detected,
+        # hence we have to round the pixel values to integers:
+        img.quantize()
+
         # Adding dark current to the image
         # Even when the detector is unexposed to any radiation, the electron-hole pairs that are
         # generated within the depletion region due to finite temperature are swept by the high
@@ -274,11 +278,24 @@ def main(argv):
         img.write(out_filename)
         logger.debug('Wrote {0}-band image with readnoise to disk'.format(filter_name))
 
-        # Subtracting backgrounds
-        img -= sky_level_pix
-        img -= wfirst.dark_current*wfirst.exptime
+        # Technically we have to apply the gain, dividing the signal in e- by the voltage gain in
+        # e-/ADU to get a signal in ADU.  For WFIRST the gain is expected to be around 1, so it
+        # doesn't really matter, but for completeness we include this step.
+        img /= wfirst.gain
 
-        logger.debug('Added Readnoise for {0}-band image'.format(filter_name))
+        # Finally, the analog-to-digital converter reads in integer value.
+        img.quantize()
+        # Note that the image type after this step is still a float.  If we want to actually get
+        # integer values, we can do
+        #   new_img = galsim.Image(img, dtype=int)
+
+        # Since many people are used to viewing background-subtracted images, we provide a version
+        # with the background subtracted (also rounding that to an int)
+        tot_sky_level = (sky_level_pix + wfirst.dark_current*wfirst.exptime)/wfirst.gain
+        tot_sky_level = numpy.round(tot_sky_level)
+        img -= tot_sky_level
+
+        logger.debug('Subtracted background for {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo13_{0}.fits'.format(filter_name))
         img.write(out_filename)
         logger.debug('Wrote the final {0}-band image after subtracting backgrounds to disk'.\
