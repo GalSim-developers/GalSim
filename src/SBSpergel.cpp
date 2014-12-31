@@ -150,11 +150,7 @@ namespace galsim {
                 It valit = val.col(j).begin();
                 for (int i=0;i<m;++i,x+=dx) {
                     double r = sqrt(x*x + ysq);
-                    if (r == 0.) {
-                        if (_nu > 0.) *valit++ = _norm * _gamma_nup1 / (2. * _nu);
-                        else *valit++ = INFINITY;
-                    }
-                    else *valit++ = _norm * boost::math::cyl_bessel_k(_nu, r) * std::pow(r / 2., _nu);
+                    *valit++ = _norm * _info->xValue(r);
                 }
             }
         }
@@ -188,7 +184,7 @@ namespace galsim {
                 It valit(val.col(j).begin().getP(),1);
                 for (int i=0;i<m;++i,x+=dx) {
                     double ksq = x*x + ysq;
-                    *valit++ = _flux / std::pow(1. + ksq, 1. + _nu);
+                    *valit++ = _flux * _info->kValue(ksq);
                 }
             }
         }
@@ -221,11 +217,7 @@ namespace galsim {
             It valit = val.col(j).begin();
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double r = sqrt(x*x + y*y);
-                if (r == 0.) {
-                    if (_nu > 0.) *valit++ = _norm * _gamma_nup1 / (2. * _nu);
-                    else *valit++ = INFINITY;
-                }
-                else *valit++ = _norm * boost::math::cyl_bessel_k(_nu, r) * std::pow(r / 2., _nu);
+                *valit++ = _norm * _info->xValue(r);
             }
         }
     }
@@ -257,7 +249,7 @@ namespace galsim {
             It valit(val.col(j).begin().getP(),1);
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double ksq = x*x + y*y;
-                *valit++ = _flux / std::pow(1. + ksq, 1. + _nu);
+                *valit++ = _flux * _info->kValue(ksq);
             }
         }
     }
