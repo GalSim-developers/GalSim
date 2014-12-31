@@ -17,7 +17,8 @@
 """@file detectors.py
 
 Module with routines to simulate CCD and NIR detector effects like nonlinearity, reciprocity
-failure, interpixel capacitance, etc. """
+failure, interpixel capacitance, etc.
+"""
 
 import galsim
 import numpy
@@ -252,11 +253,16 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     topright = pad_array[2:,2:]
     bottomleft = pad_array[:-2,:-2]
 
+    # Ensure that the choice of origin does not matter
+    x0 = IPC_kernel.bounds.xmin # 1 by default
+    y0 = IPC_kernel.bounds.ymin # 1 by default
+
     # Generating the output array, with 2 rows and 2 columns lesser than the padded array
     # Image values have been used to make the code look more intuitive
-    out_array = IPC_kernel(1,3)*topleft + IPC_kernel(2,3)*top + IPC_kernel(3,3)*topright + \
-        IPC_kernel(1,2)*left + IPC_kernel(2,2)*center + IPC_kernel(3,2)*right + \
-        IPC_kernel(1,1)*bottomleft + IPC_kernel(2,1)*bottom + IPC_kernel(3,1)*bottomright
+    out_array = \
+        IPC_kernel(x0,y0+2)*topleft + IPC_kernel(x0+1,y0+2)*top + IPC_kernel(x0+2,y0+2)*topright +\
+        IPC_kernel(x0,y0+1)*left + IPC_kernel(x0+1,y0+1)*center + IPC_kernel(x0+2,y0+1)*right +\
+        IPC_kernel(x0,y0)*bottomleft + IPC_kernel(x0+1,y0)*bottom + IPC_kernel(x0+2,y0)*bottomright
 
     if edge_treatment=='crop':
         self.array[1:-1,1:-1] = out_array
