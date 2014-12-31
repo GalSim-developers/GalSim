@@ -112,18 +112,14 @@ namespace galsim {
     double SBSpergel::SBSpergelImpl::xValue(const Position<double>& p) const
     {
         double r = sqrt(p.x * p.x + p.y * p.y) * _inv_r0;
-        if (r == 0.) {
-            if (_nu > 0) return _norm * _gamma_nup1 / (2. * _nu);
-            else return INFINITY;
-        }
-        return _norm * boost::math::cyl_bessel_k(_nu, r) * std::pow(r / 2., _nu);
+        return _norm * _info->xValue(r);
     }
 
     // Equation (2) of Spergel (2010)
     std::complex<double> SBSpergel::SBSpergelImpl::kValue(const Position<double>& k) const
     {
-        double ksq = (k.x*k.x + k.y*k.y)*_r0_sq;
-        return _flux / std::pow(1. + ksq, 1. + _nu);
+        double ksq = (k.x*k.x + k.y*k.y) * _r0_sq;
+        return _flux * _info->kValue(ksq);
     }
 
     void SBSpergel::SBSpergelImpl::fillXValue(tmv::MatrixView<double> val,
@@ -344,6 +340,20 @@ namespace galsim {
     double SpergelInfo::getHLR() const
     {
         return _cnu;
+    }
+
+    double SpergelInfo::xValue(double r) const
+    {
+        if (r == 0.) {
+            if (_nu > 0) return _gamma_nup1 / (2. * _nu);
+            else return INFINITY;
+        }
+        return boost::math::cyl_bessel_k(_nu, r) * std::pow(r/2., _nu);
+    }
+
+    double SpergelInfo::kValue(double ksq) const
+    {
+        return std::pow(1. + ksq, -1. - _nu);
     }
 
     class SpergelRadialFunction: public FluxDensity

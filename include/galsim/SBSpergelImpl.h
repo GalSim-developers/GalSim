@@ -43,6 +43,22 @@ namespace galsim {
         double getHLR() const;
 
         /**
+         * @brief Returns the unnormalized real space value of the Spergel function.
+         *
+         * The input `r` should be (r_actual / r0).
+         * The returned value should then be multiplied by XXX
+         */
+        double xValue(double r) const;
+
+        /**
+         * @brief Returns the unnormalized value of the fourier transform.
+         *
+         * The input `ksq` should be (k_actual^2 * r0^2).
+         * The returned value should then be multiplied by flux.
+         */
+        double kValue(double ksq) const;
+
+        /**
          * @brief Shoot photons through unit-size, unnormalized profile
          * Spergel profiles are sampled with a numerical method, using class
          * `OneDimensionalDeviate`.

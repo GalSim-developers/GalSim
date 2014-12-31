@@ -113,7 +113,8 @@ namespace galsim {
                        }
 
                        // Update _info with the correct truncated version.
-                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,this->gsparams.duplicate()));
+                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,
+                                                           this->gsparams.duplicate()));
 
                        if (flux_untruncated) {
                            // Update the stored _flux and _re with the correct values
@@ -131,7 +132,8 @@ namespace galsim {
                    _r0 = size;
                    if (_truncated) {
                        // Update _info with the correct truncated version.
-                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,this->gsparams.duplicate()));
+                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,
+                                                           this->gsparams.duplicate()));
 
                        if (flux_untruncated) {
                            // Update the stored _flux with the correct value
