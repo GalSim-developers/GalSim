@@ -274,7 +274,7 @@ def test_quantize():
     t1 = time.time()
 
     # Choose a set of types.
-    dtypes = [np.float64, np.int32]
+    dtypes = [np.float64, np.float32]
     for dtype in dtypes:
 
         # Set up some array and image with this type.
