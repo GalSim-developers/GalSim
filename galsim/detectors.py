@@ -129,8 +129,6 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
                             units of 'per decade'.
     @param base_flux        The flux (p'/t') at which the gain is calibrated to have its nominal
                             value.
-    
-    @returns None
     """
 
     if not isinstance(alpha, float) or alpha < 0.:
@@ -148,5 +146,28 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
     a = alpha/numpy.log(10)
     self.applyNonlinearity(lambda x,x0,a: (x**(a+1))/(x0**a), p0, a)
 
+def quantize(self):
+    """
+    Rounds the pixel values in an image to integer values, while preserving the type of the data.
+
+    At certain stages in the astronomical image generation process, detectors effectively round to
+    the nearest integer.  The exact stage at which this happens depends on the type of device (CCD
+    vs. NIR detector).  For example, for H2RG detectors, quantization happens in two stages: first,
+    when detecting a certain number of photons, corresponding to the sum of background and signal
+    multiplied by the QE and including reciprocity failure.  After this, a number of other processes
+    occur (e.g., nonlinearity, IPC, read noise) that could result in non-integer pixel values, only
+    rounding to an integer at the stage of analog-to-digital conversion.
+
+    Because we cannot guarantee that quantization will always be the last step in the process, the
+    quantize() routine does not actually modify the type of the image to 'int'.  However, users can
+    easily do so by doing
+
+        image.quantize()
+        int_image = galsim.Image(image, dtype=int)
+
+    """
+    self.applyNonlinearity(numpy.round)
+
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
+galsim.Image.quantize = quantize
