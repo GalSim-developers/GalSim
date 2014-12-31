@@ -156,6 +156,8 @@ def main(argv):
         # much.
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
         img_psf = PSF.drawImage(filter_, scale=pixel_scale)
+        # Artificially normalize to a total flux of 1 for display purposes.
+        img_psf /= img_psf.array.sum()
         img_psf.write(out_filename)
         logger.debug('Created PSF with flat SED for {0}-band'.format(filter_name))
 
@@ -177,7 +179,7 @@ def main(argv):
         img += sky_level_pix
         print "sky_level_pix = ", sky_level_pix
 
-        #Adding Poisson Noise       
+        # Adding Poisson Noise
         img.addNoise(poisson_noise)
 
         logger.debug('Created {0}-band image'.format(filter_name))
