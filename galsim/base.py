@@ -1963,7 +1963,7 @@ class Sersic(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = { "n" : float }
-    _opt_params = { "flux" : float, "trunc": float, "flux_untruncated" : bool }
+    _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
     _takes_logger = False
@@ -2152,16 +2152,18 @@ class Spergel(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = { "nu" : float }
-    _opt_params = { "flux" : float}
+    _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool}
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, nu, half_light_radius=None, scale_radius=None, flux=1., gsparams=None):
+    def __init__(self, nu, half_light_radius=None, scale_radius=None,
+                 flux=1., trunc=0., flux_untruncated=False, gsparams=None):
         GSObject.__init__(
             self, galsim._galsim.SBSpergel(nu, half_light_radius=half_light_radius,
                                            scale_radius=scale_radius, flux=flux,
+                                           trunc=trunc, flux_untruncated=flux_untruncated,
                                            gsparams=gsparams))
 
     def getNu(self):

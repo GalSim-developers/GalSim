@@ -94,11 +94,11 @@ namespace galsim {
         const GSParamsPtr _gsparams; ///< The GSParams object.
 
         // Some derived values calculated in the constructor:
-        double _invn;    ///< 1/n
-        double _inv2n;   ///< 1/(2n)
+        double _invn;      ///< 1/n
+        double _inv2n;     ///< 1/(2n)
         double _trunc_sq;  ///< trunc^2
-        bool _truncated; ///< True if this Sersic profile is truncated.
-        double _gamma2n; ///< Gamma(2n) = 1/n * int(exp(-r^1/n)*r,r=0..inf)
+        bool _truncated;   ///< True if this Sersic profile is truncated.
+        double _gamma2n;   ///< Gamma(2n) = 1/n * int(exp(-r^1/n)*r,r=0..inf)
 
         // Parameters calculated when they are first needed, and then stored:
         mutable double _maxk;    ///< Value of k beyond which aliasing can be neglected.
@@ -116,7 +116,7 @@ namespace galsim {
         mutable double _highk_a; ///< Coefficient of 1/k^2 in high-k asymptote
         mutable double _highk_b; ///< Coefficient of 1/k^3 in high-k asymptote
 
-        /// Classes used for photon shooting
+        // Classes used for photon shooting
         mutable boost::shared_ptr<FluxDensity> _radial;
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
 
@@ -200,11 +200,11 @@ namespace galsim {
                         double y0, double dy, double dyx) const;
 
     private:
-        double _n;     ///< Sersic index.
-        double _flux;  ///< Actual flux (may differ from that specified at the constructor).
-        double _r0;    ///< Scale radius specified at the constructor.
-        double _re;    ///< Half-light radius specified at the constructor.
-        double _trunc;  ///< The truncation radius (if any)
+        double _n;       ///< Sersic index.
+        double _flux;    ///< Actual flux (may differ from that specified at the constructor).
+        double _r0;      ///< Scale radius specified at the constructor.
+        double _re;      ///< Half-light radius specified at the constructor.
+        double _trunc;   ///< The truncation radius (if any)
         bool _truncated; ///< True if this Sersic profile is truncated.
 
 

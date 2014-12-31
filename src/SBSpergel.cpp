@@ -42,8 +42,8 @@
 namespace galsim {
 
     SBSpergel::SBSpergel(double nu, double size, RadiusType rType, double flux,
-                         const GSParamsPtr& gsparams) :
-        SBProfile(new SBSpergelImpl(nu, size, rType, flux, gsparams)) {}
+                         double trunc, bool flux_untruncated, const GSParamsPtr& gsparams) :
+        SBProfile(new SBSpergelImpl(nu, size, rType, flux, trunc, flux_untruncated, gsparams)) {}
 
     SBSpergel::SBSpergel(const SBSpergel& rhs) : SBProfile(rhs) {}
 
@@ -67,34 +67,40 @@ namespace galsim {
         return static_cast<const SBSpergelImpl&>(*_pimpl).getHalfLightRadius();
     }
 
-    LRUCache<boost::tuple< double, GSParamsPtr >, SpergelInfo> SBSpergel::SBSpergelImpl::cache(
+    LRUCache<boost::tuple< double, double, GSParamsPtr >, SpergelInfo> SBSpergel::SBSpergelImpl::cache(
         sbp::max_spergel_cache);
 
     SBSpergel::SBSpergelImpl::SBSpergelImpl(double nu, double size, RadiusType rType,
-                                            double flux, const GSParamsPtr& gsparams) :
+                                            double flux, double trunc, bool flux_untruncated,
+                                            const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _nu(nu), _flux(flux),
+        _nu(nu), _flux(flux), _trunc(trunc),
         _gamma_nup1(boost::math::tgamma(_nu+1.0)),
-        _info(cache.get(boost::make_tuple(_nu, this->gsparams.duplicate())))
+        // Start with untruncated SpergelInfo regardless of value of trunc
+        _info(cache.get(boost::make_tuple(_nu, 0., this->gsparams.duplicate())))
     {
         dbg<<"Start SBSpergel constructor:\n";
         dbg<<"nu = "<<_nu<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
         dbg<<"C_nu = "<<_info->getHLR()<<std::endl;
+        dbg<<"trunc = "<<_trunc<<"  flux_untruncated = "<<flux_untruncated<<std::endl;
 
+        _truncated = (_trunc > 0.);
+
+        // Set size of this instance according to type of size given in constructor
         switch(rType) {
-        case HALF_LIGHT_RADIUS:
-            {
-                _re = size;
-                _r0 = _re / _info->getHLR();
-            }
-            break;
-        case SCALE_RADIUS:
-            {
-                _r0 = size;
-                _re = _r0 * _info->getHLR();
-            }
-            break;
+          case HALF_LIGHT_RADIUS:
+              {
+                  _re = size;
+                  _r0 = _re / _info->getHLR();
+              }
+              break;
+          case SCALE_RADIUS:
+              {
+                  _r0 = size;
+                  _re = _r0 * _info->getHLR();
+              }
+              break;
         }
 
         _r0_sq = _r0 * _r0;
@@ -287,14 +293,15 @@ namespace galsim {
         }
     }
 
-    SpergelInfo::SpergelInfo(double nu, const GSParamsPtr& gsparams) :
-        _nu(nu), _gsparams(gsparams),
+    SpergelInfo::SpergelInfo(double nu, double trunc, const GSParamsPtr& gsparams) :
+        _nu(nu), _trunc(trunc), _gsparams(gsparams),
         _gamma_nup1(boost::math::tgamma(_nu+1.0)),
         _gamma_nup2(_gamma_nup1 * (_nu+1)),
         _cnu(calculateFluxRadius(0.5)),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.)
     {
         dbg<<"Start SpergelInfo constructor for nu = "<<_nu<<std::endl;
+        dbg<<"trunc = "<<_trunc<<std::endl;
 
         if (_nu < sbp::minimum_spergel_nu || _nu > sbp::maximum_spergel_nu)
             throw SBError("Requested Spergel index out of range");

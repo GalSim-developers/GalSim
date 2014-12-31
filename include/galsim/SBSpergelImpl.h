@@ -31,7 +31,7 @@ namespace galsim {
     {
     public:
         /// @brief Constructor
-        SpergelInfo(double nu, const GSParamsPtr& gsparams);
+        SpergelInfo(double nu, double trunc, const GSParamsPtr& gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~SpergelInfo() {}
@@ -76,30 +76,35 @@ namespace galsim {
 
         // Input variables:
         double _nu;       ///< Spergel index.
+        double _trunc;    ///< Truncation radius.
         const GSParamsPtr _gsparams; ///< The GSParams object.
 
-        // Constants to immediately compute.
-        double _gamma_nup1;
-        double _gamma_nup2;
-        double _cnu;
+        // Some derived values calculated in the constructor:
+        double _gamma_nup1; ///< Gamma(nu+1)
+        double _gamma_nup2; ///< Gamma(nu+2)
+        double _cnu;        ///< The HLR in units of r0
+        bool _truncated;  ///< True if this Spergel profile is truncated.
+
         // Parameters calculated when they are first needed, and then stored:
         mutable double _maxk;    ///< Value of k beyond which aliasing can be neglected.
         mutable double _stepk;   ///< Sampling in k space necessary to avoid folding.
         mutable double _re;      ///< The HLR in units of r0.
         mutable double _flux;    ///< Flux relative to the untruncated profile.
 
-        double calculateFluxRadius(const double& flux_frac) const;
-
-        /// Classes used for photon shooting
+        // Classes used for photon shooting
         mutable boost::shared_ptr<FluxDensity> _radial;
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
+
+        // Helper functions used internally:
+        double calculateFluxRadius(const double& flux_frac) const;
     };
 
     class SBSpergel::SBSpergelImpl : public SBProfileImpl
     {
     public:
         SBSpergelImpl(double nu, double size, RadiusType rType,
-                      double flux, const GSParamsPtr& gsparams);
+                      double flux, double trunc, bool flux_untruncated,
+                      const GSParamsPtr& gsparams);
 
         ~SBSpergelImpl() {}
 
@@ -144,14 +149,16 @@ namespace galsim {
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
     private:
-        double _nu;    ///< Spergel index
-        double _flux;  ///< Flux
-        double _r0;    ///< Scale radius
+        double _nu;      ///< Spergel index
+        double _flux;    ///< Flux
+        double _trunc;   ///< Truncation radius
+        double _r0;      ///< Scale radius
+        bool _truncated; ///< True if this Sersic profile is truncated.
 
         double _shootnorm; ///< Normalization for photon shooting.
 
-        double _gamma_nup1; // Gamma(nu + 1)
-        double _re;         // half-light-radius
+        double _gamma_nup1; ///< Gamma(nu + 1)
+        double _re;         ///< half-light-radius
         double _r0_sq;
         double _inv_r0;
         double _norm;
@@ -162,7 +169,7 @@ namespace galsim {
         SBSpergelImpl(const SBSpergelImpl& rhs);
         void operator=(const SBSpergelImpl& rhs);
 
-        static LRUCache<boost::tuple< double, GSParamsPtr >, SpergelInfo> cache;
+        static LRUCache<boost::tuple< double, double, GSParamsPtr >, SpergelInfo> cache;
     };
 }
 
