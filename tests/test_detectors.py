@@ -410,8 +410,40 @@ def test_IPC_basic():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+=======
+def test_quantize():
+    """Check behavior of the image quantization routine."""
+    import time
+    t1 = time.time()
+
+    # Choose a set of types.
+    dtypes = [np.float64, np.float32]
+    for dtype in dtypes:
+
+        # Set up some array and image with this type.
+        arr = np.arange(0,20,0.5,dtype=dtype).reshape(5,8)
+        image = galsim.Image(arr, scale=0.3, xmin=37, ymin=-14)
+        image_q = image.copy()
+
+        # Do quantization.
+        image_q.quantize()
+
+        # Check for correctness of numerical values.
+        np.testing.assert_array_almost_equal(
+            image_q.array, np.round(image.array), decimal=8,
+            err_msg='Array contents not as expected after quantization, for dtype=%s'%dtype)
+
+        # Check for preservation of WCS etc.
+        assert image_q.scale == image.scale
+        assert image_q.wcs == image.wcs
+        assert image_q.dtype == image.dtype
+        assert image_q.bounds == image.bounds
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2-t1)
 
 if __name__ == "__main__":
     test_nonlinearity_basic()
     test_recipfail_basic()
     test_IPC_basic()
+    test_quantize()
