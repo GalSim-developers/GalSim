@@ -24,6 +24,7 @@
 #include <boost/math/special_functions/bessel.hpp>
 #include <boost/math/special_functions/gamma.hpp>
 #include "Solve.h"
+#include "bessel/Roots.h"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
 // drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit
@@ -37,6 +38,7 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
+//std::ostream* dbgout = new std::ofstream("debug.out");
 std::ostream* dbgout = &std::cout;
 int verbose_level = 1;
 #endif
@@ -69,7 +71,7 @@ namespace galsim {
         return static_cast<const SBSpergelImpl&>(*_pimpl).getHalfLightRadius();
     }
 
-    LRUCache<boost::tuple< double, double, GSParamsPtr >, SpergelInfo> SBSpergel::SBSpergelImpl::cache(
+    LRUCache<boost::tuple<double,double,GSParamsPtr>,SpergelInfo> SBSpergel::SBSpergelImpl::cache(
         sbp::max_spergel_cache);
 
     SBSpergel::SBSpergelImpl::SBSpergelImpl(double nu, double size, RadiusType rType,
@@ -114,7 +116,7 @@ namespace galsim {
 
         _r0_sq = _r0 * _r0;
         _inv_r0 = 1. / _r0;
-        _norm = _flux / _r0_sq / _gamma_nup1 / (2.0 * M_PI) / std::pow(2., _nu);
+        _xnorm = _flux / _r0_sq * _info->getXNorm();
 
         dbg<<"scale radius = "<<_r0<<std::endl;
         dbg<<"HLR = "<<_re<<std::endl;
@@ -127,7 +129,7 @@ namespace galsim {
     double SBSpergel::SBSpergelImpl::xValue(const Position<double>& p) const
     {
         double r = sqrt(p.x * p.x + p.y * p.y) * _inv_r0;
-        return _norm * _info->xValue(r);
+        return _xnorm * _info->xValue(r);
     }
 
     // Equation (2) of Spergel (2010)
@@ -149,7 +151,7 @@ namespace galsim {
             fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
             // Spergels can be super peaky at the center, so handle explicitly like Sersics
             if (ix_zero != 0 && iy_zero != 0)
-                val(ix_zero, iy_zero) = _norm * _info->xValue(0.);
+                val(ix_zero, iy_zero) = _xnorm * _info->xValue(0.);
         } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -168,7 +170,7 @@ namespace galsim {
                 It valit = val.col(j).begin();
                 for (int i=0;i<m;++i,x+=dx) {
                     double r = sqrt(x*x + ysq);
-                    *valit++ = _norm * _info->xValue(r);
+                    *valit++ = _xnorm * _info->xValue(r);
                 }
             }
         }
@@ -237,7 +239,7 @@ namespace galsim {
             It valit = val.col(j).begin();
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double r = sqrt(x*x + y*y);
-                *valit++ = _norm * _info->xValue(r);
+                *valit++ = _xnorm * _info->xValue(r);
             }
         }
 
@@ -254,7 +256,7 @@ namespace galsim {
         if ( std::abs(i0 - inti0) < 1.e-12 && std::abs(j0 - intj0) < 1.e-12 &&
              inti0 >= 0 && inti0 < m && intj0 >= 0 && intj0 < n)  {
             dbg<<"Fixing central value from "<<val(inti0, intj0);
-            val(inti0, intj0) = _norm * _info->xValue(0.0);
+            val(inti0, intj0) = _xnorm * _info->xValue(0.0);
             dbg<<" to "<<val(inti0, intj0)<<std::endl;
 #ifdef DEBUGLOGGING
             double x = x00;
@@ -307,7 +309,8 @@ namespace galsim {
         _gamma_nup1(boost::math::tgamma(_nu+1.0)),
         _gamma_nup2(_gamma_nup1 * (_nu+1)),
         _truncated(_trunc > 0.),
-        _maxk(0.), _stepk(0.), _re(0.), _flux(0.)
+        _maxk(0.), _stepk(0.), _re(0.), _flux(0.),
+        _ft(Table<double,double>::spline)
     {
         dbg<<"Start SpergelInfo constructor for nu = "<<_nu<<std::endl;
         dbg<<"trunc = "<<_trunc<<std::endl;
@@ -359,9 +362,12 @@ namespace galsim {
     {
         if (_stepk == 0.) {
             double R = calculateFluxRadius(1.0 - _gsparams->folding_threshold);
+            if (_truncated && _trunc < R)  R = _trunc;
             // Go to at least 5*re
-            R = std::max(R,_gsparams->stepk_minimum_hlr/_re);
+            R = std::max(R,_gsparams->stepk_minimum_hlr);
+            dbg<<"R => "<<R<<std::endl;
             _stepk = M_PI / R;
+            dbg<<"stepk = "<<_stepk<<std::endl;
         }
         return _stepk;
     }
@@ -369,11 +375,14 @@ namespace galsim {
     double SpergelInfo::maxK() const
     {
         if(_maxk == 0.) {
-            // Solving (1+k^2)^(-1-nu) = maxk_threshold for k
-            // exact:
-            //_maxk = std::sqrt(std::pow(gsparams->maxk_threshold, -1./(1+_nu))-1.0);
-            // approximate 1+k^2 ~ k^2 => good enough:
-            _maxk = std::pow(_gsparams->maxk_threshold, -1./(2*(1+_nu)));
+            if (_truncated) buildFT();
+            else {
+                // Solving (1+k^2)^(-1-nu) = maxk_threshold for k
+                // exact:
+                //_maxk = std::sqrt(std::pow(gsparams->maxk_threshold, -1./(1+_nu))-1.0);
+                // approximate 1+k^2 ~ k^2 => good enough:
+                _maxk = std::pow(_gsparams->maxk_threshold, -1./(2*(1+_nu)));
+            }
         }
         return _maxk;
     }
@@ -417,18 +426,105 @@ namespace galsim {
         dbg<<"re is "<<_re<<std::endl;
     }
 
+    double SpergelInfo::getXNorm() const
+    { return std::pow(2., -_nu) / _gamma_nup1 / (2.0 * M_PI) / getFluxFraction(); }
+
     double SpergelInfo::xValue(double r) const
     {
-        if (r == 0.) {
+        if (_truncated && r > _trunc) return 0.;
+        else if (r == 0.) {
             if (_nu > 0) return _gamma_nup1 / (2. * _nu) * std::pow(2., _nu);
             else return INFINITY;
-        }
-        return boost::math::cyl_bessel_k(_nu, r) * std::pow(r, _nu);
+        } else
+            return boost::math::cyl_bessel_k(_nu, r) * std::pow(r, _nu);
     }
 
     double SpergelInfo::kValue(double ksq) const
     {
-        return std::pow(1. + ksq, -1. - _nu);
+        if (_truncated) {
+            if (_ft.size() == 0) buildFT();
+            if (ksq > _ft.argMax()) return 0.;
+            else return _ft(ksq);
+        } else {
+            return std::pow(1. + ksq, -1. - _nu);
+        }
+    }
+
+    class SpergelIntegrand : public std::unary_function<double, double>
+    {
+    public:
+        SpergelIntegrand(double nu, double k) :
+            _nu(nu), _k(k) {}
+        double operator()(double r) const
+        { return std::pow(r, _nu)*boost::math::cyl_bessel_k(_nu, r) * r*j0(_k*r); }
+
+    private:
+        double _nu;
+        double _k;
+    };
+
+    void SpergelInfo::buildFT() const
+    {
+        assert(_trunc > 0.);
+        if (_ft.size() > 0) return;
+        dbg<<"Building truncated Spergel Hankel transform"<<std::endl;
+        dbg<<"nu = "<<_nu<<std::endl;
+        dbg<<"trunc = "<<_trunc<<std::endl;
+        // Do a Hankel transform and store the results in a lookup table.
+        double prefactor = std::pow(2., -_nu) / _gamma_nup1 / _flux;
+        dbg<<"prefactor = "<<prefactor<<std::endl;
+
+        // Along the way, find the last k that has a kValue > 1.e-3
+        double maxk_val = this->_gsparams->maxk_threshold;
+        dbg<<"Looking for maxk_val = "<<maxk_val<<std::endl;
+        // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
+        // (It's oscillatory, so want to make sure not to stop at a zero crossing.)
+
+        // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
+        // I have no idea what range the fourth derivative can take for the hankel transform,
+        // so let's take the completely arbitrary value of 10.  (This value was found to be
+        // conservative for Sersic, but I haven't investigated here.)
+        // 10 h^4 <= kvalue_accuracy
+        // h = (kvalue_accuracy/10)^0.25
+        double dk = _gsparams->table_spacing * sqrt(sqrt(_gsparams->kvalue_accuracy / 10.));
+        dbg<<"Using dk = "<<dk<<std::endl;
+        int n_below_thresh = 0;
+
+        // Don't go past k = 500
+        for (double k = 0.; k < 500; k += dk) {
+            SpergelIntegrand I(_nu, k);
+
+#ifdef DEBUGLOGGING
+            std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
+            integ::IntRegion<double> reg(0, _trunc, integ_dbgout);
+#else
+            integ::IntRegion<double> reg(0, _trunc);
+#endif
+
+            // Add explicit splits at first several roots of J0.
+            // This tends to make the integral more accurate.
+            for (int s=1; s<=10; ++s) {
+                double root = bessel::getBesselRoot0(s);
+                if (root > k * _trunc) break;
+                reg.addSplit(root/k);
+            }
+
+            double val = integ::int1d(
+                I, reg,
+                this->_gsparams->integration_relerr,
+                this->_gsparams->integration_abserr);
+            val *= prefactor;
+
+            xdbg<<"ft("<<k<<") = "<<val<<std::endl;
+            _ft.addEntry(k*k, val);
+
+            if (std::abs(val) > maxk_val) _maxk = k;
+
+            if (std::abs(val) > this->_gsparams->kvalue_accuracy) n_below_thresh = 0;
+            else ++n_below_thresh;
+            if (n_below_thresh == 5) break;
+        }
+        dbg<<"maxk = "<<_maxk<<std::endl;
     }
 
     class SpergelRadialFunction: public FluxDensity

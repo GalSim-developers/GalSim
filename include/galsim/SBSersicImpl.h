@@ -108,7 +108,7 @@ namespace galsim {
         mutable double _flux;    ///< Flux relative to the untruncated profile.
 
         // Parameters for the Hankel transform:
-        mutable Table<double,double> _ft;  ///< Lookup table for fourier transform.
+        mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform.
         mutable double _kderiv2; ///< Quadratic dependence of F near k=0.
         mutable double _kderiv4; ///< Quartic dependence of F near k=0.
         mutable double _ksq_min; ///< Minimum ksq to use lookup table.

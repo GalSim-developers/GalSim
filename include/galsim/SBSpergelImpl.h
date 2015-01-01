@@ -61,6 +61,9 @@ namespace galsim {
         /// @brief The fractional flux relative to the untruncated profile.
         double getFluxFraction() const;
 
+        /// @brief The fractional flux relative to the untruncated profile.
+        double getXNorm() const;
+
         /**
          * @brief Shoot photons through unit-size, unnormalized profile
          * Spergel profiles are sampled with a numerical method, using class
@@ -93,6 +96,9 @@ namespace galsim {
         mutable double _re;      ///< The HLR in units of r0.
         mutable double _flux;    ///< Flux relative to the untruncated profile.
 
+        // Parameters for the Hankel transform:
+        mutable Table<double,double> _ft; ///< Lookup table for Fourier transform
+
         // Classes used for photon shooting
         mutable boost::shared_ptr<FluxDensity> _radial;
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
@@ -100,6 +106,7 @@ namespace galsim {
         // Helper functions used internally:
         double calculateFluxRadius(const double& flux_frac) const;
         void calculateHLR() const;
+        void buildFT() const;
     };
 
     class SBSpergel::SBSpergelImpl : public SBProfileImpl
@@ -164,7 +171,7 @@ namespace galsim {
         double _re;         ///< half-light-radius
         double _r0_sq;
         double _inv_r0;
-        double _norm;
+        double _xnorm;
 
         boost::shared_ptr<SpergelInfo> _info; ///< Points to info structure for this nu
 

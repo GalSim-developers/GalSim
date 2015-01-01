@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 // clang doesn't like some of the code in boost files included by gamma.hpp.
 #ifdef __clang__
