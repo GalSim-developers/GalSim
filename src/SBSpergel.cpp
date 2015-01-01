@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBSpergel.h"
 #include "SBSpergelImpl.h"
@@ -37,6 +37,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
+std::ostream* dbgout = &std::cout;
+int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -98,6 +100,13 @@ namespace galsim {
           case SCALE_RADIUS:
               {
                   _r0 = size;
+                  if (_truncated) {
+                      _info = cache.get(boost::make_tuple(_nu, _trunc/_r0,
+                                                          this->gsparams.duplicate()));
+                      if (flux_untruncated) {
+                          _flux *= _info->getFluxFraction();
+                      }
+                  }
                   _re = _r0 * _info->getHLR();
               }
               break;
@@ -297,7 +306,7 @@ namespace galsim {
         _nu(nu), _trunc(trunc), _gsparams(gsparams),
         _gamma_nup1(boost::math::tgamma(_nu+1.0)),
         _gamma_nup2(_gamma_nup1 * (_nu+1)),
-        _cnu(calculateFluxRadius(0.5)),
+        _truncated(_trunc > 0.),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.)
     {
         dbg<<"Start SpergelInfo constructor for nu = "<<_nu<<std::endl;
@@ -351,7 +360,7 @@ namespace galsim {
         if (_stepk == 0.) {
             double R = calculateFluxRadius(1.0 - _gsparams->folding_threshold);
             // Go to at least 5*re
-            R = std::max(R,_gsparams->stepk_minimum_hlr/_cnu);
+            R = std::max(R,_gsparams->stepk_minimum_hlr/_re);
             _stepk = M_PI / R;
         }
         return _stepk;
@@ -371,7 +380,41 @@ namespace galsim {
 
     double SpergelInfo::getHLR() const
     {
-        return _cnu;
+        if (_re == 0.0) calculateHLR();
+        return _re;
+    }
+
+    double SpergelInfo::getFluxFraction() const
+    {
+        if (_flux == 0.) {
+            // Calculate the flux of a truncated profile (relative to the integral for
+            // an untruncated profile).
+            if (_truncated) {
+                SpergelIntegratedFlux func(_nu, _gamma_nup2, 0.0);
+                _flux = func(_trunc);
+                dbg << "Flux fraction = " << _flux << std::endl;
+            } else {
+                _flux = 1.;
+            }
+        }
+        return _flux;
+    }
+
+    void SpergelInfo::calculateHLR() const
+    {
+        dbg<<"Find HLR for (nu,trunc) = ("<<_nu<<","<<_trunc<<")"<<std::endl;
+        SpergelIntegratedFlux func(_nu, _gamma_nup2, 0.5*getFluxFraction());
+        double b1 = 0.001; // These are pretty conservative...
+        double b2 = 25.0;
+        Solve<SpergelIntegratedFlux> solver(func, b1, b2);
+        xdbg<<"Initial range is "<<b1<<" .. "<<b2<<std::endl;
+        solver.setMethod(Brent);
+        solver.bracketLowerWithLimit(0.); // Expand if needed
+        solver.bracketUpper();
+        xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
+            solver.getUpperBound()<<std::endl;
+        _re = solver.root();
+        dbg<<"re is "<<_re<<std::endl;
     }
 
     double SpergelInfo::xValue(double r) const
@@ -392,7 +435,9 @@ namespace galsim {
     {
     public:
         SpergelRadialFunction(double nu): _nu(nu) {}
-        double operator()(double r) const { return std::exp(-std::pow(r,_nu)) * boost::math::cyl_bessel_k(_nu, r); }
+        double operator()(double r) const {
+            return std::exp(-std::pow(r,_nu)) * boost::math::cyl_bessel_k(_nu, r);
+        }
     private:
         double _nu;
     };

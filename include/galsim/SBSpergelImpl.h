@@ -36,12 +36,6 @@ namespace galsim {
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~SpergelInfo() {}
 
-        double maxK() const;
-        double stepK() const;
-
-        /// @brief The half-light radius in units of r0.
-        double getHLR() const;
-
         /**
          * @brief Returns the unnormalized real space value of the Spergel function.
          *
@@ -57,6 +51,15 @@ namespace galsim {
          * The returned value should then be multiplied by flux.
          */
         double kValue(double ksq) const;
+
+        double maxK() const;
+        double stepK() const;
+
+        /// @brief The half-light radius in units of r0.
+        double getHLR() const;
+
+        /// @brief The fractional flux relative to the untruncated profile.
+        double getFluxFraction() const;
 
         /**
          * @brief Shoot photons through unit-size, unnormalized profile
@@ -82,7 +85,6 @@ namespace galsim {
         // Some derived values calculated in the constructor:
         double _gamma_nup1; ///< Gamma(nu+1)
         double _gamma_nup2; ///< Gamma(nu+2)
-        double _cnu;        ///< The HLR in units of r0
         bool _truncated;  ///< True if this Spergel profile is truncated.
 
         // Parameters calculated when they are first needed, and then stored:
@@ -97,6 +99,7 @@ namespace galsim {
 
         // Helper functions used internally:
         double calculateFluxRadius(const double& flux_frac) const;
+        void calculateHLR() const;
     };
 
     class SBSpergel::SBSpergelImpl : public SBProfileImpl
