@@ -64,6 +64,9 @@ namespace galsim {
         /// @brief The fractional flux relative to the untruncated profile.
         double getXNorm() const;
 
+        /// @brief Calculate scale that has the given HLR and truncation radius in physical units.
+        double calculateScaleForTruncatedHLR(double re, double trunc) const;
+
         /**
          * @brief Shoot photons through unit-size, unnormalized profile
          * Spergel profiles are sampled with a numerical method, using class

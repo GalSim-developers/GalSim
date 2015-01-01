@@ -40,7 +40,7 @@
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
 std::ostream* dbgout = &std::cout;
-int verbose_level = 1;
+int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -85,8 +85,8 @@ namespace galsim {
     {
         dbg<<"Start SBSpergel constructor:\n";
         dbg<<"nu = "<<_nu<<std::endl;
+        dbg<<"size = "<<size<<"  rType = "<<rType<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
-        dbg<<"C_nu = "<<_info->getHLR()<<std::endl;
         dbg<<"trunc = "<<_trunc<<"  flux_untruncated = "<<flux_untruncated<<std::endl;
 
         _truncated = (_trunc > 0.);
@@ -96,19 +96,45 @@ namespace galsim {
           case HALF_LIGHT_RADIUS:
               {
                   _re = size;
-                  _r0 = _re / _info->getHLR();
+                  if (_truncated) {
+                      if (flux_untruncated) {
+                          // The given HLR and flux are the values for the untruncated profile.
+                          _r0 = _re / _info->getHLR(); // getHLR() is in units of r0.
+                      } else {
+                           // This is the one case that is a bit complicated, since the
+                           // half-light radius and trunc are both given in physical units,
+                           // so we need to solve for what scale radius this corresponds to.
+                          _r0 = _info->calculateScaleForTruncatedHLR(_re, _trunc);
+                      }
+
+                      // Update _info with the correct truncated version.
+                      _info = cache.get(boost::make_tuple(_nu, _trunc/_r0,
+                                                          this->gsparams.duplicate()));
+
+                      if (flux_untruncated) {
+                          // Update the stored _flux and _re with the correct values
+                          _flux *= _info->getFluxFraction();
+                          _re = _r0 * _info->getHLR();
+                      }
+                  } else {
+                      // Then given HLR and flux are the values for the untruncated profile.
+                      _r0 = _re / _info->getHLR();
+                  }
               }
               break;
           case SCALE_RADIUS:
               {
                   _r0 = size;
                   if (_truncated) {
+                      // Update _info with the correct truncated version.
                       _info = cache.get(boost::make_tuple(_nu, _trunc/_r0,
                                                           this->gsparams.duplicate()));
                       if (flux_untruncated) {
+                          // Update the stored _flux with the correct value
                           _flux *= _info->getFluxFraction();
                       }
                   }
+                  // In all cases, _re is the real HLR
                   _re = _r0 * _info->getHLR();
               }
               break;
@@ -329,10 +355,10 @@ namespace galsim {
         // Return flux integrated up to radius `u` in units of r0, minus `flux_frac`
         // (i.e., make a residual so this can be used to search for a target flux.
         {
-            double fnup1 = std::pow(u / 2., _nu+1)
-                * boost::math::cyl_bessel_k(_nu+1, u)
+            double fnup1 = std::pow(u / 2., _nu+1.)
+                * boost::math::cyl_bessel_k(_nu+1., u)
                 / _gamma_nup2;
-            double f = 1.0 - 2.0 * (1+_nu)*fnup1;
+            double f = 1.0 - 2.0 * (1.+_nu)*fnup1;
             return f - _target;
         }
     private:
@@ -424,6 +450,57 @@ namespace galsim {
             solver.getUpperBound()<<std::endl;
         _re = solver.root();
         dbg<<"re is "<<_re<<std::endl;
+    }
+
+    class SpergelTruncatedHLR
+    {
+    public:
+        SpergelTruncatedHLR(double nu, double gamma_nup2, double HLR, double trunc) :
+            _nu(nu), _gamma_nup2(gamma_nup2), _HLR(HLR), _trunc(trunc) {}
+
+        double operator()(double r0) const
+        {
+            double u1 = _HLR/r0;
+            double u2 = _trunc/r0;
+            double f1 = std::pow(u1/2., _nu+1.)
+                * boost::math::cyl_bessel_k(_nu+1., u1) / _gamma_nup2;
+            double f2 = std::pow(u2/2., _nu+1.)
+                * boost::math::cyl_bessel_k(_nu+1., u2) / _gamma_nup2;
+            return 2*(1-2*(_nu+1.)*f1) - (1-2*(_nu+1.)*f2);
+        }
+    private:
+        double _nu;
+        double _gamma_nup2;
+        double _HLR;
+        double _trunc;
+    };
+
+    double SpergelInfo::calculateScaleForTruncatedHLR(double re, double trunc) const
+    {
+        // This is the limit for profiles that round off in the center, since you can locally
+        // approximate the profile as flat within the truncation radius.  This isn't true for
+        // Spergels, so the real limit is larger than this (since more flux is inside re than in
+        // the annulus between re and sqrt(2) re), but I don't know of an analytic formula for
+        // the correct limit.  So we check for this here, and then if we encounter problems
+        // later on, we throw a different error.
+        if (trunc <= sqrt(2.) * re) {
+            throw SBError("Spergel truncation must be larger than sqrt(2)*half_light_radius.");
+        }
+
+        // I'm sure I could do something more intelligent here, but this seems to work.
+        double b2 = getHLR();
+        double b1 = b2 * 0.999;
+        SpergelTruncatedHLR func(_nu, _gamma_nup2, re, trunc);
+        Solve<SpergelTruncatedHLR> solver(func,b1,b2);
+        solver.bracketLowerWithLimit(0.0);
+        dbg<<"Initial range is "<<solver.getLowerBound()<<" .. "
+            <<solver.getUpperBound()<<std::endl;
+        dbg<<"which evaluates to "<<func(solver.getLowerBound())<<" .. "
+           <<func(solver.getUpperBound())<<std::endl;
+        solver.setMethod(Brent);
+        double r0re = solver.root();
+        dbg<<"Root is "<<r0re<<std::endl;
+        return r0re / re;
     }
 
     double SpergelInfo::getXNorm() const
