@@ -520,8 +520,13 @@ namespace galsim {
     {
         if (_truncated) {
             if (_ft.size() == 0) buildFT();
-            if (ksq > _ft.argMax()) return 0.;
-            else return _ft(ksq);
+            double lk=0.5*std::log(ksq);
+            if (lk < _a1) {
+                //linearly interpolate the first bin (in ksq)
+                return (1. - ksq/_a1ksq * (1. - _fta1/_a1ksq));
+            }
+            else if (lk > _ft.argMax()) return 0.;
+            else return _ft(lk)/ksq;
         } else {
             return std::pow(1. + ksq, -1. - _nu);
         }
@@ -563,12 +568,16 @@ namespace galsim {
         // conservative for Sersic, but I haven't investigated here.)
         // 10 h^4 <= kvalue_accuracy
         // h = (kvalue_accuracy/10)^0.25
-        double dk = _gsparams->table_spacing * sqrt(sqrt(_gsparams->kvalue_accuracy / 10.));
-        dbg<<"Using dk = "<<dk<<std::endl;
+        double dlogk = _gsparams->table_spacing * sqrt(sqrt(_gsparams->kvalue_accuracy / 10.));
+        dbg<<"Using dlogk = "<<dlogk<<std::endl;
         int n_below_thresh = 0;
 
         // Don't go past k = 500
-        for (double k = 0.; k < 500; k += dk) {
+        double kmin = dlogk; // have to begin somewhere...
+        for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
+            double k = std::exp(logk);
+            double ksq = k*k;
+
             SpergelIntegrand I(_nu, k);
 
 #ifdef DEBUGLOGGING
@@ -592,8 +601,10 @@ namespace galsim {
                 this->_gsparams->integration_abserr);
             val *= prefactor;
 
-            xdbg<<"ft("<<k<<") = "<<val<<std::endl;
-            _ft.addEntry(k*k, val);
+            xdbg<<"logk = "<<logk<<", ft("<<exp(logk)<<") = "<<val<<"   "<<val*ksq<<std::endl;
+
+            double f0 = val * ksq;
+            _ft.addEntry(logk, f0);
 
             if (std::abs(val) > maxk_val) _maxk = k;
 
@@ -602,6 +613,9 @@ namespace galsim {
             if (n_below_thresh == 5) break;
         }
         dbg<<"maxk = "<<_maxk<<std::endl;
+        _a1 = _ft.argMin();
+        _a1ksq = std::exp(2. * _a1);
+        _fta1 = _ft(_a1);
     }
 
     class SpergelRadialFunction: public FluxDensity

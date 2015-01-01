@@ -101,6 +101,9 @@ namespace galsim {
 
         // Parameters for the Hankel transform:
         mutable Table<double,double> _ft; ///< Lookup table for Fourier transform
+        mutable double _a1;               ///< First argument (logk) of lookup table
+        mutable double _a1ksq;            ///< converted to ksq
+        mutable double _fta1;             ///< First value in lookup table
 
         // Classes used for photon shooting
         mutable boost::shared_ptr<FluxDensity> _radial;
