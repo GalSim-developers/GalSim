@@ -1757,8 +1757,8 @@ def test_spergel():
     do_kvalue(spergel, "Truncated Spergel w/ flux_untruncated, scale radius specified")
 
     # Test severely truncated Spergel
-    # spergel = galsim.Spergel(nu=0.0, flux=test_flux, half_light_radius=1, trunc=1.45)
-    # do_kvalue(spergel, "Severely truncated n=4 Spergel")
+    spergel = galsim.Spergel(nu=0.4, flux=test_flux, half_light_radius=1, trunc=1.45)
+    do_kvalue(spergel, "Severely truncated nu=0.4 Spergel")
 
 
 def test_spergel_properties():
@@ -1771,11 +1771,7 @@ def test_spergel_properties():
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(spergel.centroid(), cen)
     # # Check Fourier properties
-    # np.testing.assert_almost_equal(gauss.maxK(), 3.7169221888498383 / test_sigma)
-    # np.testing.assert_almost_equal(gauss.stepK(), 0.533644625664 / test_sigma)
     np.testing.assert_equal(spergel.kValue(cen), (1+0j) * test_flux)
-    import math
-    # np.testing.assert_almost_equal(gauss.xValue(cen), 1./(2.*math.pi) * test_flux / test_sigma**2)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         spergel = galsim.Spergel(nu=0.0, flux=inFlux, scale_radius=1.0)
@@ -1783,91 +1779,6 @@ def test_spergel_properties():
         np.testing.assert_almost_equal(outFlux, inFlux)
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-
-# def test_spergel_radii():
-#     """Test initialization of Spergel with different types of radius specification.
-#     """
-#     import time
-#     t1 = time.time()
-#     import math
-#     for nu, scale in zip(test_spergel_nu, test_scale) :
-
-#         test_gal = galsim.Spergel(nu=nu, half_light_radius=test_hlr, flux=1.)
-
-#         # Check that the returned half-light radius is correct
-#         print 'test_hlr = ',test_hlr
-#         print 'test_gal hlr, sr = ',test_gal.getHalfLightRadius(),test_gal.getScaleRadius()
-#         np.testing.assert_almost_equal(
-#             test_gal.getHalfLightRadius(), test_hlr, decimal=5,
-#             err_msg = "Error in returned HLR for Spergel HLR constructor, nu=%.1f"%nu)
-
-#         # Check that the returned flux is correct
-#         print 'test_gal.getFlux() = ',test_gal.getFlux()
-#         np.testing.assert_almost_equal(
-#             test_gal.getFlux(), 1., decimal=5,
-#             err_msg = "Error in returned Flux for Spergel HLR constructor, nu=%.1f"%nu)
-
-#         print 'flux = ',test_gal.getFlux()
-#         print 'hlr = ',test_gal.getHalfLightRadius()
-#         print 'scale = ',test_gal.getScaleRadius()
-#         got_hlr = test_gal.getHalfLightRadius()
-#         got_flux = test_gal.getFlux()
-
-#         # nu = 0.9 is too difficult to numerically integrate
-#         if nu != -0.9:
-#             hlr_sum = radial_integrate(test_gal, 0.0, got_hlr)
-#             print 'hlr_sum = ',hlr_sum
-#             np.testing.assert_almost_equal(
-#                     hlr_sum, 0.5*got_flux, decimal=4,
-#                     err_msg = "Error in Spergel half-light radius constructor, nu=%.1f"%nu)
-
-#         got_sr = test_gal.getScaleRadius()
-
-#         test_gal = galsim.Spergel(nu=nu, scale_radius=scale, flux=1.)
-
-#         # Check that the returned scale radius is correct
-#         print 'test_scale = ',scale
-#         print 'test_gal hlr, sr = ',test_gal.getHalfLightRadius(),test_gal.getScaleRadius()
-#         np.testing.assert_almost_equal(
-#             test_gal.getScaleRadius(), scale, decimal=5,
-#             err_msg = "Error in returned SR for Spergel SR constructor, nu=%.1f"%nu)
-
-#         # Check that the returned flux is correct
-#         print 'test_gal.getFlux() = ',test_gal.getFlux()
-#         np.testing.assert_almost_equal(
-#             test_gal.getFlux(), 1., decimal=5,
-#             err_msg = "Error in returned Flux for Spergel HLR constructor, nu=%.1f"%nu)
-
-#         # (test half-light radius)
-#         got_hlr = test_gal.getHalfLightRadius()
-#         got_flux = test_gal.getFlux()
-
-#         # nu = 0.9 is too difficult to numerically integrate
-#         if nu > -0.9:
-#             hlr_sum = radial_integrate(test_gal, 0.0, got_hlr)
-#             print 'hlr_sum = ',hlr_sum
-#             np.testing.assert_almost_equal(
-#                     hlr_sum, 0.5*got_flux, decimal=4,
-#                     err_msg="Error in HLR for scale_radius constructed Spergel")
-
-#         # Check that the getters don't work after modifying the original.
-#         test_gal_shear = test_gal.copy()
-#         # They still work after copy()
-#         print 'nu = ',test_gal_shear.getNu()
-#         print 'hlr = ',test_gal_shear.getHalfLightRadius()
-#         print 'sr = ',test_gal_shear.getScaleRadius()
-#         test_gal_shear.applyShear(g1=0.3, g2=0.1)
-#         # But not after applyShear() (or others, but this is a sufficient test here)
-#         try:
-#             np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getNu")
-#             np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
-#             np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius")
-#         except ImportError:
-#             pass
-
-#     t2 = time.time()
-#     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_spergel_radii():
@@ -2020,11 +1931,9 @@ def test_spergel_flux_scaling():
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
 
-    # loop through sersic n
+    # loop through spergel nu
     for test_nu in test_spergel_nu:
         # init with hlr and flux only (should be ok given last tests)
-        # n=-4 is code to use explicit DeVaucouleurs rather than Sersic(n=4).
-        # It should be identical.
         init_obj = galsim.Spergel(test_nu, half_light_radius=test_hlr, flux=test_flux)
 
         # Test in place *= and /=
