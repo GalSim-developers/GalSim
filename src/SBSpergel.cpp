@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "SBSpergel.h"
 #include "SBSpergelImpl.h"
@@ -39,8 +39,8 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
-std::ostream* dbgout = &std::cout;
-int verbose_level = 2;
+//std::ostream* dbgout = &std::cout;
+//int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -452,26 +452,24 @@ namespace galsim {
         dbg<<"re is "<<_re<<std::endl;
     }
 
+    // Function object for finding scale radius given a HLR and truncation radius.
     class SpergelTruncatedHLR
     {
     public:
-        SpergelTruncatedHLR(double nu, double gamma_nup2, double HLR, double trunc) :
-            _nu(nu), _gamma_nup2(gamma_nup2), _HLR(HLR), _trunc(trunc) {}
+        SpergelTruncatedHLR(double nu, double gamma_nup1, double re, double trunc) :
+            _nu(nu), _gamma_nup1(gamma_nup1), _re(re), _trunc(trunc) {}
 
         double operator()(double r0) const
         {
-            double u1 = _HLR/r0;
-            double u2 = _trunc/r0;
-            double f1 = std::pow(u1/2., _nu+1.)
-                * boost::math::cyl_bessel_k(_nu+1., u1) / _gamma_nup2;
-            double f2 = std::pow(u2/2., _nu+1.)
-                * boost::math::cyl_bessel_k(_nu+1., u2) / _gamma_nup2;
-            return 2*(1-2*(_nu+1.)*f1) - (1-2*(_nu+1.)*f2);
+            double term1 = 2. * std::pow(_re, _nu+1.)*boost::math::cyl_bessel_k(_nu+1, _re/r0);
+            double term2 = std::pow(_trunc, _nu+1.)*boost::math::cyl_bessel_k(_nu+1, _trunc/r0);
+            double term3 = 0.5 * _gamma_nup1 * std::pow(2*r0, _nu+1.);
+            return term1 - term2 - term3;
         }
     private:
         double _nu;
-        double _gamma_nup2;
-        double _HLR;
+        double _gamma_nup1;
+        double _re;
         double _trunc;
     };
 
@@ -487,20 +485,29 @@ namespace galsim {
             throw SBError("Spergel truncation must be larger than sqrt(2)*half_light_radius.");
         }
 
-        // I'm sure I could do something more intelligent here, but this seems to work.
-        double b2 = getHLR();
-        double b1 = b2 * 0.999;
-        SpergelTruncatedHLR func(_nu, _gamma_nup2, re, trunc);
+        // Given re and trunc, find the scale radius, r0, that makes these work.
+        // f(re) = 1 - 2(1+nu)(re/2r0)^(nu+1) K_{nu+1}(re/r0)/Gamma(nu+2)
+        // f(trunc) = 1 - 2(1+nu)(trunc/2r0)^(nu+1) K_{nu+1}(trunc/r0)/Gamma(nu+2)
+        // Solve for the r0 that leads to f(re) = 1/2 f(trunc)
+        // Algebra:
+        // 0 = 2 K_{nu+1}(re/r0) re^(nu+1) - K_{nu+1}(trunc/r0) trunc^(nu+1)
+        //     - Gamma(nu+1) (2 r0)^(nu+1)/2
+
+        // The scale radius given the untruncated HLR is always a lower bound:
+        double b1 = re / getHLR();
+        // I'm not sure what a reasonable upper bound could be, so start at factor of 10 and expand.
+        double b2 = b1 * 10.0;
+        SpergelTruncatedHLR func(_nu, _gamma_nup1, re, trunc);
         Solve<SpergelTruncatedHLR> solver(func,b1,b2);
-        solver.bracketLowerWithLimit(0.0);
+        solver.bracketUpper();
         dbg<<"Initial range is "<<solver.getLowerBound()<<" .. "
             <<solver.getUpperBound()<<std::endl;
         dbg<<"which evaluates to "<<func(solver.getLowerBound())<<" .. "
            <<func(solver.getUpperBound())<<std::endl;
         solver.setMethod(Brent);
-        double r0re = solver.root();
-        dbg<<"Root is "<<r0re<<std::endl;
-        return r0re / re;
+        double r0 = solver.root();
+        dbg<<"Root is "<<r0<<std::endl;
+        return r0;
     }
 
     double SpergelInfo::getXNorm() const
