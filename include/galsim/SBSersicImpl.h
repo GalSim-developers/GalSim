@@ -207,7 +207,6 @@ namespace galsim {
         double _trunc;   ///< The truncation radius (if any)
         bool _truncated; ///< True if this Sersic profile is truncated.
 
-
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
         double _shootnorm; ///< Normalization for photon shooting.
 

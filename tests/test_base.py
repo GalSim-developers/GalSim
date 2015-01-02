@@ -1718,29 +1718,20 @@ def test_spergel():
         # Only nu >= -0.3 give reasonably sized FFTs
         if nu >= -0.3:
             do_kvalue(spergel, "Spergel(nu={:1}) ".format(nu))
+
         # s.b. finite at origin iff nu > 0
+        # Consequently can only test sb sum and photon shooting for nu > 0.
         if nu > 0.0:
             np.testing.assert_almost_equal(
                 myImg.array.sum()*dx**2, myImg.added_flux, 5,
                 err_msg="Spergel profile GSObject::draw returned wrong added_flux")
 
+            # Test photon shooting.
+            # Convolve with a small gaussian to smooth out the central peak.
+            spergel2 = galsim.Convolve(spergel, galsim.Gaussian(sigma=0.3))
+            do_shoot(spergel2,myImg,"Spergel")
+
     # Now repeat everything using a truncation.  (Above had no truncation.)
-
-    # Test Truncated Sersic
-    # savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1_10.fits"))
-    # myImg = galsim.ImageF(savedImg.bounds, scale=dx)
-    # myImg.setCenter(0,0)
-
-    spergel = galsim.Spergel(nu=0.0, flux=1, half_light_radius=1, trunc=10)
-    # spergel.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
-    # np.testing.assert_array_almost_equal(
-    #         myImg.array, savedImg.array, 5,
-    #         err_msg="Using truncated GSObject Sersic disagrees with expected result")
-
-    # # Test photon shooting.
-    # # Convolve with a small gaussian to smooth out the central peak.
-    # sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
-    # do_shoot(sersic2,myImg,"Truncated Sersic")
 
     # Test kvalues
     do_kvalue(spergel, "Truncated Spergel")
@@ -2116,14 +2107,14 @@ def test_spergel_05():
 
     # Test truncated exponential
     spergel = galsim.Spergel(nu=0.5, flux=test_flux, half_light_radius=1.8, trunc=4.0)
-    spergelImg = spergel.drawImage(nx=32, ny=32, scale=0.2)
+    spergelImg = spergel.drawImage(nx=32, ny=32, scale=0.2, method='sb')
     sersic = galsim.Sersic(n=1.0, flux=test_flux, half_light_radius=1.8, trunc=4.0)
-    sersicImg = sersic.drawImage(nx=32, ny=32, scale=0.2)
+    sersicImg = sersic.drawImage(nx=32, ny=32, scale=0.2, method='sb')
     np.testing.assert_array_almost_equal(
             spergelImg.array, sersicImg.array, 5,
             err_msg="Using truncated Spergel nu=0.5 disagrees with truncated Sersic n=1.0")
 
-
+    do_shoot(spergel, spergelImg, "Truncated Spergel")
 
 
 if __name__ == "__main__":

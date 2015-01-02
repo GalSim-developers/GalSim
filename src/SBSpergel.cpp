@@ -40,7 +40,7 @@
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
 //std::ostream* dbgout = &std::cout;
-//int verbose_level = 1;
+//int verbose_level = 3;
 #endif
 
 namespace galsim {
@@ -141,7 +141,8 @@ namespace galsim {
 
         _r0_sq = _r0 * _r0;
         _inv_r0 = 1. / _r0;
-        _xnorm = _flux / _r0_sq * _info->getXNorm();
+        _shootnorm = _flux * _info->getXNorm();
+        _xnorm = _shootnorm / _r0_sq;
 
         dbg<<"scale radius = "<<_r0<<std::endl;
         dbg<<"HLR = "<<_re<<std::endl;
@@ -333,6 +334,7 @@ namespace galsim {
         _nu(nu), _trunc(trunc), _gsparams(gsparams),
         _gamma_nup1(boost::math::tgamma(_nu+1.0)),
         _gamma_nup2(_gamma_nup1 * (_nu+1)),
+        _xnorm0(_gamma_nup1 / (2. * _nu) * std::pow(2., _nu)),
         _truncated(_trunc > 0.),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.),
         _ft(Table<double,double>::spline)
@@ -516,7 +518,7 @@ namespace galsim {
     {
         if (_truncated && r > _trunc) return 0.;
         else if (r == 0.) {
-            if (_nu > 0) return _gamma_nup1 / (2. * _nu) * std::pow(2., _nu);
+            if (_nu > 0) return _xnorm0;
             else return INFINITY;
         } else
             return boost::math::cyl_bessel_k(_nu, r) * std::pow(r, _nu);
@@ -627,12 +629,17 @@ namespace galsim {
     class SpergelRadialFunction: public FluxDensity
     {
     public:
-        SpergelRadialFunction(double nu): _nu(nu) {}
+        SpergelRadialFunction(double nu, double xnorm0): _nu(nu), _xnorm0(xnorm0) {}
         double operator()(double r) const {
-            return std::exp(-std::pow(r,_nu)) * boost::math::cyl_bessel_k(_nu, r);
+            if (r == 0.) {
+                if (_nu > 0) return _xnorm0;
+                else return INFINITY;
+            } else
+                return boost::math::cyl_bessel_k(_nu, r) * std::pow(r,_nu);
         }
     private:
         double _nu;
+        double _xnorm0;
     };
 
     boost::shared_ptr<PhotonArray> SpergelInfo::shoot(int N, UniformDeviate ud) const
@@ -642,10 +649,10 @@ namespace galsim {
 
         if (!_sampler) {
             // Set up the classes for photon shooting
-            _radial.reset(new SpergelRadialFunction(_nu));
+            _radial.reset(new SpergelRadialFunction(_nu, _xnorm0));
             std::vector<double> range(2,0.);
-            //double shoot_maxr = calculateMissingFluxRadius(_gsparams->shoot_accuracy);
-            double shoot_maxr = 1.0;
+            double shoot_maxr = calculateFluxRadius(1. - _gsparams->shoot_accuracy);
+            if (_truncated && _trunc < shoot_maxr) shoot_maxr = _trunc;
             range[1] = shoot_maxr;
             _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, _gsparams));
         }

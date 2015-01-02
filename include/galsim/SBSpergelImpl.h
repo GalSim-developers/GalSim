@@ -90,12 +90,13 @@ namespace galsim {
 
         // Input variables:
         double _nu;       ///< Spergel index.
-        double _trunc;    ///< Truncation radius.
+        double _trunc;   ///< Truncation radius `trunc` in units of r0.
         const GSParamsPtr _gsparams; ///< The GSParams object.
 
         // Some derived values calculated in the constructor:
         double _gamma_nup1; ///< Gamma(nu+1)
         double _gamma_nup2; ///< Gamma(nu+2)
+        double _xnorm0   ;  ///< Normalization at r=0 for nu>0
         bool _truncated;  ///< True if this Spergel profile is truncated.
 
         // Parameters calculated when they are first needed, and then stored:
@@ -166,7 +167,7 @@ namespace galsim {
         Position<double> centroid() const
         { return Position<double>(0., 0.); }
 
-        /// @brief Returns the flux
+        /// @brief Returns the true flux (may be different from the specified flux)
         double getFlux() const { return _flux; }
 
         /// @brief Spergel photon shooting done by rescaling photons from appropriate `SpergelInfo`
@@ -174,7 +175,7 @@ namespace galsim {
 
         /// @brief Returns the Spergel index nu
         double getNu() const { return _nu; }
-        /// @brief Returns the half-light radius
+        /// @brief Returns the true half-light radius (may be different from the specified value)
         double getHalfLightRadius() const { return _re; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
@@ -192,12 +193,13 @@ namespace galsim {
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
+
     private:
         double _nu;      ///< Spergel index
-        double _flux;    ///< Flux
-        double _trunc;   ///< Truncation radius
-        double _r0;      ///< Scale radius
-        double _re;      ///< half-light-radius
+        double _flux;    ///< Actual flux (may differ from that specified at the constructor).
+        double _r0;      ///< Scale radius specified at the constructor.
+        double _re;      ///< Half-light radius specified at the constructor.
+        double _trunc;   ///< The truncation radius (if any)
         bool _truncated; ///< True if this Sersic profile is truncated.
 
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
