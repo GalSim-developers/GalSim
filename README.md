@@ -117,7 +117,7 @@ Getting started
   main repository directory to specify all doxygen settings.  Alternatively,
   you can view the documentation online at
 
-      http://galsim-developers.github.com/GalSim/
+      http://galsim-developers.github.io/GalSim/
 
 
 Reference documentation
