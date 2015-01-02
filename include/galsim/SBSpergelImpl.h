@@ -40,7 +40,7 @@ namespace galsim {
          * @brief Returns the unnormalized real space value of the Spergel function.
          *
          * The input `r` should be (r_actual / r0).
-         * The returned value should then be multiplied by XXX
+         * The returned value should then be multiplied by flux * getXNorm() / r0^2
          */
         double xValue(double r) const;
 
@@ -61,7 +61,12 @@ namespace galsim {
         /// @brief The fractional flux relative to the untruncated profile.
         double getFluxFraction() const;
 
-        /// @brief The fractional flux relative to the untruncated profile.
+        /**
+         * @brief The factor by which to multiply the returned value from xValue.
+         *
+         * Since the returned value needs to be multiplied by flux/r0^2 anyway, we also let
+         * the caller of xValue multiply by the normalization, which we calculate for them here.
+         */
         double getXNorm() const;
 
         /// @brief Calculate scale that has the given HLR and truncation radius in physical units.
@@ -110,9 +115,9 @@ namespace galsim {
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
 
         // Helper functions used internally:
-        double calculateFluxRadius(const double& flux_frac) const;
-        void calculateHLR() const;
         void buildFT() const;
+        void calculateHLR() const;
+        double calculateFluxRadius(const double& flux_frac) const;
     };
 
     class SBSpergel::SBSpergelImpl : public SBProfileImpl
@@ -130,8 +135,31 @@ namespace galsim {
         double maxK() const;
         double stepK() const;
 
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
+        {
+            splits.push_back(0.);
+            if (!_truncated) { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
+            else { xmin = -_trunc; xmax = _trunc; }
+        }
+
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
+        {
+            splits.push_back(0.);
+            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
+            else { ymin = -_trunc; ymax = _trunc; }
+        }
+
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
+        {
+            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
+            else if (std::abs(x) >= _trunc) { ymin = 0; ymax = 0; }
+            else { ymax = sqrt(_trunc_sq - x*x);  ymin = -ymax; }
+
+            if (std::abs(x/_re) < 1.e-2) splits.push_back(0.);
+        }
+
         bool isAxisymmetric() const { return true; }
-        bool hasHardEdges() const { return false; }
+        bool hasHardEdges() const { return _truncated; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
@@ -169,15 +197,15 @@ namespace galsim {
         double _flux;    ///< Flux
         double _trunc;   ///< Truncation radius
         double _r0;      ///< Scale radius
+        double _re;      ///< half-light-radius
         bool _truncated; ///< True if this Sersic profile is truncated.
 
+        double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
         double _shootnorm; ///< Normalization for photon shooting.
 
-        double _gamma_nup1; ///< Gamma(nu + 1)
-        double _re;         ///< half-light-radius
         double _r0_sq;
         double _inv_r0;
-        double _xnorm;
+        double _trunc_sq;
 
         boost::shared_ptr<SpergelInfo> _info; ///< Points to info structure for this nu
 

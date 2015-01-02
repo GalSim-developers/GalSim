@@ -78,8 +78,7 @@ namespace galsim {
                                             double flux, double trunc, bool flux_untruncated,
                                             const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _nu(nu), _flux(flux), _trunc(trunc),
-        _gamma_nup1(boost::math::tgamma(_nu+1.0)),
+        _nu(nu), _flux(flux), _trunc(trunc), _trunc_sq(trunc*trunc),
         // Start with untruncated SpergelInfo regardless of value of trunc
         _info(cache.get(boost::make_tuple(_nu, 0., this->gsparams.duplicate())))
     {

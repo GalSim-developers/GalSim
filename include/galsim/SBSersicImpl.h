@@ -209,7 +209,6 @@ namespace galsim {
 
 
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
-        double _knorm;     ///< Normalization of kValue relative to what SersicInfo returns.
         double _shootnorm; ///< Normalization for photon shooting.
 
         double _r0_sq;
