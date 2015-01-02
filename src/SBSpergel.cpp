@@ -334,7 +334,7 @@ namespace galsim {
         _nu(nu), _trunc(trunc), _gsparams(gsparams),
         _gamma_nup1(boost::math::tgamma(_nu+1.0)),
         _gamma_nup2(_gamma_nup1 * (_nu+1)),
-        _xnorm0(_gamma_nup1 / (2. * _nu) * std::pow(2., _nu)),
+        _xnorm0((_nu > 0.) ? _gamma_nup1 / (2. * _nu) * std::pow(2., _nu) : INFINITY),
         _truncated(_trunc > 0.),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.),
         _ft(Table<double,double>::spline)
@@ -517,11 +517,8 @@ namespace galsim {
     double SpergelInfo::xValue(double r) const
     {
         if (_truncated && r > _trunc) return 0.;
-        else if (r == 0.) {
-            if (_nu > 0) return _xnorm0;
-            else return INFINITY;
-        } else
-            return boost::math::cyl_bessel_k(_nu, r) * std::pow(r, _nu);
+        else if (r == 0.) return _xnorm0;
+        else return boost::math::cyl_bessel_k(_nu, r) * std::pow(r, _nu);
     }
 
     double SpergelInfo::kValue(double ksq) const
@@ -631,11 +628,8 @@ namespace galsim {
     public:
         SpergelRadialFunction(double nu, double xnorm0): _nu(nu), _xnorm0(xnorm0) {}
         double operator()(double r) const {
-            if (r == 0.) {
-                if (_nu > 0) return _xnorm0;
-                else return INFINITY;
-            } else
-                return boost::math::cyl_bessel_k(_nu, r) * std::pow(r,_nu);
+            if (r == 0.) return _xnorm0;
+            else return boost::math::cyl_bessel_k(_nu, r) * std::pow(r,_nu);
         }
     private:
         double _nu;
