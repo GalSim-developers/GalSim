@@ -40,7 +40,7 @@ test_scale = [1.8, 0.05, 0.002, 0.002]
 test_sersic_trunc = [0., 8.5]
 test_flux = 1.8
 
-test_spergel_nu = [-0.9, -0.5, 0.0, 0.85]
+test_spergel_nu = [-0.85, -0.5, 0.0, 0.85]
 test_spergel_scale = [20.0, 1.0, 1.0, 0.5]
 test_spergel_trunc = [80, 20, 5, 5]
 
@@ -1837,8 +1837,8 @@ def test_spergel_radii():
             print 'scale = ',test_gal.getScaleRadius()
             got_hlr = test_gal.getHalfLightRadius()
             got_flux = test_gal.getFlux()
-            # nu = 0.9 is too difficult to numerically integrate
-            if nu > -0.9:
+            # nu = 0.85 is too difficult to numerically integrate
+            if nu > -0.85:
                 hlr_sum = radial_integrate(test_gal, 0., got_hlr)
                 print 'hlr_sum = ',hlr_sum
                 np.testing.assert_almost_equal(
@@ -1896,7 +1896,7 @@ def test_spergel_radii():
         for test_gal, label in zip(gal_list, gal_labels):
             got_hlr = test_gal.getHalfLightRadius()
             got_flux = test_gal.getFlux()
-            if nu > -0.9:
+            if nu > -0.85:
                 hlr_sum = radial_integrate(test_gal, 0., got_hlr)
                 print 'hlr_sum = ',hlr_sum
                 np.testing.assert_almost_equal(

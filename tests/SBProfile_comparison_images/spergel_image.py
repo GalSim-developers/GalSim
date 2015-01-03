@@ -25,7 +25,7 @@ hlr = 1.0
 
 hdulist = fits.HDUList()
 
-for nu in [-0.9, -0.5, 0.0, 0.85]:
+for nu in [-0.85, -0.5, 0.0, 0.85]:
     img = radial_profile(nu, hlr)(np.sqrt(xs**2 + ys**2))
     # deal with the center:
     if nu > 0:
