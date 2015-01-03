@@ -29,10 +29,12 @@ namespace galsim {
 
     namespace sbp {
 
-        // Constrain range of allowed Spergel index nu
-        // These ranges taken from Table 1 of Spergel (2010), but could be extended with further
-        // testing.
-        const double minimum_spergel_nu = -0.9;
+        // Constrain range of allowed Spergel index nu.  Spergel (2010) Table 1 lists values of nu
+        // from -0.9 to +0.85. I've found that nu = -0.9 is too tricky for the GKP integrator to
+        // handle, however, so I'm setting the lower range to -0.85 instead.  I haven't run into any
+        // problems with the upper limit though, which could probably be extended.
+
+        const double minimum_spergel_nu = -0.85;
         const double maximum_spergel_nu = 0.85;
 
         // How many Spergel profiles to save in the cache

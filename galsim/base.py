@@ -2197,7 +2197,7 @@ class Spergel(GSObject):
     Initialization
     --------------
 
-    The allowed range of values for the `nu` parameter is -0.90 <= n <= 0.85.  An exception will be
+    The allowed range of values for the `nu` parameter is -0.85 <= nu <= 0.85.  An exception will be
     thrown if you provide a value outside that range.  These values are chosen to match the values
     investigated by the above paper.  At and below nu=0.0, the surface brightness profile diverges
     at the origin, which currently affects our ability to perform photon-shooting or `real_space`

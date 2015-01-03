@@ -40,7 +40,7 @@
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
 //std::ostream* dbgout = &std::cout;
-//int verbose_level = 3;
+//int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -373,12 +373,14 @@ namespace galsim {
         // Calcute r such that L(r/r0) / L_tot == flux_frac
 
         // These seem to bracket pretty much every reasonable possibility
-        // that I checked in Mathematica.
-        double z1=0.001;
-        double z2=25.0;
+        // that I checked in Mathematica, though I'm not very happy about
+        // the lower bound....
+        double z1=1.e-16;
+        double z2=20.0;
         SpergelIntegratedFlux func(_nu, _gamma_nup2, flux_frac);
         Solve<SpergelIntegratedFlux> solver(func, z1, z2);
         solver.setMethod(Brent);
+        solver.bracketLowerWithLimit(0.0); // Just in case...
         double R = solver.root();
         dbg<<"flux_frac = "<<flux_frac<<std::endl;
         dbg<<"r/r0 = "<<R<<std::endl;
@@ -623,10 +625,11 @@ namespace galsim {
         _fta1 = _ft(_a1);
     }
 
-    class SpergelRadialFunction: public FluxDensity
+    class SpergelNuPositiveRadialFunction: public FluxDensity
     {
     public:
-        SpergelRadialFunction(double nu, double xnorm0): _nu(nu), _xnorm0(xnorm0) {}
+        SpergelNuPositiveRadialFunction(double nu, double xnorm0):
+            _nu(nu), _xnorm0(xnorm0) {}
         double operator()(double r) const {
             if (r == 0.) return _xnorm0;
             else return boost::math::cyl_bessel_k(_nu, r) * std::pow(r,_nu);
@@ -636,6 +639,23 @@ namespace galsim {
         double _xnorm0;
     };
 
+    class SpergelNuNegativeRadialFunction: public FluxDensity
+    {
+    public:
+        SpergelNuNegativeRadialFunction(double nu, double rmin, double a, double b):
+            _nu(nu), _rmin(rmin), _a(a), _b(b) {}
+        double operator()(double r) const {
+            if (r <= _rmin) {
+                return _a + _b*r;
+            } else return boost::math::cyl_bessel_k(_nu, r) * std::pow(r,_nu);
+        }
+    private:
+        double _nu;
+        double _rmin;
+        double _a;
+        double _b;
+    };
+
     boost::shared_ptr<PhotonArray> SpergelInfo::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"SpergelInfo shoot: N = "<<N<<std::endl;
@@ -643,12 +663,38 @@ namespace galsim {
 
         if (!_sampler) {
             // Set up the classes for photon shooting
-            _radial.reset(new SpergelRadialFunction(_nu, _xnorm0));
-            std::vector<double> range(2,0.);
-            double shoot_maxr = calculateFluxRadius(1. - _gsparams->shoot_accuracy);
-            if (_truncated && _trunc < shoot_maxr) shoot_maxr = _trunc;
-            range[1] = shoot_maxr;
-            _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, _gsparams));
+            double shoot_rmax = calculateFluxRadius(1. - _gsparams->shoot_accuracy);
+            if (_truncated && _trunc < shoot_rmax) shoot_rmax = _trunc;
+            if (_nu > 0.) {
+                std::vector<double> range(2,0.);
+                range[1] = shoot_rmax;
+                _radial.reset(new SpergelNuPositiveRadialFunction(_nu, _xnorm0));
+                _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, _gsparams));
+            } else {
+                // exact s.b. profile diverges at origin, so replace the inner most circle
+                // (defined such that enclosed flux is shoot_acccuracy*_flux) with a linear function
+                // that contains the same flux and has the right value at r = rmin.
+                // So need to solve the following for a and b:
+                // int_0^rmin 2 pi r (a + b r) 0..rmin = shoot_accuracy
+                // a + b rmin = K_nu(rmin) * rmin^nu
+                double flux_target = _gsparams->shoot_accuracy*_flux;
+                double shoot_rmin = calculateFluxRadius(flux_target);
+                double knur = boost::math::cyl_bessel_k(_nu, shoot_rmin)*std::pow(shoot_rmin, _nu);
+                double b = 3./shoot_rmin*(knur - flux_target/(M_PI*shoot_rmin*shoot_rmin));
+                double a = knur - shoot_rmin*b;
+                dbg<<"flux target: "<<flux_target<<std::endl;
+                dbg<<"shoot rmin: "<<shoot_rmin<<std::endl;
+                dbg<<"shoot rmax: "<<shoot_rmax<<std::endl;
+                dbg<<"knur: "<<knur<<std::endl;
+                dbg<<"b: "<<b<<std::endl;
+                dbg<<"a: "<<a<<std::endl;
+                dbg<<"a+b*rmin:"<<a+b*shoot_rmin<<std::endl;
+                std::vector<double> range(3,0.);
+                range[1] = shoot_rmin;
+                range[2] = shoot_rmax;
+                _radial.reset(new SpergelNuNegativeRadialFunction(_nu, shoot_rmin, a, b));
+                _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, _gsparams));
+            }
         }
 
         assert(_sampler.get());
