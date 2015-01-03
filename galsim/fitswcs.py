@@ -397,8 +397,14 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
                 from galsim import pyfits
                 hdu = pyfits.PrimaryHDU()
                 galsim.fits.FitsHeader(hdu_list=hdu).update(header)
-            fc = starlink.Ast.FitsChan( starlink.Atl.PyFITSAdapter(hdu) )
-            wcsinfo = fc.read()
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                # They aren't so good at keeping up with the latest pyfits and numpy syntax, so
+                # this next line can emit deprecation warnings.
+                # We can safely ignore them (for now...)
+                fc = starlink.Ast.FitsChan(starlink.Atl.PyFITSAdapter(hdu))
+                wcsinfo = fc.read()
             if wcsinfo is None:
                 raise RuntimeError("Failed to read WCS information from fits file")
 
@@ -485,19 +491,23 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         import starlink.Atl
 
         hdu = pyfits.PrimaryHDU()
-        fc = starlink.Ast.FitsChan( None, starlink.Atl.PyFITSAdapter(hdu) , "Encoding=FITS-WCS")
-        success = fc.write(self._wcsinfo)
-        # PyAst doesn't write out TPV or ZPX correctly.  It writes them as TAN and ZPN 
-        # respectively.  However, it claims success nonetheless, so we need to countermand that.  
-        # The easiest way I found to check for them is that the string TPN is in the string 
-        # version of wcsinfo.  So check for that and set success = False in that case.
-        if 'TPN' in str(self._wcsinfo): success = False
-        if not success:
-            # This should always work, since it uses starlinks own proprietary encoding, but 
-            # it won't necessarily be readable by ds9.
-            fc = starlink.Ast.FitsChan( None, starlink.Atl.PyFITSAdapter(hdu))
-            fc.write(self._wcsinfo)
-        fc.writefits()
+        import warnings
+        with warnings.catch_warnings():
+            # Again, we can get deprecation warnings here.  Safe to ignore.
+            warnings.simplefilter("ignore")
+            fc = starlink.Ast.FitsChan(None, starlink.Atl.PyFITSAdapter(hdu) , "Encoding=FITS-WCS")
+            success = fc.write(self._wcsinfo)
+            # PyAst doesn't write out TPV or ZPX correctly.  It writes them as TAN and ZPN 
+            # respectively.  However, it claims success nonetheless, so we need to countermand that.
+            # The easiest way I found to check for them is that the string TPN is in the string 
+            # version of wcsinfo.  So check for that and set success = False in that case.
+            if 'TPN' in str(self._wcsinfo): success = False
+            if not success:
+                # This should always work, since it uses starlinks own proprietary encoding, but 
+                # it won't necessarily be readable by ds9.
+                fc = starlink.Ast.FitsChan(None, starlink.Atl.PyFITSAdapter(hdu))
+                fc.write(self._wcsinfo)
+            fc.writefits()
         header.update(hdu.header)
 
         # And write the name as a special GalSim key
@@ -586,16 +596,11 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
     def origin(self): return self._origin
 
     def _radec(self, x, y):
-        #print 'start wcstools _radec'
-        #print 'x = ',x
-        #print 'y = ',y
-
         import numpy
         # Need this to look like 
         #    [ x1, y1, x2, y2, ... ] 
         # if input is either scalar x,y or two arrays.
         xy = numpy.array([x, y]).transpose().flatten()
-        #print 'xy = ',xy
         
         # The OS cannot handle arbitrarily long command lines, so we may need to split up
         # the list into smaller chunks.
@@ -605,37 +610,30 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
         else:
             # A conservative guess. My machines have 131072, 262144, and 2621440
             arg_max = 32768  
-        #print 'arg_max = ',arg_max
 
         # Sometimes SC_ARG_MAX is listed as -1.  Apparently that means "the configuration name
         # is known, but the value is not defined." So, just go with the above conservative value.
         if arg_max <= 0:
             arg_max = 32768
-            #print 'arg_max => ',arg_max
 
         # Just in case something weird happened.  This should be _very_ conservative.
         # It's the smallest value in this list of values for a bunch of systems:
         # http://www.in-ulm.de/~mascheck/various/argmax/
         if arg_max < 4096:
             arg_max = 4096
-            #print 'arg_max => ',arg_max
 
         # This corresponds to the total number of characters in the line.  
         # But we really need to know how many arguments we are allowed to use in each call.
         # Lets be conservative again and assume each argument is at most 20 characters.
         # (We ignore the few characters at the start for the command name and such.)
         nargs = int(arg_max / 40) * 2  # Make sure it is even!
-        #print 'nargs = ',nargs
 
         xy_strs = [ str(z) for z in xy ]
-        #print 'xy_strs = ',xy_strs
         ra = []
         dec = []
 
         for i in range(0,len(xy_strs),nargs):
-            #print 'i = ',i
             xy1 = xy_strs[i:i+nargs]
-            #print 'xy1 = ',xy1
             import subprocess
             # We'd like to get the output to 10 digits of accuracy.  This corresponds to
             # an accuracy of about 1.e-6 arcsec.  But sometimes xy2sky cannot handle it,
@@ -646,7 +644,6 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
                 p = subprocess.Popen(['xy2sky', '-d', '-n', str(digits), self._file_name] + xy1,
                                     stdout=subprocess.PIPE)
                 results = p.communicate()[0]
-                #print 'results for digits = ',digits,' = ',results
                 p.stdout.close()
                 if len(results) == 0:
                     raise IOError('wcstools command xy2sky was unable to read '+ self._file_name)
@@ -654,7 +651,6 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             if results[0] == '*':
                 raise IOError('wcstools command xy2sky was unable to read '+self._file_name)
             lines = results.splitlines()
-            #print 'lines = ',lines
 
             # Each line of output should looke like:
             #    x y J2000 ra dec
@@ -662,13 +658,10 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             #    Off map x y
             for line in lines:
                 vals = line.split()
-                #print 'vals = ',vals
                 if len(vals) != 5:
                     raise RuntimeError('wcstools xy2sky returned invalid result near %f,%f'%(x0,y0))
                 ra.append(float(vals[0]))
                 dec.append(float(vals[1]))
-            #print 'ra => ',ra
-            #print 'dec => ',dec
 
         # wcstools reports ra, dec in degrees, so convert to radians
         factor = galsim.degrees / galsim.radians
@@ -1500,6 +1493,9 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     for wcs_type in fits_wcs_types:
         try:
             wcs = wcs_type._readHeader(header)
+            # Give it a better tag for the repr if appropriate.
+            if hasattr(wcs,'_tag'):
+                wcs._tag = file_name
             return wcs
         except Exception as err:
             #print 'caught ',err
