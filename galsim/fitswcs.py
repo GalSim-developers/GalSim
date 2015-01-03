@@ -1500,6 +1500,9 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     for wcs_type in fits_wcs_types:
         try:
             wcs = wcs_type._readHeader(header)
+            # Give it a better tag for the repr if appropriate.
+            if hasattr(wcs,'_tag'):
+                wcs._tag = file_name
             return wcs
         except Exception as err:
             #print 'caught ',err
