@@ -29,7 +29,9 @@ import os
 pixel_size_mm = 0.01
 focal_length = 18500.
 n_pix_tot = 4096 # Each SCA has n_pix_tot x n_pix_tot pixels.
-n_pix = 4088 # (but only a subset of those pixels are actively used)
+n_pix = 4088 # (but only a subset of those pixels are actively used - the 4 outer rows, columns are
+# attached internally to capacitors rather than to detector pixels, and are used to monitor bias
+# voltage drifts)
 n_sip = 5 # Number of SIP coefficients used, where arrays are n_sip x n_sip in dimension
 
 # Version-related information, for reference back to material provided by Jeff Kruk.
