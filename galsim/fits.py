@@ -1071,7 +1071,8 @@ class FitsHeader(object):
             raise TypeError("Cannot provide both hdu_list and header to FitsHeader")
         if file_name and hdu_list:
             raise TypeError("Cannot provide both file_name and hdu_list to FitsHeader")
-        if not (header or file_name or hdu_list):
+        # The line below allows 'header' to be set to {} (an empty dict).
+        if not (file_name or hdu_list) and (header is None):
             raise TypeError("Must provide one of header, file_name or hdu_list to FitsHeader")
 
         # Interpret a string header as though it were passed as file_name.
