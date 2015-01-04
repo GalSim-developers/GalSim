@@ -120,6 +120,11 @@ This module also contains the following routines:
                      make objects corresponding to each of them for later use.  This routine has
                      less overhead than getPSF() but also is less flexible.
 
+    getWCS() - A routine to get the WCS for each SCA in the focal plane, for a given target RA, dec,
+               and orientation angle.  Use of this routine requires that GalSim be able to access
+               some software that can handle TAN-SIP style WCS (either Astropy, starlink.Ast,
+               WCSTools).
+
 All of the above routines have docstrings that can be accessed using
 help(galsim.wfirst.getBandpasses), and so on.
 """
@@ -155,6 +160,7 @@ n_sca = 18
 from wfirst_bandpass import getBandpasses
 from wfirst_backgrounds import getSkyLevel
 from wfirst_psfs import getPSF, tabulatePSFImages, getStoredPSF
+from wfirst_wcs import getWCS
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)
