@@ -28,10 +28,6 @@ import os
 # Basic WFIRST reference info, with lengths in mm.
 pixel_size_mm = 0.01
 focal_length = 18500.
-n_pix_tot = 4096 # Each SCA has n_pix_tot x n_pix_tot pixels.
-n_pix = 4088 # (but only a subset of those pixels are actively used - the 4 outer rows, columns are
-# attached internally to capacitors rather than to detector pixels, and are used to monitor bias
-# voltage drifts)
 n_sip = 5 # Number of SIP coefficients used, where arrays are n_sip x n_sip in dimension
 
 # Version-related information, for reference back to material provided by Jeff Kruk.
@@ -288,20 +284,20 @@ def _calculate_minmax_pix(include_border=False):
     # First, set up the default (no border).
     # The minimum and maximum pixel values are (1, n_pix).
     min_x_pix = np.ones(galsim.wfirst.n_sca+1)
-    max_x_pix = min_x_pix + n_pix - 1.0
+    max_x_pix = min_x_pix + galsim.wfirst.n_pix - 1.0
     min_y_pix = min_x_pix.copy()
     max_y_pix = max_x_pix.copy()
 
     # Then, calculate the half-gaps, grouping together SCAs whenever possible.
     if include_border:
         # Negative side of 1/2/3, same as positive side of 10/11/12
-        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[10])-n_pix_tot*pixel_size_mm
+        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[10])-galsim.wfirst.n_pix_tot*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         min_x_pix[1:4] -= half_border_pix
         max_x_pix[10:13] += half_border_pix
 
         # Positive side of 1/2/3 and 13/14/15, same as negative side of 10/11/12, 4/5/6
-        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[4])-n_pix_tot*pixel_size_mm
+        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[4])-galsim.wfirst.n_pix_tot*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         max_x_pix[1:4] += half_border_pix
         max_x_pix[13:16] += half_border_pix
@@ -310,7 +306,7 @@ def _calculate_minmax_pix(include_border=False):
 
         # Positive side of 4/5/6, 16/17/18, 7/8/9, same as negative side of 13/14/15, 7/8/9,
         # 16/17/18
-        border_mm = abs(sca_xc_mm[7]-sca_xc_mm[4])-n_pix_tot*pixel_size_mm
+        border_mm = abs(sca_xc_mm[7]-sca_xc_mm[4])-galsim.wfirst.n_pix_tot*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         max_x_pix[4:10] += half_border_pix
         max_x_pix[16:19] += half_border_pix
@@ -318,7 +314,7 @@ def _calculate_minmax_pix(include_border=False):
         min_x_pix[13:19] -= half_border_pix
 
         # Top of 2/5/8/11/14/17, same as bottom of 1/4/7/10/13/16 and 2/5/8/11/14/17
-        border_mm = abs(sca_yc_mm[1]-sca_yc_mm[2])-n_pix_tot*pixel_size_mm
+        border_mm = abs(sca_yc_mm[1]-sca_yc_mm[2])-galsim.wfirst.n_pix_tot*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         list_1 = np.linspace(1,16,6).astype(int)
         list_2 = list_1 + 1
@@ -328,7 +324,7 @@ def _calculate_minmax_pix(include_border=False):
         max_y_pix[list_2] += half_border_pix
 
         # Top of 1/4/7/10/13/16, same as bottom of 3/6/9/12/15/18 and top of same
-        border_mm = abs(sca_yc_mm[1]-sca_yc_mm[3])-n_pix_tot*pixel_size_mm
+        border_mm = abs(sca_yc_mm[1]-sca_yc_mm[3])-galsim.wfirst.n_pix_tot*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         min_y_pix[list_3] -= half_border_pix
         max_y_pix[list_1] += half_border_pix
@@ -363,8 +359,8 @@ def _populate_required_fields(header):
     header['A_ORDER'] = 4
     header['B_ORDER'] = 4
     header['WCSNAME'] = 'wfiwcs_'+optics_design_ver+'_'+prog_version
-    header['CRPIX1'] = (n_pix/2, "x-coordinate of reference pixel")
-    header['CRPIX2'] = (n_pix/2, "y-coordinate of reference pixel")
+    header['CRPIX1'] = (galsim.wfirst.n_pix/2, "x-coordinate of reference pixel")
+    header['CRPIX2'] = (galsim.wfirst.n_pix/2, "y-coordinate of reference pixel")
     header['CTYPE1'] = ("RA---TAN-SIP", "coordinate type for the first axis")
     header['CTYPE2'] = ("DEC--TAN-SIP", "coordinate type for the second axis")
     header['SIMPLE'] = 'True'

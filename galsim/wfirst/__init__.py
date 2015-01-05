@@ -15,11 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-
-import os
-import galsim
-import numpy
-
 """
 The galsim.wfirst module, containing information GalSim needs to simulate images for the WFIRST-AFTA
 project.
@@ -87,6 +82,12 @@ following numbers:
 
     n_sca - The number of SCAs in the focal plane.
 
+    n_pix_tot - Each SCA has n_pix_tot x n_pix_tot pixels.
+
+    n_pix - The number of pixels that are actively used.  The 4 outer rows and columns will be
+            attached internally to capacitors rather than to detector pixels, and used to monitor
+            bias voltage drifts).  Thus, images seen by users will be n_pix x n_pix.
+
 For example, to get the gain value, use galsim.wfirst.gain.  Some of the numbers related to the
 nature of the detectors are subject to change as further lab tests are done.
 
@@ -133,6 +134,9 @@ This module also contains the following routines:
 All of the above routines have docstrings that can be accessed using
 help(galsim.wfirst.getBandpasses), and so on.
 """
+import os
+import galsim
+import numpy
 
 gain = 1.0
 pixel_scale = 0.11
@@ -161,6 +165,8 @@ ipc_kernel = numpy.array([ [0.001269938, 0.015399776, 0.001199862], \
 ipc_kernel /= numpy.sum(ipc_kernel)
 ipc_kernel = galsim.Image(ipc_kernel)
 n_sca = 18
+n_pix_tot = 4096 
+n_pix = 4088
 
 from wfirst_bandpass import getBandpasses
 from wfirst_backgrounds import getSkyLevel
