@@ -1,8 +1,20 @@
 # vim: set filetype=python :
 
-import os
-import sys
+import os, sys
 import glob
+
+# Note that SCons automatically adds the root directory to sys.path,
+# so python is able to find galsim._version without any additional mucking around.
+try:
+    from galsim._version import __version__ as version
+    from galsim._version import __version_info__ as version_info
+except:
+    # If SCons is using an old python (2.4 is relatively common still), then the above may fail.
+    # In this case, we need to be a little trickier.
+    execfile(os.path.join('..','galsim','_version.py'))
+    version = __version__
+    version_info = __version_info__
+
 
 Import('env')
 ReadFileList = env['_ReadFileList']
@@ -41,26 +53,15 @@ if env1['MEM_TEST']:
 # Library file containing generic code
 obj_lib = env1.SharedObject(lib_files)
 
-def get_version():
-    version = '0.0' # Just in case we fall through, it won't completely fail.
-    f = open(os.path.join('..','galsim','__init__.py'))
-    for line in f:
-        if line.startswith('version = '):
-            # Line with version number looks like:
-            # version = '1.0.0'
-            version = line.split()[2]
-            # Remove quotes:
-            version = version[1:-1]
-            # Stop when we found the right line.
-            break
-    f.close()
-    print 'GalSim version ',version
-    lvers = version.split('.')
-    while len(lvers) < 3: lvers.append('0')
-    return tuple(lvers)
+print 'GalSim version ',version
 
-version = get_version()
-compat_version = version[:2]
+# Make sure the version tuple has 3 elements.
+if len(version_info) == 2:
+    version_info += (0,)
+else:
+    assert len(version_info) == 3
+
+compat_version = version_info[:2]
 
 lib_final_dir = os.path.join(env['FINAL_PREFIX'],'lib')
 
@@ -76,7 +77,7 @@ if sys.platform == 'darwin':
         '-dynamic',
         '-Wl,-install_name,%s'%lib_final_name,
         '-Wl,-compatibility_version,%s.%s'%compat_version,
-        '-Wl,-current_version,%s.%s.%s'%version ] )
+        '-Wl,-current_version,%s.%s.%s'%version_info ] )
     env1.Replace(SHLIBSUFFIX = '.%s.%s.dylib'%compat_version)
 
 elif sys.platform.startswith('linux'):  # Should work for both linux2 and linux3

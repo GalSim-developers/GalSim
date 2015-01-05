@@ -191,9 +191,10 @@ class Image(object):
         float : numpy.float64,      # if using dtype=int or float
     }
     # Note: Numpy uses int64 for int on 64 bit machines.  We don't implement int64 at all,
-    # so we cannot follow this pattern.  If this becomes too confusing, we might need to
-    # add an ImageL class that uses int64.  Hard to imagine a use case where this would
-    # be required though...
+    # so we cannot quite match up to the numpy convention for dtype=int.  e.g. via
+    #     int : numpy.zeros(1,dtype=int).dtype.type
+    # If this becomes too confusing, we might need to add an ImageL class that uses int64.
+    # Hard to imagine a use case where this would be required though...
     valid_dtypes = cpp_valid_dtypes + alias_dtypes.keys()
 
     def __init__(self, *args, **kwargs):

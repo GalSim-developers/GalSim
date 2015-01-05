@@ -30,10 +30,10 @@ gal :
     # we'll model as delta functions.  We select from this list with index below.
     type : List
     items:
-        - # First the galaxy, a bulge + disc model
+        - # First the galaxy, a bulge + disk model
             type : Sum
             items : 
-                - # The disc component.
+                - # The disk component.
                     type : Exponential
                     ellip :
                         type : EtaBeta
@@ -44,7 +44,7 @@ gal :
                 - # The bulge component.
                     type : Sersic
                     n : 3.4
-                    flux : { type : Random, min : 0, max : 2 } # relative to disc flux
+                    flux : { type : Random, min : 0, max : 2 } # relative to disk flux
                     half_light_radius : { type : Random, min : 0.2, max : 0.6 }
                     shift : { type : RandomCircle, radius : 0.5 } # up to 0.5 arcsec shift.
   
