@@ -1354,7 +1354,6 @@ def test_InterpolatedChromaticObject():
     im_interp = im_exact.copy()
     im_interp = obj_interp.drawImage(bandpass, image=im_interp, scale=scale)
     expected_flux = disk_SED.calculateFlux(bandpass) + bulge_SED.calculateFlux(bandpass)
-    expected_flux *= (1.0 - galsim.GSParams().alias_threshold)
     frac_diff_exact = abs(im_exact.array.sum()/expected_flux-1.0)
     frac_diff_interp = abs(im_interp.array.sum()/expected_flux-1.0)
     np.testing.assert_almost_equal(
