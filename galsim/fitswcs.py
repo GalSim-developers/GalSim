@@ -433,11 +433,21 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         # There was an older proposed standard that used TAN with PV values, which is used by
         # SCamp, so we want to support it if possible.  The standard is now called TPV, which
         # PyAst understands.  All we need to do is change the names of the CTYPE values.
-        if ( 'CTYPE1' in header and header['CTYPE1'].endswith('TAN') and
-             'CTYPE2' in header and header['CTYPE2'].endswith('TAN') and
-             'PV1_10' in header ):
-            header['CTYPE1'] = header['CTYPE1'].replace('TAN','TPV')
-            header['CTYPE2'] = header['CTYPE2'].replace('TAN','TPV')
+        # Note that the CTYPES could be tuples if there are comments associated with these values,
+        # so we have to check for that option and if so, unpack/repack the tuples.
+        print header['CTYPE1']
+        print header['CTYPE2']
+        if ( 'CTYPE1' in header and 'CTYPE2' in header and 'PV1_10' in header ):
+            ctype1 = header['CTYPE1']
+            ctype2 = header['CTYPE2']
+            if isinstance(ctype1, str) and ctype1.endswith('TAN'):
+                header['CTYPE1'] = header['CTYPE1'].replace('TAN','TPV')
+            if isinstance(ctype1, tuple) and ctype1[0].endswith('TAN'):
+                header['CTYPE1'] = (ctype1[0].replace('TAN','TPV'), ctype1[1])
+            if isinstance(ctype2, str) and ctype2.endswith('TAN'):
+                header['CTYPE2'] = header['CTYPE2'].replace('TAN','TPV')
+            if isinstance(ctype2, tuple) and ctype2[0].endswith('TAN'):
+                header['CTYPE2'] = (ctype2[0].replace('TAN','TPV'), ctype2[1])
 
     def _radec(self, x, y):
         import numpy
@@ -1497,7 +1507,10 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     if header is None:
         raise TypeError("Must provide either file_name or header")
 
-    for wcs_type in fits_wcs_types:
+    # Note: refer to the list of WCS types as galsim.wcs.fits_wcs_types, rather than
+    # fits_wcs_types.  In the latter case, the user cannot edit the list of options to try, whereas
+    # the former allows this.
+    for wcs_type in galsim.wcs.fits_wcs_types:
         try:
             wcs = wcs_type._readHeader(header)
             return wcs
