@@ -121,18 +121,7 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
         raise TypeError("Position angle must be a galsim.Angle!")
 
     # Parse input position
-    if pos is not None:
-        if RA is not None or dec is not None:
-            raise ValueError("Can provide either pos or (RA, dec), not both!")
-        ra = pos.ra
-        dec = pos.dec
-    if ra is not None:
-        if dec is None:
-            raise ValueError("Must provide (RA, dec) pair!")
-        if pos is not None:
-            raise ValueError("Can provide either pos or (RA, dec), not both!")
-    if ra is None:
-        raise ValueError("Must provide either pos or (RA, dec)!")
+    use_ra, use_dec = _parse_input_position(ra, dec, pos)
 
     # Compute position angle of FPA f2 axis, where positive corresponds to the angle east of North.
     if PA_is_FPA:
@@ -166,8 +155,8 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
 
         # And populate some things that just depend on the overall locations or other input, not on
         # the SCA.
-        header['RA_TARG'] = (ra / galsim.degrees, "right ascension of the target (deg) (J2000)")
-        header['DEC_TARG'] = (dec / galsim.degrees, "declination of the target (deg) (J2000)")
+        header['RA_TARG'] = (use_ra / galsim.degrees, "right ascension of the target (deg) (J2000)")
+        header['DEC_TARG'] = (use_dec / galsim.degrees, "declination of the target (deg) (J2000)")
         header['PA_OBSY'] = (pa_obsy / galsim.degrees, "position angle of observatory Y axis (deg)")
         header['PA_FPA'] = (pa_fpa / galsim.degrees, "position angle of FPA Y axis (deg)")
 
@@ -195,14 +184,14 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
         sin_delta_phi = np.sin(phi.rad() - phi_p.rad())
         cos_theta = np.cos(theta.rad())
         sin_theta = np.sin(theta.rad())
-        cos_dec = np.cos(dec.rad())
-        sin_dec = np.sin(dec.rad())
+        cos_dec = np.cos(use_dec.rad())
+        sin_dec = np.sin(use_dec.rad())
 
         # Rotate sca_xc_tp[i_sca], sca_yc_tp[i_sca] by pa_fpa
         # Add pos_targ when implemented
         crval1 = np.arctan2(-sin_delta_phi*cos_theta,
                              sin_theta*cos_dec - cos_theta*sin_dec*cos_delta_phi)*galsim.radians
-        crval1 += ra
+        crval1 += use_ra
         header['CRVAL1'] = (crval1 / galsim.degrees, "first axis value at reference pixel")
         crval2 = np.arcsin(sin_theta*sin_dec + cos_theta*cos_dec*cos_delta_phi)*galsim.radians
         header['CRVAL2'] = (crval2 / galsim.degrees, "second axis value at reference pixel")
@@ -237,6 +226,132 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
             wcs_list.append(header)
 
     return wcs_list
+
+def findSCA(wcs_list, ra=None, dec=None, pos=None, include_border=False):
+    """
+    This is a subroutine to take a list of WCS (one per SCA) from galsim.wfirst.getWCS() and query
+    which SCA a particular real-world coordinate would be located on.  If the position is not
+    located on any of the SCAs, the result will be None.
+
+    The position should be specified in a way similar to how it is specified for
+    galsim.wfirst.getWCS().
+
+    Depending on what the use wants to do with the results, they may wish to use the
+    `include_border` keyword.  This keyword determines whether or not to include an additional
+    border corresponding to half of the gaps between SCAs.  For example, if a user is drawing a
+    single image they may wish to only know whether a given position falls onto an SCA, and if so,
+    which one (ignoring everything in the gaps).  In contrast, a user who plans to make a sequence
+    of dithered images might find it most useful to know whether the position is either on an SCA or
+    close enough that in a typical dither sequence it might appear on the SCA at some point.  Use of
+    `include_border` switches between these scenarios.
+
+    @param ra               Right ascension of the sky position of interest, as a galsim.Angle.
+                            Must be provided with `dec`.
+    @param dec              Declination of the sky position of interest, as a galsim.Angle.  Must be
+                            provided with `ra`.
+    @param pos              A galsim.CelestialCoord indicating the sky position of interest, as an
+                            alternative to providing `ra` and `dec`.
+    @param include_border   If True, then include the half-border around SCA to cover the gap
+                            between each sensor. [default: False]
+    @returns an integer value of the SCA on which the position falls, or None if the position is not
+             on any SCA.
+
+    """
+    if len(wcs_list) != galsim.wfirst.n_sca+1:
+        raise ValueError("wcs_list should be a list of length %d output by"
+                         " galsim.wfirst.getWCS!"%(galsim.wfirst.n_sca+1))
+
+    # Parse input position
+    use_ra, use_dec = _parse_input_position(ra, dec, pos)
+
+    # Set up the minimum and maximum pixel values, depending on whether or not to include the
+    # border.
+    min_x_pix, max_x_pix, min_y_pix, max_y_pix = _calculate_minmax_pix(include_border)
+
+    sca = None
+    for i_sca in range(1, galsim.wfirst.n_sca+1):
+        wcs = wcs_list[i_sca]
+        image_pos = wcs.toImage(galsim.CelestialCoord(use_ra, use_dec))
+        if image_pos.x >= min_x_pix[i_sca] and image_pos.x <= max_x_pix[i_sca] and \
+                image_pos.y >= min_y_pix[i_sca] and image_pos.y <= max_y_pix[i_sca]:
+            sca = i_sca
+            break
+
+    return sca
+
+def _calculate_minmax_pix(include_border=False):
+    """
+    This is a helper routine to calculate the minimum and maximum pixel values that should be
+    considered within an SCA, including the complexities of including 1/2 of the gap between SCAs.
+    In that case it depends on the detailed geometry of the WFIRST focal plane.
+    """
+    # First, set up the default (no border).
+    # The minimum and maximum pixel values are (1, n_pix).
+    min_x_pix = np.ones(galsim.wfirst.n_sca+1)
+    max_x_pix = min_x_pix + n_pix - 1.0
+    min_y_pix = min_x_pix.copy()
+    max_y_pix = max_x_pix.copy()
+
+    # Then, calculate the half-gaps, grouping together SCAs whenever possible.
+    if include_border:
+        # Negative side of 1/2/3, same as positive side of 10/11/12
+        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[10])-n_pix_tot*pixel_size_mm
+        half_border_pix = int(0.5*border_mm / pixel_size_mm)
+        min_x_pix[1:4] -= half_border_pix
+        max_x_pix[10:13] += half_border_pix
+
+        # Positive side of 1/2/3 and 13/14/15, same as negative side of 10/11/12, 4/5/6
+        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[4])-n_pix_tot*pixel_size_mm
+        half_border_pix = int(0.5*border_mm / pixel_size_mm)
+        max_x_pix[1:4] += half_border_pix
+        max_x_pix[13:16] += half_border_pix
+        min_x_pix[10:13] -= half_border_pix
+        min_x_pix[4:7] -= half_border_pix
+
+        # Positive side of 4/5/6, 16/17/18, 7/8/9, same as negative side of 13/14/15, 7/8/9,
+        # 16/17/18
+        border_mm = abs(sca_xc_mm[7]-sca_xc_mm[4])-n_pix_tot*pixel_size_mm
+        half_border_pix = int(0.5*border_mm / pixel_size_mm)
+        max_x_pix[4:10] += half_border_pix
+        max_x_pix[16:19] += half_border_pix
+        min_x_pix[7:10] -= half_border_pix
+        min_x_pix[13:19] -= half_border_pix
+
+        # Top of 2/5/8/11/14/17, same as bottom of 1/4/7/10/13/16 and 2/5/8/11/14/17
+        border_mm = abs(sca_yc_mm[1]-sca_yc_mm[2])-n_pix_tot*pixel_size_mm
+        half_border_pix = int(0.5*border_mm / pixel_size_mm)
+        list_1 = np.linspace(1,16,6).astype(int)
+        list_2 = list_1 + 1
+        list_3 = list_1 + 2
+        min_y_pix[list_1] -= half_border_pix
+        min_y_pix[list_2] -= half_border_pix
+        max_y_pix[list_2] += half_border_pix
+
+        # Top of 1/4/7/10/13/16, same as bottom of 3/6/9/12/15/18 and top of same
+        border_mm = abs(sca_yc_mm[1]-sca_yc_mm[3])-n_pix_tot*pixel_size_mm
+        half_border_pix = int(0.5*border_mm / pixel_size_mm)
+        min_y_pix[list_3] -= half_border_pix
+        max_y_pix[list_1] += half_border_pix
+        max_y_pix[list_3] += half_border_pix
+
+    return min_x_pix, max_x_pix, min_y_pix, max_y_pix
+
+def _parse_input_position(ra, dec, pos):
+    if ra is not None:
+        if dec is None:
+            raise ValueError("Must provide (RA, dec) pair!")
+        if not isinstance(ra, galsim.Angle) or not isinstance(dec, galsim.Angle):
+            raise TypeError("(RA, dec) pair must be galsim.Angles")
+        if pos is not None:
+            raise ValueError("Can provide either pos or (RA, dec), not both!")
+    if pos is not None:
+        if ra is not None or dec is not None:
+            raise ValueError("Can provide either pos or (RA, dec), not both!")
+        ra = pos.ra
+        dec = pos.dec
+    if ra is None:
+        raise ValueError("Must provide either pos or (RA, dec)!")
+    return ra, dec
 
 def _populate_required_fields(header):
     """

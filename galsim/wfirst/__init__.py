@@ -125,6 +125,11 @@ This module also contains the following routines:
                some software that can handle TAN-SIP style WCS (either Astropy, starlink.Ast,
                WCSTools).
 
+    findSCA() - A routine that can take the WCS from getWCS() and some sky position, and indicate in
+                which SCA that position can be found, optionally including half of the gaps between
+                SCAs (to identify positions that are in the focal plane array but in the gap between
+                SCAs).
+
 All of the above routines have docstrings that can be accessed using
 help(galsim.wfirst.getBandpasses), and so on.
 """
@@ -160,7 +165,7 @@ n_sca = 18
 from wfirst_bandpass import getBandpasses
 from wfirst_backgrounds import getSkyLevel
 from wfirst_psfs import getPSF, tabulatePSFImages, getStoredPSF
-from wfirst_wcs import getWCS
+from wfirst_wcs import getWCS, findSCA
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)
