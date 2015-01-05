@@ -77,11 +77,16 @@ lost profits, business interruption, or indirect special or consequential
 damages of any kind.
 """
 
-__version__ = '1.2'
+# The version is stored in _version.py as recommended here:
+# http://stackoverflow.com/questions/458550/standard-way-to-embed-version-into-python-package
+# We don't use setup.py, so it's not so important to do it this way, but if we ever switch...  
+# And it does make it a bit easier to get the version number in SCons too.
+from _version import __version__, __version_info__
+
 
 # Define the current code version, in addition to the hidden attribute, to be consistent with
 # previous GalSim versions that indicated the version number in this way.
-version = '1.2'
+version = __version__
 
 # Two options for pyfits module:
 try:
