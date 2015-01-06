@@ -1526,11 +1526,7 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Figure out where the supplied wavelength is compared to the list of wavelengths on which
         # images were originally tabulated.
-        lower_idx = np.searchsorted(self.waves, wave)-1
-        # There can be edge issues, so watch out for that:
-        if lower_idx < 0: lower_idx = 0
-        if lower_idx > len(self.waves)-1: lower_idx = len(self.waves)-1
-        frac = (wave-self.waves[lower_idx]) / (self.waves[lower_idx+1]-self.waves[lower_idx])
+        lower_idx, frac = _findWave(self.waves, wave)
 
         # Actually do the interpolation for the image, stepK, and maxK.
         im = _linearInterp(self.ims, frac, lower_idx)
@@ -1653,9 +1649,25 @@ class ChromaticOpticalPSF(InterpolatedChromaticObject):
             galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
         return ret
 
+def _findWave(wave_list, wave):
+    """
+    Helper routine to search a sorted NumPy array of wavelengths (not necessarily evenly spaced) to
+    find where a particular wavelength `wave` would fit in, and return the index below along with
+    the fraction of the way to the next entry in the array.
+    """
+    lower_idx = np.searchsorted(wave_list, wave)-1
+    # There can be edge issues, so watch out for that:
+    if lower_idx < 0: lower_idx = 0
+    if lower_idx > len(wave_list)-1: lower_idx = len(wave_list)-1
+
+    frac = (wave-wave_list[lower_idx]) / (wave_list[lower_idx+1]-wave_list[lower_idx])
+    return lower_idx, frac
+
 def _linearInterp(list, frac, lower_idx):
-    """Helper routine for linear interpolation between values in lists (which could be lists of
+    """
+    Helper routine for linear interpolation between values in lists (which could be lists of
     images, just not numbers, hence the need to avoid a LookupTable).  Not really worth
     splitting out on its own now, but could be useful to have separate routines for the
-    interpolation later on if we want to enable something other than linear interpolation."""
+    interpolation later on if we want to enable something other than linear interpolation.
+    """
     return frac*list[lower_idx+1] + (1.-frac)*list[lower_idx]
