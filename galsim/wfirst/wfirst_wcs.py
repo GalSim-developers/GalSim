@@ -220,7 +220,7 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
             # AstropyWCS, but it will throw exceptions when doing routine calculations.  Since we
             # know we have a TAN-SIP WCS we restrict the list of WCS to try to those that we know
             # should work for TAN-SIP.
-            galsim.wcs.fits_wcs_types = [galsim.PyAstWCS, galsim.WcsToolsWCS]
+            galsim.fitswcs.fits_wcs_types = [galsim.PyAstWCS, galsim.WcsToolsWCS]
             wcs = galsim.FitsWCS(header=header)
             wcs_list.append(wcs)
         else:

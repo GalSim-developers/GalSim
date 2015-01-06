@@ -441,8 +441,6 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         # PyAst understands.  All we need to do is change the names of the CTYPE values.
         # Note that the CTYPES could be tuples if there are comments associated with these values,
         # so we have to check for that option and if so, unpack/repack the tuples.
-        print header['CTYPE1']
-        print header['CTYPE2']
         if ( 'CTYPE1' in header and 'CTYPE2' in header and 'PV1_10' in header ):
             ctype1 = header['CTYPE1']
             ctype2 = header['CTYPE2']
@@ -1470,7 +1468,7 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     have the latest version).
 
     Note: The list of classes this function will try may be edited, e.g. by an external module 
-    that wants to add an additional WCS type.  The list is `galsim.wcs.fits_wcs_types`.
+    that wants to add an additional WCS type.  The list is `galsim.fitswcs.fits_wcs_types`.
 
     @param file_name      The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [default: None]
@@ -1503,10 +1501,7 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     if header is None:
         raise TypeError("Must provide either file_name or header")
 
-    # Note: refer to the list of WCS types as galsim.wcs.fits_wcs_types, rather than
-    # fits_wcs_types.  In the latter case, the user cannot edit the list of options to try, whereas
-    # the former allows this.
-    for wcs_type in galsim.wcs.fits_wcs_types:
+    for wcs_type in fits_wcs_types:
         try:
             wcs = wcs_type._readHeader(header)
             # Give it a better tag for the repr if appropriate.
