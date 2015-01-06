@@ -1382,6 +1382,24 @@ class InterpolatedChromaticObject(ChromaticObject):
     combinations of GSObjects with wavelength-dependent keywords or transformations (shifts, shears,
     etc.).
 
+    This class is intended to expedite calculations using objects that have to be built up as sums
+    of GSObjects with different parameters at each wavelength, by interpolating between Images at
+    each wavelength instead of making a more costly instantiation of the relevant GSObject at each
+    value of wavelength at which the bandpass is defined.  In order to carry out this interpolation,
+    there is a costly initialization process to build up a grid of images to be used for the
+    interpolation later on.  However, the object can get reused with different SEDs and bandpasses,
+    so there should not be any need to make many versions of any particular type of
+    InterpolatedChromaticObject, and there is a significant savings each time it is called.  Note
+    that the interpolation scheme is simple linear interpolation in wavelength, and no extrapolation
+    beyond the original range of wavelengths is permitted.
+
+    It is possible to override the interpolation and instantiate a new GSObject at each value of
+    wavelength.  This is slower, but should be more accurate.  The calling sequence for this mode is
+    nearly identical to the first mode, except for one keyword argument (`waves`, see below).  For
+    use cases requiring a high level of precision, we recommend a comparison between the
+    interpolated and the more accurate calculation for at least one case, to ensure that the
+    required precision has been reached.
+
     This class inherits from ChromaticObject, and subclasses of it could be defined to describe
     objects like chromatic PSFs.  See, for example, the subclass ChromaticOpticalPSF.  Subclasses of
     InterpolatedChromaticObject must have a method called `simpleEvaluateAtWavelength`, which is
@@ -1392,25 +1410,6 @@ class InterpolatedChromaticObject(ChromaticObject):
     must include proper flux normalization for that wavelength (see ChromaticOpticalPSF for an
     example of how this works).  However, if the InterpolatedChromaticObject is only going to be
     drawn when convolved by another object with an SED, then this is unnecessary.
-
-    There are two possible ways to use this class.  The first (the purpose for which it is intended)
-    is to expedite calculations using objects that have to be built up as sums of GSObjects with
-    different parameters at each wavelength, by interpolating between Images at each wavelength
-    instead of making a more costly instantiation of the relevant GSObject at each value of
-    wavelength at which the bandpass is defined.  In order to carry out this interpolation, there is
-    a costly initialization process to build up a grid of images to be used for the interpolation
-    later on.  However, the object can get reused with different SEDs and bandpasses, so there
-    should not be any need to make many versions of any particular type of
-    InterpolatedChromaticObject, and there is a significant savings each time it is called.  Note
-    that the interpolation scheme is simple linear interpolation in wavelength, and no extrapolation
-    beyond the original range of wavelengths is permitted.
-
-    The second way to use this class is to override the interpolation and instantiate a new GSObject
-    at each value of wavelength.  This is slower, but should be more accurate.  The calling sequence
-    for this mode is nearly identical to the first mode, except for one keyword argument (`waves`,
-    see below).  For use cases requiring a high level of precision, we recommend a comparison
-    between the interpolated and the more accurate calculation for at least one case, to ensure that
-    the required precision has been reached.
 
     The input parameter `waves` determines the input grid on which images are precomputed.  It is
     difficult to give completely general guidance as to how many wavelengths to choose or how they
