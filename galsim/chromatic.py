@@ -1538,11 +1538,9 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         This method has a number of optimizations compared to brute force drawing.  It uses the set
         of interpolated images at each wavelength to carry out the integration, only carrying out
-        the GSObject instantation and convolution with pixel response at the very end.
-
-        Currently there is only one image integrator for direct integration of the interpolated
-        images, so there is no keyword argument to select one, unlike for
-        ChromaticObject.drawImage().
+        the GSObject instantation and convolution with pixel response at the very end.  Currently,
+        it can only carry out linear interpolation between the stored images at fixed values of
+        wavelength.
 
         @param bandpass         A Bandpass object representing the filter against which to
                                 integrate.
@@ -1568,20 +1566,40 @@ class InterpolatedChromaticObject(ChromaticObject):
         # determine combined self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
 
-        # decide on integrator
-        integrator = galsim.integ.DirectSampleIntegrator(galsim.integ.midpt)
-
         # merge self.wave_list into bandpass.wave_list since we are using a sampling integrator
         bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
                                                       interpolant='linear'))
 
-        integral, stepk, maxk = integrator(self._imageAtWavelength, bandpass)
-        # For now, pretend we have no information about the maxk and stepk that should be used.
-        int_im = galsim.InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
+        # The integration is carried out using the following two basic approaches:
+        # (1) We use linear interpolation between the stored images to get an image at a given
+        #     wavelength.
+        # (2) We use the midpoint rule for integration.
 
-        # For performance profiling, store the number of evaluations used for the last integration
-        # performed.
-        self._last_n_eval = integrator.last_n_eval
+        # Figure out the dwave for each of the wavelengths in the bandpass.
+        dw = [bandpass.wave_list[1]-bandpass.wave_list[0]]
+        dw.extend(0.5*(bandpass.wave_list[2:]-bandpass.wave_list[0:-2]))
+        dw.append(bandpass.wave_list[-1]-bandpass.wave_list[-2])
+        # Set up arrays to accumulate the weights for each of the stored images.
+        weight_fac = np.zeros(len(self.waves))
+        for idx, w in enumerate(bandpass.wave_list):
+            # Find where this is with respect to the wavelengths on which images are stored.
+            lower_idx, frac = _findWave(self.waves, w)
+            # Store the weight factors for the two stored images that can contribute at this
+            # wavelength.  Must include the dwave that is part of doing the integral.
+            b = self.SED(w)*bandpass(w)*dw[idx]
+            weight_fac[lower_idx] += (1.0-frac)*b
+            weight_fac[lower_idx+1] += frac*b
+
+        # Do the integral as a weighted sum.
+        integral = sum([w*im for w,im in zip(weight_fac, self.ims)])
+
+        # Figure out stepK and maxK using the minimum and maximum (respectively) that have nonzero
+        # weight.
+        stepk = min(np.array(self.stepK_vals)[weight_fac>0])
+        maxk = max(np.array(self.maxK_vals)[weight_fac>0])
+
+        # Instantiate the InterpolatedImage, using these conservative stepK and maxK choices.
+        int_im = galsim.InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
 
         # Apply integral to the initial image appropriately.  This will naturally work properly and
         # take into account the supplied value of `add_to_image`, which will be included in kwargs.
