@@ -24,10 +24,10 @@ development.  For details of algorithms and code validation, please see
 Distribution
 ------------
 
-The current released version of GalSim is version 1.1.  To get the code, you
+The current released version of GalSim is version 1.2.  To get the code, you
 can grab the tarball (or zip file) from
 
-    https://github.com/GalSim-developers/GalSim/releases/tag/v1.1.0
+    https://github.com/GalSim-developers/GalSim/releases/tag/v1.2.0
 
 Also, feel free to fork the repository:
 
@@ -41,7 +41,7 @@ Or clone the repository with either of the following:
 although after doing so, if you are not a developer, you should probably
 checkout the latest release tag, rather than use the master branch:
 
-    git checkout v1.1.0
+    git checkout v1.2.0
 
 The code is also distributed via Fink, Macports, and Homebrew for Mac users.
 See INSTALL.md for more information.
@@ -117,7 +117,7 @@ Getting started
   main repository directory to specify all doxygen settings.  Alternatively,
   you can view the documentation online at
 
-      http://galsim-developers.github.com/GalSim/
+      http://galsim-developers.github.io/GalSim/
 
 
 Reference documentation
@@ -191,7 +191,7 @@ at one time or another.
 The version of the code at any given snapshot can be downloaded from our
 GitHub webpage, or checked out from the repository using the tag name, e.g.:
 
-    git checkout v1.1.0
+    git checkout v1.2.0
 
 This will then update your directory tree to the snapshot of the code at the
 milestone requested.  (You will also get a message about being in a "detached"

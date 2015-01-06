@@ -68,10 +68,16 @@ class MetaImage(type):
 class Image(object):
     """A class for storing image data along with the pixel scale or wcs information
 
-    The Image class encapsulates all the relevant information about an image including a NumPy
-    array for the pixel values, a bounding box, and some kind of WCS that converts between pixel
+    The Image class encapsulates all the relevant information about an image including a NumPy array
+    for the pixel values, a bounding box, and some kind of WCS that converts between pixel
     coordinates and world coordinates.  The NumPy array may be constructed by the Image class
     itself, or an existing array can be provided by the user.
+
+    This class creates shallow copies unless a deep copy is explicitly requested using the `copy`
+    method.  The main reason for this is that it allows users to work directly with and modify
+    subimages of larger images (for example, to successively draw many galaxies into one large
+    image).  For other implications of this convention, see the description of initialization
+    instructions below.
 
     There are 4 data types that the Image can use for the data values.  These are `numpy.int16`,
     `numpy.int32`, `numpy.float32`, and `numpy.float64`.  If you are constructing a new Image from
@@ -99,18 +105,22 @@ class Image(object):
 
         Image(array, xmin=1, ymin=1, make_const=False, ...)
 
-                This views an existing NumPy array as an Image.  The dtype is taken from
-                `array.dtype`, which must be one of the allowed types listed above.  You can also
-                optionally set the origin `(xmin, ymin)` if you want it to be something other
-                than (1,1).  You can also optionally force the image to be read-only with
-                `make_const=True`.
+                This views an existing NumPy array as an Image, with updates to the array or Image
+                being affecting the other object unless `Image(array.copy(), ...)` is used.  The
+                dtype is taken from `array.dtype`, which must be one of the allowed types listed
+                above.  You can also optionally set the origin `(xmin, ymin)` if you want it to be
+                something other than (1,1).  You can also optionally force the Image to be read-only
+                with `make_const=True`, though if the original NumPy array is modified then the
+                contents of `Image.array` will change.
 
         Image(image, dtype=dtype)
 
-                This creates a copy of an Image, possibly changing the type.  e.g.
+                This creates a shallow copy of an Image, possibly changing the type.  e.g.
 
                     >>> image_float = galsim.Image(64, 64) # default dtype=numpy.float32
                     >>> image_double = galsim.Image(image_float, dtype=numpy.float64)
+
+                To get a deep copy, use the `copy` method rather than the `Image` constructor.
 
     You can specify the `ncol`, `nrow`, `bounds`, `array`, or `image`  parameters by keyword
     argument if you want, or you can pass them as simple arg as shown aboves, and the constructor
@@ -169,6 +179,7 @@ class Image(object):
         fill        Fill the image with the same value in all pixels.
         setZero     Fill the image with zeros.
         invertSelf  Convert each value x to 1/x.
+        copy        Return a deep copy of the image.
 
     See their doc strings for more details.
 
@@ -180,9 +191,10 @@ class Image(object):
         float : numpy.float64,      # if using dtype=int or float
     }
     # Note: Numpy uses int64 for int on 64 bit machines.  We don't implement int64 at all,
-    # so we cannot follow this pattern.  If this becomes too confusing, we might need to
-    # add an ImageL class that uses int64.  Hard to imagine a use case where this would
-    # be required though...
+    # so we cannot quite match up to the numpy convention for dtype=int.  e.g. via
+    #     int : numpy.zeros(1,dtype=int).dtype.type
+    # If this becomes too confusing, we might need to add an ImageL class that uses int64.
+    # Hard to imagine a use case where this would be required though...
     valid_dtypes = cpp_valid_dtypes + alias_dtypes.keys()
 
     def __init__(self, *args, **kwargs):

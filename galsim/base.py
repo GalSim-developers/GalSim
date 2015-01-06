@@ -741,23 +741,40 @@ class GSObject(object):
 
 
     # Make sure the image is defined with the right size and wcs for drawImage()
-    def _setup_image(self, image, wmult, add_to_image, dtype):
+    def _setup_image(self, image, nx, ny, bounds, wmult, add_to_image, dtype):
+        # Check validity of nx,ny,bounds:
+        if image is not None:
+            if bounds is not None:
+                raise ValueError("Cannot provide bounds if image is provided")
+            if nx is not None or ny is not None:
+                raise ValueError("Cannot provide nx,ny if image is provided")
+            if dtype is not None:
+                raise ValueError("Cannot specify dtype if image is provided")
+
         # Make image if necessary
         if image is None:
             # Can't add to image if none is provided.
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image is None")
-            N = self.SBProfile.getGoodImageSize(1.0,wmult)
-            image = galsim.Image(N,N,dtype=dtype)
+            # Use bounds or nx,ny if provided
+            if bounds is not None:
+                if nx is not None or ny is not None:
+                    raise ValueError("Cannot set both bounds and (nx, ny)")
+                image = galsim.Image(bounds=bounds, dtype=dtype)
+            elif nx is not None or ny is not None:
+                if nx is None or ny is None:
+                    raise ValueError("Must set either both or neither of nx, ny")
+                image = galsim.Image(nx, ny, dtype=dtype)
+            else:
+                N = self.SBProfile.getGoodImageSize(1.0, wmult)
+                image = galsim.Image(N, N, dtype=dtype)
 
         # Resize the given image if necessary
         elif not image.bounds.isDefined():
             # Can't add to image if need to resize
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
-            if dtype is not None:
-                raise ValueError("Cannot specify dtype if image is provided")
-            N = self.SBProfile.getGoodImageSize(1.0,wmult)
+            N = self.SBProfile.getGoodImageSize(1.0, wmult)
             bounds = galsim.BoundsI(1,N,1,N)
             image.resize(bounds)
             image.setZero()
@@ -765,8 +782,6 @@ class GSObject(object):
         # Else use the given image as is
         else:
             # Clear the image if we are not adding to it.
-            if dtype is not None:
-                raise ValueError("Cannot specify dtype if image is provided")
             if not add_to_image:
                 image.setZero()
 
@@ -855,9 +870,9 @@ class GSObject(object):
 
         return wcs
 
-    def drawImage(self, image=None, scale=None, wcs=None, dtype=None, method='auto',
-                  gain=1., wmult=1., add_to_image=False, use_true_center=True, offset=None,
-                  n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None,
+    def drawImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None, dtype=None,
+                  method='auto', gain=1., wmult=1., add_to_image=False, use_true_center=True,
+                  offset=None, n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None,
                   setup_only=False, dx=None):
         """Draws an Image of the object.
 
@@ -867,15 +882,39 @@ class GSObject(object):
         optionally add to the given Image if `add_to_image = True`, but the default is to replace
         the current contents with new values.
 
-        If drawImage() will be creating the image from scratch for you, it will decide a good size
-        to use based on the size of the object being drawn.  Basically, it will try to use an area
-        large enough to include at least 99.5% of the flux.  (Note: the value 0.995 is really
-        `1 - folding_threshold`.  You can change the value of `folding_threshold` for any object via
+        Note that if you provide an `image` parameter, it is the image onto which the profile
+        will be drawn.  The provided image *will be modified*.  A reference to the same image
+        is also returned to provide a parallel return behavior to when `image` is `None`
+        (described above).
+
+        This option is useful in practice because you may want to construct the image first and
+        then draw onto it, perhaps multiple times. For example, you might be drawing onto a
+        subimage of a larger image. Or you may want to draw different components of a complex
+        profile separately.  In this case, the returned value is typically ignored.  For example:
+
+                >>> im1 = bulge.drawImage()
+                >>> im2 = disk.drawImage(image=im1, add_to_image=True)
+                >>> assert im1 is im2
+
+                >>> full_image = galsim.Image(2048, 2048, scale=pixel_scale)
+                >>> b = galsim.BoundsI(x-32, x+32, y-32, y+32)
+                >>> stamp = obj.drawImage(image = full_image[b])
+                >>> assert (stamp.array == full_image[b].array).all()
+
+        If drawImage() will be creating the image from scratch for you, then there are several ways
+        to control the size of the new image.  If the `nx` and `ny` keywords are present, then an
+        image with these numbers of pixels on a side will be created.  Similarly, if the `bounds`
+        keyword is present, then an image with the specified bounds will be created.  Note that it
+        is an error to provide an existing Image when also specifying `nx`, `ny`, or `bounds`. In
+        the absence of `nx`, `ny`, and `bounds`, drawImage will decide a good size to use based on
+        the size of the object being drawn.  Basically, it will try to use an area large enough to
+        include at least 99.5% of the flux.  (Note: the value 0.995 is really `1 -
+        folding_threshold`.  You can change the value of `folding_threshold` for any object via
         GSParams.  See `help(GSParams)` for more details.)  You can set the pixel scale of the
         constructed image with the `scale` parameter, or set a WCS function with `wcs`.  If you do
         not provide either `scale` or `wcs`, then drawImage() will default to using the Nyquist
-        scale for the current object.  You can also set the data type used in the new Image with
-        the `dtype` parameter that has the same options as for the Image constructor.
+        scale for the current object.  You can also set the data type used in the new Image with the
+        `dtype` parameter that has the same options as for the Image constructor.
 
         There are several different possible methods drawImage() can use for rendering the image.
         This is set by the `method` parameter.  The options are:
@@ -988,14 +1027,22 @@ class GSObject(object):
                             If `image` is given, but its bounds are undefined (e.g. if it was
                             constructed with `image = galsim.Image()`), then it will be resized
                             appropriately based on the profile's size [default: None].
+        @param nx           If provided and `image` is None, use to set the x-direction size of the
+                            image.  Must be accompanied by `ny`.
+        @param ny           If provided and `image` is None, use to set the y-direction size of the
+                            image.  Must be accompanied by `nx`.
+        @param bounds       If provided and `image` is None, use to set the bounds of the image.
         @param scale        If provided, use this as the pixel scale for the image.
                             If `scale` is None and `image` is given, then take the provided
                             image's pixel scale.
                             If `scale` is None and `image` is None, then use the Nyquist scale.
                             If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
+                            If `scale > 0` and `image` is given, then override `image.scale` with
+                            the value given as a keyword.
                             [default: None]
-        @param wcs          If provided, use this as the wcs for the image.  At most one of `scale`
-                            or `wcs` may be provided. [default: None]
+        @param wcs          If provided, use this as the wcs for the image (possibly overriding any
+                            existing `image.wcs`).  At most one of `scale` or `wcs` may be provided.
+                            [default: None]
         @param dtype        The data type to use for an automatically constructed image.  Only
                             valid if `image` is None. [default: None, which means to use
                             numpy.float32]
@@ -1038,7 +1085,7 @@ class GSObject(object):
                             [default: 0]
         @param rng          If provided, a random number generator to use for photon shooting,
                             which may be any kind of BaseDeviate object.  If `rng` is None, one
-                            will be automatically created, using the time as a seed. 
+                            will be automatically created, using the time as a seed.
                             [default: None]
         @param max_extra_noise  If provided, the allowed extra noise in each pixel when photon
                             shooting.  This is only relevant if `n_photons=0`, so the number of
@@ -1082,7 +1129,7 @@ class GSObject(object):
         if wmult <= 0:
             raise ValueError("Invalid wmult <= 0.")
 
-        if method not in ['auto', 'fft', 'real_space', 'phot', 'no_pixel', 'sb' ]:
+        if method not in ['auto', 'fft', 'real_space', 'phot', 'no_pixel', 'sb']:
             raise ValueError("Invalid method name = %s"%method)
 
         # Some checks that are only relevant for method == 'phot'
@@ -1139,6 +1186,11 @@ class GSObject(object):
                     "for your profile to include the Pixel and also have GalSim convolve by"
                     "an _additional_ Pixel, you can suppress this warning by using method=fft.")
 
+        # Check for scale if using nx, ny, or bounds
+        if (scale is None and wcs is None and
+            (nx is not None or ny is not None or bounds is not None)):
+            raise ValueError("Must provide scale if providing nx,ny or bounds")
+
         # Figure out what wcs we are going to use.
         wcs = self._determine_wcs(scale, wcs, image)
 
@@ -1165,7 +1217,7 @@ class GSObject(object):
         prof = prof._fix_center(image, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
-        image = prof._setup_image(image, wmult, add_to_image, dtype)
+        image = prof._setup_image(image, nx, ny, bounds, wmult, add_to_image, dtype)
         image.wcs = wcs
 
         if setup_only:
@@ -1233,8 +1285,8 @@ class GSObject(object):
             gain *= local_wcs.pixelArea()
             return self.drawImage(*args, method='phot', gain=gain, **kwargs)
 
-    def drawKImage(self, re=None, im=None, scale=None, dtype=None, gain=1., wmult=1.,
-                   add_to_image=False, dk=None):
+    def drawKImage(self, re=None, im=None, nx=None, ny=None, bounds=None, scale=None, dtype=None,
+                   gain=1., wmult=1., add_to_image=False, dk=None):
         """Draws the k-space Image (both real and imaginary parts) of the object, with bounds
         optionally set by input Image instances.
 
@@ -1294,6 +1346,11 @@ class GSObject(object):
         if wmult <= 0:
             raise ValueError("Invalid wmult <= 0.")
 
+        # Check for scale if using nx, ny, or bounds
+        if (scale is None and
+            (nx is not None or ny is not None or bounds is not None)):
+            raise ValueError("Must provide scale if providing nx,ny or bounds")
+
         # Check that the images are consistent, and possibly get the scale from them.
         if re is None:
             if im is not None:
@@ -1326,8 +1383,8 @@ class GSObject(object):
         # do that, but only if the profile is in image coordinates for the real space image.
         # So make that profile.
         real_prof = galsim.PixelScale(dx).toImage(self)
-        re = real_prof._setup_image(re, wmult, add_to_image, dtype)
-        im = real_prof._setup_image(im, wmult, add_to_image, dtype)
+        re = real_prof._setup_image(re, nx, ny, bounds, wmult, add_to_image, dtype)
+        im = real_prof._setup_image(im, nx, ny, bounds, wmult, add_to_image, dtype)
 
         # Set the wcs of the images to use the dk scale size
         re.scale = dk
@@ -1828,6 +1885,14 @@ class Sersic(GSObject):
     problems.  Above n=6.2, we found that the code begins to be inaccurate when sheared or
     magnified (at the level of upcoming shear surveys), so we do not recommend extending beyond
     this.  See Issues #325 and #450 for more details.
+
+    Sersic profile calculations take advantage of Hankel transform tables that are precomputed for a
+    given value of n when the Sersic profile is initialized.  Making additional objects with the
+    same n can therefore be many times faster than making objects with different values of n that
+    have not been used before.  Moreover, these Hankel transforms are only cached for a maximum of
+    100 different n values at a time.  For this reason, for large sets of simulations, it is worth
+    considering the use of only discrete n values rather than allowing it to vary continuously.  For
+    more details, see https://github.com/GalSim-developers/GalSim/issues/566.
 
     Note that if you are building many Sersic profiles using truncation, the code will be more
     efficient if the truncation is always the same multiple of `scale_radius`, since it caches
