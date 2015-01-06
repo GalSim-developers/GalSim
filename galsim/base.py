@@ -1908,7 +1908,8 @@ class Sersic(GSObject):
                             [One of `scale_radius` or `half_light_radius` is required.]
     @param flux             The flux (in photons) of the profile. [default: 1]
     @param trunc            An optional truncation radius at which the profile is made to drop to
-                            zero.  [default: 0, indicating no truncation]
+                            zero, in the same units as the size parameter.
+                            [default: 0, indicating no truncation]
     @param flux_untruncated Should the provided `flux` and `half_light_radius` refer to the
                             untruncated profile? See below for more details. [default: False]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
@@ -2138,7 +2139,8 @@ class DeVaucouleurs(GSObject):
                             [One of `scale_radius` or `half_light_radius` is required.]
     @param flux             The flux (in photons) of the profile. [default: 1]
     @param trunc            An optional truncation radius at which the profile is made to drop to
-                            zero.  [default: 0, indicating no truncation]
+                            zero, in the same units as the size parameter.
+                            [default: 0, indicating no truncation]
     @param flux_untruncated Should the provided `flux` and `half_light_radius` refer to the
                             untruncated profile? See the docstring for Sersic for more details.
                             [default: False]
@@ -2223,7 +2225,8 @@ class Spergel(GSObject):
                             [One of `scale_radius` or `half_light_radius` is required.]
     @param flux             The flux (in photons) of the profile. [default: 1]
     @param trunc            An optional truncation radius at which the profile is made to drop to
-                            zero.  [default: 0, indicating no truncation]
+                            zero, in the same units as the size parameter.
+                            [default: 0, indicating no truncation]
     @param flux_untruncated Should the provided `flux` and `half_light_radius` refer to the
                             untruncated profile? See below for more details. [default: False]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
