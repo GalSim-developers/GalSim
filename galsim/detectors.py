@@ -254,7 +254,7 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     bottomleft = pad_array[:-2,:-2]
 
     # Ensure that the origin is (1,1)
-    kernel = IPC_kernel.copy()
+    kernel = IPC_kernel.view()
     kernel.setOrigin(1,1)
 
     # Generating the output array, with 2 rows and 2 columns lesser than the padded array
