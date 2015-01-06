@@ -258,7 +258,6 @@ namespace galsim {
 
         double x00 = x0; // Preserve the originals for below.
         double y00 = y0;
-        It valit = val.linearView().begin();
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
@@ -318,7 +317,6 @@ namespace galsim {
         dy *= _r0;
         dyx *= _r0;
 
-        It valit(val.linearView().begin().getP());
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;

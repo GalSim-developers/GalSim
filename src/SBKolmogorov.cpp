@@ -47,10 +47,10 @@ namespace galsim {
 
     SBKolmogorov::~SBKolmogorov() {}
 
-    double SBKolmogorov::getLamOverR0() const 
+    double SBKolmogorov::getLamOverR0() const
     {
         assert(dynamic_cast<const SBKolmogorovImpl*>(_pimpl.get()));
-        return static_cast<const SBKolmogorovImpl&>(*_pimpl).getLamOverR0(); 
+        return static_cast<const SBKolmogorovImpl&>(*_pimpl).getLamOverR0();
     }
 
     LRUCache<GSParamsPtr, KolmogorovInfo> SBKolmogorov::SBKolmogorovImpl::cache(
@@ -58,7 +58,7 @@ namespace galsim {
 
     // The "magic" number 2.992934 below comes from the standard form of the Kolmogorov spectrum
     // from Racine, 1996 PASP, 108, 699 (who in turn is quoting Fried, 1966, JOSA, 56, 1372):
-    // T(k) = exp(-1/2 D(k)) 
+    // T(k) = exp(-1/2 D(k))
     // D(k) = 6.8839 (lambda/r0 k/2Pi)^(5/3)
     //
     // We convert this into T(k) = exp(-(k/k0)^5/3) for efficiency,
@@ -68,12 +68,12 @@ namespace galsim {
     SBKolmogorov::SBKolmogorovImpl::SBKolmogorovImpl(
         double lam_over_r0, double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _lam_over_r0(lam_over_r0), 
-        _k0(2.992934 / lam_over_r0), 
+        _lam_over_r0(lam_over_r0),
+        _k0(2.992934 / lam_over_r0),
         _k0sq(_k0*_k0),
         _inv_k0(1./_k0),
         _inv_k0sq(1./_k0sq),
-        _flux(flux), 
+        _flux(flux),
         _xnorm(_flux * _k0sq),
         _info(cache.get(this->gsparams.duplicate()))
     {
@@ -84,13 +84,13 @@ namespace galsim {
         dbg<<"xnorm = "<<_xnorm<<std::endl;
     }
 
-    double SBKolmogorov::SBKolmogorovImpl::xValue(const Position<double>& p) const 
+    double SBKolmogorov::SBKolmogorovImpl::xValue(const Position<double>& p) const
     {
         double r = sqrt(p.x*p.x+p.y*p.y) * _k0;
         return _xnorm * _info->xValue(r);
     }
 
-    double KolmogorovInfo::xValue(double r) const 
+    double KolmogorovInfo::xValue(double r) const
     { return r < _radial.argMax() ? _radial(r) : 0.; }
 
     std::complex<double> SBKolmogorov::SBKolmogorovImpl::kValue(const Position<double>& k) const
@@ -184,7 +184,6 @@ namespace galsim {
         dy *= _k0;
         dyx *= _k0;
 
-        It valit = val.linearView().begin();
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
@@ -216,7 +215,6 @@ namespace galsim {
         dy *= _inv_k0;
         dyx *= _inv_k0;
 
-        It valit(val.linearView().begin().getP(),1);
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
@@ -226,17 +224,17 @@ namespace galsim {
     }
 
     // Set maxK to where kValue drops to maxk_threshold
-    double SBKolmogorov::SBKolmogorovImpl::maxK() const 
+    double SBKolmogorov::SBKolmogorovImpl::maxK() const
     { return _info->maxK() * _k0; }
 
-    // The amount of flux missed in a circle of radius pi/stepk should be at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at
     // most folding_threshold of the flux.
     double SBKolmogorov::SBKolmogorovImpl::stepK() const
     { return _info->stepK() * _k0; }
 
     // f(k) = exp(-(k/k0)^5/3)
     // The input value should already be (k/k0)^2
-    double KolmogorovInfo::kValue(double ksq) const 
+    double KolmogorovInfo::kValue(double ksq) const
     { return exp(-std::pow(ksq,5./6.)); }
 
     // Integrand class for the Hankel transform of Kolmogorov
@@ -258,7 +256,7 @@ namespace galsim {
         KolmXValue(const GSParamsPtr& gsparams) : _gsparams(gsparams) {}
 
         double operator()(double r) const
-        { 
+        {
             const double integ_maxK = integ::MOCK_INF;
             KolmIntegrand I(r);
             return integ::int1d(I, 0., integ_maxK,
@@ -298,7 +296,7 @@ namespace galsim {
     public:
         KolmEnclosedFlux(const GSParamsPtr& gsparams) :
             f(gsparams), _gsparams(gsparams) {}
-        double operator()(double r) const 
+        double operator()(double r) const
         {
             return integ::int1d(f, 0., r,
                                 _gsparams->integration_relerr,
@@ -333,7 +331,7 @@ namespace galsim {
         dbg<<"maxK = "<<_maxk<<std::endl;
 
         // Build the table for the radial function.
-        
+
         // Start with f(0), which is analytic:
         // According to Wolfram Alpha:
         // Integrate[k*exp(-k^5/3),{k,0,infinity}] = 3/5 Gamma(6/5)
@@ -344,7 +342,7 @@ namespace galsim {
 
         // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
         // I have no idea what range the fourth derivative can take for the f(r),
-        // so let's take the completely arbitrary value of 10.  (This value was found to be 
+        // so let's take the completely arbitrary value of 10.  (This value was found to be
         // conservative for Sersic, but I haven't investigated here.)
         // 10 h^4 <= xvalue_accuracy
         // h = (xvalue_accuracy/10)^0.25
