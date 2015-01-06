@@ -305,16 +305,16 @@ def test_IPC_basic():
     # Check if the edges are filled with fill_value
     np.testing.assert_array_equal(
         im_new.array[0,:], fill_value,
-        err_msg="Top edge is not filled with the correct value")
+        err_msg="Top edge is not filled with the correct value by applyIPC")
     np.testing.assert_array_equal(
         im_new.array[-1,:], fill_value,
-        err_msg="Bottom edge is not filled with the correct value")
+        err_msg="Bottom edge is not filled with the correct value by applyIPC")
     np.testing.assert_array_equal(
         im_new.array[:,0], fill_value,
-        err_msg="Left edge is not filled with the correct value")
+        err_msg="Left edge is not filled with the correct value by applyIPC")
     np.testing.assert_array_equal(
         im_new.array[:,-1], fill_value,
-        err_msg="Left edge is not filled with the correct value")
+        err_msg="Left edge is not filled with the correct value by applyIPC")
 
     # Testing for flux conservation
     np.random.seed(1234)
@@ -342,10 +342,10 @@ def test_IPC_basic():
     im1 = im.copy()
     im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
     np.testing.assert_array_almost_equal(0.875*im.array[1:-1,1:-1]+0.125*im.array[2:,1:-1],
-        im1.array[1:-1,1:-1], 7, err_msg="Difference in directionality for up kernel.")
+        im1.array[1:-1,1:-1], 7, err_msg="Difference in directionality for up kernel in applyIPC")
     # Checking for one pixel in the central bulk
     np.testing.assert_almost_equal(im1(2,2), 0.875*im(2,2)+0.125*im(2,3), 7,
-        err_msg="Direction is not as intended for up kernel.")
+        err_msg="Direction is not as intended for up kernel in applyIPC")
 
     ipc_kernel = galsim.Image(3,3)
     ipc_kernel.setValue(2,2,0.875)
@@ -354,10 +354,10 @@ def test_IPC_basic():
     im1 = im.copy()
     im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
     np.testing.assert_array_almost_equal(im1.array[1:-1,1:-1], im1.array[1:-1,1:-1], 7,
-        err_msg="Difference in directionality for left kernel.")
+        err_msg="Difference in directionality for left kernel in applyIPC")
     # Checking for one pixel in the central bulk
     np.testing.assert_almost_equal(im1(2,3), 0.875*im(2,3)+0.125*im(2,2), 7,
-        err_msg="Direction is not as intended for left kernel.")
+        err_msg="Direction is not as intended for left kernel in applyIPC")
 
     # Check using GalSim's native Convolve routine for GSObjects for a realisitic kernel
     ipc_kernel = galsim.Image(np.array(
@@ -373,7 +373,7 @@ def test_IPC_basic():
     im_int = galsim.Convolve(ipc_kernel_int,im2_int,real_space=False)
     im_int.drawImage(im2,method='no_pixel',scale=im.scale)
     np.testing.assert_array_almost_equal(im1.array,im2.array,6,
-        err_msg="Does not match the output from Convolve")
+        err_msg="Output of applyIPC does not match the output from Convolve")
 
     try:
         from scipy import signal
