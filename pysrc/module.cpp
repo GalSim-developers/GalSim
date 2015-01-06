@@ -46,6 +46,7 @@ namespace galsim {
     void pyExportSBExponential();
     void pyExportSBSersic();
     void pyExportSBSpergel();
+    void pyExportSBSpergelet();
     void pyExportSBMoffat();
     void pyExportSBAiry();
     void pyExportSBShapelet();
@@ -88,6 +89,7 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportSBExponential();
     galsim::pyExportSBSersic();
     galsim::pyExportSBSpergel();
+    galsim::pyExportSBSpergelet();
     galsim::pyExportSBMoffat();
     galsim::pyExportSBAiry();
     galsim::pyExportSBShapelet();

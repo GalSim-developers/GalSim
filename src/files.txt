@@ -20,6 +20,7 @@ SBInterpolatedImage.cpp
 SBDeconvolve.cpp
 SBKolmogorov.cpp
 SBSpergel.cpp
+SBSpergelet.cpp
 CppShear.cpp
 Table.cpp
 RealSpaceConvolve.cpp
