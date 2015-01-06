@@ -2199,9 +2199,9 @@ class Spergel(GSObject):
 
     The allowed range of values for the `nu` parameter is -0.85 <= nu <= 0.85.  An exception will be
     thrown if you provide a value outside that range.  These values are chosen to match the values
-    investigated by the above paper.  At and below nu=0.0, the surface brightness profile diverges
-    at the origin, which currently affects our ability to perform photon-shooting or `real_space`
-    convolutions.
+    investigated by the above paper, with the exception that our lower limit is slightly above the
+    lower limit in the paper.  This change is due to numerical difficulties integrating the *very*
+    peaky nu < -0.85 profiles.
 
     The Spergel profile is the Fourier transform of the Moffat profile, and hence has an analytic
     Fourier transform if not truncated.  If truncation is used, however, then the calculations take
