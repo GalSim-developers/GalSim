@@ -2215,7 +2215,7 @@ class Spergel(GSObject):
     reason, for large sets of simulations, it is worth considering the use of only discrete
     nu/truncation radius pairs rather than allowing these to vary continuously.
 
-    A Spergel can be initialized using one (and only one) of two possible size parameters:
+    A Spergel profile can be initialized using one (and only one) of two possible size parameters:
     `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
 
     @param nu               The Spergel index, nu.
@@ -2244,7 +2244,7 @@ class Spergel(GSObject):
     Methods
     -------
 
-    In addition to the usual GSObject methods, Spergel has the following access methods:
+    In addition to the usual GSObject methods, the Spergel profile has the following access methods:
 
         >>> nu = spergel_obj.getNu()
         >>> r0 = spergel_obj.getScaleRadius()
