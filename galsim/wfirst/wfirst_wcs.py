@@ -283,8 +283,13 @@ def findSCA(wcs_list, ra=None, dec=None, pos=None, include_border=False):
 def _calculate_minmax_pix(include_border=False):
     """
     This is a helper routine to calculate the minimum and maximum pixel values that should be
-    considered within an SCA, including the complexities of including 1/2 of the gap between SCAs.
-    In that case it depends on the detailed geometry of the WFIRST focal plane.
+    considered within an SCA, possibly including the complexities of including 1/2 of the gap
+    between SCAs.  In that case it depends on the detailed geometry of the WFIRST focal plane.
+
+    @param include_border   A boolean value that determines whether to include 1/2 of the gap
+                            between SCAs as part of the SCA itself.  [default: False]
+    @returns a tuple of NumPy arrays for the minimum x pixel value, maximum x pixel value, minimum y
+             pixel value, and maximum y pixel value for each SCA.
     """
     # First, set up the default (no border).
     # The minimum and maximum pixel values are (1, n_pix).
@@ -295,14 +300,18 @@ def _calculate_minmax_pix(include_border=False):
 
     # Then, calculate the half-gaps, grouping together SCAs whenever possible.
     if include_border:
+        # Currently, the configuration in the focal plane is such that all the horizontal chip gaps
+        # are the same, but that won't always be the case, so for the sake of generality we only
+        # group together those that are forced to be the same.
+        #
         # Negative side of 1/2/3, same as positive side of 10/11/12
-        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[10])-galsim.wfirst.n_pix_tot*pixel_size_mm
+        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[10])-galsim.wfirst.n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         min_x_pix[1:4] -= half_border_pix
         max_x_pix[10:13] += half_border_pix
 
         # Positive side of 1/2/3 and 13/14/15, same as negative side of 10/11/12, 4/5/6
-        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[4])-galsim.wfirst.n_pix_tot*pixel_size_mm
+        border_mm = abs(sca_xc_mm[1]-sca_xc_mm[4])-galsim.wfirst.n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         max_x_pix[1:4] += half_border_pix
         max_x_pix[13:16] += half_border_pix
@@ -311,15 +320,21 @@ def _calculate_minmax_pix(include_border=False):
 
         # Positive side of 4/5/6, 16/17/18, 7/8/9, same as negative side of 13/14/15, 7/8/9,
         # 16/17/18
-        border_mm = abs(sca_xc_mm[7]-sca_xc_mm[4])-galsim.wfirst.n_pix_tot*pixel_size_mm
+        border_mm = abs(sca_xc_mm[7]-sca_xc_mm[4])-galsim.wfirst.n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         max_x_pix[4:10] += half_border_pix
         max_x_pix[16:19] += half_border_pix
         min_x_pix[7:10] -= half_border_pix
         min_x_pix[13:19] -= half_border_pix
 
+        # In the vertical direction, the gaps vary, with the gap between one pair of rows being
+        # significantly larger than between the other pair of rows.  The reason for this has to do
+        # with asymmetries in the electronics that stick out from the top and bottom of the SCAs,
+        # and choices in which way to arrange each SCA to maximize the usable space in the focal
+        # plane.
+
         # Top of 2/5/8/11/14/17, same as bottom of 1/4/7/10/13/16 and 2/5/8/11/14/17
-        border_mm = abs(sca_yc_mm[1]-sca_yc_mm[2])-galsim.wfirst.n_pix_tot*pixel_size_mm
+        border_mm = abs(sca_yc_mm[1]-sca_yc_mm[2])-galsim.wfirst.n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         list_1 = np.linspace(1,16,6).astype(int)
         list_2 = list_1 + 1
@@ -329,7 +344,7 @@ def _calculate_minmax_pix(include_border=False):
         max_y_pix[list_2] += half_border_pix
 
         # Top of 1/4/7/10/13/16, same as bottom of 3/6/9/12/15/18 and top of same
-        border_mm = abs(sca_yc_mm[1]-sca_yc_mm[3])-galsim.wfirst.n_pix_tot*pixel_size_mm
+        border_mm = abs(sca_yc_mm[1]-sca_yc_mm[3])-galsim.wfirst.n_pix*pixel_size_mm
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         min_y_pix[list_3] -= half_border_pix
         max_y_pix[list_1] += half_border_pix
