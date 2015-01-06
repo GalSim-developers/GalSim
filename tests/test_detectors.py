@@ -319,6 +319,7 @@ def test_IPC_basic():
     # Testing for flux conservation
     np.random.seed(1234)
     ipc_kernel = galsim.Image(abs(np.random.randn(3,3))) # a random kernel
+    ipc_kernel /= ipc_kernel.array.sum() # but make it normalized so we do not get warnings
     im_new = im.copy()
     # Set edges to zero since flux is not conserved at the edges otherwise
     im_new.array[0,:] = 0.0
@@ -364,6 +365,7 @@ def test_IPC_basic():
         [[0.01,0.1,0.01],
          [0.1,1.0,0.1],
          [0.01,0.1,0.01]]))
+    ipc_kernel /= ipc_kernel.array.sum()
     ipc_kernel_int = galsim.InterpolatedImage(ipc_kernel,x_interpolant='nearest',scale=im.scale)
     im1 = im.copy()
     im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
@@ -382,6 +384,7 @@ def test_IPC_basic():
         # Generate an arbitrary kernel
         np.random.seed(2345)
         ipc_kernel = galsim.Image(abs(np.random.randn(3,3)))
+        ipc_kernel /= ipc_kernel.array.sum()
         # Convolution requires the kernel to be flipped up-down and left-right.
         im_new = im.copy()
         im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=False)
