@@ -205,6 +205,9 @@ def do_kvalue(prof, name):
             " convolved with a delta function is inconsistent with real-space image.")
 
 def radial_integrate(prof, minr, maxr):
+    """A simple helper that calculates int 2pi r f(r) dr, from rmin to rmax
+       for an axially symmetric profile.
+    """
     assert prof.isAxisymmetric()
     f = lambda r: 2 * np.pi * r * prof.SBProfile.xValue(galsim.PositionD(r,0))
     return galsim.integ.int1d(f, minr, maxr)
