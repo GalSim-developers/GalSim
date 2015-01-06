@@ -154,7 +154,7 @@ def test_nonlinearity_basic():
         assert im2.dtype == im.dtype
         assert im2.bounds == im.bounds
 
-        #Let the user know that this test happened
+        # Let the user know that this test happened
         print "SciPy was found installed. Using SciPy modules in the unit test for",\
         "'applyNonlinearity'"
         # Note, don't be quite as stringent as in previous test; there can be small interpolation
@@ -380,32 +380,44 @@ def test_IPC_basic():
     try:
         from scipy import signal
         print "SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`"
+        # SciPy is going to emit a warning that we don't want to worry about, so let's deliberately
+        # ignore it by going into a `catch_warnings` context.
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
 
-        # Generate an arbitrary kernel
-        np.random.seed(2345)
-        ipc_kernel = galsim.Image(abs(np.random.randn(3,3)))
-        ipc_kernel /= ipc_kernel.array.sum()
-        # Convolution requires the kernel to be flipped up-down and left-right.
-        im_new = im.copy()
-        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=False)
-        np.testing.assert_array_almost_equal(
-            im_new.array, signal.convolve2d(im.array, np.flipud(np.fliplr(ipc_kernel.array)),
-                                            mode='same', boundary='fill'), 7,
-            err_msg="Image differs from SciPy's result using `mode='same'` and `boundary='fill`.")
+            # Generate an arbitrary kernel
+            np.random.seed(2345)
+            ipc_kernel = galsim.Image(abs(np.random.randn(3,3)))
+            ipc_kernel /= ipc_kernel.array.sum()
+            # Convolution requires the kernel to be flipped up-down and left-right.
+            im_new = im.copy()
+            im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend',
+                            kernel_normalization=False)
+            np.testing.assert_array_almost_equal(
+                im_new.array, signal.convolve2d(im.array, np.flipud(np.fliplr(ipc_kernel.array)),
+                                                mode='same', boundary='fill'), 7,
+                err_msg="Image differs from SciPy's result using `mode='same'` and "
+                "`boundary='fill`.")
 
-        im_new = im.copy()
-        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop', kernel_normalization=False)
-        np.testing.assert_array_almost_equal(
-            im_new.array[1:-1,1:-1], signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel.array)),
-                                            mode='valid', boundary = 'fill'), 7,
-            err_msg="Image differs from SciPy's result using `mode=valid'` and `boundary='fill'`.")
+            im_new = im.copy()
+            im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',
+                            kernel_normalization=False)
+            np.testing.assert_array_almost_equal(
+                im_new.array[1:-1,1:-1], signal.convolve2d(im.array,
+                                                           np.fliplr(np.flipud(ipc_kernel.array)),
+                                                           mode='valid', boundary = 'fill'), 7,
+                err_msg="Image differs from SciPy's result using `mode=valid'` and "
+                "`boundary='fill'`.")
 
-        im_new = im.copy()
-        im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap', kernel_normalization=False)
-        np.testing.assert_array_almost_equal(
-            im_new.array, signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel.array)),
-                                            mode='same', boundary='wrap'), 7,
-            err_msg="Image differs from SciPy's result using `mode=same'` and boundary='wrap'`.")
+            im_new = im.copy()
+            im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap',
+                            kernel_normalization=False)
+            np.testing.assert_array_almost_equal(
+                im_new.array, signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel.array)),
+                                                mode='same', boundary='wrap'), 7,
+                err_msg="Image differs from SciPy's result using `mode=same'` and "
+                "boundary='wrap'`.")
 
     except ImportError:
         # Skip without any warning if SciPy is not installed
