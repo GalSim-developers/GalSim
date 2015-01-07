@@ -2191,6 +2191,17 @@ class Spergel(GSObject):
     the surface brightness profile scales as I(r) ~ r^{nu} * K_{nu}(r), where K_{nu} is the
     modified Bessel function of the second kind.
 
+    The Spergel profile is intended as a generic galaxy profile, somewhat like a Sersic profile, but
+    with the advantage of being analytic in both real space and Fourier space.  The Spergel index
+    `nu` plays a similar role to the Sersic index `n`, in that it adjusts the relative peakiness of
+    the profile core and the relative prominence of the profile wings.  At `nu = 0.5`, the Spergel
+    profile is equivalent to an Exponential profile (or alternatively an `n = 1.0` Sersic profile).
+    At `nu = -0.6` (and in the radial range near the half-light radius), the Spergel profile is
+    similar to a DeVaucouleurs profile or `n = 4.0` Sersic profile.  Note that a `nu = -0.6` Spergel
+    profile is roughly 3x faster to draw than an `n = 4.0` Sersic profile, though a `nu = 0.5`
+    Spergel profile, `n = 1.0` Sersic profile, and an Exponential profile all take about the same
+    amount of time to draw.
+
     For more information, refer to
 
         D. N. Spergel, "ANALYTICAL GALAXY PROFILES FOR PHOTOMETRIC AND LENSING ANALYSIS,"
