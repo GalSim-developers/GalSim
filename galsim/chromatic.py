@@ -1594,7 +1594,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         integral = sum([w*im for w,im in zip(weight_fac, self.ims)])
 
         # Figure out stepK and maxK using the minimum and maximum (respectively) that have nonzero
-        # weight.
+        # weight.  This is the most conservative possible choice.
         stepk = min(np.array(self.stepK_vals)[weight_fac>0])
         maxk = max(np.array(self.maxK_vals)[weight_fac>0])
 
