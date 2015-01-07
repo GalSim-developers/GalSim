@@ -1405,11 +1405,10 @@ class InterpolatedChromaticObject(ChromaticObject):
     InterpolatedChromaticObject must have a method called `simpleEvaluateAtWavelength`, which is
     functionally the equivalent of `evaluateAtWavelength` for ChromaticObjects (i.e., it's a way to
     directly instantiate a GSObject at a single wavelength, without doing any interpolation).  Note
-    that since InterpolatedChromaticObjects can include an SED, for cases where they are going to be
-    drawn on their own without convolution by anything else, the `simpleEvaluateAtWavelength` method
-    must include proper flux normalization for that wavelength (see ChromaticOpticalPSF for an
-    example of how this works).  However, if the InterpolatedChromaticObject is only going to be
-    drawn when convolved by another object with an SED, then this is unnecessary.
+    that since InterpolatedChromaticObjects can include an SED, the `simpleEvaluateAtWavelength`
+    method must include proper flux normalization for that wavelength.  However, if the
+    InterpolatedChromaticObject is only going to be drawn when convolved by another object with an
+    SED, then this is unnecessary.
 
     The input parameter `waves` determines the input grid on which images are precomputed.  It is
     difficult to give completely general guidance as to how many wavelengths to choose or how they
@@ -1427,12 +1426,7 @@ class InterpolatedChromaticObject(ChromaticObject):
                             wavelengths.
     @param SED              A galsim.SED for the object.  If None, a flat SED is used.  When using
                             the object as a PSF to be convolved by a chromatic object, a flat SED
-                            should be used, whereas when using the object as a star to make a PSF
-                            image, an appropriate SED should be assigned. Note that a new
-                            InterpolatedChromatic object can be instantiated from an existing one
-                            with a new SED using the `withSED` method without any significant
-                            overhead, so when in doubt, constructing the object with a flat SED is
-                            not a problem.  [default: None]
+                            should be used.  [default: None]
     @param oversample_fac   Factor by which to oversample the stored profiles compared to the
                             default, which is to sample them at the Nyquist frequency for whichever
                             wavelength has the highest Nyquist frequency.  `oversample_fac`>1
@@ -1445,7 +1439,10 @@ class InterpolatedChromaticObject(ChromaticObject):
             self.SED = lambda w: 1.0
         else:
             self.SED = sed
-        self.wave_list = np.array([], dtype=float)
+        if hasattr(self.SED, 'wave_list'):
+            self.wave_list = self.SED.wave_list
+        else:
+            self.wave_list = np.array([], dtype=float)
 
         # Set up the interpolation (which can be a costly step, depending on the length of `waves`.
         if self.waves is not None:
@@ -1493,6 +1490,10 @@ class InterpolatedChromaticObject(ChromaticObject):
             new.SED = lambda w: 1.0
         else:
             new.SED = sed
+        if hasattr(new.SED, 'wave_list'):
+            new.wave_list = new.SED.wave_list
+        else:
+            new.wave_list = np.array([], dtype=float)
         return new
 
     def evaluateAtWavelength(self, wave, force_eval=False):
@@ -1662,8 +1663,7 @@ class ChromaticOpticalPSF(InterpolatedChromaticObject):
         """
         lam_over_diam = 1.e-9 * (wave / self.diam) * (galsim.radians / galsim.arcsec)
         aberrations = self.aberrations / wave
-        ret = self.SED(wave)* \
-            galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
+        ret = galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
         return ret
 
 def _findWave(wave_list, wave):
