@@ -117,8 +117,12 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     # the calculations for.  For now, just check for invalid numbers.
     if SCAs is not None:
         if hasattr(SCAs, '__iter__'):
-            if max(SCAs) > galsim.wfirst.n_sca:
-                raise ValueError("Invalid SCA!  Indices must be <=%d."%galsim.wfirst.n_sca)
+            if min(SCAs) < 0 or max(SCAs) > galsim.wfirst.n_sca:
+                raise ValueError(
+                    "Invalid SCA!  Indices must be positive and <=%d."%galsim.wfirst.n_sca)
+            if min(SCAs) == 0:
+                import warnings
+                warnings.warn("SCA 0 requested, but SCAs are 1-indexed.  Ignoring 0.")
         else:
             SCAs = [SCAs]
 
