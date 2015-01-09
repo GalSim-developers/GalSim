@@ -103,7 +103,7 @@ namespace galsim {
                       bp::arg("poisson_flux")=true, bp::arg("add_to_image")=false),
                      "Draw object into existing image using photon shooting.\n"
                      "\n"
-                     "Setting optional integer arg possionFlux != 0 allows profile flux to vary\n"
+                     "Setting optional integer arg poissonFlux != 0 allows profile flux to vary\n"
                      "according to Poisson statistics for N samples.\n"
                      "\n"
                      "Returns total flux of photons that landed inside image bounds.")
@@ -122,7 +122,7 @@ namespace galsim {
         static void wrap() {
             static char const * doc = 
                 "\n"
-                "SBProfile is an abstract base class represented all of the 2d surface\n"
+                "SBProfile is an abstract base class representing all of the 2d surface\n"
                 "brightness that we know how to draw.  Every SBProfile knows how to\n"
                 "draw an Image<float> of itself in real and k space.  Each also knows\n"
                 "what is needed to prevent aliasing or truncation of itself when drawn.\n"
@@ -135,11 +135,14 @@ namespace galsim {
                 "drawK() routines are normalized such that I(0,0) is the total flux.\n"
                 "\n"
                 "Currently we have the following possible implementations of SBProfile:\n"
-                "Basic shapes: SBBox, SBGaussian, SBExponential, SBAiry, SBSersic\n"
-                "SBLaguerre: Gauss-Laguerre expansion\n"
+                "Basic shapes: SBBox, SBGaussian, SBExponential, SBAiry, SBSersic,\n"
+                "              SBMoffat, SBKolmogorov\n"
+                "SBInterpolatedImage: a representation of some arbitrary image\n"
+                "SBShapelet: an object represented as a shapelets decomposition\n"
                 "SBTransform: affine transformation of another SBProfile\n"
                 "SBAdd: sum of SBProfiles\n"
                 "SBConvolve: convolution of other SBProfiles\n"
+                "SBDeconvolve: deconvolution of an SBProfile\n"
                 "\n"
                 "==== Drawing routines ====\n"
                 "Grid on which SBProfile is drawn has pitch dx, which is taken from the\n"
