@@ -140,7 +140,7 @@ def main(argv):
     exptime = wfirst.exptime # 168.1 seconds
     pixel_scale = wfirst.pixel_scale # 0.11 arcsecs / pixel
 
-    # save a list of the galaxy images in the "images" list variable:
+    # Create a dictionary that contains lists of images at different stages for every bandpass
     images = {}
     images_RecipFail = {}
     diff_RecipFail = {}
@@ -149,7 +149,7 @@ def main(argv):
     images_IPC = {}
     diff_IPC = {}
 
-    # Precompute skylevel for each filer
+    # Drawing PSFs, defining the dict keys and recomputing skylevel for each filer
     for filter_name, filter_ in filters.iteritems():
         # Drawing PSF.  Note that the PSF object intrinsically has a flat SED, so if we
         # convolve it with a galaxy, it will properly take on the SED of the galaxy.  However,
@@ -175,6 +175,7 @@ def main(argv):
         # e-/pix/s, so we have to multiply by the exposure time.
         sky_level_pix += wfirst.thermal_backgrounds[filter_name]*wfirst.exptime
 
+        # Create an empty list for each filter to which each galaxy in the catalog will be appended
         images[filter_name] = []
         images_RecipFail[filter_name] = []
         diff_RecipFail[filter_name] = []
