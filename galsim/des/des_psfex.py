@@ -81,16 +81,16 @@ class DES_PSFEx(object):
     called an "effective PSF".  Thus, you should not convolve by the pixel profile again
     (nor integrate over the pixel).  This would effectively include the pixel twice!
 
-    @param file_name       The file name to be read in.
-    @param image_file_name The name of the fits file of the original image (needed for the
-                           WCS information in the header).  If unavailable, you may omit this
-                           (or use None), but then the returned profiles will be in image
-                           coordinates, not world coordinates.  (Default `image_file_name = None`)
-    @param wcs             Optional way to provide the WCS if you already have it loaded from the
-                           image file. (Default `wcs = None`)
-    @param dir             Optionally a directory name can be provided if the file_name does not 
-                           already include it.  (The image file is assumed to be in the same
-                           directory.) (Default `dir = None`)
+    @param file_name_or_hdu The file name to be read in, or a pyfits HDU.
+    @param image_file_name  The name of the fits file of the original image (needed for the
+                            WCS information in the header).  If unavailable, you may omit this
+                            (or use None), but then the returned profiles will be in image
+                            coordinates, not world coordinates.  (Default `image_file_name = None`)
+    @param wcs              Optional way to provide the WCS if you already have it loaded from the
+                            image file. (Default `wcs = None`)
+    @param dir              Optionally a directory name can be provided if the file_name does not 
+                            already include it.  (The image file is assumed to be in the same
+                            directory.) (Default `dir = None`).  Cannot pass an HDU with this option.
     """
     # For config, image_file_name is required, since that always works in world coordinates.
     _req_params = { 'file_name' : str , 'image_file_name' : str }
@@ -99,13 +99,15 @@ class DES_PSFEx(object):
     _takes_rng = False
     _takes_logger = False
 
-    def __init__(self, file_name, image_file_name=None, wcs=None, dir=None):
+    def __init__(self, file_name_or_hdu, image_file_name=None, wcs=None, dir=None):
 
         if dir:
+            if not isinstance(file_name_or_hdu, basestring):
+                raise ValueError("Cannot provide dir and an HDU instance")
             import os
-            file_name = os.path.join(dir,file_name)
+            file_name_or_hdu = os.path.join(dir,file_name_or_hdu)
             image_file_name = os.path.join(dir,image_file_name)
-        self.file_name = file_name
+        self.file_name_or_hdu = file_name_or_hdu
         if image_file_name:
             if wcs is not None:
                 raise AttributeError("Cannot provide both image_file_name and wcs")
@@ -118,7 +120,10 @@ class DES_PSFEx(object):
 
     def read(self):
         from galsim import pyfits
-        hdu = pyfits.open(self.file_name)[1]
+        if isinstance(self.file_name_or_hdu, basestring):
+            hdu = pyfits.open(self.file_name_or_hdu)[1]
+        else:
+            hdu = self.file_name_or_hdu
         # Number of parameters used for the interpolation.  We require this to be 2.
         pol_naxis = hdu.header['POLNAXIS']
         if pol_naxis != 2:
