@@ -684,6 +684,15 @@ noise to an image.  These have their own separate hierarchy of classes
     The supplied \texttt{var\_image} must be the same size and shape as the \Image\ 
     onto which the noise is eventually added.}
 
+  \item[$\circ$] 
+  \texttt{galsim.\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1correlatednoise_1_1_correlated_noise.html}{CorrelatedNoise}(image, rng, ...)}  
+    \newline
+   The provided image should be a pure noise field (i.e. a blank area of sky with no detectable
+    objects).  The correlated noise of this image will be computed, which can then be applied
+    to any other image, laying down noise with the same correlations.  The provided
+    random number generator, \texttt{rng}, which may be any deviate instance will be used
+    as the basis of the required random numbers.. 
+    
 \end{itemize}
 
 To apply noise to an \Image\ using these noise models,
@@ -698,11 +707,29 @@ the command is simply:
 
 \end{itemize}
 
-Finally, GalSim has classes that can generate and manipulate noise
-fields with pixel-to-pixel correlated noise.  See docstrings for the
-\texttt{CorrelatedNoise} class for more information.
-% Seems odd that we don't mention this at all, so I put something
-% brief in. -RM
+In addition, GalSim can remove some or all of the noise correlations in an image that has 
+a known correlated noise:
+
+\begin{itemize}
+
+  \item[$\circ$] 
+  \texttt{image.\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1correlatednoise_1_1___base_correlated_noise.html\#af39b3141a36a515022acabae5c973817}{whitenNoise}(noise)} 
+    \newline 
+    This adds extra correlated noise
+    to the image such that if the image initially has correlated noise given by \texttt{noise}
+    (which should be a \texttt{CorrelatedNoise} object), then the image will end up with
+    white noise.  It tries to add the minimum amount of extra noise possible to achieve this.
+
+  \item[$\circ$] 
+  \texttt{image.\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1correlatednoise_1_1___base_correlated_noise.html\#a8f4cb9995d9e097a35aaf87da1b72ec1}{symmetrizeNoise}(noise, order=4)} 
+    \newline 
+    This is similar to \texttt{whitenNoise}, 
+    except that rather than making the resulting noise profile completely white, it just makes
+    the final noise in the image have N-fold symmetry where N is given by \texttt{order}.
+    This typically requires much less noise to be added than \texttt{whitenNoise}, and for
+    many purposes this is sufficient to remove the adverse effects of correlated noise.
+    
+\end{itemize}
 
 \section{Images}\label{sect:image}
 
