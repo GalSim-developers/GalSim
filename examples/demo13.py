@@ -131,8 +131,8 @@ def main(argv):
     use_SCA = 7 # This could be any number from 1...18
     logger.info('Doing expensive pre-computation of PSF')
     t1 = time.time()
-    #PSFs = wfirst.getPSF(SCAs=use_SCA, approximate_struts=True, n_waves=25)
-    #PSF = PSFs[use_SCA]
+    PSFs = wfirst.getPSF(SCAs=use_SCA, approximate_struts=True, n_waves=25)
+    PSF = PSFs[use_SCA]
     t2 = time.time()
     logger.info('Done precomputation in %.1f seconds!'%(t2-t1))
 
@@ -159,7 +159,7 @@ def main(argv):
         # enough that this doesn't matter too much.
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
         img_psf = galsim.ImageF(16,16)
-        #PSF.drawImage(bandpass=filter_, image=img_psf, scale=pixel_scale)
+        PSF.drawImage(bandpass=filter_, image=img_psf, scale=pixel_scale)
         # Artificially normalize to a total flux of 1 for display purposes.
         img_psf /= img_psf.array.sum()
         img_psf.write(out_filename)
@@ -189,8 +189,6 @@ def main(argv):
         # Use a different random seed for each object to get different noise realizations.
         rng = galsim.BaseDeviate(random_seed+k)
 
-        # MY PSF
-        PSF = galsim.Moffat(beta=cat.getFloat(k,0), fwhm=cat.getFloat(k,1), trunc=cat.getFloat(k,4))
         # Galaxy is a bulge + disk with parameters taken from the catalog:
         disk = galsim.Exponential(flux=0.33, half_light_radius=cat.getFloat(k,5))
         disk = disk * disk_SED
