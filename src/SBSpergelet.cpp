@@ -17,13 +17,12 @@
  *    and/or other materials provided with the distribution.
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBSpergelet.h"
 #include "SBSpergeletImpl.h"
 #include <boost/math/special_functions/bessel.hpp>
 #include <boost/math/special_functions/gamma.hpp>
-#include <boost/math/special_functions/factorials.hpp>
 #include "Solve.h"
 #include "bessel/Roots.h"
 
@@ -40,15 +39,14 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
-//std::ostream* dbgout = &std::cout;
-//int verbose_level = 1;
+std::ostream* dbgout = &std::cout;
+int verbose_level = 1;
 #endif
 
 namespace galsim {
 
-    SBSpergelet::SBSpergelet(double nu, double r0, double flux,
-                             int j, int m, int n, const GSParamsPtr& gsparams) :
-        SBProfile(new SBSpergeletImpl(nu, r0, flux, j, m, n, gsparams)) {}
+    SBSpergelet::SBSpergelet(double nu, double r0, int j, int q, const GSParamsPtr& gsparams) :
+        SBProfile(new SBSpergeletImpl(nu, r0, j, q, gsparams)) {}
 
     SBSpergelet::SBSpergelet(const SBSpergelet& rhs) : SBProfile(rhs) {}
 
@@ -72,98 +70,97 @@ namespace galsim {
         return static_cast<const SBSpergeletImpl&>(*_pimpl).getJ();
     }
 
-    int SBSpergelet::getM() const
+    int SBSpergelet::getQ() const
     {
         assert(dynamic_cast<const SBSpergeletImpl*>(_pimpl.get()));
-        return static_cast<const SBSpergeletImpl&>(*_pimpl).getM();
-    }
-
-    int SBSpergelet::getN() const
-    {
-        assert(dynamic_cast<const SBSpergeletImpl*>(_pimpl.get()));
-        return static_cast<const SBSpergeletImpl&>(*_pimpl).getN();
+        return static_cast<const SBSpergeletImpl&>(*_pimpl).getQ();
     }
 
     LRUCache<boost::tuple<double,int,int,GSParamsPtr>,SpergeletInfo>
         SBSpergelet::SBSpergeletImpl::cache(sbp::max_spergelet_cache);
 
-    SBSpergelet::SBSpergeletImpl::SBSpergeletImpl(double nu, double r0, double flux,
-                                                  int j, int m, int n,
+    SBSpergelet::SBSpergeletImpl::SBSpergeletImpl(double nu, double r0,
+                                                  int j, int q,
                                                   const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _nu(nu), _r0(r0), _flux(flux), _j(j), _m(m), _n(n),
-        _info(cache.get(boost::make_tuple(_nu, _j, 2*_n-_m, this->gsparams.duplicate())))
+        _nu(nu), _r0(r0), _j(j), _q(q),
+        _info(cache.get(boost::make_tuple(_nu, _j, _q, this->gsparams.duplicate())))
     {
+        if ((j < 0) or (q < 0) or (j < q))
+            throw SBError("Requested Spegelet indices out of range");
+
         dbg<<"Start SBSpergelet constructor:\n";
         dbg<<"nu = "<<_nu<<std::endl;
         dbg<<"r0 = "<<_r0<<std::endl;
-        dbg<<"flux = "<<_flux<<std::endl;
-        dbg<<"(j,m,n) = ("<<_j<<","<<_m<<","<<_n<<")"<<std::endl;
+        dbg<<"(j,q) = ("<<_j<<","<<_q<<")"<<std::endl;
 
         _r0_sq = _r0 * _r0;
         _inv_r0 = 1. / _r0;
-        _xnorm = _flux * _info->getXNorm() / _r0_sq
-            / boost::math::factorial<double>(_j-_m)
-            / boost::math::factorial<double>(_m-_n)
-            / std::pow(2., _m);
+        _xnorm = _info->getXNorm() / _r0_sq;
     }
 
     double SBSpergelet::SBSpergeletImpl::maxK() const { return _info->maxK() * _inv_r0; }
     double SBSpergelet::SBSpergeletImpl::stepK() const { return _info->stepK() * _inv_r0; }
 
-    double SBSpergelet::SBSpergeletImpl::xValue(const Position<double>& p) const
-    {
-        double r = sqrt(p.x * p.x + p.y * p.y) * _inv_r0;
-        double phi = atan2(p.y, p.x);
-        return _xnorm * _info->xValue(r, phi);
-    }
+    // double SBSpergelet::SBSpergeletImpl::xValue(const Position<double>& p) const
+    // {
+    //     double r = sqrt(p.x * p.x + p.y * p.y) * _inv_r0;
+    //     double phi = atan2(p.y, p.x);
+    //     return _xnorm * _info->xValue(r, phi);
+    // }
 
     // Modified equation (47) of Spergel (2010)
     std::complex<double> SBSpergelet::SBSpergeletImpl::kValue(const Position<double>& k) const
     {
         double ksq = (k.x*k.x + k.y*k.y) * _r0_sq;
         double phi = atan2(k.y, k.x);
-        return _flux * _info->kValue(ksq, phi);
+        return _info->kValue(ksq, phi);
     }
 
-    void SBSpergelet::SBSpergeletImpl::fillXValue(tmv::MatrixView<double> val,
-                                                  double x0, double dx, int ix_zero,
-                                                  double y0, double dy, int iy_zero) const
+    // TODO: Figure this out
+    double SBSpergelet::SBSpergeletImpl::getFlux() const
     {
-        dbg<<"SBSpergelet fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        // Not sure about quadrant.  Spergelets are sometimes even and sometimes odd.
-        // if (ix_zero != 0 || iy_zero != 0) {
-        //     xdbg<<"Use Quadrant\n";
-        //     fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
-        //     // Spergels can be super peaky at the center, so handle explicitly like Sersics
-        //     if (ix_zero != 0 && iy_zero != 0)
-        //         val(ix_zero, iy_zero) = _xnorm * _info->xValue(0.);
-        // } else {
-            xdbg<<"Non-Quadrant\n";
-            assert(val.stepi() == 1);
-            const int m = val.colsize();
-            const int n = val.rowsize();
-            typedef tmv::VIt<double,1,tmv::NonConj> It;
-
-            x0 *= _inv_r0;
-            dx *= _inv_r0;
-            y0 *= _inv_r0;
-            dy *= _inv_r0;
-
-            for (int j=0;j<n;++j,y0+=dy) {
-                double x = x0;
-                double ysq = y0*y0;
-                It valit = val.col(j).begin();
-                for (int i=0;i<m;++i,x+=dx) {
-                    double r = sqrt(x*x + ysq);
-                    double phi = atan2(y0, x);
-                    *valit++ = _xnorm * _info->xValue(r, phi);
-                }
-            }
-        // }
+        return 1.;
     }
+
+    // void SBSpergelet::SBSpergeletImpl::fillXValue(tmv::MatrixView<double> val,
+    //                                               double x0, double dx, int ix_zero,
+    //                                               double y0, double dy, int iy_zero) const
+    // {
+    //     dbg<<"SBSpergelet fillXValue\n";
+    //     dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+    //     dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+    //     // Not sure about quadrant.  Spergelets are sometimes even and sometimes odd.
+    //     // if (ix_zero != 0 || iy_zero != 0) {
+    //     //     xdbg<<"Use Quadrant\n";
+    //     //     fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+    //     //     // Spergels can be super peaky at the center, so handle explicitly like Sersics
+    //     //     if (ix_zero != 0 && iy_zero != 0)
+    //     //         val(ix_zero, iy_zero) = _xnorm * _info->xValue(0.);
+    //     // } else {
+    //         xdbg<<"Non-Quadrant\n";
+    //         assert(val.stepi() == 1);
+    //         const int m = val.colsize();
+    //         const int n = val.rowsize();
+    //         typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+    //         x0 *= _inv_r0;
+    //         dx *= _inv_r0;
+    //         y0 *= _inv_r0;
+    //         dy *= _inv_r0;
+
+    //         for (int j=0;j<n;++j,y0+=dy) {
+    //             double x = x0;
+    //             double ysq = y0*y0;
+    //             It valit = val.col(j).begin();
+    //             for (int i=0;i<m;++i,x+=dx) {
+    //                 double r = sqrt(x*x + ysq);
+    //                 double phi = atan2(y0, x);
+    //                 *valit++ = _xnorm * _info->xValue(r, phi);
+    //             }
+    //         }
+    //     // }
+    // }
 
     void SBSpergelet::SBSpergeletImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
                                                   double x0, double dx, int ix_zero,
@@ -195,44 +192,44 @@ namespace galsim {
                 for (int i=0;i<m;++i,x+=dx) {
                     double ksq = x*x + ysq;
                     double phi = atan2(y0, x);
-                    *valit++ = _flux * _info->kValue(ksq, phi);
+                    *valit++ = _info->kValue(ksq, phi);
                 }
             }
         // }
     }
 
-    void SBSpergelet::SBSpergeletImpl::fillXValue(tmv::MatrixView<double> val,
-                                                  double x0, double dx, double dxy,
-                                                  double y0, double dy, double dyx) const
-    {
-        dbg<<"SBSpergelet fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
+    // void SBSpergelet::SBSpergeletImpl::fillXValue(tmv::MatrixView<double> val,
+    //                                               double x0, double dx, double dxy,
+    //                                               double y0, double dy, double dyx) const
+    // {
+    //     dbg<<"SBSpergelet fillXValue\n";
+    //     dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+    //     dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+    //     assert(val.stepi() == 1);
+    //     assert(val.canLinearize());
+    //     const int m = val.colsize();
+    //     const int n = val.rowsize();
+    //     typedef tmv::VIt<double,1,tmv::NonConj> It;
 
-        x0 *= _inv_r0;
-        dx *= _inv_r0;
-        dxy *= _inv_r0;
-        y0 *= _inv_r0;
-        dy *= _inv_r0;
-        dyx *= _inv_r0;
+    //     x0 *= _inv_r0;
+    //     dx *= _inv_r0;
+    //     dxy *= _inv_r0;
+    //     y0 *= _inv_r0;
+    //     dy *= _inv_r0;
+    //     dyx *= _inv_r0;
 
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
-            double x = x0;
-            double y = y0;
-            It valit = val.col(j).begin();
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
-                double r = sqrt(x*x + y*y);
-                double phi = atan2(y,x);
-                *valit++ = _xnorm * _info->xValue(r, phi);
-            }
-        }
-    }
+    //     It valit = val.linearView().begin();
+    //     for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+    //         double x = x0;
+    //         double y = y0;
+    //         It valit = val.col(j).begin();
+    //         for (int i=0;i<m;++i,x+=dx,y+=dyx) {
+    //             double r = sqrt(x*x + y*y);
+    //             double phi = atan2(y,x);
+    //             *valit++ = _xnorm * _info->xValue(r, phi);
+    //         }
+    //     }
+    // }
 
     void SBSpergelet::SBSpergeletImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
                                                   double x0, double dx, double dxy,
@@ -262,14 +259,17 @@ namespace galsim {
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double ksq = x*x + y*y;
                 double phi = atan2(y,x);
-                *valit++ = _flux * _info->kValue(ksq, phi);
+                *valit++ = _info->kValue(ksq, phi);
             }
         }
     }
 
-    SpergeletInfo::SpergeletInfo(double nu, int j, int m, int n, const GSParamsPtr& gsparams) :
-        _nu(nu), _j(j), _m(m), _n(n), _gsparams(gsparams),
-        _gamma_nup2(boost::math::tgamma(_nu+2.0)),
+    SpergeletInfo::SpergeletInfo(double nu, int j, int q, const GSParamsPtr& gsparams) :
+        _nu(nu), _j(j), _q(q), _gsparams(gsparams),
+        _gamma_nup1(boost::math::tgamma(_nu+1.0)),
+        _gamma_nup2(_gamma_nup1 * (_nu+1.0)),
+        _gamma_nupjp1(boost::math::tgamma(_nu+_j+1.0)),
+        _knorm(_gamma_nupjp1/_gamma_nup1),
         _maxk(0.), _stepk(0.),
         _ft(Table<double,double>::spline)
     {
@@ -347,107 +347,91 @@ namespace galsim {
         return _maxk;
     }
 
+    // TODO: Figure this out!
     double SpergeletInfo::getXNorm() const
-    { return boost::math::tgamma(_nu+_j+1.0) / boost::math::tgamma(_nu+1.0); }
+    { return 1.0; }
 
-    double SpergeletInfo::xValue(double r, double phi) const
+    double SpergeletInfo::kValue(double ksq, double phi) const
     {
-        if (_ft.size() == 0) buildFT();
-        // only return the real part?
-        // return _ft(r) * std::exp(2. * M_PI * I * _m * phi);
-        return _ft(r) * std::cos(2. * M_PI * _m * phi);
+        return _knorm * std::pow(ksq, _j) * std::pow(1.+ksq, -1.-_nu-_j) * cos(2*_q*phi);
     }
 
-    std::complex<double> SpergeletInfo::kValue(double ksq, double phi) const
-    {
-        std::complex<double> I (0., 1.);
-        std::complex<double> num = std::pow(ksq, _j) * std::exp(-2. * I * (2*_n - _m) * phi);
-        double den = std::pow(1.+ksq, _nu+_j+1.);
-        return num/den;
-    }
+//     double SpergeletInfo::xValue(double r, double phi) const
+//     {
+//         if (_ft.size() == 0) buildFT();
+//         return _ft(r) * std::cos(2*_q*phi);
+//     }
 
-    class SpergelIntegrand : public std::unary_function<double, double>
-    {
-    public:
-        SpergelIntegrand(double nu, double k) :
-            _nu(nu), _k(k) {}
-        double operator()(double r) const
-        { return std::pow(r, _nu)*boost::math::cyl_bessel_k(_nu, r) * r*j0(_k*r); }
+//     class SpergeletIntegrand : public std::unary_function<double, double>
+//     {
+//     public:
+//         SpergeletIntegrand(double nu, int j, int q, double r) :
+//             _nu(nu), _j(j), _q(q), _r(r) {}
+//         double operator()(double k) const
+//         { return std::pow(k, 2.*_j)*std::pow(1+k*k, -1.-_nu-_j)
+//                  *k*boost::math::cyl_bessel_j(2*_q, k*_r);}
 
-    private:
-        double _nu;
-        double _k;
-    };
+//     private:
+//         double _nu;
+//         int _j;
+//         int _q;
+//         double _r;
+//     };
 
-    void SpergeletInfo::buildFT() const
-    {
-        if (_ft.size() > 0) return;
-        dbg<<"Building truncated Spergel Hankel transform"<<std::endl;
-        dbg<<"nu = "<<_nu<<std::endl;
-        dbg<<"trunc = "<<_trunc<<std::endl;
-        // Do a Hankel transform and store the results in a lookup table.
-        double prefactor = std::pow(2., -_nu) / _gamma_nup1 / _flux;
-        dbg<<"prefactor = "<<prefactor<<std::endl;
+//     void SpergeletInfo::buildFT() const
+//     {
+//         if (_ft.size() > 0) return;
+//         dbg<<"Building Spergelet Hankel transform"<<std::endl;
+//         dbg<<"nu = "<<_nu<<std::endl;
+//         // Do a Hankel transform and store the results in a lookup table.
+//         double prefactor = _knorm;
+//         dbg<<"prefactor = "<<prefactor<<std::endl;
 
-        // Along the way, find the last k that has a kValue > 1.e-3
-        double maxk_val = this->_gsparams->maxk_threshold;
-        dbg<<"Looking for maxk_val = "<<maxk_val<<std::endl;
-        // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
-        // (It's oscillatory, so want to make sure not to stop at a zero crossing.)
+//         // // Along the way, find the last k that has a kValue > 1.e-3
+//         // double maxk_val = this->_gsparams->maxk_threshold;
+//         // dbg<<"Looking for maxk_val = "<<maxk_val<<std::endl;
+//         // // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
+//         // // (It's oscillatory, so want to make sure not to stop at a zero crossing.)
 
-        // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
-        // I have no idea what range the fourth derivative can take for the hankel transform,
-        // so let's take the completely arbitrary value of 10.  (This value was found to be
-        // conservative for Sersic, but I haven't investigated here.)
-        // 10 h^4 <= kvalue_accuracy
-        // h = (kvalue_accuracy/10)^0.25
-        double dlogk = _gsparams->table_spacing * sqrt(sqrt(_gsparams->kvalue_accuracy / 10.));
-        dbg<<"Using dlogk = "<<dlogk<<std::endl;
-        int n_below_thresh = 0;
+//         // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
+//         // I have no idea what range the fourth derivative can take for the Hankel transform,
+//         // so let's take the completely arbitrary value of 10.  (This value was found to be
+//         // conservative for Sersic, but I haven't investigated here.)
+//         // 10 h^4 <= xvalue_accuracy
+//         // h = (xvalue_accuracy/10)^0.25
+//         double dr = _gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
+//         dbg<<"Using dr = "<<dr<<std::endl;
 
-        // Don't go past k = 500
-        double kmin = dlogk; // have to begin somewhere...
-        for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
-            double k = std::exp(logk);
-            double ksq = k*k;
+//         double rmin = dr; // have to begin somewhere...
+//         for (double r = rmin; r < M_PI/_stepk; r += dr) {
+//             SpergeletIntegrand I(_nu, _j, _q, r);
 
-            SpergelIntegrand I(_nu, k);
+// #ifdef DEBUGLOGGING
+//             std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
+//             integ::IntRegion<double> reg(0, 30.0, integ_dbgout);
+// #else
+//             integ::IntRegion<double> reg(0, 30.0);
+// #endif
 
-#ifdef DEBUGLOGGING
-            std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
-            integ::IntRegion<double> reg(0, _trunc, integ_dbgout);
-#else
-            integ::IntRegion<double> reg(0, _trunc);
-#endif
+//             // Add explicit splits at first several roots of Jn.
+//             // This tends to make the integral more accurate.
+//             for (int s=1; s<=30; ++s) {
+//                 double root = boost::math::cyl_bessel_j_zero(double(2*_q), s);
+//                 if (root > r*30.0) break;
+//                 xxdbg<<"root="<<root/r<<std::endl;
+//                 reg.addSplit(root/r);
+//             }
+//             xxdbg<<"int reg = ("<<0<<","<<30<<")"<<std::endl;
 
-            // Add explicit splits at first several roots of J0.
-            // This tends to make the integral more accurate.
-            for (int s=1; s<=10; ++s) {
-                double root = bessel::getBesselRoot0(s);
-                if (root > k * _trunc) break;
-                reg.addSplit(root/k);
-            }
+//             double val = integ::int1d(
+//                 I, reg,
+//                 this->_gsparams->integration_relerr,
+//                 this->_gsparams->integration_abserr);
+//             val *= prefactor;
 
-            double val = integ::int1d(
-                I, reg,
-                this->_gsparams->integration_relerr,
-                this->_gsparams->integration_abserr);
-            val *= prefactor;
+//             xdbg<<"ft("<<r<<") = "<<val<<"   "<<val<<std::endl;
 
-            xdbg<<"logk = "<<logk<<", ft("<<exp(logk)<<") = "<<val<<"   "<<val*ksq<<std::endl;
-
-            double f0 = val * ksq;
-            _ft.addEntry(logk, f0);
-
-            if (std::abs(val) > maxk_val) _maxk = k;
-
-            if (std::abs(val) > this->_gsparams->kvalue_accuracy) n_below_thresh = 0;
-            else ++n_below_thresh;
-            if (n_below_thresh == 5) break;
-        }
-        dbg<<"maxk = "<<_maxk<<std::endl;
-        _a1 = _ft.argMin();
-        _a1ksq = std::exp(2. * _a1);
-        _fta1 = _ft(_a1);
-    }
+//             _ft.addEntry(r, val);
+//         }
+//     }
 }

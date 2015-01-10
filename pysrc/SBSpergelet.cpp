@@ -35,11 +35,10 @@ namespace galsim {
     struct PySBSpergelet
     {
 
-        static SBSpergelet* construct(double nu, double r0,
-                                      double flux, int j, int m, int n,
+        static SBSpergelet* construct(double nu, double r0, int j, int q,
                                       boost::shared_ptr<GSParams> gsparams)
         {
-            return new SBSpergelet(nu, r0, flux, j, m, n, gsparams);
+            return new SBSpergelet(nu, r0, j, q, gsparams);
         }
 
         static void wrap()
@@ -50,18 +49,15 @@ namespace galsim {
                         &construct, bp::default_call_policies(),
                         (bp::arg("nu"),
                          bp::arg("r0"),
-                         bp::arg("flux")=1.,
                          bp::arg("j"),
-                         bp::arg("m"),
-                         bp::arg("n"),
+                         bp::arg("q"),
                          bp::arg("gsparams")=bp::object()))
                 )
                 .def(bp::init<const SBSpergelet &>())
-                .def("getNu", &SBSpergel::getNu)
-                .def("getScaleRadius", &SBSpergel::getScaleRadius)
-                .def("getJ", &SBSpergel::getJ)
-                .def("getM", &SBSpergel::getM)
-                .def("getN", &SBSpergel::getN)
+                .def("getNu", &SBSpergelet::getNu)
+                .def("getScaleRadius", &SBSpergelet::getScaleRadius)
+                .def("getJ", &SBSpergelet::getJ)
+                .def("getQ", &SBSpergelet::getQ)
                 ;
         }
     };

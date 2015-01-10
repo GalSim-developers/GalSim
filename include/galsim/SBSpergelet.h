@@ -67,14 +67,12 @@ namespace galsim {
          *
          * @param[in] nu       index parameter setting the logarithmic slope of the profile.
          * @param[in] r0       scale radius.
-         * @param[in] flux     flux.
          * @param[in] j        Radial index.
-         * @param[in] m        First azimuthal index.
-         * @param[in] n        Second azimuthal index.
+         * @param[in] q        Azimuthal index.
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
-        SBSpergelet(double nu, double r0, double flux, int j, int m, int n,
+        SBSpergelet(double nu, double r0, int j, int q,
                     const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
@@ -91,8 +89,7 @@ namespace galsim {
 
         /// @brief Return jmn indices of the Spergelet.
         int getJ() const;
-        int getM() const;
-        int getN() const;
+        int getQ() const;
 
     protected:
 

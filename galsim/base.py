@@ -2286,23 +2286,20 @@ class Spergelet(GSObject):
     @param nu               The Spergel index, nu.
     @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
     @param j                Radial index.
-    @param m                First azimuthal index.
-    @param n                Second azimuthal index.
+    @param q                Azimuthal index.
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     """
 
     # Initialization parameters of the object, with type information
-    _req_params = { "nu" : float, "scale_radius": float, "j":int, "m":int, "n":int }
-    _opt_params = { "flux" : float}
+    _req_params = { "nu" : float, "scale_radius": float, "j":int, "q":int }
     _takes_rng = False
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, nu, scale_radius, j, m, n, flux=1., gsparams=None):
+    def __init__(self, nu, scale_radius, j, q, gsparams=None):
         GSObject.__init__(
-            self, galsim._galsim.SBSpergelet(nu, scale_radius, j, m, n, flux=flux,
-                                             gsparams=gsparams))
+            self, galsim._galsim.SBSpergelet(nu, scale_radius, j, q, gsparams=gsparams))
 
     def getNu(self):
         """Return the Spergel index `nu` for this profile.
@@ -2314,10 +2311,10 @@ class Spergelet(GSObject):
         """
         return self.SBProfile.getScaleRadius()
 
-    def getJMN(self):
-        """Return the jmn indices for this Spergelet.
+    def getJQ(self):
+        """Return the jq indices for this Spergelet.
         """
-        return self.SBProfile.getJ(), self.SBProfile.getM(), self.SBProfile.getN()
+        return self.SBProfile.getJ(), self.SBProfile.getQ()
 
 
 # GSParams is defined in C++ and wrapped.  But we want to modify it here slightly to add
