@@ -1354,15 +1354,15 @@ def test_InterpolatedChromaticObject():
     im_interp = im_exact.copy()
     im_interp = obj_interp.drawImage(bandpass, image=im_interp, scale=scale)
     expected_flux = disk_SED.calculateFlux(bandpass) + bulge_SED.calculateFlux(bandpass)
-    expected_flux *= (1.0 - galsim.GSParams().alias_threshold)
     frac_diff_exact = abs(im_exact.array.sum()/expected_flux-1.0)
     frac_diff_interp = abs(im_interp.array.sum()/expected_flux-1.0)
+    # Check to 2%
     np.testing.assert_almost_equal(
-        frac_diff_exact, 0.0, decimal=2,
+        frac_diff_exact/2, 0.0, decimal=2,
         err_msg='InterpolatedChromaticObject flux is wrong when convolved with ChromaticSum'
         ' (exact calculation)')
     np.testing.assert_almost_equal(
-        frac_diff_interp, 0.0, decimal=2,
+        frac_diff_interp/2, 0.0, decimal=2,
         err_msg='InterpolatedChromaticObject flux is wrong when convolved with ChromaticSum'
         ' (interpolated calculation)')
     np.testing.assert_array_almost_equal(
