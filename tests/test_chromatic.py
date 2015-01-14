@@ -69,18 +69,20 @@ disk_SED = disk_SED.withFluxDensity(target_flux_density=0.3, wavelength=500.0)
 # define the directory containing some reference images
 refdir = os.path.join(".", "chromatic_reference_images") # Directory containing the reference
 
-# Define an InterpolatedChromaticObject subclass for which calculations can be done quickly:
+# Define an ChromaticObject subclass for which interpolation could be helpful, but calculations can
+# be done quickly:
 # It's a Gaussian with a wavelength-dependent sigma [sigma = sigma_0 (wave / 500 nm)]
 # and shear g1 [g1 = 0.1 ((wave)/(500 nm) - 1)]
-class ChromaticGaussian(galsim.InterpolatedChromaticObject):
-    def __init__(self, sigma, waves, oversample_fac=1.):
+class ChromaticGaussian(galsim.ChromaticObject):
+    def __init__(self, sigma):
         # First, take the basic info.
         self.sigma = sigma
+        self.separable = False
 
         # Take user-specified choice for number of wavelengths to use for initial calculation.
-        super(ChromaticGaussian, self).__init__(waves, oversample_fac=oversample_fac)
+        super(ChromaticGaussian, self).__init__(self)
 
-    def simpleEvaluateAtWavelength(self, wave):
+    def evaluateAtWavelength(self, wave):
         this_sigma = self.sigma * (wave / 500.)
         this_shear = 0.1 * ((wave/500.)-1.)
         ret = galsim.Gaussian(sigma = this_sigma, flux=self.SED(wave))
@@ -1225,8 +1227,8 @@ def test_centroid():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_InterpolatedChromaticObject():
-    """Test the InterpolatedChromaticObject functionality."""
+def test_interpolated_ChromaticObject():
+    """Test the ChromaticObject interpolation functionality."""
     import time
     t1 = time.time()
 
@@ -1245,24 +1247,18 @@ def test_InterpolatedChromaticObject():
     red_limit = max(bandpass.red_limit, bandpass_g.red_limit)
     waves = np.linspace(blue_limit, red_limit, n_interp)
 
-    # First, compare images that are drawn with exact and interpolated PSF.  For the latter, we
-    # should check that when we force exact evaluation of the profile at each wavelength, that the
-    # results are also correct.
-    exact_psf = ChromaticGaussian(sigma_0, None)
-    interp_psf = ChromaticGaussian(sigma_0, waves, oversample_fac=oversample_fac)
+    # First, compare images that are drawn with exact and interpolated PSF.
+    exact_psf = ChromaticGaussian(sigma_0)
+    interp_psf = exact_psf.copy()
+    interp_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
     im_exact = exact_psf.drawImage(bandpass, scale=scale)
     im_interp = im_exact.copy()
     im_interp = interp_psf.drawImage(bandpass, image=im_interp, scale=scale)
-    im_force = im_exact.copy()
-    im_force = interp_psf.drawImage(bandpass, image=im_force, scale=scale, force_eval=True)
     # Note: peak value of array is around 1, so going to 4 decimal places is a reasonably stringent
     # test considering how different the exact vs. interpolated rendering process is.
     np.testing.assert_array_almost_equal(
         im_interp.array, im_exact.array, decimal=4,
         err_msg='InterpolatedChromaticObject results differ for exact vs. interpolated')
-    np.testing.assert_array_almost_equal(
-        im_force.array, im_exact.array, decimal=4,
-        err_msg='InterpolatedChromaticObject results differ for exact vs. forced')
 
     # Just to be safe, we're going to do our own brute-force calculation of the interpolated result,
     # and compare it with `im_interp`.  Note that if the definition of the ChromaticGaussian gets
@@ -1277,47 +1273,10 @@ def test_InterpolatedChromaticObject():
     im *= im_interp.array.sum()/im.array.sum()
     np.testing.assert_array_almost_equal(
         im_interp.array, im.array, decimal=4,
-        err_msg='InterpolatedChromaticObject results differ for interpolated vs. brute force')
+        err_msg='ChromaticObject results differ for interpolated vs. brute force')
 
-    # Also check that with a tiny / narrow band, we get exactly what we expect.
-    # Since the band is extremely narrow we can do this test to quite high accuracy.
-    wave_list = [550., 555., 560.]
-    bp_list = [0., 1., 0.]
-    lut = galsim.LookupTable(wave_list, bp_list)
-    test_bp = galsim.Bandpass(lut, red_limit=560., blue_limit=550.)
-    im_test = exact_psf.drawImage(test_bp, scale=scale)
-    im_exact = im_test.copy()
-    exact_obj = galsim.Gaussian(sigma=sigma_0*(555./500.), flux=bandpass(555.))
-    exact_obj = exact_obj.shear(g1=0.1*((555./500.)-1.))
-    exact_obj.drawImage(image=im_exact, scale=scale)
-    # Again, we don't expect the same normalization, so renormalize.
-    im_test *= im_exact.array.sum()/im_test.array.sum()
-    np.testing.assert_array_almost_equal(
-        im_test.array, im_exact.array, decimal=8,
-        err_msg='InterpolatedChromaticObject results are incorrect for very narrow band')
-
-    # Check that we can get the right flux for an InterpolatedChromaticObject (our
-    # ChromaticGaussian) on its own, i.e., if we assign it an SED normalized in a specific way, and
-    # draw it in some band, are the fluxes that we get correct?
-    exact_psf_1 = exact_psf.withSED(disk_SED)
-    interp_psf_1 = interp_psf.withSED(disk_SED)
-    im_exact = exact_psf_1.drawImage(bandpass, scale=scale)
-    im_interp = im_exact.copy()
-    im_interp = interp_psf_1.drawImage(bandpass, image=im_interp, scale=scale)
-    expected_flux = disk_SED.calculateFlux(bandpass)
-    frac_diff_exact = abs(im_exact.array.sum()/expected_flux-1.0)
-    frac_diff_interp = abs(im_interp.array.sum()/expected_flux-1.0)
-    np.testing.assert_almost_equal(
-        frac_diff_exact, 0., decimal=3,
-        err_msg='InterpolatedChromaticObject flux is wrong (exact calculation)')
-    np.testing.assert_almost_equal(
-        frac_diff_interp, 0.0, decimal=3,
-        err_msg='InterpolatedChromaticObject flux is wrong (interpolated calculation)')
-
-    # Check that when an InterpolatedChromaticObject is convolved with a ChromaticObject, the flux
-    # that we get is correct.  (Note, we don't have to try convolving it with something achromatic,
-    # because the test above does this implicitly - the pixel response that it gets convolved with
-    # is achromatic.)  We are forcing it to go through the evaluation of
+    # Check that when an interpolated ChromaticObject is convolved with a ChromaticObject, the flux
+    # that we get is correct. We are forcing it to go through the evaluation of
     # ChromaticConvolution.drawImage().
     gal = galsim.Exponential(half_light_radius = 2.*scale)
     gal = gal.shear(g2 = 0.3)
@@ -1332,19 +1291,19 @@ def test_InterpolatedChromaticObject():
     frac_diff_interp = abs(im_interp.array.sum()/expected_flux-1.0)
     np.testing.assert_almost_equal(
         frac_diff_exact, 0.0, decimal=3,
-        err_msg='InterpolatedChromaticObject flux is wrong when convolved with ChromaticObject'
+        err_msg='ChromaticObject flux is wrong when convolved with ChromaticObject '
         ' (exact calculation)')
     np.testing.assert_almost_equal(
         frac_diff_interp, 0.0, decimal=3,
-        err_msg='InterpolatedChromaticObject flux is wrong when convolved with ChromaticObject'
-        ' (interpolated calculation)')
+        err_msg='ChromaticObject (with interpolation) flux is wrong when convolved with '
+        ' ChromaticObject')
     np.testing.assert_array_almost_equal(
         im_interp.array, im_exact.array, decimal=4,
-        err_msg='InterpolatedChromaticObject results differ for interpolated vs. exact'
+        err_msg='ChromaticObject results differ for interpolated vs. exact'
         ' when convolving with ChromaticObject')
 
-    # Check that when an InterpolatedChromaticObject is convolved with a ChromaticSum, the flux
-    # that we get is correct.
+    # Check that when an ChromaticObject with interpolation is convolved with a ChromaticSum, the
+    # flux that we get is correct.
     bulge = galsim.DeVaucouleurs(half_light_radius = 1.5*scale)
     bulge = bulge_SED*bulge
     tot_gal = gal + bulge
@@ -1359,15 +1318,15 @@ def test_InterpolatedChromaticObject():
     # Check to 2%
     np.testing.assert_almost_equal(
         frac_diff_exact/2, 0.0, decimal=2,
-        err_msg='InterpolatedChromaticObject flux is wrong when convolved with ChromaticSum'
+        err_msg='ChromaticObject flux is wrong when convolved with ChromaticSum'
         ' (exact calculation)')
     np.testing.assert_almost_equal(
         frac_diff_interp/2, 0.0, decimal=2,
-        err_msg='InterpolatedChromaticObject flux is wrong when convolved with ChromaticSum'
+        err_msg='ChromaticObject flux is wrong when convolved with ChromaticSum'
         ' (interpolated calculation)')
     np.testing.assert_array_almost_equal(
         im_interp.array, im_exact.array, decimal=3,
-        err_msg='InterpolatedChromaticObject results differ for interpolated vs. exact'
+        err_msg='ChromaticObject results differ for interpolated vs. exact'
         ' when convolving with ChromaticSum')
 
     # Check that we can modify the flux in the usual way.
@@ -1381,11 +1340,11 @@ def test_InterpolatedChromaticObject():
     frac_diff_interp = abs(im_interp.array.sum()/expected_flux-1.0)
     np.testing.assert_almost_equal(
         frac_diff_exact, 0.0, decimal=2,
-        err_msg='InterpolatedChromaticObject flux is wrong when multiplied to change'
+        err_msg='ChromaticObject flux is wrong when multiplied to change'
         ' normalization (exact calculation)')
     np.testing.assert_almost_equal(
         frac_diff_interp, 0.0, decimal=2,
-        err_msg='InterpolatedChromaticObject flux is wrong when multiplied to change'
+        err_msg='ChromaticObject flux is wrong when multiplied to change'
         ' normalization (interpolated calculation)')
 
     # Finally, check that the routine is careful not to interpolate outside of its original bounds.
@@ -1403,8 +1362,8 @@ def test_ChromaticOpticalPSF():
     t1 = time.time()
 
     # For ChromaticOpticalPSF, exact evaluation is really too slow for routine unit tests.  So, for
-    # this unit test, we use an interpolated version only.  The tests of exact evaluation for
-    # InterpolatedChromaticObject in the previous unit test should be enough to ensure that exact
+    # this unit test, we use an interpolated version only.  The tests of 
+    # ChromaticObject in the previous unit test should be enough to ensure that exact
     # and interpolated evaluation match in general (given reasonable settings).
 
     # First, compare the interpolated result (drawn through two bands) with saved, exact results.
@@ -1426,7 +1385,7 @@ def test_ChromaticOpticalPSF():
     # nstruts = 2
     # scale = 0.02
     # 
-    # obj = galsim.ChromaticOpticalPSF(diam, aberrations, None, obscuration=obscuration, nstruts=nstruts)
+    # obj = galsim.ChromaticOpticalPSF(diam, aberrations, obscuration=obscuration, nstruts=nstruts)
     # im_r = obj.drawImage(bandpass, scale=scale)
     # im_r.write('./chromatic_reference_images/r_exact.fits')
     #
@@ -1448,8 +1407,9 @@ def test_ChromaticOpticalPSF():
     n_interp = 15
     oversample_fac = 2.0
     waves = np.linspace(bandpass.blue_limit, bandpass.red_limit, n_interp)
-    obj = galsim.ChromaticOpticalPSF(diam, aberrations, waves, oversample_fac=oversample_fac,
+    obj = galsim.ChromaticOpticalPSF(diam, aberrations,
                                      obscuration=obscuration, nstruts=nstruts)
+    obj.setupInterpolation(waves, oversample_fac=oversample_fac)
     im_r = obj.drawImage(bandpass, scale=scale)
     im_r_ref = galsim.fits.read(os.path.join(refdir, 'r_exact.fits'))
     # Renormalize so peak is 1.
@@ -1509,5 +1469,5 @@ if __name__ == "__main__":
     test_gsparam()
     test_separable_ChromaticSum()
     test_centroid()
-    test_InterpolatedChromaticObject()
+    test_interpolated_ChromaticObject()
     test_ChromaticOpticalPSF()
