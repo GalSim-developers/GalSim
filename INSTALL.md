@@ -643,10 +643,7 @@ However, it has been found that GalSim and its dependencies can be sensitive
 fact the Gnu Compiler Collection, but in fact Clang masquerading as such.  This
 can lead to problems when linking libraries, as described in the following
 GalSim Wiki FAQ item:
-https://github.com/GalSim-developers/GalSim/wiki/Installation-FAQ#
-wiki-what-should-i-do-about-undefined-symbols-for-architecture-x86_64-errors
-
-(concatenate lines in above URL together and copy-paste to browser) 
+https://github.com/GalSim-developers/GalSim/wiki/Installation-FAQ#wiki-what-should-i-do-about-undefined-symbols-for-architecture-x86_64-errors
 
 The best success seems to be achieved in Mavericks by *explicitly* specifying
 `clang` and `clang++` as the compiler to GalSim and all its dependencies when
