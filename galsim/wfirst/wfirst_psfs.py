@@ -42,9 +42,9 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     Get the PSF for WFIRST observations.
 
     By default, this routine returns a list of ChromaticOpticalPSF objects, with the list index
-    corresponding to the SCA.  The PSF corresponds to a location in the center of the SCA.
-    Currently we do not have information about variation across the SCAs, which is expected to be
-    relatively small.
+    corresponding to the SCA (Sensor Chip Array, the equivalent of a chip in an optical CCD).  The
+    PSF corresponds to a location in the center of the SCA.  Currently we do not have information
+    about variation across the SCAs, which is expected to be relatively small.
 
     This routine also takes an optional keyword `SCAs`, which can be a single value or a list; if
     this is specified then results are not included for the other SCAs.  However, to preserve the

@@ -19,10 +19,16 @@
 The galsim.wfirst module, containing information GalSim needs to simulate images for the WFIRST-AFTA
 project.
 
-This module contains numbers and routines for the WFIRST-AFTA project.  Currently, it includes the
-following numbers:
+This module contains numbers and routines for the WFIRST-AFTA project.  Some of the parameters below
+relate to the entire wide-field imager.  Others, especially the return values of the functions to
+get the PSF and WCS, are specific to each SCA (Sensor Chip Assembly, the equivalent of a chip for an
+optical CCD) and therefore are indexed based on the SCA.  All SCA-related arrays are 1-indexed,
+i.e., the entry with index 0 is None and the entries from 1 to n_sca are the relevant ones.  This is
+consistent with diagrams and so on provided by the WFIRST project, which are 1-indexed.
 
-    gain - The gain for all SCAs (sensor chip arrays) is expected to be the same, so this is a
+Currently, the module includes the following numbers:
+
+    gain - The gain for all SCAs (sensor chip assemblies) is expected to be the same, so this is a
            single value rather than a list of values.
 
     pixel_scale - The pixel scale in units of arcsec/pixel.
