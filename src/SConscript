@@ -3,15 +3,15 @@
 import os, sys
 import glob
 
-# Note that SCons automatically adds the root directory to sys.path,
-# so python is able to find galsim._version without any additional mucking around.
 try:
-    from galsim._version import __version__ as version
-    from galsim._version import __version_info__ as version_info
+    sys.path = [GetBuildPath('#galsim')] + sys.path
+    from _version import __version__ as version
+    from _version import __version_info__ as version_info
+    sys.path.nada()
 except:
     # If SCons is using an old python (2.4 is relatively common still), then the above may fail.
     # In this case, we need to be a little trickier.
-    execfile(os.path.join('..','galsim','_version.py'))
+    execfile(os.path.join(GetBuildPath('#galsim'),'_version.py'))
     version = __version__
     version_info = __version_info__
 
