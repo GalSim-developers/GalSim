@@ -17,12 +17,12 @@
 "#" : "New features introduced in this demo:",
 
 "#" : " - obj type : InterpolatedImage(image, scale) ",
-"#" : " - obj type : RealGalaxy(..., whiten)",
 "#" : " - float_value type : RandomDistribution(function, x_min, x_max) ",
 "#" : " - image : draw_method (no_pixel) ",
-"#" : " - pix type : None ",
 "#" : " - input.power_spectrum : (e_power_file, delta2, units) ",
 "#" : " - image.index_convention : (0 or 'C' or 'python') vs (1 or 'Fortran' or 'FITS')",
+"#" : " - image.noise : whiten",
+"#" : " - image.noise : symmetrize",
 "#" : " - wcs type : Tan(dudx, dudy, dvdx, dvdy, units, origin, ra, dec)",
 
 "#" : " - Power spectrum shears and magnifications for non-gridded positions.",
@@ -52,17 +52,14 @@
 "#" : "Define the galaxy profile",
 "gal" : {
     "type" : "List",
-    "#" : "Another option available for the RealGalaxy type is whiten.  If set to true, then",
-    "#" : "we will keep track of the original correlated noise in the image and whiten it before",
-    "#" : "adding the additional noise (specified below in image.noise).",
-
-    "#" : "When whitening the image, we need to make sure the original correlated noise is",
-    "#" : "present throughout the whole image, otherwise the whitening will do the wrong thing",
-    "#" : "to the parts of the image that don't include the original image.  The RealGalaxy",
-    "#" : "stores the correct noise profile to use, but we need to tell it how large to pad",
-    "#" : "with this noise.  This is a bit complicated for the code to figure out on its own, ",
-    "#" : "especially with the possibility of compound objects, dilations, shears, etc.  So we ",
-    "#" : "require the user to provide the size with the noise_pad_size parameter.",
+    "#" : "When whitening the image (see image.noise.whiten below), we need to make sure the",
+    "#" : "original correlated noise is present throughout the whole image, otherwise the",
+    "#" : "whitening will do the wrong thing to the parts of the image that don't include the",
+    "#" : "original image.  The RealGalaxy stores the correct noise profile to use, but we",
+    "#" : "need to tell it how large to pad with this noise.  This is a bit complicated for",
+    "#" : "the code to figure out on its own, especially with the possibility of compound",
+    "#" : "objects, dilations, shears, etc.  So we require the user to provide the size with",
+    "#" : "the noise_pad_size parameter.",
 
     "#" : "In this case, the postage stamp will be 32 arcsec for the undilated galaxies.",
     "#" : "We expand the postage stamp as we dilate the galaxies, so that factor doesn't",
@@ -72,11 +69,11 @@
     "#" : "    noise_pad_size = 32 * sqrt(2) * 0.2 arcsec/pixel = 9.1 arcsec",
     "#" : "We round this up to 10 to be safe.",
     "items" : [
-        { "type" : "RealGalaxy", "id" : 106416, "whiten" : "true", "noise_pad_size" : 10 },
-        { "type" : "RealGalaxy", "id" : 106731, "whiten" : "true", "noise_pad_size" : 10 },
-        { "type" : "RealGalaxy", "id" : 108402, "whiten" : "true", "noise_pad_size" : 10 },
-        { "type" : "RealGalaxy", "id" : 116045, "whiten" : "true", "noise_pad_size" : 10 },
-        { "type" : "RealGalaxy", "id" : 116448, "whiten" : "true", "noise_pad_size" : 10 }
+        { "type" : "RealGalaxy", "id" : 106416, "noise_pad_size" : 10 },
+        { "type" : "RealGalaxy", "id" : 106731, "noise_pad_size" : 10 },
+        { "type" : "RealGalaxy", "id" : 108402, "noise_pad_size" : 10 },
+        { "type" : "RealGalaxy", "id" : 116045, "noise_pad_size" : 10 },
+        { "type" : "RealGalaxy", "id" : 116448, "noise_pad_size" : 10 }
     ],
     "index" : { "type" : "Random" },
     "#" : "Note: we could also have set the main gal type to RealGalaxy and had id be a list with",
@@ -170,7 +167,37 @@
     "#" : "Gaussian noise as well, with the total variance preserved.",
     "noise" : {
         "type" : "Gaussian",
-        "variance" : 10000.0
+        "variance" : 10000.0,
+
+        "#" : "RealGalaxy objects have some noise already included in the original HST images.",
+        "#" : "This noise is stored with each object, and the propagated through all changes",
+        "#" : "(transformations, convolutions, etc.), which will correlate the noise.",
+
+        "#" : "Once the process gets to the point of adding additional noise to the image, you",
+        "#" : "have a few options for what to do with this propagated noise.  The first option",
+        "#" : "is to do nothing, in which case GalSim will just ignore it and add the full ",
+        "#" : "amount specified above as additional noise.  This is equivalent to treating the",
+        "#" : "noise that was in the original image as part of the true surface brightness",
+        "#" : "profile of the galaxy.",
+
+        "#" : "Another option is to whiten the noise to get rid of the correlations.  This is",
+        "#" : "specified as whiten : True.  GalSim will add enough correlated noise to make the",
+        "#" : "resulting noise be white, then add more white noise to make the total variance ",
+        "#" : "equal to the above specified value.",
+
+        "#" : "However, this is often overkill for many applications.  If it is acceptable to ",
+        "#" : "merely end up with noise with some degree of symmetry (say 4-fold or 8-fold",
+        "#" : "symmetry), then you can instead have GalSim just add enough noise to make the",
+        "#" : "resulting noise have this kind of symmetry.  Usually this requires adding ",
+        "#" : "significantly less additional noise, which means you can have the resulting ",
+        "#" : "total variance be somewhat smaller.  The above specified variance will then ",
+        "#" : "correspond to the zero-lag value, since the noise will still have some ",
+        "#" : "covariances.  This option is specified using symmetrize : N, where N is the",
+        "#" : "order of the symmetry that is desired.  We use 8-fold symmetry here.",
+        
+        "#" : "whiten : True",
+        "symmetrize" : 8
+ 
     },
 
     "#" : "For the WCS, we use one that has the world coordinates on the celestial sphere, using",
