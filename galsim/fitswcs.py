@@ -1452,9 +1452,12 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     work.  It tries a number of different WCS classes until it finds one that succeeds in reading 
     the file.
     
-    If none of them work, then the last class it tries, AffineTransform, is guaranteed to succeed, 
-    but it will only model the linear portion of the WCS (the CD matrix, CRPIX, and CRVAL), using 
-    reasonable defaults if even these are missing.
+    If none of them work, then the last class it tries, AffineTransform, is guaranteed to succeed,
+    but it will only model the linear portion of the WCS (the CD matrix, CRPIX, and CRVAL), using
+    reasonable defaults if even these are missing.  If you think that you have the right software
+    for one of the WCS types, but FitsWCS still defaults to AffineTransform, it may be helpful to
+    update your installation of PyFITS/astropy and the relevant WCS software (if you don't already
+    have the latest version).
 
     Note: The list of classes this function will try may be edited, e.g. by an external module 
     that wants to add an additional WCS type.  The list is `galsim.wcs.fits_wcs_types`.
