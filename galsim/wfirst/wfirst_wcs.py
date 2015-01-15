@@ -28,11 +28,14 @@ import os
 # Basic WFIRST reference info, with lengths in mm.
 pixel_size_mm = 0.01
 focal_length = 18500.
+pix_scale = (pixel_size_mm/focal_length)*galsim.radians
 n_sip = 5 # Number of SIP coefficients used, where arrays are n_sip x n_sip in dimension
 
 # Version-related information, for reference back to material provided by Jeff Kruk.
+tel_name = "WFIRST"
+instr_name = "WFI"
 optics_design_ver = "4.2.2"
-prog_version = "0.2"
+prog_version = "0.4"
 
 # Information about center points of the SCAs in the WFI focal plane coordinate system (f1, f2)
 # coordinates.  These are rotated by an angle theta_fpa with respect to the payload axes, as
@@ -174,38 +177,125 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
         # and eqns 12-15
         rtheta = np.sqrt(sca_xc_tp_f.rad()**2 + sca_yc_tp_f.rad()**2)*galsim.radians
         theta = np.arctan(1./rtheta.rad())*galsim.radians
-        phi = np.arctan2(sca_xc_tp_f.rad(), -sca_yc_tp_f.rad())*galsim.radians
-        phi_p = 180.*galsim.degrees - pa_fpa
-        cos_delta_phi = np.cos(phi.rad() - phi_p.rad())
-        sin_delta_phi = np.sin(phi.rad() - phi_p.rad())
+        # phi is measured clockwise from the -Ytp axis
+        delta_phi = np.arctan2(-sca_xc_tp_f.rad(), sca_yc_tp_f.rad())*galsim.radians
+        delta_phi -= pa_fpa
+        # Leave phi_p at 180 (0 if dec_targ=-90), so that tangent plane axes remain oriented along
+        # celestial coordinates.
+        if use_dec / galsim.degrees > -90.:
+            phi_p = np.pi*galsim.radians
+        else:
+            phi_p = 0.*galsim.radians
+        phi = delta_phi + phi_p
+        cos_delta_phi = np.cos(delta_phi.rad())
+        sin_delta_phi = np.sin(delta_phi.rad())
         cos_theta = np.cos(theta.rad())
         sin_theta = np.sin(theta.rad())
-        cos_dec = np.cos(use_dec.rad())
-        sin_dec = np.sin(use_dec.rad())
+        cos_decp = np.cos(use_dec.rad())
+        sin_decp = np.sin(use_dec.rad())
 
-        # Rotate sca_xc_tp[i_sca], sca_yc_tp[i_sca] by pa_fpa
-        # Add pos_targ when implemented
+        # Compute RA, DEC of center of SCA.
+        # (Add pos_targ offsets when implemented.)
         crval1 = np.arctan2(-sin_delta_phi*cos_theta,
-                             sin_theta*cos_dec - cos_theta*sin_dec*cos_delta_phi)*galsim.radians
+                             sin_theta*cos_decp - cos_theta*sin_decp*cos_delta_phi)*galsim.radians
         crval1 += use_ra
         header['CRVAL1'] = (crval1 / galsim.degrees, "first axis value at reference pixel")
-        crval2 = np.arcsin(sin_theta*sin_dec + cos_theta*cos_dec*cos_delta_phi)*galsim.radians
+        crval2 = np.arcsin(sin_theta*sin_decp + cos_theta*cos_decp*cos_delta_phi)*galsim.radians
         header['CRVAL2'] = (crval2 / galsim.degrees, "second axis value at reference pixel")
 
-        # Compute CD coefficients: extract the linear terms from the a_sip, b_sip arrays.
-        a10 = a_sip[i_sca,1,0]
+        # Compute the position angle of the local pixel Y axis.
+        # This requires projecting local North onto the detector axes.
+        # Start by adding any SCA-unique rotation relative to FPA axes
+        sca_tp_rot = pa_fpa + sca_rot[i_sca]*galsim.degrees
+        cos_sca_rot = np.cos(sca_tp_rot.rad()) 
+        sin_sca_rot = np.sin(sca_tp_rot.rad())
+
+        # Compute X,Y position of reference pixel in tangent plane.
+        # This is first point in pair that will define a vector pointing North.
+        # A few lines here are redundant with what is done earlier, but keeps the code simpler and
+        # easier to follow.
+        alpha1 = crval1
+        delta1 = crval2
+        alpha2 = alpha1
+        # Increment dec by half-way from center to edge of the SCA.
+        # This seems a reasonable compromise in making the step big enough to avoid round-off errors
+        # becoming too large and avoiding non-linearities in the trigonometric functions.
+        delta2 = delta1 + float(galsim.wfirst.n_pix) * pix_scale / 4
+
+        # If these two points straddle dec = 90, shift points the other direction.
+        if delta2/galsim.degrees > 90.:
+            delta2 = delta1
+            delta1 = delta2 - float(galsim.wfirst.n_pix) * pix_scale / 4
+        # Only need to check North pole: if near South pole, the step above always takes the second
+        # point farther from the pole.
+
+        # Project onto tangent plane.
+        sin_dec1 = np.sin(delta1.rad())
+        cos_dec1 = np.cos(delta1.rad())
+        sin_dec2 = np.sin(delta2.rad())
+        cos_dec2 = np.cos(delta2.rad())
+        cos_dalpha1 = np.cos((alpha1 - use_ra).rad())
+        sin_dalpha1 = np.sin((alpha1 - use_ra).rad())
+        cos_dalpha2 = cos_dalpha1
+        sin_dalpha2 = sin_dalpha1
+
+        # Can compute sin_theta1 and sin_theta2 directly without first computing theta1:
+        sin_theta1 = sin_dec1*sin_decp + cos_dec1*cos_decp*cos_dalpha1
+        sin_theta2 = sin_dec2*sin_decp + cos_dec2*cos_decp*cos_dalpha2
+        # These should always be in range 0-1, but look out for roundoff error:
+        if sin_theta1 < 0.: sin_theta1 = 0.
+        if sin_theta1 > 1.: sin_theta1 = 1.
+        if sin_theta2 < 0.: sin_theta2 = 0.
+        if sin_theta2 > 1.: sin_theta2 = 1.
+        # This is always in the range 0-90, so can compute cos_theta simply:
+        cos_theta1 = np.sqrt(1.-sin_theta1*sin_theta1)
+        cos_theta2 = np.sqrt(1.-sin_theta2*sin_theta2)
+
+        phi1 = phi_p + \
+            np.arctan2(-cos_dec1*sin_dalpha1, 
+                        sin_dec1*cos_decp-cos_dec1*sin_decp*cos_dalpha1)*galsim.radians
+        phi2 = phi_p + \
+            np.arctan2(-cos_dec2*sin_dalpha2,
+                        sin_dec2*cos_decp-cos_dec2*sin_decp*cos_dalpha2)*galsim.radians
+
+        # Convert to X-Y positions:
+        # Don't need to protect against divide by zero as theta is always near 90 degrees.
+        xtp1 = cos_theta1*np.sin(phi1.rad())*galsim.radians/sin_theta1
+        ytp1 = -cos_theta1*np.cos(phi1.rad())*galsim.radians/sin_theta1
+        xtp2 = cos_theta2*np.sin(phi2.rad())*galsim.radians/sin_theta2
+        ytp2 = -cos_theta2*np.cos(phi2.rad())*galsim.radians/sin_theta2
+        dxtp = xtp2 - xtp1
+        dytp = ytp2 - ytp1
+
+        # Finally have the ingredients for computing the position angle of this SCA Y axis.
+        ## TODO: dxtp and so on are Angles, so they can't go in pa_sca.  Check about units, since
+        ## Jeff's C code seems to have them in degrees, which doesn't make sense to me.
+        pa_sca = np.arctan2(-cos_sca_rot*dxtp+sin_sca_rot*dytp,
+                             sin_sca_rot*dxtp+cos_sca_rot*dytp)*galsim.radians
+
+        # Compute CD coefficients: extract the linear terms from the a_sip, b_sip arrays.  These
+        # linear terms are stored in the SIP arrays for convenience, but are defined differently.
+        # The other terms have been divided by the linear terms, so that these become pure
+        # multiplicative factors. There is no need to change signs of the SIP coefficents associated
+        # with odd powers of X! Change sign of a10, b10 because the tangent-plane X pixel coordinate
+        # has sign opposite to the detector pixel X coordinate, and this transformation maps pixels
+        # to tangent plane.
+        a10 = -a_sip[i_sca,1,0]
         a11 = a_sip[i_sca,0,1]
-        b10 = b_sip[i_sca,1,0]
+        b10 = -b_sip[i_sca,1,0]
         b11 = b_sip[i_sca,0,1]
 
-        # Rotate by pa_fpa, plus rotational offsets of each SCA.
-        pa_tot = pa_fpa + sca_rot[i_sca]*galsim.degrees
-        cos_pa = np.cos(pa_tot.rad())
-        sin_pa = np.sin(pa_tot.rad())
+        # Rotate by pa_fpa.
+        cos_pa = np.cos(pa_sca.rad())
+        sin_pa = np.sin(pa_sca.rad())
         header['CD1_1'] = (cos_pa * a10 + sin_pa * b10, "partial of first axis coordinate w.r.t. x")
         header['CD1_2'] = (cos_pa * a11 + sin_pa * b11, "partial of first axis coordinate w.r.t. y")
         header['CD2_1'] = (-sin_pa * a10 + cos_pa * b10, "partial of second axis coordinate w.r.t. x")
         header['CD2_2'] = (-sin_pa * a11 + cos_pa * b11, "partial of second axis coordinate w.r.t. y")
+        header['ORIENTAT'] = (pa_sca / galsim.degrees, 
+                              "position angle of image y axis (deg. e of n)")
+        header['LONPOLE'] = (phi_p / galsim.degrees,
+                             "Native longitude of celestial pole")
 
         for i in range(n_sip):
             for j in range(n_sip):
@@ -389,6 +479,8 @@ def _populate_required_fields(header):
     header['EXTEND'] = 'True'
     header['BZERO'] = 32768
     header['BSCALE'] = 1
+    header['TELESCOP'] = (tel_name, "telescope used to acquire data")
+    header['INSTRUME'] = (instr_name, "identifier for instrument used to acquire data")
 
 def _parse_sip_file(file):
     """
