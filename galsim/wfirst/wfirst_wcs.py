@@ -270,8 +270,8 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
         # Finally have the ingredients for computing the position angle of this SCA Y axis.
         ## TODO: dxtp and so on are Angles, so they can't go in pa_sca.  Check about units, since
         ## Jeff's C code seems to have them in degrees, which doesn't make sense to me.
-        pa_sca = np.arctan2(-cos_sca_rot*dxtp+sin_sca_rot*dytp,
-                             sin_sca_rot*dxtp+cos_sca_rot*dytp)*galsim.radians
+        pa_sca = np.arctan2(-cos_sca_rot*dxtp.rad()+sin_sca_rot*dytp.rad(),
+                             sin_sca_rot*dxtp.rad()+cos_sca_rot*dytp.rad())*galsim.radians
 
         # Compute CD coefficients: extract the linear terms from the a_sip, b_sip arrays.  These
         # linear terms are stored in the SIP arrays for convenience, but are defined differently.
