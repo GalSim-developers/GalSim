@@ -136,6 +136,17 @@ def main(argv):
     t2 = time.time()
     logger.info('Done precomputation in %.1f seconds!'%(t2-t1))
 
+    # Define some parameters
+    nx_tiles = 10
+    ny_tiles = 10
+    stamp_size = 64
+    image_size = 10*nx_tiles
+
+    # Set up the final image:
+    final_image = galsim.ImageF(image_size,image_size)
+    # Set origin to be (0,0) for convenience
+    final_image.setOrigin(0,0)
+
     # Load WFIRST parameters
     exptime = wfirst.exptime # 168.1 seconds
     pixel_scale = wfirst.pixel_scale # 0.11 arcsecs / pixel
@@ -149,7 +160,7 @@ def main(argv):
     images_IPC = {}
     diff_IPC = {}
 
-    # Drawing PSFs, defining the dict keys and recomputing skylevel for each filer
+    # Drawing PSFs, defining the dict keys and recomputing skylevel for each filter
     for filter_name, filter_ in filters.iteritems():
         # Drawing PSF.  Note that the PSF object intrinsically has a flat SED, so if we
         # convolve it with a galaxy, it will properly take on the SED of the galaxy.  However,
@@ -184,11 +195,12 @@ def main(argv):
         images_IPC[filter_name] = []
         diff_IPC[filter_name] = []
 
-    for k in xrange(5): #xrange(cat.nobjects):
+    for k in xrange(cat.nobjects):
         logger.info('Processing the object at row %d in the input catalog'%k)
         # Initialize the (pseudo-)random number generator that we will be using below.
-        # Use a different random seed for each object to get different noise realizations.
-        rng = galsim.BaseDeviate(random_seed+k)
+
+        # The usual random number generator using a different seed for each galaxy.
+        ud = galsim.UniformDeviate(random_seed+k)
 
         # Galaxy is a bulge + disk with parameters taken from the catalog:
         disk = galsim.Exponential(flux=0.33, half_light_radius=cat.getFloat(k,5))
@@ -205,9 +217,23 @@ def main(argv):
         logger.debug('Created bulge+disk galaxy final profile')
         # Q: Should the flux be adjusted?????
 
+        # Apply a random rotation
+        theta = ud()*2.0*numpy.pi*galsim.radians
+        gal = gal.rotate(theta)
+
         # The center of the object is normally placed at the center of the postage stamp image.
         # You can change that with shift:
         gal = gal.shift(dx=cat.getFloat(k,11), dy=cat.getFloat(k,12))
+
+        # Choose a random position in the image
+        x = ud()*(image_size-1)
+        y = ud()*(image_size-1)
+        image_pos = galsim.PositionD(x,y)  # -> Goes into WCS stuff then
+
+        # Account for the fractional part of the position:
+        ix = int(math.floor(x+0.5))
+        iy = int(math.floor(y+0.5))
+        offset = galsim.PositionD(x-ix, y-iy)
 
         # Convolve the chromatic galaxy and the chromatic PSF
         final = galsim.Convolve([gal,PSF])
@@ -215,7 +241,12 @@ def main(argv):
         # draw profile through WFIRST filters
         for filter_name, filter_ in filters.iteritems():
             img = galsim.ImageF(64,64, scale=pixel_scale) # 64, 64
-            final.drawImage(filter_, image=img)
+            final.drawImage(filter_, image=img, offset=offset, wcs=wcs.local(image_pos))
+
+            # Find the overlapping bounds:
+            bounds = img.bounds & final_image.bounds
+            # Add the galaxy within the bounds to the bigger image
+            final_image[bounds] += img[bounds]
 
             # Adding sky level to the image.  
             img += sky_level_pix
