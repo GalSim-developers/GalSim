@@ -117,6 +117,8 @@ def main(argv):
     dir = 'input'
     cat = galsim.Catalog(cat_file_name,dir=dir)
     logger.info('Read in %d galaxies from catalog',cat.nobjects)
+    # Just use a few galaxies.
+    n_use = 5
 
     # At this stage, our galaxy is chromatic.
     logger.debug('Created bulge+disk galaxy final profile')
@@ -131,7 +133,7 @@ def main(argv):
     use_SCA = 7 # This could be any number from 1...18
     logger.info('Doing expensive pre-computation of PSF')
     t1 = time.time()
-    PSFs = wfirst.getPSF(SCAs=use_SCA, approximate_struts=True, n_waves=25)
+    PSFs = wfirst.getPSF(SCAs=use_SCA, approximate_struts=True, n_waves=10)
     PSF = PSFs[use_SCA]
     t2 = time.time()
     logger.info('Done precomputation in %.1f seconds!'%(t2-t1))
@@ -139,6 +141,30 @@ def main(argv):
     # Load WFIRST parameters
     exptime = wfirst.exptime # 168.1 seconds
     pixel_scale = wfirst.pixel_scale # 0.11 arcsecs / pixel
+
+    # We are going to choose a particular location on the sky.
+    ra_targ = 30.*galsim.degrees
+    dec_targ = -10.*galsim.degrees
+    targ_pos = galsim.CelestialCoord(ra=ra_targ, dec=dec_targ)
+    ang = 0.*galsim.degrees
+    # Get the WCS for an observation at this position, with the focal plane array oriented at an
+    # angle of 0 with respect to North.  The output of this routine is a list of WCS objects, one
+    # for each SCA.  We will then take the WCS for the SCA that we are going to use.
+    wcs_list = wfirst.getWCS(ang, pos=targ_pos, PA_is_FPA=True)
+    wcs = wcs_list[use_SCA]
+    # We need to find the center position for this SCA.  We'll tell it to give us a CelestialCoord
+    # corresponding to (X, Y) = (wfirst.n_pix/2, wfirst.n_pix/2).
+    SCA_cent_pos = wcs.toWorld(galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+    # We are going to just randomly distribute points in X, Y.  If we had a real galaxy catalog with
+    # positions in terms of RA, dec we could use wcs.toImage() to find where those objects should be
+    # in terms of (X, Y).
+    pos_rng = galsim.UniformDeviate(random_seed)
+    # Make a list of (X, Y) values, eliminating the 10% of the edge pixels as the object centroids.
+    x_img = []
+    y_img = []
+    for i_gal in range(n_use):
+        x_img.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
+        y_img.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
 
     # Create a dictionary that contains lists of images at different stages for every bandpass
     images = {}
@@ -158,196 +184,187 @@ def main(argv):
         # differs for the bulge and the disk.  However, the WFIRST bandpasses are narrow
         # enough that this doesn't matter too much.
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
-        img_psf = galsim.ImageF(16,16)
+        img_psf = galsim.ImageF(64,64)
         PSF.drawImage(bandpass=filter_, image=img_psf, scale=pixel_scale)
         # Artificially normalize to a total flux of 1 for display purposes.
         img_psf /= img_psf.array.sum()
         img_psf.write(out_filename)
         logger.debug('Created PSF with flat SED for {0}-band'.format(filter_name))
 
-        # First we get the amount of zodaical light (where currently we use the default location
-        # on the sky; this value will depend on position).  Since we have supplied an exposure
-        # time, the results will be returned to us in e-/s.  Then we multiply this by a factor to
-        # account for the amount of stray light that is expected.
-        sky_level_pix = wfirst.getSkyLevel(filters[filter_name], exp_time=wfirst.exptime)
+        # And create a big image into which everything will be drawn.
+        img = galsim.Image(wfirst.n_pix, wfirst.n_pix, wcs=wcs)
+
+        for k in xrange(n_use): #xrange(cat.nobjects):
+            logger.info('Processing the object at row %d in the input catalog'%k)
+            # Initialize the (pseudo-)random number generator that we will be using below.
+            # Use a different random seed for each object to get different noise realizations.
+            rng = galsim.BaseDeviate(random_seed+k)
+
+            # Galaxy is a bulge + disk with parameters taken from the catalog:
+            disk = galsim.Exponential(half_light_radius=0.1*cat.getFloat(k,5))
+            disk = disk * disk_SED
+            disk = disk.shear(e1=cat.getFloat(k,6), e2=cat.getFloat(k,7))
+
+            bulge = galsim.DeVaucouleurs(half_light_radius=0.1*cat.getFloat(k,8))
+            bulge = bulge * bulge_SED
+            bulge = bulge.shear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
+
+            # Add the components to get the galaxy.  The flux is clearly getting rescaled in an
+            # incorrect way, which I need to fix, but for now we'll just artificially fix it.
+            gal = 100*(1./3)*bulge+100*(2./3)*disk
+            # At this stage, our galaxy is chromatic.
+            logger.debug('Created bulge+disk galaxy final profile')
+
+            # Convolve the chromatic galaxy and the chromatic PSF
+            final = galsim.Convolve([gal,PSF])
+
+            # Find the bounds for this sub-image.  Note, have to properly handle sub-pixel shifts
+            # (not quite done yet).
+            bounds = galsim.BoundsI(int(round(x_img[k]-32)), int(round(x_img[k]+32)),
+                                    int(round(y_img[k]-32)), int(round(y_img[k]+32)))
+            final.drawImage(filter_, image=img[bounds], add_to_image=True)
+
+        # Now we're done with the per-galaxy drawing for this image.  The rest will be done for the
+        # entire image at once.
+
+        # First we get the amount of zodaical light for a position corresponding to the center of
+        # this SCA.  Since we have supplied an exposure time, the results will be returned to us in
+        # e-/s.  Then we multiply this by a factor to account for the amount of stray light that is
+        # expected.
+        sky_level_pix = wfirst.getSkyLevel(filters[filter_name], position=SCA_cent_pos,
+                                           exp_time=wfirst.exptime)
         sky_level_pix *= (1.0 + wfirst.stray_light_fraction)
         # Finally we add the expected thermal backgrounds in this band.  These are provided in
         # e-/pix/s, so we have to multiply by the exposure time.
         sky_level_pix += wfirst.thermal_backgrounds[filter_name]*wfirst.exptime
 
-        # Create an empty list for each filter to which each galaxy in the catalog will be appended
-        images[filter_name] = []
-        images_RecipFail[filter_name] = []
-        diff_RecipFail[filter_name] = []
-        images_NL[filter_name] = []
-        diff_NL[filter_name] = []
-        images_IPC[filter_name] = []
-        diff_IPC[filter_name] = []
+        # Adding sky level to the image.  
+        img += sky_level_pix
 
-    for k in xrange(5): #xrange(cat.nobjects):
-        logger.info('Processing the object at row %d in the input catalog'%k)
-        # Initialize the (pseudo-)random number generator that we will be using below.
-        # Use a different random seed for each object to get different noise realizations.
-        rng = galsim.BaseDeviate(random_seed+k)
+        # Adding Poisson Noise
+        img.addNoise(poisson_noise)
 
-        # Galaxy is a bulge + disk with parameters taken from the catalog:
-        disk = galsim.Exponential(flux=0.33, half_light_radius=cat.getFloat(k,5))
-        disk = disk * disk_SED
-        disk = disk.shear(e1=cat.getFloat(k,6), e2=cat.getFloat(k,7))
+        logger.debug('Created {0}-band image for galaxy'.format(filter_name))
 
-        bulge = galsim.DeVaucouleurs(flux=0.67, half_light_radius=cat.getFloat(k,8))
-        bulge = bulge * bulge_SED
-        bulge = bulge.shear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
+        # The subsequent steps account for the non-ideality of the detectors
 
-        # Add the components to get the galaxy
-        gal = bulge+disk
-        # At this stage, our galaxy is chromatic.
-        logger.debug('Created bulge+disk galaxy final profile')
-        # Q: Should the flux be adjusted?????
+        # Accounting Reciprocity Failure: Reciprocity, in the context of photography, is the inverse
+        # relationship between the incident flux (I) of a source object and the exposure time (t)
+        # required to produce a given response(p) in the detector, i.e., p = I*t. However, in NIR
+        # detectors, this relation does not hold always. The pixel response to a high flux is larger
+        # than its response to a low flux. This flux-dependent non-linearity is known as
+        # 'Reciprocity Failure'.
 
-        # The center of the object is normally placed at the center of the postage stamp image.
-        # You can change that with shift:
-        gal = gal.shift(dx=cat.getFloat(k,11), dy=cat.getFloat(k,12))
+        # Save the image before applying the transformation to see the difference
+        img_1 = img.copy()
 
-        # Convolve the chromatic galaxy and the chromatic PSF
-        final = galsim.Convolve([gal,PSF])
+        img.addReciprocityFailure(exp_time=exptime, alpha=wfirst.reciprocity_alpha,
+                                  base_flux=1.0)
+        logger.debug('Accounted for Reciprocity Failure in {0}-band image'.format(filter_name))
 
-        # draw profile through WFIRST filters
-        for filter_name, filter_ in filters.iteritems():
-            img = galsim.ImageF(64,64, scale=pixel_scale) # 64, 64
-            final.drawImage(filter_, image=img)
+        img_2 = img.copy()
+        diff = img_2-img_1
+        diff_RecipFail[filter_name] = diff
+        images_RecipFail[filter_name] = img_2
 
-            # Adding sky level to the image.  
-            img += sky_level_pix
+        # At this point in the image generation process, an integer number of photons gets
+        # detected, hence we have to round the pixel values to integers:
+        img.quantize()
 
-            # Adding Poisson Noise
-            img.addNoise(poisson_noise)
+        # Adding dark current to the image:
+        # Even when the detector is unexposed to any radiation, the electron-hole pairs that are
+        # generated within the depletion region due to finite temperature are swept by the high
+        # electric field at the junction of the photodiode. This small reverse bias leakage current
+        # is referred to as 'Dark current'. It is specified by the average number of electrons
+        # reaching the detectors per unit time and has an associated Poisson noise since it's a
+        # random event.
+        dark_img = galsim.ImageF(bounds=img.bounds, wcs=img.wcs,
+                                 init_value=wfirst.dark_current*wfirst.exptime)
+        dark_img.addNoise(poisson_noise)
+        img += dark_img
+        img_3 = img.copy()
 
-            logger.debug('Created {0}-band image for galaxy'.format(filter_name))
+        # NOTE: Sky level and dark current might appear like a constant background that can be
+        # simply subtracted. However, these contribute to the shot noise and matter for the
+        # non-linear effects that follow. Hence, these must be included at this stage of the image
+        # generation process. We subtract these backgrounds in the end.
 
-            # The subsequent steps account for the non-ideality of the detectors
+        # Applying a quadratic non-linearity
+        # In order to convert the units from electrons to ADU, we must multiply the image by a
+        # gain factor. The gain has a weak dependency on the charge present in each pixel. This
+        # dependency is accounted for by changing the pixel values (in electrons) and applying
+        # a constant nominal gain later, which is unity in our demo.
 
-            # Accounting Reciprocity Failure:
-            # Reciprocity, in the context of photography, is the inverse relationship between the
-            # incident flux (I) of a source object and the exposure time (t) required to produce a
-            # given response(p) in the detector, i.e., p = I*t. However, in NIR detectors, this
-            # relation does not hold always. The pixel response to a high flux is larger than its
-            # response to a low flux. This flux-dependent non-linearity is known as 'Reciprocity
-            # Failure'.
+        NLfunc = wfirst.NLfunc        # a quadratic non-linear function
+        img.applyNonlinearity(NLfunc)
+        logger.debug('Applied Nonlinearity to {0}-band image'.format(filter_name))
+        img_4 = img.copy()
 
-            # Save the image before applying the transformation to see the difference
-            img_old = img.copy()
+        diff = img_4-img_3
+        diff_NL[filter_name] = diff
+        images_NL[filter_name] = img_4
 
-            img.addReciprocityFailure(exp_time=exptime, alpha=wfirst.reciprocity_alpha,
-                base_flux=1.0)
-            logger.debug('Accounted for Reciprocity Failure in {0}-band image'.format(filter_name))
+        # Adding Interpixel Capacitance
+        # The voltage read at a given pixel location is influenced by the charges present in the
+        # neighboring pixel locations due to capacitive coupling of sense nodes. This interpixel
+        # capacitance effect is modelled as a linear effect that is described as a convolution of a
+        # 3x3 kernel with the image. The WFIRST kernel is not normalized to have the entries add to
+        # unity and hence must be normalized inside the routine.
 
-            diff = img-img_old
-            diff_RecipFail[filter_name].append(diff)
-            images_RecipFail[filter_name].append(img)
+        img.applyIPC(IPC_kernel=wfirst.ipc_kernel,edge_treatment='extend', kernel_normalization=True)
+        img_5 = img.copy()
+        # Here, we use `edge_treatment='extend'`, which pads the image with zeros before
+        # applying the kernel. The central part of the image is retained.
+        logger.debug('Applied interpixel capacitance to {0}-band image'.format(filter_name))
 
-            # At this point in the image generation process, an integer number of photons gets
-            # detected, hence we have to round the pixel values to integers:
-            img.quantize()
+        diff = img_5-img_4
+        diff_IPC[filter_name] = diff
+        images_IPC[filter_name] = img_5
 
-            # Adding dark current to the image
-            # Even when the detector is unexposed to any radiation, the electron-hole pairs that
-            # are generated within the depletion region due to finite temperature are swept by the
-            # high electric field at the junction of the photodiode. This small reverse bias
-            # leakage current is referred to as 'Dark current'. It is specified by the average
-            # number of electrons reaching the detectors per unit time and has an associated
-            # Poisson noise since it's a random event.
-            dark_img = galsim.ImageF(bounds=img.bounds,
-                init_value=wfirst.dark_current*wfirst.exptime)
-            dark_img.addNoise(poisson_noise)
-            img += dark_img
+        # Adding Read Noise
+        read_noise = galsim.CCDNoise(rng)
+        read_noise.setReadNoise(wfirst.read_noise)
+        img.addNoise(read_noise)
+        img_6 = img.copy()
 
-            # NOTE: Sky level and dark current might appear like a constant background that can be
-            # simply subtracted. However, these contribute to the shot noise and matter for the
-            # non-linear effects that follow. Hence, these must be included at this stage of the 
-            # image generation process. We subtract these backgrounds in the end.
+        logger.debug('Added Readnoise to {0}-band image'.format(filter_name))
 
-            # Applying a quadratic non-linearity
-            # In order to convert the units from electrons to ADU, we must multiply the image by a
-            # gain factor. The gain has a weak dependency on the charge present in each pixel. This
-            # dependency is accounted for by changing the pixel values (in electrons) and applying
-            # a constant nominal gain later, which is unity in our demo.
+        # Technically we have to apply the gain, dividing the signal in e- by the voltage gain in
+        # e-/ADU to get a signal in ADU.  For WFIRST the gain is expected to be around 1, so it
+        # doesn't really matter, but for completeness we include this step.
+        img /= wfirst.gain
 
-            # Save the image before applying the transformation to see the difference
-            img_old = img.copy()
+        # Finally, the analog-to-digital converter reads in integer value.
+        img.quantize()
+        # Note that the image type after this step is still a float.  If we want to actually
+        # get integer values, we can do new_img = galsim.Image(img, dtype=int)
 
-            NLfunc = wfirst.NLfunc        # a quadratic non-linear function
-            img.applyNonlinearity(NLfunc)
-            logger.debug('Applied Nonlinearity to {0}-band image'.format(filter_name))
+        # Since many people are used to viewing background-subtracted images, we provide a
+        # version with the background subtracted (also rounding that to an int)
+        tot_sky_level = (sky_level_pix + wfirst.dark_current*wfirst.exptime)/wfirst.gain
+        tot_sky_level = numpy.round(tot_sky_level)
+        img -= tot_sky_level
 
-            diff = img-img_old
-            diff_NL[filter_name].append(diff)
-            images_NL[filter_name].append(img)
+        logger.debug('Subtracted background for {0}-band image'.format(filter_name))
+        images[filter_name] = img
 
-            # Adding Interpixel Capacitance
-            # The voltage read at a given pixel location is influenced by the charges present in
-            # the neighboring pixel locations due to capacitive coupling of sense nodes. This
-            # interpixel capacitance effect is modelled as a linear effect that is described as a
-            # convolution of a 3x3 kernel with the image. The WFIRST kernel is not normalized to
-            # have the entries add to unity and hence must be normalized inside the routine.
-
-            # Save the image before applying the transformation to see the difference
-            img_old = img.copy()
-
-            img.applyIPC(IPC_kernel=wfirst.ipc_kernel,edge_treatment='extend',
-                         kernel_normalization=True)
-            # Here, we use `edge_treatment='extend'`, which pads the image with zeros before
-            # applying the kernel. The central part of the image is retained.
-            logger.debug('Applied interpixel capacitance to {0}-band image'.format(filter_name))
-
-            diff = img-img_old
-            diff_IPC[filter_name].append(diff)
-            images_IPC[filter_name].append(img)
-
-            # Adding Read Noise
-            read_noise = galsim.CCDNoise(rng)
-            read_noise.setReadNoise(wfirst.read_noise)
-            img.addNoise(read_noise)
-
-            logger.debug('Added Readnoise to {0}-band image'.format(filter_name))
-
-            # Technically we have to apply the gain, dividing the signal in e- by the voltage gain
-            # in e-/ADU to get a signal in ADU.  For WFIRST the gain is expected to be around 1,
-            # so it doesn't really matter, but for completeness we include this step.
-            img /= wfirst.gain
-
-            # Finally, the analog-to-digital converter reads in integer value.
-            img.quantize()
-            # Note that the image type after this step is still a float.  If we want to actually
-            # get integer values, we can do new_img = galsim.Image(img, dtype=int)
-
-            # Since many people are used to viewing background-subtracted images, we provide a
-            # version with the background subtracted (also rounding that to an int)
-            tot_sky_level = (sky_level_pix + wfirst.dark_current*wfirst.exptime)/wfirst.gain
-            tot_sky_level = numpy.round(tot_sky_level)
-            img -= tot_sky_level
-
-            logger.debug('Subtracted background for {0}-band image'.format(filter_name))
-            images[filter_name].append(img)
-
-    for filter_name, filter_ in filters.iteritems():
         out_filename = os.path.join(outpath,'demo13_{0}.fits'.format(filter_name))
-        galsim.fits.writeMulti(images[filter_name], out_filename)
+        images[filter_name].write(out_filename)
 
         out_filename = os.path.join(outpath,'demo13_IPC_{0}.fits'.format(filter_name))
-        galsim.fits.writeMulti(images_IPC[filter_name], out_filename)
+        images_IPC[filter_name].write(out_filename)
         out_filename = os.path.join(outpath,'demo13_diff_IPC_{0}.fits'.format(filter_name))
-        galsim.fits.writeMulti(diff_IPC[filter_name], out_filename)
+        diff_IPC[filter_name].write(out_filename)
 
         out_filename = os.path.join(outpath,'demo13_RecipFail_{0}.fits'.format(filter_name))
-        galsim.fits.writeMulti(images_RecipFail[filter_name], out_filename)
+        images_RecipFail[filter_name].write(out_filename)
         out_filename = os.path.join(outpath,'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
-        galsim.fits.writeMulti(diff_RecipFail[filter_name], out_filename)
+        diff_RecipFail[filter_name].write(out_filename)
 
         out_filename = os.path.join(outpath,'demo13_NL_{0}.fits'.format(filter_name))
-        galsim.fits.writeMulti(images_NL[filter_name], out_filename)
+        images_NL[filter_name].write(out_filename)
         out_filename = os.path.join(outpath,'demo13_diff_NL_{0}.fits'.format(filter_name))
-        galsim.fits.writeMulti(diff_NL[filter_name], out_filename)
+        diff_NL[filter_name].write(out_filename)
 
     logger.info('You can display the output in ds9 with a command line that looks something like:')
     logger.info('ds9 -rgb -blue -scale limits -0.2 0.8 output/demo13_J129.fits -green '
