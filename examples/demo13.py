@@ -58,6 +58,12 @@ import galsim as galsim
 import galsim.wfirst as wfirst
 
 def main(argv):
+    # Increase the maximum fft size to draw galaxies convolved with PSF
+    # NOTE TO SELF: NEEDS A FIX
+    gsparams = galsim.GSParams()
+    gsparams.maximum_fft_size = 8192
+    print galsim.GSParams().maximum_fft_size
+
     # Where to find and output data.
     path, filename = os.path.split(__file__)
     datapath = os.path.abspath(os.path.join(path, "data/"))
