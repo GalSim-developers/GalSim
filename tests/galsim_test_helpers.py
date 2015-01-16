@@ -153,7 +153,7 @@ def do_shoot(prof, img, name):
     # even for slow convergers like Airy (which needs a _very_ large image) or Sersic.
     if 'Airy' in name:
         img = galsim.ImageD(2048,2048, scale=dx)
-    elif 'Sersic' in name or 'DeVauc' in name:
+    elif 'Sersic' in name or 'DeVauc' in name or 'Spergel' in name:
         img = galsim.ImageD(512,512, scale=dx)
     else:
         img = galsim.ImageD(128,128, scale=dx)
@@ -205,6 +205,9 @@ def do_kvalue(prof, name):
             " convolved with a delta function is inconsistent with real-space image.")
 
 def radial_integrate(prof, minr, maxr):
+    """A simple helper that calculates int 2pi r f(r) dr, from rmin to rmax
+       for an axially symmetric profile.
+    """
     assert prof.isAxisymmetric()
     f = lambda r: 2 * np.pi * r * prof.SBProfile.xValue(galsim.PositionD(r,0))
     return galsim.integ.int1d(f, minr, maxr)

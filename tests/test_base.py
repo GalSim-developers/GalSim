@@ -1719,17 +1719,14 @@ def test_spergel():
         if nu >= -0.3:
             do_kvalue(spergel, "Spergel(nu={:1}) ".format(nu))
 
-        # s.b. finite at origin iff nu > 0
-        # Consequently can only test sb sum and photon shooting for nu > 0.
-        if nu > 0.0:
-            np.testing.assert_almost_equal(
-                myImg.array.sum()*dx**2, myImg.added_flux, 5,
-                err_msg="Spergel profile GSObject::draw returned wrong added_flux")
+        np.testing.assert_almost_equal(
+            myImg.array.sum()*dx**2, myImg.added_flux, 5,
+            err_msg="Spergel profile GSObject::draw returned wrong added_flux")
 
-            # Test photon shooting.
-            # Convolve with a small gaussian to smooth out the central peak.
-            spergel2 = galsim.Convolve(spergel, galsim.Gaussian(sigma=0.3))
-            do_shoot(spergel2,myImg,"Spergel")
+        # Test photon shooting.
+        # Convolve with a small gaussian to smooth out the central peak.
+        spergel2 = galsim.Convolve(spergel, galsim.Gaussian(sigma=0.3))
+        do_shoot(spergel2,myImg,"Spergel")
 
     # Now repeat everything using a truncation.  (Above had no truncation.)
 
@@ -1837,7 +1834,7 @@ def test_spergel_radii():
             print 'scale = ',test_gal.getScaleRadius()
             got_hlr = test_gal.getHalfLightRadius()
             got_flux = test_gal.getFlux()
-            # nu = 0.85 is too difficult to numerically integrate
+            # nu = -0.85 is too difficult to numerically integrate
             if nu > -0.85:
                 hlr_sum = radial_integrate(test_gal, 0., got_hlr)
                 print 'hlr_sum = ',hlr_sum
@@ -1896,6 +1893,7 @@ def test_spergel_radii():
         for test_gal, label in zip(gal_list, gal_labels):
             got_hlr = test_gal.getHalfLightRadius()
             got_flux = test_gal.getFlux()
+            # nu = -0.85 is too difficult to numerically integrate
             if nu > -0.85:
                 hlr_sum = radial_integrate(test_gal, 0., got_hlr)
                 print 'hlr_sum = ',hlr_sum
