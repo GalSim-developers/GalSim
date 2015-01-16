@@ -78,24 +78,32 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
     The user must specify a position for the center of the focal plane array (either as (ra, dec),
     or a CelestialCoord `pos`) and the orientation.
 
-    Some notes on coordinate systems for WFIRST.  There are three coordinate systems that are used,
-    all as projected onto the sky.
+    To use this routine it is useful to define several coordinate systems for WFIRST.  The diagram
+    located on the GalSim wiki,
+    https://github.com/GalSim-developers/GalSim/wiki/GalSim-WFIRST-module-diagrams
+    will be useful in understanding the description of these coordinate systems below.
 
     Observatory coordinate system: +X_obs points along the boresight into the sky, +Z_obs points
-    towards the Sun in the absence of a roll offset, +Y_obs makes a right-handed system
+    towards the Sun in the absence of a roll offset, +Y_obs makes a right-handed system.
 
     Payload coordinate system: +X_pl points along -Y_obs, +Y_pl points along +Z_obs, +Z_pl points
     along -X_obs (back towards observer).
 
-    WFI focal plane array (FPA) coordinate system: This is defined by a left-handed system f1, f2,
-    that is rotated by an angle `theta_fpa` with respect to the payload axes.  `theta_fpa` is a
+    Wide field imager (WFI) focal plane assembly (FPA) coordinate system: This is defined by a
+    left-handed system f1, f2, that is rotated by an angle `theta_fpa` with respect to the payload
+    axes.  +f1 points along the long axis of the focal plane, transverse to the radius from the
+    telescope optic axis.  +f2 points radially out from the telescope optic axis, along the narrow
+    dimension of the focal plane.  If +f2 points North, then +f1 points East.  `theta_fpa` is a
     positive CCW rotation of the f2 axis relative to -Y_pl, and of f1 relative to +X_pl.  In terms
     of focal plane geometry, if +Y_fp is pointing North, then SCAs 3 and 12 will be at highest
     declination, 8 and 17 at the lowest.  +Y_fp is aligned with the short axis of the focal plane
     array.
 
+    There is also a detector coordinate system (P1, P2).  +P1 and +P2 point along the fast- and
+    slow-scan directions of the pixel readout, respectively.
+
     So, for reference, if the boresight is pointed at RA=90, DEC=0 on March 21st (Sun at vernal
-    equinox), then  +X_obs points at (RA,DEC)=(90,0), +Y_obs points North, and +Z_obs points at the
+    equinox), then +X_obs points at (RA,DEC)=(90,0), +Y_obs points North, and +Z_obs points at the
     Sun.  The payload coordinates are +X_pl points South, -Y_pl points East.  Finally, the FPA
     coordinate system is defined by +f2 being at a position angle 90+theta_fpa east of North.  If
     the observatory +Y axis is at a position angle `pa_obsy` East of North, then the focal plane
