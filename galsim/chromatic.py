@@ -53,6 +53,9 @@ class ChromaticObject(object):
     gsobj = chrom_obj.evaluateAtWavelength(lambda) returns the monochromatic surface brightness
     profile (as a GSObject) at a given wavelength (in nanometers).
 
+    The setupInterpolation() method can be used for non-separable ChromaticObjects to expedite the
+    image rendering process.  See the docstring of that method for more details.
+
     Also, ChromaticObject has most of the same methods as GSObjects with the following exceptions:
 
     The GSObject access methods (e.g. xValue(), maxK(), etc.) are not available.  Instead,
