@@ -168,9 +168,6 @@ class ChromaticObject(object):
                                 `oversample_fac`>1 results in higher accuracy but costlier
                                 pre-computations (more memory and time). [default: 1]
         """
-        # Swap in the alternate drawing routine.
-        self.drawImage = self._drawImage
-
         # Set up the interpolation (which can be a costly step, depending on the length of
         # `waves`).
         self.waves = np.sort(np.array(waves))
@@ -216,14 +213,17 @@ class ChromaticObject(object):
         A routine to force an object for which interpolation was previously set up go back to the
         exact calculation.
         """
-        # Get rid of the stored attributes related to interpolation.
-        del self.waves
-        del self.stepK_vals
-        del self.maxK_vals
-        del self.ims
-
-        # Swap in the regular drawImage routine.
-        self.drawImage = galsim.ChromaticObject.drawImage
+        # Check and emit a warning if interpolation was not set up.
+        if not hasattr(self, 'waves'):
+            import warnings
+            warnings.warn('noInterpolation was called on object for which it had not been set up!'
+                          ' No action taken.')
+        else:
+            # Get rid of the stored attributes related to interpolation.
+            del self.waves
+            del self.stepK_vals
+            del self.maxK_vals
+            del self.ims
 
     def _evaluateAtWavelength(self, wave):
         """
@@ -234,11 +234,11 @@ class ChromaticObject(object):
 
         @returns the monochromatic object at the given wavelength, as a GSObject.
         """
-        if self.waves is not None:
+        if hasattr(self, 'waves'):
             im, stepk, maxk = self._imageAtWavelength(wave)
             return galsim.InterpolatedImage(im, _force_stepk=stepk, _force_maxk=maxk)
         else:
-            return self.simpleEvaluateAtWavelength(wave)
+            return self.evaluateAtWavelength(wave)
 
     def _imageAtWavelength(self, wave):
         """
@@ -251,7 +251,7 @@ class ChromaticObject(object):
         @returns an Image of the object at the given wavelength.
         """
         # First, some wavelength-related sanity checks.
-        if self.waves is None:
+        if not hasattr(self, 'waves'):
             raise RuntimeError("Requested image at some wavelength without setting up "
                                "interpolation!")
         if wave < min(self.waves) or wave > max(self.waves):
@@ -277,9 +277,15 @@ class ChromaticObject(object):
 
         The task of drawImage() in a chromatic context is to integrate a chromatic surface
         brightness profile multiplied by the throughput of `bandpass`, over the wavelength interval
-        indicated by `bandpass`.
+        indicated by `bandpass`.  This integration will take place either via brute-force drawing
+        the image at each wavelength using the `_normal_drawImage` routine, or via an optimized
+        version of the routine (`_interp_drawImage`) that uses some approximations to significantly
+        speed-up the calculations for non-separable profiles.  `drawImage` chooses which method to
+        use depending on whether the user has done the pre-computation necessary for the latter,
+        using the `setupInterpolation` method.
 
-        Several integrators are available in galsim.integ to do this integration.  By default,
+        Several integrators are available in galsim.integ to do this integration when using the
+        first (non-interpolated integration).  By default,
         `galsim.integ.SampleIntegrator(rule=np.trapz)` will be used if either
         `bandpass.wave_list` or `self.wave_list` have len() > 0.  If lengths of both are zero, which
         may happen if both the bandpass throughput and the SED associated with `self` are analytic
@@ -301,9 +307,23 @@ class ChromaticObject(object):
                                 for details.)  [default: None]
         @param integrator       One of the image integrators from galsim.integ [default: None,
                                 which will try to select an appropriate integrator automatically.]
+                                This keyword is ignored in the case that optimized interpolation
+                                between precomputed images is to be used to render the image.
         @param **kwargs         For all other kwarg options, see GSObject.drawImage()
 
         @returns the drawn Image.
+        """
+        if hasattr(self, 'waves'):
+            return self._interp_drawImage(bandpass, image=image,
+                                          integrator=integrator, **kwargs)
+        else:
+            return self._normal_drawImage(bandpass, image=image,
+                                          integrator=integrator, **kwargs)
+
+    def _normal_drawImage(self, bandpass, image=None, integrator=None, **kwargs):
+        """
+        Base implementation for drawing an image of a ChromaticObject without interpolation.
+        Users will not typically call this directly, and should instead use `drawImage`.
         """
         # To help developers debug extensions to ChromaticObject, check that ChromaticObject has
         # the expected attributes
@@ -361,29 +381,10 @@ class ChromaticObject(object):
         image += integral
         return image
 
-    def _drawImage(self, bandpass, image=None, integrator=None, **kwargs):
+    def _interp_drawImage(self, bandpass, image=None, integrator=None, **kwargs):
         """Draw method adapted to work for ChromaticImage instances for which interpolation between
-        stored images is being used.
-
-        This method has a number of optimizations compared to brute force drawing.  It uses the set
-        of interpolated images at each wavelength to carry out the integration, only carrying out
-        the GSObject instantation and convolution with pixel response at the very end.  Currently,
-        it can only carry out linear interpolation between the stored images at fixed values of
-        wavelength.
-
-        @param bandpass         A Bandpass object representing the filter against which to
-                                integrate.
-        @param image            Optionally, the Image to draw onto.  (See GSObject.drawImage()
-                                for details.)  [default: None]
-        @param integrator       Keyword to specify the integrator to use when integrating over
-                                wavelength.  Currently, users cannot actually select the integration
-                                method since this is a specially optimized drawing routine, but this
-                                keyword is allowed in order to have parallel sets of keyword
-                                arguments for this and the regular ChromaticObject.drawImage()
-                                routine.  [default: None]
-        @param **kwargs         For all other kwarg options, see GSObject.drawImage()
-
-        @returns the drawn Image.
+        stored images is being used.  Users should not call this routine directly, and should
+        instead interact with the `drawImage` method.
         """
         # Note that integrator is not actually selectable.
         if integrator is not None:
@@ -435,8 +436,8 @@ class ChromaticObject(object):
 
         # Figure out stepK and maxK using the minimum and maximum (respectively) that have nonzero
         # weight.  This is the most conservative possible choice, since it's possible that some of
-        # the images that have non-zero weights might have such tiny weights that we should really
-        # be ignoring them.
+        # the images that have non-zero weights might have such tiny weights that they don't change
+        # the effective stepk and maxk we should use.
         stepk = min(np.array(self.stepK_vals)[weight_fac>0])
         maxk = max(np.array(self.maxK_vals)[weight_fac>0])
 

@@ -1329,24 +1329,6 @@ def test_interpolated_ChromaticObject():
         err_msg='ChromaticObject results differ for interpolated vs. exact'
         ' when convolving with ChromaticSum')
 
-    # Check that we can modify the flux in the usual way.
-    exact_psf_2 = np.pi*exact_psf_1
-    interp_psf_2 = np.pi*interp_psf_1
-    im_exact = exact_psf_2.drawImage(bandpass, scale=scale)
-    im_interp = im_exact.copy()
-    im_interp = interp_psf_2.drawImage(bandpass, image=im_interp, scale=scale)
-    expected_flux = exact_psf_2.SED.calculateFlux(bandpass)
-    frac_diff_exact = abs(im_exact.array.sum()/expected_flux-1.0)
-    frac_diff_interp = abs(im_interp.array.sum()/expected_flux-1.0)
-    np.testing.assert_almost_equal(
-        frac_diff_exact, 0.0, decimal=2,
-        err_msg='ChromaticObject flux is wrong when multiplied to change'
-        ' normalization (exact calculation)')
-    np.testing.assert_almost_equal(
-        frac_diff_interp, 0.0, decimal=2,
-        err_msg='ChromaticObject flux is wrong when multiplied to change'
-        ' normalization (interpolated calculation)')
-
     # Finally, check that the routine is careful not to interpolate outside of its original bounds.
     try:
         np.testing.assert_raises(RuntimeError, obj_interp.drawImage, bandpass_z)
