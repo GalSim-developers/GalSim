@@ -97,7 +97,7 @@ def main(argv):
         # means that the colors of the galaxy will now be meaningful (for example, the bulge will
         # be more evident in the redder bands and the disk in the bluer bands).
         bandpass = filters['W149']
-        mag_norm = 22.0
+        mag_norm = 20.0
 
         SEDs[SED_name] = SED.withMagnitude(target_magnitude=mag_norm, bandpass=bandpass)
 
