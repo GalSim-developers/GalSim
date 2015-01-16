@@ -2197,10 +2197,18 @@ class Spergel(GSObject):
     the profile core and the relative prominence of the profile wings.  At `nu = 0.5`, the Spergel
     profile is equivalent to an Exponential profile (or alternatively an `n = 1.0` Sersic profile).
     At `nu = -0.6` (and in the radial range near the half-light radius), the Spergel profile is
-    similar to a DeVaucouleurs profile or `n = 4.0` Sersic profile.  Note that a `nu = -0.6` Spergel
-    profile is roughly 3x faster to draw than an `n = 4.0` Sersic profile, though a `nu = 0.5`
-    Spergel profile, `n = 1.0` Sersic profile, and an Exponential profile all take about the same
-    amount of time to draw.
+    similar to a DeVaucouleurs profile or `n = 4.0` Sersic profile.
+
+    Due to its analytic Fourier transform and depending on the indices `n` and `nu`, the Spergel
+    profile can be considerably faster to draw than the roughly equivalent Sersic profile.  For
+    example, the `nu = -0.6` Spergel profile is roughly 3x faster to draw than an `n = 4.0` Sersic
+    profile once the Sersic profile cache has been set up.  However, if not taking advantage of
+    the cache, for example, if drawing Sersic profiles with `n` continuously varying near 4.0 and
+    Spergel profiles with `nu` continuously varying near -0.6, then the Spergel profiles are about
+    50x faster to draw.  At the other end of the galaxy profile spectrum, the `nu = 0.5` Spergel
+    profile, `n = 1.0` Sersic profile, and the Exponential profile all take about the same amount
+    of time to draw if cached, and the Spergel profile is about 2x faster than the Sersic profile
+    if uncached.
 
     For more information, refer to
 
