@@ -1247,7 +1247,7 @@ def test_interpolated_ChromaticObject():
     red_limit = max(bandpass.red_limit, bandpass_g.red_limit)
     waves = np.linspace(blue_limit, red_limit, n_interp)
 
-    # First, compare images that are drawn with exact and interpolated PSF.
+    # First, compare images that are drawn with exact and interpolated ChromaticGaussian.
     exact_psf = ChromaticGaussian(sigma_0)
     interp_psf = exact_psf.copy()
     interp_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
@@ -1269,7 +1269,8 @@ def test_interpolated_ChromaticObject():
         obj = galsim.Gaussian(sigma=sigma_0*(wave/500.), flux=bandpass(wave))
         obj = obj.shear(g1=0.1*((wave/500.)-1.))
         obj.drawImage(image=im, scale=scale, add_to_image=True)
-    # Flux normalization should not be the same, but the rest should be.  So just renormalize.
+    # Flux normalization should not be the same, since we didn't do the dwave part of the integral,
+    # but the rest should be.  So just renormalize.
     im *= im_interp.array.sum()/im.array.sum()
     np.testing.assert_array_almost_equal(
         im_interp.array, im.array, decimal=4,
@@ -1394,11 +1395,11 @@ def test_ChromaticOpticalPSF():
     obj.setupInterpolation(waves, oversample_fac=oversample_fac)
     im_r = obj.drawImage(bandpass, scale=scale)
     im_r_ref = galsim.fits.read(os.path.join(refdir, 'r_exact.fits'))
+    # Test nearly passes at decimal=4, but 0.15% of pixels disagree.  However, decimal=3 after
+    # normalization with peak flux is still very good.
     # Renormalize so peak is 1.
     im_r /= im_r.array.max()
     im_r_ref /= im_r_ref.array.max()
-    # Test nearly passes at decimal=4, but 0.15% of pixels disagree.  However, decimal=3 after
-    # normalization with peak flux is still very good.
     np.testing.assert_array_almost_equal(
         im_r.array, im_r_ref.array, decimal=3,
         err_msg='ChromaticOpticalPSF results disagree with reference in r band')
@@ -1426,6 +1427,20 @@ def test_ChromaticOpticalPSF():
             im.array, im_exact.array, decimal=3,
             err_msg='ChromaticOpticalPSF results disagree with reference in narrow band'
             ' centered at %.1f nm'%cent_val)
+
+    # Finally, check that flux normalization is preserved when we convolve with a chromatic object.
+    gal = galsim.Exponential(half_light_radius = 2.*scale)
+    gal = gal.shear(g2 = 0.3)
+    gal = disk_SED*gal
+    obj_conv = galsim.Convolve(obj, gal)
+    im = obj_conv.drawImage(bandpass, scale=scale)
+    expected_flux = disk_SED.calculateFlux(bandpass)
+    frac_diff_exact = abs(im.array.sum()/expected_flux-1.0)/2.
+    # Check to 2%
+    np.testing.assert_almost_equal(
+        frac_diff_exact, 0.0, decimal=2,
+        err_msg='ChromaticObject flux is wrong when convolved with ChromaticOpticalPSF '
+        ' (interpolated calculation)')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
