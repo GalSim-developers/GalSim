@@ -4,23 +4,69 @@ not listed here for brevity.  See the CHANGLELOG.md files associated with each
 version for a more complete list.  Issue numbers related to each change are 
 given in parentheses.
 
+v1.2
+====
+
+New Features
+------------
+
+- Changed name of noise whitening routine from noise.applyWhiteningTo(image)
+  to image.whitenNoise(noise). (#529)
+- Added image.symmetrizeNoise. (#529)
+- Added magnitudes as a method to set the flux of SED objects. (#547)
+- Added SED.calculateDCRMomentShifts, SED.calculateChromaticSeeingRatio. (#547)
+- Added image.applyNonlinearity and image.addReciprocityFaiure. (#552)
+- Renamed `alias_threshold` to `folding_threshold`. (#562)
+- Extended to the `rotate`, `shear`, and `transform` methods of ChromaticObject
+  the ability to take functions of wavelength for the arguments. (#581)
+- Added cdmodel module to describe charge deflection in CCD pixels. (#524)
+- Added `pupil_plane_im` option to OpticalPSF. (#601)
+- Added `nx`, `ny`, and `bounds` keywords to drawImage() and drawKImage()
+  methods. (#603)
+
+Bug Fixes and Improvements
+--------------------------
+
+- Improved efficiency of noise generation by correlated noise models. (#563)
+- Modified BoundsI and PositionI initialization to ensure that integer elements
+  in NumPy arrays with `dtype==int` are handled without error. (#486)
+- Changed the default seed used for Deviate objects when no seed is given to
+  use /dev/urandom if it is available. (#537)
+- Changed SED and Bandpass methods to preserve type when returning a new object
+  when possible. (#547)
+- Made `file_name` argument to `CorrelatedNoise.getCOSMOSNoise()` be able
+  to have a default value in the repo. (#548)
+- Fixed the `dtype=` kwarg of `Image` constructor on some platforms. (#571)
+- Added workaround for bug in pyfits 3.0 in `galsim.fits.read`. (#572)
+- Fixed a bug in the Image constructor when passed a NumPy array with the
+  opposite byteorder as the system native one. (#594)
+- Fixed bug that prevented calling LookupTables on non-square 2d arrays. (#599)
+- Updated the code to account for a planned change in NumPy 1.9. (#604)
+- Fixed a bug where the dtype of an Image could change when resizing. (#604)
+- Defined a hidden `__version__` attribute according to PEP 8 standards. (#610)
+
+Updates to config options
+-------------------------
+
+- Moved noise whitening option from being an attribute of the RealGalaxy class,
+  to being a part of the description of the noise. (#529)
+- Added RandomPoisson, RandomBinomial, RandomWeibull, RandomGamma, and
+  RandomChi2 random number generators. (#537)
+
+
 v1.1
 ====
 
 Non-backward-compatible API changes
 -----------------------------------
 
-* Changed the `xw` and `yw` parameters of the `Pixel` constructor to a
-  single `scale` parameter. (#364)
-* Added new `Box` class to take up the functionality that had been `Pixel`
-  with unequal values of `xw` and `yw`. (#364)
-* Changed `Angle.wrap()` to return the wrapped angle rather than modifying the
-  original. (#364)
+* Changed `Pixel` to take a single `scale` parameter. (#364)
+* Added new `Box` class. (#364)
+* Changed `Angle.wrap()` to return the wrapped angle. (#364)
 * Changed Bounds methods `addBorder`, `shift`, and `expand` to return new
-  Bounds objects rather than changing the original. (#364)
+  Bounds objects. (#364)
 * Merged the GSParams parameters `shoot_relerr` and `shoot_abserr` into the
-  parameters `integration_relerr` and `integration_abserr`.  The latter items
-  now cover all integrations other than real-space rendering. (#535)
+  parameters `integration_relerr` and `integration_abserr`. (#535)
 
 Other changes to the API
 ------------------------
@@ -29,45 +75,26 @@ Other changes to the API
 * Combined the old `Image`, `ImageView` and `ConstImageView` arrays of class
   names into a single python layer `Image` class. (#364)
 * Changed the methods createSheared, createRotated, etc. to more succinct
-  names.  The applyShear, applyRotation, etc. methods are also discouraged
-  and will eventually be deprecated. (#511)
-* Changed the `setFlux` and `scaleFlux` methods to versions that return new
-  objects, rather than change the object in place. (#511)
-* Changed the Shapelet.fitImage method to a factory function named
-  `FitShapelet` (#511)
+  names `shear`, `rotate`, etc. (#511)
+* Changed the `setFlux` and `scaleFlux` methods to return new objects. (#511)
+* Changed the Shapelet.fitImage method to `FitShapelet` (#511)
 * Changed the `nyquistDx` method to `nyquistScale`. (#511)
-* Moved as many classes as possible toward an immutable design, meaning that
-  we discourage use of setters in various classes that had them. (#511)
+* Moved as many classes as possible toward an immutable design. (#511)
 * Combined the `draw` and `drawShoot` methods into a single `drawImage` method
-  with more options about how the profile should be rendered.  Furthermore, in
-  most cases, you no longer need to convolve by a Pixel by hand.  The default
-  rendering method will include the pixel convolution for you. (#535)
-* Changed the name of `drawK` to `drawKImage` to be more parallel with the
-  new `drawImage` name. (#535)
+  with more options about how the profile should be rendered. (#535)
+* Changed the name of `drawK` to `drawKImage`. (#535)
 
 New Features
 ------------
 
-* Added new set of WCS classes.  See wcs.py and fitswcs.py for details. (#364)
-* Every place in the code that can take a `scale` parameter  can now take a
-  `wcs` parameter. (#364)
+* Added new set of WCS classes. (#364)
 * Added `CelestialCoord` class to represent (ra,dec) coordinates. (#364)
-* Added `Bandpass` class to represent throughput functions. (#467)
-* Added `SED` class to represent stellar and galactic spectra. (#467)
-* Added `ChromaticObject` class to represent wavelength-dependent surface
-  brightness profiles. (#467)
-* Added `ChromaticAtmosphere` function to easily handle chromatic effects
-  due to the atmosphere. (#467)
-* Permit users to initialize `OpticalPSF` with a list or array of aberrations,
-  as an alternative to specifying each one individually. (#409)
-* Added `max_size` optional parameter to OpticalPSF that lets you limit the
-  size of the image that it constructs internally. (#478)
-* Added option to FitsHeader and FitsWCS to read in SCamp-style text files with
-  the header information using the parameter `text_file=True`. (#508)
-* Modified addNoiseSNR() method to return the variance of the noise that was
-  added. (#526)
-* Added `dtype` option to `drawImage` and `drawKImage`, which sets the data
-  type to use for automatically constructed images. (#526)
+* Added `Bandpass`, `SED`, and `ChromaticObject` classes. (#467)
+* Added `aberrations` parameter of OpticalPSF. (#409)
+* Added `max_size` parameter to OpticalPSF. (#478)
+* Added `text_file` parameter to FitsHeader and FitsWCS. (#508)
+* Modified addNoiseSNR() method to return the added variance. (#526)
+* Added `dtype` option to `drawImage` and `drawKImage`. (#526)
 
 Bug fixes and improvements
 --------------------------
@@ -78,27 +105,19 @@ Bug fixes and improvements
 Updates to config options
 -------------------------
 
-* Changed the previous behavior of the `image.wcs` field to allow several WCS
-  types: 'PixelScale', 'Shear', 'Jacobian', 'Affine', 'UVFunction',
-  'RaDecFunction', 'Fits', and 'Tan'. (#364)
+* Added more options for `image.wcs` field. (#364)
 * Changed the name of `sky_pos` to `world_pos`. (#364)
 * Removed `pix` top layer in config structure.  Add `draw_method=no_pixel` to
   do what `pix : None` used to do. (#364)
 * Added `draw_method=real_space` to try to use real-space convolution. (#364)
-* Added ability to index `Sequence` types by any running index, rather than
-  just the default by specifying an `index_key` parameter.  The options are
-  'obj_num', 'image_num', 'file_num', or 'obj_num_in_file'.  (#364, #536)
-* Added `Sum` type for value types for which it makes sense: float, int, angle,
-  shear, position. (#457)
-* Allowed the user to modify or add config parameters from the command line.
-  (#479)
-* Added `image.retry_failures` to retry making a GSObject that fails for
-  any reason. (#482)
+* Added ability to index `Sequence` types by any running index. (#364, #536)
+* Added `Sum` type for value types for which it makes sense. (#457)
+* Allowed modification of config parameters from the command line. (#479)
+* Added `image.retry_failures`. (#482)
 * Added `output.retry_io` item to retry failed write commands. (#482)
 * Changed the default sequence indexing for most things to be 'obj_num_in_file'
   rather than 'obj_num'. (#487)
-* Added `draw_method=sb` to make this parameter completely consistent with
-  the way the `method` parameter for drawImage() now works. (#535)
+* Added `draw_method=sb`. (#535)
 * Changed the `output.psf.real_space` option to `output.psf.draw_method`
   and allow all of the options that exist for `image.draw_method`. (#535)
 * Added an `index` item for Ring objects. (#536)
