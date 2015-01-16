@@ -184,13 +184,14 @@ class ChromaticObject(object):
         # modify the SED attribute, which now refers to the total flux at a given wavelength after
         # integrating over the whole light profile.
         fluxes = np.array([ obj.getFlux() for obj in objs ])
-        if np.any(abs(fluxes - 1.0) > 10.*np.finfo(fluxes.dtype.type).eps):
+        if np.any(abs(fluxes - 1.0) > 1000.*np.finfo(fluxes.dtype.type).eps):
             # Figure out the rescaling factor for the SED.
             rescale_fac = np.zeros_like(self.waves)
             for ind in range(len(self.waves)):
                 rescale_fac[ind] = fluxes[ind]
                 objs[ind].setFlux(1.0)
-            self.SED = galsim.LookupTable(x=self.waves, f=self.SED(self.waves)*rescale_fac)
+            self.SED = galsim.LookupTable(x=self.waves, f=self.SED(self.waves)*rescale_fac,
+                                          interpolant='linear')
 
         # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for the
         # array of images that is being stored.
@@ -965,6 +966,9 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     if 'zenith_angle' in kwargs:
         zenith_angle = kwargs.pop('zenith_angle')
         parallactic_angle = kwargs.pop('parallactic_angle', 0.0*galsim.degrees)
+        if not isinstance(zenith_angle, galsim.Angle) or \
+                not isinstance(parallactic_angle, galsim.Angle):
+            raise TypeError("zenith_angle and parallactic_angle must be galsim.Angles!")
     elif 'obj_coord' in kwargs:
         obj_coord = kwargs.pop('obj_coord')
         if 'zenith_coord' in kwargs:
