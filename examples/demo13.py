@@ -123,6 +123,8 @@ def main(argv):
     dir = 'input'
     cat = galsim.Catalog(cat_file_name,dir=dir)
     logger.info('Read in %d galaxies from catalog',cat.nobjects)
+    # Just use a few galaxies.
+    n_use = 5
 
     # At this stage, our galaxy is chromatic.
     logger.debug('Created bulge+disk galaxy final profile')
@@ -137,7 +139,7 @@ def main(argv):
     use_SCA = 7 # This could be any number from 1...18
     logger.info('Doing expensive pre-computation of PSF')
     t1 = time.time()
-    PSFs = wfirst.getPSF(SCAs=use_SCA, approximate_struts=True, n_waves=25)
+    PSFs = wfirst.getPSF(SCAs=use_SCA, approximate_struts=True, n_waves=10)
     PSF = PSFs[use_SCA]
     t2 = time.time()
     logger.info('Done precomputation in %.1f seconds!'%(t2-t1))
@@ -151,6 +153,30 @@ def main(argv):
     # Load WFIRST parameters
     exptime = wfirst.exptime # 168.1 seconds
     pixel_scale = wfirst.pixel_scale # 0.11 arcsecs / pixel
+
+    # We are going to choose a particular location on the sky.
+    ra_targ = 30.*galsim.degrees
+    dec_targ = -10.*galsim.degrees
+    targ_pos = galsim.CelestialCoord(ra=ra_targ, dec=dec_targ)
+    ang = 0.*galsim.degrees
+    # Get the WCS for an observation at this position, with the focal plane array oriented at an
+    # angle of 0 with respect to North.  The output of this routine is a list of WCS objects, one
+    # for each SCA.  We will then take the WCS for the SCA that we are going to use.
+    wcs_list = wfirst.getWCS(ang, pos=targ_pos, PA_is_FPA=True)
+    wcs = wcs_list[use_SCA]
+    # We need to find the center position for this SCA.  We'll tell it to give us a CelestialCoord
+    # corresponding to (X, Y) = (wfirst.n_pix/2, wfirst.n_pix/2).
+    SCA_cent_pos = wcs.toWorld(galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
+    # We are going to just randomly distribute points in X, Y.  If we had a real galaxy catalog with
+    # positions in terms of RA, dec we could use wcs.toImage() to find where those objects should be
+    # in terms of (X, Y).
+    pos_rng = galsim.UniformDeviate(random_seed)
+    # Make a list of (X, Y) values, eliminating the 10% of the edge pixels as the object centroids.
+    x_img = []
+    y_img = []
+    for i_gal in range(n_use):
+        x_img.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
+        y_img.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
 
     # Create a dictionary that contains lists of images at different stages for every bandpass
     # This is needed because we loop over galaxies first and then over the bandpasses
@@ -172,18 +198,55 @@ def main(argv):
         # differs for the bulge and the disk.  However, the WFIRST bandpasses are narrow
         # enough that this doesn't matter too much.
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
-        img_psf = galsim.ImageF(16,16)
+        img_psf = galsim.ImageF(64,64)
         PSF.drawImage(bandpass=filter_, image=img_psf, scale=pixel_scale)
         # Artificially normalize to a total flux of 1 for display purposes.
         img_psf /= img_psf.array.sum()
         img_psf.write(out_filename)
         logger.debug('Created PSF with flat SED for {0}-band'.format(filter_name))
 
-        # First we get the amount of zodaical light (where currently we use the default location
-        # on the sky; this value will depend on position).  Since we have supplied an exposure
-        # time, the results will be returned to us in e-/s.  Then we multiply this by a factor to
-        # account for the amount of stray light that is expected.
-        sky_level_pix = wfirst.getSkyLevel(filters[filter_name], exp_time=wfirst.exptime)
+        # And create a big image into which everything will be drawn.
+        img = galsim.Image(wfirst.n_pix, wfirst.n_pix, wcs=wcs)
+
+        for k in xrange(n_use): #xrange(cat.nobjects):
+            logger.info('Processing the object at row %d in the input catalog'%k)
+            # Initialize the (pseudo-)random number generator that we will be using below.
+            # Use a different random seed for each object to get different noise realizations.
+            rng = galsim.BaseDeviate(random_seed+k)
+
+            # Galaxy is a bulge + disk with parameters taken from the catalog:
+            disk = galsim.Exponential(half_light_radius=0.1*cat.getFloat(k,5))
+            disk = disk * disk_SED
+            disk = disk.shear(e1=cat.getFloat(k,6), e2=cat.getFloat(k,7))
+
+            bulge = galsim.DeVaucouleurs(half_light_radius=0.1*cat.getFloat(k,8))
+            bulge = bulge * bulge_SED
+            bulge = bulge.shear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
+
+            # Add the components to get the galaxy.  The flux is clearly getting rescaled in an
+            # incorrect way, which I need to fix, but for now we'll just artificially fix it.
+            gal = 100*(1./3)*bulge+100*(2./3)*disk
+            # At this stage, our galaxy is chromatic.
+            logger.debug('Created bulge+disk galaxy final profile')
+
+            # Convolve the chromatic galaxy and the chromatic PSF
+            final = galsim.Convolve([gal,PSF])
+
+            # Find the bounds for this sub-image.  Note, have to properly handle sub-pixel shifts
+            # (not quite done yet).
+            bounds = galsim.BoundsI(int(round(x_img[k]-32)), int(round(x_img[k]+32)),
+                                    int(round(y_img[k]-32)), int(round(y_img[k]+32)))
+            final.drawImage(filter_, image=img[bounds], add_to_image=True)
+
+        # Now we're done with the per-galaxy drawing for this image.  The rest will be done for the
+        # entire image at once.
+
+        # First we get the amount of zodaical light for a position corresponding to the center of
+        # this SCA.  Since we have supplied an exposure time, the results will be returned to us in
+        # e-/s.  Then we multiply this by a factor to account for the amount of stray light that is
+        # expected.
+        sky_level_pix = wfirst.getSkyLevel(filters[filter_name], position=SCA_cent_pos,
+                                           exp_time=wfirst.exptime)
         sky_level_pix *= (1.0 + wfirst.stray_light_fraction)
         # Finally we add the expected thermal backgrounds in this band.  These are provided in
         # e-/pix/s, so we have to multiply by the exposure time.
@@ -292,7 +355,7 @@ def main(argv):
         # Failure'.
 
         # Save the image before applying the transformation to see the difference
-        final_image_old = final_image.copy()
+        final_image-final_image_old = final_image.copy()
 
         final_image.addReciprocityFailure(exp_time=exptime, alpha=wfirst.reciprocity_alpha,
             base_flux=1.0)
@@ -374,6 +437,7 @@ def main(argv):
 
         # Finally, the analog-to-digital converter reads in integer value.
         final_image.quantize()
+
         # Note that the image type after this step is still a float.  If we want to actually
         # get integer values, we can do new_img = galsim.Image(img, dtype=int)
 
@@ -381,28 +445,29 @@ def main(argv):
         # version with the background subtracted (also rounding that to an int)
         tot_sky_level = (sky_level_pix + wfirst.dark_current*wfirst.exptime)/wfirst.gain
         tot_sky_level = numpy.round(tot_sky_level)
+
         final_image -= tot_sky_level
 
         logger.debug('Subtracted background for {0}-band image'.format(filter_name))
         images[filter_name].append(final_image)
 
         out_filename = os.path.join(outpath,'demo13_{0}.fits'.format(filter_name))
-        galsim.fits.writeMulti(images[filter_name], out_filename)
+        images[filter_name].write(out_filename)
 
         out_filename = os.path.join(outpath,'demo13_IPC_{0}.fits'.format(filter_name))
-        galsim.fits.writeMulti(images_IPC[filter_name], out_filename)
+        images_IPC[filter_name].write(out_filename)
         out_filename = os.path.join(outpath,'demo13_diff_IPC_{0}.fits'.format(filter_name))
-        galsim.fits.writeMulti(diff_IPC[filter_name], out_filename)
+        diff_IPC[filter_name].write(out_filename)
 
         out_filename = os.path.join(outpath,'demo13_RecipFail_{0}.fits'.format(filter_name))
-        galsim.fits.writeMulti(images_RecipFail[filter_name], out_filename)
+        images_RecipFail[filter_name].write(out_filename)
         out_filename = os.path.join(outpath,'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
-        galsim.fits.writeMulti(diff_RecipFail[filter_name], out_filename)
+        diff_RecipFail[filter_name].write(out_filename)
 
         out_filename = os.path.join(outpath,'demo13_NL_{0}.fits'.format(filter_name))
-        galsim.fits.writeMulti(images_NL[filter_name], out_filename)
+        images_NL[filter_name].write(out_filename)
         out_filename = os.path.join(outpath,'demo13_diff_NL_{0}.fits'.format(filter_name))
-        galsim.fits.writeMulti(diff_NL[filter_name], out_filename)
+        diff_NL[filter_name].write(out_filename)
 
         logger.info('Created {0}-band image.'.format(filter_name))
 

@@ -186,9 +186,10 @@ class DirectImageIntegrator(object):
 
 class DirectSampleIntegrator(DirectImageIntegrator):
     """
-    Create an image-based chromatic surface brightness profile integrator, which will integrate over
-    tabulated images as a function of wavelength using a Bandpass as a weight function.  This is
-    used for calculations related to the InterpolatedChromaticImage class and its subclasses.
+    Create an image-based chromatic surface brightness profile integrator, which can integrate over
+    tabulated images as a function of wavelength using a Bandpass as a weight function.  This could
+    be used for calculations related to the InterpolatedChromaticImage class and its subclasses,
+    though currently it is not.
 
     This integrator will evaluate the integrand only at the wavelengths in `bandpass.wave_list`.
 

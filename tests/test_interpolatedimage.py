@@ -903,10 +903,10 @@ def test_stepk_maxk():
                                           _force_maxk=mult_val*max_k_val)
     numpy.testing.assert_almost_equal(
         new_int_im.stepK(), mult_val*step_k_val, decimal=7,
-        err_msg='InterpolatedImage did not adopt forced minimum value for stepK')
+        err_msg='InterpolatedImage did not adopt forced value for stepK')
     numpy.testing.assert_almost_equal(
         new_int_im.maxK(), mult_val*max_k_val, decimal=7,
-        err_msg='InterpolatedImage did not adopt forced minimum value for maxK')
+        err_msg='InterpolatedImage did not adopt forced value for maxK')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

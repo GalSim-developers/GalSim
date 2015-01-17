@@ -37,14 +37,14 @@ zemax_filesuff = '_F01_W04.txt'
 zemax_wavelength = 1293. #nm
 
 def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=None,
-           wavelength_limits=None):
+           wavelength_limits=None, verbose=True):
     """
     Get the PSF for WFIRST observations.
 
     By default, this routine returns a list of ChromaticOpticalPSF objects, with the list index
-    corresponding to the SCA.  The PSF corresponds to a location in the center of the SCA.
-    Currently we do not have information about variation across the SCAs, which is expected to be
-    relatively small.
+    corresponding to the SCA (Sensor Chip Array, the equivalent of a chip in an optical CCD).  The
+    PSF corresponds to a location in the center of the SCA.  Currently we do not have information
+    about variation across the SCAs, which is expected to be relatively small.
 
     This routine also takes an optional keyword `SCAs`, which can be a single value or a list; if
     this is specified then results are not included for the other SCAs.  However, to preserve the
@@ -105,6 +105,10 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                    (or a subset of passbands) is to be used for making the images,
                                    since the number of precomputations it has to do is reduced.
                                    [default: None]
+    @param    verbose              Should the routine provide information about its progress in
+                                   loading the per-SCA PSFs?  This can be valuable in tracking
+                                   progress, since the full calculations including the real WFIRST
+                                   pupil plane can be quite expensive.  [default: True]
     @returns  A list of ChromaticOpticalPSF objects, one for each SCA.  The SCAs in WFIRST are
               1-indexed, and the list is indexed according go the SCA, meaning that the 0th object
               in the list is always None, the 1st is the PSF for SCA 1, and so on.
@@ -117,8 +121,12 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     # the calculations for.  For now, just check for invalid numbers.
     if SCAs is not None:
         if hasattr(SCAs, '__iter__'):
-            if max(SCAs) > galsim.wfirst.n_sca:
-                raise ValueError("Invalid SCA!  Indices must be <=%d."%galsim.wfirst.n_sca)
+            if min(SCAs) < 0 or max(SCAs) > galsim.wfirst.n_sca:
+                raise ValueError(
+                    "Invalid SCA!  Indices must be positive and <=%d."%galsim.wfirst.n_sca)
+            if min(SCAs) == 0:
+                import warnings
+                warnings.warn("SCA 0 requested, but SCAs are 1-indexed.  Ignoring 0.")
         else:
             SCAs = [SCAs]
 
@@ -142,6 +150,7 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     # don't have to call the reading routine too many times.
     aberration_list = []
     PSF_list = []
+    if verbose: print 'Beginning to loop over SCAs and get the PSF:'
     for SCA in all_SCAs:
         # First, if the SCA is zero or if it's not in SCAs (user-supplied list) then just stick None
         # on the list.
@@ -160,9 +169,10 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
         read_SCA = SCA
         if SCA >= 10:
             if aberration_list[SCA-9] is not None:
+                if verbose: print '... SCA',SCA
                 aberration_list.append(aberration_list[SCA-9])
                 PSF_list.append(PSF_list[SCA-9])
-                pass
+                continue
             else:
                 read_SCA -= 9
 
@@ -172,6 +182,7 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
         aberration_list.append(aberrations)
 
         # Now set up the PSF for this SCA, including the option to simplify the pupil plane.
+        if verbose: print '   ... SCA',SCA
         if approximate_struts:
             PSF = galsim.ChromaticOpticalPSF(
                 diam=galsim.wfirst.diameter, aberrations=aberration_list[SCA],

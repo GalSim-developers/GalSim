@@ -1382,35 +1382,33 @@ class InterpolatedChromaticObject(ChromaticObject):
     combinations of GSObjects with wavelength-dependent keywords or transformations (shifts, shears,
     etc.).
 
+    This class is intended to expedite calculations using objects that have to be built up as sums
+    of GSObjects with different parameters at each wavelength, by interpolating between Images at
+    each wavelength instead of making a more costly instantiation of the relevant GSObject at each
+    value of wavelength at which the bandpass is defined.  In order to carry out this interpolation,
+    there is a costly initialization process to build up a grid of images to be used for the
+    interpolation later on.  However, the object can get reused with different SEDs and bandpasses,
+    so there should not be any need to make many versions of any particular type of
+    InterpolatedChromaticObject, and there is a significant savings each time it is called.  Note
+    that the interpolation scheme is simple linear interpolation in wavelength, and no extrapolation
+    beyond the original range of wavelengths is permitted.
+
+    It is possible to override the interpolation and instantiate a new GSObject at each value of
+    wavelength.  This is slower, but should be more accurate.  The calling sequence for this mode is
+    nearly identical to the first mode, except for one keyword argument (`waves`, see below).  For
+    use cases requiring a high level of precision, we recommend a comparison between the
+    interpolated and the more accurate calculation for at least one case, to ensure that the
+    required precision has been reached.
+
     This class inherits from ChromaticObject, and subclasses of it could be defined to describe
     objects like chromatic PSFs.  See, for example, the subclass ChromaticOpticalPSF.  Subclasses of
     InterpolatedChromaticObject must have a method called `simpleEvaluateAtWavelength`, which is
     functionally the equivalent of `evaluateAtWavelength` for ChromaticObjects (i.e., it's a way to
     directly instantiate a GSObject at a single wavelength, without doing any interpolation).  Note
-    that since InterpolatedChromaticObjects can include an SED, for cases where they are going to be
-    drawn on their own without convolution by anything else, the `simpleEvaluateAtWavelength` method
-    must include proper flux normalization for that wavelength (see ChromaticOpticalPSF for an
-    example of how this works).  However, if the InterpolatedChromaticObject is only going to be
-    drawn when convolved by another object with an SED, then this is unnecessary.
-
-    There are two possible ways to use this class.  The first (the purpose for which it is intended)
-    is to expedite calculations using objects that have to be built up as sums of GSObjects with
-    different parameters at each wavelength, by interpolating between Images at each wavelength
-    instead of making a more costly instantiation of the relevant GSObject at each value of
-    wavelength at which the bandpass is defined.  In order to carry out this interpolation, there is
-    a costly initialization process to build up a grid of images to be used for the interpolation
-    later on.  However, the object can get reused with different SEDs and bandpasses, so there
-    should not be any need to make many versions of any particular type of
-    InterpolatedChromaticObject, and there is a significant savings each time it is called.  Note
-    that the interpolation scheme is simple linear interpolation in wavelength, and no extrapolation
-    beyond the original range of wavelengths is permitted.
-
-    The second way to use this class is to override the interpolation and instantiate a new GSObject
-    at each value of wavelength.  This is slower, but should be more accurate.  The calling sequence
-    for this mode is nearly identical to the first mode, except for one keyword argument (`waves`,
-    see below).  For use cases requiring a high level of precision, we recommend a comparison
-    between the interpolated and the more accurate calculation for at least one case, to ensure that
-    the required precision has been reached.
+    that since InterpolatedChromaticObjects can include an SED, the `simpleEvaluateAtWavelength`
+    method must include proper flux normalization for that wavelength.  However, if the
+    InterpolatedChromaticObject is only going to be drawn when convolved by another object with an
+    SED, then this is unnecessary.
 
     The input parameter `waves` determines the input grid on which images are precomputed.  It is
     difficult to give completely general guidance as to how many wavelengths to choose or how they
@@ -1428,12 +1426,7 @@ class InterpolatedChromaticObject(ChromaticObject):
                             wavelengths.
     @param SED              A galsim.SED for the object.  If None, a flat SED is used.  When using
                             the object as a PSF to be convolved by a chromatic object, a flat SED
-                            should be used, whereas when using the object as a star to make a PSF
-                            image, an appropriate SED should be assigned. Note that a new
-                            InterpolatedChromatic object can be instantiated from an existing one
-                            with a new SED using the `withSED` method without any significant
-                            overhead, so when in doubt, constructing the object with a flat SED is
-                            not a problem.  [default: None]
+                            should be used.  [default: None]
     @param oversample_fac   Factor by which to oversample the stored profiles compared to the
                             default, which is to sample them at the Nyquist frequency for whichever
                             wavelength has the highest Nyquist frequency.  `oversample_fac`>1
@@ -1446,7 +1439,10 @@ class InterpolatedChromaticObject(ChromaticObject):
             self.SED = lambda w: 1.0
         else:
             self.SED = sed
-        self.wave_list = np.array([], dtype=float)
+        if hasattr(self.SED, 'wave_list'):
+            self.wave_list = self.SED.wave_list
+        else:
+            self.wave_list = np.array([], dtype=float)
 
         # Set up the interpolation (which can be a costly step, depending on the length of `waves`.
         if self.waves is not None:
@@ -1494,6 +1490,10 @@ class InterpolatedChromaticObject(ChromaticObject):
             new.SED = lambda w: 1.0
         else:
             new.SED = sed
+        if hasattr(new.SED, 'wave_list'):
+            new.wave_list = new.SED.wave_list
+        else:
+            new.wave_list = np.array([], dtype=float)
         return new
 
     def evaluateAtWavelength(self, wave, force_eval=False):
@@ -1526,11 +1526,7 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Figure out where the supplied wavelength is compared to the list of wavelengths on which
         # images were originally tabulated.
-        lower_idx = np.searchsorted(self.waves, wave)-1
-        # There can be edge issues, so watch out for that:
-        if lower_idx < 0: lower_idx = 0
-        if lower_idx == len(self.waves)-1: lower_idx = len(self.waves)-1
-        frac = (wave-self.waves[lower_idx]) / (self.waves[lower_idx+1]-self.waves[lower_idx])
+        lower_idx, frac = _findWave(self.waves, wave)
 
         # Actually do the interpolation for the image, stepK, and maxK.
         im = _linearInterp(self.ims, frac, lower_idx)
@@ -1543,11 +1539,9 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         This method has a number of optimizations compared to brute force drawing.  It uses the set
         of interpolated images at each wavelength to carry out the integration, only carrying out
-        the GSObject instantation and convolution with pixel response at the very end.
-
-        Currently there is only one image integrator for direct integration of the interpolated
-        images, so there is no keyword argument to select one, unlike for
-        ChromaticObject.drawImage().
+        the GSObject instantation and convolution with pixel response at the very end.  Currently,
+        it can only carry out linear interpolation between the stored images at fixed values of
+        wavelength.
 
         @param bandpass         A Bandpass object representing the filter against which to
                                 integrate.
@@ -1573,20 +1567,40 @@ class InterpolatedChromaticObject(ChromaticObject):
         # determine combined self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
 
-        # decide on integrator
-        integrator = galsim.integ.DirectSampleIntegrator(galsim.integ.midpt)
-
         # merge self.wave_list into bandpass.wave_list since we are using a sampling integrator
         bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
                                                       interpolant='linear'))
 
-        integral, stepk, maxk = integrator(self._imageAtWavelength, bandpass)
-        # For now, pretend we have no information about the maxk and stepk that should be used.
-        int_im = galsim.InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
+        # The integration is carried out using the following two basic approaches:
+        # (1) We use linear interpolation between the stored images to get an image at a given
+        #     wavelength.
+        # (2) We use the midpoint rule for integration.
 
-        # For performance profiling, store the number of evaluations used for the last integration
-        # performed.
-        self._last_n_eval = integrator.last_n_eval
+        # Figure out the dwave for each of the wavelengths in the bandpass.
+        dw = [bandpass.wave_list[1]-bandpass.wave_list[0]]
+        dw.extend(0.5*(bandpass.wave_list[2:]-bandpass.wave_list[0:-2]))
+        dw.append(bandpass.wave_list[-1]-bandpass.wave_list[-2])
+        # Set up arrays to accumulate the weights for each of the stored images.
+        weight_fac = np.zeros(len(self.waves))
+        for idx, w in enumerate(bandpass.wave_list):
+            # Find where this is with respect to the wavelengths on which images are stored.
+            lower_idx, frac = _findWave(self.waves, w)
+            # Store the weight factors for the two stored images that can contribute at this
+            # wavelength.  Must include the dwave that is part of doing the integral.
+            b = self.SED(w)*bandpass(w)*dw[idx]
+            weight_fac[lower_idx] += (1.0-frac)*b
+            weight_fac[lower_idx+1] += frac*b
+
+        # Do the integral as a weighted sum.
+        integral = sum([w*im for w,im in zip(weight_fac, self.ims)])
+
+        # Figure out stepK and maxK using the minimum and maximum (respectively) that have nonzero
+        # weight.  This is the most conservative possible choice.
+        stepk = min(np.array(self.stepK_vals)[weight_fac>0])
+        maxk = max(np.array(self.maxK_vals)[weight_fac>0])
+
+        # Instantiate the InterpolatedImage, using these conservative stepK and maxK choices.
+        int_im = galsim.InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
 
         # Apply integral to the initial image appropriately.  This will naturally work properly and
         # take into account the supplied value of `add_to_image`, which will be included in kwargs.
@@ -1649,13 +1663,28 @@ class ChromaticOpticalPSF(InterpolatedChromaticObject):
         """
         lam_over_diam = 1.e-9 * (wave / self.diam) * (galsim.radians / galsim.arcsec)
         aberrations = self.aberrations / wave
-        ret = self.SED(wave)* \
-            galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
+        ret = galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
         return ret
 
+def _findWave(wave_list, wave):
+    """
+    Helper routine to search a sorted NumPy array of wavelengths (not necessarily evenly spaced) to
+    find where a particular wavelength `wave` would fit in, and return the index below along with
+    the fraction of the way to the next entry in the array.
+    """
+    lower_idx = np.searchsorted(wave_list, wave)-1
+    # There can be edge issues, so watch out for that:
+    if lower_idx < 0: lower_idx = 0
+    if lower_idx > len(wave_list)-1: lower_idx = len(wave_list)-1
+
+    frac = (wave-wave_list[lower_idx]) / (wave_list[lower_idx+1]-wave_list[lower_idx])
+    return lower_idx, frac
+
 def _linearInterp(list, frac, lower_idx):
-    """Helper routine for linear interpolation between values in lists (which could be lists of
+    """
+    Helper routine for linear interpolation between values in lists (which could be lists of
     images, just not numbers, hence the need to avoid a LookupTable).  Not really worth
     splitting out on its own now, but could be useful to have separate routines for the
-    interpolation later on if we want to enable something other than linear interpolation."""
+    interpolation later on if we want to enable something other than linear interpolation.
+    """
     return frac*list[lower_idx+1] + (1.-frac)*list[lower_idx]
