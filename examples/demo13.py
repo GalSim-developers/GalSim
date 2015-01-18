@@ -103,7 +103,7 @@ def main(argv):
         # means that the colors of the galaxy will now be meaningful (for example, the bulge will
         # be more evident in the redder bands and the disk in the bluer bands).
         bandpass = filters['W149']
-        mag_norm = 20.0
+        mag_norm = 22.0
 
         SEDs[SED_name] = SED.withMagnitude(target_magnitude=mag_norm, bandpass=bandpass)
 
@@ -145,10 +145,10 @@ def main(argv):
     logger.info('Done precomputation in %.1f seconds!'%(t2-t1))
 
     # Define some parameters
-    nx_tiles = 10
-    ny_tiles = 10
-    stamp_size = 64
-    image_size = stamp_size*nx_tiles
+    nx_tiles = 10 # no longer required
+    ny_tiles = 10 # no longer required
+    stamp_size = 64 # required
+    image_size = wfirst.n_pix # no longer required
 
     # Load WFIRST parameters
     exptime = wfirst.exptime # 168.1 seconds
@@ -174,9 +174,12 @@ def main(argv):
     # Make a list of (X, Y) values, eliminating the 10% of the edge pixels as the object centroids.
     x_img = []
     y_img = []
+    theta_img = []
     for i_gal in range(n_use):
         x_img.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
         y_img.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
+        theta_img.append(pos_rng()*2.0*numpy.pi*galsim.radians)
+    # Rachel, is it necessary to store the positions as a list? - Arun
 
     # Create a dictionary that contains lists of images at different stages for every bandpass
     # This is needed because we loop over galaxies first and then over the bandpasses
@@ -205,41 +208,44 @@ def main(argv):
         img_psf.write(out_filename)
         logger.debug('Created PSF with flat SED for {0}-band'.format(filter_name))
 
-        # And create a big image into which everything will be drawn.
-        img = galsim.Image(wfirst.n_pix, wfirst.n_pix, wcs=wcs)
+        ### Commented out as these things are done later in the demo - Arun
+        ### ---------------------------------------------------------------
+        # # And create a big image into which everything will be drawn.
+        # img = galsim.Image(wfirst.n_pix, wfirst.n_pix, wcs=wcs)
 
-        for k in xrange(n_use): #xrange(cat.nobjects):
-            logger.info('Processing the object at row %d in the input catalog'%k)
-            # Initialize the (pseudo-)random number generator that we will be using below.
-            # Use a different random seed for each object to get different noise realizations.
-            rng = galsim.BaseDeviate(random_seed+k)
+        # for k in xrange(n_use): #xrange(cat.nobjects):
+        #     logger.info('Processing the object at row %d in the input catalog'%k)
+        #     # Initialize the (pseudo-)random number generator that we will be using below.
+        #     # Use a different random seed for each object to get different noise realizations.
+        #     rng = galsim.BaseDeviate(random_seed+k)
 
-            # Galaxy is a bulge + disk with parameters taken from the catalog:
-            disk = galsim.Exponential(half_light_radius=0.1*cat.getFloat(k,5))
-            disk = disk * disk_SED
-            disk = disk.shear(e1=cat.getFloat(k,6), e2=cat.getFloat(k,7))
+        #     # Galaxy is a bulge + disk with parameters taken from the catalog:
+        #     disk = galsim.Exponential(half_light_radius=0.1*cat.getFloat(k,5))
+        #     disk = disk * disk_SED
+        #     disk = disk.shear(e1=cat.getFloat(k,6), e2=cat.getFloat(k,7))
 
-            bulge = galsim.DeVaucouleurs(half_light_radius=0.1*cat.getFloat(k,8))
-            bulge = bulge * bulge_SED
-            bulge = bulge.shear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
+        #     bulge = galsim.DeVaucouleurs(half_light_radius=0.1*cat.getFloat(k,8))
+        #     bulge = bulge * bulge_SED
+        #     bulge = bulge.shear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
 
-            # Add the components to get the galaxy.  The flux is clearly getting rescaled in an
-            # incorrect way, which I need to fix, but for now we'll just artificially fix it.
-            gal = 100*(1./3)*bulge+100*(2./3)*disk
-            # At this stage, our galaxy is chromatic.
-            logger.debug('Created bulge+disk galaxy final profile')
+        #     # Add the components to get the galaxy.  The flux is clearly getting rescaled in an
+        #     # incorrect way, which I need to fix, but for now we'll just artificially fix it.
+        #     gal = 100*(1./3)*bulge+100*(2./3)*disk
+        #     # At this stage, our galaxy is chromatic.
+        #     logger.debug('Created bulge+disk galaxy final profile')
 
-            # Convolve the chromatic galaxy and the chromatic PSF
-            final = galsim.Convolve([gal,PSF])
+        #     # Convolve the chromatic galaxy and the chromatic PSF
+        #     final = galsim.Convolve([gal,PSF])
 
-            # Find the bounds for this sub-image.  Note, have to properly handle sub-pixel shifts
-            # (not quite done yet).
-            bounds = galsim.BoundsI(int(round(x_img[k]-32)), int(round(x_img[k]+32)),
-                                    int(round(y_img[k]-32)), int(round(y_img[k]+32)))
-            final.drawImage(filter_, image=img[bounds], add_to_image=True)
+        #     # Find the bounds for this sub-image.  Note, have to properly handle sub-pixel shifts
+        #     # (not quite done yet).
+        #     bounds = galsim.BoundsI(int(round(x_img[k]-32)), int(round(x_img[k]+32)),
+        #                             int(round(y_img[k]-32)), int(round(y_img[k]+32)))
+        #     final.drawImage(filter_, image=img[bounds], add_to_image=True)
 
-        # Now we're done with the per-galaxy drawing for this image.  The rest will be done for the
-        # entire image at once.
+        # # Now we're done with the per-galaxy drawing for this image.  The rest will be done for the
+        # # entire image at once.
+        ### -----------------------------------------------------------------------------------
 
         # First we get the amount of zodaical light for a position corresponding to the center of
         # this SCA.  Since we have supplied an exposure time, the results will be returned to us in
@@ -253,7 +259,8 @@ def main(argv):
         sky_level_pix += wfirst.thermal_backgrounds[filter_name]*wfirst.exptime
 
         # Set up the final image:
-        final_image = galsim.ImageF(image_size,image_size)
+        # final_image = galsim.ImageF(wfirst.n_pix,wfirst.n_pix, wcs=wcs)
+        final_image = galsim.ImageF(wfirst.n_pix,wfirst.n_pix)
         # Set origin to be (0,0) for convenience
         final_image.setOrigin(0,0)
 
@@ -267,49 +274,52 @@ def main(argv):
         images_IPC[filter_name] = []
         diff_IPC[filter_name] = []
 
-    for k in xrange(36): #xrange(cat.nobjects):
+    for k in xrange(n_use): #xrange(cat.nobjects):
         logger.info('Processing the object at row %d in the input catalog'%k)
         
         # The usual random number generator using a different seed for each galaxy.
-        ud = galsim.UniformDeviate(random_seed+k)
+        ud = galsim.UniformDeviate(random_seed+k) # no longer required
 
         # Galaxy is a bulge + disk with parameters taken from the catalog:
-        disk = galsim.Exponential(flux=0.33, half_light_radius=cat.getFloat(k,5))
+        disk = galsim.Exponential(half_light_radius=0.1*cat.getFloat(k,5))
         disk = disk * disk_SED
         disk = disk.shear(e1=cat.getFloat(k,6), e2=cat.getFloat(k,7))
 
-        bulge = galsim.DeVaucouleurs(flux=0.67, half_light_radius=cat.getFloat(k,8))
+        bulge = galsim.DeVaucouleurs(half_light_radius=0.1*cat.getFloat(k,8))
         bulge = bulge * bulge_SED
         bulge = bulge.shear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
 
-        # Add the components to get the galaxy
-        gal = bulge+disk
+        # Add the components to get the galaxy. The flux is clearly getting rescaled in an
+        # incorrect way, which I need to fix, but for now we'll just artificially fix it.
+        gal = 100*(1./3)*bulge+100*(2./3)*disk
         # At this stage, our galaxy is chromatic.
         logger.debug('Created bulge+disk galaxy final profile')
         # Q: Should the flux be adjusted?????
 
         # Apply a random rotation
-        theta = ud()*2.0*numpy.pi*galsim.radians
-        gal = gal.rotate(theta)
+        ## theta = ud()*2.0*numpy.pi*galsim.radians :already done earlier - Arun
+        gal = gal.rotate(theta_img[k])
 
-        # Choose a random position in the image
-        x = ud()*(image_size-1)
-        y = ud()*(image_size-1)
-        image_pos = galsim.PositionD(x,y)  # -> Goes into WCS stuff then?
+        # Already done earlier - Arun
+        # # Choose a random position in the image
+        # x = ud()*(image_size-1)
+        # y = ud()*(image_size-1)
+        # image_pos = galsim.PositionD(x,y)  # -> Goes into WCS stuff then?
 
         # Account for the fractional part of the position:
-        ix = int(math.floor(x+0.5))
-        iy = int(math.floor(y+0.5))
-        offset = galsim.PositionD(x-ix, y-iy)
-        stamp_pos = galsim.PositionI(ix,iy)
+        ix = int(math.floor(x_img[k]+0.5))
+        iy = int(math.floor(y_img[k]+0.5))
+        offset = galsim.PositionD(x_img[k]-ix, y_img[k]-iy)
+        stamp_pos = galsim.PositionI(ix-0.5*stamp_size,iy-0.5*stamp_size)
 
         # Create a nominal bounds for the postage stamp
-        stamp_bounds = galsim.BoundsI(ix, ix+stamp_size-1, iy, iy+stamp_size-1)
+        stamp_bounds = galsim.BoundsI(ix-0.5*stamp_size, ix+0.5*stamp_size-1, 
+                                    iy-0.5*stamp_size, iy+0.5*stamp_size-1)
 
         # The center of the object is normally placed at the center of the postage stamp image.
         # You can change that with shift:
         # gal = gal.shift(dx=cat.getFloat(k,11), dy=cat.getFloat(k,12))
-        # NOTE TO SELF: Disabled since galaxies look cropped
+        # NOTE TO SELF: Disabled since galaxies look cropped - Arun
         # Convolve the chromatic galaxy and the chromatic PSF
         final = galsim.Convolve([gal,PSF],gsparams=gsparams)
 
@@ -325,7 +335,7 @@ def main(argv):
 
             # Find the overlapping bounds:
             bounds = stamp_bounds & final_image.bounds
-            # Image bounds:
+            # Image bounds
 
             # Add the galaxy within the bounds to the bigger image
             final_image[bounds] += img[bounds]
@@ -355,15 +365,16 @@ def main(argv):
         # Failure'.
 
         # Save the image before applying the transformation to see the difference
-        final_image-final_image_old = final_image.copy()
+        final_image_1 = final_image.copy()
 
         final_image.addReciprocityFailure(exp_time=exptime, alpha=wfirst.reciprocity_alpha,
             base_flux=1.0)
         logger.debug('Accounted for Reciprocity Failure in {0}-band image'.format(filter_name))
+        final_image_2 = final_image.copy()
 
-        diff = final_image-final_image_old
-        diff_RecipFail[filter_name].append(diff)
-        images_RecipFail[filter_name].append(final_image)
+        diff = final_image_2-final_image_1
+        diff_RecipFail[filter_name] = diff
+        images_RecipFail[filter_name] = final_image_2
 
         # At this point in the image generation process, an integer number of photons gets
         # detected, hence we have to round the pixel values to integers:
@@ -393,15 +404,16 @@ def main(argv):
         # a constant nominal gain later, which is unity in our demo.
 
         # Save the image before applying the transformation to see the difference
-        final_image_old = final_image.copy()
+        final_image_3 = final_image.copy()
 
         NLfunc = wfirst.NLfunc        # a quadratic non-linear function
         final_image.applyNonlinearity(NLfunc)
         logger.debug('Applied Nonlinearity to {0}-band image'.format(filter_name))
+        final_image_4 = final_image.copy()
 
-        diff = final_image-final_image_old
-        diff_NL[filter_name].append(diff)
-        images_NL[filter_name].append(final_image)
+        diff = final_image_4-final_image_3
+        diff_NL[filter_name] = diff
+        images_NL[filter_name] = final_image_4
 
         # Adding Interpixel Capacitance
         # The voltage read at a given pixel location is influenced by the charges present in
@@ -410,23 +422,22 @@ def main(argv):
         # convolution of a 3x3 kernel with the image. The WFIRST kernel is not normalized to
         # have the entries add to unity and hence must be normalized inside the routine.
 
-        # Save the image before applying the transformation to see the difference
-        final_image_old = final_image.copy()
-
         img.applyIPC(IPC_kernel=wfirst.ipc_kernel,edge_treatment='extend',
                      kernel_normalization=True)
         # Here, we use `edge_treatment='extend'`, which pads the image with zeros before
         # applying the kernel. The central part of the image is retained.
         logger.debug('Applied interpixel capacitance to {0}-band image'.format(filter_name))
+        final_image_5 = final_image.copy()
 
-        diff = final_image-final_image_old
-        diff_IPC[filter_name].append(diff)
-        images_IPC[filter_name].append(final_image)
+        diff = final_image_5-final_image_4
+        diff_IPC[filter_name] = diff
+        images_IPC[filter_name] = final_image_5
 
         # Adding Read Noise
         read_noise = galsim.CCDNoise(rng)
         read_noise.setReadNoise(wfirst.read_noise)
         #final_image.addNoise(read_noise)
+        final_image_6 = final_image.copy()
 
         logger.debug('Added Readnoise to {0}-band image'.format(filter_name))
 
@@ -449,7 +460,7 @@ def main(argv):
         final_image -= tot_sky_level
 
         logger.debug('Subtracted background for {0}-band image'.format(filter_name))
-        images[filter_name].append(final_image)
+        images[filter_name] = final_image
 
         out_filename = os.path.join(outpath,'demo13_{0}.fits'.format(filter_name))
         images[filter_name].write(out_filename)
