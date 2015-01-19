@@ -218,8 +218,7 @@ class ChromaticObject(object):
         # transformations.
         transform_done = False
         for wave in waves:
-            res = self._nullTransformation(wave)
-            if res:
+            if not self._nullTransformation(wave):
                 transform_done = True
                 break
         if transform_done:
@@ -340,11 +339,10 @@ class ChromaticObject(object):
         The task of drawImage() in a chromatic context is to integrate a chromatic surface
         brightness profile multiplied by the throughput of `bandpass`, over the wavelength interval
         indicated by `bandpass`.  This integration will take place either via brute-force drawing
-        the image at each wavelength using the `_normal_drawImage` routine, or via an optimized
-        version of the routine (`_interp_drawImage`) that uses some approximations to significantly
-        speed-up the calculations for non-separable profiles.  `drawImage` chooses which method to
-        use depending on whether the user has done the pre-computation necessary for the latter,
-        using the `setupInterpolation` method.
+        the image at each wavelength, or via an optimized version of the routine that uses some
+        approximations to significantly speed-up the calculations for non-separable profiles.
+        `drawImage` chooses which method to use depending on whether the user has done the
+        pre-computation necessary for the latter, using the `setupInterpolation` method.
 
         Several integrators are available in galsim.integ to do this integration when using the
         first (non-interpolated integration).  By default,
@@ -538,8 +536,8 @@ class ChromaticObject(object):
         null transformation at a given wavelength.
 
         @param wave     Wavelength in nanometers.
-        @returns True/False (True if the transformation corresponds to no shear, dilation, and flux
-        rescaling)
+        @returns True/False (True if the transformation corresponds to no shear, shift dilation,
+        or flux rescaling)
         """
         null_A = np.matrix(np.identity(3), dtype=float)
         A0 = self._A(wave)
@@ -547,9 +545,9 @@ class ChromaticObject(object):
         # Check whether any transformation was done.
         if np.any(abs(A0-null_A) > 1000.*np.finfo(A0.dtype.type).eps) or \
                 abs(f0-1.) > 1000.*np.finfo(A0.dtype.type).eps:
-            return True
-        else:
             return False
+        else:
+            return True
 
     def _chromaticTransformation(self, bandpass):
         """

@@ -1373,11 +1373,13 @@ def test_interpolated_ChromaticObject():
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated'+
         ' when including chromatic transformations')
     # Make sure it behaves appropriately when asked to apply chromatic transformations after
-    # interpolating.
+    # interpolating, or when trying to undo interpolation on something that had a transformation
+    # applied to it.
     try:
         interp_psf = interp_psf.shear(shear=chrom_shear)
         interp_obj = galsim.Convolve(interp_psf, star)
         np.testing.assert_raises(RuntimeError, interp_obj.drawImage, bandpass, scale=atm_scale)
+        np.testing.assert_raises(RuntimeError, interp_psf.noInterpolation)
     except ImportError:
         print 'The assert_raises tests require nose'
 
