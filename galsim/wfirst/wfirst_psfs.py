@@ -186,14 +186,13 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
         if approximate_struts:
             PSF = galsim.ChromaticOpticalPSF(
                 diam=galsim.wfirst.diameter, aberrations=aberration_list[SCA],
-                waves=np.linspace(blue_limit, red_limit, n_waves), oversample_fac=1.5,
                 obscuration=galsim.wfirst.obscuration, nstruts=6)
         else:
             PSF = galsim.ChromaticOpticalPSF(
                 diam=galsim.wfirst.diameter, aberrations=aberration_list[SCA],
-                waves=np.linspace(blue_limit, red_limit, n_waves), oversample_fac=1.5,
                 obscuration=galsim.wfirst.obscuration, pupil_plane_im=galsim.wfirst.pupil_plane_file,
                 oversampling=1.2, pad_factor=2.)
+        PSF.setupInterpolation(waves=np.linspace(blue_limit, red_limit, n_waves), oversample_fac=1.5)
         PSF_list.append(PSF)
 
     return PSF_list
