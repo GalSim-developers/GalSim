@@ -515,6 +515,21 @@ def test_chromatic_flux():
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "analytic prediction")
 
+    # Also check that the flux is okay and the image fairly consistent when using interpolation
+    # for the ChromaticAtmosphere.
+    PSF.setupInterpolation(waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30))
+    final_int = galsim.Convolve([star, PSF, pix])
+    image3 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    final_int.draw(bandpass, image=image3)
+    int_flux = image3.array.sum()
+    # Be *slight* less stringent in this test given that we did use interpolation.
+    printval(image, image3)
+    np.testing.assert_almost_equal(
+        int_flux/analytic_flux, 1.0, 3,
+        err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
+    # Go back to no interpolation (this will effect the PSFs that are used below).
+    PSF.noInterpolation()
+
     # Try adjusting flux to something else.
     target_flux = 2.63
     bulge_SED2 = bulge_SED.withFlux(target_flux, bandpass)
