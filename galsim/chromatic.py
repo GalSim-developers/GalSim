@@ -164,7 +164,9 @@ class ChromaticObject(object):
                                 should be given in nanometers, and they should span the full range
                                 of wavelengths covered by any bandpass to be used for drawing Images
                                 (i.e., this class will not extrapolate beyond the given range of
-                                wavelengths).
+                                wavelengths).  They can be spaced any way the user likes, not
+                                necessarily linearly, though interpolation will be linear in
+                                wavelength.
         @param oversample_fac   Factor by which to oversample the stored profiles compared to the
                                 default, which is to sample them at the Nyquist frequency for
                                 whichever wavelength has the highest Nyquist frequency.
