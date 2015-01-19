@@ -528,7 +528,8 @@ def test_chromatic_flux():
         int_flux/analytic_flux, 1.0, 3,
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
     # Go back to no interpolation (this will effect the PSFs that are used below).
-    PSF.noInterpolation()
+    PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500,
+                                     zenith_angle=zenith_angle)
 
     # Try adjusting flux to something else.
     target_flux = 2.63
@@ -1262,38 +1263,28 @@ def test_interpolated_ChromaticObject():
     red_limit = max(bandpass.red_limit, bandpass_g.red_limit)
     waves = np.linspace(blue_limit, red_limit, n_interp)
 
+    # Make a star.
+    star = galsim.Gaussian(fwhm=1.e-8) * bulge_SED
+
     # First, compare images that are drawn with exact and interpolated ChromaticGaussian.
     exact_psf = ChromaticGaussian(sigma_0)
     interp_psf = exact_psf.copy()
     interp_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
-    im_exact = exact_psf.drawImage(bandpass, scale=scale)
+    exact_obj = galsim.Convolve(star, exact_psf)
+    interp_obj = galsim.Convolve(star, interp_psf)
+    im_exact = exact_obj.drawImage(bandpass, scale=scale)
     im_interp = im_exact.copy()
-    im_interp = interp_psf.drawImage(bandpass, image=im_interp, scale=scale)
-    # Note: peak value of array is around 1, so going to 4 decimal places is a reasonably stringent
-    # test considering how different the exact vs. interpolated rendering process is.
+    im_interp = interp_obj.drawImage(bandpass, image=im_interp, scale=scale)
+    # Note: peak value of array is around 0.3, so going to 4 decimal places is a reasonably
+    # stringent test considering how different the exact vs. interpolated rendering process is.
     np.testing.assert_array_almost_equal(
         im_interp.array, im_exact.array, decimal=4,
         err_msg='InterpolatedChromaticObject results differ for exact vs. interpolated')
 
-    # Just to be safe, we're going to do our own brute-force calculation of the interpolated result,
-    # and compare it with `im_interp`.  Note that if the definition of the ChromaticGaussian gets
-    # changed, then this code has to get changed too.
-    im = im_exact.copy()
-    im.setZero()
-    for wave in waves:
-        obj = galsim.Gaussian(sigma=sigma_0*(wave/500.), flux=bandpass(wave))
-        obj = obj.shear(g1=0.1*((wave/500.)-1.))
-        obj.drawImage(image=im, scale=scale, add_to_image=True)
-    # Flux normalization should not be the same, since we didn't do the dwave part of the integral,
-    # but the rest should be.  So just renormalize.
-    im *= im_interp.array.sum()/im.array.sum()
-    np.testing.assert_array_almost_equal(
-        im_interp.array, im.array, decimal=4,
-        err_msg='ChromaticObject results differ for interpolated vs. brute force')
-
-    # Check that when an interpolated ChromaticObject is convolved with a ChromaticObject, the flux
-    # that we get is correct. We are forcing it to go through the evaluation of
-    # ChromaticConvolution.drawImage().
+    # Check that when an interpolated ChromaticObject is convolved with a ChromaticObject that has a
+    # non-trivial surface brightness profile (i.e., a galaxy rather than a star), the image that we
+    # get and the total flux normalization is correct. We are forcing it to go through the
+    # evaluation of ChromaticConvolution.drawImage().
     gal = galsim.Exponential(half_light_radius = 2.*scale)
     gal = gal.shear(g2 = 0.3)
     gal = disk_SED*gal
@@ -1319,7 +1310,7 @@ def test_interpolated_ChromaticObject():
         ' when convolving with ChromaticObject')
 
     # Check that when an ChromaticObject with interpolation is convolved with a ChromaticSum, the
-    # flux that we get is correct.
+    # image and flux normalization is correct.
     bulge = galsim.DeVaucouleurs(half_light_radius = 1.5*scale)
     bulge = bulge_SED*bulge
     tot_gal = gal + bulge
@@ -1345,7 +1336,7 @@ def test_interpolated_ChromaticObject():
         err_msg='ChromaticObject results differ for interpolated vs. exact'
         ' when convolving with ChromaticSum')
 
-    # Finally, check that the routine is careful not to interpolate outside of its original bounds.
+    # Finally, check that the routine does not interpolate outside of its original bounds.
     try:
         np.testing.assert_raises(RuntimeError, obj_interp.drawImage, bandpass_z)
     except ImportError:
@@ -1359,12 +1350,12 @@ def test_ChromaticOpticalPSF():
     import time
     t1 = time.time()
 
-    # For ChromaticOpticalPSF, exact evaluation is really too slow for routine unit tests.  So, for
+    # For ChromaticOpticalPSF, exact evaluation is too slow for routine unit tests.  So, for
     # this unit test, we use an interpolated version only.  The tests of 
     # ChromaticObject in the previous unit test should be enough to ensure that exact
     # and interpolated evaluation match in general (given reasonable settings).
 
-    # First, compare the interpolated result (drawn through two bands) with saved, exact results.
+    # First, compare the interpolated result with saved, exact results.
     # Exact results were generated using the following code, sitting in this directory:
     #
     # import galsim
@@ -1374,6 +1365,10 @@ def test_ChromaticOpticalPSF():
     # path, filename = os.path.split(__file__)
     # datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
     # bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat')).thin()
+    # disk_SED = galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='ang')
+    # disk_SED = disk_SED.withFluxDensity(target_flux_density=0.3, wavelength=500.0)
+    #
+    # star = galsim.Gaussian(sigma=1.e-8)*disk_SED
     #
     # aberrations = np.zeros(12)
     # aberrations[4] = 40. # nm
@@ -1383,14 +1378,17 @@ def test_ChromaticOpticalPSF():
     # nstruts = 2
     # scale = 0.02
     # 
-    # obj = galsim.ChromaticOpticalPSF(diam, aberrations, obscuration=obscuration, nstruts=nstruts)
+    # psf = galsim.ChromaticOpticalPSF(diam, aberrations, obscuration=obscuration, nstruts=nstruts)
+    # obj = galsim.Convolve(psf, star)
     # im_r = obj.drawImage(bandpass, scale=scale)
     # im_r.write('./chromatic_reference_images/r_exact.fits')
     #
-    # That script took 13 seconds to run, nearly all in the image rendering process.  In contrast,
-    # the ChromaticOpticalPSF with interpolation that is used for this unit test takes about 2.4s to
-    # initialize, and 0.7s for the image rendering process.  Obviously, if many images are to be
-    # rendered, this is a huge savings compared to doing the exact calculation each time.
+    # That script took 17 seconds to run on a new-ish Macbook Pro, nearly all in the image rendering
+    # process.  In contrast, the ChromaticOpticalPSF with interpolation that is used for this unit
+    # test takes about 2.5 seconds to initialize, and 0.5s for the image rendering process.
+    # Obviously, if many images are to be rendered after incurring the overhead of initializing this
+    # object, the interpolated calculation leads to a huge savings compared to doing the exact
+    # calculation each time.
     #
     # Note that exact results will have to be regenerated if any of the bandpass or other parameters
     # defined here are changed.  Because of the parameters chosen here, there is a lot of
@@ -1400,54 +1398,36 @@ def test_ChromaticOpticalPSF():
     aberrations[7] = 20. # nm
     diam = 2.4 # meters
     obscuration = 0.18
-    nstruts = 2
+    nstruts = 4
     scale = 0.02
     n_interp = 15
     oversample_fac = 2.0
     waves = np.linspace(bandpass.blue_limit, bandpass.red_limit, n_interp)
-    obj = galsim.ChromaticOpticalPSF(diam, aberrations,
+    psf = galsim.ChromaticOpticalPSF(diam, aberrations,
                                      obscuration=obscuration, nstruts=nstruts)
-    obj.setupInterpolation(waves, oversample_fac=oversample_fac)
-    im_r = obj.drawImage(bandpass, scale=scale)
+    psf.setupInterpolation(waves, oversample_fac=oversample_fac)
+    star = galsim.Gaussian(fwhm=1.e-8) * disk_SED
+    obj = galsim.Convolve(star, psf)
+
     im_r_ref = galsim.fits.read(os.path.join(refdir, 'r_exact.fits'))
-    # Test nearly passes at decimal=4, but 0.15% of pixels disagree.  However, decimal=3 after
-    # normalization with peak flux is still very good.
-    # Renormalize so peak is 1.
-    im_r /= im_r.array.max()
+    im_r = im_r_ref.copy()
+    obj.drawImage(bandpass, image=im_r, scale=scale)
+    np.testing.assert_almost_equal(
+        im_r.array.max(), im_r.array.max(), decimal=2,
+        err_msg='Interpolated ChromaticOpticalPSF peak flux disagrees with reference in r band')
     im_r_ref /= im_r_ref.array.max()
+    im_r /= im_r.array.max()
+    # Test nearly passes at decimal=4, but 0.08% of pixels disagree.  However, decimal=3 after
+    # normalization with peak flux is still very good.
     np.testing.assert_array_almost_equal(
         im_r.array, im_r_ref.array, decimal=3,
-        err_msg='ChromaticOpticalPSF results disagree with reference in r band')
-
-    # Then, check that with two very narrow bands, we get what we expect.  We check two bands just
-    # to make sure that the expected scaling of the diffraction limit with wavelength is working out
-    # correctly.
-    dlam = 5.
-    cent_vals = [520., 720.]
-    bp_list = [0., 1., 0.]
-    for cent_val in cent_vals:
-        wave_list = [cent_val-dlam, cent_val, cent_val+dlam]
-        bp = galsim.Bandpass(galsim.LookupTable(wave_list, bp_list), blue_limit=min(wave_list),
-                             red_limit=max(wave_list))
-        im = obj.drawImage(bp, scale=scale)
-        exact_obj = galsim.OpticalPSF(
-            (1.e-9*cent_val/diam)*(galsim.radians/galsim.arcsec), obscuration=obscuration,
-            aberrations=aberrations/cent_val, nstruts=nstruts)
-        im_exact = im.copy()
-        im_exact = exact_obj.drawImage(image=im_exact, 
-            scale=scale)
-        im_exact /= im_exact.array.max()
-        im /= im.array.max()
-        np.testing.assert_array_almost_equal(
-            im.array, im_exact.array, decimal=3,
-            err_msg='ChromaticOpticalPSF results disagree with reference in narrow band'
-            ' centered at %.1f nm'%cent_val)
+        err_msg='Interpolated ChromaticOpticalPSF results disagree with reference in r band')
 
     # Finally, check that flux normalization is preserved when we convolve with a chromatic object.
     gal = galsim.Exponential(half_light_radius = 2.*scale)
     gal = gal.shear(g2 = 0.3)
     gal = disk_SED*gal
-    obj_conv = galsim.Convolve(obj, gal)
+    obj_conv = galsim.Convolve(psf, gal)
     im = obj_conv.drawImage(bandpass, scale=scale)
     expected_flux = disk_SED.calculateFlux(bandpass)
     frac_diff_exact = abs(im.array.sum()/expected_flux-1.0)/2.
