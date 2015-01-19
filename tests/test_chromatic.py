@@ -1279,7 +1279,18 @@ def test_interpolated_ChromaticObject():
     # stringent test considering how different the exact vs. interpolated rendering process is.
     np.testing.assert_array_almost_equal(
         im_interp.array, im_exact.array, decimal=4,
-        err_msg='InterpolatedChromaticObject results differ for exact vs. interpolated')
+        err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated')
+
+    # Check that we can turn interpolation off and on at will.
+    other_psf = interp_psf.copy()
+    other_psf.noInterpolation()
+    other_obj = galsim.Convolve(star, other_psf)
+    im_other = im_exact.copy()
+    im_other = other_obj.drawImage(bandpass, scale=scale)
+    # Can test to very high accuracy.
+    np.testing.assert_array_almost_equal(
+        im_other.array, im_exact.array, decimal=8,
+        err_msg='Failure to turn off interpolation in ChromaticObject')
 
     # Check that when an interpolated ChromaticObject is convolved with a ChromaticObject that has a
     # non-trivial surface brightness profile (i.e., a galaxy rather than a star), the image that we
@@ -1335,6 +1346,64 @@ def test_interpolated_ChromaticObject():
         im_interp.array, im_exact.array, decimal=3,
         err_msg='ChromaticObject results differ for interpolated vs. exact'
         ' when convolving with ChromaticSum')
+
+    # Check that we can render an image with chromatic transformations directly, and with
+    # interpolation.  Use a ChromaticAtmosphere just because that's easily transformed.
+    atm_fwhm = 0.7
+    atm_scale = 0.2
+    exact_psf = galsim.ChromaticAtmosphere(
+        galsim.Kolmogorov(atm_fwhm), 500., zenith_angle=0.*galsim.degrees,
+        parallactic_angle=0.*galsim.degrees)
+    chrom_shear = lambda w: galsim.Shear(g1=0.2+0.2*(w-500.)/500.,g2=0.) if w<1000. else \
+        galsim.Shear(g1=0.4, g2=0.)
+    chrom_shift_y = lambda w: scale*(w-500.)
+    chrom_dilate = lambda w: 1.0+0.1*(w-500.)/500.
+    exact_psf = exact_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y).dilate(chrom_dilate)
+    interp_psf = exact_psf.copy()
+    interp_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
+    exact_obj = galsim.Convolve(star, exact_psf)
+    interp_obj = galsim.Convolve(star, interp_psf)
+    im_exact = exact_obj.drawImage(bandpass, scale=atm_scale)
+    im_interp = im_exact.copy()
+    im_interp = interp_obj.drawImage(bandpass, image=im_interp, scale=atm_scale)
+    # Note: peak value of array is around 4, so going to 3 decimal places is a reasonably
+    # stringent test considering how different the exact vs. interpolated rendering process is.
+    np.testing.assert_array_almost_equal(
+        im_interp.array, im_exact.array, decimal=3,
+        err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated'+
+        ' when including chromatic transformations')
+    # Make sure it behaves appropriately when asked to apply chromatic transformations after
+    # interpolating.
+    try:
+        interp_psf = interp_psf.shear(shear=chrom_shear)
+        interp_obj = galsim.Convolve(interp_psf, star)
+        np.testing.assert_raises(RuntimeError, interp_obj.drawImage, bandpass, scale=atm_scale)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
+    # Check that we can render an image with achromatic transformations applied after
+    # interpolation.
+    exact_psf = galsim.ChromaticAtmosphere(
+        galsim.Kolmogorov(atm_fwhm), 500., zenith_angle=0.*galsim.degrees,
+        parallactic_angle=0.*galsim.degrees)
+    interp_psf = exact_psf.copy()
+    interp_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
+
+    achrom_shear = galsim.Shear(g1=0.05, g2=-0.1)
+    exact_psf = exact_psf.shear(shear=achrom_shear)
+    exact_obj = galsim.Convolve(star, exact_psf)
+    interp_psf = interp_psf.shear(shear=achrom_shear)
+    interp_obj = galsim.Convolve(star, interp_psf)
+
+    im_exact = exact_obj.drawImage(bandpass, scale=atm_scale)
+    im_interp = im_exact.copy()
+    im_interp = interp_obj.drawImage(bandpass, image=im_interp, scale=atm_scale)
+    # Note: peak value of array is around 4, so going to 3 decimal places is a reasonably
+    # stringent test considering how different the exact vs. interpolated rendering process is.
+    np.testing.assert_array_almost_equal(
+        im_interp.array, im_exact.array, decimal=3,
+        err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated'+
+        ' when including achromatic transformations after precomputation')
 
     # Finally, check that the routine does not interpolate outside of its original bounds.
     try:
