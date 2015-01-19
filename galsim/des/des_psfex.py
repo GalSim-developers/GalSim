@@ -82,15 +82,15 @@ class DES_PSFEx(object):
     (nor integrate over the pixel).  This would effectively include the pixel twice!
 
     @param file_name The file name to be read in, or a pyfits HDU.
-    @param image_file_name  The name of the fits file of the original image (needed for the
-                            WCS information in the header).  If unavailable, you may omit this
-                            (or use None), but then the returned profiles will be in image
-                            coordinates, not world coordinates.  (Default `image_file_name = None`)
-    @param wcs              Optional way to provide the WCS if you already have it loaded from the
-                            image file. (Default `wcs = None`)
-    @param dir              Optionally a directory name can be provided if the file_name does not 
-                            already include it.  (The image file is assumed to be in the same
-                            directory.) (Default `dir = None`).  Cannot pass an HDU with this option.
+    @param image_file_name The name of the fits file of the original image (needed for the
+                           WCS information in the header).  If unavailable, you may omit this
+                           (or use None), but then the returned profiles will be in image
+                           coordinates, not world coordinates.  (Default `image_file_name = None`)
+    @param wcs             Optional way to provide the WCS if you already have it loaded from the
+                           image file. (Default `wcs = None`)
+    @param dir             Optionally a directory name can be provided if the file_name does not 
+                           already include it.  (The image file is assumed to be in the same
+                           directory.) (Default `dir = None`).  Cannot pass an HDU with this option.
     """
     # For config, image_file_name is required, since that always works in world coordinates.
     _req_params = { 'file_name' : str , 'image_file_name' : str }
