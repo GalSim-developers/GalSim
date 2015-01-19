@@ -473,8 +473,8 @@ class ChromaticObject(object):
         the appropriate change in area, either use shear() with magnify(), or use lens(), which
         combines both operations.
 
-        Note that, while gravitational shear is monochromatic, the shear method may be used for 
-        many other use cases including some which may be wavelength-dependent, such as 
+        Note that, while gravitational shear is monochromatic, the shear method may be used for
+        many other use cases including some which may be wavelength-dependent, such as
         intrinsic galaxy shape, telescope dilation, atmospheric PSF shape, etc.  Thus, the
         shear argument is allowed to be a function of wavelength like other transformations.
 
@@ -524,7 +524,7 @@ class ChromaticObject(object):
 
         While gravitational lensing is achromatic, we do allow the parameters `g1`, `g2`, and `mu`
         to be callable functions to be parallel to all the other transformations of chromatic
-        objects.  In this case, the functions should take the wavelength in nanometers as the 
+        objects.  In this case, the functions should take the wavelength in nanometers as the
         argument, and the return values are the corresponding value at that wavelength.
 
         @param g1       First component of lensing (reduced) shear to apply to the object.

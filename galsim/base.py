@@ -2302,43 +2302,6 @@ class Spergel(GSObject):
         return self.SBProfile.getScaleRadius()
 
 
-class Spergelet(GSObject):
-    """A basis function in the Taylor series expansion of the Spergel profile.
-
-    @param nu               The Spergel index, nu.
-    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
-    @param j                Radial index.
-    @param q                Azimuthal index.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
-    """
-
-    # Initialization parameters of the object, with type information
-    _req_params = { "nu" : float, "scale_radius": float, "j":int, "q":int }
-    _takes_rng = False
-    _takes_logger = False
-
-    # --- Public Class methods ---
-    def __init__(self, nu, scale_radius, j, q, gsparams=None):
-        GSObject.__init__(
-            self, galsim._galsim.SBSpergelet(nu, scale_radius, j, q, gsparams=gsparams))
-
-    def getNu(self):
-        """Return the Spergel index `nu` for this profile.
-        """
-        return self.SBProfile.getNu()
-
-    def getScaleRadius(self):
-        """Return the scale radius for this Spergel profile.
-        """
-        return self.SBProfile.getScaleRadius()
-
-    def getJQ(self):
-        """Return the jq indices for this Spergelet.
-        """
-        return self.SBProfile.getJ(), self.SBProfile.getQ()
-
-
 # GSParams is defined in C++ and wrapped.  But we want to modify it here slightly to add
 # the obsolete name alias_threshold as a valid synonym for folding_threshold
 GSParams.alias_threshold = property(lambda self: self.folding_threshold,
