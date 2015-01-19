@@ -55,8 +55,8 @@ class ChromaticObject(object):
 
     The setupInterpolation() method can be used for non-separable ChromaticObjects to expedite the
     image rendering process.  See the docstring of that method for more details and discussion of
-    when this is a useful tool (and the interplay between interpolation and object
-    transformations).
+    when this is a useful tool (and the interplay between interpolation, object
+    transformations, and convolutions).
 
     Also, ChromaticObject has most of the same methods as GSObjects with the following exceptions:
 
@@ -162,6 +162,15 @@ class ChromaticObject(object):
         be applied before setting up interpolation, and attempts to render images of
         ChromaticObjects with interpolation followed by a chromatic transformation will result in an
         exception being raised.
+
+        Because of the clever way that the ChromaticConvolution routine is built up, convolutions of
+        non-separable chromatic objects that use interpolation with separable objects will still
+        benefit from these optimizations.  For example, a non-separable chromatic PSF that uses
+        interpolation, when convolved with a sum of two galaxy components each with their own SED
+        will be able to take advantage of this optimization.  In contrast, when convolving two
+        non-separable profiles there is no way to take advantage of the interpolation optimization,
+        so even in the case that interpolation has been set up, it will be ignored and the full
+        calculation will be done.
 
         For use cases requiring a high level of precision, we recommend a comparison between the
         interpolated and the more accurate calculation for at least one case, to ensure that the
@@ -1376,6 +1385,20 @@ class ChromaticConvolution(ChromaticObject):
             self.SED = lambda w: reduce(lambda x,y:x*y, [obj.SED(w) for obj in self.objlist])
         else:
             self.separable = False
+
+        # Check quickly whether we are convolving two non-separable things, >1 of each uses
+        # interpolation.  If so, emit a warning that the interpolation optimization is being ignored
+        # and full evaluation is necessary.
+        n_nonsep = 0
+        n_interp = 0
+        for obj in self.objlist:
+            if not obj.separable: n_nonsep += 1
+            if hasattr(obj, 'waves'): n_interp += 1
+        if n_nonsep>1 and n_interp>0:
+            import warnings
+            warnings.warn(
+                "Image rendering for this convolution cannot take advantage of " +
+                "interpolation-related optimization.  Will use full profile evaluation.")
 
         # Assemble wave_lists
         self.wave_list = np.array([], dtype=float)
