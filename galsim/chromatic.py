@@ -170,7 +170,7 @@ class ChromaticObject(object):
         ChromaticObjects with interpolation followed by a chromatic transformation will result in an
         exception being raised.
 
-        Because of the clever way that the ChromaticConvolution routine is built up, convolutions of
+        Because of the clever way that the ChromaticConvolution routine works, convolutions of
         non-separable chromatic objects that use interpolation with separable objects will still
         benefit from these optimizations.  For example, a non-separable chromatic PSF that uses
         interpolation, when convolved with a sum of two galaxy components each with their own SED
