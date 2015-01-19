@@ -150,9 +150,16 @@ class ChromaticObject(object):
         is a significant savings each time it is drawn into an image.  As a general rule of thumb,
         chromatic objects that are separable do not benefit from this particular optimization,
         whereas those that involve making GSObjects with wavelength-dependent keywords or
-        transformations do benefit.  Note that the interpolation scheme is simple linear
+        transformations do benefit from it.  Note that the interpolation scheme is simple linear
         interpolation in wavelength, and no extrapolation beyond the originally-provided range of
         wavelengths is permitted.
+
+        The speedup involved in using interpolation depends in part on the bandpass used for
+        rendering (since that determines how many full profile evaluations are involved in rendering
+        the image).  However, for ChromaticAtmosphere with simple profiles like Kolmogorov, the
+        speedup in some simple example cases is roughly a factor of three, whereas for more
+        expensive to render profiles like the ChromaticOpticalPSF, the speedup is more typically a
+        factor of 10-50.
 
         Achromatic transformations can be applied either before or after setting up interpolation,
         with the best option depending on the application.  For example, when rendering many times
@@ -1386,13 +1393,16 @@ class ChromaticConvolution(ChromaticObject):
         else:
             self.separable = False
 
-        # Check quickly whether we are convolving two non-separable things, >1 of each uses
-        # interpolation.  If so, emit a warning that the interpolation optimization is being ignored
-        # and full evaluation is necessary.
+        # Check quickly whether we are convolving two non-separable things that aren't
+        # ChromaticSums, >1 of each uses interpolation.  If so, emit a warning that the
+        # interpolation optimization is being ignored and full evaluation is necessary.
+        # For the case of ChromaticSums, as long as each object in the sum is separable (even if the
+        # entire object is not) then interpolation can still be used.  So we do not warn about this
+        # here.
         n_nonsep = 0
         n_interp = 0
         for obj in self.objlist:
-            if not obj.separable: n_nonsep += 1
+            if not obj.separable and not isinstance(obj, galsim.ChromaticSum): n_nonsep += 1
             if hasattr(obj, 'waves'): n_interp += 1
         if n_nonsep>1 and n_interp>0:
             import warnings
