@@ -81,7 +81,8 @@ class DES_PSFEx(object):
     called an "effective PSF".  Thus, you should not convolve by the pixel profile again
     (nor integrate over the pixel).  This would effectively include the pixel twice!
 
-    @param file_name The file name to be read in, or a pyfits HDU.
+    @param file_name       The file name to be read in, or a pyfits HDU in which case it is used
+                           directly instead of being opened.
     @param image_file_name The name of the fits file of the original image (needed for the
                            WCS information in the header).  If unavailable, you may omit this
                            (or use None), but then the returned profiles will be in image
