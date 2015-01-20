@@ -20,6 +20,8 @@ Definitions for Galsim Series class and subclasses.
 """
 
 import galsim
+from scipy.misc import factorial
+import numpy as np
 
 # Simplified Least Recently Used replacement cache.
 # http://code.activestate.com/recipes/577970-simplified-lru-cache/
@@ -67,6 +69,7 @@ class LRU_Cache:
 class _cached(type):
     def __new__(cls, clsname, bases, dct):
         dct['cache'] = object()
+        dct['kcache'] = object()
         return super(_cached, cls).__new__(cls, clsname, bases, dct)
 
 
@@ -79,7 +82,14 @@ class Series(object):
             nx, ny, scale = key[1]
             obj = self.getBasisFunc(idx)
             return obj.drawImage(nx=nx, ny=ny, scale=scale).array
+        def basisKImg(key):
+            idx = key[0]
+            nx, ny, scale = key[1]
+            obj = self.getBasisFunc(idx)
+            img, _ = obj.drawKImage(nx=nx, ny=ny, scale=scale)
+            return img.array
         self.cache = LRU_Cache(basisImg, maxsize=maxcache)
+        self.kcache = LRU_Cache(basisKImg, maxsize=maxcache)
 
     def getCoeff(self, index):
         raise NotImplementedError("subclasses of Series must define getCoeff() method")
@@ -91,6 +101,11 @@ class Series(object):
         args = (nx, ny, scale)
         return reduce(lambda x,y:x+y,
                       [self.cache((idx,args))*self.getCoeff(idx) for idx in self.indices])
+
+    def drawKImage(self, nx=None, ny=None, scale=None):
+        args = (nx, ny, scale)
+        return reduce(lambda x,y:x+y,
+                      [self.kcache((idx,args))*self.getCoeff(idx) for idx in self.indices])
 
 
 class SeriesConvolution(Series):
@@ -190,25 +205,50 @@ class SpergelSeries(Series):
     def __init__(self, nu, jmax, half_light_radius=None, scale_radius=None,
                  flux=1., gsparams=None):
         self.nu=nu
+        self.jmax=jmax
         if half_light_radius is not None:
             prof = galsim.Spergel(nu=nu, half_light_radius=half_light_radius)
             self.scale_radius = prof.getScaleRadius()
         else:
             self.scale_radius=scale_radius
         self.flux=flux
-        self.jmax=jmax
         self.gsparams=gsparams
+
         self.indices=[]
         for j in xrange(jmax+1):
             for q in xrange(j+1):
-                self.indices.append((j, q))
+                self.indices.append((nu, scale_radius, j, q))
         self.indices = tuple(self.indices)
-        Series.__init__(self)
+
+        #for testing
+        self.ellip = 0.0
+        self.phi0 = 0.0
+        self.delta = 0.0
+
+        super(SpergelSeries, self).__init__()
 
     def getCoeff(self, index):
-        return 1.0
+        _, _, j, q = index
+        ellip, phi0, delta = self.ellip, self.phi0, self.delta
+        coeff = 0.0
+        print
+        print "processing j:{} q:{}".format(j, q)
+        for m in range(q, j+1):
+            if (m+q)%2 == 1:
+                continue
+            n = (q+m)/2
+            num = delta**(j-m) * (1.-delta)**m * ellip**m
+            den = 2**(m-1) * factorial(j-m) * factorial((m-q)/2) * factorial((m+q)/2)
+            outstr = "j:{} m:{} n:{} num:{} (j-m)!:{} ((m-q)/2)!:{} ((m+q)/2)!:{}"
+            print outstr.format(j, m, n, num, factorial(j-m), factorial((m-q)/2), factorial((m+q)/2))
+            if q == 0:
+                num *= 0.5
+            coeff += num/den
+        coeff *= self.flux * np.cos(-2.*q*phi0)
+        print "j:{}  q:{}  coeff:{}".format(j, q, coeff)
+        return coeff
 
     def getBasisFunc(self, index):
-        j, q = index
-        return self.flux*Spergelet(nu=self.nu, scale_radius=self.scale_radius,
-                                   j=j, q=q, gsparams=self.gsparams)
+        _, _, j, q = index
+        return Spergelet(nu=self.nu, scale_radius=self.scale_radius,
+                         j=j, q=q, gsparams=self.gsparams)
