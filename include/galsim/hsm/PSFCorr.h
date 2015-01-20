@@ -241,8 +241,8 @@ namespace hsm {
             x0(0.), y0(0.), sigma(0.), flux(0.), e1(0.), e2(0.), responsivity(0.),
             meas_type('\0'), resolution(0.) {}
 
-        double x0; ///< x centroid position within the postage stamp
-        double y0; ///< y centroid position within the postage stamp
+        double x0; ///< x centroid position within the postage stamp, in units of pixels
+        double y0; ///< y centroid position within the postage stamp, in units of pixels
         double sigma; ///< size parameter
         double flux; ///< total flux
         double e1; ///< first ellipticity component
@@ -330,6 +330,13 @@ namespace hsm {
         /// perfect resolution; default -1
         float resolution_factor;
 
+        /// @brief PSF size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels;
+        /// default -1.
+        float psf_sigma;
+
+        /// @brief galsim::CppShear object representing the PSF shape from the adaptive moments
+        CppShear psf_shape;
+
         /// @brief A string containing any error messages from the attempted measurements, to
         /// facilitate proper error handling in both C++ and python
         std::string error_message;
@@ -340,7 +347,8 @@ namespace hsm {
             moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.), moments_n_iter(0),
             correction_status(-1), corrected_e1(-10.), corrected_e2(-10.), corrected_g1(-10.), 
             corrected_g2(-10.), meas_type("None"), corrected_shape_err(-1.),
-            correction_method("None"), resolution_factor(-1.), error_message("")
+            correction_method("None"), resolution_factor(-1.),
+            psf_sigma(-1.0), psf_shape(galsim::CppShear()), error_message("")
         {}
     };
 
@@ -373,10 +381,7 @@ namespace hsm {
      * @param[in] guess_sig_PSF    Optional argument with an initial guess for the Gaussian sigma of
      *                             the PSF, default 3.0 (pixels).
      * @param[in] precision        The convergence criterion for the moments; default 1e-6.
-     * @param[in] guess_x_centroid Optional argument with an initial guess for the x centroid of the
-     *                             galaxy; if not set, then the code will try the center of the
-     *                             image.
-     * @param[in] guess_y_centroid Optional argument with an initial guess for the y centroid of the
+     * @param[in] guess_centroid   Optional argument with an initial guess for the centroid of the
      *                             galaxy; if not set, then the code will try the center of the
      *                             image.
      * @param[in] hsmparams        Optional argument to specify parameters to be used for shape
@@ -390,7 +395,7 @@ namespace hsm {
         float sky_var = 0.0, const char *shear_est = "REGAUSS",
         const std::string& recompute_flux = "FIT",
         double guess_sig_gal = 5.0, double guess_sig_PSF = 3.0, double precision = 1.0e-6,
-        double guess_x_centroid = -1000.0, double guess_y_centroid = -1000.0,
+        galsim::Position<double> guess_centroid = galsim::Position<double>(-1000.,-1000.),
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
     /**
@@ -410,10 +415,7 @@ namespace hsm {
      * @param[in] guess_sig         Optional argument with an initial guess for the Gaussian sigma
      *                              of the object, default 5.0 (pixels).
      * @param[in] precision         The convergence criterion for the moments; default 1e-6.
-     * @param[in] guess_x_centroid  Optional argument with an initial guess for the x centroid of
-     *                              the galaxy; if not set, then the code will try the center of the
-     *                              image.
-     * @param[in] guess_y_centroid  Optional argument with an initial guess for the y centroid of
+     * @param[in] guess_centroid    Optional argument with an initial guess for the centroid of
      *                              the galaxy; if not set, then the code will try the center of the
      *                              image.
      * @param[in] hsmparams         Optional argument to specify parameters to be used for shape
@@ -423,8 +425,8 @@ namespace hsm {
     template <typename T>
     CppShapeData FindAdaptiveMomView(
         const ImageView<T> &object_image, const ImageView<int> &object_mask_image,
-        double guess_sig = 5.0, double precision = 1.0e-6, double guess_x_centroid = -1000.0,
-        double guess_y_centroid = -1000.0,
+        double guess_sig = 5.0, double precision = 1.0e-6,
+        galsim::Position<double> guess_centroid = galsim::Position<double>(-1000.,-1000.),
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
     /**
