@@ -5,6 +5,8 @@ Changes from v1.2 to v1.3
 New Features
 ------------
 
+- Added information about PSF size and shape to the data structure that is
+  returned by EstimateShear(). (#612)
 - Added Spergel(2010) profile GSObject (#616).
 
 
