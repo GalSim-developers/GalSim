@@ -175,11 +175,10 @@ def main(argv):
     x_img = []
     y_img = []
     theta_img = []
-    for i_gal in range(n_use):
+    for i_gal in xrange(n_use):
         x_img.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
         y_img.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
         theta_img.append(pos_rng()*2.0*numpy.pi*galsim.radians)
-    # Rachel, is it necessary to store the positions as a list? - Arun
 
     # Create a dictionary that contains lists of images at different stages for every bandpass
     # This is needed because we loop over galaxies first and then over the bandpasses
@@ -274,77 +273,75 @@ def main(argv):
         images_IPC[filter_name] = []
         diff_IPC[filter_name] = []
 
-    for k in xrange(n_use): #xrange(cat.nobjects):
-        logger.info('Processing the object at row %d in the input catalog'%k)
-        
-        # The usual random number generator using a different seed for each galaxy.
-        ud = galsim.UniformDeviate(random_seed+k) # no longer required
+        for k in xrange(n_use): #xrange(cat.nobjects):
+            logger.info('Processing the object at row %d in the input catalog'%k)
+            
+            # The usual random number generator using a different seed for each galaxy.
+            ud = galsim.UniformDeviate(random_seed+k) # no longer required
 
-        # Galaxy is a bulge + disk with parameters taken from the catalog:
-        disk = galsim.Exponential(half_light_radius=0.1*cat.getFloat(k,5))
-        disk = disk * disk_SED
-        disk = disk.shear(e1=cat.getFloat(k,6), e2=cat.getFloat(k,7))
+            # Galaxy is a bulge + disk with parameters taken from the catalog:
+            disk = galsim.Exponential(half_light_radius=0.1*cat.getFloat(k,5))
+            disk = disk * disk_SED
+            disk = disk.shear(e1=cat.getFloat(k,6), e2=cat.getFloat(k,7))
 
-        bulge = galsim.DeVaucouleurs(half_light_radius=0.1*cat.getFloat(k,8))
-        bulge = bulge * bulge_SED
-        bulge = bulge.shear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
+            bulge = galsim.DeVaucouleurs(half_light_radius=0.1*cat.getFloat(k,8))
+            bulge = bulge * bulge_SED
+            bulge = bulge.shear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
 
-        # Add the components to get the galaxy. The flux is clearly getting rescaled in an
-        # incorrect way, which I need to fix, but for now we'll just artificially fix it.
-        gal = 100*(1./3)*bulge+100*(2./3)*disk
-        # At this stage, our galaxy is chromatic.
-        logger.debug('Created bulge+disk galaxy final profile')
-        # Q: Should the flux be adjusted?????
+            # Add the components to get the galaxy. The flux is clearly getting rescaled in an
+            # incorrect way, which I need to fix, but for now we'll just artificially fix it.
+            gal = 100*(1./3)*bulge+100*(2./3)*disk
+            # At this stage, our galaxy is chromatic.
+            logger.debug('Created bulge+disk galaxy final profile')
+            # Q: Should the flux be adjusted?????
 
-        # Apply a random rotation
-        ## theta = ud()*2.0*numpy.pi*galsim.radians :already done earlier - Arun
-        gal = gal.rotate(theta_img[k])
+            # Apply a random rotation
+            ## theta = ud()*2.0*numpy.pi*galsim.radians :already done earlier - Arun
+            gal = gal.rotate(theta_img[k])
 
-        # Already done earlier - Arun
-        # # Choose a random position in the image
-        # x = ud()*(image_size-1)
-        # y = ud()*(image_size-1)
-        # image_pos = galsim.PositionD(x,y)  # -> Goes into WCS stuff then?
+            # Already done earlier - Arun
+            # # Choose a random position in the image
+            # x = ud()*(image_size-1)
+            # y = ud()*(image_size-1)
+            # image_pos = galsim.PositionD(x,y)  # -> Goes into WCS stuff then?
 
-        # Account for the fractional part of the position:
-        ix = int(math.floor(x_img[k]+0.5))
-        iy = int(math.floor(y_img[k]+0.5))
-        offset = galsim.PositionD(x_img[k]-ix, y_img[k]-iy)
-        stamp_pos = galsim.PositionI(ix-0.5*stamp_size,iy-0.5*stamp_size)
+            # Account for the fractional part of the position:
+            ix = int(math.floor(x_img[k]+0.5))
+            iy = int(math.floor(y_img[k]+0.5))
+            offset = galsim.PositionD(x_img[k]-ix, y_img[k]-iy)
+            stamp_pos = galsim.PositionI(ix-0.5*stamp_size,iy-0.5*stamp_size)
 
-        # Create a nominal bounds for the postage stamp
-        stamp_bounds = galsim.BoundsI(ix-0.5*stamp_size, ix+0.5*stamp_size-1, 
-                                    iy-0.5*stamp_size, iy+0.5*stamp_size-1)
+            # Create a nominal bounds for the postage stamp
+            stamp_bounds = galsim.BoundsI(ix-0.5*stamp_size, ix+0.5*stamp_size-1, 
+                                        iy-0.5*stamp_size, iy+0.5*stamp_size-1)
 
-        # The center of the object is normally placed at the center of the postage stamp image.
-        # You can change that with shift:
-        # gal = gal.shift(dx=cat.getFloat(k,11), dy=cat.getFloat(k,12))
-        # NOTE TO SELF: Disabled since galaxies look cropped - Arun
-        # Convolve the chromatic galaxy and the chromatic PSF
-        final = galsim.Convolve([gal,PSF],gsparams=gsparams)
+            # The center of the object is normally placed at the center of the postage stamp image.
+            # You can change that with shift:
+            # gal = gal.shift(dx=cat.getFloat(k,11), dy=cat.getFloat(k,12))
+            # NOTE TO SELF: Disabled since galaxies look cropped - Arun
+            # Convolve the chromatic galaxy and the chromatic PSF
+            final = galsim.Convolve([gal,PSF],gsparams=gsparams)
 
-        logger.debug('Preprocessing for galaxy %d completed.'%k)
+            logger.debug('Preprocessing for galaxy %d completed.'%k)
 
-        # draw profile through WFIRST filters
-        for filter_name, filter_ in filters.iteritems():
-            final_image = final_images[filter_name]
-            img = galsim.ImageF(stamp_size, stamp_size, scale=pixel_scale) # 64, 64
-            img.setOrigin(0,0)
-            img.shift(stamp_pos)
-            final.drawImage(filter_, image=img, offset=offset)
+            # draw profile through WFIRST filters
+            stamp = galsim.ImageF(stamp_size, stamp_size, scale=pixel_scale) # 64, 64
+            stamp.setOrigin(0,0)
+            stamp.shift(stamp_pos)
+            final.drawImage(filter_, image=stamp, offset=offset)
 
             # Find the overlapping bounds:
             bounds = stamp_bounds & final_image.bounds
             # Image bounds
 
             # Add the galaxy within the bounds to the bigger image
-            final_image[bounds] += img[bounds]
+            final_image[bounds] += stamp[bounds]
 
     logger.info('Postage stamps of all galaxies drawn on a single big image.')
     logger.info('Adding the skylevel, noise and detector non-idealities')
+
     # Adding the skylevel, noise and detector non-idealities
-    for filter_name, filter_ in filters.iteritems():
-        final_image = final_images[filter_name]
+        #final_image = final_images[filter_name]
 
         # Adding sky level to the image.  
         final_image += sky_level_pix
