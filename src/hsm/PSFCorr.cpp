@@ -137,13 +137,10 @@ namespace hsm {
     // Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.
     template <typename T, typename U>
     CppShapeData EstimateShearView(
-        const ImageView<T>& gal_image, const ImageView<U>& PSF_image,
-        const ImageView<int>& gal_mask_image,
-        float sky_var, const char* shear_est, const std::string& recompute_flux,
-        double guess_sig_gal,
-        double guess_sig_PSF, double precision,
-        double guess_x_centroid, double guess_y_centroid,
-        boost::shared_ptr<HSMParams> hsmparams) 
+        const ImageView<T>& gal_image, const ImageView<U>& PSF_image, const ImageView<int>& gal_mask_image,
+        float sky_var, const char* shear_est, const std::string& recompute_flux, double guess_sig_gal,
+        double guess_sig_PSF, double precision, galsim::Position<double> guess_centroid,
+        boost::shared_ptr<HSMParams> hsmparams)
     {
         // define variables, create output CppShapeData struct, etc.
         CppShapeData results;
@@ -156,15 +153,13 @@ namespace hsm {
         dbg<<"Start EstimateShearView"<<std::endl;
         dbg<<"Setting defaults and so on before calling general_shear_estimator"<<std::endl;
         // Set defaults etc. and pass to general_shear_estimator
-        if (guess_x_centroid != -1000.0) {
-            gal_data.x0 = guess_x_centroid;
+        if (guess_centroid.x != 1000.) {
+            gal_data.x0 = guess_centroid.x;
+            gal_data.y0 = guess_centroid.y;
         } else {
-            gal_data.x0 = 0.5*(gal_image.getXMin() + gal_image.getXMax());
-        }
-        if (guess_y_centroid != -1000.0) {
-            gal_data.y0 = guess_y_centroid;
-        } else {
-            gal_data.y0 = 0.5*(gal_image.getYMin() + gal_image.getYMax());
+            Position<double> tc = gal_image.getBounds().trueCenter();
+            gal_data.x0 = tc.x;
+            gal_data.y0 = tc.y;
         }
         gal_data.sigma = guess_sig_gal;
 
@@ -236,6 +231,9 @@ namespace hsm {
         results.moments_sigma = gal_data.sigma;
         results.moments_amp = gal_data.flux;
         results.resolution_factor = gal_data.resolution;
+        results.psf_sigma = PSF_data.sigma;
+        results.psf_shape = galsim::CppShear();
+        results.psf_shape.setE1E2(PSF_data.e1, PSF_data.e2);
 
         if (results.resolution_factor <= 0.) {
             throw HSMError("Unphysical situation: galaxy convolved with PSF is smaller than PSF!\n");
@@ -250,8 +248,8 @@ namespace hsm {
     template <typename T>
     CppShapeData FindAdaptiveMomView(
         const ImageView<T>& object_image, const ImageView<int>& object_mask_image, 
-        double guess_sig, double precision, double guess_x_centroid,
-        double guess_y_centroid, boost::shared_ptr<HSMParams> hsmparams) 
+        double guess_sig, double precision, galsim::Position<double> guess_centroid,
+        boost::shared_ptr<HSMParams> hsmparams) 
     {
         dbg<<"Start FindAdaptiveMomView"<<std::endl;
         dbg<<"Setting defaults and so on before calling find_ellipmom_2"<<std::endl;
@@ -262,15 +260,13 @@ namespace hsm {
         if (!hsmparams.get()) hsmparams = hsm::default_hsmparams;
 
         // set some values for initial guesses
-        if (guess_x_centroid != -1000.0) {
-            results.moments_centroid.x = guess_x_centroid;
-        } else {
-            results.moments_centroid.x = 0.5*(object_image.getXMin() + object_image.getXMax());
+        if (guess_centroid.x != -1000.0) {
+            results.moments_centroid = guess_centroid;
         }
-        if (guess_y_centroid != -1000.0) {
-            results.moments_centroid.y = guess_y_centroid;
-        } else {
-            results.moments_centroid.y = 0.5*(object_image.getYMin() + object_image.getYMax());
+        else {
+            Position<double> tc = object_image.getBounds().trueCenter();
+            results.moments_centroid.x = tc.x;
+            results.moments_centroid.y = tc.y;
         }
         m_xx = guess_sig*guess_sig;
         m_yy = m_xx;
@@ -1512,7 +1508,8 @@ namespace hsm {
         ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
         double& e1, double& e2, double& R, unsigned long flags, double& x0_gal,
         double& y0_gal, double& sig_gal, double& x0_psf, double& y0_psf,
-        double& sig_psf, double& flux_gal, boost::shared_ptr<HSMParams> hsmparams) 
+        double& sig_psf, double& e1_psf, double& e2_psf, double& flux_gal,
+        boost::shared_ptr<HSMParams> hsmparams) 
     {
         int num_iter;
         unsigned int status = 0;
@@ -1551,6 +1548,10 @@ namespace hsm {
         Mxypsf = 0.;
         find_ellipmom_2(PSF_image, A_g, x0_psf, y0_psf, Mxxpsf, Mxypsf, Myypsf, rho4psf,
                         1.0e-6, num_iter, hsmparams);
+        sig_psf = std::pow( Mxxpsf * Myypsf - Mxypsf * Mxypsf, 0.25);
+        double T_psf = (Mxxpsf+Myypsf);
+        e1_psf = (Mxxpsf-Myypsf)/T_psf;
+        e2_psf = 2.*Mxypsf/T_psf;
 
         if (num_iter == hsmparams->num_iter_default) {
             x0_psf = x0_old;
@@ -1751,10 +1752,8 @@ namespace hsm {
         double A_gal, Mxx_gal, Mxy_gal, Myy_gal, rho4_gal;
         double A_psf, Mxx_psf, Mxy_psf, Myy_psf, rho4_psf;
 
-        if (shear_est == "BJ" || shear_est == "LINEAR") {
-            /* Bernstein & Jarvis and linear estimator */
-
-            /* Measure the PSF */
+        if (shear_est == "BJ" || shear_est == "LINEAR" || shear_est == "KSB") {
+            /* Measure the PSF so its size and shape can get propagated up to python layer */
             x0 = PSF_data.x0;
             y0 = PSF_data.y0;
             Mxx_psf = Myy_psf = PSF_data.sigma * PSF_data.sigma; Mxy_psf = 0.;
@@ -1766,7 +1765,14 @@ namespace hsm {
                 PSF_data.x0 = x0;
                 PSF_data.y0 = y0;
                 PSF_data.sigma = std::pow( Mxx_psf * Myy_psf - Mxy_psf * Mxy_psf, 0.25);
+                double T_psf = (Mxx_psf+Myy_psf);
+                PSF_data.e1 = (Mxx_psf-Myy_psf)/T_psf;
+                PSF_data.e2 = 2.*Mxy_psf/T_psf;
             }
+        }
+
+        if (shear_est == "BJ" || shear_est == "LINEAR") {
+            /* Bernstein & Jarvis and linear estimator */
 
             /* Measure the galaxy */
             x0 = gal_data.x0;
@@ -1814,7 +1820,8 @@ namespace hsm {
             status = psf_corr_regauss(
                 gal_image, PSF_image, gal_data.e1, gal_data.e2, R,
                 flags, gal_data.x0, gal_data.y0, gal_data.sigma, PSF_data.x0,
-                PSF_data.y0, PSF_data.sigma, gal_data.flux, hsmparams );
+                PSF_data.y0, PSF_data.sigma, PSF_data.e1, PSF_data.e2,
+                gal_data.flux, hsmparams );
             gal_data.meas_type = 'e';
             gal_data.responsivity = 1.;
 
@@ -1833,43 +1840,43 @@ namespace hsm {
         const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, const std::string& recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
-        double guess_x_centroid, double guess_y_centroid, boost::shared_ptr<HSMParams> hsmparams);
+        galsim::Position<double> guess_centroid, boost::shared_ptr<HSMParams> hsmparams);
     template CppShapeData EstimateShearView(
         const ImageView<double>& gal_image, const ImageView<double>& PSF_image,
         const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, const std::string& recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
-        double guess_x_centroid, double guess_y_centroid, boost::shared_ptr<HSMParams> hsmparams);
+        galsim::Position<double> guess_centroid, boost::shared_ptr<HSMParams> hsmparams);
     template CppShapeData EstimateShearView(
         const ImageView<float>& gal_image, const ImageView<double>& PSF_image,
         const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, const std::string& recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
-        double guess_x_centroid, double guess_y_centroid, boost::shared_ptr<HSMParams> hsmparams);
+        galsim::Position<double> guess_centroid, boost::shared_ptr<HSMParams> hsmparams);
     template CppShapeData EstimateShearView(
         const ImageView<double>& gal_image, const ImageView<float>& PSF_image,
         const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, const std::string& recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
-        double guess_x_centroid, double guess_y_centroid, boost::shared_ptr<HSMParams> hsmparams);
+        galsim::Position<double> guess_centroid, boost::shared_ptr<HSMParams> hsmparams);
     template CppShapeData EstimateShearView(
         const ImageView<int>& gal_image, const ImageView<int>& PSF_image,
         const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, const std::string& recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
-        double guess_x_centroid, double guess_y_centroid, boost::shared_ptr<HSMParams> hsmparams);
+        galsim::Position<double> guess_centroid, boost::shared_ptr<HSMParams> hsmparams);
 
     template CppShapeData FindAdaptiveMomView(
         const ImageView<float>& object_image, const ImageView<int> &object_mask_image,
-        double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid,
+        double guess_sig, double precision, galsim::Position<double> guess_centroid,
         boost::shared_ptr<HSMParams> hsmparams);
     template CppShapeData FindAdaptiveMomView(
         const ImageView<double>& object_image, const ImageView<int> &object_mask_image,
-        double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid,
+        double guess_sig, double precision, galsim::Position<double> guess_centroid,
         boost::shared_ptr<HSMParams> hsmparams);
     template CppShapeData FindAdaptiveMomView(
         const ImageView<int>& object_image, const ImageView<int> &object_mask_image,
-        double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid,
+        double guess_sig, double precision, galsim::Position<double> guess_centroid,
         boost::shared_ptr<HSMParams> hsmparams);
 
 }
