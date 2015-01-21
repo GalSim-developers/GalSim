@@ -139,7 +139,7 @@ def main(argv):
     PSFs = wfirst.getPSF(SCAs=use_SCA, approximate_struts=True, n_waves=10)
     PSF = PSFs[use_SCA]
     t2 = time.time()
-    logger.info('Done precomputation in %.1f seconds!'%(t2-t1))
+    logger.info('Done PSF precomputation in %.1f seconds!'%(t2-t1))
 
     # Define some parameters
     stamp_size = 64
@@ -249,8 +249,8 @@ def main(argv):
             # draw profile through WFIRST filters
             final.drawImage(filter_, image=final_image[bounds], offset=offset, add_to_image=True)
 
-    logger.info('Postage stamps of all galaxies drawn on a single big image.')
-    logger.info('Adding the skylevel, noise and detector non-idealities')
+        logger.info('Postage stamps of all galaxies drawn on a single big image.')
+        logger.info('Adding the skylevel, noise and detector non-idealities')
 
         # Now we're done with the per-galaxy drawing for this image.  The rest will be done for the
         # entire image at once.
