@@ -73,7 +73,7 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
     This routine gets a list of WCS, one for each of the WFIRST SCAs (Sensor Chip Array, the
     equivalent of a chip in an optical CCD).  Since the WFIRST SCAs are labeled 1-18, the zeroth
     list item is simply None.  Use of this routine requires that GalSim be able to access some
-    software that can handle TAN-SIP style WCS (either Astropy, starlink.Ast, WCSTools).
+    software that can handle TAN-SIP style WCS (either starlink.Ast or WCSTools).
 
     The user must specify a position for the center of the focal plane array (either as (ra, dec),
     or a CelestialCoord `pos`) and the orientation.
