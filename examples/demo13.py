@@ -253,7 +253,6 @@ def main(argv):
             offset = galsim.PositionD(x_stamp[k]-ix, y_stamp[k]-iy)
 
             # Create a nominal bounds for the postage stamp
-            stamp_pos = galsim.PositionI(ix-0.5*stamp_size,iy-0.5*stamp_size) # lower-left corner
             stamp_bounds = galsim.BoundsI(ix-0.5*stamp_size, ix+0.5*stamp_size-1, 
                                         iy-0.5*stamp_size, iy+0.5*stamp_size-1)
 
@@ -267,17 +266,11 @@ def main(argv):
 
             logger.debug('Preprocessing for galaxy %d completed.'%k)
 
-            # draw profile through WFIRST filters
-            stamp = galsim.ImageF(stamp_size, stamp_size, scale=wfirst.pixel_scale) # 64, 64
-            stamp.setOrigin(stamp_pos)
-            final.drawImage(filter_, image=stamp, offset=offset)
-
             # Find the overlapping bounds:
             bounds = stamp_bounds & final_image.bounds
-            # Image bounds
 
-            # Add the galaxy within the bounds to the bigger image
-            final_image[bounds] += stamp[bounds]
+            # draw profile through WFIRST filters
+            final.drawImage(filter_, image=final_image[bounds], offset=offset, add_to_image=True)
 
     logger.info('Postage stamps of all galaxies drawn on a single big image.')
     logger.info('Adding the skylevel, noise and detector non-idealities')
