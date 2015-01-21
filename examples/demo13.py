@@ -171,17 +171,6 @@ def main(argv):
         y_stamp.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
         theta_stamp.append(pos_rng()*2.0*numpy.pi*galsim.radians)
 
-    # Create a dictionary that contains lists of images at different stages for every bandpass
-    # This is needed because we loop over galaxies first and then over the bandpasses
-    final_images = {}
-    images = {}
-    images_RecipFail = {}
-    diff_RecipFail = {}
-    images_NL = {}
-    diff_NL = {}
-    images_IPC = {}
-    diff_IPC = {}
-
     # Drawing PSFs, defining the dict keys and recomputing skylevel for each filter
     for filter_name, filter_ in filters.iteritems():
         # Drawing PSF.  Note that the PSF object intrinsically has a flat SED, so if we
@@ -212,18 +201,6 @@ def main(argv):
         # Set up the final image:
         # final_image = galsim.ImageF(wfirst.n_pix,wfirst.n_pix, wcs=wcs)
         final_image = galsim.ImageF(wfirst.n_pix,wfirst.n_pix)
-        # Set origin to be (0,0) for convenience
-        final_image.setOrigin(0,0)
-
-        # Create an empty list for each filter to which each galaxy in the catalog will be appended
-        final_images[filter_name] = final_image
-        images[filter_name] = []
-        images_RecipFail[filter_name] = []
-        diff_RecipFail[filter_name] = []
-        images_NL[filter_name] = []
-        diff_NL[filter_name] = []
-        images_IPC[filter_name] = []
-        diff_IPC[filter_name] = []
 
         for k in xrange(n_use): #xrange(cat.nobjects):
             logger.info('Processing the object at row %d in the input catalog'%k)
@@ -305,8 +282,11 @@ def main(argv):
         final_image_2 = final_image.copy()
 
         diff = final_image_2-final_image_1
-        diff_RecipFail[filter_name] = diff
-        images_RecipFail[filter_name] = final_image_2
+
+        out_filename = os.path.join(outpath,'demo13_RecipFail_{0}.fits'.format(filter_name))
+        final_image_2.write(out_filename)
+        out_filename = os.path.join(outpath,'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
+        diff.write(out_filename)
 
         # At this point in the image generation process, an integer number of photons gets
         # detected, hence we have to round the pixel values to integers:
@@ -344,8 +324,11 @@ def main(argv):
         final_image_4 = final_image.copy()
 
         diff = final_image_4-final_image_3
-        diff_NL[filter_name] = diff
-        images_NL[filter_name] = final_image_4
+
+        out_filename = os.path.join(outpath,'demo13_NL_{0}.fits'.format(filter_name))
+        final_image_4.write(out_filename)
+        out_filename = os.path.join(outpath,'demo13_diff_NL_{0}.fits'.format(filter_name))
+        diff.write(out_filename)
 
         # Adding Interpixel Capacitance
         # The voltage read at a given pixel location is influenced by the charges present in
@@ -362,8 +345,11 @@ def main(argv):
         final_image_5 = final_image.copy()
 
         diff = final_image_5-final_image_4
-        diff_IPC[filter_name] = diff
-        images_IPC[filter_name] = final_image_5
+
+        out_filename = os.path.join(outpath,'demo13_IPC_{0}.fits'.format(filter_name))
+        final_image_5.write(out_filename)
+        out_filename = os.path.join(outpath,'demo13_diff_IPC_{0}.fits'.format(filter_name))
+        diff.write(out_filename)
 
         # Adding Read Noise
         read_noise = galsim.CCDNoise(rng)
@@ -392,25 +378,9 @@ def main(argv):
         final_image -= tot_sky_level
 
         logger.debug('Subtracted background for {0}-band image'.format(filter_name))
-        images[filter_name] = final_image
 
         out_filename = os.path.join(outpath,'demo13_{0}.fits'.format(filter_name))
-        images[filter_name].write(out_filename)
-
-        out_filename = os.path.join(outpath,'demo13_IPC_{0}.fits'.format(filter_name))
-        images_IPC[filter_name].write(out_filename)
-        out_filename = os.path.join(outpath,'demo13_diff_IPC_{0}.fits'.format(filter_name))
-        diff_IPC[filter_name].write(out_filename)
-
-        out_filename = os.path.join(outpath,'demo13_RecipFail_{0}.fits'.format(filter_name))
-        images_RecipFail[filter_name].write(out_filename)
-        out_filename = os.path.join(outpath,'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
-        diff_RecipFail[filter_name].write(out_filename)
-
-        out_filename = os.path.join(outpath,'demo13_NL_{0}.fits'.format(filter_name))
-        images_NL[filter_name].write(out_filename)
-        out_filename = os.path.join(outpath,'demo13_diff_NL_{0}.fits'.format(filter_name))
-        diff_NL[filter_name].write(out_filename)
+        final_image.write(out_filename)
 
         logger.info('Created {0}-band image.'.format(filter_name))
 
