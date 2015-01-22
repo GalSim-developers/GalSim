@@ -1104,12 +1104,12 @@ def test_uncorrelated_noise_tracking():
 
     # Start with an UncorrelatedNoise instance that we attach to an InterpolatedImage GSObject as a
     # 'noise' attribute
-    gal_sigma = 1.
-    noise_var = 1.
+    gal_sigma = 1.7
+    noise_var = 1.3
     seed = 1234
     pix_scale = 0.1
     orig_object = galsim.Gaussian(sigma=gal_sigma)
-    orig_ucn = galsim.UncorrelatedNoise(noise_var, rng=galsim.BaseDeviate(seed), scale=pix_scale)
+    orig_ucn = galsim.UncorrelatedNoise(variance=noise_var, scale=pix_scale)
     im = orig_object.draw(scale=pix_scale)
     int_im = galsim.InterpolatedImage(im)
     # Note, I'm including the noise attribute without actually adding noise.  It doesn't matter
