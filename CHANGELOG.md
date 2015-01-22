@@ -19,6 +19,7 @@ New Features
 - Added information about PSF size and shape to the data structure that is
   returned by EstimateShear(). (#612)
 
+
 Bug Fixes and Improvements
 --------------------------
 
