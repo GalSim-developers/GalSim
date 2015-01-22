@@ -30,8 +30,6 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-DECIMAL = 14
-
 def test_nonlinearity_basic():
     """Check for overall sensible behavior of the nonlinearity routine."""
     import time
@@ -39,7 +37,7 @@ def test_nonlinearity_basic():
 
     # Make an image with non-trivially interesting scale and bounds.
     g = galsim.Gaussian(sigma=3.7)
-    im = g.draw(scale=0.25)
+    im = g.drawImage(scale=0.25)
     im.shift(dx=-5, dy=3)
     im_save = im.copy()
 
@@ -129,7 +127,7 @@ def test_nonlinearity_basic():
     # Note, don't be quite as stringent as in previous test; there can be small interpolation
     # errors.
     np.testing.assert_array_almost_equal(
-        im1.array, im2.array, int(0.5*DECIMAL),
+        im1.array, im2.array, 7,
         err_msg='Image differs when using LUT vs. lambda function')
 
     # Check that lambda func vs. interpolated function from SciPy agree
@@ -156,13 +154,13 @@ def test_nonlinearity_basic():
         assert im2.dtype == im.dtype
         assert im2.bounds == im.bounds
 
-        #Let the user know that this test happened
+        # Let the user know that this test happened
         print "SciPy was found installed. Using SciPy modules in the unit test for",\
         "'applyNonlinearity'"
         # Note, don't be quite as stringent as in previous test; there can be small interpolation
         # errors.
         np.testing.assert_array_almost_equal(
-            im1.array, im2.array, int(0.5*DECIMAL),
+            im1.array, im2.array, 7,
             err_msg="Image differs when using SciPy's interpolation vs. lambda function")
     except ImportError:
         pass
@@ -172,7 +170,6 @@ def test_nonlinearity_basic():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
 def test_recipfail_basic():
     """Check for overall sensible behavior of the reciprocity failure routine."""
     import time
@@ -180,7 +177,7 @@ def test_recipfail_basic():
 
     # Make an image with non-trivially interesting scale and bounds.
     g = galsim.Gaussian(sigma=3.7)
-    im = g.draw(scale=0.25)
+    im = g.drawImage(scale=0.25)
     im.shift(dx=-5, dy=3)
     im_save = im.copy()
 
@@ -237,7 +234,7 @@ def test_recipfail_basic():
     assert im2.bounds == im.bounds
 
     np.testing.assert_array_almost_equal(
-        np.log(dim2)/np.log(dim1), expected_ratio, int(DECIMAL/3),
+        np.log(dim2)/np.log(dim1), expected_ratio, 5,
         err_msg='Did not get expected change in reciprocity failure when varying alpha')
 
     #Check math is right
@@ -250,8 +247,8 @@ def test_recipfail_basic():
     assert im_new.bounds == im.bounds
     np.testing.assert_array_almost_equal(
         (np.log10(im_new.array)-np.log10(im.array)), (alpha/np.log(10))*np.log10(im.array/ \
-            (exp_time*base_flux))
-        ,int(DECIMAL/3), err_msg='Difference in images is not alpha times the log of original')
+            (exp_time*base_flux)), 5,
+        err_msg='Difference in images is not alpha times the log of original')
 
     # Check power law against logarithmic behavior
     alpha, exp_time, base_flux = 0.0065, 2.0, 4.0
@@ -262,7 +259,7 @@ def test_recipfail_basic():
     assert im_new.dtype == im.dtype
     assert im_new.bounds == im.bounds
     np.testing.assert_array_almost_equal(
-        im_new.array,im.array*(1+alpha*np.log10(im.array/(exp_time*base_flux))),int(DECIMAL/3),
+        im_new.array,im.array*(1+alpha*np.log10(im.array/(exp_time*base_flux))),6,
         err_msg='Difference between power law and log behavior')
 
     t2 = time.time()
@@ -299,7 +296,169 @@ def test_quantize():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2-t1)
 
+def test_IPC_basic():
+    import time
+    t1 = time.time()
+
+    # Make an image with non-trivially interesting scale.
+    g = galsim.Gaussian(sigma=3.7)
+    im = g.drawImage(scale=0.25)
+    im_save = im.copy()
+
+    # Check for no IPC
+    ipc_kernel = galsim.Image(3,3)
+    ipc_kernel.setValue(2,2,1.0)
+    im_new = im.copy()
+
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend')
+    np.testing.assert_array_equal(
+        im_new.array, im.array,
+        err_msg="Image is altered for no IPC with edge_treatment = 'extend'" )
+
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap')
+    np.testing.assert_array_equal(
+        im_new.array, im.array,
+        err_msg="Image is altered for no IPC with edge_treatment = 'wrap'" )
+
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop')
+    np.testing.assert_array_equal(
+        im_new.array, im.array,
+        err_msg="Image is altered for no IPC with edge_treatment = 'crop'" )
+
+    # Test with a scalar fill_value
+    fill_value = np.pi # a non-trivial one
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',fill_value=fill_value)
+
+    #Input arrays and output arrays will differ at the edges for this option.
+    np.testing.assert_array_equal(
+        im_new.array[1:-1,1:-1], im.array[1:-1,1:-1],
+        err_msg="Image is altered for no IPC with edge_treatment = 'crop' and with a fill_value" )
+    # Check if the edges are filled with fill_value
+    np.testing.assert_array_equal(
+        im_new.array[0,:], fill_value,
+        err_msg="Top edge is not filled with the correct value by applyIPC")
+    np.testing.assert_array_equal(
+        im_new.array[-1,:], fill_value,
+        err_msg="Bottom edge is not filled with the correct value by applyIPC")
+    np.testing.assert_array_equal(
+        im_new.array[:,0], fill_value,
+        err_msg="Left edge is not filled with the correct value by applyIPC")
+    np.testing.assert_array_equal(
+        im_new.array[:,-1], fill_value,
+        err_msg="Left edge is not filled with the correct value by applyIPC")
+
+    # Testing for flux conservation
+    np.random.seed(1234)
+    ipc_kernel = galsim.Image(abs(np.random.randn(3,3))) # a random kernel
+    ipc_kernel /= ipc_kernel.array.sum() # but make it normalized so we do not get warnings
+    im_new = im.copy()
+    # Set edges to zero since flux is not conserved at the edges otherwise
+    im_new.array[0,:] = 0.0
+    im_new.array[-1,:] = 0.0
+    im_new.array[:,0] = 0.0
+    im_new.array[:,-1] = 0.0
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', kernel_normalization=True)
+    np.testing.assert_almost_equal(im_new.array.sum(), im.array[1:-1,1:-1].sum(), 4,
+        err_msg="Normalized IPC kernel does not conserve the total flux for 'extend' option.")
+
+    im_new = im.copy()
+    im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap', kernel_normalization=True)
+    np.testing.assert_almost_equal(im_new.array.sum(), im.array.sum(), 4,
+        err_msg="Normalized IPC kernel does not conserve the total flux for 'wrap' option.")
+
+    # Checking directionality
+    ipc_kernel = galsim.Image(3,3)
+    ipc_kernel.setValue(2,2,0.875)
+    ipc_kernel.setValue(2,3,0.125)
+    # This kernel should correspond to each pixel getting contribution from the pixel above it.
+    im1 = im.copy()
+    im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
+    np.testing.assert_array_almost_equal(0.875*im.array[1:-1,1:-1]+0.125*im.array[2:,1:-1],
+        im1.array[1:-1,1:-1], 7, err_msg="Difference in directionality for up kernel in applyIPC")
+    # Checking for one pixel in the central bulk
+    np.testing.assert_almost_equal(im1(2,2), 0.875*im(2,2)+0.125*im(2,3), 7,
+        err_msg="Direction is not as intended for up kernel in applyIPC")
+
+    ipc_kernel = galsim.Image(3,3)
+    ipc_kernel.setValue(2,2,0.875)
+    ipc_kernel.setValue(1,2,0.125)
+    # This kernel should correspond to each pixel getting contribution from the pixel to its left.
+    im1 = im.copy()
+    im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
+    np.testing.assert_array_almost_equal(im1.array[1:-1,1:-1], im1.array[1:-1,1:-1], 7,
+        err_msg="Difference in directionality for left kernel in applyIPC")
+    # Checking for one pixel in the central bulk
+    np.testing.assert_almost_equal(im1(2,3), 0.875*im(2,3)+0.125*im(2,2), 7,
+        err_msg="Direction is not as intended for left kernel in applyIPC")
+
+    # Check using GalSim's native Convolve routine for GSObjects for a realisitic kernel
+    ipc_kernel = galsim.Image(np.array(
+        [[0.01,0.1,0.01],
+         [0.1,1.0,0.1],
+         [0.01,0.1,0.01]]))
+    ipc_kernel /= ipc_kernel.array.sum()
+    ipc_kernel_int = galsim.InterpolatedImage(ipc_kernel,x_interpolant='nearest',scale=im.scale)
+    im1 = im.copy()
+    im1.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',kernel_normalization=False)
+    im2 = im.copy()
+    im2_int = galsim.InterpolatedImage(im2,x_interpolant='nearest')
+    ipc_kernel_int = galsim.InterpolatedImage(ipc_kernel,x_interpolant='nearest',scale=im.scale)
+    im_int = galsim.Convolve(ipc_kernel_int,im2_int,real_space=False)
+    im_int.drawImage(im2,method='no_pixel',scale=im.scale)
+    np.testing.assert_array_almost_equal(im1.array,im2.array,6,
+        err_msg="Output of applyIPC does not match the output from Convolve")
+
+    try:
+        from scipy import signal
+        print "SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`"
+        # SciPy is going to emit a warning that we don't want to worry about, so let's deliberately
+        # ignore it by going into a `catch_warnings` context.
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+
+            # Generate an arbitrary kernel
+            np.random.seed(2345)
+            ipc_kernel = galsim.Image(abs(np.random.randn(3,3)))
+            ipc_kernel /= ipc_kernel.array.sum()
+            # Convolution requires the kernel to be flipped up-down and left-right.
+            im_new = im.copy()
+            im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend',
+                            kernel_normalization=False)
+            np.testing.assert_array_almost_equal(
+                im_new.array, signal.convolve2d(im.array, np.flipud(np.fliplr(ipc_kernel.array)),
+                                                mode='same', boundary='fill'), 7,
+                err_msg="Image differs from SciPy's result using `mode='same'` and "
+                "`boundary='fill`.")
+
+            im_new = im.copy()
+            im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='crop',
+                            kernel_normalization=False)
+            np.testing.assert_array_almost_equal(
+                im_new.array[1:-1,1:-1], signal.convolve2d(im.array,
+                                                           np.fliplr(np.flipud(ipc_kernel.array)),
+                                                           mode='valid', boundary = 'fill'), 7,
+                err_msg="Image differs from SciPy's result using `mode=valid'` and "
+                "`boundary='fill'`.")
+
+            im_new = im.copy()
+            im_new.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='wrap',
+                            kernel_normalization=False)
+            np.testing.assert_array_almost_equal(
+                im_new.array, signal.convolve2d(im.array, np.fliplr(np.flipud(ipc_kernel.array)),
+                                                mode='same', boundary='wrap'), 7,
+                err_msg="Image differs from SciPy's result using `mode=same'` and "
+                "boundary='wrap'`.")
+
+    except ImportError:
+        # Skip without any warning if SciPy is not installed
+        pass
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_nonlinearity_basic()
     test_recipfail_basic()
     test_quantize()
+    test_IPC_basic()
