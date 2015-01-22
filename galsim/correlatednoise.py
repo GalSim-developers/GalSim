@@ -317,7 +317,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         must at least be "uniform", i.e., `image.wcs.isUniform() == True`.
 
         If you are interested in a theoretical calculation of the variance in the final noise field
-        after imposing symmetry, the symmetrizeImage() method in fact returns this variance.  For example:
+        after imposing symmetry, the symmetrizeImage() method in fact returns this variance.
+        For example:
 
             >>> variance = correlated_noise.symmetrizeImage(image, order=order)
 
