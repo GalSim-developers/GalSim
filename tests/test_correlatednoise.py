@@ -161,13 +161,15 @@ def test_uncorrelated_noise_output():
     # If we provide a wcs, then the wcs given to UncorrelatedNoise should match the wcs
     # of the image.  In this case, the resulting pixel variance should still match the 
     # provided variance parameter.
-    if __name__ == "__main__":
+    if False:
+        # The last one is a sufficient unit tests, but if it fails, it is helpful to
+        # test the simpler ones first.
         wcs_list = [ galsim.PixelScale(1.0),
                      galsim.PixelScale(0.23),
                      galsim.JacobianWCS(0.23, 0.01, -0.05, 0.21),
-                     galsim.AffineTransform(0.23, 0.01, -0.05, 0.21, galsim.PositionD(73,45)) ]
+                     galsim.AffineTransform(0.23, 0.31, -0.15, 0.21, galsim.PositionD(73,45)) ]
     else:
-        wcs_list = [ galsim.PixelScale(0.23) ]
+        wcs_list = [ galsim.AffineTransform(0.23, 0.31, -0.15, 0.21, galsim.PositionD(73,45)) ]
     for wcs in wcs_list:
         scale = math.sqrt(wcs.pixelArea())
         im.wcs = wcs
@@ -188,7 +190,8 @@ def test_uncorrelated_noise_output():
 
         # Test with a regular CorrelatedNoise object built from an image with this variance
         uncorr_noise_image = setup_uncorrelated_noise(ud, 10*largeim_size) * sigma
-        cn = galsim.CorrelatedNoise(uncorr_noise_image, ud, scale=scale)
+        uncorr_noise_image.wcs = wcs
+        cn = galsim.CorrelatedNoise(uncorr_noise_image, ud)
         im.setZero()
         im.addNoise(cn)
         im_var = im.array.var()
