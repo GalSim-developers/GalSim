@@ -413,8 +413,6 @@ def _check_hdu(hdu, pyfits_compress):
     """
     if pyfits_compress:
         if not isinstance(hdu, pyfits.CompImageHDU):
-            #print 'pyfits_compress = ',pyfits_compress
-            #print 'hdu = ',hdu
             if isinstance(hdu, pyfits.BinTableHDU):
                 raise IOError('Expecting a CompImageHDU, but got a BinTableHDU\n' +
                     'Probably your pyfits installation does not have the pyfitsComp module '+
@@ -426,8 +424,6 @@ def _check_hdu(hdu, pyfits_compress):
                 raise IOError('Found invalid HDU reading FITS file (expected an ImageHDU)')
     else:
         if not isinstance(hdu, pyfits.ImageHDU) and not isinstance(hdu, pyfits.PrimaryHDU):
-            #print 'pyfits_compress = ',pyfits_compress
-            #print 'hdu = ',hdu
             raise IOError('Found invalid HDU reading FITS file (expected an ImageHDU)')
 
 
@@ -1017,13 +1013,17 @@ class FitsHeader(object):
     to write to a fits header, so this class will work regardless of which version of pyfits
     (or astropy.io.fits) is installed.
 
+    The underlying pyfits.Header object is available as a `.header` attribute:
+
+        >>> pyf_header = fits_header.header
+
     Constructor parameters:
 
-    @param header       A pyfits Header object.  [One of `file_name`, `hdu_list` or `header`
-                        is required.  The `header` parameter may be given without the keyword
-                        name.  Also, if `header` is a string, it is interpreted as a file name,
-                        so a file name may be passed as an arg like most other galsim.fits 
-                        read functions.]
+    @param header       A pyfits Header object or in fact any dict-like object.  [One of 
+                        `file_name`, `hdu_list` or `header` is required.  The `header` parameter
+                        may be given without the keyword name.  Also, if `header` is a string, it
+                        is interpreted as a file name, so a file name may be passed as an arg like
+                        most other galsim.fits read functions.]
     @param file_name    The name of the file to read in.  [One of `file_name`, `hdu_list` or 
                         `header` is required.]
     @param dir          Optionally a directory name can be provided if `file_name` does not 
@@ -1098,6 +1098,13 @@ class FitsHeader(object):
         if hdu_list:
             hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
             header = hdu.header
+
+        # Let header be any kind of dict-like object.
+        # Header.update() should handle anything that acts like a dict.
+        if not isinstance(header, pyfits.Header):
+            h2 = pyfits.Header()
+            h2.update(header)
+            header = h2
 
         if file_name and not text_file:
             # If we opened a file, don't forget to close it.

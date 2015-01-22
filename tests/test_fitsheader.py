@@ -166,7 +166,6 @@ def test_dict():
     header = galsim.FitsHeader(header = {})
     for k in d:
         header[k] = (d[k], 'The value of ' + k)
-    print 'header = ',header.header
     check_dict(header)
     
     # Use update
