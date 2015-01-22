@@ -74,19 +74,29 @@ def test_uncorrelated_noise_zero_lag():
     t1 = time.time()
     sigmas = [3.e-9, 49., 1.11e11]  # some wide ranging sigma values for the noise field
     # loop through the sigmas
-    cf_zero = 0.
     gd = galsim.GaussianDeviate(rseed)
     for sigma in sigmas:
         # Test the estimated value is good to 1% of the input variance; we expect this!
         # Note we make multiple correlation funcs and average their zero lag to beat down noise
+        cf_zero = 0.
         for i in range(nsum_test):
             uncorr_noise_image = setup_uncorrelated_noise(gd, largeim_size) * sigma
-            cn = galsim.CorrelatedNoise(uncorr_noise_image, gd, scale=1.)
+            cn = galsim.CorrelatedNoise(uncorr_noise_image, gd)
             cf_zero += cn._profile.xValue(galsim.PositionD(0., 0.))
         cf_zero /= float(nsum_test)
         np.testing.assert_almost_equal(
             cf_zero / sigma**2, 1., decimal=2,
             err_msg="Zero distance noise correlation value does not match input noise variance.")
+
+        # Repeat using UncorrelatedNoise
+        ucn = galsim.UncorrelatedNoise(variance=sigma**2)
+        ucf_zero = ucn._profile.xValue(galsim.PositionD(0.,0.))
+        np.testing.assert_almost_equal(
+            ucf_zero / sigma**2, 1., decimal=5,
+            err_msg="Zero distance noise correlation value does not match variance value " + 
+            "provided to UncorrlatedNoise.")
+
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
@@ -95,30 +105,37 @@ def test_uncorrelated_noise_nonzero_lag():
     randomly chosen positions.
     """
     t1 = time.time()
+    ud = galsim.UniformDeviate(rseed)
+    sigma = 1.7  # Don't use sigma = 1, to notice sqrt error.
+    gn = galsim.GaussianNoise(ud, sigma=sigma)
     # Set up some random positions (within and outside) the bounds of the table inside the
     # CorrelatedNoise then test
-    uncorr_noise_image = galsim.ImageD(largeim_size, largeim_size)
-    ud = galsim.UniformDeviate(rseed)
-    gn = galsim.GaussianNoise(ud, sigma=1.)
-    for i in range(npos_test):
+    for rpos in [ 1.3, 23., 84., 243. ]:
         # Note we make multiple noise fields and correlation funcs and average non-zero lag values
         # to beat down noise
         cf_test_value = 0.
         for i in range(nsum_test):
-            uncorr_noise_image.addNoise(gn)
-            cn = galsim.CorrelatedNoise(uncorr_noise_image, ud, scale=1.)
-            # generate the test position at least one pixel away from the origin
-            rpos = 2. + ud() * (largeim_size - 2.) # this can go outside table bounds
-            tpos = 2. * np.pi * ud()
+            tpos = 2. * np.pi * ud()  # A new random direction each time
             pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
+            uncorr_noise_image = setup_uncorrelated_noise(ud, largeim_size) * sigma
+            cn = galsim.CorrelatedNoise(uncorr_noise_image, ud)
+            # generate the test position at least one pixel away from the origin
             cf_test_value += cn._profile.xValue(pos)
-            uncorr_noise_image.setZero()
         cf_test_value /= float(nsum_test)
         # Then test this estimated value is good to within our chosen decimal place of zero
         np.testing.assert_almost_equal(
             cf_test_value, 0., decimal=2,
             err_msg="Non-zero distance noise correlation value not sufficiently close to target "+
             "value of zero.")
+
+        # Repeat using UncorrelatedNoise
+        ucn = galsim.UncorrelatedNoise(variance=sigma**2)
+        ucf_test_value = ucn._profile.xValue(pos)
+        np.testing.assert_almost_equal(
+            ucf_test_value, 0., decimal=5,
+            err_msg="Non-zero distance noise correlation value not sufficiently close to target "+
+            "value of zero.")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
