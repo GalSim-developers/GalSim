@@ -211,12 +211,10 @@ def main(argv):
             bulge = bulge * bulge_SED
             bulge = bulge.shear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
 
-            # Add the components to get the galaxy. The flux is clearly getting rescaled in an
-            # incorrect way, which I need to fix, but for now we'll just artificially fix it.
-            gal = 100*(1./3)*bulge+100*(2./3)*disk
+            # Add the components to get the galaxy.
+            gal = (1./3)*bulge+(2./3)*disk
             # At this stage, our galaxy is chromatic.
             logger.debug('Created bulge+disk galaxy final profile')
-            # Q: Should the flux be adjusted or set mag_norm at a lower magnitude?????
 
             # Apply a random rotation
             gal = gal.rotate(theta_stamp[k])
