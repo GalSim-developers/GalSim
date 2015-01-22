@@ -134,6 +134,44 @@ def test_scamp():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+def test_dict():
+    """Test that we can create a FitsHeader from a dict
+    """
+    import time
+    t1 = time.time()
+
+    d = { 'TIME-OBS' : '04:28:14.105' ,
+          'FILTER'   : 'I',
+          'AIRMASS'  : 1.185 }
+
+    def check_dict(header):
+        """Check that the header object has correct values from the given dict
+        """
+        assert header['TIME-OBS'] == '04:28:14.105'
+        assert header['FILTER'] == 'I'
+        assert header['AIRMASS'] == 1.185
+        assert len(header) == 3
+
+    # Construct from a given dict
+    header = galsim.FitsHeader(header = d)
+    check_dict(header)
+
+    # Start with a blank dict and add elements individually
+    header = galsim.FitsHeader(header = {})
+    for k in d:
+        header[k] = d[k]
+    check_dict(header)
+    
+    # Use update
+    header = galsim.FitsHeader(header = {})
+    header.update(d)
+    check_dict(header)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
     test_read()
     test_scamp()
+    test_dict()
