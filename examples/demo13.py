@@ -58,11 +58,6 @@ import galsim as galsim
 import galsim.wfirst as wfirst
 
 def main(argv):
-    # Increase the maximum fft size to draw galaxies convolved with PSF
-    # NOTE TO SELF: NEEDS A FIX
-    gsparams = galsim.GSParams()
-    gsparams.maximum_fft_size = 8192
-    print galsim.GSParams().maximum_fft_size
 
     # Where to find and output data.
     path, filename = os.path.split(__file__)
@@ -239,7 +234,7 @@ def main(argv):
             # NOTE TO SELF: Disabled since galaxies look cropped - Arun
 
             # Convolve the chromatic galaxy and the chromatic PSF
-            final = galsim.Convolve([gal,PSF],gsparams=gsparams)
+            final = galsim.Convolve([gal,PSF])
 
             logger.debug('Preprocessing for galaxy %d completed.'%k)
 
@@ -337,7 +332,7 @@ def main(argv):
         # convolution of a 3x3 kernel with the image. The WFIRST kernel is not normalized to
         # have the entries add to unity and hence must be normalized inside the routine.
 
-        img.applyIPC(IPC_kernel=wfirst.ipc_kernel,edge_treatment='extend',
+        final_image.applyIPC(IPC_kernel=wfirst.ipc_kernel,edge_treatment='extend',
                      kernel_normalization=True)
         # Here, we use `edge_treatment='extend'`, which pads the image with zeros before
         # applying the kernel. The central part of the image is retained.
@@ -354,7 +349,7 @@ def main(argv):
         # Adding Read Noise
         read_noise = galsim.CCDNoise(rng)
         read_noise.setReadNoise(wfirst.read_noise)
-        #final_image.addNoise(read_noise)
+        final_image.addNoise(read_noise)
         final_image_6 = final_image.copy()
 
         logger.debug('Added Readnoise to {0}-band image'.format(filter_name))
