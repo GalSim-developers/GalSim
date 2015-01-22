@@ -161,6 +161,13 @@ def test_dict():
     for k in d:
         header[k] = d[k]
     check_dict(header)
+
+    # Set with a comment field
+    header = galsim.FitsHeader(header = {})
+    for k in d:
+        header[k] = (d[k], 'The value of ' + k)
+    print 'header = ',header.header
+    check_dict(header)
     
     # Use update
     header = galsim.FitsHeader(header = {})
