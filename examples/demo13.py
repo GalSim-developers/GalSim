@@ -42,6 +42,7 @@ New feautres introduced in this demo:
 - Adding sky level and dark current
 - poisson_noise = galsim.PoissonNoise(rng)
 - image.addReciprocityFailure(exp_time, alpha, base_flux)
+- image.quantize()
 - image.applyNonlinearity(NLfunc,*args)
 - image.applyIPC(IPC_kernel, edge_treatment, fill_value, kernel_nonnegativity,
                  kernel_normalization)
@@ -58,7 +59,6 @@ import galsim as galsim
 import galsim.wfirst as wfirst
 
 def main(argv):
-
     # Where to find and output data.
     path, filename = os.path.split(__file__)
     datapath = os.path.abspath(os.path.join(path, "data/"))
@@ -83,7 +83,7 @@ def main(argv):
     del filters['BAO-Grism']
     logger.debug('Read in filters')
 
-    # Read in SEDs.  We only need two of them, for the two components of the galaxy (bulge and
+    # Read in SEDs. We only need two of them, for the two components of the galaxy (bulge and
     # disk).
     SED_names = ['CWW_E_ext', 'CWW_Im_ext']
     SEDs = {}
@@ -118,7 +118,7 @@ def main(argv):
     dir = 'input'
     cat = galsim.Catalog(cat_file_name,dir=dir)
     logger.info('Read in %d galaxies from catalog',cat.nobjects)
-    # Just use a few galaxies.
+    # Just use a few galaxies, to save time.
     n_use = 5
 
     # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
@@ -153,20 +153,22 @@ def main(argv):
     # corresponding to (X, Y) = (wfirst.n_pix/2, wfirst.n_pix/2).
     SCA_cent_pos = wcs.toWorld(galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
 
-    # We are going to just randomly distribute points in X, Y.  If we had a real galaxy catalog
-    # with positions in terms of RA, dec we could use wcs.toImage() to find where those objects
-    # should be in terms of (X, Y).
+    # We are going to just randomly distribute points in X, Y and randomly rotate the galaxies.
+    # If we had a real galaxy catalog with positions in terms of RA, dec we could use wcs.toImage()
+    # to find where those objects should be in terms of (X, Y).
     pos_rng = galsim.UniformDeviate(random_seed)
     # Make a list of (X, Y) values, eliminating the 10% of the edge pixels as the object centroids.
     x_stamp = []
     y_stamp = []
+    # Make a list of angle values by which the galaxies are rotated.
     theta_stamp = []
     for i_gal in xrange(n_use):
         x_stamp.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
         y_stamp.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
         theta_stamp.append(pos_rng()*2.0*numpy.pi*galsim.radians)
 
-    # Drawing PSFs, defining the dict keys and recomputing skylevel for each filter
+    # Calculate the sky level for each filter, and draw the PSF and the galaxies through the
+    # filters.
     for filter_name, filter_ in filters.iteritems():
         # Drawing PSF.  Note that the PSF object intrinsically has a flat SED, so if we
         # convolve it with a galaxy, it will properly take on the SED of the galaxy.  However,
@@ -193,14 +195,14 @@ def main(argv):
         # e-/pix/s, so we have to multiply by the exposure time.
         sky_level_pix += wfirst.thermal_backgrounds[filter_name]*wfirst.exptime
 
-        # Set up the final image:
-        # final_image = galsim.ImageF(wfirst.n_pix,wfirst.n_pix, wcs=wcs)
-        final_image = galsim.ImageF(wfirst.n_pix,wfirst.n_pix)
+        # Set up the final image, with information about WCS:
+        final_image = galsim.ImageF(wfirst.n_pix,wfirst.n_pix, wcs=wcs)
 
-        for k in xrange(n_use): #xrange(cat.nobjects):
+        for k in xrange(n_use):
             logger.info('Processing the object at row %d in the input catalog'%k)
 
-            # Galaxy is a bulge + disk with parameters taken from the catalog:
+            # Galaxy is a bulge + disk with parameters taken from the catalog.
+            # We arbitrarily adjust the sizes of the galaxies from their true values.
             disk = galsim.Exponential(half_light_radius=0.1*cat.getFloat(k,5))
             disk = disk * disk_SED
             disk = disk.shear(e1=cat.getFloat(k,6), e2=cat.getFloat(k,7))
@@ -224,7 +226,7 @@ def main(argv):
             iy = int(math.floor(y_stamp[k]+0.5))
             offset = galsim.PositionD(x_stamp[k]-ix, y_stamp[k]-iy)
 
-            # Create a nominal bounds for the postage stamp
+            # Create a nominal bound for the postage stamp
             stamp_bounds = galsim.BoundsI(ix-0.5*stamp_size, ix+0.5*stamp_size-1, 
                                         iy-0.5*stamp_size, iy+0.5*stamp_size-1)
 
@@ -235,7 +237,6 @@ def main(argv):
 
             # Convolve the chromatic galaxy and the chromatic PSF
             final = galsim.Convolve([gal,PSF])
-
             logger.debug('Preprocessing for galaxy %d completed.'%k)
 
             # Find the overlapping bounds:
@@ -249,14 +250,13 @@ def main(argv):
 
         # Now we're done with the per-galaxy drawing for this image.  The rest will be done for the
         # entire image at once.
+        logger.debug('Creating {0}-band image.'.format(filter_name))
 
         # Adding sky level to the image.  
         final_image += sky_level_pix
 
         # Adding Poisson Noise
         final_image.addNoise(poisson_noise)
-
-        logger.debug('Creating {0}-band image.'.format(filter_name))
 
         # The subsequent steps account for the non-ideality of the detectors
 
@@ -275,7 +275,7 @@ def main(argv):
             base_flux=1.0)
         logger.debug('Accounted for Reciprocity Failure in {0}-band image'.format(filter_name))
         final_image_2 = final_image.copy()
-
+        # Isolate the changes due to Reciprocity Failure.
         diff = final_image_2-final_image_1
 
         out_filename = os.path.join(outpath,'demo13_RecipFail_{0}.fits'.format(filter_name))
@@ -314,10 +314,10 @@ def main(argv):
         final_image_3 = final_image.copy()
 
         NLfunc = wfirst.NLfunc        # a quadratic non-linear function
-        final_image.applyNonlinearity(NLfunc)
+        final_image.applyNonlinearity(NLfunc=NLfunc)
         logger.debug('Applied Nonlinearity to {0}-band image'.format(filter_name))
         final_image_4 = final_image.copy()
-
+        # Isolate the changes due to non-linear gain.
         diff = final_image_4-final_image_3
 
         out_filename = os.path.join(outpath,'demo13_NL_{0}.fits'.format(filter_name))
@@ -338,7 +338,7 @@ def main(argv):
         # applying the kernel. The central part of the image is retained.
         logger.debug('Applied interpixel capacitance to {0}-band image'.format(filter_name))
         final_image_5 = final_image.copy()
-
+        # Isolate the changes due to the interpixel capacitance effect.
         diff = final_image_5-final_image_4
 
         out_filename = os.path.join(outpath,'demo13_IPC_{0}.fits'.format(filter_name))
@@ -347,6 +347,8 @@ def main(argv):
         diff.write(out_filename)
 
         # Adding Read Noise
+        # Read Noise is the noise due to the on-chip amplifier that converts the charge into an
+        # analog voltage.
         read_noise = galsim.CCDNoise(rng)
         read_noise.setReadNoise(wfirst.read_noise)
         final_image.addNoise(read_noise)
@@ -369,11 +371,10 @@ def main(argv):
         # version with the background subtracted (also rounding that to an int)
         tot_sky_level = (sky_level_pix + wfirst.dark_current*wfirst.exptime)/wfirst.gain
         tot_sky_level = numpy.round(tot_sky_level)
-
         final_image -= tot_sky_level
 
         logger.debug('Subtracted background for {0}-band image'.format(filter_name))
-
+        # Write the final image to a file.
         out_filename = os.path.join(outpath,'demo13_{0}.fits'.format(filter_name))
         final_image.write(out_filename)
 
