@@ -175,14 +175,19 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             raise NotImplementedError("Sorry, correlated noise cannot be applied to an "+
                                       "image with a non-uniform WCS.")
 
+        if image.wcs is None:
+            wcs = galsim.PixelScale(1.0)
+        else:
+            wcs = image.wcs
+
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field
-        rootps = self._get_update_rootps(image.array.shape, image.wcs)
+        rootps = self._get_update_rootps(image.array.shape, wcs)
 
         # Finally generate a random field in Fourier space with the right PS
         noise_array = _generate_noise_from_rootps(self.getRNG(), image.array.shape, rootps)
 
         # Add it to the image
-        image += galsim.Image(noise_array, wcs=image.wcs)
+        image.array[:,:] += noise_array
         return image
 
     def applyToView(self, image_view):
@@ -267,9 +272,14 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Set profile_for_stored for next time.
         self._profile_for_stored = self._profile
 
+        if image.wcs is None:
+            wcs = galsim.PixelScale(1.0)
+        else:
+            wcs = image.wcs
+
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the whitening noise,
         # and the total variance of the combination
-        rootps_whitening, variance = self._get_update_rootps_whitening(image.array.shape, image.wcs)
+        rootps_whitening, variance = self._get_update_rootps_whitening(image.array.shape, wcs)
 
         # Finally generate a random field in Fourier space with the right PS and add to image
         noise_array = _generate_noise_from_rootps(
@@ -359,10 +369,15 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Set profile_for_stored for next time.
         self._profile_for_stored = self._profile
 
+        if image.wcs is None:
+            wcs = galsim.PixelScale(1.0)
+        else:
+            wcs = image.wcs
+
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the symmetrizing noise,
         # and the total variance of the combination.
         rootps_symmetrizing, variance = self._get_update_rootps_symmetrizing(
-            image.array.shape, image.wcs, order)
+            image.array.shape, wcs, order)
 
         # Finally generate a random field in Fourier space with the right PS and add to image.
         noise_array = _generate_noise_from_rootps(
@@ -557,7 +572,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 imtmp = galsim.ImageD(1, 1)
                 # GalSim internals handle this correctly w/out folding
                 self.drawImage(imtmp, scale=1.)
-                variance = imtmp.at(1, 1)
+                variance = imtmp(1, 1)
                 self._variance_stored = variance # Store variance for next time
         return variance
 
@@ -661,7 +676,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
         self.__class__ = new_obj.__class__
 
-    def drawImage(self, image=None, scale=None, dtype=None, wmult=1., add_to_image=False, dx=None):
+    def drawImage(self, image=None, scale=None, wcs=None, dtype=None, wmult=1., add_to_image=False,
+                  dx=None):
         """A method for drawing profiles storing correlation functions.
 
         This is a mild reimplementation of the drawImage() method for GSObjects.  The `method` is
@@ -674,10 +690,15 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                             constructed with `image = galsim.Image()`), then it will be resized
                             appropriately based on the profile's size [default: None].
         @param scale        If provided, use this as the pixel scale for the image.
-                            If `scale` is None and image is given, then take the provided
+                            If `scale` is None and `image` is given, then take the provided
                             image's pixel scale.
-                            If `scale` is None and image is None, then use the Nyquist scale.
+                            If `scale` is None and `image` is None, then use the Nyquist scale.
                             If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
+                            If `scale > 0` and `image` is given, then override `image.scale` with
+                            the value given as a keyword.
+                            [default: None]
+        @param wcs          If provided, use this as the wcs for the image (possibly overriding any
+                            existing `image.wcs`).  At most one of `scale` or `wcs` may be provided.
                             [default: None]
         @param dtype        The data type to use for an automatically constructed image.  Only
                             valid if `image` is None. [default: None, which means to use
@@ -697,7 +718,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         if dx is not None and scale is None: scale = dx
 
         return self._profile.drawImage(
-            image=image, scale=scale, dtype=dtype, method='sb', gain=1., wmult=wmult,
+            image=image, scale=scale, wcs=wcs, dtype=dtype, method='sb', gain=1., wmult=wmult,
             add_to_image=add_to_image, use_true_center=False)
 
     def draw(self, *args, **kwargs):
@@ -730,27 +751,20 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
         half_shape = (shape[0], shape[1] // 2 + 1)
         for rootps_array, saved_wcs in self._rootps_store:
-            if rootps_array.shape == half_shape:
-                if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
-                     wcs == saved_wcs ):
-                    use_stored = True
-                    rootps = rootps_array
-                    break
+            if rootps_array.shape == half_shape and wcs == saved_wcs:
+                use_stored = True
+                rootps = rootps_array
+                break
 
         # If not, draw the correlation function to the desired size and resolution, then DFT to
         # generate the required array of the square root of the power spectrum
         if use_stored is False:
-            newcf = galsim.ImageD(shape[1], shape[0]) # set the corr func to be the correct size
-            # set the wcs...
-            if wcs is None:
-                newcf.scale = 1.
-            else:
-                newcf.wcs = wcs
             # Then draw this correlation function into an array.  If this is not done at the same
             # wcs as the original image from which the CF derives, even if the image is rotated,
             # then this step requires interpolation and the newcf (used to generate the PS below) is
             # thus approximate at some level
-            newcf = self.drawImage(newcf)
+            newcf = galsim.ImageD(shape[1], shape[0], wcs=wcs)
+            self.drawImage(newcf)
 
             # Since we just drew it, save the variance value for posterity.
             var = newcf(newcf.bounds.center())
@@ -797,13 +811,11 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Query using the rfft2/irfft2 half-sized shape (shape[0], shape[1] // 2 + 1)
         half_shape = (shape[0], shape[1] // 2 + 1)
         for rootps_whitening_array, saved_wcs, var in self._rootps_whitening_store:
-            if rootps_whitening_array.shape == half_shape:
-                if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
-                     wcs == saved_wcs ):
-                    use_stored = True
-                    rootps_whitening = rootps_whitening_array
-                    variance = var
-                    break
+            if rootps_whitening_array.shape == half_shape and wcs == saved_wcs:
+                use_stored = True
+                rootps_whitening = rootps_whitening_array
+                variance = var
+                break
 
         # If not, calculate the whitening power spectrum as (almost) the smallest power spectrum
         # that when added to rootps**2 gives a flat resultant power that is nowhere negative.
@@ -842,13 +854,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         for (
             rootps_symmetrizing_array, saved_wcs, var, saved_order
             ) in self._rootps_symmetrizing_store:
-            if rootps_symmetrizing_array.shape == half_shape and saved_order == order:
-                if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.scale == 1.) or
-                     wcs == saved_wcs ):
-                    use_stored = True
-                    rootps_symmetrizing = rootps_symmetrizing_array
-                    variance = var
-                    break
+            if (rootps_symmetrizing_array.shape == half_shape and saved_order == order and
+                    wcs == saved_wcs):
+                use_stored = True
+                rootps_symmetrizing = rootps_symmetrizing_array
+                variance = var
+                break
 
         # If not, calculate the symmetrizing power spectrum as (almost) the smallest power spectrum
         # that when added to rootps**2 gives a power that has N-fold symmetry, where `N=order`.
@@ -1175,8 +1186,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     scale the overall correlation function by a scalar operand.  The random number generators are
     not affected by these scaling operations.
     """
-    def __init__(self, image, rng=None, scale=0., x_interpolant=None, correct_periodicity=True,
-        subtract_mean=False, gsparams=None, dx=None):
+    def __init__(self, image, rng=None, scale=None, wcs=None, x_interpolant=None, 
+        correct_periodicity=True, subtract_mean=False, gsparams=None, dx=None):
         # Check for obsolete dx parameter
         if dx is not None and scale==0.: scale = dx
 
@@ -1239,13 +1250,22 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         # Wrap correlation function in an image
         cf_image = galsim.Image(np.ascontiguousarray(cf_array))
 
-        # Correctly record the original image scale if set
-        if scale > 0.:
+        # Set the wcs if necessary
+        if wcs is not None:
+            if scale is not None:
+                raise ValueError("Cannot provide both wcs and scale")
+            if not wcs.isUniform():
+                raise ValueError("Cannot provide non-uniform wcs")
+            if not isinstance(wcs, galsim.BaseWCS):
+                raise TypeError("wcs must be a BaseWCS instance")
+            cf_image.wcs = wcs
+        elif scale is not None:
             cf_image.scale = scale
-        elif image.scale > 0.:
-            cf_image.scale = image.scale
-        else: # sometimes Images are instantiated with scale=0, in which case we will assume unit
-              # pixel scale
+        elif image is not None and image.wcs is not None:
+            cf_image.wcs = image.wcs
+
+        # If wcs is still None at this point or is a PixelScale <= 0., use scale=1.
+        if cf_image.wcs is None or (cf_image.wcs.isPixelScale() and cf_image.wcs.scale <= 0):
             cf_image.scale = 1.
 
         # If x_interpolant not specified on input, use bilinear
@@ -1257,17 +1277,17 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         # Then initialize...
         cf_object = galsim.InterpolatedImage(
-            cf_image, x_interpolant=x_interpolant, scale=cf_image.scale, normalization="sb",
+            cf_image, x_interpolant=x_interpolant, normalization="sb",
             calculate_stepk=False, calculate_maxk=False, #<-these internal calculations do not seem
             gsparams=gsparams)                           #  to do very well with often sharp-peaked
                                                          #  correlation function images...
         _BaseCorrelatedNoise.__init__(self, rng, cf_object)
 
         if store_rootps:
-            # If it corresponds to the CF above, store useful data as a (rootps, scale) tuple for
+            # If it corresponds to the CF above, store useful data as a (rootps, wcs) tuple for
             # efficient later use:
             self._profile_for_stored = self._profile
-            self._rootps_store.append((np.sqrt(ps_array), cf_image.scale))
+            self._rootps_store.append((np.sqrt(ps_array), cf_image.wcs))
 
 
 def _cf_periodicity_dilution_correction(cf_shape):
