@@ -863,6 +863,15 @@ def test_symmetrizing():
     convolution with a ground-based PSF.
     """
     t1 = time.time()
+
+    if __name__ == "__main__":
+        # symm_divide determines how close to zero we need to be.  Bigger is looser tolerance.
+        symm_divide = 2.
+        symm_size_mult = 6 # make really huge images
+    else:
+        symm_divide = 3.
+        symm_size_mult = 3 # make only moderately huge images
+
     gd = galsim.GaussianDeviate(rseed)
     cosmos_scale = 7.5 # Use some non-default, non-unity value of COSMOS pixel spacing
     ccn = galsim.getCOSMOSNoise(
@@ -878,14 +887,6 @@ def test_symmetrizing():
     symmetrized_variance = ccn.symmetrizeImage(outimage, order=4)
     cntest_symmetrized = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
     cftest00 = cntest_symmetrized._profile.xValue(galsim.PositionD(0., 0.))
-
-    if __name__ == "__main__":
-        # symm_divide determines how close to zero we need to be.  Bigger is looser tolerance.
-        symm_divide = 2.
-        symm_size_mult = 6 # make really huge images
-    else:
-        symm_divide = 3.
-        symm_size_mult = 3 # make only moderately huge images
 
     # Test variances first
     np.testing.assert_almost_equal(
