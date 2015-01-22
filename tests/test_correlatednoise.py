@@ -36,33 +36,12 @@ rseed=12345
 smallim_size = 16 # size of image when we test correlated noise properties using small inputs
 smallim_size_odd = 17 # odd-sized version of the above for odd/even relevant tests (e.g. draw)
 largeim_size = 12 * smallim_size # ditto, but when we need a larger image
-xlargeim_size =long(np.ceil(1.41421356 * largeim_size)) # sometimes, for precision tests, we 
-                                                        # need a very large image that will 
-                                                        # fit a large image within it, even if 
-                                                        # rotated
 
 # Number of positions to test in nonzero lag uncorrelated tests
 npos_test = 3
 
 # Number of CorrelatedNoises to sum over to get slightly better statistics for noise generation test
 nsum_test = 7
-
-# Set up some variables for testing of noise symmetry.  If we run this test suite directly, do a
-# more stringent test that takes more time, otherwise do a looser test that takes less time.
-if __name__ == "__main__":
-    symm_divide = 2. # test to precision determined by decimal_approx (usually 2%)
-    symm_size_mult = 6 # make really huge images
-    # The convolve_cosmos test, which includes a lot of the correlated noise functionality is
-    # fairly sensitive at 2dp, but takes ~200s on a mid-range laptop
-    decimal_convolve_cosmos = 2
-    nsum_test_convolve_cosmos = 1000
-else:
-    symm_divide = 3. # test to worse precision than determined by decimal_approx (usually 3%)
-    symm_size_mult = 3 # make only moderately huge images
-    # Basic settings for convolve_cosmos, will only catch basic screwups
-    decimal_convolve_cosmos = 1
-    nsum_test_convolve_cosmos = 10
-
 
 def setup_uncorrelated_noise(deviate, size):
     """Makes and returns uncorrelated noise fields for later use in generating derived correlated
@@ -544,6 +523,8 @@ def test_output_generation_rotated():
     # TODO: It would be good to understand more about the detailed interpolant behaviour though...
     ud = galsim.UniformDeviate(rseed)
     # Get the correlated noise from an image of some y-correlated noise
+    xlargeim_size =long(np.ceil(1.41421356 * largeim_size)) 
+    # need a very large image that will fit a large image within it, even if rotated
     ynoise_xlarge = make_ycorr_from_uncorr(setup_uncorrelated_noise(ud, xlargeim_size))
     # Subtract the mean
     ynoise_xlarge -= ynoise_xlarge.array.mean()
@@ -817,6 +798,15 @@ def test_symmetrizing():
     symmetrized_variance = ccn.symmetrizeImage(outimage, order=4)
     cntest_symmetrized = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
     cftest00 = cntest_symmetrized._profile.xValue(galsim.PositionD(0., 0.))
+
+    if __name__ == "__main__":
+        # symm_divide determines how close to zero we need to be.  Bigger is looser tolerance.
+        symm_divide = 2.
+        symm_size_mult = 6 # make really huge images
+    else:
+        symm_divide = 3.
+        symm_size_mult = 3 # make only moderately huge images
+
     # Test variances first
     np.testing.assert_almost_equal(
         (cftest00/symmetrized_variance - 1.)/symm_divide, 0, decimal=2,
@@ -949,6 +939,16 @@ def test_convolve_cosmos():
         normalization='sb', scale=cosmos_scale, x_interpolant=interp)
     cimobj_padded = galsim.Convolve(imobj_padded, psf_shera)
 
+    if __name__ == "__main__":
+        # The convolve_cosmos test, which includes a lot of the correlated noise functionality is
+        # fairly sensitive at 2dp, but takes ~200s on a mid-range laptop
+        decimal_convolve_cosmos = 2
+        nsum_test_convolve_cosmos = 1000
+    else:
+        # Basic settings for convolve_cosmos, will only catch basic screwups
+        decimal_convolve_cosmos = 1
+        nsum_test_convolve_cosmos = 10
+
     # We draw, calculate a correlation function for the resulting field, and repeat to get an
     # average over nsum_test_convolve_cosmos trials
     convimage = galsim.ImageD(2 * smallim_size, 2 * smallim_size)
@@ -962,8 +962,7 @@ def test_convolve_cosmos():
                                          # zero convimage and write over it later!
     mnsq_list = [np.mean(convimage.array**2)]
     var_list = [convimage.array.var()]
-    for i in range(nsum_test_convolve_cosmos - 1): # See notes for nsum_test_convolve_cosmos
-                                                   # at the top of the module: varies test accuracy
+    for i in range(nsum_test_convolve_cosmos - 1):
         cosimage_padded.setZero()
         cosimage_padded.addNoise(cn)
         imobj_padded = galsim.InterpolatedImage(
