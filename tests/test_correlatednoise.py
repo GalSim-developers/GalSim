@@ -41,10 +41,6 @@ xlargeim_size =long(np.ceil(1.41421356 * largeim_size)) # sometimes, for precisi
                                                         # fit a large image within it, even if 
                                                         # rotated
 
-# Decimals for comparison (one for fine detail, another for comparing stochastic quantities)
-decimal_approx = 2
-decimal_precise = 7
-
 # Number of positions to test in nonzero lag uncorrelated tests
 npos_test = 3
 
@@ -110,7 +106,7 @@ def test_uncorrelated_noise_zero_lag():
             cf_zero += cn._profile.xValue(galsim.PositionD(0., 0.))
         cf_zero /= float(nsum_test)
         np.testing.assert_almost_equal(
-            cf_zero / sigma**2, 1., decimal=decimal_approx,
+            cf_zero / sigma**2, 1., decimal=2,
             err_msg="Zero distance noise correlation value does not match input noise variance.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
@@ -141,7 +137,7 @@ def test_uncorrelated_noise_nonzero_lag():
         cf_test_value /= float(nsum_test)
         # Then test this estimated value is good to within our chosen decimal place of zero
         np.testing.assert_almost_equal(
-            cf_test_value, 0., decimal=decimal_approx,
+            cf_test_value, 0., decimal=2,
             err_msg="Non-zero distance noise correlation value not sufficiently close to target "+
             "value of zero.")
     t2 = time.time()
@@ -166,7 +162,7 @@ def test_uncorrelated_noise_symmetry_90degree_rotation():
         cf_test2 = cn._profile.xValue(-pos)
         np.testing.assert_almost_equal(
             cf_test1, cf_test2,
-            decimal=decimal_precise,
+            decimal=7,
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric.")
     # Then test that CorrelatedNoise rotation methods produces the same output as initializing 
@@ -193,10 +189,10 @@ def test_uncorrelated_noise_symmetry_90degree_rotation():
             cf_test2 = cn_test2._profile.xValue(pos)
             # Then test these estimated value is good to within our chosen decimal place
             np.testing.assert_almost_equal(
-                cf_test1, cf_ref, decimal=decimal_precise,
+                cf_test1, cf_ref, decimal=7,
                 err_msg="Uncorrelated noise failed 90 degree createRotated() method test.")
             np.testing.assert_almost_equal(
-                cf_test2, cf_ref, decimal=decimal_precise,
+                cf_test2, cf_ref, decimal=7,
                 err_msg="Uncorrelated noise failed 90 degree applyRotation() method test.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
@@ -221,11 +217,11 @@ def test_xcorr_noise_basics_symmetry_90degree_rotation():
     cf_10 /= float(nsum_test)
     # Then test the zero-lag value is good to 1% of the input variance; we expect this!
     np.testing.assert_almost_equal(
-        cf_zero, 1., decimal=decimal_approx,
+        cf_zero, 1., decimal=2,
         err_msg="Zero distance noise correlation value does not match input noise variance.")
     # Then test the (1, 0) value is good to 1% of the input variance (0.5); we expect this!
     np.testing.assert_almost_equal(
-        cf_10, .5, decimal=decimal_approx,
+        cf_10, .5, decimal=2,
         err_msg="Noise correlation value at (1, 0) does not match input covariance.")
     # Then set up some random positions (within and outside) the bounds of the table inside the 
     # corrfunc (the last one made is fine) then test for symmetry
@@ -237,7 +233,7 @@ def test_xcorr_noise_basics_symmetry_90degree_rotation():
         cf_test2 = xcn._profile.xValue(-pos)
         # Then test this estimated value is good to within our chosen decimal place of zero
         np.testing.assert_almost_equal(
-            cf_test1, cf_test2, decimal=decimal_precise, # should be good to machine precision
+            cf_test1, cf_test2, decimal=12, # should be good to machine precision
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric for x correlated noise field.")
     # Then test that CorrelatedNoise rotation methods produces the same output as initializing 
@@ -264,10 +260,10 @@ def test_xcorr_noise_basics_symmetry_90degree_rotation():
             xcf_test2 = xcn_test2._profile.xValue(pos)
             # Then test these estimated value is good to within our chosen decimal place
             np.testing.assert_almost_equal(
-                xcf_test1, xcf_ref, decimal=decimal_precise,
+                xcf_test1, xcf_ref, decimal=7,
                 err_msg="x-correlated noise failed 90 degree createRotated() method test.")
             np.testing.assert_almost_equal(
-                xcf_test2, xcf_ref, decimal=decimal_precise,
+                xcf_test2, xcf_ref, decimal=7,
                 err_msg="x-correlated noise failed 90 degree applyRotation() method test.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
@@ -292,11 +288,11 @@ def test_ycorr_noise_basics_symmetry_90degree_rotation():
     cf_01 /= float(nsum_test)
     # Then test the zero-lag value is good to 1% of the input variance; we expect this!
     np.testing.assert_almost_equal(
-        cf_zero, 1., decimal=decimal_approx,
+        cf_zero, 1., decimal=2,
         err_msg="Zero distance noise correlation value does not match input noise variance.")
     # Then test the (0, 1) value is good to 1% of the input variance (0.5); we expect this!
     np.testing.assert_almost_equal(
-        cf_01, .5, decimal=decimal_approx,
+        cf_01, .5, decimal=2,
         err_msg="Noise correlation value at (0, 1) does not match input covariance.")
     # Then set up some random positions (within and outside) the bounds of the table inside the 
     # corrfunc (the last one made is fine) then test for symmetry
@@ -308,7 +304,7 @@ def test_ycorr_noise_basics_symmetry_90degree_rotation():
         cf_test2 = ycn._profile.xValue(-pos)
         # Then test this estimated value is good to within our chosen decimal place of zero
         np.testing.assert_almost_equal(
-            cf_test1, cf_test2, decimal=decimal_precise, # should be good to machine precision
+            cf_test1, cf_test2, decimal=12, # should be good to machine precision
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric for x correlated noise field.")
     # Then test that CorrelatedNoise rotation methods produces the same output as initializing 
@@ -335,10 +331,10 @@ def test_ycorr_noise_basics_symmetry_90degree_rotation():
             ycf_test2 = ycn_test2._profile.xValue(pos)
             # Then test these estimated value is good to within our chosen decimal place
             np.testing.assert_almost_equal(
-                ycf_test1, ycf_ref, decimal=decimal_precise,
+                ycf_test1, ycf_ref, decimal=7,
                 err_msg="y-correlated noise failed 90 degree createRotated() method test.")
             np.testing.assert_almost_equal(
-                ycf_test2, ycf_ref, decimal=decimal_precise,
+                ycf_test2, ycf_ref, decimal=7,
                 err_msg="y-correlated noise failed 90 degree applyRotation() method test.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
@@ -367,12 +363,12 @@ def test_arbitrary_rotation():
         cn_rot2.applyRotation(rot_angle * galsim.radians)
         np.testing.assert_almost_equal(
             cn._profile.xValue(pos_rot), cn_rot1._profile.xValue(pos_ref), 
-            decimal=decimal_precise, # this should be good at very high accuracy 
+            decimal=12, # this should be good at very high accuracy 
             err_msg="Noise correlated in the y direction failed createRotated() "+
             "method test for arbitrary rotations.")
         np.testing.assert_almost_equal(
             cn._profile.xValue(pos_rot), cn_rot2._profile.xValue(pos_ref), 
-            decimal=decimal_precise, # ditto
+            decimal=12, # ditto
             err_msg="Noise correlated in the y direction failed applyRotation() "+
             "method test for arbitrary rotations.")
     t2 = time.time()
@@ -398,11 +394,11 @@ def test_scaling():
            pos_ref = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
            np.testing.assert_almost_equal(
                cn_test1._profile.xValue(pos_ref), cn._profile.xValue(pos_ref / scale),
-               decimal=decimal_precise,
+               decimal=7,
                err_msg="Noise correlated in the y direction failed createExpanded() scaling test.")
            np.testing.assert_almost_equal(
                cn_test2._profile.xValue(pos_ref), cn._profile.xValue(pos_ref / scale),
-               decimal=decimal_precise,
+               decimal=7,
                err_msg="Noise correlated in the y direction failed applyExpansion() scaling "+
                "test.")
     t2 = time.time()
@@ -431,11 +427,11 @@ def test_jacobian():
                                     pos_ref.x * dvdx + pos_ref.y * dvdy)
         np.testing.assert_almost_equal(
             cn_test1._profile.xValue(pos_test), cn._profile.xValue(pos_ref),
-            decimal=decimal_precise,
+            decimal=7,
             err_msg="Noise correlated in the y direction failed createTransformed() test")
         np.testing.assert_almost_equal(
             cn_test2._profile.xValue(pos_test), cn._profile.xValue(pos_ref),
-            decimal=decimal_precise,
+            decimal=7,
             err_msg="Noise correlated in the y direction failed applyTransformation() test")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
@@ -467,7 +463,7 @@ def test_draw():
     cn.draw(testim1, scale=1.)
     # Then compare the odd-sized arrays:
     np.testing.assert_array_almost_equal(
-        testim1.array, cf_array, decimal=decimal_precise, 
+        testim1.array, cf_array, decimal=7,
         err_msg="Drawn image (odd-sized) does not match independently calculated correlated noise.")
     # Now we do even
     uncorr_noise_small = setup_uncorrelated_noise(gd, smallim_size)
@@ -483,7 +479,7 @@ def test_draw():
     cn.draw(testim1, scale=1.)
     # Then compare the even-sized arrays:
     np.testing.assert_array_almost_equal(
-        testim1.array, cf_array, decimal=decimal_precise, 
+        testim1.array, cf_array, decimal=7,
         err_msg="Drawn image (even-sized) does not match independently calculated correlated "+
         "noise.")
     t2 = time.time()
@@ -520,7 +516,7 @@ def test_output_generation_basic():
     # Then take average
     testim /= float(nsum_test)
     np.testing.assert_array_almost_equal(
-        testim.array, refim.array, decimal=decimal_approx,
+        testim.array, refim.array, decimal=2,
         err_msg="Generated noise field (basic) does not match input correlation properties.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
@@ -577,7 +573,7 @@ def test_output_generation_rotated():
         testim = galsim.ImageD(smallim_size, smallim_size)
         cn_2ndlevel.draw(testim, scale=1.)
         np.testing.assert_array_almost_equal(
-            testim.array, refim.array, decimal=decimal_approx,
+            testim.array, refim.array, decimal=2,
             err_msg="Generated noise field (rotated) does not match input correlation properties.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
@@ -617,7 +613,7 @@ def test_output_generation_magnified():
         testim = galsim.ImageD(smallim_size, smallim_size)
         cn_2ndlevel.draw(testim, scale=1.)
         np.testing.assert_array_almost_equal(
-            testim.array, refim.array, decimal=decimal_approx,
+            testim.array, refim.array, decimal=2,
             err_msg="Generated noise does not match (magnified) input correlation properties.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
@@ -666,7 +662,7 @@ def test_copy():
     # rootps_store cache is *not* copied over and when the CF is redrawn the GSObject may make
     # slight approximations.  So we'll just test at high precision:
     np.testing.assert_array_almost_equal(
-        outim1.array, outim2.array, decimal=decimal_precise,
+        outim1.array, outim2.array, decimal=7,
         err_msg="Copied correlated noise does not produce the same noise field as the parent "+
         "despite sharing the same RNG.")
     # To illustrate the point above, we'll run a test in which the rootps is not stored in cn when
@@ -681,7 +677,7 @@ def test_copy():
     outim2.addNoise(cn_copy)
     decimal_very_precise = 14
     np.testing.assert_array_almost_equal(
-        outim1.array, outim2.array, decimal=decimal_precise,
+        outim1.array, outim2.array, decimal=7,
         err_msg="Copied correlated noise does not produce the same noise field as the parent "+
         "despite sharing the same RNG (high precision test).")
     t2 = time.time()
@@ -707,7 +703,7 @@ def test_cosmos_and_whitening():
     cftest00 = cntest_correlated._profile.xValue(pos)
     # Test variances first
     np.testing.assert_almost_equal(
-        cftest00 / cf00, 1., decimal=decimal_approx,
+        cftest00 / cf00, 1., decimal=2,
         err_msg="Noise field generated with COSMOS CorrelatedNoise does not approximately match "+
         "input variance")
     # Then test (1, 0), (0, 1), (1,-1) and (1,1) values
@@ -717,7 +713,7 @@ def test_cosmos_and_whitening():
         cf = ccn._profile.xValue(pos)
         cftest = cntest_correlated._profile.xValue(pos)
         np.testing.assert_almost_equal(
-            cftest / cftest00, cf / cf00, decimal=decimal_approx,
+            cftest / cftest00, cf / cf00, decimal=2,
             err_msg="Noise field generated with COSMOS CorrelatedNoise does not have "+
             "approximately matching interpixel covariances")
     # Now whiten the noise field, and check that its variance and covariances are as expected
@@ -728,7 +724,7 @@ def test_cosmos_and_whitening():
     cftest00 = cntest_whitened._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
-        cftest00 / whitened_variance, 1., decimal=decimal_approx,
+        cftest00 / whitened_variance, 1., decimal=2,
         err_msg="Noise field generated by whitening COSMOS CorrelatedNoise does not approximately "+
         "match theoretical variance")
     # Then test (1, 0), (0, 1), (1,-1) and (1,1) values
@@ -737,7 +733,7 @@ def test_cosmos_and_whitening():
         pos = galsim.PositionD(xpos, ypos)
         cftest = cntest_whitened._profile.xValue(pos)
         np.testing.assert_almost_equal(
-            cftest / cftest00, 0., decimal=decimal_approx,
+            cftest / cftest00, 0., decimal=2,
             err_msg="Noise field generated by whitening COSMOS CorrelatedNoise does not have "+
             "approximately zero interpixel covariances")
     # Now test whitening but having first expanded and sheared the COSMOS noise correlation
@@ -752,7 +748,7 @@ def test_cosmos_and_whitening():
     cftest00 = cntest_whitened._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
-        cftest00 / wht_variance, 1., decimal=decimal_approx,
+        cftest00 / wht_variance, 1., decimal=2,
         err_msg="Noise field generated by whitening rotated, sheared, magnified COSMOS "+
         "CorrelatedNoise does not approximately match theoretical variance")
     # Then test (1, 0), (0, 1), (1,-1) and (1,1) values
@@ -761,7 +757,7 @@ def test_cosmos_and_whitening():
         pos = galsim.PositionD(xpos, ypos)
         cftest = cntest_whitened._profile.xValue(pos)
         np.testing.assert_almost_equal(
-            cftest / cftest00, 0., decimal=decimal_approx,
+            cftest / cftest00, 0., decimal=2,
             err_msg="Noise field generated by whitening rotated, sheared, magnified COSMOS "+
             "CorrelatedNoise does not have approximately zero interpixel covariances")
     # Then convolve with a ground-based PSF and pixel, generate some more correlated noise
@@ -785,7 +781,7 @@ def test_cosmos_and_whitening():
     cftest00 = cntest_whitened._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
-        cftest00 / wht_variance, 1., decimal=decimal_approx,
+        cftest00 / wht_variance, 1., decimal=2,
         err_msg="Noise field generated by whitening rotated, sheared, magnified, convolved COSMOS "+
         "CorrelatedNoise does not approximately match theoretical variance")
     # Then test (1, 0), (0, 1), (1,-1) and (1,1) values
@@ -794,7 +790,7 @@ def test_cosmos_and_whitening():
         pos = galsim.PositionD(xpos, ypos)
         cftest = cntest_whitened._profile.xValue(pos)
         np.testing.assert_almost_equal(
-            cftest / cftest00, 0., decimal=decimal_approx,
+            cftest / cftest00, 0., decimal=2,
             err_msg="Noise field generated by whitening rotated, sheared, magnified, convolved "+
             "COSMOS CorrelatedNoise does not have approximately zero interpixel covariances")
     t2 = time.time()
@@ -823,7 +819,7 @@ def test_symmetrizing():
     cftest00 = cntest_symmetrized._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
-        (cftest00/symmetrized_variance - 1.)/symm_divide, 0, decimal=decimal_approx,
+        (cftest00/symmetrized_variance - 1.)/symm_divide, 0, decimal=2,
         err_msg="Noise field generated by symmetrizing COSMOS CorrelatedNoise does not "+
         "approximately match theoretical variance")
     # Then test (1, 0), (0, 1), (-1,0) and (0,-1) values
@@ -835,7 +831,7 @@ def test_symmetrizing():
     # They should be approximately equal, so check ratios of each one to the next one
     for ind in range(len(cftest)-1):
         np.testing.assert_almost_equal(
-            (cftest[ind]/cftest[ind+1] - 1.)/symm_divide, 0., decimal=decimal_approx,
+            (cftest[ind]/cftest[ind+1] - 1.)/symm_divide, 0., decimal=2,
             err_msg="Noise field generated by symmetrizing COSMOS CorrelatedNoise does not have "+
             "approximate 4-fold symmetry")
 
@@ -853,7 +849,7 @@ def test_symmetrizing():
     cftest00 = cntest_symmetrized._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
-        (cftest00/sym_variance - 1.)/symm_divide, 0., decimal=decimal_approx,
+        (cftest00/sym_variance - 1.)/symm_divide, 0., decimal=2,
         err_msg="Noise field generated by symmetrizing rotated, sheared, magnified COSMOS "+
         "CorrelatedNoise does not approximately match theoretical variance")
     # Then test (1, 0), (0, 1), (-1,0) and (0,-1) values
@@ -865,7 +861,7 @@ def test_symmetrizing():
     # They should be approximately equal, so check ratios of each one to the next one
     for ind in range(len(cftest)-1):
         np.testing.assert_almost_equal(
-            (cftest[ind]/cftest[ind+1]-1.)/symm_divide, 0., decimal=decimal_approx,
+            (cftest[ind]/cftest[ind+1]-1.)/symm_divide, 0., decimal=2,
             err_msg="Noise field generated by symmetrizing rotated, sheared, magnified COSMOS "+
             "CorrelatedNoise does not have approximate 4-fold symmetry")
 
@@ -891,7 +887,7 @@ def test_symmetrizing():
     cftest00 = cntest_symmetrized._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
-        (cftest00/sym_variance - 1.)/symm_divide, 0., decimal=decimal_approx,
+        (cftest00/sym_variance - 1.)/symm_divide, 0., decimal=2,
         err_msg="Noise field generated by symmetrizing rotated, sheared, magnified, convolved "+
         "COSMOS CorrelatedNoise does not approximately match theoretical variance")
     # Then test (1, 0), (0, 1), (-1, 0) and (0, -1) values
@@ -903,7 +899,7 @@ def test_symmetrizing():
     # They should be approximately equal, so check ratios of each one to the next one
     for ind in range(len(cftest)-1):
         np.testing.assert_almost_equal(
-            (cftest[ind]/cftest[ind+1] - 1.)/symm_divide, 0., decimal=decimal_approx,
+            (cftest[ind]/cftest[ind+1] - 1.)/symm_divide, 0., decimal=2,
             err_msg="Noise field generated by symmetrizing rotated, sheared, magnified, convolved "+
             "COSMOS CorrelatedNoise does not have approximate 4-fold symmetry")
     t2 = time.time()
