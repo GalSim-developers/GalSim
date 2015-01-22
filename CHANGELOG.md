@@ -5,6 +5,8 @@ Changes from v1.2 to v1.3
 New Features
 ------------
 
+- Added new methods of the image class to simulate detector effects:
+  inter-pixel capacitance.  (#555)
 - Added information about PSF size and shape to the data structure that is
   returned by EstimateShear(). (#612)
 - Added Spergel(2010) profile GSObject (#616).
