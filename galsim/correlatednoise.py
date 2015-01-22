@@ -1492,17 +1492,21 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
             if not isinstance(wcs, galsim.BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
             if not wcs.isUniform():
-                raise ValueError("Cannot provide non-local wcs")
+                raise ValueError("Cannot provide non-uniform wcs")
         elif scale is not None:
             wcs = galsim.PixelScale(scale)
         else:
             wcs = galsim.PixelScale(1.0)
 
-        # Need variance == xvalue(0,0)
-        # Pixel has flux of f/scale^2, so use f = variance * scale^2
-        image_pix = galsim.Pixel(scale=1.0, flux=variance * wcs.pixelArea(), gsparams=gsparams)
-        world_pix = wcs.toWorld(image_pix)
-        cf_object = galsim.AutoConvolve(world_pix)
-        _BaseCorrelatedNoise.__init__(self, rng, cf_object)
+        # Need variance == xvalue(0,0) after autoconvolution
+        # So the Pixel needs to have an amplitude of sigma at (0,0)
+        import math
+        sigma = math.sqrt(variance)
+        pix = galsim.Pixel(scale=1.0, flux=sigma, gsparams=gsparams)
+        cf = galsim.AutoConvolve(pix, real_space=True)
+        world_cf = wcs.toWorld(cf)
+        # This gets the shape right, but not the amplitude.  Need to rescale by the pixel area
+        world_cf *= wcs.pixelArea()
+        _BaseCorrelatedNoise.__init__(self, rng, world_cf)
 
 
