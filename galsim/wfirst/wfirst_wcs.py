@@ -154,8 +154,7 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
             continue
 
         # Set up the header.
-        header = {}
-        header = galsim.FitsHeader(header=header)
+        header = galsim.FitsHeader()
         # Populate some necessary variables in the FITS header that are always the same, regardless of
         # input and SCA number.
         _populate_required_fields(header)
@@ -318,7 +317,11 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
             # AstropyWCS, but it will throw exceptions when doing routine calculations.  Since we
             # know we have a TAN-SIP WCS we restrict the list of WCS to try to those that we know
             # should work for TAN-SIP.
-            galsim.fitswcs.fits_wcs_types = [galsim.PyAstWCS, galsim.WcsToolsWCS]
+            #galsim.fitswcs.fits_wcs_types = [galsim.PyAstWCS, galsim.WcsToolsWCS]
+            # MJ: Don't do this.  AstropyWCS should work fine with SIP.  If this is not the case
+            # for you, then let's fix the problem rather than change fitswcs.fits_wcs_types.
+            # This change will make all future calls to FitsWCS be restricted to these two options,
+            # which is not what we want!
             wcs = galsim.FitsWCS(header=header)
             wcs_list.append(wcs)
         else:
