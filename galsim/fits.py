@@ -1099,13 +1099,6 @@ class FitsHeader(object):
             hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
             header = hdu.header
 
-        # Let header be any kind of dict-like object.
-        # Header.update() should handle anything that acts like a dict.
-        if not isinstance(header, pyfits.Header):
-            h2 = pyfits.Header()
-            h2.update(header)
-            header = h2
-
         if file_name and not text_file:
             # If we opened a file, don't forget to close it.
             # Also need to make a copy of the header to keep it available.
@@ -1114,8 +1107,14 @@ class FitsHeader(object):
             import copy
             self.header = copy.copy(header)
             closeHDUList(hdu_list, fin)
-        else:
+        elif isinstance(header, pyfits.Header):
+            # If header is a pyfits.Header, then we just use it.
             self.header = header
+        else:
+            # Otherwise, header may be any kind of dict-like object.
+            # update() should handle anything that acts like a dict.
+            self.header = pyfits.Header()
+            self.update(header)
 
     # The rest of the functions are typical non-mutating functions for a dict, for which we just
     # pass the request along to self.header.
