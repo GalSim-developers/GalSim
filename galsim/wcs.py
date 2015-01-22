@@ -1781,12 +1781,6 @@ class AffineTransform(UniformWCS):
         y0 = header.get("CRPIX2",0.)
         u0 = header.get("CRVAL1",0.)
         v0 = header.get("CRVAL2",0.)
-        # Deal with the possibility that the x0/y0/u0/v0 have descriptions in the header, so they
-        # will be tuple, with the value being the 0th item and description being the 1st item.
-        if isinstance(x0, tuple): x0 = x0[0]
-        if isinstance(y0, tuple): y0 = y0[0]
-        if isinstance(u0, tuple): u0 = u0[0]
-        if isinstance(v0, tuple): v0 = v0[0]
 
         return AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0,y0),
                                galsim.PositionD(u0,v0))
