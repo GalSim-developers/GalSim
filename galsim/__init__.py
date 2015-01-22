@@ -155,6 +155,8 @@ from lensing_ps import PowerSpectrum
 from nfw_halo import NFWHalo, Cosmology
 
 # Detector effects
+# Currently everything here is made an Image method.  If there are classes or functions where
+# this is not the case, switch this to the normal from detectors import stuff syntax.
 from . import detectors
 
 # Packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)
