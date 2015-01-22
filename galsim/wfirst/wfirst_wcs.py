@@ -154,8 +154,7 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
             continue
 
         # Set up the header.
-        header = {}
-        header = galsim.FitsHeader(header=header)
+        header = galsim.FitsHeader()
         # Populate some necessary variables in the FITS header that are always the same, regardless of
         # input and SCA number.
         _populate_required_fields(header)
