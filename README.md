@@ -253,7 +253,8 @@ Currently, GalSim has the following capabilities:
   of arcsec/pixel to affine transforms to arbitrary functions of (x,y),
   including a variety of common FITS WCS specifications.
 
-
+* Can include a range of simple detector effects such as nonlinearity,
+  brighter-fatter, etc.
 
 
 Summary of planned future development
@@ -265,7 +266,7 @@ GalSim:
 * PSFs from stochastic atmosphere models.
   (cf. `devel/modules/atmos_factfinding.pdf`)
 
-* Simulating simple detector defects or image artifacts.
+* Simulating more sophisticated detector defects and image artifacts.
 
 * Support for flexion.  (cf. Issue #361)
 
