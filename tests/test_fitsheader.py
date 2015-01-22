@@ -111,6 +111,12 @@ def test_read():
     header.header.append( ('',''), useblanks=False, bottom=True )
     check_tpv(header)
 
+    # Clear all values
+    header.clear()
+    assert 'AIRMASS' not in header
+    assert 'FILTER' not in header
+    assert len(header) == 0
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -169,7 +175,13 @@ def test_dict():
     check_dict(header)
     
     # Use update
-    header = galsim.FitsHeader(header = {})
+    header = galsim.FitsHeader({})
+    header.update(d)
+    check_dict(header)
+
+    # Use default constructor
+    header = galsim.FitsHeader()
+    assert len(header) == 0
     header.update(d)
     check_dict(header)
 
