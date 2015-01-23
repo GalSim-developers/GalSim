@@ -1025,6 +1025,23 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     Initialization
     --------------
 
+    @param image            The image from which to derive the correlated noise profile
+    @param rng              A BaseDeviate instance to use for generating the random numbers.
+    @param scale            If provided, use this as the pixel scale.  Normally, the scale (or wcs)
+                            is taken from the image.wcs field, but you may override that by
+                            providing either scale or wcs.  [default: use image.wcs if defined,
+                            else 1.0, unless `wcs` is provided]
+    @param wcs              If provided, use this as the wcs for the image.  At most one of `scale`
+                            or `wcs` may be provided. [default: None]
+    @param x_interpolant    The interpolant to use for interpolating the image of the correlation
+                            function. (See below.) [default: galsim.Linear(tol=1.e-4)]
+    @param correct_periodicity  Whether to correct for the effects of periodicity.  (See below.)
+                            [default: True]
+    @param subtract_mean    Whether to subtract off the mean value from the image before computing
+                            the correlation function. [default: False]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
     Basic example:
 
         >>> cn = galsim.CorrelatedNoise(image, rng=rng)
@@ -1042,20 +1059,16 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     The example above instantiates a CorrelatedNoise, but forces the use of the pixel scale
     `scale` to set the units of the internal lookup table.
 
-        >>> cn = galsim.CorrelatedNoise(image, rng=rng,
-        ...     x_interpolant=galsim.InterpolantXY(galsim.Lanczos(5, tol=1.e-4))
+        >>> cn = galsim.CorrelatedNoise(image, rng=rng, x_interpolant=galsim.Lanczos(5, tol=1.e-4)
 
     The example above instantiates a CorrelatedNoise, but forces use of a non-default interpolant
-    for interpolation of the internal lookup table in real space.  Must be an InterpolantXY instance
-    or an Interpolant instance (if the latter one-dimensional case is supplied, an InterpolantXY
-    will be automatically generated from it).
+    for interpolation of the internal lookup table in real space.
 
-    The default `x_interpolant` is `galsim.InterpolantXY(galsim.Linear(tol=1.e-4))`, which uses 
-    bilinear interpolation.  The use of this interpolant is an approximation that gives good 
-    empirical results without requiring internal convolution of the correlation function profile by
-    a Pixel object when applying correlated noise to images: such an internal convolution has been
-    found to be computationally costly in practice, requiring the Fourier transform of very large
-    arrays.
+    The default `x_interpolant` is `galsim.Linear(tol=1.e-4)`, which uses bilinear interpolation.
+    The use of this interpolant is an approximation that gives good empirical results without
+    requiring internal convolution of the correlation function profile by a Pixel object when
+    applying correlated noise to images: such an internal convolution has been found to be
+    computationally costly in practice, requiring the Fourier transform of very large arrays.
 
     The use of the bilinear interpolants means that the representation of correlated noise will be
     noticeably inaccurate in at least the following two regimes:
