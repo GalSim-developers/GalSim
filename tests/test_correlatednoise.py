@@ -213,7 +213,7 @@ def test_uncorrelated_noise_symmetry_90degree_rotation():
     t1 = time.time()
     ud = galsim.UniformDeviate(rseed)
     uncorr_noise_small = setup_uncorrelated_noise(ud, smallim_size)
-    cn = galsim.CorrelatedNoise(uncorr_noise_small, ud, scale=1.) # small image is fine here
+    cn = galsim.CorrelatedNoise(uncorr_noise_small, ud) # small image is fine here
     # Set up some random positions (within and outside) the bounds of the table inside the corrfunc
     # then test
     for i in range(npos_test):
@@ -235,7 +235,7 @@ def test_uncorrelated_noise_symmetry_90degree_rotation():
     for i, angle in zip(range(len(angles)), angles):
         noise_ref = galsim.ImageD(
             np.ascontiguousarray(np.rot90(uncorr_noise_small.array, k=i+1)))
-        cn_ref = galsim.CorrelatedNoise(noise_ref, ud, scale=1.)
+        cn_ref = galsim.CorrelatedNoise(noise_ref, ud)
         # First we'll check the createRotated() method
         cn_test1 = cn.createRotated(angle)
         # Then we'll check the applyRotation() method
@@ -272,7 +272,7 @@ def test_xcorr_noise_basics_symmetry_90degree_rotation():
     for i in range(nsum_test):
         uncorr_noise = setup_uncorrelated_noise(ud, largeim_size)
         xnoise = make_xcorr_from_uncorr(uncorr_noise)
-        xcn = galsim.CorrelatedNoise(xnoise, ud, scale=1.)
+        xcn = galsim.CorrelatedNoise(xnoise, ud)
         cf_zero += xcn._profile.xValue(galsim.PositionD(0., 0.))
         cf_10 += xcn._profile.xValue(galsim.PositionD(1., 0.))
     cf_zero /= float(nsum_test)
@@ -306,7 +306,7 @@ def test_xcorr_noise_basics_symmetry_90degree_rotation():
     for i, angle in zip(range(len(angles)), angles):
         noise_ref = galsim.ImageD(
             np.ascontiguousarray(np.rot90(xnoise.array, k=i+1)))
-        xcn_ref = galsim.CorrelatedNoise(noise_ref, ud, scale=1.)
+        xcn_ref = galsim.CorrelatedNoise(noise_ref, ud)
         # First we'll check the createRotated() method
         xcn_test1 = xcn.createRotated(angle)
         # Then we'll check the applyRotation() method
@@ -343,7 +343,7 @@ def test_ycorr_noise_basics_symmetry_90degree_rotation():
     for i in range(nsum_test):
         uncorr_noise = setup_uncorrelated_noise(ud, largeim_size)
         ynoise = make_ycorr_from_uncorr(uncorr_noise)
-        ycn = galsim.CorrelatedNoise(ynoise, ud, scale=1.)
+        ycn = galsim.CorrelatedNoise(ynoise, ud)
         cf_zero += ycn._profile.xValue(galsim.PositionD(0., 0.))
         cf_01 += ycn._profile.xValue(galsim.PositionD(0., 1.))
     cf_zero /= float(nsum_test)
@@ -377,7 +377,7 @@ def test_ycorr_noise_basics_symmetry_90degree_rotation():
     for i, angle in zip(range(len(angles)), angles):
         noise_ref = galsim.ImageD(
             np.ascontiguousarray(np.rot90(ynoise.array, k=i+1)))
-        ycn_ref = galsim.CorrelatedNoise(noise_ref, ud, scale=1.)
+        ycn_ref = galsim.CorrelatedNoise(noise_ref, ud)
         # First we'll check the createRotated() method
         ycn_test1 = ycn.createRotated(angle)
         # Then we'll check the applyRotation() method
@@ -409,7 +409,7 @@ def test_arbitrary_rotation():
     t1 = time.time()
     ud = galsim.UniformDeviate(rseed)
     ynoise_small = make_ycorr_from_uncorr(setup_uncorrelated_noise(ud, smallim_size))
-    cn = galsim.CorrelatedNoise(ynoise_small, ud, scale=1.) # use something >0
+    cn = galsim.CorrelatedNoise(ynoise_small, ud)
     for i in range(npos_test):
         rot_angle = 2. * np.pi * ud()
         rpos = ud() * smallim_size # look in the vicinity of the action near the centre
@@ -444,7 +444,7 @@ def test_scaling():
     t1 = time.time()
     ud = galsim.UniformDeviate(rseed)
     xnoise_small = make_xcorr_from_uncorr(setup_uncorrelated_noise(ud, smallim_size))
-    cn = galsim.CorrelatedNoise(xnoise_small, ud, scale=1.)
+    cn = galsim.CorrelatedNoise(xnoise_small, ud)
     scalings = [7.e-13, 424., 7.9e23]
     for scale in scalings:
        cn_test1 = cn.createExpanded(scale)
@@ -473,7 +473,7 @@ def test_jacobian():
     t1 = time.time()
     ud = galsim.UniformDeviate(rseed)
     ynoise_small = make_ycorr_from_uncorr(setup_uncorrelated_noise(ud, smallim_size))
-    cn = galsim.CorrelatedNoise(ynoise_small, ud, scale=1.)
+    cn = galsim.CorrelatedNoise(ynoise_small, ud)
     dudx = 0.241
     dudy = 0.051
     dvdx = -0.098
@@ -520,7 +520,7 @@ def test_draw():
     cf_array = utilities.roll2d(cf_array, (cf_array.shape[0] / 2, cf_array.shape[1] / 2))
     # Then use the CorrelatedNoise class for comparison (don't use periodicity correction for
     # comparison with naive results above)
-    cn = galsim.CorrelatedNoise(uncorr_noise_small_odd, gd, scale=1., correct_periodicity=False)
+    cn = galsim.CorrelatedNoise(uncorr_noise_small_odd, gd, correct_periodicity=False)
     testim1 = galsim.ImageD(smallim_size_odd, smallim_size_odd)
     cn.draw(testim1, scale=1.)
     # Then compare the odd-sized arrays:
@@ -536,7 +536,7 @@ def test_draw():
     cf_array = (np.fft.ifft2(ps_array)).real / float(np.product(np.shape(ft_array)))
     cf_array = utilities.roll2d(cf_array, (cf_array.shape[0] / 2, cf_array.shape[1] / 2))
     # Then use the CorrelatedNoise class for comparison (as above don't correct for periodicity)
-    cn = galsim.CorrelatedNoise(uncorr_noise_small, gd, scale=1., correct_periodicity=False)
+    cn = galsim.CorrelatedNoise(uncorr_noise_small, gd, correct_periodicity=False)
     testim1 = galsim.ImageD(smallim_size, smallim_size)
     cn.draw(testim1, scale=1.)
     # Then compare the even-sized arrays:
@@ -556,7 +556,8 @@ def test_output_generation_basic():
     # Get the correlated noise from an image of some x-correlated noise
     xnoise_large = make_xcorr_from_uncorr(setup_uncorrelated_noise(ud, largeim_size))
     # Note the noise we generate in these tests *is* periodic, so use non-default settings
-    cn = galsim.CorrelatedNoise(xnoise_large, ud, scale=.18, correct_periodicity=False)
+    xnoise_large.scale = 0.18
+    cn = galsim.CorrelatedNoise(xnoise_large, ud, correct_periodicity=False)
     refim = galsim.ImageD(smallim_size, smallim_size)
     # Draw this for reference
     cn.draw(refim, scale=.18)
@@ -565,7 +566,7 @@ def test_output_generation_basic():
     outimage.addNoise(cn)
     # Summed (average) CorrelatedNoises should be approximately equal to the input, so average
     # multiple CFs
-    cn_2ndlevel = galsim.CorrelatedNoise(outimage, ud, scale=.18, correct_periodicity=False)
+    cn_2ndlevel = galsim.CorrelatedNoise(outimage, ud, correct_periodicity=False)
     # Draw the summed CF to an image for comparison 
     testim = galsim.ImageD(smallim_size, smallim_size)
     cn_2ndlevel.draw(testim, scale=.18, add_to_image=True)
@@ -573,7 +574,7 @@ def test_output_generation_basic():
         # Then repeat
         outimage.setZero()
         outimage.addNoise(cn)
-        cn_2ndlevel = galsim.CorrelatedNoise(outimage, ud, scale=.18, correct_periodicity=False)
+        cn_2ndlevel = galsim.CorrelatedNoise(outimage, ud, correct_periodicity=False)
         cn_2ndlevel.draw(testim, scale=.18, add_to_image=True)
     # Then take average
     testim /= float(nsum_test)
@@ -611,7 +612,7 @@ def test_output_generation_rotated():
     ynoise_xlarge = make_ycorr_from_uncorr(setup_uncorrelated_noise(ud, xlargeim_size))
     # Subtract the mean
     ynoise_xlarge -= ynoise_xlarge.array.mean()
-    cn = galsim.CorrelatedNoise(ynoise_xlarge, ud, scale=1., correct_periodicity=False)
+    cn = galsim.CorrelatedNoise(ynoise_xlarge, ud, correct_periodicity=False)
     # Then loop over some angles
     angles = [28.7 * galsim.degrees, 135. * galsim.degrees]
     for angle in angles:
@@ -624,14 +625,14 @@ def test_output_generation_rotated():
         outimage.addNoise(cn_rot)
         # Summed (average) CorrelatedNoises should be approximately equal to the input, so avg
         # multiple CFs
-        cn_2ndlevel = galsim.CorrelatedNoise(
-            outimage, ud, scale=1., subtract_mean=False, correct_periodicity=False)
+        cn_2ndlevel = galsim.CorrelatedNoise(outimage, ud, subtract_mean=False,
+                                             correct_periodicity=False)
         for i in range(nsum_test - 1):
             # Then repeat
             outimage.setZero()
             outimage.addNoise(cn_rot)
-            cn_2ndlevel += galsim.CorrelatedNoise(
-                outimage, ud, scale=1., subtract_mean=False, correct_periodicity=False)
+            cn_2ndlevel += galsim.CorrelatedNoise(outimage, ud, subtract_mean=False,
+                                                  correct_periodicity=False)
         cn_2ndlevel /= float(nsum_test)
         # Then draw the summed CF to an image for comparison 
         testim = galsim.ImageD(smallim_size, smallim_size)
@@ -650,7 +651,7 @@ def test_output_generation_magnified():
     # Get the correlated noise from an image of some y-correlated noise
     ynoise_large = make_ycorr_from_uncorr(setup_uncorrelated_noise(ud, largeim_size))
     # Get the correlated noise
-    cn = galsim.CorrelatedNoise(ynoise_large, ud, scale=1., correct_periodicity=False)
+    cn = galsim.CorrelatedNoise(ynoise_large, ud, correct_periodicity=False)
     refim = galsim.ImageD(smallim_size, smallim_size)
     # Draw this for reference
     cn.draw(refim, scale=1.)
@@ -665,6 +666,7 @@ def test_output_generation_magnified():
         outimage.addNoise(cn_scl)
         # Summed (average) CorrelatedNoises should be approximately equal to the input, so avg
         # multiple CFs
+        # Make the CorrelatedNoise object with scale=1. rather than image scale
         cn_2ndlevel = galsim.CorrelatedNoise(outimage, ud, scale=1., correct_periodicity=False)
         for i in range(nsum_test - 1): # Need to add here to nsum_test to beat down noise
             # Then repeat
@@ -1035,10 +1037,9 @@ def test_convolve_cosmos():
 
     # We draw, calculate a correlation function for the resulting field, and repeat to get an
     # average over nsum_test_convolve_cosmos trials
-    convimage = galsim.ImageD(2 * smallim_size, 2 * smallim_size)
+    convimage = galsim.ImageD(2 * smallim_size, 2 * smallim_size, scale=0.18)
     cimobj_padded.draw(convimage, scale=0.18, normalization='sb')
-    cn_test = galsim.CorrelatedNoise(
-        convimage, gd, scale=0.18, correct_periodicity=True, subtract_mean=False)
+    cn_test = galsim.CorrelatedNoise(convimage, gd, correct_periodicity=True, subtract_mean=False)
     testim = galsim.ImageD(smallim_size, smallim_size)
     cn_test.draw(testim, scale=0.18)
     # Start some lists to store image info
@@ -1059,8 +1060,8 @@ def test_convolve_cosmos():
         conv_list.append(convimage.array.copy()) # See above
         mnsq_list.append(np.mean(convimage.array**2))
         var_list.append(convimage.array.var())
-        cn_test = galsim.CorrelatedNoise(
-            convimage, gd, scale=0.18, correct_periodicity=True, subtract_mean=False) 
+        cn_test = galsim.CorrelatedNoise(convimage, gd, correct_periodicity=True,
+                                         subtract_mean=False) 
         cn_test.draw(testim, scale=0.18, add_to_image=True)
         del imobj_padded
         del cimobj_padded
@@ -1135,9 +1136,9 @@ def test_uncorrelated_noise_tracking():
 
     # Now, make a correlated noise object directly based on a realization of the original
     # uncorrelated noise object.
-    test_im = galsim.Image(512,512)
+    test_im = galsim.Image(512,512, scale=pix_scale)
     orig_ucn.applyTo(test_im)
-    cn = galsim.CorrelatedNoise(test_im, galsim.BaseDeviate(seed), scale=pix_scale)
+    cn = galsim.CorrelatedNoise(test_im, galsim.BaseDeviate(seed))
 
     # Run it through the same operations.
     new_cn = cn.shear(g1=test_shear)
