@@ -5,6 +5,10 @@ New Features
 ------------
 
 - Updated CorrelatedNoise to work with images that have a non-trivial WCS. (#501)
+- Added new methods of the image class to simulate detector effects:
+  inter-pixel capacitance.  (#555)
+- Added information about PSF size and shape to the data structure that is
+  returned by EstimateShear(). (#612)
 
 
 Bug Fixes and Improvements
