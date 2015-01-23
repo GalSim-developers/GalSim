@@ -275,7 +275,7 @@ def test_quantize():
     for dtype in dtypes:
 
         # Set up some array and image with this type.
-        arr = np.arange(0,20,0.5,dtype=dtype).reshape(5,8)
+        arr = np.arange(-10,10,0.5,dtype=dtype).reshape(5,8)
         image = galsim.Image(arr, scale=0.3, xmin=37, ymin=-14)
         image_q = image.copy()
 
@@ -286,6 +286,13 @@ def test_quantize():
         np.testing.assert_array_almost_equal(
             image_q.array, np.round(image.array), decimal=8,
             err_msg='Array contents not as expected after quantization, for dtype=%s'%dtype)
+
+        # Make sure quantizing an image with values that are already integers does nothing.
+        save_image = image_q.copy()
+        image_q.quantize()
+        np.testing.assert_array_almost_equal(
+            image_q.array, save_image.array, decimal=8,
+            err_msg='Array contents of integer-valued array modified by quantization, for dtype=%s'%dtype)
 
         # Check for preservation of WCS etc.
         assert image_q.scale == image.scale
