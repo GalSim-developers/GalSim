@@ -237,7 +237,7 @@ def test_recipfail_basic():
         np.log(dim2)/np.log(dim1), expected_ratio, 5,
         err_msg='Did not get expected change in reciprocity failure when varying alpha')
 
-    #Check math is right
+    # Check math is right
     alpha, exp_time, base_flux = 0.0065, 10.0, 5.0
     im_new = im.copy()
     im_new.addReciprocityFailure(alpha=alpha, exp_time=exp_time, base_flux=base_flux)
@@ -275,7 +275,7 @@ def test_quantize():
     for dtype in dtypes:
 
         # Set up some array and image with this type.
-        arr = np.arange(-10,10,0.5,dtype=dtype).reshape(5,8)
+        arr = np.arange(-10.2,9.8,0.5,dtype=dtype).reshape(5,8)
         image = galsim.Image(arr, scale=0.3, xmin=37, ymin=-14)
         image_q = image.copy()
 
@@ -284,7 +284,7 @@ def test_quantize():
 
         # Check for correctness of numerical values.
         np.testing.assert_array_almost_equal(
-            image_q.array, np.round(image.array), decimal=8,
+            image_q.array, np.floor(image.array+0.5), decimal=8,
             err_msg='Array contents not as expected after quantization, for dtype=%s'%dtype)
 
         # Make sure quantizing an image with values that are already integers does nothing.
