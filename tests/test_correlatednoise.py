@@ -94,7 +94,7 @@ def test_uncorrelated_noise_zero_lag():
         np.testing.assert_almost_equal(
             ucf_zero / sigma**2, 1., decimal=5,
             err_msg="Zero distance noise correlation value does not match variance value " + 
-            "provided to UncorrlatedNoise.")
+            "provided to UncorrelatedNoise.")
 
 
     t2 = time.time()
@@ -162,7 +162,7 @@ def test_uncorrelated_noise_output():
     # of the image.  In this case, the resulting pixel variance should still match the 
     # provided variance parameter.
     if False:
-        # The last one is a sufficient unit tests, but if it fails, it is helpful to
+        # The last one is a sufficient unit test, but if it fails, it is helpful to
         # test the simpler ones first.
         wcs_list = [ galsim.PixelScale(1.0),
                      galsim.PixelScale(0.23),

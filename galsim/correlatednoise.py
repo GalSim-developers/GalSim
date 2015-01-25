@@ -1059,7 +1059,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     The example above instantiates a CorrelatedNoise, but forces the use of the pixel scale
     `scale` to set the units of the internal lookup table.
 
-        >>> cn = galsim.CorrelatedNoise(image, rng=rng, x_interpolant=galsim.Lanczos(5, tol=1.e-4)
+        >>> cn = galsim.CorrelatedNoise(image, rng=rng, x_interpolant=galsim.Lanczos(5, tol=1.e-4))
 
     The example above instantiates a CorrelatedNoise, but forces use of a non-default interpolant
     for interpolation of the internal lookup table in real space.
