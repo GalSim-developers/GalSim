@@ -124,10 +124,11 @@ def main(argv):
     # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
     # (diameter, bandpasses, obscuration, etc.).  Note that we are going to arbitrarily choose a
-    # single SCA rather than all of them, for faster calculations, and we're going to use a simpler
-    # representation of the struts for faster calculations.  To do a more exact calculation of the
-    # chromaticity and pupil plane configuration, remove the approximate_struts and the n_waves
-    # keyword from this call:
+    # single SCA (Silicon Chip Array) rather than all of them, for faster calculations, and we're
+    # going to use a simpler representation of the struts for faster calculations.  To do a more
+    # exact calculation of the chromaticity and pupil plane configuration, remove the
+    # approximate_struts and the n_waves keyword from this call:
+
     use_SCA = 7 # This could be any number from 1...18
     logger.info('Doing expensive pre-computation of PSF')
     t1 = time.time()
@@ -136,7 +137,7 @@ def main(argv):
     t2 = time.time()
     logger.info('Done PSF precomputation in %.1f seconds!'%(t2-t1))
 
-    # Define some parameters
+    # Define the size of the postage stamp
     stamp_size = 64
 
     # We are going to choose a particular location on the sky.
@@ -157,11 +158,11 @@ def main(argv):
     # If we had a real galaxy catalog with positions in terms of RA, dec we could use wcs.toImage()
     # to find where those objects should be in terms of (X, Y).
     pos_rng = galsim.UniformDeviate(random_seed)
+    # Make a list of angle values by which the galaxies are rotated.
+    theta_stamp = []
     # Make a list of (X, Y) values, eliminating the 10% of the edge pixels as the object centroids.
     x_stamp = []
     y_stamp = []
-    # Make a list of angle values by which the galaxies are rotated.
-    theta_stamp = []
     for i_gal in xrange(n_use):
         x_stamp.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
         y_stamp.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
@@ -230,8 +231,7 @@ def main(argv):
 
             # The center of the object is normally placed at the center of the postage stamp image.
             # You can change that with shift:
-            # gal = gal.shift(dx=cat.getFloat(k,11), dy=cat.getFloat(k,12))
-            # NOTE TO SELF: Disabled since galaxies look cropped - Arun
+            gal = gal.shift(dx=cat.getFloat(k,11), dy=cat.getFloat(k,12))
 
             # Convolve the chromatic galaxy and the chromatic PSF
             final = galsim.Convolve([gal,PSF])
@@ -258,7 +258,7 @@ def main(argv):
 
         # The subsequent steps account for the non-ideality of the detectors
 
-        # Accounting Reciprocity Failure:
+        # 1) Accounting Reciprocity Failure:
         # Reciprocity, in the context of photography, is the inverse relationship between the
         # incident flux (I) of a source object and the exposure time (t) required to produce a
         # given response(p) in the detector, i.e., p = I*t. However, in NIR detectors, this
@@ -285,7 +285,7 @@ def main(argv):
         # detected, hence we have to round the pixel values to integers:
         final_image.quantize()
 
-        # Adding dark current to the image
+        # 2) Adding dark current to the image
         # Even when the detector is unexposed to any radiation, the electron-hole pairs that
         # are generated within the depletion region due to finite temperature are swept by the
         # high electric field at the junction of the photodiode. This small reverse bias
@@ -302,7 +302,7 @@ def main(argv):
         # non-linear effects that follow. Hence, these must be included at this stage of the 
         # image generation process. We subtract these backgrounds in the end.
 
-        # Applying a quadratic non-linearity
+        # 3) Applying a quadratic non-linearity
         # In order to convert the units from electrons to ADU, we must multiply the image by a
         # gain factor. The gain has a weak dependency on the charge present in each pixel. This
         # dependency is accounted for by changing the pixel values (in electrons) and applying
@@ -323,7 +323,7 @@ def main(argv):
         out_filename = os.path.join(outpath,'demo13_diff_NL_{0}.fits'.format(filter_name))
         diff.write(out_filename)
 
-        # Adding Interpixel Capacitance
+        # 4) Adding Interpixel Capacitance
         # The voltage read at a given pixel location is influenced by the charges present in
         # the neighboring pixel locations due to capacitive coupling of sense nodes. This
         # interpixel capacitance effect is modelled as a linear effect that is described as a
@@ -344,7 +344,7 @@ def main(argv):
         out_filename = os.path.join(outpath,'demo13_diff_IPC_{0}.fits'.format(filter_name))
         diff.write(out_filename)
 
-        # Adding Read Noise
+        # 5) Adding Read Noise
         # Read Noise is the noise due to the on-chip amplifier that converts the charge into an
         # analog voltage.
         read_noise = galsim.CCDNoise(rng)
