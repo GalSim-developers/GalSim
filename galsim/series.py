@@ -20,8 +20,9 @@ Definitions for Galsim Series class and subclasses.
 """
 
 import galsim
-from scipy.misc import factorial
 import numpy as np
+import copy
+import math
 
 # Simplified Least Recently Used replacement cache.
 # http://code.activestate.com/recipes/577970-simplified-lru-cache/
@@ -106,6 +107,10 @@ class Series(object):
         args = (nx, ny, scale)
         return reduce(lambda x,y:x+y,
                       [self.kcache((idx,args))*self.getCoeff(idx) for idx in self.indices])
+
+    def kValue(self, *args):
+        return reduce(lambda x,y:x+y,
+                      [self.getCoeff(idx)*self.getBasisFunc(idx).kValue(args) for idx in self.indices])
 
 
 class SeriesConvolution(Series):
@@ -216,39 +221,96 @@ class SpergelSeries(Series):
 
         self.indices=[]
         for j in xrange(jmax+1):
-            for q in xrange(j+1):
+            for q in xrange(-j, j+1):
                 self.indices.append((nu, scale_radius, j, q))
         self.indices = tuple(self.indices)
 
-        #for testing
+        #defaults
         self.ellip = 0.0
         self.phi0 = 0.0
-        self.delta = 0.0
+        self.Delta = 0.0
+        self._A = np.matrix(np.identity(2), dtype=float)
 
         super(SpergelSeries, self).__init__()
 
     def getCoeff(self, index):
         _, _, j, q = index
-        ellip, phi0, delta = self.ellip, self.phi0, self.delta
+        #ellip, phi0, Delta = self.ellip, self.phi0, self.Delta
+        ellip, phi0, Delta = self._decomposeA()
         coeff = 0.0
-        print
-        print "processing j:{} q:{}".format(j, q)
-        for m in range(q, j+1):
+        for m in range(abs(q), j+1):
             if (m+q)%2 == 1:
                 continue
             n = (q+m)/2
-            num = delta**(j-m) * (1.-delta)**m * ellip**m
-            den = 2**(m-1) * factorial(j-m) * factorial((m-q)/2) * factorial((m+q)/2)
-            outstr = "j:{} m:{} n:{} num:{} (j-m)!:{} ((m-q)/2)!:{} ((m+q)/2)!:{}"
-            print outstr.format(j, m, n, num, factorial(j-m), factorial((m-q)/2), factorial((m+q)/2))
-            if q == 0:
-                num *= 0.5
+            num = (1.-Delta)**m
+            # Have to catch 0^0=1 situations...
+            if not (Delta == 0.0 and j==m):
+                num *= Delta**(j-m)
+            if not (ellip == 0.0 and m==0):
+                num *= ellip**m
+            den = 2**(m-1) * math.factorial(j-m) * math.factorial(m-n) * math.factorial(n)
             coeff += num/den
-        coeff *= self.flux * np.cos(-2.*q*phi0)
-        print "j:{}  q:{}  coeff:{}".format(j, q, coeff)
+        if q > 0:
+            coeff *= self.flux * math.cos(2*q*phi0)
+        elif q < 0:
+            coeff *= self.flux * math.sin(2*q*phi0)
+        else:
+            coeff *= self.flux * 0.5
         return coeff
 
     def getBasisFunc(self, index):
         _, _, j, q = index
         return Spergelet(nu=self.nu, scale_radius=self.scale_radius,
                          j=j, q=q, gsparams=self.gsparams)
+
+    def copy(self):
+        """Returns a copy of an object.  This preserves the original type of the object."""
+        cls = self.__class__
+        ret = cls.__new__(cls)
+        for k, v in self.__dict__.iteritems():
+            ret.__dict__[k] = copy.copy(v)
+        return ret
+
+    def _applyMatrix(self, J):
+        ret = self.copy()
+        ret._A *= J
+        return ret
+
+    def dilate(self, scale):
+        E = np.diag([scale, scale])
+        return self._applyMatrix(E)
+
+    def shear(self, *args, **kwargs):
+        if len(args) == 1:
+            if kwargs:
+                raise TypeError("Gave both unnamed and named arguments!")
+            if not isinstance(args[0], galsim.Shear):
+                raise TypeError("Unnamed argument is not a Shear!")
+            shear = args[0]
+        elif len(args) > 1:
+            raise TypeError("Too many unnamed arguments!")
+        elif 'shear' in kwargs:
+            shear = kwargs.pop('shear')
+            if kwargs:
+                raise TypeError("Too many kwargs provided!")
+        else:
+            shear = galsim.Shear(**kwargs)
+        return self._applyMatrix(shear._shear.getMatrix())
+
+    def rotate(self, theta):
+        cth = math.cos(theta.rad())
+        sth = math.sin(theta.rad())
+        R = np.matrix([[cth, -sth],
+                       [sth,  cth]],
+                      dtype=float)
+        return self._applyMatrix(R)
+
+    def _decomposeA(self):
+        A = self._A
+        ad = A[0,0]*A[1,1]
+        bc = A[0,1]*A[1,0]
+        mu = math.sqrt(ad - bc)
+        phi0 = math.atan2(A[1,0], A[0,0])
+        eta = math.log(A[0,0]/A[1,1])
+        ellip = galsim.Shear(eta1=eta).e1
+        return ellip, phi0, 1-mu**2
