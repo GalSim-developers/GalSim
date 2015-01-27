@@ -33,8 +33,6 @@ Currently, the module includes the following numbers:
 
     pixel_scale - The pixel scale in units of arcsec/pixel.
 
-    dark_current - The dark current in units of e-/s.
-
     diameter - The telescope diameter in meters.
 
     obscuration - The linear obscuration of the telescope, in terms of fraction of the diameter.
@@ -146,7 +144,6 @@ import numpy
 
 gain = 1.0
 pixel_scale = 0.11
-dark_current = 0.01
 diameter = 2.36
 obscuration = 0.3
 exptime = 168.1
