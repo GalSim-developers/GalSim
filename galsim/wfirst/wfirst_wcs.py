@@ -78,7 +78,7 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
     The user must specify a position for the center of the focal plane array (either as (ra, dec),
     or a CelestialCoord `pos`) and the orientation.
 
-    To use this routine it is useful to define several coordinate systems for WFIRST.  The diagram
+    For this routine, we define several coordinate systems for WFIRST.  The diagram
     located on the GalSim wiki,
     https://github.com/GalSim-developers/GalSim/wiki/GalSim-WFIRST-module-diagrams
     will be useful in understanding the description of these coordinate systems below.
@@ -338,7 +338,7 @@ def findSCA(wcs_list, ra=None, dec=None, pos=None, include_border=False):
     The position should be specified in a way similar to how it is specified for
     galsim.wfirst.getWCS().
 
-    Depending on what the use wants to do with the results, they may wish to use the
+    Depending on what the user wants to do with the results, they may wish to use the
     `include_border` keyword.  This keyword determines whether or not to include an additional
     border corresponding to half of the gaps between SCAs.  For example, if a user is drawing a
     single image they may wish to only know whether a given position falls onto an SCA, and if so,
