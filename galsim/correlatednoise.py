@@ -759,10 +759,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # If not, draw the correlation function to the desired size and resolution, then DFT to
         # generate the required array of the square root of the power spectrum
         if use_stored is False:
-            # Then draw this correlation function into an array.  If this is not done at the same
-            # wcs as the original image from which the CF derives, even if the image is rotated,
-            # then this step requires interpolation and the newcf (used to generate the PS below) is
-            # thus approximate at some level
+            # Draw this correlation function into an array.  If this is not done at the same wcs as
+            # the original image from which the CF derives, even if the image is rotated, then this
+            # step requires interpolation and the newcf (used to generate the PS below) is thus
+            # approximate at some level
             newcf = galsim.ImageD(shape[1], shape[0], wcs=wcs)
             self.drawImage(newcf)
 
