@@ -61,9 +61,11 @@ Currently, the module includes the following numbers:
         >>>> im_recip = im.addReciprocityFailure(galsim.wfirst.exptime,
                                                  galsim.wfirst.reciprocity_alpha)
 
-    read_noise - A total of 10e-.  This comes from 20 e- per CDS and a 5 e- floor, so the CDS noise
-                 dominates.  This read_noise value might be reduced based on improved behavior of
-                 newer detectors.
+    read_noise - A total of 10e-.  This comes from 20 e- per correlated double sampling (CDS) and a
+                 5 e- floor, so the CDS read noise dominates.  The source of CDS read noise is the
+                 noise introduced when subtracting a single pair of reads; this can be reduced by
+                 averaging over multiple reads.  Also, this read_noise value might be reduced
+                 based on improved behavior of newer detectors which have lower CDS noise.
 
     thermal_backgrounds - The thermal backgrounds (in units of e-/pix/s) are based on a temperature
                           of 282 K, but this plan might change in future.  The thermal backgrounds
