@@ -11,6 +11,12 @@ New Features
   returned by EstimateShear(). (#612)
 
 
+Deprecated Features
+-------------------
+
+- Deprecated CorrelatedNoise.calculateCovarianceMatrix, since it is not used anywhere. (#630)
+
+
 Bug Fixes and Improvements
 --------------------------
 

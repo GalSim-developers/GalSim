@@ -726,7 +726,15 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return self.drawImage(*args, **kwargs)
 
     def calculateCovarianceMatrix(self, bounds, scale):
-        """Calculate the covariance matrix for an image with specified properties.
+        """This function is deprecated and will be removed in a future version.  If you have a
+        use for this function and would like to keep it, please open an issue at:
+
+            https://github.com/GalSim-developers/GalSim/issues
+
+        Old documentation:
+        ------------------
+        
+        Calculate the covariance matrix for an image with specified properties.
 
         A correlation function also specifies a covariance matrix for noise in an image of known
         dimensions and pixel scale.  The user specifies these bounds and pixel scale, and this
@@ -739,7 +747,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @returns the covariance matrix (as an Image).
         """
-        # TODO: Allow this to take a JacobianWCS, rather than just a scale.
+        import warnings
+        warnings.warn("The method calculateCovarianceMatrix is deprecated.")
         return galsim._galsim._calculateCovarianceMatrix(self._profile.SBProfile, bounds, scale)
 
     def _get_update_rootps(self, shape, wcs):
