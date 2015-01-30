@@ -87,7 +87,7 @@ namespace galsim {
         _info(cache.get(boost::make_tuple(_nu, _j, _q, this->gsparams.duplicate())))
     {
         if ((j < 0) or (q < -j) or (q > j))
-            throw SBError("Requested Spegelet indices out of range");
+            throw SBError("Requested Spergelet indices out of range");
 
         dbg<<"Start SBSpergelet constructor:\n";
         dbg<<"nu = "<<_nu<<std::endl;
@@ -356,7 +356,7 @@ namespace galsim {
         double amplitude = _knorm * std::pow(ksq, _j) * std::pow(1.+ksq, -1.-_nu-_j);
         if (_q > 0)
             return amplitude * cos(2*_q*phi);
-        else if (_q < 0 )
+        else if (_q < 0)
             return amplitude * sin(2*_q*phi);
         else
             return amplitude;
