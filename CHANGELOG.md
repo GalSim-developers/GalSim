@@ -8,7 +8,8 @@ New Features
   inter-pixel capacitance.  (#555)
 - Added information about PSF size and shape to the data structure that is
   returned by EstimateShear(). (#612)
-
+- Enable initializing a DES_PSFEx object using a pyfits HDU directly instead
+  of a filename. (#626)
 
 Bug Fixes and Improvements
 --------------------------
