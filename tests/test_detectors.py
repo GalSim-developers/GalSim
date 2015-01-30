@@ -296,7 +296,8 @@ def test_quantize():
         image_q.quantize()
         np.testing.assert_array_almost_equal(
             image_q.array, save_image.array, decimal=8,
-            err_msg='Array contents of integer-valued array modified by quantization, for dtype=%s'%dtype)
+            err_msg='Array contents of integer-valued array modified by quantization, '+
+            'for dtype=%s'%dtype)
 
         # Check for preservation of WCS etc.
         assert image_q.scale == image.scale
