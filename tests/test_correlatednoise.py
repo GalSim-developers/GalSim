@@ -223,8 +223,7 @@ def test_uncorrelated_noise_symmetry_90degree_rotation():
         cf_test1 = cn._profile.xValue(pos)
         cf_test2 = cn._profile.xValue(-pos)
         np.testing.assert_almost_equal(
-            cf_test1, cf_test2,
-            decimal=7,
+            cf_test1, cf_test2, decimal=7,
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric.")
     # Then test that CorrelatedNoise rotation methods produces the same output as initializing 
@@ -424,13 +423,11 @@ def test_arbitrary_rotation():
         cn_rot2 = cn.copy()
         cn_rot2.applyRotation(rot_angle * galsim.radians)
         np.testing.assert_almost_equal(
-            cn._profile.xValue(pos_rot), cn_rot1._profile.xValue(pos_ref), 
-            decimal=12, # this should be good at very high accuracy 
+            cn._profile.xValue(pos_rot), cn_rot1._profile.xValue(pos_ref), decimal=12,
             err_msg="Noise correlated in the y direction failed createRotated() "+
             "method test for arbitrary rotations.")
         np.testing.assert_almost_equal(
-            cn._profile.xValue(pos_rot), cn_rot2._profile.xValue(pos_ref), 
-            decimal=12, # ditto
+            cn._profile.xValue(pos_rot), cn_rot2._profile.xValue(pos_ref), decimal=12,
             err_msg="Noise correlated in the y direction failed applyRotation() "+
             "method test for arbitrary rotations.")
     t2 = time.time()
@@ -455,12 +452,10 @@ def test_scaling():
            tpos = 2. * np.pi * ud()
            pos_ref = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
            np.testing.assert_almost_equal(
-               cn_test1._profile.xValue(pos_ref), cn._profile.xValue(pos_ref / scale),
-               decimal=7,
+               cn_test1._profile.xValue(pos_ref), cn._profile.xValue(pos_ref / scale), decimal=7,
                err_msg="Noise correlated in the y direction failed createExpanded() scaling test.")
            np.testing.assert_almost_equal(
-               cn_test2._profile.xValue(pos_ref), cn._profile.xValue(pos_ref / scale),
-               decimal=7,
+               cn_test2._profile.xValue(pos_ref), cn._profile.xValue(pos_ref / scale), decimal=7,
                err_msg="Noise correlated in the y direction failed applyExpansion() scaling "+
                "test.")
     t2 = time.time()
@@ -488,12 +483,10 @@ def test_jacobian():
         pos_test = galsim.PositionD(pos_ref.x * dudx + pos_ref.y * dudy,
                                     pos_ref.x * dvdx + pos_ref.y * dvdy)
         np.testing.assert_almost_equal(
-            cn_test1._profile.xValue(pos_test), cn._profile.xValue(pos_ref),
-            decimal=7,
+            cn_test1._profile.xValue(pos_test), cn._profile.xValue(pos_ref), decimal=7,
             err_msg="Noise correlated in the y direction failed createTransformed() test")
         np.testing.assert_almost_equal(
-            cn_test2._profile.xValue(pos_test), cn._profile.xValue(pos_ref),
-            decimal=7,
+            cn_test2._profile.xValue(pos_test), cn._profile.xValue(pos_ref), decimal=7,
             err_msg="Noise correlated in the y direction failed applyTransformation() test")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
@@ -1150,8 +1143,9 @@ def test_uncorrelated_noise_tracking():
     # Allow for some error due to inferring the CorrelatedNoise object 'cn' from a single
     # realization.  For now we'll do the simplest possible comparison of just the variance.  This is
     # probably not adequate but it's a start.
-    np.testing.assert_almost_equal(final_noise.getVariance(), new_cn.getVariance(), decimal=3,
-                                   err_msg='Failure in tracking noise properties through operations')
+    np.testing.assert_almost_equal(
+            final_noise.getVariance(), new_cn.getVariance(), decimal=3,
+            err_msg='Failure in tracking noise properties through operations')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
