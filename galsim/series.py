@@ -23,6 +23,8 @@ import galsim
 import numpy as np
 import copy
 import math
+import operator
+from itertools import imap, product
 
 # Simplified Least Recently Used replacement cache.
 # http://code.activestate.com/recipes/577970-simplified-lru-cache/
@@ -82,7 +84,7 @@ class Series(object):
             idx = key[0]
             nx, ny, scale = key[1]
             obj = self.getBasisFunc(idx)
-            return obj.drawImage(nx=nx, ny=ny, scale=scale).array
+            return obj.drawImage(nx=nx, ny=ny, scale=scale, method='sb').array
         def basisKImg(key):
             idx = key[0]
             nx, ny, scale = key[1]
@@ -100,17 +102,18 @@ class Series(object):
 
     def drawImage(self, nx=None, ny=None, scale=None):
         args = (nx, ny, scale)
-        return reduce(lambda x,y:x+y,
-                      [self.cache((idx,args))*self.getCoeff(idx) for idx in self.indices])
+        return np.add.reduce(
+            [self.cache((idx,args))*c for idx, c in zip(self.indices, self.getCoeffs())])
 
     def drawKImage(self, nx=None, ny=None, scale=None):
         args = (nx, ny, scale)
-        return reduce(lambda x,y:x+y,
-                      [self.kcache((idx,args))*self.getCoeff(idx) for idx in self.indices])
+        return np.add.reduce(
+            [self.kcache((idx,args))*c for idx, c in zip(self.indices, self.getCoeffs())])
 
     def kValue(self, *args):
-        return reduce(lambda x,y:x+y,
-                      [self.getCoeff(idx)*self.getBasisFunc(idx).kValue(args) for idx in self.indices])
+        return reduce(operator.add,
+                      [self.getBasisFunc(idx).kValue(args)*c
+                       for idx, c in zip(self.indices, self.getCoeffs())])
 
 
 class SeriesConvolution(Series):
@@ -148,15 +151,13 @@ class SeriesConvolution(Series):
 
         # Make self.indices:
         convolutant_subclasses = tuple(obj.__class__ for obj in self.objlist)
-        from itertools import product
         convolutant_indices = tuple(product(*[obj.indices for obj in self.objlist]))
         self.indices = tuple((convolutant_subclasses, i) for i in convolutant_indices)
 
         super(SeriesConvolution, self).__init__(maxcache=self.maxcache)
 
-    def getCoeff(self, index):
-        return reduce(lambda x,y:x*y,
-                      [obj.getCoeff(idx) for obj, idx in zip(self.objlist, index[1])])
+    def getCoeffs(self):
+        return imap(np.multiply.reduce, product(*[obj.getCoeffs() for obj in self.objlist]))
 
     def getBasisFunc(self, index):
         return galsim.Convolve([obj.getBasisFunc(idx)
@@ -226,23 +227,47 @@ class SpergelSeries(Series):
         self.indices = tuple(self.indices)
 
         #defaults
-        self.ellip = 0.0
-        self.phi0 = 0.0
-        self.Delta = 0.0
         self._A = np.matrix(np.identity(2), dtype=float)
 
         super(SpergelSeries, self).__init__()
 
-    def getCoeff(self, index):
-        _, _, j, q = index
-        #ellip, phi0, Delta = self.ellip, self.phi0, self.Delta
+    def getCoeffs(self):
         ellip, phi0, Delta = self._decomposeA()
+        coeffs = []
+        for idx in self.indices:
+            j, q = idx[2:4]
+            coeff = 0.0
+            for m in range(abs(q), j+1):
+                if (m+q)%2 == 1:
+                    continue
+                n = (q+m)/2
+                num = (Delta-1.0)**m
+                # Have to catch 0^0=1 situations...
+                if not (Delta == 0.0 and j==m):
+                    num *= Delta**(j-m)
+                if not (ellip == 0.0 and m==0):
+                    num *= ellip**m
+                den = 2**(m-1) * math.factorial(j-m) * math.factorial(m-n) * math.factorial(n)
+                coeff += num/den
+            if q > 0:
+                coeff *= self.flux * math.cos(2*q*phi0)
+            elif q < 0:
+                coeff *= self.flux * math.sin(2*q*phi0)
+            else:
+                coeff *= self.flux * 0.5
+            coeffs.append(coeff)
+        return coeffs
+
+    def getCoeff(self, j, q):
+        ellip, phi0, Delta = self._decomposeA()
+        print "ellip:{} phi0:{} Delta:{}".format(ellip, phi0, Delta)
+        coeffs = []
         coeff = 0.0
         for m in range(abs(q), j+1):
             if (m+q)%2 == 1:
                 continue
             n = (q+m)/2
-            num = (1.-Delta)**m
+            num = (Delta-1.0)**m
             # Have to catch 0^0=1 situations...
             if not (Delta == 0.0 and j==m):
                 num *= Delta**(j-m)
@@ -250,6 +275,7 @@ class SpergelSeries(Series):
                 num *= ellip**m
             den = 2**(m-1) * math.factorial(j-m) * math.factorial(m-n) * math.factorial(n)
             coeff += num/den
+            print "j:{} q:{} m:{} n:{} num:{}, den:{}".format(j, q, m, n, num, den)
         if q > 0:
             coeff *= self.flux * math.cos(2*q*phi0)
         elif q < 0:
@@ -307,10 +333,13 @@ class SpergelSeries(Series):
 
     def _decomposeA(self):
         A = self._A
+        phi0 = math.atan2(-A[0,1], A[0,0])
+        if A[0,0] != 0.0:
+            eta = math.log(A[0,0]/A[1,1])
+        else:
+            eta = math.log(-A[1,0]/A[0,1])
+        ellip = galsim.Shear(eta1=eta).e1
         ad = A[0,0]*A[1,1]
         bc = A[0,1]*A[1,0]
-        mu = math.sqrt(ad - bc)
-        phi0 = math.atan2(A[1,0], A[0,0])
-        eta = math.log(A[0,0]/A[1,1])
-        ellip = galsim.Shear(eta1=eta).e1
-        return ellip, phi0, 1-mu**2
+        Delta = 1-(ad - bc)/np.sqrt(1.0 - ellip**2)
+        return ellip, phi0, Delta
