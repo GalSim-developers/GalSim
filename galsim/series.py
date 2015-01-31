@@ -24,12 +24,12 @@ import numpy as np
 import copy
 import math
 import operator
-from itertools import imap, product
+from itertools import product
 
 # Simplified Least Recently Used replacement cache.
 # http://code.activestate.com/recipes/577970-simplified-lru-cache/
 class LRU_Cache:
-    def __init__(self, user_function, maxsize=1024):
+    def __init__(self, user_function, maxsize=4096):
         # Link layout:     [PREV, NEXT, KEY, RESULT]
         self.root = root = [None, None, None, None]
         self.user_function = user_function
@@ -71,28 +71,31 @@ class LRU_Cache:
 # all of the subclasses of `Series`.
 class _cached(type):
     def __new__(cls, clsname, bases, dct):
-        dct['cache'] = object()
-        dct['kcache'] = object()
+        dct['cache'] = None
+        dct['kcache'] = None
         return super(_cached, cls).__new__(cls, clsname, bases, dct)
 
 
 class Series(object):
     __metaclass__ = _cached
     # Initialize LRU_Cache to store precomputed images.
-    def __init__(self, maxcache=1024):
+    def __init__(self, maxcache=4096):
         def basisImg(key):
-            idx = key[0]
-            nx, ny, scale = key[1]
+            args = key[0][0]
+            kwargs = dict(key[0][1])
+            idx = key[1]
             obj = self.getBasisFunc(idx)
-            return obj.drawImage(nx=nx, ny=ny, scale=scale, method='sb').array
+            return obj.drawImage(*args, **kwargs).array
         def basisKImg(key):
-            idx = key[0]
-            nx, ny, scale = key[1]
+            args = key[0][0]
+            kwargs = dict(key[0][1])
+            idx = key[1]
             obj = self.getBasisFunc(idx)
-            img, _ = obj.drawKImage(nx=nx, ny=ny, scale=scale)
-            return img.array
-        self.cache = LRU_Cache(basisImg, maxsize=maxcache)
-        self.kcache = LRU_Cache(basisKImg, maxsize=maxcache)
+            return obj.drawKImage(*args, **kwargs)[0].array
+        if self.cache is None:
+            self.__class__.cache = LRU_Cache(basisImg, maxsize=maxcache)
+        if self.kcache is None:
+            self.__class__.kcache = LRU_Cache(basisKImg, maxsize=maxcache)
 
     def getCoeff(self, index):
         raise NotImplementedError("subclasses of Series must define getCoeff() method")
@@ -100,15 +103,15 @@ class Series(object):
     def getBasisFunc(self, index):
         raise NotImplementedError("subclasses of Series must define getBasisFunc() method")
 
-    def drawImage(self, nx=None, ny=None, scale=None):
-        args = (nx, ny, scale)
+    def drawImage(self, *args, **kwargs):
+        key = (args, tuple(sorted(kwargs.items())))
         return np.add.reduce(
-            [self.cache((idx,args))*c for idx, c in zip(self.indices, self.getCoeffs())])
+            [self.cache((key, idx))*c for idx, c in zip(self.indices, self.getCoeffs())])
 
-    def drawKImage(self, nx=None, ny=None, scale=None):
-        args = (nx, ny, scale)
+    def drawKImage(self, *args, **kwargs):
+        key = (args, tuple(sorted(kwargs.items())))
         return np.add.reduce(
-            [self.kcache((idx,args))*c for idx, c in zip(self.indices, self.getCoeffs())])
+            [self.kcache((key,idx))*c for idx, c in zip(self.indices, self.getCoeffs())])
 
     def kValue(self, *args):
         return reduce(operator.add,
@@ -138,7 +141,7 @@ class SeriesConvolution(Series):
                     "Single input argument must be a Series or a list of Series.")
         # Check kwargs
         self.gsparams = kwargs.pop("gsparams", None)
-        self.maxcache = kwargs.pop("maxcache", 1024)
+        self.maxcache = kwargs.pop("maxcache", 4096)
         # Make sure there is nothing left in the dict.
         if kwargs:
             raise TypeError("Got unexpected keyword argument(s): %s"%kwargs.keys())
@@ -157,11 +160,10 @@ class SeriesConvolution(Series):
         super(SeriesConvolution, self).__init__(maxcache=self.maxcache)
 
     def getCoeffs(self):
-        return imap(np.multiply.reduce, product(*[obj.getCoeffs() for obj in self.objlist]))
+        return map(np.multiply.reduce, product(*[obj.getCoeffs() for obj in self.objlist]))
 
     def getBasisFunc(self, index):
-        return galsim.Convolve([obj.getBasisFunc(idx)
-                                for obj, idx in zip(self.objlist, index[1])])
+        return galsim.Convolve([obj.getBasisFunc(idx) for obj, idx in zip(self.objlist, index[1])])
 
 
 class Spergelet(galsim.GSObject):
