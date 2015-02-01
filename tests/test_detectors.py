@@ -285,7 +285,7 @@ def test_quantize():
         # Check for correctness of numerical values.
         # Note that quantize uses np.round, which rounds x.5 to the nearest even number.
         # cf. http://docs.scipy.org/doc/numpy/reference/generated/numpy.around.html#numpy.around
-        # This is different from flooar(array+0.5), so don't use x.5 in the test array here.
+        # This is different from floor(array+0.5), so don't use x.5 in the test array here.
         # For all other values, the two prescriptions should be equivalent.
         np.testing.assert_array_almost_equal(
             image_q.array, np.floor(image.array+0.5), decimal=8,
