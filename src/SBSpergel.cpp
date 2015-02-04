@@ -175,9 +175,6 @@ namespace galsim {
         if (ix_zero != 0 || iy_zero != 0) {
             xdbg<<"Use Quadrant\n";
             fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
-            // Spergels can be super peaky at the center, so handle explicitly like Sersics
-            if (ix_zero != 0 && iy_zero != 0)
-                val(ix_zero, iy_zero) = _xnorm * _info->xValue(0.);
         } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -256,8 +253,6 @@ namespace galsim {
         dy *= _inv_r0;
         dyx *= _inv_r0;
 
-        double x00 = x0; // Preserve the originals for below.
-        double y00 = y0;
         It valit = val.linearView().begin();
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
@@ -267,34 +262,6 @@ namespace galsim {
                 *valit++ = _xnorm * _info->xValue(r);
             }
         }
-
-        // Check for (0,0) in disguise as in Sersic
-        double det = dx * dy - dxy * dyx;
-        double i0 = (-dy * x00 + dxy * y00) / det;
-        double j0 = (dyx * x00 - dx * y00) / det;
-        dbg<<"i0, j0 = "<<i0<<','<<j0<<std::endl;
-        dbg<<"x0 + dx i + dxy j = "<<x00+dx*i0+dxy*j0<<std::endl;
-        dbg<<"y0 + dyx i + dy j = "<<y00+dyx*i0+dy*j0<<std::endl;
-        int inti0 = int(floor(i0+0.5));
-        int intj0 = int(floor(j0+0.5));
-
-        if ( std::abs(i0 - inti0) < 1.e-12 && std::abs(j0 - intj0) < 1.e-12 &&
-             inti0 >= 0 && inti0 < m && intj0 >= 0 && intj0 < n)  {
-            dbg<<"Fixing central value from "<<val(inti0, intj0);
-            val(inti0, intj0) = _xnorm * _info->xValue(0.0);
-            dbg<<" to "<<val(inti0, intj0)<<std::endl;
-#ifdef DEBUGLOGGING
-            double x = x00;
-            double y = y00;
-            for (int j=0;j<intj0;++j) { x += dxy; y += dy; }
-            for (int i=0;i<inti0;++i) { x += dx; y += dyx; }
-            double r = sqrt(x*x+y*y);
-            dbg<<"Note: the original r value for this pixel had been "<<r<<std::endl;
-            dbg<<"xValue(r) = "<<_info->xValue(r)<<std::endl;
-            dbg<<"xValue(0) = "<<_info->xValue(0.)<<std::endl;
-#endif
-        }
-
     }
 
     void SBSpergel::SBSpergelImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,

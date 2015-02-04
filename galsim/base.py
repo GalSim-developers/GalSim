@@ -2199,6 +2199,10 @@ class Spergel(GSObject):
     At `nu = -0.6` (and in the radial range near the half-light radius), the Spergel profile is
     similar to a DeVaucouleurs profile or `n = 4.0` Sersic profile.
 
+    Note that for `nu <= 0.0`, the Spergel profile surface brightness diverges at the origin.  This
+    may lead to rendering problems if the profile is not convolved by either a PSF or a pixel and
+    the profile center is precisely on a pixel center.
+
     Due to its analytic Fourier transform and depending on the indices `n` and `nu`, the Spergel
     profile can be considerably faster to draw than the roughly equivalent Sersic profile.  For
     example, the `nu = -0.6` Spergel profile is roughly 3x faster to draw than an `n = 4.0` Sersic
