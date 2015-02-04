@@ -16,9 +16,8 @@ New Features
   `ChromaticOpticalPSF` class, which allow the diffraction limit and aberrations
   to be wavelength-dependent, can particularly benefit from this
   optimization. (#618)
-- Added information about PSF size and shape to the data structure that is
-  returned by EstimateShear(). (#612)
-
+- Enable initializing a DES_PSFEx object using a pyfits HDU directly instead
+  of a filename. (#626)
 
 Bug Fixes and Improvements
 --------------------------
