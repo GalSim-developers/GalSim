@@ -5,7 +5,7 @@ New Features
 ------------
 
 - Added new methods of the image class to simulate detector effects:
-  inter-pixel capacitance.  (#555)
+  inter-pixel capacitance (#555) and image quantization (#558).
 - Added information about PSF size and shape to the data structure that is
   returned by EstimateShear(). (#612)
 - Added an option to the ChromaticObject class that allows for image rendering
