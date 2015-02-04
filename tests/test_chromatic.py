@@ -78,14 +78,12 @@ class ChromaticGaussian(galsim.ChromaticObject):
         # First, take the basic info.
         self.sigma = sigma
         self.separable = False
-
-        # Take user-specified choice for number of wavelengths to use for initial calculation.
-        super(ChromaticGaussian, self).__init__(self)
+        self.wave_list = np.array([], dtype=float)
 
     def evaluateAtWavelength(self, wave):
         this_sigma = self.sigma * (wave / 500.)
         this_shear = 0.1 * ((wave/500.)-1.)
-        ret = galsim.Gaussian(sigma = this_sigma, flux=self.SED(wave))
+        ret = galsim.Gaussian(sigma = this_sigma)
         ret = ret.shear(g1 = this_shear)
         return ret
 
