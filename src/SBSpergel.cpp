@@ -425,15 +425,11 @@ namespace galsim {
     {
         dbg<<"Find HLR for (nu,trunc) = ("<<_nu<<","<<_trunc<<")"<<std::endl;
         SpergelIntegratedFlux func(_nu, _gamma_nup2, 0.5*getFluxFraction());
-        double b1 = 0.001; // These are pretty conservative...
-        double b2 = 25.0;
+        double b1 = 0.1; // These are sufficient for -0.85 < nu < 100
+        double b2 = 17.0;
         Solve<SpergelIntegratedFlux> solver(func, b1, b2);
         xdbg<<"Initial range is "<<b1<<" .. "<<b2<<std::endl;
         solver.setMethod(Brent);
-        solver.bracketLowerWithLimit(0.); // Expand if needed
-        solver.bracketUpper();
-        xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
-            solver.getUpperBound()<<std::endl;
         _re = solver.root();
         dbg<<"re is "<<_re<<std::endl;
     }
