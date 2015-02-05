@@ -355,17 +355,17 @@ namespace hsm {
     /* functions that the user will want to call from outside */
 
     /**
-     * @brief Carry out PSF correction directly using ImageViews.
+     * @brief Carry out PSF correction directly using Images.
      *
      * A template function to carry out one of the multiple possible methods of PSF correction using
-     * the HSM package, directly accessing the input ImageViews.  The input arguments get repackaged
+     * the HSM package, directly accessing the input Images.  The input arguments get repackaged
      * before calling general_shear_estimator, and results for the shape measurement are returned as
      * CppShapeData.  There are two arguments that have default values, namely shear_est (the
      * type of shear estimator) and recompute_flux (for the REGAUSS method only).
      *
-     * @param[in] gal_image        The ImageView for the galaxy being measured
-     * @param[in] PSF_image        The ImageView for the PSF
-     * @param[in] gal_mask_image   The ImageView for the mask image to be applied to the galaxy
+     * @param[in] gal_image        The BaseImage for the galaxy being measured
+     * @param[in] PSF_image        The BaseImage for the PSF
+     * @param[in] gal_mask_image   The BaseImage for the mask image to be applied to the galaxy
      *                             being measured (integer array, 1=use pixel and 0=do not use
      *                             pixel).
      * @param[in] sky_var          The variance of the sky level, used for estimating uncertainty on
@@ -390,8 +390,8 @@ namespace hsm {
      */
     template <typename T, typename U>
     CppShapeData EstimateShearView(
-        const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
-        const ImageView<int> &gal_mask_image,
+        const BaseImage<T> &gal_image, const BaseImage<U> &PSF_image,
+        const BaseImage<int> &gal_mask_image,
         float sky_var = 0.0, const char *shear_est = "REGAUSS",
         const std::string& recompute_flux = "FIT",
         double guess_sig_gal = 5.0, double guess_sig_PSF = 3.0, double precision = 1.0e-6,
@@ -399,17 +399,17 @@ namespace hsm {
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
     /**
-     * @brief Measure the adaptive moments of an object directly using ImageViews.
+     * @brief Measure the adaptive moments of an object directly using Images.
      *
-     * This function repackages the input ImageView in a format that find_ellipmom_2 accepts, in
+     * This function repackages the input BaseImage in a format that find_ellipmom_2 accepts, in
      * order to iteratively compute the adaptive moments of an object.  The key result is the
      * best-fit elliptical Gaussian to the object, which is computed by initially guessing a
      * circular Gaussian that is used as a weight function, computing the weighted moments,
      * recomputing the moments using the result of the previous step as the weight function, and so
      * on until the moments that are measured are the same as those used for the weight function.
      *
-     * @param[in] object_image      The ImageView for the object being measured.
-     * @param[in] object_mask_image The ImageView for the mask image to be applied to the object
+     * @param[in] object_image      The BaseImage for the object being measured.
+     * @param[in] object_mask_image The BaseImage for the mask image to be applied to the object
      *                              being measured (integer array, 1=use pixel and 0=do not use
      *                              pixel).
      * @param[in] guess_sig         Optional argument with an initial guess for the Gaussian sigma
@@ -424,7 +424,7 @@ namespace hsm {
      */
     template <typename T>
     CppShapeData FindAdaptiveMomView(
-        const ImageView<T> &object_image, const ImageView<int> &object_mask_image,
+        const BaseImage<T> &object_image, const BaseImage<int> &object_mask_image,
         double guess_sig = 5.0, double precision = 1.0e-6,
         galsim::Position<double> guess_centroid = galsim::Position<double>(-1000.,-1000.),
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
