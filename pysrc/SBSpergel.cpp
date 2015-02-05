@@ -38,8 +38,7 @@ namespace galsim {
 
         static SBSpergel* construct(
             double nu, const bp::object & scale_radius, const bp::object & half_light_radius,
-            double flux, double trunc, bool flux_untruncated,
-            boost::shared_ptr<GSParams> gsparams)
+            double flux, boost::shared_ptr<GSParams> gsparams)
         {
             double s = 1.0;
             checkRadii(half_light_radius, scale_radius, bp::object());
@@ -51,7 +50,7 @@ namespace galsim {
                 s = bp::extract<double>(scale_radius);
                 rType = SBSpergel::SCALE_RADIUS;
             }
-            return new SBSpergel(nu, s, rType, flux, trunc, flux_untruncated, gsparams);
+            return new SBSpergel(nu, s, rType, flux, gsparams);
         }
 
         static void wrap()
@@ -64,7 +63,6 @@ namespace galsim {
                          bp::arg("scale_radius")=bp::object(),
                          bp::arg("half_light_radius")=bp::object(),
                          bp::arg("flux")=1.,
-                         bp::arg("trunc")=0., bp::arg("flux_untruncated")=false,
                          bp::arg("gsparams")=bp::object()))
                 )
                 .def(bp::init<const SBSpergel &>())

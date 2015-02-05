@@ -72,14 +72,10 @@ namespace galsim {
          * @param[in] rType    Kind of size being specified (HALF_LIGHT_RADIUS or
          *                     SCALE_RADIUS).
          * @param[in] flux     flux.
-         * @param[in] trunc    Truncation radius beyond which profile value is 0.0
-         * @param[in] flux_untruncated
-         *                     Determines how to normalize truncated profile.
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
         SBSpergel(double nu, double size, RadiusType rType, double flux,
-                  double trunc, bool flux_untruncated,
                   const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.

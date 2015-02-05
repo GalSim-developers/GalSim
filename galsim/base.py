@@ -2228,16 +2228,6 @@ class Spergel(GSObject):
     lower limit in the paper.  This change is due to numerical difficulties integrating the *very*
     peaky nu < -0.85 profiles.
 
-    The Spergel profile is the Fourier transform of the Moffat profile, and hence has an analytic
-    Fourier transform if not truncated.  If truncation is used, however, then the calculations take
-    advantage of Hankel transform tables that are precomputed for a given value of nu and truncation
-    radius when the Spergel profile is initialized.  Making additional objects with the same nu and
-    truncation radius can therefore be many times faster than making objects with different values
-    of nu and truncation radius that have not been used before.  Moreover, these Hankel transforms
-    are only cached for a maximum of 100 different nu/truncation radius pairs at a time.  For this
-    reason, for large sets of simulations, it is worth considering the use of only discrete
-    nu/truncation radius pairs rather than allowing these to vary continuously.
-
     A Spergel profile can be initialized using one (and only one) of two possible size parameters:
     `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
 
@@ -2247,22 +2237,8 @@ class Spergel(GSObject):
     @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
                             [One of `scale_radius` or `half_light_radius` is required.]
     @param flux             The flux (in photons) of the profile. [default: 1]
-    @param trunc            An optional truncation radius at which the profile is made to drop to
-                            zero, in the same units as the size parameter.
-                            [default: 0, indicating no truncation]
-    @param flux_untruncated Should the provided `flux` and `half_light_radius` refer to the
-                            untruncated profile? See below for more details. [default: False]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-
-    Flux of a truncated profile
-    ---------------------------
-
-    If you are truncating the profile, the optional parameter, `flux_untruncated`, specifies
-    whether the `flux` and `half_light_radius` specifications correspond to the untruncated
-    profile (`True`) or to the truncated profile (`False`, default).  The impact of this parameter
-    is a little subtle; please see the detailed description in the `Sersic` profile documentation
-    for examples.
 
     Methods
     -------
@@ -2276,18 +2252,17 @@ class Spergel(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = { "nu" : float }
-    _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool}
+    _opt_params = { "flux" : float}
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
     _takes_logger = False
 
     # --- Public Class methods ---
     def __init__(self, nu, half_light_radius=None, scale_radius=None,
-                 flux=1., trunc=0., flux_untruncated=False, gsparams=None):
+                 flux=1., gsparams=None):
         GSObject.__init__(
             self, galsim._galsim.SBSpergel(nu, half_light_radius=half_light_radius,
                                            scale_radius=scale_radius, flux=flux,
-                                           trunc=trunc, flux_untruncated=flux_untruncated,
                                            gsparams=gsparams))
 
     def getNu(self):

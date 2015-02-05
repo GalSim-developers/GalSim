@@ -31,7 +31,7 @@ namespace galsim {
     {
     public:
         /// @brief Constructor
-        SpergelInfo(double nu, double trunc, const GSParamsPtr& gsparams);
+        SpergelInfo(double nu, const GSParamsPtr& gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~SpergelInfo() {}
@@ -58,9 +58,6 @@ namespace galsim {
         /// @brief The half-light radius in units of r0.
         double getHLR() const;
 
-        /// @brief The fractional flux relative to the untruncated profile.
-        double getFluxFraction() const;
-
         /**
          * @brief The factor by which to multiply the returned value from xValue.
          *
@@ -68,9 +65,6 @@ namespace galsim {
          * the caller of xValue multiply by the normalization, which we calculate for them here.
          */
         double getXNorm() const;
-
-        /// @brief Calculate scale that has the given HLR and truncation radius in physical units.
-        double calculateScaleForTruncatedHLR(double re, double trunc) const;
 
         /**
          * @brief Shoot photons through unit-size, unnormalized profile
@@ -90,33 +84,23 @@ namespace galsim {
 
         // Input variables:
         double _nu;       ///< Spergel index.
-        double _trunc;   ///< Truncation radius `trunc` in units of r0.
         const GSParamsPtr _gsparams; ///< The GSParams object.
 
         // Some derived values calculated in the constructor:
         double _gamma_nup1; ///< Gamma(nu+1)
         double _gamma_nup2; ///< Gamma(nu+2)
         double _xnorm0   ;  ///< Normalization at r=0 for nu>0
-        bool _truncated;  ///< True if this Spergel profile is truncated.
 
         // Parameters calculated when they are first needed, and then stored:
         mutable double _maxk;    ///< Value of k beyond which aliasing can be neglected.
         mutable double _stepk;   ///< Sampling in k space necessary to avoid folding.
         mutable double _re;      ///< The HLR in units of r0.
-        mutable double _flux;    ///< Flux relative to the untruncated profile.
-
-        // Parameters for the Hankel transform:
-        mutable Table<double,double> _ft; ///< Lookup table for Fourier transform
-        mutable double _a1;               ///< First argument (logk) of lookup table
-        mutable double _a1ksq;            ///< converted to ksq
-        mutable double _fta1;             ///< First value in lookup table
 
         // Classes used for photon shooting
         mutable boost::shared_ptr<FluxDensity> _radial;
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
 
         // Helper functions used internally:
-        void buildFT() const;
         void calculateHLR() const;
         double calculateFluxRadius(const double& flux_frac) const;
     };
@@ -125,8 +109,7 @@ namespace galsim {
     {
     public:
         SBSpergelImpl(double nu, double size, RadiusType rType,
-                      double flux, double trunc, bool flux_untruncated,
-                      const GSParamsPtr& gsparams);
+                      double flux, const GSParamsPtr& gsparams);
 
         ~SBSpergelImpl() {}
 
@@ -139,35 +122,33 @@ namespace galsim {
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
-            if (!_truncated) { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
-            else { xmin = -_trunc; xmax = _trunc; }
+            xmin = -integ::MOCK_INF;
+            xmax = integ::MOCK_INF;
         }
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
-            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
-            else { ymin = -_trunc; ymax = _trunc; }
+            ymin = -integ::MOCK_INF;
+            ymax = integ::MOCK_INF;
         }
 
         void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
         {
-            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
-            else if (std::abs(x) >= _trunc) { ymin = 0; ymax = 0; }
-            else { ymax = sqrt(_trunc_sq - x*x);  ymin = -ymax; }
+            ymin = -integ::MOCK_INF;
+            ymax = integ::MOCK_INF;
 
             if (std::abs(x/_re) < 1.e-2) splits.push_back(0.);
         }
 
         bool isAxisymmetric() const { return true; }
-        bool hasHardEdges() const { return _truncated; }
+        bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
         Position<double> centroid() const
         { return Position<double>(0., 0.); }
 
-        /// @brief Returns the true flux (may be different from the specified flux)
         double getFlux() const { return _flux; }
 
         /// @brief Spergel photon shooting done by rescaling photons from appropriate `SpergelInfo`
@@ -196,18 +177,15 @@ namespace galsim {
 
     private:
         double _nu;      ///< Spergel index
-        double _flux;    ///< Actual flux (may differ from that specified at the constructor).
+        double _flux;    ///< Flux
         double _r0;      ///< Scale radius specified at the constructor.
         double _re;      ///< Half-light radius specified at the constructor.
-        double _trunc;   ///< The truncation radius (if any)
-        bool _truncated; ///< True if this Sersic profile is truncated.
 
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
         double _shootnorm; ///< Normalization for photon shooting.
 
         double _r0_sq;
         double _inv_r0;
-        double _trunc_sq;
 
         boost::shared_ptr<SpergelInfo> _info; ///< Points to info structure for this nu
 
@@ -215,7 +193,7 @@ namespace galsim {
         SBSpergelImpl(const SBSpergelImpl& rhs);
         void operator=(const SBSpergelImpl& rhs);
 
-        static LRUCache<boost::tuple< double, double, GSParamsPtr >, SpergelInfo> cache;
+        static LRUCache<boost::tuple< double, GSParamsPtr >, SpergelInfo> cache;
     };
 }
 
