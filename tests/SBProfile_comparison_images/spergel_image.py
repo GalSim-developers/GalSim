@@ -30,7 +30,7 @@ def f(nu):
 
 def c(nu):
     """Compute c_nu"""
-    return brentq(lambda r: (1.0+nu)*f(nu+1.0)(r) - 0.25, 0.01, 2.0)
+    return brentq(lambda r: (1.0+nu)*f(nu+1.0)(r) - 0.25, 0.01, 25.0)
 
 def radial_profile(nu, r0):
     cnu = c(nu)
@@ -46,7 +46,7 @@ hlr = 1.0
 
 hdulist = fits.HDUList()
 
-for nu in [-0.85, -0.5, 0.0, 0.85]:
+for nu in [-0.85, -0.5, 0.0, 0.85, 4.0]:
     img = radial_profile(nu, hlr)(np.sqrt(xs**2 + ys**2))
     # deal with the center:
     if nu > 0:

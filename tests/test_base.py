@@ -40,8 +40,8 @@ test_scale = [1.8, 0.05, 0.002, 0.002]
 test_sersic_trunc = [0., 8.5]
 test_flux = 1.8
 
-test_spergel_nu = [-0.85, -0.5, 0.0, 0.85]
-test_spergel_scale = [20.0, 1.0, 1.0, 0.5]
+test_spergel_nu = [-0.85, -0.5, 0.0, 0.85, 4.0]
+test_spergel_scale = [20.0, 1.0, 1.0, 0.5, 0.5]
 
 if __name__ == "__main__":
     # If doing a nosetests run, we don't actually need to do all 4 sersic n values.
@@ -1891,6 +1891,9 @@ def test_spergel_flux_scaling():
 def test_spergel_05():
     """Test the equivalence of Spergel with nu=0.5 and Exponential
     """
+    import time
+    t1 = time.time()
+
     # cf test_exponential()
     re = 1.0
     r0 = re/1.67839
@@ -1923,6 +1926,8 @@ def test_spergel_05():
         np.testing.assert_almost_equal(spergel.xValue(pos), expon.xValue(pos), decimal=5)
         np.testing.assert_almost_equal(spergel.kValue(pos), expon.kValue(pos), decimal=5)
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_gaussian()
