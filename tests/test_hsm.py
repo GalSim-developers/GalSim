@@ -115,6 +115,7 @@ def test_moments_basic():
     """Test that we can properly recover adaptive moments for Gaussians."""
     import time
     t1 = time.time()
+    first_test=True
     for sig in gaussian_sig_values:
         for g1 in shear_values:
             for g2 in shear_values:
@@ -136,6 +137,36 @@ def test_moments_basic():
                 np.testing.assert_almost_equal(result.observed_shape.e2,
                                                distortion_2, err_msg = "- incorrect e2",
                                                decimal = decimal_shape)
+                # if this is the first time through this loop, just make sure it runs and gives the
+                # same result for ImageView and ConstImageViews:
+                if first_test:
+                    result = gal_image.view().FindAdaptiveMom()
+                    first_test=False
+                    np.testing.assert_almost_equal(
+                        np.fabs(result.moments_sigma-sig/pixel_scale), 0.0,
+                        err_msg = "- incorrect dsigma (ImageView)", decimal = decimal)
+                    np.testing.assert_almost_equal(
+                        result.observed_shape.e1,
+                        distortion_1, err_msg = "- incorrect e1 (ImageView)",
+                        decimal = decimal_shape)
+                    np.testing.assert_almost_equal(
+                        result.observed_shape.e2,
+                        distortion_2, err_msg = "- incorrect e2 (ImageView)",
+                        decimal = decimal_shape)
+                    result = gal_image.view(make_const=True).FindAdaptiveMom()
+                    np.testing.assert_almost_equal(
+                        np.fabs(result.moments_sigma-sig/pixel_scale), 0.0,
+                        err_msg = "- incorrect dsigma (ConstImageView)", decimal = decimal)
+                    np.testing.assert_almost_equal(
+                        result.observed_shape.e1,
+                        distortion_1, err_msg = "- incorrect e1 (ConstImageView)",
+                        decimal = decimal_shape)
+                    np.testing.assert_almost_equal(
+                        result.observed_shape.e2,
+                        distortion_2, err_msg = "- incorrect e2 (ConstImageView)",
+                        decimal = decimal_shape)
+
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
