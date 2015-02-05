@@ -237,7 +237,7 @@ def test_recipfail_basic():
         np.log(dim2)/np.log(dim1), expected_ratio, 5,
         err_msg='Did not get expected change in reciprocity failure when varying alpha')
 
-    #Check math is right
+    # Check math is right
     alpha, exp_time, base_flux = 0.0065, 10.0, 5.0
     im_new = im.copy()
     im_new.addReciprocityFailure(alpha=alpha, exp_time=exp_time, base_flux=base_flux)
@@ -261,6 +261,49 @@ def test_recipfail_basic():
     np.testing.assert_array_almost_equal(
         im_new.array,im.array*(1+alpha*np.log10(im.array/(exp_time*base_flux))),6,
         err_msg='Difference between power law and log behavior')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2-t1)
+
+def test_quantize():
+    """Check behavior of the image quantization routine."""
+    import time
+    t1 = time.time()
+
+    # Choose a set of types.
+    dtypes = [np.float64, np.float32]
+    for dtype in dtypes:
+
+        # Set up some array and image with this type.
+        arr = np.arange(-10.2,9.8,0.5,dtype=dtype).reshape(5,8)
+        image = galsim.Image(arr, scale=0.3, xmin=37, ymin=-14)
+        image_q = image.copy()
+
+        # Do quantization.
+        image_q.quantize()
+
+        # Check for correctness of numerical values.
+        # Note that quantize uses np.round, which rounds x.5 to the nearest even number.
+        # cf. http://docs.scipy.org/doc/numpy/reference/generated/numpy.around.html#numpy.around
+        # This is different from floor(array+0.5), so don't use x.5 in the test array here.
+        # For all other values, the two prescriptions should be equivalent.
+        np.testing.assert_array_almost_equal(
+            image_q.array, np.floor(image.array+0.5), decimal=8,
+            err_msg='Array contents not as expected after quantization, for dtype=%s'%dtype)
+
+        # Make sure quantizing an image with values that are already integers does nothing.
+        save_image = image_q.copy()
+        image_q.quantize()
+        np.testing.assert_array_almost_equal(
+            image_q.array, save_image.array, decimal=8,
+            err_msg='Array contents of integer-valued array modified by quantization, '+
+            'for dtype=%s'%dtype)
+
+        # Check for preservation of WCS etc.
+        assert image_q.scale == image.scale
+        assert image_q.wcs == image.wcs
+        assert image_q.dtype == image.dtype
+        assert image_q.bounds == image.bounds
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2-t1)
@@ -429,4 +472,5 @@ def test_IPC_basic():
 if __name__ == "__main__":
     test_nonlinearity_basic()
     test_recipfail_basic()
+    test_quantize()
     test_IPC_basic()
