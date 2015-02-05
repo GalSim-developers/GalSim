@@ -124,7 +124,7 @@ def main(argv):
     # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
     # (diameter, bandpasses, obscuration, etc.).  Note that we are going to arbitrarily choose a
-    # single SCA (Silicon Chip Array) rather than all of them, for faster calculations, and we're
+    # single SCA (Sensor Chip Array) rather than all of them, for faster calculations, and we're
     # going to use a simpler representation of the struts for faster calculations.  To do a more
     # exact calculation of the chromaticity and pupil plane configuration, remove the
     # approximate_struts and the n_waves keyword from this call:
