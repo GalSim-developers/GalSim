@@ -148,7 +148,7 @@ struct PyCppShapeData {
 
     template <typename U, typename V>
     static void wrapTemplates() {
-        typedef CppShapeData (*FAM_func)(const ImageView<U>&, const ImageView<int>&, 
+        typedef CppShapeData (*FAM_func)(const BaseImage<U>&, const BaseImage<int>&, 
                                          double, double, Position<double>,
                                          boost::shared_ptr<HSMParams>);
         bp::def("_FindAdaptiveMomView",
@@ -158,8 +158,8 @@ struct PyCppShapeData {
                  bp::arg("hsmparams")=bp::object()),
                 "Find adaptive moments of an image (with some optional args).");
 
-        typedef CppShapeData (*ESH_func)(const ImageView<U>&, const ImageView<V>&, 
-                                         const ImageView<int>&, float, const char *,
+        typedef CppShapeData (*ESH_func)(const BaseImage<U>&, const BaseImage<V>&, 
+                                         const BaseImage<int>&, float, const char *,
                                          const std::string&, double, double, double, Position<double>,
                                          boost::shared_ptr<HSMParams>);
         bp::def("_EstimateShearView",
