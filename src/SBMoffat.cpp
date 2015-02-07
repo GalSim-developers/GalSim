@@ -454,7 +454,6 @@ namespace galsim {
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
-            It valit = val.col(j).begin();
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double rsq = x*x + y*y;
                 if (rsq > _maxRrD_sq) *valit++ = 0.;
@@ -487,7 +486,6 @@ namespace galsim {
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
-            It valit = val.col(j).begin();
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double ksq = x*x + y*y;
                 *valit++ = _knorm * (this->*_kV)(ksq);
