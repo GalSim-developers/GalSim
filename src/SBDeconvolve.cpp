@@ -71,7 +71,7 @@ namespace galsim {
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-        It valit(val.linearView().begin().getP(),1);
+        It valit = val.linearView().begin();
         for (int j=0;j<n;++j,y0+=dy) {
             double x = x0;
             double ysq = y0*y0;
@@ -94,7 +94,7 @@ namespace galsim {
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-        It valit(val.linearView().begin().getP(),1);
+        It valit = val.linearView().begin();
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;

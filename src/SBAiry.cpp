@@ -197,7 +197,7 @@ namespace galsim {
             for (int j=0;j<n;++j,y0+=dy) {
                 double x = x0;
                 double ysq = y0*y0;
-                It valit(val.col(j).begin().getP(),1);
+                It valit = val.col(j).begin();
                 for (int i=0;i<m;++i,x+=dx) 
                     *valit++ = _knorm * _info->kValue(x*x + ysq);
             }
@@ -253,7 +253,7 @@ namespace galsim {
         dy *= _inv_D_pi;
         dyx *= _inv_D_pi;
 
-        It valit(val.linearView().begin().getP(),1);
+        It valit = val.linearView().begin();
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;

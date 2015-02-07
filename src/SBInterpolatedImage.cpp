@@ -443,7 +443,7 @@ namespace galsim {
                 for (int i=i1;i<i2;++i,x0+=dx,++uxit) {
                     double y = y0;
                     uyit = uy.begin();
-                    RMIt valit(val.row(i,j1,j2).begin().getP(),val.stepj());
+                    RMIt valit = val.row(i,j1,j2).begin();
                     for (int j=j1;j<j2;++j,y+=dy) {
                         *valit++ = *uxit * *uyit++ * _ktab->interpolate(x0, y, *kInterpXY);
                     }
@@ -453,7 +453,7 @@ namespace galsim {
                 for (int i=i1;i<i2;++i,x0+=dx,++uxit) {
                     double y = y0;
                     It uyit = uy.begin();
-                    RMIt valit(val.row(i,j1,j2).begin().getP(),val.stepj());
+                    RMIt valit = val.row(i,j1,j2).begin();
                     for (int j=j1;j<j2;++j,y+=dy) {
                         double xKernelTransform = _xInterp->uval(*uxit, *uyit++);
                         *valit++ = xKernelTransform * _ktab->interpolate(x0, y, *kInterpXY);
@@ -473,7 +473,7 @@ namespace galsim {
                 for (int j=j1;j<j2;++j,y0+=dy,++uyit) {
                     double x = x0;
                     uxit = ux.begin();
-                    CMIt valit(val.col(j,i1,i2).begin().getP(),1);
+                    CMIt valit = val.col(j,i1,i2).begin();
                     for (int i=i1;i<i2;++i,x+=dx) {
                         *valit++ = *uxit++ * *uyit * _ktab->interpolate(x, y0, *_kInterp);
                     }
@@ -483,7 +483,7 @@ namespace galsim {
                 for (int j=j1;j<j2;++j,y0+=dy,++uyit) {
                     double x = x0;
                     It uxit = ux.begin();
-                    CMIt valit(val.col(j,i1,i2).begin().getP(),1);
+                    CMIt valit = val.col(j,i1,i2).begin();
                     for (int i=i1;i<i2;++i,x+=dx) {
                         double xKernelTransform = _xInterp->uval(*uxit++, *uyit);
                         *valit++ = xKernelTransform * _ktab->interpolate(x, y0, *_kInterp);
@@ -539,7 +539,7 @@ namespace galsim {
         double duxy = dxy * _uscale;
         double duyx = dyx * _uscale;
 
-        It valit(val.linearView().begin().getP(),1);
+        It valit = val.linearView().begin();
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy,ux0+=duxy,uy0+=duy) {
             double x = x0;
             double y = y0;

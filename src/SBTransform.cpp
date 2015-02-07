@@ -659,7 +659,7 @@ namespace galsim {
             const int n = val.rowsize();
 
             typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-            It valit(val.linearView().begin().getP(),1);
+            It valit = val.linearView().begin();
             x0 *= _cen.x;
             dx *= _cen.x;
             dxy *= _cen.x;

@@ -289,7 +289,7 @@ namespace galsim {
         //It valit = val.linearView().begin();
         // There is a bug in TMV v0.71 that the above line doesn't work.
         // The workaround is the following:
-        It valit(val.linearView().begin().getP(),1);
+        It valit = val.linearView().begin();
         double y = y0;
         for (int j=0;j<n;++j,y+=dy) {
             double x = x0;
@@ -331,7 +331,7 @@ namespace galsim {
         const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-        It valit(val.linearView().begin().getP(),1);
+        It valit = val.linearView().begin();
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;

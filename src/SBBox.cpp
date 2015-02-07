@@ -255,7 +255,7 @@ namespace galsim {
         dy *= 0.5*_height;
         dyx *= 0.5*_height;
 
-        It valit(val.linearView().begin().getP(),1);
+        It valit = val.linearView().begin();
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
