@@ -80,9 +80,6 @@ namespace galsim {
         double _flux;
         double _norm; // Calculated value: flux / (width*height)
 
-        // Sinc function used to describe Boxcar in k space. 
-        double sinc(double u) const; 
-
         // Copy constructor and op= are undefined.
         SBBoxImpl(const SBBoxImpl& rhs);
         void operator=(const SBBoxImpl& rhs);

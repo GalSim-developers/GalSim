@@ -22,6 +22,7 @@
 #include "SBBox.h"
 #include "SBBoxImpl.h"
 #include "FFT.h"
+#include "Interpolant.h"  // For sinc(x)
 
 #ifdef DEBUGLOGGING
 #include <fstream>
@@ -66,17 +67,9 @@ namespace galsim {
         else return 0.;  // do not use this function for filling image!
     }
 
-    double SBBox::SBBoxImpl::sinc(double u) const 
-    {
-        if (std::abs(u) < 1.e-3)
-            return 1.-u*u/6.;
-        else
-            return std::sin(u)/u;
-    }
-
     std::complex<double> SBBox::SBBoxImpl::kValue(const Position<double>& k) const
     {
-        return _flux * sinc(0.5*k.x*_width)*sinc(0.5*k.y*_height);
+        return _flux * sinc(k.x*_width/(2.*M_PI))*sinc(k.y*_height/(2.*M_PI));
     }
 
     void SBBox::SBBoxImpl::fillXValue(tmv::MatrixView<double> val,
@@ -201,10 +194,10 @@ namespace galsim {
             const int n = val.rowsize();
             typedef tmv::VIt<double,1,tmv::NonConj> It;
 
-            x0 *= 0.5*_width;
-            dx *= 0.5*_width;
-            y0 *= 0.5*_height;
-            dy *= 0.5*_height;
+            x0 *= _width/(2.*M_PI);
+            dx *= _width/(2.*M_PI);
+            y0 *= _height/(2.*M_PI);
+            dy *= _height/(2.*M_PI);
 
             // The Box profile in Fourier space is separable:
             //    val = _flux * sinc(0.5 * x * _height) * sinc(0.5 * y * _height) 
@@ -248,12 +241,12 @@ namespace galsim {
         const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-        x0 *= 0.5*_width;
-        dx *= 0.5*_width;
-        dxy *= 0.5*_width;
-        y0 *= 0.5*_height;
-        dy *= 0.5*_height;
-        dyx *= 0.5*_height;
+        x0 *= _width/(2.*M_PI);
+        dx *= _width/(2.*M_PI);
+        dxy *= _width/(2.*M_PI);
+        y0 *= _height/(2.*M_PI);
+        dy *= _height/(2.*M_PI);
+        dyx *= _height/(2.*M_PI);
 
         It valit = val.linearView().begin();
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
