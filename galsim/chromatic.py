@@ -457,18 +457,23 @@ class ChromaticObject(object):
         stored images is being used.  Users should not call this routine directly, and should
         instead interact with the `drawImage` method.
         """
+        # Check whether the object has had some chromatic transformation applied to it.  Since we
+        # are interpolating between stored images, this is not a situation that _interp_drawImage
+        # can handle.  We have to lose the interpolation.
+        if hasattr(self, '_A') and self._chromaticTransformation(bandpass):
+            import warnings
+            warnings.warn("Cannot render image with chromatic transformation applied to it"
+                          " using interpolation between stored images.  Reverting to "
+                          "non-interpolated version.")
+            self.noInterpolation()
+            return self._normal_drawImage(bandpass, image=image,
+                                          integrator=integrator, **kwargs)
+
         # Note that integrator is not actually selectable.
         if integrator is not None:
             import warnings
             warnings.warn("Cannot choose image integrator when using stored images! "
                           "Ignoring this keyword argument.")
-
-        # Check whether the object has had some chromatic transformation applied to it.  Since we
-        # are interpolating between stored images, this is not a situation that _interp_drawImage
-        # can handle.
-        if hasattr(self, '_A') and self._chromaticTransformation(bandpass):
-            raise RuntimeError("Error, cannot render image with chromatic transformation applied"
-                               " to it using interpolation between stored images.")
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength).
         # Note: we cannot just use self._imageAtWavelength, because that routine returns an image
