@@ -1071,6 +1071,10 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     arcsec.  This is unlike the rest of GalSim, in which Position units only need to be internally
     consistent.
 
+    Also, note that in order to render an image of a real physical object, the ChromaticAtmosphere
+    should be convolved with some object that has an SED.  Drawing without doing so corresponds to
+    using a flat SED.
+
     @param base_obj             Fiducial PSF, equal to the monochromatic PSF at `base_wavelength`
     @param base_wavelength      Wavelength represented by the fiducial PSF, in nanometers.
     @param alpha                Power law index for wavelength-dependent seeing.  [default: -0.2,
@@ -1759,11 +1763,9 @@ class ChromaticOpticalPSF(ChromaticObject):
     commonly satisfied by space telescopes); if they are larger than that, then more stringent
     settings are required.
 
-    Note that because of how the ChromaticOpticalPSF is defined, it is not possible to apply
-    transformations such as shears, shifts, or dilation to them.  The OpticalPSF model at each
-    wavelength is uniquely defined by the telescope model and aberrations.  However, for some use
-    case requiring these transformations, it is possible to override this behavior by applying the
-    transformations after using the ChromaticObject.setupInterpolation() method.
+    Also, note that in order to render an image of a real physical object, the ChromaticOpticalPSF
+    should be convolved with some object that has an SED.  Drawing without doing so corresponds to
+    using a flat SED.
 
     @param   diam          Telescope diameter in meters.
     @param   aberrations   An array of aberrations, in nanometers.  The size and format of this
