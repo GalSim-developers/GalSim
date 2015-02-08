@@ -283,6 +283,17 @@ class ChromaticObject(object):
             del self.maxK_vals
             del self.ims
 
+    def hasInterpolation(self):
+        """
+        A routine to check whether an object has interpolation set up or not.
+
+        @returns    True or False
+        """
+        if hasattr(self, 'waves'):
+            return True
+        else:
+            return False
+
     def _evaluateAtWavelength(self, wave):
         """
         Evaluate this ChromaticObject at a particular wavelength, either using interpolation or via
