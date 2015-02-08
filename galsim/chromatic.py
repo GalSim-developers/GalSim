@@ -269,19 +269,14 @@ class ChromaticObject(object):
         This can only be done if some transformation was not done when setting up the interpolation,
         since the information about that transformation was deleted at that time.
         """
-        # Check whether some chromatic transformation was done when setting up the interpolation.
-        # If so, information about it has been lost, so raise an exception.
-        if hasattr(self, '_reset') and self._reset:
-            raise RuntimeError(
-                "Error, cannot go back to exact calculation because a transformation was "
-                "applied (and then cleared) when storing images.")
+        if hasattr(self, 'waves'):
+            # Check whether some chromatic transformation was done when setting up the
+            # interpolation.  If so, information about it has been lost, so raise an exception.
+            if hasattr(self, '_reset') and self._reset:
+                raise RuntimeError(
+                    "Error, cannot go back to exact calculation because a transformation was "
+                    "applied (and then cleared) when storing images.")
 
-        # Check and emit a warning if interpolation was not set up.
-        if not hasattr(self, 'waves'):
-            import warnings
-            warnings.warn('noInterpolation was called on object for which it had not been set up!'
-                          ' No action taken.')
-        else:
             # Get rid of the stored attributes related to interpolation.
             del self.waves
             del self.stepK_vals
