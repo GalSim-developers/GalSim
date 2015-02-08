@@ -1375,8 +1375,6 @@ def test_interpolated_ChromaticObject():
     # applied to it.
     try:
         interp_psf = interp_psf.shear(shear=chrom_shear)
-        interp_obj = galsim.Convolve(interp_psf, star)
-        np.testing.assert_raises(RuntimeError, interp_obj.drawImage, bandpass, scale=atm_scale)
         np.testing.assert_raises(RuntimeError, interp_psf.noInterpolation)
     except ImportError:
         print 'The assert_raises tests require nose'
