@@ -216,12 +216,7 @@ class ChromaticObject(object):
         # transformations into the stored models between which we interpolation, so reset the
         # internal attributes that store information about transformations, if indeed there were any
         # transformations.
-        transform_done = False
-        for wave in waves:
-            if hasattr(self, '_A') and not self._nullTransformation(wave):
-                transform_done = True
-                break
-        if transform_done and hasattr(self, '_A'):
+        if hasattr(self, '_A') and not all ([self._nullTransformation(w) for w in waves]):
             self._A = lambda w: np.matrix(np.identity(3), dtype=float)
             self._fluxFactor = lambda w: 1.0
             self._reset = True
