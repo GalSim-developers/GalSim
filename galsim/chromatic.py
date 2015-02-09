@@ -284,10 +284,7 @@ class ChromaticObject(object):
 
         @returns    True or False
         """
-        if hasattr(self, 'waves'):
-            return True
-        else:
-            return False
+        return hasattr(self, 'waves')
 
     def _evaluateAtWavelength(self, wave):
         """
