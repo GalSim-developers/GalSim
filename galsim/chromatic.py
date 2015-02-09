@@ -216,12 +216,7 @@ class ChromaticObject(object):
         # transformations into the stored models between which we interpolation, so reset the
         # internal attributes that store information about transformations, if indeed there were any
         # transformations.
-        transform_done = False
-        for wave in waves:
-            if not self._nullTransformation(wave):
-                transform_done = True
-                break
-        if transform_done:
+        if hasattr(self, '_A') and not all ([self._nullTransformation(w) for w in waves]):
             self._A = lambda w: np.matrix(np.identity(3), dtype=float)
             self._fluxFactor = lambda w: 1.0
             self._reset = True
@@ -237,6 +232,8 @@ class ChromaticObject(object):
             for ind in range(len(self.waves)):
                 rescale_fac[ind] = fluxes[ind]
                 objs[ind].setFlux(1.0)
+            if not hasattr(self, 'SED'):
+                self.SED = lambda w : 1.0
             self.SED = galsim.LookupTable(x=self.waves, f=self.SED(self.waves)*rescale_fac,
                                           interpolant='linear')
 
@@ -267,24 +264,27 @@ class ChromaticObject(object):
         This can only be done if some transformation was not done when setting up the interpolation,
         since the information about that transformation was deleted at that time.
         """
-        # Check whether some chromatic transformation was done when setting up the interpolation.
-        # If so, information about it has been lost, so raise an exception.
-        if self._reset:
-            raise RuntimeError(
-                "Error, cannot go back to exact calculation because a transformation was "
-                "applied (and then cleared) when storing images.")
+        if hasattr(self, 'waves'):
+            # Check whether some chromatic transformation was done when setting up the
+            # interpolation.  If so, information about it has been lost, so raise an exception.
+            if hasattr(self, '_reset') and self._reset:
+                raise RuntimeError(
+                    "Error, cannot go back to exact calculation because a transformation was "
+                    "applied (and then cleared) when storing images.")
 
-        # Check and emit a warning if interpolation was not set up.
-        if not hasattr(self, 'waves'):
-            import warnings
-            warnings.warn('noInterpolation was called on object for which it had not been set up!'
-                          ' No action taken.')
-        else:
             # Get rid of the stored attributes related to interpolation.
             del self.waves
             del self.stepK_vals
             del self.maxK_vals
             del self.ims
+
+    def hasInterpolation(self):
+        """
+        A routine to check whether an object has interpolation set up or not.
+
+        @returns    True or False
+        """
+        return hasattr(self, 'waves')
 
     def _evaluateAtWavelength(self, wave):
         """
@@ -327,7 +327,10 @@ class ChromaticObject(object):
         im = _linearInterp(self.ims, frac, lower_idx)
         stepk = _linearInterp(self.stepK_vals, frac, lower_idx)
         maxk = _linearInterp(self.maxK_vals, frac, lower_idx)
-        return self.SED(wave)*im, stepk, maxk
+        if hasattr(self, 'SED'):
+            return self.SED(wave)*im, stepk, maxk
+        else:
+            return im, stepk, maxk
 
     def drawImage(self, bandpass, image=None, integrator=None, **kwargs):
         """Base implementation for drawing an image of a ChromaticObject.
@@ -446,18 +449,23 @@ class ChromaticObject(object):
         stored images is being used.  Users should not call this routine directly, and should
         instead interact with the `drawImage` method.
         """
+        # Check whether the object has had some chromatic transformation applied to it.  Since we
+        # are interpolating between stored images, this is not a situation that _interp_drawImage
+        # can handle.  We have to lose the interpolation.
+        if hasattr(self, '_A') and self._chromaticTransformation(bandpass):
+            import warnings
+            warnings.warn("Cannot render image with chromatic transformation applied to it"
+                          " using interpolation between stored images.  Reverting to "
+                          "non-interpolated version.")
+            self.noInterpolation()
+            return self._normal_drawImage(bandpass, image=image,
+                                          integrator=integrator, **kwargs)
+
         # Note that integrator is not actually selectable.
         if integrator is not None:
             import warnings
             warnings.warn("Cannot choose image integrator when using stored images! "
                           "Ignoring this keyword argument.")
-
-        # Check whether the object has had some chromatic transformation applied to it.  Since we
-        # are interpolating between stored images, this is not a situation that _interp_drawImage
-        # can handle.
-        if self._chromaticTransformation(bandpass):
-            raise RuntimeError("Error, cannot render image with chromatic transformation applied"
-                               " to it using interpolation between stored images.")
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength).
         # Note: we cannot just use self._imageAtWavelength, because that routine returns an image
@@ -494,7 +502,10 @@ class ChromaticObject(object):
             lower_idx, frac = _findWave(self.waves, w)
             # Store the weight factors for the two stored images that can contribute at this
             # wavelength.  Must include the dwave that is part of doing the integral.
-            b = self.SED(w)*bandpass(w)*dw[idx]
+            if hasattr(self, 'SED'):
+                b = self.SED(w)*bandpass(w)*dw[idx]
+            else:
+                b = bandpass(w)*dw[idx]
             weight_fac[lower_idx] += (1.0-frac)*b
             weight_fac[lower_idx+1] += frac*b
 
@@ -512,11 +523,12 @@ class ChromaticObject(object):
         int_im = galsim.InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
         # Get the transformations at bandpass.red_limit (they are achromatic so it doesn't matter
         # where you get them).
-        A0 = self._A(bandpass.red_limit)
-        f0 = self._fluxFactor(bandpass.red_limit)
-        int_im = int_im.transform(A0[0,0], A0[0,1], A0[1,0], A0[1,1])
-        int_im = int_im.shift(A0[0,2], A0[1,2])
-        int_im *= f0
+        if hasattr(self, '_A'):
+            A0 = self._A(bandpass.red_limit)
+            f0 = self._fluxFactor(bandpass.red_limit)
+            int_im = int_im.transform(A0[0,0], A0[0,1], A0[1,0], A0[1,1])
+            int_im = int_im.shift(A0[0,2], A0[1,2])
+            int_im *= f0
 
         # Apply integral to the initial image appropriately.  This will naturally work properly and
         # take into account the supplied value of `add_to_image`, which will be included in kwargs.
@@ -1050,6 +1062,10 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     function, you should specify properties like FWHM, half_light_radius, and pixel scales in
     arcsec.  This is unlike the rest of GalSim, in which Position units only need to be internally
     consistent.
+
+    Also, note that in order to render an image of a real physical object, the ChromaticAtmosphere
+    should be convolved with some object that has an SED.  Drawing without doing so corresponds to
+    using a flat SED.
 
     @param base_obj             Fiducial PSF, equal to the monochromatic PSF at `base_wavelength`
     @param base_wavelength      Wavelength represented by the fiducial PSF, in nanometers.
@@ -1729,7 +1745,9 @@ class ChromaticOpticalPSF(ChromaticObject):
     Chromaticity plays two roles in optical PSFs. First, it determines the diffraction limit, via
     the wavelength/diameter factor.  Second, aberrations such as defocus, coma, etc. are typically
     defined in physical distances, but their impact on the PSF depends on their size in units of
-    wavelength.  Other aspects of the optical PSF are achromatic, e.g., the obscuration and struts.
+    wavelength.  Other aspects of the optical PSF do not require explicit specification of their
+    chromaticity, e.g., once the obscuration and struts are specified in units of the aperture
+    diameter, their chromatic dependence gets taken care of automatically.
 
     When using interpolation to speed up image rendering (see ChromaticObject.setupInterpolation()
     method for details), including ~10-15 samples across any given bandpass should be sufficient.
@@ -1739,11 +1757,9 @@ class ChromaticOpticalPSF(ChromaticObject):
     commonly satisfied by space telescopes); if they are larger than that, then more stringent
     settings are required.
 
-    Note that because of how the ChromaticOpticalPSF is defined, it is not possible to apply
-    transformations such as shears, shifts, or dilation to them.  The OpticalPSF model at each
-    wavelength is uniquely defined by the telescope model and aberrations.  However, for some use
-    case requiring these transformations, it is possible to override this behavior by applying the
-    transformations after using the ChromaticObject.setupInterpolation() method.
+    Also, note that in order to render an image of a real physical object, the ChromaticOpticalPSF
+    should be convolved with some object that has an SED.  Drawing without doing so corresponds to
+    using a flat SED.
 
     @param   diam          Telescope diameter in meters.
     @param   aberrations   An array of aberrations, in nanometers.  The size and format of this
@@ -1757,10 +1773,10 @@ class ChromaticOpticalPSF(ChromaticObject):
         self.diam = diam
         self.aberrations = aberrations
         self.kwargs = kwargs
-        self.separable = False
 
-        # Take user-specified choice for number of wavelengths to use for initial calculation.
-        super(ChromaticOpticalPSF, self).__init__(self)
+        # Define the necessary attributes for this ChromaticObject.
+        self.separable = False
+        self.wave_list = np.array([], dtype=float)
 
     def evaluateAtWavelength(self, wave):
         """
@@ -1772,90 +1788,6 @@ class ChromaticOpticalPSF(ChromaticObject):
         aberrations = self.aberrations / wave
         ret = galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
         return ret
-
-    def expand(self, scale):
-        """Expand the linear size of the profile by the given (possibly wavelength-dependent)
-        scale factor `scale`, while preserving surface brightness.
-
-        See ChromaticObject.expand() for more details.
-       """
-        if hasattr(self, 'waves'):
-            return galsim.ChromaticObject.expand(self, scale)
-        else:
-            raise RuntimeError("Cannot transform ChromaticOpticalPSF in this way!")
-
-    def dilate(self, scale):
-        """Dilate the linear size of the profile by the given (possibly wavelength-dependent)
-        `scale`, while preserving flux.
-
-        See ChromaticObject.dilate() for more details.
-        """
-        if hasattr(self, 'waves'):
-            return galsim.ChromaticObject.dilate(self, scale)
-        else:
-            raise RuntimeError("Cannot transform ChromaticOpticalPSF in this way!")
-
-    def magnify(self, mu):
-        """Apply a lensing magnification, scaling the area and flux by `mu` at fixed surface
-        brightness.
-
-        See ChromaticObject.magnify() for more details.
-        """
-        if hasattr(self, 'waves'):
-            return galsim.ChromaticObject.magnify(self, mu)
-        else:
-            raise RuntimeError("Cannot transform ChromaticOpticalPSF in this way!")
-
-    def shear(self, *args, **kwargs):
-        """Apply an area-preserving shear to this object, where arguments are either a Shear,
-        or arguments that will be used to initialize one.
-
-        See ChromaticObject.shear() for more details.
-        """
-        if hasattr(self, 'waves'):
-            return galsim.ChromaticObject.shear(self, *args, **kwargs)
-        else:
-            raise RuntimeError("Cannot transform ChromaticOpticalPSF in this way!")
-
-    def lens(self, g1, g2, mu):
-        """Apply a lensing shear and magnification to this object.
-
-        See ChromaticObject.lens() for more details.
-        """
-        if hasattr(self, 'waves'):
-            return galsim.ChromaticObject.lens(self, *args, **kwargs)
-        else:
-            raise RuntimeError("Cannot transform ChromaticOpticalPSF in this way!")
-
-    def rotate(self, theta):
-        """Rotate this object by an Angle `theta`.
-
-        See ChromaticObject.rotate() for more details.
-        """
-        if hasattr(self, 'waves'):
-            return galsim.ChromaticObject.rotate(self, theta)
-        else:
-            raise RuntimeError("Cannot transform ChromaticOpticalPSF in this way!")
-
-    def transform(self, dudx, dudy, dvdx, dvdy):
-        """Apply a transformation to this object defined by an arbitrary Jacobian matrix.
-
-        See ChromaticObject.transform() for more details.
-        """
-        if hasattr(self, 'waves'):
-            return galsim.ChromaticObject.transform(self, dudx, dudy, dvdx, dvdy)
-        else:
-            raise RuntimeError("Cannot transform ChromaticOpticalPSF in this way!")
-
-    def shift(self, *args, **kwargs):
-        """Apply a (possibly wavelength-dependent) (dx, dy) shift to this chromatic object.
-
-        See ChromaticObject.shift() for more details.
-        """
-        if hasattr(self, 'waves'):
-            return galsim.ChromaticObject.shift(self, *args, **kwargs)
-        else:
-            raise RuntimeError("Cannot transform ChromaticOpticalPSF in this way!")
 
 def _findWave(wave_list, wave):
     """

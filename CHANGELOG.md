@@ -9,6 +9,8 @@ New Features
 - Enable constructing a FitsHeader object from a dict.  This had been a hidden
   feature that only half worked.  It should now work correctly.  Also, allow
   FitsHeader to be default constructed, which creates it with no keys. (#590)
+- Added information about PSF size and shape to the data structure that is
+  returned by EstimateShear(). (#612)
 - Added an option to the ChromaticObject class that allows for image rendering
   via interpolation between stored images.  This option can speed up the image
   rendering process compared to brute force evaluation for chromatic objects
