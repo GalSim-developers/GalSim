@@ -1745,7 +1745,9 @@ class ChromaticOpticalPSF(ChromaticObject):
     Chromaticity plays two roles in optical PSFs. First, it determines the diffraction limit, via
     the wavelength/diameter factor.  Second, aberrations such as defocus, coma, etc. are typically
     defined in physical distances, but their impact on the PSF depends on their size in units of
-    wavelength.  Other aspects of the optical PSF are achromatic, e.g., the obscuration and struts.
+    wavelength.  Other aspects of the optical PSF do not require explicit specification of their
+    chromaticity, e.g., once the obscuration and struts are specified in units of the aperture
+    diameter, their chromatic dependence gets taken care of automatically.
 
     When using interpolation to speed up image rendering (see ChromaticObject.setupInterpolation()
     method for details), including ~10-15 samples across any given bandpass should be sufficient.
