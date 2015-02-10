@@ -135,8 +135,6 @@ class ChromaticObject(object):
         # a wavelength-dependent dilate(f(w)) is implemented as a combination of a
         # wavelength-dependent expansion and wavelength-dependent flux rescaling.
         self._fluxFactor = lambda w: 1.0
-        # Attribute to track whether the affine transformation information has been reset.
-        self._reset = False
 
     def setupInterpolation(self, waves, oversample_fac=1.):
         """
@@ -217,9 +215,12 @@ class ChromaticObject(object):
         # internal attributes that store information about transformations, if indeed there were any
         # transformations.
         if hasattr(self, '_A') and not all ([self._nullTransformation(w) for w in waves]):
+            # Store the old transformations.
+            self._save_A = self._A
+            self._save_fluxFactor = self._fluxFactor
+            # Then reset the one that is stored as part of this profile.
             self._A = lambda w: np.matrix(np.identity(3), dtype=float)
             self._fluxFactor = lambda w: 1.0
-            self._reset = True
 
         # Check the fluxes for the objects.  If they are unity (within some tolerance) then that
         # makes things simple.  If they are not, however, then we have to reset them to unity, and
@@ -260,17 +261,21 @@ class ChromaticObject(object):
         """
         A routine to force an object for which interpolation was previously set up go back to the
         exact calculation.
-
-        This can only be done if some transformation was not done when setting up the interpolation,
-        since the information about that transformation was deleted at that time.
         """
         if hasattr(self, 'waves'):
             # Check whether some chromatic transformation was done when setting up the
-            # interpolation.  If so, information about it has been lost, so raise an exception.
-            if hasattr(self, '_reset') and self._reset:
-                raise RuntimeError(
-                    "Error, cannot go back to exact calculation because a transformation was "
-                    "applied (and then cleared) when storing images.")
+            # interpolation, and restore the associated _A and _fluxFactor in combination with any
+            # other transformations that have been done in the meantime.
+            if hasattr(self, '_save_A'):
+                self._applyMatrix(self._save_A)
+                if hasattr(self, '_fluxFactor') and \
+                        not all ([self._nullFluxTransformation(w) for w in self.waves]):
+                    self._fluxFactor = lambda w: self._fluxFactor(w) * self._save_fluxFactor(w)
+                else:
+                    self._fluxFactor = self._save_fluxFactor
+
+                # Then delete the old _save_A.
+                del self._save_A
 
             # Get rid of the stored attributes related to interpolation.
             del self.waves
@@ -555,11 +560,20 @@ class ChromaticObject(object):
         A0 = self._A(wave)
         f0 = self._fluxFactor(wave)
         # Check whether any transformation was done.
-        if np.any(abs(A0-null_A) > 1000.*np.finfo(A0.dtype.type).eps) or \
-                abs(f0-1.) > 1000.*np.finfo(A0.dtype.type).eps:
-            return False
-        else:
-            return True
+        return not (np.any(abs(A0-null_A) > 1000.*np.finfo(A0.dtype.type).eps) or \
+                        abs(f0-1.) > 1000.*np.finfo(A0.dtype.type).eps)
+
+    def _nullFluxTransformation(self, wave):
+        """
+        A utility to check whether the internally stored flux transformation is consistent with a
+        null transformation at a given wavelength.
+
+        @param wave     Wavelength in nanometers.
+        @returns True/False (True if the transformation corresponds to no flux rescaling)
+        """
+        f0 = self._fluxFactor(wave)
+        # Check whether any transformation was done.
+        return (abs(f0-1.) <= 1000.*np.finfo(np.array(f0).dtype.type).eps)
 
     def _chromaticTransformation(self, bandpass):
         """

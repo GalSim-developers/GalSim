@@ -1370,14 +1370,6 @@ def test_interpolated_ChromaticObject():
         im_interp.array, im_exact.array, decimal=3,
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated'+
         ' when including chromatic transformations')
-    # Make sure it behaves appropriately when asked to apply chromatic transformations after
-    # interpolating, or when trying to undo interpolation on something that had a transformation
-    # applied to it.
-    try:
-        interp_psf = interp_psf.shear(shear=chrom_shear)
-        np.testing.assert_raises(RuntimeError, interp_psf.noInterpolation)
-    except ImportError:
-        print 'The assert_raises tests require nose'
 
     # Check that we can render an image with achromatic transformations applied after
     # interpolation.
@@ -1403,11 +1395,45 @@ def test_interpolated_ChromaticObject():
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated'+
         ' when including achromatic transformations after precomputation')
 
-    # Finally, check that the routine does not interpolate outside of its original bounds.
+    # Check that the routine does not interpolate outside of its original bounds.
     try:
         np.testing.assert_raises(RuntimeError, obj_interp.drawImage, bandpass_z)
     except ImportError:
         print 'The assert_raises tests require nose'
+
+    # Make sure it behaves appropriately when asked to apply chromatic transformations after
+    # interpolating: it should do the job properly after un-setting the interpolation.
+    exact_psf = galsim.ChromaticAtmosphere(
+        galsim.Kolmogorov(atm_fwhm), 500., zenith_angle=0.*galsim.degrees,
+        parallactic_angle=0.*galsim.degrees)
+    interp_psf = exact_psf.copy()
+    interp_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
+    trans_exact_psf = \
+        exact_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y)#.dilate(chrom_dilate)
+    # The object is going to emit a warning that we don't want to worry about (it's good for code
+    # users, but a nuisance when testing), so let's deliberately ignore it by going into a
+    # `catch_warnings` context.
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        trans_interp_psf = \
+            interp_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y)#.dilate(chrom_dilate)
+        exact_obj = galsim.Convolve(star, trans_exact_psf)
+        interp_obj = galsim.Convolve(star, trans_interp_psf)
+        im_exact = exact_obj.drawImage(bandpass, scale=atm_scale)
+        im_interp = im_exact.copy()
+        im_interp = interp_obj.drawImage(bandpass, image=im_interp, scale=atm_scale)
+        # Note: since the image rendering should have been done in exactly the same way (it should
+        # have trashed the interpolation entirely), test to high precision.
+        np.testing.assert_array_almost_equal(
+            im_interp.array, im_exact.array, decimal=9,
+            err_msg='Did not do exact chromatic transformation by discarding interpolation')
+        # Also make sure that it ditched the interpolation.
+        assert not hasattr(interp_psf, 'waves')
+
+    # Make sure it behaves properly when undoing interpolation on something that had a previous
+    # transformation applied (chromatically) before setting up the interpolation.
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
