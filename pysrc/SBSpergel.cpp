@@ -70,6 +70,7 @@ namespace galsim {
                 .def("getScaleRadius", &SBSpergel::getScaleRadius)
                 .def("getHalfLightRadius", &SBSpergel::getHalfLightRadius)
                 .def("calculateIntegratedFlux", &SBSpergel::calculateIntegratedFlux, bp::arg("r"))
+                .def("calculateFluxRadius", &SBSpergel::calculateFluxRadius, bp::arg("f"))
                 ;
         }
     };

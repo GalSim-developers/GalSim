@@ -78,6 +78,7 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         double calculateIntegratedFlux(const double& r) const;
+        double calculateFluxRadius(const double& f) const;
 
     private:
 
@@ -106,7 +107,6 @@ namespace galsim {
 
         // Helper functions used internally:
         void calculateHLR() const;
-        double calculateFluxRadius(const double& flux_frac) const;
     };
 
     class SBSpergel::SBSpergelImpl : public SBProfileImpl
@@ -164,8 +164,10 @@ namespace galsim {
         double getHalfLightRadius() const { return _re; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
-        /// @brief Returns the integrated flux
+        /// @brief Returns enclosed flux
         double calculateIntegratedFlux(const double& r) const;
+        /// @brief Return flux-enclosing-radius
+        double calculateFluxRadius(const double &f) const;
 
         // Overrides for better efficiency
         void fillXValue(tmv::MatrixView<double> val,

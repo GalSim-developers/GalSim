@@ -97,6 +97,8 @@ namespace galsim {
         /// @brief Return integrated flux of circular profile.
         double calculateIntegratedFlux(const double& r) const;
 
+        /// @brief Return radius enclosing flux f
+        double calculateFluxRadius(const double& f) const;
 
     protected:
 

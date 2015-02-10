@@ -1696,7 +1696,12 @@ def test_spergel():
     import time
     t1 = time.time()
 
-    for nu in test_spergel_nu:
+    mathica_enclosed_fluxes = [3.06256e-2, 9.99995e-6, 6.06443e-10, 2.94117e-11, 6.25011e-12]
+    mathica_enclosing_radii = [2.3973e-17, 1.00001e-5, 1.69047e-3, 5.83138e-3, 1.26492e-2]
+    
+    for nu, enclosed_flux, enclosing_radius in zip(test_spergel_nu,
+                                                   mathica_enclosed_fluxes,
+                                                   mathica_enclosing_radii):
         filename = "spergel_nu{:.2f}.fits".format(nu)
         savedImg = galsim.fits.read(os.path.join(imgdir, filename))
         savedImg.setCenter(0,0)
@@ -1714,20 +1719,34 @@ def test_spergel():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Spergel disagrees with expected result")
 
-        # Only nu >= -0.3 give reasonably sized FFTs
-        if nu >= -0.3:
-            do_kvalue(spergel, "Spergel(nu={:1}) ".format(nu))
-
         np.testing.assert_almost_equal(
             myImg.array.sum()*dx**2, myImg.added_flux, 5,
             err_msg="Spergel profile GSObject::draw returned wrong added_flux")
 
-        # Test photon shooting.
-        # Convolve with a small gaussian to smooth out the central peak.
-        spergel2 = galsim.Convolve(spergel, galsim.Gaussian(sigma=0.3))
-        do_shoot(spergel2,myImg,"Spergel")
+        # Only nu >= -0.3 give reasonably sized FFTs,
+        # and small nu drawShoot is super slow.
+        if nu >= -0.3:
+            do_kvalue(spergel, "Spergel(nu={:1}) ".format(nu))
+
+            # Test photon shooting.
+            # Convolve with a small gaussian to smooth out the central peak.
+            spergel2 = galsim.Convolve(spergel, galsim.Gaussian(sigma=0.3))
+            do_shoot(spergel2,myImg,"Spergel")
+
+        # Test integrated flux routines against Mathematica
+        spergel = galsim.Spergel(nu=nu, scale_radius=1.0)
+        np.testing.assert_almost_equal(
+            spergel.SBProfile.calculateFluxRadius(1.e-5)/enclosing_radius, 1.0, 4,
+            err_msg="Calculated incorrect Spergel(nu={}) flux-enclosing-radius.".format(nu))
+        np.testing.assert_almost_equal(
+            spergel.SBProfile.calculateIntegratedFlux(1.e-5)/enclosed_flux, 1.0, 4,
+            err_msg="Calculated incorrect Spergel(nu={}) enclosed flux.".format(nu))
 
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+        
 def test_spergel_properties():
     """Test some basic properties of the SBSpergel profile.
     """
