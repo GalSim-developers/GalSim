@@ -267,7 +267,11 @@ class ChromaticObject(object):
             # interpolation, and restore the associated _A and _fluxFactor in combination with any
             # other transformations that have been done in the meantime.
             if hasattr(self, '_save_A'):
-                self._applyMatrix(self._save_A)
+                # Need to be careful about order.  What's in self._A came after what's in
+                # self._save_A.
+                tmp_A = self._A
+                self._A = self._save_A
+                self._applyMatrix(tmp_A)
                 if hasattr(self, '_fluxFactor') and \
                         not all ([self._nullFluxTransformation(w) for w in self.waves]):
                     self._fluxFactor = lambda w: self._fluxFactor(w) * self._save_fluxFactor(w)
