@@ -209,6 +209,9 @@ def radial_integrate(prof, minr, maxr):
        for an axially symmetric profile.
     """
     assert prof.isAxisymmetric()
+    # In this tight loop, it is worth optimizing away the parse_pos_args step.
+    # It makes a rather significant difference in the running time of this function.
+    # (I.e., use prof.SBProfile.xValue() instead of prof.xValue() )
     f = lambda r: 2 * np.pi * r * prof.SBProfile.xValue(galsim.PositionD(r,0))
     return galsim.integ.int1d(f, minr, maxr)
 
