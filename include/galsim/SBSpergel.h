@@ -94,6 +94,9 @@ namespace galsim {
         /// @brief Returns the half light radius of the Spergel profile.
         double getHalfLightRadius() const;
 
+        /// @brief Return integrated flux of circular profile.
+        double calculateIntegratedFlux(const double& r) const;
+
 
     protected:
 

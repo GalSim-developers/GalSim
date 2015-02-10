@@ -71,6 +71,12 @@ namespace galsim {
         return static_cast<const SBSpergelImpl&>(*_pimpl).getHalfLightRadius();
     }
 
+    double SBSpergel::calculateIntegratedFlux(const double& r) const
+    {
+        assert(dynamic_cast<const SBSpergelImpl*>(_pimpl.get()));
+        return static_cast<const SBSpergelImpl&>(*_pimpl).calculateIntegratedFlux(r);
+    }
+
     LRUCache<boost::tuple<double,GSParamsPtr>,SpergelInfo> SBSpergel::SBSpergelImpl::cache(
         sbp::max_spergel_cache);
 
@@ -111,6 +117,9 @@ namespace galsim {
 
     double SBSpergel::SBSpergelImpl::maxK() const { return _info->maxK() * _inv_r0; }
     double SBSpergel::SBSpergelImpl::stepK() const { return _info->stepK() * _inv_r0; }
+
+    double SBSpergel::SBSpergelImpl::calculateIntegratedFlux(const double& r) const
+    {return _info->calculateIntegratedFlux(r*_inv_r0);}
 
     // Equations (3, 4) of Spergel (2010)
     double SBSpergel::SBSpergelImpl::xValue(const Position<double>& p) const
@@ -260,6 +269,8 @@ namespace galsim {
         _nu(nu), _gsparams(gsparams),
         _gamma_nup1(boost::math::tgamma(_nu+1.0)),
         _gamma_nup2(_gamma_nup1 * (_nu+1)),
+        _gamma_nup3(_gamma_nup2 * (_nu+2)),
+        _gamma_mnum1(_nu < 0.0 ? boost::math::tgamma(-_nu-1.0) : 0.0), // only use this if nu<0
         _xnorm0((_nu > 0.) ? _gamma_nup1 / (2. * _nu) * std::pow(2., _nu) : INFINITY),
         _maxk(0.), _stepk(0.), _re(0.)
     {
@@ -309,6 +320,40 @@ namespace galsim {
         double _target;
     };
 
+    class SpergelTaylorIntegratedFlux
+    {
+    public:
+        SpergelTaylorIntegratedFlux(double nu, double gamma_nup2, double gamma_nup3,
+                                    double gamma_mnum1, double flux_frac=0.0)
+            : _nu(nu), _gamma_nup2(gamma_nup2), _gamma_nup3(gamma_nup3),
+              _gamma_mnum1(gamma_mnum1), _target(flux_frac) {}
+
+        double operator()(double u) const
+        {
+        // Use the small radius Taylor series approximation to the Spergel surface brightness
+        // profile to compute the flux enclosed within a small radius.
+        // Only use this for profiles with negative nu.
+        // Here's the approximation to second order in u:
+        // f_nu(u) = (u/2)^nu K_nu(u)/Gamma(nu+1)
+        //         ~  u^(2 nu) [2^(-1 - 2 nu) Gamma(-nu)/Gamma(nu+1)
+        //                      + 2^(-3-2*nu) Gamma(-nu) u^2 / Gamma(nu+2)]
+        //            + (1/(2 nu) + u^2 / (8 nu - 8 nu^2)
+        // Recall from above that F(u) = 1 - 2 (1 + nu) f_{nu+1}(u)
+            double nup1 = _nu + 1.0;
+            double term1 =
+                std::pow(u, 2*nup1)*(std::pow(2., -1.-2*nup1) * _gamma_mnum1 / _gamma_nup2
+                                     + std::pow(2., -3.-2*nup1) * _gamma_mnum1 *u*u / _gamma_nup3);
+            double term2 = 1./(2*nup1) + u*u / (8.*nup1*(1 -nup1));
+            return 1.0-2.0*(nup1)*(term1 + term2) - _target;
+        }
+    private:
+        double _nu;
+        double _gamma_nup2;
+        double _gamma_nup3;
+        double _gamma_mnum1;
+        double _target;
+    };
+
     double SpergelInfo::calculateFluxRadius(const double& flux_frac) const
     {
         // Calcute r such that L(r/r0) / L_tot == flux_frac
@@ -316,16 +361,43 @@ namespace galsim {
         // These seem to bracket pretty much every reasonable possibility
         // that I checked in Mathematica, though I'm not very happy about
         // the lower bound....
-        double z1=1.e-16;
-        double z2=20.0;
-        SpergelIntegratedFlux func(_nu, _gamma_nup2, flux_frac);
-        Solve<SpergelIntegratedFlux> solver(func, z1, z2);
-        solver.setMethod(Brent);
-        solver.bracketLowerWithLimit(0.0); // Just in case...
-        double R = solver.root();
+        double R = 0.0;
+        if (_nu < 0.0 && flux_frac < 1.e-4) {
+            double z1=1.e-25;
+            double z2=20.0;
+            SpergelTaylorIntegratedFlux func(_nu, _gamma_nup2, _gamma_nup3,
+                                             _gamma_mnum1, flux_frac);
+            Solve<SpergelTaylorIntegratedFlux> solver(func, z1, z2);
+            solver.setMethod(Brent);
+            solver.bracketLowerWithLimit(0.0); // Just in case...
+            R = solver.root();
+        } else {
+            double z1=1.e-14;
+            double z2=20.0;
+            SpergelIntegratedFlux func(_nu, _gamma_nup2, flux_frac);
+            Solve<SpergelIntegratedFlux> solver(func, z1, z2);
+            solver.setMethod(Brent);
+            if (flux_frac < 0.5)
+                solver.bracketLowerWithLimit(0.0); // Just in case...
+            else
+                solver.bracketUpper(); // Just in case...
+            R = solver.root();
+        }
         dbg<<"flux_frac = "<<flux_frac<<std::endl;
         dbg<<"r/r0 = "<<R<<std::endl;
         return R;
+    }
+
+    double SpergelInfo::calculateIntegratedFlux(const double& r) const
+    {
+        if (_nu < 0.0 && r < 1.e-4) {
+            SpergelTaylorIntegratedFlux func(_nu, _gamma_nup2, _gamma_nup3,
+                                             _gamma_mnum1);
+            return func(r);
+        } else {
+            SpergelIntegratedFlux func(_nu, _gamma_nup2);
+            return func(r);
+        }
     }
 
     double SpergelInfo::stepK() const
@@ -435,10 +507,14 @@ namespace galsim {
                 // (defined such that enclosed flux is shoot_acccuracy) with a linear function
                 // that contains the same flux and has the right value at r = rmin.
                 // So need to solve the following for a and b:
-                // int_0^rmin 2 pi r (a + b r) 0..rmin = shoot_accuracy
+                // int(2 pi r (a + b r) dr, 0..rmin) = shoot_accuracy
                 // a + b rmin = K_nu(rmin) * rmin^nu
                 double flux_target = _gsparams->shoot_accuracy;
+                std::cout<<std::endl;
+                std::cout<<"nu: "<<_nu<<std::endl;
+                std::cout<<"flux_target: "<<flux_target<<std::endl;
                 double shoot_rmin = calculateFluxRadius(flux_target);
+                std::cout<<"shoot_rmin: "<<shoot_rmin<<std::endl;
                 double knur = boost::math::cyl_bessel_k(_nu, shoot_rmin)*std::pow(shoot_rmin, _nu);
                 double b = 3./shoot_rmin*(knur - flux_target/(M_PI*shoot_rmin*shoot_rmin));
                 double a = knur - shoot_rmin*b;
