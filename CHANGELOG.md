@@ -19,4 +19,3 @@ Bug Fixes and Improvements
 
 Updates to config options
 -------------------------
-
