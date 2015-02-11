@@ -1429,7 +1429,7 @@ def test_interpolated_ChromaticObject():
             im_interp.array, im_exact.array, decimal=9,
             err_msg='Did not do exact chromatic transformation by discarding interpolation')
         # Also make sure that it ditched the interpolation.
-        assert not hasattr(interp_psf, 'waves')
+        assert not hasattr(trans_interp_psf, 'waves')
 
     # Make sure it behaves properly when undoing interpolation on something that had a previous
     # transformation applied (chromatically) before setting up the interpolation.

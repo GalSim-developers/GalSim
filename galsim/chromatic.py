@@ -269,17 +269,22 @@ class ChromaticObject(object):
             if hasattr(self, '_save_A'):
                 # Need to be careful about order.  What's in self._A came after what's in
                 # self._save_A.
-                tmp_A = self._A
-                self._A = self._save_A
-                self._applyMatrix(tmp_A)
-                if hasattr(self, '_fluxFactor') and \
-                        not all ([self._nullFluxTransformation(w) for w in self.waves]):
-                    self._fluxFactor = lambda w: self._fluxFactor(w) * self._save_fluxFactor(w)
+
+                if all([self._nullTransformation(w) for w in self.waves]):
+                    self._A = self._save_A
                 else:
+                    tmp_A = self._A
+                    self._A = lambda w: tmp_A(w) * self._save_A
+
+                if all([self._nullFluxTransformation(w) for w in self.waves]):
                     self._fluxFactor = self._save_fluxFactor
+                else:
+                    tmp_fluxFactor = self._fluxFactor
+                    self._fluxFactor = lambda w: tmp_fluxFactor(w) * self._save_fluxFactor(w)
 
                 # Then delete the old _save_A.
                 del self._save_A
+                del self._save_fluxFactor
 
             # Get rid of the stored attributes related to interpolation.
             del self.waves
@@ -594,11 +599,8 @@ class ChromaticObject(object):
         A1 = self._A(bandpass.red_limit)
         f0 = self._fluxFactor(bandpass.blue_limit)
         f1 = self._fluxFactor(bandpass.red_limit)
-        if np.any(abs(A1-A0) > 1000.*np.finfo(A0.dtype.type).eps) or \
-                abs(f1-f0) > 1000.*np.finfo(A0.dtype.type).eps:
-            return True
-        else:
-            return False
+        return (np.any(abs(A1-A0) > 1000.*np.finfo(A0.dtype.type).eps) or
+                abs(f1-f0) > 1000.*np.finfo(A0.dtype.type).eps)
 
     def draw(self, *args, **kwargs):
         """An obsolete synonym for obj.drawImage(method='no_pixel')
@@ -740,6 +742,8 @@ class ChromaticObject(object):
 
     # Helper function
     def _applyMatrix(self, J):
+        if hasattr(J, '__call__'):
+            self.noInterpolation()
         if isinstance(self, ChromaticSum):
             # Don't wrap ChromaticSum object, easier to just wrap its arguments.
             return ChromaticSum([ obj._applyMatrix(J) for obj in self.objlist ])
