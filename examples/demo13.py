@@ -23,31 +23,29 @@ The thirteenth script in our tutorial about using Galsim in python scripts: exam
 
 This script currently doesn't have an equivalent demo*.yaml or demo*.json file.
 
-This script introduces the non-idealities arising from the (NIR) detectors, in particular those
-that will be observed and accounted for in the WFIRST surveys. Four such non-ideal effects are
-demonstrated, in the order in which they are introduced in the detectors:
+This script introduces non-idealities arising from NIR detectors, in particular those that will be
+observed and accounted for in the WFIRST surveys. Three such non-ideal effects are demonstrated, in
+the order in which they are introduced in the detectors:
 
-1) Reciprocity Failure: Flux dependent sensitivity of the detector
-2) Dark current: Constant response to zero flux, due to thermal generation of electron-hole pairs.
-3) Non-linearity: Charge dependent gain in converting from units of electrons to ADU.
-4) Interpixel Capacitance: Influence of charge in a pixel on the voltage reading of neighboring
+1) Reciprocity failure: Flux-dependent sensitivity of the detector.
+2) Non-linearity: Charge-dependent gain in converting from units of electrons to ADU.  Non-linearity
+   in some form is also relevant for CCDs in addition to NIR detectors.
+3) Interpixel capacitance: Influence of charge in a pixel on the voltage reading of neighboring
    ones.
 
-The purpose of the demo is two-fold: to show the effects of detector non-idealities in the full
-context of the entire image generation process., including all sources of noise and skylevel added
-at appropriate stages. After each effect, suggested parameters for viewing the intermediate and
-difference images in ds9 are also included.
+The purpose of the demo is two-fold: (1) to show the effects of detector non-idealities on images
+from NIR detectors, and (2) to illustrate the full image generation process, including all sources
+of noise at appropriate stages.
 
-New feautres introduced in this demo:
-- Adding sky level and dark current
-- poisson_noise = galsim.PoissonNoise(rng)
+New features introduced in this demo:
+- Adding sky level and dark current.
 - image.addReciprocityFailure(exp_time, alpha, base_flux)
 - image.quantize()
-- image.applyNonlinearity(NLfunc,*args)
+- image.applyNonlinearity(NLfunc, *args)
 - image.applyIPC(IPC_kernel, edge_treatment, fill_value, kernel_nonnegativity,
                  kernel_normalization)
-- readnoise = galsim.CCDNoise(rng)
 - readnoise.setReadNoise(readnoise_level)
+- All functionality in the galsim.wfirst module.
 """
 
 import numpy
