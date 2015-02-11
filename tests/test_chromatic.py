@@ -1270,7 +1270,7 @@ def test_interpolated_ChromaticObject():
     interp_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
     exact_obj = galsim.Convolve(star, exact_psf)
     interp_obj = galsim.Convolve(star, interp_psf)
-    im_exact = exact_obj.drawImage(bandpass, scale=scale)
+    im_exact = exact_obj.drawImage(bandpass, scale=scale, nx=40, ny=40)
     im_interp = im_exact.copy()
     im_interp = interp_obj.drawImage(bandpass, image=im_interp, scale=scale)
     # Note: peak value of array is around 0.3, so going to 4 decimal places is a reasonably
@@ -1284,7 +1284,7 @@ def test_interpolated_ChromaticObject():
     other_psf.noInterpolation()
     other_obj = galsim.Convolve(star, other_psf)
     im_other = im_exact.copy()
-    im_other = other_obj.drawImage(bandpass, scale=scale)
+    im_other = other_obj.drawImage(bandpass, image=im_other, scale=scale)
     # Can test to very high accuracy.
     np.testing.assert_array_almost_equal(
         im_other.array, im_exact.array, decimal=8,
@@ -1557,3 +1557,4 @@ if __name__ == "__main__":
     test_centroid()
     test_interpolated_ChromaticObject()
     test_ChromaticOpticalPSF()
+    
