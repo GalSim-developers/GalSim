@@ -126,9 +126,9 @@ namespace galsim {
 
     double SBSpergel::SBSpergelImpl::calculateIntegratedFlux(const double& r) const
     { return _info->calculateIntegratedFlux(r*_inv_r0);}
-
     double SBSpergel::SBSpergelImpl::calculateFluxRadius(const double& f) const
     { return _info->calculateFluxRadius(f) * _r0; }
+
     // Equations (3, 4) of Spergel (2010)
     double SBSpergel::SBSpergelImpl::xValue(const Position<double>& p) const
     {
@@ -407,7 +407,7 @@ namespace galsim {
         if(_maxk == 0.) {
             // Solving (1+k^2)^(-1-nu) = maxk_threshold for k
             // exact:
-            //_maxk = std::sqrt(std::pow(gsparams->maxk_threshold, -1./(1+_nu))-1.0);
+            // _maxk = std::sqrt(std::pow(gsparams->maxk_threshold, -1./(1+_nu))-1.0);
             // approximate 1+k^2 ~ k^2 => good enough:
             _maxk = std::pow(_gsparams->maxk_threshold, -1./(2*(1+_nu)));
         }
@@ -419,19 +419,6 @@ namespace galsim {
         if (_re == 0.0) _re = calculateFluxRadius(0.5);
         return _re;
     }
-
-    // void SpergelInfo::calculateHLR() const
-    // {
-    //     dbg<<"Find HLR for nu = "<<_nu<<std::endl;
-    //     SpergelIntegratedFlux func(_nu, _gamma_nup2, 0.5);
-    //     double b1 = 0.1; // These are sufficient for -0.85 < nu < 100
-    //     double b2 = 17.0;
-    //     Solve<SpergelIntegratedFlux> solver(func, b1, b2);
-    //     xdbg<<"Initial range is "<<b1<<" .. "<<b2<<std::endl;
-    //     solver.setMethod(Brent);
-    //     _re = solver.root();
-    //     dbg<<"re is "<<_re<<std::endl;
-    // }
 
     double SpergelInfo::getXNorm() const
     { return std::pow(2., -_nu) / _gamma_nup1 / (2.0 * M_PI); }

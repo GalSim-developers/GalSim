@@ -104,9 +104,6 @@ namespace galsim {
         // Classes used for photon shooting
         mutable boost::shared_ptr<FluxDensity> _radial;
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
-
-        // Helper functions used internally:
-        void calculateHLR() const;
     };
 
     class SBSpergel::SBSpergelImpl : public SBProfileImpl
