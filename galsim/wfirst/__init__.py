@@ -94,6 +94,12 @@ Currently, the module includes the following numbers:
             attached internally to capacitors rather than to detector pixels, and used to monitor
             bias voltage drifts).  Thus, images seen by users will be n_pix x n_pix.
 
+    jitter_rms - The worst-case RMS jitter per axis for WFIRST in the current design (reality
+                 will likely be much better than this).  Units: arcsec.
+
+    charge_diffusion - The per-axis sigma to use for a Gaussian representing charge diffusion for
+                       WFIRST.  Units: pixels.
+
 For example, to get the gain value, use galsim.wfirst.gain.  Some of the numbers related to the
 nature of the detectors are subject to change as further lab tests are done.
 
@@ -172,6 +178,8 @@ ipc_kernel = galsim.Image(ipc_kernel)
 n_sca = 18
 n_pix_tot = 4096 
 n_pix = 4088
+jitter_rms = 0.014
+charge_diffusion = 0.1
 
 from wfirst_bandpass import getBandpasses
 from wfirst_backgrounds import getSkyLevel

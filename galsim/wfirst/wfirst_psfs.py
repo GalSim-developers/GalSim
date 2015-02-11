@@ -70,6 +70,10 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     (NOT defocus).  This information might serve as a guide for reasonable `extra_aberrations`
     inputs.
 
+    Likewise, jitter and charge diffusion are, by default, not included.  Users who wish to include
+    these can find some guidelines for typical length scales of the Gaussians that can represent
+    these effects, and convolve the ChromaticOpticalPSF with appropriate achromatic Gaussians.
+
     The default is to instantiate the ChromaticOpticalPSF objects with coverage of the full
     wavelength range of all WFIRST passbands.  Since this is typically done with a fixed wavelength
     sampling over a wide wavelength range, there is significant overhead in this process.  If the
