@@ -37,7 +37,7 @@ zemax_filesuff = '_F01_W04.txt'
 zemax_wavelength = 1293. #nm
 
 def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=None,
-           wavelength_limits=None, verbose=True):
+           wavelength_limits=None, verbose=True, achromatic=False):
     """
     Get the PSF for WFIRST observations.
 
@@ -109,6 +109,12 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                    loading the per-SCA PSFs?  This can be valuable in tracking
                                    progress, since the full calculations including the real WFIRST
                                    pupil plane can be quite expensive.  [default: True]
+    @param    achromatic           An option to get an achromatic PSF for a single wavelength, for
+                                   users who do not care about chromaticity of the PSF.  If False,
+                                   then the fully chromatic PSF is returned.  Otherwise the user
+                                   should supply a wavelength in nanometers, and they will get a
+                                   list of achromatic OpticalPSF objects for that wavelength.
+                                   [default: False]
     @returns  A list of ChromaticOpticalPSF objects, one for each SCA.  The SCAs in WFIRST are
               1-indexed, and the list is indexed according go the SCA, meaning that the 0th object
               in the list is always None, the 1st is the PSF for SCA 1, and so on.
@@ -130,21 +136,23 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
         else:
             SCAs = [SCAs]
 
-    if wavelength_limits is None:
-        # To decide the range of wavelengths to use (if none were passed in by the user), first
-        # check out all the bandpasses.
-        bandpass_dict = galsim.wfirst.getBandpasses()
-        # Then find the blue and red limit to be used for the imaging bandpasses overall.
-        blue_limit, red_limit = _find_limits(default_bandpass_list, bandpass_dict)
-    else:
-        if not isinstance(wavelength_limits, tuple):
-            raise ValueError("Wavelength limits must be entered as a tuple!")
-        blue_limit, red_limit = wavelength_limits
-        if red_limit <= blue_limit:
-            raise ValueError("Wavelength limits must have red_limit > blue_limit."
-                             "Input: blue limit=%f, red limit=%f nanometers"%(blue_limit, red_limit))
-    # Decide on the number of linearly spaced wavelengths to use for the ChromaticOpticalPSF:
-    if n_waves is None: n_waves = int((red_limit - blue_limit)/20)
+    if not achromatic:
+        if wavelength_limits is None:
+            # To decide the range of wavelengths to use (if none were passed in by the user), first
+            # check out all the bandpasses.
+            bandpass_dict = galsim.wfirst.getBandpasses()
+            # Then find the blue and red limit to be used for the imaging bandpasses overall.
+            blue_limit, red_limit = _find_limits(default_bandpass_list, bandpass_dict)
+        else:
+            if not isinstance(wavelength_limits, tuple):
+                raise ValueError("Wavelength limits must be entered as a tuple!")
+            blue_limit, red_limit = wavelength_limits
+            if red_limit <= blue_limit:
+                raise ValueError("Wavelength limits must have red_limit > blue_limit."
+                                 "Input: blue limit=%f, red limit=%f nanometers"%
+                                 (blue_limit, red_limit))
+        # Decide on the number of linearly spaced wavelengths to use for the ChromaticOpticalPSF:
+        if n_waves is None: n_waves = int((red_limit - blue_limit)/20)
 
     # Start reading in the aberrations for the relevant SCAs.  Take advantage of symmetries, so we
     # don't have to call the reading routine too many times.
@@ -183,16 +191,31 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
 
         # Now set up the PSF for this SCA, including the option to simplify the pupil plane.
         if verbose: print '   ... SCA',SCA
-        if approximate_struts:
-            PSF = galsim.ChromaticOpticalPSF(
-                diam=galsim.wfirst.diameter, aberrations=aberration_list[SCA],
-                obscuration=galsim.wfirst.obscuration, nstruts=6)
+        if not achromatic:
+            if approximate_struts:
+                PSF = galsim.ChromaticOpticalPSF(
+                    diam=galsim.wfirst.diameter, aberrations=aberration_list[SCA],
+                    obscuration=galsim.wfirst.obscuration, nstruts=6)
+            else:
+                PSF = galsim.ChromaticOpticalPSF(
+                    diam=galsim.wfirst.diameter, aberrations=aberration_list[SCA],
+                    obscuration=galsim.wfirst.obscuration,
+                    pupil_plane_im=galsim.wfirst.pupil_plane_file,
+                    oversampling=1.2, pad_factor=2.)
+            PSF.setupInterpolation(waves=np.linspace(blue_limit, red_limit, n_waves),
+                                   oversample_fac=1.5)
         else:
-            PSF = galsim.ChromaticOpticalPSF(
-                diam=galsim.wfirst.diameter, aberrations=aberration_list[SCA],
-                obscuration=galsim.wfirst.obscuration, pupil_plane_im=galsim.wfirst.pupil_plane_file,
-                oversampling=1.2, pad_factor=2.)
-        PSF.setupInterpolation(waves=np.linspace(blue_limit, red_limit, n_waves), oversample_fac=1.5)
+            lam_over_diam = 1.e-9*achromatic/galsim.wfirst.diameter*(galsim.radians / galsim.arcsec)
+            tmp_aberrations = aberration_list[SCA] / achromatic
+            if approximate_struts:
+                PSF = galsim.OpticalPSF(lam_over_diam, aberrations=tmp_aberrations,
+                                        obscuration=galsim.wfirst.obscuration, nstruts=6)
+            else:
+                PSF = galsim.OpticalPSF(lam_over_diam, aberrations=tmp_aberrations,
+                                        obscuration=galsim.wfirst.obscuration,
+                                        pupil_plane_im=galsim.wfirst.pupil_plane_file,
+                                        oversampling=1.2, pad_factor=2.)
+
         PSF_list.append(PSF)
 
     return PSF_list
