@@ -1403,9 +1403,14 @@ def test_interpolated_ChromaticObject():
 
     # Make sure it behaves appropriately when asked to apply chromatic transformations after
     # interpolating: it should do the job properly after un-setting the interpolation.
+    # As a really strict test, we will apply chromatic transformations twice (before and after
+    # setting up the interpolation).  This will make sure that it's really tracking and combining
+    # all transformations.
     exact_psf = galsim.ChromaticAtmosphere(
         galsim.Kolmogorov(atm_fwhm), 500., zenith_angle=0.*galsim.degrees,
         parallactic_angle=0.*galsim.degrees)
+    exact_psf = \
+        exact_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y).dilate(chrom_dilate)
     interp_psf = exact_psf.copy()
     interp_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
     trans_exact_psf = \
@@ -1430,10 +1435,6 @@ def test_interpolated_ChromaticObject():
             err_msg='Did not do exact chromatic transformation by discarding interpolation')
         # Also make sure that it ditched the interpolation.
         assert not hasattr(trans_interp_psf, 'waves')
-
-    # Make sure it behaves properly when undoing interpolation on something that had a previous
-    # transformation applied (chromatically) before setting up the interpolation.
-
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
