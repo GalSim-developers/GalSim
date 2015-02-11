@@ -1409,7 +1409,7 @@ def test_interpolated_ChromaticObject():
     interp_psf = exact_psf.copy()
     interp_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
     trans_exact_psf = \
-        exact_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y)#.dilate(chrom_dilate)
+        exact_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y).dilate(chrom_dilate)
     # The object is going to emit a warning that we don't want to worry about (it's good for code
     # users, but a nuisance when testing), so let's deliberately ignore it by going into a
     # `catch_warnings` context.
@@ -1417,7 +1417,7 @@ def test_interpolated_ChromaticObject():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         trans_interp_psf = \
-            interp_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y)#.dilate(chrom_dilate)
+            interp_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y).dilate(chrom_dilate)
         exact_obj = galsim.Convolve(star, trans_exact_psf)
         interp_obj = galsim.Convolve(star, trans_interp_psf)
         im_exact = exact_obj.drawImage(bandpass, scale=atm_scale)
