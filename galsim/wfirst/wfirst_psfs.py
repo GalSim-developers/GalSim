@@ -65,7 +65,10 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     provide an optional keyword `extra_aberrations` that will be included on top of those that
     are part of the design.  This should be in the same format as for the ChromaticOpticalPSF class,
     with units of nanometers. Currently, only aberrations up to order 11 (Noll convention) can be
-    simulated.
+    simulated.  For WFIRST, the current tolerance for additional aberrations is a total of 195
+    nanometers RMS, distributed largely among coma, astigmatism, trefoil, and spherical aberrations
+    (NOT defocus).  This information might serve as a guide for reasonable `extra_aberrations`
+    inputs.
 
     The default is to instantiate the ChromaticOpticalPSF objects with coverage of the full
     wavelength range of all WFIRST passbands.  Since this is typically done with a fixed wavelength
