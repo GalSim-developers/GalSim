@@ -34,7 +34,7 @@ namespace galsim {
     //! @cond
 
     /// @brief Exception class thrown by Solve
-    class SolveError : public std::runtime_error 
+    class SolveError : public std::runtime_error
     {
     public:
         SolveError(const std::string m) : std::runtime_error("Solve error: "+m) {}
@@ -50,7 +50,7 @@ namespace galsim {
     /**
      * @brief A class that solves a provided function for a zero.
      *
-     * The first template argument, F, is the type of the function.  
+     * The first template argument, F, is the type of the function.
      * Typically you would simple function object that defines the operator() method
      * and use that for F.
      *
@@ -59,7 +59,7 @@ namespace galsim {
      *
      * The solving process is in two parts:
      *
-     * 1. First the solution needs to be bracketed. 
+     * 1. First the solution needs to be bracketed.
      *
      *    This can be done in several ways:
      *
@@ -128,7 +128,7 @@ namespace galsim {
      * @endcode
      */
     template <class F, class T=double>
-    class Solve 
+    class Solve
     {
     private:
         const F&  func;
@@ -182,13 +182,13 @@ namespace galsim {
         /**
          * @brief Hunt for bracket, geometrically expanding range
          *
-         * This version assumes that the root is to the side of the  end point that is 
+         * This version assumes that the root is to the side of the  end point that is
          * closer to 0.  This will be true if the function is monotonic.
          */
-        void bracket() 
+        void bracket()
         {
             const T factor=2.0;
-            if (uBound == lBound) 
+            if (uBound == lBound)
                 throw SolveError("uBound=lBound in bracket()");
             evaluateBounds();
 
@@ -232,12 +232,12 @@ namespace galsim {
         /**
          * @brief Hunt for bracket, geometrically expanding range
          *
-         * This one only expands to the right for when you know that the lower bound is 
+         * This one only expands to the right for when you know that the lower bound is
          * definitely to the left of the root, but the upper bound might not bracket it.
          */
-        void bracketUpper() 
+        void bracketUpper()
         {
-            if (uBound == lBound) 
+            if (uBound == lBound)
                 throw SolveError("uBound=lBound in bracketUpper()");
             evaluateBounds();
             if (!bracket1(lBound,uBound,flower,fupper))
@@ -249,16 +249,16 @@ namespace galsim {
          *
          * The opposite of bracketUpper -- only expand to the left.
          */
-        void bracketLower() 
+        void bracketLower()
         {
-            if (uBound == lBound) 
+            if (uBound == lBound)
                 throw SolveError("uBound=lBound in bracketLower()");
             evaluateBounds();
             if (!bracket1(uBound,lBound,fupper,flower))
                 throw SolveError("Too many iterations in bracketLower()");
         }
 
-        // General purpose one-sided bracket with limit.  
+        // General purpose one-sided bracket with limit.
         // Used by bracketUpperWithLimit and bracketLowerWithLimit.
         // Expand in the direction of b.
         bool bracket1WithLimit(T& a, T& b, T& fa, T& fb, T& c)
@@ -300,8 +300,8 @@ namespace galsim {
             //    = c - d(c-a)/2(c-a)
             //    = c - d/2
             //
-            // So when far from the limit (1), the iteration is just like the version without 
-            // the limit.  But when the variable approaches the limit (2), it just goes half the 
+            // So when far from the limit (1), the iteration is just like the version without
+            // the limit.  But when the variable approaches the limit (2), it just goes half the
             // remaining distance each time.
 
             xdbg<<"Bracket with limits:\n";
@@ -326,11 +326,11 @@ namespace galsim {
         /**
          * @brief Hunt for upper bracket, with an upper limit to how far it can go.
          */
-        void bracketUpperWithLimit(T upper_limit) 
+        void bracketUpperWithLimit(T upper_limit)
         {
-            if (uBound == lBound) 
+            if (uBound == lBound)
                 throw SolveError("uBound=lBound in bracketUpperWithLimit()");
-            if (uBound == upper_limit) 
+            if (uBound == upper_limit)
                 throw SolveError("uBound=upper_limit in bracketUpperWithLimit()");
             if ((uBound-lBound) * (upper_limit-uBound) <= 0)
                 throw SolveError("uBound not between lBound and upper_limit");
@@ -342,11 +342,11 @@ namespace galsim {
         /**
          * @brief Hunt for lower bracket, with a lower limit to how far it can go.
          */
-        void bracketLowerWithLimit(T lower_limit) 
+        void bracketLowerWithLimit(T lower_limit)
         {
-            if (uBound == lBound) 
+            if (uBound == lBound)
                 throw SolveError("uBound=lBound in bracketLowerWithLimit()");
-            if (lBound == lower_limit) 
+            if (lBound == lower_limit)
                 throw SolveError("lBound=lower_limit in bracketLowerWithLimit()");
             if ((uBound-lBound) * (lBound-lower_limit) <= 0)
                 throw SolveError("lBound not between uBound and lower_limit");
@@ -381,8 +381,8 @@ namespace galsim {
             f=flower;
             fmid=fupper;
 
-            if (f*fmid >= 0.0) 
-                FormatAndThrow<SolveError> () << "Root is not bracketed: " << lBound 
+            if (f*fmid >= 0.0)
+                FormatAndThrow<SolveError> () << "Root is not bracketed: " << lBound
                     << " " << uBound;
             rtb = f < 0.0 ? (dx=uBound-lBound,lBound) : (dx=lBound-uBound,uBound);
             for (int j=1;j<=maxSteps;j++) {
@@ -395,7 +395,7 @@ namespace galsim {
         }
 
         /**
-         * @brief A more sophisticated root-finder using Brent's algorithm 
+         * @brief A more sophisticated root-finder using Brent's algorithm
          */
         T zbrent() const
         {
@@ -408,7 +408,7 @@ namespace galsim {
 
             T p,q,r,s,tol1,xm;
             if ((fa > 0.0 && fb > 0.0) || (fa < 0.0 && fb < 0.0)) {
-                FormatAndThrow<SolveError> () << "Root is not bracketed: " 
+                FormatAndThrow<SolveError> () << "Root is not bracketed: "
                     << lBound << " " << uBound;
             }
             T fc=fb;

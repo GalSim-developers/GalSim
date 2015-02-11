@@ -33,7 +33,7 @@ std::ostream* dbgout = new std::ofstream("debug.out");
 int verbose_level = 1;
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
-// It's Mike's way to have debug statements in the code that are really easy to turn 
+// It's Mike's way to have debug statements in the code that are really easy to turn
 // on and off.
 //
 // If DEBUGLOGGING is #defined, then these write out to *dbgout, according to the value
@@ -53,10 +53,10 @@ namespace galsim {
 
     SBProfile::SBProfile(const SBProfile& rhs) : _pimpl(rhs._pimpl) {}
 
-    SBProfile& SBProfile::operator=(const SBProfile& rhs) 
+    SBProfile& SBProfile::operator=(const SBProfile& rhs)
     { _pimpl = rhs._pimpl; return *this; }
 
-    SBProfile::~SBProfile() 
+    SBProfile::~SBProfile()
     {
         // Not strictly necessary, but it sets the ptr to 0, so if somehow someone
         // manages to use an SBProfile after it was deleted, the assert(_pimpl.get())
@@ -65,52 +65,52 @@ namespace galsim {
     }
 
     double SBProfile::xValue(const Position<double>& p) const
-    { 
+    {
         assert(_pimpl.get());
-        return _pimpl->xValue(p); 
+        return _pimpl->xValue(p);
     }
 
     std::complex<double> SBProfile::kValue(const Position<double>& k) const
-    { 
+    {
         assert(_pimpl.get());
-        return _pimpl->kValue(k); 
+        return _pimpl->kValue(k);
     }
 
-    void SBProfile::getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
-    { 
+    void SBProfile::getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
+    {
         assert(_pimpl.get());
-        _pimpl->getXRange(xmin,xmax,splits); 
+        _pimpl->getXRange(xmin,xmax,splits);
     }
 
-    void SBProfile::getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
-    { 
+    void SBProfile::getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
+    {
         assert(_pimpl.get());
-        _pimpl->getYRange(ymin,ymax,splits); 
+        _pimpl->getYRange(ymin,ymax,splits);
     }
 
     void SBProfile::getYRangeX(
-        double x, double& ymin, double& ymax, std::vector<double>& splits) const 
-    { 
+        double x, double& ymin, double& ymax, std::vector<double>& splits) const
+    {
         assert(_pimpl.get());
-        _pimpl->getYRangeX(x,ymin,ymax,splits); 
+        _pimpl->getYRangeX(x,ymin,ymax,splits);
     }
 
-    double SBProfile::maxK() const 
-    { 
+    double SBProfile::maxK() const
+    {
         assert(_pimpl.get());
-        return _pimpl->maxK(); 
+        return _pimpl->maxK();
     }
 
-    double SBProfile::stepK() const 
-    { 
+    double SBProfile::stepK() const
+    {
         assert(_pimpl.get());
-        return _pimpl->stepK(); 
+        return _pimpl->stepK();
     }
 
-    bool SBProfile::isAxisymmetric() const 
-    { 
+    bool SBProfile::isAxisymmetric() const
+    {
         assert(_pimpl.get());
-        return _pimpl->isAxisymmetric(); 
+        return _pimpl->isAxisymmetric();
     }
 
     bool SBProfile::hasHardEdges() const
@@ -119,46 +119,46 @@ namespace galsim {
         return _pimpl->hasHardEdges();
     }
 
-    bool SBProfile::isAnalyticX() const 
-    { 
+    bool SBProfile::isAnalyticX() const
+    {
         assert(_pimpl.get());
-        return _pimpl->isAnalyticX(); 
+        return _pimpl->isAnalyticX();
     }
 
-    bool SBProfile::isAnalyticK() const 
-    { 
+    bool SBProfile::isAnalyticK() const
+    {
         assert(_pimpl.get());
-        return _pimpl->isAnalyticK(); 
+        return _pimpl->isAnalyticK();
     }
 
-    Position<double> SBProfile::centroid() const 
-    { 
+    Position<double> SBProfile::centroid() const
+    {
         assert(_pimpl.get());
-        return _pimpl->centroid(); 
+        return _pimpl->centroid();
     }
 
-    double SBProfile::getFlux() const 
-    { 
+    double SBProfile::getFlux() const
+    {
         assert(_pimpl.get());
-        return _pimpl->getFlux(); 
+        return _pimpl->getFlux();
     }
 
-    boost::shared_ptr<PhotonArray> SBProfile::shoot(int N, UniformDeviate ud) const 
-    { 
+    boost::shared_ptr<PhotonArray> SBProfile::shoot(int N, UniformDeviate ud) const
+    {
         assert(_pimpl.get());
-        return _pimpl->shoot(N,ud); 
+        return _pimpl->shoot(N,ud);
     }
 
-    double SBProfile::getPositiveFlux() const 
-    { 
+    double SBProfile::getPositiveFlux() const
+    {
         assert(_pimpl.get());
-        return _pimpl->getPositiveFlux(); 
+        return _pimpl->getPositiveFlux();
     }
 
-    double SBProfile::getNegativeFlux() const 
-    { 
+    double SBProfile::getNegativeFlux() const
+    {
         assert(_pimpl.get());
-        return _pimpl->getNegativeFlux(); 
+        return _pimpl->getNegativeFlux();
     }
 
     SBProfile::SBProfile(SBProfileImpl* pimpl) : _pimpl(pimpl) {}
@@ -166,7 +166,7 @@ namespace galsim {
     SBProfile::SBProfileImpl::SBProfileImpl(const GSParamsPtr& gsparams) :
         gsparams(gsparams ? gsparams : GSParamsPtr::getDefault()) {}
 
-    SBProfile::SBProfileImpl* SBProfile::GetImpl(const SBProfile& rhs) 
+    SBProfile::SBProfileImpl* SBProfile::GetImpl(const SBProfile& rhs)
     { return rhs._pimpl.get(); }
 
     SBTransform SBProfile::scaleFlux(double fluxRatio) const
@@ -207,7 +207,7 @@ namespace galsim {
 
     // Basic draw command calls either plainDraw or fourierDraw
     template <typename T>
-    double SBProfile::draw(ImageView<T> img, double gain, double wmult) const 
+    double SBProfile::draw(ImageView<T> img, double gain, double wmult) const
     {
         dbg<<"Start draw ImageView"<<std::endl;
         if (isAnalyticX())
@@ -240,7 +240,7 @@ namespace galsim {
 
     // First is a simple case wherein we have a formula for x values:
     template <typename T>
-    double SBProfile::plainDraw(ImageView<T> I, double gain) const 
+    double SBProfile::plainDraw(ImageView<T> I, double gain) const
     {
         dbg<<"Start plainDraw"<<std::endl;
         assert(_pimpl.get());
@@ -276,7 +276,7 @@ namespace galsim {
     void SBProfile::SBProfileImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
                                               double x0, double dx, int ix_zero,
                                               double y0, double dy, int iy_zero) const
-    { 
+    {
         dbg<<"SBProfile fillKValue\n";
         dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
         dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
@@ -300,7 +300,7 @@ namespace galsim {
     void SBProfile::SBProfileImpl::fillXValue(tmv::MatrixView<double> val,
                                               double x0, double dx, double dxy,
                                               double y0, double dy, double dyx) const
-    { 
+    {
         dbg<<"SBProfile fillXValue\n";
         dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
         dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
@@ -321,7 +321,7 @@ namespace galsim {
     void SBProfile::SBProfileImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
                                               double x0, double dx, double dxy,
                                               double y0, double dy, double dyx) const
-    { 
+    {
         dbg<<"SBProfile fillKValue\n";
         dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
         dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
@@ -352,7 +352,7 @@ namespace galsim {
     { m1 += m2; }
 
     template <typename T>
-    double SBProfile::SBProfileImpl::fillXImage(ImageView<T>& I, double gain) const 
+    double SBProfile::SBProfileImpl::fillXImage(ImageView<T>& I, double gain) const
     {
         xdbg<<"Start fillXImage"<<std::endl;
         xdbg<<"gain = "<<gain<<std::endl;
@@ -395,7 +395,7 @@ namespace galsim {
     // Aliasing will be handled by folding the k values before transforming
     // And enforce no image folding
     template <typename T>
-    double SBProfile::fourierDraw(ImageView<T> I, double gain, double wmult) const 
+    double SBProfile::fourierDraw(ImageView<T> I, double gain, double wmult) const
     {
         dbg<<"Start fourierDraw"<<std::endl;
         Bounds<int> imgBounds; // Bounds for output image
@@ -421,8 +421,8 @@ namespace galsim {
         dbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
 
         double dk = 2.*M_PI/NFT;
-        dbg << 
-            " After adjustments: dk " << dk << 
+        dbg <<
+            " After adjustments: dk " << dk <<
             " maxK " << dk*NFT/2 << std::endl;
         xdbg<<"dk - stepK() = "<<dk-(stepK()*(1.+1.e-8))<<std::endl;
         xassert(dk <= stepK()*(1. + 1.e-8)); // Add a little slop in case of rounding errors.
@@ -431,13 +431,13 @@ namespace galsim {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;
             dbg<<"Use NFT = "<<NFT<<std::endl;
             if (NFT > _pimpl->gsparams->maximum_fft_size)
-                FormatAndThrow<SBError>() << 
+                FormatAndThrow<SBError>() <<
                     "fourierDraw() requires an FFT that is too large, " << NFT <<
                     "\nIf you can handle the large FFT, you may update gsparams.maximum_fft_size.";
             // No aliasing: build KTable and transform
             KTable kt(NFT,dk);
             assert(_pimpl.get());
-            _pimpl->fillKGrid(kt); 
+            _pimpl->fillKGrid(kt);
             xt = kt.transform();
         } else {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" <= maxK() = "<<maxK()<<std::endl;
@@ -446,7 +446,7 @@ namespace galsim {
             int Nk = int(std::ceil(maxK()/dk)) * 2;
             dbg<<"Use Nk = "<<Nk<<std::endl;
             if (Nk > _pimpl->gsparams->maximum_fft_size)
-                FormatAndThrow<SBError>() << 
+                FormatAndThrow<SBError>() <<
                     "fourierDraw() requires an FFT that is too large, " << Nk <<
                     "\nIf you can handle the large FFT, you may update gsparams.maximum_fft_size.";
             KTable kt(Nk, dk);
@@ -486,16 +486,16 @@ namespace galsim {
     }
 
     template <typename T>
-    void SBProfile::drawK(ImageView<T> Re, ImageView<T> Im, double gain, double wmult) const 
+    void SBProfile::drawK(ImageView<T> Re, ImageView<T> Im, double gain, double wmult) const
     {
-        if (isAnalyticK()) 
+        if (isAnalyticK())
             plainDrawK(Re, Im, gain);   // calculate in k space
-        else               
+        else
             fourierDrawK(Re, Im, gain, wmult); // calculate via FT from real space
     }
 
     template <typename T>
-    void SBProfile::plainDrawK(ImageView<T> Re, ImageView<T> Im, double gain) const 
+    void SBProfile::plainDrawK(ImageView<T> Re, ImageView<T> Im, double gain) const
     {
         dbg<<"Start plainDrawK: \n";
         // Make sure input images match or are both null
@@ -533,7 +533,7 @@ namespace galsim {
     // Note: There are no unit tests of this, since all profiles have isAnalyticK() == true.
     //       So drawK never sends anything this way.
     template <typename T>
-    void SBProfile::fourierDrawK(ImageView<T> Re, ImageView<T> Im, double gain, double wmult) const 
+    void SBProfile::fourierDrawK(ImageView<T> Re, ImageView<T> Im, double gain, double wmult) const
     {
         dbg<<"Start fourierDrawK: \n";
         // Make sure input images match or are both null
@@ -564,7 +564,7 @@ namespace galsim {
         NFT = std::max(NFT,_pimpl->gsparams->minimum_fft_size);
         dbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
         if (NFT > _pimpl->gsparams->maximum_fft_size)
-            FormatAndThrow<SBError>() << 
+            FormatAndThrow<SBError>() <<
                 "fourierDrawK() requires an FFT that is too large, " << NFT;
 
         double dx = 2.*M_PI*oversamp/NFT;
@@ -594,7 +594,7 @@ namespace galsim {
         }
     }
 
-    void SBProfile::SBProfileImpl::fillXGrid(XTable& xt) const 
+    void SBProfile::SBProfileImpl::fillXGrid(XTable& xt) const
     {
         xdbg<<"Start fillXGrid"<<std::endl;
 
@@ -612,7 +612,7 @@ namespace galsim {
         mxt = val;
     }
 
-    void SBProfile::SBProfileImpl::fillKGrid(KTable& kt) const 
+    void SBProfile::SBProfileImpl::fillKGrid(KTable& kt) const
     {
         int N = kt.getN();
         double dk = kt.getDk();
@@ -659,7 +659,7 @@ namespace galsim {
 #endif
     }
 
-    // The type of T (real or complex) determines whether the call-back is to 
+    // The type of T (real or complex) determines whether the call-back is to
     // fillXValue or fillKValue.
     template <typename T>
     struct QuadrantHelper
@@ -738,13 +738,13 @@ namespace galsim {
                 val.col(ny1,nx1+1,nx) = q->col(0,1,nx2+1);
             }
         }
-        if (!ur_done && nx2 > 0 && ny2 > 0) 
+        if (!ur_done && nx2 > 0 && ny2 > 0)
             val.subMatrix(nx1+1,nx,ny1+1,ny) = q->subMatrix(1,nx2+1,1,ny2+1);
-        if (!lr_done && nx2 > 0 && ny1 > 0) 
+        if (!lr_done && nx2 > 0 && ny1 > 0)
             val.subMatrix(nx1+1,nx,ny1-1,-1,1,-1) = q->subMatrix(1,nx2+1,1,ny1+1);
-        if (!ul_done && nx1 > 0 && ny2 > 0) 
+        if (!ul_done && nx1 > 0 && ny2 > 0)
             val.subMatrix(nx1-1,-1,ny1+1,ny,-1,1) = q->subMatrix(1,nx1+1,1,ny2+1);
-        if (!ll_done && nx1 > 0 && ny1 > 0) 
+        if (!ll_done && nx1 > 0 && ny1 > 0)
             val.subMatrix(nx1-1,-1,ny1-1,-1,-1,-1) = q->subMatrix(1,nx1+1,1,ny1+1);
         xdbg<<"Done copying quadrants"<<std::endl;
     }
@@ -768,14 +768,14 @@ namespace galsim {
     template <class T>
     double SBProfile::drawShoot(
         ImageView<T> img, double N, UniformDeviate u, double gain, double max_extra_noise,
-        bool poisson_flux, bool add_to_image) const 
+        bool poisson_flux, bool add_to_image) const
     {
-        // If N = 0, this routine will try to end up with an image with the number of real 
-        // photons = flux that has the corresponding Poisson noise. For profiles that are 
+        // If N = 0, this routine will try to end up with an image with the number of real
+        // photons = flux that has the corresponding Poisson noise. For profiles that are
         // positive definite, then N = flux. Easy.
         //
-        // However, some profiles shoot some of their photons with negative flux. This means that 
-        // we need a few more photons to get the right S/N = sqrt(flux). Take eta to be the 
+        // However, some profiles shoot some of their photons with negative flux. This means that
+        // we need a few more photons to get the right S/N = sqrt(flux). Take eta to be the
         // fraction of shot photons that have negative flux.
         //
         // S^2 = (N+ - N-)^2 = (N+ + N- - 2N-)^2 = (Ntot - 2N-)^2 = Ntot^2(1 - 2 eta)^2
@@ -785,21 +785,21 @@ namespace galsim {
         // Ntot = flux / (1-2eta)^2
         //
         // However, if each photon has a flux of 1, then S = (1-2eta) Ntot = flux / (1-2eta).
-        // So in fact, each photon needs to carry a flux of g = 1-2eta to get the right 
+        // So in fact, each photon needs to carry a flux of g = 1-2eta to get the right
         // total flux.
         //
         // That's all the easy case. The trickier case is when we are sky-background dominated.
         // Then we can usually get away with fewer shot photons than the above.  In particular,
-        // if the noise from the photon shooting is much less than the sky noise, then we can 
-        // use fewer shot photons and essentially have each photon have a flux > 1. This is ok 
-        // as long as the additional noise due to this approximation is "much less than" the 
+        // if the noise from the photon shooting is much less than the sky noise, then we can
+        // use fewer shot photons and essentially have each photon have a flux > 1. This is ok
+        // as long as the additional noise due to this approximation is "much less than" the
         // noise we'll be adding to the image for the sky noise.
         //
-        // Let's still have Ntot photons, but now each with a flux of g. And let's look at the 
+        // Let's still have Ntot photons, but now each with a flux of g. And let's look at the
         // noise we get in the brightest pixel that has a nominal total flux of Imax.
         //
         // The number of photons hitting this pixel will be Imax/flux * Ntot.
-        // The variance of this number is the same thing (Poisson counting). 
+        // The variance of this number is the same thing (Poisson counting).
         // So the noise in that pixel is:
         //
         // N^2 = Imax/flux * Ntot * g^2
@@ -810,9 +810,9 @@ namespace galsim {
         // g = flux / Ntot(1-2eta)
         // N^2 = Imax/Ntot * flux / (1-2eta)^2
         //
-        // As expected, we see that lowering Ntot will increase the noise in that (and every 
+        // As expected, we see that lowering Ntot will increase the noise in that (and every
         // other) pixel.
-        // The input max_extra_noise parameter is the maximum value of spurious noise we want 
+        // The input max_extra_noise parameter is the maximum value of spurious noise we want
         // to allow.
         //
         // So setting N^2 = Imax + nu, we get
@@ -820,14 +820,14 @@ namespace galsim {
         // Ntot = flux / (1-2eta)^2 / (1 + nu/Imax)
         //
         // One wrinkle about this calculation is that we don't know Imax a priori.
-        // So we start with a plausible number of photons to get going.  Then we keep adding 
+        // So we start with a plausible number of photons to get going.  Then we keep adding
         // more photons until we either hit N = flux / (1-2eta)^2 or the extra noise in the
         // brightest pixel is < nu
         //
         // We also make the assumption that the pixel to look at for Imax is at the centroid.
         //
         // Returns the total flux placed inside the image bounds by photon shooting.
-        // 
+        //
 
         dbg<<"Start drawShoot.\n";
         dbg<<"N = "<<N<<std::endl;
@@ -836,7 +836,7 @@ namespace galsim {
         dbg<<"poisson = "<<poisson_flux<<std::endl;
 
         // Don't do more than this at a time to keep the  memory usage reasonable.
-        const int maxN = 100000; 
+        const int maxN = 100000;
 
         double flux = getFlux();
         dbg<<"flux = "<<flux<<std::endl;
@@ -862,9 +862,9 @@ namespace galsim {
             // <F+> = (1-eta) * N * flux_scaling
             // <F+ - F-> = (1-2eta) * N * flux_scaling = flux
             // Var(F-) = eta * (1-eta) * N * flux_scaling^2
-            // F+ = N * flux_scaling - F- is not an independent variable, so 
+            // F+ = N * flux_scaling - F- is not an independent variable, so
             // Var(F+ - F-) = Var(N*flux_scaling - 2*F-)
-            //              = 4 * Var(F-) 
+            //              = 4 * Var(F-)
             //              = 4 * eta * (1-eta) * N * flux_scaling^2
             //              = 4 * eta * (1-eta) * flux
             // We want the variance to be equal to flux, so we need an extra:
@@ -896,7 +896,7 @@ namespace galsim {
         std::vector<boost::shared_ptr<PhotonArray> > arrays;
 
         // total flux falling inside image bounds, this will be returned on exit.
-        double added_flux = 0.; 
+        double added_flux = 0.;
 #ifdef DEBUGLOGGING
         double realized_flux = 0.;
         double positive_flux = 0.;
@@ -913,7 +913,7 @@ namespace galsim {
         T raw_Imax = 0.;
         int Imax_count = 0;
         while (true) {
-            // We break out of the loop when either N drops to 0 (if max_extra_noise = 0) or 
+            // We break out of the loop when either N drops to 0 (if max_extra_noise = 0) or
             // we find that the max pixel has an excess noise level < max_extra_noise
 
             if (thisN > maxN) thisN = maxN;
@@ -943,7 +943,7 @@ namespace galsim {
                 }
 #endif
             }
-         
+
             N -= thisN;
             xdbg<<"N -> "<<N<<std::endl;
 
@@ -1039,7 +1039,7 @@ namespace galsim {
 #endif
         dbg<<"Added flux (falling within image bounds) = "<<added_flux*gain<<std::endl;
 
-        // The "added_flux" above really counts ADU's.  So multiply by gain to get the 
+        // The "added_flux" above really counts ADU's.  So multiply by gain to get the
         // actual flux in photons that was added.
         return added_flux * gain;
     }

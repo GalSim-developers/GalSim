@@ -62,7 +62,7 @@ def printval(image1, image2):
 def getmoments(image1):
     #print 'shape = ',image1.array.shape
     #print 'bounds = ',image1.bounds
-    xgrid, ygrid = np.meshgrid(np.arange(image1.array.shape[1]) + image1.getXMin(), 
+    xgrid, ygrid = np.meshgrid(np.arange(image1.array.shape[1]) + image1.getXMin(),
                                np.arange(image1.array.shape[0]) + image1.getYMin())
     mx = np.sum(xgrid * image1.array) / np.sum(image1.array)
     my = np.sum(ygrid * image1.array) / np.sum(image1.array)
@@ -216,7 +216,7 @@ def radial_integrate(prof, minr, maxr, dr):
     while r < maxr:
         # In this tight loop, it is worth optimizing away the parse_pos_args step.
         # It makes a rather significant difference in the running time of this function.
-        sum += r * prof.SBProfile.xValue(galsim.PositionD(r,0)) 
+        sum += r * prof.SBProfile.xValue(galsim.PositionD(r,0))
         r += dr
     sum *= 2. * math.pi * dr
     return sum
