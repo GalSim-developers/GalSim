@@ -385,14 +385,6 @@ namespace galsim {
 
     double SpergelInfo::calculateIntegratedFlux(const double& r) const
     {
-        // if (_nu < 0.0 && r < 1.e-4) {
-        //     SpergelTaylorIntegratedFlux func(_nu, _gamma_nup2, _gamma_nup3,
-        //                                      _gamma_mnum1);
-        //     return func(r);
-        // } else {
-        //     SpergelIntegratedFlux func(_nu, _gamma_nup2);
-        //     return func(r);
-        // }
         SpergelIntegratedFlux func(_nu, _gamma_nup2);
         return func(r);
     }
@@ -424,22 +416,22 @@ namespace galsim {
 
     double SpergelInfo::getHLR() const
     {
-        if (_re == 0.0) calculateHLR();
+        if (_re == 0.0) _re = calculateFluxRadius(0.5);
         return _re;
     }
 
-    void SpergelInfo::calculateHLR() const
-    {
-        dbg<<"Find HLR for nu = "<<_nu<<std::endl;
-        SpergelIntegratedFlux func(_nu, _gamma_nup2, 0.5);
-        double b1 = 0.1; // These are sufficient for -0.85 < nu < 100
-        double b2 = 17.0;
-        Solve<SpergelIntegratedFlux> solver(func, b1, b2);
-        xdbg<<"Initial range is "<<b1<<" .. "<<b2<<std::endl;
-        solver.setMethod(Brent);
-        _re = solver.root();
-        dbg<<"re is "<<_re<<std::endl;
-    }
+    // void SpergelInfo::calculateHLR() const
+    // {
+    //     dbg<<"Find HLR for nu = "<<_nu<<std::endl;
+    //     SpergelIntegratedFlux func(_nu, _gamma_nup2, 0.5);
+    //     double b1 = 0.1; // These are sufficient for -0.85 < nu < 100
+    //     double b2 = 17.0;
+    //     Solve<SpergelIntegratedFlux> solver(func, b1, b2);
+    //     xdbg<<"Initial range is "<<b1<<" .. "<<b2<<std::endl;
+    //     solver.setMethod(Brent);
+    //     _re = solver.root();
+    //     dbg<<"re is "<<_re<<std::endl;
+    // }
 
     double SpergelInfo::getXNorm() const
     { return std::pow(2., -_nu) / _gamma_nup1 / (2.0 * M_PI); }
