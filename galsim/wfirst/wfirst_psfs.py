@@ -179,33 +179,40 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                 PSF_list.append(None)
                 continue
 
-        # Check if it's above 10.  If it is, the aberrations are the same as for the SCA with
-        # index that is 9 lower.  So if that one is in the list, then just use its results.
+        # Check if it's above 10.  If it is, the design aberrations are the same as for the SCA with
+        # index that is 9 lower, except for certain sign flips (astig1, coma2, trefoil2) that result
+        # in symmetry about the FPA y axis (except for the struts).
         read_SCA = SCA
         if SCA >= 10:
             if aberration_list[SCA-9] is not None:
-                if verbose: print '... SCA',SCA
-                aberration_list.append(aberration_list[SCA-9])
-                PSF_list.append(PSF_list[SCA-9])
-                continue
+                read_SCA = -1
+                tmp_aberrations = aberration_list[SCA-9]
+                tmp_aberrations *= np.array([1.,1.,1.,1.,1.,-1.,1.,1.,-1.,1.,-1.,1.])
+                aberration_list.append(tmp_aberrations)
             else:
                 read_SCA -= 9
 
         # If we got here, then it means we have to read in the aberrations.
-        aberrations = _read_aberrations(read_SCA)
-        if extra_aberrations: aberrations += extra_aberrations
-        aberration_list.append(aberrations)
+        if read_SCA > 0:
+            aberrations = _read_aberrations(read_SCA)
+            if read_SCA != SCA:
+                aberrations *= np.array([1.,1.,1.,1.,1.,-1.,1.,1.,-1.,1.,-1.,1.])
+            aberration_list.append(aberrations)
+
+        use_aberrations = aberration_list[SCA]
+        if extra_aberrations:
+            use_aberrations += extra_aberrations
 
         # Now set up the PSF for this SCA, including the option to simplify the pupil plane.
         if verbose: print '   ... SCA',SCA
         if not achromatic:
             if approximate_struts:
                 PSF = galsim.ChromaticOpticalPSF(
-                    diam=galsim.wfirst.diameter, aberrations=aberration_list[SCA],
+                    diam=galsim.wfirst.diameter, aberrations=use_aberrations,
                     obscuration=galsim.wfirst.obscuration, nstruts=6)
             else:
                 PSF = galsim.ChromaticOpticalPSF(
-                    diam=galsim.wfirst.diameter, aberrations=aberration_list[SCA],
+                    diam=galsim.wfirst.diameter, aberrations=use_aberrations,
                     obscuration=galsim.wfirst.obscuration,
                     pupil_plane_im=galsim.wfirst.pupil_plane_file,
                     oversampling=1.2, pad_factor=2.)
@@ -213,7 +220,7 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                    oversample_fac=1.5)
         else:
             lam_over_diam = 1.e-9*achromatic/galsim.wfirst.diameter*(galsim.radians / galsim.arcsec)
-            tmp_aberrations = aberration_list[SCA] / achromatic
+            tmp_aberrations = use_aberrations / achromatic
             if approximate_struts:
                 PSF = galsim.OpticalPSF(lam_over_diam, aberrations=tmp_aberrations,
                                         obscuration=galsim.wfirst.obscuration, nstruts=6)
