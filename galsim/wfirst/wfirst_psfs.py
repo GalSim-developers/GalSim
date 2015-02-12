@@ -200,7 +200,7 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
             aberration_list.append(aberrations)
 
         use_aberrations = aberration_list[SCA]
-        if extra_aberrations:
+        if extra_aberrations is not None:
             use_aberrations += extra_aberrations
 
         # Now set up the PSF for this SCA, including the option to simplify the pupil plane.
