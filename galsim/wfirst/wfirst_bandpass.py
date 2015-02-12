@@ -25,7 +25,7 @@ import galsim
 import numpy as np
 import os
 
-def getBandpasses(AB_zeropoint=True, exptime=None):
+def getBandpasses(AB_zeropoint=True, exptime=None, thin_err=1.e-4):
     """Utility to get a dictionary containing the WFIRST bandpasses.
 
     This routine reads in a file containing a list of wavelengths and throughput for all WFIRST
@@ -37,8 +37,9 @@ def getBandpasses(AB_zeropoint=True, exptime=None):
     - There is a column called 'Wave', containing the wavelengths in microns.
     - The other columns are labeled by the name of the bandpass.
 
-    Currently the bandpasses are not truncated and are only mildly thinned.  We leave it to the user to
-    decide whether they wish to do either of those operations more aggressively.
+    Currently the bandpasses are not truncated.  We leave it to the user to decide whether they wish
+    to truncate after getting the bandpasses, and the `thin_err` keyword allows the user to choose
+    the relative errors allowed when thinning.
 
     By default, the routine will set an AB zeropoint using the WFIRST effective diameter and default
     exposure time.  Setting the zeropoint can be avoided by setting `AB_zeropoint=False`; changing
@@ -48,6 +49,10 @@ def getBandpasses(AB_zeropoint=True, exptime=None):
     This routine also loads information about sky backgrounds in each filter, to be used by the
     galsim.wfirst.getSkyLevel() routine.  The sky background information is saved as an attribute in
     each Bandpass object.
+
+    There are some subtle points related to the filter edges, which seem to depend on the field
+    angle at some level.  This is more important for the grism than for the imaging, so currently
+    this effect is not included in the WFIRST bandpasses in GalSim.
 
     Example usage
     -------------
@@ -60,6 +65,7 @@ def getBandpasses(AB_zeropoint=True, exptime=None):
                             True]
     @param exptime          Exposure time to use for setting the zeropoint; if None, use the default
                             WFIRST exposure time, taken from galsim.wfirst.exptime.  [default: None]
+    @param thin_err         Relative error allowed when thinning the bandpasses.  [default: 1e-4]
 
     @returns A dictionary containing bandpasses for all WFIRST filters and grisms.
     """
@@ -98,7 +104,7 @@ def getBandpasses(AB_zeropoint=True, exptime=None):
             continue
 
         # Initialize the bandpass object.
-        bp = galsim.Bandpass(galsim.LookupTable(wave, data[index,:]), wave_type='nm').thin()
+        bp = galsim.Bandpass(galsim.LookupTable(wave, data[index,:]), wave_type='nm').thin(thin_err)
         # Set the zeropoint if requested by the user:
         if AB_zeropoint:
             if exptime is None:
