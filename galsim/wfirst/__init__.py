@@ -19,11 +19,12 @@
 The galsim.wfirst module, containing information GalSim needs to simulate images for the WFIRST-AFTA
 project.
 
-This module contains numbers and routines for the WFIRST-AFTA project.  Some of the parameters below
-relate to the entire wide-field imager.  Others, especially the return values of the functions to
-get the PSF and WCS, are specific to each SCA (Sensor Chip Assembly, the equivalent of a chip for an
-optical CCD) and therefore are indexed based on the SCA.  All SCA-related arrays are 1-indexed,
-i.e., the entry with index 0 is None and the entries from 1 to n_sca are the relevant ones.  This is
+This module contains numbers and routines for the WFIRST-AFTA project.  There is also a demo
+illustrating the use of most of this functionality, demo13.py.  Some of the parameters below relate
+to the entire wide-field imager.  Others, especially the return values of the functions to get the
+PSF and WCS, are specific to each SCA (Sensor Chip Assembly, the equivalent of a chip for an optical
+CCD) and therefore are indexed based on the SCA.  All SCA-related arrays are 1-indexed, i.e., the
+entry with index 0 is None and the entries from 1 to n_sca are the relevant ones.  This is
 consistent with diagrams and so on provided by the WFIRST project, which are 1-indexed.
 
 Currently, the module includes the following numbers:
@@ -84,7 +85,7 @@ Currently, the module includes the following numbers:
                            could be used to get a total background including stray light.
 
     ipc_kernel - The 3x3 kernel to be used in simulations of interpixel capacitance (IPC); see
-                 help(galsim.detectors.applyIPC()) for more information.
+                 help(galsim.detectors.applyIPC) for more information.
 
     n_sca - The number of SCAs in the focal plane.
 
