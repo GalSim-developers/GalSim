@@ -55,7 +55,10 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     which is a costly calculation in terms of memory.  To turn this off, use the optional keyword
     `approximate_struts`.  In this case, the pupil plane will have the correct obscuration and
     number of struts, but the struts will be purely radial and evenly spaced instead of the true
-    configuration.  The simplicity of this arrangement leads to a much faster calculation.
+    configuration.  The simplicity of this arrangement leads to a much faster calculation, and
+    somewhat simplifies the configuration of the diffraction spikes.  Also note that currently the
+    orientation of the struts is fixed, rather than rotating depending on the orientation of the
+    focal plane.
 
     The calculation takes advantage of the fact that the diffraction limit and aberrations have a
     simple, understood wavelength-dependence.  The resulting object can be used to draw into any of
