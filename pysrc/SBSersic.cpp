@@ -33,7 +33,7 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBSersic 
+    struct PySBSersic
     {
 
         static SBSersic* construct(
@@ -54,7 +54,7 @@ namespace galsim {
             return new SBSersic(n, s, rType, flux, trunc, flux_untruncated, gsparams);
         }
 
-        static void wrap() 
+        static void wrap()
         {
             bp::class_<SBSersic,bp::bases<SBProfile> >("SBSersic", bp::no_init)
                 .def("__init__",
@@ -76,7 +76,7 @@ namespace galsim {
         }
     };
 
-    struct PySBDeVaucouleurs 
+    struct PySBDeVaucouleurs
     {
 
         static SBDeVaucouleurs* construct(
@@ -97,7 +97,7 @@ namespace galsim {
             return new SBDeVaucouleurs(s, rType, flux, trunc, flux_untruncated, gsparams);
         }
 
-        static void wrap() 
+        static void wrap()
         {
             bp::class_<SBDeVaucouleurs,bp::bases<SBSersic> >("SBDeVaucouleurs",bp::no_init)
                 .def("__init__",
@@ -117,7 +117,7 @@ namespace galsim {
         }
     };
 
-    void pyExportSBSersic() 
+    void pyExportSBSersic()
     {
         PySBSersic::wrap();
         PySBDeVaucouleurs::wrap();
