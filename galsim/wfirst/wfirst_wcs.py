@@ -275,8 +275,6 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
         dytp = ytp2 - ytp1
 
         # Finally have the ingredients for computing the position angle of this SCA Y axis.
-        ## TODO: dxtp and so on are Angles, so they can't go in pa_sca.  Check about units, since
-        ## Jeff's C code seems to have them in degrees, which doesn't make sense to me.
         pa_sca = np.arctan2(-cos_sca_rot*dxtp.rad()+sin_sca_rot*dytp.rad(),
                              sin_sca_rot*dxtp.rad()+cos_sca_rot*dytp.rad())*galsim.radians
 
@@ -463,8 +461,8 @@ def _parse_input_position(ra, dec, pos):
 
 def _populate_required_fields(header):
     """
-    Utility routine to do some of the basics for the WCS headers for WFIRST that don't require any
-    interesting calculation.
+    Utility routine to do populate some of the basic fields for the WCS headers for WFIRST that
+    don't require any interesting calculation.
     """
     header['EQUINOX'] = (2000.0, "equinox of celestial coordinate system")
     header['WCSAXES'] = (2, "number of World Coordinate System axes")

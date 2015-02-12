@@ -32,8 +32,9 @@ def getSkyLevel(bandpass, position=None, e_lat=None, e_lon=None, exp_time=None):
     position.
 
     This routine requires Bandpass objects that were loaded by galsim.wfirst.getBandpasses().  That
-    routine will have stored information about the sky background as a function of position on the
-    sky for that bandpass.
+    routine will have stored tables containing the sky background as a function of position on the
+    sky for that bandpass.  This routine then interpolates between the values in those tables to
+    arbitrary positions on the sky.
 
     The numbers that are stored in the Bandpass object `bandpass` are background level in units of
     e-/m^2/s/arcsec^2.  To get rid of the m^2, this routine multiplies by the total effective
@@ -43,15 +44,17 @@ def getSkyLevel(bandpass, position=None, e_lat=None, e_lon=None, exp_time=None):
     must multiply by the exposure time later on themselves.
 
     The source of the tables that are being interpolated is Chris Hirata's publicly-available WFIRST
-    ETC:
+    exposure time calculator (ETC):
 
         http://www.tapir.caltech.edu/~chirata/web/software/space-etc/
 
-    It nominally returns photons/m^2/s/arcsec^2, but the input bandpasses were given with the QE
-    included to effectively convert to e-/m^2/s/arcsec^2.
+    It nominally returns photons/m^2/s/arcsec^2, but the input bandpasses used internally by the ETC
+    code include the quantum efficiency, to effectively convert to e-/m^2/s/arcsec^2.
 
     Positions can be specified either with a keyword `position`, which must be a CelestialCoord
     object, or with both `e_lat` and `e_lon` for the ecliptic coordinates (as Angle instances).
+    Without any of those values supplied, the routine will use a default position that looks
+    sensibly away from the sun.
 
     @param bandpass     A Bandpass object.
     @param position     A position, given as a CelestialCoord object.  If None, and `e_lat` and
@@ -71,7 +74,7 @@ def getSkyLevel(bandpass, position=None, e_lat=None, e_lon=None, exp_time=None):
     @returns the expected sky level in e-/pix/s, unless `exp_time` was used, in which case the
     results are in e-/pix.
     """
-    # Check for a cache for this filter.  If not, raise exception
+    # Check for cached sky level information for this filter.  If not, raise exception
     if not hasattr(bandpass, '_sky_level'):
         raise RuntimeError("This bandpass does not have stored sky level information!")
 

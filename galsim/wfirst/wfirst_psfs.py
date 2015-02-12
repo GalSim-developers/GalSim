@@ -84,8 +84,6 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     bandpasses), it can be significantly faster to use the `wavelength_limits` keyword to pass in a
     tuple with the lower and upper limits in wavelength.
 
-    Usage: <fill in usage example>
-
     @param    SCAs                 Specific SCAs for which the PSF should be loaded.  This can be
                                    either a single number, a tuple, a NumPy array, or a list.  If
                                    None, then the PSF will be loaded for all SCAs.  Note that the

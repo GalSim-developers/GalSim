@@ -43,8 +43,8 @@ def getBandpasses(AB_zeropoint=True, exptime=None, thin_err=1.e-4):
 
     By default, the routine will set an AB zeropoint using the WFIRST effective diameter and default
     exposure time.  Setting the zeropoint can be avoided by setting `AB_zeropoint=False`; changing
-    the exposure time that is used for the calculation can be used by setting the `exptime`
-    keyword.
+    the exposure time that is used for the zeropoint calculation can be used by setting the
+    `exptime` keyword.
 
     This routine also loads information about sky backgrounds in each filter, to be used by the
     galsim.wfirst.getSkyLevel() routine.  The sky background information is saved as an attribute in
@@ -58,7 +58,7 @@ def getBandpasses(AB_zeropoint=True, exptime=None, thin_err=1.e-4):
     -------------
 
         >>> wfirst_bandpasses = galsim.wfirst.getBandpasses()
-        >>> f184 = wfirst_bandpasses['F184']
+        >>> f184_bp = wfirst_bandpasses['F184']
 
     @param AB_zeropoint     Should the routine set an AB zeropoint before returning the bandpass?
                             If False, then it is up to the user to set a zero point.  [default:
