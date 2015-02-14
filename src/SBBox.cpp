@@ -282,8 +282,9 @@ namespace galsim {
         dbg<<"Box shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
-        for (int i=0; i<result->size(); i++)
-            result->setPhoton(i, _width*(u()-0.5), _height*(u()-0.5), _flux/N);
+        double fluxPerPhoton = _flux/N;
+        for (int i=0; i<N; i++)
+            result->setPhoton(i, _width*(u()-0.5), _height*(u()-0.5), fluxPerPhoton);
         dbg<<"Box Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
