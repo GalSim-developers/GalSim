@@ -92,8 +92,6 @@ namespace galsim {
         // Some derived values calculated in the constructor:
         double _gamma_nup1;  ///< Gamma(nu+1)
         double _gamma_nup2;  ///< Gamma(nu+2)
-        double _gamma_nup3;  ///< Gamma(nu+3)
-        double _gamma_mnum1; ///< Gamma(-nu-1)
         double _xnorm0   ;   ///< Normalization at r=0 for nu>0
 
         // Parameters calculated when they are first needed, and then stored:
