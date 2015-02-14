@@ -2222,10 +2222,11 @@ class Spergel(GSObject):
     Initialization
     --------------
 
-    The allowed range of values for the `nu` parameter is -0.85 <= nu <= 100.  An exception will be
+    The allowed range of values for the `nu` parameter is -0.85 <= nu <= 4.  An exception will be
     thrown if you provide a value outside that range.  The lower limit is set above the theoretical
     lower limit of -1 due to numerical difficulties integrating the *very* peaky nu < -0.85
-    profiles.  The upper limit ...
+    profiles.  The upper limit is set to avoid numerical difficulties evaluating the modified
+    Bessel function of the second kind.
 
     A Spergel profile can be initialized using one (and only one) of two possible size parameters:
     `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
