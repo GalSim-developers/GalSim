@@ -200,7 +200,7 @@ namespace galsim {
             dy *= _height/(2.*M_PI);
 
             // The Box profile in Fourier space is separable:
-            //    val = _flux * sinc(0.5 * x * _height) * sinc(0.5 * y * _height) 
+            //    val(x,y) = _flux * sinc(x * _width/2pi) * sinc(y * _height/2pi) 
             tmv::Vector<double> sinc_x(m);
             It xit = sinc_x.begin();
             for (int i=0;i<m;++i,x0+=dx) *xit++ = sinc(x0);
