@@ -17,6 +17,7 @@ SBAiry.cpp
 SBShapelet.cpp
 SBInterpolatedImage.cpp
 SBKolmogorov.cpp
+SBSpergel.cpp
 Random.cpp
 Noise.cpp
 HSM.cpp

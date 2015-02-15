@@ -182,7 +182,7 @@ namespace galsim {
         /**
          * @brief Hunt for bracket, geometrically expanding range
          *
-         * This version assumes that the root is to the side of the  end point that is
+         * This version assumes that the root is to the side of the end point that is
          * closer to 0.  This will be true if the function is monotonic.
          */
         void bracket()
