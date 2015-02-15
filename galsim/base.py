@@ -1585,7 +1585,7 @@ class Airy(GSObject):
 
         >>> lam = 700  # nm
         >>> diam = 4.0    # meters
-        >>> lam_over_diam = (lambda * 1.e-9) / diam  # radians
+        >>> lam_over_diam = (lam * 1.e-9) / diam  # radians
         >>> lam_over_diam *= 206265  # Convert to arcsec
 
     @param lam_over_diam    The parameter that governs the scale size of the profile.
