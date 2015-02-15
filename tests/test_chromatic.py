@@ -1281,7 +1281,7 @@ def test_interpolated_ChromaticObject():
 
     # Check that we can turn interpolation off and on at will.
     other_psf = interp_psf.copy()
-    other_psf.noInterpolation()
+    other_psf.removeInterpolation()
     other_obj = galsim.Convolve(star, other_psf)
     im_other = im_exact.copy()
     im_other = other_obj.drawImage(bandpass, image=im_other, scale=scale)

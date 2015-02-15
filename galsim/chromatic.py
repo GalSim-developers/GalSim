@@ -180,7 +180,7 @@ class ChromaticObject(object):
         For use cases requiring a high level of precision, we recommend a comparison between the
         interpolated and the more accurate calculation for at least one case, to ensure that the
         required precision has been reached.  Also note that after calling `setupInterpolation`, it
-        is possible to revert to the exact calculation by calling `noInterpolation`.
+        is possible to revert to the exact calculation by calling `removeInterpolation`.
 
         The input parameter `waves` determines the input grid on which images are precomputed.  It
         is difficult to give completely general guidance as to how many wavelengths to choose or how
@@ -257,7 +257,7 @@ class ChromaticObject(object):
         # `no_pixel` is used (we want the object on its own, without a pixel response).
         self.ims = [ obj.drawImage(scale=dx, nx=n_im, ny=n_im, method='no_pixel') for obj in objs ]
 
-    def noInterpolation(self):
+    def removeInterpolation(self):
         """
         A routine to force an object for which interpolation was previously set up go back to the
         exact calculation.
@@ -473,7 +473,7 @@ class ChromaticObject(object):
             warnings.warn("Cannot render image with chromatic transformation applied to it"
                           " using interpolation between stored images.  Reverting to "
                           "non-interpolated version.")
-            self.noInterpolation()
+            self.removeInterpolation()
             return self._normal_drawImage(bandpass, image=image,
                                           integrator=integrator, **kwargs)
 
@@ -747,7 +747,7 @@ class ChromaticObject(object):
     # Helper function
     def _applyMatrix(self, J):
         if hasattr(J, '__call__'):
-            self.noInterpolation()
+            self.removeInterpolation()
         if isinstance(self, ChromaticSum):
             # Don't wrap ChromaticSum object, easier to just wrap its arguments.
             return ChromaticSum([ obj._applyMatrix(J) for obj in self.objlist ])
