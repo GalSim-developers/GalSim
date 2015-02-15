@@ -227,7 +227,7 @@ class ChromaticObject(object):
         # modify the SED attribute, which now refers to the total flux at a given wavelength after
         # integrating over the whole light profile.
         fluxes = np.array([ obj.getFlux() for obj in objs ])
-        if np.any(abs(fluxes - 1.0) > 1000.*np.finfo(fluxes.dtype.type).eps):
+        if np.any(abs(fluxes - 1.0) > 10.*np.finfo(fluxes.dtype.type).eps):
             # Figure out the rescaling factor for the SED.
             rescale_fac = np.zeros_like(self.waves)
             for ind in range(len(self.waves)):
@@ -574,8 +574,8 @@ class ChromaticObject(object):
         A0 = self._A(wave)
         f0 = self._fluxFactor(wave)
         # Check whether any transformation was done.
-        return not (np.any(abs(A0-null_A) > 1000.*np.finfo(A0.dtype.type).eps) or \
-                        abs(f0-1.) > 1000.*np.finfo(A0.dtype.type).eps)
+        return not (np.any(abs(A0-null_A) > 10.*np.finfo(A0.dtype.type).eps) or \
+                        abs(f0-1.) > 10.*np.finfo(A0.dtype.type).eps)
 
     def _nullFluxTransformation(self, wave):
         """
@@ -587,7 +587,7 @@ class ChromaticObject(object):
         """
         f0 = self._fluxFactor(wave)
         # Check whether any transformation was done.
-        return (abs(f0-1.) <= 1000.*np.finfo(np.array(f0).dtype.type).eps)
+        return (abs(f0-1.) <= 10.*np.finfo(np.array(f0).dtype.type).eps)
 
     def _chromaticTransformation(self, bandpass):
         """
@@ -604,8 +604,8 @@ class ChromaticObject(object):
         A1 = self._A(bandpass.red_limit)
         f0 = self._fluxFactor(bandpass.blue_limit)
         f1 = self._fluxFactor(bandpass.red_limit)
-        return (np.any(abs(A1-A0) > 1000.*np.finfo(A0.dtype.type).eps) or
-                abs(f1-f0) > 1000.*np.finfo(A0.dtype.type).eps)
+        return (np.any(abs(A1-A0) > 10.*np.finfo(A0.dtype.type).eps) or
+                abs(f1-f0) > 10.*np.finfo(A0.dtype.type).eps)
 
     def draw(self, *args, **kwargs):
         """An obsolete synonym for obj.drawImage(method='no_pixel')
