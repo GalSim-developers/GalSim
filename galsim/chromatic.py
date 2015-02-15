@@ -195,7 +195,7 @@ class ChromaticObject(object):
                                 (i.e., this class will not extrapolate beyond the given range of
                                 wavelengths).  They can be spaced any way the user likes, not
                                 necessarily linearly, though interpolation will be linear in
-                                wavelength.
+                                wavelength between the specified wavelengths.
         @param oversample_fac   Factor by which to oversample the stored profiles compared to the
                                 default, which is to sample them at the Nyquist frequency for
                                 whichever wavelength has the highest Nyquist frequency.
