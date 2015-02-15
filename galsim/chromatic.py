@@ -173,9 +173,12 @@ class ChromaticObject(object):
         benefit from these optimizations.  For example, a non-separable chromatic PSF that uses
         interpolation, when convolved with a sum of two galaxy components each with their own SED
         will be able to take advantage of this optimization.  In contrast, when convolving two
-        non-separable profiles there is no way to take advantage of the interpolation optimization,
-        so even in the case that interpolation has been set up, it will be ignored and the full
-        calculation will be done.
+        non-separable profiles that already have interpolation set up, there is no way to take
+        advantage of that interpolation optimization, so it will be ignored and the full calculation
+        will be done.  However, interpolation can be set up for the convolution of two non-separable
+        profiles, after the convolution step.  This could be beneficial for example when convolving
+        a chromatic optical PSF and chromatic atmosphere, before convolving with multiple galaxy
+        profiles.
 
         For use cases requiring a high level of precision, we recommend a comparison between the
         interpolated and the more accurate calculation for at least one case, to ensure that the
