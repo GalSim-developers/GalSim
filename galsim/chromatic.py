@@ -385,8 +385,8 @@ class ChromaticObject(object):
                                 for details.)  [default: None]
         @param integrator       One of the image integrators from galsim.integ [default: None,
                                 which will try to select an appropriate integrator automatically.]
-                                This keyword is ignored in the case that optimized interpolation
-                                between precomputed images is to be used to render the image.
+                                This keyword is ignored if setupInterpolation() has been called for
+                                this object.
         @param **kwargs         For all other kwarg options, see GSObject.drawImage()
 
         @returns the drawn Image.
