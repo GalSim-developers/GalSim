@@ -28,8 +28,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-//std::ostream* dbgout = &std::cout;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+std::ostream* dbgout = &std::cout;
 int verbose_level = 1;
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).

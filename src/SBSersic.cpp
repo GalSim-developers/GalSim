@@ -113,7 +113,8 @@ namespace galsim {
                        }
 
                        // Update _info with the correct truncated version.
-                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,this->gsparams.duplicate()));
+                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,
+                                                           this->gsparams.duplicate()));
 
                        if (flux_untruncated) {
                            // Update the stored _flux and _re with the correct values
@@ -131,7 +132,8 @@ namespace galsim {
                    _r0 = size;
                    if (_truncated) {
                        // Update _info with the correct truncated version.
-                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,this->gsparams.duplicate()));
+                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,
+                                                           this->gsparams.duplicate()));
 
                        if (flux_untruncated) {
                            // Update the stored _flux with the correct value
@@ -236,7 +238,7 @@ namespace galsim {
             for (int j=0;j<n;++j,y0+=dy) {
                 double x = x0;
                 double ysq = y0*y0;
-                It valit(val.col(j).begin().getP(),1);
+                It valit = val.col(j).begin();
                 for (int i=0;i<m;++i,x+=dx) {
                     double ksq = x*x + ysq;
                     *valit++ = _flux * _info->kValue(ksq);
@@ -265,13 +267,12 @@ namespace galsim {
         dy *= _inv_r0;
         dyx *= _inv_r0;
 
+        It valit = val.linearView().begin();
         double x00 = x0; // Preserve the originals for below.
         double y00 = y0;
-        It valit = val.linearView().begin();
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
-            It valit = val.col(j).begin();
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double rsq = x*x + y*y;
                 *valit++ = _xnorm * _info->xValue(rsq);
@@ -336,11 +337,10 @@ namespace galsim {
         dy *= _r0;
         dyx *= _r0;
 
-        It valit(val.linearView().begin().getP(),1);
+        It valit = val.linearView().begin();
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
-            It valit(val.col(j).begin().getP(),1);
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double ksq = x*x + y*y;
                 *valit++ = _flux * _info->kValue(ksq);

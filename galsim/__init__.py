@@ -125,7 +125,7 @@ from correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
 
 # GSObject
 from base import GSParams, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box
-from base import Exponential, Sersic, DeVaucouleurs
+from base import Exponential, Sersic, DeVaucouleurs, Spergel
 from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
 from shapelet import Shapelet, ShapeletSize, FitShapelet, LVectorSize

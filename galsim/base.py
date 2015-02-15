@@ -1585,7 +1585,7 @@ class Airy(GSObject):
 
         >>> lam = 700  # nm
         >>> diam = 4.0    # meters
-        >>> lam_over_diam = (lambda * 1.e-9) / diam  # radians
+        >>> lam_over_diam = (lam * 1.e-9) / diam  # radians
         >>> lam_over_diam *= 206265  # Convert to arcsec
 
     @param lam_over_diam    The parameter that governs the scale size of the profile.
@@ -1908,7 +1908,8 @@ class Sersic(GSObject):
                             [One of `scale_radius` or `half_light_radius` is required.]
     @param flux             The flux (in photons) of the profile. [default: 1]
     @param trunc            An optional truncation radius at which the profile is made to drop to
-                            zero.  [default: 0, indicating no truncation]
+                            zero, in the same units as the size parameter.
+                            [default: 0, indicating no truncation]
     @param flux_untruncated Should the provided `flux` and `half_light_radius` refer to the
                             untruncated profile? See below for more details. [default: False]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
@@ -2028,7 +2029,7 @@ class Sersic(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = { "n" : float }
-    _opt_params = { "flux" : float, "trunc": float, "flux_untruncated" : bool }
+    _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
     _takes_logger = False
@@ -2138,7 +2139,8 @@ class DeVaucouleurs(GSObject):
                             [One of `scale_radius` or `half_light_radius` is required.]
     @param flux             The flux (in photons) of the profile. [default: 1]
     @param trunc            An optional truncation radius at which the profile is made to drop to
-                            zero.  [default: 0, indicating no truncation]
+                            zero, in the same units as the size parameter.
+                            [default: 0, indicating no truncation]
     @param flux_untruncated Should the provided `flux` and `half_light_radius` refer to the
                             untruncated profile? See the docstring for Sersic for more details.
                             [default: False]
@@ -2177,6 +2179,104 @@ class DeVaucouleurs(GSObject):
 
     def getScaleRadius(self):
         """Return the scale radius for this DeVaucouleurs profile.
+        """
+        return self.SBProfile.getScaleRadius()
+
+
+class Spergel(GSObject):
+    """A class describing a Spergel profile.
+
+    The Spergel surface brightness profile is characterized by three properties: its Spergel index
+    `nu`, its `flux`, and either the `half_light_radius` or `scale_radius`.  Given these properties,
+    the surface brightness profile scales as I(r) ~ r^{nu} * K_{nu}(r), where K_{nu} is the
+    modified Bessel function of the second kind.
+
+    The Spergel profile is intended as a generic galaxy profile, somewhat like a Sersic profile, but
+    with the advantage of being analytic in both real space and Fourier space.  The Spergel index
+    `nu` plays a similar role to the Sersic index `n`, in that it adjusts the relative peakiness of
+    the profile core and the relative prominence of the profile wings.  At `nu = 0.5`, the Spergel
+    profile is equivalent to an Exponential profile (or alternatively an `n = 1.0` Sersic profile).
+    At `nu = -0.6` (and in the radial range near the half-light radius), the Spergel profile is
+    similar to a DeVaucouleurs profile or `n = 4.0` Sersic profile.
+
+    Note that for `nu <= 0.0`, the Spergel profile surface brightness diverges at the origin.  This
+    may lead to rendering problems if the profile is not convolved by either a PSF or a pixel and
+    the profile center is precisely on a pixel center.
+
+    Due to its analytic Fourier transform and depending on the indices `n` and `nu`, the Spergel
+    profile can be considerably faster to draw than the roughly equivalent Sersic profile.  For
+    example, the `nu = -0.6` Spergel profile is roughly 3x faster to draw than an `n = 4.0` Sersic
+    profile once the Sersic profile cache has been set up.  However, if not taking advantage of
+    the cache, for example, if drawing Sersic profiles with `n` continuously varying near 4.0 and
+    Spergel profiles with `nu` continuously varying near -0.6, then the Spergel profiles are about
+    50x faster to draw.  At the other end of the galaxy profile spectrum, the `nu = 0.5` Spergel
+    profile, `n = 1.0` Sersic profile, and the Exponential profile all take about the same amount
+    of time to draw if cached, and the Spergel profile is about 2x faster than the Sersic profile
+    if uncached.
+
+    For more information, refer to
+
+        D. N. Spergel, "ANALYTICAL GALAXY PROFILES FOR PHOTOMETRIC AND LENSING ANALYSIS,"
+        ASTROPHYS J SUPPL S 191(1), 58-65 (2010) [doi:10.1088/0067-0049/191/1/58].
+
+    Initialization
+    --------------
+
+    The allowed range of values for the `nu` parameter is -0.85 <= nu <= 4.  An exception will be
+    thrown if you provide a value outside that range.  The lower limit is set above the theoretical
+    lower limit of -1 due to numerical difficulties integrating the *very* peaky nu < -0.85
+    profiles.  The upper limit is set to avoid numerical difficulties evaluating the modified
+    Bessel function of the second kind.
+
+    A Spergel profile can be initialized using one (and only one) of two possible size parameters:
+    `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
+
+    @param nu               The Spergel index, nu.
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of `scale_radius` or `half_light_radius` is required.]
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
+                            [One of `scale_radius` or `half_light_radius` is required.]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    In addition to the usual GSObject methods, the Spergel profile has the following access methods:
+
+        >>> nu = spergel_obj.getNu()
+        >>> r0 = spergel_obj.getScaleRadius()
+        >>> hlr = spergel_obj.getHalfLightRadius()
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "nu" : float }
+    _opt_params = { "flux" : float}
+    _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
+    _takes_rng = False
+    _takes_logger = False
+
+    # --- Public Class methods ---
+    def __init__(self, nu, half_light_radius=None, scale_radius=None,
+                 flux=1., gsparams=None):
+        GSObject.__init__(
+            self, galsim._galsim.SBSpergel(nu, half_light_radius=half_light_radius,
+                                           scale_radius=scale_radius, flux=flux,
+                                           gsparams=gsparams))
+
+    def getNu(self):
+        """Return the Spergel index `nu` for this profile.
+        """
+        return self.SBProfile.getNu()
+
+    def getHalfLightRadius(self):
+        """Return the half light radius for this Spergel profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
+
+    def getScaleRadius(self):
+        """Return the scale radius for this Spergel profile.
         """
         return self.SBProfile.getScaleRadius()
 
