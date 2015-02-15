@@ -1,6 +1,7 @@
 Changes from v1.2 to v1.3
 =========================
 
+
 New Features
 ------------
 
@@ -15,6 +16,7 @@ New Features
   `ChromaticOpticalPSF` class, which allow the diffraction limit and aberrations
   to be wavelength-dependent, can particularly benefit from this
   optimization. (#618)
+- Added Spergel(2010) profile GSObject (#616).
 - Enable initializing a DES_PSFEx object using a pyfits HDU directly instead
   of a filename. (#626)
 
@@ -24,4 +26,3 @@ Bug Fixes and Improvements
 
 Updates to config options
 -------------------------
-

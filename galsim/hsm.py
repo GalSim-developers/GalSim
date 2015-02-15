@@ -103,11 +103,14 @@ class ShapeData(object):
 
     - corrected_e1, corrected_e2, corrected_g1, corrected_g2: floats representing the estimated
       shear after removing the effects of the PSF.  Either e1/e2 or g1/g2 will differ from the
-      default values of -10, with the choice of shape to use determined by the quantity meas_type (a
-      string that equals either 'e' or 'g') or, equivalently, by the correction method (since the
-      correction method determines what quantity is estimated, either the shear or the distortion).
+      default values of -10, with the choice of shape to use determined by the correction method
+      (since the correction method determines what quantity is estimated, either the shear or the
+      distortion).  After a measurement is made, the type of shape measurement is stored in the
+      ShapeData structure as 'meas_type' (a string that equals either 'e' or 'g').
 
-    - corrected_shape_err: shape measurement uncertainty sigma_gamma per component.
+    - corrected_shape_err: shape measurement uncertainty sigma_gamma per component.  The estimate of
+      the uncertainty will only be non-zero if an estimate of the sky variance was passed to
+      EstimateShearHSM().
 
     - correction_method: a string indicating the method of PSF correction (will be "None" if
       PSF-correction was not carried out).
@@ -297,7 +300,9 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     @param sky_var          The variance of the sky level, used for estimating uncertainty on the
                             measured shape. [default: 0.]
     @param shear_est        A string indicating the desired method of PSF correction: 'REGAUSS',
-                            'LINEAR', 'BJ', or 'KSB'. [default: 'REGAUSS']
+                            'LINEAR', 'BJ', or 'KSB'. The first three options return an e-type
+                            distortion, whereas the last option returns a g-type shear.  [default:
+                            'REGAUSS']
     @param recompute_flux   A string indicating whether to recompute the object flux, which
                             should be 'NONE' (for no recomputation), 'SUM' (for recomputation via
                             an unweighted sum over unmasked pixels), or 'FIT' (for

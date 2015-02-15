@@ -25,7 +25,7 @@
 
 namespace galsim {
 
-    class SBMoffat::SBMoffatImpl : public SBProfileImpl 
+    class SBMoffat::SBMoffatImpl : public SBProfileImpl
     {
     public:
         SBMoffatImpl(double beta, double size, RadiusType rType, double trunc, double flux,
@@ -35,9 +35,9 @@ namespace galsim {
 
         double xValue(const Position<double>& p) const;
 
-        std::complex<double> kValue(const Position<double>& k) const; 
+        std::complex<double> kValue(const Position<double>& k) const;
 
-        bool isAxisymmetric() const { return true; } 
+        bool isAxisymmetric() const { return true; }
         bool hasHardEdges() const { return (1.-_fluxFactor) > this->gsparams->maxk_threshold; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
@@ -45,26 +45,26 @@ namespace galsim {
         double maxK() const;
         double stepK() const;
 
-        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
+        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const
         { xmin = -_maxR; xmax = _maxR; }
 
-        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
+        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const
         { ymin = -_maxR; ymax = _maxR; }
 
-        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& ) const 
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& ) const
         {
             if (std::abs(x) >= _maxR) { ymin = 0; ymax = 0; }
             else { ymax = sqrt(_maxR_sq - x*x); ymin = -ymax; }
         }
 
-        Position<double> centroid() const 
+        Position<double> centroid() const
         { return Position<double>(0., 0.); }
 
 
         double getFlux() const { return _flux; }
 
         /**
-         * @brief Moffat photon shooting is done by analytic inversion of cumulative flux 
+         * @brief Moffat photon shooting is done by analytic inversion of cumulative flux
          * distribution.
          *
          * Will require 2 uniform deviates per photon, plus analytic function (pow and sqrt)
@@ -110,7 +110,7 @@ namespace galsim {
         mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
 
         mutable double _re; ///< Stores the half light radius if set or calculated post-setting.
-        mutable double _stepk; 
+        mutable double _stepk;
         mutable double _maxk; ///< Maximum k with kValue > 1.e-3
 
         double (*_pow_beta)(double x, double beta);
@@ -149,4 +149,3 @@ namespace galsim {
 }
 
 #endif
-

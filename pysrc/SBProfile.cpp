@@ -136,7 +136,7 @@ namespace galsim {
                 "\n"
                 "Currently we have the following possible implementations of SBProfile:\n"
                 "Basic shapes: SBBox, SBGaussian, SBExponential, SBAiry, SBSersic,\n"
-                "              SBMoffat, SBKolmogorov\n"
+                "              SBMoffat, SBKolmogorov, SBSpergel\n"
                 "SBInterpolatedImage: a representation of some arbitrary image\n"
                 "SBShapelet: an object represented as a shapelets decomposition\n"
                 "SBTransform: affine transformation of another SBProfile\n"
