@@ -17,32 +17,32 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef GalSim_SBSersicImpl_H
-#define GalSim_SBSersicImpl_H
+#ifndef GalSim_SBSpergelImpl_H
+#define GalSim_SBSpergelImpl_H
 
 #include "SBProfileImpl.h"
-#include "SBSersic.h"
+#include "SBSpergel.h"
 #include "LRUCache.h"
 
 namespace galsim {
 
-    /// @brief A private class that caches the needed parameters for each Sersic index `n`.
-    class SersicInfo
+    /// @brief A private class that caches the needed parameters for each Spergel index `nu`.
+    class SpergelInfo
     {
     public:
         /// @brief Constructor
-        SersicInfo(double n, double trunc, const GSParamsPtr& gsparams);
+        SpergelInfo(double nu, const GSParamsPtr& gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
-        ~SersicInfo() {}
+        ~SpergelInfo() {}
 
         /**
-         * @brief Returns the unnormalized real space value of the Sersic function.
+         * @brief Returns the unnormalized real space value of the Spergel function.
          *
-         * The input `rsq` should be (r_actual^2 / r0^2).
-         * The returned value should then be multiplied by flux * getXNorm() / r0^2.
+         * The input `r` should be (r_actual / r0).
+         * The returned value should then be multiplied by flux * getXNorm() / r0^2
          */
-        double xValue(double rsq) const;
+        double xValue(double r) const;
 
         /**
          * @brief Returns the unnormalized value of the fourier transform.
@@ -58,9 +58,6 @@ namespace galsim {
         /// @brief The half-light radius in units of r0.
         double getHLR() const;
 
-        /// @brief The fractional flux relative to the untruncated profile.
-        double getFluxFraction() const;
-
         /**
          * @brief The factor by which to multiply the returned value from xValue.
          *
@@ -69,12 +66,9 @@ namespace galsim {
          */
         double getXNorm() const;
 
-        /// @brief Calculate scale that has the given HLR and truncation radius in physical units.
-        double calculateScaleForTruncatedHLR(double re, double trunc) const;
-
         /**
          * @brief Shoot photons through unit-size, unnormalized profile
-         * Sersic profiles are sampled with a numerical method, using class
+         * Spergel profiles are sampled with a numerical method, using class
          * `OneDimensionalDeviate`.
          *
          * @param[in] N  Total number of photons to produce.
@@ -83,57 +77,40 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        double calculateIntegratedFlux(const double& r) const;
+        double calculateFluxRadius(const double& f) const;
+
     private:
 
-        SersicInfo(const SersicInfo& rhs); ///< Hide the copy constructor.
-        void operator=(const SersicInfo& rhs); ///<Hide assignment operator.
+        SpergelInfo(const SpergelInfo& rhs); ///< Hide the copy constructor.
+        void operator=(const SpergelInfo& rhs); ///<Hide assignment operator.
 
         // Input variables:
-        double _n;       ///< Sersic index.
-        double _trunc;   ///< Truncation radius `trunc` in units of r0.
+        double _nu;       ///< Spergel index.
         const GSParamsPtr _gsparams; ///< The GSParams object.
 
         // Some derived values calculated in the constructor:
-        double _invn;      ///< 1/n
-        double _inv2n;     ///< 1/(2n)
-        double _trunc_sq;  ///< trunc^2
-        bool _truncated;   ///< True if this Sersic profile is truncated.
-        double _gamma2n;   ///< Gamma(2n) = 1/n * int(exp(-r^1/n)*r,r=0..inf)
+        double _gamma_nup1;  ///< Gamma(nu+1)
+        double _gamma_nup2;  ///< Gamma(nu+2)
+        double _xnorm0   ;   ///< Normalization at r=0 for nu>0
 
         // Parameters calculated when they are first needed, and then stored:
         mutable double _maxk;    ///< Value of k beyond which aliasing can be neglected.
         mutable double _stepk;   ///< Sampling in k space necessary to avoid folding.
         mutable double _re;      ///< The HLR in units of r0.
-        mutable double _b;       ///< b = re^(1/n)
-        mutable double _flux;    ///< Flux relative to the untruncated profile.
-
-        // Parameters for the Hankel transform:
-        mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform.
-        mutable double _kderiv2; ///< Quadratic dependence of F near k=0.
-        mutable double _kderiv4; ///< Quartic dependence of F near k=0.
-        mutable double _ksq_min; ///< Minimum ksq to use lookup table.
-        mutable double _ksq_max; ///< Maximum ksq to use lookup table.
-        mutable double _highk_a; ///< Coefficient of 1/k^2 in high-k asymptote
-        mutable double _highk_b; ///< Coefficient of 1/k^3 in high-k asymptote
 
         // Classes used for photon shooting
         mutable boost::shared_ptr<FluxDensity> _radial;
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
-
-        // Helper functions used internally:
-        void buildFT() const;
-        void calculateHLR() const;
-        double calculateMissingFluxRadius(double missing_flux_frac) const;
     };
 
-    class SBSersic::SBSersicImpl : public SBProfileImpl
+    class SBSpergel::SBSpergelImpl : public SBProfileImpl
     {
     public:
-        SBSersicImpl(double n, double size, RadiusType rType, double flux,
-                     double trunc, bool flux_untruncated,
-                     const GSParamsPtr& gsparams);
+        SBSpergelImpl(double nu, double size, RadiusType rType,
+                      double flux, const GSParamsPtr& gsparams);
 
-        ~SBSersicImpl() {}
+        ~SBSpergelImpl() {}
 
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& k) const;
@@ -144,46 +121,48 @@ namespace galsim {
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
-            if (!_truncated) { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
-            else { xmin = -_trunc; xmax = _trunc; }
+            xmin = -integ::MOCK_INF;
+            xmax = integ::MOCK_INF;
         }
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
-            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
-            else { ymin = -_trunc; ymax = _trunc; }
+            ymin = -integ::MOCK_INF;
+            ymax = integ::MOCK_INF;
         }
 
         void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
         {
-            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
-            else if (std::abs(x) >= _trunc) { ymin = 0; ymax = 0; }
-            else { ymax = sqrt(_trunc_sq - x*x);  ymin = -ymax; }
+            ymin = -integ::MOCK_INF;
+            ymax = integ::MOCK_INF;
 
             if (std::abs(x/_re) < 1.e-2) splits.push_back(0.);
         }
 
         bool isAxisymmetric() const { return true; }
-        bool hasHardEdges() const { return _truncated; }
+        bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return true; }
-        bool isAnalyticK() const { return true; }  // 1d lookup table
+        bool isAnalyticK() const { return true; }
 
         Position<double> centroid() const
         { return Position<double>(0., 0.); }
 
-        /// @brief Returns the true flux (may be different from the specified flux)
         double getFlux() const { return _flux; }
 
-        /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
+        /// @brief Spergel photon shooting done by rescaling photons from appropriate `SpergelInfo`
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        /// @brief Returns the Sersic index n
-        double getN() const { return _n; }
+        /// @brief Returns the Spergel index nu
+        double getNu() const { return _nu; }
         /// @brief Returns the true half-light radius (may be different from the specified value)
         double getHalfLightRadius() const { return _re; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
+        /// @brief Returns enclosed flux
+        double calculateIntegratedFlux(const double& r) const;
+        /// @brief Return flux-enclosing-radius
+        double calculateFluxRadius(const double &f) const;
 
         // Overrides for better efficiency
         void fillXValue(tmv::MatrixView<double> val,
@@ -200,29 +179,24 @@ namespace galsim {
                         double y0, double dy, double dyx) const;
 
     private:
-        double _n;       ///< Sersic index.
-        double _flux;    ///< Actual flux (may differ from that specified at the constructor).
+        double _nu;      ///< Spergel index
+        double _flux;    ///< Flux
         double _r0;      ///< Scale radius specified at the constructor.
         double _re;      ///< Half-light radius specified at the constructor.
-        double _trunc;   ///< The truncation radius (if any)
-        bool _truncated; ///< True if this Sersic profile is truncated.
 
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
         double _shootnorm; ///< Normalization for photon shooting.
 
         double _r0_sq;
         double _inv_r0;
-        double _inv_r0_sq;
-        double _trunc_sq;
 
-        boost::shared_ptr<SersicInfo> _info; ///< Points to info structure for this n,trunc
+        boost::shared_ptr<SpergelInfo> _info; ///< Points to info structure for this nu
 
         // Copy constructor and op= are undefined.
-        SBSersicImpl(const SBSersicImpl& rhs);
-        void operator=(const SBSersicImpl& rhs);
+        SBSpergelImpl(const SBSpergelImpl& rhs);
+        void operator=(const SBSpergelImpl& rhs);
 
-        static LRUCache<boost::tuple< double, double, GSParamsPtr >, SersicInfo> cache;
-
+        static LRUCache<boost::tuple< double, GSParamsPtr >, SpergelInfo> cache;
     };
 }
 

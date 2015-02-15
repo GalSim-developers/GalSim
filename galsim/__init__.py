@@ -79,7 +79,7 @@ damages of any kind.
 
 # The version is stored in _version.py as recommended here:
 # http://stackoverflow.com/questions/458550/standard-way-to-embed-version-into-python-package
-# We don't use setup.py, so it's not so important to do it this way, but if we ever switch...  
+# We don't use setup.py, so it's not so important to do it this way, but if we ever switch...
 # And it does make it a bit easier to get the version number in SCons too.
 from _version import __version__, __version_info__
 
@@ -109,9 +109,9 @@ from angle import Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec, HMS
 from catalog import Catalog, Dict
 from table import LookupTable
 
-# Image 
+# Image
 from image import Image, ImageS, ImageI, ImageF, ImageD
-# These are obsolete, but we currently still support them.  They will be deprecated and 
+# These are obsolete, but we currently still support them.  They will be deprecated and
 # removed eventually.
 from image import ImageView, ImageViewS, ImageViewI, ImageViewF, ImageViewD
 from image import ConstImageView, ConstImageViewS, ConstImageViewI, ConstImageViewF, ConstImageViewD
@@ -125,7 +125,7 @@ from correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
 
 # GSObject
 from base import GSParams, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box
-from base import Exponential, Sersic, DeVaucouleurs
+from base import Exponential, Sersic, DeVaucouleurs, Spergel
 from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
 from shapelet import Shapelet, ShapeletSize, FitShapelet, LVectorSize
