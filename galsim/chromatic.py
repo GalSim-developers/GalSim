@@ -163,10 +163,10 @@ class ChromaticObject(object):
         with the best option depending on the application.  For example, when rendering many times
         with the same achromatic transformation applied, it is typically advantageous to apply the
         transformation before setting up the interpolation.  But there is no value in this when
-        applying different achromatic transformation to each object.  Chromatic transformations must
-        be applied before setting up interpolation, and attempts to render images of
-        ChromaticObjects with interpolation followed by a chromatic transformation will result in an
-        exception being raised.
+        applying different achromatic transformation to each object.  Chromatic transformations
+        should be applied before setting up interpolation; attempts to render images of
+        ChromaticObjects with interpolation followed by a chromatic transformation will result in
+        the interpolation being unset and the full calculation being done.
 
         Because of the clever way that the ChromaticConvolution routine works, convolutions of
         non-separable chromatic objects that use interpolation with separable objects will still
