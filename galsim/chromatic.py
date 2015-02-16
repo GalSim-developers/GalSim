@@ -1088,9 +1088,15 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     arcsec.  This is unlike the rest of GalSim, in which Position units only need to be internally
     consistent.
 
-    Also, note that in order to render an image of a real physical object, the ChromaticAtmosphere
-    should be convolved with some object that has an SED.  Drawing without doing so corresponds to
-    using a flat SED.
+    Note that a ChromaticAtmosphere by itself is NOT the correct thing to use to draw an image of a
+    star. Stars (and galaxies too, of course) have an SED that is not flat. To draw a real star, you
+    should either multiply the ChromaticAtmosphere object by an SED, or convolve it with a point
+    source (typically approximated by a very tiny Gaussian) multiplied by an SED:
+
+        >>> psf = galsim.ChromaticAtmosphere(...)
+        >>> star = galsim.Gaussian(sigma = 1.e-6) * psf_sed
+        >>> final_star = galsim.Convolve( [psf, star] )
+        >>> final_star.drawImage(bandpass = bp, ...)
 
     @param base_obj             Fiducial PSF, equal to the monochromatic PSF at `base_wavelength`
     @param base_wavelength      Wavelength represented by the fiducial PSF, in nanometers.
@@ -1790,9 +1796,15 @@ class ChromaticOpticalPSF(ChromaticObject):
     waves, which is commonly satisfied by space telescopes); if they are larger than that, then more
     stringent settings are required.
 
-    Also, note that in order to render an image of a real physical object, the ChromaticOpticalPSF
-    should be convolved with some object that has an SED.  Drawing without doing so corresponds to
-    using a flat SED.
+    Note that a ChromaticOpticalPSF by itself is NOT the correct thing to use to draw an image of a
+    star. Stars (and galaxies too, of course) have an SED that is not flat. To draw a real star, you
+    should either multiply the ChromaticOpticalPSF object by an SED, or convolve it with a point
+    source (typically approximated by a very tiny Gaussian) multiplied by an SED:
+
+        >>> psf = galsim.ChromaticOpticalPSF(...)
+        >>> star = galsim.Gaussian(sigma = 1.e-6) * psf_sed
+        >>> final_star = galsim.Convolve( [psf, star] )
+        >>> final_star.drawImage(bandpass = bp, ...)
 
     @param   diam          Telescope diameter in meters.
     @param   aberrations   An array of aberrations, in nanometers.  The size and format of this
