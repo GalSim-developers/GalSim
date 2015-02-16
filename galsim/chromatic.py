@@ -211,13 +211,13 @@ class ChromaticObject(object):
 
         # Make the objects between which we are going to interpolate.  Note that these do not have
         # to be saved for later, unlike the images.
-        objs = [ self.evaluateAtWavelength(wave) for wave in waves ]
+        objs = [ self.evaluateAtWavelength(wave) for wave in self.waves ]
 
         # The evaluation step (above) led to the incorporation of any shears and other
         # transformations into the stored models between which we interpolation, so reset the
         # internal attributes that store information about transformations, if indeed there were any
         # transformations.
-        if hasattr(self, '_A') and not all ([self._nullTransformation(w) for w in waves]):
+        if hasattr(self, '_A') and not all ([self._nullTransformation(w) for w in self.waves]):
             # Store the old transformations.
             self._save_A = self._A
             self._save_fluxFactor = self._fluxFactor

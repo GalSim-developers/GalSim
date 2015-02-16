@@ -1260,6 +1260,8 @@ def test_interpolated_ChromaticObject():
     blue_limit = min(bandpass.blue_limit, bandpass_g.blue_limit)
     red_limit = max(bandpass.red_limit, bandpass_g.red_limit)
     waves = np.linspace(blue_limit, red_limit, n_interp)
+    # Make a version that tests the ability of the routine to handle non-sorted / non-array input.
+    tricky_waves = list(waves[::-1])
 
     # Make a star.
     star = galsim.Gaussian(fwhm=1.e-8) * bulge_SED
@@ -1358,7 +1360,8 @@ def test_interpolated_ChromaticObject():
     chrom_dilate = lambda w: 1.0+0.1*(w-500.)/500.
     exact_psf = exact_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y).dilate(chrom_dilate)
     interp_psf = exact_psf.copy()
-    interp_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
+    # Note here we are checking the use of more difficult input wavelengths.
+    interp_psf.setupInterpolation(tricky_waves, oversample_fac=oversample_fac)
     exact_obj = galsim.Convolve(star, exact_psf)
     interp_obj = galsim.Convolve(star, interp_psf)
     im_exact = exact_obj.drawImage(bandpass, scale=atm_scale)
