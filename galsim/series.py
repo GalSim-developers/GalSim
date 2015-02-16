@@ -105,8 +105,8 @@ class Series(object):
 
     def drawImage(self, *args, **kwargs):
         key = (args, tuple(sorted(kwargs.items())))
-        return np.add.reduce(
-            [self.cache((key, idx))*c for idx, c in zip(self.indices, self.getCoeffs())])
+        return galsim.ImageF(np.add.reduce(
+            [self.cache((key, idx))*c for idx, c in zip(self.indices, self.getCoeffs())]))
 
     def drawKImage(self, *args, **kwargs):
         key = (args, tuple(sorted(kwargs.items())))
@@ -165,7 +165,7 @@ class SeriesConvolution(Series):
     def getBasisFunc(self, index):
         return galsim.Convolve([obj.getBasisFunc(idx) for obj, idx in zip(self.objlist, index[1])])
 
-
+    
 class Spergelet(galsim.GSObject):
     """A basis function in the Taylor series expansion of the Spergel profile.
 
@@ -262,7 +262,6 @@ class SpergelSeries(Series):
 
     def getCoeff(self, j, q):
         ellip, phi0, Delta = self._decomposeA()
-        print "ellip:{} phi0:{} Delta:{}".format(ellip, phi0, Delta)
         coeffs = []
         coeff = 0.0
         for m in range(abs(q), j+1):
@@ -277,7 +276,6 @@ class SpergelSeries(Series):
                 num *= ellip**m
             den = 2**(m-1) * math.factorial(j-m) * math.factorial(m-n) * math.factorial(n)
             coeff += num/den
-            print "j:{} q:{} m:{} n:{} num:{}, den:{}".format(j, q, m, n, num, den)
         if q > 0:
             coeff *= self.flux * math.cos(2*q*phi0)
         elif q < 0:
