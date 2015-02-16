@@ -355,13 +355,13 @@ class ChromaticObject(object):
         The task of drawImage() in a chromatic context is to integrate a chromatic surface
         brightness profile multiplied by the throughput of `bandpass`, over the wavelength interval
         indicated by `bandpass`.  This integration will take place either via brute-force drawing
-        the image at each wavelength, or via an optimized version of the routine that uses some
-        approximations to significantly speed-up the calculations for non-separable profiles.
-        `drawImage` chooses which method to use depending on whether the user has done the
-        pre-computation necessary for the latter, using the `setupInterpolation` method.
+        the image at some number of wavelengths, or via an optimized version of the routine that
+        uses interpolation between stored images (see setupInterpolation() for more details).
+        `drawImage` chooses which method to use depending on whether the user has called
+        setupInterpolation().
 
         Several integrators are available in galsim.integ to do this integration when using the
-        first (non-interpolated integration).  By default,
+        first method (non-interpolated integration).  By default,
         `galsim.integ.SampleIntegrator(rule=np.trapz)` will be used if either
         `bandpass.wave_list` or `self.wave_list` have len() > 0.  If lengths of both are zero, which
         may happen if both the bandpass throughput and the SED associated with `self` are analytic
