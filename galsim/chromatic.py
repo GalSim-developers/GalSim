@@ -464,18 +464,6 @@ class ChromaticObject(object):
         stored images is being used.  Users should not call this routine directly, and should
         instead interact with the `drawImage` method.
         """
-        # Check whether the object has had some chromatic transformation applied to it.  Since we
-        # are interpolating between stored images, this is not a situation that _interp_drawImage
-        # can handle.  We have to lose the interpolation.
-        if hasattr(self, '_A') and self._chromaticTransformation(bandpass):
-            import warnings
-            warnings.warn("Cannot render image with chromatic transformation applied to it"
-                          " using interpolation between stored images.  Reverting to "
-                          "non-interpolated version.")
-            self.removeInterpolation()
-            return self._normal_drawImage(bandpass, image=image,
-                                          integrator=integrator, **kwargs)
-
         # Note that integrator is not actually selectable.
         if integrator is not None:
             import warnings
@@ -741,7 +729,14 @@ class ChromaticObject(object):
 
     # Helper function
     def _applyMatrix(self, J):
-        if hasattr(J, '__call__'):
+        if hasattr(J, '__call__') and hasattr(self, 'waves'):
+            # In principle, do not need to check for presence of 'waves', could just use
+            # removeInterpolation(). But we do want to warn users, so check to make sure we are
+            # really in a situation that warrants a warning.
+            import warnings
+            warnings.warn("Cannot render image with chromatic transformation applied to it"
+                          " using interpolation between stored images.  Reverting to "
+                          "non-interpolated version.")
             self.removeInterpolation()
         if isinstance(self, ChromaticSum):
             # Don't wrap ChromaticSum object, easier to just wrap its arguments.
