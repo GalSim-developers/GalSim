@@ -496,22 +496,18 @@ class ChromaticObject(object):
         kwargs.pop('nx', None)
         kwargs.pop('ny', None)
 
-        # determine combined self.wave_list and bandpass.wave_list
+        # determine combination of self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
-
-        # merge self.wave_list into bandpass.wave_list since we are using a sampling integrator
-        bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
-                                                      interpolant='linear'))
 
         # The integration is carried out using the following two basic approaches:
         # (1) We use linear interpolation between the stored images to get an image at a given
         #     wavelength.
         # (2) We use the midpoint rule for integration.
 
-        # Figure out the dwave for each of the wavelengths in the bandpass.
-        dw = [bandpass.wave_list[1]-bandpass.wave_list[0]]
-        dw.extend(0.5*(bandpass.wave_list[2:]-bandpass.wave_list[0:-2]))
-        dw.append(bandpass.wave_list[-1]-bandpass.wave_list[-2])
+        # Figure out the dwave for each of the wavelengths in the combined wave_list.
+        dw = [wave_list[1]-wave_list[0]]
+        dw.extend(0.5*(wave_list[2:]-wave_list[0:-2]))
+        dw.append(wave_list[-1]-wave_list[-2])
         # Set up arrays to accumulate the weights for each of the stored images.
         weight_fac = np.zeros(len(self.waves))
         for idx, w in enumerate(bandpass.wave_list):
