@@ -508,8 +508,7 @@ def test_chromatic_flux():
         int_flux/analytic_flux, 1.0, 3,
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
     # Go back to no interpolation (this will effect the PSFs that are used below).
-    PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500,
-                                     zenith_angle=zenith_angle)
+    PSF.removeInterpolation()
 
     # Try adjusting flux to something else.
     target_flux = 2.63
