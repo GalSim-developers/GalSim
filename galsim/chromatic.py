@@ -1781,12 +1781,14 @@ class ChromaticOpticalPSF(ChromaticObject):
     diameter, their chromatic dependence gets taken care of automatically.
 
     When using interpolation to speed up image rendering (see ChromaticObject.setupInterpolation()
-    method for details), including ~10-15 samples across any given bandpass should be sufficient.
-    For moderate accuracy, 5 is often sufficient.  Likewise, for high accuracy, `oversample_fac`
-    should be in the range 1.5-2, whereas for moderate accuracy, 1 is often sufficient.  All of
-    these statements assume that aberrations are not very large (typically <~0.25 waves, which is
-    commonly satisfied by space telescopes); if they are larger than that, then more stringent
-    settings are required.
+    method for details), the ideal number of wavelengths to use across a given bandpass depends on
+    the application and accuracy requirements.  In general it will be necessary to do a test in
+    comparison with a more exact calculation to ensure convergence.  However, a typical calculation
+    might use ~10-15 samples across a typical optical bandpass, with `oversample_fac` in the range
+    1.5-2; for moderate accuracy, ~5 samples across the bandpass and `oversample_fac=1` may
+    suffice. All of these statements assume that aberrations are not very large (typically <~0.25
+    waves, which is commonly satisfied by space telescopes); if they are larger than that, then more
+    stringent settings are required.
 
     Also, note that in order to render an image of a real physical object, the ChromaticOpticalPSF
     should be convolved with some object that has an SED.  Drawing without doing so corresponds to
