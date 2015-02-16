@@ -328,9 +328,6 @@ class ChromaticObject(object):
         @returns an Image of the object at the given wavelength.
         """
         # First, some wavelength-related sanity checks.
-        if not hasattr(self, 'waves'):
-            raise RuntimeError("Requested image at some wavelength without setting up "
-                               "interpolation!")
         if wave < min(self.waves) or wave > max(self.waves):
             raise RuntimeError("Requested wavelength %.1f is outside the allowed range:"
                                " %.1f to %.1f nm"%(wave, min(self.waves), max(self.waves)))
