@@ -31,11 +31,12 @@ namespace galsim {
 
         // Constrain range of allowed Spergel index nu.  Spergel (2010) Table 1 lists values of nu
         // from -0.9 to +0.85. I've found that nu = -0.9 is too tricky for the GKP integrator to
-        // handle, however, so I'm setting the lower range to -0.85 instead.  I haven't run into any
-        // problems with the upper limit though, which could probably be extended.
+        // handle, however, so I'm setting the lower range to -0.85 instead.  The upper limit is
+        // set by the boost::math::cyl_bessel_k function, which I found runs into overflow errors
+        // for nu larger than about 4.0.
 
         const double minimum_spergel_nu = -0.85;
-        const double maximum_spergel_nu = 0.85;
+        const double maximum_spergel_nu = 4.0;
 
         // How many Spergel profiles to save in the cache
         const int max_spergel_cache = 100;
@@ -72,14 +73,10 @@ namespace galsim {
          * @param[in] rType    Kind of size being specified (HALF_LIGHT_RADIUS or
          *                     SCALE_RADIUS).
          * @param[in] flux     flux.
-         * @param[in] trunc    Truncation radius beyond which profile value is 0.0
-         * @param[in] flux_untruncated
-         *                     Determines how to normalize truncated profile.
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
         SBSpergel(double nu, double size, RadiusType rType, double flux,
-                  double trunc, bool flux_untruncated,
                   const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
@@ -97,6 +94,11 @@ namespace galsim {
         /// @brief Returns the half light radius of the Spergel profile.
         double getHalfLightRadius() const;
 
+        /// @brief Return integrated flux of circular profile.
+        double calculateIntegratedFlux(const double& r) const;
+
+        /// @brief Return radius enclosing flux f
+        double calculateFluxRadius(const double& f) const;
 
     protected:
 
