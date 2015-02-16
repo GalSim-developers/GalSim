@@ -241,12 +241,12 @@ class ChromaticObject(object):
 
         # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for the
         # array of images that is being stored.
-        nyquist_dx_vals = [ obj.nyquistScale() for obj in objs ]
-        dx = min(nyquist_dx_vals) / oversample_fac
+        nyquist_scale_vals = [ obj.nyquistScale() for obj in objs ]
+        scale = min(nyquist_scale_vals) / oversample_fac
 
         # Find the suggested image size for each object given the choice of scale, and use the
         # maximum just to be safe.
-        possible_im_sizes = [ obj.SBProfile.getGoodImageSize(dx, 1.0) for obj in objs ]
+        possible_im_sizes = [ obj.SBProfile.getGoodImageSize(scale, 1.0) for obj in objs ]
         im_size = max(possible_im_sizes)
 
         # Find the stepK and maxK values for each object.  These will be used later on, so that we
@@ -256,7 +256,7 @@ class ChromaticObject(object):
 
         # Finally, now that we have an image scale and size, draw all the images.  Note that
         # `no_pixel` is used (we want the object on its own, without a pixel response).
-        self.ims = [ obj.drawImage(scale=dx, nx=im_size, ny=im_size, method='no_pixel') \
+        self.ims = [ obj.drawImage(scale=scale, nx=im_size, ny=im_size, method='no_pixel') \
                          for obj in objs ]
 
     def removeInterpolation(self):
