@@ -232,13 +232,11 @@ class ChromaticObject(object):
         fluxes = np.array([ obj.getFlux() for obj in objs ])
         if np.any(abs(fluxes - 1.0) > 10.*np.finfo(fluxes.dtype.type).eps):
             # Figure out the rescaling factor for the SED.
-            rescale_fac = np.zeros_like(self.waves)
-            for ind in range(len(self.waves)):
-                rescale_fac[ind] = fluxes[ind]
-                objs[ind].setFlux(1.0)
+            for obj in objs:
+                obj.setFlux(1.)
             if not hasattr(self, 'SED'):
                 self.SED = lambda w : 1.0
-            self.SED = galsim.LookupTable(x=self.waves, f=self.SED(self.waves)*rescale_fac,
+            self.SED = galsim.LookupTable(x=self.waves, f=self.SED(self.waves)*fluxes,
                                           interpolant='linear')
 
         # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for the
