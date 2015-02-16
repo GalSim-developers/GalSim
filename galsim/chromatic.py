@@ -1436,7 +1436,7 @@ class ChromaticConvolution(ChromaticObject):
             self.separable = False
 
         # Check quickly whether we are convolving two non-separable things that aren't
-        # ChromaticSums, >1 of each uses interpolation.  If so, emit a warning that the
+        # ChromaticSums, >1 of which uses interpolation.  If so, emit a warning that the
         # interpolation optimization is being ignored and full evaluation is necessary.
         # For the case of ChromaticSums, as long as each object in the sum is separable (even if the
         # entire object is not) then interpolation can still be used.  So we do not warn about this
