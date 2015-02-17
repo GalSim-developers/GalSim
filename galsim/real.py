@@ -40,6 +40,7 @@ import galsim
 import utilities
 from galsim import GSObject
 from galsim import pyfits
+import os
 
 class RealGalaxy(GSObject):
     """A class describing real galaxies from some training dataset.  Its underlying implementation
@@ -333,30 +334,9 @@ class RealGalaxyCatalog(object):
     # So skip any other calculations that might normally be necessary on construction.
     def __init__(self, file_name, image_dir=None, dir=None, preload=False, nobjects_only=False,
                  noise_dir=None, logger=None):
-        import os
-        # First build full file_name
-        if dir is None:
-            self.file_name = file_name
-            if image_dir is None:
-                self.image_dir = os.path.dirname(file_name)
-            elif os.path.dirname(image_dir) == '':
-                self.image_dir = os.path.join(os.path.dirname(self.file_name),image_dir)
-            else:
-                self.image_dir = image_dir
-        else:
-            self.file_name = os.path.join(dir,file_name)
-            if image_dir is None:
-                self.image_dir = dir
-            else:
-                self.image_dir = os.path.join(dir,image_dir)
-        if not os.path.isdir(self.image_dir):
-            raise RuntimeError(self.image_dir+' directory does not exist!')
-        if noise_dir is None:
-            self.noise_dir = self.image_dir
-        else:
-            if not os.path.isdir(noise_dir):
-                raise RuntimeError(noise_dir+' directory does not exist!')
-            self.noise_dir = noise_dir
+
+        self.file_name, self.image_dir, self.noise_dir = \
+            parse_files_dirs(file_name, image_dir, dir, noise_dir)
 
         cat = pyfits.getdata(self.file_name)
         self.nobjects = len(cat) # number of objects in the catalog
@@ -660,3 +640,30 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
 
     # return simulated image
     return image
+
+def parse_files_dirs(file_name, image_dir, dir, noise_dir):
+    # First build full file_name
+    if dir is None:
+        full_file_name = file_name
+        if image_dir is None:
+            full_image_dir = os.path.dirname(file_name)
+        elif os.path.dirname(image_dir) == '':
+            full_image_dir = os.path.join(os.path.dirname(full_file_name),image_dir)
+        else:
+            full_image_dir = image_dir
+    else:
+        full_file_name = os.path.join(dir,file_name)
+        if image_dir is None:
+            full_image_dir = dir
+        else:
+            full_image_dir = os.path.join(dir,image_dir)
+    if not os.path.isdir(full_image_dir):
+        raise RuntimeError(full_image_dir+' directory does not exist!')
+    if noise_dir is None:
+        full_noise_dir = full_image_dir
+    else:
+        if not os.path.isdir(noise_dir):
+            raise RuntimeError(noise_dir+' directory does not exist!')
+        full_noise_dir = noise_dir
+
+    return full_file_name, full_image_dir, full_noise_dir

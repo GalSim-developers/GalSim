@@ -20,6 +20,13 @@ Routines for controlling catalog input/output with GalSim.
 """
 
 import galsim
+from galsim import pyfits
+import numpy as np
+import math
+import os
+
+bandpass = galsim.Bandpass(os.path.join(galsim.meta_data.share_dir, 'wfc_F814W.dat'),
+                           wave_type='ang').thin().withZeropoint(25.94)
 
 class Catalog(object):
     """A class storing the data from an input catalog.
@@ -311,4 +318,226 @@ class Dict(object):
 
     def iteritems(self):
         return self.dict.iteritems()
+
+def makeCOSMOSCatalog(file_name, use_real=True, image_dir=None, dir=None, preload=False,
+                      noise_dir=None, deep_sample=False, exclude_failure=True):
+    # First, do the easy thing: real galaxies.
+    if use_real:
+        cat = galsim.RealGalaxyCatalog(
+            file_name, image_dir=image_dir, dir=dir, preload=preload, noise_dir=noise_dir)
+    else:
+        from real import parse_files_dirs
+
+        use_file_name, _, _ = \
+            parse_files_dirs(file_name, image_dir, dir, noise_dir)
+
+        # Read in data.
+        cat = pyfits.getdata(use_file_name)
+
+        # Apply cuts: is there a usable fit?
+        if exclude_failure:
+            sersicfit_status = cat.field('fit_status')[:,4]
+            bulgefit_status = cat.field('fit_status')[:,0]
+            use_fit_ind = np.where(
+                (sersicfit_status > 0) &
+                (sersicfit_status < 5) &
+                (bulgefit_status > 0) &
+                (bulgefit_status < 5)
+                )[0]
+
+    # Make fake deeper sample if necessary.
+    if deep_sample:
+        # Rescale the flux to get a limiting mag of 25 in F814W.  Current limiting mag is 23.5,
+        # so it's a magnitude difference of 1.5.  Just make the galaxies a factor of 0.6 smaller.
+        flux_factor = 10.**(-0.4*1.5)
+        size_factor = 0.6
+    else:
+        flux_factor = 1.0
+        size_factor = 1.0
+
+    if use_real:
+        # We have a RealGalaxyCatalog object, can just attach stuff to it as new attributes and
+        # return.
+        cat.flux_factor = flux_factor
+        cat.size_factor = size_factor
+        return cat
+    else:
+        # Have to do some pyfits-related magic, then return the FITS_rec part of the FITS binary
+        # table.
+        col_list = [col for col in cat.columns]
+        col_list.append(
+            pyfits.Column(name='flux_factor', format='D',
+                          array=flux_factor*np.ones(len(cat)))
+            )
+        col_list.append(
+            pyfits.Column(name='size_factor', format='D',
+                          array=size_factor*np.ones(len(cat)))
+            )
+        # The way to make the new BinTableHDU depends on the pyfits version.  Try the newer way
+        # first:
+        try:
+            cat = pyfits.BinTableHDU.from_columns(pyfits.ColDefs(col_list))
+        except:
+            cat = pyfits.new_table(pyfits.ColDefs(col_list))
+        if exclude_failure:
+            return cat.data[use_fit_ind]
+        else:
+            return cat.data
+
+def makeCOSMOSObj(cat, index, chromatic=False, pad_size=None):
+    # Check whether this is a catalog entry for a real object or for a parametric one.
+    if isinstance(cat, galsim.RealGalaxyCatalog):
+        if pad_size is None:
+            pad_size=0.25 # totally random guess in arcsec
+        if chromatic:
+            raise RuntimeError("Cannot yet make real chromatic galaxies!")
+        return makeReal(cat, index, pad_size=pad_size)
+    else:
+        return makeParam(cat, index, chromatic=chromatic)
+
+def makeReal(cat, index, pad_size):
+    noise_pad_size = int(np.ceil(pad_size * np.sqrt(2.)))
+    gal = galsim.RealGalaxy(cat, index=index, noise_pad_size=noise_pad_size)
+
+    # Rescale its size.
+    if hasattr(cat, 'size_factor'):
+        gal.applyDilation(cat.size_factor)
+    # Rescale its flux.
+    if hasattr(cat, 'flux_factor'):
+        gal *= cat.flux_factor
+    return gal
+
+def makeParam(cat, index, chromatic=False):
+    record = cat[index]
+
+    if chromatic:
+        sed_bulge = galsim.SED('examples/data/CWW_E_ext.sed')
+        sed_disk = galsim.SED('examples/data/CWW_Scd_ext.sed')
+        sed_intermed = galsim.SED('examples/data/CWW_Sbc_ext.sed')
+
+    # Get fit parameters.
+    params = record.field('bulgefit')
+    sparams = record.field('sersicfit')
+    # Get the status flag for the fits.
+    bstat = record.field('fit_status')[0]
+    sstat = record.field('fit_status')[4]
+    # Get the precomputed bulge-to-total ratio for the 2-component fits.
+    dvc_btt = record.field('fit_dvc_btt')
+    # Get the precomputed median absolute deviation for the 1- and 2-component fits.
+    bmad = record.field('fit_mad_b')
+    smad = record.field('fit_mad_s')
+
+    # First decide if we can / should use bulgefit, otherwise sersicfit.  This decision process
+    # depends on: the status flags for the fits, the bulge-to-total ratios (if near 0 or 1, just use
+    # single component fits), the sizes for the bulge and disk (if <=0 then use single component
+    # fits), the axis ratios for the bulge and disk (if <0.051 then use single component fits), and
+    # a comparison of the median absolute deviations to see which is better.
+    use_bulgefit = 1
+    if bstat<1 or bstat>4 or dvc_btt<0.1 or dvc_btt>0.9 or np.isnan(dvc_btt) or params[9]<=0 or params[1]<=0 or params[11]<0.051 or params[3]<0.051 or smad<bmad:
+        use_bulgefit = 0
+        # Then check if sersicfit is viable; if not, this object is a total failure:
+        if sstat<1 or sstat>4 or sparams[1]<=0 or sparams[0]<=0:
+            raise RuntimeError("Cannot make parametric model for this object")
+
+    # Now, if we're supposed to use the 2-component fits, get all the parameters.
+    if use_bulgefit:
+        bulge_q = params[11]
+        bulge_beta = params[15]*galsim.radians
+        bulge_hlr = 0.03*np.sqrt(bulge_q)*params[9]
+        bulge_flux = 2.0*np.pi*3.607*(bulge_hlr**2)*params[8]/0.03**2
+        disk_q = params[3]
+        disk_beta = params[7]*galsim.radians
+        disk_hlr = 0.03*np.sqrt(disk_q)*params[1]
+        disk_flux = 2.0*np.pi*1.901*(disk_hlr**2)*params[0]/0.03**2
+        bfrac = bulge_flux/(bulge_flux+disk_flux)
+        # Make sure the bulge flux fraction is not nonsense.
+        if bfrac < 0 or bfrac > 1 or np.isnan(bfrac):
+            raise RuntimeError("Cannot make parametric model for this object")
+
+        # Then make the object.
+        if chromatic:
+            bulge = galsim.Sersic(
+                4.0, flux=1., half_light_radius = record['size_factor']*bulge_hlr) * \
+                sed_bulge.withMagnitude(
+                record['mag_auto']-2.5*math.log10(bfrac*record['flux_factor']), bandpass)
+            disk = galsim.Sersic(
+                1.0, flux=1., half_light_radius = record['size_factor']*disk_hlr) * \
+                sed_disk.withMagnitude(
+                record['mag_auto']-2.5*math.log10((1.-bfrac)*record['flux_factor']), bandpass)
+        else:
+            bulge = galsim.Sersic(
+                4.0,
+                flux = record['flux_factor']*bulge_flux,
+                half_light_radius = record['size_factor']*bulge_hlr)
+            disk = galsim.Sersic(
+                1.0,
+                flux = record['flux_factor']*disk_flux,
+                half_light_radius = record['size_factor']*disk_hlr)
+        if bulge_q < 1.:
+            bulge = bulge.shear(q=bulge_q, beta=bulge_beta)
+        if disk_q < 1.:
+            disk = disk.shear(q=disk_q, beta=disk_beta)
+        return bulge+disk
+    else:
+        (fit_gal_flux, fit_gal_hlr, fit_gal_n, fit_gal_q, _, _, _, fit_gal_beta) = \
+            sparams
+
+        gal_n = fit_gal_n
+        # Fudge this if it is at the edge of the allowed n values.  Now that GalSim #325 and #449
+        # allow Sersic n in the range 0.3<=n<=6, the only problem is that the fits occasionally go
+        # as low as n=0.2.
+        if gal_n < 0.3: gal_n = 0.3
+        gal_q = fit_gal_q
+        gal_beta = fit_gal_beta*galsim.radians
+        gal_hlr = 0.03*np.sqrt(gal_q)*fit_gal_hlr
+        # Below is the calculation of the full Sersic n-dependent quantity that goes into the
+        # conversion from surface brightness to flux, which here we're calling 'prefactor'.  In the
+        # n=4 and n=1 cases above, this was precomputed, but here we have to calculate for each
+        # value of n.
+        tmp_ser = galsim.Sersic(gal_n, half_light_radius=1.)
+        gal_bn = (1./tmp_ser.getScaleRadius())**(1./gal_n)
+        prefactor = gal_n * _gammafn(2.*gal_n) * math.exp(gal_bn) / (gal_bn**(2.*gal_n))
+        gal_flux = 2.*np.pi*prefactor*(gal_hlr**2)*fit_gal_flux/0.03**2
+
+        if chromatic:
+            gal = galsim.Sersic(
+                gal_n, flux = 1.,
+                half_light_radius = record['size_factor']*gal_hlr)
+            gal = gal* sed_intermed.withMagnitude(
+                record['mag_auto']-2.5*math.log10(record['flux_factor']), bandpass)
+        else:
+            gal = galsim.Sersic(
+                gal_n,
+                flux = record['flux_factor']*gal_flux,
+                half_light_radius = record['size_factor']*gal_hlr)
+        if gal_q < 1.:
+            gal = gal.shear(q=gal_q, beta=gal_beta)
+        return gal
+
+def _gammafn(x):
+    """The gamma function is present in python2.7's math module, but not 2.6.  So try using that,
+    and if it fails, use some code from RosettaCode:
+    http://rosettacode.org/wiki/Gamma_function#Python
+    """
+    try:
+        import math
+        return math.gamma(x)
+    except:
+        y  = float(x) - 1.0;
+        sm = _gammafn._a[-1];
+        for an in _gammafn._a[-2::-1]:
+            sm = sm * y + an;
+        return 1.0 / sm;
+
+_gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.65587807152025388108,
+              -0.04200263503409523553, 0.16653861138229148950, -0.04219773455554433675,
+              -0.00962197152787697356, 0.00721894324666309954, -0.00116516759185906511,
+              -0.00021524167411495097, 0.00012805028238811619, -0.00002013485478078824,
+              -0.00000125049348214267, 0.00000113302723198170, -0.00000020563384169776,
+               0.00000000611609510448, 0.00000000500200764447, -0.00000000118127457049,
+               0.00000000010434267117, 0.00000000000778226344, -0.00000000000369680562,
+               0.00000000000051003703, -0.00000000000002058326, -0.00000000000000534812,
+               0.00000000000000122678, -0.00000000000000011813, 0.00000000000000000119,
+               0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
+             )
 
