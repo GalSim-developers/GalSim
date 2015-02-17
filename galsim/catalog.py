@@ -325,7 +325,48 @@ def makeCOSMOSCatalog(file_name, use_real=True, image_dir=None, dir=None, noise_
     This routine makes a catalog of galaxies based on the COSMOS sample with F814W<23.5.
 
     Depending on the keyword arguments, particularly `use_real`, the catalog will either have
-    information about real galaxies, or parametric ones.
+    information about real galaxies, or parametric ones.  To use this with either type of galaxies,
+    you need to get the COSMOS datasets in the format that GalSim recognizes; see
+
+        https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy-Data
+
+    option (1) for more information.  Note that if you want to make real galaxies you need to
+    download the full tarball with all galaxy images, whereas if you want to make parametric
+    galaxies you only need the supplemental catalogs, not the images.
+
+    After getting the catalogs, there is a helper routine makeCOSMOSObj() that can make an object
+    corresponding to any chosen galaxy in the catalog (whether real or parametric).  See
+    help(galsim.makeCOSMOSObj) for more information.  As an interesting application and example of
+    the usage of these routines, consider the following code:
+
+        >>>> im_size = 64
+        >>>> pix_scale = 0.05
+        >>>> bandpass = galsim.Bandpass('wfc_F814W.dat',
+                                        wave_type='ang').thin().withZeropoint(25.94)
+        >>>> real_cat = galsim.makeCOSMOSCatalog('real_galaxy_catalog_23.5.fits',
+                                                 dir='/path/to/COSMOS/data')
+        >>>> param_cat = galsim.makeCOSMOSCatalog('real_galaxy_catalog_23.5_fits.fits',
+                                                  dir='/path/to/COSMOS/data',
+                                                  use_real=False, exclude_fail=False)
+        >>>> psf = galsim.OpticalPSF(diam=2.4, lam=1000.) # bigger than HST F814W PSF.
+        >>>> for ind in range(10):
+        >>>>     real_gal = galsim.makeCOSMOSObj(real_cat, ind, pad_size=im_size*pix_scale)
+        >>>>     param_gal = galsim.makeCOSMOSObj(param_cat, ind, chromatic=True)
+        >>>>     real_obj = galsim.Convolve(real_gal, psf)
+        >>>>     param_obj = galsim.Convolve(param_gal, psf)
+        >>>>     im_real = galsim.Image(im_size, im_size)
+        >>>>     im_param = galsim.Image(im_size, im_size)
+        >>>>     try:
+        >>>>         real_obj.drawImage(image=im_real, scale=pix_scale)
+        >>>>         param_obj.drawImage(bandpass, image=im_param, scale=pix_scale)
+        >>>>         im_real.write('im_real_'+str(ind)+'.fits')
+        >>>>         im_param.write('im_param_'+str(ind)+'.fits')
+        >>>>     except:
+        >>>>         pass
+
+    This code snippet will draw images of the first 10 objects in the COSMOS catalog, at slightly
+    lower resolution than in COSMOS, with a real image and its parametric representation for each of
+    those objects.
 
     @param file_name    The file containing the catalog.
     @param use_real     Use realistic galaxies or parametric ones?  [default: True]
