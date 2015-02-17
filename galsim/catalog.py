@@ -393,32 +393,6 @@ def makeCOSMOSCatalog(file_name, use_real=True, image_dir=None, dir=None, noise_
     @returns either a RealGalaxyCatalog or a pyfits.FITS_rec containing information about the real
     galaxies or parametric ones.
     """
-    if use_real:
-        # First, do the easy thing: real galaxies.  We make the galsim.RealGalaxyCatalog()
-        # constructor do most of the work.
-        cat = galsim.RealGalaxyCatalog(
-            file_name, image_dir=image_dir, dir=dir, preload=preload, noise_dir=noise_dir)
-    else:
-        from real import parse_files_dirs
-
-        # Find the file.
-        use_file_name, _, _ = \
-            parse_files_dirs(file_name, image_dir, dir, noise_dir)
-
-        # Read in data.
-        cat = pyfits.getdata(use_file_name)
-
-        # If requested, select galaxies based on existence of a usable fit.
-        if exclude_fail:
-            sersicfit_status = cat.field('fit_status')[:,4]
-            bulgefit_status = cat.field('fit_status')[:,0]
-            use_fit_ind = np.where(
-                (sersicfit_status > 0) &
-                (sersicfit_status < 5) &
-                (bulgefit_status > 0) &
-                (bulgefit_status < 5)
-                )[0]
-
     # Make fake deeper sample if necessary.
     if deep_sample:
         # Rescale the flux to get a limiting mag of 25 in F814W.  Current limiting mag is 23.5,
@@ -431,12 +405,27 @@ def makeCOSMOSCatalog(file_name, use_real=True, image_dir=None, dir=None, noise_
         size_factor = 1.0
 
     if use_real:
+        # First, do the easy thing: real galaxies.  We make the galsim.RealGalaxyCatalog()
+        # constructor do most of the work.
+        cat = galsim.RealGalaxyCatalog(
+            file_name, image_dir=image_dir, dir=dir, preload=preload, noise_dir=noise_dir)
+
         # We have a RealGalaxyCatalog object, can just attach stuff to it as new attributes and
         # return.
         cat.flux_factor = flux_factor
         cat.size_factor = size_factor
         return cat
+
     else:
+        from real import parse_files_dirs
+
+        # Find the file.
+        use_file_name, _, _ = \
+            parse_files_dirs(file_name, image_dir, dir, noise_dir)
+
+        # Read in data.
+        cat = pyfits.getdata(use_file_name)
+
         # Have to do some pyfits-related magic, then return the FITS_rec part of the FITS binary
         # table.
         col_list = [col for col in cat.columns]
@@ -455,7 +444,16 @@ def makeCOSMOSCatalog(file_name, use_real=True, image_dir=None, dir=None, noise_
         except:
             cat = pyfits.new_table(pyfits.ColDefs(col_list))
 
+        # If requested, select galaxies based on existence of a usable fit.
         if exclude_fail:
+            sersicfit_status = cat.data['fit_status'][:,4]
+            bulgefit_status = cat.data['fit_status'][:,0]
+            use_fit_ind = np.where(
+                (sersicfit_status > 0) &
+                (sersicfit_status < 5) &
+                (bulgefit_status > 0) &
+                (bulgefit_status < 5)
+                )[0]
             return cat.data[use_fit_ind]
         else:
             return cat.data
