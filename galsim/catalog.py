@@ -460,8 +460,8 @@ def makeCOSMOSCatalog(file_name, use_real=True, image_dir=None, dir=None, noise_
 
 def makeCOSMOSObj(cat, index, chromatic=False, pad_size=None):
     """
-    Routine to take a catalog from makeCOSMOSCatalog, and construct a GSObject corresponding to an
-    object with a particular index.
+    Routine to take a catalog output by makeCOSMOSCatalog, and construct a GSObject corresponding to
+    an object with a particular index.
 
     The fluxes are set such that drawing into an image with the COSMOS pixel scale should give the
     right pixel values to mimic the actual COSMOS image.
@@ -482,7 +482,7 @@ def makeCOSMOSObj(cat, index, chromatic=False, pad_size=None):
     # Check whether this is a catalog entry for a real object or for a parametric one.
     if isinstance(cat, galsim.RealGalaxyCatalog):
         if pad_size is None:
-            pad_size=0.25 # totally random guess in arcsec
+            pad_size=0.25 # random and not completely ridiculous guess in arcsec
         if chromatic:
             raise RuntimeError("Cannot yet make real chromatic galaxies!")
         return _makeReal(cat, index, pad_size=pad_size)
@@ -493,10 +493,10 @@ def _makeReal(cat, index, pad_size):
     noise_pad_size = int(np.ceil(pad_size * np.sqrt(2.)))
     gal = galsim.RealGalaxy(cat, index=index, noise_pad_size=noise_pad_size)
 
-    # Rescale its size.
+    # Rescale the galaxy size.
     if hasattr(cat, 'size_factor'):
         gal.applyDilation(cat.size_factor)
-    # Rescale its flux.
+    # Rescale the galaxy flux.
     if hasattr(cat, 'flux_factor'):
         gal *= cat.flux_factor
     return gal
@@ -505,9 +505,10 @@ def _makeParam(cat, index, chromatic=False):
     record = cat[index]
 
     if chromatic:
-        sed_bulge = galsim.SED('examples/data/CWW_E_ext.sed')
-        sed_disk = galsim.SED('examples/data/CWW_Scd_ext.sed')
-        sed_intermed = galsim.SED('examples/data/CWW_Sbc_ext.sed')
+        # Read in some SEDs.
+        sed_bulge = galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_E_ext.sed'))
+        sed_disk = galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Scd_ext.sed'))
+        sed_intermed = galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Sbc_ext.sed'))
 
     # Get fit parameters.
     params = record.field('bulgefit')
@@ -536,51 +537,47 @@ def _makeParam(cat, index, chromatic=False):
 
     # Now, if we're supposed to use the 2-component fits, get all the parameters.
     if use_bulgefit:
+        # Bulge parameters.
         bulge_q = params[11]
         bulge_beta = params[15]*galsim.radians
         bulge_hlr = 0.03*np.sqrt(bulge_q)*params[9]
         bulge_flux = 2.0*np.pi*3.607*(bulge_hlr**2)*params[8]/0.03**2
+        # Disk parameters.
         disk_q = params[3]
         disk_beta = params[7]*galsim.radians
         disk_hlr = 0.03*np.sqrt(disk_q)*params[1]
         disk_flux = 2.0*np.pi*1.901*(disk_hlr**2)*params[0]/0.03**2
         bfrac = bulge_flux/(bulge_flux+disk_flux)
-        # Make sure the bulge flux fraction is not nonsense.
+        # Make sure the bulge-to-total flux ratio is not nonsense.
         if bfrac < 0 or bfrac > 1 or np.isnan(bfrac):
             raise RuntimeError("Cannot make parametric model for this object")
 
         # Then make the object.
         if chromatic:
-            bulge = galsim.Sersic(
-                4.0, flux=1., half_light_radius = record['size_factor']*bulge_hlr) * \
-                sed_bulge.withMagnitude(
+            bulge = galsim.DeVaucouleurs(flux=1., half_light_radius=record['size_factor']*bulge_hlr) \
+                * sed_bulge.withMagnitude(
                 record['mag_auto']-2.5*math.log10(bfrac*record['flux_factor']), bandpass)
-            disk = galsim.Sersic(
-                1.0, flux=1., half_light_radius = record['size_factor']*disk_hlr) * \
-                sed_disk.withMagnitude(
+            disk = galsim.Exponential(flux=1., half_light_radius=record['size_factor']*disk_hlr) \
+                * sed_disk.withMagnitude(
                 record['mag_auto']-2.5*math.log10((1.-bfrac)*record['flux_factor']), bandpass)
         else:
-            bulge = galsim.Sersic(
-                4.0,
-                flux = record['flux_factor']*bulge_flux,
-                half_light_radius = record['size_factor']*bulge_hlr)
-            disk = galsim.Sersic(
-                1.0,
-                flux = record['flux_factor']*disk_flux,
-                half_light_radius = record['size_factor']*disk_hlr)
+            bulge = galsim.DeVaucouleurs(flux = record['flux_factor']*bulge_flux,
+                                         half_light_radius = record['size_factor']*bulge_hlr)
+            disk = galsim.Exponential(flux = record['flux_factor']*disk_flux,
+                                      half_light_radius = record['size_factor']*disk_hlr)
+        # Apply shears for intrinsic shape.
         if bulge_q < 1.:
             bulge = bulge.shear(q=bulge_q, beta=bulge_beta)
         if disk_q < 1.:
             disk = disk.shear(q=disk_q, beta=disk_beta)
         return bulge+disk
     else:
-        (fit_gal_flux, fit_gal_hlr, fit_gal_n, fit_gal_q, _, _, _, fit_gal_beta) = \
-            sparams
+        (fit_gal_flux, fit_gal_hlr, fit_gal_n, fit_gal_q, _, _, _, fit_gal_beta) = sparams
 
         gal_n = fit_gal_n
-        # Fudge this if it is at the edge of the allowed n values.  Now that GalSim #325 and #449
-        # allow Sersic n in the range 0.3<=n<=6, the only problem is that the fits occasionally go
-        # as low as n=0.2.
+        # Fudge this if it is at the edge of the allowed n values.  Since GalSim (as of #325 and
+        # #449) allow Sersic n in the range 0.3<=n<=6, the only problem is that the fits
+        # occasionally go as low as n=0.2.
         if gal_n < 0.3: gal_n = 0.3
         gal_q = fit_gal_q
         gal_beta = fit_gal_beta*galsim.radians
@@ -595,22 +592,18 @@ def _makeParam(cat, index, chromatic=False):
         gal_flux = 2.*np.pi*prefactor*(gal_hlr**2)*fit_gal_flux/0.03**2
 
         if chromatic:
-            gal = galsim.Sersic(
-                gal_n, flux = 1.,
-                half_light_radius = record['size_factor']*gal_hlr)
+            gal = galsim.Sersic(gal_n, flux=1., half_light_radius=record['size_factor']*gal_hlr)
             if gal_n < 1.5:
                 use_sed = sed_disk
             elif gal_n >= 1.5 and gal_n < 3.0:
                 use_sed = sed_intermed
             else:
                 use_sed = sed_bulge
-            gal = gal * use_sed.withMagnitude(
-                record['mag_auto']-2.5*math.log10(record['flux_factor']), bandpass)
+            gal *= use_sed.withMagnitude(record['mag_auto']-2.5*math.log10(record['flux_factor']),
+                                         bandpass)
         else:
-            gal = galsim.Sersic(
-                gal_n,
-                flux = record['flux_factor']*gal_flux,
-                half_light_radius = record['size_factor']*gal_hlr)
+            gal = galsim.Sersic(gal_n, flux=record['flux_factor']*gal_flux,
+                                half_light_radius=record['size_factor']*gal_hlr)
         if gal_q < 1.:
             gal = gal.shear(q=gal_q, beta=gal_beta)
         return gal
