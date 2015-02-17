@@ -135,8 +135,6 @@ class ChromaticObject(object):
         # a wavelength-dependent dilate(f(w)) is implemented as a combination of a
         # wavelength-dependent expansion and wavelength-dependent flux rescaling.
         self._fluxFactor = lambda w: 1.0
-        # Attribute to track whether the affine transformation information has been reset.
-        self._reset = False
 
     def setupInterpolation(self, waves, oversample_fac=1.):
         """
@@ -165,24 +163,27 @@ class ChromaticObject(object):
         with the best option depending on the application.  For example, when rendering many times
         with the same achromatic transformation applied, it is typically advantageous to apply the
         transformation before setting up the interpolation.  But there is no value in this when
-        applying different achromatic transformation to each object.  Chromatic transformations must
-        be applied before setting up interpolation, and attempts to render images of
-        ChromaticObjects with interpolation followed by a chromatic transformation will result in an
-        exception being raised.
+        applying different achromatic transformation to each object.  Chromatic transformations
+        should be applied before setting up interpolation; attempts to render images of
+        ChromaticObjects with interpolation followed by a chromatic transformation will result in
+        the interpolation being unset and the full calculation being done.
 
         Because of the clever way that the ChromaticConvolution routine works, convolutions of
-        non-separable chromatic objects that use interpolation with separable objects will still
+        separable chromatic objects with non-separable ones that use interpolation will still
         benefit from these optimizations.  For example, a non-separable chromatic PSF that uses
         interpolation, when convolved with a sum of two galaxy components each with their own SED
         will be able to take advantage of this optimization.  In contrast, when convolving two
-        non-separable profiles there is no way to take advantage of the interpolation optimization,
-        so even in the case that interpolation has been set up, it will be ignored and the full
-        calculation will be done.
+        non-separable profiles that already have interpolation set up, there is no way to take
+        advantage of that interpolation optimization, so it will be ignored and the full calculation
+        will be done.  However, interpolation can be set up for the convolution of two non-separable
+        profiles, after the convolution step.  This could be beneficial for example when convolving
+        a chromatic optical PSF and chromatic atmosphere, before convolving with multiple galaxy
+        profiles.
 
         For use cases requiring a high level of precision, we recommend a comparison between the
         interpolated and the more accurate calculation for at least one case, to ensure that the
         required precision has been reached.  Also note that after calling `setupInterpolation`, it
-        is possible to revert to the exact calculation by calling `noInterpolation`.
+        is possible to revert to the exact calculation by calling `removeInterpolation`.
 
         The input parameter `waves` determines the input grid on which images are precomputed.  It
         is difficult to give completely general guidance as to how many wavelengths to choose or how
@@ -197,7 +198,7 @@ class ChromaticObject(object):
                                 (i.e., this class will not extrapolate beyond the given range of
                                 wavelengths).  They can be spaced any way the user likes, not
                                 necessarily linearly, though interpolation will be linear in
-                                wavelength.
+                                wavelength between the specified wavelengths.
         @param oversample_fac   Factor by which to oversample the stored profiles compared to the
                                 default, which is to sample them at the Nyquist frequency for
                                 whichever wavelength has the highest Nyquist frequency.
@@ -210,42 +211,43 @@ class ChromaticObject(object):
 
         # Make the objects between which we are going to interpolate.  Note that these do not have
         # to be saved for later, unlike the images.
-        objs = [ self.evaluateAtWavelength(wave) for wave in waves ]
+        objs = [ self.evaluateAtWavelength(wave) for wave in self.waves ]
 
         # The evaluation step (above) led to the incorporation of any shears and other
         # transformations into the stored models between which we interpolation, so reset the
         # internal attributes that store information about transformations, if indeed there were any
         # transformations.
-        if hasattr(self, '_A') and not all ([self._nullTransformation(w) for w in waves]):
+        if hasattr(self, '_A') and not all ([self._nullTransformation(w) for w in self.waves]):
+            # Store the old transformations.
+            self._save_A = self._A
+            self._save_fluxFactor = self._fluxFactor
+            # Then reset the one that is stored as part of this profile.
             self._A = lambda w: np.matrix(np.identity(3), dtype=float)
             self._fluxFactor = lambda w: 1.0
-            self._reset = True
 
         # Check the fluxes for the objects.  If they are unity (within some tolerance) then that
         # makes things simple.  If they are not, however, then we have to reset them to unity, and
         # modify the SED attribute, which now refers to the total flux at a given wavelength after
         # integrating over the whole light profile.
         fluxes = np.array([ obj.getFlux() for obj in objs ])
-        if np.any(abs(fluxes - 1.0) > 1000.*np.finfo(fluxes.dtype.type).eps):
+        if np.any(abs(fluxes - 1.0) > 10.*np.finfo(fluxes.dtype.type).eps):
             # Figure out the rescaling factor for the SED.
-            rescale_fac = np.zeros_like(self.waves)
-            for ind in range(len(self.waves)):
-                rescale_fac[ind] = fluxes[ind]
-                objs[ind].setFlux(1.0)
+            for obj in objs:
+                obj.setFlux(1.)
             if not hasattr(self, 'SED'):
                 self.SED = lambda w : 1.0
-            self.SED = galsim.LookupTable(x=self.waves, f=self.SED(self.waves)*rescale_fac,
+            self.SED = galsim.LookupTable(x=self.waves, f=self.SED(self.waves)*fluxes,
                                           interpolant='linear')
 
         # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for the
         # array of images that is being stored.
-        nyquist_dx_vals = [ obj.nyquistScale() for obj in objs ]
-        dx = min(nyquist_dx_vals) / oversample_fac
+        nyquist_scale_vals = [ obj.nyquistScale() for obj in objs ]
+        scale = min(nyquist_scale_vals) / oversample_fac
 
         # Find the suggested image size for each object given the choice of scale, and use the
         # maximum just to be safe.
-        possible_im_sizes = [ obj.SBProfile.getGoodImageSize(dx, 1.0) for obj in objs ]
-        n_im = max(possible_im_sizes)
+        possible_im_sizes = [ obj.SBProfile.getGoodImageSize(scale, 1.0) for obj in objs ]
+        im_size = max(possible_im_sizes)
 
         # Find the stepK and maxK values for each object.  These will be used later on, so that we
         # can force these values when instantiating InterpolatedImages before drawing.
@@ -254,23 +256,37 @@ class ChromaticObject(object):
 
         # Finally, now that we have an image scale and size, draw all the images.  Note that
         # `no_pixel` is used (we want the object on its own, without a pixel response).
-        self.ims = [ obj.drawImage(scale=dx, nx=n_im, ny=n_im, method='no_pixel') for obj in objs ]
+        self.ims = [ obj.drawImage(scale=scale, nx=im_size, ny=im_size, method='no_pixel') \
+                         for obj in objs ]
 
-    def noInterpolation(self):
+    def removeInterpolation(self):
         """
         A routine to force an object for which interpolation was previously set up go back to the
         exact calculation.
-
-        This can only be done if some transformation was not done when setting up the interpolation,
-        since the information about that transformation was deleted at that time.
         """
         if hasattr(self, 'waves'):
             # Check whether some chromatic transformation was done when setting up the
-            # interpolation.  If so, information about it has been lost, so raise an exception.
-            if hasattr(self, '_reset') and self._reset:
-                raise RuntimeError(
-                    "Error, cannot go back to exact calculation because a transformation was "
-                    "applied (and then cleared) when storing images.")
+            # interpolation, and restore the associated _A and _fluxFactor in combination with any
+            # other transformations that have been done in the meantime.
+            if hasattr(self, '_save_A'):
+                # Need to be careful about order.  What's in self._A came after what's in
+                # self._save_A.
+
+                if all([self._nullTransformation(w) for w in self.waves]):
+                    self._A = self._save_A
+                else:
+                    tmp_A = self._A
+                    self._A = lambda w: tmp_A(w) * self._save_A
+
+                if all([self._nullFluxTransformation(w) for w in self.waves]):
+                    self._fluxFactor = self._save_fluxFactor
+                else:
+                    tmp_fluxFactor = self._fluxFactor
+                    self._fluxFactor = lambda w: tmp_fluxFactor(w) * self._save_fluxFactor(w)
+
+                # Then delete the old _save_A.
+                del self._save_A
+                del self._save_fluxFactor
 
             # Get rid of the stored attributes related to interpolation.
             del self.waves
@@ -312,9 +328,6 @@ class ChromaticObject(object):
         @returns an Image of the object at the given wavelength.
         """
         # First, some wavelength-related sanity checks.
-        if not hasattr(self, 'waves'):
-            raise RuntimeError("Requested image at some wavelength without setting up "
-                               "interpolation!")
         if wave < min(self.waves) or wave > max(self.waves):
             raise RuntimeError("Requested wavelength %.1f is outside the allowed range:"
                                " %.1f to %.1f nm"%(wave, min(self.waves), max(self.waves)))
@@ -342,13 +355,13 @@ class ChromaticObject(object):
         The task of drawImage() in a chromatic context is to integrate a chromatic surface
         brightness profile multiplied by the throughput of `bandpass`, over the wavelength interval
         indicated by `bandpass`.  This integration will take place either via brute-force drawing
-        the image at each wavelength, or via an optimized version of the routine that uses some
-        approximations to significantly speed-up the calculations for non-separable profiles.
-        `drawImage` chooses which method to use depending on whether the user has done the
-        pre-computation necessary for the latter, using the `setupInterpolation` method.
+        the image at some number of wavelengths, or via an optimized version of the routine that
+        uses interpolation between stored images (see setupInterpolation() for more details).
+        `drawImage` chooses which method to use depending on whether the user has called
+        setupInterpolation().
 
         Several integrators are available in galsim.integ to do this integration when using the
-        first (non-interpolated integration).  By default,
+        first method (non-interpolated integration).  By default,
         `galsim.integ.SampleIntegrator(rule=np.trapz)` will be used if either
         `bandpass.wave_list` or `self.wave_list` have len() > 0.  If lengths of both are zero, which
         may happen if both the bandpass throughput and the SED associated with `self` are analytic
@@ -370,8 +383,8 @@ class ChromaticObject(object):
                                 for details.)  [default: None]
         @param integrator       One of the image integrators from galsim.integ [default: None,
                                 which will try to select an appropriate integrator automatically.]
-                                This keyword is ignored in the case that optimized interpolation
-                                between precomputed images is to be used to render the image.
+                                This keyword is ignored if setupInterpolation() has been called for
+                                this object.
         @param **kwargs         For all other kwarg options, see GSObject.drawImage()
 
         @returns the drawn Image.
@@ -397,9 +410,11 @@ class ChromaticObject(object):
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
         # Remove from kwargs anything that is only used for setting up image:
-        if 'dtype' in kwargs: kwargs.pop('dtype')
-        if 'scale' in kwargs: kwargs.pop('scale')
-        if 'wcs' in kwargs: kwargs.pop('wcs')
+        kwargs.pop('dtype', None)
+        kwargs.pop('scale', None)
+        kwargs.pop('wcs', None)
+        kwargs.pop('nx', None)
+        kwargs.pop('ny', None)
 
         # determine combined self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
@@ -449,18 +464,6 @@ class ChromaticObject(object):
         stored images is being used.  Users should not call this routine directly, and should
         instead interact with the `drawImage` method.
         """
-        # Check whether the object has had some chromatic transformation applied to it.  Since we
-        # are interpolating between stored images, this is not a situation that _interp_drawImage
-        # can handle.  We have to lose the interpolation.
-        if hasattr(self, '_A') and self._chromaticTransformation(bandpass):
-            import warnings
-            warnings.warn("Cannot render image with chromatic transformation applied to it"
-                          " using interpolation between stored images.  Reverting to "
-                          "non-interpolated version.")
-            self.noInterpolation()
-            return self._normal_drawImage(bandpass, image=image,
-                                          integrator=integrator, **kwargs)
-
         # Note that integrator is not actually selectable.
         if integrator is not None:
             import warnings
@@ -475,26 +478,24 @@ class ChromaticObject(object):
         prof0 = self._evaluateAtWavelength(bandpass.effective_wavelength)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
         # Remove from kwargs anything that is only used for setting up image:
-        if 'dtype' in kwargs: kwargs.pop('dtype')
-        if 'scale' in kwargs: kwargs.pop('scale')
-        if 'wcs' in kwargs: kwargs.pop('wcs')
+        kwargs.pop('dtype', None)
+        kwargs.pop('scale', None)
+        kwargs.pop('wcs', None)
+        kwargs.pop('nx', None)
+        kwargs.pop('ny', None)
 
-        # determine combined self.wave_list and bandpass.wave_list
+        # determine combination of self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
-
-        # merge self.wave_list into bandpass.wave_list since we are using a sampling integrator
-        bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
-                                                      interpolant='linear'))
 
         # The integration is carried out using the following two basic approaches:
         # (1) We use linear interpolation between the stored images to get an image at a given
         #     wavelength.
         # (2) We use the midpoint rule for integration.
 
-        # Figure out the dwave for each of the wavelengths in the bandpass.
-        dw = [bandpass.wave_list[1]-bandpass.wave_list[0]]
-        dw.extend(0.5*(bandpass.wave_list[2:]-bandpass.wave_list[0:-2]))
-        dw.append(bandpass.wave_list[-1]-bandpass.wave_list[-2])
+        # Figure out the dwave for each of the wavelengths in the combined wave_list.
+        dw = [wave_list[1]-wave_list[0]]
+        dw.extend(0.5*(wave_list[2:]-wave_list[0:-2]))
+        dw.append(wave_list[-1]-wave_list[-2])
         # Set up arrays to accumulate the weights for each of the stored images.
         weight_fac = np.zeros(len(self.waves))
         for idx, w in enumerate(bandpass.wave_list):
@@ -555,11 +556,20 @@ class ChromaticObject(object):
         A0 = self._A(wave)
         f0 = self._fluxFactor(wave)
         # Check whether any transformation was done.
-        if np.any(abs(A0-null_A) > 1000.*np.finfo(A0.dtype.type).eps) or \
-                abs(f0-1.) > 1000.*np.finfo(A0.dtype.type).eps:
-            return False
-        else:
-            return True
+        return not (np.any(abs(A0-null_A) > 10.*np.finfo(A0.dtype.type).eps) or \
+                        abs(f0-1.) > 10.*np.finfo(A0.dtype.type).eps)
+
+    def _nullFluxTransformation(self, wave):
+        """
+        A utility to check whether the internally stored flux transformation is consistent with a
+        null transformation at a given wavelength.
+
+        @param wave     Wavelength in nanometers.
+        @returns True/False (True if the transformation corresponds to no flux rescaling)
+        """
+        f0 = self._fluxFactor(wave)
+        # Check whether any transformation was done.
+        return (abs(f0-1.) <= 10.*np.finfo(np.array(f0).dtype.type).eps)
 
     def _chromaticTransformation(self, bandpass):
         """
@@ -576,11 +586,8 @@ class ChromaticObject(object):
         A1 = self._A(bandpass.red_limit)
         f0 = self._fluxFactor(bandpass.blue_limit)
         f1 = self._fluxFactor(bandpass.red_limit)
-        if np.any(abs(A1-A0) > 1000.*np.finfo(A0.dtype.type).eps) or \
-                abs(f1-f0) > 1000.*np.finfo(A0.dtype.type).eps:
-            return True
-        else:
-            return False
+        return (np.any(abs(A1-A0) > 10.*np.finfo(A0.dtype.type).eps) or
+                abs(f1-f0) > 10.*np.finfo(A0.dtype.type).eps)
 
     def draw(self, *args, **kwargs):
         """An obsolete synonym for obj.drawImage(method='no_pixel')
@@ -710,9 +717,11 @@ class ChromaticObject(object):
         ret = cls.__new__(cls)
         for k, v in self.__dict__.iteritems():
             if k == 'objlist':
-                # explicity request that individual items of objlist are copied,
-                # not just the list itself
+                # explicitly copy all individual items of objlist, not just the list itself
                 ret.__dict__[k] = [o.copy() for o in v]
+            elif k == 'scale_unit':
+                # Cannot deep-copy AngleUnits
+                ret.__dict__[k] = v
             else:
                 ret.__dict__[k] = copy.copy(v)
         return ret
@@ -722,6 +731,15 @@ class ChromaticObject(object):
 
     # Helper function
     def _applyMatrix(self, J):
+        if hasattr(J, '__call__') and hasattr(self, 'waves'):
+            # In principle, do not need to check for presence of 'waves', could just use
+            # removeInterpolation(). But we do want to warn users, so check to make sure we are
+            # really in a situation that warrants a warning.
+            import warnings
+            warnings.warn("Cannot render image with chromatic transformation applied to it"
+                          " using interpolation between stored images.  Reverting to "
+                          "non-interpolated version.")
+            self.removeInterpolation()
         if isinstance(self, ChromaticSum):
             # Don't wrap ChromaticSum object, easier to just wrap its arguments.
             return ChromaticSum([ obj._applyMatrix(J) for obj in self.objlist ])
@@ -1063,9 +1081,15 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     arcsec.  This is unlike the rest of GalSim, in which Position units only need to be internally
     consistent.
 
-    Also, note that in order to render an image of a real physical object, the ChromaticAtmosphere
-    should be convolved with some object that has an SED.  Drawing without doing so corresponds to
-    using a flat SED.
+    Note that a ChromaticAtmosphere by itself is NOT the correct thing to use to draw an image of a
+    star. Stars (and galaxies too, of course) have an SED that is not flat. To draw a real star, you
+    should either multiply the ChromaticAtmosphere object by an SED, or convolve it with a point
+    source (typically approximated by a very tiny Gaussian) multiplied by an SED:
+
+        >>> psf = galsim.ChromaticAtmosphere(...)
+        >>> star = galsim.Gaussian(sigma = 1.e-6) * psf_sed
+        >>> final_star = galsim.Convolve( [psf, star] )
+        >>> final_star.drawImage(bandpass = bp, ...)
 
     @param base_obj             Fiducial PSF, equal to the monochromatic PSF at `base_wavelength`
     @param base_wavelength      Wavelength represented by the fiducial PSF, in nanometers.
@@ -1408,7 +1432,7 @@ class ChromaticConvolution(ChromaticObject):
             self.separable = False
 
         # Check quickly whether we are convolving two non-separable things that aren't
-        # ChromaticSums, >1 of each uses interpolation.  If so, emit a warning that the
+        # ChromaticSums, >1 of which uses interpolation.  If so, emit a warning that the
         # interpolation optimization is being ignored and full evaluation is necessary.
         # For the case of ChromaticSums, as long as each object in the sum is separable (even if the
         # entire object is not) then interpolation can still be used.  So we do not warn about this
@@ -1531,6 +1555,12 @@ class ChromaticConvolution(ChromaticObject):
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
+        # Remove from kwargs anything that is only used for setting up image:
+        kwargs.pop('dtype', None)
+        kwargs.pop('scale', None)
+        kwargs.pop('wcs', None)
+        kwargs.pop('nx', None)
+        kwargs.pop('ny', None)
 
         # Sort these atomic objects into separable and inseparable lists, and collect
         # the spectral parts of the separable profiles.
@@ -1747,32 +1777,63 @@ class ChromaticOpticalPSF(ChromaticObject):
     defined in physical distances, but their impact on the PSF depends on their size in units of
     wavelength.  Other aspects of the optical PSF do not require explicit specification of their
     chromaticity, e.g., once the obscuration and struts are specified in units of the aperture
-    diameter, their chromatic dependence gets taken care of automatically.
+    diameter, their chromatic dependence gets taken care of automatically.  Note that the
+    ChromaticOpticalPSF implicitly defines diffraction limits in units of `scale_units`, which by
+    default are arcsec, but can in principle be set to any of our GalSim angle units.
 
     When using interpolation to speed up image rendering (see ChromaticObject.setupInterpolation()
-    method for details), including ~10-15 samples across any given bandpass should be sufficient.
-    For moderate accuracy, 5 is often sufficient.  Likewise, for high accuracy, `oversample_fac`
-    should be in the range 1.5-2, whereas for moderate accuracy, 1 is often sufficient.  All of
-    these statements assume that aberrations are not very large (typically <~0.25 waves, which is
-    commonly satisfied by space telescopes); if they are larger than that, then more stringent
-    settings are required.
+    method for details), the ideal number of wavelengths to use across a given bandpass depends on
+    the application and accuracy requirements.  In general it will be necessary to do a test in
+    comparison with a more exact calculation to ensure convergence.  However, a typical calculation
+    might use ~10-15 samples across a typical optical bandpass, with `oversample_fac` in the range
+    1.5-2; for moderate accuracy, ~5 samples across the bandpass and `oversample_fac=1` may
+    suffice. All of these statements assume that aberrations are not very large (typically <~0.25
+    waves, which is commonly satisfied by space telescopes); if they are larger than that, then more
+    stringent settings are required.
 
-    Also, note that in order to render an image of a real physical object, the ChromaticOpticalPSF
-    should be convolved with some object that has an SED.  Drawing without doing so corresponds to
-    using a flat SED.
+    Note that a ChromaticOpticalPSF by itself is NOT the correct thing to use to draw an image of a
+    star. Stars (and galaxies too, of course) have an SED that is not flat. To draw a real star, you
+    should either multiply the ChromaticOpticalPSF object by an SED, or convolve it with a point
+    source (typically approximated by a very tiny Gaussian) multiplied by an SED:
 
-    @param   diam          Telescope diameter in meters.
-    @param   aberrations   An array of aberrations, in nanometers.  The size and format of this
-                           array is described in the OpticalPSF docstring.
+        >>> psf = galsim.ChromaticOpticalPSF(...)
+        >>> star = galsim.Gaussian(sigma = 1.e-6) * psf_sed
+        >>> final_star = galsim.Convolve( [psf, star] )
+        >>> final_star.drawImage(bandpass = bp, ...)
+
+    @param   lam           Fiducial wavelength for which diffraction limit and aberrations are
+                           initially defined, in nanometers.
+    @param   diam          Telescope diameter in meters.  Either `diam` or `lam_over_diam` must be
+                           specified.
+    @param   lam_over_diam Ratio of (fiducial wavelength) / telescope diameter in units of
+                           `scale_unit`.  Either `diam` or `lam_over_diam` must be specified.
+    @param   aberrations   An array of aberrations, in units of fiducial wavelength `lam`.  The size
+                           and format of this array is described in the OpticalPSF docstring.
+    @param   scale_unit    Units used to define the diffraction limit and draw images.
+                           [default: galsim.arcsec]
     @param   **kwargs      Any other keyword arguments to be passed to OpticalPSF, for example,
                            related to struts, obscuration, oversampling, etc.  See OpticalPSF
-                           docstring for a complete list of options.
+                           docstring for a complete list of options. 
     """
-    def __init__(self, diam, aberrations, **kwargs):
+    def __init__(self, lam, diam=None, lam_over_diam=None, aberrations=None,
+                           scale_unit=galsim.arcsec, **kwargs):
         # First, take the basic info.
-        self.diam = diam
-        self.aberrations = aberrations
+        # We have to require either diam OR lam_over_diam:
+        if (diam is None and lam_over_diam is None) or \
+                (diam is not None and lam_over_diam is not None):
+            raise RuntimeError("Need to specify telescope diameter OR wavelength/diam ratio")
+        if diam is not None:
+            self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/scale_unit
+        else:
+            self.lam_over_diam = lam_over_diam
+        self.lam = lam
+
+        if aberrations is not None:
+            self.aberrations = aberrations
+        else:
+            self.aberrations = np.zeros(12)
         self.kwargs = kwargs
+        self.scale_unit = scale_unit
 
         # Define the necessary attributes for this ChromaticObject.
         self.separable = False
@@ -1784,9 +1845,13 @@ class ChromaticOpticalPSF(ChromaticObject):
 
         @param  wave   Wavelength in nanometers.
         """
-        lam_over_diam = 1.e-9 * (wave / self.diam) * (galsim.radians / galsim.arcsec)
-        aberrations = self.aberrations / wave
-        ret = galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
+        # We need to rescale the stored lam/diam by the ratio of input wavelength to stored fiducial
+        # wavelength.  Likewise, the aberrations were in units of wavelength for the fiducial
+        # wavelength, so we have to convert to units of waves for *this* wavelength.
+        ret = galsim.OpticalPSF(
+            lam_over_diam=self.lam_over_diam*(wave/self.lam),
+            aberrations=self.aberrations*(self.lam/wave), scale_unit=self.scale_unit,
+            **self.kwargs)
         return ret
 
 def _findWave(wave_list, wave):

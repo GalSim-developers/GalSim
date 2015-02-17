@@ -65,13 +65,13 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     the WFIRST bandpasses.
 
     By default, no additional aberrations are included above the basic design.  However, users can
-    provide an optional keyword `extra_aberrations` that will be included on top of those that
-    are part of the design.  This should be in the same format as for the ChromaticOpticalPSF class,
-    with units of nanometers. Currently, only aberrations up to order 11 (Noll convention) can be
-    simulated.  For WFIRST, the current tolerance for additional aberrations is a total of 195
-    nanometers RMS, distributed largely among coma, astigmatism, trefoil, and spherical aberrations
-    (NOT defocus).  This information might serve as a guide for reasonable `extra_aberrations`
-    inputs.
+    provide an optional keyword `extra_aberrations` that will be included on top of those that are
+    part of the design.  This should be in the same format as for the ChromaticOpticalPSF class,
+    with units of waves at the fiducial wavelength, 1293 nm. Currently, only aberrations up to order
+    11 (Noll convention) can be simulated.  For WFIRST, the current tolerance for additional
+    aberrations is a total of 195 nanometers RMS, distributed largely among coma, astigmatism,
+    trefoil, and spherical aberrations (NOT defocus).  This information might serve as a guide for
+    reasonable `extra_aberrations` inputs.
 
     Likewise, jitter and charge diffusion are, by default, not included.  Users who wish to include
     these can find some guidelines for typical length scales of the Gaussians that can represent
@@ -83,6 +83,8 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     intent is to only use the PSFs for a limited wavelength range (e.g., within a single one of the
     bandpasses), it can be significantly faster to use the `wavelength_limits` keyword to pass in a
     tuple with the lower and upper limits in wavelength.
+
+    The PSFs are always defined assuming the user will specify length scales in arcsec.
 
     @param    SCAs                 Specific SCAs for which the PSF should be loaded.  This can be
                                    either a single number, a tuple, a NumPy array, or a list.  If
@@ -102,9 +104,9 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                    [default: None]
     @param    extra_aberrations    Array of extra aberrations to include in the PSF model, on top of
                                    those that are part of the WFIRST design.  These should be
-                                   provided in units of nanometers, as an array of length 12 with
-                                   entries 4 through 11 corresponding to defocus through spherical
-                                   aberrations.  [default: None]
+                                   provided in units of waves at the fiducial wavelength of 1293 nm,
+                                   as an array of length 12 with entries 4 through 11 corresponding
+                                   to defocus through spherical aberrations.  [default: None]
     @param    wavelength_limits    A tuple or list of the blue and red wavelength limits to use for
                                    instantiating the chromatic object.  If None, then it uses the
                                    blue and red limits of all imaging passbands to determine the
@@ -209,10 +211,12 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
         if not achromatic:
             if approximate_struts:
                 PSF = galsim.ChromaticOpticalPSF(
+                    lam=zemax_wavelength,
                     diam=galsim.wfirst.diameter, aberrations=use_aberrations,
                     obscuration=galsim.wfirst.obscuration, nstruts=6)
             else:
                 PSF = galsim.ChromaticOpticalPSF(
+                    lam=zemax_wavelength,
                     diam=galsim.wfirst.diameter, aberrations=use_aberrations,
                     obscuration=galsim.wfirst.obscuration,
                     pupil_plane_im=galsim.wfirst.pupil_plane_file,
@@ -220,13 +224,14 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
             PSF.setupInterpolation(waves=np.linspace(blue_limit, red_limit, n_waves),
                                    oversample_fac=1.5)
         else:
-            lam_over_diam = 1.e-9*achromatic/galsim.wfirst.diameter*(galsim.radians / galsim.arcsec)
-            tmp_aberrations = use_aberrations / achromatic
+            tmp_aberrations = use_aberrations * zemax_wavelength / achromatic
             if approximate_struts:
-                PSF = galsim.OpticalPSF(lam_over_diam, aberrations=tmp_aberrations,
+                PSF = galsim.OpticalPSF(lam=achromatic, diam=galsim.wfirst.diameter,
+                                        aberrations=tmp_aberrations,
                                         obscuration=galsim.wfirst.obscuration, nstruts=6)
             else:
-                PSF = galsim.OpticalPSF(lam_over_diam, aberrations=tmp_aberrations,
+                PSF = galsim.OpticalPSF(lam=achromatic, diam=galsim.wfirst.diameter,
+                                        aberrations=tmp_aberrations,
                                         obscuration=galsim.wfirst.obscuration,
                                         pupil_plane_im=galsim.wfirst.pupil_plane_file,
                                         oversampling=1.2, pad_factor=2.)
@@ -410,11 +415,9 @@ def _read_aberrations(SCA):
     # Read in data.
     dat = np.loadtxt(infile, skiprows=41, usecols=(2,)).transpose()
     # Put it in the required format: an array of length 12, with the first entry empty (Zernike
-    # polynomials are 1-indexed so we use entries 1-11).  The units should be nanometers but the
-    # input files are in units of waves, hence the multiplication by the wavelength at which the
-    # calculation was done.
+    # polynomials are 1-indexed so we use entries 1-11).  The units are waves.
     aberrations = np.zeros(12)
-    aberrations[1:] = dat*zemax_wavelength
+    aberrations[1:] = dat
     return aberrations
 
 def _find_limits(bandpasses, bandpass_dict):
