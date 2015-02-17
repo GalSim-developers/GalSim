@@ -717,9 +717,11 @@ class ChromaticObject(object):
         ret = cls.__new__(cls)
         for k, v in self.__dict__.iteritems():
             if k == 'objlist':
-                # explicity request that individual items of objlist are copied,
-                # not just the list itself
+                # explicitly copy all individual items of objlist, not just the list itself
                 ret.__dict__[k] = [o.copy() for o in v]
+            elif k == 'scale_unit':
+                # Cannot deep-copy AngleUnits
+                ret.__dict__[k] = v
             else:
                 ret.__dict__[k] = copy.copy(v)
         return ret
@@ -1775,7 +1777,9 @@ class ChromaticOpticalPSF(ChromaticObject):
     defined in physical distances, but their impact on the PSF depends on their size in units of
     wavelength.  Other aspects of the optical PSF do not require explicit specification of their
     chromaticity, e.g., once the obscuration and struts are specified in units of the aperture
-    diameter, their chromatic dependence gets taken care of automatically.
+    diameter, their chromatic dependence gets taken care of automatically.  Note that the
+    ChromaticOpticalPSF implicitly defines diffraction limits in units of `scale_units`, which by
+    default are arcsec, but can in principle be set to any of our GalSim angle units.
 
     When using interpolation to speed up image rendering (see ChromaticObject.setupInterpolation()
     method for details), the ideal number of wavelengths to use across a given bandpass depends on
@@ -1797,18 +1801,39 @@ class ChromaticOpticalPSF(ChromaticObject):
         >>> final_star = galsim.Convolve( [psf, star] )
         >>> final_star.drawImage(bandpass = bp, ...)
 
-    @param   diam          Telescope diameter in meters.
-    @param   aberrations   An array of aberrations, in nanometers.  The size and format of this
-                           array is described in the OpticalPSF docstring.
+    @param   lam           Fiducial wavelength for which diffraction limit and aberrations are
+                           initially defined, in nanometers.
+    @param   diam          Telescope diameter in meters.  Either `diam` or `lam_over_diam` must be
+                           specified.
+    @param   lam_over_diam Ratio of (fiducial wavelength) / telescope diameter in units of
+                           `scale_unit`.  Either `diam` or `lam_over_diam` must be specified.
+    @param   aberrations   An array of aberrations, in units of fiducial wavelength `lam`.  The size
+                           and format of this array is described in the OpticalPSF docstring.
+    @param   scale_unit    Units used to define the diffraction limit and draw images.
+                           [default: galsim.arcsec]
     @param   **kwargs      Any other keyword arguments to be passed to OpticalPSF, for example,
                            related to struts, obscuration, oversampling, etc.  See OpticalPSF
-                           docstring for a complete list of options.
+                           docstring for a complete list of options. 
     """
-    def __init__(self, diam, aberrations, **kwargs):
+    def __init__(self, lam, diam=None, lam_over_diam=None, aberrations=None,
+                           scale_unit=galsim.arcsec, **kwargs):
         # First, take the basic info.
-        self.diam = diam
-        self.aberrations = aberrations
+        # We have to require either diam OR lam_over_diam:
+        if (diam is None and lam_over_diam is None) or \
+                (diam is not None and lam_over_diam is not None):
+            raise RuntimeError("Need to specify telescope diameter OR wavelength/diam ratio")
+        if diam is not None:
+            self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/scale_unit
+        else:
+            self.lam_over_diam = lam_over_diam
+        self.lam = lam
+
+        if aberrations is not None:
+            self.aberrations = aberrations
+        else:
+            self.aberrations = np.zeros(12)
         self.kwargs = kwargs
+        self.scale_unit = scale_unit
 
         # Define the necessary attributes for this ChromaticObject.
         self.separable = False
@@ -1820,9 +1845,13 @@ class ChromaticOpticalPSF(ChromaticObject):
 
         @param  wave   Wavelength in nanometers.
         """
-        lam_over_diam = 1.e-9 * (wave / self.diam) * (galsim.radians / galsim.arcsec)
-        aberrations = self.aberrations / wave
-        ret = galsim.OpticalPSF(lam_over_diam=lam_over_diam, aberrations=aberrations, **self.kwargs)
+        # We need to rescale the stored lam/diam by the ratio of input wavelength to stored fiducial
+        # wavelength.  Likewise, the aberrations were in units of wavelength for the fiducial
+        # wavelength, so we have to convert to units of waves for *this* wavelength.
+        ret = galsim.OpticalPSF(
+            lam_over_diam=self.lam_over_diam*(wave/self.lam),
+            aberrations=self.aberrations*(self.lam/wave), scale_unit=self.scale_unit,
+            **self.kwargs)
         return ret
 
 def _findWave(wave_list, wave):

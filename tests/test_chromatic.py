@@ -1469,12 +1469,15 @@ def test_ChromaticOpticalPSF():
     # aberrations = np.zeros(12)
     # aberrations[4] = 40. # nm
     # aberrations[7] = 20. # nm
+    # lam = 600. # nm
+    # aberrations /= lam
     # diam = 2.4 # meters
     # obscuration = 0.18
     # nstruts = 2
     # scale = 0.02
     # 
-    # psf = galsim.ChromaticOpticalPSF(diam, aberrations, obscuration=obscuration, nstruts=nstruts)
+    # psf = galsim.ChromaticOpticalPSF(lam=lam, diam=diam, aberrations=aberrations,
+    #                                  obscuration=obscuration, nstruts=nstruts)
     # obj = galsim.Convolve(psf, star)
     # im_r = obj.drawImage(bandpass, scale=scale)
     # im_r.write('./chromatic_reference_images/r_exact.fits')
@@ -1492,6 +1495,8 @@ def test_ChromaticOpticalPSF():
     aberrations = np.zeros(12)
     aberrations[4] = 40. # nm
     aberrations[7] = 20. # nm
+    lam = 600. # nm
+    aberrations /= lam
     diam = 2.4 # meters
     obscuration = 0.18
     nstruts = 4
@@ -1499,7 +1504,7 @@ def test_ChromaticOpticalPSF():
     n_interp = 15
     oversample_fac = 2.0
     waves = np.linspace(bandpass.blue_limit, bandpass.red_limit, n_interp)
-    psf = galsim.ChromaticOpticalPSF(diam, aberrations,
+    psf = galsim.ChromaticOpticalPSF(lam=lam, diam=diam, aberrations=aberrations,
                                      obscuration=obscuration, nstruts=nstruts)
     psf.setupInterpolation(waves, oversample_fac=oversample_fac)
     star = galsim.Gaussian(fwhm=1.e-8) * disk_SED

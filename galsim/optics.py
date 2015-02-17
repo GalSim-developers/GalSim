@@ -50,6 +50,15 @@ class OpticalPSF(GSObject):
     """A class describing aberrated PSFs due to telescope optics.  Its underlying implementation
     uses an InterpolatedImage to characterize the profile.
 
+    The diffraction effects are characterized by the diffraction angle, which is a function of the
+    ratio lambda / D, where lambda is the wavelength of the light and D is the diameter of the
+    telescope.  Users can specify this diffraction angle in one of two ways.  The first option is to
+    specify the ratio as `lam_over_diam` in whatever arbitrary units they choose (and then
+    self-consistently specify the image scale in the same units).  The second option is to specify
+    the wavelength as `lam` in units of nanometers and the telescope diameter as `diam` in units of
+    meters.  OpticalPSF will then convert the ratio to arcsec, and image scales must be specified in
+    arcsec as well.
+
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the Zernike polynomials in the Noll convention defined in
     Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
@@ -86,19 +95,33 @@ class OpticalPSF(GSObject):
 
     Initialization
     --------------
-    
-        >>> optical_psf = galsim.OpticalPSF(lam_over_diam, defocus=0., astig1=0., astig2=0.,
-                                            coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
-                                            aberrations=None, circular_pupil=True, obscuration=0.,
-                                            interpolant=None, oversampling=1.5, pad_factor=1.5,
-                                            max_size=None, nstruts=0, strut_thick=0.05,
-                                            strut_angle=0.*galsim.degrees, pupil_plane_im=None,
-                                            pupil_angle=0.*galsim.degrees)
 
-    Initializes `optical_psf` as an OpticalPSF instance.
+    Either specify the lam/diam ratio directly in arbitrary units:
+    
+        >>> optical_psf = galsim.OpticalPSF(lam_over_diam=lam_over_diam, defocus=0., astig1=0., 
+                                            astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0.,
+                                            spher=0., aberrations=None, circular_pupil=True,
+                                            obscuration=0., interpolant=None, oversampling=1.5,
+                                            pad_factor=1.5, max_size=None, nstruts=0,
+                                            strut_thick=0.05, strut_angle=0.*galsim.degrees,
+                                            pupil_plane_im=None, pupil_angle=0.*galsim.degrees)
+
+    or, use separate keywords for the telescope diameter and wavelength in meters and nanometers,
+    respectively:
+
+        >>> optical_psf = galsim.OpticalPSF(lam=lam, diam=diam, defocus=0., ...)
+
+    Either of these options initializes `optical_psf` as an OpticalPSF instance.
 
     @param lam_over_diam    Lambda / telescope diameter in the physical units adopted for `scale`
-                            (user responsible for consistency).
+                            (user responsible for consistency).  Either `lam_over_diam`, or `lam`
+                            and `diam`, must be supplied.
+    @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with
+                            `diam`, and in this case, image scales (`scale`) should be specified in
+                            units of `scale_unit`.
+    @param diam             Telescope diameter in units of meters.  Must be supplied with
+                            `lam`, and in this case, image scales (`scale`) should be specified in
+                            units of `scale_unit`.
     @param defocus          Defocus in units of incident light wavelength. [default: 0]
     @param astig1           Astigmatism (like e2) in units of incident light wavelength. 
                             [default: 0]
@@ -164,6 +187,9 @@ class OpticalPSF(GSObject):
     @param pupil_angle      If `pupil_plane_im` is not None, rotation angle for the pupil plane
                             (positive in the counter-clockwise direction).  Must be an Angle
                             instance. [default: 0. * galsim.degrees]
+    @param scale_unit       Units used to define the diffraction limit and draw images, if the user
+                            has supplied a separate value for `lam` and `diam`.
+                            [default: galsim.arcsec]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -174,8 +200,11 @@ class OpticalPSF(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _req_params = { "lam_over_diam" : float }
+    _req_params = { }
     _opt_params = {
+        "lam_over_diam" : float ,
+        "lam" : float ,
+        "diam" : float ,
         "defocus" : float ,
         "astig1" : float ,
         "astig2" : float ,
@@ -196,19 +225,30 @@ class OpticalPSF(GSObject):
         "strut_thick" : float ,
         "strut_angle" : galsim.Angle ,
         "pupil_plane_im" : str ,
-        "pupil_angle" : galsim.Angle}
+        "pupil_angle" : galsim.Angle ,
+        "scale_unit" : galsim.AngleUnit }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, lam_over_diam, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
-                 trefoil1=0., trefoil2=0., spher=0., aberrations=None,
+    def __init__(self, lam_over_diam=None, lam=None, diam=None, defocus=0., astig1=0., astig2=0.,
+                 coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., aberrations=None,
                  circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
-                 pad_factor=1.5, suppress_warning=False, max_size=None, flux=1.,
-                 nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
-                 pupil_plane_im=None, pupil_angle=0.*galsim.degrees, gsparams=None):
+                 pad_factor=1.5, suppress_warning=False, _warning=False, max_size=None, flux=1.,
+                 nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees, pupil_plane_im=None,
+                 pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None):
 
+        # Parse arguments: either lam_over_diam in arbitrary units, or lam in nm and diam in m.
+        # If the latter, then get lam_over_diam in units of `scale_unit`, as specified in
+        # docstring.
+        if lam_over_diam is not None:
+            if lam is not None or diam is not None:
+                raise RuntimeError("If specifying lam_over_diam, then do not specify lam or diam")
+        else:
+            if lam is None or diam is None:
+                raise RuntimeError("If not specifying lam_over_diam, then specify lam AND diam")
+            lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
         
         # Choose scale for lookup table using Nyquist for optical aperture and the specified
         # oversampling factor
