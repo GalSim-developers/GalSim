@@ -319,23 +319,56 @@ class Dict(object):
     def iteritems(self):
         return self.dict.iteritems()
 
-def makeCOSMOSCatalog(file_name, use_real=True, image_dir=None, dir=None, preload=False,
-                      noise_dir=None, deep_sample=False, exclude_failure=True):
-    # First, do the easy thing: real galaxies.
+def makeCOSMOSCatalog(file_name, use_real=True, image_dir=None, dir=None, noise_dir=None,
+                      preload=False, deep_sample=False, exclude_fail=True):
+    """
+    This routine makes a catalog of galaxies based on the COSMOS sample with F814W<23.5.
+
+    Depending on the keyword arguments, particularly `use_real`, the catalog will either have
+    information about real galaxies, or parametric ones.
+
+    @param file_name    The file containing the catalog.
+    @param use_real     Use realistic galaxies or parametric ones?  [default: True]
+    @param preload      Keyword that is only used for real galaxies, not parametric ones, to choose
+                        whether to preload the header information.  If `preload=True`, the bulk of  
+                        the I/O time is in the constructor.  If `preload=False`, there is
+                        approximately the same total I/O time (assuming you eventually use most of
+                        the image files referenced in the catalog), but it is spread over the
+                        various calls to getGal() and getPSF().  [default: False]
+    @param image_dir    Keyword that is only used for real galaxies, not parametric ones.
+                        If a string containing no `/`, it is the relative path from the location of
+                        the catalog file to the directory containing the galaxy/PDF images.
+                        If a path (a string containing `/`), it is the full path to the directory
+                        containing the galaxy/PDF images. [default: None]
+    @param dir          The directory of catalog file. [default: None]
+    @param noise_dir    Keyword that is only used for real galaxies, not parametric ones.
+                        The directory of the noise files if different from the directory of the 
+                        image files.  [default: image_dir]
+    @param deep_sample  Modify fluxes and sizes of galaxies in order to roughly simulate an F814W<25
+                        sample? [default: False]
+    @param exclude_fail For catalogs of parametric galaxies, exclude those that have failures in the
+                        parametric fits?  [default: True]
+
+    @returns either a RealGalaxyCatalog or a pyfits.FITS_rec containing information about the real
+    galaxies or parametric ones.
+    """
     if use_real:
+        # First, do the easy thing: real galaxies.  We make the galsim.RealGalaxyCatalog()
+        # constructor do most of the work.
         cat = galsim.RealGalaxyCatalog(
             file_name, image_dir=image_dir, dir=dir, preload=preload, noise_dir=noise_dir)
     else:
         from real import parse_files_dirs
 
+        # Find the file.
         use_file_name, _, _ = \
             parse_files_dirs(file_name, image_dir, dir, noise_dir)
 
         # Read in data.
         cat = pyfits.getdata(use_file_name)
 
-        # Apply cuts: is there a usable fit?
-        if exclude_failure:
+        # If requested, select galaxies based on existence of a usable fit.
+        if exclude_fail:
             sersicfit_status = cat.field('fit_status')[:,4]
             bulgefit_status = cat.field('fit_status')[:,0]
             use_fit_ind = np.where(
@@ -348,7 +381,8 @@ def makeCOSMOSCatalog(file_name, use_real=True, image_dir=None, dir=None, preloa
     # Make fake deeper sample if necessary.
     if deep_sample:
         # Rescale the flux to get a limiting mag of 25 in F814W.  Current limiting mag is 23.5,
-        # so it's a magnitude difference of 1.5.  Just make the galaxies a factor of 0.6 smaller.
+        # so it's a magnitude difference of 1.5.  Make the galaxies a factor of 0.6 smaller and
+        # appropriately fainter.
         flux_factor = 10.**(-0.4*1.5)
         size_factor = 0.6
     else:
@@ -379,23 +413,44 @@ def makeCOSMOSCatalog(file_name, use_real=True, image_dir=None, dir=None, preloa
             cat = pyfits.BinTableHDU.from_columns(pyfits.ColDefs(col_list))
         except:
             cat = pyfits.new_table(pyfits.ColDefs(col_list))
-        if exclude_failure:
+
+        if exclude_fail:
             return cat.data[use_fit_ind]
         else:
             return cat.data
 
 def makeCOSMOSObj(cat, index, chromatic=False, pad_size=None):
+    """
+    Routine to take a catalog from makeCOSMOSCatalog, and construct a GSObject corresponding to an
+    object with a particular index.
+
+    The fluxes are set such that drawing into an image with the COSMOS pixel scale should give the
+    right pixel values to mimic the actual COSMOS image.
+
+    @param cat        The output from makeCOSMOSCatalog
+    @param index      The index of the object of interest in this catalog.
+    @param chromatic  Make this a chromatic object, or not?  [default: False]
+                      It is important to bear in mind that we do not actually have
+                      spatially-resolved color information for these galaxies, so this keyword can
+                      only be True if we are using parametric galaxies.  Even then, we simply do the
+                      most arbitrary thing possible, which is to assign bulges an elliptical SED,
+                      disks a disk-like SED, and Sersic galaxies with intermediate values of n some
+                      intermediate SED.  We then normalize to give the right flux in F814W.
+    @param pad_size   For realistic galaxies, the size of region requiring noise padding, in arcsec.
+
+    @returns Either a GSObject or a chromatic object representing the galaxy of interest.
+    """
     # Check whether this is a catalog entry for a real object or for a parametric one.
     if isinstance(cat, galsim.RealGalaxyCatalog):
         if pad_size is None:
             pad_size=0.25 # totally random guess in arcsec
         if chromatic:
             raise RuntimeError("Cannot yet make real chromatic galaxies!")
-        return makeReal(cat, index, pad_size=pad_size)
+        return _makeReal(cat, index, pad_size=pad_size)
     else:
-        return makeParam(cat, index, chromatic=chromatic)
+        return _makeParam(cat, index, chromatic=chromatic)
 
-def makeReal(cat, index, pad_size):
+def _makeReal(cat, index, pad_size):
     noise_pad_size = int(np.ceil(pad_size * np.sqrt(2.)))
     gal = galsim.RealGalaxy(cat, index=index, noise_pad_size=noise_pad_size)
 
@@ -407,7 +462,7 @@ def makeReal(cat, index, pad_size):
         gal *= cat.flux_factor
     return gal
 
-def makeParam(cat, index, chromatic=False):
+def _makeParam(cat, index, chromatic=False):
     record = cat[index]
 
     if chromatic:
@@ -433,7 +488,8 @@ def makeParam(cat, index, chromatic=False):
     # fits), the axis ratios for the bulge and disk (if <0.051 then use single component fits), and
     # a comparison of the median absolute deviations to see which is better.
     use_bulgefit = 1
-    if bstat<1 or bstat>4 or dvc_btt<0.1 or dvc_btt>0.9 or np.isnan(dvc_btt) or params[9]<=0 or params[1]<=0 or params[11]<0.051 or params[3]<0.051 or smad<bmad:
+    if bstat<1 or bstat>4 or dvc_btt<0.1 or dvc_btt>0.9 or np.isnan(dvc_btt) or params[9]<=0 or \
+            params[1]<=0 or params[11]<0.051 or params[3]<0.051 or smad<bmad:
         use_bulgefit = 0
         # Then check if sersicfit is viable; if not, this object is a total failure:
         if sstat<1 or sstat>4 or sparams[1]<=0 or sparams[0]<=0:
@@ -503,7 +559,13 @@ def makeParam(cat, index, chromatic=False):
             gal = galsim.Sersic(
                 gal_n, flux = 1.,
                 half_light_radius = record['size_factor']*gal_hlr)
-            gal = gal* sed_intermed.withMagnitude(
+            if gal_n < 1.5:
+                use_sed = sed_disk
+            elif gal_n >= 1.5 and gal_n < 3.0:
+                use_sed = sed_intermed
+            else:
+                use_sed = sed_bulge
+            gal = gal * use_sed.withMagnitude(
                 record['mag_auto']-2.5*math.log10(record['flux_factor']), bandpass)
         else:
             gal = galsim.Sersic(
