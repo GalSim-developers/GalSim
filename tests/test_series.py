@@ -38,7 +38,17 @@ def test_spergelet():
                 myImg.array, savedImg.array, 5,
                 err_msg="GSObject Spergelet disagrees with expected result")
 
-
+def test_series_draw():
+    """ Test that we can draw Series objects
+    """
+    a = galsim.SpergelSeries(nu=0.0, scale_radius=1.0, jmax=4)
+    im = a.drawImage(nx=15, ny=15, scale=0.2)
+    re, im = a.drawKImage(nx=15, ny=15, scale=0.2)
+    
+    b = galsim.SeriesConvolution(a, a)
+    im = b.drawImage(nx=15, ny=15, scale=0.2)
+    re, im = b.drawKImage(nx=15, ny=15, scale=0.2)
+    
 def test_spergelseries_decomposeA():
     """ Test that the SpergelSeries decomposition of the A matrix works.
     """
@@ -84,6 +94,7 @@ def test_spergelseries_dilate():
 
 if __name__ == "__main__":
     test_spergelet()
+    test_series_draw()
     test_spergelseries_decomposeA()
     test_spergelseries()
     test_spergelseries_dilate()
