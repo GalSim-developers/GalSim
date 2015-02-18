@@ -38,6 +38,8 @@ from NIR detectors, and (2) to illustrate the full image generation process, inc
 of noise at appropriate stages.
 
 New features introduced in this demo:
+- galsim.makeCOSMOSCatalog(...)
+- galsim.makeCOSMOSObj(...)
 - Adding sky level and dark current.
 - image.addReciprocityFailure(exp_time, alpha, base_flux)
 - image.quantize()
@@ -84,39 +86,23 @@ def main(argv):
     del filters['BAO-Grism']
     logger.debug('Read in WFIRST imaging filters.')
 
-    # Read in SEDs. We only need two of them, for the two components of the galaxy (bulge and
-    # disk).
-    SED_names = ['CWW_E_ext', 'CWW_Im_ext']
-    SEDs = {}
-    # The normalization of SEDs affects how many photons are eventually drawn into an image.  One
-    # way to control this normalization is to specify the magnitude in a given bandpass.  We pick
-    # W149 and enforce the flux through the filter to be of magnitude specified by `mag_norm`. This
-    # choice of overall normalization is completely arbitrary, but it means that the colors of the
-    # galaxy will now be meaningful (for example, the bulge will be more evident in the redder bands
-    # and the disk in the bluer bands).  We also specify that the SEDs are being observed at
-    # redshift z=0.8.
-    bandpass_norm = filters['W149']
-    mag_norm = 22.0
-    redshift = 0.8
-    for SED_name in SED_names:
-        SED_filename = os.path.join(datapath, '{0}.sed'.format(SED_name))
-        SED = galsim.SED(SED_filename, wave_type='Ang').atRedshift(redshift)
-        SEDs[SED_name] = SED.withMagnitude(target_magnitude=mag_norm, bandpass=bandpass_norm)
-    logger.debug('Successfully read in SEDs.')
-    bulge_SED = SEDs['CWW_E_ext']
-    disk_SED = SEDs['CWW_Im_ext']
-
-    logger.info('Simulating z=%.1f chromatic bulge+disk galaxies from a fake catalog.'%redshift)
-
-    logger.info('Reading from a catalog.')
-    # Read in a galaxy catalog
-    cat_file_name = 'galsim_default_input.asc'
-    dir = 'input'
-    cat = galsim.Catalog(cat_file_name, dir=dir)
-    logger.info('Read in %d galaxies from catalog',cat.nobjects)
-    # Just use a few galaxies, to save time.  Users who want a more interesting image can change
-    # `n_use` to something larger.
-    n_use = 5
+    logger.info('Reading from a parametric COSMOS catalog.')
+    # Read in a galaxy catalog - just a random subsample of 500 galaxies for F814W<23.5 from COSMOS.
+    cat_file_name = 'real_galaxy_23.5_500_fits.fits'
+    dir = 'data'
+    # Use the routine that can take COSMOS real or parametric galaxy information, and tell it we
+    # want parametric galaxies.
+    cat = galsim.makeCOSMOSCatalog(cat_file_name, dir=dir, use_real=False)
+    logger.info('Read in %d galaxies from catalog'%len(cat))
+    # Just use a few galaxies, to save time.  Note that we are going to put 2000 galaxy images into
+    # our big image, so if we have n_use=10, each galaxy will appear 200 times.  Users who want a
+    # more interesting image with greater variation in the galaxy population can change `n_use` to
+    # something larger that evenly divides 2000 (but it should be <=500, which is the number of
+    # galaxies in the catalog).  The code is not set up to handle values of n_use that do not evenly
+    # divide n_tot, though it would not be very hard to do so.
+    n_use = 10
+    n_tot = 2000
+    n_per_gal = n_tot / n_use
 
     # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
@@ -135,7 +121,7 @@ def main(argv):
 
     # Define the size of the postage stamp that we will use for each individual galaxy within the
     # larger image, and for the PSF images.
-    stamp_size = 64
+    stamp_size = 128
 
     # We are going to choose a particular (RA, dec) location on the sky for our observation.
     ra_targ = 30.*galsim.degrees
@@ -151,44 +137,27 @@ def main(argv):
     # corresponding to (X, Y) = (wfirst.n_pix/2, wfirst.n_pix/2).
     SCA_cent_pos = wcs.toWorld(galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
 
-    # We are going to just randomly distribute points in (X, Y) and randomly rotate the galaxies.
+    # We are going to just randomly distribute points in (X, Y).
     # If we had a real galaxy catalog with positions in terms of RA, dec we could use wcs.toImage()
     # to find where those objects should be in terms of (X, Y).
     pos_rng = galsim.UniformDeviate(random_seed)
-    # Make a list of angle values by which the galaxies are rotated.
-    theta_stamp = []
     # Make a list of (X, Y) values, eliminating the 10% of the edge pixels as the object centroids.
     x_stamp = []
     y_stamp = []
-    for i_gal in xrange(n_use):
+    for i_gal in xrange(n_tot):
         x_stamp.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
         y_stamp.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
-        theta_stamp.append(pos_rng()*2.0*numpy.pi*galsim.radians)
 
-    # Make the GSObjects for each object.  Note that since the PSF is position-independent within
-    # the SCA, we can simply do the convolution with that PSF now instead of using a different one
-    # for each position.
+    # Make the 2-component parametric GSObjects for each object, including chromaticity (roughly
+    # appropriate SEDs per galaxy component, at the appropriate galaxy redshift).  Note that since
+    # the PSF is position-independent within the SCA, we can simply do the convolution with that PSF
+    # now instead of using a different one for each position.
     gal_list = []
     for i_gal in xrange(n_use):
         logger.info('Processing the object at row %d in the input catalog.'%i_gal)
 
-        # Galaxy is a bulge + disk with parameters taken from the catalog.  We arbitrarily adjust
-        # the sizes of the galaxies from their (already arbitrary) initial values.
-        disk = galsim.Exponential(half_light_radius=0.1*cat.getFloat(i_gal,5))
-        disk = disk * disk_SED
-        disk = disk.shear(e1=cat.getFloat(i_gal,6), e2=cat.getFloat(i_gal,7))
-
-        bulge = galsim.DeVaucouleurs(half_light_radius=0.1*cat.getFloat(i_gal,8))
-        bulge = bulge * bulge_SED
-        bulge = bulge.shear(e1=cat.getFloat(i_gal,9), e2=cat.getFloat(i_gal,10))
-
-        # Add the components to get the galaxy.  We're going to make each have a bulge-to-total flux
-        # ratio of 1/2.
-        gal = (1./2)*bulge+(1./2)*disk
-        logger.debug('Created bulge+disk galaxy final profile for galaxy %d.'%i_gal)
-
-        # Apply a random rotation
-        gal = gal.rotate(theta_stamp[i_gal])
+        # Use built-in routines for constructing COSMOS objects:
+        gal = galsim.makeCOSMOSObj(cat, i_gal, chromatic=True)
 
         # Convolve the chromatic galaxy and the chromatic PSF
         final = galsim.Convolve(gal, PSF)
@@ -223,21 +192,33 @@ def main(argv):
         for i_gal in xrange(n_use):
             logger.info('Drawing image for the object at row %d in the input catalog'%i_gal)
 
-            # Account for the fractional part of the position:
-            ix = int(math.floor(x_stamp[i_gal]+0.5))
-            iy = int(math.floor(y_stamp[i_gal]+0.5))
-            offset = galsim.PositionD(x_stamp[i_gal]-ix, y_stamp[i_gal]-iy)
+            # We want to only draw the galaxy once (for speed), not over and over with different
+            # sub-pixel offsets.  For this reason we will ignore the sub-pixel offset entirely.
+            stamp = galsim.Image(stamp_size, stamp_size)
+            gal_list[i_gal].drawImage(filter_, image=stamp)
 
-            # Create a nominal bound for the postage stamp given the integer part of the position.
-            stamp_bounds = galsim.BoundsI(ix-0.5*stamp_size, ix+0.5*stamp_size-1, 
-                                          iy-0.5*stamp_size, iy+0.5*stamp_size-1)
+            # Have to find where to place it:
+            for i_gal_use in range(i_gal*n_per_gal, i_gal*(n_per_gal+1)):
+                # Account for the fractional part of the position:
+                ix = int(math.floor(x_stamp[i_gal_use]+0.5))
+                iy = int(math.floor(y_stamp[i_gal_use]+0.5))
+                # We're not going to actually use this offset.
+                offset = galsim.PositionD(x_stamp[i_gal]-ix, y_stamp[i_gal]-iy)
 
-            # Find the overlapping bounds between the large image and the individual postage stamp.
-            bounds = stamp_bounds & final_image.bounds
+                # Create a nominal bound for the postage stamp given the integer part of the
+                # position.
+                stamp_bounds = galsim.BoundsI(ix-0.5*stamp_size, ix+0.5*stamp_size-1, 
+                                              iy-0.5*stamp_size, iy+0.5*stamp_size-1)
+                stamp.setOrigin(galsim.PositionI(stamp_bounds.xmin, stamp_bounds.ymin))
 
-            # Draw PSF-convolved galaxy profile through this filter.
-            gal_list[i_gal].drawImage(filter_, image=final_image[bounds], offset=offset,
-                                      add_to_image=True)
+                # Find the overlapping bounds between the large image and the individual postage
+                # stamp.
+                bounds = stamp_bounds & final_image.bounds
+
+                # Copy the image into the right place in the big image.  There is a difference in
+                # normalization between COSMOS images and these that we account for using a
+                # numerical factor.
+                final_image[bounds] += stamp[bounds]/0.03**2
 
         # Now we're done with the per-galaxy drawing for this image.  The rest will be done for the
         # entire image at once.
