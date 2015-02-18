@@ -13,6 +13,8 @@ New Features
 - Added a module, galsim.wfirst, that includes information about the planned
   WFIRST mission, along with helper routines for constructing appropriate PSFs,
   bandpasses, WCS, etc.  (#590)
+- Added new methods for making realistic galaxy samples using COSMOS:
+  makeCOSMOSCatalog() and the associated makeCOSMOSObj(). (#590 / #635).
 - Added information about PSF size and shape to the data structure that is
   returned by EstimateShear(). (#612)
 - Added Spergel(2010) profile GSObject (#616).
