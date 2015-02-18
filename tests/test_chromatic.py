@@ -1280,6 +1280,12 @@ def test_interpolated_ChromaticObject():
         im_interp.array, im_exact.array, decimal=4,
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated')
 
+    # And test with midpoint rule (non-default).
+    im_interp = interp_obj.drawImage(bandpass, image=im_interp, integrator='midpoint', scale=scale)
+    np.testing.assert_array_almost_equal(
+        im_interp.array, im_exact.array, decimal=4,
+        err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated (midpoint)')
+
     # Check that we can turn interpolation off and on at will.
     other_psf = interp_psf.copy()
     other_psf.removeInterpolation()

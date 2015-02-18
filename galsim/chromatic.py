@@ -381,10 +381,12 @@ class ChromaticObject(object):
                                 integrate.
         @param image            Optionally, the Image to draw onto.  (See GSObject.drawImage()
                                 for details.)  [default: None]
-        @param integrator       One of the image integrators from galsim.integ [default: None,
+        @param integrator       When doing the exact evaluation of the profile, this argument should
+                                be one of the image integrators from galsim.integ [default: None,
                                 which will try to select an appropriate integrator automatically.]
-                                This keyword is ignored if setupInterpolation() has been called for
-                                this object.
+                                If setupInterpolation() has been called for this object, then
+                                `integrator` should be a string, either 'midpoint' or
+                                'trapezoidal'. [default: 'trapezoidal']
         @param **kwargs         For all other kwarg options, see GSObject.drawImage()
 
         @returns the drawn Image.
@@ -464,11 +466,14 @@ class ChromaticObject(object):
         stored images is being used.  Users should not call this routine directly, and should
         instead interact with the `drawImage` method.
         """
-        # Note that integrator is not actually selectable.
-        if integrator is not None:
-            import warnings
-            warnings.warn("Cannot choose image integrator when using stored images! "
-                          "Ignoring this keyword argument.")
+        if integrator is None:
+            integrator='trapezoidal'
+        else:
+            if integrator not in ['trapezoidal', 'midpoint']:
+                if not isinstance(integrator, str):
+                    raise ValueError("Integrator should be a string indicating trapezoidal"
+                                     " or midpoint rule for integration")
+                raise ValueError("Unknown integrator: %s"%integrator)
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength).
         # Note: we cannot just use self._imageAtWavelength, because that routine returns an image
@@ -487,10 +492,22 @@ class ChromaticObject(object):
         # determine combination of self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
 
-        # The integration is carried out using the following two basic approaches:
+        # The integration is carried out using the following two basic principles:
         # (1) We use linear interpolation between the stored images to get an image at a given
         #     wavelength.
-        # (2) We use the midpoint rule for integration.
+        # (2) We use the trapezoidal or midpoint rule for integration, depending on what the user
+        #     has selected.
+
+        # For the midpoint rule, we take the list of wavelengths in wave_list, and treat each of
+        # those as the midpoint of a narrow wavelength range with width given by `dw` (to be
+        # calculated below).  Then, we can take the summation over indices i:
+        #   integral ~ sum_i dw[i] * img[i].
+        # where the indices i run over the wavelengths in wave_list from i=0...N-1.
+        #
+        # For the trapezoidal rule, we treat the list of wavelengths in wave_list as the *edges* of
+        # the regions, and sum over the areas of the trapezoids, giving
+        #   integral ~ sum_j dw[j] * img[j] + sum_k dw[k] *img[k]/2.
+        # where indices j go from j=1...N-2 and k is (0, N-1).
 
         # Figure out the dwave for each of the wavelengths in the combined wave_list.
         dw = [wave_list[1]-wave_list[0]]
@@ -498,7 +515,7 @@ class ChromaticObject(object):
         dw.append(wave_list[-1]-wave_list[-2])
         # Set up arrays to accumulate the weights for each of the stored images.
         weight_fac = np.zeros(len(self.waves))
-        for idx, w in enumerate(bandpass.wave_list):
+        for idx, w in enumerate(wave_list):
             # Find where this is with respect to the wavelengths on which images are stored.
             lower_idx, frac = _findWave(self.waves, w)
             # Store the weight factors for the two stored images that can contribute at this
@@ -507,8 +524,13 @@ class ChromaticObject(object):
                 b = self.SED(w)*bandpass(w)*dw[idx]
             else:
                 b = bandpass(w)*dw[idx]
-            weight_fac[lower_idx] += (1.0-frac)*b
-            weight_fac[lower_idx+1] += frac*b
+            if (idx > 0 and idx < len(wave_list)-1) or integrator == 'midpoint':
+                weight_fac[lower_idx] += (1.0-frac)*b
+                weight_fac[lower_idx+1] += frac*b
+            else:
+                # We're doing the trapezoidal rule, and we're at the endpoints.
+                weight_fac[lower_idx] += (1.0-frac)*b/2.
+                weight_fac[lower_idx+1] += frac*b/2.
 
         # Do the integral as a weighted sum.
         integral = sum([w*im for w,im in zip(weight_fac, self.ims)])
