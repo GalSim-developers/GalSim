@@ -36,6 +36,9 @@ from numpy import sin, cos, tan, arcsin, arccos, arctan, sqrt, pi
 
 
 def test_distance():
+    """Test calculations of distances on the sphere."""
+    import time
+    t1 = time.time()
 
     # First, let's test some distances that are easy to figure out
     # without any spherical trig.
@@ -84,7 +87,7 @@ def test_distance():
     c7 = galsim.CelestialCoord(0.234 * galsim.radians, (0.342 + 1.9e-9) * galsim.radians)
     c8 = galsim.CelestialCoord((0.234 + 2.3e-9) * galsim.radians, (0.342 + 1.2e-9) * galsim.radians)
 
-    # Note that the standard formula gets thsse wrong.  d comes back as 0.
+    # Note that the standard formula gets these wrong.  d comes back as 0.
     d = arccos(sin(0.342) * sin(0.342) + cos(0.342) * cos(0.342) * cos(1.7e-9))
     print 'd(c6) = ',1.7e-9 * cos(0.342), c1.distanceTo(c6), d
     d = arccos(sin(0.342) * sin(0.342+1.9e-9) + cos(0.342) * cos(0.342+1.9e-9) * cos(0.))
@@ -95,9 +98,14 @@ def test_distance():
     numpy.testing.assert_almost_equal(c1.distanceTo(c6).rad()/(1.7e-9 * cos(0.342)), 1.0)
     numpy.testing.assert_almost_equal(c1.distanceTo(c7).rad()/1.9e-9, 1.0)
     numpy.testing.assert_almost_equal(c1.distanceTo(c8).rad()/true_d, 1.0)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_angle():
+    """Test calculations of angles between positions on the sphere."""
+    import time
+    t1 = time.time()
 
     # Again, let's start with some answers we can get by inspection.
     eq1 = galsim.CelestialCoord(0. * galsim.radians, 0. * galsim.radians)  # point on the equator
@@ -163,9 +171,14 @@ def test_angle():
 
     # L'Huilier's formula for spherical excess:
     numpy.testing.assert_almost_equal(tan(E/4)**2, tan(s/2)*tan((s-a)/2)*tan((s-b)/2)*tan((s-c)/2))
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_projection():
+    """Test calculations of various projections."""
+    import time
+    t1 = time.time()
 
     # Test that a small triangle has the correct properties for each kind of projection
     center = galsim.CelestialCoord(0.234 * galsim.radians, 0.342 * galsim.radians)
@@ -368,9 +381,14 @@ def test_projection():
     dudx, dudy, dvdx, dvdy = center.deproject_jac(pA.x, pA.y, projection='postel')
     jac_area = abs(dudx*dvdy - dudy*dvdx)
     numpy.testing.assert_almost_equal(jac_area, E/area, decimal=5)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_precess():
+    """Test precession between epochs."""
+    import time
+    t1 = time.time()
     # I don't have much of a test here.  The formulae are what they are.
     # But it should at least be the case that a precession trip that ends up
     # back at the original epoch should leave the coord unchanged.
@@ -398,8 +416,14 @@ def test_precess():
     print 'delta from precess: ',(c2.ra-orig.ra),(c2.dec-orig.dec)
     numpy.testing.assert_almost_equal(dra_1900, c2.ra.rad()-orig.ra.rad(), decimal=5)
     numpy.testing.assert_almost_equal(ddec_1900, c2.dec.rad()-orig.dec.rad(), decimal=5)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_galactic():
+    """Test the conversion from equatorial to galactic coordinates."""
+    import time
+    t1 = time.time()
+
     # According to wikipedia: http://en.wikipedia.org/wiki/Galactic_coordinate_system
     # the galactic center is located at 17h:45.6m, -28.94d
     center = galsim.CelestialCoord( (17.+45.6/60.) * galsim.hours, -28.94 * galsim.degrees)
@@ -426,6 +450,34 @@ def test_galactic():
     el,b = anticenter.galactic()
     numpy.testing.assert_almost_equal(el.rad(), pi, decimal=3)
     numpy.testing.assert_almost_equal(b.rad(), 0., decimal=3)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_ecliptic():
+    """Test the conversion from equatorial to ecliptic coordinates."""
+    import time
+    t1 = time.time()
+
+    # Use locations of ecliptic poles from http://en.wikipedia.org/wiki/Ecliptic_pole
+    north_pole = galsim.CelestialCoord(
+        galsim.angle.HMS_Angle('18:00:00.00'),
+        galsim.angle.parse_dms('66:33:38.55')*galsim.degrees)
+    el, b = north_pole.ecliptic()
+    # North pole should have b=90 degrees, with el being completely arbitrary.  Note that
+    # imprecision of test is because the routine does not have the most accurate expression for the
+    # obliquity of the ecliptic.  So percent-level precision is the best we can do at this point.
+    numpy.testing.assert_almost_equal(b.rad(), pi/2, decimal=2)
+
+    south_pole = galsim.CelestialCoord(
+        galsim.angle.HMS_Angle('06:00:00.00'),
+        galsim.angle.parse_dms('-66:33:38.55')*galsim.degrees)
+    el, b = south_pole.ecliptic()
+    # South pole should have b=-90 degrees, with el being completely arbitrary.
+    numpy.testing.assert_almost_equal(b.rad(), -pi/2, decimal=2)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 if __name__ == '__main__':
     test_distance()
@@ -433,3 +485,4 @@ if __name__ == '__main__':
     test_projection()
     test_precess()
     test_galactic()
+    test_ecliptic()
