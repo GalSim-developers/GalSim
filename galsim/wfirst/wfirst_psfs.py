@@ -253,6 +253,10 @@ def tabulatePSFImages(PSF_list, image_filename, data_filename, bandpass_list=Non
     GalSim recognizes as corresponding to a compressed format, the compression will automatically be
     done.
 
+    This routine is not meant to work for PSFs from getPSF() that are completely achromatic.  The
+    reason for this is that those PSFs are quite fast to generate, so there is little benefit to
+    storing them.
+
     @param PSF_list            A list of PSF objects for each SCA, in the same format as output by
                                the getPSF() routine (though it can take versions that have been
                                modified, for example in the inclusion of an SED).
@@ -308,6 +312,8 @@ def tabulatePSFImages(PSF_list, image_filename, data_filename, bandpass_list=Non
                 continue
 
             PSF = PSF_list[SCA]
+            if not isinstance(PSF, galsim.ChromaticOpticalPSF):
+                raise RuntimeError("Error, PSFs are not ChromaticOpticalPSFs.")
             im = PSF.drawImage(bandpass, scale=0.5*galsim.wfirst.pixel_scale)
             im_list.append(im)
             bp_name_list.append(bp_name)
