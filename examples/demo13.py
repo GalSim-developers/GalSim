@@ -94,14 +94,15 @@ def main(argv):
     # want parametric galaxies.
     cat = galsim.makeCOSMOSCatalog(cat_file_name, dir=dir, use_real=False)
     logger.info('Read in %d galaxies from catalog'%len(cat))
-    # Just use a few galaxies, to save time.  Note that we are going to put 2000 galaxy images into
-    # our big image, so if we have n_use=10, each galaxy will appear 200 times.  Users who want a
+    # Just use a few galaxies, to save time.  Note that we are going to put 4000 galaxy images into
+    # our big image, so if we have n_use=10, each galaxy will appear 400 times.  Users who want a
     # more interesting image with greater variation in the galaxy population can change `n_use` to
-    # something larger that evenly divides 2000 (but it should be <=500, which is the number of
+    # something larger that evenly divides 4000 (but it should be <=500, which is the number of
     # galaxies in the catalog).  The code is not set up to handle values of n_use that do not evenly
-    # divide n_tot, though it would not be very hard to do so.
+    # divide n_tot, though it would not be very hard to do so.  With 4000 galaxies in a 4k x 4k
+    # image with the WFIRST pixel scale, the effective galaxy number density is 74/arcmin^2
     n_use = 10
-    n_tot = 2000
+    n_tot = 4000
     n_per_gal = n_tot / n_use
 
     # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
@@ -147,6 +148,9 @@ def main(argv):
     for i_gal in xrange(n_tot):
         x_stamp.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
         y_stamp.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
+        # Note that we could use wcs.toWorld() to get the (RA, dec) for these (x, y) positions.  Or,
+        # if we had started with (RA, dec) positions, we could have used wcs.toImage() to get the
+        # CCD coordinates for those positions.
 
     # Make the 2-component parametric GSObjects for each object, including chromaticity (roughly
     # appropriate SEDs per galaxy component, at the appropriate galaxy redshift).  Note that since
