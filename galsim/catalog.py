@@ -477,7 +477,9 @@ def makeCOSMOSObj(cat, index, chromatic=False, pad_size=None):
                       intermediate SED.  We assume that the photometric redshift is the correct
                       redshift for these galaxies (which is a good assumption for COSMOS 30-band
                       photo-z for these bright galaxies).  For the given SED and redshift, we then
-                      normalize to give the right (observed) flux in F814W.
+                      normalize to give the right (observed) flux in F814W.  Note that for a mock
+                      "deep" sample, the redshift distributions of the galaxies would be modified,
+                      which is not included here.
     @param pad_size   For realistic galaxies, the size of region requiring noise padding, in arcsec.
 
     @returns Either a GSObject or a chromatic object representing the galaxy of interest.
