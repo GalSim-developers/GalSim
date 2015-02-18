@@ -147,16 +147,15 @@ class SeriesConvolution(Series):
         if len(args) == 0:
             # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
             # exception instead.
-            raise ValueError("Must provide at least one Series object")
+            raise ValueError("Must provide at least one Series or GSObject")
         elif len(args) == 1:
-            # TODO: allow convolution by GSObjects here too!
-            if isinstance(args[0], Series):
+            if isinstance(args[0], (Series, galsim.GSObject)):
                 args = [args[0]]
             elif isinstance(args[0], list):
                 args = args[0]
             else:
                 raise TypeError(
-                    "Single input argument must be a Series object or a list of Series objects.")
+                    "Single input argument must be a Series or GSObject or a list of them.")
         # Check kwargs
         self.gsparams = kwargs.pop("gsparams", None)
         # Make sure there is nothing left in the dict.
@@ -169,6 +168,14 @@ class SeriesConvolution(Series):
                 self.objlist.extend([o for o in obj.objlist])
             else:
                 self.objlist.append(obj)
+
+        # Magically transform GSObjects into super-simple Series objects
+        for obj in self.objlist:
+            if isinstance(obj, galsim.GSObject):
+                obj.getCoeffs = lambda : [1.0]
+                obj.getBasisFuncs = lambda :[obj]
+                obj.cubeidx = lambda :id(obj)
+
         super(SeriesConvolution, self).__init__()
 
     def getCoeffs(self):

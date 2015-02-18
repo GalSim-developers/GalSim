@@ -49,6 +49,14 @@ def test_series_draw():
     im = b.drawImage(nx=15, ny=15, scale=0.2)
     re, im = b.drawKImage(nx=15, ny=15, scale=0.2)
     
+def test_series_gsobject_convolution():
+    """ Test that we can convolve a Series and a GSObject.
+    """
+    a = galsim.SpergelSeries(nu=0.0, scale_radius=1.0, jmax=4)
+    b = galsim.SeriesConvolution(a, galsim.Gaussian(fwhm=1))
+    im = b.drawImage(nx=15, ny=15, scale=0.2)
+    re, im = b.drawKImage(nx=15, ny=15, scale=0.2)
+    
 def test_spergelseries_decomposeA():
     """ Test that the SpergelSeries decomposition of the A matrix works.
     """
@@ -95,6 +103,7 @@ def test_spergelseries_dilate():
 if __name__ == "__main__":
     test_spergelet()
     test_series_draw()
+    test_series_gsobject_convolution()
     test_spergelseries_decomposeA()
     test_spergelseries()
     test_spergelseries_dilate()
