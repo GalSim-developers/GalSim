@@ -474,7 +474,10 @@ def makeCOSMOSObj(cat, index, chromatic=False, pad_size=None):
                       only be True if we are using parametric galaxies.  Even then, we simply do the
                       most arbitrary thing possible, which is to assign bulges an elliptical SED,
                       disks a disk-like SED, and Sersic galaxies with intermediate values of n some
-                      intermediate SED.  We then normalize to give the right flux in F814W.
+                      intermediate SED.  We assume that the photometric redshift is the correct
+                      redshift for these galaxies (which is a good assumption for COSMOS 30-band
+                      photo-z for these bright galaxies).  For the given SED and redshift, we then
+                      normalize to give the right (observed) flux in F814W.
     @param pad_size   For realistic galaxies, the size of region requiring noise padding, in arcsec.
 
     @returns Either a GSObject or a chromatic object representing the galaxy of interest.
@@ -555,10 +558,10 @@ def _makeParam(cat, index, chromatic=False):
         # Then make the object.
         if chromatic:
             bulge = galsim.DeVaucouleurs(flux=1., half_light_radius=record['size_factor']*bulge_hlr) \
-                * sed_bulge.withMagnitude(
+                * sed_bulge.atRedshift(record['zphot']).withMagnitude(
                 record['mag_auto']-2.5*math.log10(bfrac*record['flux_factor']), bandpass)
             disk = galsim.Exponential(flux=1., half_light_radius=record['size_factor']*disk_hlr) \
-                * sed_disk.withMagnitude(
+                * sed_disk.atRedshift(record['zphot']).withMagnitude(
                 record['mag_auto']-2.5*math.log10((1.-bfrac)*record['flux_factor']), bandpass)
         else:
             bulge = galsim.DeVaucouleurs(flux = record['flux_factor']*bulge_flux,
@@ -599,8 +602,8 @@ def _makeParam(cat, index, chromatic=False):
                 use_sed = sed_intermed
             else:
                 use_sed = sed_bulge
-            gal *= use_sed.withMagnitude(record['mag_auto']-2.5*math.log10(record['flux_factor']),
-                                         bandpass)
+            gal *= use_sed.atRedshift(record['zphot']).withMagnitude(record['mag_auto']-2.5*math.log10(record['flux_factor']),
+                                                                     bandpass)
         else:
             gal = galsim.Sersic(gal_n, flux=record['flux_factor']*gal_flux,
                                 half_light_radius=record['size_factor']*gal_hlr)
