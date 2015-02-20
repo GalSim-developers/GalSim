@@ -1097,6 +1097,23 @@ def test_box():
     # Test photon shooting.
     do_shoot(pixel,myImg,"Pixel")
 
+    # Also check than non-square Box profiles work correctly
+    scale = 0.2939  # Use a strange scale here to make sure that the centers of the pixels
+                    # never fall on the box edge, otherwise it gets a bit weird to know what
+                    # the correct SB value is for that pixel.
+    im = galsim.ImageF(32,32, scale=scale)
+    gsp = galsim.GSParams(maximum_fft_size = 30000)
+    for (width,height) in [ (3,2), (1.7, 2.7), (2.2222, 3.1415) ]:
+        print 'width, height = ',width,height
+        box = galsim.Box(width=width, height=height, flux=test_flux, gsparams=gsp)
+        print 'im.bounds = ',im.bounds
+        print 'im.scale = ',im.scale
+        do_shoot(box,im,"Box with width,height = %f,%f"%(width,height))
+        if __name__ == '__main__':
+            # These are slow because the require a pretty huge fft.
+            # So only do them if running as main.
+            do_kvalue(box,"Box with width,height = %f,%f"%(width,height), scale=scale)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
