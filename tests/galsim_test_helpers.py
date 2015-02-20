@@ -59,7 +59,7 @@ def printval(image1, image2):
     #print "new image.center = ",image1.array[xcen-3:xcen+4,ycen-3:ycen+4]
     #print "saved image.center = ",image2.array[xcen-3:xcen+4,ycen-3:ycen+4]
 
-    if True:
+    if False:
         import matplotlib.pylab as plt
         #plt.figure()
         ax1 = plt.subplot(121)
