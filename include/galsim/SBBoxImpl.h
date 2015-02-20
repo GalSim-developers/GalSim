@@ -43,10 +43,10 @@ namespace galsim {
         double stepK() const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
-        { xmin = -0.5*_width;  xmax = 0.5*_width; }
+        { xmin = -_wo2;  xmax = _wo2; }
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
-        { ymin = -0.5*_height;  ymax = 0.5*_height; }
+        { ymin = -_ho2;  ymax = _ho2; }
 
         Position<double> centroid() const 
         { return Position<double>(0., 0.); }
@@ -79,6 +79,10 @@ namespace galsim {
         double _height;
         double _flux;
         double _norm; // Calculated value: flux / (width*height)
+        double _wo2;
+        double _ho2;
+        double _wo2pi;
+        double _ho2pi;
 
         // Copy constructor and op= are undefined.
         SBBoxImpl(const SBBoxImpl& rhs);

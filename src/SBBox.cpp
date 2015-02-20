@@ -64,18 +64,22 @@ namespace galsim {
     {
         if (_height==0.) _height=_width;
         _norm = _flux / (_width * _height);
+        _wo2 = 0.5*_width;
+        _ho2 = 0.5*_height;
+        _wo2pi = _width/(2.*M_PI);
+        _ho2pi = _height/(2.*M_PI);
     }
 
 
     double SBBox::SBBoxImpl::xValue(const Position<double>& p) const 
     {
-        if (fabs(p.x) < 0.5*_width && fabs(p.y) < 0.5*_height) return _norm;
+        if (fabs(p.x) < _wo2 && fabs(p.y) < _ho2) return _norm;
         else return 0.;  // do not use this function for filling image!
     }
 
     std::complex<double> SBBox::SBBoxImpl::kValue(const Position<double>& k) const
     {
-        return _flux * sinc(k.x*_width/(2.*M_PI))*sinc(k.y*_height/(2.*M_PI));
+        return _flux * sinc(k.x*_wo2pi)*sinc(k.y*_ho2pi);
     }
 
     void SBBox::SBBoxImpl::fillXValue(tmv::MatrixView<double> val,
@@ -200,10 +204,10 @@ namespace galsim {
             const int n = val.rowsize();
             typedef tmv::VIt<double,1,tmv::NonConj> It;
 
-            x0 *= _width/(2.*M_PI);
-            dx *= _width/(2.*M_PI);
-            y0 *= _height/(2.*M_PI);
-            dy *= _height/(2.*M_PI);
+            x0 *= _wo2pi;
+            dx *= _wo2pi;
+            y0 *= _ho2pi;
+            dy *= _ho2pi;
 
             // The Box profile in Fourier space is separable:
             //    val(x,y) = _flux * sinc(x * _width/2pi) * sinc(y * _height/2pi) 
@@ -247,12 +251,12 @@ namespace galsim {
         const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-        x0 *= _width/(2.*M_PI);
-        dx *= _width/(2.*M_PI);
-        dxy *= _width/(2.*M_PI);
-        y0 *= _height/(2.*M_PI);
-        dy *= _height/(2.*M_PI);
-        dyx *= _height/(2.*M_PI);
+        x0 *= _wo2pi;
+        dx *= _wo2pi;
+        dxy *= _wo2pi;
+        y0 *= _ho2pi;
+        dy *= _ho2pi;
+        dyx *= _ho2pi;
 
         It valit = val.linearView().begin();
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
