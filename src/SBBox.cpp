@@ -89,10 +89,48 @@ namespace galsim {
         dbg<<"SBBox fillXValue\n";
         dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
         dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+
         assert(val.stepi() == 1);
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+        // It will be useful to do everything in units of dx,dy
+        x0 /= dx;
+        double wo2 = _wo2 / dx;
+        y0 /= dy;
+        double ho2 = _ho2 / dy;
+        xdbg<<"x0,y0 -> "<<x0<<','<<y0<<std::endl;
+        xdbg<<"width,height -> "<<wo2*2.<<','<<ho2*2.<<std::endl;
+
+        // Start by setting everything to zero
+        val.setZero();
+
+        // Then fill the interior with _norm:
+        // Fill pixels where:
+        //     x0 + ix >= -width/2
+        //     x0 + ix < width/2
+        //     y0 + iy >= -width/2
+        //     y0 + iy < width/2
+
+        int ix1 = std::max(0, int(std::ceil(-wo2 - x0)));
+        int ix2 = std::min(m, int(std::ceil(wo2 - x0)));
+        int iy1 = std::max(0, int(std::ceil(-ho2 - y0)));
+        int iy2 = std::min(n, int(std::ceil(ho2 - y0)));
+
+        if (ix1 < ix2 && iy1 < iy2)
+            val.subMatrix(ix1,ix2,iy1,iy2).setAllTo(_norm);
+
+#if 0
+        // We used to implement this by making the pixels that cross the edge have a 
+        // fractional flux value appropriate for the fraction of the box that goes through
+        // each pixel.  However, this isn't actually correct.  SBProfile objects are always
+        // rendered as the local surface brightness at the center of the pixel.  To get
+        // the right flux, you need to convolve by a Pixel.  So if someone renders a Box
+        // without convolving by a pixel, it is inconsistent to do this differently than we
+        // do all the other SBProfile types.  However, since it was an involved calculation
+        // and someone might actually care to resurrect it in a different guise at some point,
+        // I'm leaving it here, just commented out.
 
         // We need to make sure the pixels where the edges of the box fall only get
         // a fraction of the flux.
@@ -108,14 +146,6 @@ namespace galsim {
         //    above the box where val = 0 again
         //
         // Furthermore, we have to calculate the correct values for the pixels on the border.
-        
-        // It will be useful to do everything in units of dx,dy
-        x0 /= dx;
-        double width = _width / dx;
-        y0 /= dy;
-        double height = _height / dy;
-        xdbg<<"x0,y0 -> "<<x0<<','<<y0<<std::endl;
-        xdbg<<"width,height -> "<<width<<','<<height<<std::endl;
 
         int ix_left, ix_right, iy_bottom, iy_top;
         double x_left, x_right, y_bottom, y_top;
@@ -185,6 +215,7 @@ namespace galsim {
         val(ix_right,iy_bottom) = x_right * y_bottom * _norm;
         val(ix_left,iy_top) = x_left * y_top * _norm;
         val(ix_right,iy_top) = x_right * y_top * _norm;
+#endif
     }
 
     void SBBox::SBBoxImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
