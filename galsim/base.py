@@ -1784,13 +1784,6 @@ class Pixel(GSObject):
 
         >>> scale = pixel.getScale()
 
-    Note: We have not implemented drawing a sheared or rotated Pixel in real space.  It's a
-          bit tricky to get right at the edges where fractional fluxes are required.
-          Fortunately, this is almost never needed.  Pixels are almost always convolved by
-          something else rather than drawn by themselves, in which case either the fourier
-          space method is used, or photon shooting.  Both of these are implemented in GalSim.
-          If you need to draw sheared or rotated Pixels in real space, please file an issue, and
-          maybe we'll implement that function.  Until then, you will get an exception if you try.
     """
 
     # Initialization parameters of the object, with type information
@@ -1831,13 +1824,6 @@ class Box(GSObject):
         >>> width = box.getWidth()
         >>> height = box.getHeight()
 
-    Note: We have not implemented drawing a sheared or rotated Box in real space.  It's a
-          bit tricky to get right at the edges where fractional fluxes are required.
-          Fortunately, this is almost never needed.  Box profiles are almost always convolved
-          by something else rather than drawn by themselves, in which case either the fourier
-          space method is used, or photon shooting.  Both of these are implemented in GalSim.
-          If you need to draw sheared or rotated Boxes in real space, please file an issue, and
-          maybe we'll implement that function.  Until then, you will get an exception if you try.
     """
 
     # Initialization parameters of the object, with type information
@@ -1862,6 +1848,45 @@ class Box(GSObject):
         """Return the height of the box in the y dimension.
         """
         return self.SBProfile.getHeight()
+
+
+class TopHat(GSObject):
+    """A class describing a radial tophat profile.  This profile is a constant value within some
+    radius, and zero outside this radius.
+
+    Initialization
+    --------------
+
+    @param radius           The radius of the TopHat, where the surface brightness drops to 0.
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    In addition to the usual GSObject methods, Box has the following access method:
+
+        >>> radius = tophat.getGetRadius()
+
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "radius" : float }
+    _opt_params = { "flux" : float }
+    _single_params = []
+    _takes_rng = False
+    _takes_logger = False
+
+    # --- Public Class methods ---
+    def __init__(self, radius, flux=1., gsparams=None):
+        radius = float(radius)
+        GSObject.__init__(self, galsim._galsim.SBTopHat(radius, flux=flux, gsparams=gsparams))
+
+    def getRadius(self):
+        """Return the radius of the tophat profile.
+        """
+        return self.SBProfile.getRadius()
 
 
 class Sersic(GSObject):
