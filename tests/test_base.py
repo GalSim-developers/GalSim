@@ -1072,7 +1072,7 @@ def test_box():
     import time
     t1 = time.time()
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
-    myImg = galsim.ImageF(savedImg.bounds, scale=savedImg.scale)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     myImg.setCenter(0,0)
 
     pixel = galsim.Pixel(scale=1, flux=1)
@@ -1123,7 +1123,7 @@ def test_tophat():
     import time
     t1 = time.time()
     savedImg = galsim.fits.read(os.path.join(imgdir, "tophat_101.fits"))
-    myImg = galsim.ImageF(savedImg.bounds, scale=savedImg.scale)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     myImg.setCenter(0,0)
 
     # There are numerical issues with using radius = 1, since many points are right on the edge
