@@ -509,7 +509,7 @@ namespace galsim {
                 It valit = val.col(j).begin();
                 for (int i=0;i<m;++i,x+=dx) {
                     double ksq = x*x + ysq;
-                    *valit++ = _flux * kValue2(ksq);
+                    *valit++ = kValue2(ksq);
                 }
             }
         }
@@ -555,7 +555,7 @@ namespace galsim {
             double y = y0;
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double ksq = x*x + y*y;
-                *valit++ = _flux * kValue2(ksq);
+                *valit++ = kValue2(ksq);
             }
         }
     }

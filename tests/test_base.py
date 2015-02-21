@@ -1072,8 +1072,7 @@ def test_box():
     import time
     t1 = time.time()
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
-    dx = 0.2
-    myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg = galsim.ImageF(savedImg.bounds, scale=savedImg.scale)
     myImg.setCenter(0,0)
 
     pixel = galsim.Pixel(scale=1, flux=1)
@@ -1113,6 +1112,64 @@ def test_box():
             # These are slow because the require a pretty huge fft.
             # So only do them if running as main.
             do_kvalue(box,"Box with width,height = %f,%f"%(width,height), scale=scale)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_tophat():
+    """Test the generation of a specific box profile using SBProfile against a known result.
+    """
+    import time
+    t1 = time.time()
+    savedImg = galsim.fits.read(os.path.join(imgdir, "tophat_101.fits"))
+    myImg = galsim.ImageF(savedImg.bounds, scale=savedImg.scale)
+    myImg.setCenter(0,0)
+
+    # There are numerical issues with using radius = 1, since many points are right on the edge
+    # of the circle.  e.g. (+-1,0), (0,+-1), (+-0.6,+-0.8), (+-0.8,+-0.6).  And in practice, some
+    # of these end up getting drawn and not others, which means it's not a good choice for a unit
+    # test since it wouldn't be any less correct for a different subset of these points to be
+    # drawn. Using r = 1.01 solves this problem and makes the result symmetric.
+    tophat = galsim.TopHat(radius=1.01, flux=1)
+    tophat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject TopHat disagrees with expected result")
+
+    # Check with default_params
+    tophat = galsim.TopHat(radius=1.01, flux=1, gsparams=default_params)
+    tophat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject TopHat with default_params disagrees with expected result")
+    tophat = galsim.TopHat(radius=1.01, flux=1, gsparams=galsim.GSParams())
+    tophat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject TopHat with GSParams() disagrees with expected result")
+
+    # Test photon shooting.
+    do_shoot(tophat,myImg,"TopHat")
+
+    # Test shoot and kvalue
+    scale = 0.2939
+    im = galsim.ImageF(32,32, scale=scale)
+    #gsp = galsim.GSParams(maximum_fft_size = 30000)
+    gsp = galsim.GSParams()
+    # The choices of radius here are fairly specific.  If the edge of the circle comes too close
+    # to the center of one of the pixels, then the test will fail, since the Fourier draw method
+    # will blur the edge a bit and give some flux to that pixel.
+    for radius in [ 1.2, 0.83, 2.11 ]:
+        print 'radius = ',radius
+        tophat = galsim.TopHat(radius=radius, flux=test_flux, gsparams=gsp)
+        print 'im.bounds = ',im.bounds
+        print 'im.scale = ',im.scale
+        #do_shoot(tophat,im,"TopHat with radius = %f"%radius)
+        if __name__ == '__main__':
+            # These are slow because the require a pretty huge fft.
+            # So only do them if running as main.
+            do_kvalue(tophat,"TopHat with radius = %f"%radius, scale=scale)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1723,6 +1780,7 @@ if __name__ == "__main__":
     test_airy_radii()
     test_airy_flux_scaling()
     test_box()
+    test_tophat()
     test_moffat()
     test_moffat_properties()
     test_moffat_radii()
