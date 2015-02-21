@@ -49,9 +49,26 @@ namespace galsim {
         }
     };
 
+    struct PySBTopHat 
+    {
+
+        static void wrap() 
+        {
+            bp::class_<SBTopHat,bp::bases<SBProfile> >("SBTopHat", bp::no_init)
+                .def(bp::init<double,double,boost::shared_ptr<GSParams> >(
+                        (bp::arg("radius"), bp::arg("flux")=1.,
+                         bp::arg("gsparams")=bp::object())
+                ))
+                .def(bp::init<const SBTopHat&>())
+                .def("getRadius", &SBTopHat::getRadius)
+                ;
+        }
+    };
+
     void pyExportSBBox() 
     {
         PySBBox::wrap();
+        PySBTopHat::wrap();
     }
 
 } // namespace galsim
