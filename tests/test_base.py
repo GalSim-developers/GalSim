@@ -113,7 +113,7 @@ def test_gaussian():
     do_shoot(gauss,myImg,"Gaussian")
 
     # Test kvalues
-    do_kvalue(gauss,"Gaussian")
+    do_kvalue(gauss,myImg,"Gaussian")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -390,7 +390,7 @@ def test_exponential():
     do_shoot(expon,myImg,"Exponential")
 
     # Test kvalues
-    do_kvalue(expon,"Exponential")
+    do_kvalue(expon,myImg,"Exponential")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -564,7 +564,7 @@ def test_sersic():
     do_shoot(sersic2,myImg,"Sersic")
 
     # Test kvalues
-    do_kvalue(sersic,"Sersic")
+    do_kvalue(sersic,myImg,"Sersic")
 
 
     # Now repeat everything using a truncation.  (Above had no truncation.)
@@ -586,30 +586,30 @@ def test_sersic():
     do_shoot(sersic2,myImg,"Truncated Sersic")
 
     # Test kvalues
-    do_kvalue(sersic, "Truncated Sersic")
+    do_kvalue(sersic,myImg, "Truncated Sersic")
 
     # Check for normalization consistencies with kValue checks. xValues tested in test_sersic_radii.
 
     # For half-light radius specified truncated Sersic, with flux_untruncated flag set
     sersic = galsim.Sersic(n=3, flux=test_flux, half_light_radius=1, trunc=10,
                            flux_untruncated=True)
-    do_kvalue(sersic, "Truncated Sersic w/ flux_untruncated, half-light radius specified")
+    do_kvalue(sersic,myImg, "Truncated Sersic w/ flux_untruncated, half-light radius specified")
 
     # For scale radius specified Sersic
     sersic = galsim.Sersic(n=3, flux=test_flux, scale_radius=0.05)
-    do_kvalue(sersic, "Sersic w/ scale radius specified")
+    do_kvalue(sersic,myImg, "Sersic w/ scale radius specified")
 
     # For scale radius specified truncated Sersic
     sersic = galsim.Sersic(n=3, flux=test_flux, scale_radius=0.05, trunc=10)
-    do_kvalue(sersic, "Truncated Sersic w/ scale radius specified")
+    do_kvalue(sersic,myImg, "Truncated Sersic w/ scale radius specified")
 
     # For scale radius specified truncated Sersic, with flux_untruncated flag set
     sersic = galsim.Sersic(n=3, flux=test_flux, scale_radius=0.05, trunc=10, flux_untruncated=True)
-    do_kvalue(sersic, "Truncated Sersic w/ flux_untruncated, scale radius specified")
+    do_kvalue(sersic,myImg, "Truncated Sersic w/ flux_untruncated, scale radius specified")
 
     # Test severely truncated Sersic
     sersic = galsim.Sersic(n=4, flux=test_flux, half_light_radius=1, trunc=1.45)
-    do_kvalue(sersic, "Severely truncated n=4 Sersic")
+    do_kvalue(sersic,myImg, "Severely truncated n=4 Sersic")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -872,7 +872,7 @@ def test_sersic_05():
             myImg.array, savedImg.array, 5,
             err_msg="Using Sersic with n=0.5 disagrees with expected result for Gaussian")
 
-    do_kvalue(sersic,"n=0.5 Sersic")
+    do_kvalue(sersic,myImg,"n=0.5 Sersic")
 
     # cf test_gaussian_properties()
     sersic = galsim.Sersic(n=0.5, flux=test_flux, half_light_radius=test_sigma * hlr_sigma)
@@ -908,7 +908,7 @@ def test_sersic_1():
             myImg.array, savedImg.array, 5,
             err_msg="Using Sersic n=1 disagrees with expected result for Exponential")
 
-    do_kvalue(sersic,"n=1 Sersic")
+    do_kvalue(sersic,myImg,"n=1 Sersic")
 
     # cf test_exponential_properties()
     sersic = galsim.Sersic(n=1, flux=test_flux, half_light_radius=test_scale[0] * hlr_r0)
@@ -962,8 +962,8 @@ def test_airy():
     do_shoot(airy2,myImg,"Airy obscuration=0.1")
 
     # Test kvalues
-    do_kvalue(airy, "Airy obscuration=0.0")
-    do_kvalue(airy2, "Airy obscuration=0.1")
+    do_kvalue(airy,myImg, "Airy obscuration=0.0")
+    do_kvalue(airy2,myImg, "Airy obscuration=0.1")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1100,7 +1100,7 @@ def test_box():
     scale = 0.2939  # Use a strange scale here to make sure that the centers of the pixels
                     # never fall on the box edge, otherwise it gets a bit weird to know what
                     # the correct SB value is for that pixel.
-    im = galsim.ImageF(32,32, scale=scale)
+    im = galsim.ImageF(16,16, scale=scale)
     gsp = galsim.GSParams(maximum_fft_size = 30000)
     for (width,height) in [ (3,2), (1.7, 2.7), (2.2222, 3.1415) ]:
         print 'width, height = ',width,height
@@ -1111,7 +1111,7 @@ def test_box():
         if __name__ == '__main__':
             # These are slow because the require a pretty huge fft.
             # So only do them if running as main.
-            do_kvalue(box,"Box with width,height = %f,%f"%(width,height), scale=scale)
+            do_kvalue(box,im,"Box with width,height = %f,%f"%(width,height))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1154,7 +1154,7 @@ def test_tophat():
 
     # Test shoot and kvalue
     scale = 0.2939
-    im = galsim.ImageF(32,32, scale=scale)
+    im = galsim.ImageF(16,16, scale=scale)
     #gsp = galsim.GSParams(maximum_fft_size = 30000)
     gsp = galsim.GSParams()
     # The choices of radius here are fairly specific.  If the edge of the circle comes too close
@@ -1169,7 +1169,7 @@ def test_tophat():
         if __name__ == '__main__':
             # These are slow because the require a pretty huge fft.
             # So only do them if running as main.
-            do_kvalue(tophat,"TopHat with radius = %f"%radius, scale=scale)
+            do_kvalue(tophat,im,"TopHat with radius = %f"%radius)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1217,13 +1217,13 @@ def test_moffat():
     do_shoot(moffat,myImg,"Moffat")
 
     # Test kvalues
-    do_kvalue(moffat, "Moffat")
+    do_kvalue(moffat,myImg, "Moffat")
 
     # The code for untruncated Moffat profiles is specialized for particular beta values, so 
     # test each of these:
     for beta in [ 1.5, 2, 2.5, 3, 3.5, 4, 2.3 ]:  # The one last is for the generic case.
         moffat = galsim.Moffat(beta=beta, half_light_radius=0.7, flux=test_flux)
-        do_kvalue(moffat,"Untruncated Moffat with beta=%f"%beta)
+        do_kvalue(moffat,myImg,"Untruncated Moffat with beta=%f"%beta)
         # Don't bother repeating the do_shoot tests, since they are rather slow, and the code
         # isn't different for the different beta values.
 
@@ -1570,7 +1570,7 @@ def test_kolmogorov():
     do_shoot(kolm,myImg,"Kolmogorov")
 
     # Test kvalues
-    do_kvalue(kolm, "Kolmogorov")
+    do_kvalue(kolm,myImg, "Kolmogorov")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

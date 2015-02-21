@@ -195,19 +195,17 @@ def do_shoot(prof, img, name):
             err_msg="Photon shooting flux normalization for %s disagrees with expected result"%name)
 
 
-def do_kvalue(prof, name, scale=0.2):
+def do_kvalue(prof, im1, name):
     """Test that the k-space values are consistent with the real-space values by drawing the
     profile directly (without any convolution, so using fillXValues) and convolved by a tiny
     Gaussian (effectively a delta function).
     """
 
-    im1 = galsim.ImageF(16,16, scale=scale)
     prof.draw(im1)
 
     delta = galsim.Gaussian(sigma = 1.e-8)
     conv = galsim.Convolve([prof,delta])
-    im2 = galsim.ImageF(16,16, scale=scale)
-    conv.draw(im2)
+    im2 = conv.draw(im1.copy())
     printval(im1,im2)
     np.testing.assert_array_almost_equal(
             im2.array, im1.array, 3,
