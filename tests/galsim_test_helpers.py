@@ -61,7 +61,6 @@ def printval(image1, image2):
 
     if False:
         import matplotlib.pylab as plt
-        #plt.figure()
         ax1 = plt.subplot(121)
         ax2 = plt.subplot(122)
         ax1.imshow(image1.array)
