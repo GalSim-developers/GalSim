@@ -1865,9 +1865,9 @@ class TopHat(GSObject):
     Methods
     -------
 
-    In addition to the usual GSObject methods, Box has the following access method:
+    In addition to the usual GSObject methods, TopHat has the following access method:
 
-        >>> radius = tophat.getGetRadius()
+        >>> radius = tophat.getRadius()
 
     """
 
