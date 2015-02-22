@@ -1876,6 +1876,62 @@ class ChromaticOpticalPSF(ChromaticObject):
             **self.kwargs)
         return ret
 
+class ChromaticAiry(ChromaticObject):
+    """A subclass of ChromaticObject meant to represent chromatic Airy profiles.
+
+    For more information about the basics of Airy profiles, please see help(galsim.Airy).
+
+    This class is a chromatic representation of Airy profiles, including the wavelength-dependent
+    diffraction limit.  One can also get this functionality using the ChromaticOpticalPSF class, but
+    that class includes additional complications beyond a simple Airy profile, and thus has a more
+    complicated internal representation.  For users who only want a (possibly obscured) Airy
+    profile, the ChromaticAiry class is likely to be a less computationally expensive and more
+    accurate option.
+
+    @param   lam           Fiducial wavelength for which diffraction limit is initially defined, in
+                           nanometers.
+    @param   diam          Telescope diameter in meters.  Either `diam` or `lam_over_diam` must be
+                           specified.
+    @param   lam_over_diam Ratio of (fiducial wavelength) / telescope diameter in units of
+                           `scale_unit`.  Either `diam` or `lam_over_diam` must be specified.
+    @param   scale_unit    Units used to define the diffraction limit and draw images.
+                           [default: galsim.arcsec]
+    @param   **kwargs      Any other keyword arguments to be passed to Airy: either flux, or
+                           gsparams.  See galsim.Airy docstring for a complete description of these
+                           options.
+    """
+    def __init__(self, lam, diam=None, lam_over_diam=None, scale_unit=galsim.arcsec, **kwargs):
+        # First, take the basic info.
+        # We have to require either diam OR lam_over_diam:
+        if (diam is None and lam_over_diam is None) or \
+                (diam is not None and lam_over_diam is not None):
+            raise TypeError("Need to specify telescope diameter OR wavelength/diam ratio")
+        if diam is not None:
+            self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/scale_unit
+        else:
+            self.lam_over_diam = lam_over_diam
+        self.lam = lam
+
+        self.kwargs = kwargs
+        self.scale_unit = scale_unit
+
+        # Define the necessary attributes for this ChromaticObject.
+        self.separable = False
+        self.wave_list = np.array([], dtype=float)
+
+    def evaluateAtWavelength(self, wave):
+        """
+        Method to directly instantiate a monochromatic instance of this object.
+
+        @param  wave   Wavelength in nanometers.
+        """
+        # We need to rescale the stored lam/diam by the ratio of input wavelength to stored fiducial
+        # wavelength.
+        ret = galsim.Airy(
+            lam_over_diam=self.lam_over_diam*(wave/self.lam), scale_unit=self.scale_unit,
+            **self.kwargs)
+        return ret
+
 def _findWave(wave_list, wave):
     """
     Helper routine to search a sorted NumPy array of wavelengths (not necessarily evenly spaced) to
