@@ -650,31 +650,121 @@ def test_integer_shift_photon():
 def test_flip():
     """Test several ways to flip a profile
     """
-    # Use a fairly non-trivial profile so the flips are unambiguous
-    prof = galsim.OpticalPSF(0.1, obscuration=0.2, nstruts=6, coma1=0.2, coma2=0.5, defocus=-0.1)
-    image = prof.drawImage(scale=0.01, nx=64, ny=64)
+    import time
+    t1 = time.time()
 
-    # Flip around y axis (i.e. x -> -x)
-    flip_yaxis = prof.transform(-1, 0, 0, 1)
-    image2 = flip_yaxis.drawImage(scale=0.01, nx=64, ny=64)
-    np.testing.assert_array_almost_equal(
-        image.array, image2.array[:,::-1], decimal=12, 
-        err_msg="Flipping image around y-axis failed")
+    # The Shapelet profile has the advantage of being fast and not circularly symmetric, so
+    # it is a good test of the actual code for doing the flips (in SBTransform).
+    # But since the bug Rachel reported in #645 was actually in SBInterpolatedImage
+    # (one calculated implicitly assumed dx > 0), it seems worthwhile to run through all the
+    # classes to make sure we hit everything with negative steps for dx and dy.
+    prof_list = [
+        galsim.Shapelet(sigma=0.17, order=2,
+                        bvec=[1.7, 0.01,0.03, 0.29, 0.33, -0.18]),
+    ]
+    if __name__ == "__main__":
+        # Some of these are slow, so only do the Shapelet test as part of the normal unit tests.
+        prof_list += [
+            galsim.Airy(lam_over_diam=0.17, flux=1.7),
+            galsim.Airy(lam_over_diam=0.17, obscuration=0.2, flux=1.7),
+            #galsim.Box(0.17, 0.23, flux=1.7),
+            galsim.DeVaucouleurs(half_light_radius=0.17, flux=1.7,
+                                gsparams=galsim.GSParams(maximum_fft_size=8000)),
+            galsim.Exponential(scale_radius=0.17, flux=1.7,
+                            gsparams=galsim.GSParams(maxk_threshold=1.e-4)),
+            galsim.Gaussian(sigma=0.17, flux=1.7),
+            galsim.Kolmogorov(fwhm=0.17, flux=1.7),
+            galsim.Moffat(beta=2.5, fwhm=0.17, flux=1.7),
+            galsim.OpticalPSF(lam_over_diam=0.17, obscuration=0.2, nstruts=6,
+                            coma1=0.2, coma2=0.5, defocus=-0.1, flux=1.7),
+            #galsim.Pixel(0.23, flux=1.7),
+            galsim.Spergel(nu=-0.19, half_light_radius=0.17, flux=1.7),
+            galsim.Sersic(n=2.3, half_light_radius=0.17, flux=1.7),
+            #galsim.TopHat(0.23, flux=1.7),
+            # Add in Pixel, Box and TopHat once #639 is merged in.
+        ]
+     
+    s = galsim.Shear(g1=0.11, g2=-0.21)
+    s1 = galsim.Shear(g1=0.11, g2=0.21)  # Appropriate for the flips around x and y axes
+    s2 = galsim.Shear(g1=-0.11, g2=-0.21)  # Appropriate for the flip around x=y
 
-    # Flip around x axis (i.e. y -> -y)
-    flip_yaxis = prof.transform(1, 0, 0, -1)
-    image2 = flip_yaxis.drawImage(scale=0.01, nx=64, ny=64)
-    np.testing.assert_array_almost_equal(
-        image.array, image2.array[::-1,:], decimal=12, 
-        err_msg="Flipping image around x-axis failed")
+    decimal=6  # Oddly, these aren't as precise as I would have expected.
+               # Even when we only go to this many digits of accuracy, the Exponential needed
+               # a lower than default value for maxk_threshold. 
+    im = galsim.ImageD(16,16, scale=0.05)
 
-    # Flip around x=y (i.e. y -> x, x -> y)
-    flip_yaxis = prof.transform(0, 1, 1, 0)
-    image2 = flip_yaxis.drawImage(scale=0.01, nx=64, ny=64)
-    np.testing.assert_array_almost_equal(
-        image.array, np.transpose(image2.array), decimal=12, 
-        err_msg="Flipping image around x=y failed")
+    for prof in prof_list:
+        print 'prof = ',prof
 
+        # Make sure we hit all 4 fill functions.  
+        # image_x uses fillXValue with ix_zero, iy_zero
+        # image_x2 uses fillXValue with dxy, dyx
+        # image_k uses fillKValue with ix_zero, iy_zero
+        # image_k2 uses fillKValue with dxy, dyx
+        image_x = prof.drawImage(image=im.copy(), method='no_pixel')
+        image_x2 = prof.shear(s).drawImage(image=im.copy(), method='no_pixel')
+        image_k = prof.drawImage(image=im.copy())
+        image_k2 = prof.shear(s).drawImage(image=im.copy())
+
+        # Flip around y axis (i.e. x -> -x)
+        flip = prof.transform(-1, 0, 0, 1)
+        image2_x = flip.drawImage(image=im.copy(), method='no_pixel')
+        np.testing.assert_array_almost_equal(
+            image_x.array, image2_x.array[:,::-1], decimal=decimal,
+            err_msg="Flipping image around y-axis failed x test")
+        image2_x2 = flip.shear(s1).drawImage(image=im.copy(), method='no_pixel')
+        np.testing.assert_array_almost_equal(
+            image_x2.array, image2_x2.array[:,::-1], decimal=decimal,
+            err_msg="Flipping image around y-axis failed x2 test")
+        image2_k = flip.drawImage(image=im.copy())
+        np.testing.assert_array_almost_equal(
+            image_k.array, image2_k.array[:,::-1], decimal=decimal,
+            err_msg="Flipping image around y-axis failed k test")
+        image2_k2 = flip.shear(s1).drawImage(image=im.copy())
+        np.testing.assert_array_almost_equal(
+            image_k2.array, image2_k2.array[:,::-1], decimal=decimal,
+            err_msg="Flipping image around y-axis failed k2 test")
+
+        # Flip around x axis (i.e. y -> -y)
+        flip = prof.transform(1, 0, 0, -1)
+        image2_x = flip.drawImage(image=im.copy(), method='no_pixel')
+        np.testing.assert_array_almost_equal(
+            image_x.array, image2_x.array[::-1,:], decimal=decimal,
+            err_msg="Flipping image around x-axis failed x test")
+        image2_x2 = flip.shear(s1).drawImage(image=im.copy(), method='no_pixel')
+        np.testing.assert_array_almost_equal(
+            image_x2.array, image2_x2.array[::-1,:], decimal=decimal,
+            err_msg="Flipping image around x-axis failed x2 test")
+        image2_k = flip.drawImage(image=im.copy())
+        np.testing.assert_array_almost_equal(
+            image_k.array, image2_k.array[::-1,:], decimal=decimal,
+            err_msg="Flipping image around x-axis failed k test")
+        image2_k2 = flip.shear(s1).drawImage(image=im.copy())
+        np.testing.assert_array_almost_equal(
+            image_k2.array, image2_k2.array[::-1,:], decimal=decimal,
+            err_msg="Flipping image around x-axis failed k2 test")
+
+        # Flip around x=y (i.e. y -> x, x -> y)
+        flip = prof.transform(0, 1, 1, 0)
+        image2_x = flip.drawImage(image=im.copy(), method='no_pixel')
+        np.testing.assert_array_almost_equal(
+            image_x.array, np.transpose(image2_x.array), decimal=decimal,
+            err_msg="Flipping image around x=y failed x test")
+        image2_x2 = flip.shear(s2).drawImage(image=im.copy(), method='no_pixel')
+        np.testing.assert_array_almost_equal(
+            image_x2.array, np.transpose(image2_x2.array), decimal=decimal,
+            err_msg="Flipping image around x=y failed x2 test")
+        image2_k = flip.drawImage(image=im.copy())
+        np.testing.assert_array_almost_equal(
+            image_k.array, np.transpose(image2_k.array), decimal=decimal,
+            err_msg="Flipping image around x=y failed k test")
+        image2_k2 = flip.shear(s2).drawImage(image=im.copy())
+        np.testing.assert_array_almost_equal(
+            image_k2.array, np.transpose(image2_k2.array), decimal=decimal,
+            err_msg="Flipping image around x=y failed k2 test")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":
