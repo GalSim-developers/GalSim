@@ -16,6 +16,8 @@ New Features
 Bug Fixes and Improvements
 --------------------------
 
+- Fixed a bug where InterpolatedImages were not correctly rendered when
+  transformed by something that includes a flip (#645)
 
 Updates to config options
 -------------------------

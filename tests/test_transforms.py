@@ -647,6 +647,35 @@ def test_integer_shift_photon():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_flip():
+    """Test several ways to flip a profile
+    """
+    # Use a fairly non-trivial profile so the flips are unambiguous
+    prof = galsim.OpticalPSF(0.1, obscuration=0.2, nstruts=6, coma1=0.2, coma2=0.5, defocus=-0.1)
+    image = prof.drawImage(scale=0.01, nx=64, ny=64)
+
+    # Flip around y axis (i.e. x -> -x)
+    flip_yaxis = prof.transform(-1, 0, 0, 1)
+    image2 = flip_yaxis.drawImage(scale=0.01, nx=64, ny=64)
+    np.testing.assert_array_almost_equal(
+        image.array, image2.array[:,::-1], decimal=12, 
+        err_msg="Flipping image around y-axis failed")
+
+    # Flip around x axis (i.e. y -> -y)
+    flip_yaxis = prof.transform(1, 0, 0, -1)
+    image2 = flip_yaxis.drawImage(scale=0.01, nx=64, ny=64)
+    np.testing.assert_array_almost_equal(
+        image.array, image2.array[::-1,:], decimal=12, 
+        err_msg="Flipping image around x-axis failed")
+
+    # Flip around x=y (i.e. y -> x, x -> y)
+    flip_yaxis = prof.transform(0, 1, 1, 0)
+    image2 = flip_yaxis.drawImage(scale=0.01, nx=64, ny=64)
+    np.testing.assert_array_almost_equal(
+        image.array, np.transpose(image2.array), decimal=12, 
+        err_msg="Flipping image around x=y failed")
+
+
 
 if __name__ == "__main__":
     test_smallshear()
@@ -658,3 +687,4 @@ if __name__ == "__main__":
     test_rescale()
     test_integer_shift_fft()
     test_integer_shift_photon()
+    test_flip()
