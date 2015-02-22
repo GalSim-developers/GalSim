@@ -31,7 +31,7 @@ a cubic telescope distortion for the WCS.
 
 New features introduced in this demo:
 
-- psf = OpticalPSF(..., trefoil1, trefoil2, nstruts, strut_thick, strut_angle)
+- psf = OpticalPSF(lam, diam, ..., trefoil1, trefoil2, nstruts, strut_thick, strut_angle)
 - im = galsim.ImageS(xsize, ysize, wcs)
 - pos = galsim.PositionD(x, y)
 - nfw = galsim.NFWHalo(mass, conc, z, omega_m, omega_lam)
@@ -82,7 +82,10 @@ def main(argv):
     image_size = 512       # pixels
     sky_level = 1.e2       # ADU / arcsec^2
 
-    psf_lam_over_D = 0.077 # (900nm / 2.4m) * 206265 arcsec/rad = 0.077 arcsec
+    psf_D = 2.4            # meters
+    psf_lam = 900.0        # nanometers; note that OpticalPSF will automatically convert units to
+                           # get lam/diam in units of arcsec, unless told otherwise.  In this case,
+                           # that is (900e-9m / 2.4m) * 206265 arcsec/rad = 0.077 arcsec.
     psf_obsc = 0.125       # (0.3m / 2.4m) = 0.125
     psf_nstruts = 4
     psf_strut_thick = 0.07
@@ -241,7 +244,7 @@ def main(argv):
         # Make the PSF profile outside the loop to minimize the (significant) OpticalPSF 
         # construction overhead.
         psf = galsim.OpticalPSF(
-            lam_over_diam=psf_lam_over_D, obscuration=psf_obsc,
+            lam=psf_lam, diam=psf_D, obscuration=psf_obsc,
             nstruts=psf_nstruts, strut_thick=psf_strut_thick, strut_angle=psf_strut_angle,
             defocus=psf_defocus, astig1=psf_astig1, astig2=psf_astig2,
             coma1=psf_coma1, coma2=psf_coma2, trefoil1=psf_trefoil1, trefoil2=psf_trefoil2)
