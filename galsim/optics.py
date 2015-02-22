@@ -202,8 +202,6 @@ class OpticalPSF(GSObject):
     # Initialization parameters of the object, with type information
     _req_params = { }
     _opt_params = {
-        "lam_over_diam" : float ,
-        "lam" : float ,
         "diam" : float ,
         "defocus" : float ,
         "astig1" : float ,
@@ -227,7 +225,7 @@ class OpticalPSF(GSObject):
         "pupil_plane_im" : str ,
         "pupil_angle" : galsim.Angle ,
         "scale_unit" : galsim.AngleUnit }
-    _single_params = []
+    _single_params = [ { "lam_over_diam" : float , "lam" : float } ]
     _takes_rng = False
     _takes_logger = False
 
