@@ -72,7 +72,7 @@ def printval(image1, image2):
 def getmoments(image1):
     #print 'shape = ',image1.array.shape
     #print 'bounds = ',image1.bounds
-    xgrid, ygrid = np.meshgrid(np.arange(image1.array.shape[1]) + image1.getXMin(), 
+    xgrid, ygrid = np.meshgrid(np.arange(image1.array.shape[1]) + image1.getXMin(),
                                np.arange(image1.array.shape[0]) + image1.getYMin())
     mx = np.sum(xgrid * image1.array) / np.sum(image1.array)
     my = np.sum(ygrid * image1.array) / np.sum(image1.array)
@@ -164,7 +164,7 @@ def do_shoot(prof, img, name):
     # even for slow convergers like Airy (which needs a _very_ large image) or Sersic.
     if 'Airy' in name:
         img = galsim.ImageD(2048,2048, scale=dx)
-    elif 'Sersic' in name or 'DeVauc' in name:
+    elif 'Sersic' in name or 'DeVauc' in name or 'Spergel' in name:
         img = galsim.ImageD(512,512, scale=dx)
     else:
         img = galsim.ImageD(128,128, scale=dx)
@@ -213,22 +213,16 @@ def do_kvalue(prof, im1, name):
             err_msg = name +
             " convolved with a delta function is inconsistent with real-space image.")
 
-
-def radial_integrate(prof, minr, maxr, dr):
+def radial_integrate(prof, minr, maxr):
     """A simple helper that calculates int 2pi r f(r) dr, from rmin to rmax
        for an axially symmetric profile.
     """
-    import math
     assert prof.isAxisymmetric()
-    r = minr
-    sum = 0.
-    while r < maxr:
-        # In this tight loop, it is worth optimizing away the parse_pos_args step.
-        # It makes a rather significant difference in the running time of this function.
-        sum += r * prof.SBProfile.xValue(galsim.PositionD(r,0)) 
-        r += dr
-    sum *= 2. * math.pi * dr
-    return sum
+    # In this tight loop, it is worth optimizing away the parse_pos_args step.
+    # It makes a rather significant difference in the running time of this function.
+    # (I.e., use prof.SBProfile.xValue() instead of prof.xValue() )
+    f = lambda r: 2 * np.pi * r * prof.SBProfile.xValue(galsim.PositionD(r,0))
+    return galsim.integ.int1d(f, minr, maxr)
 
 def funcname():
     import inspect

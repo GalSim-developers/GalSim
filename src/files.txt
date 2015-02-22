@@ -19,6 +19,7 @@ SBTransform.cpp
 SBInterpolatedImage.cpp
 SBDeconvolve.cpp
 SBKolmogorov.cpp
+SBSpergel.cpp
 CppShear.cpp
 Table.cpp
 RealSpaceConvolve.cpp

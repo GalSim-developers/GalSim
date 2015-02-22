@@ -1,6 +1,7 @@
 Changes from v1.2 to v1.3
 =========================
 
+
 New Features
 ------------
 
@@ -8,6 +9,7 @@ New Features
   inter-pixel capacitance (#555) and image quantization (#558).
 - Added information about PSF size and shape to the data structure that is
   returned by EstimateShear(). (#612)
+- Added Spergel(2010) profile GSObject (#616).
 - Enable initializing a DES_PSFEx object using a pyfits HDU directly instead
   of a filename. (#626)
 - Added TopHat class implementing a circular tophat profile. (#639)
@@ -26,3 +28,4 @@ Updates to config options
 -------------------------
 
 - Added TopHat type. (#639)
+
