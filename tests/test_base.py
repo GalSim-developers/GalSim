@@ -1173,6 +1173,14 @@ def test_tophat():
         do_shoot(tophat,im,"TopHat with radius = %f"%radius)
         do_kvalue(tophat,im,"TopHat with radius = %f"%radius)
 
+    # Check sheared tophat the same way
+    tophat = galsim.TopHat(radius=1.2, flux=test_flux)
+    # Again, the test is very sensitive to the choice of shear here.  Most values fail because 
+    # some pixel center gets too close to the resulting ellipse for the fourier draw to match
+    # the real-space draw at the required accuracy.
+    tophat = tophat.shear(galsim.Shear(g1=0.15, g2=-0.33))
+    do_shoot(tophat,im, "Sheared TopHat")
+    do_kvalue(tophat,im, "Sheared TopHat")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

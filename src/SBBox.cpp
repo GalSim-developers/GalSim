@@ -451,14 +451,31 @@ namespace galsim {
                                             double x0, double dx, double dxy,
                                             double y0, double dy, double dyx) const
     {
-        // As with SBBox, this is hard to get right at the boundard.  The pixels are parallelograms
-        // intersecting the TopHat circle.  But also as with SBBox, it's not really ever needed, 
-        // so we don't implement it.
-        if (dxy == 0. && dyx == 0.)
-            fillXValue(val,x0,dx,0,y0,dy,0);
-        else
-            throw std::runtime_error(
-                "fillXValue for a sheared or rotated SBTopHat is not implemented.");
+        dbg<<"SBTopHat fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+        val.setZero();
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            int i=0;
+            // Use the fact that any slice through the circle has only one segment that is non-zero.
+            // So start with zeroes until in the box, then _norm, then more zeroes.
+            // Note: this could be sped up somewhat using the same kind of calculation we did
+            // for the non-sheared fillXValue (the one with ix_zero, iy_zero), but I didn't
+            // bother.  This is probably plenty fast enough for as often as the function is 
+            // called (i.e. almost never!)
+            for (;i<m && (x*x+y*y > _r0sq); ++i,x+=dx,y+=dyx) ++valit;
+            for (;i<m && (x*x+y*y < _r0sq); ++i,x+=dx,y+=dyx) *valit++ = _norm;
+            for (;i<m; ++i,x+=dx,y+=dyx) ++valit;
+        }
     }
 
     void SBTopHat::SBTopHatImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
