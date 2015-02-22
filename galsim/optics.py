@@ -244,10 +244,10 @@ class OpticalPSF(GSObject):
         # docstring.
         if lam_over_diam is not None:
             if lam is not None or diam is not None:
-                raise RuntimeError("If specifying lam_over_diam, then do not specify lam or diam")
+                raise TypeError("If specifying lam_over_diam, then do not specify lam or diam")
         else:
             if lam is None or diam is None:
-                raise RuntimeError("If not specifying lam_over_diam, then specify lam AND diam")
+                raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
             lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
         
         # Choose scale for lookup table using Nyquist for optical aperture and the specified

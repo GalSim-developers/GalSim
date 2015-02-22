@@ -1843,7 +1843,7 @@ class ChromaticOpticalPSF(ChromaticObject):
         # We have to require either diam OR lam_over_diam:
         if (diam is None and lam_over_diam is None) or \
                 (diam is not None and lam_over_diam is not None):
-            raise RuntimeError("Need to specify telescope diameter OR wavelength/diam ratio")
+            raise TypeError("Need to specify telescope diameter OR wavelength/diam ratio")
         if diam is not None:
             self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/scale_unit
         else:
