@@ -17,7 +17,9 @@ Bug Fixes and Improvements
 --------------------------
 
 - Fixed a bug where InterpolatedImages were not correctly rendered when
-  transformed by something that includes a flip (#645)
+  transformed by something that includes a flip. (#645)
+- Fixed a bug if drawImage was given odd nx, ny parameters, the drawn profile
+  was not correctly centered in the image. (#645)
 
 Updates to config options
 -------------------------
