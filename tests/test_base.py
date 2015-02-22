@@ -1096,7 +1096,7 @@ def test_box():
     # Test photon shooting.
     do_shoot(pixel,myImg,"Pixel")
 
-    # Also check than non-square Box profiles work correctly
+    # Check than non-square Box profiles work correctly
     scale = 0.2939  # Use a strange scale here to make sure that the centers of the pixels
                     # never fall on the box edge, otherwise it gets a bit weird to know what
                     # the correct SB value is for that pixel.
@@ -1112,6 +1112,13 @@ def test_box():
             # These are slow because the require a pretty huge fft.
             # So only do them if running as main.
             do_kvalue(box,im,"Box with width,height = %f,%f"%(width,height))
+
+    # Check sheared boxes the same way
+    box = galsim.Box(width=3, height=2, flux=test_flux, gsparams=gsp)
+    box = box.shear(galsim.Shear(g1=0.2, g2=-0.3))
+    do_shoot(box,im, "Sheared Box")
+    if __name__ == '__main__':
+        do_kvalue(box,im, "Sheared Box")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

@@ -257,16 +257,26 @@ namespace galsim {
                                       double x0, double dx, double dxy,
                                       double y0, double dy, double dyx) const
     {
-        // This is complicated to get right, since the edges cut through the image grid
-        // at angles.  Fortunately, we also don't really have any need for it.
-        // It would only get called if you draw a sheared or rotated Pixel without convolving 
-        // it by anything else, which we don't really do.  If we ever decide we need this,
-        // someone can try to figure out all the math involved here.
-        if (dxy == 0. && dyx == 0.)
-            fillXValue(val,x0,dx,0,y0,dy,0);
-        else
-            throw std::runtime_error(
-                "fillXValue for a sheared or rotated SBBox is not implemented.");
+        dbg<<"SBBox fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            int i=0;
+            // Use the fact that any slice through the box has only one segment that is non-zero.
+            // So start with zeroes until in the box, then _norm, then more zeroes.
+            for (;i<m && (std::abs(x)>_wo2 || std::abs(y)>_ho2); ++i,x+=dx,y+=dyx) *valit++ = 0.;
+            for (;i<m && std::abs(x)<_wo2 && std::abs(y)<_ho2; ++i,x+=dx,y+=dyx) *valit++ = _norm;
+            for (;i<m; ++i,x+=dx,y+=dyx) *valit++ = 0.;
+        }
     }
 
     void SBBox::SBBoxImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
