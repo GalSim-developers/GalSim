@@ -10,6 +10,7 @@ New Features
   returned by EstimateShear(). (#612)
 - Enable initializing a DES_PSFEx object using a pyfits HDU directly instead
   of a filename. (#626)
+- Added TopHat class implementing a circular tophat profile. (#639)
 
 
 Bug Fixes and Improvements
@@ -24,3 +25,4 @@ Bug Fixes and Improvements
 Updates to config options
 -------------------------
 
+- Added TopHat type. (#639)
