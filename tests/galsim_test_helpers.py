@@ -153,6 +153,7 @@ def do_shoot(prof, img, name):
 
     prof.drawShoot(img2, n_photons=nphot, poisson_flux=False, rng=rng)
     print 'img2.sum => ',img2.array.sum()
+    #printval(img2,img)
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
             err_msg="Photon shooting for %s disagrees with expected result"%name)

@@ -555,7 +555,7 @@ namespace galsim {
                 yu = 2.*u()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1.);
-            result->setPhoton(i, xu * _r0, _r0 * yu * _r0, fluxPerPhoton);
+            result->setPhoton(i, xu * _r0, yu * _r0, fluxPerPhoton);
 #endif
         }
         dbg<<"TopHat Realized flux = "<<result->getTotalFlux()<<std::endl;
