@@ -1162,21 +1162,17 @@ def test_tophat():
     # Test shoot and kvalue
     scale = 0.2939
     im = galsim.ImageF(16,16, scale=scale)
-    #gsp = galsim.GSParams(maximum_fft_size = 30000)
-    gsp = galsim.GSParams()
     # The choices of radius here are fairly specific.  If the edge of the circle comes too close
     # to the center of one of the pixels, then the test will fail, since the Fourier draw method
     # will blur the edge a bit and give some flux to that pixel.
     for radius in [ 1.2, 0.83, 2.11 ]:
         print 'radius = ',radius
-        tophat = galsim.TopHat(radius=radius, flux=test_flux, gsparams=gsp)
+        tophat = galsim.TopHat(radius=radius, flux=test_flux)
         print 'im.bounds = ',im.bounds
         print 'im.scale = ',im.scale
-        #do_shoot(tophat,im,"TopHat with radius = %f"%radius)
-        if __name__ == '__main__':
-            # These are slow because the require a pretty huge fft.
-            # So only do them if running as main.
-            do_kvalue(tophat,im,"TopHat with radius = %f"%radius)
+        do_shoot(tophat,im,"TopHat with radius = %f"%radius)
+        do_kvalue(tophat,im,"TopHat with radius = %f"%radius)
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
