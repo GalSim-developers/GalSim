@@ -1820,7 +1820,8 @@ def test_spergel():
         # Only nu >= -0.3 give reasonably sized FFTs,
         # and small nu drawShoot is super slow.
         if nu >= -0.3:
-            do_kvalue(spergel, "Spergel(nu={:1}) ".format(nu))
+            test_im = galsim.Image(16,16,scale=dx)
+            do_kvalue(spergel,test_im, "Spergel(nu={:1}) ".format(nu))
 
             # Test photon shooting.
             # Convolve with a small gaussian to smooth out the central peak.
@@ -2021,7 +2022,7 @@ def test_spergel_05():
             myImg.array, savedImg.array, 5,
             err_msg="Using Spergel nu=0.5 disagrees with expected result for Exponential")
 
-    do_kvalue(spergel,"nu=0.5 Spergel")
+    do_kvalue(spergel,myImg,"nu=0.5 Spergel")
 
     # cf test_exponential_properties()
     spergel = galsim.Spergel(nu=0.5, flux=test_flux, half_light_radius=test_scale[0] * hlr_r0)
