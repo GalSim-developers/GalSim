@@ -1120,6 +1120,11 @@ def test_box():
     if __name__ == '__main__':
         do_kvalue(box,im, "Sheared Box")
 
+    # This is also a profile that may be convolved using real space convolution, so test that.
+    if __name__ == '__main__':
+        conv = galsim.Convolve(box, galsim.Pixel(scale=scale), real_space=True)
+        do_kvalue(conv,im, "Sheared Box convolved with pixel in real space")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1181,6 +1186,10 @@ def test_tophat():
     tophat = tophat.shear(galsim.Shear(g1=0.15, g2=-0.33))
     do_shoot(tophat,im, "Sheared TopHat")
     do_kvalue(tophat,im, "Sheared TopHat")
+
+    # This is also a profile that may be convolved using real space convolution, so test that.
+    conv = galsim.Convolve(tophat, galsim.Pixel(scale=scale), real_space=True)
+    do_kvalue(conv,im, "Sheared TopHat convolved with pixel in real space")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
