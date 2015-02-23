@@ -803,10 +803,10 @@ def test_OpticalPSF_lamdiam():
 
     # Now make sure we cannot do some weird mix-and-match of arguments.
     try:
-        np.testing.assert_raises(RuntimeError, galsim.OpticalPSF, lam=1.) # need diam too!
-        np.testing.assert_raises(RuntimeError, galsim.OpticalPSF, diam=1.) # need lam too!
-        np.testing.assert_raises(RuntimeError, galsim.OpticalPSF, lam_over_diam=1., diam=1.)
-        np.testing.assert_raises(RuntimeError, galsim.OpticalPSF, lam_over_diam=1., lam=1.)
+        np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam=1.) # need diam too!
+        np.testing.assert_raises(TypeError, galsim.OpticalPSF, diam=1.) # need lam too!
+        np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam_over_diam=1., diam=1.)
+        np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam_over_diam=1., lam=1.)
     except ImportError:
         print 'The assert_raises tests require nose'
 

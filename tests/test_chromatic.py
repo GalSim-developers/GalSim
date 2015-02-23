@@ -117,6 +117,15 @@ def test_draw_add_commutativity():
     print 'GS_object.draw() took {0} seconds.'.format(t3-t2)
     # plotme(GS_image)
 
+    # As an aside, check for appropriate tests of 'integrator' argument.
+    try:
+        np.testing.assert_raises(TypeError, final.drawImage, bandpass, method='no_pixel',
+                                 integrator='midp') # minor misspelling
+        np.testing.assert_raises(TypeError, final.drawImage, bandpass, method='no_pixel',
+                                 integrator=galsim.integ.midpt)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
     #------------------------------------------------------------------------------
     # Use galsim.chromatic to generate chromaticity.  Internally, this module draws
     # the result at each wavelength and adds the results together.  I.e., drawing
@@ -507,6 +516,15 @@ def test_chromatic_flux():
     np.testing.assert_almost_equal(
         int_flux/analytic_flux, 1.0, 3,
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
+    # As an aside, check for appropriate tests of 'integrator' argument.
+    try:
+        np.testing.assert_raises(TypeError, final_int.drawImage, bandpass, 
+                                 method='no_pixel', integrator='midp') # minor misspelling
+        np.testing.assert_raises(TypeError, final_int.drawImage, bandpass,
+                                 method='no_pixel', integrator=galsim.integ.midpt)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
     # Go back to no interpolation (this will effect the PSFs that are used below).
     PSF.removeInterpolation()
 
@@ -1550,6 +1568,98 @@ def test_ChromaticOpticalPSF():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_ChromaticAiry():
+    """Test the ChromaticAiry functionality."""
+    import time
+    t1 = time.time()
+
+    # First, compare the interpolated result with saved, exact results.
+    # Exact results were generated using the following code, sitting in this directory:
+    #
+    # import galsim
+    # import os
+    # import numpy as np
+    #
+    # path, filename = os.path.split(__file__)
+    # datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+    # bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat')).thin()
+    # disk_SED = galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='ang')
+    # disk_SED = disk_SED.withFluxDensity(target_flux_density=0.3, wavelength=500.0)
+    #
+    # star = galsim.Gaussian(sigma=1.e-8)*disk_SED
+    #
+    # lam = 750. # nm
+    # diam = 3.1 # meters
+    # obscuration = 0.11
+    # scale = 0.02
+    # 
+    # psf = galsim.ChromaticAiry(lam=lam, diam=diam, obscuration=obscuration)
+    # obj = galsim.Convolve(psf, star)
+    # im_r = obj.drawImage(bandpass, scale=scale)
+    # im_r.write('./chromatic_reference_images/r_exact_Airy.fits')
+    #
+    # Note that exact results will have to be regenerated if any of the bandpass or other parameters
+    # defined here are changed.
+
+    # Define parameters:
+    lam = 750. # nm
+    diam = 3.1 # meters
+    obscuration = 0.11
+    scale = 0.02
+
+    # Read in reference image:
+    im_r_ref = galsim.fits.read(os.path.join(refdir, 'r_exact_Airy.fits'))
+    im_r_tmp = im_r_ref.copy()
+
+    # Make new object, and compare:
+    psf = galsim.ChromaticAiry(lam=lam, diam=diam, obscuration=obscuration)
+    star = galsim.Gaussian(fwhm=1.e-8) * disk_SED
+    obj = galsim.Convolve(psf, star)
+    obj.drawImage(bandpass, image=im_r_tmp, scale=scale)
+    np.testing.assert_array_almost_equal(
+        im_r_tmp.array, im_r_ref.array, decimal=8,
+        err_msg='ChromaticAiry image disagrees with reference in r band')
+
+    # Initialize object in different way, make sure results are identical:
+    lam_over_diam = (1.e-9*lam/diam)*galsim.radians
+    psf = galsim.ChromaticAiry(lam=lam, lam_over_diam=lam_over_diam/galsim.arcsec,
+                               obscuration=obscuration)
+    obj = galsim.Convolve(psf, star)
+    im_r_2 = im_r_tmp.copy()
+    obj.drawImage(bandpass, image=im_r_2, scale=scale)
+    np.testing.assert_array_almost_equal(
+        im_r_2.array, im_r_ref.array, decimal=8,
+        err_msg='ChromaticAiry image disagrees with reference in r band when initializing'
+                ' a different way')
+
+    # Also check evaluation at a single wavelength.
+    chromatic_psf_400 = psf.evaluateAtWavelength(400.)
+    new_lam_over_diam = (1.e-9*400/diam)*galsim.radians
+    exact_psf_400 = galsim.Airy(lam_over_diam=new_lam_over_diam/galsim.arcsec,
+                                obscuration=obscuration)
+    chr_im = chromatic_psf_400.drawImage(scale=scale)
+    exact_im = chr_im.copy()
+    exact_psf_400.drawImage(image=exact_im, scale=scale)
+    np.testing.assert_array_almost_equal(
+        chr_im.array, exact_im.array, decimal=8,
+        err_msg='ChromaticAiry evaluated at a single wavelength is not as expected')
+
+    # Finally, check that flux normalization is preserved when we convolve with a chromatic object.
+    gal = galsim.Exponential(half_light_radius = 2.*scale)
+    gal = gal.shear(g2 = 0.3)
+    gal = disk_SED*gal
+    obj_conv = galsim.Convolve(psf, gal)
+    im = obj_conv.drawImage(bandpass, scale=scale)
+    expected_flux = disk_SED.calculateFlux(bandpass)
+    frac_diff_exact = abs(im.array.sum()/expected_flux-1.0)
+    # Check to 1%
+    np.testing.assert_almost_equal(
+        frac_diff_exact, 0.0, decimal=2,
+        err_msg='ChromaticObject flux is wrong when convolved with ChromaticAiry')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_draw_add_commutativity()
     test_ChromaticConvolution_InterpolatedImage()
@@ -1573,4 +1683,4 @@ if __name__ == "__main__":
     test_centroid()
     test_interpolated_ChromaticObject()
     test_ChromaticOpticalPSF()
-    
+    test_ChromaticAiry()

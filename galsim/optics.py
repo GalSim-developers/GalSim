@@ -190,7 +190,9 @@ class OpticalPSF(GSObject):
                             (positive in the counter-clockwise direction).  Must be an Angle
                             instance. [default: 0. * galsim.degrees]
     @param scale_unit       Units used to define the diffraction limit and draw images, if the user
-                            has supplied a separate value for `lam` and `diam`.
+                            has supplied a separate value for `lam` and `diam`.  Should be either a
+                            galsim.AngleUnit, or a string that can be used to construct one (e.g.,
+                            'arcsec', 'radians', etc.).
                             [default: galsim.arcsec]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
@@ -204,8 +206,6 @@ class OpticalPSF(GSObject):
     # Initialization parameters of the object, with type information
     _req_params = { }
     _opt_params = {
-        "lam_over_diam" : float ,
-        "lam" : float ,
         "diam" : float ,
         "defocus" : float ,
         "astig1" : float ,
@@ -228,8 +228,8 @@ class OpticalPSF(GSObject):
         "strut_angle" : galsim.Angle ,
         "pupil_plane_im" : str ,
         "pupil_angle" : galsim.Angle ,
-        "scale_unit" : galsim.AngleUnit }
-    _single_params = []
+        "scale_unit" : str }
+    _single_params = [ { "lam_over_diam" : float , "lam" : float } ]
     _takes_rng = False
     _takes_logger = False
 
@@ -246,10 +246,13 @@ class OpticalPSF(GSObject):
         # docstring.
         if lam_over_diam is not None:
             if lam is not None or diam is not None:
-                raise RuntimeError("If specifying lam_over_diam, then do not specify lam or diam")
+                raise TypeError("If specifying lam_over_diam, then do not specify lam or diam")
         else:
             if lam is None or diam is None:
-                raise RuntimeError("If not specifying lam_over_diam, then specify lam AND diam")
+                raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
+            # In this case we're going to use scale_unit, so parse it in case of string input:
+            if isinstance(scale_unit, basestring):
+                scale_unit = galsim.angle.get_angle_unit(scale_unit)
             lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
         
         # Choose scale for lookup table using Nyquist for optical aperture and the specified

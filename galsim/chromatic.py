@@ -345,7 +345,7 @@ class ChromaticObject(object):
         else:
             return im, stepk, maxk
 
-    def drawImage(self, bandpass, image=None, integrator=None, **kwargs):
+    def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
         """Base implementation for drawing an image of a ChromaticObject.
 
         Some subclasses may choose to override this for specific efficiency gains.  For instance,
@@ -382,11 +382,15 @@ class ChromaticObject(object):
         @param image            Optionally, the Image to draw onto.  (See GSObject.drawImage()
                                 for details.)  [default: None]
         @param integrator       When doing the exact evaluation of the profile, this argument should
-                                be one of the image integrators from galsim.integ [default: None,
-                                which will try to select an appropriate integrator automatically.]
+                                be one of the image integrators from galsim.integ, or a string
+                                'trapezoidal' or 'midpoint', in which case the routine will use a
+                                SampleIntegrator or ContinuousIntegrator depending on whether or not
+                                the object has a `wave_list`.  [default: 'trapezoidal',
+                                which will try to select an appropriate integrator using the
+                                trapezoidal integration rule automatically.]
                                 If setupInterpolation() has been called for this object, then
-                                `integrator` should be a string, either 'midpoint' or
-                                'trapezoidal'. [default: 'trapezoidal']
+                                `integrator` can only be a string, either 'midpoint' or
+                                'trapezoidal'.
         @param **kwargs         For all other kwarg options, see GSObject.drawImage()
 
         @returns the drawn Image.
@@ -398,7 +402,7 @@ class ChromaticObject(object):
             return self._normal_drawImage(bandpass, image=image,
                                           integrator=integrator, **kwargs)
 
-    def _normal_drawImage(self, bandpass, image=None, integrator=None, **kwargs):
+    def _normal_drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
         """
         Base implementation for drawing an image of a ChromaticObject without interpolation.
         Users will not typically call this directly, and should instead use `drawImage`.
@@ -431,12 +435,23 @@ class ChromaticObject(object):
             image = prof0.drawImage(image=image, **kwargs)
             return image
 
-        # decide on integrator
-        if integrator is None:
-            if len(wave_list) > 0:
-                integrator = galsim.integ.SampleIntegrator(np.trapz)
+        # Decide on integrator.  If the user passed one of the integrators from galsim.integ, that's
+        # fine.  Otherwise we decide based on the adopted integration rule and the presence/absence
+        # of `wave_list`.
+        if isinstance(integrator, str):
+            if integrator == 'trapezoidal':
+                rule = np.trapz
+            elif integrator == 'midpoint':
+                rule = galsim.integ.midpt
             else:
-                integrator = galsim.integ.ContinuousIntegrator(np.trapz)
+                raise TypeError("Unrecognized integration rule: %s"%integrator)
+            if len(wave_list) > 0:
+                integrator = galsim.integ.SampleIntegrator(rule)
+            else:
+                integrator = galsim.integ.ContinuousIntegrator(rule)
+        if not isinstance(integrator, galsim.integ.SampleIntegrator) and \
+                not isinstance(integrator, galsim.integ.ContinuousIntegrator):
+            raise TypeError("Invalid type passed in for integrator!")
 
         # merge self.wave_list into bandpass.wave_list if using a sampling integrator
         if isinstance(integrator, galsim.integ.SampleIntegrator):
@@ -461,19 +476,16 @@ class ChromaticObject(object):
         image += integral
         return image
 
-    def _interp_drawImage(self, bandpass, image=None, integrator=None, **kwargs):
+    def _interp_drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
         """Draw method adapted to work for ChromaticImage instances for which interpolation between
         stored images is being used.  Users should not call this routine directly, and should
         instead interact with the `drawImage` method.
         """
-        if integrator is None:
-            integrator='trapezoidal'
-        else:
-            if integrator not in ['trapezoidal', 'midpoint']:
-                if not isinstance(integrator, str):
-                    raise ValueError("Integrator should be a string indicating trapezoidal"
-                                     " or midpoint rule for integration")
-                raise ValueError("Unknown integrator: %s"%integrator)
+        if integrator not in ['trapezoidal', 'midpoint']:
+            if not isinstance(integrator, str):
+                raise TypeError("Integrator should be a string indicating trapezoidal"
+                                 " or midpoint rule for integration")
+            raise TypeError("Unknown integrator: %s"%integrator)
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength).
         # Note: we cannot just use self._imageAtWavelength, because that routine returns an image
@@ -1345,7 +1357,7 @@ class ChromaticSum(ChromaticObject):
         return galsim.Add([obj.evaluateAtWavelength(wave) for obj in self.objlist],
                           gsparams=self.gsparams)
 
-    def drawImage(self, bandpass, image=None, integrator=None, **kwargs):
+    def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
         """Slightly optimized draw method for ChromaticSum instances.
 
         Draws each summand individually and add resulting images together.  This might waste time if
@@ -1359,8 +1371,16 @@ class ChromaticSum(ChromaticObject):
                                 integrate.
         @param image            Optionally, the Image to draw onto.  (See GSObject.drawImage()
                                 for details.)  [default: None]
-        @param integrator       One of the image integrators from galsim.integ [default: None,
-                                which will try to select an appropriate integrator automatically.]
+        @param integrator       When doing the exact evaluation of the profile, this argument should
+                                be one of the image integrators from galsim.integ, or a string
+                                'trapezoidal' or 'midpoint', in which case the routine will use a
+                                SampleIntegrator or ContinuousIntegrator depending on whether or not
+                                the object has a `wave_list`.  [default: 'trapezoidal',
+                                which will try to select an appropriate integrator using the
+                                trapezoidal integration rule automatically.]
+                                If setupInterpolation() has been called for this object, then
+                                `integrator` can only be a string, either 'midpoint' or
+                                'trapezoidal'.
         @param **kwargs         For all other kwarg options, see GSObject.drawImage()
 
         @returns the drawn Image.
@@ -1485,7 +1505,7 @@ class ChromaticConvolution(ChromaticObject):
         return galsim.Convolve([obj.evaluateAtWavelength(wave) for obj in self.objlist],
                                gsparams=self.gsparams)
 
-    def drawImage(self, bandpass, image=None, integrator=None, iimult=None, **kwargs):
+    def drawImage(self, bandpass, image=None, integrator='trapezoidal', iimult=None, **kwargs):
         """Optimized draw method for the ChromaticConvolution class.
 
         Works by finding sums of profiles which include separable portions, which can then be
@@ -1495,8 +1515,16 @@ class ChromaticConvolution(ChromaticObject):
                                 integrate.
         @param image            Optionally, the Image to draw onto.  (See GSObject.drawImage()
                                 for details.)  [default: None]
-        @param integrator       One of the image integrators from galsim.integ [default: None,
-                                which will try to select an appropriate integrator automatically.]
+        @param integrator       When doing the exact evaluation of the profile, this argument should
+                                be one of the image integrators from galsim.integ, or a string
+                                'trapezoidal' or 'midpoint', in which case the routine will use a
+                                SampleIntegrator or ContinuousIntegrator depending on whether or not
+                                the object has a `wave_list`.  [default: 'trapezoidal',
+                                which will try to select an appropriate integrator using the
+                                trapezoidal integration rule automatically.]
+                                If setupInterpolation() has been called for this object, then
+                                `integrator` can only be a string, either 'midpoint' or
+                                'trapezoidal'.
         @param iimult           Oversample any intermediate InterpolatedImages created to hold
                                 effective profiles by this amount. [default: None]
         @param **kwargs         For all other kwarg options, see GSObject.drawImage()
@@ -1843,7 +1871,7 @@ class ChromaticOpticalPSF(ChromaticObject):
         # We have to require either diam OR lam_over_diam:
         if (diam is None and lam_over_diam is None) or \
                 (diam is not None and lam_over_diam is not None):
-            raise RuntimeError("Need to specify telescope diameter OR wavelength/diam ratio")
+            raise TypeError("Need to specify telescope diameter OR wavelength/diam ratio")
         if diam is not None:
             self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/scale_unit
         else:
@@ -1873,6 +1901,62 @@ class ChromaticOpticalPSF(ChromaticObject):
         ret = galsim.OpticalPSF(
             lam_over_diam=self.lam_over_diam*(wave/self.lam),
             aberrations=self.aberrations*(self.lam/wave), scale_unit=self.scale_unit,
+            **self.kwargs)
+        return ret
+
+class ChromaticAiry(ChromaticObject):
+    """A subclass of ChromaticObject meant to represent chromatic Airy profiles.
+
+    For more information about the basics of Airy profiles, please see help(galsim.Airy).
+
+    This class is a chromatic representation of Airy profiles, including the wavelength-dependent
+    diffraction limit.  One can also get this functionality using the ChromaticOpticalPSF class, but
+    that class includes additional complications beyond a simple Airy profile, and thus has a more
+    complicated internal representation.  For users who only want a (possibly obscured) Airy
+    profile, the ChromaticAiry class is likely to be a less computationally expensive and more
+    accurate option.
+
+    @param   lam           Fiducial wavelength for which diffraction limit is initially defined, in
+                           nanometers.
+    @param   diam          Telescope diameter in meters.  Either `diam` or `lam_over_diam` must be
+                           specified.
+    @param   lam_over_diam Ratio of (fiducial wavelength) / telescope diameter in units of
+                           `scale_unit`.  Either `diam` or `lam_over_diam` must be specified.
+    @param   scale_unit    Units used to define the diffraction limit and draw images.
+                           [default: galsim.arcsec]
+    @param   **kwargs      Any other keyword arguments to be passed to Airy: either flux, or
+                           gsparams.  See galsim.Airy docstring for a complete description of these
+                           options.
+    """
+    def __init__(self, lam, diam=None, lam_over_diam=None, scale_unit=galsim.arcsec, **kwargs):
+        # First, take the basic info.
+        # We have to require either diam OR lam_over_diam:
+        if (diam is None and lam_over_diam is None) or \
+                (diam is not None and lam_over_diam is not None):
+            raise TypeError("Need to specify telescope diameter OR wavelength/diam ratio")
+        if diam is not None:
+            self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/scale_unit
+        else:
+            self.lam_over_diam = lam_over_diam
+        self.lam = lam
+
+        self.kwargs = kwargs
+        self.scale_unit = scale_unit
+
+        # Define the necessary attributes for this ChromaticObject.
+        self.separable = False
+        self.wave_list = np.array([], dtype=float)
+
+    def evaluateAtWavelength(self, wave):
+        """
+        Method to directly instantiate a monochromatic instance of this object.
+
+        @param  wave   Wavelength in nanometers.
+        """
+        # We need to rescale the stored lam/diam by the ratio of input wavelength to stored fiducial
+        # wavelength.
+        ret = galsim.Airy(
+            lam_over_diam=self.lam_over_diam*(wave/self.lam), scale_unit=self.scale_unit,
             **self.kwargs)
         return ret
 

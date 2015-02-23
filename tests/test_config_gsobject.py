@@ -177,7 +177,8 @@ def test_airy():
                  },
         'gal5' : { 'type' : 'Airy' , 'lam_over_diam' : 45, 
                    'gsparams' : { 'xvalue_accuracy' : 1.e-2 }
-                 }
+                 },
+        'gal6' : { 'type' : 'Airy' , 'lam' : 400., 'diam' : 4.0, 'scale_unit' : 'arcmin' }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -210,6 +211,10 @@ def test_airy():
     gsparams = galsim.GSParams(xvalue_accuracy=1.e-2)
     gal5b = galsim.Airy(lam_over_diam=45, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b)
+
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.Airy(lam=400., diam=4., scale_unit=galsim.arcmin)
+    gsobject_compare(gal6a, gal6b)
 
     try:
         # Make sure they don't match when using the default GSParams
