@@ -178,7 +178,7 @@ def test_airy():
         'gal5' : { 'type' : 'Airy' , 'lam_over_diam' : 45, 
                    'gsparams' : { 'xvalue_accuracy' : 1.e-2 }
                  },
-        'gal6' : { 'type' : 'Airy' , 'lam' : 400., 'diam' : 4.0, 'scale_unit' : galsim.arcmin }
+        'gal6' : { 'type' : 'Airy' , 'lam' : 400., 'diam' : 4.0, 'scale_unit' : 'arcmin' }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]

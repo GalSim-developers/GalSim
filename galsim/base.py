@@ -1613,7 +1613,8 @@ class Airy(GSObject):
     @param scale_unit       Units used to define the diffraction limit and draw images, if the user
                             has supplied a separate value for `lam` and `diam`.  Note that the
                             results of calling methods like getFWHM() will be returned in units of
-                            `scale_unit`, as well.
+                            `scale_unit`, as well.  Should be either a galsim.AngleUnit, or a string
+                            that can be used to construct one (e.g., 'arcsec', 'radians', etc.).
                             [default: galsim.arcsec]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
@@ -1637,7 +1638,7 @@ class Airy(GSObject):
     # error.
     _req_params = { }
     _opt_params = { "flux" : float , "obscuration" : float, "diam" : float,
-                    "scale_unit" : galsim.AngleUnit }
+                    "scale_unit" : str }
     _single_params = [{ "lam_over_diam" : float , "lam" : float } ]
     _takes_rng = False
     _takes_logger = False
@@ -1654,6 +1655,9 @@ class Airy(GSObject):
         else:
             if lam is None or diam is None:
                 raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
+            # In this case we're going to use scale_unit, so parse it in case of string input:
+            if isinstance(scale_unit, basestring):
+                scale_unit = galsim.angle.get_angle_unit(scale_unit)
             lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
 
         GSObject.__init__(
