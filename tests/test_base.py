@@ -1099,7 +1099,7 @@ def test_box():
     # Test photon shooting.
     do_shoot(pixel,myImg,"Pixel")
 
-    # Check than non-square Box profiles work correctly
+    # Check that non-square Box profiles work correctly
     scale = 0.2939  # Use a strange scale here to make sure that the centers of the pixels
                     # never fall on the box edge, otherwise it gets a bit weird to know what
                     # the correct SB value is for that pixel.
