@@ -374,6 +374,7 @@ namespace galsim {
     std::complex<double> SBTopHat::SBTopHatImpl::kValue2(double kr0sq) const
     {
         if (kr0sq < 1.e-4) {
+            // Use the Taylor expansion for small arguments.
             // Error from omitting next term is about 1.e-16 for kr0sq = 1.e-4
             return _flux * (1. - kr0sq * ( (1./8.) + (1./192.) * kr0sq ));
         } else {
