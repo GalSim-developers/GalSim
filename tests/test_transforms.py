@@ -656,7 +656,7 @@ def test_flip():
     # The Shapelet profile has the advantage of being fast and not circularly symmetric, so
     # it is a good test of the actual code for doing the flips (in SBTransform).
     # But since the bug Rachel reported in #645 was actually in SBInterpolatedImage
-    # (one calculated implicitly assumed dx > 0), it seems worthwhile to run through all the
+    # (one calculation implicitly assumed dx > 0), it seems worthwhile to run through all the
     # classes to make sure we hit everything with negative steps for dx and dy.
     prof_list = [
         galsim.Shapelet(sigma=0.17, order=2,
