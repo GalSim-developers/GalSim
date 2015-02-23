@@ -1112,7 +1112,7 @@ def test_box():
         print 'im.scale = ',im.scale
         do_shoot(box,im,"Box with width,height = %f,%f"%(width,height))
         if __name__ == '__main__':
-            # These are slow because the require a pretty huge fft.
+            # These are slow because they require a pretty huge fft.
             # So only do them if running as main.
             do_kvalue(box,im,"Box with width,height = %f,%f"%(width,height))
 
