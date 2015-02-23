@@ -1183,7 +1183,7 @@ class GSObject(object):
                     "This is probably an error.  Normally, you should let GalSim "
                     "handle the Pixel convolution for you.  If you want to handle the Pixel "
                     "convolution yourself, you can use method=no_pixel.  Or if you really meant "
-                    "for your profile to include the Pixel and also have GalSim convolve by"
+                    "for your profile to include the Pixel and also have GalSim convolve by "
                     "an _additional_ Pixel, you can suppress this warning by using method=fft.")
 
         # Check for scale if using nx, ny, or bounds

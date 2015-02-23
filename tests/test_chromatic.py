@@ -117,6 +117,15 @@ def test_draw_add_commutativity():
     print 'GS_object.draw() took {0} seconds.'.format(t3-t2)
     # plotme(GS_image)
 
+    # As an aside, check for appropriate tests of 'integrator' argument.
+    try:
+        np.testing.assert_raises(TypeError, final.drawImage, bandpass, method='no_pixel',
+                                 integrator='midp') # minor misspelling
+        np.testing.assert_raises(TypeError, final.drawImage, bandpass, method='no_pixel',
+                                 integrator=galsim.integ.midpt)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
     #------------------------------------------------------------------------------
     # Use galsim.chromatic to generate chromaticity.  Internally, this module draws
     # the result at each wavelength and adds the results together.  I.e., drawing
@@ -507,6 +516,15 @@ def test_chromatic_flux():
     np.testing.assert_almost_equal(
         int_flux/analytic_flux, 1.0, 3,
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
+    # As an aside, check for appropriate tests of 'integrator' argument.
+    try:
+        np.testing.assert_raises(TypeError, final_int.drawImage, bandpass, 
+                                 method='no_pixel', integrator='midp') # minor misspelling
+        np.testing.assert_raises(TypeError, final_int.drawImage, bandpass,
+                                 method='no_pixel', integrator=galsim.integ.midpt)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
     # Go back to no interpolation (this will effect the PSFs that are used below).
     PSF.removeInterpolation()
 
