@@ -1516,8 +1516,8 @@ def test_ChromaticOpticalPSF():
     # object, the interpolated calculation leads to a huge savings compared to doing the exact
     # calculation each time.
     #
-    # Note that exact results will have to be regenerated if any of the bandpass or other parameters
-    # defined here are changed.  Because of the parameters chosen here, there is a lot of
+    # Note that exact results will have to be regenerated if any of the bandpasses or other
+    # parameters defined here are changed.  Because of the parameters chosen here, there is a lot of
     # non-trivially complex structure in the PSFs, so this is a stringent test.
     aberrations = np.zeros(12)
     aberrations[4] = 40. # nm
@@ -1598,8 +1598,9 @@ def test_ChromaticAiry():
     # im_r = obj.drawImage(bandpass, scale=scale)
     # im_r.write('./chromatic_reference_images/r_exact_Airy.fits')
     #
-    # Note that exact results will have to be regenerated if any of the bandpass or other parameters
-    # defined here are changed.
+    # Note that exact results will have to be regenerated if any of the bandpasses or other
+    # parameters defined here are changed.  For example, had to regenerate on #590 because of new
+    # version of r bandpass.
 
     # Define parameters:
     lam = 750. # nm
