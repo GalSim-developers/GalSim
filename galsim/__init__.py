@@ -154,7 +154,11 @@ from lensing_ps import PowerSpectrum
 from nfw_halo import NFWHalo, Cosmology
 
 # Detector effects
+# Everything here is migrated into the Image class, so nothing to import by name.
 from . import detectors
+
+# Deprecation warning class
+from deprecated import GalSimDeprecationWarning
 
 # Packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)
 from . import fits
@@ -163,7 +167,6 @@ from . import integ
 from . import bessel
 from . import pse
 from . import hsm
-from . import deprecated
 from . import dcr
 from . import meta_data
 from . import cdmodel
