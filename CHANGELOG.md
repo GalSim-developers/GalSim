@@ -22,8 +22,9 @@ New Features
   via interpolation between stored images.  This option can speed up the image
   rendering process compared to brute force evaluation for chromatic objects
   with basic properties that are wavelength-dependent. (#618)
-- Added new `ChromaticOpticalPSF` class, which allows the diffraction effects
-  and aberrations to be wavelength-dependent. (#618)
+- Added new `ChromaticAiry` and `ChromaticOpticalPSF` classes for representing
+  optical PSFs.  These new classes allow the diffraction effects and (in the 
+  latter case) aberrations to be wavelength-dependent. (#618)
 - Enable initializing a DES_PSFEx object using a pyfits HDU directly instead
   of a filename. (#626)
 
