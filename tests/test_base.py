@@ -1133,7 +1133,7 @@ def test_box():
 
 
 def test_tophat():
-    """Test the generation of a specific box profile using SBProfile against a known result.
+    """Test the generation of a specific tophat profile using SBProfile against a known result.
     """
     import time
     t1 = time.time()
