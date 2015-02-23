@@ -1702,7 +1702,7 @@ def test_spergel():
     for nu, enclosed_flux, enclosing_radius in zip(test_spergel_nu,
                                                    mathica_enclosed_fluxes,
                                                    mathica_enclosing_radii):
-        filename = "spergel_nu{:.2f}.fits".format(nu)
+        filename = "spergel_nu{0:.2f}.fits".format(nu)
         savedImg = galsim.fits.read(os.path.join(imgdir, filename))
         savedImg.setCenter(0,0)
         dx = 0.2
@@ -1726,7 +1726,7 @@ def test_spergel():
         # Only nu >= -0.3 give reasonably sized FFTs,
         # and small nu drawShoot is super slow.
         if nu >= -0.3:
-            do_kvalue(spergel, "Spergel(nu={:1}) ".format(nu))
+            do_kvalue(spergel, "Spergel(nu={0:1}) ".format(nu))
 
             # Test photon shooting.
             # Convolve with a small gaussian to smooth out the central peak.
