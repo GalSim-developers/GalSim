@@ -30,6 +30,8 @@ import copy
 
 import galsim
 
+from .deprecated import depr
+
 class ChromaticObject(object):
     """Base class for defining wavelength dependent objects.
 
@@ -230,6 +232,9 @@ class ChromaticObject(object):
     def draw(self, *args, **kwargs):
         """An obsolete synonym for obj.drawImage(method='no_pixel')
         """
+        depr('draw', 1.1, "drawImage(..., method='no_pixel'",
+             'Note: drawImage has different args than draw did.  Read the docs for the method ' +
+             'keyword carefully.')
         normalization = kwargs.pop('normalization','f')
         if normalization in ['flux','f']:
             return self.drawImage(*args, method='no_pixel', **kwargs)

@@ -47,6 +47,7 @@ import utilities
 from . import _galsim
 from ._galsim import GSParams
 
+from .deprecated import depr
 
 class GSObject(object):
     """Base class for all GalSim classes that represent some kind of surface brightness profile.
@@ -302,6 +303,7 @@ class GSObject(object):
 
     def nyquistDx(self):
         """An obsolete synonym for nyquistScale()"""
+        depr('nyquistDx', 1.1, 'nyquistScale()')
         return self.nyquistScale()
 
     def stepK(self):
@@ -433,6 +435,7 @@ class GSObject(object):
 
     def setFlux(self, flux):
         """This is an obsolete method that is roughly equivalent to obj = obj.withFlux(flux)"""
+        depr('setFlux', 1.1, 'obj = obj.withFlux(flux)')
         new_obj = self.withFlux(flux)
         self.SBProfile = new_obj.SBProfile
         if hasattr(self,'noise'): self.noise = new_obj.noise
@@ -440,6 +443,7 @@ class GSObject(object):
 
     def scaleFlux(self, flux_ratio):
         """This is an obsolete method that is roughly equivalent to obj = obj * flux_ratio"""
+        depr('scaleFlux', 1.1, 'obj = obj * flux_ratio')
         new_obj = self * flux_ratio
         self.SBProfile = new_obj.SBProfile
         if hasattr(self,'noise'): self.noise = new_obj.noise
@@ -477,10 +481,12 @@ class GSObject(object):
 
     def createExpanded(self, scale):
         """This is an obsolete synonym for expand(scale)"""
+        depr('createExpanded', 1.1, 'obj.expand(scale)')
         return self.expand(scale)
 
     def applyExpansion(self, scale):
         """This is an obsolete method that is roughly equivalent to obj = obj.expand(scale)."""
+        depr('applyExpansion', 1.1, 'obj = obj.expand(scale)')
         new_obj = self.expand(scale)
         self.SBProfile = new_obj.SBProfile
         if hasattr(self,'noise'): self.noise = new_obj.noise
@@ -503,10 +509,12 @@ class GSObject(object):
 
     def createDilated(self, scale):
         """This is an obsolete synonym for dilate(scale)"""
+        depr('createDilated', 1.1, 'obj.dilate(scale)')
         return self.dilate(scale)
 
     def applyDilation(self, scale):
         """This is an obsolete method that is roughly equivalent to obj = obj.dilate(scale)."""
+        depr('applyDilation', 1.1, 'obj = obj.dilate(scale)')
         new_obj = self.dilate(scale)
         self.SBProfile = new_obj.SBProfile
         if hasattr(self,'noise'): self.noise = new_obj.noise
@@ -534,10 +542,12 @@ class GSObject(object):
 
     def createMagnified(self, mu):
         """This is an obsolete synonym for magnify(mu)"""
+        depr('createMagnified', 1.1, 'obj.magnify(mu)')
         return self.magnify(mu)
 
     def applyMagnification(self, mu):
         """This is an obsolete method that is roughly equivalent to obj = obj.magnify(mu)"""
+        depr('applyMagnification', 1.1, 'obj = obj.magnify(mu)')
         new_obj = self.magnify(mu)
         self.SBProfile = new_obj.SBProfile
         if hasattr(self,'noise'): self.noise = new_obj.noise
@@ -583,10 +593,12 @@ class GSObject(object):
 
     def createSheared(self, *args, **kwargs):
         """This is an obsolete synonym for shear(shear)"""
+        depr('createSheared', 1.1, 'obj.shear(shear)')
         return self.shear(*args, **kwargs)
 
     def applyShear(self, *args, **kwargs):
         """This is an obsolete method that is roughly equivalent to obj = obj.shear(shear)"""
+        depr('applyShear', 1.1, 'obj = obj.shear(shear)')
         new_obj = self.shear(*args, **kwargs)
         self.SBProfile = new_obj.SBProfile
         if hasattr(self,'noise'): self.noise = new_obj.noise
@@ -615,10 +627,12 @@ class GSObject(object):
 
     def createLensed(self, g1, g2, mu):
         """This is an obsolete synonym for lens(g1,g2,mu)"""
+        depr('createLensed', 1.1, 'obj.lens(g1,g2,mu)')
         return self.lens(g1,g2,mu)
 
     def applyLensing(self, g1, g2, mu):
         """This is an obsolete method that is roughly equivalent to obj = obj.lens(g1,g2,mu)"""
+        depr('applyLensing', 1.1, 'obj = obj.lens(g1,g2,mu)')
         new_obj = self.lens(g1,g2,mu)
         self.SBProfile = new_obj.SBProfile
         if hasattr(self,'noise'): self.noise = new_obj.noise
@@ -645,10 +659,12 @@ class GSObject(object):
 
     def createRotated(self, theta):
         """This is an obsolete synonym for rotate(theta)"""
+        depr('createRotated', 1.1, 'obj.rotate(theta)')
         return self.rotate(theta)
 
     def applyRotation(self, theta):
         """This is an obsolete method that is roughly equivalent to obj = obj.rotate(theta)"""
+        depr('applyRotation', 1.1, 'obj = obj.rotate(theta)')
         new_obj = self.rotate(theta)
         self.SBProfile = new_obj.SBProfile
         if hasattr(self,'noise'): self.noise = new_obj.noise
@@ -692,10 +708,12 @@ class GSObject(object):
 
     def createTransformed(self, dudx, dudy, dvdx, dvdy):
         """This is an obsolete sysnonym for transform()"""
+        depr('createTransformed', 1.1, 'obj.transform(dudx,dudy,dvdx,dvdy)')
         return self.transform(dudx,dudy,dvdx,dvdy)
 
     def applyTransformation(self, dudx, dudy, dvdx, dvdy):
         """This is an obsolete method that is roughly equivalent to obj = obj.transform(...)"""
+        depr('applyTransformation', 1.1, 'obj = obj.transform(dudx,dudy,dvdx,dvdy)')
         new_obj = self.transform(dudx,dudy,dvdx,dvdy)
         self.SBProfile = new_obj.SBProfile
         if hasattr(self,'noise'): self.noise = new_obj.noise
@@ -730,10 +748,12 @@ class GSObject(object):
 
     def createShifted(self, *args, **kwargs):
         """This is an obsolete synonym for shift(dx,dy)"""
+        depr('createShifted', 1.1, 'obj.shift(dx,dy)')
         return self.shift(*args,**kwargs)
 
     def applyShift(self, *args, **kwargs):
         """This is an obsolete method that is roughly equivalent to obj = obj.shift(dx,dy)"""
+        depr('applyShift', 1.1, 'obj = obj.shift(dx,dy)')
         new_obj = self.shift(*args,**kwargs)
         self.SBProfile = new_obj.SBProfile
         if hasattr(self,'noise'): self.noise = new_obj.noise
@@ -1111,6 +1131,7 @@ class GSObject(object):
         @returns the drawn Image.
         """
         # Check for obsolete dx parameter
+        depr('dx', 1.1, 'scale')
         if dx is not None and scale is None: scale = dx
 
         # Check that image is sane
@@ -1253,6 +1274,9 @@ class GSObject(object):
     def draw(self, *args, **kwargs):
         """An obsolete synonym for obj.drawImage(method='no_pixel')
         """
+        depr('draw', 1.1, "drawImage(..., method='no_pixel'",
+             'Note: drawImage has different args than draw did.  Read the docs for the method ' +
+             'keyword carefully.')
         normalization = kwargs.pop('normalization','f')
         if normalization in ['flux','f']:
             return self.drawImage(*args, method='no_pixel', **kwargs)
@@ -1262,6 +1286,9 @@ class GSObject(object):
     def drawShoot(self, *args, **kwargs):
         """An obsolete synonym for obj.drawImage(methos='phot')
         """
+        depr('draw', 1.1, "drawImage(..., method='phot')",
+             'Note: drawImage has different args than draw did.  Read the docs for the method ' +
+             'keyword carefully.')
         normalization = kwargs.pop('normalization','f')
         if normalization in ['flux','f']:
             return self.drawImage(*args, method='phot', **kwargs)
@@ -1332,6 +1359,7 @@ class GSObject(object):
         @returns the tuple of Image instances, `(re, im)` (created if necessary)
         """
         # Check for obsolete dk parameter
+        depr('dx', 1.1, 'scale')
         if dk is not None and scale is None: scale = dk
 
         # Make sure the type of gain is correct and has a valid value:
@@ -1408,6 +1436,7 @@ class GSObject(object):
     def drawK(self, *args, **kwargs):
         """An obsolete synonym for drawKImage()
         """
+        depr('drawK', 1.1, "drawKImage")
         return self.drawKImage(*args, **kwargs)
 
 
@@ -2283,8 +2312,14 @@ class Spergel(GSObject):
 
 # GSParams is defined in C++ and wrapped.  But we want to modify it here slightly to add
 # the obsolete name alias_threshold as a valid synonym for folding_threshold
-GSParams.alias_threshold = property(lambda self: self.folding_threshold,
-                                    lambda self, val: setattr(self,'folding_threshold',val))
+def _get_alias_threshold(self):
+    depr('alias_threshold',1.1,'foldin_threshold')
+    return self.folding_threshold
+def _set_alias_threshold(self, val):
+    depr('alias_threshold',1.1,'foldin_threshold')
+    setattr(self, 'folding_threshold', val)
+
+GSParams.alias_threshold = property(_get_alias_threshold, _set_alias_threshold)
 
 # Also update the constructor to allow this name.
 _orig_GSP_init = GSParams.__init__
@@ -2292,6 +2327,7 @@ def _new_GSP_init(self, *args, **kwargs):
     if 'alias_threshold' in kwargs:
         if 'folding_threshold' in kwargs:
             raise TypeError('Cannot specify both alias_threshold and folding_threshold')
+        depr('alias_threshold',1.1,'foldin_threshold')
         kwargs['folding_threshold'] = kwargs.pop('alias_threshold')
     _orig_GSP_init(self, *args, **kwargs)
 GSParams.__init__ = _new_GSP_init

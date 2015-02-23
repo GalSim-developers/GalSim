@@ -25,8 +25,11 @@ from galsim import GSObject
 import galsim._galsim
 from ._galsim import LVector, ShapeletSize
 
+from .deprecated import depr
+
 def LVectorSize(order):
     """An obsolete synonym for ShapeletSize"""
+    depr('LVectorSize', 1.1, 'ShapeletSize')
     return ShapeletSize(order)
 
 
@@ -217,6 +220,7 @@ class Shapelet(GSObject):
         """An obsolete method that is roughly equivalent to 
         self = galsim.FitShapelet(self.sigma, self.order, image)
         """
+        depr('fitImage', 1.1, 'galsim.FitShapelet')
         new_obj = galsim.FitShapelet(self.sigma, self.order, image, center, normalization)
         bvec = new_obj.SBProfile.getBVec()
         GSObject.__init__(self, galsim._galsim.SBShapelet(self.sigma, bvec))

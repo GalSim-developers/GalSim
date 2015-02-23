@@ -24,6 +24,8 @@ import galsim
 from . import base
 from . import utilities
 
+from .deprecated import depr
+
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
     """Whiten the noise in the image assuming that the noise currently in the image can be described
@@ -281,6 +283,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
     def applyWhiteningTo(self, image):
         """An obsolete synonym for whitenImage"""
+        depr('applyWhiteningTo', 1.2, 'whitenImage')
         return self.whitenImage(image)
 
     def symmetrizeImage(self, image, order=4):
@@ -317,7 +320,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         must at least be "uniform", i.e., `image.wcs.isUniform() == True`.
 
         If you are interested in a theoretical calculation of the variance in the final noise field
-        after imposing symmetry, the symmetrizeImage() method in fact returns this variance.  For example:
+        after imposing symmetry, the symmetrizeImage() method in fact returns this variance.
+        For example:
 
             >>> variance = correlated_noise.symmetrizeImage(image, order=order)
 
@@ -385,10 +389,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
     def createExpanded(self, scale):
         """This is an obsolete synonym for expand(scale)"""
+        depr('createExpanded', 1.1, 'obj.expand(scale)')
         return self.expand(scale)
 
     def applyExpansion(self, scale):
         """This is an obsolete method that is roughly equivalent to obj = obj.expand(scale)"""
+        depr('applyExpansion', 1.1, 'obj = obj.expand(scale)')
         new_obj = self.expand(scale)
         self._profile = new_obj._profile
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
@@ -408,10 +414,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
     def createDilated(self, scale):
         """This is an obsolete synonym for dilate(scale)"""
+        depr('createDilated', 1.1, 'obj.dilate(scale)')
         return self.dilate(scale)
 
     def applyDilation(self, scale):
         """This is an obsolete method that is roughly equivalent to obj = obj.dilate(scale)"""
+        depr('applyDilation', 1.1, 'obj = obj.dilate(scale)')
         new_obj = self.dilate(scale)
         self._profile = new_obj._profile
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
@@ -429,10 +437,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
     def createMagnified(self, mu):
         """This is an obsolete synonym for magnify(mu)"""
+        depr('createMagnified', 1.1, 'obj.magnify(mu)')
         return self.magnify(mu)
 
     def applyMagnification(self, mu):
         """This is an obsolete method that is roughly equivalent to obj = obj.magnify(mu)"""
+        depr('applyMagnification', 1.1, 'obj = obj.magnify(mu)')
         new_obj = self.magnify(mu)
         self._profile = new_obj._profile
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
@@ -451,10 +461,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
     def createLensed(self, g1, g2, mu):
         """This is an obsolete synonym for lens(g1,g2,mu)"""
+        depr('createLensed', 1.1, 'obj.lens(g1,g2,mu)')
         return self.lens(g1,g2,mu)
 
     def applyLensing(self, g1, g2, mu):
         """This is an obsolete method that is roughly equivalent to obj = obj.lens(g1,g2,mu)"""
+        depr('applyLensing', 1.1, 'obj = obj.lens(g1,g2,mu)')
         new_obj = self.lens(g1,g2,mu)
         self._profile = new_obj._profile
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
@@ -473,10 +485,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
     def createRotated(self, theta):
         """This is an obsolete synonym for rotate(theta)"""
+        depr('createRotated', 1.1, 'obj.rotate(theta)')
         return self.rotate(theta)
 
     def applyRotation(self, theta):
         """This is an obsolete method that is roughly equivalent to obj = obj.rotate(theta)"""
+        depr('applyRotation', 1.1, 'obj = obj.rotate(theta)')
         new_obj = self.rotate(theta)
         self._profile = new_obj._profile
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
@@ -498,10 +512,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
     def createSheared(self, *args, **kwargs):
         """This is an obsolete synonym for shear(shear)"""
+        depr('createSheared', 1.1, 'obj.shear(shear)')
         return self.shear(*args,**kwargs)
 
     def applyShear(self, *args, **kwargs):
         """This is an obsolete method that is roughly equivalent to obj = obj.shear(shear)"""
+        depr('applyShear', 1.1, 'obj = obj.shear(shear)')
         new_obj = self.shear(*args, **kwargs)
         self._profile = new_obj._profile
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
@@ -521,10 +537,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
     def createTransformed(self, dudx, dudy, dvdx, dvdy):
         """This is an obsolete synonym for transform(dudx,dudy,dvdx,dvdy)"""
+        depr('createTransformed', 1.1, 'obj.transform(dudx,dudy,dvdx,dvdy)')
         return self.transform(dudx,dudy,dvdx,dvdy)
 
     def applyTransformation(self, dudx, dudy, dvdx, dvdy):
         """This is an obsolete method that is roughly equivalent to obj = obj.transform(...)"""
+        depr('applyTransformation', 1.1, 'obj = obj.transform(dudx,dudy,dvdx,dvdy)')
         new_obj = self.transform(dudx,dudy,dvdx,dvdy)
         self._profile = new_obj._profile
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
@@ -589,6 +607,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """This is an obsolete method that is roughly equivalent to
         corr = corr.withVariance(variance)
         """
+        depr('setVariance', 1.1, 'obj = obj.withVariance(variance)')
         new_obj = self.withVariance(variance)
         self._profile = new_obj._profile
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
@@ -596,6 +615,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
     def scaleVariance(self, variance_ratio):
         """This is an obsolete method that is roughly equivalent to corr = corr * variance_ratio"""
+        depr('scaleVariance', 1.1, 'obj = obj * variance_ratio')
         new_obj = self.withScaledVariance(variance_ratio)
         self._profile = new_obj._profile
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
@@ -655,6 +675,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """This is an obsolete method that is roughly equivalent to
         cn = cn.convolvedWith(gsobject,gsparams)
         """
+        depr('convolveWith', 1.1, 'obj = obj.convolvedWith(gsobject, gsparams)')
         new_obj = self.convolvedWith(gsobject,gsparams)
         self._profile = new_obj._profile
         self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
@@ -693,6 +714,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         @returns an Image of the correlation function.
         """
         # Check for obsolete dx parameter
+        depr('dx', 1.1, 'scale')
         if dx is not None and scale is None: scale = dx
 
         return self._profile.drawImage(
@@ -701,6 +723,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
     def draw(self, *args, **kwargs):
         """An obsolete synonym of drawImage"""
+        depr('draw', 1.1, "drawImage")
         return self.drawImage(*args, **kwargs)
 
     def calculateCovarianceMatrix(self, bounds, scale):
@@ -923,7 +946,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 # For later ones, rotate by 2pi/order, and draw it back into a new image.
                 tmp_obj = tmp_obj.rotate(2.*np.pi*galsim.radians/order)
                 tmp_im = galsim.Image(tmp_arr.shape[1], tmp_arr.shape[0], scale=1)
-                tmp_obj.draw(tmp_im, scale=1)
+                tmp_obj.drawImage(tmp_im, scale=1, method='no_pixel')
                 final_arr[tmp_im.array > final_arr] = tmp_im.array[tmp_im.array > final_arr]
 
         # Now simply take the halfcomplex, compact stored part that we are interested in,
@@ -1177,6 +1200,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     def __init__(self, image, rng=None, scale=0., x_interpolant=None, correct_periodicity=True,
         subtract_mean=False, gsparams=None, dx=None):
         # Check for obsolete dx parameter
+        depr('dx', 1.1, 'scale')
         if dx is not None and scale==0.: scale = dx
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
@@ -1402,6 +1426,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     The FITS file `out.fits` should then contain an image of randomly-generated, COSMOS-like noise.
     """
     # Check for obsolete dx_cosmos parameter
+    depr('dx_cosmos', 1.1, 'cosmos_scale')
     if dx_cosmos is not None and cosmos_scale==0.03: cosmos_scale = dx_cosmos
 
     # First try to read in the image of the COSMOS correlation function stored in the repository

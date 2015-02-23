@@ -25,6 +25,8 @@ from . import _galsim
 from ._galsim import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate
 from ._galsim import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate
 
+from .deprecated import depr
+
 # BaseDeviate docstrings
 _galsim.BaseDeviate.__doc__ = """
 Base class for all the various random deviates.
@@ -237,6 +239,7 @@ class DistDeviate(_galsim.BaseDeviate):
         # lseed is an obsolete synonym for seed
         # I think this was the only place that the name lseed was actually used in the docs.
         # so we keep it for now for backwards compatibility.
+        depr('lseed', 1.1, 'seed')
         if lseed is not None: seed = lseed
 
         import numpy
