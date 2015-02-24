@@ -390,27 +390,22 @@ namespace galsim {
         dbg<<"SBTopHat fillXValue\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
-        if (izero != 0 || jzero != 0) {
-            xdbg<<"Use Quadrant\n";
-            fillXValueQuadrant(val,x0,dx,izero,y0,dy,jzero);
-        } else {
-            xdbg<<"Non-Quadrant\n";
-            assert(val.stepi() == 1);
-            const int m = val.colsize();
-            const int n = val.rowsize();
-            typedef tmv::VIt<double,1,tmv::NonConj> It;
 
-            val.setZero();
-            for (int j=0;j<n;++j,y0+=dy) {
-                double ysq = y0*y0;
-                double xmax = std::sqrt(_r0sq - ysq);
-                // Set to _norm all pixels with -xmax <= x < xmax
-                // given that x = x0 + i dx.
-                int i1 = std::max(0, int(std::ceil((-xmax - x0)/dx)));
-                int i2 = std::min(m, int(std::ceil((xmax - x0)/dx)));
-                if (i1 < i2)
-                    val.col(j,i1,i2).setAllTo(_norm);
-            }
+        assert(val.stepi() == 1);
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+        val.setZero();
+        for (int j=0;j<n;++j,y0+=dy) {
+            double ysq = y0*y0;
+            double xmax = std::sqrt(_r0sq - ysq);
+            // Set to _norm all pixels with -xmax <= x < xmax
+            // given that x = x0 + i dx.
+            int i1 = std::max(0, int(std::ceil((-xmax - x0)/dx)));
+            int i2 = std::min(m, int(std::ceil((xmax - x0)/dx)));
+            if (i1 < i2)
+                val.col(j,i1,i2).setAllTo(_norm);
         }
     }
 
@@ -468,7 +463,7 @@ namespace galsim {
             double y = y0;
             int i=0;
             // Use the fact that any slice through the circle has only one segment that is non-zero.
-            // So start with zeroes until in the box, then _norm, then more zeroes.
+            // So start with zeroes until in the circle, then _norm, then more zeroes.
             // Note: this could be sped up somewhat using the same kind of calculation we did
             // for the non-sheared fillXValue (the one with izero, jzero), but I didn't
             // bother.  This is probably plenty fast enough for as often as the function is 
