@@ -157,38 +157,38 @@ namespace galsim {
     } 
 
     void SBConvolve::SBConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                double x0, double dx, int ix_zero,
-                                                double y0, double dy, int iy_zero) const
+                                                double kx0, double dkx, int izero,
+                                                double ky0, double dky, int jzero) const
     {
         dbg<<"SBConvolve fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->fillKValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        GetImpl(*pptr)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
         if (++pptr != _plist.end()) {
             tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
             for (; pptr != _plist.end(); ++pptr) {
-                GetImpl(*pptr)->fillKValue(val2.view(),x0,dx,ix_zero,y0,dy,iy_zero);
+                GetImpl(*pptr)->fillKValue(val2.view(),kx0,dkx,izero,ky0,dky,jzero);
                 val = ElemProd(val,val2);
             }
         }
     }
 
     void SBConvolve::SBConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                double x0, double dx, double dxy,
-                                                double y0, double dy, double dyx) const
+                                                double kx0, double dkx, double dkxy,
+                                                double ky0, double dky, double dkyx) const
     {
         dbg<<"SBConvolve fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->fillKValue(val,x0,dx,dxy,y0,dy,dyx);
+        GetImpl(*pptr)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
         if (++pptr != _plist.end()) {
             tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
             for (; pptr != _plist.end(); ++pptr) {
-                GetImpl(*pptr)->fillKValue(val2.view(),x0,dx,dxy,y0,dy,dyx);
+                GetImpl(*pptr)->fillKValue(val2.view(),kx0,dkx,dkxy,ky0,dky,dkyx);
                 val = ElemProd(val,val2);
             }
         }
@@ -264,27 +264,25 @@ namespace galsim {
     double SBAutoConvolve::SBAutoConvolveImpl::xValue(const Position<double>& pos) const
     { return RealSpaceConvolve(_adaptee,_adaptee,pos,getFlux(),this->gsparams); }
 
-    void SBAutoConvolve::SBAutoConvolveImpl::fillKValue(
-        tmv::MatrixView<std::complex<double> > val,
-        double x0, double dx, int ix_zero,
-        double y0, double dy, int iy_zero) const
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                        double kx0, double dkx, int izero,
+                                                        double ky0, double dky, int jzero) const
     {
         dbg<<"SBAutoConvolve fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
         val = ElemProd(val,val);
     }
 
-    void SBAutoConvolve::SBAutoConvolveImpl::fillKValue(
-        tmv::MatrixView<std::complex<double> > val,
-        double x0, double dx, double dxy,
-        double y0, double dy, double dyx) const
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                        double kx0, double dkx, double dkxy,
+                                                        double ky0, double dky, double dkyx) const
     {
         dbg<<"SBAutoConvolve fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,x0,dx,dxy,y0,dy,dyx);
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
         val = ElemProd(val,val);
     }
 
@@ -338,25 +336,25 @@ namespace galsim {
 
     void SBAutoCorrelate::SBAutoCorrelateImpl::fillKValue(
         tmv::MatrixView<std::complex<double> > val,
-        double x0, double dx, int ix_zero,
-        double y0, double dy, int iy_zero) const
+        double kx0, double dkx, int izero,
+        double ky0, double dky, int jzero) const
     {
         dbg<<"SBAutoCorrelate fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
         val = ElemProd(val,val.conjugate());
     }
 
     void SBAutoCorrelate::SBAutoCorrelateImpl::fillKValue(
         tmv::MatrixView<std::complex<double> > val,
-        double x0, double dx, double dxy,
-        double y0, double dy, double dyx) const
+        double kx0, double dkx, double dkxy,
+        double ky0, double dky, double dkyx) const
     {
         dbg<<"SBCorrelate fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,x0,dx,dxy,y0,dy,dyx);
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
         val = ElemProd(val,val.conjugate());
     }
 
