@@ -69,6 +69,43 @@ namespace galsim {
         // op= is undefined
         void operator=(const SBBox& rhs);
     };
+
+    /** 
+     * @brief Surface Brightness Profile for the TopHat function.
+     *
+     * The tophat function is much like the boxcar, but a circular plateau, rather than
+     * a rectangle.  It is defined by a radius and a flux.
+     */ 
+    class SBTopHat : public SBProfile 
+    {
+    public:
+        /** 
+         * @brief Constructor.
+         *
+         * @param[in] radius    radius of TopHat function
+         * @param[in] flux      flux.
+         * @param[in] gsparams  GSParams object storing constants that control the accuracy of
+         *                      image operations and rendering, if different from the default.
+         */
+        SBTopHat(double radius, double flux, const GSParamsPtr& gsparams);
+
+        /// @brief Copy constructor.
+        SBTopHat(const SBTopHat& rhs);
+
+        /// @brief Destructor.
+        ~SBTopHat();
+
+        /// @brief Returns the radius of the TopHat.
+        double getRadius() const;
+
+    protected:
+
+        class SBTopHatImpl;
+
+    private:
+        // op= is undefined
+        void operator=(const SBTopHat& rhs);
+    };
 }
 
 #endif

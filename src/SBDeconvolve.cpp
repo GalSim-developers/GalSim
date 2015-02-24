@@ -58,48 +58,48 @@ namespace galsim {
     }
 
     void SBDeconvolve::SBDeconvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                    double x0, double dx, int ix_zero,
-                                                    double y0, double dy, int iy_zero) const
+                                                    double kx0, double dkx, int izero,
+                                                    double ky0, double dky, int jzero) const
     {
         dbg<<"SBDeconvolve fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
 
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-        It valit(val.linearView().begin().getP(),1);
-        for (int j=0;j<n;++j,y0+=dy) {
-            double x = x0;
-            double ysq = y0*y0;
-            for (int i=0;i<m;++i,x+=dx,++valit) 
-                *valit = (x*x+ysq <= _maxksq) ? 1./(*valit) : 0.;
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,ky0+=dky) {
+            double kx = kx0;
+            double kysq = ky0*ky0;
+            for (int i=0;i<m;++i,kx+=dkx,++valit) 
+                *valit = (kx*kx+kysq <= _maxksq) ? 1./(*valit) : 0.;
         }
     }
 
     void SBDeconvolve::SBDeconvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                    double x0, double dx, double dxy,
-                                                    double y0, double dy, double dyx) const
+                                                    double kx0, double dkx, double dkxy,
+                                                    double ky0, double dky, double dkyx) const
     {
         dbg<<"SBDeconvolve fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,x0,dx,dxy,y0,dy,dyx);
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
 
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-        It valit(val.linearView().begin().getP(),1);
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
-            double x = x0;
-            double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx,++valit) 
-                *valit = (x*x+y*y <= _maxksq) ? 1./(*valit) : 0.;
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx,++valit) 
+                *valit = (kx*kx+ky*ky <= _maxksq) ? 1./(*valit) : 0.;
         }
     }
 
