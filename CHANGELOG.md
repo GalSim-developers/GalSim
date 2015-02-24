@@ -24,6 +24,7 @@ Bug Fixes and Improvements
   but had not been what a Box or Pixel did. (#639)
 - Fixed a bug where InterpolatedImages were not correctly rendered when
   transformed by something that includes a flip. (#645)
+- Fixed a bug in rendering profiles that involve two separate shifts. (#645)
 - Fixed a bug if drawImage was given odd nx, ny parameters, the drawn profile
   was not correctly centered in the image. (#645)
 
