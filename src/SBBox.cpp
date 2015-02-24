@@ -83,12 +83,12 @@ namespace galsim {
     }
 
     void SBBox::SBBoxImpl::fillXValue(tmv::MatrixView<double> val,
-                                      double x0, double dx, int ix_zero,
-                                      double y0, double dy, int iy_zero) const
+                                      double x0, double dx, int izero,
+                                      double y0, double dy, int jzero) const
     {
         dbg<<"SBBox fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
 
         assert(val.stepi() == 1);
         const int m = val.colsize();
@@ -219,15 +219,15 @@ namespace galsim {
     }
 
     void SBBox::SBBoxImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                      double x0, double dx, int ix_zero,
-                                      double y0, double dy, int iy_zero) const
+                                      double kx0, double dkx, int izero,
+                                      double ky0, double dky, int jzero) const
     {
         dbg<<"SBBox fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        if (ix_zero != 0 || iy_zero != 0) {
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillKValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+            fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -235,21 +235,21 @@ namespace galsim {
             const int n = val.rowsize();
             typedef tmv::VIt<double,1,tmv::NonConj> It;
 
-            x0 *= _wo2pi;
-            dx *= _wo2pi;
-            y0 *= _ho2pi;
-            dy *= _ho2pi;
+            kx0 *= _wo2pi;
+            dkx *= _wo2pi;
+            ky0 *= _ho2pi;
+            dky *= _ho2pi;
 
             // The Box profile in Fourier space is separable:
             //    val(x,y) = _flux * sinc(x * _width/2pi) * sinc(y * _height/2pi) 
-            tmv::Vector<double> sinc_x(m);
-            It xit = sinc_x.begin();
-            for (int i=0;i<m;++i,x0+=dx) *xit++ = sinc(x0);
-            tmv::Vector<double> sinc_y(n);
-            It yit = sinc_y.begin();
-            for (int j=0;j<n;++j,y0+=dy) *yit++ = sinc(y0);
+            tmv::Vector<double> sinc_kx(m);
+            It kxit = sinc_kx.begin();
+            for (int i=0;i<m;++i,kx0+=dkx) *kxit++ = sinc(kx0);
+            tmv::Vector<double> sinc_ky(n);
+            It kyit = sinc_ky.begin();
+            for (int j=0;j<n;++j,ky0+=dky) *kyit++ = sinc(ky0);
 
-            val = _flux * sinc_x ^ sinc_y;
+            val = _flux * sinc_kx ^ sinc_ky;
         }
     }
 
@@ -258,8 +258,8 @@ namespace galsim {
                                       double y0, double dy, double dyx) const
     {
         dbg<<"SBBox fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
@@ -280,31 +280,31 @@ namespace galsim {
     }
 
     void SBBox::SBBoxImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                      double x0, double dx, double dxy,
-                                      double y0, double dy, double dyx) const
+                                      double kx0, double dkx, double dkxy,
+                                      double ky0, double dky, double dkyx) const
     {
         dbg<<"SBBox fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-        x0 *= _wo2pi;
-        dx *= _wo2pi;
-        dxy *= _wo2pi;
-        y0 *= _ho2pi;
-        dy *= _ho2pi;
-        dyx *= _ho2pi;
+        kx0 *= _wo2pi;
+        dkx *= _wo2pi;
+        dkxy *= _wo2pi;
+        ky0 *= _ho2pi;
+        dky *= _ho2pi;
+        dkyx *= _ho2pi;
 
         It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
-            double x = x0;
-            double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) 
-                *valit++ = _flux * sinc(x) * sinc(y);
+        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) 
+                *valit++ = _flux * sinc(kx) * sinc(ky);
         }
     }
 
@@ -384,15 +384,15 @@ namespace galsim {
     }
 
     void SBTopHat::SBTopHatImpl::fillXValue(tmv::MatrixView<double> val,
-                                            double x0, double dx, int ix_zero,
-                                            double y0, double dy, int iy_zero) const
+                                            double x0, double dx, int izero,
+                                            double y0, double dy, int jzero) const
     {
         dbg<<"SBTopHat fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        if (ix_zero != 0 || iy_zero != 0) {
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+            fillXValueQuadrant(val,x0,dx,izero,y0,dy,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -415,15 +415,15 @@ namespace galsim {
     }
 
     void SBTopHat::SBTopHatImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                            double x0, double dx, int ix_zero,
-                                            double y0, double dy, int iy_zero) const
+                                            double kx0, double dkx, int izero,
+                                            double ky0, double dky, int jzero) const
     {
         dbg<<"SBTopHat fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        if (ix_zero != 0 || iy_zero != 0) {
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillKValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+            fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -431,17 +431,17 @@ namespace galsim {
             const int n = val.rowsize();
             typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-            x0 *= _r0;
-            dx *= _r0;
-            y0 *= _r0;
-            dy *= _r0;
+            kx0 *= _r0;
+            dkx *= _r0;
+            ky0 *= _r0;
+            dky *= _r0;
 
-            for (int j=0;j<n;++j,y0+=dy) {
-                double x = x0;
-                double ysq = y0*y0;
+            for (int j=0;j<n;++j,ky0+=dky) {
+                double kx = kx0;
+                double kysq = ky0*ky0;
                 It valit = val.col(j).begin();
-                for (int i=0;i<m;++i,x+=dx) {
-                    double ksq = x*x + ysq;
+                for (int i=0;i<m;++i,kx+=dkx) {
+                    double ksq = kx*kx + kysq;
                     *valit++ = kValue2(ksq);
                 }
             }
@@ -453,8 +453,8 @@ namespace galsim {
                                             double y0, double dy, double dyx) const
     {
         dbg<<"SBTopHat fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
@@ -470,7 +470,7 @@ namespace galsim {
             // Use the fact that any slice through the circle has only one segment that is non-zero.
             // So start with zeroes until in the box, then _norm, then more zeroes.
             // Note: this could be sped up somewhat using the same kind of calculation we did
-            // for the non-sheared fillXValue (the one with ix_zero, iy_zero), but I didn't
+            // for the non-sheared fillXValue (the one with izero, jzero), but I didn't
             // bother.  This is probably plenty fast enough for as often as the function is 
             // called (i.e. almost never!)
             for (;i<m && (x*x+y*y > _r0sq); ++i,x+=dx,y+=dyx) ++valit;
@@ -480,31 +480,31 @@ namespace galsim {
     }
 
     void SBTopHat::SBTopHatImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                            double x0, double dx, double dxy,
-                                            double y0, double dy, double dyx) const
+                                            double kx0, double dkx, double dkxy,
+                                            double ky0, double dky, double dkyx) const
     {
         dbg<<"SBTopHat fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-        x0 *= _r0;
-        dx *= _r0;
-        dxy *= _r0;
-        y0 *= _r0;
-        dy *= _r0;
-        dyx *= _r0;
+        kx0 *= _r0;
+        dkx *= _r0;
+        dkxy *= _r0;
+        ky0 *= _r0;
+        dky *= _r0;
+        dkyx *= _r0;
 
         It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
-            double x = x0;
-            double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
-                double ksq = x*x + y*y;
+        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) {
+                double ksq = kx*kx + ky*ky;
                 *valit++ = kValue2(ksq);
             }
         }

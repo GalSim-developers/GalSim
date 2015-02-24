@@ -477,12 +477,12 @@ namespace galsim {
     { return adaptee.kValue(fwdTk) * std::polar(absdet , -k.x*cen.x-k.y*cen.y); }
 
     void SBTransform::SBTransformImpl::fillXValue(tmv::MatrixView<double> val,
-                                                  double x0, double dx, int ix_zero,
-                                                  double y0, double dy, int iy_zero) const
+                                                  double x0, double dx, int izero,
+                                                  double y0, double dy, int jzero) const
     {
         dbg<<"SBTransform fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
         dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
         dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
@@ -494,10 +494,10 @@ namespace galsim {
             y0 -= _cen.y;
             int dix = int(_cen.x/dx);
             int diy = int(_cen.y/dy);
-            if (std::abs(_cen.x - dix*dx) < 1.e-10) ix_zero += dix;
-            else ix_zero = 0;
-            if (std::abs(_cen.y - diy*dy) < 1.e-10) iy_zero += diy;
-            else iy_zero = 0;
+            if (std::abs(_cen.x - dix*dx) < 1.e-10) izero += dix;
+            else izero = 0;
+            if (std::abs(_cen.y - diy*dy) < 1.e-10) jzero += diy;
+            else jzero = 0;
         }
 
         // Apply inv to x,y
@@ -509,7 +509,7 @@ namespace galsim {
             y0 *= yscal;
             dy *= yscal;
 
-            GetImpl(_adaptee)->fillXValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
+            GetImpl(_adaptee)->fillXValue(val,x0,dx,izero,y0,dy,jzero);
         } else {
             Position<double> inv0 = inv(Position<double>(x0,y0));
             Position<double> inv1 = inv(Position<double>(dx,0.));
@@ -526,12 +526,12 @@ namespace galsim {
     }
 
     void SBTransform::SBTransformImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                  double x0, double dx, int ix_zero,
-                                                  double y0, double dy, int iy_zero) const
+                                                  double kx0, double dkx, int izero,
+                                                  double ky0, double dky, int jzero) const
     {
         dbg<<"SBTransform fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
         dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
         dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
@@ -539,16 +539,16 @@ namespace galsim {
 
         // Apply fwdT to kx,ky
         if (_mB == 0. && _mC == 0.) {
-            double fwdT_x0 = _mA * x0;
-            double fwdT_dx = _mA * dx;
-            double fwdT_y0 = _mD * y0;
-            double fwdT_dy = _mD * dy;
+            double fwdT_kx0 = _mA * kx0;
+            double fwdT_dkx = _mA * dkx;
+            double fwdT_ky0 = _mD * ky0;
+            double fwdT_dky = _mD * dky;
 
-            GetImpl(_adaptee)->fillKValue(val,fwdT_x0,fwdT_dx,ix_zero,fwdT_y0,fwdT_dy,iy_zero);
+            GetImpl(_adaptee)->fillKValue(val,fwdT_kx0,fwdT_dkx,izero,fwdT_ky0,fwdT_dky,jzero);
         } else {
-            Position<double> fwdT0 = fwdT(Position<double>(x0,y0));
-            Position<double> fwdT1 = fwdT(Position<double>(dx,0.));
-            Position<double> fwdT2 = fwdT(Position<double>(0.,dy));
+            Position<double> fwdT0 = fwdT(Position<double>(kx0,ky0));
+            Position<double> fwdT1 = fwdT(Position<double>(dkx,0.));
+            Position<double> fwdT2 = fwdT(Position<double>(0.,dky));
             xdbg<<"fwdT0 = "<<fwdT0<<std::endl;
             xdbg<<"fwdT1 = "<<fwdT1<<std::endl;
             xdbg<<"fwdT2 = "<<fwdT2<<std::endl;
@@ -572,9 +572,9 @@ namespace galsim {
             typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
             CIt kx_phit = kx_phase.begin();
             CIt ky_phit = ky_phase.begin();
-            for (int i=0;i<m;++i,x0+=dx) *kx_phit++ = std::polar(_absdet, -x0*_cen.x);
+            for (int i=0;i<m;++i,kx0+=dkx) *kx_phit++ = std::polar(_absdet, -kx0*_cen.x);
             // Only use _absdet on one of them!
-            for (int j=0;j<n;++j,y0+=dy) *ky_phit++ = std::polar(1., -y0*_cen.y);
+            for (int j=0;j<n;++j,ky0+=dky) *ky_phit++ = std::polar(1., -ky0*_cen.y);
 
             val = DiagMatrixViewOf(kx_phase) * val;
             val = val * DiagMatrixViewOf(ky_phase);
@@ -586,8 +586,8 @@ namespace galsim {
                                                   double y0, double dy, double dyx) const
     {
         dbg<<"SBTransform fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
         dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
@@ -614,15 +614,12 @@ namespace galsim {
     }
 
     void SBTransform::SBTransformImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                  double x0, double dx, double dxy,
-                                                  double y0, double dy, double dyx) const
+                                                  double kx0, double dkx, double dkxy,
+                                                  double ky0, double dky, double dkyx) const
     { 
-        //if (dxy != 0. || dyx != 0.) 
-        //if ((_mB != 0. || _mC != 0.) && (dxy != 0. || dyx != 0.))
-            //return SBProfile::SBProfileImpl::fillKValue(val,x0,dx,dxy,y0,dy,dyx);
         dbg<<"SBTransform fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
         dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
@@ -630,17 +627,17 @@ namespace galsim {
 
         // Apply fwdT to kx,ky
         // Original (x,y):
-        //     x = x0 + ix dx + iy dxy
-        //     y = y0 + ix dyx + iy dy
-        // (x',y') = fwdT(x,y)
-        //     x' = A x + C y
-        //        = (A x0 + C y0) + ix (A dx + C dyx) + iy (A dxy + C dy)
-        //     y' = B x + D y
-        //        = (B x0 + D y0) + ix (B dx + D dyx) + iy (B dxy + D dy)
+        //     kx = kx0 + i dkx + j dkxy
+        //     ky = ky0 + i dkyx + j dky
+        // (kx',ky') = fwdT(kx,ky)
+        //     kx' = A kx + C ky
+        //         = (A kx0 + C ky0) + i (A dkx + C dkyx) + j (A dkxy + C dky)
+        //     ky' = B kx + D ky
+        //         = (B kx0 + D ky0) + i (B dkx + D dkyx) + j (B dkxy + D dky)
         //
-        Position<double> fwdT0 = fwdT(Position<double>(x0,y0));
-        Position<double> fwdT1 = fwdT(Position<double>(dx,dyx));
-        Position<double> fwdT2 = fwdT(Position<double>(dxy,dy));
+        Position<double> fwdT0 = fwdT(Position<double>(kx0,ky0));
+        Position<double> fwdT1 = fwdT(Position<double>(dkx,dkyx));
+        Position<double> fwdT2 = fwdT(Position<double>(dkxy,dky));
         xdbg<<"fwdT0 = "<<fwdT0<<std::endl;
         xdbg<<"fwdT1 = "<<fwdT1<<std::endl;
         xdbg<<"fwdT2 = "<<fwdT2<<std::endl;
@@ -660,16 +657,16 @@ namespace galsim {
 
             typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
             It valit = val.linearView().begin();
-            x0 *= _cen.x;
-            dx *= _cen.x;
-            dxy *= _cen.x;
-            y0 *= _cen.y;
-            dy *= _cen.y;
-            dyx *= _cen.y;
-            for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
-                double x = x0;
-                double y = y0;
-                for (int i=0;i<m;++i,x+=dx,y+=dyx) *valit++ *= std::polar(_absdet, -x-y);
+            kx0 *= _cen.x;
+            dkx *= _cen.x;
+            dkxy *= _cen.x;
+            ky0 *= _cen.y;
+            dky *= _cen.y;
+            dkyx *= _cen.y;
+            for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+                double kx = kx0;
+                double ky = ky0;
+                for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) *valit++ *= std::polar(_absdet, -kx-ky);
             }
         }
     }

@@ -121,15 +121,15 @@ namespace galsim {
     }
 
     void SBGaussian::SBGaussianImpl::fillXValue(tmv::MatrixView<double> val,
-                                                double x0, double dx, int ix_zero,
-                                                double y0, double dy, int iy_zero) const
+                                                double x0, double dx, int izero,
+                                                double y0, double dy, int jzero) const
     {
         dbg<<"SBGaussian fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        if (ix_zero != 0 || iy_zero != 0) {
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+            fillXValueQuadrant(val,x0,dx,izero,y0,dy,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -157,15 +157,15 @@ namespace galsim {
     }
 
     void SBGaussian::SBGaussianImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                double x0, double dx, int ix_zero,
-                                                double y0, double dy, int iy_zero) const
+                                                double kx0, double dkx, int izero,
+                                                double ky0, double dky, int jzero) const
     {
         dbg<<"SBGaussian fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        if (ix_zero != 0 || iy_zero != 0) {
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillKValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+            fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -173,19 +173,19 @@ namespace galsim {
             const int n = val.rowsize();
             typedef tmv::VIt<double,1,tmv::NonConj> It;
 
-            x0 *= _sigma;
-            dx *= _sigma;
-            y0 *= _sigma;
-            dy *= _sigma;
+            kx0 *= _sigma;
+            dkx *= _sigma;
+            ky0 *= _sigma;
+            dky *= _sigma;
 
-            tmv::Vector<double> gauss_x(m);
-            It xit = gauss_x.begin();
-            for (int i=0;i<m;++i,x0+=dx) *xit++ = exp(-0.5 * x0*x0);
-            tmv::Vector<double> gauss_y(n);
-            It yit = gauss_y.begin();
-            for (int j=0;j<n;++j,y0+=dy) *yit++ = exp(-0.5 * y0*y0);
+            tmv::Vector<double> gauss_kx(m);
+            It kxit = gauss_kx.begin();
+            for (int i=0;i<m;++i,kx0+=dkx) *kxit++ = exp(-0.5 * kx0*kx0);
+            tmv::Vector<double> gauss_ky(n);
+            It kyit = gauss_ky.begin();
+            for (int j=0;j<n;++j,ky0+=dky) *kyit++ = exp(-0.5 * ky0*ky0);
 
-            val = _flux * gauss_x ^ gauss_y;
+            val = _flux * gauss_kx ^ gauss_ky;
         }
     }
 
@@ -194,8 +194,8 @@ namespace galsim {
                                                 double y0, double dy, double dyx) const
     {
         dbg<<"SBGaussian fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
@@ -219,31 +219,31 @@ namespace galsim {
     }
 
     void SBGaussian::SBGaussianImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                double x0, double dx, double dxy,
-                                                double y0, double dy, double dyx) const
+                                                double kx0, double dkx, double dkxy,
+                                                double ky0, double dky, double dkyx) const
     {
         dbg<<"SBGaussian fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-        x0 *= _sigma;
-        dx *= _sigma;
-        dxy *= _sigma;
-        y0 *= _sigma;
-        dy *= _sigma;
-        dyx *= _sigma;
+        kx0 *= _sigma;
+        dkx *= _sigma;
+        dkxy *= _sigma;
+        ky0 *= _sigma;
+        dky *= _sigma;
+        dkyx *= _sigma;
 
         It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
-            double x = x0;
-            double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
-                double ksq = x*x + y*y;
+        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) {
+                double ksq = kx*kx + ky*ky;
                 if (ksq > _ksq_max) {
                     *valit++ = 0.;
                 } else if (ksq < _ksq_min) {
