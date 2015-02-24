@@ -1178,7 +1178,78 @@ def test_variance_changes():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
+def test_cosmos_wcs():
+    """Test how getCOSMOSNoise works when applied to an image with a WCS.
+    """
+    t1 = time.time()
+
+    cn_cosmos = galsim.getCOSMOSNoise(rng=galsim.BaseDeviate(rseed), variance=1.7)
+    cosmos_scale = 0.03
+
+    # Shear it significantly to amplify the directionality of the correlations.
+    cn_orig = cn_cosmos.shear(e2=0.7)
+
+    # im1 has a trivial WCS.
+    im1 = galsim.ImageD(3 * largeim_size, 3 * largeim_size, scale=cosmos_scale)
+    im1.addNoise(cn_orig)
+    im1.write('im1.fits')
+
+    # im2 has a larger pixel scale.
+    im2 = galsim.ImageD(3 * largeim_size, 3 * largeim_size, scale=2*cosmos_scale)
+    im2.addNoise(cn_orig)
+    im2.write('im2.fits')
+
+    # im3 has a smaller pixel scale.
+    im3 = galsim.ImageD(3 * largeim_size, 3 * largeim_size, scale=0.5*cosmos_scale)
+    im3.addNoise(cn_orig)
+    im3.write('im3.fits')
+
+    # im4 has the original scale, but rotated 90 degrees
+    rot = galsim.JacobianWCS(0., cosmos_scale, -cosmos_scale, 0.)
+    im4 = galsim.ImageD(3 * largeim_size, 3 * largeim_size, wcs=rot)
+    im4.addNoise(cn_orig)
+    im4.write('im4.fits')
+
+    # im2b,im3b,im4b are views of im2,im3,im4 with just the regular pixel scale wcs
+    im2b = im2.view()
+    im3b = im3.view()
+    im4b = im4.view()
+    im2b.wcs = galsim.PixelScale(cosmos_scale)
+    im3b.wcs = galsim.PixelScale(cosmos_scale)
+    im4b.wcs = galsim.PixelScale(cosmos_scale)
+
+    # Estimate correlation function in each case
+    cn_test1 = galsim.CorrelatedNoise(im1)
+    cn_test2 = galsim.CorrelatedNoise(im2)
+    cn_test3 = galsim.CorrelatedNoise(im3)
+    cn_test4 = galsim.CorrelatedNoise(im4)
+    cn_test2b = galsim.CorrelatedNoise(im2b)
+    cn_test3b = galsim.CorrelatedNoise(im3b)
+    cn_test4b = galsim.CorrelatedNoise(im4b)
+
+    # Check basic correlation function values of the 3x3 pixel region around (0,0)
+    print ('{:30s} ' + '{:^7s} '*8).format(
+            ' ','orig','same','big','small','rot','big/raw','sm/raw','rot/raw')
+    for xpos, ypos in zip((0., cosmos_scale, 0., cosmos_scale, cosmos_scale), 
+                          (0., 0., cosmos_scale, -cosmos_scale, cosmos_scale)):
+        pos = galsim.PositionD(xpos, ypos)
+        cf0 = cn_orig._profile.xValue(pos)
+        cf1 = cn_test1._profile.xValue(pos)
+        cf2 = cn_test2._profile.xValue(pos)
+        cf3 = cn_test3._profile.xValue(pos)
+        cf4 = cn_test4._profile.xValue(pos)
+        cf2b = cn_test2b._profile.xValue(pos)
+        cf3b = cn_test3b._profile.xValue(pos)
+        cf4b = cn_test4b._profile.xValue(pos)
+        print ('Covariance at {:14s}: ' + '{:7.3f} '*8).format(
+                str(pos),cf0,cf1,cf2,cf3,cf4,cf2b,cf3b,cf4b)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
+
 if __name__ == "__main__":
+    test_cosmos_wcs()
+    sys.exit()
     test_uncorrelated_noise_zero_lag()
     test_uncorrelated_noise_nonzero_lag()
     test_uncorrelated_noise_output()
@@ -1198,4 +1269,5 @@ if __name__ == "__main__":
     test_convolve_cosmos()
     test_uncorrelated_noise_tracking()
     test_variance_changes()
+    test_cosmos_wcs()
 
