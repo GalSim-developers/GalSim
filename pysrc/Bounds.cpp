@@ -49,8 +49,8 @@ struct PyPosition {
         bp::class_< Position<T> > pyPosition(("Position" + suffix).c_str(), bp::no_init);
         pyPosition.def(bp::init< const Position<T>& >(bp::args("other")))
             .def(bp::init<T,T>((bp::arg("x")=T(0), bp::arg("y")=T(0))))
-            .def_readwrite("x", &Position<T>::x)
-            .def_readwrite("y", &Position<T>::y)
+            .def_readonly("x", &Position<T>::x)
+            .def_readonly("y", &Position<T>::y)
             .def(bp::self * bp::other<T>())
             .def(bp::self / bp::other<T>())
             .def(bp::other<T>() * bp::self)
