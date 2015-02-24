@@ -667,21 +667,28 @@ def test_flip():
         prof_list += [
             galsim.Airy(lam_over_diam=0.17, flux=1.7),
             galsim.Airy(lam_over_diam=0.17, obscuration=0.2, flux=1.7),
-            #galsim.Box(0.17, 0.23, flux=1.7),
+            galsim.Box(0.17, 0.23, flux=1.7,
+                       gsparams=galsim.GSParams(realspace_relerr=1.e-6)),
             galsim.DeVaucouleurs(half_light_radius=0.17, flux=1.7,
-                                gsparams=galsim.GSParams(maximum_fft_size=8000)),
+                                 gsparams=galsim.GSParams(maximum_fft_size=8000)),
             galsim.Exponential(scale_radius=0.17, flux=1.7,
-                            gsparams=galsim.GSParams(maxk_threshold=1.e-4)),
+                               gsparams=galsim.GSParams(maxk_threshold=1.e-4)),
             galsim.Gaussian(sigma=0.17, flux=1.7),
             galsim.Kolmogorov(fwhm=0.17, flux=1.7),
             galsim.Moffat(beta=2.5, fwhm=0.17, flux=1.7),
             galsim.OpticalPSF(lam_over_diam=0.17, obscuration=0.2, nstruts=6,
                             coma1=0.2, coma2=0.5, defocus=-0.1, flux=1.7),
-            #galsim.Pixel(0.23, flux=1.7),
+            galsim.Pixel(0.23, flux=1.7,
+                         gsparams=galsim.GSParams(realspace_relerr=1.e-6,
+                                                  realspace_abserr=1.e-8)),
             galsim.Spergel(nu=-0.19, half_light_radius=0.17, flux=1.7),
             galsim.Sersic(n=2.3, half_light_radius=0.17, flux=1.7),
-            #galsim.TopHat(0.23, flux=1.7),
-            # Add in Pixel, Box and TopHat once #639 is merged in.
+            galsim.TopHat(0.23, flux=1.7),
+            # Box and Pixel use real-space convolution.  Convolve with a Gaussian to get fft.
+            galsim.Convolve([ galsim.Box(0.17, 0.23, flux=1.7).shift(-0.2,0.1),
+                              galsim.Gaussian(sigma=0.09) ]),
+            galsim.Convolve([ galsim.TopHat(0.17, flux=1.7).shift(-0.2,0.1),
+                              galsim.Gaussian(sigma=0.09) ]),
         ]
      
     s = galsim.Shear(g1=0.11, g2=-0.21)
