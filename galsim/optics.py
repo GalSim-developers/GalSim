@@ -56,8 +56,8 @@ class OpticalPSF(GSObject):
     specify the ratio as `lam_over_diam` in whatever arbitrary units they choose (and then
     self-consistently specify the image scale in the same units).  The second option is to specify
     the wavelength as `lam` in units of nanometers and the telescope diameter as `diam` in units of
-    meters.  OpticalPSF will then convert the ratio to arcsec, and image scales must be specified in
-    arcsec as well.
+    meters.  OpticalPSF will then convert the ratio to units of `scale_units`, and image scales must
+    be specified in `scale_units` as well.
 
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the Zernike polynomials in the Noll convention defined in
