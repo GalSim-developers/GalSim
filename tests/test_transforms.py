@@ -676,6 +676,7 @@ def test_flip():
             galsim.Gaussian(sigma=0.17, flux=1.7),
             galsim.Kolmogorov(fwhm=0.17, flux=1.7),
             galsim.Moffat(beta=2.5, fwhm=0.17, flux=1.7),
+            galsim.Moffat(beta=2.5, fwhm=0.17, flux=1.7, trunc=0.82),
             galsim.OpticalPSF(lam_over_diam=0.17, obscuration=0.2, nstruts=6,
                             coma1=0.2, coma2=0.5, defocus=-0.1, flux=1.7),
             galsim.Pixel(0.23, flux=1.7,
@@ -683,11 +684,14 @@ def test_flip():
                                                   realspace_abserr=1.e-8)),
             galsim.Spergel(nu=-0.19, half_light_radius=0.17, flux=1.7),
             galsim.Sersic(n=2.3, half_light_radius=0.17, flux=1.7),
+            galsim.Sersic(n=2.3, half_light_radius=0.17, flux=1.7, trunc=0.82),
+            galsim.Sum([ galsim.Gaussian(sigma=0.17, flux=1.7).shift(-0.2,0.125),
+                         galsim.Exponential(scale_radius=0.23, flux=3.1).shift(0.375,0.23)]),
             galsim.TopHat(0.23, flux=1.7),
             # Box and Pixel use real-space convolution.  Convolve with a Gaussian to get fft.
             galsim.Convolve([ galsim.Box(0.17, 0.23, flux=1.7).shift(-0.2,0.1),
                               galsim.Gaussian(sigma=0.09) ]),
-            galsim.Convolve([ galsim.TopHat(0.17, flux=1.7).shift(-0.2,0.1),
+            galsim.Convolve([ galsim.TopHat(0.17, flux=1.7).shift(-0.275,0.125),
                               galsim.Gaussian(sigma=0.09) ]),
         ]
      
