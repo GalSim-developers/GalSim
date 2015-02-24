@@ -663,14 +663,23 @@ def test_flip():
                         bvec=[1.7, 0.01,0.03, 0.29, 0.33, -0.18]),
     ]
     if __name__ == "__main__":
+        image_dir = './real_comparison_images'
+        catalog_file = os.path.join(image_dir,'test_catalog.fits')
+        rgc = galsim.RealGalaxyCatalog(catalog_file, image_dir)
         # Some of these are slow, so only do the Shapelet test as part of the normal unit tests.
         prof_list += [
             galsim.Airy(lam_over_diam=0.17, flux=1.7),
             galsim.Airy(lam_over_diam=0.17, obscuration=0.2, flux=1.7),
+            # Box gets rendered with real-space convolution.  The default accuracy isn't quite
+            # enough to get the flip to match at 6 decimal places.
             galsim.Box(0.17, 0.23, flux=1.7,
                        gsparams=galsim.GSParams(realspace_relerr=1.e-6)),
+            # Without being convolved by anything with a reasonable k cutoff, this needs
+            # a very large fft.
             galsim.DeVaucouleurs(half_light_radius=0.17, flux=1.7,
                                  gsparams=galsim.GSParams(maximum_fft_size=8000)),
+            # I don't really understand why this needs a lower maxk_threshold to work, but
+            # without it, the k-space tests fail.
             galsim.Exponential(scale_radius=0.17, flux=1.7,
                                gsparams=galsim.GSParams(maxk_threshold=1.e-4)),
             galsim.Gaussian(sigma=0.17, flux=1.7),
@@ -678,13 +687,24 @@ def test_flip():
             galsim.Moffat(beta=2.5, fwhm=0.17, flux=1.7),
             galsim.Moffat(beta=2.5, fwhm=0.17, flux=1.7, trunc=0.82),
             galsim.OpticalPSF(lam_over_diam=0.17, obscuration=0.2, nstruts=6,
-                            coma1=0.2, coma2=0.5, defocus=-0.1, flux=1.7),
+                              coma1=0.2, coma2=0.5, defocus=-0.1, flux=1.7),
+            # Like with Box, we need to increase the real-space convolution accuracy.
+            # This time lowering both relerr and abserr.
             galsim.Pixel(0.23, flux=1.7,
                          gsparams=galsim.GSParams(realspace_relerr=1.e-6,
                                                   realspace_abserr=1.e-8)),
+            # Note: RealGalaxy should not be rendered directly because of the deconvolution.
+            # Here we convolve it by a Gaussian that is slightly larger than the original PSF.
+            galsim.Convolve([ galsim.RealGalaxy(rgc, index=0, flux=1.7),  # "Real" RealGalaxy
+                              galsim.Gaussian(sigma=0.08) ]),
+            galsim.Convolve([ galsim.RealGalaxy(rgc, index=1, flux=1.7),  # "Fake" RealGalaxy
+                              galsim.Gaussian(sigma=0.08) ]),
             galsim.Spergel(nu=-0.19, half_light_radius=0.17, flux=1.7),
             galsim.Sersic(n=2.3, half_light_radius=0.17, flux=1.7),
             galsim.Sersic(n=2.3, half_light_radius=0.17, flux=1.7, trunc=0.82),
+            # The shifts here caught a bug in how SBTransform handled the recentering.
+            # Two of the shifts (0.125 and 0.375) lead back to 0.0 happening on an integer
+            # index, which now works correctly.
             galsim.Sum([ galsim.Gaussian(sigma=0.17, flux=1.7).shift(-0.2,0.125),
                          galsim.Exponential(scale_radius=0.23, flux=3.1).shift(0.375,0.23)]),
             galsim.TopHat(0.23, flux=1.7),
