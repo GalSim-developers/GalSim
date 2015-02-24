@@ -21,13 +21,13 @@ import sys
 
 from galsim_test_helpers import *
 
-imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
-                                                          # images. 
+path, filename = os.path.split(__file__)
+imgdir = os.path.join(path, "SBProfile_comparison_images") # Directory containing the reference
+                                                           # images.
 
 try:
     import galsim
 except ImportError:
-    path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
@@ -40,6 +40,9 @@ test_scale = [1.8, 0.05, 0.002, 0.002]
 test_sersic_trunc = [0., 8.5]
 test_flux = 1.8
 
+test_spergel_nu = [-0.85, -0.5, 0.0, 0.85, 4.0]
+test_spergel_scale = [20.0, 1.0, 1.0, 0.5, 0.5]
+
 if __name__ == "__main__":
     # If doing a nosetests run, we don't actually need to do all 4 sersic n values.
     # Two should be enough to notice if there is a problem, and the full list will be tested
@@ -47,7 +50,7 @@ if __name__ == "__main__":
     test_sersic_n = [1.5, -4]
     test_scale = [1.8, 0.002]
 
-# These are the default GSParams used when unspecified.  We'll check that specifying 
+# These are the default GSParams used when unspecified.  We'll check that specifying
 # these explicitly produces the same results.
 default_params = galsim.GSParams(
         minimum_fft_size = 128,
@@ -151,7 +154,7 @@ def test_gaussian_radii():
     import math
     # Test constructor using half-light-radius:
     test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
-    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -159,7 +162,7 @@ def test_gaussian_radii():
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
-    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(
@@ -168,7 +171,7 @@ def test_gaussian_radii():
 
     # test that getSigma() method provides correct sigma
     got_sigma = test_gal.getSigma()
-    test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) / 
+    test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'sigma ratio = ', test_sigma_ratio
     np.testing.assert_almost_equal(
@@ -186,7 +189,7 @@ def test_gaussian_radii():
 
     # then test that image indeed has the correct HLR properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (profile initialized with sigma) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -194,7 +197,7 @@ def test_gaussian_radii():
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
-    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(
@@ -212,7 +215,7 @@ def test_gaussian_radii():
 
     # then test that image indeed has the correct HLR properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (profile initialized with fwhm) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -220,7 +223,7 @@ def test_gaussian_radii():
 
     # test that getSigma() method provides correct sigma
     got_sigma = test_gal.getSigma()
-    test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) / 
+    test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'sigma ratio = ', test_sigma_ratio
     np.testing.assert_almost_equal(
@@ -352,7 +355,7 @@ def test_gaussian_flux_scaling():
 
 
 def test_exponential():
-    """Test the generation of a specific exp profile using SBProfile against a known result. 
+    """Test the generation of a specific exp profile using SBProfile against a known result.
     """
     import time
     t1 = time.time()
@@ -424,11 +427,11 @@ def test_exponential_radii():
     """Test initialization of Exponential with different types of radius specification.
     """
     import time
-    t1 = time.time() 
+    t1 = time.time()
     import math
     # Test constructor using half-light-radius:
     test_gal = galsim.Exponential(flux = 1., half_light_radius = test_hlr)
-    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -453,7 +456,7 @@ def test_exponential_radii():
 
     # then test that image indeed has the correct HLR properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (profile initialized with scale_radius) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -523,7 +526,7 @@ def test_exponential_flux_scaling():
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __div__ (result).")   
+        err_msg="Flux param inconsistent after __div__ (result).")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -678,7 +681,7 @@ def test_sersic_radii():
             print 'scale = ',test_gal.getScaleRadius()
             got_hlr = test_gal.getHalfLightRadius()
             got_flux = test_gal.getFlux()
-            hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+            hlr_sum = radial_integrate(test_gal, 0., got_hlr)
             print 'hlr_sum = ',hlr_sum
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5*got_flux, decimal=4,
@@ -760,7 +763,7 @@ def test_sersic_radii():
         for test_gal, label in zip(gal_list, gal_labels):
             got_hlr = test_gal.getHalfLightRadius()
             got_flux = test_gal.getFlux()
-            hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+            hlr_sum = radial_integrate(test_gal, 0., got_hlr)
             print 'hlr_sum = ',hlr_sum
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5*got_flux, decimal=4,
@@ -973,13 +976,13 @@ def test_airy_radii():
     """Test Airy half light radius and FWHM correctly set and match image.
     """
     import time
-    t1 = time.time() 
+    t1 = time.time()
     import math
     # Test constructor using lam_over_diam: (only option for Airy)
     test_gal = galsim.Airy(lam_over_diam= 1./0.8, flux=1.)
     # test half-light-radius getter
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -1114,8 +1117,8 @@ def test_moffat():
     # Code was formerly:
     # moffat = galsim.Moffat(beta=2, truncationFWHM=5, flux=1, half_light_radius=1)
     #
-    # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
-    # physical units.  However, the same profile can be constructed using 
+    # ...but this is no longer quite so simple since we changed the handling of trunc to be in
+    # physical units.  However, the same profile can be constructed using
     # fwhm=1.3178976627539716
     # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.3178976627539716
@@ -1126,13 +1129,13 @@ def test_moffat():
             err_msg="Using GSObject Moffat disagrees with expected result")
 
     # Check with default_params
-    moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1, 
+    moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1,
                            gsparams=default_params)
     moffat.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat with default_params disagrees with expected result")
-    moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1, 
+    moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1,
                            gsparams=galsim.GSParams())
     moffat.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
@@ -1145,7 +1148,7 @@ def test_moffat():
     # Test kvalues
     do_kvalue(moffat, "Moffat")
 
-    # The code for untruncated Moffat profiles is specialized for particular beta values, so 
+    # The code for untruncated Moffat profiles is specialized for particular beta values, so
     # test each of these:
     for beta in [ 1.5, 2, 2.5, 3, 3.5, 4, 2.3 ]:  # The one last is for the generic case.
         moffat = galsim.Moffat(beta=beta, half_light_radius=0.7, flux=test_flux)
@@ -1165,9 +1168,9 @@ def test_moffat_properties():
     # Code was formerly:
     # psf = galsim.Moffat(beta=2.0, truncationFWHM=2, flux=test_flux, half_light_radius=1)
     #
-    # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
-    # physical units.  However, the same profile can be constructed using 
-    # fwhm=1.4686232496771867, 
+    # ...but this is no longer quite so simple since we changed the handling of trunc to be in
+    # physical units.  However, the same profile can be constructed using
+    # fwhm=1.4686232496771867,
     # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.4686232496771867
     psf = galsim.Moffat(beta=2.0, fwhm=fwhm_backwards_compatible,
@@ -1208,7 +1211,7 @@ def test_moffat_properties():
 def test_moffat_radii():
     """Test initialization of Moffat with different types of radius specification.
     """
-    import time 
+    import time
     t1 = time.time()
     import math
 
@@ -1216,7 +1219,7 @@ def test_moffat_radii():
 
     # Test constructor using half-light-radius:
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius = test_hlr)
-    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -1224,7 +1227,7 @@ def test_moffat_radii():
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
-    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(
@@ -1233,7 +1236,7 @@ def test_moffat_radii():
 
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
-    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
+    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'scale ratio = ', test_scale_ratio
     np.testing.assert_almost_equal(
@@ -1251,7 +1254,7 @@ def test_moffat_radii():
 
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (profile initialized with scale_radius) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -1259,7 +1262,7 @@ def test_moffat_radii():
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
-    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(
@@ -1277,14 +1280,14 @@ def test_moffat_radii():
 
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (profile initialized with FWHM) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Moffat initialized with FWHM.")
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
-    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
+    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'scale ratio = ', test_scale_ratio
     np.testing.assert_almost_equal(
@@ -1296,7 +1299,7 @@ def test_moffat_radii():
     # Test constructor using half-light-radius:
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius = test_hlr,
                              trunc=2*test_hlr)
-    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -1304,7 +1307,7 @@ def test_moffat_radii():
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
-    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(
@@ -1313,7 +1316,7 @@ def test_moffat_radii():
 
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
-    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
+    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'scale ratio = ', test_scale_ratio
     np.testing.assert_almost_equal(
@@ -1332,7 +1335,7 @@ def test_moffat_radii():
 
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (truncated profile initialized with scale_radius) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -1341,7 +1344,7 @@ def test_moffat_radii():
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
-    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(
@@ -1360,7 +1363,7 @@ def test_moffat_radii():
 
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (truncated profile initialized with FWHM) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
@@ -1368,7 +1371,7 @@ def test_moffat_radii():
 
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
-    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) / 
+    test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'scale ratio = ', test_scale_ratio
     np.testing.assert_almost_equal(
@@ -1547,7 +1550,7 @@ def test_kolmogorov_properties():
 def test_kolmogorov_radii():
     """Test initialization of Kolmogorov with different types of radius specification.
     """
-    import time 
+    import time
     t1 = time.time()
     import math
     # Test constructor using lambda/r0
@@ -1563,7 +1566,7 @@ def test_kolmogorov_radii():
         # test that getFWHM() method provides correct FWHM
         got_fwhm = test_gal.getFWHM()
         print 'got_fwhm = ',got_fwhm
-        test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+        test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
         print 'fwhm ratio = ', test_fwhm_ratio
         np.testing.assert_almost_equal(
@@ -1573,7 +1576,7 @@ def test_kolmogorov_radii():
         # then test that image indeed has the correct HLR properties when radially integrated
         got_hlr = test_gal.getHalfLightRadius()
         print 'got_hlr = ',got_hlr
-        hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+        hlr_sum = radial_integrate(test_gal, 0., got_hlr)
         print 'hlr_sum = ',hlr_sum
         np.testing.assert_almost_equal(
                 hlr_sum, 0.5, decimal=3,
@@ -1581,7 +1584,7 @@ def test_kolmogorov_radii():
 
     # Test constructor using half-light-radius:
     test_gal = galsim.Kolmogorov(flux=1., half_light_radius = test_hlr)
-    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=3,
@@ -1590,7 +1593,7 @@ def test_kolmogorov_radii():
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
     print 'got_fwhm = ',got_fwhm
-    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) / 
+    test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                     test_gal.xValue(galsim.PositionD(0., 0.)))
     print 'fwhm ratio = ', test_fwhm_ratio
     np.testing.assert_almost_equal(
@@ -1609,7 +1612,7 @@ def test_kolmogorov_radii():
     # then test that image indeed has the correct HLR properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
     print 'got_hlr = ',got_hlr
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
     print 'hlr_sum (profile initialized with fwhm) = ',hlr_sum
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=3,
@@ -1687,6 +1690,263 @@ def test_kolmogorov_flux_scaling():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+def test_spergel():
+    """Test the generation of a specific Spergel profile using SBProfile against a known result.
+    """
+    import time
+    t1 = time.time()
+
+    mathica_enclosed_fluxes = [3.06256e-2, 9.99995e-6, 6.06443e-10, 2.94117e-11, 6.25011e-12]
+    mathica_enclosing_radii = [2.3973e-17, 1.00001e-5, 1.69047e-3, 5.83138e-3, 1.26492e-2]
+    
+    for nu, enclosed_flux, enclosing_radius in zip(test_spergel_nu,
+                                                   mathica_enclosed_fluxes,
+                                                   mathica_enclosing_radii):
+        filename = "spergel_nu{:.2f}.fits".format(nu)
+        savedImg = galsim.fits.read(os.path.join(imgdir, filename))
+        savedImg.setCenter(0,0)
+        dx = 0.2
+        myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+        myImg.setCenter(0,0)
+
+        spergel = galsim.Spergel(nu=nu, half_light_radius=1.0)
+        # Reference images were made with old centering,
+        # which is equivalent to use_true_center=False.
+        myImg = spergel.draw(myImg, scale=dx, normalization="surface brightness",
+                             use_true_center=False)
+
+        np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject Spergel disagrees with expected result")
+
+        np.testing.assert_almost_equal(
+            myImg.array.sum()*dx**2, myImg.added_flux, 5,
+            err_msg="Spergel profile GSObject::draw returned wrong added_flux")
+
+        # Only nu >= -0.3 give reasonably sized FFTs,
+        # and small nu drawShoot is super slow.
+        if nu >= -0.3:
+            do_kvalue(spergel, "Spergel(nu={:1}) ".format(nu))
+
+            # Test photon shooting.
+            # Convolve with a small gaussian to smooth out the central peak.
+            spergel2 = galsim.Convolve(spergel, galsim.Gaussian(sigma=0.3))
+            do_shoot(spergel2,myImg,"Spergel")
+
+        # Test integrated flux routines against Mathematica
+        spergel = galsim.Spergel(nu=nu, scale_radius=1.0)
+        np.testing.assert_almost_equal(
+            spergel.SBProfile.calculateFluxRadius(1.e-5)/enclosing_radius, 1.0, 4,
+            err_msg="Calculated incorrect Spergel(nu={}) flux-enclosing-radius.".format(nu))
+        np.testing.assert_almost_equal(
+            spergel.SBProfile.calculateIntegratedFlux(1.e-5)/enclosed_flux, 1.0, 4,
+            err_msg="Calculated incorrect Spergel(nu={}) enclosed flux.".format(nu))
+
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+        
+def test_spergel_properties():
+    """Test some basic properties of the SBSpergel profile.
+    """
+    import time
+    t1 = time.time()
+    spergel = galsim.Spergel(nu=0.0, flux=test_flux, scale_radius=1.0)
+    # Check that we are centered on (0, 0)
+    cen = galsim.PositionD(0, 0)
+    np.testing.assert_equal(spergel.centroid(), cen)
+    # # Check Fourier properties
+    np.testing.assert_equal(spergel.kValue(cen), (1+0j) * test_flux)
+    # Check input flux vs output flux
+    for inFlux in np.logspace(-2, 2, 10):
+        spergel = galsim.Spergel(nu=0.0, flux=inFlux, scale_radius=1.0)
+        outFlux = spergel.getFlux()
+        np.testing.assert_almost_equal(outFlux, inFlux)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_spergel_radii():
+    """Test initialization of Spergel with different types of radius specification.
+    """
+    import time
+    t1 = time.time()
+    import math
+    for nu, scale in zip(test_spergel_nu, test_spergel_scale) :
+
+        test_gal = galsim.Spergel(nu=nu, half_light_radius=test_hlr, flux=1.)
+
+        # Check that the returned half-light radius is correct
+        print 'test_hlr = ',test_hlr
+        print 'test_gal hlr, sr = ',test_gal.getHalfLightRadius(),test_gal.getScaleRadius()
+        np.testing.assert_almost_equal(
+            test_gal.getHalfLightRadius(), test_hlr, decimal=5,
+            err_msg = "Error in returned HLR for Spergel HLR constructor, nu=%.1f"%nu)
+
+        # Check that the returned flux is correct
+        print 'test_gal.getFlux() = ',test_gal.getFlux()
+        np.testing.assert_almost_equal(
+            test_gal.getFlux(), 1., decimal=5,
+            err_msg = "Error in returned Flux for Spergel HLR constructor, nu=%.1f"%nu)
+
+        # (test half-light radii)
+        print 'flux = ',test_gal.getFlux()
+        print 'hlr = ',test_gal.getHalfLightRadius()
+        print 'scale = ',test_gal.getScaleRadius()
+        got_hlr = test_gal.getHalfLightRadius()
+        got_flux = test_gal.getFlux()
+        # nu = -0.85 is too difficult to numerically integrate
+        if nu > -0.85:
+            hlr_sum = radial_integrate(test_gal, 0., got_hlr)
+            print 'hlr_sum = ',hlr_sum
+            np.testing.assert_almost_equal(
+                    hlr_sum, 0.5*got_flux, decimal=4,
+                    err_msg = "Error in Spergel half-light radius constructor, nu=%.1f"%nu)
+
+        # Test constructor using scale radius (test scale radius)
+        test_gal = galsim.Spergel(nu=nu, scale_radius=scale, flux=1.)
+
+        # Check that the returned scale radius is correct
+        print 'test_scale = ',scale
+        print 'test_gal hlr, sr = ',test_gal.getHalfLightRadius(),test_gal.getScaleRadius()
+        np.testing.assert_almost_equal(
+            test_gal.getScaleRadius(), scale, decimal=5,
+            err_msg = "Error in returned SR for Sersic SR constructor, nu=%.1f"%nu)
+
+        # Check that the returned flux is correct
+        print 'test_gal.getFlux() = ',test_gal.getFlux()
+        np.testing.assert_almost_equal(
+            test_gal.getFlux(), 1., decimal=5,
+            err_msg = "Error in returned Flux for Spergel HLR constructor, nu=%.1f"%nu)
+
+        # (test half-light radius)
+        got_hlr = test_gal.getHalfLightRadius()
+        got_flux = test_gal.getFlux()
+        # nu = -0.85 is too difficult to numerically integrate
+        if nu > -0.85:
+            hlr_sum = radial_integrate(test_gal, 0., got_hlr)
+            print 'hlr_sum = ',hlr_sum
+            np.testing.assert_almost_equal(
+                    hlr_sum, 0.5*got_flux, decimal=4,
+                    err_msg="Error in HLR for scale_radius constructed Spergel")
+
+        # Check that the getters don't work after modifying the original.
+        test_gal_shear = test_gal.copy()
+        # They still work after copy()
+        print 'nu = ',test_gal_shear.getNu()
+        print 'hlr = ',test_gal_shear.getHalfLightRadius()
+        print 'sr = ',test_gal_shear.getScaleRadius()
+        test_gal_shear.applyShear(g1=0.3, g2=0.1)
+        # But not after applyShear() (or others, but this is a sufficient test here)
+        try:
+            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getNu")
+            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius")
+        except ImportError:
+            pass
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_spergel_flux_scaling():
+    """Test flux scaling for Spergel.
+    """
+    import time
+    t1 = time.time()
+
+    # decimal point to go to for parameter value comparisons
+    param_decimal = 12
+
+    # loop through spergel nu
+    for test_nu in test_spergel_nu:
+        # init with hlr and flux only (should be ok given last tests)
+        init_obj = galsim.Spergel(test_nu, half_light_radius=test_hlr, flux=test_flux)
+
+        # Test in place *= and /=
+        obj = init_obj.copy()
+        obj *= 2.
+        np.testing.assert_almost_equal(
+            obj.getFlux(), test_flux * 2., decimal=param_decimal,
+            err_msg="Flux param inconsistent after __imul__.")
+        np.testing.assert_almost_equal(
+            init_obj.getFlux(), test_flux, decimal=param_decimal,
+            err_msg="obj.copy() didn't produce a separate copy.")
+        obj = init_obj.copy()
+        obj /= 2.
+        np.testing.assert_almost_equal(
+            obj.getFlux(), test_flux / 2., decimal=param_decimal,
+            err_msg="Flux param inconsistent after __idiv__.")
+
+        obj2 = init_obj * 2.
+        np.testing.assert_almost_equal(
+            init_obj.getFlux(), test_flux, decimal=param_decimal,
+            err_msg="Flux param inconsistent after __rmul__ (original).")
+        np.testing.assert_almost_equal(
+            obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+            err_msg="Flux param inconsistent after __rmul__ (result).")
+
+        obj2 = 2. * init_obj
+        np.testing.assert_almost_equal(
+            init_obj.getFlux(), test_flux, decimal=param_decimal,
+            err_msg="Flux param inconsistent after __mul__ (original).")
+        np.testing.assert_almost_equal(
+            obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+            err_msg="Flux param inconsistent after __mul__ (result).")
+
+        obj2 = init_obj / 2.
+        np.testing.assert_almost_equal(
+             init_obj.getFlux(), test_flux, decimal=param_decimal,
+             err_msg="Flux param inconsistent after __div__ (original).")
+        np.testing.assert_almost_equal(
+            obj2.getFlux(), test_flux / 2., decimal=param_decimal,
+            err_msg="Flux param inconsistent after __div__ (result).")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_spergel_05():
+    """Test the equivalence of Spergel with nu=0.5 and Exponential
+    """
+    import time
+    t1 = time.time()
+
+    # cf test_exponential()
+    re = 1.0
+    r0 = re/1.67839
+    # The real value of re/r0 = 1.6783469900166605
+    hlr_r0 =  1.6783469900166605
+    savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
+    dx = 0.2
+    myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    spergel = galsim.Spergel(nu=0.5, flux=1., half_light_radius=r0 * hlr_r0)
+    spergel.draw(myImg, normalization="surface brightness", use_true_center=False)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using Spergel nu=0.5 disagrees with expected result for Exponential")
+
+    do_kvalue(spergel,"nu=0.5 Spergel")
+
+    # cf test_exponential_properties()
+    spergel = galsim.Spergel(nu=0.5, flux=test_flux, half_light_radius=test_scale[0] * hlr_r0)
+    cen = galsim.PositionD(0, 0)
+    np.testing.assert_equal(spergel.centroid(), cen)
+    np.testing.assert_equal(spergel.kValue(cen), (1+0j) * test_flux)
+    import math
+    np.testing.assert_almost_equal(spergel.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2,
+                                   decimal=5)
+
+    # Also test some random values other than the center:
+    expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])
+    for (x,y) in [ (0.1,0.2), (-0.5, 0.4), (0, 0.9), (1.2, 0.1), (2,2) ]:
+        pos = galsim.PositionD(x,y)
+        np.testing.assert_almost_equal(spergel.xValue(pos), expon.xValue(pos), decimal=5)
+        np.testing.assert_almost_equal(spergel.kValue(pos), expon.kValue(pos), decimal=5)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_gaussian()
@@ -1714,4 +1974,8 @@ if __name__ == "__main__":
     test_kolmogorov_properties()
     test_kolmogorov_radii()
     test_kolmogorov_flux_scaling()
-
+    test_spergel()
+    test_spergel_properties()
+    test_spergel_radii()
+    test_spergel_flux_scaling()
+    test_spergel_05()

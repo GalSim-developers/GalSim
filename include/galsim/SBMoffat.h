@@ -19,7 +19,7 @@
 
 #ifndef GalSim_SBMoffat_H
 #define GalSim_SBMoffat_H
-/** 
+/**
  * @file SBMoffat.h @brief SBProfile that implements a Moffat profile.
  */
 
@@ -35,7 +35,7 @@ namespace galsim {
      * SBProfile representation of a Moffat profile also includes an optional truncation beyond a
      * given radius.
      */
-    class SBMoffat : public SBProfile 
+    class SBMoffat : public SBProfile
     {
     public:
         enum  RadiusType
@@ -91,4 +91,3 @@ namespace galsim {
 }
 
 #endif
-

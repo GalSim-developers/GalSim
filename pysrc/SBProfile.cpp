@@ -135,7 +135,7 @@ namespace galsim {
                 "drawK() routines are normalized such that I(0,0) is the total flux.\n"
                 "\n"
                 "Currently we have the following possible implementations of SBProfile:\n"
-                "Basic shapes: SBBox, SBGaussian, SBExponential, SBAiry, SBSersic\n"
+                "Basic shapes: SBBox, SBGaussian, SBExponential, SBAiry, SBSersic, SBSpergel\n"
                 "SBLaguerre: Gauss-Laguerre expansion\n"
                 "SBTransform: affine transformation of another SBProfile\n"
                 "SBAdd: sum of SBProfiles\n"
