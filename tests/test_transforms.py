@@ -695,6 +695,11 @@ def test_flip():
     s1 = galsim.Shear(g1=0.11, g2=0.21)  # Appropriate for the flips around x and y axes
     s2 = galsim.Shear(g1=-0.11, g2=-0.21)  # Appropriate for the flip around x=y
 
+    # Also use shears with just a g1 to get dx != dy, but dxy, dyx = 0.
+    q = galsim.Shear(g1=0.11, g2=0.)
+    q1 = galsim.Shear(g1=0.11, g2=0.)  # Appropriate for the flips around x and y axes
+    q2 = galsim.Shear(g1=-0.11, g2=0.)  # Appropriate for the flip around x=y
+
     decimal=6  # Oddly, these aren't as precise as I would have expected.
                # Even when we only go to this many digits of accuracy, the Exponential needed
                # a lower than default value for maxk_threshold. 
@@ -704,13 +709,17 @@ def test_flip():
         print 'prof = ',prof
 
         # Make sure we hit all 4 fill functions.  
-        # image_x uses fillXValue with ix_zero, iy_zero
+        # image_x uses fillXValue with izero, jzero
+        # image_x1 uses fillXValue with izero, jzero, and unequal dx,dy
         # image_x2 uses fillXValue with dxy, dyx
-        # image_k uses fillKValue with ix_zero, iy_zero
+        # image_k uses fillKValue with izero, jzero
+        # image_k1 uses fillKValue with izero, jzero, and unequal dx,dy
         # image_k2 uses fillKValue with dxy, dyx
         image_x = prof.drawImage(image=im.copy(), method='no_pixel')
+        image_x1 = prof.shear(q).drawImage(image=im.copy(), method='no_pixel')
         image_x2 = prof.shear(s).drawImage(image=im.copy(), method='no_pixel')
         image_k = prof.drawImage(image=im.copy())
+        image_k1 = prof.shear(q).drawImage(image=im.copy())
         image_k2 = prof.shear(s).drawImage(image=im.copy())
 
         # Flip around y axis (i.e. x -> -x)
@@ -719,6 +728,10 @@ def test_flip():
         np.testing.assert_array_almost_equal(
             image_x.array, image2_x.array[:,::-1], decimal=decimal,
             err_msg="Flipping image around y-axis failed x test")
+        image2_x1 = flip.shear(q1).drawImage(image=im.copy(), method='no_pixel')
+        np.testing.assert_array_almost_equal(
+            image_x1.array, image2_x1.array[:,::-1], decimal=decimal,
+            err_msg="Flipping image around y-axis failed x1 test")
         image2_x2 = flip.shear(s1).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x2.array, image2_x2.array[:,::-1], decimal=decimal,
@@ -727,6 +740,10 @@ def test_flip():
         np.testing.assert_array_almost_equal(
             image_k.array, image2_k.array[:,::-1], decimal=decimal,
             err_msg="Flipping image around y-axis failed k test")
+        image2_k1 = flip.shear(q1).drawImage(image=im.copy())
+        np.testing.assert_array_almost_equal(
+            image_k1.array, image2_k1.array[:,::-1], decimal=decimal,
+            err_msg="Flipping image around y-axis failed k1 test")
         image2_k2 = flip.shear(s1).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k2.array, image2_k2.array[:,::-1], decimal=decimal,
@@ -738,6 +755,10 @@ def test_flip():
         np.testing.assert_array_almost_equal(
             image_x.array, image2_x.array[::-1,:], decimal=decimal,
             err_msg="Flipping image around x-axis failed x test")
+        image2_x1 = flip.shear(q1).drawImage(image=im.copy(), method='no_pixel')
+        np.testing.assert_array_almost_equal(
+            image_x1.array, image2_x1.array[::-1,:], decimal=decimal,
+            err_msg="Flipping image around x-axis failed x1 test")
         image2_x2 = flip.shear(s1).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x2.array, image2_x2.array[::-1,:], decimal=decimal,
@@ -746,6 +767,10 @@ def test_flip():
         np.testing.assert_array_almost_equal(
             image_k.array, image2_k.array[::-1,:], decimal=decimal,
             err_msg="Flipping image around x-axis failed k test")
+        image2_k1 = flip.shear(q1).drawImage(image=im.copy())
+        np.testing.assert_array_almost_equal(
+            image_k1.array, image2_k1.array[::-1,:], decimal=decimal,
+            err_msg="Flipping image around x-axis failed k1 test")
         image2_k2 = flip.shear(s1).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k2.array, image2_k2.array[::-1,:], decimal=decimal,
@@ -757,6 +782,10 @@ def test_flip():
         np.testing.assert_array_almost_equal(
             image_x.array, np.transpose(image2_x.array), decimal=decimal,
             err_msg="Flipping image around x=y failed x test")
+        image2_x1 = flip.shear(q2).drawImage(image=im.copy(), method='no_pixel')
+        np.testing.assert_array_almost_equal(
+            image_x1.array, np.transpose(image2_x1.array), decimal=decimal,
+            err_msg="Flipping image around x=y failed x1 test")
         image2_x2 = flip.shear(s2).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x2.array, np.transpose(image2_x2.array), decimal=decimal,
@@ -765,6 +794,10 @@ def test_flip():
         np.testing.assert_array_almost_equal(
             image_k.array, np.transpose(image2_k.array), decimal=decimal,
             err_msg="Flipping image around x=y failed k test")
+        image2_k1 = flip.shear(q2).drawImage(image=im.copy())
+        np.testing.assert_array_almost_equal(
+            image_k1.array, np.transpose(image2_k1.array), decimal=decimal,
+            err_msg="Flipping image around x=y failed k1 test")
         image2_k2 = flip.shear(s2).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k2.array, np.transpose(image2_k2.array), decimal=decimal,
