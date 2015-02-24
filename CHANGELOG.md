@@ -5,10 +5,11 @@ Changes from v1.2 to v1.3
 API Changes
 -----------
 
-- Made the Position classes immutable.  It was an oversight that we failed
-  to make it immutable in version 1.1 when we made most other GalSim classes
-  immutable.  Now rather than `p.x = 4` and `p.y = 5`, you would need to do 
-  `p = galsim.PositionD(4,5)`. (#643)
+- Made the classes PositionI, PositionD, and GSParams immutable.  It was an
+  oversight that we failed to make them immutable in version 1.1 when we made
+  most other GalSim classes immutable.  Now rather than write to their various
+  attributes, you should make a new object. e.g. instead of `p.x = 4` and
+  `p.y = 5`, you now need to do `p = galsim.PositionD(4,5)`. (#643)
 
 New Features
 ------------

@@ -2313,13 +2313,9 @@ class Spergel(GSObject):
 # GSParams is defined in C++ and wrapped.  But we want to modify it here slightly to add
 # the obsolete name alias_threshold as a valid synonym for folding_threshold
 def _get_alias_threshold(self):
-    depr('alias_threshold',1.1,'foldin_threshold')
+    depr('alias_threshold',1.1,'folding_threshold')
     return self.folding_threshold
-def _set_alias_threshold(self, val):
-    depr('alias_threshold',1.1,'foldin_threshold')
-    setattr(self, 'folding_threshold', val)
-
-GSParams.alias_threshold = property(_get_alias_threshold, _set_alias_threshold)
+GSParams.alias_threshold = property(_get_alias_threshold)
 
 # Also update the constructor to allow this name.
 _orig_GSP_init = GSParams.__init__
@@ -2327,7 +2323,7 @@ def _new_GSP_init(self, *args, **kwargs):
     if 'alias_threshold' in kwargs:
         if 'folding_threshold' in kwargs:
             raise TypeError('Cannot specify both alias_threshold and folding_threshold')
-        depr('alias_threshold',1.1,'foldin_threshold')
+        depr('alias_threshold',1.1,'folding_threshold')
         kwargs['folding_threshold'] = kwargs.pop('alias_threshold')
     _orig_GSP_init(self, *args, **kwargs)
 GSParams.__init__ = _new_GSP_init
