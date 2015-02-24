@@ -397,7 +397,12 @@ namespace galsim {
         typedef tmv::VIt<double,1,tmv::NonConj> It;
 
         val.setZero();
-        for (int j=0;j<n;++j,y0+=dy) {
+        // The columns to consider have -r0 <= y < r0
+        // given that y = y0 + j dy
+        int j1 = std::max(0, int(std::ceil((-_r0 - y0)/dy)));
+        int j2 = std::min(n, int(std::ceil((_r0 - y0)/dy)));
+        y0 += j1 * dy;
+        for (int j=j1;j<j2;++j,y0+=dy) {
             double ysq = y0*y0;
             double xmax = std::sqrt(_r0sq - ysq);
             // Set to _norm all pixels with -xmax <= x < xmax
