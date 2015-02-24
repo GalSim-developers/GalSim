@@ -1,23 +1,23 @@
-# # Copyright (c) 2012-2014 by the GalSim developers team on GitHub
-# # https://github.com/GalSim-developers
-# #
-# # This file is part of GalSim: The modular galaxy image simulation toolkit.
-# # https://github.com/GalSim-developers/GalSim
-# #
-# # GalSim is free software: redistribution and use in source and binary forms,
-# # with or without modification, are permitted provided that the following
-# # conditions are met:
-# #
-# # 1. Redistributions of source code must retain the above copyright notice, this
-# #    list of conditions, and the disclaimer given in the accompanying LICENSE
-# #    file.
-# # 2. Redistributions in binary form must reproduce the above copyright notice,
-# #    this list of conditions, and the disclaimer given in the documentation
-# #    and/or other materials provided with the distribution.
-# #
-# """@file series.py
-# Definitions for Galsim Series class and subclasses.
-# """
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+"""@file series.py
+Definitions for Galsim Series class and subclasses.
+"""
 
 import galsim
 import numpy as np
@@ -28,31 +28,38 @@ from itertools import product
 
 
 class Series(object):
+    # Share caches among all subclasses of Series
     cache = {}
     kcache = {}
+    root = None
+    kroot = None
 
     def __init__(self, maxcache=100):
-        # Steal some ideas from http://code.activestate.com/recipes/577970-simplified-lru-cache/
-        # Link layout:     [PREV, NEXT, KEY, RESULT]
-        self.root = root = [None, None, None, None]
-        cache = self.cache
-        last = root
-        for i in range(maxcache):
-            key = object()
-            cache[key] = last[1] = last = [last, root, key, None]
-        root[0] = last
-        # And similarly for Fourier-space cube
-        self.kroot = kroot = [None, None, None, None]
-        kcache = self.kcache
-        klast = kroot
-        for i in range(maxcache):
-            key = object()
-            kcache[key] = klast[1] = klast = [klast, kroot, key, None]
-        kroot[0] = last
+        # Initialize caches
+        if self.root is None:
+            # Steal some ideas from http://code.activestate.com/recipes/577970-simplified-lru-cache/
+            # Note that self.root = ... doesn't work since this will set [subclass].root instead
+            # of Series.root.
+            # Link layout:       [PREV, NEXT, KEY, RESULT]
+            Series.root = root = [None, None, None, None]
+            cache = self.cache
+            last = root
+            for i in range(maxcache):
+                key = object()
+                cache[key] = last[1] = last = [last, root, key, None]
+            root[0] = last
+            # And similarly for Fourier-space cache
+            Series.kroot = kroot = [None, None, None, None]
+            kcache = self.kcache
+            klast = kroot
+            for i in range(maxcache):
+                key = object()
+                kcache[key] = klast[1] = klast = [klast, kroot, key, None]
+            kroot[0] = last
 
     def basisCube(self, key):
-        cache = self.cache
-        root = self.root
+        cache = Series.cache
+        root = Series.root
         link = cache.get(key)
         if link is not None:
             link_prev, link_next, _, cube = link
@@ -74,7 +81,7 @@ class Series(object):
         root[2] = key
         root[3] = cube
         oldroot = root
-        root = self.root = root[1]
+        root = Series.root = root[1]
         root[2], oldkey = None, root[2]
         root[3], oldvalue = None, root[3]
         del cache[oldkey]
@@ -82,8 +89,8 @@ class Series(object):
         return cube
 
     def basisKCube(self, key):
-        cache = self.kcache
-        root = self.kroot
+        cache = Series.kcache
+        root = Series.kroot
         link = cache.get(key)
         if link is not None:
             link_prev, link_next, _, kcubes = link
@@ -108,7 +115,7 @@ class Series(object):
         root[2] = key
         root[3] = (recube, imcube)
         oldroot = root
-        root = self.kroot = root[1]
+        root = Series.kroot = root[1]
         root[2], oldkey = None, root[2]
         root[3], oldvalue = None, root[3]
         del cache[oldkey]
@@ -295,15 +302,22 @@ class SpergelSeries(Series):
 
     def _decomposeA(self):
         A = self._A
-        phi0 = math.atan2(-A[0,1], A[0,0])
-        if A[0,0] != 0.0:
-            eta = math.log(A[0,0]/A[1,1])
-        else:
-            eta = math.log(-A[1,0]/A[0,1])
+        a = A[0,0]
+        b = A[0,1]
+        c = A[1,0]
+        d = A[1,1]
+        mu = math.sqrt(a*d-b*c)
+        phi0 = math.atan2(c-b, a+d)
+        beta = math.atan2(b+c, a-d)+phi0
+        eta = math.acosh(0.5*((a-d)**2 + (b+c)**2)/mu**2 + 1.0)
+
+        # print "mu: {}".format(mu)
+        # print "phi0: {}".format(phi0)
+        # print "beta: {}".format(beta)
+        # print "eta: {}".format(eta)
+        
         ellip = galsim.Shear(eta1=eta).e1
-        ad = A[0,0]*A[1,1]
-        bc = A[0,1]*A[1,0]
-        r0 = np.sqrt((ad - bc)/np.sqrt(1.0 - ellip**2))
+        r0 = mu/np.sqrt(1.0 - ellip**2)
         # find the nearest r_i:
         f, i = np.modf(np.log(r0)/self.dlnr)
         # deal with negative logs
@@ -316,7 +330,7 @@ class SpergelSeries(Series):
             i += 1
         scale_radius = np.exp(self.dlnr*i)
         Delta = 1.0 - (r0/scale_radius)**2
-        return ellip, phi0, scale_radius, Delta
+        return ellip, phi0+beta/2, scale_radius, Delta
         
         
 class Spergelet(galsim.GSObject):
