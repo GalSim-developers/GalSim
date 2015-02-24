@@ -95,7 +95,7 @@ namespace galsim {
         /// @brief Destructor.
         ~SBTopHat();
 
-        /// @brief Returns the radius of the TopHatcar.
+        /// @brief Returns the radius of the TopHat.
         double getRadius() const;
 
     protected:
