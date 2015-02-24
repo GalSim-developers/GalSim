@@ -230,7 +230,7 @@ class ChromaticObject(object):
         return image
 
     def draw(self, *args, **kwargs):
-        """An obsolete synonym for obj.drawImage(method='no_pixel')
+        """A deprecated synonym for obj.drawImage(method='no_pixel')
         """
         depr('draw', 1.1, "drawImage(..., method='no_pixel'",
              'Note: drawImage has different args than draw did.  Read the docs for the method ' +

@@ -21,6 +21,8 @@ Redefinition of the Shear class at the Python layer.
 
 from . import _galsim
 
+from .deprecated import depr
+
 class Shear(object):
     """A class to represent shears in a variety of ways.
 
@@ -192,19 +194,24 @@ class Shear(object):
 
     # define all the methods for setting shear values
     def setE1E2(self, e1=0.0, e2=0.0):
-        """Discouraged method that will be deprecated eventually."""
+        """Deprecated method that will be deprecated eventually."""
+        depr('setE1E2',1.1,'shear = galsim.Shear(e1=e1,e2=e2)')
         self._shear.setE1E2(e1, e2)
     def setEBeta(self, e=0.0, beta=None): 
-        """Discouraged method that will be deprecated eventually."""
+        """Deprecated method that will be deprecated eventually."""
+        depr('setEBeta',1.1,'shear = galsim.Shear(e=e,beta=beta)')
         self._shear.setEBeta(e, beta)
     def setEta1Eta2(self, eta1=0.0, eta2=0.0): 
-        """Discouraged method that will be deprecated eventually."""
+        """Deprecated method that will be deprecated eventually."""
+        depr('setEta1Eta2',1.1,'shear = galsim.Shear(eta1=eta1,eta2=eta2)')
         self._shear.setEta1Eta2(eta1, eta2)
     def setEtaBeta(self, eta=0.0, beta=None): 
-        """Discouraged method that will be deprecated eventually."""
+        """Deprecated method that will be deprecated eventually."""
+        depr('setEtaBeta',1.1,'shear = galsim.Shear(e=e,beta=beta)')
         self._shear.setEtaBeta(eta, beta)
     def setG1G2(self, g1=0.0, g2=0.0): 
-        """Discouraged method that will be deprecated eventually."""
+        """Deprecated method that will be deprecated eventually."""
+        depr('setG1G2',1.1,'shear = galsim.Shear(g1=g1,g2=g2)')
         self._shear.setG1G2(g1, g2)
 
     # define all the methods to get shear values

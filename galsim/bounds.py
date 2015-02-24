@@ -142,10 +142,6 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.getXMax.__func__.__doc__ = "Get the value of xmax."
     Class.getYMin.__func__.__doc__ = "Get the value of ymin."
     Class.getYMax.__func__.__doc__ = "Get the value of ymax."
-    Class.setXMin.__func__.__doc__ = "Set the value of xmin. (discouraged, will be deprecated)"
-    Class.setXMax.__func__.__doc__ = "Set the value of xmax. (discouraged, will be deprecated)"
-    Class.setYMin.__func__.__doc__ = "Set the value of ymin. (discouraged, will be deprecated)"
-    Class.setYMax.__func__.__doc__ = "Set the value of ymax. (discouraged, will be deprecated)"
     Class.shift.__func__.__doc__ = """Shift the Bounds instance by a supplied position
 
     Calling Examples
@@ -158,6 +154,40 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
         >>> bounds = BoundsD(0, 37.4, 0, 49.9)
         >>> bounds = bounds.shift(galsim.PositionD(3.9, 2.1))
     """ 
+
+def Bounds_setXMin(self, xmin):
+    """Deprecated method for setting the value of xmin.
+    """
+    depr('setXMin',1.1,
+         'bounds = galsim.'+self.__class__.__name__+'(xmin,bounds.xmax,bounds.ymin,bounds.ymax)')
+    self._setXMin(xmin)
+
+def Bounds_setXMax(self, xmax):
+    """Deprecated method for setting the value of xmax.
+    """
+    depr('setXMax',1.1,
+         'bounds = galsim.'+self.__class__.__name__+'(bounds.xmin,xmax,bounds.ymin,bounds.ymax)')
+    self._setXMax(xmax)
+
+def Bounds_setYMin(self, ymin):
+    """Deprecated method for setting the value of ymin.
+    """
+    depr('setYMin',1.1,
+         'bounds = galsim.'+self.__class__.__name__+'(bounds.xmin,bounds.xmax,ymin,bounds.ymax)')
+    self._setYMin(ymin)
+
+def Bounds_setYMax(self, ymax):
+    """Deprecated method for setting the value of ymax.
+    """
+    depr('setYMax',1.1,
+         'bounds = galsim.'+self.__class__.__name__+'(bounds.xmin,bounds.xmax,bounds.ymin,ymax)')
+    self._setYMax(ymax)
+
+for Class in (_galsim.BoundsD, _galsim.BoundsI):
+    Class.setXMin = Bounds_setXMin
+    Class.setXMax = Bounds_setXMax
+    Class.setYMin = Bounds_setYMin
+    Class.setYMax = Bounds_setYMax
 
 del Class    # cleanup public namespace
 

@@ -282,7 +282,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return variance
 
     def applyWhiteningTo(self, image):
-        """An obsolete synonym for whitenImage"""
+        """A deprecated synonym for whitenImage"""
         depr('applyWhiteningTo', 1.2, 'whitenImage')
         return self.whitenImage(image)
 
@@ -388,12 +388,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.expand(scale))
 
     def createExpanded(self, scale):
-        """This is an obsolete synonym for expand(scale)"""
+        """A deprecated synonym for expand(scale)"""
         depr('createExpanded', 1.1, 'obj.expand(scale)')
         return self.expand(scale)
 
     def applyExpansion(self, scale):
-        """This is an obsolete method that is roughly equivalent to obj = obj.expand(scale)"""
+        """A deprecated method that is roughly equivalent to obj = obj.expand(scale)"""
         depr('applyExpansion', 1.1, 'obj = obj.expand(scale)')
         new_obj = self.expand(scale)
         self._profile = new_obj._profile
@@ -413,12 +413,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.expand(scale) * (1./scale**4))
 
     def createDilated(self, scale):
-        """This is an obsolete synonym for dilate(scale)"""
+        """A deprecated synonym for dilate(scale)"""
         depr('createDilated', 1.1, 'obj.dilate(scale)')
         return self.dilate(scale)
 
     def applyDilation(self, scale):
-        """This is an obsolete method that is roughly equivalent to obj = obj.dilate(scale)"""
+        """A deprecated method that is roughly equivalent to obj = obj.dilate(scale)"""
         depr('applyDilation', 1.1, 'obj = obj.dilate(scale)')
         new_obj = self.dilate(scale)
         self._profile = new_obj._profile
@@ -436,12 +436,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.magnify(mu))
 
     def createMagnified(self, mu):
-        """This is an obsolete synonym for magnify(mu)"""
+        """A deprecated synonym for magnify(mu)"""
         depr('createMagnified', 1.1, 'obj.magnify(mu)')
         return self.magnify(mu)
 
     def applyMagnification(self, mu):
-        """This is an obsolete method that is roughly equivalent to obj = obj.magnify(mu)"""
+        """A deprecated method that is roughly equivalent to obj = obj.magnify(mu)"""
         depr('applyMagnification', 1.1, 'obj = obj.magnify(mu)')
         new_obj = self.magnify(mu)
         self._profile = new_obj._profile
@@ -460,12 +460,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.lens(g1,g2,mu))
 
     def createLensed(self, g1, g2, mu):
-        """This is an obsolete synonym for lens(g1,g2,mu)"""
+        """A deprecated synonym for lens(g1,g2,mu)"""
         depr('createLensed', 1.1, 'obj.lens(g1,g2,mu)')
         return self.lens(g1,g2,mu)
 
     def applyLensing(self, g1, g2, mu):
-        """This is an obsolete method that is roughly equivalent to obj = obj.lens(g1,g2,mu)"""
+        """A deprecated method that is roughly equivalent to obj = obj.lens(g1,g2,mu)"""
         depr('applyLensing', 1.1, 'obj = obj.lens(g1,g2,mu)')
         new_obj = self.lens(g1,g2,mu)
         self._profile = new_obj._profile
@@ -484,12 +484,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.rotate(theta))
 
     def createRotated(self, theta):
-        """This is an obsolete synonym for rotate(theta)"""
+        """A deprecated synonym for rotate(theta)"""
         depr('createRotated', 1.1, 'obj.rotate(theta)')
         return self.rotate(theta)
 
     def applyRotation(self, theta):
-        """This is an obsolete method that is roughly equivalent to obj = obj.rotate(theta)"""
+        """A deprecated method that is roughly equivalent to obj = obj.rotate(theta)"""
         depr('applyRotation', 1.1, 'obj = obj.rotate(theta)')
         new_obj = self.rotate(theta)
         self._profile = new_obj._profile
@@ -511,12 +511,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.shear(*args,**kwargs))
 
     def createSheared(self, *args, **kwargs):
-        """This is an obsolete synonym for shear(shear)"""
+        """A deprecated synonym for shear(shear)"""
         depr('createSheared', 1.1, 'obj.shear(shear)')
         return self.shear(*args,**kwargs)
 
     def applyShear(self, *args, **kwargs):
-        """This is an obsolete method that is roughly equivalent to obj = obj.shear(shear)"""
+        """A deprecated method that is roughly equivalent to obj = obj.shear(shear)"""
         depr('applyShear', 1.1, 'obj = obj.shear(shear)')
         new_obj = self.shear(*args, **kwargs)
         self._profile = new_obj._profile
@@ -536,12 +536,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return _BaseCorrelatedNoise(self.getRNG(), self._profile.transform(dudx,dudy,dvdx,dvdy))
 
     def createTransformed(self, dudx, dudy, dvdx, dvdy):
-        """This is an obsolete synonym for transform(dudx,dudy,dvdx,dvdy)"""
+        """A deprecated synonym for transform(dudx,dudy,dvdx,dvdy)"""
         depr('createTransformed', 1.1, 'obj.transform(dudx,dudy,dvdx,dvdy)')
         return self.transform(dudx,dudy,dvdx,dvdy)
 
     def applyTransformation(self, dudx, dudy, dvdx, dvdy):
-        """This is an obsolete method that is roughly equivalent to obj = obj.transform(...)"""
+        """A deprecated method that is roughly equivalent to obj = obj.transform(...)"""
         depr('applyTransformation', 1.1, 'obj = obj.transform(dudx,dudy,dvdx,dvdy)')
         new_obj = self.transform(dudx,dudy,dvdx,dvdy)
         self._profile = new_obj._profile
@@ -604,7 +604,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return _BaseCorrelatedNoise(self.getRNG(), self._profile * variance_ratio)
 
     def setVariance(self, variance):
-        """This is an obsolete method that is roughly equivalent to
+        """A deprecated method that is roughly equivalent to
         corr = corr.withVariance(variance)
         """
         depr('setVariance', 1.1, 'obj = obj.withVariance(variance)')
@@ -614,7 +614,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self.__class__ = new_obj.__class__
 
     def scaleVariance(self, variance_ratio):
-        """This is an obsolete method that is roughly equivalent to corr = corr * variance_ratio"""
+        """A deprecated method that is roughly equivalent to corr = corr * variance_ratio"""
         depr('scaleVariance', 1.1, 'obj = obj * variance_ratio')
         new_obj = self.withScaledVariance(variance_ratio)
         self._profile = new_obj._profile
@@ -672,7 +672,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return _BaseCorrelatedNoise(self.getRNG(), conv)
 
     def convolveWith(self, gsobject, gsparams=None):
-        """This is an obsolete method that is roughly equivalent to
+        """A deprecated method that is roughly equivalent to
         cn = cn.convolvedWith(gsobject,gsparams)
         """
         depr('convolveWith', 1.1, 'obj = obj.convolvedWith(gsobject, gsparams)')
@@ -722,7 +722,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             add_to_image=add_to_image, use_true_center=False)
 
     def draw(self, *args, **kwargs):
-        """An obsolete synonym of drawImage"""
+        """A deprecated synonym of drawImage"""
         depr('draw', 1.1, "drawImage")
         return self.drawImage(*args, **kwargs)
 
@@ -1323,9 +1323,10 @@ def _cf_periodicity_dilution_correction(cf_shape):
 
 # Make a function for returning Noise correlations
 def _Image_getCorrelatedNoise(image):
-    """Returns a CorrelatedNoise instance by calculating the correlation function of image pixels.
-    This function is discouraged and will be deprecated in a future version.
+    """Deprecated method to get a CorrelatedNoise instance by calculating the correlation function
+    of image pixels.  It is equivalent to `noise = galsim.CorrelatedNoise(image)`
     """
+    depr('getCorrelatedNoise',1.1,'noise = galsim.CorrelatedNoise(image)')
     return CorrelatedNoise(image)
 
 # Then add this Image method to the Image class

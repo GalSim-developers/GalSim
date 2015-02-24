@@ -29,15 +29,6 @@
 
 namespace bp = boost::python;
 
-#define ADD_CORNER(getter, setter, prop)\
-    do {                                                            \
-        bp::object fget = bp::make_function(&Bounds<T>::getter);    \
-        bp::object fset = bp::make_function(&Bounds<T>::setter);    \
-        pyBounds.def(#getter, fget);                                \
-        pyBounds.def(#setter, fset);                                \
-        pyBounds.add_property(#prop, fget, fset);                   \
-    } while (false)
-
 namespace galsim {
 namespace {
 
@@ -97,15 +88,23 @@ struct PyBounds {
             .def("area", &Bounds<T>::area)
             .def(str(bp::self))
             .def("assign", &Bounds<T>::operator=, bp::return_self<>())
+            .def(bp::self + bp::self)
+            .def(bp::self + bp::other< Position<T> >())
+            .def(bp::self + bp::other<T>())
+            .def("getXMin", &Bounds<T>::getXMin)
+            .def("getXMax", &Bounds<T>::getXMax)
+            .def("getYMin", &Bounds<T>::getYMin)
+            .def("getYMax", &Bounds<T>::getYMax)
+            .add_property("xmin", &Bounds<T>::getXMin)
+            .add_property("xmax", &Bounds<T>::getXMax)
+            .add_property("ymin", &Bounds<T>::getYMin)
+            .add_property("ymax", &Bounds<T>::getYMax)
+            .def("_setXMin", &Bounds<T>::setXMin)
+            .def("_setXMax", &Bounds<T>::setXMax)
+            .def("_setYMin", &Bounds<T>::setYMin)
+            .def("_setYMax", &Bounds<T>::setYMax)
             .enable_pickling()
             ;
-        pyBounds.def(bp::self + bp::self);
-        pyBounds.def(bp::self + bp::other< Position<T> >());
-        pyBounds.def(bp::self + bp::other<T>());
-        ADD_CORNER(getXMin, setXMin, xmin);
-        ADD_CORNER(getXMax, setXMax, xmax);
-        ADD_CORNER(getYMin, setYMin, ymin);
-        ADD_CORNER(getYMax, setYMax, ymax);
     }
 
 };
