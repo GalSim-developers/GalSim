@@ -300,7 +300,7 @@ def test_realspace_convolve():
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
 
     # Test kvalues
-    do_kvalue(conv,"Truncated Moffat convolved with Box")
+    do_kvalue(conv,img,"Truncated Moffat convolved with Box")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -501,7 +501,7 @@ def test_add():
     do_shoot(sum,myImg,"sum of 2 Gaussians")
 
     # Test kvalues
-    do_kvalue(sum,"sum of 2 Gaussians")
+    do_kvalue(sum,myImg,"sum of 2 Gaussians")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
