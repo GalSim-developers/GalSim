@@ -106,7 +106,7 @@ def test_smallshear():
     do_shoot(gauss,myImg,"sheared Gaussian")
 
     # Test kvalues
-    do_kvalue(gauss,"sheared Gaussian")
+    do_kvalue(gauss,myImg,"sheared Gaussian")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -164,7 +164,7 @@ def test_largeshear():
     # testing though is the accuracy of the applyShear function.  So just shear a Gaussian here.
     gauss = galsim.Gaussian(sigma=2.3)
     gauss.applyShear(myShear)
-    do_kvalue(gauss, "sheared Gaussian")
+    do_kvalue(gauss,myImg, "sheared Gaussian")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -213,7 +213,7 @@ def test_rotate():
     do_shoot(gal2,myImg,"rotated sheared Sersic")
 
     # Test kvalues
-    do_kvalue(gal,"rotated sheared Sersic")
+    do_kvalue(gal,myImg,"rotated sheared Sersic")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -312,7 +312,7 @@ def test_mag():
     do_shoot(gal,myImg,"dilated Exponential")
 
     # Test kvalues
-    do_kvalue(gal,"dilated Exponential")
+    do_kvalue(gal,myImg,"dilated Exponential")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -383,7 +383,7 @@ def test_shift():
     # testing though is the accuracy of the applyShift function.  So just shift a Gaussian here.
     gauss = galsim.Gaussian(sigma=2.3)
     gauss.applyShift(dx,-dx)
-    do_kvalue(gauss, "shifted Gaussian")
+    do_kvalue(gauss,myImg, "shifted Gaussian")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -529,7 +529,7 @@ def test_rescale():
     do_shoot(sersic_smooth,myImg,"scaled Sersic")
 
     # Test kvalues
-    do_kvalue(sersic2, "scaled Sersic")
+    do_kvalue(sersic2,myImg, "scaled Sersic")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

@@ -116,7 +116,7 @@ def test_gaussian():
     do_shoot(gauss,myImg,"Gaussian")
 
     # Test kvalues
-    do_kvalue(gauss,"Gaussian")
+    do_kvalue(gauss,myImg,"Gaussian")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -393,7 +393,7 @@ def test_exponential():
     do_shoot(expon,myImg,"Exponential")
 
     # Test kvalues
-    do_kvalue(expon,"Exponential")
+    do_kvalue(expon,myImg,"Exponential")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -567,7 +567,7 @@ def test_sersic():
     do_shoot(sersic2,myImg,"Sersic")
 
     # Test kvalues
-    do_kvalue(sersic,"Sersic")
+    do_kvalue(sersic,myImg,"Sersic")
 
 
     # Now repeat everything using a truncation.  (Above had no truncation.)
@@ -589,30 +589,30 @@ def test_sersic():
     do_shoot(sersic2,myImg,"Truncated Sersic")
 
     # Test kvalues
-    do_kvalue(sersic, "Truncated Sersic")
+    do_kvalue(sersic,myImg, "Truncated Sersic")
 
     # Check for normalization consistencies with kValue checks. xValues tested in test_sersic_radii.
 
     # For half-light radius specified truncated Sersic, with flux_untruncated flag set
     sersic = galsim.Sersic(n=3, flux=test_flux, half_light_radius=1, trunc=10,
                            flux_untruncated=True)
-    do_kvalue(sersic, "Truncated Sersic w/ flux_untruncated, half-light radius specified")
+    do_kvalue(sersic,myImg, "Truncated Sersic w/ flux_untruncated, half-light radius specified")
 
     # For scale radius specified Sersic
     sersic = galsim.Sersic(n=3, flux=test_flux, scale_radius=0.05)
-    do_kvalue(sersic, "Sersic w/ scale radius specified")
+    do_kvalue(sersic,myImg, "Sersic w/ scale radius specified")
 
     # For scale radius specified truncated Sersic
     sersic = galsim.Sersic(n=3, flux=test_flux, scale_radius=0.05, trunc=10)
-    do_kvalue(sersic, "Truncated Sersic w/ scale radius specified")
+    do_kvalue(sersic,myImg, "Truncated Sersic w/ scale radius specified")
 
     # For scale radius specified truncated Sersic, with flux_untruncated flag set
     sersic = galsim.Sersic(n=3, flux=test_flux, scale_radius=0.05, trunc=10, flux_untruncated=True)
-    do_kvalue(sersic, "Truncated Sersic w/ flux_untruncated, scale radius specified")
+    do_kvalue(sersic,myImg, "Truncated Sersic w/ flux_untruncated, scale radius specified")
 
     # Test severely truncated Sersic
     sersic = galsim.Sersic(n=4, flux=test_flux, half_light_radius=1, trunc=1.45)
-    do_kvalue(sersic, "Severely truncated n=4 Sersic")
+    do_kvalue(sersic,myImg, "Severely truncated n=4 Sersic")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -875,7 +875,7 @@ def test_sersic_05():
             myImg.array, savedImg.array, 5,
             err_msg="Using Sersic with n=0.5 disagrees with expected result for Gaussian")
 
-    do_kvalue(sersic,"n=0.5 Sersic")
+    do_kvalue(sersic,myImg,"n=0.5 Sersic")
 
     # cf test_gaussian_properties()
     sersic = galsim.Sersic(n=0.5, flux=test_flux, half_light_radius=test_sigma * hlr_sigma)
@@ -911,7 +911,7 @@ def test_sersic_1():
             myImg.array, savedImg.array, 5,
             err_msg="Using Sersic n=1 disagrees with expected result for Exponential")
 
-    do_kvalue(sersic,"n=1 Sersic")
+    do_kvalue(sersic,myImg,"n=1 Sersic")
 
     # cf test_exponential_properties()
     sersic = galsim.Sersic(n=1, flux=test_flux, half_light_radius=test_scale[0] * hlr_r0)
@@ -965,8 +965,8 @@ def test_airy():
     do_shoot(airy2,myImg,"Airy obscuration=0.1")
 
     # Test kvalues
-    do_kvalue(airy, "Airy obscuration=0.0")
-    do_kvalue(airy2, "Airy obscuration=0.1")
+    do_kvalue(airy,myImg, "Airy obscuration=0.0")
+    do_kvalue(airy2,myImg, "Airy obscuration=0.1")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1075,8 +1075,7 @@ def test_box():
     import time
     t1 = time.time()
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
-    dx = 0.2
-    myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     myImg.setCenter(0,0)
 
     pixel = galsim.Pixel(scale=1, flux=1)
@@ -1099,6 +1098,101 @@ def test_box():
 
     # Test photon shooting.
     do_shoot(pixel,myImg,"Pixel")
+
+    # Check that non-square Box profiles work correctly
+    scale = 0.2939  # Use a strange scale here to make sure that the centers of the pixels
+                    # never fall on the box edge, otherwise it gets a bit weird to know what
+                    # the correct SB value is for that pixel.
+    im = galsim.ImageF(16,16, scale=scale)
+    gsp = galsim.GSParams(maximum_fft_size = 30000)
+    for (width,height) in [ (3,2), (1.7, 2.7), (2.2222, 3.1415) ]:
+        print 'width, height = ',width,height
+        box = galsim.Box(width=width, height=height, flux=test_flux, gsparams=gsp)
+        print 'im.bounds = ',im.bounds
+        print 'im.scale = ',im.scale
+        do_shoot(box,im,"Box with width,height = %f,%f"%(width,height))
+        if __name__ == '__main__':
+            # These are slow because they require a pretty huge fft.
+            # So only do them if running as main.
+            do_kvalue(box,im,"Box with width,height = %f,%f"%(width,height))
+
+    # Check sheared boxes the same way
+    box = galsim.Box(width=3, height=2, flux=test_flux, gsparams=gsp)
+    box = box.shear(galsim.Shear(g1=0.2, g2=-0.3))
+    do_shoot(box,im, "Sheared Box")
+    if __name__ == '__main__':
+        do_kvalue(box,im, "Sheared Box")
+
+    # This is also a profile that may be convolved using real space convolution, so test that.
+    if __name__ == '__main__':
+        conv = galsim.Convolve(box, galsim.Pixel(scale=scale), real_space=True)
+        do_kvalue(conv,im, "Sheared Box convolved with pixel in real space")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_tophat():
+    """Test the generation of a specific tophat profile using SBProfile against a known result.
+    """
+    import time
+    t1 = time.time()
+    savedImg = galsim.fits.read(os.path.join(imgdir, "tophat_101.fits"))
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
+    myImg.setCenter(0,0)
+
+    # There are numerical issues with using radius = 1, since many points are right on the edge
+    # of the circle.  e.g. (+-1,0), (0,+-1), (+-0.6,+-0.8), (+-0.8,+-0.6).  And in practice, some
+    # of these end up getting drawn and not others, which means it's not a good choice for a unit
+    # test since it wouldn't be any less correct for a different subset of these points to be
+    # drawn. Using r = 1.01 solves this problem and makes the result symmetric.
+    tophat = galsim.TopHat(radius=1.01, flux=1)
+    tophat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject TopHat disagrees with expected result")
+
+    # Check with default_params
+    tophat = galsim.TopHat(radius=1.01, flux=1, gsparams=default_params)
+    tophat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject TopHat with default_params disagrees with expected result")
+    tophat = galsim.TopHat(radius=1.01, flux=1, gsparams=galsim.GSParams())
+    tophat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject TopHat with GSParams() disagrees with expected result")
+
+    # Test photon shooting.
+    do_shoot(tophat,myImg,"TopHat")
+
+    # Test shoot and kvalue
+    scale = 0.2939
+    im = galsim.ImageF(16,16, scale=scale)
+    # The choices of radius here are fairly specific.  If the edge of the circle comes too close
+    # to the center of one of the pixels, then the test will fail, since the Fourier draw method
+    # will blur the edge a bit and give some flux to that pixel.
+    for radius in [ 1.2, 0.83, 2.11 ]:
+        print 'radius = ',radius
+        tophat = galsim.TopHat(radius=radius, flux=test_flux)
+        print 'im.bounds = ',im.bounds
+        print 'im.scale = ',im.scale
+        do_shoot(tophat,im,"TopHat with radius = %f"%radius)
+        do_kvalue(tophat,im,"TopHat with radius = %f"%radius)
+
+    # Check sheared tophat the same way
+    tophat = galsim.TopHat(radius=1.2, flux=test_flux)
+    # Again, the test is very sensitive to the choice of shear here.  Most values fail because 
+    # some pixel center gets too close to the resulting ellipse for the fourier draw to match
+    # the real-space draw at the required accuracy.
+    tophat = tophat.shear(galsim.Shear(g1=0.15, g2=-0.33))
+    do_shoot(tophat,im, "Sheared TopHat")
+    do_kvalue(tophat,im, "Sheared TopHat")
+
+    # This is also a profile that may be convolved using real space convolution, so test that.
+    conv = galsim.Convolve(tophat, galsim.Pixel(scale=scale), real_space=True)
+    do_kvalue(conv,im, "Sheared TopHat convolved with pixel in real space")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1146,13 +1240,13 @@ def test_moffat():
     do_shoot(moffat,myImg,"Moffat")
 
     # Test kvalues
-    do_kvalue(moffat, "Moffat")
+    do_kvalue(moffat,myImg, "Moffat")
 
     # The code for untruncated Moffat profiles is specialized for particular beta values, so
     # test each of these:
     for beta in [ 1.5, 2, 2.5, 3, 3.5, 4, 2.3 ]:  # The one last is for the generic case.
         moffat = galsim.Moffat(beta=beta, half_light_radius=0.7, flux=test_flux)
-        do_kvalue(moffat,"Untruncated Moffat with beta=%f"%beta)
+        do_kvalue(moffat,myImg,"Untruncated Moffat with beta=%f"%beta)
         # Don't bother repeating the do_shoot tests, since they are rather slow, and the code
         # isn't different for the different beta values.
 
@@ -1499,7 +1593,7 @@ def test_kolmogorov():
     do_shoot(kolm,myImg,"Kolmogorov")
 
     # Test kvalues
-    do_kvalue(kolm, "Kolmogorov")
+    do_kvalue(kolm,myImg, "Kolmogorov")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1726,7 +1820,8 @@ def test_spergel():
         # Only nu >= -0.3 give reasonably sized FFTs,
         # and small nu drawShoot is super slow.
         if nu >= -0.3:
-            do_kvalue(spergel, "Spergel(nu={0:1}) ".format(nu))
+            test_im = galsim.Image(16,16,scale=dx)
+            do_kvalue(spergel,test_im, "Spergel(nu={0:1}) ".format(nu))
 
             # Test photon shooting.
             # Convolve with a small gaussian to smooth out the central peak.
@@ -1927,7 +2022,7 @@ def test_spergel_05():
             myImg.array, savedImg.array, 5,
             err_msg="Using Spergel nu=0.5 disagrees with expected result for Exponential")
 
-    do_kvalue(spergel,"nu=0.5 Spergel")
+    do_kvalue(spergel,myImg,"nu=0.5 Spergel")
 
     # cf test_exponential_properties()
     spergel = galsim.Spergel(nu=0.5, flux=test_flux, half_light_radius=test_scale[0] * hlr_r0)
@@ -1966,6 +2061,7 @@ if __name__ == "__main__":
     test_airy_radii()
     test_airy_flux_scaling()
     test_box()
+    test_tophat()
     test_moffat()
     test_moffat_properties()
     test_moffat_radii()
