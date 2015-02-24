@@ -35,7 +35,7 @@ namespace galsim {
         // problems with the upper limit though, which could probably be extended.
 
         const double minimum_spergel_nu = -0.85;
-        const double maximum_spergel_nu = 0.85;
+        const double maximum_spergel_nu = 4.0;
 
         // How many Spergel profiles to save in the cache
         // Start with 100, though it may make sense to increase this depending on what value of
