@@ -151,6 +151,21 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         assumed.  If the image has a non-trivial WCS, it must at least be "uniform", i.e.,
         `image.wcs.isUniform() == True`.
 
+        Note that the correlations defined in a correlated_noise object are defined in terms of
+        world coordinates (i.e. typically arcsec on the sky).  Some care is thus required if you
+        apply correlated noise to an image with a non-trivial WCS.  The correlations will have a
+        specific direction and scale in world coordinates, so if you apply them to an image with
+        a WCS that has a rotation or a different pixel scale than the original, the resulting
+        correlations will have the correct direction and scale in world coordinates, but a 
+        different direction and/or scale in image coordinates.
+
+        If you want to override this behavior, you can view your image with the WCS of the 
+        correlation function and apply the noise to that.  For example:
+
+            >>> image = galsim.Image(nx, ny, wcs=complicated_wcs)
+            >>> noise = galsim.getCOSMOSNoise(rng=rng)
+            >>> image.view(wcs=noise.wcs).addNoise(noise)
+
         Note that the correlated noise field in `image` will be periodic across its boundaries: this
         is due to the fact that the internals of the CorrelatedNoise currently use a relatively
         simple implementation of noise generation using the Fast Fourier Transform.  If you wish to
@@ -707,8 +722,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                             If `scale` is None and `image` is None, then use the Nyquist scale.
                             If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
                             If `scale > 0` and `image` is given, then override `image.scale` with
-                            the value given as a keyword.
-                            [default: None]
+                            the value given as a keyword. [default: None]
         @param wcs          If provided, use this as the wcs for the image (possibly overriding any
                             existing `image.wcs`).  At most one of `scale` or `wcs` may be provided.
                             [default: None]
@@ -1151,22 +1165,15 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     This is common to all the classes that inherit from BaseNoise: to add deviates to every element
     of an image, the syntax
 
-        >>> im.addNoise(cn)
+        >>> image.addNoise(cn)
 
     is preferred, although
 
-        >>> cn.applyTo(im)
+        >>> cn.applyTo(image)
 
     is equivalent.  See the addNoise() method docstring for more information.  The `image.scale`
     is used to get the pixel scale of the input image unless this is <= 0, in which case a scale
     of 1 is assumed.
-
-    Another method that may be of use is
-
-        >>> m = cn.calculateCovarianceMatrix(im.bounds, scale)
-
-    which can be used to generate a covariance matrix based on a user input image geometry.  See
-    the calculateCovarianceMatrix() method docstring for more information.
 
     A number of methods familiar from GSObject instances have also been implemented directly as
     `cn` methods, so that the following commands are all legal:
@@ -1447,12 +1454,20 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     The following commands use this function to generate a 300 pixel x 300 pixel image of noise with
     HST COSMOS correlation properties (substitute in your own file and path for the `filestring`).
 
-        >>> import galsim
-        >>> rng = galsim.UniformDeviate(123456)
-        >>> cf = galsim.correlatednoise.getCOSMOSNoise(rng=rng)
-        >>> im = galsim.ImageD(300, 300, scale=0.03)
-        >>> cf.applyTo(im)
-        >>> im.write('out.fits')
+        >>> rng = galsim.BaseDeviate(123456)
+        >>> noise = galsim.getCOSMOSNoise(rng=rng)
+        >>> image = galsim.ImageD(nx, ny, scale=0.03)
+        >>> image.addNoise(cf)
+
+    If your image has some other pixel scale or a complicated WCS, then the applied noise will
+    have the correct correlations in world coordinates, which may not be what you wanted if you
+    wanted the pixel-to-pixel correlations to match the COSMOS noise profile.  However, in
+    this case, you would want to view your image with the COSMOS pixel scale when you apply
+    the noise:
+
+        >>> image = galsim.Image(nx, ny, wcs=complicated_wcs)
+        >>> noise = galsim.getCOSMOSNoise(rng=rng)
+        >>> image.view(wcs=noise.wcs).addNoise(noise)
 
     The FITS file `out.fits` should then contain an image of randomly-generated, COSMOS-like noise.
     """
