@@ -772,6 +772,47 @@ def test_OpticalPSF_pupil_plane():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_OpticalPSF_lamdiam():
+    """Test the ability to generate an OpticalPSF using different lam/diam specifications.
+    """
+    import time
+    t1 = time.time()
+
+    # Choose some lam, diam, scale.
+    lam = 457.3 # nm
+    diam = 3.7 # m
+    scale = 0.02*galsim.arcsec
+    obscuration = 0.15
+
+    # Make optical PSF using lam/diam and scale in some arbitrary units.  Let's use arcmin.
+    lam_over_diam = 1.e-9*lam/diam*galsim.radians
+    lam_over_diam_arcmin = lam_over_diam / galsim.arcmin
+    opt_psf_1 = galsim.OpticalPSF(lam_over_diam = lam_over_diam_arcmin, obscuration=obscuration,
+                                  scale_unit=galsim.arcmin)
+    im_1 = opt_psf_1.drawImage(scale=scale/galsim.arcmin)
+
+    # Make optical PSF using lam, diam separately and scale in arcsec.
+    opt_psf_2 = galsim.OpticalPSF(lam=lam, diam=diam, obscuration=obscuration)
+    im_2 = opt_psf_2.drawImage(scale=scale/galsim.arcsec)
+
+    # These images should agree, since we defined PSF AND image scale using arcmin in one case and
+    # using arcsec in the other case.
+    np.testing.assert_almost_equal(
+        im_2.array, im_1.array, decimal=8,
+        err_msg="Inconsistent OpticalPSF when using different initialization arguments.")
+
+    # Now make sure we cannot do some weird mix-and-match of arguments.
+    try:
+        np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam=1.) # need diam too!
+        np.testing.assert_raises(TypeError, galsim.OpticalPSF, diam=1.) # need lam too!
+        np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam_over_diam=1., diam=1.)
+        np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam_over_diam=1., lam=1.)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_check_all_contiguous()
     test_simple_wavefront()
@@ -790,3 +831,4 @@ if __name__ == "__main__":
     test_OpticalPSF_aberrations_kwargs()
     test_OpticalPSF_flux_scaling()
     test_OpticalPSF_pupil_plane()
+    test_OpticalPSF_lamdiam()

@@ -14,7 +14,7 @@
 
 "#" : "New features introduced in this demo:",
 
-"#" : "- obj type : OpticalPSF (..., trefoil1, trefoil2, nstruts, strut_thick, strut_angle)",
+"#" : "- obj type : OpticalPSF (lam, diam, ..., trefoil1, trefoil2, nstruts, strut_thick, strut_angle)",
 "#" : "- shear_value : NFWHaloShear (redshift)",
 "#" : "- float_value : NFWHaloMagnification (redshift)",
 "#" : "- input : nfw_halo (mass, conc, redshift)",
@@ -35,13 +35,17 @@
 "#" : "Define the PSF profile",
 "psf" : {
     "#" : "We use OpticalPSF with a few new features we haven't mentioned before:",
-    "#" : "1) We introduce the parameters trefoil1 and trefoil2, which are 3rd order Zernike",
+    "#" : "1) We separately specify the light wavelength and telescope diameter, relying on"
+    "#" : "   OpticalPSF to convert to appropriate units (arcsec by default, though the routine"
+    "#" : "   can be told otherwise)."
+    "#" : "2) We introduce the parameters trefoil1 and trefoil2, which are 3rd order Zernike",
     "#" : "   terms.",
-    "#" : "2) We specify support struts that hold the secondary mirror.  You can specify how",
+    "#" : "3) We specify support struts that hold the secondary mirror.  You can specify how",
     "#" : "   many struts to have, their thickness relative to the diameter, and the angle of the",
     "#" : "   first one relative to the vertical axis.  Here, we use 4 supports.",
     "type" : "OpticalPSF",
-    "lam_over_diam" : 0.077,
+    "lam" : 900.0,
+    "diam" : 2.4,
     "obscuration" : 0.125,
     "nstruts" : 4,
     "strut_thick" : 0.07,

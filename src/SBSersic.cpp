@@ -172,23 +172,23 @@ namespace galsim {
     }
 
     void SBSersic::SBSersicImpl::fillXValue(tmv::MatrixView<double> val,
-                                            double x0, double dx, int ix_zero,
-                                            double y0, double dy, int iy_zero) const
+                                            double x0, double dx, int izero,
+                                            double y0, double dy, int jzero) const
     {
         dbg<<"SBSersic fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        if (ix_zero != 0 || iy_zero != 0) {
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+            fillXValueQuadrant(val,x0,dx,izero,y0,dy,jzero);
             // Sersics tend to be super peaky at the center, so if we are including
             // (0,0) in the image, then it is helpful to do (0,0) explicitly rather
             // than treating it as 0 ~= x0 + n*dx, which has rounding errors and doesn't
             // quite come out to 0, and high-n Sersics vary a lot between r = 0 and 1.e-16!
             // By a lot, I mean ~0.5%, which is enough to care about.
-            if (ix_zero != 0 && iy_zero != 0)
+            if (izero != 0 && jzero != 0)
                 // NB: _info->xValue(0) = 1
-                val(ix_zero, iy_zero) = _xnorm;
+                val(izero, jzero) = _xnorm;
         } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -214,15 +214,15 @@ namespace galsim {
     }
 
     void SBSersic::SBSersicImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                            double x0, double dx, int ix_zero,
-                                            double y0, double dy, int iy_zero) const
+                                            double kx0, double dkx, int izero,
+                                            double ky0, double dky, int jzero) const
     {
         dbg<<"SBSersic fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        if (ix_zero != 0 || iy_zero != 0) {
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillKValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+            fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -230,17 +230,17 @@ namespace galsim {
             const int n = val.rowsize();
             typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-            x0 *= _r0;
-            dx *= _r0;
-            y0 *= _r0;
-            dy *= _r0;
+            kx0 *= _r0;
+            dkx *= _r0;
+            ky0 *= _r0;
+            dky *= _r0;
 
-            for (int j=0;j<n;++j,y0+=dy) {
-                double x = x0;
-                double ysq = y0*y0;
+            for (int j=0;j<n;++j,ky0+=dky) {
+                double kx = kx0;
+                double kysq = ky0*ky0;
                 It valit = val.col(j).begin();
-                for (int i=0;i<m;++i,x+=dx) {
-                    double ksq = x*x + ysq;
+                for (int i=0;i<m;++i,kx+=dkx) {
+                    double ksq = kx*kx + kysq;
                     *valit++ = _flux * _info->kValue(ksq);
                 }
             }
@@ -252,8 +252,8 @@ namespace galsim {
                                             double y0, double dy, double dyx) const
     {
         dbg<<"SBSersic fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
@@ -318,31 +318,31 @@ namespace galsim {
     }
 
     void SBSersic::SBSersicImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                            double x0, double dx, double dxy,
-                                            double y0, double dy, double dyx) const
+                                            double kx0, double dkx, double dkxy,
+                                            double ky0, double dky, double dkyx) const
     {
         dbg<<"SBSersic fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-        x0 *= _r0;
-        dx *= _r0;
-        dxy *= _r0;
-        y0 *= _r0;
-        dy *= _r0;
-        dyx *= _r0;
+        kx0 *= _r0;
+        dkx *= _r0;
+        dkxy *= _r0;
+        ky0 *= _r0;
+        dky *= _r0;
+        dkyx *= _r0;
 
         It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
-            double x = x0;
-            double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
-                double ksq = x*x + y*y;
+        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) {
+                double ksq = kx*kx + ky*ky;
                 *valit++ = _flux * _info->kValue(ksq);
             }
         }

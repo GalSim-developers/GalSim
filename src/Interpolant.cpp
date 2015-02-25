@@ -93,7 +93,7 @@ namespace galsim {
     //
 
     // sinc(x) is defined here as sin(Pi x) / (Pi x)
-    static double sinc(double x) 
+    double sinc(double x) 
     {
         if (std::abs(x) < 1.e-4) return 1.- (M_PI*M_PI/6.)*x*x; 
         else return std::sin(M_PI*x)/(M_PI*x);
