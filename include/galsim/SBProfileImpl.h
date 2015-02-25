@@ -48,9 +48,9 @@ namespace galsim {
         // For the first two versions, the x,y values for val(ix,iy) are
         //     x = x0 + ix dx 
         //     y = y0 + iy dy
-        // The ix_zero, iy_zero values are the indices where x=0, y=0.
+        // The izero, jzero values are the indices where x=0, y=0.
         // For some profiles (e.g. axi-symmetric profiles), this affords further opportunities
-        // for optimization.  If there is no such index, then ix_zero, iy_zero = 0, which indicates 
+        // for optimization.  If there is no such index, then izero, jzero = 0, which indicates 
         // that all the values need to be used.
         //
         // For the latter two versions, the x,y values for val(ix,iy) are
@@ -60,17 +60,17 @@ namespace galsim {
         // If these aren't overridden, then the regular xValue or kValue will be called for each 
         // position.
         virtual void fillXValue(tmv::MatrixView<double> val,
-                                double x0, double dx, int ix_zero,
-                                double y0, double dy, int iy_zero) const;
+                                double x0, double dx, int izero,
+                                double y0, double dy, int jzero) const;
         virtual void fillXValue(tmv::MatrixView<double> val,
                                 double x0, double dx, double dxy,
                                 double y0, double dy, double dyx) const;
         virtual void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                double x0, double dx, int ix_zero,
-                                double y0, double dy, int iy_zero) const;
+                                double kx0, double dkx, int izero,
+                                double ky0, double dky, int jzero) const;
         virtual void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                double x0, double dx, double dxy,
-                                double y0, double dy, double dyx) const;
+                                double kx0, double dkx, double dkxy,
+                                double ky0, double dky, double dkyx) const;
 
         virtual double maxK() const =0; 
         virtual double stepK() const =0;
@@ -116,14 +116,14 @@ namespace galsim {
         // A helper function for cases where the profile has f(x,y) = f(|x|,|y|).
         // This includes axisymmetric profiles, but also a few other cases.
         // Only one quadrant has its values computed.  Then these values are copied to the other
-        // 3 quadrants.  The input values ix_zero, iy_zero are the index of x=0, y=0.
+        // 3 quadrants.  The input values izero, jzero are the index of x=0, y=0.
         // At least one of these needs to be != 0.
         void fillXValueQuadrant(tmv::MatrixView<double> val,
                                 double x0, double dx, int nx1,
                                 double y0, double dy, int ny1) const;
         void fillKValueQuadrant(tmv::MatrixView<std::complex<double> > val,
-                                double x0, double dx, int nx1,
-                                double y0, double dy, int ny1) const;
+                                double kx0, double dkx, int nkx1,
+                                double ky0, double dky, int nky1) const;
 
     private:
         // Copy constructor and op= are undefined.

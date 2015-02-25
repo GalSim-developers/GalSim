@@ -124,7 +124,7 @@ from noise import DeviateNoise, VariableGaussianNoise
 from correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
 
 # GSObject
-from base import GSParams, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box
+from base import GSParams, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat
 from base import Exponential, Sersic, DeVaucouleurs, Spergel
 from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
@@ -139,6 +139,7 @@ from compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelati
 from chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum
 from chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
 from chromatic import ChromaticAutoCorrelation
+from chromatic import ChromaticOpticalPSF, ChromaticAiry
 from sed import SED
 from bandpass import Bandpass
 

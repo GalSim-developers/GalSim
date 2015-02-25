@@ -169,11 +169,17 @@ def main(argv):
     atmos = atmos.shear(e=atmos_e, beta=atmos_beta*galsim.radians)
     logger.debug('Made atmospheric PSF profile')
 
-    # Define the optical part of the PSF.
-    # The first argument of OpticalPSF below is lambda/diam, which needs to be in arcsec,
-    # so do the calculation:
+    # Define the optical part of the PSF:
+    # The first argument of OpticalPSF below is lambda/diam (wavelength of light / telescope
+    # diameter), which needs to be in the same units used to specify the image scale.  We are using
+    # arcsec for that, so we have to self-consistently use arcsec here, using the following
+    # calculation:
     lam_over_diam = lam * 1.e-9 / tel_diam # radians
     lam_over_diam *= 206265  # arcsec
+    # Note that we could also have made GalSim do the conversion for us if we did not know the right
+    # factor:
+    # lam_over_diam = lam * 1.e-9 / tel_diam * galsim.radians
+    # lam_over_diam = lam_over_diam / galsim.arcsec
     logger.debug('Calculated lambda over diam = %f arcsec', lam_over_diam)
     # The rest of the values should be given in units of the wavelength of the incident light.
     optics = galsim.OpticalPSF(lam_over_diam, 

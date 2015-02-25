@@ -53,6 +53,8 @@ namespace galsim {
 
         void calculateMaxK(double max_stepk) const;
         void calculateStepK(double max_maxk) const;
+        void forceStepK(double stepk) const;
+        void forceMaxK(double maxk) const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const;
         void getYRange(double& ymin, double& ymax, std::vector<double>& ) const;
@@ -103,17 +105,17 @@ namespace galsim {
 
         // Overrides for better efficiency
         void fillXValue(tmv::MatrixView<double> val,
-                        double x0, double dx, int ix_zero,
-                        double y0, double dy, int iy_zero) const;
+                        double x0, double dx, int izero,
+                        double y0, double dy, int jzero) const;
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double x0, double dx, int ix_zero,
-                        double y0, double dy, int iy_zero) const;
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double x0, double dx, double dxy,
-                        double y0, double dy, double dyx) const;
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
 
     protected:  // Made protected so that these can be used in the derived CorrelationFunction class
 
