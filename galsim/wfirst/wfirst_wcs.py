@@ -123,6 +123,10 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
                      galsim.FitsHeader objects defining the WCS.
     @returns a list of WCS or FitsHeader objects for each SCA.
     """
+    # First and foremost, check for presence of software that can read the WCS:
+    if not _check_software():
+        raise ImportError("Cannot find any software package that can read the WFIRST WCS!")
+
     # Enforce type for PA
     if not isinstance(PA, galsim.Angle):
         raise TypeError("Position angle must be a galsim.Angle!")
@@ -536,3 +540,23 @@ def _det_to_tangplane_positions(x_in, y_in):
     r = np.sqrt(r_sq)
     dist_fac = 1. + img_dist_coeff[0] + img_dist_coeff[1]*r + img_dist_coeff[2]*r_sq
     return x_in/dist_fac, y_in/dist_fac
+
+def _check_software():
+    # A helper routine to check for the presence of software that can read the constructed TAN-SIP
+    # WCS.
+    has_software = False
+    try:
+        import astropy.wcs
+        import scipy  # AstropyWCS constructor will do this, so check now.
+        has_software = True
+    except ImportError:
+        try:
+            import starlink.Ast
+            has_software = True
+        except ImportError:
+            try:
+                galsim.WcsToolsWCS(references['TAN'][0], dir=ref_dir)
+                has_software = True
+            except OSError:
+                pass
+    return has_software
