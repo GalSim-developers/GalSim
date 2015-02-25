@@ -108,11 +108,13 @@ def getSkyLevel(bandpass, position=None, e_lat=None, e_lon=None, exp_time=None):
         ecliptic_lon, ecliptic_lat = position.ecliptic()
         ecliptic_lon = ecliptic_lon / galsim.degrees
         ecliptic_lat = ecliptic_lat / galsim.degrees
-        if ecliptic_lon > 180.:
-            ecliptic_lon -= 360.
-            ecliptic_lon = abs(ecliptic_lon)
-        if ecliptic_lat < 0.:
-            ecliptic_lat = abs(ecliptic_lat)
+    # Here's where we take advantage of longitude symmetries:
+    if ecliptic_lon > 180.:
+        ecliptic_lon -= 360.
+    ecliptic_lon = abs(ecliptic_lon)
+    # And latitude symmetries:
+    if ecliptic_lat < 0.:
+        ecliptic_lat = abs(ecliptic_lat)
     sin_ecliptic_lat = np.sin(np.pi*ecliptic_lat/180.)
 
     # Take the lookup table, and turn negative numbers (indicating failure because of proximity to
