@@ -32,6 +32,15 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+# The dict below is just a subset of a dict from test_wcs.py, which we'll use to test our ability to
+# import WCSTools to use the WFIRST WCS software.
+references = {
+    'TAN' : ('1904-66_TAN.fits' ,
+            [ ('193930.753119', '-634259.217527', 117, 178, 13.43628),
+              ('181918.652839', '-634903.833411', 153, 35, 11.44438) ] ),
+}
+ref_dir = 'fits_files'
+
 def test_wfirst_wcs():
     """Test the WFIRST WCS routines against those from software provided by WFIRST project office.
     """
@@ -50,7 +59,7 @@ def test_wfirst_wcs():
             has_software = True
         except ImportError:
             try:
-                galsim.WcsToolsWCS(references['TAN'][0], dir=dir)
+                galsim.WcsToolsWCS(references['TAN'][0], dir=ref_dir)
                 has_software = True
             except OSError:
                 pass
