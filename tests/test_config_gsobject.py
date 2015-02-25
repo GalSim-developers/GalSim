@@ -177,7 +177,8 @@ def test_airy():
                  },
         'gal5' : { 'type' : 'Airy' , 'lam_over_diam' : 45, 
                    'gsparams' : { 'xvalue_accuracy' : 1.e-2 }
-                 }
+                 },
+        'gal6' : { 'type' : 'Airy' , 'lam' : 400., 'diam' : 4.0, 'scale_unit' : 'arcmin' }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -210,6 +211,10 @@ def test_airy():
     gsparams = galsim.GSParams(xvalue_accuracy=1.e-2)
     gal5b = galsim.Airy(lam_over_diam=45, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b)
+
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.Airy(lam=400., diam=4., scale_unit=galsim.arcmin)
+    gsobject_compare(gal6a, gal6b)
 
     try:
         # Make sure they don't match when using the default GSParams
@@ -314,7 +319,9 @@ def test_opticalpsf():
                    'defocus' : 0.1, 'obscuration' : 0.18,
                    'pupil_plane_im' : \
                        os.path.join(".","Optics_comparison_images","sample_pupil_rolled.fits"),
-                   'pupil_angle' : 27.*galsim.degrees }
+                   'pupil_angle' : 27.*galsim.degrees },
+        'gal6' : {'type' : 'OpticalPSF' , 'lam' : 874.0, 'diam' : 7.4, 'flux' : 70.,
+                  'obscuration' : 0.1 }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -354,6 +361,10 @@ def test_opticalpsf():
         pupil_plane_im=os.path.join(".","Optics_comparison_images","sample_pupil_rolled.fits"),
         pupil_angle=27.*galsim.degrees)
     gsobject_compare(gal5a, gal5b)
+
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.OpticalPSF(lam=874., diam=7.4, flux=70., obscuration=0.1)
+    gsobject_compare(gal6a, gal6b)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

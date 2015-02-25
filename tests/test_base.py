@@ -968,6 +968,19 @@ def test_airy():
     do_kvalue(airy,myImg, "Airy obscuration=0.0")
     do_kvalue(airy2,myImg, "Airy obscuration=0.1")
 
+    # Test initialization separately with lam and diam, in various units.  Since the above profiles
+    # have lam/diam = 1./0.8 in arbitrary units, we will tell it that lam=1.e9 nm and diam=0.8 m,
+    # and use `scale_unit` of galsim.radians.  This is rather silly, but it should work.
+    airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1.7)
+    test_im1 = airy.drawImage(scale=0.2)
+    test_im2 = test_im1.copy()
+    airy2 = galsim.Airy(lam=1.e9, diam=0.8, scale_unit=galsim.radians, obscuration=0.1, flux=1.7)
+    airy2.drawImage(image=test_im2, scale=0.2)
+    np.testing.assert_array_almost_equal(
+            test_im1.array, test_im2.array, 8,
+            err_msg="Using GSObject Airy with different kwargs disagrees with expected result")
+
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
