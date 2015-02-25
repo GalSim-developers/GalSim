@@ -108,7 +108,7 @@ def test_read():
     # We are essentially back to where we started, except the len won't be right.
     # Deleting a key removed an item, but setting it overwrote a blank item.
     # But if we add back another one of these, we should be back to the original values.
-    header.header.append( ('',''), useblanks=False, bottom=True )
+    header.append('','', useblanks=False)
     check_tpv(header)
 
     # Clear all values

@@ -1195,13 +1195,30 @@ class FitsHeader(object):
     def update(self, dict2):
         # dict2 may be a dict or another FitsHeader (or anything that acts like a dict).
         if pyfits_version < '3.1':
-            for k, v in dict2.iteritems:
+            for k, v in dict2.iteritems():
                 self[k] = v
         else:
             self.header.update(dict2)
 
     def values(self):
         return self.header.values()
+
+    def append(self, key, value='', useblanks=True):
+        """Append an item to the end of the header.
+
+        This breaks convention a bit by treating the header more like a list than a dict,
+        but sometimes that is necessary to get the header structured the way you want it.
+
+        @param key          The key of the entry to append
+        @param value        The value of the entry to append
+        @param useblanks    If there are blank entries currently at the end, should they be
+                            overwritten with the new entry? [default: True]
+        """
+        if pyfits_version < '3.1':
+            self.header.ascardlist().append(pyfits.Card(key, value),
+                                            useblanks=useblanks, bottom=True)
+        else:
+            self.header.append((key, value), useblanks=useblanks, bottom=True)
 
 
 # inject write as method of Image class
