@@ -1780,6 +1780,10 @@ def test_Image_view():
     imv.setValue(10,18, 30)
     assert imv(10,18) == 30
     assert im(11,19) == 30
+    imv2 = im.view()
+    imv2.setOrigin(0,0)
+    assert imv.bounds == imv2.bounds
+    assert imv.wcs == imv2.wcs
 
     # Test view with new center
     imv = im.view(center=(0,0))
@@ -1790,6 +1794,10 @@ def test_Image_view():
     imv.setValue(-2,6, 40)
     assert imv(-2,6) == 40
     assert im(11,19) == 40
+    imv2 = im.view()
+    imv2.setCenter(0,0)
+    assert imv.bounds == imv2.bounds
+    assert imv.wcs == imv2.wcs
 
     # Test view with new scale
     imv = im.view(scale=0.17)
@@ -1799,6 +1807,11 @@ def test_Image_view():
     imv.setValue(11,19, 50)
     assert imv(11,19) == 50
     assert im(11,19) == 50
+    imv2 = im.view()
+    imv2.wcs = None
+    imv2.scale = 0.17
+    assert imv.bounds == imv2.bounds
+    assert imv.wcs == imv2.wcs
 
     # Test view with new wcs
     imv = im.view(wcs=galsim.JacobianWCS(0., 0.23, -0.23, 0.))
@@ -1808,6 +1821,10 @@ def test_Image_view():
     imv.setValue(11,19, 60)
     assert imv(11,19) == 60
     assert im(11,19) == 60
+    imv2 = im.view()
+    imv2.wcs = galsim.JacobianWCS(0.,0.23,-0.23,0.)
+    assert imv.bounds == imv2.bounds
+    assert imv.wcs == imv2.wcs
 
     # Go back to original value for that pixel and make sure all are still equal to 17
     im.setValue(11,19, 17)
