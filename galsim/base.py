@@ -1188,7 +1188,7 @@ class GSObject(object):
                     "This is probably an error.  Normally, you should let GalSim "
                     "handle the Pixel convolution for you.  If you want to handle the Pixel "
                     "convolution yourself, you can use method=no_pixel.  Or if you really meant "
-                    "for your profile to include the Pixel and also have GalSim convolve by"
+                    "for your profile to include the Pixel and also have GalSim convolve by "
                     "an _additional_ Pixel, you can suppress this warning by using method=fft.")
 
         # Check for scale if using nx, ny, or bounds
@@ -1266,7 +1266,7 @@ class GSObject(object):
             return self.drawImage(*args, method='sb', **kwargs)
 
     def drawShoot(self, *args, **kwargs):
-        """An obsolete synonym for obj.drawImage(methos='phot')
+        """An obsolete synonym for obj.drawImage(method='phot')
         """
         normalization = kwargs.pop('normalization','f')
         if normalization in ['flux','f']:
@@ -1593,12 +1593,35 @@ class Airy(GSObject):
         >>> diam = 4.0    # meters
         >>> lam_over_diam = (lam * 1.e-9) / diam  # radians
         >>> lam_over_diam *= 206265  # Convert to arcsec
+        >>> airy = galsim.Airy(lam_over_diam)
+
+    Or, use separate keywords for the telescope diameter and wavelength in meters and nanometers,
+    respectively:
+
+        >>> airy = galsim.Airy(lam=lam, diam=diam)
+
+    in which case the user can also choose what units to use for internal descriptions of the light
+    profile using the `scale_unit` keyword (default: galsim.arcsec).  When drawing images, users
+    should then use units of `scale_unit` to specify the pixel scale.
+
 
     @param lam_over_diam    The parameter that governs the scale size of the profile.
                             See above for details about calculating it.
+    @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with
+                            `diam`, and in this case, image scales (`scale`) should be specified in
+                            units of `scale_unit`.
+    @param diam             Telescope diameter in units of meters.  Must be supplied with
+                            `lam`, and in this case, image scales (`scale`) should be specified in
+                            units of `scale_unit`.
     @param obscuration      The linear dimension of a central obscuration as a fraction of the
                             pupil dimension.  [default: 0]
     @param flux             The flux (in photons) of the profile. [default: 1]
+    @param scale_unit       Units used to define the diffraction limit and draw images, if the user
+                            has supplied a separate value for `lam` and `diam`.  Note that the
+                            results of calling methods like getFWHM() will be returned in units of
+                            `scale_unit`, as well.  Should be either a galsim.AngleUnit, or a string
+                            that can be used to construct one (e.g., 'arcsec', 'radians', etc.).
+                            [default: galsim.arcsec]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -1614,15 +1637,35 @@ class Airy(GSObject):
     The latter two are only available if the obscuration is 0.
     """
 
-    # Initialization parameters of the object, with type information
-    _req_params = { "lam_over_diam" : float }
-    _opt_params = { "flux" : float , "obscuration" : float }
-    _single_params = []
+    # Initialization parameters of the object, with type information.
+    # Note that this is not quite right; it's true that either lam_over_diam or lam should be
+    # supplied, but if lam is supplied then diam is required.  Errors in which parameters are used
+    # may be caught either by config or by the python code itself, depending on the particular
+    # error.
+    _req_params = { }
+    _opt_params = { "flux" : float , "obscuration" : float, "diam" : float,
+                    "scale_unit" : str }
+    _single_params = [{ "lam_over_diam" : float , "lam" : float } ]
     _takes_rng = False
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, lam_over_diam, obscuration=0., flux=1., gsparams=None):
+    def __init__(self, lam_over_diam=None, lam=None, diam=None, obscuration=0., flux=1.,
+                 scale_unit=galsim.arcsec, gsparams=None):
+        # Parse arguments: either lam_over_diam in arbitrary units, or lam in nm and diam in m.
+        # If the latter, then get lam_over_diam in units of `scale_unit`, as specified in
+        # docstring.
+        if lam_over_diam is not None:
+            if lam is not None or diam is not None:
+                raise TypeError("If specifying lam_over_diam, then do not specify lam or diam")
+        else:
+            if lam is None or diam is None:
+                raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
+            # In this case we're going to use scale_unit, so parse it in case of string input:
+            if isinstance(scale_unit, basestring):
+                scale_unit = galsim.angle.get_angle_unit(scale_unit)
+            lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
+
         GSObject.__init__(
             self, galsim._galsim.SBAiry(lam_over_diam=lam_over_diam, obscuration=obscuration,
                                         flux=flux, gsparams=gsparams))

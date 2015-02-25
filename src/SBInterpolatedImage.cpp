@@ -53,16 +53,28 @@ namespace galsim {
 
     SBInterpolatedImage::~SBInterpolatedImage() {}
 
-    void SBInterpolatedImage::calculateStepK(double max_stepk) const 
-    { 
-        assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
-        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateStepK(max_stepk); 
-    }
-
-    void SBInterpolatedImage::calculateMaxK(double max_maxk) const 
+    void SBInterpolatedImage::calculateStepK(double max_stepk) const
     {
         assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
-        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateMaxK(max_maxk); 
+        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateStepK(max_stepk);
+    }
+
+    void SBInterpolatedImage::calculateMaxK(double max_maxk) const
+    {
+        assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
+        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateMaxK(max_maxk);
+    }
+
+    void SBInterpolatedImage::forceStepK(double stepk) const 
+    { 
+        assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
+        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).forceStepK(stepk); 
+    }
+
+    void SBInterpolatedImage::forceMaxK(double maxk) const 
+    {
+        assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
+        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).forceMaxK(maxk); 
     }
 
     template <class T>
@@ -725,6 +737,16 @@ namespace galsim {
         // Scale by dk
         _maxk = maxk_ix*dk;
         dbg<<"new maxk = "<<_maxk<<std::endl;
+    }
+
+    void SBInterpolatedImage::SBInterpolatedImageImpl::forceStepK(double stepk) const
+    {
+        _stepk = stepk;
+    }
+
+    void SBInterpolatedImage::SBInterpolatedImageImpl::forceMaxK(double maxk) const
+    {
+        _maxk = maxk;
     }
 
     void SBInterpolatedImage::SBInterpolatedImageImpl::checkReadyToShoot() const 
