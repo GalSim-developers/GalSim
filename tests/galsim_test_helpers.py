@@ -59,6 +59,15 @@ def printval(image1, image2):
     #print "new image.center = ",image1.array[xcen-3:xcen+4,ycen-3:ycen+4]
     #print "saved image.center = ",image2.array[xcen-3:xcen+4,ycen-3:ycen+4]
 
+    if False:
+        import matplotlib.pylab as plt
+        ax1 = plt.subplot(121)
+        ax2 = plt.subplot(122)
+        ax1.imshow(image1.array)
+        ax2.imshow(image2.array)
+        plt.show()
+
+
 def getmoments(image1):
     #print 'shape = ',image1.array.shape
     #print 'bounds = ',image1.bounds
@@ -143,6 +152,7 @@ def do_shoot(prof, img, name):
 
     prof.drawShoot(img2, n_photons=nphot, poisson_flux=False, rng=rng)
     print 'img2.sum => ',img2.array.sum()
+    #printval(img2,img)
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
             err_msg="Photon shooting for %s disagrees with expected result"%name)
@@ -185,19 +195,17 @@ def do_shoot(prof, img, name):
             err_msg="Photon shooting flux normalization for %s disagrees with expected result"%name)
 
 
-def do_kvalue(prof, name):
+def do_kvalue(prof, im1, name):
     """Test that the k-space values are consistent with the real-space values by drawing the
     profile directly (without any convolution, so using fillXValues) and convolved by a tiny
     Gaussian (effectively a delta function).
     """
 
-    im1 = galsim.ImageF(16,16, scale=0.2)
     prof.draw(im1)
 
     delta = galsim.Gaussian(sigma = 1.e-8)
     conv = galsim.Convolve([prof,delta])
-    im2 = galsim.ImageF(16,16, scale=0.2)
-    conv.draw(im2)
+    im2 = conv.draw(im1.copy())
     printval(im1,im2)
     np.testing.assert_array_almost_equal(
             im2.array, im1.array, 3,

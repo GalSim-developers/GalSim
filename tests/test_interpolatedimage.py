@@ -99,7 +99,8 @@ def test_roundtrip():
         do_shoot(interp,image_out,"InterpolatedImage")
 
         # Test kvalues
-        do_kvalue(interp,"InterpolatedImage")
+        test_im = galsim.Image(16,16,scale=0.2)
+        do_kvalue(interp,test_im,"InterpolatedImage")
 
 
     t2 = time.time()

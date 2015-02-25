@@ -27,6 +27,8 @@ New Features
   latter case) aberrations to be wavelength-dependent. (#618)
 - Enable initializing a DES_PSFEx object using a pyfits HDU directly instead
   of a filename. (#626)
+- Added TopHat class implementing a circular tophat profile. (#639)
+
 
 Bug Fixes and Improvements
 --------------------------
@@ -35,7 +37,14 @@ Bug Fixes and Improvements
   The sign is now positive when the angle as seen from the ground sweeps in
   the counter-clockwise direction, which is a more sensible definition than
   what it had used. (#590)
+- Changed the implementation of drawing Box and Pixel profiles in real space
+  (i.e. without being convolved by anything) to actually draw the surface 
+  brightness at the center of each pixel.  This is what all other profiles do,
+  but had not been what a Box or Pixel did. (#639)
 
 
 Updates to config options
 -------------------------
+
+- Added TopHat type. (#639)
+
