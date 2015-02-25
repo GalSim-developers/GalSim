@@ -25,7 +25,7 @@ import numpy as np
 import math
 import os
 
-bandpass = galsim.Bandpass(os.path.join(galsim.meta_data.share_dir, 'wfc_F814W.dat'),
+bandpass = galsim.Bandpass(os.path.join(galsim.meta_data.share_dir, 'wfc_F814W.dat.gz'),
                            wave_type='ang').thin().withZeropoint(25.94)
 
 class Catalog(object):
@@ -341,7 +341,7 @@ def makeCOSMOSCatalog(file_name, use_real=True, image_dir=None, dir=None, noise_
 
         >>>> im_size = 64
         >>>> pix_scale = 0.05
-        >>>> bandpass = galsim.Bandpass('wfc_F814W.dat',
+        >>>> bandpass = galsim.Bandpass('wfc_F814W.dat.gz',
                                         wave_type='ang').thin().withZeropoint(25.94)
         >>>> real_cat = galsim.makeCOSMOSCatalog('real_galaxy_catalog_23.5.fits',
                                                  dir='/path/to/COSMOS/data')
