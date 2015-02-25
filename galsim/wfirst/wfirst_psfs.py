@@ -121,9 +121,12 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                    pupil plane can be quite expensive.  [default: True]
     @param    achromatic           An option to get an achromatic PSF for a single wavelength, for
                                    users who do not care about chromaticity of the PSF.  If False,
-                                   then the fully chromatic PSF is returned.  Otherwise the user
-                                   should supply a wavelength in nanometers, and they will get a
-                                   list of achromatic OpticalPSF objects for that wavelength.
+                                   then the fully chromatic PSF is returned.  Alternatively the user
+                                   should supply either (a) a wavelength in nanometers, and they
+                                   will get a list of achromatic OpticalPSF objects for that
+                                   wavelength, or (b) a bandpass object, in which case they will get
+                                   a list of achromatic OpticalPSF objects defined at the effective
+                                   wavelength of that bandpass.
                                    [default: False]
     @returns  A list of ChromaticOpticalPSF objects, one for each SCA.  The SCAs in WFIRST are
               1-indexed, and the list is indexed according go the SCA, meaning that the 0th object
@@ -163,6 +166,14 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                  (blue_limit, red_limit))
         # Decide on the number of linearly spaced wavelengths to use for the ChromaticOpticalPSF:
         if n_waves is None: n_waves = int((red_limit - blue_limit)/20)
+    else:
+        if isinstance(achromatic, galsim.Bandpass):
+            achromatic_lam = achromatic.effective_wavelength
+        elif isinstance(achromatic, float):
+            achromatic_lam = achromatic
+        else:
+            raise TypeError("Keyword 'achromatic' should either be a Bandpass, float,"
+                            " or False.")
 
     # Start reading in the aberrations for the relevant SCAs.  Take advantage of symmetries, so we
     # don't have to call the reading routine too many times.
@@ -224,13 +235,13 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
             PSF.setupInterpolation(waves=np.linspace(blue_limit, red_limit, n_waves),
                                    oversample_fac=1.5)
         else:
-            tmp_aberrations = use_aberrations * zemax_wavelength / achromatic
+            tmp_aberrations = use_aberrations * zemax_wavelength / achromatic_lam
             if approximate_struts:
-                PSF = galsim.OpticalPSF(lam=achromatic, diam=galsim.wfirst.diameter,
+                PSF = galsim.OpticalPSF(lam=achromatic_lam, diam=galsim.wfirst.diameter,
                                         aberrations=tmp_aberrations,
                                         obscuration=galsim.wfirst.obscuration, nstruts=6)
             else:
-                PSF = galsim.OpticalPSF(lam=achromatic, diam=galsim.wfirst.diameter,
+                PSF = galsim.OpticalPSF(lam=achromatic_lam, diam=galsim.wfirst.diameter,
                                         aberrations=tmp_aberrations,
                                         obscuration=galsim.wfirst.obscuration,
                                         pupil_plane_im=galsim.wfirst.pupil_plane_file,
