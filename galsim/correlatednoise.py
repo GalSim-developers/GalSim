@@ -109,14 +109,14 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         if self.wcs != other.wcs:
             import warnings
             warnings.warn("Adding two CorrelatedNoise objects with different WCS functions.\n"+
-                          "The sum will have the WCS of the first object.")
+                          "The result will have the WCS of the first object.")
         return _BaseCorrelatedNoise(self.getRNG(), self._profile + other._profile, self.wcs)
 
     def __sub__(self, other):
         if self.wcs != other.wcs:
             import warnings
-            warnings.warn("Adding two CorrelatedNoise objects with different WCS functions.\n"+
-                          "The sum will have the WCS of the first object.")
+            warnings.warn("Subtracting two CorrelatedNoise objects with different WCS functions.\n"+
+                          "The result will have the WCS of the first object.")
         return _BaseCorrelatedNoise(self.getRNG(), self._profile - other._profile, self.wcs)
 
     # NB: op* and op/ already work to adjust the overall variance of an object using the operator
@@ -166,11 +166,15 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             >>> noise = galsim.getCOSMOSNoise(rng=rng)
             >>> image.view(wcs=noise.wcs).addNoise(noise)
 
+        This will create noise whose pixel-to-pixel correlations match those of the original
+        correlated noise image (in this case, the COSMOS images).  If the input image has no WCS
+        set, then it will be treated as having the same WCS as the noise.
+
         Note that the correlated noise field in `image` will be periodic across its boundaries: this
         is due to the fact that the internals of the CorrelatedNoise currently use a relatively
         simple implementation of noise generation using the Fast Fourier Transform.  If you wish to
-        avoid this property being present in your final `image` you should applyTo() an `image` of
-        greater extent than you need, and take a subset.
+        avoid this property being present in your final `image` you should add the noise to an
+        `image` of greater extent than you need, and take a subset.
 
         @param image The input Image object.
         """
@@ -200,7 +204,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                                       "image with a non-uniform WCS.")
 
         if image.wcs is None:
-            wcs = galsim.PixelScale(1.0)
+            wcs = self.wcs
         else:
             wcs = image.wcs
 
@@ -243,8 +247,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         is the case for the final noise to be uncorrelated.
 
         Normally, `image.scale` is used to determine the input Image pixel separation, and if
-        `image.wcs` is None, a pixel scale of 1 is assumed.  If the image has a non-trivial WCS, it
-        must at least be "uniform", i.e., `image.wcs.isUniform() == True`.
+        `image.wcs` is None, it will use the wcs of the noise.  If the image has a non-trivial WCS,
+        it must at least be "uniform", i.e., `image.wcs.isUniform() == True`.
 
         If you are interested in a theoretical calculation of the variance in the final noise field
         after whitening, the whitenImage() method in fact returns this variance.  For example:
@@ -297,7 +301,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile_for_stored = self._profile
 
         if image.wcs is None:
-            wcs = galsim.PixelScale(1.0)
+            wcs = self.wcs
         else:
             wcs = image.wcs
 
@@ -347,8 +351,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         is the case for the final noise correlation function to be symmetric in the requested way.
 
         Normally, `image.scale` is used to determine the input Image pixel separation, and if
-        `image.wcs` is None, a pixel scale of 1 is assumed.  If the image has a non-trivial WCS, it
-        must at least be "uniform", i.e., `image.wcs.isUniform() == True`.
+        `image.wcs` is None, it will use the wcs of the noise.  If the image has a non-trivial WCS,
+        it must at least be "uniform", i.e., `image.wcs.isUniform() == True`.
 
         If you are interested in a theoretical calculation of the variance in the final noise field
         after imposing symmetry, the symmetrizeImage() method in fact returns this variance.
@@ -394,7 +398,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile_for_stored = self._profile
 
         if image.wcs is None:
-            wcs = galsim.PixelScale(1.0)
+            wcs = self.wcs
         else:
             wcs = image.wcs
 
@@ -711,21 +715,19 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         automatically set to 'sb' and cannot be changed, and the `gain` is set to unity.
         Also, not all the normal parameters of the GSObject method are available.
 
+        It `scale` and `wcs` are not set, and the `image` has no `wcs` attribute, then this will
+        use the wcs of the CorrelatedNoise object.
+
         @param image        If provided, this will be the image on which to draw the profile.
                             If `image` is None, then an automatically-sized Image will be created.
                             If `image` is given, but its bounds are undefined (e.g. if it was
                             constructed with `image = galsim.Image()`), then it will be resized
                             appropriately based on the profile's size [default: None].
-        @param scale        If provided, use this as the pixel scale for the image.
-                            If `scale` is None and `image` is given, then take the provided
-                            image's pixel scale.
-                            If `scale` is None and `image` is None, then use the Nyquist scale.
-                            If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
-                            If `scale > 0` and `image` is given, then override `image.scale` with
-                            the value given as a keyword. [default: None]
+        @param scale        If provided, use this as the pixel scale for the image.  [default: None]
         @param wcs          If provided, use this as the wcs for the image (possibly overriding any
                             existing `image.wcs`).  At most one of `scale` or `wcs` may be provided.
-                            [default: None]
+                            [default: None]  Note: If no WCS is provided either via `scale`, `wcs`
+                            or `image.wcs`, then the noise object's wcs will be used.
         @param dtype        The data type to use for an automatically constructed image.  Only
                             valid if `image` is None. [default: None, which means to use
                             numpy.float32]
@@ -743,8 +745,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Check for obsolete dx parameter
         if dx is not None and scale is None: scale = dx
 
+        wcs = self._profile._determine_wcs(scale, wcs, image, self.wcs)
+
         return self._profile.drawImage(
-            image=image, scale=scale, wcs=wcs, dtype=dtype, method='sb', gain=1., wmult=wmult,
+            image=image, wcs=wcs, dtype=dtype, method='sb', gain=1., wmult=wmult,
             add_to_image=add_to_image, use_true_center=False)
 
     def draw(self, *args, **kwargs):
@@ -1461,7 +1465,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
 
     If your image has some other pixel scale or a complicated WCS, then the applied noise will
     have the correct correlations in world coordinates, which may not be what you wanted if you
-    wanted the pixel-to-pixel correlations to match the COSMOS noise profile.  However, in
+    expected the pixel-to-pixel correlations to match the COSMOS noise profile.  However, in
     this case, you would want to view your image with the COSMOS pixel scale when you apply
     the noise:
 
