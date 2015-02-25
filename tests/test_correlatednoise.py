@@ -1183,66 +1183,71 @@ def test_cosmos_wcs():
     """
     t1 = time.time()
 
-    cn_cosmos = galsim.getCOSMOSNoise(rng=galsim.BaseDeviate(rseed), variance=1.7)
+    var = 1.7
+    rng = galsim.BaseDeviate(8675309)
+    cn_cosmos = galsim.getCOSMOSNoise(rng=rng, variance=var)
     cosmos_scale = 0.03
 
     # Shear it significantly to amplify the directionality of the correlations.
     cn_orig = cn_cosmos.shear(e2=0.7)
 
-    # im1 has a trivial WCS.
-    im1 = galsim.ImageD(3 * largeim_size, 3 * largeim_size, scale=cosmos_scale)
-    im1.addNoise(cn_orig)
-    im1.write('im1.fits')
+    test_wcs_list = [
+        galsim.PixelScale(cosmos_scale),                            # Same as original
+        #galsim.PixelScale(2.*cosmos_scale),                         # 2x larger pixels
+        galsim.PixelScale(0.5*cosmos_scale),                        # 2x smaller pixels
+        galsim.JacobianWCS(0., cosmos_scale, -cosmos_scale, 0.),    # 90 degrees rotated
+    ]
+    # The test doesn't work for the big pixels.  When drawing on such an image, there
+    # is too much information lost by sampling on the effectively larger grid, so the
+    # measured correlation function is unable to recover the original noise correlations
+    # correctly.  I don't think this is a problem, so don't include that in the test list.
 
-    # im2 has a larger pixel scale.
-    im2 = galsim.ImageD(3 * largeim_size, 3 * largeim_size, scale=2*cosmos_scale)
-    im2.addNoise(cn_orig)
-    im2.write('im2.fits')
+    # This test isn't super fast, so for regular unit tests, just do the last one.
+    if __name__ != "__main__":
+        test_wcs_list = test_wcs_list[-1:]
 
-    # im3 has a smaller pixel scale.
-    im3 = galsim.ImageD(3 * largeim_size, 3 * largeim_size, scale=0.5*cosmos_scale)
-    im3.addNoise(cn_orig)
-    im3.write('im3.fits')
+    for k, test_wcs in enumerate(test_wcs_list):
+        print test_wcs
+        test_im = galsim.ImageD(3 * largeim_size, 3 * largeim_size, wcs=test_wcs)
 
-    # im4 has the original scale, but rotated 90 degrees
-    rot = galsim.JacobianWCS(0., cosmos_scale, -cosmos_scale, 0.)
-    im4 = galsim.ImageD(3 * largeim_size, 3 * largeim_size, wcs=rot)
-    im4.addNoise(cn_orig)
-    im4.write('im4.fits')
+        # This adds the noise respecting the different WCS functions in the two cases.
+        test_im.addNoise(cn_orig)
+        cn_test = galsim.CorrelatedNoise(test_im)
 
-    # im2b,im3b,im4b are views of im2,im3,im4 with just the regular pixel scale wcs
-    im2b = im2.view()
-    im3b = im3.view()
-    im4b = im4.view()
-    im2b.wcs = galsim.PixelScale(cosmos_scale)
-    im3b.wcs = galsim.PixelScale(cosmos_scale)
-    im4b.wcs = galsim.PixelScale(cosmos_scale)
+        # The "raw" correlation function treats the image as having the cosmos pixel_scale
+        cn_raw = galsim.CorrelatedNoise(test_im.view(scale=cosmos_scale))
 
-    # Estimate correlation function in each case
-    cn_test1 = galsim.CorrelatedNoise(im1)
-    cn_test2 = galsim.CorrelatedNoise(im2)
-    cn_test3 = galsim.CorrelatedNoise(im3)
-    cn_test4 = galsim.CorrelatedNoise(im4)
-    cn_test2b = galsim.CorrelatedNoise(im2b)
-    cn_test3b = galsim.CorrelatedNoise(im3b)
-    cn_test4b = galsim.CorrelatedNoise(im4b)
+        # Check basic correlation function values of the 3x3 pixel region around (0,0)
+        for xpos, ypos in zip((0., cosmos_scale, 0., cosmos_scale, cosmos_scale), 
+                              (0., 0., cosmos_scale, -cosmos_scale, cosmos_scale)):
+            pos = galsim.PositionD(xpos, ypos)
+            cf_orig = cn_orig._profile.xValue(pos)
+            cf_test = cn_test._profile.xValue(pos)
+            cf_raw = cn_raw._profile.xValue(pos)
+            print pos, cf_orig, cf_test, cf_raw
+            np.testing.assert_almost_equal(
+                    cf_orig/var, cf_test/var, decimal=2,
+                    err_msg='Drawing COSMOS noise on image with WCS did not ' +
+                    'recover correct covariance at positions '+str(pos))
 
-    # Check basic correlation function values of the 3x3 pixel region around (0,0)
-    print ('{:30s} ' + '{:^7s} '*8).format(
-            ' ','orig','same','big','small','rot','big/raw','sm/raw','rot/raw')
-    for xpos, ypos in zip((0., cosmos_scale, 0., cosmos_scale, cosmos_scale), 
-                          (0., 0., cosmos_scale, -cosmos_scale, cosmos_scale)):
-        pos = galsim.PositionD(xpos, ypos)
-        cf0 = cn_orig._profile.xValue(pos)
-        cf1 = cn_test1._profile.xValue(pos)
-        cf2 = cn_test2._profile.xValue(pos)
-        cf3 = cn_test3._profile.xValue(pos)
-        cf4 = cn_test4._profile.xValue(pos)
-        cf2b = cn_test2b._profile.xValue(pos)
-        cf3b = cn_test3b._profile.xValue(pos)
-        cf4b = cn_test4b._profile.xValue(pos)
-        print ('Covariance at {:14s}: ' + '{:7.3f} '*8).format(
-                str(pos),cf0,cf1,cf2,cf3,cf4,cf2b,cf3b,cf4b)
+        # Repeat, but this time adding the noise to a view with the cosmos pixel scale
+        test_im.setZero()
+        test_im.view(wcs=cn_orig.wcs).addNoise(cn_orig)
+        cn_test = galsim.CorrelatedNoise(test_im)
+        cn_raw = galsim.CorrelatedNoise(test_im.view(scale=cosmos_scale))
+
+        # This time it is the raw cf values that should match.
+        for xpos, ypos in zip((0., cosmos_scale, 0., cosmos_scale, cosmos_scale), 
+                              (0., 0., cosmos_scale, -cosmos_scale, cosmos_scale)):
+            pos = galsim.PositionD(xpos, ypos)
+            cf_orig = cn_orig._profile.xValue(pos)
+            cf_test = cn_test._profile.xValue(pos)
+            cf_raw = cn_raw._profile.xValue(pos)
+            print pos, cf_orig, cf_test, cf_raw
+            np.testing.assert_almost_equal(
+                    cf_orig/var, cf_raw/var, decimal=2,
+                    err_msg='Drawing COSMOS noise on view with cosmos pixel scale did not '+
+                    'recover correct covariance at positions '+str(pos))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
