@@ -141,6 +141,11 @@ class Series(object):
         imim = np.einsum('ijk,i', imcube, coeffs)
         return galsim.Image(reim), galsim.Image(imim)
 
+    def kValue(self, *args, **kwargs):
+        kvals = [obj.kValue(*args, **kwargs) for obj in self.getBasisFuncs()]
+        coeffs = self.getCoeffs()
+        return np.dot(kvals, coeffs)
+
     def getCoeffs(self):
         raise NotImplementedError("subclasses of Series must define getCoeffs() method")
 
