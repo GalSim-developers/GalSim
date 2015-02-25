@@ -306,36 +306,41 @@ class SpergelSeries(Series):
         return self._applyMatrix(R)
 
     def _decomposeA(self):
-        A = self._A
-        a = A[0,0]
-        b = A[0,1]
-        c = A[1,0]
-        d = A[1,1]
-        mu = math.sqrt(a*d-b*c)
-        phi0 = math.atan2(c-b, a+d)
-        beta = math.atan2(b+c, a-d)+phi0
-        eta = math.acosh(0.5*((a-d)**2 + (b+c)**2)/mu**2 + 1.0)
+        if not hasattr(self, 'ellip'):
+            A = self._A
+            a = A[0,0]
+            b = A[0,1]
+            c = A[1,0]
+            d = A[1,1]
+            mu = math.sqrt(a*d-b*c)
+            phi0 = math.atan2(c-b, a+d)
+            beta = math.atan2(b+c, a-d)+phi0
+            eta = math.acosh(0.5*((a-d)**2 + (b+c)**2)/mu**2 + 1.0)
 
-        # print "mu: {}".format(mu)
-        # print "phi0: {}".format(phi0)
-        # print "beta: {}".format(beta)
-        # print "eta: {}".format(eta)
-        
-        ellip = galsim.Shear(eta1=eta).e1
-        r0 = mu/np.sqrt(1.0 - ellip**2)
-        # find the nearest r_i:
-        f, i = np.modf(np.log(r0)/self.dlnr)
-        # deal with negative logs
-        if f < 0.0:
-            f += 1.0
-            i -= 1
-        # if f > 0.5, then round down from above
-        if f > 0.5:
-            f -= 1.0
-            i += 1
-        scale_radius = np.exp(self.dlnr*i)
-        Delta = 1.0 - (r0/scale_radius)**2
-        return ellip, phi0+beta/2, scale_radius, Delta
+            # print "mu: {}".format(mu)
+            # print "phi0: {}".format(phi0)
+            # print "beta: {}".format(beta)
+            # print "eta: {}".format(eta)
+
+            ellip = galsim.Shear(eta1=eta).e1
+            r0 = mu/np.sqrt(np.sqrt(1.0 - ellip**2))
+            # find the nearest r_i:
+            f, i = np.modf(np.log(r0)/self.dlnr)
+            # deal with negative logs
+            if f < 0.0:
+                f += 1.0
+                i -= 1
+            # if f > 0.5, then round down from above
+            if f > 0.5:
+                f -= 1.0
+                i += 1
+            scale_radius = np.exp(self.dlnr*i)
+            Delta = 1.0 - (r0/scale_radius)**2
+            self.ellip = ellip
+            self.phi0 = phi0+beta/2
+            self.scale_radius = scale_radius
+            self.Delta = Delta
+        return self.ellip, self.phi0, self.scale_radius, self.Delta
         
         
 class Spergelet(galsim.GSObject):
