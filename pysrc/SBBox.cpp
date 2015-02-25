@@ -35,29 +35,32 @@ namespace galsim {
     struct PySBBox 
     {
 
-        static SBBox* construct(const bp::object & width, const bp::object & height, double flux,
-                                boost::shared_ptr<GSParams> gsparams) 
-        {
-            if (width.ptr() == Py_None || height.ptr() == Py_None) {
-                PyErr_SetString(PyExc_TypeError, "SBBox requires width and height parameters");
-                bp::throw_error_already_set();
-            }
-            return new SBBox(bp::extract<double>(width), bp::extract<double>(height), flux,
-                             gsparams);
-        }
-
         static void wrap() 
         {
             bp::class_<SBBox,bp::bases<SBProfile> >("SBBox", bp::no_init)
-                .def("__init__", bp::make_constructor(
-                        &construct, bp::default_call_policies(),
-                        (bp::arg("width")=bp::object(), bp::arg("height")=bp::object(), 
-                         bp::arg("flux")=1.,
+                .def(bp::init<double,double,double,boost::shared_ptr<GSParams> >(
+                        (bp::arg("width"), bp::arg("height"), bp::arg("flux")=1.,
                          bp::arg("gsparams")=bp::object())
                 ))
-                .def(bp::init<const SBBox &>())
+                .def(bp::init<const SBBox&>())
                 .def("getWidth", &SBBox::getWidth)
                 .def("getHeight", &SBBox::getHeight)
+                ;
+        }
+    };
+
+    struct PySBTopHat 
+    {
+
+        static void wrap() 
+        {
+            bp::class_<SBTopHat,bp::bases<SBProfile> >("SBTopHat", bp::no_init)
+                .def(bp::init<double,double,boost::shared_ptr<GSParams> >(
+                        (bp::arg("radius"), bp::arg("flux")=1.,
+                         bp::arg("gsparams")=bp::object())
+                ))
+                .def(bp::init<const SBTopHat&>())
+                .def("getRadius", &SBTopHat::getRadius)
                 ;
         }
     };
@@ -65,6 +68,7 @@ namespace galsim {
     void pyExportSBBox() 
     {
         PySBBox::wrap();
+        PySBTopHat::wrap();
     }
 
 } // namespace galsim
