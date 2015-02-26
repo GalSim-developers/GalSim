@@ -378,9 +378,3 @@ class Spergelet(galsim.GSObject):
         """Return the jq indices for this Spergelet.
         """
         return self.SBProfile.getJ(), self.SBProfile.getQ()
-
-class KolmogorovSeries(Series):
-    pass
-
-class Kolmogorovlet(galsim.GSObject):
-    pass
