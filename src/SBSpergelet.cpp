@@ -96,18 +96,10 @@ namespace galsim {
 
         _r0_sq = _r0 * _r0;
         _inv_r0 = 1. / _r0;
-        _xnorm = _info->getXNorm() / _r0_sq;
     }
 
     double SBSpergelet::SBSpergeletImpl::maxK() const { return _info->maxK() * _inv_r0; }
     double SBSpergelet::SBSpergeletImpl::stepK() const { return _info->stepK() * _inv_r0; }
-
-    // double SBSpergelet::SBSpergeletImpl::xValue(const Position<double>& p) const
-    // {
-    //     double r = sqrt(p.x * p.x + p.y * p.y) * _inv_r0;
-    //     double phi = atan2(p.y, p.x);
-    //     return _xnorm * _info->xValue(r, phi);
-    // }
 
     // Modified equation (47) of Spergel (2010)
     std::complex<double> SBSpergelet::SBSpergeletImpl::kValue(const Position<double>& k) const
@@ -117,49 +109,10 @@ namespace galsim {
         return _info->kValue(ksq, phi);
     }
 
-    // TODO: Figure this out
-    double SBSpergelet::SBSpergeletImpl::getFlux() const
-    {
-        return 1.;
-    }
-
-    // void SBSpergelet::SBSpergeletImpl::fillXValue(tmv::MatrixView<double> val,
-    //                                               double x0, double dx, int izero,
-    //                                               double y0, double dy, int jzero) const
+    // // TODO: Figure this out
+    // double SBSpergelet::SBSpergeletImpl::getFlux() const
     // {
-    //     dbg<<"SBSpergelet fillXValue\n";
-    //     dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
-    //     dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
-    //     // Not sure about quadrant.  Spergelets are sometimes even and sometimes odd.
-    //     // if (izero != 0 || jzero != 0) {
-    //     //     xdbg<<"Use Quadrant\n";
-    //     //     fillXValueQuadrant(val,x0,dx,izero,y0,dy,jzero);
-    //     //     // Spergels can be super peaky at the center, so handle explicitly like Sersics
-    //     //     if (izero != 0 && jzero != 0)
-    //     //         val(izero, jzero) = _xnorm * _info->xValue(0.);
-    //     // } else {
-    //         xdbg<<"Non-Quadrant\n";
-    //         assert(val.stepi() == 1);
-    //         const int m = val.colsize();
-    //         const int n = val.rowsize();
-    //         typedef tmv::VIt<double,1,tmv::NonConj> It;
-
-    //         x0 *= _inv_r0;
-    //         dx *= _inv_r0;
-    //         y0 *= _inv_r0;
-    //         dy *= _inv_r0;
-
-    //         for (int j=0;j<n;++j,y0+=dy) {
-    //             double x = x0;
-    //             double ysq = y0*y0;
-    //             It valit = val.col(j).begin();
-    //             for (int i=0;i<m;++i,x+=dx) {
-    //                 double r = sqrt(x*x + ysq);
-    //                 double phi = atan2(y0, x);
-    //                 *valit++ = _xnorm * _info->xValue(r, phi);
-    //             }
-    //         }
-    //     // }
+    //     return 1.;
     // }
 
     void SBSpergelet::SBSpergeletImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
@@ -169,7 +122,7 @@ namespace galsim {
         dbg<<"SBSpergelet fillKValue\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dky<<", jzero = "<<jzero<<std::endl;
-        // Not sure about quadrant.  Spergelets are sometimes even, sometimes odd.
+        // Not sure about quadrant.  Spergelets have different symmetries than most other profiles.
         // if (izero != 0 || jzero != 0) {
         //     xdbg<<"Use Quadrant\n";
         //     fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
@@ -199,39 +152,6 @@ namespace galsim {
         // }
     }
 
-    // void SBSpergelet::SBSpergeletImpl::fillXValue(tmv::MatrixView<double> val,
-    //                                               double x0, double dx, double dxy,
-    //                                               double y0, double dy, double dyx) const
-    // {
-    //     dbg<<"SBSpergelet fillXValue\n";
-    //     dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
-    //     dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
-    //     assert(val.stepi() == 1);
-    //     assert(val.canLinearize());
-    //     const int m = val.colsize();
-    //     const int n = val.rowsize();
-    //     typedef tmv::VIt<double,1,tmv::NonConj> It;
-
-    //     x0 *= _inv_r0;
-    //     dx *= _inv_r0;
-    //     dxy *= _inv_r0;
-    //     y0 *= _inv_r0;
-    //     dy *= _inv_r0;
-    //     dyx *= _inv_r0;
-
-    //     It valit = val.linearView().begin();
-    //     for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
-    //         double x = x0;
-    //         double y = y0;
-    //         It valit = val.col(j).begin();
-    //         for (int i=0;i<m;++i,x+=dx,y+=dyx) {
-    //             double r = sqrt(x*x + y*y);
-    //             double phi = atan2(y,x);
-    //             *valit++ = _xnorm * _info->xValue(r, phi);
-    //         }
-    //     }
-    // }
-
     void SBSpergelet::SBSpergeletImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
                                                   double kx0, double dkx, double dkxy,
                                                   double ky0, double dky, double dkyx) const
@@ -252,12 +172,10 @@ namespace galsim {
         dky *= _r0;
         dkyx *= _r0;
 
-        //It valit(val.linearView().begin().getP());
         It valit = val.linearView().begin();
         for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
             double kx = kx0;
             double ky = ky0;
-            //It valit(val.col(j).begin().getP(),1);
             for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) {
                 double ksq = kx*kx + ky*ky;
                 double phi = atan2(ky,kx);
@@ -272,8 +190,7 @@ namespace galsim {
         _gamma_nup2(_gamma_nup1 * (_nu+1.0)),
         _gamma_nupjp1(boost::math::tgamma(_nu+_j+1.0)),
         _knorm(_gamma_nupjp1/_gamma_nup1),
-        _maxk(0.), _stepk(0.),
-        _ft(Table<double,double>::spline)
+        _maxk(0.), _stepk(0.)
     {
         dbg<<"Start SpergeletInfo constructor for nu = "<<_nu<<std::endl;
 
@@ -349,10 +266,6 @@ namespace galsim {
         return _maxk;
     }
 
-    // TODO: Figure this out!
-    double SpergeletInfo::getXNorm() const
-    { return 1.0; }
-
     double SpergeletInfo::kValue(double ksq, double phi) const
     {
         double amplitude = _knorm * std::pow(ksq, _j) * std::pow(1.+ksq, -1.-_nu-_j);
@@ -364,82 +277,4 @@ namespace galsim {
             return amplitude;
     }
 
-//     double SpergeletInfo::xValue(double r, double phi) const
-//     {
-//         if (_ft.size() == 0) buildFT();
-//         return _ft(r) * std::cos(2*_q*phi);
-//     }
-
-//     class SpergeletIntegrand : public std::unary_function<double, double>
-//     {
-//     public:
-//         SpergeletIntegrand(double nu, int j, int q, double r) :
-//             _nu(nu), _j(j), _q(q), _r(r) {}
-//         double operator()(double k) const
-//         { return std::pow(k, 2.*_j)*std::pow(1+k*k, -1.-_nu-_j)
-//                  *k*boost::math::cyl_bessel_j(2*_q, k*_r);}
-
-//     private:
-//         double _nu;
-//         int _j;
-//         int _q;
-//         double _r;
-//     };
-
-//     void SpergeletInfo::buildFT() const
-//     {
-//         if (_ft.size() > 0) return;
-//         dbg<<"Building Spergelet Hankel transform"<<std::endl;
-//         dbg<<"nu = "<<_nu<<std::endl;
-//         // Do a Hankel transform and store the results in a lookup table.
-//         double prefactor = _knorm;
-//         dbg<<"prefactor = "<<prefactor<<std::endl;
-
-//         // // Along the way, find the last k that has a kValue > 1.e-3
-//         // double maxk_val = this->_gsparams->maxk_threshold;
-//         // dbg<<"Looking for maxk_val = "<<maxk_val<<std::endl;
-//         // // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
-//         // // (It's oscillatory, so want to make sure not to stop at a zero crossing.)
-
-//         // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
-//         // I have no idea what range the fourth derivative can take for the Hankel transform,
-//         // so let's take the completely arbitrary value of 10.  (This value was found to be
-//         // conservative for Sersic, but I haven't investigated here.)
-//         // 10 h^4 <= xvalue_accuracy
-//         // h = (xvalue_accuracy/10)^0.25
-//         double dr = _gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
-//         dbg<<"Using dr = "<<dr<<std::endl;
-
-//         double rmin = dr; // have to begin somewhere...
-//         for (double r = rmin; r < M_PI/_stepk; r += dr) {
-//             SpergeletIntegrand I(_nu, _j, _q, r);
-
-// #ifdef DEBUGLOGGING
-//             std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
-//             integ::IntRegion<double> reg(0, 30.0, integ_dbgout);
-// #else
-//             integ::IntRegion<double> reg(0, 30.0);
-// #endif
-
-//             // Add explicit splits at first several roots of Jn.
-//             // This tends to make the integral more accurate.
-//             for (int s=1; s<=30; ++s) {
-//                 double root = boost::math::cyl_bessel_j_zero(double(2*_q), s);
-//                 if (root > r*30.0) break;
-//                 xxdbg<<"root="<<root/r<<std::endl;
-//                 reg.addSplit(root/r);
-//             }
-//             xxdbg<<"int reg = ("<<0<<","<<30<<")"<<std::endl;
-
-//             double val = integ::int1d(
-//                 I, reg,
-//                 this->_gsparams->integration_relerr,
-//                 this->_gsparams->integration_abserr);
-//             val *= prefactor;
-
-//             xdbg<<"ft("<<r<<") = "<<val<<"   "<<val<<std::endl;
-
-//             _ft.addEntry(r, val);
-//         }
-//     }
 }

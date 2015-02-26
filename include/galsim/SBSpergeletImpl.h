@@ -33,35 +33,18 @@ namespace galsim {
         /// @brief Constructor
         SpergeletInfo(double nu, int j, int q, const GSParamsPtr& gsparams);
 
-        /// @brief Destructor: deletes photon-shooting classes if necessary
+        /// @brief Destructor.
         ~SpergeletInfo() {}
-
-        /**
-         * @brief Returns the unnormalized real space value of the Spergelet function.
-         *
-         * The input `r` should be (r_actual / r0).
-         * The returned value should then be multiplied by flux * getXNorm() / r0^2
-         */
-        //double xValue(double r, double phi) const;
 
         /**
          * @brief Returns the unnormalized value of the fourier transform.
          *
          * The input `ksq` should be (k_actual^2 * r0^2).
-         * The returned value should then be multiplied by flux.
          */
         double kValue(double ksq, double phi) const;
 
         double maxK() const;
         double stepK() const;
-
-        /**
-         * @brief The factor by which to multiply the returned value from xValue.
-         *
-         * Since the returned value needs to be multiplied by flux/r0^2 anyway, we also let
-         * the caller of xValue multiply by the normalization, which we calculate for them here.
-         */
-        double getXNorm() const;
 
     private:
 
@@ -83,11 +66,7 @@ namespace galsim {
         mutable double _maxk;    ///< Value of k beyond which aliasing can be neglected.
         mutable double _stepk;   ///< Sampling in k space necessary to avoid folding.
 
-        // Parameters for the Hankel transform:
-        mutable Table<double,double> _ft; ///< Lookup table for Fourier transform
-
         // Helper functions used internally:
-        // void buildFT() const;
         double calculateFluxRadius(const double& flux_frac) const;
     };
 
@@ -98,7 +77,6 @@ namespace galsim {
 
         ~SBSpergeletImpl() {}
 
-        //double xValue(const Position<double>& p) const;
         double xValue(const Position<double>& p) const
         { throw SBError("SBSpergelet::shoot() is not implemented"); }
 
@@ -115,8 +93,6 @@ namespace galsim {
         Position<double> centroid() const
         { return Position<double>(0., 0.); } // TODO: Is this true?
 
-        double getFlux() const;
-
         /// @brief Returns the Spergel index nu
         double getNu() const { return _nu; }
         /// @brief Returns the scale radius
@@ -130,13 +106,6 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const
         { throw SBError("SBSpergelet::shoot() is not implemented"); }
 
-        // Overrides for better efficiency
-        // void fillXValue(tmv::MatrixView<double> val,
-        //                 double x0, double dx, int ix_zero,
-        //                 double y0, double dy, int iy_zero) const;
-        // void fillXValue(tmv::MatrixView<double> val,
-        //                 double x0, double dx, double dxy,
-        //                 double y0, double dy, double dyx) const;
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
                         double x0, double dx, int ix_zero,
                         double y0, double dy, int iy_zero) const;

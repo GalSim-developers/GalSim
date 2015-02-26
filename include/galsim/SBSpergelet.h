@@ -56,11 +56,6 @@ namespace galsim {
     class SBSpergelet : public SBProfile
     {
     public:
-        // enum  RadiusType
-        // {
-        //     HALF_LIGHT_RADIUS,
-        //     SCALE_RADIUS
-        // };
         /**
          * @brief Constructor - note that `r0` is scale length, NOT half-light radius `re` as in
          * SBSersic.
@@ -87,7 +82,7 @@ namespace galsim {
         /// @brief Returns the scale radius of the Spergel profile.
         double getScaleRadius() const;
 
-        /// @brief Return jmn indices of the Spergelet.
+        /// @brief Return jq indices of the Spergelet.
         int getJ() const;
         int getQ() const;
 
