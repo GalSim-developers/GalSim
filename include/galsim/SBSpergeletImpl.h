@@ -80,6 +80,9 @@ namespace galsim {
         double xValue(const Position<double>& p) const
         { throw SBError("SBSpergelet::shoot() is not implemented"); }
 
+        double getFlux() const
+        { return 1.0; }
+
         std::complex<double> kValue(const Position<double>& k) const;
 
         double maxK() const;
