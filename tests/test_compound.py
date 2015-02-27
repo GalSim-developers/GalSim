@@ -36,8 +36,7 @@ except ImportError:
 default_params = galsim.GSParams(
         minimum_fft_size = 128,
         maximum_fft_size = 4096,
-        #folding_threshold = 5.e-3,
-        alias_threshold = 5.e-3,
+        folding_threshold = 5.e-3,
         maxk_threshold = 1.e-3,
         kvalue_accuracy = 1.e-5,
         xvalue_accuracy = 1.e-5,

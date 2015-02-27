@@ -39,8 +39,7 @@ test_flux = 1.8
 default_params = galsim.GSParams(
         minimum_fft_size = 128,
         maximum_fft_size = 4096,
-        #folding_threshold = 5.e-3,
-        alias_threshold = 5.e-3,
+        folding_threshold = 5.e-3,
         maxk_threshold = 1.e-3,
         kvalue_accuracy = 1.e-5,
         xvalue_accuracy = 1.e-5,
@@ -401,8 +400,7 @@ def test_rescale():
 
     # With lower folding_threshold and maxk_threshold, the calculated flux should come out right 
     # so long as we also convolve by a pixel:
-    #gsp1 = galsim.GSParams(folding_threshold=1.e-3, maxk_threshold=5.e-4)
-    gsp1 = galsim.GSParams(alias_threshold=1.e-3, maxk_threshold=5.e-4)
+    gsp1 = galsim.GSParams(folding_threshold=1.e-3, maxk_threshold=5.e-4)
     sersic_acc = galsim.Sersic(n=3, flux=1, half_light_radius=1, gsparams=gsp1)
     myImg2 = sersic_acc.drawImage(scale=dx, use_true_center=False)
     print myImg2.array.sum(), myImg2.added_flux
@@ -419,8 +417,7 @@ def test_rescale():
 
     # Check that the flux works out when adding multiple times.
     # With a Gaussian, we can take the thresholds even lower and get another digit of accuracy.
-    #gsp2 = galsim.GSParams(folding_threshold=1.e-5, maxk_threshold=1.e-5)
-    gsp2 = galsim.GSParams(alias_threshold=1.e-5, maxk_threshold=1.e-5)
+    gsp2 = galsim.GSParams(folding_threshold=1.e-5, maxk_threshold=1.e-5)
     gauss = galsim.Gaussian(flux=1.e5, sigma=2., gsparams=gsp2)
     myImg2 = gauss.drawImage(scale=dx, use_true_center=False)
     print 'image size = ',myImg2.array.shape
