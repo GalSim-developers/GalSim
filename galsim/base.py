@@ -999,9 +999,10 @@ class GSObject(object):
         @returns the drawn Image.
         """
         # Check for obsolete dx parameter
-        from .deprecated import depr
-        depr('dx', 1.1, 'scale')
-        if dx is not None and scale is None: scale = dx
+        if dx is not None and scale is None:
+            from .deprecated import depr
+            depr('dx', 1.1, 'scale')
+            scale = dx
 
         # Check that image is sane
         if image is not None and not isinstance(image, galsim.Image):
@@ -1187,9 +1188,10 @@ class GSObject(object):
         @returns the tuple of Image instances, `(re, im)` (created if necessary)
         """
         # Check for obsolete dk parameter
-        from .deprecated import depr
-        depr('dx', 1.1, 'scale')
-        if dk is not None and scale is None: scale = dk
+        if dk is not None and scale is None:
+            from .deprecated import depr
+            depr('dx', 1.1, 'scale')
+            scale = dk
 
         # Make sure the type of gain is correct and has a valid value:
         if type(gain) != float:

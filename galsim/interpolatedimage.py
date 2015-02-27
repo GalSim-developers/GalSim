@@ -256,9 +256,10 @@ class InterpolatedImage(GSObject):
                  use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None,
                  _force_stepk=None, _force_maxk=None):
         # Check for obsolete dx parameter
-        from galsim.deprecated import depr
-        depr('dx', 1.1, 'scale')
-        if dx is not None and scale is None: scale = dx
+        if dx is not None and scale is None:
+            from galsim.deprecated import depr
+            depr('dx', 1.1, 'scale')
+            scale = dx
 
         import numpy
 
