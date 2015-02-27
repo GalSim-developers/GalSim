@@ -705,14 +705,19 @@ class GSObject(object):
                 # Let python raise the appropriate exception if this isn't valid.
                 return galsim.PositionD(offset[0], offset[1])
 
-
-    def _fix_center(self, image, offset, use_true_center, reverse):
-        # Note: this assumes self is in terms of image coordinates.
-        if image is None or not image.bounds.isDefined():
-            shape = (0,0)
-        else:
+    def _get_shape(self, image, nx, ny, bounds):
+        if image is not None and image.bounds.isDefined():
             shape = image.array.shape
+        elif nx is not None and ny is not None:
+            shape = (ny,nx)
+        elif bounds is not None and bounds.isDefined():
+            shape = (bounds.ymax-bounds.ymin+1, bounds.xmax-bounds.xmin+1)
+        else:
+            shape = (0,0)
+        return shape
 
+    def _fix_center(self, shape, offset, use_true_center, reverse):
+        # Note: this assumes self is in terms of image coordinates.
         if use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the
             # pixel just up and right of the real center.  So shift it back to make sure it really
@@ -1108,7 +1113,8 @@ class GSObject(object):
             prof = galsim.Convolve(prof, galsim.Pixel(scale = 1.0), real_space=real_space)
 
         # Apply the offset, and possibly fix the centering for even-sized images
-        prof = prof._fix_center(image, offset, use_true_center, reverse=False)
+        shape = prof._get_shape(image, nx, ny, bounds)
+        prof = prof._fix_center(shape, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
         image = prof._setup_image(image, nx, ny, bounds, wmult, add_to_image, dtype)

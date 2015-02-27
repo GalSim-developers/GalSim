@@ -283,13 +283,36 @@ def test_drawImage():
     # Test if we provide nx, ny, and scale.  It should:
     #   - create a new image with the right size
     #   - set the scale
-    im10 = obj.drawImage(nx=200, ny=100, scale=nyq_scale)
+    im10 = obj.drawImage(nx=200, ny=100, scale=0.51)
     np.testing.assert_almost_equal(im10.array.shape, (100, 200), 9,
-                                   "obj.drawImage(nx=200, ny=100) produced image with wrong size")
-    np.testing.assert_almost_equal(im10.scale, nyq_scale, 9,
-                                   "obj.drawImage(nx=200, ny=100) produced image with wrong scale")
+                                   "obj.drawImage(nx,ny,scale) produced image with wrong size")
+    np.testing.assert_almost_equal(im10.scale, 0.51, 9,
+                                   "obj.drawImage(nx,ny,scale) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
-                                   "obj.drawImage(nx=200, ny=100) produced image with wrong flux")
+                                   "obj.drawImage(nx,ny,scale) produced image with wrong flux")
+    mx, my, mxx, myy, mxy = getmoments(im10)
+    np.testing.assert_almost_equal(
+        mx, (200.+1.)/2., 4,
+        "obj.drawImage(nx,ny,scale) (even) did not center in x correctly")
+    np.testing.assert_almost_equal(
+        my, (100.+1.)/2., 4,
+        "obj.drawImage(nx,ny,scale) (even) did not center in y correctly")
+
+    # Repeat with odd nx,ny
+    im10 = obj.drawImage(nx=201, ny=101, scale=0.51)
+    np.testing.assert_almost_equal(im10.array.shape, (101, 201), 9,
+                                   "obj.drawImage(nx,ny,scale) produced image with wrong size")
+    np.testing.assert_almost_equal(im10.scale, 0.51, 9,
+                                   "obj.drawImage(nx,ny,scale) produced image with wrong scale")
+    np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
+                                   "obj.drawImage(nx,ny,scale) produced image with wrong flux")
+    mx, my, mxx, myy, mxy = getmoments(im10)
+    np.testing.assert_almost_equal(
+        mx, (201.+1.)/2., 4,
+        "obj.drawImage(nx,ny,scale) (odd) did not center in x correctly")
+    np.testing.assert_almost_equal(
+        my, (101.+1.)/2., 4,
+        "obj.drawImage(nx,ny,scale) (odd) did not center in y correctly")
 
     try:
         # Test if we provide nx, ny, and no scale.  It should:
@@ -301,22 +324,27 @@ def test_drawImage():
         # Test if we provide nx, ny, scale, and an existing image.  It should:
         #   - raise a ValueError
         im10 = galsim.ImageF()
-        kwargs = {'nx':200, 'ny':100, 'scale':nyq_scale, 'image':im10}
-        np.testing.assert_raises(ValueError, obj.drawImage, kwargs)
+        kwargs = {'nx':200, 'ny':100, 'scale':0.51, 'image':im10}
+        np.testing.assert_raises(ValueError, obj2.drawImage, kwargs)
     except ImportError:
         print 'The assert_raises tests require nose'
 
     # Test if we provide bounds and scale.  It should:
     #   - create a new image with the right size
     #   - set the scale
-    bounds = galsim.BoundsI(1,200,1,100)
-    im10 = obj.drawImage(bounds=bounds, scale=nyq_scale)
-    np.testing.assert_almost_equal(im10.array.shape, (100, 200), 9,
-        "obj.drawImage(bounds=galsim.Bounds(1,200,1,100)) produced image with wrong size")
-    np.testing.assert_almost_equal(im10.scale, nyq_scale, 9,
-        "obj.drawImage(bounds=galsim.Bounds(1,200,1,100)) produced image with wrong scale")
+    bounds = galsim.BoundsI(1,200,1,101)
+    im10 = obj.drawImage(bounds=bounds, scale=0.51)
+    np.testing.assert_almost_equal(im10.array.shape, (101, 200), 9,
+                                   "obj.drawImage(bounds,scale) produced image with wrong size")
+    np.testing.assert_almost_equal(im10.scale, 0.51, 9,
+                                   "obj.drawImage(bounds,scale) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
-        "obj.drawImage(bounds=galsim.Bounds(1,200,1,100)) produced image with wrong flux")
+                                   "obj.drawImage(bounds,scale) produced image with wrong flux")
+    mx, my, mxx, myy, mxy = getmoments(im10)
+    np.testing.assert_almost_equal(mx, (200.+1.)/2., 4,
+                                   "obj.drawImage(bounds,scale) did not center in x correctly")
+    np.testing.assert_almost_equal(my, (101.+1.)/2., 4,
+                                   "obj.drawImage(bounds,scale) did not center in y correctly")
 
     try:
         # Test if we provide bounds and no scale.  It should:
@@ -328,7 +356,7 @@ def test_drawImage():
         # Test if we provide bounds, scale, and an existing image.  It should:
         #   - raise a ValueError
         bounds = galsim.BoundsI(1,200,1,100)
-        kwargs = {'bounds':bounds, 'scale':nyq_scale, 'image':im10}
+        kwargs = {'bounds':bounds, 'scale':0.51, 'image':im10}
         np.testing.assert_raises(ValueError, obj.drawImage, kwargs)
     except ImportError:
         print 'The assert_raises tests require nose'

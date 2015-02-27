@@ -25,9 +25,9 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
+//std::ostream* dbgout = new std::ofstream("debug.out");
 //std::ostream* dbgout = &std::cout;
-int verbose_level = 2;
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -411,19 +411,23 @@ namespace galsim {
         checkK();
 
         // Assign zeros for range that has |u| > maxu
-        int i1 = std::max( int((-_maxk1-kx0)/dkx) , 0 );
-        int i2 = std::min( int((_maxk1-kx0)/dkx)+1 , m );
-        int j1 = std::max( int((-_maxk1-ky0)/dky) , 0 );
-        int j2 = std::min( int((_maxk1-ky0)/dky)+1 , n );
+        double absdkx = std::abs(dkx);
+        double absdky = std::abs(dky);
+        int i1 = std::max( int(-_maxk1/absdkx-kx0/dkx) , 0 );
+        int i2 = std::min( int(_maxk1/absdkx-kx0/dkx)+1 , m );
+        int j1 = std::max( int(-_maxk1/absdky-ky0/dky) , 0 );
+        int j2 = std::min( int(_maxk1/absdky-ky0/dky)+1 , n );
+        xdbg<<"_maxk1 = "<<_maxk1<<std::endl;
+        xdbg<<"i1,i2 = "<<i1<<','<<i2<<std::endl;
+        xdbg<<"j1,j2 = "<<j1<<','<<j2<<std::endl;
+
         val.colRange(0,j1).setZero();
         val.subMatrix(0,i1,j1,j2).setZero();
         val.subMatrix(i2,m,j1,j2).setZero();
         val.colRange(j2,n).setZero();
+
         kx0 += i1*dkx;
         ky0 += j1*dky;
-        xdbg<<"_maxk1 = "<<_maxk1<<std::endl;
-        xdbg<<"i1,i2 = "<<i1<<','<<i2<<std::endl;
-        xdbg<<"j1,j2 = "<<j1<<','<<j2<<std::endl;
 
         // For the rest of the range, calculate ux, uy values
         tmv::Vector<double> ux(i2-i1);
