@@ -28,6 +28,7 @@ API Changes
 New Features
 ------------
 
+- Updated CorrelatedNoise to work with images that have a non-trivial WCS. (#501)
 - Added new methods of the image class to simulate detector effects:
   inter-pixel capacitance (#555) and image quantization (#558).
 - Added information about PSF size and shape to the data structure that is
@@ -47,9 +48,16 @@ New Features
   BaseDeviate instance) when being copied. (#643)
 
 
+Deprecated Features
+-------------------
+
+- Deprecated CorrelatedNoise.calculateCovarianceMatrix, since it is not used anywhere. (#630)
+
+
 Bug Fixes and Improvements
 --------------------------
 
+- Fixed a bug in UncorrelatedNoise where the variance was set incorrectly. (#630)
 - Changed the implementation of drawing Box and Pixel profiles in real space
   (i.e. without being convolved by anything) to actually draw the surface 
   brightness at the center of each pixel.  This is what all other profiles do,

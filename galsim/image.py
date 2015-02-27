@@ -170,7 +170,7 @@ class Image(object):
     Methods
     -------
 
-        view        Return a view of the image.
+        view        Return a view of the image, possibly giving it a new scale or wcs.
         subImage    Return a view of a portion of the full image.
         shift       Shift the origin of the image by (dx,dy).
         setCenter   Set a new position for the center of the image.
@@ -433,17 +433,45 @@ class Image(object):
         """
         self.image.copyFrom(rhs.image)
 
-    def view(self, make_const=False):
+    def view(self, scale=None, wcs=None, origin=None, center=None, make_const=False):
         """Make a view of this image, which lets you change the scale, wcs, origin, etc.
         but view the same underlying data as the original image.
 
-        You can make this a const view with the `make_const` parameter.
+        If you do not provide either `scale` or `wcs`, the view will keep the same wcs
+        as the current Image object.
+
+        @param scale        If provided, use this as the pixel scale for the image. [default: None]
+        @param wcs          If provided, use this as the wcs for the image. [default: None]
+        @param origin       If profided, use this as the origin position of the view.
+                            [default: None]
+        @param center       If profided, use this as the center position of the view.
+                            [default: None]
+        @param make_const   Make the view's data array immutable. [default: False]
         """
-        if make_const:
-            return Image(image=_galsim.ConstImageView[self.dtype](self.image.view()),
-                         wcs=self.wcs)
+        if origin is not None and center is not None:
+            raise TypeError("Cannot provide both center and origin")
+
+        if scale is not None:
+            if wcs is not None:
+                raise TypeError("Cannot provide both scale and wcs")
+            wcs = galsim.PixelScale(scale)
+        elif wcs is not None:
+            if not isinstance(wcs,galsim.BaseWCS):
+                raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
         else:
-            return Image(image=self.image.view(), wcs=self.wcs)
+            wcs = self.wcs
+
+        if make_const:
+            ret = Image(image=_galsim.ConstImageView[self.dtype](self.image.view()), wcs=wcs)
+        else:
+            ret = Image(image=self.image.view(), wcs=wcs)
+
+        if origin is not None:
+            ret.setOrigin(origin)
+        elif center is not None:
+            ret.setCenter(center)
+
+        return ret
 
     def shift(self, *args, **kwargs):
         """Shift the pixel coordinates by some (integral) dx,dy.
