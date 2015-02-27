@@ -25,14 +25,6 @@ from galsim import GSObject
 import _galsim
 from ._galsim import LVector, ShapeletSize
 
-from .deprecated import depr
-
-def LVectorSize(order):
-    """A deprecated synonym for ShapeletSize"""
-    depr('LVectorSize', 1.1, 'ShapeletSize')
-    return ShapeletSize(order)
-
-
 class Shapelet(GSObject):
     """A class describing polar shapelet surface brightness profiles.
 
@@ -151,17 +143,6 @@ class Shapelet(GSObject):
     def bvec(self): 
         return self.SBProfile.getBVec().array
 
-    # For backwards compatibility only.  Obsolete.
-    def getSigma(self):
-        depr('getSigma',1.1,'shapelet.sigma')
-        return self.sigma
-    def getOrder(self):
-        depr('getOrder',1.1,'shapelet.order')
-        return self.order
-    def getBVec(self):
-        depr('getBVec',1.1,'shapelet.bvec')
-        return self.bvec
-
     def getPQ(self,p,q):
         return self.SBProfile.getBVec().getPQ(p,q)
     def getNM(self,N,m):
@@ -183,61 +164,6 @@ class Shapelet(GSObject):
     def dilate(self, scale):
         sigma = self.sigma * scale
         return Shapelet(sigma, self.order, self.bvec)
-
-    # Note: Since SBProfiles are officially immutable, these create a new
-    # SBProfile object for this GSObject.  This is of course inefficient, but not
-    # outrageously so, since the SBShapelet constructor is pretty minimalistic, and 
-    # presumably anyone who cares about efficiency would not be using these functions.
-    # They would create the Shapelet with the right bvec from the start.
-    def setSigma(self,sigma):
-        """Deprecated method to change the value of sigma"""
-        depr('setSigma',1.1,'shapelet = galsim.Shapelet(sigma, order, ...)')
-        GSObject.__init__(self, _galsim.SBShapelet(sigma, self.SBProfile.getBVec()))
-
-    def setOrder(self,order):
-        """Deprecated method to change the order"""
-        depr('setOrder',1.1,'shapelet = galsim.Shapelet(sigma, order, ...)')
-        if self.order == order: return
-        # Preserve the existing values as much as possible.
-        if self.order > order:
-            bvec = LVector(order, self.bvec[0:ShapeletSize(order)])
-        else:
-            import numpy
-            a = numpy.zeros(ShapeletSize(order))
-            a[0:len(self.bvec)] = self.bvec
-            bvec = LVector(order,a)
-        GSObject.__init__(self, _galsim.SBShapelet(self.sigma, bvec))
-
-    def setBVec(self,bvec):
-        """Deprecated method to change the bvec"""
-        depr('setBVec',1.1,'shapelet = galsim.Shapelet(sigma, order, bvec=bvec)')
-        bvec_size = ShapeletSize(self.order)
-        if len(bvec) != bvec_size:
-            raise ValueError("bvec is the wrong size for the Shapelet order")
-        import numpy
-        bvec = LVector(self.order,numpy.array(bvec))
-        GSObject.__init__(self, _galsim.SBShapelet(self.sigma, bvec))
-
-    def setPQ(self,p,q,re,im=0.):
-        """Deprecated method to change a single element (p,q)"""
-        depr('setPQ',1.1,'bvec with correct values in the constructor')
-        bvec = self.SBProfile.getBVec().copy()
-        bvec.setPQ(p,q,re,im)
-        GSObject.__init__(self, _galsim.SBShapelet(self.sigma, bvec))
-
-    def setNM(self,N,m,re,im=0.):
-        """Deprecated method to change a single element (N,m)"""
-        depr('setNM',1.1,'bvec with correct values in the constructor')
-        self.setPQ((N+m)/2,(N-m)/2,re,im)
-
-    def fitImage(self, image, center=None, normalization='flux'):
-        """A deprecated method that is roughly equivalent to 
-        self = galsim.FitShapelet(self.sigma, self.order, image)
-        """
-        depr('fitImage', 1.1, 'galsim.FitShapelet')
-        new_obj = galsim.FitShapelet(self.sigma, self.order, image, center, normalization)
-        bvec = new_obj.SBProfile.getBVec()
-        GSObject.__init__(self, _galsim.SBShapelet(self.sigma, bvec))
 
 
 def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams=None):

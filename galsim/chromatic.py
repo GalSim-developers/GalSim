@@ -30,8 +30,6 @@ import copy
 
 import galsim
 
-from .deprecated import depr
-
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
 
@@ -624,18 +622,6 @@ class ChromaticObject(object):
         f1 = self._fluxFactor(bandpass.red_limit)
         return (np.any(abs(A1-A0) > 10.*np.finfo(A0.dtype.type).eps) or
                 abs(f1-f0) > 10.*np.finfo(A0.dtype.type).eps)
-
-    def draw(self, *args, **kwargs):
-        """A deprecated synonym for obj.drawImage(method='no_pixel')
-        """
-        depr('draw', 1.1, "drawImage(..., method='no_pixel'",
-             'Note: drawImage has different args than draw did.  Read the docs for the method ' +
-             'keyword carefully.')
-        normalization = kwargs.pop('normalization','f')
-        if normalization in ['flux','f']:
-            return self.drawImage(*args, method='no_pixel', **kwargs)
-        else:
-            return self.drawImage(*args, method='sb', **kwargs)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.

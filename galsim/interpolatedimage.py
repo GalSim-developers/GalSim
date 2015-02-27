@@ -26,8 +26,6 @@ from . import _galsim
 from ._galsim import Interpolant, Interpolant2d, InterpolantXY
 from ._galsim import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 
-from .deprecated import depr
-
 class InterpolatedImage(GSObject):
     """A class describing non-parametric profiles specified using an Image, which can be 
     interpolated for the purpose of carrying out transformations.
@@ -258,6 +256,7 @@ class InterpolatedImage(GSObject):
                  use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None,
                  _force_stepk=None, _force_maxk=None):
         # Check for obsolete dx parameter
+        from galsim.deprecated import depr
         depr('dx', 1.1, 'scale')
         if dx is not None and scale is None: scale = dx
 

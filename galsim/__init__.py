@@ -111,10 +111,6 @@ from table import LookupTable
 
 # Image
 from image import Image, ImageS, ImageI, ImageF, ImageD
-# These are obsolete, but we currently still support them.  They will be deprecated and
-# removed eventually.
-from image import ImageView, ImageViewS, ImageViewI, ImageViewF, ImageViewD
-from image import ConstImageView, ConstImageViewS, ConstImageViewI, ConstImageViewF, ConstImageViewD
 
 # Noise
 from random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate, DistDeviate
@@ -128,7 +124,7 @@ from base import GSParams, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, 
 from base import Exponential, Sersic, DeVaucouleurs, Spergel
 from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
-from shapelet import Shapelet, ShapeletSize, FitShapelet, LVectorSize
+from shapelet import Shapelet, ShapeletSize, FitShapelet
 from interpolatedimage import Interpolant, Interpolant2d, InterpolantXY
 from interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 from interpolatedimage import InterpolatedImage

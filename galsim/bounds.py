@@ -155,40 +155,6 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
         >>> bounds = bounds.shift(galsim.PositionD(3.9, 2.1))
     """ 
 
-def Bounds_setXMin(self, xmin):
-    """Deprecated method for setting the value of xmin.
-    """
-    depr('setXMin',1.1,
-         'bounds = galsim.'+self.__class__.__name__+'(xmin,bounds.xmax,bounds.ymin,bounds.ymax)')
-    self._setXMin(xmin)
-
-def Bounds_setXMax(self, xmax):
-    """Deprecated method for setting the value of xmax.
-    """
-    depr('setXMax',1.1,
-         'bounds = galsim.'+self.__class__.__name__+'(bounds.xmin,xmax,bounds.ymin,bounds.ymax)')
-    self._setXMax(xmax)
-
-def Bounds_setYMin(self, ymin):
-    """Deprecated method for setting the value of ymin.
-    """
-    depr('setYMin',1.1,
-         'bounds = galsim.'+self.__class__.__name__+'(bounds.xmin,bounds.xmax,ymin,bounds.ymax)')
-    self._setYMin(ymin)
-
-def Bounds_setYMax(self, ymax):
-    """Deprecated method for setting the value of ymax.
-    """
-    depr('setYMax',1.1,
-         'bounds = galsim.'+self.__class__.__name__+'(bounds.xmin,bounds.xmax,bounds.ymin,ymax)')
-    self._setYMax(ymax)
-
-for Class in (_galsim.BoundsD, _galsim.BoundsI):
-    Class.setXMin = Bounds_setXMin
-    Class.setXMax = Bounds_setXMax
-    Class.setYMin = Bounds_setYMin
-    Class.setYMax = Bounds_setYMax
-
 del Class    # cleanup public namespace
 
 # Force the input args to BoundsI to be `int` (correctly handles elements of int arrays)

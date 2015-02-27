@@ -25,8 +25,6 @@ from . import _galsim
 from ._galsim import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate
 from ._galsim import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate
 
-from .deprecated import depr
-
 # BaseDeviate docstrings
 _galsim.BaseDeviate.__doc__ = """
 Base class for all the various random deviates.
@@ -239,6 +237,7 @@ class DistDeviate(_galsim.BaseDeviate):
         # lseed is an obsolete synonym for seed
         # I think this was the only place that the name lseed was actually used in the docs.
         # so we keep it for now for backwards compatibility.
+        from galsim.deprecated import depr
         depr('lseed', 1.1, 'seed')
         if lseed is not None: seed = lseed
 
@@ -441,21 +440,6 @@ Returns a Gaussian deviate with current `mean` and `sigma`.
 _galsim.GaussianDeviate.getMean.__func__.__doc__ = "Get current distribution `mean`."
 _galsim.GaussianDeviate.getSigma.__func__.__doc__ = "Get current distribution `sigma`."
 
-def GaussianDeviate_setMean(self, mean):
-    """Deprecated method to set the mean.
-    """
-    depr('setMean', 1.1, 'rng = galsim.GaussianDeviate(rng, mean=mean, sigma=rng.sigma)')
-    self._setMean(mean)
-_galsim.GaussianDeviate.setMean = GaussianDeviate_setMean
-
-def GaussianDeviate_setSigma(self, sigma):
-    """Deprecated method to set sigma.
-    """
-    depr('setSigma', 1.1, 'rng = galsim.GaussianDeviate(rng, mean=rng.mean, sigma=sigma)')
-    self._setSigma(sigma)
-_galsim.GaussianDeviate.setSigma = GaussianDeviate_setSigma
-
-
 
 # BinomialDeviate docstrings
 _galsim.BinomialDeviate.__doc__ = """
@@ -494,21 +478,6 @@ Returns a Binomial deviate with current `N` and `p`.
 _galsim.BinomialDeviate.getN.__func__.__doc__ = "Get current distribution `N`."
 _galsim.BinomialDeviate.getP.__func__.__doc__ = "Get current distribution `p`."
 
-def BinomialDeviate_setN(self, N):
-    """Deprecated method to set N.
-    """
-    depr('setN', 1.1, 'rng = galsim.BinomialDeviate(rng, N=N, p=rng.p)')
-    self._setN(N)
-_galsim.BinomialDeviate.setN = BinomialDeviate_setN
-
-def BinomialDeviate_setP(self, p):
-    """Deprecated method to set p.
-    """
-    depr('setP', 1.1, 'rng = galsim.BinomialDeviate(rng, N=rng.N, p=p)')
-    self._setP(p)
-_galsim.BinomialDeviate.setP = BinomialDeviate_setP
-
-
 
 # PoissonDeviate docstrings
 _galsim.PoissonDeviate.__doc__ = """
@@ -544,14 +513,6 @@ Draw a new random number from the distribution.
 Returns a Poisson deviate with current `mean`.
 """
 _galsim.PoissonDeviate.getMean.__func__.__doc__ = "Get current distribution `mean`."
-
-
-def PoissonDeviate_setMean(self, mean):
-    """Deprecated method to set the mean.
-    """
-    depr('setMean', 1.1, 'rng = galsim.PoissonDeviate(rng, mean=mean)')
-    self._setMean(mean)
-_galsim.PoissonDeviate.setMean = PoissonDeviate_setMean
 
 
 # WeibullDeviate docstrings
@@ -593,21 +554,6 @@ Returns a Weibull-distributed deviate with current `a` and `b`.
 _galsim.WeibullDeviate.getA.__func__.__doc__ = "Get current distribution shape parameter `a`."
 _galsim.WeibullDeviate.getB.__func__.__doc__ = "Get current distribution shape parameter `b`."
 
-def WeibullDeviate_setA(self, a):
-    """Deprecated method to set a.
-    """
-    depr('setA', 1.1, 'rng = galsim.WeibullDeviate(rng, a=a, b=rng.b)')
-    self._setA(a)
-_galsim.WeibullDeviate.setA = WeibullDeviate_setA
-
-def WeibullDeviate_setB(self, b):
-    """Deprecated method to set b.
-    """
-    depr('setB', 1.1, 'rng = galsim.WeibullDeviate(rng, a=rng.a, b=b)')
-    self._setB(b)
-_galsim.WeibullDeviate.setB = WeibullDeviate_setB
-
-
 
 # GammaDeviate docstrings
 _galsim.GammaDeviate.__doc__ = """
@@ -645,21 +591,6 @@ Returns a Gamma-distributed deviate with current k and theta.
 _galsim.GammaDeviate.getK.__func__.__doc__ = "Get current distribution shape parameter `k`."
 _galsim.GammaDeviate.getTheta.__func__.__doc__ = "Get current distribution shape parameter `theta`."
 
-def GammaDeviate_setK(self, k):
-    """Deprecated method to set k.
-    """
-    depr('setK', 1.1, 'rng = galsim.GammaDeviate(rng, k=k, theta=rng.theta)')
-    self._setK(k)
-_galsim.GammaDeviate.setK = GammaDeviate_setK
-
-def GammaDeviate_setTheta(self, theta):
-    """Deprecated method to set theta.
-    """
-    depr('setTheta', 1.1, 'rng = galsim.GammaDeviate(rng, k=rng.k, theta=theta)')
-    self._setTheta(theta)
-_galsim.GammaDeviate.setTheta = GammaDeviate_setTheta
-
-
 
 # Chi2Deviate docstrings
 _galsim.Chi2Deviate.__doc__ = """
@@ -696,13 +627,6 @@ Draw a new random number from the distribution.
 Returns a Chi2-distributed deviate with current `n` degrees of freedom.
 """
 _galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution `n` degrees of freedom."
-
-def Chi2Deviate_setN(self, n):
-    """Deprecated method to set n.
-    """
-    depr('setN', 1.1, 'rng = galsim.Chi2Deviate(rng, n=n)')
-    self._setN(n)
-_galsim.Chi2Deviate.setN = Chi2Deviate_setN
 
 
 # Some functions to enable pickling of deviates

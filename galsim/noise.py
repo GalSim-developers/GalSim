@@ -25,8 +25,6 @@ from . import _galsim
 from ._galsim import BaseNoise, GaussianNoise, PoissonNoise, CCDNoise
 from ._galsim import DeviateNoise, VarGaussianNoise
 
-from .deprecated import depr
-
 def addNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
     """Add noise to the image according to a supplied noise model.
@@ -98,26 +96,6 @@ Get the BaseDeviate used to generate random numbers for the current noise model.
 
 _galsim.BaseNoise.getVariance.__func__.__doc__ = "Get variance in current noise model."
 
-def Noise_setRNG(self, rng):
-    """Deprecated method to set the BaseDeviate used to generate random numbers for 
-    the current noise model.
-    """
-    depr('setRNG', 1.1, 'new noise object with the correct RNG')
-    self._setRNG(rng)
-
-def Noise_setVariance(self, variance):
-    """A deprecated method that is roughly equivalent to
-    `noise = noise.withVariance(variance)`.
-    """
-    depr('setVariance', 1.1, 'noise = noise.withVariance(variance)')
-    self._setVariance(variance)
-
-def Noise_scaleVariance(self, variance_ratio):
-    """A deprecated method that is roughly equivalent to `noise = noise * variance_ratio`.
-    """
-    depr('scaleVariance', 1.1, 'noise *= variance_ratio')
-    self._scaleVariance(variance_ratio)
-
 def Noise_withVariance(self, variance):
     """Return a new noise object (of the same type as the current one) with the specified variance.
 
@@ -143,9 +121,6 @@ def Noise_withScaledVariance(self, variance_ratio):
     ret._scaleVariance(variance_ratio)
     return ret
 
-_galsim.BaseNoise.setRNG = Noise_setRNG
-_galsim.BaseNoise.setVariance = Noise_setVariance
-_galsim.BaseNoise.scaleVariance = Noise_scaleVariance
 _galsim.BaseNoise.withVariance = Noise_withVariance
 _galsim.BaseNoise.withScaledVariance = Noise_withScaledVariance
 
@@ -214,13 +189,6 @@ _galsim.GaussianNoise.applyTo = GaussianNoise_applyTo
 
 _galsim.GaussianNoise.getSigma.__func__.__doc__ = "Get `sigma` in current noise model."
 
-def GaussianNoise_setSigma(self, sigma):
-    """Deprecated method to set the value of sigma
-    """
-    depr('setSigma', 1.1, 'noise = galsim.GaussianNoise(noise.rng, sigma)')
-    self._setSigma(sigma)
-_galsim.GaussianNoise.setSigma = GaussianNoise_setSigma
-
 def GaussianNoise_copy(self):
     return _galsim.GaussianNoise(self.getRNG(),self.getSigma())
 _galsim.GaussianNoise.copy = GaussianNoise_copy
@@ -280,13 +248,6 @@ def PoissonNoise_applyTo(self, image):
 _galsim.PoissonNoise.applyTo = PoissonNoise_applyTo
 
 _galsim.PoissonNoise.getSkyLevel.__func__.__doc__ = "Get sky level in current noise model."
-
-def PoissonNoise_setSkyLevel(self, sky_level):
-    """Deprecated method to set the value of sky_level
-    """
-    depr('setSkyLevel', 1.1, 'noise = galsim.PoissonNoise(noise.rng, sky_level)')
-    self._setSkyLevel(sky_level)
-_galsim.PoissonNoise.setSkyLevel = PoissonNoise_setSkyLevel
 
 def PoissonNoise_copy(self):
     return _galsim.PoissonNoise(self.getRNG(),self.getSkyLevel())
@@ -357,30 +318,6 @@ _galsim.CCDNoise.applyTo = CCDNoise_applyTo
 _galsim.CCDNoise.getSkyLevel.__func__.__doc__ = "Get sky level in current noise model."
 _galsim.CCDNoise.getGain.__func__.__doc__ = "Get gain in current noise model."
 _galsim.CCDNoise.getReadNoise.__func__.__doc__ = "Get read noise in current noise model."
-
-def CCDNoise_setSkyLevel(self, sky_level):
-    """Deprecated method to set the value of sky_level
-    """
-    depr('setSkyLevel', 1.1,
-         'noise = galsim.CCDNoise(noise.rng, sky_level, noise.gain, noise.read_noise)')
-    self._setSkyLevel(sky_level)
-_galsim.CCDNoise.setSkyLevel = CCDNoise_setSkyLevel
-
-def CCDNoise_setGain(self, gain):
-    """Deprecated method to set the value of gain
-    """
-    depr('setGain', 1.1,
-         'noise = galsim.CCDNoise(noise.rng, noise.sky_level, gain, noise.read_noise)')
-    self._setGain(gain)
-_galsim.CCDNoise.setGain = CCDNoise_setGain
-
-def CCDNoise_setReadNoise(self, read_noise):
-    """Deprecated method to set the value of read_noise
-    """
-    depr('setReadNoise', 1.1,
-         'noise = galsim.CCDNoise(noise.rng, noise.sky_level, noise.gain, read_noise)')
-    self._setReadNoise(read_noise)
-_galsim.CCDNoise.setReadNoise = CCDNoise_setReadNoise
 
 def CCDNoise_copy(self):
     return _galsim.CCDNoise(self.getRNG(),self.getSkyLevel(),self.getGain(),self.getReadNoise())

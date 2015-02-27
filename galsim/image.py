@@ -24,8 +24,6 @@ from . import _galsim
 import numpy
 import galsim
 
-from .deprecated import depr
-
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
 # when doing arithmetic with images.  So just make sure both of them point to ImageAllocI in the
 # ImageAlloc dict.  One of them is what you get when you just write numpy.int32.  The other is
@@ -59,6 +57,7 @@ _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 class MetaImage(type):
     def __getitem__(cls,t):
         """A deprecated syntax that treats Image as a dict indexed by type"""
+        from galsim.deprecated import depr
         depr('Image[type]', 1.1, 'Image(..., dtype=type)')
         Image_dict = {
             numpy.int16 : ImageS,
@@ -188,6 +187,7 @@ class Image(object):
 
     """
     __metaclass__ = MetaImage
+
     cpp_valid_dtypes = _galsim.ImageView.keys()
     alias_dtypes = {
         int : numpy.int32,          # So that user gets what they would expect
@@ -570,82 +570,6 @@ def ImageD(*args, **kwargs):
     """
     kwargs['dtype'] = numpy.float64
     return Image(*args, **kwargs)
-
-def ImageViewS(*args, **kwargs):
-    """A deprecated alias for galsim.Image(..., dtype=numpy.int16)
-    """
-    depr('ImageView[type] or ImageViewS', 1.1, 'ImageS')
-    kwargs['dtype'] = numpy.int16
-    return Image(*args, **kwargs)
-
-def ImageViewI(*args, **kwargs):
-    """A deprecated alias for galsim.Image(..., dtype=numpy.int32)
-    """
-    depr('ImageView[type] or ImageViewI', 1.1, 'ImageI')
-    kwargs['dtype'] = numpy.int32
-    return Image(*args, **kwargs)
-
-def ImageViewF(*args, **kwargs):
-    """A deprecated alias for galsim.Image(..., dtype=numpy.float32)
-    """
-    depr('ImageView[type] or ImageViewF', 1.1, 'ImageF')
-    kwargs['dtype'] = numpy.float32
-    return Image(*args, **kwargs)
-
-def ImageViewD(*args, **kwargs):
-    """A deprecated alias for galsim.Image(..., dtype=numpy.float64)
-    """
-    depr('ImageView[type] or ImageViewD', 1.1, 'ImageD')
-    kwargs['dtype'] = numpy.float64
-    return Image(*args, **kwargs)
-
-def ConstImageViewS(*args, **kwargs):
-    """A deprecated alias for galsim.Image(..., dtype=numpy.int16, make_const=True)
-    """
-    depr('ConstImageView[type] or ConstImageViewS', 1.1, 'ImageS(..., make_const=True)')
-    kwargs['dtype'] = numpy.int16
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-def ConstImageViewI(*args, **kwargs):
-    """A deprecated alias for galsim.Image(..., dtype=numpy.int32, make_const=True)
-    """
-    depr('ConstImageView[type] or ConstImageViewI', 1.1, 'ImageI(..., make_const=True)')
-    kwargs['dtype'] = numpy.int32
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-def ConstImageViewF(*args, **kwargs):
-    """A deprecated alias for galsim.Image(..., dtype=numpy.float32, make_const=True)
-    """
-    depr('ConstImageView[type] or ConstImageViewF', 1.1, 'ImageF(..., make_const=True)')
-    kwargs['dtype'] = numpy.float32
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-def ConstImageViewD(*args, **kwargs):
-    """A deprecated alias for galsim.Image(..., dtype=numpy.float64, make_const=True)
-    """
-    depr('ConstImageView[type] or ConstImageViewD', 1.1, 'ImageD(..., make_const=True)')
-    kwargs['dtype'] = numpy.float64
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-ImageView = {
-    numpy.int16 : ImageViewS,
-    numpy.int32 : ImageViewI,
-    numpy.float32 : ImageViewF,
-    numpy.float64 : ImageViewD
-}
-
-ConstImageView = {
-    numpy.int16 : ConstImageViewS,
-    numpy.int32 : ConstImageViewI,
-    numpy.float32 : ConstImageViewF,
-    numpy.float64 : ConstImageViewD
-}
-
-
 
 
 ################################################################################################

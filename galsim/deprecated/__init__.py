@@ -29,3 +29,15 @@ def depr(f, v, s, s2=None):
     if s2 is not None:
         s = s + s2
     warnings.warn(s, GalSimDeprecationWarning)
+
+# Only need to import things by name that aren't made into a method of some galsim class.
+
+from . import base
+from . import bounds
+from . import chromatic
+from . import correlatednoise
+from . import image
+from . import noise
+from . import random
+from . import shapelet
+from . import shear
