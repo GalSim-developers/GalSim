@@ -119,10 +119,7 @@ This module also contains the following routines:
 
                >>>> im_nl = im.applyNonlinearity(galsim.wfirst.NLfunc)
 
-    getPSF() - A routine to get a chromatic representation of the PSF in each SCAs.  This involves a
-               significant overhead when initializing, though certain keywords can be used to speed
-               up the process.  Actually using the PSFs to draw images is much faster than the
-               initialization.
+    getPSF() - A routine to get a chromatic representation of the PSF in each SCAs.
 
     tabulatePSFImages() - A routine to take outputs of getPSF() and write them to file as a set of
                           images in a multi-extension FITS file.  This can be used along with the
