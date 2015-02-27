@@ -1129,12 +1129,11 @@ def test_gsparam():
     t1 = time.time()
     gal = galsim.ChromaticObject(galsim.Gaussian(fwhm=1))
     pix = galsim.Pixel(0.2)
-    gsparams = galsim.GSParams()
 
     # Setting maximum_fft_size this low causes an exception to be raised for GSObjects, so
     # make sure it does for ChromaticObjects too, thereby assuring that gsparams is really
     # getting properly forwarded through the internals of ChromaticObjects.
-    gsparams.maximum_fft_size = 16
+    gsparams = galsim.GSParams(maximum_fft_size=16)
     final = galsim.Convolve(gal, pix, gsparams=gsparams)
     try:
         np.testing.assert_raises(RuntimeError, final.draw, bandpass)
