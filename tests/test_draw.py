@@ -64,11 +64,11 @@ def test_drawImage():
     # First test drawImage() with method='no_pixel'.  It should:
     #   - create a new image
     #   - return the new image
-    #   - set the scale to obj.nyquistDx()
+    #   - set the scale to obj.nyquistScale()
     #   - set the size large enough to contain 99.5% of the flux
     im1 = obj.drawImage(method='no_pixel')
-    dx_nyq = obj.nyquistDx()
-    np.testing.assert_almost_equal(im1.scale, dx_nyq, 9,
+    nyq_scale = obj.nyquistScale()
+    np.testing.assert_almost_equal(im1.scale, nyq_scale, 9,
                                    "obj.drawImage() produced image with wrong scale")
     #print 'im1.bounds = ',im1.bounds
     assert im1.bounds == galsim.BoundsI(1,56,1,56),(
@@ -80,8 +80,8 @@ def test_drawImage():
     # convoled with a pixel:
     obj2 = galsim.Convolve([ obj, galsim.Pixel(im1.scale) ])
     im2 = obj2.drawImage(method='no_pixel')
-    dx_nyq = obj2.nyquistDx()
-    np.testing.assert_almost_equal(im2.scale, dx_nyq, 9,
+    nyq_scale = obj2.nyquistScale()
+    np.testing.assert_almost_equal(im2.scale, nyq_scale, 9,
                                    "obj2.drawImage() produced image with wrong scale")
     np.testing.assert_almost_equal(im2.array.astype(float).sum(), test_flux, 2,
                                    "obj2.drawImage() produced image with wrong flux")
@@ -91,7 +91,7 @@ def test_drawImage():
                                    "Measured wrong scale after obj2.drawImage()")
     # This should be the same as obj with method='auto'
     im2 = obj.drawImage()
-    np.testing.assert_almost_equal(im2.scale, dx_nyq, 9,
+    np.testing.assert_almost_equal(im2.scale, nyq_scale, 9,
                                    "obj2.drawImage() produced image with wrong scale")
     np.testing.assert_almost_equal(im2.array.astype(float).sum(), test_flux, 2,
                                    "obj2.drawImage() produced image with wrong flux")
@@ -103,11 +103,11 @@ def test_drawImage():
     # Test if we provide an image argument.  It should:
     #   - write to the existing image
     #   - also return that image
-    #   - set the scale to obj2.nyquistDx()
+    #   - set the scale to obj2.nyquistScale()
     #   - zero out any existing data
     im3 = galsim.ImageD(56,56)
     im4 = obj.drawImage(im3)
-    np.testing.assert_almost_equal(im3.scale, dx_nyq, 9,
+    np.testing.assert_almost_equal(im3.scale, nyq_scale, 9,
                                    "obj.drawImage(im3) produced image with wrong scale")
     np.testing.assert_almost_equal(im3.array.sum(), test_flux, 2,
                                    "obj.drawImage(im3) produced image with wrong flux")
@@ -127,10 +127,10 @@ def test_drawImage():
     # Test if we provide an image with undefined bounds.  It should:
     #   - resize the provided image
     #   - also return that image
-    #   - set the scale to obj2.nyquistDx()
+    #   - set the scale to obj2.nyquistScale()
     im5 = galsim.ImageD()
     obj.drawImage(im5)
-    np.testing.assert_almost_equal(im5.scale, dx_nyq, 9,
+    np.testing.assert_almost_equal(im5.scale, nyq_scale, 9,
                                    "obj.drawImage(im5) produced image with wrong scale")
     np.testing.assert_almost_equal(im5.array.sum(), test_flux, 2,
                                    "obj.drawImage(im5) produced image with wrong flux")
@@ -145,9 +145,9 @@ def test_drawImage():
     # Test if we provide wmult.  It should:
     #   - create a new image that is wmult times larger in each direction.
     #   - return the new image
-    #   - set the scale to obj2.nyquistDx()
+    #   - set the scale to obj2.nyquistScale()
     im6 = obj.drawImage(wmult=4.)
-    np.testing.assert_almost_equal(im6.scale, dx_nyq, 9,
+    np.testing.assert_almost_equal(im6.scale, nyq_scale, 9,
                                    "obj.drawImage(wmult) produced image with wrong scale")
     # Can assert accuracy to 4 decimal places now, since we're capturing much more
     # of the flux on the image.
@@ -162,14 +162,14 @@ def test_drawImage():
     # Test if we provide an image argument and wmult.  It should:
     #   - write to the existing image
     #   - also return that image
-    #   - set the scale to obj2.nyquistDx()
+    #   - set the scale to obj2.nyquistScale()
     #   - zero out any existing data
     #   - the calculation of the convolution should be slightly more accurate than for im3
     im3.setZero()
     im5.setZero()
     obj.drawImage(im3, wmult=4.)
     obj.drawImage(im5)
-    np.testing.assert_almost_equal(im3.scale, dx_nyq, 9,
+    np.testing.assert_almost_equal(im3.scale, nyq_scale, 9,
                                    "obj.drawImage(im3) produced image with wrong scale")
     np.testing.assert_almost_equal(im3.array.sum(), test_flux, 2,
                                    "obj.drawImage(im3,wmult) produced image with wrong flux")
@@ -222,11 +222,11 @@ def test_drawImage():
 
     # Test if we provide an image with a defined scale <= 0.  It should:
     #   - write to the existing image
-    #   - set the scale to obj2.nyquistDx()
+    #   - set the scale to obj2.nyquistScale()
     im9.scale = -0.51
     im9.setZero()
     obj.drawImage(im9)
-    np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
+    np.testing.assert_almost_equal(im9.scale, nyq_scale, 9,
                                    "obj.drawImage(im9) produced image with wrong scale")
     np.testing.assert_almost_equal(im9.array.sum(), test_flux, 4,
                                    "obj.drawImage(im9) produced image with wrong flux")
@@ -235,7 +235,7 @@ def test_drawImage():
     im9.scale = 0
     im9.setZero()
     obj.drawImage(im9)
-    np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
+    np.testing.assert_almost_equal(im9.scale, nyq_scale, 9,
                                    "obj.drawImage(im9) produced image with wrong scale")
     np.testing.assert_almost_equal(im9.array.sum(), test_flux, 4,
                                    "obj.drawImage(im9) produced image with wrong flux")
@@ -259,11 +259,11 @@ def test_drawImage():
 
     # Test if we provide an image and dx <= 0.  It should:
     #   - write to the existing image
-    #   - set the scale to obj2.nyquistDx()
+    #   - set the scale to obj2.nyquistScale()
     im9.scale = 0.73
     im9.setZero()
     obj.drawImage(im9, scale=-0.51)
-    np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
+    np.testing.assert_almost_equal(im9.scale, nyq_scale, 9,
                                    "obj.drawImage(im9,dx<0) produced image with wrong scale")
     np.testing.assert_almost_equal(im9.array.sum(), test_flux, 4,
                                    "obj.drawImage(im9,dx<0) produced image with wrong flux")
@@ -272,7 +272,7 @@ def test_drawImage():
     im9.scale = 0.73
     im9.setZero()
     obj.drawImage(im9, scale=0)
-    np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
+    np.testing.assert_almost_equal(im9.scale, nyq_scale, 9,
                                    "obj.drawImage(im9,scale=0) produced image with wrong scale")
     np.testing.assert_almost_equal(im9.array.sum(), test_flux, 4,
                                    "obj.drawImage(im9,scale=0) produced image with wrong flux")
@@ -283,10 +283,10 @@ def test_drawImage():
     # Test if we provide nx, ny, and scale.  It should:
     #   - create a new image with the right size
     #   - set the scale
-    im10 = obj.drawImage(nx=200, ny=100, scale=dx_nyq)
+    im10 = obj.drawImage(nx=200, ny=100, scale=nyq_scale)
     np.testing.assert_almost_equal(im10.array.shape, (100, 200), 9,
                                    "obj.drawImage(nx=200, ny=100) produced image with wrong size")
-    np.testing.assert_almost_equal(im10.scale, dx_nyq, 9,
+    np.testing.assert_almost_equal(im10.scale, nyq_scale, 9,
                                    "obj.drawImage(nx=200, ny=100) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj.drawImage(nx=200, ny=100) produced image with wrong flux")
@@ -301,7 +301,7 @@ def test_drawImage():
         # Test if we provide nx, ny, scale, and an existing image.  It should:
         #   - raise a ValueError
         im10 = galsim.ImageF()
-        kwargs = {'nx':200, 'ny':100, 'scale':dx_nyq, 'image':im10}
+        kwargs = {'nx':200, 'ny':100, 'scale':nyq_scale, 'image':im10}
         np.testing.assert_raises(ValueError, obj.drawImage, kwargs)
     except ImportError:
         print 'The assert_raises tests require nose'
@@ -310,10 +310,10 @@ def test_drawImage():
     #   - create a new image with the right size
     #   - set the scale
     bounds = galsim.BoundsI(1,200,1,100)
-    im10 = obj.drawImage(bounds=bounds, scale=dx_nyq)
+    im10 = obj.drawImage(bounds=bounds, scale=nyq_scale)
     np.testing.assert_almost_equal(im10.array.shape, (100, 200), 9,
         "obj.drawImage(bounds=galsim.Bounds(1,200,1,100)) produced image with wrong size")
-    np.testing.assert_almost_equal(im10.scale, dx_nyq, 9,
+    np.testing.assert_almost_equal(im10.scale, nyq_scale, 9,
         "obj.drawImage(bounds=galsim.Bounds(1,200,1,100)) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
         "obj.drawImage(bounds=galsim.Bounds(1,200,1,100)) produced image with wrong flux")
@@ -328,7 +328,7 @@ def test_drawImage():
         # Test if we provide bounds, scale, and an existing image.  It should:
         #   - raise a ValueError
         bounds = galsim.BoundsI(1,200,1,100)
-        kwargs = {'bounds':bounds, 'scale':dx_nyq, 'image':im10}
+        kwargs = {'bounds':bounds, 'scale':nyq_scale, 'image':im10}
         np.testing.assert_raises(ValueError, obj.drawImage, kwargs)
     except ImportError:
         print 'The assert_raises tests require nose'
@@ -479,17 +479,17 @@ def test_drawKImage():
     # First test drawKImage() with no kwargs.  It should:
     #   - create new images
     #   - return the new images
-    #   - set the scale to 2pi/(N*obj.nyquistDx())
+    #   - set the scale to 2pi/(N*obj.nyquistScale())
     re1, im1 = obj.drawKImage()
     N = 1162
     assert re1.bounds == galsim.BoundsI(1,N,1,N),(
             "obj.drawKImage() produced image with wrong bounds")
     assert im1.bounds == galsim.BoundsI(1,N,1,N),(
             "obj.drawKImage() produced image with wrong bounds")
-    dx_nyq = obj.nyquistDx()
+    nyq_scale = obj.nyquistScale()
     stepk = obj.stepK()
-    #print 'dx_nyq = ',dx_nyq
-    #print '2pi/(dx_nyq N) = ',2*np.pi/(dx_nyq*N)
+    #print 'nyq_scale = ',nyq_scale
+    #print '2pi/(nyq_scale N) = ',2*np.pi/(nyq_scale*N)
     #print 'stepK = ',obj.stepK()
     #print 'maxK = ',obj.maxK()
     #print 'im1.scale = ',im1.scale
