@@ -113,14 +113,17 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
     # NB: op* and op/ already work to adjust the overall variance of an object using the operator
     # methods defined in BaseNoise.
 
-    def copy(self):
+    def copy(self, rng=None):
         """Returns a copy of the correlated noise model.
 
-        The copy will share the BaseDeviate random number generator with the parent instance.
-        Use the setRNG() method after copying if you wish to use a different random number
-        sequence.
+        By default, the copy will share the BaseDeviate random number generator with the parent
+        instance.  However, you can provide a new rng to use in the copy if want with
+
+            >>> cn_copy = cn.copy(rng=new_rng)
         """
-        return _BaseCorrelatedNoise(self.getRNG(), self._profile.copy())
+        if rng is None:
+            rng = self.getRNG()
+        return _BaseCorrelatedNoise(rng, self._profile.copy())
 
     def applyTo(self, image):
         """Apply this correlated Gaussian random noise field to an input Image.

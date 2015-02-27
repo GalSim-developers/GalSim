@@ -94,6 +94,7 @@ _galsim.BaseNoise.getRNG.__func__.__doc__ = """
 Get the BaseDeviate used to generate random numbers for the current noise model.
 """
 
+
 _galsim.BaseNoise.getVariance.__func__.__doc__ = "Get variance in current noise model."
 
 def Noise_withVariance(self, variance):
@@ -189,8 +190,17 @@ _galsim.GaussianNoise.applyTo = GaussianNoise_applyTo
 
 _galsim.GaussianNoise.getSigma.__func__.__doc__ = "Get `sigma` in current noise model."
 
-def GaussianNoise_copy(self):
-    return _galsim.GaussianNoise(self.getRNG(),self.getSigma())
+def GaussianNoise_copy(self, rng=None):
+    """Returns a copy of the Gaussian noise model.
+
+    By default, the copy will share the BaseDeviate random number generator with the parent
+    instance.  However, you can provide a new rng to use in the copy if want with
+
+        >>> noise_copy = noise.copy(rng=new_rng)
+    """
+    if rng is None: rng = self.getRNG()
+    return _galsim.GaussianNoise(rng, self.getSigma())
+
 _galsim.GaussianNoise.copy = GaussianNoise_copy
 
 
@@ -249,9 +259,19 @@ _galsim.PoissonNoise.applyTo = PoissonNoise_applyTo
 
 _galsim.PoissonNoise.getSkyLevel.__func__.__doc__ = "Get sky level in current noise model."
 
-def PoissonNoise_copy(self):
-    return _galsim.PoissonNoise(self.getRNG(),self.getSkyLevel())
+def PoissonNoise_copy(self, rng=None):
+    """Returns a copy of the Poisson noise model.
+
+    By default, the copy will share the BaseDeviate random number generator with the parent
+    instance.  However, you can provide a new rng to use in the copy if want with
+
+        >>> noise_copy = noise.copy(rng=new_rng)
+    """
+    if rng is None: rng = self.getRNG()
+    return _galsim.PoissonNoise(rng, self.getSkyLevel())
+
 _galsim.PoissonNoise.copy = PoissonNoise_copy
+
 
 
 # CCDNoise docstrings
@@ -319,8 +339,17 @@ _galsim.CCDNoise.getSkyLevel.__func__.__doc__ = "Get sky level in current noise 
 _galsim.CCDNoise.getGain.__func__.__doc__ = "Get gain in current noise model."
 _galsim.CCDNoise.getReadNoise.__func__.__doc__ = "Get read noise in current noise model."
 
-def CCDNoise_copy(self):
-    return _galsim.CCDNoise(self.getRNG(),self.getSkyLevel(),self.getGain(),self.getReadNoise())
+def CCDNoise_copy(self, rng=None):
+    """Returns a copy of the CCD noise model.
+
+    By default, the copy will share the BaseDeviate random number generator with the parent
+    instance.  However, you can provide a new rng to use in the copy if want with
+
+        >>> noise_copy = noise.copy(rng=new_rng)
+    """
+    if rng is None: rng = self.getRNG()
+    return _galsim.CCDNoise(rng, self.getSkyLevel(), self.getGain(), self.getReadNoise())
+
 _galsim.CCDNoise.copy = CCDNoise_copy
 
 
@@ -368,8 +397,18 @@ def DeviateNoise_applyTo(self, image):
     self.applyToView(image.image.view())
 _galsim.DeviateNoise.applyTo = DeviateNoise_applyTo
 
-def DeviateNoise_copy(self):
-    return _galsim.DeviateNoise(self.getRNG())
+def DeviateNoise_copy(self, rng=None):
+    """Returns a copy of the Deviate noise model.
+
+    By default, the copy will share the BaseDeviate random number generator with the parent
+    instance.  However, you can provide a new rng to use in the copy if want with
+
+        >>> noise_copy = noise.copy(rng=new_rng)
+    """
+    if rng is None: rng = self.getRNG()
+    else: rng = self.getRNG().duplicate().reset(rng)
+    return _galsim.DeviateNoise(rng)
+
 _galsim.DeviateNoise.copy = DeviateNoise_copy
 
 # VariableGaussianNoise is a thin wrapper of the C++ VarGaussianNoise
@@ -437,8 +476,16 @@ class VariableGaussianNoise(_galsim.BaseNoise):
     def getRNG(self):
         return self.noise.getRNG()
 
-    def copy(self):
-        return VariableGaussianNoise(self.getRNG(),self.getVarImage())
+    def copy(self, rng=None):
+        """Returns a copy of the variable Gaussian noise model.
+
+        By default, the copy will share the BaseDeviate random number generator with the parent
+        instance.  However, you can provide a new rng to use in the copy if want with
+
+            >>> noise_copy = noise.copy(rng=new_rng)
+        """
+        if rng is None: rng = self.getRNG()
+        return VariableGaussianNoise(rng, self.getVarImage())
 
     def getVariance(self):
         raise RuntimeError("No single variance value for VariableGaussianNoise")

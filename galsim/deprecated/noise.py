@@ -23,7 +23,7 @@ def Noise_setRNG(self, rng):
     """Deprecated method to set the BaseDeviate used to generate random numbers for 
     the current noise model.
     """
-    depr('setRNG', 1.1, 'new noise object with the correct RNG')
+    depr('setRNG', 1.1, 'noise = noise.copy(rng=rng)')
     self._setRNG(rng)
 
 def Noise_setVariance(self, variance):
