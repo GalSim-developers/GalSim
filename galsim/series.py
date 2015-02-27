@@ -210,7 +210,7 @@ class SpergelSeries(Series):
         self.nu = nu
         self.jmax = jmax
         if dlnr is None:
-            dlnr = np.log(np.sqrt(2))
+            dlnr = np.log(np.sqrt(2.0))
         self.dlnr = dlnr
         if half_light_radius is not None:
             prof = galsim.Spergel(nu=nu, half_light_radius=half_light_radius)
@@ -353,13 +353,6 @@ class Spergelet(galsim.GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     """
-
-    # Initialization parameters of the object, with type information
-    _req_params = { "nu" : float, "scale_radius": float, "j":int, "q":int }
-    _takes_rng = False
-    _takes_logger = False
-
-    # --- Public Class methods ---
     def __init__(self, nu, scale_radius, j, q, gsparams=None):
         galsim.GSObject.__init__(
             self, galsim._galsim.SBSpergelet(nu, scale_radius, j, q, gsparams=gsparams))
@@ -378,3 +371,175 @@ class Spergelet(galsim.GSObject):
         """Return the jq indices for this Spergelet.
         """
         return self.SBProfile.getJ(), self.SBProfile.getQ()
+
+class MoffatSeries(Series):
+    def __init__(self, beta, jmax, dlnr=None,
+                 half_light_radius=None, scale_radius=None, fwhm=None,
+                 flux=1.0, gsparams=None):
+        self.beta = beta
+        self.jmax = jmax
+        if dlnr is None:
+            dlnr = np.log(np.sqrt(2.0))
+        self.dlnr = dlnr
+        if half_light_radius is not None:
+            prof = galsim.Moffat(beta=beta, half_light_radius=half_light_radius)
+            scale_radius = prof.getScaleRadius()
+        elif fwhm is not None:
+            prof = galsim.Moffat(beta=beta, fwhm=fwhm)
+            scale_radius = prof.getScaleRadius()
+        self.scale_radius = scale_radius
+        self.flux = flux
+        self.gsparams = gsparams
+
+        # Store transformation relative to scale_radius=1.
+        self._A = np.matrix(np.identity(2)*self.scale_radius, dtype=float)
+        super(MoffatSeries, self).__init__()
+
+    def getCoeffs(self):
+        ellip, phi0, scale_radius, Delta = self._decomposeA()
+        coeffs = []
+        for j in xrange(self.jmax+1):
+            for q in xrange(-j, j+1):
+                coeff = 0.0
+                for m in range(abs(q), j+1):
+                    if (m+q)%2 == 1:
+                        continue
+                    n = (q+m)/2
+                    num = (Delta-1.0)**m
+                    # Have to catch 0^0=1 situations...
+                    if not (Delta == 0.0 and j==m):
+                        num *= Delta**(j-m)
+                    if not (ellip == 0.0 and m==0):
+                        num *= ellip**m
+                    den = 2**(m-1) * math.factorial(j-m) * math.factorial(m-n) * math.factorial(n)
+                    coeff += num/den
+                if q > 0:
+                    coeff *= self.flux * math.cos(2*q*phi0)
+                elif q < 0:
+                    coeff *= self.flux * math.sin(2*q*phi0)
+                else:
+                    coeff *= self.flux * 0.5
+                coeffs.append(coeff)
+        return coeffs
+                
+    def getBasisFuncs(self):
+        ellip, phi0, scale_radius, Delta = self._decomposeA()
+        objs = []
+        for j in xrange(self.jmax+1):
+            for q in xrange(-j, j+1):
+                objs.append(Moffatlet(beta=self.beta, scale_radius=scale_radius,
+                                      j=j, q=q, gsparams=self.gsparams))
+        return objs
+
+    def cubeidx(self):
+        ellip, phi0, scale_radius, Delta = self._decomposeA()
+        return (self.__class__, self.beta, self.jmax, scale_radius)
+    
+    def copy(self):
+        """Returns a copy of an object.  This preserves the original type of the object."""
+        cls = self.__class__
+        ret = cls.__new__(cls)
+        for k, v in self.__dict__.iteritems():
+            ret.__dict__[k] = copy.copy(v)
+        return ret
+
+    def _applyMatrix(self, J):
+        ret = self.copy()
+        ret._A *= J
+        return ret
+
+    def dilate(self, scale):
+        E = np.diag([scale, scale])
+        return self._applyMatrix(E)
+
+    def shear(self, *args, **kwargs):
+        if len(args) == 1:
+            if kwargs:
+                raise TypeError("Gave both unnamed and named arguments!")
+            if not isinstance(args[0], galsim.Shear):
+                raise TypeError("Unnamed argument is not a Shear!")
+            shear = args[0]
+        elif len(args) > 1:
+            raise TypeError("Too many unnamed arguments!")
+        elif 'shear' in kwargs:
+            shear = kwargs.pop('shear')
+            if kwargs:
+                raise TypeError("Too many kwargs provided!")
+        else:
+            shear = galsim.Shear(**kwargs)
+        return self._applyMatrix(shear._shear.getMatrix())
+
+    def rotate(self, theta):
+        cth = math.cos(theta.rad())
+        sth = math.sin(theta.rad())
+        R = np.matrix([[cth, -sth],
+                       [sth,  cth]],
+                      dtype=float)
+        return self._applyMatrix(R)
+
+    def _decomposeA(self):
+        if not hasattr(self, 'ellip'):
+            A = self._A
+            a = A[0,0]
+            b = A[0,1]
+            c = A[1,0]
+            d = A[1,1]
+            mu = math.sqrt(a*d-b*c)
+            phi0 = math.atan2(c-b, a+d)
+            beta = math.atan2(b+c, a-d)+phi0
+            eta = math.acosh(0.5*((a-d)**2 + (b+c)**2)/mu**2 + 1.0)
+
+            # print "mu: {}".format(mu)
+            # print "phi0: {}".format(phi0)
+            # print "beta: {}".format(beta)
+            # print "eta: {}".format(eta)
+
+            ellip = galsim.Shear(eta1=eta).e1
+            r0 = mu/np.sqrt(np.sqrt(1.0 - ellip**2))
+            # find the nearest r_i:
+            f, i = np.modf(np.log(r0)/self.dlnr)
+            # deal with negative logs
+            if f < 0.0:
+                f += 1.0
+                i -= 1
+            # if f > 0.5, then round down from above
+            if f > 0.5:
+                f -= 1.0
+                i += 1
+            scale_radius = np.exp(self.dlnr*i)
+            Delta = 1.0 - (r0/scale_radius)**2
+            self.ellip = ellip
+            self.phi0 = phi0+beta/2
+            self.scale_radius = scale_radius
+            self.Delta = Delta
+        return self.ellip, self.phi0, self.scale_radius, self.Delta
+
+class Moffatlet(galsim.GSObject):
+    """A basis function in the Taylor series expansion of the Moffat profile.
+
+    @param beta             The Moffat index, beta.
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
+    @param j                Radial index.
+    @param q                Azimuthal index.
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+    """
+    def __init__(self, beta, scale_radius, j, q, gsparams=None):
+        galsim.GSObject.__init__(
+            self, galsim._galsim.SBMoffatlet(beta, scale_radius, j, q, gsparams=gsparams))
+
+    def getBeta(self):
+        """Return the Moffat index `beta` for this profile.
+        """
+        return self.SBProfile.getBeta()
+
+    def getScaleRadius(self):
+        """Return the scale radius for this Moffat profile.
+        """
+        return self.SBProfile.getScaleRadius()
+
+    def getJQ(self):
+        """Return the jq indices for this Moffatlet.
+        """
+        return self.SBProfile.getJ(), self.SBProfile.getQ()
+            

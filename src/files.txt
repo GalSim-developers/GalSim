@@ -11,6 +11,7 @@ SBGaussian.cpp
 SBExponential.cpp
 SBSersic.cpp
 SBMoffat.cpp
+SBMoffatlet.cpp
 SBAiry.cpp
 SBShapelet.cpp
 SBAdd.cpp
