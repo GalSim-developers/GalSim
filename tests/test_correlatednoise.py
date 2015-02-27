@@ -675,8 +675,7 @@ def test_cosmos_and_whitening():
             "approximately matching interpixel covariances")
     # Now whiten the noise field, and check that its variance and covariances are as expected
     # (non-zero distance correlations ~ 0!)
-    whitened_variance = ccn.applyWhiteningTo(outimage)
-    #whitened_variance = ccn.whitenImage(outimage)
+    whitened_variance = ccn.whitenImage(outimage)
     cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
     cftest00 = cntest_whitened._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
@@ -697,7 +696,6 @@ def test_cosmos_and_whitening():
     ccn_transformed = ccn.shear(g1=-0.03, g2=0.07).rotate(313. * galsim.degrees).expand(3.9)
     outimage.setZero()
     outimage.addNoise(ccn_transformed)
-    #wht_variance = ccn_transformed.applyWhiteningTo(outimage)  # Whiten noise correlation
     wht_variance = ccn_transformed.whitenImage(outimage)  # Whiten noise correlation
     cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
     cftest00 = cntest_whitened._profile.xValue(galsim.PositionD(0., 0.))
