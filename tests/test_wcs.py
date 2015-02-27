@@ -475,8 +475,8 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
                 'round trip xValue gave different result for PositionI for '+name)
 
         # Test drawing the profile on an image with the given wcs
-        world_profile.draw(im1)
-        image_profile.draw(im2)
+        world_profile.drawImage(im1, method='no_pixel')
+        image_profile.drawImage(im2, method='no_pixel')
         np.testing.assert_array_almost_equal(
                 im1.array, im2.array, digits,
                 'world_profile and image_profile were different when drawn for '+name)
@@ -638,8 +638,8 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
             #print 'profile = ',world_profile
             image_profile = wcs.toImage(world_profile, image_pos=image_pos)
 
-            world_profile.draw(im1, offset=(dx,dy))
-            image_profile.draw(im2, offset=(dx,dy))
+            world_profile.drawImage(im1, offset=(dx,dy), method='no_pixel')
+            image_profile.drawImage(im2, offset=(dx,dy), method='no_pixel')
             np.testing.assert_array_almost_equal(
                     im1.array, im2.array, digits,
                     'world_profile and image_profile differed when drawn for '+name)
@@ -649,8 +649,8 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
                 # So guard against NotImplementedError.
                 image_profile = wcs.toImage(world_profile, world_pos=world_pos)
 
-                world_profile.draw(im1, offset=(dx,dy))
-                image_profile.draw(im2, offset=(dx,dy))
+                world_profile.drawImage(im1, offset=(dx,dy), method='no_pixel')
+                image_profile.drawImage(im2, offset=(dx,dy), method='no_pixel')
                 np.testing.assert_array_almost_equal(
                         im1.array, im2.array, digits,
                         'world_profile and image_profile differed when drawn for '+name)
@@ -732,8 +732,8 @@ def do_celestial_wcs(wcs, name):
             #print 'profile = ',world_profile
             image_profile = wcs.toImage(world_profile, image_pos=image_pos)
 
-            world_profile.draw(im1, offset=(dx,dy))
-            image_profile.draw(im2, offset=(dx,dy))
+            world_profile.drawImage(im1, offset=(dx,dy), method='no_pixel')
+            image_profile.drawImage(im2, offset=(dx,dy), method='no_pixel')
             np.testing.assert_array_almost_equal(
                     im1.array, im2.array, digits,
                     'world_profile and image_profile differed when drawn for '+name)
@@ -743,8 +743,8 @@ def do_celestial_wcs(wcs, name):
                 # So guard against NotImplementedError.
                 image_profile = wcs.toImage(world_profile, world_pos=world_pos)
 
-                world_profile.draw(im1, offset=(dx,dy))
-                image_profile.draw(im2, offset=(dx,dy))
+                world_profile.drawImage(im1, offset=(dx,dy), method='no_pixel')
+                image_profile.drawImage(im2, offset=(dx,dy), method='no_pixel')
                 np.testing.assert_array_almost_equal(
                         im1.array, im2.array, digits,
                         'world_profile and image_profile differed when drawn for '+name)

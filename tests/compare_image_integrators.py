@@ -75,11 +75,10 @@ def compare_image_integrators():
     stamp_size = 128
 
     gal = galsim.Chromatic(galsim.Gaussian(half_light_radius=0.5), disk_SED)
-    pix = galsim.Pixel(pixel_scale)
     PSF_500 = galsim.Gaussian(half_light_radius=PSF_hlr)
     PSF = galsim.ChromaticAtmosphere(PSF_500, 500.0, zenith_angle)
 
-    final = galsim.Convolve([gal, PSF, pix])
+    final = galsim.Convolve([gal, PSF])
     image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
     # truth flux
@@ -92,7 +91,7 @@ def compare_image_integrators():
     t1 = time.time()
     print 'midpoint'
     for N in [10, 30, 100, 300, 1000, 3000]:
-        image = final.draw(
+        image = final.drawImage(
             bandpass, image=image,
             integrator=galsim.integ.ContinuousIntegrator(rule=galsim.integ.midpt, N=N))
         mom = silentgetmoments(image)
@@ -103,7 +102,7 @@ def compare_image_integrators():
 
     print 'trapezoidal'
     for N in [10, 30, 100, 300, 1000, 3000]:
-        image = final.draw(
+        image = final.drawImage(
             bandpass, image=image,
             integrator=galsim.integ.ContinuousIntegrator(rule=np.trapz, N=N))
         mom = silentgetmoments(image)

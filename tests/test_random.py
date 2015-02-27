@@ -1629,9 +1629,7 @@ def test_addnoisesnr():
     pix_scale = 0.6
     test_snr = 73.
     gauss = galsim.Gaussian(sigma=gal_sigma)
-    pix = galsim.Pixel(pix_scale)
-    obj = galsim.Convolve(gauss, pix)
-    im = obj.draw(scale=pix_scale, dtype=np.float64)
+    im = gauss.drawImage(scale=pix_scale, dtype=np.float64)
 
     # Now make the noise object to use.
     # Use a default-constructed rng (i.e. rng=None) since we had initially had trouble
@@ -1650,7 +1648,7 @@ def test_addnoisesnr():
     # variance in the original RNG, i.e., 1.  Check that the returned variance is 1, and that the
     # value of the maximum pixel (presumably the peak of the galaxy light profile) is scaled as we
     # expect for this SNR.
-    im2 = obj.draw(scale=pix_scale, dtype=np.float64)
+    im2 = gauss.drawImage(scale=pix_scale, dtype=np.float64)
     gn2 = galsim.GaussianNoise(rng=rng2)
     var_out2 = im2.addNoiseSNR(gn2, test_snr, preserve_flux=False)
     assert var_out2==1.0

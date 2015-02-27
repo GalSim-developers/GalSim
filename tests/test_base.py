@@ -80,7 +80,7 @@ def test_gaussian():
 
     gauss = galsim.Gaussian(flux=1, sigma=1)
     # Reference images were made with old centering, which is equivalent to use_true_center=False.
-    myImg = gauss.draw(myImg, scale=dx, normalization="surface brightness", use_true_center=False)
+    myImg = gauss.drawImage(myImg, scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian disagrees with expected result")
@@ -92,7 +92,7 @@ def test_gaussian():
     print myImg.bounds
     recImg = galsim.ImageF(45,66)
     recImg.setCenter(0,0)
-    recImg = gauss.draw(recImg, scale=dx, normalization="surface brightness", use_true_center=False)
+    recImg = gauss.drawImage(recImg, scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             recImg[savedImg.bounds].array, savedImg.array, 5,
             err_msg="Drawing Gaussian on non-square image disagrees with expected result")
@@ -102,12 +102,12 @@ def test_gaussian():
 
     # Check with default_params
     gauss = galsim.Gaussian(flux=1, sigma=1, gsparams=default_params)
-    gauss.draw(myImg,scale=0.2, normalization="surface brightness", use_true_center=False)
+    gauss.drawImage(myImg,scale=0.2, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian with default_params disagrees with expected result")
     gauss = galsim.Gaussian(flux=1, sigma=1, gsparams=galsim.GSParams())
-    gauss.draw(myImg,scale=0.2, normalization="surface brightness", use_true_center=False)
+    gauss.drawImage(myImg,scale=0.2, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian with GSParams() disagrees with expected result")
@@ -372,19 +372,19 @@ def test_exponential():
     myImg.setCenter(0,0)
 
     expon = galsim.Exponential(flux=1., scale_radius=r0)
-    expon.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    expon.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Exponential disagrees with expected result")
 
     # Check with default_params
     expon = galsim.Exponential(flux=1., scale_radius=r0, gsparams=default_params)
-    expon.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    expon.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Exponential with default_params disagrees with expected result")
     expon = galsim.Exponential(flux=1., scale_radius=r0, gsparams=galsim.GSParams())
-    expon.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    expon.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Exponential with GSParams() disagrees with expected result")
@@ -544,19 +544,19 @@ def test_sersic():
     myImg.setCenter(0,0)
 
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
-    sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Sersic disagrees with expected result")
 
     # Check with default_params
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, gsparams=default_params)
-    sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Sersic with default_params disagrees with expected result")
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, gsparams=galsim.GSParams())
-    sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Sersic with GSParams() disagrees with expected result")
@@ -578,7 +578,7 @@ def test_sersic():
     myImg.setCenter(0,0)
 
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, trunc=10)
-    sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using truncated GSObject Sersic disagrees with expected result")
@@ -868,7 +868,7 @@ def test_sersic_05():
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     sersic = galsim.Sersic(n=0.5, flux=1, half_light_radius=1 * hlr_sigma)
-    myImg = sersic.draw(myImg, normalization="surface brightness", use_true_center=False)
+    myImg = sersic.drawImage(myImg, method="sb", use_true_center=False)
     print 'saved image center = ',savedImg(0,0)
     print 'image center = ',myImg(0,0)
     np.testing.assert_array_almost_equal(
@@ -906,7 +906,7 @@ def test_sersic_1():
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     sersic = galsim.Sersic(n=1, flux=1., half_light_radius=r0 * hlr_r0)
-    sersic.draw(myImg, normalization="surface brightness", use_true_center=False)
+    sersic.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using Sersic n=1 disagrees with expected result for Exponential")
@@ -941,19 +941,19 @@ def test_airy():
     myImg.setCenter(0,0)
 
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
-    airy.draw(myImg, normalization="surface brightness", use_true_center=False)
+    airy.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy disagrees with expected result")
 
     # Check with default_params
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1, gsparams=default_params)
-    airy.draw(myImg, normalization="surface brightness", use_true_center=False)
+    airy.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy with default_params disagrees with expected result")
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1, gsparams=galsim.GSParams())
-    airy.draw(myImg, normalization="surface brightness", use_true_center=False)
+    airy.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy with GSParams() disagrees with expected result")
@@ -1092,19 +1092,19 @@ def test_box():
     myImg.setCenter(0,0)
 
     pixel = galsim.Pixel(scale=1, flux=1)
-    pixel.draw(myImg, normalization="surface brightness", use_true_center=False)
+    pixel.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel disagrees with expected result")
 
     # Check with default_params
     pixel = galsim.Pixel(scale=1, flux=1, gsparams=default_params)
-    pixel.draw(myImg, normalization="surface brightness", use_true_center=False)
+    pixel.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel with default_params disagrees with expected result")
     pixel = galsim.Pixel(scale=1, flux=1, gsparams=galsim.GSParams())
-    pixel.draw(myImg, normalization="surface brightness", use_true_center=False)
+    pixel.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel with GSParams() disagrees with expected result")
@@ -1160,19 +1160,19 @@ def test_tophat():
     # test since it wouldn't be any less correct for a different subset of these points to be
     # drawn. Using r = 1.01 solves this problem and makes the result symmetric.
     tophat = galsim.TopHat(radius=1.01, flux=1)
-    tophat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    tophat.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject TopHat disagrees with expected result")
 
     # Check with default_params
     tophat = galsim.TopHat(radius=1.01, flux=1, gsparams=default_params)
-    tophat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    tophat.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject TopHat with default_params disagrees with expected result")
     tophat = galsim.TopHat(radius=1.01, flux=1, gsparams=galsim.GSParams())
-    tophat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    tophat.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject TopHat with GSParams() disagrees with expected result")
@@ -1230,7 +1230,7 @@ def test_moffat():
     # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.3178976627539716
     moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1)
-    moffat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    moffat.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat disagrees with expected result")
@@ -1238,13 +1238,13 @@ def test_moffat():
     # Check with default_params
     moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1,
                            gsparams=default_params)
-    moffat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    moffat.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat with default_params disagrees with expected result")
     moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1,
                            gsparams=galsim.GSParams())
-    moffat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    moffat.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat with GSParams() disagrees with expected result")
@@ -1578,26 +1578,26 @@ def test_kolmogorov():
     # It would be nice to get an independent calculation here...
     #mySBP = galsim.SBKolmogorov(lam_over_r0=1.5, flux=test_flux)
     #savedImg = galsim.ImageF(128,128)
-    #mySBP.draw(image=savedImg, dx=dx)
+    #mySBP.drawImage(image=savedImg, dx=dx, method="sb")
     #savedImg.write(os.path.join(imgdir, "kolmogorov.fits"))
     savedImg = galsim.fits.read(os.path.join(imgdir, "kolmogorov.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
 
     kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=test_flux)
-    kolm.draw(myImg, normalization="surface brightness", use_true_center=False)
+    kolm.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Kolmogorov disagrees with expected result")
 
     # Check with default_params
     kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=test_flux, gsparams=default_params)
-    kolm.draw(myImg, normalization="surface brightness", use_true_center=False)
+    kolm.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Kolmogorov with default_params disagrees with expected result")
     kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=test_flux, gsparams=galsim.GSParams())
-    kolm.draw(myImg, normalization="surface brightness", use_true_center=False)
+    kolm.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Kolmogorov with GSParams() disagrees with expected result")
@@ -1643,9 +1643,7 @@ def test_kolmogorov_properties():
         # Also check the realized flux in a drawn image
         dx = lor / 10.
         img = galsim.ImageF(256,256, scale=dx)
-        pix = galsim.Pixel(dx)
-        conv = galsim.Convolve([psf,pix])
-        conv.draw(image=img)
+        psf.drawImage(image=img)
         out_flux = img.array.sum()
         np.testing.assert_almost_equal(out_flux, test_flux, 3,
                                        err_msg="Flux of Kolmogorov (image array) is incorrect.")
@@ -1819,7 +1817,7 @@ def test_spergel():
         spergel = galsim.Spergel(nu=nu, half_light_radius=1.0)
         # Reference images were made with old centering,
         # which is equivalent to use_true_center=False.
-        myImg = spergel.draw(myImg, scale=dx, normalization="surface brightness",
+        myImg = spergel.drawImage(myImg, scale=dx, method="sb",
                              use_true_center=False)
 
         np.testing.assert_array_almost_equal(
@@ -1831,7 +1829,7 @@ def test_spergel():
             err_msg="Spergel profile GSObject::draw returned wrong added_flux")
 
         # Only nu >= -0.3 give reasonably sized FFTs,
-        # and small nu drawShoot is super slow.
+        # and small nu method='phot' is super slow.
         if nu >= -0.3:
             test_im = galsim.Image(16,16,scale=dx)
             do_kvalue(spergel,test_im, "Spergel(nu={:1}) ".format(nu))
@@ -2030,7 +2028,7 @@ def test_spergel_05():
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     spergel = galsim.Spergel(nu=0.5, flux=1., half_light_radius=r0 * hlr_r0)
-    spergel.draw(myImg, normalization="surface brightness", use_true_center=False)
+    spergel.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using Spergel nu=0.5 disagrees with expected result for Exponential")

@@ -140,7 +140,7 @@ def test_real_galaxy_ideal():
                     expected_gaussian.applyShear(e1 = tot_e1, e2 = tot_e2)
                     expected_image = galsim.ImageD(
                             sim_image.array.shape[0], sim_image.array.shape[1])
-                    expected_gaussian.draw(expected_image, scale = tps)
+                    expected_gaussian.drawImage(expected_image, scale=tps, method='no_pixel')
                     printval(expected_image,sim_image)
                     np.testing.assert_array_almost_equal(
                         sim_image.array, expected_image.array, decimal = 3,
