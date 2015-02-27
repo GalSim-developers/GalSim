@@ -232,8 +232,7 @@ class ChromaticObject(object):
         fluxes = np.array([ obj.getFlux() for obj in objs ])
         if np.any(abs(fluxes - 1.0) > 10.*np.finfo(fluxes.dtype.type).eps):
             # Figure out the rescaling factor for the SED.
-            for obj in objs:
-                obj.setFlux(1.)
+            objs = [ obj.withFlux(1.0) for obj in objs ]
             if not hasattr(self, 'SED'):
                 self.SED = lambda w : 1.0
             self.SED = galsim.LookupTable(x=self.waves, f=self.SED(self.waves)*fluxes,
