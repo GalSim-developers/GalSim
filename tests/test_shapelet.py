@@ -50,7 +50,7 @@ def test_shapelet_gaussian():
         gauss = galsim.Gaussian(flux=test_flux, sigma=sigma)
         gauss.drawImage(im1, method='no_pixel')
         for order in [0, 2, 8]:
-            bvec = np.zeros(galsim.LVectorSize(order))
+            bvec = np.zeros(galsim.ShapeletSize(order))
             bvec[0] = test_flux
             shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
             shapelet.drawImage(im2, method='no_pixel')
@@ -77,20 +77,25 @@ def test_shapelet_drawImage():
     im = galsim.ImageF(129,129, scale=scale)
     for sigma in [1., 0.3, 2.4]:
         for order in [0, 2, 8]:
-            shapelet = galsim.Shapelet(sigma=sigma, order=order)
-            shapelet.setNM(0,0,1.)
+            bvec = np.zeros(galsim.ShapeletSize(order))
+            bvec[0] = 1.  # N,m = 0,0
+            k = 0
             for n in range(1,order+1):
+                k += n+1
                 if n%2 == 0:  # even n
-                    #shapelet.setNM(n,0,0.23/(n*n))
-                    shapelet.setPQ(n/2,n/2,0.23/(n*n))  # same thing.  Just test setPQ syntax.
+                    bvec[k] = 0.23/(n*n)        # N,m = n,0  or p,q = n/2,n/2
                     if n >= 2:
-                        shapelet.setNM(n,2,0.14/n,-0.08/n)
+                        bvec[k-2] = 0.14/n      # N,m = n,2  real part
+                        bvec[k-1] = -0.08/n     # N,m = n,2  imag part
                 else:  # odd n
                     if n >= 1:
-                        shapelet.setNM(n,1,-0.08/n**3.2,0.05/n**2.1)
+                        bvec[k-1] = -0.08/n**3.2    # N,m = n,1  real part
+                        bvec[k] = 0.05/n**2.1       # N,m = n,1  imag part
                     if n >= 3:
-                        shapelet.setNM(n,3,0.31/n**4.2,-0.18/n**3.9)
-            print 'shapelet vector = ',shapelet.getBVec()
+                        bvec[k-3] = 0.31/n**4.2    # N,m = n,3  real part
+                        bvec[k-2] = -0.18/n**3.9       # N,m = n,3  imag part
+            print 'shapelet vector = ',bvec
+            shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
 
             # Test normalization  (This is normally part of do_shoot.  When we eventually 
             # implement photon shooting, we should go back to the normal do_shoot call, 
@@ -178,9 +183,8 @@ def test_shapelet_fit():
         im1 = conv.drawImage(scale=scale, method=method)
 
         sigma = 1.2  # Match half-light-radius as a decent first approximation.
-        shapelet = galsim.Shapelet(sigma=sigma, order=10)
-        shapelet.fitImage(im1, normalization=norm)
-        #print 'fitted shapelet coefficients = ',shapelet.getBVec()
+        shapelet = galsim.FitShapelet(sigma, 10, im1, normalization=norm)
+        print 'fitted shapelet coefficients = ',shapelet.bvec
 
         # Check flux
         print 'flux = ',shapelet.getFlux(),'  cf. ',flux
@@ -203,13 +207,12 @@ def test_shapelet_fit():
         assert np.sum((im1.array-im2.array)**2) < 1.e-3 * np.sum(im1.array**2)
 
         # Remeasure -- should now be very close to the same.
-        shapelet2 = shapelet.copy()
-        shapelet2.fitImage(im2, normalization=norm)
-        np.testing.assert_equal(shapelet.getSigma(), shapelet2.getSigma(),
+        shapelet2 = galsim.FitShapelet(sigma, 10, im2, normalization=norm)
+        np.testing.assert_equal(shapelet.sigma, shapelet2.sigma,
                 err_msg="Second fitted shapelet has the wrong sigma")
-        np.testing.assert_equal(shapelet.getOrder(), shapelet2.getOrder(),
+        np.testing.assert_equal(shapelet.order, shapelet2.order,
                 err_msg="Second fitted shapelet has the wrong order")
-        np.testing.assert_almost_equal(shapelet.getBVec(), shapelet2.getBVec(), 6,
+        np.testing.assert_almost_equal(shapelet.bvec, shapelet2.bvec, 6,
                 err_msg="Second fitted shapelet coefficients do not match original")
 
     t2 = time.time()
