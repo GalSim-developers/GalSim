@@ -589,7 +589,7 @@ def test_copy():
     cn_copy = cn.copy()
     # Fundamental checks on RNG
     assert cn.getRNG() is cn_copy.getRNG(), "Copied correlated noise does not keep same RNG."
-    cn_copy.setRNG(galsim.UniformDeviate(rseed + 1))
+    cn_copy = cn.copy(rng=galsim.UniformDeviate(rseed + 1))
     assert cn.getRNG() is not cn_copy.getRNG(), \
         "Copied correlated noise keeps same RNG despite reset."
     # Then check the profile in the copy is *NOT* shared, so that changes in one aren't manifest
@@ -613,9 +613,7 @@ def test_copy():
     # they are initialized with the same RNG immediately prior to noise generation
     outim1 = galsim.ImageD(smallim_size, smallim_size, scale=1.)
     outim2 = galsim.ImageD(smallim_size, smallim_size, scale=1.)
-    cn_copy = cn.copy()
-    cn.setRNG(galsim.UniformDeviate(rseed))
-    cn_copy.setRNG(galsim.UniformDeviate(rseed))
+    cn_copy = cn.copy(rng=cn.getRNG().duplicate())
     outim1.addNoise(cn)
     outim2.addNoise(cn_copy)
     # The test below does not yield *exactly* equivalent results, plausibly due to the fact that the
@@ -630,9 +628,8 @@ def test_copy():
     outim1.setZero()
     outim2.setZero()
     cn = galsim.CorrelatedNoise(noise_image, ud, subtract_mean=True, correct_periodicity=True)
-    cn_copy = cn.copy()
-    cn.setRNG(galsim.UniformDeviate(rseed))
-    cn_copy.setRNG(galsim.UniformDeviate(rseed))
+    cn_copy = cn.copy(rng=cn.getRNG().duplicate())
+    cn = cn.copy(rng=cn.getRNG().duplicate())
     outim1.addNoise(cn)
     outim2.addNoise(cn_copy)
     decimal_very_precise = 14
