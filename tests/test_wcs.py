@@ -40,8 +40,8 @@ far_y_list = [ 10, 12.5, 103.3, 500 ]
 # Make a few different profiles to check.  Make sure to include ones that 
 # aren't symmetrical so we don't get fooled by symmetries.
 prof1 = galsim.Gaussian(sigma = 1.7, flux = 100)
-prof2 = prof1.createSheared(g1=0.3, g2=-0.12)
-prof3 = prof2 + galsim.Exponential(scale_radius = 1.3, flux = 20).createShifted(-0.1,-0.4)
+prof2 = prof1.shear(g1=0.3, g2=-0.12)
+prof3 = prof2 + galsim.Exponential(scale_radius = 1.3, flux = 20).shift(-0.1,-0.4)
 profiles = [ prof1, prof2, prof3 ]
 
 if __name__ != "__main__":
@@ -533,18 +533,15 @@ def do_jac_decomp(wcs, name):
     # for getDecomposition.
     base_obj = galsim.Gaussian(sigma=2)
     # Make sure it doesn't have any initial symmetry!
-    base_obj.applyShear(g1=0.1, g2=0.23)
-    base_obj.applyShift(0.17, -0.37)
+    base_obj = base_obj.shear(g1=0.1, g2=0.23).shift(0.17, -0.37)
 
-    obj1 = base_obj.copy()
-    obj1.applyTransformation(wcs.dudx, wcs.dudy, wcs.dvdx, wcs.dvdy)
+    obj1 = base_obj.transform(wcs.dudx, wcs.dudy, wcs.dvdx, wcs.dvdy)
 
-    obj2 = base_obj.copy()
     if flip:
-        obj2.applyTransformation(0,1,1,0)
-    obj2.applyRotation(theta)
-    obj2.applyShear(shear)
-    obj2.applyExpansion(scale)
+        obj2 = base_obj.transform(0,1,1,0)
+    else:
+        obj2 = base_obj
+    obj2 = obj2.rotate(theta).shear(shear).expand(scale)
 
     gsobject_compare(obj1, obj2)
 

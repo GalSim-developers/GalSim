@@ -90,7 +90,7 @@ def test_shapelet_drawImage():
                         shapelet.setNM(n,1,-0.08/n**3.2,0.05/n**2.1)
                     if n >= 3:
                         shapelet.setNM(n,3,0.31/n**4.2,-0.18/n**3.9)
-            #print 'shapelet vector = ',shapelet.getBVec()
+            print 'shapelet vector = ',shapelet.getBVec()
 
             # Test normalization  (This is normally part of do_shoot.  When we eventually 
             # implement photon shooting, we should go back to the normal do_shoot call, 
@@ -171,8 +171,7 @@ def test_shapelet_fit():
         # We fit a shapelet approximation of a distorted Moffat profile:
         flux = 20
         psf = galsim.Moffat(beta=3.4, half_light_radius=1.2, flux=flux)
-        psf.applyShear(g1=0.11,g2=0.07)
-        psf.applyShift(0.03,0.04)
+        psf = psf.shear(g1=0.11,g2=0.07).shift(0.03,0.04)
         scale = 0.2
         pixel = galsim.Pixel(scale)
         conv = galsim.Convolve([psf,pixel])
@@ -263,42 +262,33 @@ def test_shapelet_adjustments():
         im.array, ref_im.array, 6,
         err_msg="Shapelet setFlux disagrees with SObject scaleFlux")
 
-    # Test that the Shapelet applyRotation does the same thing as the GSObject applyRotation
-    gsref_shapelet.applyRotation(23. * galsim.degrees)
-    gsref_shapelet.drawImage(ref_im, method='no_pixel')
-    shapelet.applyRotation(23. * galsim.degrees)
-    shapelet.drawImage(im, method='no_pixel')
+    # Test that the Shapelet rotate does the same thing as the GSObject rotate
+    gsref_shapelet.rotate(23. * galsim.degrees).drawImage(ref_im, method='no_pixel')
+    shapelet.rotate(23. * galsim.degrees).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
-        err_msg="Shapelet applyRotation disagrees with GSObject applyRotation")
+        err_msg="Shapelet rotate disagrees with GSObject rotate")
 
-    # Test that the Shapelet applyDilation does the same thing as the GSObject applyDilation
-    gsref_shapelet.applyDilation(1.3)
-    gsref_shapelet.drawImage(ref_im, method='no_pixel')
-    shapelet.applyDilation(1.3)
-    shapelet.drawImage(im, method='no_pixel')
+    # Test that the Shapelet dilate does the same thing as the GSObject dilate
+    gsref_shapelet.dilate(1.3).drawImage(ref_im, method='no_pixel')
+    shapelet.dilate(1.3).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
-        err_msg="Shapelet applyDilation disagrees with GSObject applyDilation")
+        err_msg="Shapelet dilate disagrees with GSObject dilate")
 
-    # Test that the Shapelet applyMagnification does the same thing as the GSObject 
-    # applyMagnification
-    gsref_shapelet.applyMagnification(0.8)
-    gsref_shapelet.drawImage(ref_im, method='no_pixel')
-    shapelet.applyMagnification(0.8)
-    shapelet.drawImage(im, method='no_pixel')
+    # Test that the Shapelet magnify does the same thing as the GSObject magnify
+    gsref_shapelet.magnify(0.8).drawImage(ref_im, method='no_pixel')
+    shapelet.magnify(0.8).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
-        err_msg="Shapelet applyMagnification disagrees with GSObject applyMagnification")
+        err_msg="Shapelet magnify disagrees with GSObject magnify")
 
-    # Test that applyLensing works on Shapelet
-    gsref_shapelet.applyLensing(-0.05, 0.15, 1.1)
-    gsref_shapelet.drawImage(ref_im, method='no_pixel')
-    shapelet.applyLensing(-0.05, 0.15, 1.1)
-    shapelet.drawImage(im, method='no_pixel')
+    # Test that lens works on Shapelet
+    gsref_shapelet.lens(-0.05, 0.15, 1.1).drawImage(ref_im, method='no_pixel')
+    shapelet.lens(-0.05, 0.15, 1.1).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
-        err_msg="Shapelet applyLensing disagrees with GSObject applyLensing")
+        err_msg="Shapelet lens disagrees with GSObject lens")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

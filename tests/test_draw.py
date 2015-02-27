@@ -929,8 +929,8 @@ def test_offset():
                         im2(x,y), gal.xValue(galsim.PositionD(u,v)), 6,
                         "im2(%d,%d) does not match xValue(%f,%f)"%(x,y,u,v))
 
-            # Check that applyShift also moves the centroid by the right amount.
-            shifted_obj = obj.createShifted(offset * scale)
+            # Check that shift also moves the centroid by the right amount.
+            shifted_obj = obj.shift(offset * scale)
             shifted_obj.drawImage(im, method='sb')
             moments = getmoments(im)
             #print 'moments = ',moments
@@ -941,7 +941,7 @@ def test_offset():
                     moments[1], ceny+offy, decimal,
                     "shifted_obj.drawImage(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
             # Test that a few pixel values match xValue
-            shifted_gal = gal.createShifted(offset * scale)
+            shifted_gal = gal.shift(offset * scale)
             shifted_gal.drawImage(im2, method='sb')
             for x,y in xy_list:
                 #print 'x,y = ',x,y

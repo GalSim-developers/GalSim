@@ -44,14 +44,9 @@ KXVALS = np.array((1.30, 0.71, -4.30)) * np.pi / 2.
 KYVALS = np.array((0.80, -0.02, -0.31,)) * np.pi / 2.
 
 # First make an image that we'll use for interpolation:
-g1 = galsim.Gaussian(sigma = 3.1, flux=2.4)
-g1.applyShear(g1=0.2,g2=0.1)
-g2 = galsim.Gaussian(sigma = 1.9, flux=3.1)
-g2.applyShear(g1=-0.4,g2=0.3)
-g2.applyShift(-0.3,0.5)
-g3 = galsim.Gaussian(sigma = 4.1, flux=1.6)
-g3.applyShear(g1=0.1,g2=-0.1)
-g3.applyShift(0.7,-0.2)
+g1 = galsim.Gaussian(sigma = 3.1, flux=2.4).shear(g1=0.2,g2=0.1)
+g2 = galsim.Gaussian(sigma = 1.9, flux=3.1).shear(g1=-0.4,g2=0.3).shift(-0.3,0.5)
+g3 = galsim.Gaussian(sigma = 4.1, flux=1.6).shear(g1=0.1,g2=-0.1).shift(0.7,-0.2)
 
 final = g1 + g2 + g3
 ref_image = galsim.ImageD(128,128)
@@ -230,9 +225,9 @@ def test_operations_simple():
                                                      (im_size-comp_region)/2))
 
     bulge = galsim.Sersic(4, half_light_radius=bulge_hlr)
-    bulge.applyShear(e=bulge_e, beta=bulge_pos_angle)
+    bulge = bulge.shear(e=bulge_e, beta=bulge_pos_angle)
     disk = galsim.Exponential(half_light_radius = disk_hlr)
-    disk.applyShear(e=disk_e, beta=disk_pos_angle)
+    disk = disk.shear(e=disk_e, beta=disk_pos_angle)
     gal = bulge_frac*bulge + (1.-bulge_frac)*disk
     gal.setFlux(gal_flux)
     psf = galsim.Airy(lam_over_diam)
@@ -246,8 +241,8 @@ def test_operations_simple():
     test_g1=-0.07
     test_g2=0.1
     test_decimal=2 # in % difference, i.e. 2 means 1% agreement
-    test_int_im = int_im.createSheared(g1=test_g1, g2=test_g2)
-    ref_obj = obj.createSheared(g1=test_g1, g2=test_g2)
+    test_int_im = int_im.shear(g1=test_g1, g2=test_g2)
+    ref_obj = obj.shear(g1=test_g1, g2=test_g2)
     # make large images
     im = galsim.ImageD(im_size, im_size)
     ref_im = galsim.ImageD(im_size, im_size)
@@ -268,8 +263,8 @@ def test_operations_simple():
     test_mag = 1.08
     test_decimal=2 # in % difference, i.e. 2 means 1% agreement
     comp_region=30 # compare the central region of this linear size
-    test_int_im = int_im.createMagnified(test_mag)
-    ref_obj = obj.createMagnified(test_mag)
+    test_int_im = int_im.magnify(test_mag)
+    ref_obj = obj.magnify(test_mag)
     # make large images
     im = galsim.ImageD(im_size, im_size)
     ref_im = galsim.ImageD(im_size, im_size)
@@ -292,8 +287,8 @@ def test_operations_simple():
     test_mag = 0.74
     test_decimal=2 # in % difference, i.e. 2 means 1% agreement
     comp_region=30 # compare the central region of this linear size
-    test_int_im = int_im.createLensed(test_g1, test_g2, test_mag)
-    ref_obj = obj.createLensed(test_g1, test_g2, test_mag)
+    test_int_im = int_im.lens(test_g1, test_g2, test_mag)
+    ref_obj = obj.lens(test_g1, test_g2, test_mag)
     # make large images
     im = galsim.ImageD(im_size, im_size)
     ref_im = galsim.ImageD(im_size, im_size)
@@ -314,8 +309,8 @@ def test_operations_simple():
     test_rot_angle = 32.*galsim.degrees
     test_decimal=2 # in % difference, i.e. 2 means 1% agreement
     comp_region=30 # compare the central region of this linear size
-    test_int_im = int_im.createRotated(test_rot_angle)
-    ref_obj = obj.createRotated(test_rot_angle)
+    test_int_im = int_im.rotate(test_rot_angle)
+    ref_obj = obj.rotate(test_rot_angle)
     # make large images
     im = galsim.ImageD(im_size, im_size)
     ref_im = galsim.ImageD(im_size, im_size)
@@ -337,8 +332,8 @@ def test_operations_simple():
     y_shift = 0.87
     test_decimal=2 # in % difference, i.e. 2 means 1% agreement
     comp_region=30 # compare the central region of this linear size
-    test_int_im = int_im.createShifted(x_shift, y_shift)
-    ref_obj = obj.createShifted(x_shift, y_shift)
+    test_int_im = int_im.shift(x_shift, y_shift)
+    ref_obj = obj.shift(x_shift, y_shift)
     # make large images
     im = galsim.ImageD(im_size, im_size)
     ref_im = galsim.ImageD(im_size, im_size)
@@ -375,7 +370,7 @@ def test_operations():
 
     # Magnify by some amount and make sure change is as expected
     mu = 0.92
-    new_int_im = int_im.createMagnified(mu)
+    new_int_im = int_im.magnify(mu)
     test_im = galsim.ImageF(im.bounds)
     new_int_im.drawImage(image = test_im, scale = im.scale, method='no_pixel')
     new_mom = test_im.FindAdaptiveMom()
@@ -392,7 +387,7 @@ def test_operations():
     # Shift, make sure change in moments is as expected
     x_shift = 0.92
     y_shift = -0.16
-    new_int_im = int_im.createShifted(x_shift, y_shift)
+    new_int_im = int_im.shift(x_shift, y_shift)
     test_im = galsim.ImageF(im.bounds)
     new_int_im.drawImage(image = test_im, scale = im.scale, method='no_pixel')
     new_mom = test_im.FindAdaptiveMom()

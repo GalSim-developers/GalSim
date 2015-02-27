@@ -198,17 +198,10 @@ def test_shearconvolve():
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
 
-    psf = galsim.Gaussian(flux=1, sigma=1)
-    psf2 = psf.createSheared(e1=e1, e2=e2)
-    psf.applyShear(e1=e1, e2=e2)
+    psf = galsim.Gaussian(flux=1, sigma=1).shear(e1=e1, e2=e2)
     pixel = galsim.Pixel(scale=dx, flux=1.)
     conv = galsim.Convolve([psf,pixel])
     conv.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
-    conv2 = galsim.Convolve([psf2,pixel])
-    conv2.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
@@ -330,12 +323,9 @@ def test_realspace_distorted_convolve():
                         trunc=4*fwhm_backwards_compatible, flux=1)
     #psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible,
                         #trunc=4*fwhm_backwards_compatible, flux=1)
-    psf.applyShear(g1=0.11,g2=0.17)
-    psf.applyRotation(13 * galsim.degrees)
+    psf = psf.shear(g1=0.11,g2=0.17).rotate(13 * galsim.degrees)
     pixel = galsim.Pixel(scale=dx, flux=1.)
-    pixel.applyShear(g1=0.2,g2=0.0)
-    pixel.applyRotation(80 * galsim.degrees)
-    pixel.applyShift(0.13,0.27)
+    pixel = pixel.shear(g1=0.2,g2=0.0).rotate(80 * galsim.degrees).shift(0.13,0.27)
     # NB: real-space is chosen automatically
     conv = galsim.Convolve([psf,pixel])
     conv.drawImage(img,scale=dx, method="sb", use_true_center=False)
@@ -391,7 +381,7 @@ def test_realspace_shearconvolve():
     img.setCenter(0,0)
 
     psf = galsim.Gaussian(flux=1, sigma=1)
-    psf.applyShear(e1=e1,e2=e2)
+    psf = psf.shear(e1=e1,e2=e2)
     pixel = galsim.Pixel(scale=dx, flux=1.)
     conv = galsim.Convolve([psf,pixel],real_space=True)
     conv.drawImage(img,scale=dx, method="sb", use_true_center=False)
@@ -629,10 +619,8 @@ def test_autoconvolve():
 
     # Also check AutoConvolve with an asymmetric profile.
     # (AutoCorrelate with this profile is done below...)
-    obj1 = galsim.Gaussian(sigma=3., flux=4)
-    obj1.applyShift(-0.2, -0.4)
-    obj2 = galsim.Gaussian(sigma=6., flux=1.3)
-    obj2.applyShift(0.3, 0.3)
+    obj1 = galsim.Gaussian(sigma=3., flux=4).shift(-0.2, -0.4)
+    obj2 = galsim.Gaussian(sigma=6., flux=1.3).shift(0.3, 0.3)
     add = galsim.Add(obj1, obj2)
     conv = galsim.Convolve([add, add])
     conv.drawImage(myImg1, method='no_pixel')
@@ -663,13 +651,11 @@ def test_autocorrelate():
     myImg2.setCenter(0,0)
 
     # Use a function that is NOT two-fold rotationally symmetric, e.g. two different flux Gaussians
-    obj1 = galsim.Gaussian(sigma=3., flux=4)
-    obj1.applyShift(-0.2, -0.4)
-    obj2 = galsim.Gaussian(sigma=6., flux=1.3)
-    obj2.applyShift(0.3, 0.3)
+    obj1 = galsim.Gaussian(sigma=3., flux=4).shift(-0.2, -0.4)
+    obj2 = galsim.Gaussian(sigma=6., flux=1.3).shift(0.3, 0.3)
     add1 = galsim.Add(obj1, obj2)
     # Here we rotate by 180 degrees to create mirror image
-    add2 = (galsim.Add(obj1, obj2)).createRotated(180. * galsim.degrees)
+    add2 = (galsim.Add(obj1, obj2)).rotate(180. * galsim.degrees)
     conv = galsim.Convolve([add1, add2])
     conv.drawImage(myImg1, method='no_pixel')
     corr = galsim.AutoCorrelate(add1)

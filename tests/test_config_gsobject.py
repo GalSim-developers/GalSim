@@ -65,23 +65,18 @@ def test_gaussian():
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.Gaussian(half_light_radius = 2, flux = 1.e6)
-    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.Gaussian(sigma = 1, flux = 50)
-    gal4b.applyDilation(3)
-    gal4b.applyShear(e1 = 0.3)
-    gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyMagnification(1.03)
-    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
-    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gal4b = gal4b.dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees).magnify(1.03)
+    gal4b = gal4b.shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
     gal5b = galsim.Gaussian(sigma = 1.5, flux = 72.5)
-    gal5b.applyRotation(-34 * galsim.degrees)
-    gal5b.applyLensing(-0.15, 0.2, 0.93)
+    gal5b = gal5b.rotate(-34 * galsim.degrees).lens(-0.15, 0.2, 0.93)
     gsobject_compare(gal5a, gal5b)
 
     t2 = time.time()
@@ -122,17 +117,13 @@ def test_moffat():
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.Moffat(beta = 2.2, half_light_radius = 2, flux = 1.e6)
-    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.Moffat(beta = 1.7, fwhm = 1, flux = 50)
-    gal4b.applyDilation(3)
-    gal4b.applyShear(e1 = 0.3)
-    gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyMagnification(1.03)
-    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
-    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gal4b = gal4b.dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees).magnify(1.03)
+    gal4b = gal4b.shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
@@ -140,14 +131,14 @@ def test_moffat():
     # adjustments we make to the parameters in SBProfile.cpp
     gsparams = galsim.GSParams(maxk_threshold=1.e-2)
     gal5b = galsim.Moffat(beta=2.8, fwhm=0.3, flux=22, trunc=0.7, gsparams=gsparams)
-    gal5b.applyShear(g1=-0.15, g2=0.2)
+    gal5b = gal5b.shear(g1=-0.15, g2=0.2)
     # convolve to test the k-space gsparams (with an even smaller profile)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=0.01))
 
     try:
         # Make sure they don't match when using the default GSParams
         gal5c = galsim.Moffat(beta=2.8, fwhm=0.3, flux=22, trunc=0.7)
-        gal5c.applyShear(g1=-0.15, g2=0.2)
+        gal5c = gal5c.shear(g1=-0.15, g2=0.2)
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
                                  conv=galsim.Gaussian(sigma=0.01))
     except ImportError:
@@ -191,17 +182,13 @@ def test_airy():
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.Airy(lam_over_diam = 1.3, flux = 1.e6)
-    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.Airy(lam_over_diam = 1, flux = 50)
-    gal4b.applyDilation(3)
-    gal4b.applyShear(e1 = 0.3)
-    gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyMagnification(1.03)
-    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
-    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gal4b = gal4b.dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees).magnify(1.03)
+    gal4b = gal4b.shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
     # The approximation from xvalue_accuracy here happens at the core, so you need a very
@@ -260,16 +247,13 @@ def test_kolmogorov():
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.Kolmogorov(half_light_radius = 2, flux = 1.e6)
-    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.Kolmogorov(lam_over_r0 = 1, flux = 50)
-    gal4b.applyDilation(3)
-    gal4b.applyShear(e1 = 0.3)
-    gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyLensing(0.03, -0.05, 1.03)
-    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gal4b = gal4b.dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees)
+    gal4b = gal4b.lens(0.03, -0.05, 1.03).shift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
@@ -339,7 +323,7 @@ def test_opticalpsf():
     gal3b = galsim.OpticalPSF(lam_over_diam = 2, flux = 1.e6, 
                               defocus = 0.23, astig1 = -0.12, astig2 = 0.11,
                               circular_pupil = False, obscuration = 0.3)
-    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
@@ -347,12 +331,8 @@ def test_opticalpsf():
                               defocus = 0.03, astig1 = -0.04, astig2 = 0.07,
                               coma1 = -0.09, coma2 = 0.03, spher = -0.09,
                               circular_pupil = True, obscuration = 0.2)
-    gal4b.applyDilation(3)
-    gal4b.applyShear(e1 = 0.3)
-    gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyMagnification(1.03)
-    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
-    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gal4b = gal4b.dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees).magnify(1.03)
+    gal4b = gal4b.shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
@@ -403,17 +383,13 @@ def test_exponential():
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.Exponential(half_light_radius = 2, flux = 1.e6)
-    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.Exponential(scale_radius = 1, flux = 50)
-    gal4b.applyDilation(3)
-    gal4b.applyShear(e1 = 0.3)
-    gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyMagnification(1.03)
-    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
-    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gal4b = gal4b.dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees).magnify(1.03)
+    gal4b = gal4b.shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
@@ -473,16 +449,13 @@ def test_sersic():
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.Sersic(n = 2.2, half_light_radius = 3.5, flux = 1.e6)
-    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.Sersic(n = 0.7, half_light_radius = 1, flux = 50)
-    gal4b.applyDilation(3)
-    gal4b.applyShear(e1 = 0.3)
-    gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyLensing(0.03, -0.05, 1.03)
-    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gal4b = gal4b.dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees)
+    gal4b = gal4b.lens(0.03, -0.05, 1.03).shift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
@@ -562,17 +535,13 @@ def test_devaucouleurs():
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.DeVaucouleurs(half_light_radius = 3.5, flux = 1.e6)
-    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.DeVaucouleurs(half_light_radius = 1, flux = 50)
-    gal4b.applyDilation(3)
-    gal4b.applyShear(e1 = 0.3)
-    gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyMagnification(1.03)
-    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
-    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gal4b = gal4b.dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees).magnify(1.03)
+    gal4b = gal4b.shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
@@ -629,19 +598,15 @@ def test_pixel():
 
         gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
         gal3b = galsim.Box(width = 2, height = 2.1, flux = 1.e6)
-        gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+        gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
         # Drawing sheared Pixel without convolution doesn't work, so we need to 
         # do the extra convolution by a Gaussian here 
         gsobject_compare(gal3a, gal3b, conv=galsim.Gaussian(0.1))
 
         gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
         gal4b = galsim.Box(width = 1, height = 1.2, flux = 50)
-        gal4b.applyDilation(3)
-        gal4b.applyShear(e1 = 0.3)
-        gal4b.applyRotation(12 * galsim.degrees)
-        gal4b.applyMagnification(1.03)
-        gal4b.applyShear(g1 = 0.03, g2 = -0.05)
-        gal4b.applyShift(dx = 0.7, dy = -1.2) 
+        gal4b = gal4b.dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees).magnify(1.03)
+        gal4b = gal4b.shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2) 
         gsobject_compare(gal4a, gal4b, conv=galsim.Gaussian(0.1))
 
     t2 = time.time()
@@ -704,21 +669,16 @@ def test_realgalaxy():
 
     config['obj_num'] = 2
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
-    gal3b = galsim.RealGalaxy(real_cat, index = 17)
-    gal3b.setFlux(1.e6)
-    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3b = galsim.RealGalaxy(real_cat, index = 17, flux=1.e6)
+    gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b, conv=conv)
 
     config['obj_num'] = 3
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.RealGalaxy(real_cat, index = 5)
-    gal4b.scaleFlux(50)
-    gal4b.applyDilation(3)
-    gal4b.applyShear(e1 = 0.3)
-    gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyMagnification(1.03)
-    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
-    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gal4b *= 50
+    gal4b = gal4b.dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees).magnify(1.03)
+    gal4b = gal4b.shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b, conv=conv)
 
     config['obj_num'] = 4
@@ -874,25 +834,18 @@ def test_add():
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b_1 = galsim.Sersic(n = 3.4, half_light_radius = 1.1, flux = 0.3)
-    gal3b_1.applyShear(e1=0.2, e2=0.3)
-    gal3b_1.applyShift(0.4,0.9)
+    gal3b_1 = gal3b_1.shear(e1=0.2, e2=0.3).shift(0.4,0.9)
     gal3b_2 = galsim.Sersic(n = 1.1, half_light_radius = 2.5, flux = 0.7)
     gal3b = galsim.Add([gal3b_1, gal3b_2])
-    gal3b.setFlux(1.e6)
-    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3b = gal3b.withFlux(1.e6).shear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b_1 = galsim.Gaussian(half_light_radius = 2, flux = 8)
     gal4b_2 = galsim.Exponential(half_light_radius = 2.3, flux = 2)
     gal4b = galsim.Add([gal4b_1, gal4b_2])
-    gal4b.setFlux(50)
-    gal4b.applyDilation(3)
-    gal4b.applyShear(e1 = 0.3)
-    gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyMagnification(1.03)
-    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
-    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gal4b = gal4b.withFlux(50).dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees)
+    gal4b = gal4b.magnify(1.03).shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
     # Check that the Add items correctly inherit their gsparams from the top level
@@ -993,25 +946,18 @@ def test_convolve():
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b_1 = galsim.Sersic(n = 3.4, half_light_radius = 1.1, flux = 0.3)
-    gal3b_1.applyShear(e1=0.2, e2=0.3)
-    gal3b_1.applyShift(0.4,0.9)
+    gal3b_1 = gal3b_1.shear(e1=0.2, e2=0.3).shift(0.4,0.9)
     gal3b_2 = galsim.Sersic(n = 1.1, half_light_radius = 2.5, flux = 0.7)
     gal3b = galsim.Convolve([gal3b_1, gal3b_2])
-    gal3b.setFlux(1.e6)
-    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3b = gal3b.withFlux(1.e6).shear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b_1 = galsim.Gaussian(half_light_radius = 2, flux = 8)
     gal4b_2 = galsim.Exponential(half_light_radius = 2.3, flux = 2)
     gal4b = galsim.Convolve([gal4b_1, gal4b_2])
-    gal4b.setFlux(50)
-    gal4b.applyDilation(3)
-    gal4b.applyShear(e1 = 0.3)
-    gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyMagnification(1.03)
-    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
-    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gal4b = gal4b.withFlux(50).dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees)
+    gal4b = gal4b.magnify(1.03).shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
     # Check that the Convolve items correctly inherit their gsparams from the top level
@@ -1074,18 +1020,14 @@ def test_list():
     config['obj_num'] = 2
     gal3a = galsim.config.BuildGSObject(config, 'gal')[0]
     gal3b = galsim.Gaussian(half_light_radius = 2, flux = 1.e6)
-    gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
+    gal3b = gal3b.shear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
     config['obj_num'] = 3
     gal4a = galsim.config.BuildGSObject(config, 'gal')[0]
     gal4b = galsim.Gaussian(sigma = 1, flux = 50)
-    gal4b.applyDilation(3)
-    gal4b.applyShear(e1 = 0.3)
-    gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyMagnification(1.03)
-    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
-    gal4b.applyShift(dx = 0.7, dy = -1.2) 
+    gal4b = gal4b.dilate(3).shear(e1 = 0.3).rotate(12 * galsim.degrees).magnify(1.03)
+    gal4b = gal4b.shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
     # Check that the list items correctly inherit their gsparams from the top level
@@ -1153,7 +1095,7 @@ def test_ring():
     for k in range(6):
         config['obj_num'] = k
         gal1a = galsim.config.BuildGSObject(config, 'gal')[0]
-        gal1b = gauss.createSheared(e1=e1_list[k], e2=e2_list[k])
+        gal1b = gauss.shear(e1=e1_list[k], e2=e2_list[k])
         gsobject_compare(gal1a, gal1b)
 
     config = {
@@ -1166,13 +1108,12 @@ def test_ring():
         }
     }
 
-    disk = galsim.Exponential(half_light_radius=2)
-    disk.applyShear(e2=0.3)
+    disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
 
     for k in range(25):
         config['obj_num'] = k
         gal2a = galsim.config.BuildGSObject(config, 'gal')[0]
-        gal2b = disk.createRotated(theta = k * 18 * galsim.degrees)
+        gal2b = disk.rotate(theta = k * 18 * galsim.degrees)
         gsobject_compare(gal2a, gal2b)
 
     config = {
@@ -1195,17 +1136,15 @@ def test_ring():
         }
     }
 
-    disk = galsim.Exponential(half_light_radius=2)
-    disk.applyShear(e2=0.3)
-    bulge = galsim.Sersic(n=3, half_light_radius=1.3)
-    bulge.applyShear(e1=0.12,e2=-0.08)
+    disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
+    bulge = galsim.Sersic(n=3, half_light_radius=1.3).shear(e1=0.12,e2=-0.08)
     sum = disk + bulge
 
     for k in range(25):
         config['obj_num'] = k
         index = k // 4  # make sure we use integer division
         gal3a = galsim.config.BuildGSObject(config, 'gal')[0]
-        gal3b = sum.createRotated(theta = index * 72 * galsim.degrees)
+        gal3b = sum.rotate(theta = index * 72 * galsim.degrees)
         gsobject_compare(gal3a, gal3b)
 
     # Check that the ring items correctly inherit their gsparams from the top level
@@ -1235,19 +1174,15 @@ def test_ring():
     gal4a = galsim.config.BuildGSObject(config, 'gal')[0]
     #gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
     gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
-    disk = galsim.Exponential(half_light_radius=2, gsparams=gsparams)
-    disk.applyShear(e2=0.3)
-    bulge = galsim.Sersic(n=3,half_light_radius=1.3, gsparams=gsparams)
-    bulge.applyShear(e1=0.12,e2=-0.08)
+    disk = galsim.Exponential(half_light_radius=2, gsparams=gsparams).shear(e2=0.3)
+    bulge = galsim.Sersic(n=3,half_light_radius=1.3, gsparams=gsparams).shear(e1=0.12,e2=-0.08)
     gal4b = disk + bulge
     gsobject_compare(gal4a, gal4b, conv=galsim.Gaussian(sigma=1))
 
     try:
         # Make sure they don't match when using the default GSParams
-        disk = galsim.Exponential(half_light_radius=2)
-        disk.applyShear(e2=0.3)
-        bulge = galsim.Sersic(n=3,half_light_radius=1.3)
-        bulge.applyShear(e1=0.12,e2=-0.08)
+        disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
+        bulge = galsim.Sersic(n=3,half_light_radius=1.3).shear(e1=0.12,e2=-0.08)
         gal4c = disk + bulge
         np.testing.assert_raises(AssertionError,gsobject_compare, gal4a, gal4c,
                                  conv=galsim.Gaussian(sigma=1))

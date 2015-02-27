@@ -69,38 +69,31 @@ def test_smallshear():
     e1 = 0.02
     e2 = 0.02
     myShear = galsim.Shear(e1=e1, e2=e2)
-    # test the SBProfile version using applyShear
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
 
     gauss = galsim.Gaussian(flux=1, sigma=1)
-    gauss.applyShear(myShear)
-    gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShear disagrees with expected result")
-    gauss = galsim.Gaussian(flux=1, sigma=1)
-    gauss2 = gauss.createSheared(myShear)
+    gauss2 = gauss.shear(myShear)
     gauss2.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createSheared disagrees with expected result")
+            err_msg="Using GSObject shear disagrees with expected result")
  
     # Check with default_params
     gauss = galsim.Gaussian(flux=1, sigma=1, gsparams=default_params)
-    gauss.applyShear(myShear)
+    gauss = gauss.shear(myShear)
     gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShear with default_params disagrees with expected result")
+            err_msg="Using GSObject shear with default_params disagrees with expected result")
     gauss = galsim.Gaussian(flux=1, sigma=1, gsparams=galsim.GSParams())
-    gauss.applyShear(myShear)
+    gauss = gauss.shear(myShear)
     gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShear with GSParams() disagrees with expected result")
+            err_msg="Using GSObject shear with GSParams() disagrees with expected result")
  
     # Test photon shooting.
     do_shoot(gauss,myImg,"sheared Gaussian")
@@ -121,38 +114,32 @@ def test_largeshear():
     e2 = 0.5
 
     myShear = galsim.Shear(e1=e1, e2=e2)
-    # test the SBProfile version using applyShear
+    # test the SBProfile version using shear
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_largeshear.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
 
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
-    devauc.applyShear(myShear)
-    devauc.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShear disagrees with expected result")
-    devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
-    devauc2 = devauc.createSheared(myShear)
+    devauc2 = devauc.shear(myShear)
     devauc2.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createSheared disagrees with expected result")
+            err_msg="Using GSObject shear disagrees with expected result")
 
     # Check with default_params
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1, gsparams=default_params)
-    devauc.applyShear(myShear)
+    devauc = devauc.shear(myShear)
     devauc.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShear with default_params disagrees with expected result")
+            err_msg="Using GSObject shear with default_params disagrees with expected result")
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1, gsparams=galsim.GSParams())
-    devauc.applyShear(myShear)
+    devauc = devauc.shear(myShear)
     devauc.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShear with GSParams() disagrees with expected result")
+            err_msg="Using GSObject shear with GSParams() disagrees with expected result")
  
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
@@ -161,9 +148,9 @@ def test_largeshear():
 
     # Test kvalues.
     # Testing a sheared devauc requires a rather large fft.  What we really care about 
-    # testing though is the accuracy of the applyShear function.  So just shear a Gaussian here.
+    # testing though is the accuracy of the shear function.  So just shear a Gaussian here.
     gauss = galsim.Gaussian(sigma=2.3)
-    gauss.applyShear(myShear)
+    gauss = gauss.shear(myShear)
     do_kvalue(gauss,myImg, "sheared Gaussian")
 
     t2 = time.time()
@@ -183,29 +170,26 @@ def test_rotate():
     myImg.setCenter(0,0)
 
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1)
-    gal.applyShear(myShear)
-    gal.applyRotation(45.0 * galsim.degrees)
+    gal = gal.shear(myShear).rotate(45.0 * galsim.degrees)
     gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyRotation disagrees with expected result")
+            err_msg="Using GSObject rotate disagrees with expected result")
 
     # Check with default_params
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1, gsparams=default_params)
-    gal.applyShear(myShear)
-    gal.applyRotation(45.0 * galsim.degrees)
+    gal = gal.shear(myShear).rotate(45.0 * galsim.degrees)
     gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyRotation with default_params disagrees with expected "
+            err_msg="Using GSObject rotate with default_params disagrees with expected "
             "result")
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1, gsparams=galsim.GSParams())
-    gal.applyShear(myShear)
-    gal.applyRotation(45.0 * galsim.degrees)
+    gal = gal.shear(myShear).rotate(45.0 * galsim.degrees)
     gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyRotation with GSParams() disagrees with expected result")
+            err_msg="Using GSObject rotate with GSParams() disagrees with expected result")
  
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
@@ -232,83 +216,53 @@ def test_mag():
     myImg.setCenter(0,0)
 
     gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyDilation(1.5)
-    gal.scaleFlux(1.5**2) # Apply the flux magnification.
+    gal = gal.dilate(1.5)
+    gal *= 1.5**2 # Apply the flux magnification.
     gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyDilation disagrees with expected result")
+            err_msg="Using GSObject dilate disagrees with expected result")
  
     # Check with default_params
     gal = galsim.Exponential(flux=1, scale_radius=r0, gsparams=default_params)
-    gal.applyDilation(1.5)
-    gal.scaleFlux(1.5**2)
+    gal = gal.dilate(1.5)
+    gal *= 1.5**2
     gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyTransformation with default_params disagrees with "
-            "expected result")
+            err_msg="Using GSObject dilate with default_params disagrees with expected result")
     gal = galsim.Exponential(flux=1, scale_radius=r0, gsparams=galsim.GSParams())
-    gal.applyDilation(1.5)
-    gal.scaleFlux(1.5**2)
+    gal = gal.dilate(1.5)
+    gal *= 1.5**2
     gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyTransformation with GSParams() disagrees with "
-            "expected result")
+            err_msg="Using GSObject dilate with GSParams() disagrees with expected result")
 
-    # Use applyMagnification
+    # Use magnify
     gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyMagnification(1.5**2) # area rescaling factor
+    gal = gal.magnify(1.5**2) # area rescaling factor
     gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyMagnification disagrees with expected result")
+            err_msg="Using GSObject magnify disagrees with expected result")
 
-    # Use applyLensing
+    # Use lens
     gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyLensing(0., 0., 1.5**2) # area rescaling factor
+    gal = gal.lens(0., 0., 1.5**2) # area rescaling factor
     gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyLensing disagrees with expected result")
+            err_msg="Using GSObject lens disagrees with expected result")
 
-    # Use createDilated
-    gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal2 = gal.createDilated(1.5)
-    gal2.scaleFlux(1.5**2) # Apply the flux magnification.
-    gal2.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createDilated disagrees with expected result")
- 
-    # Use createMagnified
-    gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal2 = gal.createMagnified(1.5**2) # area rescaling factor
-    gal2.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createMagnified disagrees with expected result")
- 
-    # Use createLensed
-    gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal2 = gal.createLensed(0., 0., 1.5**2) # area rescaling factor
-    gal2.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createLensed disagrees with expected result")
- 
     # Test photon shooting.
     gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyMagnification(1.5**2) # area rescaling factor
+    gal = gal.magnify(1.5**2) # area rescaling factor
     do_shoot(gal,myImg,"dilated Exponential")
 
     # Test kvalues
@@ -330,9 +284,8 @@ def test_lens():
     pix_scale = 0.1
     imsize = 100
     ser = galsim.Sersic(n, half_light_radius = re)
-    ser2 = ser.createLensed(g1, g2, mu)
-    ser.applyShear(g1=g1, g2=g2)
-    ser.applyMagnification(mu)
+    ser2 = ser.lens(g1, g2, mu)
+    ser = ser.shear(g1=g1, g2=g2).magnify(mu)
     im = galsim.ImageF(imsize, imsize, scale=pix_scale)
     im = ser.drawImage(im, method='no_pixel')
     im2 = galsim.ImageF(imsize, imsize, scale=pix_scale)
@@ -355,34 +308,34 @@ def test_shift():
     myImg.setCenter(0,0)
 
     pixel = galsim.Pixel(scale=dx)
-    pixel.applyShift(dx, -dx)
+    pixel = pixel.shift(dx, -dx)
     pixel.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShift disagrees with expected result")
+            err_msg="Using GSObject shift disagrees with expected result")
  
     # Check with default_params
     pixel = galsim.Pixel(scale=dx, gsparams=default_params)
-    pixel.applyShift(dx, -dx)
+    pixel = pixel.shift(dx, -dx)
     pixel.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShift with default_params disagrees with expected result")
+            err_msg="Using GSObject shift with default_params disagrees with expected result")
     pixel = galsim.Pixel(scale=dx, gsparams=galsim.GSParams())
-    pixel.applyShift(dx, -dx)
+    pixel = pixel.shift(dx, -dx)
     pixel.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShift with GSParams() disagrees with expected result")
+            err_msg="Using GSObject shift with GSParams() disagrees with expected result")
  
     # Test photon shooting.
     do_shoot(pixel,myImg,"shifted Box")
 
     # Test kvalues.
     # Testing a shifted box requires a ridiculously large fft.  What we really care about 
-    # testing though is the accuracy of the applyShift function.  So just shift a Gaussian here.
+    # testing though is the accuracy of the shift function.  So just shift a Gaussian here.
     gauss = galsim.Gaussian(sigma=2.3)
-    gauss.applyShift(dx,-dx)
+    gauss = gauss.shift(dx,-dx)
     do_kvalue(gauss,myImg, "shifted Gaussian")
 
     t2 = time.time()
@@ -531,7 +484,7 @@ def test_rescale():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_integer_shift_fft():
-    """Test if applyShift works correctly for integer shifts using draw method.
+    """Test if shift works correctly for integer shifts using drawImage method.
     """
     import time
     t1 = time.time()
@@ -545,7 +498,7 @@ def test_integer_shift_fft():
     img_center = galsim.ImageD(n_pix_x,n_pix_y)
     final.drawImage(img_center,scale=1)
 
-    gal.applyShift(dx=int_shift_x,dy=int_shift_y)
+    gal = gal.shift(dx=int_shift_x,dy=int_shift_y)
     final=galsim.Convolve([gal, psf])
     img_shift = galsim.ImageD(n_pix_x,n_pix_y)
     final.drawImage(img_shift,scale=1)
@@ -564,7 +517,7 @@ def test_integer_shift_fft():
     # shift PSF only
 
     gal = galsim.Gaussian(sigma=test_sigma)
-    psf.applyShift(dx=int_shift_x,dy=int_shift_y)
+    psf = psf.shift(dx=int_shift_x,dy=int_shift_y)
     final=galsim.Convolve([gal, psf])
     img_shift = galsim.ImageD(n_pix_x,n_pix_y)
     final.drawImage(img_shift,scale=1)
@@ -583,7 +536,7 @@ def test_integer_shift_fft():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_integer_shift_photon():
-    """Test if applyShift works correctly for integer shifts using method=phot.
+    """Test if shift works correctly for integer shifts using method=phot.
     """
     import time
     t1 = time.time()
@@ -601,7 +554,7 @@ def test_integer_shift_photon():
     test_deviate = galsim.BaseDeviate(seed)
     final.drawImage(img_center,scale=1,rng=test_deviate,n_photons=n_photons_low, method='phot')
 
-    gal.applyShift(dx=int_shift_x,dy=int_shift_y)
+    gal = gal.shift(dx=int_shift_x,dy=int_shift_y)
     final=galsim.Convolve([gal, psf])
     img_shift = galsim.ImageD(n_pix_x,n_pix_y)
     test_deviate = galsim.BaseDeviate(seed)
@@ -622,7 +575,7 @@ def test_integer_shift_photon():
     # shift PSF only
 
     gal = galsim.Gaussian(sigma=test_sigma)
-    psf.applyShift(dx=int_shift_x,dy=int_shift_y)
+    psf = psf.shift(dx=int_shift_x,dy=int_shift_y)
     final=galsim.Convolve([gal, psf])
     img_shift = galsim.ImageD(n_pix_x,n_pix_y)
     test_deviate = galsim.BaseDeviate(seed)
