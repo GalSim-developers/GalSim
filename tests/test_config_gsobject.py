@@ -662,8 +662,7 @@ def test_realgalaxy():
 
     config['obj_num'] = 1
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
-    gal2b = galsim.RealGalaxy(real_cat, index = 23)
-    gal2b.setFlux(100)
+    gal2b = galsim.RealGalaxy(real_cat, index = 23, flux=100)
     gsobject_compare(gal2a, gal2b, conv=conv)
 
     config['obj_num'] = 2
@@ -734,14 +733,12 @@ def test_interpolated_image():
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     interp = galsim.InterpolantXY(galsim.Cubic())
-    gal3b = galsim.InterpolatedImage(im, x_interpolant=interp, normalization='surface brightness')
-    gal3b.setFlux(1.e4)
+    gal3b = galsim.InterpolatedImage(im, x_interpolant=interp, normalization='sb', flux=1.e4)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     interp = galsim.InterpolantXY(galsim.Lanczos(n=5,conserve_dc=True))
-    gal4b = galsim.InterpolatedImage(im, x_interpolant=interp, scale=0.7)
-    gal4b.setFlux(1.e5)
+    gal4b = galsim.InterpolatedImage(im, x_interpolant=interp, scale=0.7, flux=1.e5)
     gsobject_compare(gal4a, gal4b)
 
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]

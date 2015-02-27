@@ -95,7 +95,7 @@ def test_shapelet_drawImage():
             # Test normalization  (This is normally part of do_shoot.  When we eventually 
             # implement photon shooting, we should go back to the normal do_shoot call, 
             # and remove this section.)
-            shapelet.setFlux(test_flux)
+            shapelet = shapelet.withFlux(test_flux)
             shapelet.drawImage(im)
             flux = im.array.sum()
             print 'im.sum = ',flux,'  cf. ',test_flux
@@ -242,25 +242,23 @@ def test_shapelet_adjustments():
     ref_im = galsim.ImageF(nx,ny)
     ref_shapelet.drawImage(ref_im, scale=scale)
 
-    # Test that the Shapelet setFlux does the same thing as the GSObject setFlux
+    # Test that the Shapelet withFlux does the same thing as the GSObject withFlux
     gsref_shapelet = galsim.GSObject(ref_shapelet)  # Make it opaque to the Shapelet versions
-    gsref_shapelet.setFlux(23.)
-    gsref_shapelet.drawImage(ref_im, method='no_pixel')
+    gsref_shapelet.withFlux(23.).drawImage(ref_im, method='no_pixel')
     shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
-    shapelet.setFlux(23.)
-    shapelet.drawImage(im, method='no_pixel')
+    shapelet.withFlux(23.).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
-        err_msg="Shapelet setFlux disagrees with GSObject setFlux")
+        err_msg="Shapelet withFlux disagrees with GSObject withFlux")
 
-    # Test that the Shapelet scaleFlux does the same thing as the GSObject scaleFlux
-    gsref_shapelet.scaleFlux(0.23)
+    # Test that scaling the Shapelet flux does the same thing as the GSObject scaling
+    gsref_shapelet *= 0.23
     gsref_shapelet.drawImage(ref_im, method='no_pixel')
-    shapelet.scaleFlux(0.23)
+    shapelet *= 0.23
     shapelet.drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
-        err_msg="Shapelet setFlux disagrees with SObject scaleFlux")
+        err_msg="Shapelet *= 0.23 disagrees with GSObject *= 0.23")
 
     # Test that the Shapelet rotate does the same thing as the GSObject rotate
     gsref_shapelet.rotate(23. * galsim.degrees).drawImage(ref_im, method='no_pixel')

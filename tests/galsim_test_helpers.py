@@ -159,13 +159,12 @@ def do_shoot(prof, img, name):
         img = galsim.ImageD(512,512, scale=dx)
     else:
         img = galsim.ImageD(128,128, scale=dx)
-    prof.setFlux(test_flux)
+    prof = prof.withFlux(test_flux)
     prof.drawImage(img)
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux
     np.testing.assert_almost_equal(img.array.sum(), test_flux, 4,
             err_msg="Flux normalization for %s disagrees with expected result"%name)
 
-    prof.setFlux(test_flux)
     scale = test_flux / flux_tot # from above
     nphot *= scale * scale
     print 'nphot -> ',nphot

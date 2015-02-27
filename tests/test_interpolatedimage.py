@@ -229,7 +229,7 @@ def test_operations_simple():
     disk = galsim.Exponential(half_light_radius = disk_hlr)
     disk = disk.shear(e=disk_e, beta=disk_pos_angle)
     gal = bulge_frac*bulge + (1.-bulge_frac)*disk
-    gal.setFlux(gal_flux)
+    gal = gal.withFlux(gal_flux)
     psf = galsim.Airy(lam_over_diam)
     obj = galsim.Convolve([gal, psf])
     im = obj.drawImage(scale=pix_scale)

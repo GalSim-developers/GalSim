@@ -352,11 +352,10 @@ def test_rescale():
     myImg.setCenter(0,0)
 
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
-    sersic.setFlux(2)
-    sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sersic.withFlux(2).drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject setFlux disagrees with expected result")
+            err_msg="Using GSObject withFlux disagrees with expected result")
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic *= 2
     sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)

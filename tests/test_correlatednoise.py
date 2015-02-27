@@ -867,7 +867,7 @@ def test_convolve_cosmos():
     gd = galsim.GaussianDeviate(rseed)
     cosmos_scale=0.03 # Non-unity, non-default value to be used below
     cn = galsim.getCOSMOSNoise(rng=gd, cosmos_scale=cosmos_scale)
-    cn.setVariance(300.) # Again chosen to be non-unity and so as to produce ~unity output variance
+    cn = cn.withVariance(300.) # Again non-unity so as to produce ~unity output variance
     # Define a PSF with which to convolve the noise field, one WITHOUT 2-fold rotational symmetry
     # (see test_autocorrelate in test_SBProfile.py for more info as to why this is relevant)
     # Make a relatively realistic mockup of a GREAT3 target image
@@ -1038,15 +1038,15 @@ def test_variance_changes():
     orig_ucn = galsim.UncorrelatedNoise(noise_var, rng=galsim.BaseDeviate(seed), scale=pix_scale)
     # Reset variance to something else.
     new_var = 1.07
-    orig_ucn.setVariance(new_var)
-    np.testing.assert_equal(orig_ucn.getVariance(), new_var,
+    ucn = orig_ucn.withVariance(new_var)
+    np.testing.assert_equal(ucn.getVariance(), new_var,
                             err_msg='Failure to reset and then get variance for UncorrelatedNoise')
 
     # Now do this for a CorrelatedNoise object.
     gd = galsim.GaussianDeviate()
     cosmos_scale=0.03
     cn = galsim.getCOSMOSNoise(rng=gd, cosmos_scale=cosmos_scale)
-    cn.setVariance(new_var)
+    cn = cn.withVariance(new_var)
     np.testing.assert_equal(cn.getVariance(), new_var,
                             err_msg='Failure to reset and then get variance for CorrelatedNoise')
 
