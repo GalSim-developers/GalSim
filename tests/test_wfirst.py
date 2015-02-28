@@ -144,6 +144,56 @@ def test_wfirst_backgrounds():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_wfirst_bandpass():
+    """Test the WFIRST bandpasses for basic sanity.
+    """
+    import time
+    t1 = time.time()
+
+    # Obtain the bandpasses with AB_zeropoint set
+    exp_time = 200. # non WFIRST exposure time
+    bp = galsim.wfirst.getBandpasses(AB_zeropoint=True, exptime=exp_time)
+
+    # Check if the zeropoints have been set correctly
+    AB_spec = lambda x: (3631e-23)*exp_time*(np.pi)*(100.**2)*\
+              (galsim.wfirst.diameter**2)*(1-galsim.wfirst.obscuration**2)/4.
+    AB_sed = galsim.SED(spec=AB_spec,flux_type='fnu')
+    for filter_name, filter_ in bp.iteritems():
+        mag = AB_sed.calculateMagnitude(bandpass=filter_)
+        np.testing.assert_almost_equal(mag,0.0,decimal=6,
+            err_msg="Zeropoint not set accurately enough for bandpass filter \
+            {0}".format(filter_name))
+
+    # Check if the thinned bandpasses are accurate enough
+    bp = galsim.wfirst.getBandpasses(AB_zeropoint=True, thin_err=1.e-4)
+
+    # Read in the file containing the info.
+    datafile = os.path.join(galsim.meta_data.share_dir, "afta_throughput.txt")
+    # One line with the column headings, and the rest as a NumPy array.
+    data = np.loadtxt(datafile, skiprows=1).transpose()
+    first_line = open(datafile).readline().rstrip().split()
+
+    # Identify the index of the column containing the wavelength in microns.  Get the wavelength and
+    # convert to nm.
+    wave_ind = first_line.index('Wave')
+    wave = 1000.*data[wave_ind,:]
+
+    # Loop over the bands.
+    for index in range(len(first_line)):
+        # Need to skip the entry for wavelength.
+        if index==wave_ind:
+            continue
+
+        filter_name = first_line[index]
+        filter_ = bp[filter_name]
+
+        tp = filter_(wave)
+        np.testing.assert_almost_equal(tp,data[index,:],decimal=2)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_wfirst_wcs()
     test_wfirst_backgrounds()
+    test_wfirst_bandpass()
