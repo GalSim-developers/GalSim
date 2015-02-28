@@ -981,7 +981,7 @@ def test_convolve_cosmos():
     # We draw, calculate a correlation function for the resulting field, and repeat to get an
     # average over nsum_test_convolve_cosmos trials
     convimage = galsim.ImageD(2 * smallim_size, 2 * smallim_size + 11)
-    cimobj_padded.draw(convimage, scale=0.18, normalization='sb')
+    cimobj_padded.drawImage(convimage, scale=0.18, method='sb')
     cn_test = galsim.CorrelatedNoise(convimage, gd, correct_periodicity=True, subtract_mean=False)
     testim = galsim.ImageD(smallim_size, smallim_size + 11)
     cn_test.drawImage(testim, scale=0.18)
