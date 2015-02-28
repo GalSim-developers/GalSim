@@ -25,8 +25,6 @@ import numpy as np
 import math
 import os
 
-bandpass = galsim.Bandpass(os.path.join(galsim.meta_data.share_dir, 'wfc_F814W.dat.gz'),
-                           wave_type='ang').thin().withZeropoint(25.94)
 
 class Catalog(object):
     """A class storing the data from an input catalog.
@@ -506,7 +504,17 @@ def _makeReal(cat, index, pad_size):
         gal *= cat.flux_factor
     return gal
 
+# This will act essentially as a static variable for the _makeParam function
+_COSMOS_bandpass = None
+
 def _makeParam(cat, index, chromatic=False):
+    if _COSMOS_bandpass is None:
+        # Defer making the Bandpass until we actually use it.
+        # It's not a huge calculation, but the thin() call especially isn't trivial.
+        _COSMOS_bandpass = galsim.Bandpass(
+                os.path.join(galsim.meta_data.share_dir, 'wfc_F814W.dat.gz'),
+                wave_type='ang').thin().withZeropoint(25.94)
+
     record = cat[index]
 
     if chromatic:
@@ -561,10 +569,10 @@ def _makeParam(cat, index, chromatic=False):
         if chromatic:
             bulge = galsim.DeVaucouleurs(flux=1., half_light_radius=record['size_factor']*bulge_hlr) \
                 * sed_bulge.atRedshift(record['zphot']).withMagnitude(
-                record['mag_auto']-2.5*math.log10(bfrac*record['flux_factor']), bandpass)
+                record['mag_auto']-2.5*math.log10(bfrac*record['flux_factor']), _COSMOS_bandpass)
             disk = galsim.Exponential(flux=1., half_light_radius=record['size_factor']*disk_hlr) \
                 * sed_disk.atRedshift(record['zphot']).withMagnitude(
-                record['mag_auto']-2.5*math.log10((1.-bfrac)*record['flux_factor']), bandpass)
+                record['mag_auto']-2.5*math.log10((1.-bfrac)*record['flux_factor']), _COSMOS_bandpass)
         else:
             bulge = galsim.DeVaucouleurs(flux = record['flux_factor']*bulge_flux,
                                          half_light_radius = record['size_factor']*bulge_hlr)
@@ -605,7 +613,7 @@ def _makeParam(cat, index, chromatic=False):
             else:
                 use_sed = sed_bulge
             gal *= use_sed.atRedshift(record['zphot']).withMagnitude(record['mag_auto']-2.5*math.log10(record['flux_factor']),
-                                                                     bandpass)
+                                                                     _COSMOS_bandpass)
         else:
             gal = galsim.Sersic(gal_n, flux=record['flux_factor']*gal_flux,
                                 half_light_radius=record['size_factor']*gal_hlr)
