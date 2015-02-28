@@ -44,7 +44,7 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     By default, this routine returns a list of ChromaticOpticalPSF objects, with the list index
     corresponding to the SCA (Sensor Chip Array, the equivalent of a chip in an optical CCD).  The
     PSF corresponds to a location in the center of the SCA.  Currently we do not have information
-    about variation across the SCAs, which is expected to be relatively small.
+    about PSF variation across the SCAs, which is expected to be relatively small.
 
     This routine also takes an optional keyword `SCAs`, which can be a single value or a list; if
     this is specified then results are not included for the other SCAs.  However, to preserve the
@@ -98,9 +98,11 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                    representation of the pupil plane?  Setting this parameter to
                                    True will lead to faster calculations, with a slightly less
                                    realistic PSFs.  [default: False]
-    @param    n_waves              Number of wavelengths to use for initializing the chromatic PSF
-                                   objects.  If None, then a sensible default is used, corresponding
-                                   to sampling the full wavelength range every 20 nanometers.
+    @param    n_waves              Number of wavelengths to use for setting up interpolation of the
+                                   chromatic PSF objects, which can lead to much faster image
+                                   rendering.  If None, then no interpolation is used. Note that
+                                   users who want to interpolate can always set up the interpolation
+                                   later on even if they do not do so when calling getPSF().
                                    [default: None]
     @param    extra_aberrations    Array of extra aberrations to include in the PSF model, on top of
                                    those that are part of the WFIRST design.  These should be
@@ -108,12 +110,12 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                    as an array of length 12 with entries 4 through 11 corresponding
                                    to defocus through spherical aberrations.  [default: None]
     @param    wavelength_limits    A tuple or list of the blue and red wavelength limits to use for
-                                   instantiating the chromatic object.  If None, then it uses the
-                                   blue and red limits of all imaging passbands to determine the
-                                   most inclusive wavelength range possible.  But this keyword can
-                                   be used to reduce the range of wavelengths if only one passband
-                                   (or a subset of passbands) is to be used for making the images,
-                                   since the number of precomputations it has to do is reduced.
+                                   interpolating the chromatic object, if `n_waves` is not None.  If
+                                   None, then it uses the blue and red limits of all imaging
+                                   passbands to determine the most inclusive wavelength range
+                                   possible.  But this keyword can be used to reduce the range of
+                                   wavelengths if only one passband (or a subset of passbands) is to
+                                   be used for making the images.
                                    [default: None]
     @param    verbose              Should the routine provide information about its progress in
                                    loading the per-SCA PSFs?  This can be valuable in tracking
@@ -150,22 +152,21 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
             SCAs = [SCAs]
 
     if not achromatic:
-        if wavelength_limits is None:
-            # To decide the range of wavelengths to use (if none were passed in by the user), first
-            # check out all the bandpasses.
-            bandpass_dict = galsim.wfirst.getBandpasses()
-            # Then find the blue and red limit to be used for the imaging bandpasses overall.
-            blue_limit, red_limit = _find_limits(default_bandpass_list, bandpass_dict)
-        else:
-            if not isinstance(wavelength_limits, tuple):
-                raise ValueError("Wavelength limits must be entered as a tuple!")
-            blue_limit, red_limit = wavelength_limits
-            if red_limit <= blue_limit:
-                raise ValueError("Wavelength limits must have red_limit > blue_limit."
-                                 "Input: blue limit=%f, red limit=%f nanometers"%
-                                 (blue_limit, red_limit))
-        # Decide on the number of linearly spaced wavelengths to use for the ChromaticOpticalPSF:
-        if n_waves is None: n_waves = int((red_limit - blue_limit)/20)
+        if n_waves is not None:
+            if wavelength_limits is None:
+                # To decide the range of wavelengths to use (if none were passed in by the user),
+                # first check out all the bandpasses.
+                bandpass_dict = galsim.wfirst.getBandpasses()
+                # Then find the blue and red limit to be used for the imaging bandpasses overall.
+                blue_limit, red_limit = _find_limits(default_bandpass_list, bandpass_dict)
+            else:
+                if not isinstance(wavelength_limits, tuple):
+                    raise ValueError("Wavelength limits must be entered as a tuple!")
+                blue_limit, red_limit = wavelength_limits
+                if red_limit <= blue_limit:
+                    raise ValueError("Wavelength limits must have red_limit > blue_limit."
+                                     "Input: blue limit=%f, red limit=%f nanometers"%
+                                     (blue_limit, red_limit))
     else:
         if isinstance(achromatic, galsim.Bandpass):
             achromatic_lam = achromatic.effective_wavelength
@@ -232,8 +233,9 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                     obscuration=galsim.wfirst.obscuration,
                     pupil_plane_im=galsim.wfirst.pupil_plane_file,
                     oversampling=1.2, pad_factor=2.)
-            PSF.setupInterpolation(waves=np.linspace(blue_limit, red_limit, n_waves),
-                                   oversample_fac=1.5)
+            if n_waves is not None:
+                PSF.setupInterpolation(waves=np.linspace(blue_limit, red_limit, n_waves),
+                                       oversample_fac=1.5)
         else:
             tmp_aberrations = use_aberrations * zemax_wavelength / achromatic_lam
             if approximate_struts:
