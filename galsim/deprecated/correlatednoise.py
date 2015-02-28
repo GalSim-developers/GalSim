@@ -169,11 +169,9 @@ def CN_calculateCovarianceMatrix(self, bounds, scale):
 
     @returns the covariance matrix (as an Image).
     """
-    s = 'calculateCovarianceMatrix has been deprecated since GalSim version 1.3. '
-    s += 'This functionality has been removed. If you have a need for it, please open '
-    s += 'an issue requesting the functionality.'
-    import warnings
-    warnings.warn(s, GalSimDeprecationWarning)
+    depr('calculateCovarianceMatrix','1.3','',
+         'This functionality has been removed. If you have a need for it, please open '+
+         'an issue requesting the functionality.')
     return galsim._galsim._calculateCovarianceMatrix(self._profile.SBProfile, bounds, scale)
 
 galsim.correlatednoise._BaseCorrelatedNoise.applyWhiteningTo = CN_applyWhiteningTo

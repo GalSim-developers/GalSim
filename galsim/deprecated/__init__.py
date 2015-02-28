@@ -23,14 +23,14 @@ class GalSimDeprecationWarning(UserWarning):
     def __init__(self, s):
         super(GalSimDeprecationWarning, self).__init__(self, s)
 
-def depr(f, v, s, s2=None):
+def depr(f, v, s1, s2=None):
     import warnings
-    s = str(f)+' has been deprecated since GalSim version '+str(v)+'.  Use '+s+' instead.'
-    if s2 is not None:
-        s = s + s2
+    s = str(f)+' has been deprecated since GalSim version '+str(v)+'.'
+    if s1:
+        s += '  Use '+s1+' instead.'
+    if s2:
+        s += '  ' + s2
     warnings.warn(s, GalSimDeprecationWarning)
-
-# Only need to import things by name that aren't made into a method of some galsim class.
 
 from . import base
 from . import bounds
