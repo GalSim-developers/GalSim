@@ -13,6 +13,8 @@ Installation Changes
 API Changes
 -----------
 
+- Deprecated CorrelatedNoise.calculateCovarianceMatrix, since it is not used 
+  anywhere, and we think no one really has a need for it. (#630)
 - Officially deprecated the methods and functions that had been described as
   having been removed or changed to a different name.  In fact, many of them 
   had been still valid, but no longer documented.  This was intentional to
@@ -46,12 +48,6 @@ New Features
 - Added TopHat class implementing a circular tophat profile. (#639)
 - Added ability of Noise objects to take a new random number generator (a
   BaseDeviate instance) when being copied. (#643)
-
-
-Deprecated Features
--------------------
-
-- Deprecated CorrelatedNoise.calculateCovarianceMatrix, since it is not used anywhere. (#630)
 
 
 Bug Fixes and Improvements
