@@ -73,7 +73,7 @@ digits = 3
 # From that page: "The example maps and spectra are offered mainly as test material for 
 # software that deals with FITS WCS."
 #
-# I picked the 4 that GSFitsWCS can do plus a couple others that struck me as interstingly 
+# I picked the ones that GSFitsWCS can do plus a couple others that struck me as interstingly 
 # different, but there are a bunch more on that web page as well.  In particular, I included ZPN,
 # since that uses PV values, which the others don't, and HPX, since it is not implemented in 
 # wcstools.
@@ -1523,6 +1523,7 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
         pos = wcs.toImage(galsim.CelestialCoord(ra,dec))
         #print 'x,y = ',x,y
         #print 'pos = ',pos
+        #print 'dist = ',(x-pos.x)*pixel_scale, (y-pos.y)*pixel_scale
         np.testing.assert_almost_equal((x-pos.x)*pixel_scale, 0, digits2,
                                        'wcs.toImage differed from expected value')
         np.testing.assert_almost_equal((y-pos.y)*pixel_scale, 0, digits2,
@@ -1660,11 +1661,11 @@ def test_gsfitswcs():
 
     # These are all relatively fast (total time for all 7 and the TanWCS stuff below is about 
     # 1.6 seconds), but longer than my arbitrary 1 second goal for any unit test, so only do the 
-    # two most important ones as part of the regular test suite runs.
+    # three most important ones as part of the regular test suite runs.
     if __name__ == "__main__":
-        test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TNX' ]
+        test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TNX', 'SIP' ]
     else:
-        test_tags = [ 'TAN', 'TPV' ]
+        test_tags = [ 'TAN', 'TPV', 'SIP' ]
 
     dir = 'fits_files'
 
@@ -1751,17 +1752,15 @@ def test_fitswcs():
             import warnings
             warnings.warn("None of the existing WCS classes were able to read "+file_name)
         else:
-            approx1 = ( (tag == 'SIP' and isinstance(wcs, galsim.PyAstWCS)) or
-                        (tag in ['SIP', 'TPV'] and isinstance(wcs, galsim.WcsToolsWCS)) )
-            approx2 = tag == 'ZPX' and isinstance(wcs, galsim.PyAstWCS)
-            do_ref(wcs, ref_list, 'FitsWCS '+tag, approx1)
+            approx = tag == 'ZPX' and isinstance(wcs, galsim.PyAstWCS)
+            do_ref(wcs, ref_list, 'FitsWCS '+tag)
             do_celestial_wcs(wcs, 'FitsWCS '+file_name)
-            do_wcs_image(wcs, 'FitsWCS_'+tag, approx2)
+            do_wcs_image(wcs, 'FitsWCS_'+tag, approx)
 
             # Should also be able to build the file just from a fits.read() call, which 
             # uses FitsWCS behind the scenes.
             im = galsim.fits.read(file_name, dir=dir)
-            do_ref(im.wcs, ref_list, 'WCS from fits.read '+tag, approx1, im)
+            do_ref(im.wcs, ref_list, 'WCS from fits.read '+tag, im)
 
         # Finally, also check that AffineTransform can read the file.
         # We don't really have any accuracy checks here.  This really just checks that the
