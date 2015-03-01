@@ -72,8 +72,7 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
     """
     This routine gets a list of WCS, one for each of the WFIRST SCAs (Sensor Chip Array, the
     equivalent of a chip in an optical CCD).  Since the WFIRST SCAs are labeled 1-18, the zeroth
-    list item is simply None.  Use of this routine requires that GalSim be able to access some
-    software that can handle TAN-SIP style WCS (either Astropy, starlink.Ast, or WCSTools).
+    list item is simply None.
 
     The user must specify a position for the center of the focal plane array (either as (ra, dec),
     or a CelestialCoord `pos`) and the orientation.
@@ -123,10 +122,6 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
                      galsim.FitsHeader objects defining the WCS.
     @returns a list of WCS or FitsHeader objects for each SCA.
     """
-    # First and foremost, check for presence of software that can read the WCS:
-    if not _check_software():
-        raise ImportError("Cannot find any software package that can read the WFIRST WCS!")
-
     # Enforce type for PA
     if not isinstance(PA, galsim.Angle):
         raise TypeError("Position angle must be a galsim.Angle!")
@@ -315,7 +310,7 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
                     header[sipstr] = b_sip[i_sca,i,j]
 
         if not as_header:
-            wcs = galsim.FitsWCS(header=header)
+            wcs = galsim.GSFitsWCS(header=header)
             wcs_list.append(wcs)
         else:
             wcs_list.append(header)
@@ -541,31 +536,3 @@ def _det_to_tangplane_positions(x_in, y_in):
     dist_fac = 1. + img_dist_coeff[0] + img_dist_coeff[1]*r + img_dist_coeff[2]*r_sq
     return x_in/dist_fac, y_in/dist_fac
 
-def _check_software():
-    # A helper routine to check for the presence of software that can read the constructed TAN-SIP
-    # WCS.
-    has_software = False
-    try:
-        import astropy.wcs
-        import scipy  # AstropyWCS constructor will do this, so check now.
-        has_software = True
-    except ImportError:
-        try:
-            import starlink.Ast
-            has_software = True
-        except ImportError:
-            try:
-                # The dict below is just a subset of a dict from test_wcs.py, which we'll use to
-                # test our ability to import WCSTools to use the WFIRST WCS software.
-                references = {
-                    'TAN' : ('1904-66_TAN.fits.gz' ,
-                             [ ('193930.753119', '-634259.217527', 117, 178, 13.43628),
-                               ('181918.652839', '-634903.833411', 153, 35, 11.44438) ] ),
-                    }
-                ref_dir = galsim.meta_data.share_dir
-
-                galsim.WcsToolsWCS(references['TAN'][0], dir=ref_dir)
-                has_software = True
-            except OSError:
-                pass
-    return has_software
