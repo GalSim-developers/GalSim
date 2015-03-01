@@ -505,15 +505,14 @@ def _makeReal(cat, index, pad_size):
     return gal
 
 # This will act essentially as a static variable for the _makeParam function
-_COSMOS_bandpass = None
-
 def _makeParam(cat, index, chromatic=False):
-    if _COSMOS_bandpass is None:
+    if _makeParam._COSMOS_bandpass is None:
         # Defer making the Bandpass until we actually use it.
         # It's not a huge calculation, but the thin() call especially isn't trivial.
-        _COSMOS_bandpass = galsim.Bandpass(
+        _makeParam._COSMOS_bandpass = galsim.Bandpass(
                 os.path.join(galsim.meta_data.share_dir, 'wfc_F814W.dat.gz'),
                 wave_type='ang').thin().withZeropoint(25.94)
+    bandpass = _makeParam._COSMOS_bandpass
 
     record = cat[index]
 
@@ -569,10 +568,10 @@ def _makeParam(cat, index, chromatic=False):
         if chromatic:
             bulge = galsim.DeVaucouleurs(flux=1., half_light_radius=record['size_factor']*bulge_hlr) \
                 * sed_bulge.atRedshift(record['zphot']).withMagnitude(
-                record['mag_auto']-2.5*math.log10(bfrac*record['flux_factor']), _COSMOS_bandpass)
+                record['mag_auto']-2.5*math.log10(bfrac*record['flux_factor']), bandpass)
             disk = galsim.Exponential(flux=1., half_light_radius=record['size_factor']*disk_hlr) \
                 * sed_disk.atRedshift(record['zphot']).withMagnitude(
-                record['mag_auto']-2.5*math.log10((1.-bfrac)*record['flux_factor']), _COSMOS_bandpass)
+                record['mag_auto']-2.5*math.log10((1.-bfrac)*record['flux_factor']), bandpass)
         else:
             bulge = galsim.DeVaucouleurs(flux = record['flux_factor']*bulge_flux,
                                          half_light_radius = record['size_factor']*bulge_hlr)
@@ -612,14 +611,18 @@ def _makeParam(cat, index, chromatic=False):
                 use_sed = sed_intermed
             else:
                 use_sed = sed_bulge
-            gal *= use_sed.atRedshift(record['zphot']).withMagnitude(record['mag_auto']-2.5*math.log10(record['flux_factor']),
-                                                                     _COSMOS_bandpass)
+            gal *= use_sed.atRedshift(record['zphot']).withMagnitude(
+                    record['mag_auto']-2.5*math.log10(record['flux_factor']), bandpass)
         else:
             gal = galsim.Sersic(gal_n, flux=record['flux_factor']*gal_flux,
                                 half_light_radius=record['size_factor']*gal_hlr)
         if gal_q < 1.:
             gal = gal.shear(q=gal_q, beta=gal_beta)
         return gal
+
+# Initialize static variance used in _makeParam
+_makeParam._COSMOS_bandpass = None
+
 
 def _gammafn(x):
     """The gamma function is present in python2.7's math module, but not 2.6.  So try using that,
