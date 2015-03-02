@@ -19,7 +19,7 @@
 A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 """
 
-import os, sys, urllib2
+import os, sys, urllib2, tarfile
 
 # Since this will be installed in the same directory as our galsim executable,
 # we need to do the same trick about changing the path so it imports the real
@@ -60,6 +60,9 @@ def parse_args():
             '-q', '--quiet', action='store_const', default=False, const=True,
             help="don't ask about re-downloading an existing file.")
         parser.add_argument(
+            '-u', '--unpack', action='store_const', default=False, const=True,
+            help='re-unpack the tar file if not downloading')
+        parser.add_argument(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')
         args = parser.parse_args()
@@ -72,7 +75,7 @@ def parse_args():
         import optparse
 
         # Usage string not automatically generated for optparse, so generate it
-        usage = """usage: galsim_download_cosmos [-h] [-v {0,1,2,3}] [-l LOG_FILE] [--version] """
+        usage = """usage: galsim_download_cosmos [-h] [-v {0,1,2,3}] [-f] [-q] [-u] [--version] """
         # Build the parser
         parser = optparse.OptionParser(usage=usage, description=description)
         # optparse only allows string choices, so take verbosity as a string and make it int later
@@ -85,6 +88,9 @@ def parse_args():
         parser.add_argument(
             '-q', '--quiet', action='store_const', default=False, const=True,
             help="don't ask about re-downloading an existing file.")
+        parser.add_argument(
+            '-u', '--unpack', action='store_const', default=False, const=True,
+            help='Re-unpack the tar file if not downloading')
         parser.add_option(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')
@@ -213,6 +219,16 @@ def main():
                     print status,
                     sys.stdout.flush()
         logger.info("Download complete.")
+
+    if do_download or args.unpack:
+        logger.info("Unpacking the tarball")
+        with tarfile.open(target) as tar:
+            if args.verbosity >= 3:
+                tar.list(verbose=True)
+            elif args.verbosity >= 2:
+                tar.list(verbose=False)
+            tar.extractall(share_dir)
+        logger.info("Extracted contents of tar file.")
 
 
 if __name__ == "__main__":
