@@ -28,8 +28,7 @@ relevant to the more recent software used here.
 This module defines the RealGalaxyCatalog class, used to store all required information about a
 real galaxy simulation training sample and accompanying PSF model.  For information about 
 downloading GalSim-readable RealGalaxyCatalog data in FITS format, see the RealGalaxy Data Download
-page on the GalSim Wiki: 
-https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data%20Download%20Page
+page on the GalSim Wiki: https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
 
 The function simReal() takes this information and uses it to simulate a (no-noise-added) image from
 some lower-resolution telescope.
@@ -307,7 +306,7 @@ class RealGalaxyCatalog(object):
     corresponding image data in other files (`real_galaxy_images.fits` and
     `real_galaxy_PSF_images.fits`) in that directory.  For information on how to download a larger
     sample of 26k training galaxies, see the RealGalaxy Data Download Page on the GalSim Wiki:
-    https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data%20Download%20Page
+    https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
 
     @param file_name  The file containing the catalog.
     @param image_dir  If a string containing no `/`, it is the relative path from the location of
