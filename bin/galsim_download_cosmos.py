@@ -34,10 +34,8 @@ def parse_args():
     """Handle the command line arguments using either argparse (if available) or optparse.
     """
 
-    # There currently aren't any real options.  Just things like verbosity and log_file
-    # that change how it should output progress steps.
-    # A potential option we might want to add is to download the smaller training sample
-    # rather than the full 4 GB file.
+    # Another potential option we might want to add is to download the smaller training sample
+    # rather than the full 4 GB file.  Right now, this just downloads the larger catalog.
 
     # Short description strings common to both parsing mechanisms
     version_str = "GalSim Version %s"%galsim.version
@@ -56,11 +54,11 @@ def parse_args():
             '-v', '--verbosity', type=int, action='store', default=2, choices=(0, 1, 2, 3),
             help='integer verbosity level: min=0, max=3 [default=2]')
         parser.add_argument(
-            '-l', '--log_file', type=str, action='store', default=None,
-            help='filename for storing logging output [default is to stream to stdout]')
-        parser.add_argument(
             '-f', '--force', action='store_const', default=False, const=True,
             help='force overwriting the current file if one exists')
+        parser.add_argument(
+            '-q', '--quiet', action='store_const', default=False, const=True,
+            help="don't ask about re-downloading an existing file.")
         parser.add_argument(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')
@@ -82,11 +80,11 @@ def parse_args():
             '-v', '--verbosity', type="choice", action='store', choices=('0', '1', '2', '3'),
             default='2', help='integer verbosity level: min=0, max=3 [default=2]')
         parser.add_option(
-            '-l', '--log_file', type=str, action='store', default=None,
-            help='filename for storing logging output [default is to stream to stdout]')
-        parser.add_option(
             '-f', '--force', action='store_const', default=False, const=True,
             help='force overwriting the current file if one exists')
+        parser.add_argument(
+            '-q', '--quiet', action='store_const', default=False, const=True,
+            help="don't ask about re-downloading an existing file.")
         parser.add_option(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')
@@ -146,15 +144,13 @@ def main():
     logging_level = logging_levels[args.verbosity]
 
     # Setup logging to go to sys.stdout or (if requested) to an output file
-    if args.log_file is None:
-        logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
-    else:
-        logging.basicConfig(format="%(message)s", level=logging_level, filename=args.log_file)
+    logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
     logger = logging.getLogger('galsim')
     
     url = "http://great3.jb.man.ac.uk/leaderboard/data/public/COSMOS_23.5_training_sample.tar.gz"
     file_name = os.path.basename(url)
-    target = os.path.join(galsim.meta_data.share_dir, file_name)
+    share_dir = galsim.meta_data.share_dir
+    target = os.path.join(share_dir, file_name)
 
     logger.info('Downloading from url:\n  %s',url)
     logger.info('Target location is %s',target)
@@ -166,45 +162,58 @@ def main():
     logger.info("\nSize of %s: %d MBytes" , file_name, file_size)
 
     # Check if the file already exists and if it is the right size
+    do_download = True
     if os.path.isfile(target):
         logger.info("")
         existing_file_size = os.path.getsize(target) / 1024**2
-        if file_size == existing_file_size:
-            yn = query_yes_no("Target file already exists.  Overwrite?", default='no')
-            if yn == 'no':
-                sys.exit()
+        if args.force:
+            logger.info("Target file already exists.  Size = %d MBytes.  Forced re-download.",
+                        existing_file_size)
+        elif file_size == existing_file_size:
+            if args.quiet:
+                logger.info("Target file already exists.")
+                do_download = False
+            else:
+                yn = query_yes_no("Target file already exists.  Overwrite?", default='no')
+                if yn == 'no':
+                    do_download = False
         else:
             print "Target file already exists, but it seems to be corrupt."
             print "Size of existing file = %d MBytes   "%(existing_file_size),
-            yn = query_yes_no("Re-download?", default='yes')
-            if yn == 'no':
-                sys.exit()
+            if args.quiet:
+                logger.info("Re-downloading.")
+            else:
+                yn = query_yes_no("Re-download?", default='yes')
+                if yn == 'no':
+                    do_download = False
 
     # The next bit is based on one of the answers here: (by PabloG)
     # http://stackoverflow.com/questions/22676/how-do-i-download-a-file-over-http-using-python
     # The progress bar feature in that answer is important here, since this will take a while,
     # since the file is so big.
-    logger.info("")
-    with open(target, 'wb') as f:
-        file_size_dl = 0
-        block_sz = 32 * 1024
-        while True:
-            buffer = u.read(block_sz)
-            if not buffer:
-                break
+    if do_download:
+        logger.info("")
+        with open(target, 'wb') as f:
+            file_size_dl = 0
+            block_sz = 32 * 1024
+            while True:
+                buffer = u.read(block_sz)
+                if not buffer:
+                    break
 
-            file_size_dl += len(buffer) / 1024
-            f.write(buffer)
+                file_size_dl += len(buffer) / 1024
+                f.write(buffer)
 
-            # Status bar
-            if args.verbosity >= 2 and args.log_file is None:
-                fsdl = file_size_dl / 1024
-                status = r"Downloading: %5d / %d MBytes  [%3.2f%%]" % (
-                    fsdl, file_size, fsdl * 100. / file_size)
-                status = status + chr(8)*(len(status)+1)
-                print status,
-                sys.stdout.flush()
-    logger.info("Download complete.")
+                # Status bar
+                if args.verbosity >= 2:
+                    fsdl = file_size_dl / 1024
+                    status = r"Downloading: %5d / %d MBytes  [%3.2f%%]" % (
+                        fsdl, file_size, fsdl * 100. / file_size)
+                    status = status + chr(8)*(len(status)+1)
+                    print status,
+                    sys.stdout.flush()
+        logger.info("Download complete.")
+
 
 if __name__ == "__main__":
     main()
