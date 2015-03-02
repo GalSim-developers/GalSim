@@ -14,6 +14,9 @@ New Features
   WFIRST mission, along with helper routines for constructing appropriate PSFs,
   bandpasses, WCS, etc.  (#590)
 - Added native support for the TAN-SIP WCS type using GSFitsWCS. (#590)
+- Added a helper program, galsim_download_cosmos, that downloads the COSMOS
+  RealGalaxy catalog and places it in the $PREFIX/share/galsim installation
+  directory, and allow this to be the default for RealGalaxyCatalog(). (#590)
 - Added new methods for making realistic galaxy samples using COSMOS:
   makeCOSMOSCatalog() and the associated makeCOSMOSObj(). (#590 / #635).
 - Added information about PSF size and shape to the data structure that is

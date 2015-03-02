@@ -254,65 +254,55 @@ class RealGalaxyCatalog(object):
     there is no functionality that lets this be a FITS data cube, because we assume that the object
     postage stamps will in general need to be different sizes depending on the galaxy size.  
 
-    If only the catalog name (`'real_galaxy_catalog.fits'`) is specified, then the set of galaxy/PSF
-    image files (e.g., `'real_galaxy_images_1.fits'`, `'real_galaxy_PSF_images_1.fits'`, etc.) are
-    assumed to be in the directory as the catalog file (in the following example, in the current 
-    working directory `./`):
+    While you could create your own catalog to use with this class, the typical use cases would
+    be to use one of the catalogs that we have created and distribute.  There are three such
+    catalogs currently, which can be use with one of the following initializations:
 
-        >>> my_rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits')
+    1. A small example catalog is distributed with the GalSim distribution.  This catalog only
+       has 100 galaxies, so it is not terribly useful as a representative galaxy population.
+       But for simplistic use cases, it might be sufficient.  We use it for our unit tests and
+       in dome of the demo scripts (demo6, demo10, and demo11).  To use this catalog, you would
+       initialize with
 
-    If `image_dir` is specified, the set of galaxy/PSF image files is assumed to be in that
-    subdirectory of where the catalog is (in the following example, `./images`):
+           >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_example.fits',
+                                              dir='path/to/GalSim/examples/data')
 
-        >>> my_rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits', image_dir='images')
+    2. There are two larger catalogs based on HST observations of the COSMOS field with around
+       26,000 and 56,000 galaxies each.  (The former is a subset of the latter.) For information
+       about how to download these catalogs, see the RealGalaxy Data Download Page on the GalSim
+       Wiki:
 
-    If the real galaxy catalog is in some far-flung directory, and the galaxy/PSF image files are in 
-    its subdirectory, one only needs to specify the long directory name once:
+           https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
 
-        >>> file_name = '/data3/scratch/user_name/galsim/real_galaxy_data/real_galaxy_catalog.fits'
-        >>> image_dir = 'images'
-        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir)
+       Be warned that the catalogs are quite large.  The larger one is around 11 GB after unpacking
+       the tarball.  To use one of these catalogs, you would initialize with
 
-    In the above case, the galaxy/PSF image files are in the directory 
-    `/data3/scratch/user_name/galsim/real_galaxy_data/images/`.
+           >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits',
+                                              dir='path/to/download/directory')
 
-    The above behavior is changed if the `image_dir` specifies a directory.  In this case, 
-    `image_dir` is interpreted as the full path:
+       There is also an optional `image_dir` parameter that lets you have the image files in
+       a different location than the catalog.
 
-        >>> file_name = '/data3/scratch/user_name/galsim/real_galaxy_data/real_galaxy_catalog.fits'
-        >>> image_dir = '/data3/scratch/user_name/galsim/real_galaxy_data/images'
-        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir)
+    3. Finally, we provide a program that will download the large COSMOS sample for you and
+       put it in the $PREFIX/share/galsim directory of your installation path.  The program is
+       
+           galsim_download_cosmos
 
-    When `dir` is specified without `image_dir` being specified, both the catalog and
-    the set of galaxy/PSF images will be searched for under the directory `dir`:
+       which gets installed in the $PREFIX/bin directory when you install GalSim.  If you use
+       this program to download the COSMOS catalog, then you can use it with
 
-        >>> catalog_dir = '/data3/scratch/user_name/galsim/real_galaxy_data'
-        >>> file_name = 'real_galaxy_catalog.fits'
-        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, dir=catalog_dir)
+           >>> rgc = galsim.RealGalaxyCatalog()
 
-    If the `image_dir` is specified in addition to `dir`, the catalog name is specified as 
-    `dir/file_name`, while the galaxy/PSF image files will be searched for under `dir/image_dir`:
+       GalSim knows the location of the installation share directory, so it will automatically
+       look for it there.
 
-        >>> catalog_dir = '/data3/scratch/user_name/galsim/real_galaxy_data'
-        >>> file_name = 'real_galaxy_catalog.fits'
-        >>> image_dir = 'images'
-        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir, dir=catalog_dir)
-
-    To explore for the future: scaling with number of galaxies, adding more information as needed,
-    and other i/o related issues.
-
-    The GalSim repository currently contains an example catalog, in
-    `GalSim/examples/data/real_galaxy_catalog_example.fits` (100 galaxies), along with the
-    corresponding image data in other files (`real_galaxy_images.fits` and
-    `real_galaxy_PSF_images.fits`) in that directory.  For information on how to download a larger
-    sample of 26k training galaxies, see the RealGalaxy Data Download Page on the GalSim Wiki:
-    https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
-
-    @param file_name  The file containing the catalog.
-    @param image_dir  If a string containing no `/`, it is the relative path from the location of
-                      the catalog file to the directory containing the galaxy/PDF images.
-                      If a path (a string containing `/`), it is the full path to the directory
-                      containing the galaxy/PDF images. [default: None]
+    @param file_name  The file containing the catalog. [default: None, which will look for the
+                      COSMOS catalog in $PREFIX/share/galsim.  It will raise an exception if the
+                      catalog is not there telling you to run galsim_download_cosmos.]
+    @param image_dir  The directory of the image files.  If the string contains '/', then it is an
+                      absoule path, else it is taken to be a relative path from the location of
+                      the catalog file.  [default: None, which means to use the same directory
+                      as the catalog file.]
     @param dir        The directory of catalog file. [default: None]
     @param preload    Whether to preload the header information.  If `preload=True`, the bulk of 
                       the I/O time is in the constructor.  If `preload=False`, there is
@@ -321,9 +311,11 @@ class RealGalaxyCatalog(object):
                       various calls to getGal() and getPSF().  [default: False]
     @param noise_dir  The directory of the noise files if different from the directory of the 
                       image files.  [default: image_dir]
+    @param logger     An optional logger object to log progress. [default: None]
     """
-    _req_params = { 'file_name' : str }
-    _opt_params = { 'image_dir' : str , 'dir' : str, 'preload' : bool, 'noise_dir' : str }
+    _req_params = {}
+    _opt_params = { 'file_name' : str, 'image_dir' : str , 'dir' : str,
+                    'preload' : bool, 'noise_dir' : str }
     _single_params = []
     _takes_rng = False
     _takes_logger = True
@@ -331,8 +323,8 @@ class RealGalaxyCatalog(object):
     # nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
-    def __init__(self, file_name, image_dir=None, dir=None, preload=False, nobjects_only=False,
-                 noise_dir=None, logger=None):
+    def __init__(self, file_name=None, image_dir=None, dir=None, preload=False,
+                 noise_dir=None, logger=None, nobjects_only=False):
 
         self.file_name, self.image_dir, self.noise_dir = \
             parse_files_dirs(file_name, image_dir, dir, noise_dir)
@@ -641,8 +633,20 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     return image
 
 def parse_files_dirs(file_name, image_dir, dir, noise_dir):
-    # First build full file_name
-    if dir is None:
+    if file_name is None:
+        if dir is not None:
+            raise ValueError('Cannot specify dir when using default file_name.')
+        if image_dir is not None:
+            raise ValueError('Cannot specify image_dir when using default file_name.')
+        file_name = 'real_galaxy_catalog_23.5.fits'
+        dir = os.path.join(galsim.meta_data.share_dir, 'COSMOS_23.5_training_sample')
+        full_file_name = os.path.join(dir,file_name)
+        full_image_dir = dir
+        if not os.path.isfile(full_file_name):
+            raise RuntimeError('No RealGalaxy catalog found in %s.  '%dir +
+                               'Run the program galsim_download_cosmos to download catalog '+
+                               'and accompanying image file.')
+    elif dir is None:
         full_file_name = file_name
         if image_dir is None:
             full_image_dir = os.path.dirname(file_name)
@@ -656,8 +660,11 @@ def parse_files_dirs(file_name, image_dir, dir, noise_dir):
             full_image_dir = dir
         else:
             full_image_dir = os.path.join(dir,image_dir)
+    if not os.path.isfile(full_file_name):
+        raise RuntimeError(full_file_name+' not found.')
     if not os.path.isdir(full_image_dir):
         raise RuntimeError(full_image_dir+' directory does not exist!')
+
     if noise_dir is None:
         full_noise_dir = full_image_dir
     else:
