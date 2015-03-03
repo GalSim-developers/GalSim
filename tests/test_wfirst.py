@@ -193,7 +193,66 @@ def test_wfirst_bandpass():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_wfirst_detectors():
+    """Test the WFIRST detector routines for consistency with standard detector routines.
+    """
+    import time
+    t1 = time.time()
+
+    # This seems almost silly, but for now the WFIRST detector routines are define in terms of the
+    # standard GalSim detector routines, and we should check that even if the routines are modified,
+    # they still can agree given the same inputs.
+    # So start by making a fairly simple image.
+    obj = galsim.Gaussian(sigma=3.*galsim.wfirst.pixel_scale, flux=1.e5)
+    im = obj.drawImage(scale=galsim.wfirst.pixel_scale)
+
+    # Make copies that we transform using both sets of routines, and check for consistency.
+    # First we do nonlinearity:
+    im_1 = im.copy()
+    im_2 = im.copy()
+    im_1.applyNonlinearity(NLfunc=galsim.wfirst.NLfunc)
+    galsim.wfirst.applyNonlinearity(im_2)
+    assert im_2.scale == im_1.scale
+    assert im_2.wcs == im_1.wcs
+    assert im_2.dtype == im_1.dtype
+    assert im_2.bounds == im_1.bounds
+    np.testing.assert_array_equal(
+        im_2.array, im_1.array,
+        err_msg='Nonlinearity results depend on function used.')
+
+    # Then we do reciprocity failure:
+    im_1 = im.copy()
+    im_2 = im.copy()
+    im_1.addReciprocityFailure(exp_time=galsim.wfirst.exptime,
+                               alpha=galsim.wfirst.reciprocity_alpha,
+                               base_flux=1.0)
+    galsim.wfirst.addReciprocityFailure(im_2)
+    assert im_2.scale == im_1.scale
+    assert im_2.wcs == im_1.wcs
+    assert im_2.dtype == im_1.dtype
+    assert im_2.bounds == im_1.bounds
+    np.testing.assert_array_equal(
+        im_2.array, im_1.array,
+        err_msg='Reciprocity failure results depend on function used.')
+
+    # Then we do IPC:
+    im_1 = im.copy()
+    im_2 = im.copy()
+    im_1.applyIPC(IPC_kernel=galsim.wfirst.ipc_kernel, kernel_normalization=True)
+    galsim.wfirst.applyIPC(im_2)
+    assert im_2.scale == im_1.scale
+    assert im_2.wcs == im_1.wcs
+    assert im_2.dtype == im_1.dtype
+    assert im_2.bounds == im_1.bounds
+    np.testing.assert_array_equal(
+        im_2.array, im_1.array,
+        err_msg='IPC results depend on function used.')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_wfirst_wcs()
     test_wfirst_backgrounds()
     test_wfirst_bandpass()
+    test_wfirst_detectors()

@@ -36,23 +36,28 @@ def applyNonlinearity(img):
     function defined within the WFIRST module.
 
     After calling this method, the Image instance `img` is transformed to include the nonlinearity.
+
+    @param img              The Image to be transformed.
     """
     img.applyNonlinearity(NLfunc=galsim.wfirst.NLfunc)
 
-def addReciprocityFailure(self, exptime=None):
+def addReciprocityFailure(img, exptime=None):
     """
     Accounts for the reciprocity failure for the WFIRST directors and includes it in the original
-    Image directly.
+    Image `img` directly.
 
     For more information about reciprocity failure, see the docstring for
     galsim.Image.addReciprocityFailure.  Unlike that routine, this one does not need the parameters
     for reciprocity failure to be provided, though it still takes exposure time as an argument.
 
+    @param img              The Image to be transformed.
     @param exptime          The exposure time (t) in seconds, which goes into the expression for
                             reciprocity failure given in the docstring.  If None, then the routine
                             will use the default WFIRST exposure time in galsim.wfirst.exptime.
                             [default: None]
     """
+    if exptime is None:
+        exptime=galsim.wfirst.exptime
     img.addReciprocityFailure(exp_time=exptime, alpha=galsim.wfirst.reciprocity_alpha,
                               base_flux=1.0)
 
@@ -64,6 +69,7 @@ def applyIPC(img, edge_treatment='extend', fill_value=None):
     routine, this one does not need the IPC kernel to be specified, since it uses the IPC kernel
     defined within the WFIRST module.
 
+    @param img                     The Image to be transformed.
     @param edge_treatment          Specifies the method of handling edges and should be one of
                                    'crop', 'extend' or 'wrap'. See galsim.Image.applyIPC docstring
                                    for more information.
