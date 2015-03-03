@@ -305,6 +305,12 @@ def main(argv):
         # Apply the WFIRST nonlinearity routine, which knows all about the nonlinearity expected in
         # the WFIRST detectors.
         wfirst.applyNonlinearity(final_image)
+        # Note that users who wish to apply some other nonlinearity function (perhaps for other NIR
+        # detectors, or for CCDs) can use the more general nonlinearity routine, which uses the
+        # following syntax:
+        # final_image.applyNonlinearity(NLfunc=NLfunc)
+        # with NLfunc being a callable function that specifies how the output image pixel values
+        # should relate to the input ones.
         logger.debug('Applied nonlinearity to {0}-band image'.format(filter_name))
         final_image_4 = final_image.copy()
         # Isolate the changes due to non-linear gain.
