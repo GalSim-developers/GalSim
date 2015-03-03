@@ -110,36 +110,36 @@ def test_wfirst_backgrounds():
     t1 = time.time()
 
     # The routine should not allow us to look directly at the sun since the background there is high
-    # (to understate the problem).
+    # (to understate the problem).  The routine works for a date where RA=dec=0 means we are looking
+    # at the sun.
     bp_dict = galsim.wfirst.getBandpasses()
     bp = bp_dict['J129'] # one of the standard filters, doesn't really matter which
     try:
         np.testing.assert_raises(ValueError, galsim.wfirst.getSkyLevel, bp,
-                                 e_lat=0.*galsim.degrees, e_lon=0.*galsim.degrees)
+                                 world_pos=galsim.CelestialCoord(0.*galsim.degrees,
+                                                                 0.*galsim.degrees))
     except ImportError:
         print 'The assert_raises tests require nose'
 
     # The routine should have some obvious symmetry, for example, ecliptic latitude above vs. below
     # plane and ecliptic longitude positive vs. negative (or vs. 360 degrees - original value).
-    test_lat = 50.*galsim.degrees
-    test_lon = 180.*galsim.degrees
-    level_p = galsim.wfirst.getSkyLevel(bp, e_lat=test_lat, e_lon=test_lon)
-    level_m = galsim.wfirst.getSkyLevel(bp, e_lat=-test_lat, e_lon=test_lon)
+    # Because of how equatorial and ecliptic coordinates are related on the adopted date, we can do
+    # this test as follows:
+    test_ra = 50.*galsim.degrees
+    test_dec = 10.*galsim.degrees
+    test_pos_p = galsim.CelestialCoord(test_ra, test_dec)
+    test_pos_m = galsim.CelestialCoord(-1.*(test_ra/galsim.degrees)*galsim.degrees, 
+                                        -1.*(test_dec/galsim.degrees)*galsim.degrees)
+    level_p = galsim.wfirst.getSkyLevel(bp, world_pos=test_pos_p)
+    level_m = galsim.wfirst.getSkyLevel(bp, world_pos=test_pos_m)
     np.testing.assert_almost_equal(level_m, level_p, decimal=8)
 
-    level_m = galsim.wfirst.getSkyLevel(bp, e_lat=test_lat, e_lon=-test_lon)
-    np.testing.assert_almost_equal(level_m, level_p, decimal=8)
-
-    level_m = galsim.wfirst.getSkyLevel(bp, e_lat=test_lat, e_lon=360.*galsim.degrees-test_lon)
-    np.testing.assert_almost_equal(level_m, level_p, decimal=8)
-
-    # The routine should handle an input exposure time sensibly.
-    # Our original level_p was in e-/pix/s.  We will define an exposure time, pass it in, and
-    # confirm that the output is consistent with this.
-    level_p_epix = level_p * galsim.wfirst.exptime
-    level_p_epix_2 = galsim.wfirst.getSkyLevel(bp, e_lat=test_lat, e_lon=test_lon,
-                                               exp_time=galsim.wfirst.exptime)
-    np.testing.assert_almost_equal(level_p_epix, level_p_epix_2, decimal=8)
+    # The routine should handle an input exposure time sensibly.  Our original level_p was in e-/pix
+    # using the WFIRST exposure time.  We will define another exposure time, pass it in, and confirm
+    # that the output is consistent with this.
+    level_p_2 = galsim.wfirst.getSkyLevel(bp, world_pos=test_pos_p,
+                                          exptime=1.7*galsim.wfirst.exptime)
+    np.testing.assert_almost_equal(1.7*level_p, level_p_2, decimal=8)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
