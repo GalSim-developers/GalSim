@@ -49,7 +49,9 @@ def getSkyLevel(bandpass, position=None, e_lat=None, e_lon=None, exp_time=None):
         http://www.tapir.caltech.edu/~chirata/web/software/space-etc/
 
     It nominally returns photons/m^2/s/arcsec^2, but the input bandpasses used internally by the ETC
-    code include the quantum efficiency, to effectively convert to e-/m^2/s/arcsec^2.
+    code include the quantum efficiency, to effectively convert to e-/m^2/s/arcsec^2.  Note that in
+    general results will depend on the adopted model for zodiacal light, and these are uncertain at
+    the ~10% level.
 
     Positions can be specified either with a keyword `position`, which must be a CelestialCoord
     object, or with both `e_lat` and `e_lon` for the ecliptic coordinates (as Angle instances).
