@@ -54,14 +54,15 @@ Currently, the module includes the following numbers:
                         function.  This will not ordinarily be accessed directly by users; instead,
                         it will be accessed by the convenience function in this module that defines
                         the nonlinearity function as counts_out = counts_in + beta*counts_in^2.
+                        Alternatively users can use the galsim.wfirst.applyNonlinearity() routine,
+                        which already knows about the expected form of the nonlinearity in the
+                        detectors.
 
     reciprocity_alpha - The normalization factor that determines the effect of reciprocity failure
-                        of the detectors for a given exposure time.  Typically, users would then
-                        simulate the reciprocity failure for a given image `im` and for the default
-                        WFIRST exposure time using
-
-        >>>> im_recip = im.addReciprocityFailure(galsim.wfirst.exptime,
-                                                 galsim.wfirst.reciprocity_alpha)
+                        of the detectors for a given exposure time.  Alternatively, users can use
+                        the galsim.wfirst.addReciprocityFailure() routine, which knows about this
+                        normalization factor already, and allows them to choose an exposure time or
+                        use the default WFIRST exposure time.
 
     read_noise - A total of 10e-.  This comes from 20 e- per correlated double sampling (CDS) and a
                  5 e- floor, so the CDS read noise dominates.  The source of CDS read noise is the
@@ -85,8 +86,8 @@ Currently, the module includes the following numbers:
                            zodiacal light, so its value is set to 0.1 (assuming a worst-case).  This
                            could be used to get a total background including stray light.
 
-    ipc_kernel - The 3x3 kernel to be used in simulations of interpixel capacitance (IPC); see
-                 help(galsim.detectors.applyIPC) for more information.
+    ipc_kernel - The 3x3 kernel to be used in simulations of interpixel capacitance (IPC), using
+                 galsim.wfirst.applyIPC().
 
     n_sca - The number of SCAs in the focal plane.
 
@@ -115,10 +116,16 @@ This module also contains the following routines:
                     position, in a given band..
 
     NLfunc() - A function to take an input image and simulate detector nonlinearity.  This will
-               ordinarily be used as an input to GalSim routines for applying nonlinearity, i.e., if
-               you have an image `im` then you would do
+               ordinarily be used as an input to GalSim routines for applying nonlinearity, though
+               it is not needed for users who want to use galsim.wfirst.applyNonlinearity() (which
+               is what we actually recommmend).
 
-               >>>> im_nl = im.applyNonlinearity(galsim.wfirst.NLfunc)
+    applyNonlinearity() - A routine to apply detector nonlinearity of the type expected for WFIRST.
+
+    addReciprocityFailure() - A routine to include the effects of reciprocity failure in images at
+                              the level expected for WFIRST.
+
+    applyIPC() - A routine to incorporate the effects of interpixel capacitance in WFIRST images.
 
     getPSF() - A routine to get a chromatic representation of the PSF in each SCAs.
 
@@ -184,6 +191,7 @@ from wfirst_bandpass import getBandpasses
 from wfirst_backgrounds import getSkyLevel
 from wfirst_psfs import getPSF, tabulatePSFImages, getStoredPSF
 from wfirst_wcs import getWCS, findSCA
+from wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)
