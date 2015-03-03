@@ -41,11 +41,10 @@ New features introduced in this demo:
 - galsim.makeCOSMOSCatalog(...)
 - galsim.makeCOSMOSObj(...)
 - Adding sky level and dark current.
-- image.addReciprocityFailure(exp_time, alpha, base_flux)
+- galsim.wfirst.addReciprocityFailure(image)
 - image.quantize()
-- image.applyNonlinearity(NLfunc, *args)
-- image.applyIPC(IPC_kernel, edge_treatment, fill_value, kernel_nonnegativity,
-                 kernel_normalization)
+- galsim.wfirst.applyNonlinearity(image)
+- galsim.wfirst.applyIPC(image)
 - readnoise.setReadNoise(readnoise_level)
 - All functionality in the galsim.wfirst module.
 """
@@ -260,9 +259,9 @@ def main(argv):
 
         # Save the image before applying the transformation to see the difference
         final_image_orig = final_image.copy()
-
-        final_image.addReciprocityFailure(exp_time=wfirst.exptime, alpha=wfirst.reciprocity_alpha,
-                                          base_flux=1.0)
+        # If we had wanted to, we could have specified a different exposure time than the default
+        # one for WFIRST, but otherwise the following routine does not take any arguments.
+        wfirst.addReciprocityFailure(final_image)
         logger.debug('Included reciprocity failure in {0}-band image'.format(filter_name))
         final_image_2 = final_image.copy()
         # Isolate the changes due to reciprocity failure.
@@ -303,8 +302,9 @@ def main(argv):
         # Save the image before applying the transformation to see the difference:
         final_image_3 = final_image.copy()
 
-        NLfunc = wfirst.NLfunc        # a quadratic non-linear function
-        final_image.applyNonlinearity(NLfunc=NLfunc)
+        # Apply the WFIRST nonlinearity routine, which knows all about the nonlinearity expected in
+        # the WFIRST detectors.
+        wfirst.applyNonlinearity(final_image)
         logger.debug('Applied nonlinearity to {0}-band image'.format(filter_name))
         final_image_4 = final_image.copy()
         # Isolate the changes due to non-linear gain.
@@ -319,11 +319,9 @@ def main(argv):
         # The voltage read at a given pixel location is influenced by the charges present in
         # the neighboring pixel locations due to capacitive coupling of sense nodes. This
         # interpixel capacitance effect is modeled as a linear effect that is described as a
-        # convolution of a 3x3 kernel with the image. The WFIRST kernel is not normalized to
-        # have the entries add to unity and hence must be normalized inside the routine.
-
-        final_image.applyIPC(IPC_kernel=wfirst.ipc_kernel,edge_treatment='extend',
-                             kernel_normalization=True)
+        # convolution of a 3x3 kernel with the image.  The WFIRST IPC routine knows about the kernel
+        # already, so the user does not have to supply it.
+        wfirst.applyIPC(final_image)
         # Here, we use `edge_treatment='extend'`, which pads the image with zeros before
         # applying the kernel. The central part of the image is retained.
         logger.debug('Applied interpixel capacitance to {0}-band image'.format(filter_name))
