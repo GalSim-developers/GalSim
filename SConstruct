@@ -937,7 +937,7 @@ def TryScript(config,text,executable):
 
     # Run the given executable with the source file we just built
     output = config.sconf.confdir.File(f + '.out')
-    node = config.env.Command(output, source, executable + " < $SOURCE > $TARGET")
+    node = config.env.Command(output, source, executable + " < $SOURCE >& $TARGET")
     ok = config.sconf.BuildNodes(node)
 
     config.sconf.env['SPAWN'] = save_spawn
@@ -1747,7 +1747,9 @@ if not GetOption('help'):
         ClearCache()
 
     if env['PYTHON'] == '':
-        python = default_python
+        python = which('python')
+        if python is None:
+            python = default_python
     else:
         python = env['PYTHON']
         python = which(python)
