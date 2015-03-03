@@ -872,6 +872,7 @@ for Class in _galsim.ImageView.itervalues():
     Class.__pow__ = Image_pow
     Class.__neg__ = Image_neg
     Class.copy = Image_copy
+    Class.__getinitargs__ = ImageView_getinitargs
 
 for Class in _galsim.ConstImageView.itervalues():
     Class.__getitem__ = Image_getitem
@@ -888,6 +889,7 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.__pow__ = Image_pow
     Class.__neg__ = Image_neg
     Class.copy = Image_copy
+    Class.__getinitargs__ = ImageView_getinitargs
 
 for int_type in [ numpy.int16, numpy.int32 ]:
     for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type],

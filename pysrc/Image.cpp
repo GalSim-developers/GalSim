@@ -170,10 +170,6 @@ struct PyImage {
             .def("subImage", &BaseImage<T>::subImage, bp::args("bounds"))
             .add_property("array", &GetConstArray)
             .def("getBounds", getBounds)
-            .def("getDataAddress", getDataAddress,
-                 "Return the address of the pixel of the image as an integer (useful for checking "
-                 "whether images share data)."
-            )
             .add_property("bounds", getBounds)
             ;
         ADD_CORNER(pyBaseImage, getXMin, xmin);
