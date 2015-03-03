@@ -28,6 +28,7 @@
 
 namespace bp = boost::python;
 
+
 // Note that class docstrings for all of these are now added in galsim/random.py     
 
 namespace galsim {

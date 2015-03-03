@@ -46,6 +46,7 @@
 
 #endif
 
+
 // Variable defined to use a private copy of Boost.Random, modified
 // to avoid any reference to Boost.Random elements that might be on
 // the local machine.
@@ -225,22 +226,6 @@ namespace galsim {
          * BaseDeviate objects a direct way to define a common seed for other Deviates.
          */
         double operator()() { return _val(); }
-
-        /**
-         * @brief Save the generator state to a stream.
-         *
-         * This is not a virtual member function; it does not save parameters associated
-         * with derived generators, which must be saved some other way.
-         */
-        void writeState(std::ostream & os) const { os << (*_rng); }
-
-        /**
-         * @brief Load the generator state from a stream.
-         *
-         * This is not a virtual member function; it does not restore parameters associated
-         * with derived generators, which must be loaded some other way.
-         */
-        void readState(std::istream & os) { os >> (*_rng); }
 
    protected:
 
