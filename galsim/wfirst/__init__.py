@@ -32,7 +32,8 @@ Currently, the module includes the following numbers:
     gain - The gain for all SCAs (sensor chip assemblies) is expected to be the same, so this is a
            single value rather than a list of values.
 
-    pixel_scale - The pixel scale in units of arcsec/pixel.
+    pixel_scale - The pixel scale in units of arcsec/pixel.  This value is approximate and does not
+                  include effects like distortion, which are included in the WCS.
 
     diameter - The telescope diameter in meters.
 
