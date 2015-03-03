@@ -1,0 +1,346 @@
+--- Quick reference for working with git ---
+
+The internet is full of resources on doing various things with git, but we've included a brief
+synopsis of the most important commands here.
+
+Much of this has been lifted from Mario Juric's excellent LSST git tutorial, which can be found in
+full here:
+
+http://lsstdev.ncsa.uiuc.edu/trac/wiki/GitDemoAndTutorial
+
+Before you start, you'll probably want to put the following in ~/.gitconfig:
+
+[user]
+      name = Your Name
+      email = user@domain
+[push]
+      default = tracking
+
+The "push" section changes the default behavior of "git push" to operate on the current branch only,
+which makes it symmetric with "git pull", and will help you avoid confusing (but ultimately
+harmless) error messages about failing to push refs due to non-fast-forward merges on branches other
+than the current one.  Even more important, it means that "git push" won't push some changes
+you've made on a different branch that aren't ready to go public yet.
+
+Some other lines you might want to add:
+
+[color]
+    ui = auto                   # Make git status and such more colorful
+[alias]
+    st = status                 # Make aliases for anything you want to be shorter
+    br = branch -a --no-merged  # MJ - I find this one convenient
+    ci = commit                 # For those used to cvs...
+    co = checkout
+[core]
+    editor = vim                # or emacs
+
+
+--- Basic workflow ---
+
+When working on GalSim collaboratively via Github, we broadly employ "Github-flow":
+see http://scottchacon.com/2011/08/31/github-flow.html
+
+In particular, paraphrasing from the article above:
+
+* Anything in the master branch is deployable.
+
+* To work on something new, create a descriptively named branch off of master (ie: #ISSUE_NUMBER).
+
+* Commit to that branch locally and regularly push your work to the same named branch on the server.
+
+* When you need feedback or help, or you think the branch is ready for merging, open a pull request.
+
+* After someone else has reviewed and signed off on the feature, you can merge it into master.
+
+* Once it is merged and pushed to master, you can and should deploy immediately.
+
+So far, this system has proved to be very convenient for in depth code review, with hundreds of
+successful Pull Requests to date.
+
+Here are some step-by-step examples of using this flow with the command line git tools:
+
+# 0. clone the repo (only need to do this once, of course)
+    git clone git@github.com:GalSim-developers/GalSim.git
+
+# 1. check which branch you are on, mostly like you want to be on the master branch
+    git branch
+
+# 2. create new branch for issue X, both locally and remotely
+    git checkout -b #X
+    git push -u origin #X
+
+# 3. do work, commit often, push periodically
+... do work ...
+    git commit -a
+    git push
+
+# 4. when the issue work is complete, you are ready to consider a Pull Request
+
+You can do this via the Github web interface, which in the absence of conflicts will also be able
+to handle the eventual merge.  When opening a Pull Request, write a description of the changes on
+your branch and why you would like to merge it into master.  Then just wait for people to review
+your work!
+
+
+--- Initial configuration ---
+
+(If you explicitly made your ~/.gitconfig file as described above, you can skip
+ this section.)
+
+# Configure your name; this will appear in commits
+git config --global user.name "Firstname Lastname"
+
+# Configure you e-mail; this will appear in commits
+git config --global user.email "your_email@youremail.com"
+
+# Use colors if terminal is capable
+git config --global color.ui true
+
+# Make 'git push' push only the current branch, and not all of them (probably won't matter, but
+# git's default behavior is confusing)
+git config --global push.default tracking
+
+--- Add a new file ---
+
+echo '# New build system!' > CMakeList.txt
+git status                  # See the status of files in the working directory
+git status -s               # The same in format familiar to SVN users
+git add CMakeList.txt       # Add a new file to be tracked by git
+git status
+git commit                  # Commit the changes (the file addition)
+git log
+
+--- Editing a file ---
+
+echo '#more stuff' >> CMakeList.txt   # Change the file
+git status                            # See that the file is now "dirty"
+git diff                              # See the changes
+git commit -a                         # Commit all changes (don't forget the -a!)
+
+# You can also use "git add" and "git commit" separately, to only commit some of the files you've
+# made changes to.  This is called the "staging area", and it makes it easier to make your commits
+# more atomic and meaningful, which makes it easer to use the logs and fix merge conflicts.
+
+--- Branches ---
+
+git branch                 # Show the branch we're on
+git branch -a              # List all the branches
+git branch -a --no-merged  # List all branches that aren't merged into master yet.
+
+git checkout -b mybranch   # make a new branch and check it out
+git checkout mybranch      # checkout an existing branch
+
+# Try to remember to start a new branch from master, not from another existing branch unless you are
+# sure that the branch in question will be merged to master before you want to PR the new branch.
+# This is to avoid some of the third party branch contamination problems seen on the Pull Request
+# number #434.
+
+# Checking out a branch that wasn't created locally:
+git fetch                           # sync with remote repositories (pull does this too)
+git checkout -t origin/otherbranch  # make a "tracking branch" and check it out
+
+# With recent versions of git, you can also just say "git checkout otherbranch" as an equivalent of
+# the last line (it won't work at all for earlier versions, so it's safe to try).
+
+--- About Tracking and Remote Branches ---
+
+When you do a "git fetch", git gets all the changes in the repository you cloned from.  That repo is
+called "origin", and it's what git calls a "remote".  You can have multiple remotes if you like, or
+change their names (see "git remote --help"), but most of the time you'll just deal with origin.
+Anyhow, when you fetch, the branches in the remote repository are synced into local branches with
+names like "origin/master" and "origin/someotherbranch".  These are "remote branches", and you
+should never check them out directly.
+
+Instead, you make a local branch that "tracks" the remote branch, with
+"git push -u <remote>" (if you made the branch) or
+"git checkout -t <remote>/<branch>" (if someone else did), as above.
+A tracking branch tells git where to push your changes when you say "git push", and where to pull
+from when you say "git pull".  In fact, "git pull" is basically equivalent to doing "git fetch"
+(which puts remote changes into the remote branches) and "git merge <remote>" (which merges the
+remote branch into the tracking branch).
+
+--- About the impact of how we chose branch names ---
+
+We chose our branch names such that they start with #.  This has an impact if we have local
+tracking branches that we want to delete.  Say, for example, that we want to make a tracking branch
+for #12.  As above, this can be done using
+
+git checkout -t origin/#12
+
+When we use "branch" to check what branches we have, we will have a #12 on the list.  But let's say
+branch #12 gets merged to master and we no longer want the tracking branch sitting around.  If we do
+
+git branch -d #12
+
+then nothing will happen because either git or the shell is trying to interpret the #.  We have to
+say
+
+git branch -d "#12"
+
+to get the tracking branch to go away.  The quotes are necessary whenever the # appears
+at the beginning of a word:
+
+git checkout '#12'
+git merge '#12'
+
+To add the branch name in this format to each commit message, automatically (this is useful for
+getting commits listed on Github issue pages), see the file commit-msg in this directory.
+
+--- Tags ---
+
+We will be creating tags corresponding to all completed milestones and code releases.  By default,
+these should be annotated tags (which include more information).  These tags are created using
+
+git tag -a TAGNAME -m MESSAGE
+
+and are pushed to the repository using
+
+git push --tags
+
+See https://github.com/GalSim-developers/GalSim/wiki/Checklist-for-making-a-new-tagged-release
+for a full checklist of things to do when tagging a released version.
+
+To use a code version corresponding to some tag, you can use
+
+git checkout TAGNAME
+
+To list all tags, use
+
+git tag -l
+
+and to get information about some particular tag, use
+
+git show TAGNAME
+
+NOTE: when you go to the code version corresponding to some tag, you may get a message warning you
+that you have a detached HEAD.  This is okay; it means that git doesn't know what to do if you make
+a commit (i.e., you're not on any branch).  But, by definition, we should not be changing tagged
+versions; we should be working on specific branches, so this warning is not a problem.
+
+Each Mojor.minor version number may have more than one revision for bug fixes.  These are tracked
+with the branches named releases/Major.minor.  For example: releases/1.0.  Bug fixes should be 
+merged into the master branch, and also into all release versions that are being actively 
+maintained.  Then a new tag should be made for the revised code, updating the last digit 
+(e.g. v1.0.1).
+
+Here are the gory details about how to merge a bugfix branch into both master and a release branch.
+Let's say you have an issue branch, #488 say, with some changes that you want to merge both into 
+releases/1.0 and master.
+
+If there is just a single bugfix commit, then it's not too hard.  Just cherry-pick it:
+
+git checkout '#488'
+git log                                          # Note the SHA-1 of the commit you want.
+git checkout releases/1.0
+git cherry-pick 9f8c4f                           # Replay that commit onto 1.0 branch.
+git push
+
+If there are a number of commits, you can either cherry-pick each one, or use rebase:
+
+git rebase --onto releases/1.0 master '#488'     # Replay the commits in #488 onto 1.0 branch.
+git checkout releases/1.0
+git merge '#488'                                 # Fast forward merge, to bring 1.0 up to #488.
+git push
+git checkout '#488'
+git reset --hard origin/#488                     # Get #488 back where it was.
+
+Then either go to GitHub and merge the pull request from there, or continue on...
+
+git checkout master
+git merge '#488'
+git push
+
+--- Deleting branches on the origin ---
+
+Note that branches can be easily deleted on GitHub itself, either for cleanup jobs or after the
+branch has been merged into master.  Click the branches tab and press "Delete branch" for the branch
+you want to delete.  This is probably easier than the method described below.
+
+The rather obtuse syntax for deleting a branch on the origin uses a push command as follows:
+
+git push origin :"branchname"
+
+or for a direct example:
+
+git push origin :"#36_Image_unit_tests"
+
+using the case in Issue #122 of wishing to remove a branch named #36_Image_unit_tests from the 
+origin.  
+
+Note in that in Issue #122 this usage led to the removal of the branch name for the commits
+associated with the work done in #36_Image_unit_tests, highlighting why Barney made a mistake in
+creating a new branch for an old Issue that already had one.
+
+--- What happens if you make a huge mess while working locally? ---
+
+If you have made a mess with some local commits (for example, committed something to the wrong
+branch), then there are ways to fix it.  For example:
+
+git reset --hard <commit> allows you to set a branch to any commit, and <commit> can be a lot of
+different things. For instance, if you want to set your version of master to whatever the remote one
+is, do git reset --hard origin/master while on your master. If you want to totally remove the last
+two commits, you can do git reset --hard HEAD~2.
+
+git commit --amend is another neat trick that lets you modify the last commit, and you can edit
+history even further back with git rebase -i.
+
+Again, this should only be done if you haven't pushed the changes.
+
+If you have to do some kind of git surgery, please make sure to be vocal about it and tell everyone
+who might be working on this branch to do a hard reset!
+
+--- Putting git status info in your prompt ---
+
+This is a cute little trick from Paul Price.  Many people like to have the directory they are
+in as part of their prompt to help keep track of where they are in their directory structure.
+Since git always uses the same directory structure for different branches, rather than using 
+different directories a la svn, it can sometimes be hard to remember which branch you are on.
+
+Paul Price developed a trick to get the git branch as part of the prompt as well, and I 
+(Jarvis) have found it very useful.  (It doesn't do anything to your prompt when you
+aren't in a git directory.)  Here is what to put in your .bashrc or .bash_profile file:
+
+function prompt_git_dirty {
+  local gitstat=`git status 2> /dev/null`
+  local charstat=""
+  [[ -z $(echo $gitstat | grep "nothing to commit (working directory clean)") ]] && charstat="\*"
+  [[ -n $(echo $gitstat | grep "Your branch and '.*' have diverged") ]] && echo "${charstat}\%" && return
+  [[ -n $(echo $gitstat | grep 'Your branch is ahead of') ]] && echo "${charstat}+" && return 
+  [[ -n $(echo $gitstat | grep 'Your branch is behind') ]] && echo "${charstat}-" && return
+  echo $charstat
+}
+
+function prompt_git_branch {
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/[\1$(prompt_git_dirty)]/"
+}
+
+Then just add $(prompt_git_branch) where you want it in your prompt.  e.g. Here is mine:
+
+PS1='\[\033[01;34m\]\u@\h\[\033[00;30m\]:\w\[\033[00;31m\]$(prompt_git_branch) \[\033[00m\]\$ '
+
+An example prompt is (ignoring the colors):
+
+Mike@flute:~/GalSim[#107+] $
+
+The '+' after the #107 means that I have commits that haven't been pushed yet.  If I have 
+changes that haven't been committed, it will be a '*':
+
+Mike@flute:~/GalSim[#107*] $
+
+When the working directory is clean, it just shows
+
+Mike@flute:~/GalSim[#107] $
+
+If you've fetched changes from the repository, but haven't merged them, you get a '-'.  And
+if you have unpushed commit and unmerged upstream commits (which means you might be getting
+into trouble in the future), you get a '%'.
+
+This is obviously completely optional, but I've found it pretty helpful when using git.
+
+Note: Paul gives due credit, saying he "stole the idea and much of the implementation from 
+http://rubyglazed.com/post/15772234418/git-ify-your-command-line."
+
+Finally, I discovered that after a while of using git, the command prompt started to get a bit
+slow.  It turns out the 'git gc --aggressive' cleaned out a lot of the junk and made it run 
+much faster again.
+

@@ -1,6 +1,24 @@
-// -*- c++ -*-
-#ifndef SBCONVOLVE_H
-#define SBCONVOLVE_H
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+#ifndef GalSim_SBConvolve_H
+#define GalSim_SBConvolve_H
 /** 
  * @file SBConvolve.h @brief SBProfile adapter which convolves 2 or more other SBProfiles.
  */
@@ -11,7 +29,8 @@ namespace galsim {
 
     // Defined in RealSpaceConvolve.cpp
     double RealSpaceConvolve(
-        const SBProfile& p1, const SBProfile& p2, const Position<double>& pos, double flux);
+        const SBProfile& p1, const SBProfile& p2, const Position<double>& pos, double flux,
+        const GSParamsPtr& gsparams);
 
     /**
      * @brief Convolve SBProfiles.
@@ -30,7 +49,7 @@ namespace galsim {
      * The stepK used for the k-space image will be (Sum 1/stepK()^2)^(-1/2) where the sum is over
      * all the components being convolved.  Since the size of the convolved image scales roughly as
      * the quadrature sum of the components, this should be close to Pi/Rmax where Rmax is the
-     * radius that encloses all but (1-alias_threshold) of the flux in the final convolved image.
+     * radius that encloses all but (1-folding_threshold) of the flux in the final convolved image.
      *
      * The maxK used for the k-space image will be the minimum of the maxK() calculated for each
      * component.  Since the k-space images are multiplied, if one of them is essentially zero
@@ -51,32 +70,15 @@ namespace galsim {
     {
     public:
         /**
-         * @brief Constructor, 2 inputs.
-         *
-         * @param[in] s1 first SBProfile.
-         * @param[in] s2 second SBProfile.
-         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
-         */
-        SBConvolve(const SBProfile& s1, const SBProfile& s2, bool real_space=false);
-
-        /**
-         * @brief Constructor, 3 inputs.
-         *
-         * @param[in] s1 first SBProfile.
-         * @param[in] s2 second SBProfile.
-         * @param[in] s3 third SBProfile.
-         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
-         */
-        SBConvolve(const SBProfile& s1, const SBProfile& s2, const SBProfile& s3,
-                   bool real_space=false);
-
-        /**
          * @brief Constructor, list of inputs.
          *
-         * @param[in] slist Input: list of SBProfiles.
-         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
+         * @param[in] slist       Input: list of SBProfiles.
+         * @param[in] real_space  Do convolution in real space?
+         * @param[in] gsparams    GSParams object storing constants that control the accuracy of
+         *                        image operations and rendering, if different from the default.
          */
-        SBConvolve(const std::list<SBProfile>& slist, bool real_space=false);
+        SBConvolve(const std::list<SBProfile>& slist, bool real_space,
+                   const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBConvolve(const SBConvolve& rhs);
@@ -93,7 +95,68 @@ namespace galsim {
         void operator=(const SBConvolve& rhs);
     };
 
+    // A special case of a convolution of a profile with itself, which allows for some 
+    // efficiency gains over SBConvolve(s,s)
+    class SBAutoConvolve : public SBProfile
+    {
+    public:
+        /**
+         * @brief Constructor
+         *
+         * @param[in] s           SBProfile to be convolved with itself.
+         * @param[in] real_space  Do convolution in real space?
+         * @param[in] gsparams    GSParams to use, if different from the default.
+         */
+        SBAutoConvolve(const SBProfile& s, bool real_space, const GSParamsPtr& gsparams);
+
+        /// @brief Copy constructor.
+        SBAutoConvolve(const SBAutoConvolve& rhs);
+
+        /// @brief Destructor.
+        ~SBAutoConvolve();
+
+    protected:
+
+        class SBAutoConvolveImpl;
+        friend class SBConvolve;
+
+    private:
+        // op= is undefined
+        void operator=(const SBAutoConvolve& rhs);
+    };
+
+    // A special case of the autocorrelation of profile (i.e. with itself), primarily used by the
+    // correlated noise models
+    class SBAutoCorrelate : public SBProfile
+    {
+    public:
+        /**
+         * @brief Constructor
+         *
+         * @param[in] s           SBProfile to be correlated with itself.
+         * @param[in] real_space  Do convolution in real space?
+         * @param[in] gsparams    GSParams to use, if different from the default.
+         */
+        SBAutoCorrelate(const SBProfile& s, bool real_space, const GSParamsPtr& gsparams);
+
+        /// @brief Copy constructor.
+        SBAutoCorrelate(const SBAutoCorrelate& rhs);
+
+        /// @brief Destructor.
+        ~SBAutoCorrelate();
+
+    protected:
+
+        class SBAutoCorrelateImpl;
+        friend class SBConvolve;
+
+    private:
+        // op= is undefined
+        void operator=(const SBAutoCorrelate& rhs);
+    };
+
+
 }
 
-#endif // SBCONVOLVE_H
+#endif
 

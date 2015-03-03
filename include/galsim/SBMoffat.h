@@ -1,7 +1,25 @@
-// -*- c++ -*-
-#ifndef SBMOFFAT_H
-#define SBMOFFAT_H
-/** 
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+#ifndef GalSim_SBMoffat_H
+#define GalSim_SBMoffat_H
+/**
  * @file SBMoffat.h @brief SBProfile that implements a Moffat profile.
  */
 
@@ -17,7 +35,7 @@ namespace galsim {
      * SBProfile representation of a Moffat profile also includes an optional truncation beyond a
      * given radius.
      */
-    class SBMoffat : public SBProfile 
+    class SBMoffat : public SBProfile
     {
     public:
         enum  RadiusType
@@ -34,10 +52,13 @@ namespace galsim {
          * @param[in] rType          Kind of size being specified (one of FWHM, HALF_LIGHT_RADIUS,
          *                           SCALE_RADIUS).
          * @param[in] trunc          Outer truncation radius in same physical units as size,
-         *                           trunc = 0. for no truncation (default `trunc = 0.`). 
-         * @param[in] flux           Flux (default `flux = 1.`).
+         *                           trunc = 0. for no truncation.
+         * @param[in] flux           Flux.
+         * @param[in] gsparams       GSParams object storing constants that control the accuracy of
+         *                           image operations and rendering, if different from the default.
          */
-        SBMoffat(double beta, double size, RadiusType rType, double trunc=0., double flux=1.);
+        SBMoffat(double beta, double size, RadiusType rType, double trunc, double flux,
+                 const GSParamsPtr& gsparams);
 
 
         /// @brief Copy constructor.
@@ -62,13 +83,6 @@ namespace galsim {
 
         class SBMoffatImpl;
 
-        static double pow_1(double x, double ) { return x; }
-        static double pow_2(double x, double ) { return x*x; }
-        static double pow_3(double x, double ) { return x*x*x; }
-        static double pow_4(double x, double ) { return x*x*x*x; }
-        static double pow_int(double x, double beta) { return std::pow(x,int(beta)); }
-        static double pow_gen(double x, double beta) { return std::pow(x,beta); }
-
     private:
         // op= is undefined
         void operator=(const SBMoffat& rhs);
@@ -76,5 +90,4 @@ namespace galsim {
 
 }
 
-#endif // SBMOFFAT_H
-
+#endif

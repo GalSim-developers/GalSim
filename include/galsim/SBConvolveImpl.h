@@ -1,6 +1,24 @@
-// -*- c++ -*-
-#ifndef SBCONVOLVE_IMPL_H
-#define SBCONVOLVE_IMPL_H
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+#ifndef GalSim_SBConvolveImpl_H
+#define GalSim_SBConvolveImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBConvolve.h"
@@ -11,23 +29,8 @@ namespace galsim {
     {
     public:
 
-        SBConvolveImpl(const SBProfile& s1, const SBProfile& s2, bool real_space) : 
-            _real_space(real_space)
-        { add(s1);  add(s2); initialize(); }
-
-        SBConvolveImpl(const SBProfile& s1, const SBProfile& s2, const SBProfile& s3,
-                       bool real_space) :
-            _real_space(real_space)
-        { add(s1);  add(s2);  add(s3); initialize(); }
-
-        SBConvolveImpl(const std::list<SBProfile>& slist, bool real_space) :
-            _real_space(real_space)
-        {
-            for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr) 
-                add(*sptr); 
-            initialize(); 
-        }
-
+        SBConvolveImpl(const std::list<SBProfile>& slist, bool real_space,
+                       const GSParamsPtr& gsparams);
         ~SBConvolveImpl() {}
 
         void add(const SBProfile& rhs); 
@@ -40,7 +43,7 @@ namespace galsim {
         bool isAxisymmetric() const { return _isStillAxisymmetric; }
         bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return _real_space; }
-        bool isAnalyticK() const { return !_real_space; }    // convolvees must all meet this
+        bool isAnalyticK() const { return true; }    // convolvees must all meet this
         double maxK() const { return _minMaxK; }
         double stepK() const { return _netStepK; }
 
@@ -107,7 +110,13 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        void fillKGrid(KTable& kt) const;
+        // Overrides for better efficiency
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
 
     private:
         typedef std::list<SBProfile>::iterator Iter;
@@ -132,7 +141,111 @@ namespace galsim {
         SBConvolveImpl(const SBConvolveImpl& rhs);
         void operator=(const SBConvolveImpl& rhs);
     };
+
+    class SBAutoConvolve::SBAutoConvolveImpl: public SBProfileImpl
+    {
+    public:
+
+        SBAutoConvolveImpl(const SBProfile& s, bool real_space, const GSParamsPtr& gsparams);
+
+        ~SBAutoConvolveImpl() {}
+
+        double xValue(const Position<double>& p) const;
+
+        std::complex<double> kValue(const Position<double>& k) const
+        { return SQR(_adaptee.kValue(k)); }
+
+        bool isAxisymmetric() const { return _adaptee.isAxisymmetric(); }
+        bool hasHardEdges() const { return false; }
+        bool isAnalyticX() const { return _real_space; }
+        bool isAnalyticK() const { return true; }
+        double maxK() const { return _adaptee.maxK(); }
+        double stepK() const { return _adaptee.stepK() / sqrt(2.); }
+
+        Position<double> centroid() const { return _adaptee.centroid() * 2.; }
+
+        double getFlux() const { return SQR(_adaptee.getFlux()); }
+
+        double getPositiveFlux() const;
+        double getNegativeFlux() const;
+
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+
+        // Overrides for better efficiency
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
+
+        const SBProfile& getAdaptee() const { return _adaptee; }
+
+    private:
+        SBProfile _adaptee;
+        bool _real_space;
+
+        template <typename T>
+        static T SQR(T x) { return x*x; }
+
+        // Copy constructor and op= are undefined.
+        SBAutoConvolveImpl(const SBAutoConvolveImpl& rhs);
+        void operator=(const SBAutoConvolveImpl& rhs);
+    };
+
+    class SBAutoCorrelate::SBAutoCorrelateImpl: public SBProfileImpl
+    {
+    public:
+
+        SBAutoCorrelateImpl(const SBProfile& s, bool real_space, const GSParamsPtr& gsparams);
+
+        ~SBAutoCorrelateImpl() {}
+
+        double xValue(const Position<double>& p) const;
+
+        std::complex<double> kValue(const Position<double>& k) const
+        { return NORM(_adaptee.kValue(k)); }
+
+        bool isAxisymmetric() const { return _adaptee.isAxisymmetric(); }
+        bool hasHardEdges() const { return false; }
+        bool isAnalyticX() const { return _real_space; }
+        bool isAnalyticK() const { return true; }
+        double maxK() const { return _adaptee.maxK(); }
+        double stepK() const { return _adaptee.stepK() / sqrt(2.); }
+
+        Position<double> centroid() const { return Position<double>(0., 0.); }
+
+        double getFlux() const { return SQR(_adaptee.getFlux()); }
+
+        double getPositiveFlux() const;
+        double getNegativeFlux() const;
+
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+
+        // Overrides for better efficiency
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
+
+        const SBProfile& getAdaptee() const { return _adaptee; }
+
+    private:
+        SBProfile _adaptee;
+        bool _real_space;
+
+        template <typename T>
+        static T SQR(T x) { return x*x; }
+        template <typename T>
+        static T NORM(std::complex<T> x) { return std::norm(x); }
+
+        // Copy constructor and op= are undefined.
+        SBAutoCorrelateImpl(const SBAutoCorrelateImpl& rhs);
+        void operator=(const SBAutoCorrelateImpl& rhs);
+    };
+
 }
 
-#endif // SBCONVOLVE_IMPL_H
-
+#endif

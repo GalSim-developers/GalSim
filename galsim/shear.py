@@ -1,61 +1,89 @@
-"""\file shear.py Redefinition of the Shear class at the Python layer.
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+"""@file shear.py 
+Redefinition of the Shear class at the Python layer.
 """
 
 from . import _galsim
 
-"""
-@brief A class to represent shears in a variety of ways.
+class Shear(object):
+    """A class to represent shears in a variety of ways.
 
-The python Shear class can be initialized in a variety of ways to represent shape distortions. All
-arguments must be named.  Given semi-major and semi-minor axes a and b, we can define multiple shape
-measurements:
+    The python Shear class (galsim.Shear) can be initialized in a variety of ways to represent shape
+    distortions.  A shear is an operation that transforms a circle into an ellipse with
+    minor-to-major axis ratio b/a, with position angle beta, while conserving the area (see
+    below for a discussion of the implications of this choice).  Given the multiple definitions of
+    ellipticity, we have multiple definitions of shear:
 
-reduced shear |g| = (a - b)/(a + b)
-distortion |e| = (a^2 - b^2)/(a^2 + b^2)
-conformal shear eta, with a/b = exp(eta)
-minor-to-major axis ratio q = b/a
+    reduced shear |g| = (a - b)/(a + b)
+    distortion |e| = (a^2 - b^2)/(a^2 + b^2)
+    conformal shear eta, with a/b = exp(eta)
+    minor-to-major axis ratio q = b/a
 
-These can be thought of as a magnitude and a real-space position angle beta, or as two components
-e.g., g1 and g2, with
+    These can be thought of as a magnitude and a real-space position angle beta, or as two
+    components, e.g., g1 and g2, with
 
-g1 = |g| cos(2*beta)
-g2 = |g| sin(2*beta)
+    g1 = |g| cos(2*beta)
+    g2 = |g| sin(2*beta)
 
-Note: beta is _not_ the phase of a complex valued shear.
-Rather, the complex shear is g1 + i g2 = g exp(2 i beta).
-Likewise for eta or e.  Beta is twice the phase of the complex value.
+    Note: beta is _not_ the phase of a complex valued shear.  Rather, the complex shear is 
+    g1 + i g2 = g exp(2 i beta).  Likewise for eta or e.  The phase of the complex value is 2 beta.
 
-The following are all examples of valid calls to initialize a Shear object:
-@code
-s = galsim.Shear() # empty constructor sets ellipticity/shear to zero
-s = galsim.Shear(g1=0.05, g2=0.05)
-s = galsim.Shear(g1=0.05) # assumes g2=0
-s = galsim.Shear(e1=0.05, e2=0.05)
-s = galsim.Shear(e2=0.05) # assumes e1=0
-s = galsim.Shear(eta1=0.07, eta2=-0.1)
-s = galsim.Shear(eta=0.05, beta=45.0*galsim.degrees)
-s = galsim.Shear(g=0.05, beta=0.25*numpy.pi*galsim.radians)
-s = galsim.Shear(e=0.3, beta=30.0*galsim.degrees)
-s = galsim.Shear(q=0.5, beta=0.0*galsim.radians)
-# can explicitly construct Angle instance, but this is not necessary:
-s = galsim.Shear(e=0.3, beta=galsim.Angle(30.0*galsim.degrees)) 
-@endcode
+    The following are all examples of valid calls to initialize a Shear object:
+    
+        >>> s = galsim.Shear()                    # empty constructor sets ellipticity/shear to zero
+        >>> s = galsim.Shear(g1=0.05, g2=0.05)
+        >>> s = galsim.Shear(g1=0.05)             # assumes g2=0
+        >>> s = galsim.Shear(e1=0.05, e2=0.05)
+        >>> s = galsim.Shear(e2=0.05)             # assumes e1=0
+        >>> s = galsim.Shear(eta1=0.07, eta2=-0.1)
+        >>> s = galsim.Shear(eta=0.05, beta=45.0*galsim.degrees)
+        >>> s = galsim.Shear(g=0.05, beta=0.25*numpy.pi*galsim.radians)
+        >>> s = galsim.Shear(e=0.3, beta=30.0*galsim.degrees)
+        >>> s = galsim.Shear(q=0.5, beta=0.0*galsim.radians)
 
-There can be no mixing and matching, e.g., specifying g1 and e2.  It is permissible to only specify
-one of two components, with the other assumed to be zero.  If a magnitude such as e, g, eta, or q is
-specified, then beta is also required to be specified.  It is possible to initialize a Shear with
-zero reduced shear by specifying no args or kwargs, i.e. galsim.Shear().
-"""
-class Shear:
+    There can be no mixing and matching, e.g., specifying `g1` and `e2`.  It is permissible to only
+    specify one of two components, with the other assumed to be zero.  If a magnitude such as `e`, 
+    `g`, `eta`, or `q` is specified, then `beta` is also required to be specified.  It is possible 
+    to initialize a Shear with zero reduced shear by specifying no args or kwargs, i.e. 
+    galsim.Shear().
+
+    Since we have defined a Shear as a transformation that preserves area, this means that it is not
+    a precise description of what happens during the process of weak lensing.  The coordinate
+    transformation that occurs during the actual weak lensing process is such that if a galaxy is
+    sheared by some `(gamma_1, gamma_2)`, and then sheared by `(-gamma_1, -gamma_2)`, it will in the
+    end return to its original shape, but will have changed in area due to the magnification, `mu =
+    1/((1.-kappa)**2 - (gamma_1**2 + gamma_2**2))`, which is not equal to one for non-zero shear
+    even for convergence `kappa=0`.  Application of a Shear using the GSObject.shear() method does
+    not include this area change.  To properly incorporate the effective change in area due to
+    shear, it is necessary to either (a) define the Shear object, use the shear() method, and
+    separately use the magnify() method, or (b) use the lens() method that simultaneously magnifies
+    and shears.
+    """
     def __init__(self, *args, **kwargs):
         import numpy as np
 
-        # unnamed arg has to be a _Shear
+        # unnamed arg has to be a _CppShear
         if len(args) == 1:
-            if isinstance(args[0], _galsim._Shear):
+            if isinstance(args[0], _galsim._CppShear):
                 self._shear = args[0]
             else:
-                raise TypeError("Unnamed argument to initialize Shear must be a _Shear!")
+                raise TypeError("Unnamed argument to initialize Shear must be a _CppShear!")
         elif len(args) > 1:
             raise TypeError("Too many unnamed arguments to initialize Shear: %d"%len(args))
         else:
@@ -72,13 +100,13 @@ class Shear:
 
             # first case: an empty constructor (no args/kwargs)
             if not kwargs:
-                use_shear = _galsim._Shear(0.0, 0.0)
+                use_shear = _galsim._CppShear(0.0, 0.0)
             elif 'g1' in kwargs or 'g2' in kwargs:
                 g1 = kwargs.pop('g1', 0.)
                 g2 = kwargs.pop('g2', 0.)
                 g = np.sqrt(g1**2 + g2**2)
                 if g < 1:
-                    use_shear = _galsim._Shear(g1, g2)
+                    use_shear = _galsim._CppShear(g1, g2)
                 else:
                     raise ValueError("Requested shear exceeds 1: %f"%g)
             elif 'e1' in kwargs or 'e2' in kwargs:
@@ -86,14 +114,14 @@ class Shear:
                 e2 = kwargs.pop('e2', 0.)
                 e = np.sqrt(e1**2 + e2**2)
                 if e < 1:
-                    use_shear = _galsim._Shear()
+                    use_shear = _galsim._CppShear()
                     use_shear.setE1E2(e1, e2)
                 else:
                     raise ValueError("Requested distortion exceeds 1: %s"%e)
             elif 'eta1' in kwargs or 'eta2' in kwargs:
                 eta1 = kwargs.pop('eta1', 0.)
                 eta2 = kwargs.pop('eta2', 0.)
-                use_shear = _galsim._Shear()
+                use_shear = _galsim._CppShear()
                 use_shear.setEta1Eta2(eta1, eta2)
             elif 'g' in kwargs:
                 if 'beta' not in kwargs:
@@ -108,7 +136,7 @@ class Shear:
                     raise ValueError("Requested |shear| is outside [0,1]: %f"%g)
                 g1 = np.cos(2.*beta.rad())*g
                 g2 = np.sin(2.*beta.rad())*g
-                use_shear = _galsim._Shear(g1, g2)
+                use_shear = _galsim._CppShear(g1, g2)
             elif 'e' in kwargs:
                 if 'beta' not in kwargs:
                     raise TypeError(
@@ -120,7 +148,7 @@ class Shear:
                 e = kwargs.pop('e')
                 if e > 1 or e < 0:
                     raise ValueError("Requested distortion is outside [0,1]: %f"%e)
-                use_shear = _galsim._Shear()
+                use_shear = _galsim._CppShear()
                 use_shear.setEBeta(e, beta)
             elif 'eta' in kwargs:
                 if 'beta' not in kwargs:
@@ -132,8 +160,8 @@ class Shear:
                         "The position angle that was supplied is not an Angle instance!")
                 eta = kwargs.pop('eta')
                 if eta < 0:
-                    raise ValueError("Requested eta is below 0: %f"%e)
-                use_shear = _galsim._Shear()
+                    raise ValueError("Requested eta is below 0: %f"%eta)
+                use_shear = _galsim._CppShear()
                 use_shear.setEtaBeta(eta, beta)
             elif 'q' in kwargs:
                 if 'beta' not in kwargs:
@@ -146,7 +174,7 @@ class Shear:
                 q = kwargs.pop('q')
                 if q <= 0 or q > 1:
                     raise ValueError("Cannot use requested axis ratio of %f!"%q)
-                use_shear = _galsim._Shear()
+                use_shear = _galsim._CppShear()
                 eta = -np.log(q)
                 use_shear.setEtaBeta(eta, beta)
             elif 'beta' in kwargs:
@@ -160,13 +188,25 @@ class Shear:
 
             self._shear = use_shear
 
-    #### propagate through all the methods from C++
+    # below, we propagate through all the methods from C++
+
     # define all the methods for setting shear values
-    def setE1E2(self, e1=0.0, e2=0.0): self._shear.setE1E2(e1, e2)
-    def setEBeta(self, e=0.0, beta=None): self._shear.setEBeta(e, beta)
-    def setEta1Eta2(self, eta1=0.0, eta2=0.0): self._shear.setEta1Eta2(eta1, eta2)
-    def setEtaBeta(self, eta=0.0, beta=None): self._shear.setEtaBeta(eta, beta)
-    def setG1G2(self, g1=0.0, g2=0.0): self._shear.setG1G2(g1, g2)
+    def setE1E2(self, e1=0.0, e2=0.0):
+        """Discouraged method that will be deprecated eventually."""
+        self._shear.setE1E2(e1, e2)
+    def setEBeta(self, e=0.0, beta=None): 
+        """Discouraged method that will be deprecated eventually."""
+        self._shear.setEBeta(e, beta)
+    def setEta1Eta2(self, eta1=0.0, eta2=0.0): 
+        """Discouraged method that will be deprecated eventually."""
+        self._shear.setEta1Eta2(eta1, eta2)
+    def setEtaBeta(self, eta=0.0, beta=None): 
+        """Discouraged method that will be deprecated eventually."""
+        self._shear.setEtaBeta(eta, beta)
+    def setG1G2(self, g1=0.0, g2=0.0): 
+        """Discouraged method that will be deprecated eventually."""
+        self._shear.setG1G2(g1, g2)
+
     # define all the methods to get shear values
     def getE1(self): return self._shear.getE1()
     def getE2(self): return self._shear.getE2()
@@ -204,7 +244,7 @@ class Shear:
     def __ne__(self, other): return self._shear != other._shear
     def fwd(self, p): return self._shear.fwd(p)
     def inv(self, p): return self._shear.inv(p)
-    def getMatrix(self, a, b, c): self._shear.getMatrix(a, b, c)
+    def getMatrix(self): return self._shear.getMatrix()
 
     def __repr__(self):
         return (self.__class__.__name__+"(g1="+str(self.getG1())+", g2="+str(self.getG2())+")")

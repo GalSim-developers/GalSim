@@ -1,0 +1,14 @@
+#!/bin/bash
+# Copy this file to .git/hooks/commit-msg to enable automatically appending the 
+# branch name to commit messages (when on a branch).  Ensure it remains executable.
+# Branches should usually be named according to the issue number they are for.
+# e.g. "#12" for a branch that works on issue 12.
+# Then commits will automatically be linked in the comments for that issue.
+# If this script does not work, you may need to delete all the informational lines 
+# beginning with hashes in the default commit message each time you commit.
+export branch_name="$(git symbolic-ref -q HEAD)"
+export branch_name=${branch_name##refs/heads/}
+if [ "${branch_name:0:1}" = "#" ]; then
+    grep -qs "$branch_name" "$1" || echo "(${branch_name})" >> "$1"
+fi
+exit 0

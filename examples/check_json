@@ -1,0 +1,115 @@
+#!/bin/bash
+
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+
+python=../bin/installed_python  # For python scripts
+bin=../bin  # For galsim executable
+
+/bin/rm -rf output
+/bin/rm -rf output_json
+
+time $python demo1.py || exit
+time $bin/galsim json/demo1.json || exit
+
+time $python demo2.py || exit
+time $bin/galsim json/demo2.json || exit
+
+time $python demo3.py || exit
+time $bin/galsim json/demo3.json || exit
+
+time $python demo4.py || exit
+time $bin/galsim json/demo4.json || exit
+
+time $python demo5.py || exit
+time $bin/galsim json/demo5.json || exit
+
+time $python demo6.py || exit
+time $bin/galsim json/demo6a.json || exit
+time $bin/galsim json/demo6b.json || exit
+
+time $python demo7.py || exit
+time $bin/galsim json/demo7.json || exit
+
+time $python demo8.py || exit
+time $bin/galsim json/demo8a.json || exit
+time $bin/galsim json/demo8b.json || exit
+
+time $python demo9.py || exit
+time $bin/galsim -v1 json/demo9.json output.skip='{"type":"List","items":[0,0,0,0,0,1]}' || exit
+time $bin/galsim -v1 json/demo9.json output.noclobber=True || exit
+
+time $python demo10.py || exit
+time $bin/galsim json/demo10.json || exit
+
+time $python demo11.py || exit
+time $bin/galsim json/demo11.json || exit
+
+echo 'Checking diffs: (No output means success)'
+
+# demo1:
+# Don't check demo1, since it doesn't use a deterministic seed.
+# If you add an initial seed in both places, then you can uncomment 
+# the next line and it should work.
+#./check_diff output/demo1.fits output_json/demo1.fits 
+
+# demo2:
+./check_diff output/demo2.fits output_json/demo2.fits 
+
+# demo3:
+./check_diff output/demo3.fits output_json/demo3.fits 
+./check_diff output/demo3_epsf.fits output_json/demo3_epsf.fits 
+
+# demo4:
+./check_diff output/multi.fits output_json/multi.fits 
+
+# demo5:
+./check_diff output/g08_psf.fits output_json/g08_psf.fits
+./check_diff output/g08_gal.fits output_json/g08_gal.fits
+
+# demo6:
+./check_diff output/psf_real.fits output_json/psf_real.fits
+./check_diff output/cube_real.fits output_json/cube_real.fits 
+
+# demo7:
+# Note; the raw .gz files include the filename in them.
+# Since the file names are different, they don't match.
+# So unzip them first before running diff.
+gunzip output/cube_phot.fits.gz
+gunzip output_json/cube_phot.fits.gz
+./check_diff output/cube_phot.fits output_json/cube_phot.fits
+
+# demo8:
+./check_diff output/bpd_single.fits output_json/bpd_single.fits 
+./check_diff output/bpd_multi.fits output_json/bpd_multi.fits 
+
+# demo9:
+for dir_num in {1..4} 
+do
+    for file_num in {0..4}
+    do
+        file_name=nfw$dir_num/cluster000$file_num.fits
+        ./check_diff output/$file_name output_json/$file_name
+    done
+done
+
+# demo10:
+./check_diff output/power_spectrum.fits output_json/power_spectrum.fits 
+
+# demo11:
+./check_diff output/tabulated_power_spectrum.fits.fz output_json/tabulated_power_spectrum.fits.fz 

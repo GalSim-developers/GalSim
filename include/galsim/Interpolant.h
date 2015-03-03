@@ -1,17 +1,42 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
 
-#ifndef INTERPOLANT_H
-#define INTERPOLANT_H
+#ifndef GalSim_Interpolant_H
+#define GalSim_Interpolant_H
 
 #include <cmath>
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/shared_ptr.hpp>
+#include <map>
 
 #include "Std.h"
 #include "Table.h"
 #include "Random.h"
 #include "PhotonArray.h"
 #include "OneDimensionalDeviate.h"
+#include "SBProfile.h"
 
 namespace galsim {
+
+    // This is used both here and by SBBox.
+    // This particular definition is sinc(x) = sin(Pi x) / (Pi x)
+    double sinc(double x);
 
     class Interpolant;
 
@@ -21,34 +46,34 @@ namespace galsim {
      */
     class InterpolantFunction: public FluxDensity {
     public:
-        /**
-         * @brief Constructor
-         * @param[in] interp Interpolant (one-d) that we'll want to sample
-         */
         InterpolantFunction(const Interpolant& interp): _interp(interp) {}
-        /// @brief operator() will return the xval() of the `Interpolant`
-        double operator()(double x) const;
+        double operator()(double x) const; // returns the xval() of the `Interpolant`
         ~InterpolantFunction() {}
     private:
-        const Interpolant& _interp;  ///< Interpolant being wrapped
+        const Interpolant& _interp;  // Interpolant being wrapped
     };
 
     /** 
      * @brief Base class representing one-dimensional interpolant functions
      *
      * One-dimensional interpolant function.  X units are in pixels and the frequency-domain u
-     * values are in cycles per pixel.
+     * values are in cycles per pixel.  This differs from the usual definition of k in radians 
+     * per arcsec, hence the different letter variable.
      *
      * All Interpolants are assumed symmetric so that frequency-domain values are real.
      */
     class Interpolant 
     {
     public:
-        /// @brief Constructor
-        Interpolant(): _interp(*this) {}
+        /**
+         * @brief Constructor
+         * @param[in] gsparams  GSParams object storing constants that control the accuracy of
+         *                      operations, if different from the default.
+         */
+        Interpolant(const GSParamsPtr& gsparams) : _gsparams(gsparams), _interp(*this) {}
 
         /// @brief Copy constructor: does not copy photon sampler, will need to rebuild.
-        Interpolant(const Interpolant& rhs): _interp(*this) {}
+        Interpolant(const Interpolant& rhs): _gsparams(rhs._gsparams), _interp(rhs._interp) {}
 
         /// @brief Destructor 
         virtual ~Interpolant() {}
@@ -60,10 +85,21 @@ namespace galsim {
         virtual double xrange() const =0;
 
         /**
+         * @brief The total range as an integer.  Typically xrange() == 0.5 * ixrange().
+         */
+        virtual int ixrange() const =0;
+
+        /**
          * @brief Maximum extent of interpolant from origin in u space (cycles per pixel)
          * @returns Range of non-zero values of interpolant in u space
          */
         virtual double urange() const =0;
+
+        /**
+         * @brief Report a generic indication of the accuracy to which Interpolant is calculated
+         * @returns Targeted accuracy
+         */
+        virtual double getTolerance() const =0;  // report target accuracy
 
         /**
          * @brief Value of interpolant in real space
@@ -89,12 +125,6 @@ namespace galsim {
          * interpolation.
          */
         virtual double uval(double u) const =0;
-
-        /**
-         * @brief Report a generic indication of the accuracy to which Interpolant is calculated
-         * @returns Targeted accuracy
-         */
-        virtual double getTolerance() const =0;  // report target accuracy
 
         /**
          * @brief Report whether interpolation will reproduce values at samples
@@ -146,12 +176,14 @@ namespace galsim {
         { checkSampler(); return _sampler->shoot(N, ud); }
 
     protected:
-        InterpolantFunction _interp; ///< The function to interface the Interpolant to sampler
 
-        /// Class that draws photons from this Interpolant
+        const GSParamsPtr _gsparams;
+        InterpolantFunction _interp;
+
+        // Class that draws photons from this Interpolant
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;  
 
-        /// @brief Allocate photon sampler and do all of its pre-calculations
+        // Allocate photon sampler and do all of its pre-calculations
         virtual void checkSampler() const 
         {
             if (_sampler.get()) return;
@@ -160,11 +192,11 @@ namespace galsim {
             int nKnots = int(ceil(xrange()));
             std::vector<double> ranges(2*nKnots);
             for (int i=1; i<=nKnots; i++) {
-                double knot = std::min(1.*i, xrange());
+                double knot = std::min(double(i), xrange());
                 ranges[nKnots-i] = -knot;
                 ranges[nKnots+i-1] = knot;
             }
-            _sampler.reset(new OneDimensionalDeviate(_interp, ranges));
+            _sampler.reset(new OneDimensionalDeviate(_interp, ranges, false, _gsparams));
         }
     };
 
@@ -181,34 +213,18 @@ namespace galsim {
 
         // Ranges are assumed to be same in x as in y.
         virtual double xrange() const=0;
+        virtual int ixrange() const=0;
         virtual double urange() const=0;
+        virtual double getTolerance() const=0;
+
         virtual double xval(double x, double y) const=0;
         virtual double xvalWrapped(double x, double y, int N) const=0;
         virtual double uval(double u, double v) const=0;
-        virtual double getTolerance() const=0;  // report target accuracy
-        virtual bool isExactAtNodes() const { return true; }
+        virtual bool isExactAtNodes() const=0;
 
-        // Photon-shooting routines:
-        /// @brief Return the integral of the positive portions of the kernel (default=1.)
-        virtual double getPositiveFlux() const { return 1.; }
-
-        /**
-         * @brief Return the (abs value of) integral of the negative portions of the kernel 
-         * 
-         * Default=0.
-         */
-        virtual double getNegativeFlux() const { return 0.; }
-
-        /**
-         * @brief Return array of displacements drawn from this kernel.
-         *
-         * Default is to throw an runtime_error
-         */
-        virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
-        {
-            throw std::runtime_error("Interpolant2d::shoot() not implemented for this kernel");
-            return boost::shared_ptr<PhotonArray>();
-        }
+        virtual double getPositiveFlux() const=0;
+        virtual double getNegativeFlux() const=0;
+        virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const=0;
     };
 
     /**
@@ -220,114 +236,41 @@ namespace galsim {
     class InterpolantXY : public Interpolant2d 
     {
     public:
-        /**
-         * @brief Constructor
-         * @param[in] i1d  One-dimensional `Interpolant` to be applied to x and y coordinates.
-         */
         InterpolantXY(boost::shared_ptr<Interpolant> i1d) : _i1d(i1d) {}
-        /// @brief Destructor
         ~InterpolantXY() {}
+
         // All of the calls below implement base class methods.
         double xrange() const { return _i1d->xrange(); }
+        int ixrange() const { return _i1d->ixrange(); }
         double urange() const { return _i1d->urange(); }
+        double getTolerance() const { return _i1d->getTolerance(); }
+
         double xval(double x, double y) const { return _i1d->xval(x)*_i1d->xval(y); }
         double xvalWrapped(double x, double y, int N) const 
         { return _i1d->xvalWrapped(x,N)*_i1d->xvalWrapped(y,N); }
         double uval(double u, double v) const { return _i1d->uval(u)*_i1d->uval(v); }
-        double getTolerance() const { return _i1d->getTolerance(); }
-        virtual bool isExactAtNodes() const { return _i1d->isExactAtNodes(); }
+        bool isExactAtNodes() const { return _i1d->isExactAtNodes(); }
 
         // Photon-shooting routines:
         double getPositiveFlux() const;
         double getNegativeFlux() const;
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        /**
-         * @brief Access the 1d interpolant functions for more efficient 2d interps:
-         * @param[in] x 1d argument
-         * @returns 1d result
-         */
+        // Access the 1d interpolant functions for more efficient 2d interps:
         double xval1d(double x) const { return _i1d->xval(x); }
-
-        /**
-         * @brief Access the 1d interpolant functions for more efficient 2d interps:
-         * @param[in] x 1d argument
-         * @param[in] N wrapping period
-         * @returns 1d result, wrapped at period N
-         */
         double xvalWrapped1d(double x, int N) const { return _i1d->xvalWrapped(x,N); }
-
-        /**
-         * @brief Access the 1d interpolant functions for more efficient 2d interps:
-         * @param[in] u 1d argument
-         * @returns 1d result
-         */
         double uval1d(double u) const { return _i1d->uval(u); }
-
-        /**
-         * @brief Access the 1d interpolant 
-         * @returns Pointer to the 1d `Interpolant` that this class uses.
-         */
         const Interpolant* get1d() const { return _i1d.get(); }
 
     private:
-        boost::shared_ptr<Interpolant> _i1d;  ///< The 1d function used in both axes here.
+        boost::shared_ptr<Interpolant> _i1d;  // The 1d function used in both axes here.
     };
-
-    // Some functions we will want: 
-    /**
-     * @brief sinc function, defined here as sin(Pi*x) / (Pi*x).
-     * @param[in] x sinc argument
-     * @returns sinc function
-     */
-    inline double sinc(double x) 
-    {
-        if (std::abs(x)<0.001) return 1.- (M_PI*M_PI/6.)*x*x;
-        else return std::sin(M_PI*x)/(M_PI*x);
-    }
-
-    /**
-     * @brief Function returning integral of sinc function.
-     *
-     * Utility for calculating the integral of sin(t)/t from 0 to x.  Note the official definition
-     * does not have pi multiplying t.
-     * @param[in] x Upper limit of integral
-     * @returns Integral of sin(t)/t from 0 to x (no pi factors)
-     */
-    inline double Si(double x) 
-    {
-        double x2=x*x;
-        if(x2>=3.8) {
-            // Use rational approximation from Abramowitz & Stegun
-            // cf. Eqns. 5.2.38, 5.2.39, 5.2.8 - where it says it's good to <1e-6.
-            // ain't this pretty?
-            return (M_PI/2.)*((x>0.)?1.:-1.) 
-                - (38.102495+x2*(335.677320+x2*(265.187033+x2*(38.027264+x2))))
-                / (x* (157.105423+x2*(570.236280+x2*(322.624911+x2*(40.021433+x2)))) )*std::cos(x)
-                - (21.821899+x2*(352.018498+x2*(302.757865+x2*(42.242855+x2))))
-                / (x2*(449.690326+x2*(1114.978885+x2*(482.485984+x2*(48.196927+x2)))))*std::sin(x);
-
-        } else {
-            // x2<3.8: the series expansion is the better approximation, A&S 5.2.14
-            double n1=1.;
-            double n2=1.;
-            double tt=x;
-            double t=0;
-            for(int i=1; i<7; i++) {
-                t += tt/(n1*n2);
-                tt = -tt*x2;
-                n1 = 2.*double(i)+1.;
-                n2*= n1*2.*double(i);
-            }
-            return t;
-        }
-    }
 
     /** 
      * @brief Delta-function interpolant in 1d
      *
      * The interpolant for when you do not want to interpolate between samples.  It is not really
-     * intended to be used for any analytic drawing because it is infinite in the x domain at
+     * intended to be used for any analytic drawing because it is infinite in the x domain at the
      * location of samples, and it extends to infinity in the u domain.  But it could be useful for
      * photon-shooting, where it is trivially implemented as no displacements.  The argument in the
      * constructor is used to make a crude box approximation to the x-space delta function and to
@@ -339,24 +282,32 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] width Width of tiny boxcar used to approximate delta function in real space.
+         * @param[in] width    Width of tiny boxcar used to approximate delta function in real 
+         *                     space (default=1.e-3).
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        Delta(double width=1.e-3) : _width(width) {}
+        Delta(double width=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) : 
+            Interpolant(gsparams), _width(width) {}
         ~Delta() {}
+
         double xrange() const { return 0.; }
+        int ixrange() const { return 0; }
         double urange() const { return 1./_width; }
+        double getTolerance() const { return _width; }
+
         double xval(double x) const 
         {
             if (std::abs(x)>0.5*_width) return 0.;
             else return 1./_width;
         }
         double uval(double u) const { return 1.; }
-        double getTolerance() const { return _width; }
 
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+
     private:
         double _width;
     };
@@ -365,10 +316,10 @@ namespace galsim {
      * @brief Nearest-neighbor interpolation: boxcar 
      *
      * The nearest-neighbor interpolant performs poorly as a k-space or x-space interpolant for
-     * SBInterpolatedImage.  (See Bernstein & Gruen 2012 for details.)  The objection to its use in
-     * Fourier space does not apply when shooting photons to generate in image; in that case, the
-     * nearest-neighbor interpolant is quite efficient (but not necessarily the best choice in terms
-     * of accuracy).
+     * SBInterpolatedImage.  (See paper by Bernstein & Gruen, http://arxiv.org/abs/1401.2636.)
+     * The objection to its use in Fourier space does not apply when shooting photons to generate an
+     * image; in that case, the nearest-neighbor interpolant is quite efficient (but not necessarily
+     * the best choice in terms of accuracy).
      *
      * Tolerance determines how far onto sinc wiggles the uval will go.  Very far, by default!
      */
@@ -377,27 +328,28 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Tolerance determines how far onto sinc wiggles the uval will go.
-         * Very far, by default!
+         * @param[in] tol      Tolerance determines how far onto sinc wiggles the uval will go.
+         *                     Very far, by default!
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        Nearest(double tol=1.e-3) : _tolerance(tol) {}
+        Nearest(double tol=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) :
+            Interpolant(gsparams), _tolerance(tol) {}
         ~Nearest() {}
-        double getTolerance() const { return _tolerance; }
+
         double xrange() const { return 0.5; }
+        int ixrange() const { return 1; }
         double urange() const { return 1./(M_PI*_tolerance); }
-        double xval(double x) const 
-        {
-            if (std::abs(x)>0.5) return 0.;
-            else if (std::abs(x)<0.5) return 1.;
-            else return 0.5;
-        }
-        double uval(double u) const { return sinc(u); }
+        double getTolerance() const { return _tolerance; }
+
+        double xval(double x) const;
+        double uval(double u) const;
 
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
-        /// @brief Nearest-neighbor interpolant photon shooting is a simple UniformDeviate call.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+
     private:
         double _tolerance;
     };
@@ -417,42 +369,26 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Tolerance determines how far onto sinc wiggles the xval will go. 
-         * Very far, by default!
+         * @param[in] tol      Tolerance determines how far onto sinc wiggles the xval will go. 
+         *                     Very far, by default!
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        SincInterpolant(double tol=1.e-3) : _tolerance(tol) {}
+        SincInterpolant(double tol=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) :
+            Interpolant(gsparams), _tolerance(tol) {}
         ~SincInterpolant() {}
-        double getTolerance() const { return _tolerance; }
+
         double xrange() const { return 1./(M_PI*_tolerance); }
+        int ixrange() const { return 0; }
         double urange() const { return 0.5; }
-        double uval(double u) const 
-        {
-            if (std::abs(u)>0.5) return 0.;
-            else if (std::abs(u)<0.5) return 1.;
-            else return 0.5;
-        }
-        double xval(double x) const { return sinc(x); }
-        double xvalWrapped(double x, int N) const 
-        {
-            // Magic formula:
-            x *= M_PI;
-            if (N%2==0) {
-                if (std::abs(x) < 1.e-4) return 1. - x*x*(1/6.+1/2.-1./(6.*N*N));
-                return std::sin(x) * std::cos(x/N) / (N*std::sin(x/N));
-            } else {
-                if (std::abs(x) < 1.e-4) return 1. - (1./6.)*x*x*(1-1./(N*N));
-                return std::sin(x) / (N*std::sin(x/N));
-            }
-        }
-        /**
-         * @brief Photon-shooting will be disabled for sinc function since wiggles will make it
-         * crazy
-         */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
-        {
-            throw std::runtime_error("Photon shooting is not practical with sinc Interpolant");
-            return boost::shared_ptr<PhotonArray>();
-        }
+        double getTolerance() const { return _tolerance; }
+
+        double xval(double x) const;
+        double xvalWrapped(double x, int N) const;
+        double uval(double u) const;
+
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+
     private:
         double _tolerance;
     };
@@ -461,112 +397,50 @@ namespace galsim {
      * @brief Linear interpolant
      *
      * The linear interpolant is a poor choice for FFT-based operations on SBInterpolatedImage, as
-     * it rings to high frequencies.  (See Bernstein & Gruen 2012 for details.)  This objection does
-     * not apply when shooting photons, in which case the linear interpolant is quite efficient (but
-     * not necessarily the best choice in terms of accuracy).
+     * it rings to high frequencies.  (See paper by Bernstein & Gruen,
+     * http://arxiv.org/abs/1401.2636.)  This objection does not apply when shooting photons, in
+     * which case the linear interpolant is quite efficient (but not necessarily the best choice in
+     * terms of accuracy).
      */
     class Linear : public Interpolant 
     {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Tolerance determines how far onto sinc^2 wiggles the kval will go.
-         * Very far, by default!
+         * @param[in] tol      Tolerance determines how far onto sinc^2 wiggles the uval will go.
+         *                     Very far, by default!
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        Linear(double tol=1.e-3) : _tolerance(tol) {}
+        Linear(double tol=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) :
+            Interpolant(gsparams), _tolerance(tol) {}
         ~Linear() {}
-        double getTolerance() const { return _tolerance; }
+
         double xrange() const { return 1.-0.5*_tolerance; }  // Snip off endpoints near zero
+        int ixrange() const { return 2; }
         double urange() const { return std::sqrt(1./_tolerance)/M_PI; }
-        double xval(double x) const 
-        {
-            x=std::abs(x);
-            if (x>1.) return 0.;
-            else return 1.-x;
-        }
-        double uval(double u) const { return std::pow(sinc(u),2.); }
+        double getTolerance() const { return _tolerance; }
+
+        double xval(double x) const;
+        double uval(double u) const;
+
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
-        /**
-         * @brief Linear interpolant has fast photon-shooting by adding two uniform deviates per
-         * axis.
-         */
+        // Linear interpolant has fast photon-shooting by adding two uniform deviates per
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+
     private:
         double _tolerance;
     };
 
     /**
-     * @brief The Lanczos interpolation filter, nominally sinc(x)*sinc(x/n), truncated at +-n.
-     *
-     * The Lanczos filter is an approximation to the band-limiting sinc filter with a smooth cutoff
-     * at high x.  Order n Lanczos has a range of +/- n pixels.  It typically is a good compromise
-     * between kernel size and accuracy.
-     *
-     * Note that pure Lanczos, when interpolating a set of constant-valued samples, does not return
-     * this constant.  Setting fluxConserve in the constructor tweaks the function so that it 
-     * approximately conserves the value of constant (DC) input data.
-     * Only the first order correction is applied, which should be accurate to about 1.e-5.
-     */
-    class Lanczos : public Interpolant 
-    {
-    public:
-        /**
-         * @brief Constructor
-         *
-         * @param[in] n  Filter order; must be given on input and cannot be changed.  
-         * @param[in] fluxConserve  Set true to adjust filter to be more nearly correct for 
-         *                          constant inputs.
-         * @param[in] tol  Sets accuracy and extent of Fourier transform.
-         */
-        Lanczos(int n, bool fluxConserve=false, double tol=1.e-3) :  
-            _n(n), _fluxConserve(fluxConserve), _tolerance(tol), _tab(Table<double,double>::spline) 
-        { setup(); }
-
-        ~Lanczos() {}
-
-        double getTolerance() const { return _tolerance; }
-        double xrange() const { return _range; }
-        double urange() const { return _uMax; }
-        double xval(double x) const 
-        { 
-            x = std::abs(x);
-            if (x>=_n) return 0.;
-            double retval = sinc(x)*sinc(x/_n);
-            if (_fluxConserve) retval *= 1. + 2.*_u1*(1.-std::cos(2.*M_PI*x));
-            return retval;
-        }
-        double uval(double u) const 
-        {
-            u = std::abs(u);
-            double retval = u>_uMax ? 0. : _tab(u);
-            if (!_fluxConserve) return retval;
-            retval *= 1.+2.*_u1;
-            if (u+1. < _uMax) retval -= _u1*_tab(u+1.);
-            if (std::abs(u-1.) < _uMax) retval -= _u1*_tab(std::abs(u-1.));
-            return retval;
-        }
-        double uCalc(double u) const;
-
-    private:
-        double _n; ///< Actually storing 2n, since it's used mostly this way.
-        double _range; ///< Reduce range slightly from n so we're not using zero-valued endpoints.
-        bool _fluxConserve; ///< Set to insure conservation of constant (sky) flux
-        double _tolerance;  ///< k-space accuracy parameter
-        double _uMax;  ///< truncation point for Fourier transform
-        double _u1; ///< coefficient for flux correction
-        Table<double,double> _tab; ///< Table for Fourier transform
-        void setup();
-    };
-
-    /**
-     * @brief  Cubic interpolator exact to 3rd order Taylor expansion
+     * @brief Cubic interpolator exact to 3rd order Taylor expansion
      *
      * From R. G. Keys, IEEE Trans. Acoustics, Speech, & Signal Proc 29, p 1153, 1981
      *
      * The cubic interpolant is a reasonable choice for a four-point interpolant for
-     * SBInterpolatedImage.   (See Bernstein & Gruen 2012 for details.)
+     * SBInterpolatedImage.   (See paper by Bernstein & Gruen, http://arxiv.org/abs/1401.2636.)
      */
     class Cubic : public Interpolant 
     {
@@ -574,50 +448,45 @@ namespace galsim {
         /**
          * @brief Constructor
          *
-         * @param[in] tol Sets accuracy and extent of Fourier transform.
+         * @param[in] tol      Sets accuracy and extent of Fourier transform.
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        Cubic(double tol=1.e-4) : _tolerance(tol), _tab(Table<double,double>::spline) 
-        { setup(); }
-
+        Cubic(double tol=1.e-4, const GSParamsPtr& gsparams=GSParamsPtr::getDefault());
         ~Cubic() {}
 
-        double getTolerance() const { return _tolerance; }
         double xrange() const { return _range; }
+        int ixrange() const { return 4; }
         double urange() const { return _uMax; }
-        double xval(double x) const 
-        { 
-            x = std::abs(x);
-            if (x>=2.) return 0.;
-            if (x<1.) return 1. + x*x*(1.5*x-2.5);
-            return 2. + x*(-4. + x*(2.5 - 0.5*x));
-        }
-        double uval(double u) const 
-        {
-            u = std::abs(u);
-            return u>_uMax ? 0. : _tab(u);
-        }
-        double uCalc(double u) const;
+        double getTolerance() const { return _tolerance; }
 
-        /// @brief Override numerical calculation with known analytic integral
+        double xval(double x) const;
+        double uval(double u) const;
+
+        // Override numerical calculation with known analytic integral
         double getPositiveFlux() const { return 13./12.; }
-        /// @brief Override numerical calculation with known analytic integral
         double getNegativeFlux() const { return 1./12.; }
 
     private:
-        /// x range, reduced slightly from n=2 so we're not using zero-valued endpoints.
+        // x range, reduced slightly from n=2 so we're not using zero-valued endpoints.
         double _range; 
 
         double _tolerance;    
-        double _uMax;  ///< Truncation point for Fourier transform
-        Table<double,double> _tab; ///< Tabulated Fourier transform
+        boost::shared_ptr<Table<double,double> > _tab; // Tabulated Fourier transform
+        double _uMax;  // Truncation point for Fourier transform
 
-        void setup();
+        // Calculate the FT from a direct integration.
+        double uCalc(double u) const;
+
+        // Store the tables in a map, so repeat constructions are quick.
+        static std::map<double,boost::shared_ptr<Table<double,double> > > _cache_tab; 
+        static std::map<double,double> _cache_umax; 
     };
 
     /**
-     * @brief Piecewise-quintic polynomial interpolant, ideal for k-space interpolation
+     * @brief Piecewise-quintic polynomial interpolant, ideal for Fourier-space interpolation
      *
-     * See Bernstein & Gruen (2012) for details
+     * See paper by Bernstein & Gruen, http://arxiv.org/abs/1401.2636.
      */
 
     class Quintic : public Interpolant 
@@ -625,62 +494,105 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Sets accuracy and extent of Fourier transform.
+         * @param[in] tol      Sets accuracy and extent of Fourier transform.
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default. 
          */
-        Quintic(double tol=1.e-4) : _tolerance(tol), _tab(Table<double,double>::spline) 
-        { setup(); }
-
+        Quintic(double tol=1.e-4, const GSParamsPtr& gsparams=GSParamsPtr::getDefault());
         ~Quintic() {}
-        // tol is error level desired for the Fourier transform
-        double getTolerance() const { return _tolerance; }
+
         double xrange() const { return _range; }
+        int ixrange() const { return 6; }
         double urange() const { return _uMax; }
-        double xval(double x) const 
-        { 
-            x = std::abs(x);
-            if (x <= 1.)
-                return 1. + (1./12.)*x*x*x*(-95.+x*(138.-55.*x));
-            else if (x <= 2.)
-                return (1./24.)*(x-1.)*(x-2.)*(-138.+x*(348.+x*(-249.+55.*x)));
-            else if (x <= 3.)
-                return (1./24.)*(x-2.)*(x-3.)*(x-3.)*(-54.+x*(50.-11.*x));
-            else 
-                return 0.;
-        }
-        double uval(double u) const 
-        {
-            u = std::abs(u);
-            return u>_uMax ? 0. : _tab(u);
-        }
-        double uCalc(double u) const;
+        double getTolerance() const { return _tolerance; }
+
+        double xval(double x) const;
+        double uval(double u) const;
 
     protected:
-        /**
-         * @brief Override default sampler configuration because Quintic filter has sign change in
-         * outer interval
-         */
-        virtual void checkSampler() const 
-        {
-            if (_sampler.get()) return;
-            std::vector<double> ranges(8);
-            ranges[0] = -3.;
-            ranges[1] = -(1./11.)*(25.+sqrt(31.));  // This is the extra zero-crossing
-            ranges[2] = -2.;
-            ranges[3] = -1.;
-            for (int i=0; i<4; i++)
-                ranges[7-i] = -ranges[i];
-            _sampler.reset(new OneDimensionalDeviate(_interp, ranges));
-        }
+        // Override default sampler configuration because Quintic filter has sign change in
+        // outer interval
+        void checkSampler() const;
 
     private:
         double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
         double _tolerance;    
-        double _uMax;
-        Table<double,double> _tab;
+        boost::shared_ptr<Table<double,double> > _tab; // Tabulated Fourier transform
+        double _uMax;  // Truncation point for Fourier transform
 
-        void setup();
+        // Calculate the FT from a direct integration.
+        double uCalc(double u) const;
+
+        // Store the tables in a map, so repeat constructions are quick.
+        static std::map<double,boost::shared_ptr<Table<double,double> > > _cache_tab; 
+        static std::map<double,double> _cache_umax; 
+    };
+
+    /**
+     * @brief The Lanczos interpolation filter, nominally sinc(x)*sinc(x/n), truncated at +/-n.
+     *
+     * The Lanczos filter is an approximation to the band-limiting sinc filter with a smooth cutoff
+     * at high x.  Order n Lanczos has a range of +/- n pixels.  It typically is a good compromise
+     * between kernel size and accuracy.
+     *
+     * The filter has accuracy parameters `xvalue_accuracy` and `kvalue_accuracy` that relate to the
+     * accuracy of building the initial lookup table.  For now, these are fixed in
+     * src/Interpolant.cpp to be 0.1 times the input `tol` value, where `tol` is typically very
+     * small already (default 1e-4).
+     *
+     * Note that pure Lanczos, when interpolating a set of constant-valued samples, does not return
+     * this constant.  Setting conserve_dc in the constructor tweaks the function so that it 
+     * approximately conserves the value of constant (DC) input data (accurate to better than 
+     * 1.e-5 when used in two dimensions).
+     */
+    class Lanczos : public Interpolant 
+    {
+    public:
+        /**
+         * @brief Constructor
+         *
+         * @param[in] n              Filter order; must be given on input and cannot be changed.  
+         * @param[in] conserve_dc    Set true to adjust filter to be more nearly correct for 
+         *                           constant inputs.
+         * @param[in] tol            Sets accuracy and extent of Fourier transform.
+         * @param[in] gsparams       GSParams object storing constants that control the accuracy of
+         *                           operations, if different from the default.
+         */
+        Lanczos(int n, bool conserve_dc=true, double tol=1.e-4, 
+                const GSParamsPtr& gsparams=GSParamsPtr::getDefault());
+        ~Lanczos() {}
+
+        double xrange() const { return _range; }
+        int ixrange() const { return 2*_n; }
+        double urange() const { return _uMax; }
+        double getTolerance() const { return _tolerance; }
+
+        double xval(double x) const;
+        double uval(double u) const;
+
+    private:
+        int _n; // Store the filter order, n
+        double _nd; // Store n as a double, since that's often how it is used.
+        double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
+        bool _conserve_dc; // Set to insure conservation of constant (sky) flux
+        double _tolerance;  // u-space accuracy parameter
+        double _uMax;  // truncation point for Fourier transform
+        std::vector<double> _K; // coefficients for flux correction in xval
+        std::vector<double> _C; // coefficients for flux correction in uval
+        boost::shared_ptr<Table<double,double> > _xtab; // Table for x values
+        boost::shared_ptr<Table<double,double> > _utab; // Table for Fourier transform
+
+        double xCalc(double x) const;
+        double uCalc(double u) const;
+        double uCalcRaw(double u) const; // uCalc without any flux conservation.
+
+        // Store the tables in a map, so repeat constructions are quick.
+        typedef std::pair<int,std::pair<bool,double> > KeyType;
+        static std::map<KeyType,boost::shared_ptr<Table<double,double> > > _cache_xtab; 
+        static std::map<KeyType,boost::shared_ptr<Table<double,double> > > _cache_utab; 
+        static std::map<KeyType,double> _cache_umax; 
     };
 
 }
 
-#endif //INTERPOLANT_H
+#endif

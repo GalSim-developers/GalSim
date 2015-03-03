@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+
+
+import sys
+import subprocess
+
+cmd = "diff -q %s %s"%(tuple(sys.argv[1:]))
+p = subprocess.Popen([cmd],stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+diff_output = p.stdout.read()
+
+if len(diff_output) > 0:
+    print diff_output.strip()
+
+    try:
+        try:
+            import astropy.io.fits as pyfits
+        except:
+            import pyfits
+    except ImportError, e:
+        # Then /usr/bin/env python doesn't have pyfits installed.  Oh well.
+        sys.exit()
+
+    try:
+        f1 = pyfits.open(sys.argv[1])
+        f2 = pyfits.open(sys.argv[2])
+    except IOError, e:
+        # Then at least one of the files doesn't exist, which diff will have already reported.
+        sys.exit()
+
+    for hdu in range(len(f1)):
+        d0 = f1[hdu].data
+        d1 = f2[hdu].data
+        if (d0 != d1).any():
+            print '    HDU %d shows differences in %d pixels'%(hdu, (d0!=d1).sum())
+            print '    The maximum absolute difference is %e.'%(abs(d0-d1).max())
+            print '    The maximum relative difference is %e.'%(abs((d0-d1)/(d0+1.e-10)).max())

@@ -1,6 +1,24 @@
-// -*- c++ -*-
-#ifndef SBINTERPOLATED_IMAGE_H
-#define SBINTERPOLATED_IMAGE_H
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+#ifndef GalSim_SBInterpolatedImage_H
+#define GalSim_SBInterpolatedImage_H
 /** 
  * @file SBInterpolatedImage.h @brief SBProfile that interpolates a given image.
  */
@@ -10,24 +28,6 @@
 #include "FFT.h"
 
 namespace galsim {
-
-    namespace sbp {
-
-        // Magic numbers:
-
-        /// @brief FT must be at least this much larger than input
-        const double oversample_x = 4.;
-
-        /// @brief The default k-space interpolator
-        const boost::shared_ptr<Quintic> defaultKInterpolant1d(new Quintic(sbp::kvalue_accuracy));
-        const boost::shared_ptr<InterpolantXY> defaultKInterpolant2d(
-            new InterpolantXY(defaultKInterpolant1d));
-
-        /// @brief The default real-space interpolator
-        const boost::shared_ptr<Lanczos> defaultXInterpolant1d(new Lanczos(5,true,kvalue_accuracy));
-        const boost::shared_ptr<InterpolantXY> defaultXInterpolant2d(
-            new InterpolantXY(defaultXInterpolant1d));
-    }
 
     /**
      * @brief A Helper class that stores multiple images and their fourier transforms
@@ -47,30 +47,23 @@ namespace galsim {
         /** 
          * @brief Construct from a std::vector of images.
          *
-         * @param[in] images    List of images to use
-         * @param[in] dx        Stepsize between pixels in image data table (default value of 
-         *                      `dx = 0.` checks the Image header for a suitable stepsize, sets 
-         *                      to `1.` if none is found). 
-         * @param[in] padFactor Multiple by which to increase the image size when zero-padding for 
-         *                      the Fourier transform (default `padFactor = 4`)
+         * @param[in] images      List of images to use
+         * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding 
+         *                        for the Fourier transform.
          */
         template <typename T>
         MultipleImageHelper(const std::vector<boost::shared_ptr<BaseImage<T> > >& images,
-                            double dx=0., double padFactor=0.);
+                            double pad_factor);
 
         /** 
          * @brief Convenience constructor that only takes a single image.
          *
-         * @param[in] image     Single input image
-         * @param[in] dx        Stepsize between pixels in image data table (default value of 
-         *                      `dx = 0.` checks the Image header for a suitable stepsize, sets 
-         *                      to `1.` if none is found). 
-         * @param[in] padFactor Multiple by which to increase the image size when zero-padding for 
-         *                      the Fourier transform (default `padFactor = 4`)
+         * @param[in] image       Single input image
+         * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
+         *                        for the Fourier transform.
          */
         template <typename T>
-        MultipleImageHelper(const BaseImage<T>& image,
-                            double dx=0., double padFactor=0.);
+        MultipleImageHelper(const BaseImage<T>& image, double pad_factor);
 
         /// @brief Copies are shallow, so can pass by value without any copying.
         MultipleImageHelper(const MultipleImageHelper& rhs) : _pimpl(rhs._pimpl) {}
@@ -105,11 +98,11 @@ namespace galsim {
         /// @brief Get the initial (unpadded) size of the images.
         int getNin() const { return _pimpl->Ninitial; }
 
+        /// @brief Get the bounds of the original image. (Or union of them if multiple.)
+        const Bounds<int>& getInitBounds() const { return _pimpl->init_bounds; }
+
         /// @brief Get the size of the images in k-space.
         int getNft() const { return _pimpl->Nk; }
-
-        /// @brief Get the scale size being used for the images.
-        double getScale() const { return _pimpl->dx; }
 
     private:
         // Note: I'm not bothering to make this a real class with setters and getters and all.
@@ -119,7 +112,8 @@ namespace galsim {
         {
             int Ninitial; ///< maximum size of input images
             int Nk;  ///< Size of the padded grids and Discrete Fourier transform table.
-            double dx;  ///< Input pixel scales.
+
+            Bounds<int> init_bounds;
 
             /// @brief input images converted into XTables.
             std::vector<boost::shared_ptr<XTable> > vx;
@@ -159,12 +153,8 @@ namespace galsim {
      * kind of interpolation.  
      *
      * You can provide different interpolation schemes for real and fourier space
-     * (passed as xInterp and kInterp respectively).  If either one is omitted, the 
-     * defaults are:
-     *
-     * xInterp = Lanczos(5, fluxConserve=true, tol=kvalue_accuracy)
-     *
-     * kInterp = Quintic(tol=kvalue_accuracy)
+     * (passed as xInterp and kInterp respectively).  These are required, but there are 
+     * sensible defaults in the python layer wrapper class, InterpolatedImage.
      *
      * The ideal k-space interpolant is a sinc function; however, the quintic interpolant is the
      * default, based on detailed investigations on the tradeoffs between accuracy and speed.  Note
@@ -173,14 +163,14 @@ namespace galsim {
      * need to use a higher-order Lanczos interpolant instead, but this is not the recommended
      * usage.
      *
-     * There are also optional arguments for the pixel size (default is to get it from
-     * the image), and a factor by which to pad the image (default = 4).
+     * The surface brightness profile will be in terms of the image pixels.  The python layer
+     * InterpolatedImage class takes care of converting between these units and the arcsec units
+     * that are usually desired.
      *
      * You can also make an SBInterpolatedImage as a weighted sum of several images
      * using MultipleImageHelper.  This helper object holds the images and their fourier
      * transforms, so it is efficient to make many SBInterpolatedImages with different
-     * weight vectors.  This version does not take the `dx` or `padFactor` parameters,
-     * since these are set in the MultipleImageHelper constructor.
+     * weight vectors.
      */
     class SBInterpolatedImage : public SBProfile 
     {
@@ -189,21 +179,20 @@ namespace galsim {
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
          * image.
          *
-         * @param[in] image     Input Image (any of ImageF, ImageD, ImageS, ImageI).
-         * @param[in] xInterp   Interpolation scheme to adopt between pixels 
-         * @param[in] kInterp   Interpolation scheme to adopt in k-space
-         * @param[in] dx        Stepsize between pixels in image data table (default value of 
-         *                      `dx = 0.` checks the Image header for a suitable stepsize, sets 
-         *                      to `1.` if none is found). 
-         * @param[in] padFactor Multiple by which to increase the image size when zero-padding for 
-         *                      the Fourier transform (default `padFactor = 4`)
+         * @param[in] image       Input Image (any of ImageF, ImageD, ImageS, ImageI).
+         * @param[in] xInterp     Interpolation scheme to adopt between pixels 
+         * @param[in] kInterp     Interpolation scheme to adopt in k-space
+         * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
+         *                        for the Fourier transform.
+         * @param[in] gsparams    GSParams object storing constants that control the accuracy of
+         *                        image operations and rendering.
          */
         template <typename T> 
         SBInterpolatedImage(
             const BaseImage<T>& image,
-            boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
-            boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
-            double dx=0., double padFactor=0.);
+            boost::shared_ptr<Interpolant2d> xInterp,
+            boost::shared_ptr<Interpolant2d> kInterp,
+            double pad_factor, const GSParamsPtr& gsparams);
 
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
@@ -214,12 +203,15 @@ namespace galsim {
          * @param[in] weights   The weights to use for each component image.
          * @param[in] xInterp   Interpolation scheme to adopt between pixels 
          * @param[in] kInterp   Interpolation scheme to adopt in k-space
+         * @param[in] gsparams  GSParams object storing constants that control the accuracy of
+         *                      image operations and rendering.
          */
         SBInterpolatedImage(
             const MultipleImageHelper& multi,
             const std::vector<double>& weights,
-            boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
-            boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d);
+            boost::shared_ptr<Interpolant2d> xInterp,
+            boost::shared_ptr<Interpolant2d> kInterp,
+            const GSParamsPtr& gsparams);
 
         /// @brief Copy Constructor.
         SBInterpolatedImage(const SBInterpolatedImage& rhs);
@@ -227,9 +219,48 @@ namespace galsim {
         /// @brief Destructor
         ~SBInterpolatedImage();
 
+        /**
+         * @brief Refine the value of stepK if the input image was larger than necessary.
+         *
+         * @param[in] max_stepk  Optional maximum value of stepk if you have some a priori
+         *                       knowledge about an appropriate maximum. 
+         */
+        void calculateStepK(double max_stepk=0.) const;
+
+        /**
+         * @brief Refine the value of maxK if the input image had a smaller scale than necessary.
+         *
+         * @param[in] max_maxk  Optional maximum value of maxk if you have some a priori
+         *                      knowledge about an appropriate maximum. 
+         */
+        void calculateMaxK(double max_maxk=0.) const;
+
+        /**
+         * @brief Force the adoption of a particular value of stepK if the input image was larger
+         *        than necessary.
+         *
+         * @param[in] stepk  Value of stepk, if you have some a priori knowledge about an
+         *                   appropriate value.  Note that the code does *not* do a calculation to
+         *                   validate this choice!
+         */
+        void forceStepK(double stepk) const;
+
+        /**
+         * @brief Force the adoption of a particular value of maxK if the input image had a smaller
+         *        scale than necessary.
+         *
+         * @param[in] maxk   Value of maxk, if you have some a priori knowledge about an appropriate
+         *                   value.  Note that the code does *not* do a calculation to validate this
+         *                   choice!
+         */
+        void forceMaxK(double maxk) const;
+
     protected:
 
         class SBInterpolatedImageImpl;
+
+        // Regular SBProfile pimpl constructor so as to be available to derived classes
+        SBInterpolatedImage(SBProfileImpl* pimpl) : SBProfile(pimpl) {}
 
     private:
         // op= is undefined
@@ -237,4 +268,4 @@ namespace galsim {
     };
 }
 
-#endif // SBINTERPOLATED_IMAGE_H
+#endif

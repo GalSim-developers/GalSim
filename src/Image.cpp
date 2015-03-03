@@ -1,8 +1,27 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
 
 #include <sstream>
 
 #include "Image.h"
 #include "ImageArith.h"
+#include "FFT.h"
 
 namespace galsim {
 
@@ -14,7 +33,8 @@ namespace galsim {
 std::string MakeErrorMessage(
     const std::string& m, const int min, const int max, const int tried)
 {
-    std::ostringstream oss;
+    // See discussion in Std.h about this initial value.
+    std::ostringstream oss(" ");
     oss << "Attempt to access "<<m<<" number "<<tried
         << ", range is "<<min<<" to "<<max;
     return oss.str();
@@ -26,7 +46,7 @@ ImageBoundsError::ImageBoundsError(
 
 std::string MakeErrorMessage(const int x, const int y, const Bounds<int> b) 
 {
-    std::ostringstream oss;
+    std::ostringstream oss(" ");
     bool found=false;
     if (x<b.getXMin() || x>b.getXMax()) {
         oss << "Attempt to access column number "<<x
@@ -35,7 +55,7 @@ std::string MakeErrorMessage(const int x, const int y, const Bounds<int> b)
     }
     if (y<b.getYMin() || y>b.getYMax()) {
         if (found) oss << " and ";
-        oss << "Attempt to access row number "<<x
+        oss << "Attempt to access row number "<<y
             << ", range is "<<b.getYMin()<<" to "<<b.getYMax();
         found = true;
     } 
@@ -61,8 +81,8 @@ public:
 } // anonymous
 
 template <typename T>
-BaseImage<T>::BaseImage(const Bounds<int>& b, double scale) :
-    AssignableToImage<T>(b), _owner(), _data(0), _stride(0), _scale(scale)
+BaseImage<T>::BaseImage(const Bounds<int>& b) :
+    AssignableToImage<T>(b), _owner(), _data(0), _nElements(0), _stride(0)
 {
     if (this->_bounds.isDefined()) allocateMem();
     // Else _data is left as 0, stride = 0.
@@ -76,25 +96,25 @@ void BaseImage<T>::allocateMem()
     // for whether this is necessary.
     _stride = this->_bounds.getXMax() - this->_bounds.getXMin() + 1;
 
-    int nElements = _stride * (this->_bounds.getYMax() - this->_bounds.getYMin() + 1);
-    if (_stride <= 0 || nElements <= 0) {
-        std::ostringstream oss;
-        oss << "Attempt to create an Image with defined but invalid Bounds ("<<this->_bounds<<")\n";
-        throw ImageError(oss.str());
+    _nElements = _stride * (this->_bounds.getYMax() - this->_bounds.getYMin() + 1);
+    if (_stride <= 0 || _nElements <= 0) {
+        FormatAndThrow<ImageError>() << 
+            "Attempt to create an Image with defined but invalid Bounds ("<<this->_bounds<<")";
     }
 
     // The ArrayDeleter is because we use "new T[]" rather than an normal new.
     // Without ArrayDeleter, shared_ptr would just use a regular delete, rather
     // than the required "delete []".
-    _owner.reset(new T[nElements], ArrayDeleter<T>());
+    _owner.reset(new T[_nElements], ArrayDeleter<T>());
     _data = _owner.get();
 }
 
 template <typename T>
-Image<T>::Image(int ncol, int nrow, T init_value) : BaseImage<T>(Bounds<int>(1,ncol,1,nrow),1.) 
+ImageAlloc<T>::ImageAlloc(int ncol, int nrow, T init_value) :
+    BaseImage<T>(Bounds<int>(1,ncol,1,nrow)) 
 {
     if (ncol <= 0 || nrow <= 0) {
-        std::ostringstream oss;
+        std::ostringstream oss(" ");
         if (ncol <= 0) {
             if (nrow <= 0) {
                 oss << "Attempt to create an Image with non-positive ncol ("<<
@@ -113,24 +133,28 @@ Image<T>::Image(int ncol, int nrow, T init_value) : BaseImage<T>(Bounds<int>(1,n
 }
 
 template <typename T>
-Image<T>::Image(const Bounds<int>& bounds, const T init_value) : BaseImage<T>(bounds,1.)
+ImageAlloc<T>::ImageAlloc(const Bounds<int>& bounds, const T init_value) :
+    BaseImage<T>(bounds)
 {
     fill(init_value);
 }
 
 template <typename T>
-void Image<T>::resize(const Bounds<int>& new_bounds) 
+void ImageAlloc<T>::resize(const Bounds<int>& new_bounds) 
 {
     if (!new_bounds.isDefined()) {
         // Then this is really a deallocation.  Clear out the existing memory.
+        this->_bounds = new_bounds;
         this->_owner.reset();
         this->_data = 0;
+        this->_nElements = 0;
         this->_stride = 0;
-    } else if (this->_bounds.isDefined() && 
-               this->_bounds.area() <= new_bounds.area() && 
+    } else if (this->_bounds.isDefined() &&
+               new_bounds.area() <= this->_nElements && 
                this->_owner.unique()) {
         // Then safe to keep existing memory allocation.
         // Just redefine the bounds and stride.
+        this->_bounds = new_bounds;
         this->_stride = new_bounds.getXMax() - new_bounds.getXMin() + 1;
     } else {
         // Then we want to do the reallocation.
@@ -161,7 +185,7 @@ T& ImageView<T>::at(const int xpos, const int ypos) const
 }
 
 template <typename T>
-T& Image<T>::at(const int xpos, const int ypos)
+T& ImageAlloc<T>::at(const int xpos, const int ypos)
 {
     if (!this->_data) throw ImageError("Attempt to access values of an undefined image");
     if (!this->_bounds.includes(xpos, ypos)) throw ImageBoundsError(xpos, ypos, this->_bounds);
@@ -169,7 +193,7 @@ T& Image<T>::at(const int xpos, const int ypos)
 }
 
 template <typename T>
-const T& Image<T>::at(const int xpos, const int ypos) const
+const T& ImageAlloc<T>::at(const int xpos, const int ypos) const
 {
     if (!this->_data) throw ImageError("Attempt to access values of an undefined image");
     if (!this->_bounds.includes(xpos, ypos)) throw ImageBoundsError(xpos, ypos, this->_bounds);
@@ -181,15 +205,14 @@ ConstImageView<T> BaseImage<T>::subImage(const Bounds<int>& bounds) const
 {
     if (!_data) throw ImageError("Attempt to make subImage of an undefined image");
     if (!this->_bounds.includes(bounds)) {
-        std::ostringstream os;
-        os << "Subimage bounds (" << bounds << ") are outside original image bounds (" 
-           << this->_bounds << ")";
-        throw ImageError(os.str());
+        FormatAndThrow<ImageError>() << 
+            "Subimage bounds (" << bounds << ") are outside original image bounds (" << 
+            this->_bounds << ")";
     }
     T* newdata = _data
         + (bounds.getYMin() - this->_bounds.getYMin()) * _stride
         + (bounds.getXMin() - this->_bounds.getXMin());
-    return ConstImageView<T>(newdata,_owner,_stride,bounds,this->_scale);
+    return ConstImageView<T>(newdata,_owner,_stride,bounds);
 }
 
 template <typename T>
@@ -197,15 +220,14 @@ ImageView<T> ImageView<T>::subImage(const Bounds<int>& bounds) const
 {
     if (!this->_data) throw ImageError("Attempt to make subImage of an undefined image");
     if (!this->_bounds.includes(bounds)) {
-        std::ostringstream os;
-        os << "Subimage bounds (" << bounds << ") are outside original image bounds (" 
-           << this->_bounds << ")";
-        throw ImageError(os.str());
+        FormatAndThrow<ImageError>() << 
+            "Subimage bounds (" << bounds << ") are outside original image bounds (" << 
+            this->_bounds << ")";
     }
     T* newdata = this->_data
         + (bounds.getYMin() - this->_bounds.getYMin()) * this->_stride
         + (bounds.getXMin() - this->_bounds.getXMin());
-    return ImageView<T>(newdata,this->_owner,this->_stride,bounds,this->_scale);
+    return ImageView<T>(newdata,this->_owner,this->_stride,bounds);
 }
 
 namespace {
@@ -218,6 +240,13 @@ public:
     T operator()(const T ) const { return val; }
 private:
     T val;
+};
+
+template <typename T>
+class ReturnInverse
+{
+public: 
+    double operator()(const T val) const { return val==T(0) ? 0. : 1./double(val); }
 };
 
 template <typename T>
@@ -236,6 +265,12 @@ void ImageView<T>::fill(T x) const
 }
 
 template <typename T>
+void ImageView<T>::invertSelf() const 
+{
+    transform_pixel(*this, ReturnInverse<T>());
+}
+
+template <typename T>
 void ImageView<T>::copyFrom(const BaseImage<T>& rhs) const
 {
     if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
@@ -249,10 +284,10 @@ template class BaseImage<double>;
 template class BaseImage<float>;
 template class BaseImage<int32_t>;
 template class BaseImage<int16_t>;
-template class Image<double>;
-template class Image<float>;
-template class Image<int32_t>;
-template class Image<int16_t>;
+template class ImageAlloc<double>;
+template class ImageAlloc<float>;
+template class ImageAlloc<int32_t>;
+template class ImageAlloc<int16_t>;
 template class ImageView<double>;
 template class ImageView<float>;
 template class ImageView<int32_t>;

@@ -1,3 +1,21 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
 //
 // PhotonArray Class members
 //
@@ -75,7 +93,7 @@ namespace galsim {
 
     void PhotonArray::convolve(const PhotonArray& rhs, UniformDeviate ud) 
     {
-        // If both arrays have corrlated photons, then we need to shuffle the photons
+        // If both arrays have correlated photons, then we need to shuffle the photons
         // as we convolve them.
         if (_is_correlated && rhs._is_correlated) return convolveShuffle(rhs,ud);
 
@@ -112,7 +130,8 @@ namespace galsim {
 
         for (int iOut = N-1; iOut>=0; iOut--) {
             // Randomly select an input photon to use at this output
-            int iIn = int(floor( (iOut+1)*ud()));
+            // NB: don't need floor, since rhs is positive, so floor is superfluous.
+            int iIn = int((iOut+1)*ud());
             if (iIn > iOut) iIn=iOut;  // should not happen, but be safe
             if (iIn < iOut) {
                 // Save input information
@@ -145,18 +164,14 @@ namespace galsim {
     template <class T>
     double PhotonArray::addTo(ImageView<T>& target) const 
     {
-        double dx = target.getScale();
         Bounds<int> b = target.getBounds();
 
-        if (dx==0. || !b.isDefined()) 
+        if (!b.isDefined()) 
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
-                                     " zero pixel scale or undefined Bounds");
+                                     " undefined Bounds");
 
         // Factor to turn flux into surface brightness in an Image pixel
-        double fluxScale = 1./(dx*dx);  
         dbg<<"In PhotonArray::addTo\n";
-        dbg<<"dx = "<<dx<<std::endl;
-        dbg<<"fluxScale = "<<fluxScale<<std::endl;
         dbg<<"bounds = "<<b<<std::endl;
 
         double addedFlux = 0.;
@@ -169,8 +184,8 @@ namespace galsim {
         std::vector<std::vector<double> > negFlux(nx,std::vector<double>(ny,0.));
 #endif
         for (int i=0; i<int(size()); i++) {
-            int ix = int(floor(_x[i]/dx + 0.5));
-            int iy = int(floor(_y[i]/dx + 0.5));
+            int ix = int(floor(_x[i] + 0.5));
+            int iy = int(floor(_y[i] + 0.5));
 #ifdef DEBUGLOGGING
             totalFlux += _flux[i];
             xdbg<<"  photon: ("<<_x[i]<<','<<_y[i]<<")  f = "<<_flux[i]<<std::endl;
@@ -180,7 +195,7 @@ namespace galsim {
                 if (_flux[i] > 0.) posFlux[ix-target.getXMin()][iy-target.getXMin()] += _flux[i];
                 else negFlux[ix-target.getXMin()][iy-target.getXMin()] -= _flux[i];
 #endif
-                target(ix,iy) += _flux[i]*fluxScale;
+                target(ix,iy) += _flux[i];
                 addedFlux += _flux[i];
             } else {
 #ifdef DEBUGLOGGING

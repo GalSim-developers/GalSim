@@ -1,9 +1,7 @@
-python test_Image.py
-python test_SBProfile.py
-python test_artifacts.py
-python test_atmosphere.py
-python test_hsm.py
-python test_optics.py
-python test_random.py
-python test_real.py
-python test_spline.py
+#!/bin/bash
+python=python
+for test in `ls test*.py`
+do
+    echo $test
+    $python $test || exit
+done

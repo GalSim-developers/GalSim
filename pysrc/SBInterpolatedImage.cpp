@@ -1,5 +1,29 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+#ifndef __INTEL_COMPILER
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+#endif
+
+#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-#include "Interpolant.h"
 #include "SBInterpolatedImage.h"
 
 namespace bp = boost::python;
@@ -10,43 +34,46 @@ namespace galsim {
     {
 
         template <typename U, typename W>
-        static void wrapTemplates_Multi(W & wrapper) {
+        static void wrapTemplates_Multi(W& wrapper) 
+        {
             wrapper
                 .def(bp::init<const std::vector<boost::shared_ptr<BaseImage<U> > >&, 
-                     double, double>(
-                        (bp::arg("images"),
-                         bp::arg("dx")=0., bp::arg("padFactor")=0.)
+                     double>(
+                        (bp::arg("images"), bp::arg("pad_factor")=4.)
                 ))
-                .def(bp::init<const BaseImage<U> &, double, double>(
-                        (bp::arg("image"),
-                         bp::arg("dx")=0., bp::arg("padFactor")=0.)
+                .def(bp::init<const BaseImage<U>&, double>(
+                        (bp::arg("image"), bp::arg("pad_factor")=4.)
                 ))
                 ;
         }
 
         template <typename U, typename W>
-        static void wrapTemplates(W & wrapper) {
+        static void wrapTemplates(W& wrapper) 
+        {
             wrapper
                 .def(bp::init<const BaseImage<U> &,
                      boost::shared_ptr<InterpolantXY>,
                      boost::shared_ptr<InterpolantXY>,
-                     double, double>(
+                     double, boost::shared_ptr<GSParams> >(
                          (bp::arg("image"),
-                          bp::arg("xInterp")=bp::object(),
-                          bp::arg("kInterp")=bp::object(),
-                          bp::arg("dx")=0., bp::arg("padFactor")=0.)
-                     ))
+                          bp::arg("xInterp"),
+                          bp::arg("kInterp"),
+                          bp::arg("pad_factor")=4.,
+                          bp::arg("gsparams")=bp::object())
+                     )
+                )
                 ;
         }
 
-        static void wrap() {
+        static void wrap() 
+        {
             bp::class_< MultipleImageHelper > pyMultipleImageHelper(
                 "MultipleImageHelper", bp::init<const MultipleImageHelper &>()
             );
             wrapTemplates_Multi<float>(pyMultipleImageHelper);
             wrapTemplates_Multi<double>(pyMultipleImageHelper);
-            wrapTemplates_Multi<short>(pyMultipleImageHelper);
-            wrapTemplates_Multi<int>(pyMultipleImageHelper);
+            wrapTemplates_Multi<int32_t>(pyMultipleImageHelper);
+            wrapTemplates_Multi<int16_t>(pyMultipleImageHelper);
 
             bp::class_< SBInterpolatedImage, bp::bases<SBProfile> > pySBInterpolatedImage(
                 "SBInterpolatedImage", bp::init<const SBInterpolatedImage &>()
@@ -54,54 +81,33 @@ namespace galsim {
             pySBInterpolatedImage
                 .def(bp::init<const MultipleImageHelper&, const std::vector<double>&,
                      boost::shared_ptr<InterpolantXY>,
-                     boost::shared_ptr<InterpolantXY> >(
+                     boost::shared_ptr<InterpolantXY>,
+                     boost::shared_ptr<GSParams> >(
                          (bp::args("multi","weights"),
-                          bp::arg("xInterp")=bp::object(),
-                          bp::arg("kInterp")=bp::object())
-                     ))
+                          bp::arg("xInterp"),
+                          bp::arg("kInterp"),
+                          bp::arg("gsparams")=bp::object())
+                     )
+                )
+                .def("calculateStepK", &SBInterpolatedImage::calculateStepK,
+                     bp::arg("max_stepk")=0.)
+                .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK,
+                     bp::arg("max_maxk")=0.)
+                .def("forceStepK", &SBInterpolatedImage::forceStepK,
+                     bp::arg("stepk"))
+                .def("forceMaxK", &SBInterpolatedImage::forceMaxK,
+                     bp::arg("maxk"))
                 ;
             wrapTemplates<float>(pySBInterpolatedImage);
             wrapTemplates<double>(pySBInterpolatedImage);
-            wrapTemplates<short>(pySBInterpolatedImage);
-            wrapTemplates<int>(pySBInterpolatedImage);
+            wrapTemplates<int32_t>(pySBInterpolatedImage);
+            wrapTemplates<int16_t>(pySBInterpolatedImage);
         }
 
     };
 
     void pyExportSBInterpolatedImage() 
     {
-        // We wrap Interpolant classes as opaque, construct-only objects; we just
-        // need to be able to make them from Python and pass them to C++.
-        bp::class_<Interpolant,boost::noncopyable>("Interpolant", bp::no_init);
-        bp::class_<Interpolant2d,boost::noncopyable>("Interpolant2d", bp::no_init);
-        bp::class_<InterpolantXY,bp::bases<Interpolant2d>,boost::noncopyable>(
-            "InterpolantXY",
-            bp::init<boost::shared_ptr<Interpolant> >(bp::arg("i1d"))
-        );
-        bp::class_<Delta,bp::bases<Interpolant>,boost::noncopyable>(
-            "Delta", bp::init<double>(bp::arg("tol")=1E-3)
-        );
-        bp::class_<Nearest,bp::bases<Interpolant>,boost::noncopyable>(
-            "Nearest", bp::init<double>(bp::arg("tol")=1E-3)
-        );
-        bp::class_<SincInterpolant,bp::bases<Interpolant>,boost::noncopyable>(
-            "SincInterpolant", bp::init<double>(bp::arg("tol")=1E-3)
-        );
-        bp::class_<Linear,bp::bases<Interpolant>,boost::noncopyable>(
-            "Linear", bp::init<double>(bp::arg("tol")=1E-3)
-        );
-        bp::class_<Lanczos,bp::bases<Interpolant>,boost::noncopyable>(
-            "Lanczos", bp::init<int,bool,double>(
-                (bp::arg("n"), bp::arg("conserve_flux")=false, bp::arg("tol")=1E-3)
-            )
-        );
-        bp::class_<Cubic,bp::bases<Interpolant>,boost::noncopyable>(
-            "Cubic", bp::init<double>(bp::arg("tol")=1E-4)
-        );
-        bp::class_<Quintic,bp::bases<Interpolant>,boost::noncopyable>(
-            "Quintic", bp::init<double>(bp::arg("tol")=1E-4)
-        );
-
         PySBInterpolatedImage::wrap();
     }
 

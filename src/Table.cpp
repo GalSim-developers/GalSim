@@ -1,3 +1,37 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+// icpc pretends to be GNUC, since it thinks it's compliant, but it's not.
+// It doesn't understand "pragma GCC"
+#ifndef __INTEL_COMPILER
+
+// For 32-bit machines, g++ -O2 optimization in the TMV stuff below uses an optimization
+// that is technically isn't known to not overflow 32 bit integers.  In fact, it is totally
+// fine to use, but we need to remove a warning about it in this file for gcc >= 4.5
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 5)
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
+
+#endif
+
+
+
 #include "TMV.h"
 #include "TMV_SymBand.h"
 #include "Table.h"
@@ -10,9 +44,14 @@ namespace galsim {
 
     // Look up an index.  Use STL binary search; maybe faster to use
     template<class V, class A>
-    int Table<V,A>::upperIndex(const A a) const 
+    int Table<V,A>::upperIndex(const A a) const
     {
-        if (a<_argMin() || a>_argMax()) throw TableOutOfRange();
+        if (a<_argMin()-lower_slop || a>_argMax()+upper_slop)
+            throw TableOutOfRange(a,_argMin(),_argMax());
+        // check for slop
+        if (a < v[0].arg) return 1;
+        if (a > v[v.size()-1].arg) return v.size()-1;
+
         // Go directly to index if arguments are regularly spaced.
         if (equalSpaced) {
             int index = int( std::ceil( (a-_argMin()) / dx) );
@@ -23,32 +62,32 @@ namespace galsim {
             while (a < v[index-1].arg) --index;
             return index;
         } else {
-            //assert(lastIndex >= 1);
-            //assert(lastIndex < int(v.size()));
+            xassert(lastIndex >= 1);
+            xassert(lastIndex < int(v.size()));
 
             if ( a < v[lastIndex-1].arg ) {
-                //assert(lastIndex-2 >= 0);
+                xassert(lastIndex-2 >= 0);
                 // Check to see if the previous one is it.
-                if (a >= v[lastIndex-2].arg) return --lastIndex; 
+                if (a >= v[lastIndex-2].arg) return --lastIndex;
                 else {
                     // Look for the entry from 0..lastIndex-1:
-                    Entry e(a,0); 
+                    Entry e(a,0);
                     iter p = std::upper_bound(v.begin(), v.begin()+lastIndex-1, e);
-                    //assert(p != v.begin());
-                    //assert(p != v.begin()+lastIndex-1);
+                    xassert(p != v.begin());
+                    xassert(p != v.begin()+lastIndex-1);
                     lastIndex = p-v.begin();
                     return lastIndex;
                 }
             } else if (a > v[lastIndex].arg) {
-                //assert(lastIndex+1 < int(v.size()));
+                xassert(lastIndex+1 < int(v.size()));
                 // Check to see if the next one is it.
                 if (a <= v[lastIndex+1].arg) return ++lastIndex;
                 else {
                     // Look for the entry from lastIndex..end
-                    Entry e(a,0); 
+                    Entry e(a,0);
                     iter p = std::lower_bound(v.begin()+lastIndex+1, v.end(), e);
-                    //assert(p != v.begin()+lastIndex+1);
-                    //assert(p != v.end());
+                    xassert(p != v.begin()+lastIndex+1);
+                    xassert(p != v.end());
                     lastIndex = p-v.begin();
                     return lastIndex;
                 }
@@ -61,7 +100,7 @@ namespace galsim {
 
     //new element for table.
     template<class V, class A>
-    void Table<V,A>::addEntry(const A _arg, const V _val) 
+    void Table<V,A>::addEntry(const A _arg, const V _val)
     {
         Entry e(_arg,_val);
         v.push_back(e);
@@ -83,12 +122,16 @@ namespace galsim {
     }
 
     template<class V, class A>
-    Table<V,A>::Table(const std::vector<A>& aa, const std::vector<V>& vv, interpolant in) : 
+    Table<V,A>::Table(const std::vector<A>& aa, const std::vector<V>& vv, interpolant in) :
         iType(in), isReady(false)
     {
         v.reserve(aa.size());
-        if (vv.size() != aa.size()) 
+        if (vv.size() != aa.size())
             throw TableError("input vector lengths don't match");
+        if (iType == spline && vv.size() < 3)
+            throw TableError("input vectors are too short to spline interpolate");
+        if (vv.size() < 2 &&  (iType == linear || iType == ceil || iType == floor))
+            throw TableError("input vectors are too short for interpolation");
         typename std::vector<A>::const_iterator aptr=aa.begin();
         typename std::vector<V>::const_iterator vptr=vv.begin();
         for (size_t i=0; i<aa.size(); i++, ++aptr, ++vptr) {
@@ -99,20 +142,19 @@ namespace galsim {
 
     //lookup & interp. function value. - this one returns 0 out of bounds.
     template<class V, class A>
-    V Table<V,A>::operator() (const A a) const 
+    V Table<V,A>::operator() (const A a) const
     {
         setup(); //do any necessary prep
-        try {
+        if (a<_argMin() || a>_argMax()) return V(0);
+        else {
             int i = upperIndex(a);
             return interpolate(a,i,v,y2);
-        } catch (TableOutOfRange) {
-            return V(0);
         }
     }
 
     //lookup & interp. function value.
     template<class V, class A>
-    V Table<V,A>::lookup(const A a) const 
+    V Table<V,A>::lookup(const A a) const
     {
         setup();
         int i = upperIndex(a);
@@ -143,7 +185,7 @@ namespace galsim {
             (h*h)/6.0;
 #else
         // Factor out h factors, so only need 1 division by h.
-        // Also, use the fact that bb = h-aa to simplify the calculation. 
+        // Also, use the fact that bb = h-aa to simplify the calculation.
         A h = v[i].arg - v[i-1].arg;
         A aa = (v[i].arg - a);
         A bb = h-aa;
@@ -161,7 +203,7 @@ namespace galsim {
         // Normally those ='s are ok, but for floor and ceil we make the extra
         // check to see if we should choose the opposite bound.
         if (v[i].arg == a) return v[i].val;
-        else return v[i-1].val; 
+        else return v[i-1].val;
     }
 
     template<class V, class A>
@@ -169,11 +211,11 @@ namespace galsim {
         A a, int i, const std::vector<Entry>& v, const std::vector<V>& )
     {
         if (v[i-1].arg == a) return v[i-1].val;
-        return v[i].val; 
+        return v[i].val;
     }
 
     template<class V, class A>
-    void Table<V,A>::read(std::istream& is) 
+    void Table<V,A>::read(std::istream& is)
     {
         std::string line;
         const std::string comments="#;!"; //starts comment
@@ -197,11 +239,11 @@ namespace galsim {
 
     // Do any necessary setup of the table before using
     template<class V, class A>
-    void Table<V,A>::setup() const 
+    void Table<V,A>::setup() const
     {
         if (isReady) return;
 
-        if (v.size() <= 1) 
+        if (v.size() <= 1)
             throw TableError("Trying to use a null Table (need at least 2 entries)");
 
         sortIt();
@@ -211,7 +253,7 @@ namespace galsim {
         // ...within this fractional error:
         const double tolerance = 0.01;
         dx = (v.back().arg - v.front().arg) / (v.size()-1);
-        if (dx == 0.) 
+        if (dx == 0.)
             throw TableError("First and last Table entry are equal.");
         equalSpaced = true;
         for (int i=1; i<int(v.size()); i++) {
@@ -224,7 +266,7 @@ namespace galsim {
           case linear:
                interpolate = &Table<V,A>::linearInterpolate;
                break;
-          case spline : 
+          case spline :
                setupSpline();
                interpolate = &Table<V,A>::splineInterpolate;
                break;
@@ -237,6 +279,10 @@ namespace galsim {
           default:
                throw TableError("interpolation method not yet implemented");
         }
+
+        lower_slop = (v[1].arg - v[0].arg) * 1.e-6;
+        upper_slop = (v[v.size()-1].arg - v[v.size()-2].arg) * 1.e-6;
+
         isReady = true;
     }
 
@@ -249,7 +295,7 @@ namespace galsim {
          * Here we follow the broad procedure outlined in this technical note by Jim
          * Armstrong, freely available online:
          * http://www.algorithmist.net/spline.html
-         * 
+         *
          * The system we solve is equation [7].  In our adopted notation u_i are the diagonals
          * of the matrix M, and h_i the off-diagonals.  y'' is z_i and the rhs = v_i.
          *
@@ -259,13 +305,13 @@ namespace galsim {
         // Set up the 2nd-derivative table for splines
         int n = v.size();
         y2.resize(n);
-        // End points 2nd-derivatives zero for natural cubic spline 
+        // End points 2nd-derivatives zero for natural cubic spline
         y2[0] = V(0);
         y2[n-1] = V(0);
         // For 3 points second derivative at i=1 is simple
         if (n == 3){
 
-            y2[1] = 3.*((v[2].val - v[1].val) / (v[2].arg - v[1].arg) - 
+            y2[1] = 3.*((v[2].val - v[1].val) / (v[2].arg - v[1].arg) -
                         (v[1].val - v[0].val) / (v[1].arg - v[0].arg)) / (v[2].arg - v[0].arg);
 
         } else {  // For 4 or more points we use the TMV symmetric tridiagonal matrix solver

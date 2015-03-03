@@ -1,6 +1,24 @@
-// -*- c++ -*-
-#ifndef SBDECONVOLVE_IMPL_H
-#define SBDECONVOLVE_IMPL_H
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+#ifndef GalSim_SBDeconvolveImpl_H
+#define GalSim_SBDeconvolveImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBDeconvolve.h"
@@ -10,21 +28,13 @@ namespace galsim {
     class SBDeconvolve::SBDeconvolveImpl : public SBProfile::SBProfileImpl
     {
     public:
-        SBDeconvolveImpl(const SBProfile& adaptee) : _adaptee(adaptee)
-        { _maxksq = std::pow(maxK(),2.); }
-
+        SBDeconvolveImpl(const SBProfile& adaptee, const GSParamsPtr& gsparams);
         ~SBDeconvolveImpl() {}
 
         // xValue() not implemented for SBDeconvolve.
-        double xValue(const Position<double>& p) const 
-        { throw SBError("SBDeconvolve::xValue() not implemented"); }
+        double xValue(const Position<double>& p) const;
 
-        std::complex<double> kValue(const Position<double>& k) const 
-        {
-            return (k.x*k.x+k.y*k.y) <= _maxksq ?
-                1./_adaptee.kValue(k) :
-                std::complex<double>(0.,0.); 
-        }
+        std::complex<double> kValue(const Position<double>& k) const;
 
         double maxK() const { return _adaptee.maxK(); }
         double stepK() const { return _adaptee.stepK(); }
@@ -38,49 +48,19 @@ namespace galsim {
         bool isAnalyticX() const { return false; }
         bool isAnalyticK() const { return true; }
 
-        Position<double> centroid() const { return -_adaptee.centroid(); }
+        Position<double> centroid() const;
+        double getFlux() const;
 
-        double getFlux() const { return 1./_adaptee.getFlux(); }
+        // shoot also not implemented.
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;
 
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const 
-        {
-            throw SBError("SBDeconvolve::shoot() not implemented");
-            return boost::shared_ptr<PhotonArray>();
-        }
-
-    protected:
-
-        // Override for better efficiency if adaptee has it:
-        void fillKGrid(KTable& kt) const 
-        {
-            assert(SBProfile::GetImpl(_adaptee));
-            SBProfile::GetImpl(_adaptee)->fillKGrid(kt);
-            // Flip or clip:
-            int N = kt.getN();
-            int maxiksq = int(floor(_maxksq / (kt.getDk()*kt.getDk())));
-            // Only need ix>=0 because it's Hermitian, but also
-            // don't want to repeat the ix=0, N/2 twice:
-            for (int iy = -N/2; iy < N/2; iy++) {
-                if (iy>=0) {
-                    int ix=0;
-                    if (ix*ix+iy*iy <= maxiksq) 
-                        kt.kSet(ix,iy,1./kt.kval(ix,iy));
-                    else
-                        kt.kSet(ix,iy,std::complex<double>(0.,0.));
-                    ix=N/2;
-                    if (ix*ix+iy*iy <= maxiksq) 
-                        kt.kSet(ix,iy,1./kt.kval(ix,iy));
-                    else
-                        kt.kSet(ix,iy,std::complex<double>(0.,0.));
-                }
-                for (int ix = 0; ix <= N/2; ix++) {
-                    if (ix*ix+iy*iy <= maxiksq) 
-                        kt.kSet(ix,iy,1./kt.kval(ix,iy));
-                    else
-                        kt.kSet(ix,iy,std::complex<double>(0.,0.));
-                }
-            }
-        }
+        // Overrides for better efficiency
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
 
     private:
         SBProfile _adaptee;
@@ -93,4 +73,4 @@ namespace galsim {
 
 }
 
-#endif // SBDECONVOLVE_IMPL_H
+#endif 

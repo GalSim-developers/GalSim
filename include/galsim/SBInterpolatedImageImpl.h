@@ -1,6 +1,24 @@
-// -*- c++ -*-
-#ifndef SBINTERPOLATED_IMAGE_IMPL_H
-#define SBINTERPOLATED_IMAGE_IMPL_H
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+#ifndef GalSim_SBInterpolatedImageImpl_H
+#define GalSim_SBInterpolatedImageImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBInterpolatedImage.h"
@@ -16,25 +34,30 @@ namespace galsim {
             const BaseImage<T>& image, 
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double dx, double padFactor);
+            double pad_factor, const GSParamsPtr& gsparams);
 
         SBInterpolatedImageImpl(
-            const MultipleImageHelper& multi, const std::vector<double>& weights,
-            boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp);
+            const MultipleImageHelper& multi,
+            const std::vector<double>& weights,
+            boost::shared_ptr<Interpolant2d> xInterp,
+            boost::shared_ptr<Interpolant2d> kInterp,
+            const GSParamsPtr& gsparams);
 
         ~SBInterpolatedImageImpl();
 
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& p) const;
 
-        double maxK() const;
-        double stepK() const;
+        double maxK() const { return _maxk; }
+        double stepK() const { return _stepk; }
 
-        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
-        { xmin = -_max_size; xmax = _max_size; }
+        void calculateMaxK(double max_stepk) const;
+        void calculateStepK(double max_maxk) const;
+        void forceStepK(double stepk) const;
+        void forceMaxK(double maxk) const;
 
-        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
-        { ymin = -_max_size; ymax = _max_size; }
+        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const;
+        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const;
 
         bool isAxisymmetric() const { return false; }
 
@@ -74,40 +97,27 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;
 
-        double getFlux() const;
+        double getFlux() const { return _flux; }
+        double calculateFlux() const;
 
         double getPositiveFlux() const { checkReadyToShoot(); return _positiveFlux; }
         double getNegativeFlux() const { checkReadyToShoot(); return _negativeFlux; }
 
-        template <typename T>
-        double fillXImage(ImageView<T>& I, double dx, double gain) const;
+        // Overrides for better efficiency
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, int izero,
+                        double y0, double dy, int jzero) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
 
-        // Overrides for better efficiency with separable kernels:
-        void fillKGrid(KTable& kt) const;
-        void fillXGrid(XTable& xt) const;
-
-        // These are the virtual functions, but we don't want to have to duplicate the
-        // code implement these.  So each one just calls the template version.  The
-        // C++ overloading rules mean that it will call the local fillXImage template 
-        // function defined above, not the one in SBProfile (which would lead to an 
-        // infinite loop!). 
-        //
-        // So here is what happens when someone calls fillXImage(I,dx):
-        // 1) If they are calling this from an SBInterpolatedImage object, then
-        //    it just directly uses the above template version.
-        // 2) If they are calling this from an SBProfile object, the template version
-        //    there immediately calls doFillXImage for the appropriate type.
-        //    That's a virtual function, so if the SBProfile is really an SBInterpolatedImage,
-        //    it will find these virtual functions instead of the ones defined in
-        //    SBProfile.  Then these functions immediately call the template version
-        //    of fillXImage defined above.
-        //
-        double doFillXImage(ImageView<float>& I, double dx, double gain) const
-        { return fillXImage(I,dx,gain); }
-        double doFillXImage(ImageView<double>& I, double dx, double gain) const
-        { return fillXImage(I,dx,gain); }
-
-    private:
+    protected:  // Made protected so that these can be used in the derived CorrelationFunction class
 
         MultipleImageHelper _multi;
         std::vector<double> _wts;
@@ -121,7 +131,12 @@ namespace galsim {
         /// @brief Make ktab if necessary.
         void checkK() const;
 
-        double _max_size; ///< Calculated value: Ninitial+2*xInterp->xrange())*dx
+        mutable double _stepk; ///< Stored value of stepK
+        mutable double _maxk; ///< Stored value of maxK
+        double _maxk1; ///< maxk based just on the xInterp urange
+        double _uscale; ///< conversion from k to u for xInterpolant
+        double _flux;
+        int _maxNin;
 
         void initialize(); ///< Put code common to both constructors here.
 
@@ -141,13 +156,15 @@ namespace galsim {
             bool isPositive;
             double flux;
 
-            Pixel(double x_=0., double y_=0., double flux_=0.): 
+            Pixel(double x_, double y_, double flux_): 
                 x(x_), y(y_), flux(flux_) { isPositive = flux>=0.; }
             double getFlux() const { return flux; }
         };
         mutable double _positiveFlux;    ///< Sum of all positive pixels' flux
         mutable double _negativeFlux;    ///< Sum of all negative pixels' flux
         mutable ProbabilityTree<Pixel> _pt; ///< Binary tree of pixels, for photon-shooting
+
+    private:
 
         // Copy constructor and op= are undefined.
         SBInterpolatedImageImpl(const SBInterpolatedImageImpl& rhs);
@@ -156,4 +173,4 @@ namespace galsim {
 
 }
 
-#endif // SBINTERPOLATED_IMAGE_IMPL_H
+#endif

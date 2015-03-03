@@ -1,6 +1,24 @@
-// -*- c++ -*-
-#ifndef SBEXPONENTIAL_H
-#define SBEXPONENTIAL_H
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+#ifndef GalSim_SBExponential_H
+#define GalSim_SBExponential_H
 /** 
  * @file SBExponential.h @brief SBProfile that implements a 2-d exponential profile.
  */
@@ -8,6 +26,13 @@
 #include "SBProfile.h"
 
 namespace galsim {
+
+    namespace sbp {
+
+        // How many Exponential profiles to save in the cache
+        const int max_exponential_cache = 100;
+
+    }
 
     /** 
      * @brief Exponential Surface Brightness Profile.  
@@ -23,11 +48,13 @@ namespace galsim {
          * @brief Constructor - note that `r0` is scale length, NOT half-light radius `re` as in 
          * SBSersic.
          *
-         * @param[in] r0    scale length for the profile that scales as `exp[-(r / r0)]`, NOT the 
-         *                  half-light radius `re`.
-         * @param[in] flux  flux (default `flux = 1.`).
+         * @param[in] r0       scale length for the profile that scales as `exp[-(r / r0)]`, NOT the
+         *                     half-light radius `re`.
+         * @param[in] flux     flux.
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of image
+         *                     operations and rendering, if different from the default.
          */
-        SBExponential(double r0, double flux=1.);
+        SBExponential(double r0, double flux, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBExponential(const SBExponential& rhs);
@@ -40,13 +67,7 @@ namespace galsim {
 
     protected:
 
-        class ExponentialRadialFunction;
-        class ExponentialInfo;
         class SBExponentialImpl;
-
-        // Static class-wide object that does some calculations applicable to all 
-        // SBExponential instantiations.
-        static ExponentialInfo _info; 
 
     private:
         // op= is undefined
@@ -55,5 +76,5 @@ namespace galsim {
 
 }
 
-#endif // SBEXPONENTIAL_H
+#endif
 

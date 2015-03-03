@@ -1,5 +1,24 @@
-#ifndef ANGLE_H
-#define ANGLE_H
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+#ifndef GalSim_Angle_H
+#define GalSim_Angle_H
 
 /**
  *  @file Angle.h 
@@ -15,7 +34,7 @@
  *  - Include scalar = Angle / AngleUnit
  *  - Removed non-sensical Angle = Angle * Angle
  *  - Remove templates.  Let compiler convert types to double as needed.
- *  - Always keep values wrapped to [0,2pi) rather than require user to call wrap().
+ *  - Can wrap values to [-pi,pi) if desired by calling theta.wrap().
  *  - Changed names of arcminutes -> arcmin and arcseconds -> arcsec.
  *  - Removed some extra functions that I don't think we need.
  *  - Switch to galsim namespace.
@@ -60,6 +79,8 @@ namespace galsim {
         bool operator==(AngleUnit rhs) const { return (_val == rhs._val); }
         bool operator!=(AngleUnit rhs) const { return (_val != rhs._val); }
         //@}
+        
+        double getValue() const { return _val; }
 
     private:
         double _val;
@@ -71,8 +92,7 @@ namespace galsim {
     const AngleUnit arcmin(M_PI/60./180.); ///< constant with units of arcminutes
     const AngleUnit arcsec(M_PI/3600./180.); ///< constant with units of arcseconds
 
-    /**************************************************************************************/
-    /*
+    /**
      *  @brief A class representing an Angle
      *
      *  Angles are a value with an AngleUnit.
@@ -116,6 +136,7 @@ namespace galsim {
      *    theta2 -= theta1
      *    theta *= x
      *    theta /= x
+     *    x = unit1/unit2
      *  @endcode
      *
      *  I/O:
@@ -124,7 +145,7 @@ namespace galsim {
     class Angle {
     public:
         /** Construct an Angle with the specified value (interpreted in the given units) */
-        explicit Angle(double val, AngleUnit unit) : _val(val*unit._val) { wrap(); }
+        explicit Angle(double val, AngleUnit unit) : _val(val*unit._val) {}
         /** Default constructor is 0 radians */
         Angle() : _val(0) {}
         /** Copy constructor. */
@@ -138,8 +159,8 @@ namespace galsim {
 
         //@{
         /// Define arithmetic for scaling an Angle
-        Angle& operator*=(double scale) { _val *= scale; wrap(); return *this; }
-        Angle& operator/=(double scale) { _val /= scale; wrap(); return *this; }
+        Angle& operator*=(double scale) { _val *= scale; return *this; }
+        Angle& operator/=(double scale) { _val /= scale; return *this; }
         Angle operator*(double scale) const { Angle theta = *this; theta *= scale; return theta; }
         friend Angle operator*(double scale, Angle theta) { return theta * scale; }
         Angle operator/(double scale) const { Angle theta = *this; theta /= scale; return theta; }
@@ -147,8 +168,8 @@ namespace galsim {
         
         //@{
         /// Define arithmetic for adding/subtracting two Angles
-        Angle& operator+=(Angle rhs) { _val += rhs._val; wrap(); return *this; }
-        Angle& operator-=(Angle rhs) { _val -= rhs._val; wrap(); return *this; }
+        Angle& operator+=(Angle rhs) { _val += rhs._val; return *this; }
+        Angle& operator-=(Angle rhs) { _val -= rhs._val; return *this; }
         Angle operator+(Angle rhs) const { Angle theta = *this; theta += rhs; return theta; }
         Angle operator-(Angle rhs) const { Angle theta = *this; theta -= rhs; return theta; }
         //@}
@@ -167,26 +188,25 @@ namespace galsim {
         friend std::ostream& operator<<(std::ostream& os, Angle theta)
         { os << theta._val; return os; }
 
-    private:
-        /// Wraps this angle to the range [0, 2 pi)
-        void wrap() {
+        /// Wraps this angle to the range (-pi, pi]
+        Angle wrap() {
             const double TWOPI = 2.*M_PI;
-            _val = std::fmod(_val, TWOPI); // now in range (-TWOPI, TWOPI)
-            if (_val < 0.0) _val += TWOPI;
-            // if _val was -epsilon, adding 360.0 gives 360.0-epsilon = 360.0 which is actually 0.0
-            // Thus, a rare equivalence conditional test for a double ...
-            if (_val == TWOPI) _val = 0.0;
+            double new_val = std::fmod(_val, TWOPI); // now in range (-TWOPI, TWOPI)
+            if (new_val <= -M_PI) new_val += TWOPI;
+            if (new_val > M_PI) new_val -= TWOPI;
+            return Angle(new_val, radians);
         }
 
+    private:
         double _val;
     };
 
     /// Define conversion from value to an Angle
     inline Angle operator*(double val, AngleUnit unit) { return Angle(val,unit); }
-    // I don't define unit * value, since that just seems weird.
-    // Also, I'd rather have this in the Angle class, but I couldn't figure out
-    // how to wrap it.
 
+    /// A convenience function.  unit1/unit2 is equivalent to (1 * unit1) / unit2.
+    inline double operator/(AngleUnit unit1, AngleUnit unit2) 
+    { return unit1.getValue() / unit2.getValue(); }
 
 }
 #endif

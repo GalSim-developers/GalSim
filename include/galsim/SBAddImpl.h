@@ -1,6 +1,24 @@
-// -*- c++ -*-
-#ifndef SBADD_IMPL_H
-#define SBADD_IMPL_H
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+#ifndef GalSim_SBAddImpl_H
+#define GalSim_SBAddImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBAdd.h"
@@ -10,16 +28,7 @@ namespace galsim {
     class SBAdd::SBAddImpl : public SBProfileImpl
     {
     public:
-        SBAddImpl(const SBProfile& s1, const SBProfile& s2)
-        { add(s1); add(s2); initialize(); }
-
-        SBAddImpl(const std::list<SBProfile>& slist)
-        {
-            for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)
-                add(*sptr); 
-            initialize();
-        }
-
+        SBAddImpl(const std::list<SBProfile>& slist, const GSParamsPtr& gsparams);
         ~SBAddImpl() {}
 
         void add(const SBProfile& rhs);
@@ -107,13 +116,24 @@ namespace galsim {
         double getNegativeFlux() const;
 
         // Overrides for better efficiency
-        void fillKGrid(KTable& kt) const;
-        void fillXGrid(XTable& xt) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, int izero,
+                        double y0, double dy, int jzero) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
 
         typedef std::list<SBProfile>::iterator Iter;
         typedef std::list<SBProfile>::const_iterator ConstIter;
 
-    private:
+    protected:  // This is protected since we want inheritance by AddCorrelationFunctionImpl
+
         /// @brief The plist content is a pointer to a fresh copy of the summands.
         std::list<SBProfile> _plist; 
         double _sumflux; ///< Keeps track of the cumulated flux of all summands.
@@ -147,5 +167,5 @@ namespace galsim {
 
 }
 
-#endif // SBADD_IMPL_H
+#endif
 

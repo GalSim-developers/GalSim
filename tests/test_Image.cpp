@@ -1,9 +1,33 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
 #include "galsim/Image.h"
 #define BOOST_TEST_DYN_LINK
 
 // icpc pretends to be GNUC, since it thinks it's compliant, but it's not.
-// It doesn't understand "pragma GCC"
-#ifndef __INTEL_COMPILER
+// It doesn't understand #pragma GCC
+// Rather, it uses #pragma warning(disable:nn)
+#ifdef __INTEL_COMPILER
+
+// Disable "overloaded virtual function ... is only partially overridden"
+#pragma warning(disable:654)
+
+#else
 
 // The boost unit tests have some unused variables, so suppress the warnings about that.
 // I think pragma GCC was introduced in gcc 4.2, so guard for >= that version 
@@ -11,13 +35,26 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-// Not sure when this was added.  Currently check for it for versions >= 4.4
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 4)
+// Not sure when this was added.  Currently check for it for versions >= 4.3
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 3)
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
 
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #endif
 
+// Only clang seems to have this
+#ifdef __clang__
+#if __has_warning("-Wlogical-op-parentheses")
+#pragma GCC diagnostic ignored "-Wlogical-op-parentheses"
+#endif
+
+#endif
+
+#endif
+
+#define BOOST_NO_CXX11_SMART_PTR
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/mpl/list.hpp>
@@ -41,7 +78,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     // Of course, when viewed as an image, the rows are generally drawn from bottom to top.
 
     // Check basic constructor from nrow,ncol
-    galsim::Image<T> im1(ncol,nrow);
+    galsim::ImageAlloc<T> im1(ncol,nrow);
     galsim::Bounds<int> bounds(1,ncol,1,nrow);
 
     BOOST_CHECK(im1.getXMin()==1);
@@ -54,7 +91,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     BOOST_CHECK(im1.getStride() == ncol);
 
     // Check alternate constructor from bounds
-    galsim::Image<T> im2(bounds);
+    galsim::ImageAlloc<T> im2(bounds);
     galsim::ImageView<T> im2_view = im2;
     galsim::ConstImageView<T> im2_cview = im2;
 
@@ -104,8 +141,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     // Check view of given data
     // Note: Our array is on the stack, so we don't have any ownership to pass around.
     //       Hence, use a default shared_ptr constructor.
-    galsim::ImageView<T> im3_view(ref_array, boost::shared_ptr<T>(), ncol, bounds, 1.);
-    galsim::ConstImageView<T> im3_cview(ref_array, boost::shared_ptr<T>(), ncol, bounds, 1.);
+    galsim::ImageView<T> im3_view(ref_array, boost::shared_ptr<T>(), ncol, bounds);
+    galsim::ConstImageView<T> im3_cview(ref_array, boost::shared_ptr<T>(), ncol, bounds);
     for (int y=1; y<=nrow; ++y) {
         for (int x=1; x<=ncol; ++x) {
             BOOST_CHECK(im3_view(x,y) == 10*x+y);
@@ -116,9 +153,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     // Check shift ops
     int dx = 31;
     int dy = 16;
-    im1.shift(dx,dy);
-    im2_view.setOrigin( 1+dx , 1+dy );
-    im3_cview.setCenter( (ncol+1)/2+dx , (nrow+1)/2+dy );
+    galsim::Position<int> delta(dx,dy);
+
+    im1.shift(delta);
+    im2_view.shift(delta);
+    im3_cview.shift(delta);
     galsim::Bounds<int> shifted_bounds(1+dx, ncol+dx, 1+dy, nrow+dy);
 
     BOOST_CHECK(im1.getBounds() == shifted_bounds);
@@ -152,10 +191,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
         15, 25, 35, 45, 55, 65, 75 };
     galsim::Bounds<int> bounds(1,ncol,1,nrow);
 
-    galsim::ConstImageView<T> ref_im(ref_array, boost::shared_ptr<T>(), ncol, bounds, 1.);
+    galsim::ConstImageView<T> ref_im(ref_array, boost::shared_ptr<T>(), ncol, bounds);
 
-    galsim::Image<T> im1 = ref_im;
-    galsim::Image<T> im2 = T(2) * ref_im;
+    galsim::ImageAlloc<T> im1 = ref_im;
+    galsim::ImageAlloc<T> im2 = T(2) * ref_im;
     for (int y=1; y<=nrow; ++y) {
         for (int x=1; x<=ncol; ++x) {
             BOOST_CHECK(im2(x,y) == 2 * ref_im(x,y));
@@ -164,7 +203,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test image addition
     { 
-        galsim::Image<T> im3 = im1 + im2;
+        galsim::ImageAlloc<T> im3 = im1 + im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -194,7 +233,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test image subtraction
     { 
-        galsim::Image<T> im3 = im1 - im2;
+        galsim::ImageAlloc<T> im3 = im1 - im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -224,7 +263,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test binary multiplication
     { 
-        galsim::Image<T> im3 = im1 * im2;
+        galsim::ImageAlloc<T> im3 = im1 * im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -263,7 +302,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
                 im1(x,y) = 4 * ref_im(x,y) * ref_im(x,y);
             }
         }
-        galsim::Image<T> im3 = im1 / im2;
+        galsim::ImageAlloc<T> im3 = im1 / im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -296,7 +335,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test image scalar addition
     { 
-        galsim::Image<T> im3 = im1 + T(3);
+        galsim::ImageAlloc<T> im3 = im1 + T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -326,7 +365,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test image subtraction
     { 
-        galsim::Image<T> im3 = im1 - T(3);
+        galsim::ImageAlloc<T> im3 = im1 - T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -356,7 +395,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test binary multiplication
     { 
-        galsim::Image<T> im3 = im1 * T(3);
+        galsim::ImageAlloc<T> im3 = im1 * T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -391,7 +430,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
                 im1(x,y) = ref_im(x,y) * 27;
             }
         }
-        galsim::Image<T> im3 = im1 / T(3);
+        galsim::ImageAlloc<T> im3 = im1 / T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {

@@ -1,8 +1,26 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
 
 // A few generically useful utilities.
 
-#ifndef StdH
-#define StdH
+#ifndef GalSim_Std_H
+#define GalSim_Std_H
 
 #include <cmath>
 #define _USE_MATH_DEFINES  // To make sure M_PI is defined.
@@ -13,6 +31,7 @@
 #include <cstdlib>
 #include <string>
 #include <cassert>
+#include <stdexcept>
 
 // A nice memory checker if you need to track down some memory problem.
 #ifdef MEM_TEST
@@ -43,20 +62,36 @@ extern int verbose_level;
 #define dbg if(dbgout && verbose_level >= 1) (*dbgout)
 #define xdbg if(dbgout && verbose_level >= 2) (*dbgout)
 #define xxdbg if(dbgout && verbose_level >= 3) (*dbgout)
+#define xassert(x) assert(x)
 #else
 #define dbg if(false) (std::cerr)
 #define xdbg if(false) (std::cerr)
 #define xxdbg if(false) (std::cerr)
+#define xassert(x)
 #endif
 
 // A nice way to throw exceptions that take a string argument and have that string
 // include double or int information as well.
 // e.g. FormatAndThrow<std::runtime_error>() << "x = "<<x<<" is invalid.";
-template <class E>
+template <class E=std::runtime_error>
 class FormatAndThrow 
 {
 public:
-    FormatAndThrow() {}
+    // OK, this is a bit weird, but mostly innocuous.  Mac's default gcc compiler for OSX >= 10.6
+    // is apparently compiled with something called "fully dynamic strings".  If you combine
+    // this with libraries that don't use fully dynamic strings, then you can have problems with
+    // zero-length strings, such as the one in the default constructor for ostringstream.
+    // It manifests with crashes, saying "pointer being freed was not allocated".
+    // Here are some web sites that discuss the problem:
+    //     http://newartisans.com/2009/10/a-c-gotcha-on-snow-leopard/
+    //     http://gcc.gnu.org/bugzilla/show_bug.cgi?id=53838
+    //     https://trac.macports.org/ticket/35070
+    //     https://code.google.com/p/googletest/issues/detail?id=189
+    // Anyway, my workaround is to initialize the string with a space and a backspace, which 
+    // should print as nothing, so it should have no apparent result, and it avoids the 
+    // attempted deallocation of the global empty string.
+    
+    FormatAndThrow() : oss(" ") {}
 
     template <class T>
     FormatAndThrow& operator<<(const T& t) 

@@ -1,4 +1,21 @@
-// -*- c++ -*-
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
 
 //#define DEBUGLOGGING
 
@@ -18,8 +35,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
+std::ostream* dbgout = new std::ofstream("debug.out");
+int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -29,7 +46,7 @@ namespace galsim {
     class RTimesF: public std::unary_function<double,double> {
     public:
         RTimesF(const F& function): _function(function) {}
-        double operator()(double r) const {return 2.*M_PI*r*_function(r);}
+        double operator()(double r) const { return 2.*M_PI*r*_function(r); }
     private:
         const F& _function;
     };
@@ -122,7 +139,6 @@ namespace galsim {
         return true;
     }
 
-
     double Interval::interpolateFlux(double fraction) const 
     {
         // Find the x (or radius) value that encloses fraction
@@ -143,26 +159,26 @@ namespace galsim {
     void Interval::drawWithin(double unitRandom, double& x, double& flux,
                               UniformDeviate ud) const 
     {
-        //dbg<<"drawWithin interval\n";
-        //dbg<<"_flux = "<<_flux<<std::endl;
+        xdbg<<"drawWithin interval\n";
+        xdbg<<"_flux = "<<_flux<<std::endl;
         double fractionOfInterval = std::min(unitRandom, 1.);
-        //dbg<<"fractionOfInterval = "<<fractionOfInterval<<std::endl;
+        xdbg<<"fractionOfInterval = "<<fractionOfInterval<<std::endl;
         fractionOfInterval = std::max(0., fractionOfInterval);
-        //dbg<<"fractionOfInterval => "<<fractionOfInterval<<std::endl;
+        xdbg<<"fractionOfInterval => "<<fractionOfInterval<<std::endl;
         x = interpolateFlux(fractionOfInterval);
-        //dbg<<"x = "<<x<<std::endl;
+        xdbg<<"x = "<<x<<std::endl;
         flux = 1.;
         if (_useRejectionMethod) {
-            //dbg<<"use rejection\n";
-            while ( ud() > std::abs((*_fluxDensityPtr)(x)) / _maxAbsDensity) {
+            xdbg<<"use rejection\n";
+            while ( ud() > std::abs((*_fluxDensityPtr)(x)) * _invMaxAbsDensity) {
                 x = interpolateFlux(ud());
             }
-            //dbg<<"x => "<<x<<std::endl;
+            xdbg<<"x => "<<x<<std::endl;
             if (_flux < 0) flux = -1.;
         } else {
-            flux = (*_fluxDensityPtr)(x) / _meanAbsDensity;
+            flux = (*_fluxDensityPtr)(x) * _invMeanAbsDensity;
         }
-        //dbg<<"flux = "<<flux<<std::endl;
+        xdbg<<"flux = "<<flux<<std::endl;
     }
 
     void Interval::checkFlux() const 
@@ -173,14 +189,14 @@ namespace galsim {
             RTimesF<FluxDensity> integrand(*_fluxDensityPtr);
             _flux = integ::int1d(integrand, 
                                  _xLower, _xUpper,
-                                 odd::RELATIVE_ERROR,
-                                 odd::ABSOLUTE_ERROR);
+                                 _gsparams->integration_relerr,
+                                 _gsparams->integration_abserr);
         } else {
             // Integrate the input function
             _flux = integ::int1d(*_fluxDensityPtr, 
                                  _xLower, _xUpper,
-                                 odd::RELATIVE_ERROR,
-                                 odd::ABSOLUTE_ERROR);
+                                 _gsparams->integration_relerr,
+                                 _gsparams->integration_abserr);
         }
         _fluxIsReady = true;
     }
@@ -196,22 +212,20 @@ namespace galsim {
         // Get the flux in this interval 
         checkFlux();
         if (_isRadial) {
-            _meanAbsDensity = std::abs(_flux / 
-                                       ( M_PI*(_xUpper*_xUpper - _xLower*_xLower)));
+            _invMeanAbsDensity = std::abs( (M_PI*(_xUpper*_xUpper - _xLower*_xLower)) / _flux );
         } else {
-            _meanAbsDensity = std::abs(_flux / (_xUpper - _xLower));
+            _invMeanAbsDensity = std::abs( (_xUpper - _xLower) / _flux );
         }
         double densityLower = (*_fluxDensityPtr)(_xLower);
         double densityUpper = (*_fluxDensityPtr)(_xUpper);
-        _maxAbsDensity = std::max(std::abs(densityLower),
-                                  std::abs(densityUpper));
+        _invMaxAbsDensity = 1. / std::max(std::abs(densityLower), std::abs(densityUpper));
 
         std::list<Interval> result;
         double densityVariation = 0.;
         if (std::abs(densityLower) > 0. && std::abs(densityUpper) > 0.)
             densityVariation = densityLower / densityUpper;
         if (densityVariation > 1.) densityVariation = 1. / densityVariation;
-        if (densityVariation > odd::ALLOWED_FLUX_VARIATION) {
+        if (densityVariation > _gsparams->allowed_flux_variation) {
             // Don't split if flux range is small
             _useRejectionMethod = false;
             result.push_back(*this);
@@ -223,8 +237,8 @@ namespace galsim {
         } else {
             // Split the interval.  Call (recursively) split() for left & right
             double midpoint = 0.5*(_xLower + _xUpper);
-            Interval left(*_fluxDensityPtr,_xLower, midpoint, _isRadial);
-            Interval right(*_fluxDensityPtr, midpoint, _xUpper, _isRadial);
+            Interval left(*_fluxDensityPtr, _xLower, midpoint, _isRadial, _gsparams);
+            Interval right(*_fluxDensityPtr, midpoint, _xUpper, _isRadial, _gsparams);
             std::list<Interval> add = left.split(smallFlux);
             result.splice(result.end(), add);
             add = right.split(smallFlux);
@@ -235,13 +249,16 @@ namespace galsim {
 
     OneDimensionalDeviate::OneDimensionalDeviate(const FluxDensity& fluxDensity, 
                                                  std::vector<double>& range,
-                                                 bool isRadial):
+                                                 bool isRadial,
+                                                 const GSParamsPtr& gsparams) :
         _fluxDensity(fluxDensity),
         _positiveFlux(0.),
         _negativeFlux(0.),
-        _isRadial(isRadial)
+        _isRadial(isRadial),
+        _gsparams(gsparams)
     {
         dbg<<"Start ODD constructor\n";
+        dbg<<"Input range has "<<range.size()<<" entries\n";
         dbg<<"radial? = "<<isRadial<<std::endl;
 
         // Typedef for indices of standard containers, which don't like int values
@@ -251,10 +268,7 @@ namespace galsim {
         for (Index iRange = 0; iRange < range.size()-1; iRange++) {
             xdbg<<"range "<<iRange<<" = "<<range[iRange]<<" ... "<<range[iRange+1]<<std::endl;
             // Integrate total flux (and sign) in each range
-            Interval segment(fluxDensity,   
-                             range[iRange],
-                             range[iRange+1],
-                             _isRadial);
+            Interval segment(fluxDensity, range[iRange], range[iRange+1], _isRadial, _gsparams);
             double rangeFlux = segment.getFlux();
             if (rangeFlux >= 0.) _positiveFlux += rangeFlux;
             else _negativeFlux += std::abs(rangeFlux);
@@ -272,28 +286,32 @@ namespace galsim {
                              range[iRange],
                              range[iRange+1],
                              extremum,
-                             odd::RANGE_DIVISION_FOR_EXTREMA)) {
+                             _gsparams->range_division_for_extrema)) {
                 xdbg<<"range "<<iRange<<" = "<<range[iRange]<<" ... "<<range[iRange+1]<<
                     "  has an extremum at "<<extremum<<std::endl;
                 // Do 2 ranges
                 {
-                    Interval splitit(_fluxDensity, range[iRange], extremum, _isRadial);
+                    Interval splitit(_fluxDensity, range[iRange], extremum, _isRadial, _gsparams);
                     std::list<Interval> leftList = splitit.split(
-                        odd::SMALL_FRACTION_OF_FLUX * totalAbsoluteFlux);
-                    _pt.splice(_pt.end(), leftList);
+                        _gsparams->small_fraction_of_flux * totalAbsoluteFlux);
+                    xdbg<<"Add "<<leftList.size()<<" intervals on left of extremem\n";
+                    _pt.insert(_pt.end(), leftList.begin(), leftList.end());
                 }
                 {
-                    Interval splitit(_fluxDensity, extremum, range[iRange+1], _isRadial);
+                    Interval splitit(_fluxDensity, extremum, range[iRange+1], _isRadial, _gsparams);
                     std::list<Interval> rightList = splitit.split(
-                        odd::SMALL_FRACTION_OF_FLUX * totalAbsoluteFlux);
-                    _pt.splice(_pt.end(), rightList);
+                        _gsparams->small_fraction_of_flux * totalAbsoluteFlux);
+                    xdbg<<"Add "<<rightList.size()<<" intervals on right of extremem\n";
+                    _pt.insert(_pt.end(), rightList.begin(), rightList.end());
                 }
             } else {
                 // Just single Interval in this range, no extremum:
-                Interval splitit(_fluxDensity, range[iRange], range[iRange+1], _isRadial);
+                Interval splitit(
+                    _fluxDensity, range[iRange], range[iRange+1], _isRadial, _gsparams);
                 std::list<Interval> leftList = splitit.split(
-                    odd::SMALL_FRACTION_OF_FLUX * totalAbsoluteFlux);
-                _pt.splice(_pt.end(), leftList);
+                    _gsparams->small_fraction_of_flux * totalAbsoluteFlux);
+                xdbg<<"Add "<<leftList.size()<<" intervals\n";
+                _pt.insert(_pt.end(), leftList.begin(), leftList.end());
             }
         }
         dbg<<"Total of "<<_pt.size()<<" intervals\n";
@@ -315,7 +333,7 @@ namespace galsim {
         double fluxPerPhoton = totalAbsoluteFlux / N;
         dbg<<"fluxPerPhoton = "<<fluxPerPhoton<<std::endl;
 
-        // For each photon, first decide which Interval it's in, the drawWithin the interval.
+        // For each photon, first decide which Interval it's in, then drawWithin the interval.
         for (int i=0; i<N; i++) {
             if (_isRadial) {
 #ifdef USE_COS_SIN
@@ -340,7 +358,7 @@ namespace galsim {
                 } while (rsq>=1. || rsq==0.);
                 // Now rsq is unit deviate from 0 to 1
                 double unitRandom = rsq;
-                Interval* chosen = _pt.find(unitRandom);
+                const Interval* chosen = _pt.find(unitRandom);
                 // Now draw a radius from within selected interval
                 double radius, flux;
                 chosen->drawWithin(unitRandom, radius, flux, ud);
@@ -351,7 +369,7 @@ namespace galsim {
             } else {
                 // Simple 1d interpolation
                 double unitRandom = ud();
-                Interval* chosen = _pt.find(unitRandom);
+                const Interval* chosen = _pt.find(unitRandom);
                 // Now draw an x from within selected interval
                 double x, flux;
                 chosen->drawWithin(unitRandom, x, flux, ud);

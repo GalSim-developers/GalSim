@@ -1,0 +1,48 @@
+This directory contains a number of scripts useful for testing GalSim functionality, but not
+necessary and/or feasible to run as unit tests; it also contains documentation on some of the GalSim
+developers' scientific choices.
+
+---Interpolation---
+
+test_interpolants.py: a script to test the deviations from expected behavior of the x- and k-space
+interpolants for the RealGalaxy class.
+
+test_interpolants_parametric.py: a script to perform the same tests as test_interpolants.py, but
+using as images InterpolatedImages constructed from parametric Sersics instead.
+
+plot_test_interpolants.py: makes readable graphs from the output of the previous two scripts.
+
+lensing_engine_interpolants.py: a script to check the effect of using interpolants for gridded
+shears.
+
+---Correlation functions---
+
+corrfuncs/test_cf_interpolant.py: makes upsampled plots of correlation functions to see how their
+interpolants behaves and check whether this corresponds to what is physically required.  See the
+full discussion at https://github.com/GalSim-developers/GalSim/pull/452#discussion-diff-5701561
+
+corrfuncs/test_cf_periodicity.py: tests to see how the assumption of purely positive power spectra
+holds up under the periodicity correction, and other effects.  See the full discussion at
+https://github.com/GalSim-developers/GalSim/issues/430.
+
+---Other GalSim functionality---
+
+lensing_engine.pdf: a document describing the mathematics behind the GalSim "lensing engine"
+(galsim/lensing_ps.py) that takes a shear power spectrum and generates a random realization of a
+shear field, and showing some tests of its functionality.
+
+cf.eps, cf10.eps: figures that are included in lensing_engine.pdf.
+
+shera_vs_sbprofile.tex: a document from early in the GalSim development comparing its results with
+realistic galaxies against those from the SHERA pipeline.  (Somewhat outdated, mainly left for
+historical purposes.)
+
+test_mom_timing.py: a script that can be used to test the speed of the adaptive moments and PSF
+correction code that is included with GalSim, for a variety of different types of profiles.  Can be
+useful for tests of updates to that module, to see how the changes affect the speed of calculations.
+
+---Possible code modules for the future---
+
+atmos_factfinding.pdf: a document by Barney Rowe and Joerg Dietrich outlining an early exploration
+of possibilities for writing our own atmospheric PSF model based on Gaussian random field
+realizations of phase screens, see https://github.com/GalSim-developers/GalSim/issues/169.

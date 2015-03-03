@@ -1,3 +1,21 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
 
 //#define DEBUGLOGGING
 
@@ -25,14 +43,15 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = &std::cout;
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
 
-    SBExponential::SBExponential(double r0, double flux) :
-        SBProfile(new SBExponentialImpl(r0, flux)) {}
+    SBExponential::SBExponential(double r0, double flux,
+                                 const GSParamsPtr& gsparams) :
+        SBProfile(new SBExponentialImpl(r0, flux, gsparams)) {}
 
     SBExponential::SBExponential(const SBExponential& rhs) : SBProfile(rhs) {}
 
@@ -41,29 +60,34 @@ namespace galsim {
     double SBExponential::getScaleRadius() const 
     { 
         assert(dynamic_cast<const SBExponentialImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); 
+        return static_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); 
     }
 
-    SBExponential::SBExponentialImpl::SBExponentialImpl(double r0, double flux) :
-        _flux(flux), _r0(r0), _r0_sq(r0*r0)
+    LRUCache<GSParamsPtr, ExponentialInfo> SBExponential::SBExponentialImpl::cache(
+        sbp::max_exponential_cache);
+
+    SBExponential::SBExponentialImpl::SBExponentialImpl(
+        double r0, double flux, const GSParamsPtr& gsparams) :
+        SBProfileImpl(gsparams),
+        _flux(flux), _r0(r0), _r0_sq(_r0*_r0), _inv_r0(1./r0), _inv_r0_sq(_inv_r0*_inv_r0),
+        _info(cache.get(this->gsparams.duplicate()))
     {
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
         // (1+k^2 r0^2)^-1.5 = kvalue_accuracy
-        _ksq_max = (std::pow(sbp::kvalue_accuracy,-1./1.5)-1.) / _r0_sq;
+        _ksq_max = (std::pow(this->gsparams->kvalue_accuracy,-1./1.5)-1.);
 
         // For small k, we can use up to quartic in the taylor expansion to avoid the sqrt.
         // This is acceptable when the next term is less than kvalue_accuracy.
         // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
-        _ksq_min = std::pow(sbp::kvalue_accuracy * 16./35., 1./3.) / _r0_sq;
+        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.);
 
         _flux_over_2pi = _flux / (2. * M_PI);
-        _norm = _flux_over_2pi / _r0_sq;
+        _norm = _flux_over_2pi * _inv_r0_sq;
 
         dbg<<"Exponential:\n";
         dbg<<"_flux = "<<_flux<<std::endl;
         dbg<<"_r0 = "<<_r0<<std::endl;
-        dbg<<"_r0_sq = "<<_r0_sq<<std::endl;
         dbg<<"_ksq_max = "<<_ksq_max<<std::endl;
         dbg<<"_ksq_min = "<<_ksq_min<<std::endl;
         dbg<<"_norm = "<<_norm<<std::endl;
@@ -72,45 +96,185 @@ namespace galsim {
     }
 
     double SBExponential::SBExponentialImpl::maxK() const 
-    { return SBExponential::_info.maxK() / _r0; }
+    { return _info->maxK() * _inv_r0; }
     double SBExponential::SBExponentialImpl::stepK() const 
-    { return SBExponential::_info.stepK() / _r0; }
+    { return _info->stepK() * _inv_r0; }
 
     double SBExponential::SBExponentialImpl::xValue(const Position<double>& p) const
     {
-        double r = sqrt(p.x*p.x + p.y*p.y);
-        return _norm * std::exp(-r/_r0);
+        double r = sqrt(p.x * p.x + p.y * p.y);
+        return _norm * std::exp(-r * _inv_r0);
     }
 
     std::complex<double> SBExponential::SBExponentialImpl::kValue(const Position<double>& k) const 
     {
-        double ksq = k.x*k.x+k.y*k.y;
+        double ksq = (k.x*k.x + k.y*k.y)*_r0_sq;
 
-        if (ksq > _ksq_max) {
-            return 0.;
-        } else if (ksq < _ksq_min) {
-            ksq *= _r0_sq;
+        if (ksq < _ksq_min) {
             return _flux*(1. - 1.5*ksq*(1. - 1.25*ksq));
         } else {
-            double temp = 1. + ksq*_r0_sq;
-            return _flux/(temp*sqrt(temp));
+            double temp = 1. + ksq;
+            return _flux / (temp * sqrt(temp));
             // NB: flux*std::pow(temp,-1.5) is slower.
         }
     }
 
-    // Constructor to initialize Exponential functions for 1D deviate photon shooting
-    SBExponential::ExponentialInfo::ExponentialInfo()
+    void SBExponential::SBExponentialImpl::fillXValue(tmv::MatrixView<double> val,
+                                                      double x0, double dx, int izero,
+                                                      double y0, double dy, int jzero) const
     {
+        dbg<<"SBExponential fillXValue\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillXValueQuadrant(val,x0,dx,izero,y0,dy,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+            x0 *= _inv_r0;
+            dx *= _inv_r0;
+            y0 *= _inv_r0;
+            dy *= _inv_r0;
+
+            for (int j=0;j<n;++j,y0+=dy) {
+                double x = x0;
+                double ysq = y0*y0;
+                It valit = val.col(j).begin();
+                for (int i=0;i<m;++i,x+=dx) 
+                    *valit++ = _norm * std::exp(-sqrt(x*x + ysq));
+            }
+        }
+    }
+
+    void SBExponential::SBExponentialImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                      double kx0, double dkx, int izero,
+                                                      double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBExponential fillKValue\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+            kx0 *= _r0;
+            dkx *= _r0;
+            ky0 *= _r0;
+            dky *= _r0;
+
+            for (int j=0;j<n;++j,ky0+=dky) {
+                double kx = kx0;
+                double kysq = ky0*ky0;
+                It valit = val.col(j).begin();
+                for (int i=0;i<m;++i,kx+=dkx) {
+                    double ksq = kx*kx + kysq;
+                    if (ksq > _ksq_max) {
+                        *valit++ = 0.;
+                    } else if (ksq < _ksq_min) {
+                        *valit++ = _flux * (1. - 1.5*ksq*(1. - 1.25*ksq));
+                    } else {
+                        double temp = 1. + ksq;
+                        *valit++ =  _flux/(temp*sqrt(temp));
+                    }
+                }
+            }
+        }
+    }
+
+    void SBExponential::SBExponentialImpl::fillXValue(tmv::MatrixView<double> val,
+                                                      double x0, double dx, double dxy,
+                                                      double y0, double dy, double dyx) const
+    {
+        dbg<<"SBExponential fillXValue\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+        x0 *= _inv_r0;
+        dx *= _inv_r0;
+        dxy *= _inv_r0;
+        y0 *= _inv_r0;
+        dy *= _inv_r0;
+        dyx *= _inv_r0;
+
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) *valit++ = _norm * std::exp(-sqrt(x*x + y*y));
+        }
+    }
+
+    void SBExponential::SBExponentialImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                      double kx0, double dkx, double dkxy,
+                                                      double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBExponential fillKValue\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+        kx0 *= _r0;
+        dkx *= _r0;
+        dkxy *= _r0;
+        ky0 *= _r0;
+        dky *= _r0;
+        dkyx *= _r0;
+
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) {
+                double ksq = kx*kx + ky*ky;
+                if (ksq > _ksq_max) {
+                    *valit++ = 0.;
+                } else if (ksq < _ksq_min) {
+                    *valit++ = _flux * (1. - 1.5*ksq*(1. - 1.25*ksq));
+                } else {
+                    double temp = 1. + ksq;
+                    *valit++ =  _flux/(temp*sqrt(temp));
+                }
+            }
+        }
+    }
+
+    // Constructor to initialize Exponential functions for 1D deviate photon shooting
+    ExponentialInfo::ExponentialInfo(const GSParamsPtr& gsparams)
+    {
+        dbg<<"Start ExponentialInfo with gsparams = "<<gsparams.get()<<std::endl;
 #ifndef USE_NEWTON_RAPHSON
         // Next, set up the classes for photon shooting
         _radial.reset(new ExponentialRadialFunction());
+        dbg<<"Made radial"<<std::endl;
         std::vector<double> range(2,0.);
-        range[1] = -std::log(sbp::shoot_flux_accuracy);
-        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
+        range[1] = -std::log(gsparams->shoot_accuracy);
+        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, gsparams));
+        dbg<<"Made sampler"<<std::endl;
 #endif
 
         // Calculate maxk:
-        _maxk = std::pow(sbp::maxk_threshold, -1./3.);
+        _maxk = std::pow(gsparams->maxk_threshold, -1./3.);
+        dbg<<"maxk = "<<_maxk<<std::endl;
 
         // Calculate stepk:
         // int( exp(-r) r, r=0..R) = (1 - exp(-R) - Rexp(-R))
@@ -118,25 +282,27 @@ namespace galsim {
         // A fast solution to (1+R)exp(-R) = x:
         // log(1+R) - R = log(x)
         // R = log(1+R) - log(x)
-        double logx = std::log(sbp::alias_threshold);
+        double logx = std::log(gsparams->folding_threshold);
         double R = -logx;
         for (int i=0; i<3; i++) R = std::log(1.+R) - logx;
-        // Make sure it is at least 6 scale radii.
-        R = std::max(6., R);
+        // Make sure it is at least 5 hlr
+        // half-light radius = 1.6783469900166605 * r0
+        const double hlr = 1.6783469900166605;
+        R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
         _stepk = M_PI / R;
+        dbg<<"stepk = "<<_stepk<<std::endl;
     }
 
     // Set maxK to the value where the FT is down to maxk_threshold
-    double SBExponential::ExponentialInfo::maxK() const 
+    double ExponentialInfo::maxK() const 
     { return _maxk; }
 
-    // The amount of flux missed in a circle of radius pi/stepk should miss at 
-    // most alias_threshold of the flux.
-    double SBExponential::ExponentialInfo::stepK() const
+    // The amount of flux missed in a circle of radius pi/stepk should be at 
+    // most folding_threshold of the flux.
+    double ExponentialInfo::stepK() const
     { return _stepk; }
 
-    boost::shared_ptr<PhotonArray> SBExponential::ExponentialInfo::shoot(
-        int N, UniformDeviate ud) const
+    boost::shared_ptr<PhotonArray> ExponentialInfo::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"ExponentialInfo shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.0\n";
@@ -145,8 +311,6 @@ namespace galsim {
         dbg<<"ExponentialInfo Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
-
-    SBExponential::ExponentialInfo SBExponential::_info;
 
     boost::shared_ptr<PhotonArray> SBExponential::SBExponentialImpl::shoot(
         int N, UniformDeviate u) const
@@ -160,7 +324,7 @@ namespace galsim {
         // the most efficient thing since there are logs in the iteration.
 
         // Accuracy to which to solve for (log of) cumulative flux distribution:
-        const double Y_TOLERANCE=sbp::shoot_flux_accuracy;
+        const double Y_TOLERANCE=this->gsparams->shoot_accuracy;
 
         double fluxPerPhoton = _flux / N;
         boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
@@ -199,14 +363,14 @@ namespace galsim {
                 xu = 2. * u() - 1.;
                 yu = 2. * u() - 1.;
                 rsq = xu*xu+yu*yu;
-             } while (rsq >= 1. || rsq == 0.);
+            } while (rsq >= 1. || rsq == 0.);
             double rFactor = r * _r0 / std::sqrt(rsq);
             result->setPhoton(i, rFactor * xu, rFactor * yu, fluxPerPhoton);
 #endif
         }
 #else
         // Get photons from the ExponentialInfo structure, rescale flux and size for this instance
-        boost::shared_ptr<PhotonArray> result = SBExponential::_info.shoot(N,u);
+        boost::shared_ptr<PhotonArray> result = _info->shoot(N,u);
         result->scaleFlux(_flux_over_2pi);
         result->scaleXY(_r0);
 #endif

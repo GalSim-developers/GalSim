@@ -1,3 +1,15 @@
+********************Note about this README********************
+
+This README was distributed with the meas_shape package that is the
+original source of the PSFCorr.cpp code.  However, the code has been
+substantially modified once it was incorporated into GalSim, such that
+details in this README about usage are very outdated.  The rest of the
+README is preserved below for the sake of historical accuracy, and can
+still be used to e.g. find references to papers that describe the
+algorithms in more detail but not to learn how to use the code.
+
+********************Original file contents***********************
+
 This file describes the contents of the meas_shape package.
 
 ******************Basic information and history*****************
@@ -25,8 +37,8 @@ http://adsabs.harvard.edu/abs/2005MNRAS.361.1287M
 
 ******************License***************************************
 
-This package is distributed under the Gnu Public License (GPL), see
-COPYING for a copy.
+This package is distributed under a BSD license that is very similar
+to the one used for GalSim.  See the file src/hsm/LICENSE.
 
 ******************Warranty**************************************
 

@@ -1,8 +1,26 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
 
 // Include file with common "magic numbers" for Astronomy
 
-#ifndef ASTROCONST_H
-#define ASTROCONST_H
+#ifndef GalSim_AstroConst_H
+#define GalSim_AstroConst_H
 
 #ifndef PI
 #define PI 3.14159265358979323
@@ -48,5 +66,5 @@ const double EarthMass        = 3.00349e-6; //Earth mass in Solar units
 const double MJD0             = 2400000.5; //Offset for modified Julian dates
 
 
-#endif  // ASTROCONST_H
+#endif
 

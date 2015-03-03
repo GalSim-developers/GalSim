@@ -1,736 +1,295 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+#ifndef __INTEL_COMPILER
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+#endif
+
+#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 #include "Random.h"
-#include "CCDNoise.h"
-#include "Image.h"
-#include <sstream>
-
-#define PY_ARRAY_UNIQUE_SYMBOL SBPROFILE_ARRAY_API
-#define NO_IMPORT_ARRAY
-#include "numpy/arrayobject.h"
 
 namespace bp = boost::python;
 
+// Note that class docstrings for all of these are now added in galsim/random.py     
+
 namespace galsim {
-namespace {
 
-struct PyBaseDeviate {
+    // Need this special CallBack version that inherits from bp::wrapper whenever
+    // you are wrapping something that has virtual functions you want to call from
+    // python and have them resolve correctly.
+    class BaseDeviateCallBack : public BaseDeviate,
+                                public bp::wrapper<BaseDeviate>
+    {
+    public:
+        BaseDeviateCallBack(long lseed=0) : BaseDeviate(lseed) {}
+        BaseDeviateCallBack(const BaseDeviate& rhs) : BaseDeviate(rhs) {}
+        BaseDeviateCallBack(std::string& str) : BaseDeviate(str) {}
+        ~BaseDeviateCallBack() {}
 
-    static std::string writeState(BaseDeviate const & self) {
-        std::ostringstream os;
-        self.writeState(os);
-        return os.str();
-    }
+    protected:
+        // This is the special magic needed so the virtual function calls back to the 
+        // function defined in the python layer.
+        double _val()
+        {
+            if (bp::override py_func = this->get_override("_val")) 
+                return py_func();
+            else 
+                return BaseDeviate::_val();
+        }
+    };
 
-    static void readState(BaseDeviate & self, std::string const & state) {
-        std::istringstream is(state);
-        self.readState(is);
-    }
+    struct PyBaseDeviate {
 
-    static void wrap() {
-        static char const * doc = 
-            " Base class for all the various random deviates.\n"
-            " This holds the essential random number generator that all the other classes use.\n"
-            "\n"
-            " All deviates have three constructors that define different ways of setting up\n"
-            " the random number generator.\n"
-            "\n"
-            " 1) Only the arguments particular to the derived class (e.g. mean and sigma for \n"
-            "    GaussianDeviate).  In this case, a new random number generator is created and\n"
-            "    it is seeded using the computer's microsecond counter.\n"
-            "\n"
-            " 2) Using a particular seed as the first argument to the constructor.  \n"
-            "    This will also create a new random number generator, but seed it with the \n"
-            "    provided value.\n"
-            "\n"
-            " 3) Passing another BaseDeviate as the first arguemnt to the constructor.\n"
-            "    This will make the new Deviate share the same underlying random number generator\n"
-            "    with the other Deviate.  So you can make one Deviate (of any type), and seed\n"
-            "    it with a particular deterministic value.  Then if you pass that Deviate \n"
-            "    to any other one you make, they will all be using the same rng and have a \n"
-            "    particular deterministic series of values.  (It doesn't have to be the first\n"
-            "    one -- any one you've made later can also be used to seed a new one.)\n"
-            "\n"
-            " There is not much you can do with something that is only known to be a BaseDeviate\n"
-            " rather than one of the derived classes other than construct it and change the \n"
-            " seed, and use it as an argument to pass to other Deviate constructors.\n"
-            ;
+        static void wrap() {
+            bp::class_<BaseDeviateCallBack>
+                pyBaseDeviate("BaseDeviate", "", bp::no_init);
+            pyBaseDeviate
+                .def(bp::init<long>(bp::arg("seed")=0))
+                .def(bp::init<const BaseDeviate&>(bp::arg("seed")))
+                .def(bp::init<std::string>(bp::arg("str")))
+                .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed,
+                     (bp::arg("seed")=0), "")
+                .def("reset", (void (BaseDeviate::*) (long) )&BaseDeviate::reset,
+                     (bp::arg("seed")=0), "")
+                .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset, 
+                     (bp::arg("seed")), "")
+                .def("clearCache", &BaseDeviate::clearCache, "")
+                .def("serialize", &BaseDeviate::serialize, "")
+                .def("duplicate", &BaseDeviate::duplicate, "")
+                .enable_pickling()
+                ;
 
-        bp::class_<BaseDeviate> pyBaseDeviate("BaseDeviate", doc, bp::init<>());
-        pyBaseDeviate
-            .def(bp::init<long>(bp::arg("lseed")))
-            .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
-            .def("seed", (void (BaseDeviate::*) () )&BaseDeviate::seed, 
-                 "Re-seed the PRNG using current time.")
-            .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed, 
-                 (bp::arg("lseed")), "Re-seed the PRNG using specified seed.")
-            .def("reset", (void (BaseDeviate::*) () )&BaseDeviate::reset, 
-                 "Re-seed the PRNG using current time, and sever the connection to any other "
-                 "Deviate.")
-            .def("reset", (void (BaseDeviate::*) (long) )&BaseDeviate::reset, 
-                 (bp::arg("lseed")),
-                 "Re-seed the PRNG using specified seed, and sever the connection to any other "
-                 "Deviate.")
-            .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset, 
-                 (bp::arg("dev")),
-                 "Re-connect this Deviate with the rng in another one")
-            .def("readState", readState)
-            .def("writeState", writeState)
-            ;
-    }
+            // This lets python recognize functions that return a shared_ptr<BaseDeviate>
+            // as a python BaseDeviate object.  This is needed for the BaseNoise::getRNG()
+            // function _if_ the BaseNoise was default constructed.  As far as I understand it,
+            // if you construct a BaseDeviate object in python and then use that to construct
+            // a BaseNoise object:
+            //
+            //     >>> rng = galsim.BaseDeviate()
+            //     >>> gn = galsim.GauusianNoise(rng)
+            //
+            // then the `gn.getRNG()` call doesn't need anything special because the actual
+            // BaseDeviate being wrapped in the shared_ptr is really a BaseDeviateCallBack.
+            // So boost python knows how to handle it.  
+            //
+            // But if the BaseDeviate was constructed in the C++ layer, which happens when you
+            // default construct the BaseNoise object:
+            //
+            //     >>> gn = galsim.GaussianNoise()
+            //
+            // then the `gn.getRNG()` call returns a real BaseDeviate object in the shared_ptr.
+            // So python doesn't really know what that is without this next line.  The
+            // register_ptr_to_python call tells boost that a shared_ptr<BaseDeviate> in the 
+            // C++ layer should be treated like a BaseDeviate in the python layer.
+            bp::register_ptr_to_python< boost::shared_ptr<BaseDeviate> >();
+        }
 
-};
-struct PyUniformDeviate {
+    };
 
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (UniformDeviate::*) (ImageView<U>) )&UniformDeviate::applyTo,
-                 "\n"
-                 "Add Uniform deviates to every element in a supplied Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> UniformDeviate.applyTo(image) \n"
-                 "\n"
-                 "On output each element of the input Image will have a pseudo-random\n"
-                 "UniformDeviate return value added to it.\n",
-                 (bp::arg("image")))
-            ;
-    }
+    struct PyUniformDeviate {
 
-    static void wrap() {
-        static char const * doc = 
-            "\n"
-            "Pseudo-random number generator with uniform distribution in interval [0.,1.).\n"
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            ">>> u = UniformDeviate() : Initializes u to be a UniformDeviate instance, and seeds\n"
-            "                           the PRNG using current time.\n"
-            "\n"
-            ">>> u = UniformDeviate(lseed) : Initializes u to be a UniformDeviate instance, and\n"
-            "                                seeds the PRNG using specified long integer lseed.\n" 
-            "\n"
-            ">>> u = UniformDeviate(dev) : Initializes u to be a UniformDeviate instance,\n"
-            "                              and use the same RNG as dev\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to u() then generate\n"
-            "pseudo-random numbers distributed uniformly in the interval [0., 1.).\n"
-            "\n"
-            ;
+        static void wrap() {
+            bp::class_<UniformDeviate, bp::bases<BaseDeviate> >
+                pyUniformDeviate("UniformDeviate", "", bp::no_init);
+            pyUniformDeviate
+                .def(bp::init<long>(bp::arg("lseed")=0))
+                .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
+                .def(bp::init<std::string>(bp::arg("str")))
+                .def("duplicate", &UniformDeviate::duplicate, "")
+                .def("__call__", &UniformDeviate::operator(), "")
+                .enable_pickling()
+                ;
+        }
 
-        bp::class_<UniformDeviate, bp::bases<BaseDeviate> > pyUniformDeviate(
-            "UniformDeviate", doc, bp::init<>()
-        );
-        pyUniformDeviate
-            .def(bp::init<long>(bp::arg("lseed")))
-            .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
-            .def("__call__", &UniformDeviate::operator(),
-                 "Draw a new random number from the distribution.")
-            ;
-        wrapTemplates<int>(pyUniformDeviate);
-        wrapTemplates<short>(pyUniformDeviate);
-        wrapTemplates<float>(pyUniformDeviate);
-        wrapTemplates<double>(pyUniformDeviate);
-    }
+    };
 
-};
+    struct PyGaussianDeviate {
 
-struct PyGaussianDeviate {
-
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (GaussianDeviate::*) (ImageView<U>) )&GaussianDeviate::applyTo,
-                 "\n"
-                 "Add Gaussian deviates to every element in a supplied Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> GaussianDeviate.applyTo(image) \n"
-                 "\n"
-                 "On output each element of the input Image will have a pseudo-random\n"
-                 "GaussianDeviate return value added to it, with current values of mean and\n"
-                 "sigma.\n",
-                 (bp::arg("image")))
-            ;
-    }
-
-    static void wrap() {
-        static char const * doc = 
-            "\n"
-            "Pseudo-random number generator with Gaussian distribution.\n"
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            "\n"
-            ">>> g = GaussianDeviate(mean=0., sigma=1.) \n"
-            "\n"
-            "Initializes g to be a GaussianDeviate instance using the current time for the seed.\n"
-            "\n"
-            ">>> g = GaussianDeviate(lseed, mean=0., sigma=1.) \n"
-            "\n"
-            "Initializes g using the specified seed.\n"
-            "\n"
-            ">>> g = GaussianDeviate(dev, mean=0., sigma=1.) \n"
-            "\n"
-            "Initializes g to share the same underlying random number generator as dev.\n"
-            "\n"
-            "Parameters:\n"
-            "\n"
-            "mean     optional mean for Gaussian distribution (default = 0.).\n"
-            "sigma    optional sigma for Gaussian distribution (default = 1.).\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to g() then generate\n"
-            "pseudo-random numbers Gaussian-distributed with the provided mean, sigma\n"
-            ;
-        bp::class_<GaussianDeviate, bp::bases<BaseDeviate> > pyGaussianDeviate(
-            "GaussianDeviate", doc, bp::init<double, double >(
-                (bp::arg("mean")=0., bp::arg("sigma")=1.)
-            )
-        );
-        pyGaussianDeviate
-            .def(bp::init<long, double, double>(
-                (bp::arg("lseed"), bp::arg("mean")=0., bp::arg("sigma")=1.)
+        static void wrap() {
+            bp::class_<GaussianDeviate, bp::bases<BaseDeviate> >
+                pyGaussianDeviate("GaussianDeviate", "", bp::no_init);
+            pyGaussianDeviate
+                .def(bp::init<long, double, double>(
+                        (bp::arg("lseed")=0, bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
-            .def(bp::init<const BaseDeviate&, double, double>(
-                (bp::arg("dev"), bp::arg("mean")=0., bp::arg("sigma")=1.)
+                .def(bp::init<const BaseDeviate&, double, double>(
+                        (bp::arg("dev"), bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
-            .def("__call__", &GaussianDeviate::operator(),
-                 "Draw a new random number from the distribution.\n"
-                 "\n"
-                 "Returns a Gaussian deviate with current mean and sigma\n")
-            .def("getMean", &GaussianDeviate::getMean, "Get current distribution mean.")
-            .def("setMean", &GaussianDeviate::setMean, "Set current distribution mean.")
-            .def("getSigma", &GaussianDeviate::getSigma, "Get current distribution sigma.")
-            .def("setSigma", &GaussianDeviate::setSigma, "Set current distribution sigma.")
-            ;
-        wrapTemplates<int>(pyGaussianDeviate);
-        wrapTemplates<short>(pyGaussianDeviate);
-        wrapTemplates<float>(pyGaussianDeviate);
-        wrapTemplates<double>(pyGaussianDeviate);
-    }
-
-};
-
-struct PyBinomialDeviate {
-
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (BinomialDeviate::*) (ImageView<U>) )&BinomialDeviate::applyTo,
-                 "\n"
-                 "Add Binomial deviates to every element in a supplied Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> BinomialDeviate.applyTo(image) \n"
-                 "\n"
-                 "On output each element of the input Image will have a pseudo-random\n"
-                 "BinomialDeviate return value added to it, with current values of N and p.\n",
-                 (bp::arg("image")))
-            ;
-    }
-
-    static void wrap() {
-        static char const * doc =
-            "\n"
-            "Pseudo-random Binomial deviate for N trials each of probability p.\n"
-            "\n"
-            "N is number of 'coin flips,' p is probability of 'heads,' and each call returns \n"
-            "integer 0 <= value <= N giving number of heads.\n"  
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            "\n"
-            ">>> b = BinomialDeviate(N=1., p=0.5) \n"
-            "\n"
-            "Initializes b to be a BinomialDeviate instance using the current time for the seed.\n"
-            "\n"
-            ">>> b = BinomialDeviate(lseed, N=1., p=0.5) \n"
-            "\n"
-            "Initializes b using the specified seed.\n"
-            "\n"
-            ">>> b = BinomialDeviate(dev, N=1., p=0.5) \n"
-            "\n"
-            "Initializes b to share the same underlying random number generator as dev.\n"
-            "\n"
-            "Parameters:\n"
-            "\n"
-            "N        optional number of 'coin flips' per trial (default `N = 1`).\n"
-            "p        optional probability of success per coin flip (default `p = 0.5`).\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to b() then generate\n"
-            "pseudo-random numbers binomial-distributed with the provided N, p, which\n"
-            "must both be > 0.\n"
-            ;
-        bp::class_<BinomialDeviate, bp::bases<BaseDeviate> > pyBinomialDeviate(
-            "BinomialDeviate", doc, bp::init<double, double >(
-                (bp::arg("N")=1., bp::arg("p")=0.5)
-            )
-        );
-        pyBinomialDeviate
-            .def(bp::init<long, double, double>(
-                (bp::arg("lseed"), bp::arg("N")=1., bp::arg("p")=0.5)
+                .def(bp::init<std::string, double, double>(
+                        (bp::arg("str"), bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
-            .def(bp::init<const BaseDeviate&, double, double>(
-                (bp::arg("dev"), bp::arg("N")=1., bp::arg("p")=0.5)
+                .def("duplicate", &GaussianDeviate::duplicate, "")
+                .def("__call__", &GaussianDeviate::operator(), "")
+                .def("getMean", &GaussianDeviate::getMean, "")
+                .def("setMean", &GaussianDeviate::setMean, "")
+                .def("getSigma", &GaussianDeviate::getSigma, "")
+                .def("setSigma", &GaussianDeviate::setSigma, "")
+                .enable_pickling()
+                ;
+        }
+
+    };
+
+    struct PyBinomialDeviate {
+
+        static void wrap() {
+            bp::class_<BinomialDeviate, bp::bases<BaseDeviate> >
+                pyBinomialDeviate("BinomialDeviate", "", bp::no_init);
+            pyBinomialDeviate
+                .def(bp::init<long, int, double>(
+                        (bp::arg("lseed")=0, bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
-            .def("__call__", &BinomialDeviate::operator(),
-                 "Draw a new random number from the distribution.\n"
-                 "\n"
-                 "Returns a Binomial deviate with current N and p.\n")
-            .def("getN", &BinomialDeviate::getN, "Get current distribution N.")
-            .def("setN", &BinomialDeviate::setN, "Set current distribution N.")
-            .def("getP", &BinomialDeviate::getP, "Get current distribution p.")
-            .def("setP", &BinomialDeviate::setP, "Set current distribution p.")
-            ;
-        wrapTemplates<int>(pyBinomialDeviate);
-        wrapTemplates<short>(pyBinomialDeviate);
-        wrapTemplates<float>(pyBinomialDeviate);
-        wrapTemplates<double>(pyBinomialDeviate);
-    }
-
-};
-
-struct PyPoissonDeviate {
-
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (PoissonDeviate::*) (ImageView<U>) )&PoissonDeviate::applyTo,
-                 "\n"
-                 "Add Poisson deviates to every element in a supplied Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> PoissonDeviate.applyTo(image) \n"
-                 "\n"
-                 "On output each element of the input Image will have a pseudo-random\n"
-                 "PoissonDeviate return value added to it, with current mean.\n",
-                 (bp::arg("image")))
-            ;
-    }
-
-    static void wrap() {
-        static char const * doc =
-            "\n"
-            "Pseudo-random Poisson deviate with specified mean.\n"
-            "\n"
-            "The input mean sets the mean and variance of the Poisson deviate. \n"
-            "An integer deviate with this distribution is returned after each call.\n"
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            "\n"
-            ">>> p = PoissonDeviate(mean=1.)\n"
-            "\n"
-            "Initializes g to be a PoissonDeviate instance using the current time for the seed.\n"
-            "\n"
-            ">>> p = PoissonDeviate(lseed, mean=1.)\n"
-            "\n"
-            "Initializes g using the specified seed.\n"
-            "\n"
-            ">>> p = PoissonDeviate(dev, mean=1.)\n"
-            "\n"
-            "Initializes g to share the same underlying random number generator as dev.\n"
-            "\n"
-            "Parameters:\n"
-            "\n"
-            "mean     optional mean of the distribution (default `mean = 1`).\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to p() will\n"
-            "return successive, pseudo-random Poisson deviates with specified mean, which must be\n"
-            "> 0.\n"
-            ;
-        bp::class_<PoissonDeviate, bp::bases<BaseDeviate> > pyPoissonDeviate(
-            "PoissonDeviate", doc, bp::init<double>(
-                (bp::arg("mean")=1.)
-            )
-        );
-        pyPoissonDeviate
-            .def(bp::init<long, double>(
-                (bp::arg("lseed"), bp::arg("mean")=1.)
+                .def(bp::init<const BaseDeviate&, int, double>(
+                        (bp::arg("dev"), bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
-            .def(bp::init<const BaseDeviate&, double>(
-                (bp::arg("dev"), bp::arg("mean")=1.)
+                .def(bp::init<std::string, int, double>(
+                        (bp::arg("str")=0, bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
-            .def("__call__", &PoissonDeviate::operator(),
-                 "Draw a new random number from the distribution.\n"
-                 "\n"
-                 "Returns a Poisson deviate with current mean.\n")
-            .def("getMean", &PoissonDeviate::getMean, "Get current distribution mean.")
-            .def("setMean", &PoissonDeviate::setMean, "Set current distribution mean.")
-            ;
-        wrapTemplates<int>(pyPoissonDeviate);
-        wrapTemplates<short>(pyPoissonDeviate);
-        wrapTemplates<float>(pyPoissonDeviate);
-        wrapTemplates<double>(pyPoissonDeviate);
-    }
+                .def("duplicate", &BinomialDeviate::duplicate, "")
+                .def("__call__", &BinomialDeviate::operator(), "")
+                .def("getN", &BinomialDeviate::getN, "")
+                .def("setN", &BinomialDeviate::setN, "")
+                .def("getP", &BinomialDeviate::getP, "")
+                .def("setP", &BinomialDeviate::setP, "")
+                .enable_pickling()
+                ;
+        }
 
-};
+    };
 
-struct PyCCDNoise{
+    struct PyPoissonDeviate {
 
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (CCDNoise::*) (ImageView<U>) )&CCDNoise::applyTo,
-                 "\n"
-                 "Add noise to an input Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> CCDNoise.applyTo(image) \n"
-                 "\n"
-                 "On output the Image instance image will have been given an additional\n"
-                 "stochastic noise according to the gain and read noise settings of the CCDNoise\n"
-                 "instance.\n",
-                 (bp::arg("image")))
-            ;
-    }
-
-    static void wrap() {
-
-        static char const * doc =
-            "\n"
-            "Pseudo-random number generator with a basic CCD noise model.\n"
-            "\n"
-            "A CCDNoise instance is initialized given a gain level in Electrons per ADU\n"
-            "used for the Poisson noise term, and a Gaussian read noise in electrons (if\n"
-            "gain > 0.) or ADU (if gain <= 0.).  With these parameters set, the CCDNoise operates\n"
-            "on an Image, adding noise to each pixel following this model.\n" 
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            "\n"
-            ">>> ccd_noise = CCDNoise(gain=1., read_noise=0.)\n"
-            "\n"
-            "Initializes ccd_noise to be a CCDNoise instance using the current time for the seed.\n"
-            "\n"
-            ">>> ccd_noise = CCDNoise(lseed, gain=1., read_noise=0.)\n"
-            "\n"
-            "Initializes ccd_noise to be a CCDNoise instance using the specified seed.\n"
-            "\n"
-            ">>> ccd_noise = CCDNoise(dev, gain=1., read_noise=0.)\n"
-            "\n"
-            "Initializes ccd_noise to share the same underlying random number generator as dev.\n"
-            "\n"
-            "Parameters:\n"
-            "\n"
-            "gain        the gain for each pixel in electrons per ADU; setting gain <=0 will shut\n"
-            "            off the Poisson noise, and the Gaussian rms will take the value\n" 
-            "            read_noise as being in units of ADU rather than electrons [default=1.].\n"
-            "read_noise  the read noise on each pixel in electrons (gain > 0.) or ADU (gain <= 0.)\n"
-            "            setting read_noise=0. will shut off the Gaussian noise [default=0.].\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to ccd_noise() will\n"
-            "generate noise following this model.\n"
-            ;
-        bp::class_<CCDNoise, bp::bases<BaseDeviate> > pyCCDNoise(
-            "CCDNoise", doc, bp::init<double, double >(
-                (bp::arg("gain")=1., bp::arg("read_noise")=0.)
-            )
-        );
-        pyCCDNoise
-            .def(bp::init<long, double, double>(
-                (bp::arg("lseed"), bp::arg("gain")=1., bp::arg("read_noise")=0.)
+        static void wrap() {
+            bp::class_<PoissonDeviate, bp::bases<BaseDeviate> >
+                pyPoissonDeviate("PoissonDeviate", "", bp::no_init);
+            pyPoissonDeviate
+                .def(bp::init<long, double>(
+                        (bp::arg("lseed")=0, bp::arg("mean")=1.)
                 ))
-            .def(bp::init<const BaseDeviate&, double, double>(
-                (bp::arg("dev"), bp::arg("gain")=1., bp::arg("read_noise")=0.)
+                .def(bp::init<const BaseDeviate&, double>(
+                        (bp::arg("dev"), bp::arg("mean")=1.)
                 ))
-            .def("getGain", &CCDNoise::getGain, "Get gain in current noise model.")
-            .def("setGain", &CCDNoise::setGain, "Set gain in current noise model.")
-            .def("getReadNoise", &CCDNoise::getReadNoise, 
-                 "Get read noise in current noise model.")
-            .def("setReadNoise", &CCDNoise::setReadNoise, 
-                 "Set read noise in current noise model.")
-            ;
-        wrapTemplates<int>(pyCCDNoise);
-        wrapTemplates<short>(pyCCDNoise);
-        wrapTemplates<float>(pyCCDNoise);
-        wrapTemplates<double>(pyCCDNoise);
-    }
-
-};
-
-struct PyWeibullDeviate {
-
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (WeibullDeviate::*) (ImageView<U>) )&WeibullDeviate::applyTo,
-                 "\n"
-                 "Add Weibull-distributed deviates to every element in a supplied Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> WeibullDeviate.applyTo(image) \n"
-                 "\n"
-                 "On output each element of the input Image will have a pseudo-random\n"
-                 "WeibullDeviate return value added to it, with current values of a and b.\n",
-                 (bp::arg("image")))
-            ;
-    }
-
-    static void wrap() {
-        static char const * doc =
-            "\n"
-            "Pseudo-random Weibull-distributed deviate for shape parameter a & scale parameter b\n"
-            "\n"
-            "The Weibull distribution is related to a number of other probability distributions;\n"
-            "in particular, it interpolates between the exponential distribution (a=1) and the \n"
-            "Rayleigh distribution (a=2). See http://en.wikipedia.org/wiki/Weibull_distribution\n"
-            "(a=k and b=lambda in the notation adopted in the Wikipedia article).  The Weibull\n"
-            "distribution is real valued and produces deviates >= 0.\n"
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            "\n"
-            ">>> w = WeibullDeviate(a=1., b=1.) \n"
-            "\n"
-            "Initializes w to be a WeibullDeviate instance using the current time for the seed.\n"
-            "\n"
-            ">>> w = WeibullDeviate(lseed, a=1., b=1.) \n"
-            "\n"
-            "Initializes w using the specified seed.\n"
-            "\n"
-            ">>> w = WeibullDeviate(dev, a=1., b=1.) \n"
-            "\n"
-            "Initializes w to share the same underlying random number generator as dev.\n"
-            "\n"
-            "Parameters:\n"
-            "\n"
-            "a        shape parameter of the distribution (default a = 1).\n"
-            "b        scale parameter of the distribution (default b = 1).\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to w() then generate\n"
-            "pseudo-random numbers Weibull-distributed with shape and scale\n"
-            "parameters a and b, which must both be > 0.\n"
-            ;        
-        bp::class_<WeibullDeviate, bp::bases<BaseDeviate> > pyWeibullDeviate(
-            "WeibullDeviate", doc, bp::init<double, double >(
-                (bp::arg("a")=1., bp::arg("b")=1.)
-            )
-        );
-        pyWeibullDeviate
-            .def(bp::init<long, double, double>(
-                (bp::arg("lseed"), bp::arg("a")=1., bp::arg("b")=1.)
+                .def(bp::init<std::string, double>(
+                        (bp::arg("str")=0, bp::arg("mean")=1.)
                 ))
-            .def(bp::init<const BaseDeviate&, double, double>(
-                (bp::arg("dev"), bp::arg("a")=1., bp::arg("b")=1.)
+                .def("duplicate", &PoissonDeviate::duplicate, "")
+                .def("__call__", &PoissonDeviate::operator(), "")
+                .def("getMean", &PoissonDeviate::getMean, "")
+                .def("setMean", &PoissonDeviate::setMean, "")
+                .enable_pickling()
+                ;
+        }
+
+    };
+
+    struct PyWeibullDeviate {
+
+        static void wrap() {
+
+            bp::class_<WeibullDeviate, bp::bases<BaseDeviate> >
+                pyWeibullDeviate("WeibullDeviate", "", bp::no_init);
+            pyWeibullDeviate
+                .def(bp::init<long, double, double>(
+                        (bp::arg("lseed")=0, bp::arg("a")=1., bp::arg("b")=1.)
                 ))
-            .def("__call__", &WeibullDeviate::operator(),
-                 "Draw a new random number from the distribution.\n"
-                 "\n"
-                 "Returns a Weibull-distributed deviate with current a and b.\n")
-            .def("getA", &WeibullDeviate::getA, "Get current distribution shape parameter a.")
-            .def("setA", &WeibullDeviate::setA, "Set current distribution shape parameter a.")
-            .def("getB", &WeibullDeviate::getB, "Get current distribution scale parameter b.")
-            .def("setB", &WeibullDeviate::setB, "Set current distribution scale parameter b.")
-            ;
-        wrapTemplates<int>(pyWeibullDeviate);
-        wrapTemplates<short>(pyWeibullDeviate);
-        wrapTemplates<float>(pyWeibullDeviate);
-        wrapTemplates<double>(pyWeibullDeviate);
-    }
-
-};
-
-struct PyGammaDeviate {
-
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (GammaDeviate::*) (ImageView<U>) )&GammaDeviate::applyTo,
-                 "\n"
-                 "Add Gamma-distributed deviates to every element in a supplied Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> GammaDeviate.applyTo(image) \n"
-                 "\n"
-                 "On output each element of the input Image will have a pseudo-random\n"
-                 "GammaDeviate return value added to it, with current values of alpha and beta.\n",
-                 (bp::arg("image")))
-            ;
-    }
-
-    static void wrap() {
-        static char const * doc =
-            "\n"
-            "Pseudo-random Gamma-distributed deviate for parameters alpha & beta.\n"
-            "\n"
-            "See http://en.wikipedia.org/wiki/Gamma_distribution (although note that in the Boost\n"
-            "random routine this class calls the notation is alpha=k and beta=theta).  The Gamma\n"
-            "distribution is a real valued distribution producing deviates >= 0.\n"
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            "\n"
-            ">>> gam = GammaDeviate(alpha=1., beta=1.) \n"
-            "\n"
-            "Initializes gam to be a GammaDeviate instance using the current time for the seed.\n"
-            "\n"
-            ">>> gam = GammaDeviate(lseed, alpha=1., beta=1.) \n"
-            "\n"
-            "Initializes gam using the specified seed.\n"
-            "\n"
-            ">>> gam = GammaDeviate(dev alpha=1., beta=1.) \n"
-            "\n"
-            "Initializes gam to share the same underlying random number generator as dev.\n"
-            "\n"
-            "Parameters:\n"
-            "\n"
-            "alpha    shape parameter of the distribution (default alpha = 1).\n"
-            "beta     scale parameter of the distribution (default beta = 1).\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to g() will\n"
-            "return successive, pseudo-random Gamma-distributed deviates with shape and scale\n"
-            "parameters alpha and beta, which must both be > 0.\n"
-            ;
-        bp::class_<GammaDeviate, bp::bases<BaseDeviate> > pyGammaDeviate(
-            "GammaDeviate", doc, bp::init<double, double >(
-                (bp::arg("alpha")=1., bp::arg("beta")=1.)
-            )
-        );
-        pyGammaDeviate
-            .def(bp::init<long, double, double>(
-                (bp::arg("lseed"), bp::arg("alpha")=1., bp::arg("beta")=1.)
+                .def(bp::init<const BaseDeviate&, double, double>(
+                        (bp::arg("dev"), bp::arg("a")=1., bp::arg("b")=1.)
                 ))
-            .def(bp::init<const BaseDeviate&, double, double>(
-                (bp::arg("dev"), bp::arg("alpha")=1., bp::arg("beta")=1.)
+                .def(bp::init<std::string, double, double>(
+                        (bp::arg("str")=0, bp::arg("a")=1., bp::arg("b")=1.)
                 ))
-            .def("__call__", &GammaDeviate::operator(),
-                 "Draw a new random number from the distribution.\n"
-                 "\n"
-                 "Returns a Gamma-distributed deviate with current alpha and beta.\n")
-            .def("getAlpha", &GammaDeviate::getAlpha, 
-                 "Get current distribution shape parameter alpha.")
-            .def("setAlpha", &GammaDeviate::setAlpha, 
-                 "Set current distribution shape parameter alpha.")
-            .def("getBeta", &GammaDeviate::getBeta, 
-                 "Get current distribution scale parameter beta.")
-            .def("setBeta", &GammaDeviate::setBeta, 
-                 "Set current distribution scale parameter beta.")
-            ;
-        wrapTemplates<int>(pyGammaDeviate);
-        wrapTemplates<short>(pyGammaDeviate);
-        wrapTemplates<float>(pyGammaDeviate);
-        wrapTemplates<double>(pyGammaDeviate);
-    }
+                .def("duplicate", &WeibullDeviate::duplicate, "")
+                .def("__call__", &WeibullDeviate::operator(), "")
+                .def("getA", &WeibullDeviate::getA, "")
+                .def("setA", &WeibullDeviate::setA, "")
+                .def("getB", &WeibullDeviate::getB, "")
+                .def("setB", &WeibullDeviate::setB, "")
+                .enable_pickling()
+                ;
+        }
 
-};
+    };
 
-struct PyChi2Deviate {
+    struct PyGammaDeviate {
 
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (Chi2Deviate::*) (ImageView<U>) )&Chi2Deviate::applyTo,
-                 "\n"
-                 "Add Chi^2-distributed deviates to every element in a supplied Image.\n"
-                 "\n"
-                 "Calling\n"
-                 "-------\n"
-                 ">>> Chi2Deviate.applyTo(image) \n"
-                 "\n"
-                 "On output each element of the input Image will have a pseudo-random\n"
-                 "Chi2Deviate return value added to it, with current degrees-of-freedom.\n"
-                 "parameter n.\n",
-                 (bp::arg("image")))
-            ;
-    }
-
-    static void wrap() {
-        static char const * doc =
-            "\n"
-            "Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter n.\n"
-            "\n"
-            "See http://en.wikipedia.org/wiki/Chi-squared_distribution (although note that in the\n"
-            "Boost random routine this class calls the notation adopted interprets k=n).\n"
-            "The Chi^2 distribution is a real valued distribution producing deviates >= 0.\n"
-            "\n"
-            "Initialization\n"
-            "--------------\n"
-            "\n"
-            ">>> chis = Chi2Deviate(n=1.) \n"
-            "\n"
-            "Initializes chis to be a Chi2Deviate instance using the current time for the seed.\n"
-            "\n"
-            ">>> chis = Chi2Deviate(lseed, n=1.) \n"
-            "\n"
-            "Initializes chis using the specified seed.\n"
-            "\n"
-            ">>> chis = Chi2Deviate(dev, n=1.) \n"
-            "\n"
-            "Initializes chis to share the same underlying random number generator as dev.\n"
-            "\n"
-            "Parameters:\n"
-            "\n"
-            "n        number of degrees of freedom for the output distribution (default n = 1).\n"
-            "\n"
-            "Calling\n"
-            "-------\n"
-            "Taking the instance from the above examples, successive calls to g() will\n"
-            "return successive, pseudo-random Chi^2-distributed deviates with degrees-of-freedom\n"
-            "parameter n, which must be > 0.\n"
-            ;
-        bp::class_<Chi2Deviate, bp::bases<BaseDeviate> > pyChi2Deviate(
-            "Chi2Deviate", doc, bp::init<double >(
-                (bp::arg("n")=1.)
-            )
-        );
-        pyChi2Deviate
-            .def(bp::init<long, double>(
-                (bp::arg("lseed"), bp::arg("n")=1.)
+        static void wrap() {
+            bp::class_<GammaDeviate, bp::bases<BaseDeviate> >
+                pyGammaDeviate("GammaDeviate", "", bp::no_init);
+            pyGammaDeviate
+                .def(bp::init<long, double, double>(
+                        (bp::arg("lseed")=0, bp::arg("k")=1., bp::arg("theta")=1.)
                 ))
-            .def(bp::init<const BaseDeviate&, double>(
-                (bp::arg("dev"), bp::arg("n")=1.)
+                .def(bp::init<const BaseDeviate&, double, double>(
+                        (bp::arg("dev"), bp::arg("k")=1., bp::arg("theta")=1.)
                 ))
-            .def("__call__", &Chi2Deviate::operator(),
-                 "Draw a new random number from the distribution.\n"
-                 "\n"
-                 "Returns a Chi2-distributed deviate with current n degrees of freedom.\n")
-            .def("getN", &Chi2Deviate::getN, 
-                 "Get current distribution n degrees of freedom.")
-            .def("setN", &Chi2Deviate::setN, 
-                 "Set current distribution n degrees of freedom.")
-            ;
-        wrapTemplates<int>(pyChi2Deviate);
-        wrapTemplates<short>(pyChi2Deviate);
-        wrapTemplates<float>(pyChi2Deviate);
-        wrapTemplates<double>(pyChi2Deviate);
+                .def(bp::init<std::string, double, double>(
+                        (bp::arg("str")=0, bp::arg("k")=1., bp::arg("theta")=1.)
+                ))
+                .def("duplicate", &GammaDeviate::duplicate, "")
+                .def("__call__", &GammaDeviate::operator(), "")
+                .def("getK", &GammaDeviate::getK, "")
+                .def("setK", &GammaDeviate::setK, "")
+                .def("getTheta", &GammaDeviate::getTheta, "")
+                .def("setTheta", &GammaDeviate::setTheta, "")
+                .enable_pickling()
+                ;
+        }
+
+    };
+
+    struct PyChi2Deviate {
+
+        static void wrap() {
+            bp::class_<Chi2Deviate, bp::bases<BaseDeviate> >
+                pyChi2Deviate("Chi2Deviate", "", bp::no_init);
+            pyChi2Deviate
+                .def(bp::init<long, double>(
+                        (bp::arg("lseed")=0, bp::arg("n")=1.)
+                ))
+                .def(bp::init<const BaseDeviate&, double>(
+                        (bp::arg("dev"), bp::arg("n")=1.)
+                ))
+                .def(bp::init<std::string, double>(
+                        (bp::arg("str")=0, bp::arg("n")=1.)
+                ))
+                .def("duplicate", &Chi2Deviate::duplicate, "")
+                .def("__call__", &Chi2Deviate::operator(), "")
+                .def("getN", &Chi2Deviate::getN, "")
+                .def("setN", &Chi2Deviate::setN, "")
+                .enable_pickling()
+                ;
+        }
+
+    };
+
+
+    void pyExportRandom() {
+        PyBaseDeviate::wrap();
+        PyUniformDeviate::wrap();
+        PyGaussianDeviate::wrap();
+        PyBinomialDeviate::wrap();
+        PyPoissonDeviate::wrap();
+        PyWeibullDeviate::wrap();
+        PyGammaDeviate::wrap();
+        PyChi2Deviate::wrap();
     }
-
-};
-
-} // anonymous
-
-void pyExportRandom() {
-    PyBaseDeviate::wrap();
-    PyUniformDeviate::wrap();
-    PyGaussianDeviate::wrap();
-    PyBinomialDeviate::wrap();
-    PyPoissonDeviate::wrap();
-    PyCCDNoise::wrap();
-    PyWeibullDeviate::wrap();
-    PyGammaDeviate::wrap();
-    PyChi2Deviate::wrap();
-}
 
 } // namespace galsim

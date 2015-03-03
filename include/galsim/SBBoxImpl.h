@@ -1,6 +1,24 @@
-// -*- c++ -*-
-#ifndef SBBOX_IMPL_H
-#define SBBOX_IMPL_H
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+#ifndef GalSim_SBBoxImpl_H
+#define GalSim_SBBoxImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBBox.h"
@@ -10,13 +28,7 @@ namespace galsim {
     class SBBox::SBBoxImpl : public SBProfileImpl 
     {
     public:
-        SBBoxImpl(double xw, double yw, double flux) :
-            _xw(xw), _yw(yw), _flux(flux)
-        {
-            if (_yw==0.) _yw=_xw; 
-            _norm = _flux / (_xw * _yw);
-        }
-
+        SBBoxImpl(double width, double height, double flux, const GSParamsPtr& gsparams);
         ~SBBoxImpl() {}
 
         double xValue(const Position<double>& p) const;
@@ -31,54 +43,122 @@ namespace galsim {
         double stepK() const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
-        { xmin = -0.5*_xw;  xmax = 0.5*_xw; }
+        { xmin = -_wo2;  xmax = _wo2; }
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
-        { ymin = -0.5*_yw;  ymax = 0.5*_yw; }
+        { ymin = -_ho2;  ymax = _ho2; }
 
         Position<double> centroid() const 
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
 
-        double getXWidth() const { return _xw; }
-        double getYWidth() const { return _yw; }
+        double getWidth() const { return _width; }
+        double getHeight() const { return _height; }
 
-        /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        // Override for better efficiency:
-        void fillKGrid(KTable& kt) const;
-        // Override to put in fractional edge values:
-        void fillXGrid(XTable& xt) const;
-
-        template <typename T>
-        double fillXImage(ImageView<T>& I, double dx, double gain) const;
-
-        double doFillXImage(ImageView<float>& I, double dx, double gain) const
-        { return fillXImage(I,dx,gain); }
-        double doFillXImage(ImageView<double>& I, double dx, double gain) const
-        { return fillXImage(I,dx,gain); }
-        double doFillXImage(ImageView<short>& I, double dx, double gain) const
-        { return fillXImage(I,dx,gain); }
-        double doFillXImage(ImageView<int>& I, double dx, double gain) const
-        { return fillXImage(I,dx,gain); }
+        // Override both for efficiency and to put in fractional edge values which
+        // don't happen with normal calls to xValue.
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, int izero,
+                        double y0, double dy, int jzero) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        // Overrides for better efficiency
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
 
     private:
-        double _xw;   ///< Boxcar function is `xw` x `yw` across.
-        double _yw;   ///< Boxcar function is `xw` x `yw` across.
-        double _flux; ///< Flux.
-        double _norm; ///< Calculated value: flux / (xw*yw)
-
-        // Sinc function used to describe Boxcar in k space. 
-        double sinc(double u) const; 
+        double _width;
+        double _height;
+        double _flux;
+        double _norm; // Calculated value: flux / (width*height)
+        double _wo2;
+        double _ho2;
+        double _wo2pi;
+        double _ho2pi;
 
         // Copy constructor and op= are undefined.
         SBBoxImpl(const SBBoxImpl& rhs);
         void operator=(const SBBoxImpl& rhs);
     };
 
+    class SBTopHat::SBTopHatImpl : public SBProfileImpl 
+    {
+    public:
+        SBTopHatImpl(double radius, double flux, const GSParamsPtr& gsparams);
+        ~SBTopHatImpl() {}
+
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
+
+        bool isAxisymmetric() const { return true; } 
+        bool hasHardEdges() const { return true; }
+        bool isAnalyticX() const { return true; }
+        bool isAnalyticK() const { return true; }
+
+        double maxK() const;
+        double stepK() const;
+
+        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
+        { xmin = -_r0;  xmax = _r0; }
+
+        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
+        { ymin = -_r0;  ymax = _r0; }
+
+        void getYRangeX(
+            double x, double& ymin, double& ymax, std::vector<double>& ) const
+        { 
+            ymax = sqrt(_r0*_r0 - x*x);
+            ymin = -ymax;
+        }
+
+        Position<double> centroid() const 
+        { return Position<double>(0., 0.); }
+
+        double getFlux() const { return _flux; }
+
+        double getRadius() const { return _r0; }
+
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+
+        // Override both for efficiency and to put in fractional edge values which
+        // don't happen with normal calls to xValue.
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, int izero,
+                        double y0, double dy, int jzero) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        // Overrides for better efficiency
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
+
+    private:
+        double _r0;
+        double _r0sq;
+        double _flux;
+        double _norm;
+
+        // A helper function that calculates kValue given (k r0)^2
+        std::complex<double> kValue2(double kr0sq) const;
+
+        // Copy constructor and op= are undefined.
+        SBTopHatImpl(const SBTopHatImpl& rhs);
+        void operator=(const SBTopHatImpl& rhs);
+    };
+
 }
 
-#endif // SBBOX_IMPL_H
+#endif 
 

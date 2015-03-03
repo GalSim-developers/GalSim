@@ -1,11 +1,23 @@
 # vim: set filetype=python :
 
-import os
-import sys
+import os, sys
 import glob
 
+try:
+    sys.path = [GetBuildPath('#galsim')] + sys.path
+    from _version import __version__ as version
+    from _version import __version_info__ as version_info
+    sys.path.nada()
+except:
+    # If SCons is using an old python (2.4 is relatively common still), then the above may fail.
+    # In this case, we need to be a little trickier.
+    execfile(os.path.join(GetBuildPath('#galsim'),'_version.py'))
+    version = __version__
+    version_info = __version_info__
+
+
 Import('env')
-ReadFileList=env['__readfunc']
+ReadFileList = env['_ReadFileList']
 
 env1 = env.Clone()
 
@@ -34,25 +46,29 @@ for d in subdirs:
 
 if env1['MEM_TEST']:
     print 'Using mmgr.cpp'
-    lib_files += ['mmgr.cpp']
+    # put mmgr.cpp first, so its static variable is the first one registered.
+    # otherwise the memory leak reports a bunch of static variables being leaks.
+    lib_files.insert(0, 'mmgr.cpp')
 
 # Library file containing generic code
 obj_lib = env1.SharedObject(lib_files)
 
-# TODO: Should get this from somewhere.  Not hard-coded here.
-version = 0,1
-compat_version = 0,1
+print 'GalSim version ',version
 
-if 'install' in COMMAND_LINE_TARGETS:
-    lib_final_dir = os.path.join(env['INSTALL_PREFIX'],'lib')
+# Make sure the version tuple has 3 elements.
+if len(version_info) == 2:
+    version_info += (0,)
 else:
-    lib_final_dir = os.path.join(GetBuildPath('#lib'))
+    assert len(version_info) == 3
+
+compat_version = version_info[:2]
+
+lib_final_dir = os.path.join(env['FINAL_PREFIX'],'lib')
 
 if sys.platform == 'darwin':
     # Some stuff to get it to set the right compatibility version and library name:
-    lib_final_name = os.path.join(lib_final_dir,'libgalsim.%s.dylib'%version[0])
-    #lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.%s.%s.dylib'%version)
-    lib_short_name = os.path.join(GetBuildPath('#lib'),'libgalsim.%s.dylib'%version[0])
+    lib_final_name = os.path.join(lib_final_dir,'libgalsim.%s.%s.dylib'%compat_version)
+    lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.%s.%s.dylib'%compat_version)
     link_name = os.path.join(GetBuildPath('#lib'),'libgalsim.dylib')
     # TODO: If we have more than one lib, we need a different SHLINKFLAGS for each one.
     # The easiest way to do this is to have multiple environments that differ in their
@@ -61,10 +77,10 @@ if sys.platform == 'darwin':
         '-dynamic',
         '-Wl,-install_name,%s'%lib_final_name,
         '-Wl,-compatibility_version,%s.%s'%compat_version,
-        '-Wl,-current_version,%s.%s'%version ] )
-    env1.Replace(SHLIBSUFFIX = '.%s.dylib'%version[0])
+        '-Wl,-current_version,%s.%s.%s'%version_info ] )
+    env1.Replace(SHLIBSUFFIX = '.%s.%s.dylib'%compat_version)
 
-elif sys.platform == 'linux2':
+elif sys.platform.startswith('linux'):  # Should work for both linux2 and linux3
     # On linux, we don't need to include the other libraries here.  They need to be 
     # linked for compiling any executable, but not for building the library.
     # However, if any of the other libraries are static, it causes an error on some 
@@ -111,12 +127,11 @@ elif sys.platform == 'linux2':
     # Removes all -l lib flags, and add the explicit static library files.
     env1.Replace(LIBS=new_libs)
 
-    lib_final_name = os.path.join(lib_final_dir,'libgalsim.so.%s'%version[0])
-    #lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s.%s'%version)
-    lib_short_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s'%version[0])
+    lib_final_name = 'libgalsim.so.%s.%s'%compat_version
+    lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s.%s'%compat_version)
     link_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so')
     env1.AppendUnique(SHLINKFLAGS=['-Wl,-soname,%s'%lib_final_name ])
-    env1.Replace(SHLIBSUFFIX = '.so.%s'%version[0])
+    env1.Replace(SHLIBSUFFIX = '.so.%s.%s'%compat_version)
 
 elif sys.platform == 'win32':
     raise ValueError('Sorry, building on windows is not supported yet...')
@@ -128,16 +143,21 @@ lib = env1.SharedLibrary(os.path.join('#lib','galsim'), obj_lib)
 
 def SymLink(target, source, env):
     t = os.path.abspath(str(target[0]))
-    if os.path.exists(t): os.remove(t)
+    if os.path.lexists(t): os.remove(t)
     os.symlink(env['LibName'], t)
 
 # This just makes a link in the #lib directory.  Need to redo this in the install directory.
-link = env1.Command( link_name , lib , SymLink, LibName=lib_short_name)
+link = env1.Command( link_name , lib , SymLink, LibName=lib_full_name)
 Default(link)
 
 lib_targets = [lib]
-
 Default(lib_targets)
+
+tools = [ 'sizeof_SIFD' ]
+tool_targets = [ env1.Program(os.path.join('#bin/',tool), tool + '.cpp') for tool in tools ]
+
+# These don't need to be installed.  Leave them in the GalSim/bin directory.
+Default(tool_targets)
 
 if 'install' in COMMAND_LINE_TARGETS:
 
@@ -148,13 +168,18 @@ if 'install' in COMMAND_LINE_TARGETS:
         LibName=lib_final_name)
 
     env1.Alias(target='install', source=[installed_lib, installed_link])
+    env['all_builds'] += installed_lib
+    env['all_builds'] += installed_link
 
-    hfiles1 = os.listdir(GetBuildPath('#include'))
-    hfiles = []
-    for f in hfiles1:
-        hfiles += [os.path.join('#include',f)]
-    installed_h = env1.Install(dir=header_install_dir, source=hfiles)
-    env1.Alias(target='install', source=installed_h)
+    #hfiles1 = os.listdir(GetBuildPath('#include'))
+    #hfiles = []
+    #for f in hfiles1:
+        #hfiles += [os.path.join('#include',f)]
+    #installed_h = env1.Install(dir=header_install_dir, source=hfiles)
+    #env1.Alias(target='install', source=installed_h)
+else:
+    env['all_builds'] += lib
+    env['all_builds'] += link
 
 
 if 'uninstall' in COMMAND_LINE_TARGETS:
@@ -165,9 +190,9 @@ if 'uninstall' in COMMAND_LINE_TARGETS:
     # should change this.  Proabaly roll our own Delete function.
     deltarget = Delete("$TARGET")
 
-    hfiles = os.listdir(GetBuildPath('#include'))
-    for f in hfiles:
-        env1.Alias('uninstall', env1.Command(os.path.join(header_install_dir,f), None, deltarget))
+    #hfiles = os.listdir(GetBuildPath('#include'))
+    #for f in hfiles:
+        #env1.Alias('uninstall', env1.Command(os.path.join(header_install_dir,f), None, deltarget))
 
     libfiles = [os.path.join(lib_install_dir, os.path.basename(str(f[0]))) for f in lib_targets]
 

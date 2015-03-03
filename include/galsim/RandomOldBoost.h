@@ -1,9 +1,27 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
 // Random-number classes
 // This is a version of Random.h that works with Boost releases <=1.47.  Is not being used right now
 // But I am putting it into repository just in case something comes up later.
 
-#ifndef RANDOM_H
-#define RANDOM_H
+#ifndef GalSim_Random_H
+#define GalSim_Random_H
 
 #include <sys/time.h>
 
@@ -57,7 +75,7 @@ namespace galsim {
         typedef boost::variate_generator<OurURNG&, 
                 boost::normal_distribution<> > GaussGenerator;
     public:
-        GaussianDeviate(UniformDeviate& u_, double mean=0., double sigma=1.) : 
+        GaussianDeviate(UniformDeviate& u_, double mean, double sigma) : 
             u(u_), 
             normal(new boost::normal_distribution<>(mean,sigma)),
             gen(new GaussGenerator(u.urng,*normal))     {}
@@ -97,7 +115,7 @@ namespace galsim {
         typedef boost::variate_generator<OurURNG&, 
                 boost::binomial_distribution<> > BinomialGenerator;
     public:
-        BinomialDeviate(UniformDeviate& u_, const int N=1, const double p=0.5): 
+        BinomialDeviate(UniformDeviate& u_, const int N, const double p): 
             u(u_), 
             binomial(new boost::binomial_distribution<>(N,p)),
             gen(new BinomialGenerator(u.urng,*binomial))     {}
@@ -137,7 +155,7 @@ namespace galsim {
         typedef boost::variate_generator<OurURNG&, 
                 boost::poisson_distribution<> > PoissonGenerator;
     public:
-        PoissonDeviate(UniformDeviate& u_, const double mean=1.): 
+        PoissonDeviate(UniformDeviate& u_, const double mean): 
             u(u_), 
             poisson(new boost::poisson_distribution<>(mean)),
             gen(new PoissonGenerator(u.urng,*poisson))     {}

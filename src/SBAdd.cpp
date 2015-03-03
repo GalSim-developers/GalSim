@@ -1,3 +1,21 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
 
 //#define DEBUGLOGGING
 
@@ -6,28 +24,35 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
 
-    SBAdd::SBAdd(const SBProfile& s1, const SBProfile& s2) :
-        SBProfile(new SBAddImpl(s1,s2)) {}
-
-    SBAdd::SBAdd(const std::list<SBProfile>& slist) :
-        SBProfile(new SBAddImpl(slist)) {}
+    SBAdd::SBAdd(const std::list<SBProfile>& slist, const GSParamsPtr& gsparams) :
+        SBProfile(new SBAddImpl(slist,gsparams)) {}
 
     SBAdd::SBAdd(const SBAdd& rhs) : SBProfile(rhs) {}
     
     SBAdd::~SBAdd() {}
 
+    SBAdd::SBAddImpl::SBAddImpl(const std::list<SBProfile>& slist,
+                                const GSParamsPtr& gsparams) :
+        SBProfileImpl(gsparams ? gsparams : GetImpl(slist.front())->gsparams)
+    {
+        for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)
+            add(*sptr);
+        initialize();
+    }
+
+
     void SBAdd::SBAddImpl::add(const SBProfile& rhs)
     {
-        xdbg<<"Start SBAdd::add.  Adding item # "<<_plist.size()+1<<std::endl;
+        dbg<<"Start SBAdd::add.  Adding item # "<<_plist.size()+1<<std::endl;
         // Add new summand(s) to the _plist:
-        assert(SBProfile::GetImpl(rhs));
-        const SBAddImpl *sba = dynamic_cast<const SBAddImpl*>(SBProfile::GetImpl(rhs));
+        assert(GetImpl(rhs));
+        const SBAddImpl *sba = dynamic_cast<const SBAddImpl*>(GetImpl(rhs));
         if (sba) {
             // If rhs is an SBAdd, copy its full list here
             _plist.insert(_plist.end(),sba->_plist.begin(),sba->_plist.end());
@@ -45,11 +70,11 @@ namespace galsim {
 
         // Accumulate properties of all summands
         for(ConstIter it=_plist.begin(); it!=_plist.end(); ++it) {
-            xdbg<<"SBAdd component has maxK, stepK = "<<
+            dbg<<"SBAdd component has maxK, stepK = "<<
                 it->maxK()<<" , "<<it->stepK()<<std::endl;
             _sumflux += it->getFlux();
             _sumfx += it->getFlux() * it->centroid().x;
-            _sumfy += it->getFlux() * it->centroid().x;
+            _sumfy += it->getFlux() * it->centroid().y;
             if ( it->maxK() > _maxMaxK) 
                 _maxMaxK = it->maxK();
             if ( _minStepK<=0. || (it->stepK() < _minStepK) ) 
@@ -59,7 +84,7 @@ namespace galsim {
             _allAnalyticX = _allAnalyticX && it->isAnalyticX();
             _allAnalyticK = _allAnalyticK && it->isAnalyticK();
         }
-        xdbg<<"Net maxK, stepK = "<<_maxMaxK<<" , "<<_minStepK<<std::endl;
+        dbg<<"Net maxK, stepK = "<<_maxMaxK<<" , "<<_minStepK<<std::endl;
     }
 
     double SBAdd::SBAddImpl::xValue(const Position<double>& p) const 
@@ -82,34 +107,78 @@ namespace galsim {
         return kv;
     } 
 
-    void SBAdd::SBAddImpl::fillKGrid(KTable& kt) const 
+    void SBAdd::SBAddImpl::fillXValue(tmv::MatrixView<double> val,
+                                      double x0, double dx, int izero,
+                                      double y0, double dy, int jzero) const
     {
-        if (_plist.empty()) kt.clear();
+        dbg<<"SBAdd fillXValue\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
         ConstIter pptr = _plist.begin();
-        assert(SBProfile::GetImpl(*pptr));
-        SBProfile::GetImpl(*pptr)->fillKGrid(kt);
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->fillXValue(val,x0,dx,izero,y0,dy,jzero);
         if (++pptr != _plist.end()) {
-            KTable k2(kt.getN(),kt.getDk());
-            for ( ; pptr!= _plist.end(); ++pptr) {
-                assert(SBProfile::GetImpl(*pptr));
-                SBProfile::GetImpl(*pptr)->fillKGrid(k2);
-                kt.accumulate(k2);
+            tmv::Matrix<double> val2(val.colsize(),val.rowsize());
+            for (; pptr != _plist.end(); ++pptr) {
+                GetImpl(*pptr)->fillXValue(val2.view(),x0,dx,izero,y0,dy,jzero);
+                val += val2;
             }
         }
     }
 
-    void SBAdd::SBAddImpl::fillXGrid(XTable& xt) const 
+    void SBAdd::SBAddImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                      double kx0, double dkx, int izero,
+                                      double ky0, double dky, int jzero) const
     {
-        if (_plist.empty()) xt.clear();
+        dbg<<"SBAdd fillKValue\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
         ConstIter pptr = _plist.begin();
-        assert(SBProfile::GetImpl(*pptr));
-        SBProfile::GetImpl(*pptr)->fillXGrid(xt);
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
         if (++pptr != _plist.end()) {
-            XTable x2(xt.getN(),xt.getDx());
-            for ( ; pptr!= _plist.end(); ++pptr) {
-                assert(SBProfile::GetImpl(*pptr));
-                SBProfile::GetImpl(*pptr)->fillXGrid(x2);
-                xt.accumulate(x2);
+            tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
+            for (; pptr != _plist.end(); ++pptr) {
+                GetImpl(*pptr)->fillKValue(val2.view(),kx0,dkx,izero,ky0,dky,jzero);
+                val += val2;
+            }
+        }
+    }
+
+    void SBAdd::SBAddImpl::fillXValue(tmv::MatrixView<double> val,
+                                      double x0, double dx, double dxy,
+                                      double y0, double dy, double dyx) const
+    {
+        dbg<<"SBAdd fillXValue\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
+        ConstIter pptr = _plist.begin();
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->fillXValue(val,x0,dx,dxy,y0,dy,dyx);
+        if (++pptr != _plist.end()) {
+            tmv::Matrix<double> val2(val.colsize(),val.rowsize());
+            for (; pptr != _plist.end(); ++pptr) {
+                GetImpl(*pptr)->fillXValue(val2.view(),x0,dx,dxy,y0,dy,dyx);
+                val += val2;
+            }
+        }
+    }
+
+    void SBAdd::SBAddImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                      double kx0, double dkx, double dkxy,
+                                      double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBAdd fillKValue\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        ConstIter pptr = _plist.begin();
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
+        if (++pptr != _plist.end()) {
+            tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
+            for (; pptr != _plist.end(); ++pptr) {
+                GetImpl(*pptr)->fillKValue(val2.view(),kx0,dkx,dkxy,ky0,dky,dkyx);
+                val += val2;
             }
         }
     }
@@ -180,4 +249,5 @@ namespace galsim {
         
         return result;
     }
+
 }

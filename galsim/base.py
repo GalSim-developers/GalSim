@@ -1,666 +1,1672 @@
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+"""@file base.py
+Definitions for the GalSim base classes and associated methods
+
+This file includes the key parts of the user interface to GalSim: base classes representing surface
+brightness profiles for astronomical objects (galaxies, PSFs, pixel response).  These base classes
+are collectively known as GSObjects.  They include simple objects like the Gaussian class, a 2d
+Gaussian intensity profile, whereas compound GSObjects can be found in other appropriately-named
+files.  For example, the Sum and Convolution, which represent the sum and convolution of multiple
+GSObjects, respectively, can be found in compound.py; RealGalaxy objects are defined in real.py;
+and so on.
+
+These classes also have associated methods to (a) retrieve information (like the flux, half-light
+radius, or intensity at a particular point); (b) carry out common operations, like shearing,
+rescaling of flux or size, rotating, and shifting; and (c) actually make images of the surface
+brightness profiles.
+
+For a description of units conventions for scale radii for our base classes see
+`doc/GalSim_Quick_Reference.pdf`, section 2.2.  In short, any system that will ensure consistency
+between the scale radii used to specify the size of the GSObject and between the pixel scale of the
+Image is acceptable.
+"""
+
 import os
-import collections
+
 import numpy as np
+
 import galsim
 import utilities
 
-ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
+from . import _galsim
+from ._galsim import GSParams
 
-class GSObject:
-    """@brief Base class for defining the interface with which all GalSim Objects access their
-    shared methods and attributes, particularly those from the C++ SBProfile classes.
+
+class GSObject(object):
+    """Base class for all GalSim classes that represent some kind of surface brightness profile.
+
+    A GSObject is not intended to be constructed directly.  Normally, you would use whatever
+    derived class is appropriate for the surface brightness profile you want:
+
+        >>> gal = galsim.Sersic(n=4, half_light_radius=4.3)
+        >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
+        >>> conv = galsim.Convolve([gal,psf])
+
+    All of these classes are subclasses of GSObject, so you should see those docstrings for
+    more details about how to construct the various profiles.
+
+    Note that most GSObjects have some kind of size specification.  Typically, these would be
+    given in terms of arcsec, with the connection to the pixel size being given in the Pixel
+    class (0.2 arcsec/pixel in the above example).  However, you can have a more complicated
+    relationship between pixel and sky coordinates.  See BaseWCS for more details about
+    how to specify various kinds of world coordinate systems.
+
+    Transforming Methods
+    --------------------
+
+    The GSObject class uses an "immutable" design[1], so all methods that would potentially modify
+    the object actually return a new object instead.  This uses pointers and such behind the
+    scenes, so it all happens efficiently, but it makes using the objects a bit simpler, since
+    you don't need to worry about some function changing your object behind your back.
+
+    In all cases below, we just give an example usage.  See the docstrings for the methods for
+    more details about how to use them.
+
+        >>> obj = obj.shear(shear)      # Apply a shear to the object.
+        >>> obj = obj.dilate(scale)     # Apply a flux-preserving dilation.
+        >>> obj = obj.magnify(mu)       # Apply a surface-brightness-preserving magnification.
+        >>> obj = obj.rotate(theta)     # Apply a rotation.
+        >>> obj = obj.shift(dx,dy)      # Shft the object in real space.
+        >>> obj = obj.transform(dudx,dudy,dvdx,dvdy)    # Apply a general jacobian transformation.
+        >>> obj = obj.lens(g1,g2,mu)    # Apply both a lensing shear and magnification.
+        >>> obj = obj.withFlux(flux)    # Set a new flux value.
+        >>> obj = obj * ratio           # Scale the surface brightness profile by some factor.
+
+    [1]: Technically, there are some methods that do modify the object directly.  However, these
+    methods are only present for backwards compatibitility with previous versions of GalSim,
+    and they are currently discouraged.  They will be deprecated in a future version and
+    removed entirely in version 2.0.
+
+    Access Methods
+    --------------
+
+    There are some access methods that are available for all GSObjects.  Again, see the docstrings
+    for each method for more details.
+
+        >>> flux = obj.getFlux()
+        >>> centroid = obj.centroid()
+        >>> f_xy = obj.xValue(x,y)
+        >>> fk_xy = obj.kValue(kx,ky)
+        >>> nyq = obj.nyquistScale()
+        >>> stepk = obj.stepK()
+        >>> maxk = obj.maxK()
+        >>> hard = obj.hasHardEdges()
+        >>> axisym = obj.isAxisymmetric()
+        >>> analytic = obj.isAnalyticX()
+
+    Most subclasses have additional methods that are available for values that are particular to
+    that specific surface brightness profile.  e.g. `sigma = gauss.getSigma()`.  However, note
+    that class-specific methods are not available after performing one of the above transforming
+    operations.
+
+        >>> gal = galsim.Gaussian(sigma=5)
+        >>> gal = gal.shear(g1=0.2, g2=0.05)
+        >>> sigma = gal.getSigma()              # This will raise an exception.
+
+    It is however possible to access the original object that was transformed via the
+    `original` attribute.
+
+        >>> sigma = gal.original.getSigma()     # This works.
+
+    No matter how many transformations are performed, the `original` attribute will contain the
+    _original_ object (not necessarily the most recent ancestor).
+
+    Drawing Methods
+    ---------------
+
+    The main thing to do with a GSObject once you have built it is to draw it onto an image.
+    There are two methods that do this.  In both cases, there are lots of optional parameters.
+    See the docstrings for these methods for more details.
+
+        >>> image = obj.drawImage(...)
+        >>> kimage_r, kimage_i = obj.drawKImage(...)
+
+    Attributes
+    ----------
+
+    There two attributes that may be available for a GSObject.
+
+        original    This was mentioned above as a way to access the original object that has
+                    been transformed by one of the transforming methods.
+
+        noise       Some types, like RealGalaxy, set this attribute to be the intrinsic noise that
+                    is already inherent in the profile and will thus be present when you draw the
+                    object.  The noise is propagated correctly through the various transforming
+                    methods, as well as convolutions and flux rescalings.  Note that the `noise`
+                    attribute can be set directly by users even for GSObjects that do not naturally
+                    have one. The typical use for this attribute is to use it to whiten the noise in
+                    the image after drawing.  See CorrelatedNoise for more details.
+
+    GSParams
+    --------
+
+    All GSObject classes take an optional `gsparams` argument, so we document that feature here.
+    For all documentation about the specific derived classes, please see the docstring for each
+    one individually.
+
+    The `gsparams` argument can be used to specify various numbers that govern the tradeoff between
+    accuracy and speed for the calculations made in drawing a GSObject.  The numbers are
+    encapsulated in a class called GSParams, and the user should make careful choices whenever they
+    opt to deviate from the defaults.  For more details about the parameters and their default
+    values, please see the docstring of the GSParams class (e.g. type `help(galsim.GSParams)`).
+
+    For example, let's say you want to do something that requires an FFT larger than 4096 x 4096
+    (and you have enough memory to handle it!).  Then you can create a new GSParams object with a
+    larger `maximum_fft_size` and pass that to your GSObject on construction:
+
+        >>> gal = galsim.Sersic(n=4, half_light_radius=4.3)
+        >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
+        >>> conv = galsim.Convolve([gal,psf])
+        >>> im = galsim.Image(1000,1000, scale=0.05)        # Note the very small pixel scale!
+        >>> im = conv.drawImage(image=im)                   # This uses the default GSParams.
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "galsim/base.py", line 1236, in drawImage
+            image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
+        RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
+        If you can handle the large FFT, you may update gsparams.maximum_fft_size.
+        >>> big_fft_params = galsim.GSParams(maximum_fft_size=10240)
+        >>> conv = galsim.Convolve([gal,psf],gsparams=big_fft_params)
+        >>> im = conv.drawImage(image=im)                   # Now it works (but is slow!)
+        >>> im.write('high_res_sersic.fits')
+
+    Note that for compound objects in compound.py, like Convolution or Sum, not all GSParams can be
+    changed when the compound object is created.  In the example given here, it is possible to
+    change parameters related to the drawing, but not the Fourier space parameters for the
+    components that go into the Convolution.  To get better sampling in Fourier space, for example,
+    the `gal` and/or `psf` should be created with `gsparams` that have a non-default value of
+    `folding_threshold`.  This statement applies to the threshold and accuracy parameters.
     """
-    def __init__(self, SBProfile):
-        self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
+    _gsparams = { 'minimum_fft_size' : int,
+                  'maximum_fft_size' : int,
+                  'folding_threshold' : float,
+                  'stepk_minimum_hlr' : float,
+                  'maxk_threshold' : float,
+                  'kvalue_accuracy' : float,
+                  'xvalue_accuracy' : float,
+                  'realspace_relerr' : float,
+                  'realspace_abserr' : float,
+                  'integration_relerr' : float,
+                  'integration_abserr' : float,
+                  'shoot_accuracy' : float,
+                  'allowed_flux_variation' : float,
+                  'range_division_for_extrema' : int,
+                  'small_fraction_of_flux' : float
+                }
+    def __init__(self, obj):
+        # This guarantees that all GSObjects have an SBProfile
+        if isinstance(obj, GSObject):
+            self.SBProfile = obj.SBProfile
+            if hasattr(obj,'noise'):
+                self.noise = obj.noise.copy()
+        elif isinstance(obj, galsim._galsim.SBProfile):
+            self.SBProfile = obj
+        else:
+            raise TypeError("GSObject must be initialized with an SBProfile or another GSObject!")
+        # a couple of definitions for using GSObjects as duck-typed ChromaticObjects
+        self.separable = True
+        self.SED = lambda w: 1.0 # flat spectrum in photons/nanometer
+        self.wave_list = np.array([], dtype=float)
+
+    # Also need this method to duck-type as a ChromaticObject
+    def evaluateAtWavelength(self, wave):
+        """Return profile at a given wavelength.  For GSObject instances, this is just `self`.
+        This allows GSObject instances to be duck-typed as ChromaticObject instances."""
+        return self
 
     # Make op+ of two GSObjects work to return an Add object
+    # Note: we don't define __iadd__ and similar.  Let python handle this automatically
+    # to make obj += obj2 be equivalent to obj = obj + obj2.
     def __add__(self, other):
-        return Add(self,other)
+        return galsim.Add([self, other])
 
-    # op+= converts this into the equivalent of an Add object
-    def __iadd__(self, other):
-        GSObject.__init__(self, galsim.SBAdd(self.SBProfile, other.SBProfile))
-        self.__class__ = Add
-        return self
+    # op- is unusual, but allowed.  It subtracts off one profile from another.
+    def __sub__(self, other):
+        return galsim.Add([self, (-1. * other)])
 
-    # Make op* and op*= work to adjust the flux of an object
-    def __imul__(self, other):
-        self.scaleFlux(other)
-        return self
-
+    # Make op* work to adjust the flux of an object
     def __mul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
+        """Scale the flux of the object by the given factor.
+
+        obj * flux_ratio is equivalent to obj.withScaledFlux(flux_ratio)
+
+        It creates a new object that has the same profile as the original, but with the
+        surface brightness at every location scaled by the given amount.
+
+        You can also multiply by an SED, which will create a ChromaticObject where the SED
+        acts like a wavelength-dependent `flux_ratio`.
+
+        obj * sed is equivalent to galsim.Chromatic(obj, sed)
+        """
+        if isinstance(other, galsim.SED):
+            return galsim.Chromatic(self, other)
+        else:
+            return self.withScaledFlux(other)
 
     def __rmul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
+        """Equivalent to obj * other"""
+        return self.__mul__(other)
 
-    # Likewise for op/ and op/=
-    def __idiv__(self, other):
-        self.scaleFlux(1. / other)
-        return self
-
+    # Likewise for op/
     def __div__(self, other):
-        ret = self.copy()
-        ret /= other
-        return ret
-
-    def __itruediv__(self, other):
-        return __idiv__(self, other)
+        """Equivalent to obj * (1/other)"""
+        return self * (1. / other)
 
     def __truediv__(self, other):
+        """Equivalent to obj * (1/other)"""
         return __div__(self, other)
-
 
     # Make a copy of an object
     def copy(self):
-        """@brief Returns a copy of an object
+        """Returns a copy of an object.
 
-           This preserves the original type of the object, so if the caller is a
-           Gaussian (for example), the copy will also be a Gaussian, and can thus call
-           the methods that are not in GSObject, but are in Gaussian (e.g. getSigma).
+        This preserves the original type of the object, so if the caller is a Gaussian (for
+        example), the copy will also be a Gaussian, and can thus call the methods that are not in
+        GSObject, but are in Gaussian (e.g. getSigma()).  However, not necessarily all instance
+        attributes will be copied across (e.g. the interpolant stored by an OpticalPSF object).
         """
+        # Re-initialize a return GSObject with self's SBProfile
         sbp = self.SBProfile.__class__(self.SBProfile)
         ret = GSObject(sbp)
         ret.__class__ = self.__class__
+        if hasattr(self,'noise'): ret.noise = self.noise.copy()
         return ret
 
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
     #
     def maxK(self):
-        """@brief Returns value of k beyond which aliasing can be neglected.
+        """Returns value of k beyond which aliasing can be neglected.
         """
         return self.SBProfile.maxK()
 
-    def nyquistDx(self):
-        """@brief Returns Image pixel spacing that does not alias maxK.
+    def nyquistScale(self):
+        """Returns Image pixel spacing that does not alias maxK.
         """
         return self.SBProfile.nyquistDx()
 
+    def nyquistDx(self):
+        """An obsolete synonym for nyquistScale()"""
+        return self.nyquistScale()
+
     def stepK(self):
-        """@brief Returns sampling in k space necessary to avoid folding of image in x space.
+        """Returns sampling in k space necessary to avoid folding of image in x space.
         """
         return self.SBProfile.stepK()
 
     def hasHardEdges(self):
-        """@brief Returns True if there are any hard edges in the profile.
+        """Returns True if there are any hard edges in the profile, which would require very small k
+        spacing when working in the Fourier domain.
         """
         return self.SBProfile.hasHardEdges()
 
     def isAxisymmetric(self):
-        """@brief Returns True if axially symmetric: affects efficiency of evaluation.
+        """Returns True if axially symmetric: affects efficiency of evaluation.
         """
         return self.SBProfile.isAxisymmetric()
 
     def isAnalyticX(self):
-        """@brief Returns True if real-space values can be determined immediately at any position
-        without requiring a Discrete Fourier Transform.
+        """Returns True if real-space values can be determined immediately at any position without
+        requiring a Discrete Fourier Transform.
         """
         return self.SBProfile.isAnalyticX()
 
-    # This method does not seem to be wrapped from C++
-    # def isAnalyticK(self):
-    # return self.SBProfile.isAnalyticK()
+    def isAnalyticK(self):
+        """Returns True if k-space values can be determined immediately at any position without
+        requiring a Discrete Fourier Transform.
+        """
+        return self.SBProfile.isAnalyticK()
 
     def centroid(self):
-        """@brief Returns the (x, y) centroid of an object as a Position.
+        """Returns the (x, y) centroid of an object as a Position.
         """
         return self.SBProfile.centroid()
 
     def getFlux(self):
-        """@brief Returns the flux of the object.
+        """Returns the flux of the object.
         """
         return self.SBProfile.getFlux()
 
-    def xValue(self, position):
-        """@brief Returns the value of the object at a chosen 2D position in real space.
-        
-        As in SBProfile, this function assumes all are real-valued.  xValue() may not be
-        implemented for derived classes (e.g. SBConvolve) that require an Discrete Fourier
-        Transform to determine real space values.  In this case, an SBError will be thrown at the
-        C++ layer (raises a RuntimeError in Python).
-        
-        @param position  A 2D galsim.PositionD/I instance giving the position in real space.
-        """
-        return self.SBProfile.xValue(position)
+    def xValue(self, *args, **kwargs):
+        """Returns the value of the object at a chosen 2D position in real space.
 
-    def kValue(self, position):
-        """@brief Returns the value of the object at a chosen 2D position in k space.
+        This function returns the surface brightness of the object at a particular position
+        in real space.  The position argument may be provided as a PositionD or PositionI
+        argument, or it may be given as x,y (either as a tuple or as two arguments).
 
-        @param position  A 2D galsim.PositionD/I instance giving the position in k space.
-        """
-        return self.SBProfile.kValue(position)
+        The object surface brightness profiles are typically defined in world coordinates, so
+        the position here should be in world coordinates as well.
 
-    def scaleFlux(self, fluxRatio):
-        """@brief Multiply the flux of the object by fluxRatio
-           
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
-        are no longer available.
+        Not all GSObject classes can use this method.  Classes like Convolution that require a
+        Discrete Fourier Transform to determine the real space values will not do so for a single
+        position.  Instead a RuntimeError will be raised.  The xValue() method is available if and
+        only if `obj.isAnalyticX() == True`.
+
+        Users who wish to use the xValue() method for an object that is the convolution of other
+        profiles can do so by drawing the convolved profile into an image, using the image to
+        initialize a new InterpolatedImage, and then using the xValue() method for that new object.
+
+        @param position  The position at which you want the surface brightness of the object.
+
+        @returns the surface brightness at that position.
         """
-        self.SBProfile.scaleFlux(fluxRatio)
-        self.__class__ = GSObject
+        pos = galsim.utilities.parse_pos_args(args,kwargs,'x','y')
+        return self.SBProfile.xValue(pos)
+
+    def kValue(self, *args, **kwargs):
+        """Returns the value of the object at a chosen 2D position in k space.
+
+        This function returns the amplitude of the fourier transform of the surface brightness
+        profile at a given position in k space.  The position argument may be provided as a
+        PositionD or PositionI argument, or it may be given as kx,ky (either as a tuple or as two
+        arguments).
+
+        Techinically, kValue() is available if and only if the given obj has `obj.isAnalyticK()
+        == True`, but this is the case for all GSObjects currently, so that should never be an
+        issue (unlike for xValue()).
+
+        @param position  The position in k space at which you want the fourier amplitude.
+
+        @returns the amplitude of the fourier transform at that position.
+        """
+        kpos = galsim.utilities.parse_pos_args(args,kwargs,'kx','ky')
+        return self.SBProfile.kValue(kpos)
+
+    def withFlux(self, flux):
+        """Create a version of the current object with a different flux.
+
+        This function is equivalent to `obj.withScaledFlux(flux / obj.getFlux())`.
+
+        It creates a new object that has the same profile as the original, but with the
+        surface brightness at every location rescaled such that the total flux will be
+        the given value.
+
+        @param flux     The new flux for the object.
+
+        @returns the object with the new flux
+        """
+        return self.withScaledFlux(flux / self.getFlux())
+
+    def withScaledFlux(self, flux_ratio):
+        """Create a version of the current object with the flux scaled by the given `flux_ratio`.
+
+        This function is equivalent to `obj.withFlux(flux_ratio * obj.getFlux())`.  However, this
+        function is the more efficient one, since it doesn't actually require the call to
+        getFlux().  Indeed, withFlux() is implemented in terms of this one and getFlux().
+
+        It creates a new object that has the same profile as the original, but with the
+        surface brightness at every location scaled by the given amount.
+
+        An equivalent, and usually simpler, way to effect this scaling is
+
+            obj = obj * flux_ratio
+
+        @param flux_ratio   The ratio by which to rescale the flux of the object when creating a new
+                            one.
+
+        @returns the object with the new flux.
+        """
+        new_obj = GSObject(self.SBProfile.scaleFlux(flux_ratio))
+        if hasattr(self,'original'):
+            new_obj.original = self.original
+        else:
+            new_obj.original = self
+
+        if hasattr(self,'noise'):
+            new_obj.noise = self.noise * flux_ratio**2
+        return new_obj
 
     def setFlux(self, flux):
-        """@brief Set the flux of the object.
-           
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
-        are no longer available.
+        """This is an obsolete method that is roughly equivalent to obj = obj.withFlux(flux)"""
+        new_obj = self.withFlux(flux)
+        self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
+        self.__class__ = new_obj.__class__
+
+    def scaleFlux(self, flux_ratio):
+        """This is an obsolete method that is roughly equivalent to obj = obj * flux_ratio"""
+        new_obj = self * flux_ratio
+        self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
+        self.__class__ = new_obj.__class__
+
+    def expand(self, scale):
+        """Expand the linear size of the profile by the given `scale` factor, while preserving
+        surface brightness.
+
+        e.g. `half_light_radius` <-- `half_light_radius * scale`
+
+        This doesn't correspond to either of the normal operations one would typically want to do to
+        a galaxy.  The functions dilate() and magnify() are the more typical usage.  But this
+        function is conceptually simple.  It rescales the linear dimension of the profile, while
+        preserving surface brightness.  As a result, the flux will necessarily change as well.
+
+        See dilate() for a version that applies a linear scale factor while preserving flux.
+
+        See magnify() for a version that applies a scale factor to the area while preserving surface
+        brightness.
+
+        @param scale    The factor by which to scale the linear dimension of the object.
+
+        @returns the expanded object.
         """
-        self.SBProfile.setFlux(flux)
-        self.__class__ = GSObject
+        new_obj = GSObject(self.SBProfile.expand(scale))
+        if hasattr(self,'original'):
+            new_obj.original = self.original
+        else:
+            new_obj.original = self
 
-    def applyTransformation(self, ellipse):
-        """@brief Apply a galsim.ellipse.Ellipse distortion to this object.
-           
-        Ellipse objects can be initialized in a variety of ways (see documentation of this
-        class for details).
+        if hasattr(self,'noise'):
+            new_obj.noise = self.noise.expand(scale)
+        return new_obj
 
-        Note: if the ellipse includes a dilation, then this transformation will 
-        not be flux-conserving.  It conserves surface brightness instead.
-        Thus, the flux will increase by the increase in area = dilation^2.
+    def createExpanded(self, scale):
+        """This is an obsolete synonym for expand(scale)"""
+        return self.expand(scale)
 
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
-        are no longer available.
-        """
-        if not isinstance(ellipse, galsim.Ellipse):
-            raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
-        self.SBProfile.applyTransformation(ellipse._ellipse)
-        self.__class__ = GSObject
- 
-    def applyDilation(self, scale):
-        """@brief Apply a dilation of the linear size by the given scale.
+    def applyExpansion(self, scale):
+        """This is an obsolete method that is roughly equivalent to obj = obj.expand(scale)."""
+        new_obj = self.expand(scale)
+        self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
+        self.__class__ = new_obj.__class__
 
-        Scales the linear dimensions of the image by the factor scale.
-        e.g. half_light_radius <-- half_light_radius * scale
+    def dilate(self, scale):
+        """Dilate the linear size of the profile by the given `scale` factor, while preserving
+        flux.
 
-        This operation preserves flux.
-        See applyMagnification for a version that preserves surface brightness, and thus 
+        e.g. `half_light_radius` <-- `half_light_radius * scale`
+
+        See expand() and magnify() for versions that preserve surface brightness, and thus
         changes the flux.
 
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
-        are no longer available.
+        @param scale    The linear rescaling factor to apply.
+
+        @returns the dilated object.
+        """
+        return self.expand(scale) * (1./scale**2)  # conserve flux
+
+    def createDilated(self, scale):
+        """This is an obsolete synonym for dilate(scale)"""
+        return self.dilate(scale)
+
+    def applyDilation(self, scale):
+        """This is an obsolete method that is roughly equivalent to obj = obj.dilate(scale)."""
+        new_obj = self.dilate(scale)
+        self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
+        self.__class__ = new_obj.__class__
+
+    def magnify(self, mu):
+        """Create a version of the current object with a lensing magnification applied to it,
+        scaling the area and flux by `mu` at fixed surface brightness.
+
+        This process applies a lensing magnification mu, which scales the linear dimensions of the
+        image by the factor sqrt(mu), i.e., `half_light_radius` <-- `half_light_radius * sqrt(mu)`
+        while increasing the flux by a factor of mu.  Thus, magnify() preserves surface brightness.
+
+        See dilate() for a version that applies a linear scale factor while preserving flux.
+
+        See expand() for a version that applies a linear scale factor while preserving surface
+        brightness.
+
+        @param mu   The lensing magnification to apply.
+
+        @returns the magnified object.
         """
         import math
-        flux = self.getFlux()
-        self.applyTransformation(galsim.Ellipse(math.log(scale)))
-        self.setFlux(flux)
+        return self.expand(math.sqrt(mu))
 
-    def applyMagnification(self, scale):
-        """@brief Apply a magnification by the given scale, scaling the linear size by scale
-        and the flux by scale^2.  
-        
-        Scales the linear dimensions of the image by the factor scale.
-        e.g. half_light_radius <-- half_light_radius * scale
+    def createMagnified(self, mu):
+        """This is an obsolete synonym for magnify(mu)"""
+        return self.magnify(mu)
 
-        This operation preserves surface brightness, which means that the flux is scales 
-        with the change in area.  
-        See applyDilation for a version that preserves flux.
+    def applyMagnification(self, mu):
+        """This is an obsolete method that is roughly equivalent to obj = obj.magnify(mu)"""
+        new_obj = self.magnify(mu)
+        self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
+        self.__class__ = new_obj.__class__
 
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
-        are no longer available.
-        """
-        import math
-        self.applyTransformation(galsim.Ellipse(math.log(scale)))
+    def shear(self, *args, **kwargs):
+        """Create a version of the current object with an area-preserving shear applied to it.
 
-       
-    def applyShear(self, *args, **kwargs):
-        """@brief Apply a shear to this object, where arguments are either a galsim.shear.Shear, or
-        arguments that will be used to initialize one.
+        The arguments may be either a Shear instance or arguments to be used to initialize one.
 
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
-        are no longer available.
+        For more details about the allowed keyword arguments, see the documentation for Shear
+        (for doxygen documentation, see galsim.shear.Shear).
+
+        The shear() method precisely preserves the area.  To include a lensing distortion with
+        the appropriate change in area, either use shear() with magnify(), or use lens(), which
+        combines both operations.
+
+        @param shear    The Shear to be applied. Or, as described above, you may instead supply
+                        parameters do construct a shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
+
+        @returns the sheared object.
         """
         if len(args) == 1:
             if kwargs:
-                raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
+                raise TypeError("Error, gave both unnamed and named arguments to GSObject.shear!")
             if not isinstance(args[0], galsim.Shear):
-                raise TypeError("Error, unnamed argument to applyShear is not a Shear!")
-            self.SBProfile.applyShear(args[0]._shear)
+                raise TypeError("Error, unnamed argument to GSObject.shear is not a Shear!")
+            shear = args[0]
         elif len(args) > 1:
-            raise TypeError("Error, too many unnamed arguments to applyShear!")
+            raise TypeError("Error, too many unnamed arguments to GSObject.shear!")
         else:
             shear = galsim.Shear(**kwargs)
-            self.SBProfile.applyShear(shear._shear)
-        self.__class__ = GSObject
 
-    def applyRotation(self, theta):
-        """@brief Apply a rotation theta (Angle object, +ve anticlockwise) to this object.
-           
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
-        are no longer available.
-        """
-        if not isinstance(theta, galsim.Angle):
-            raise TypeError("Input theta should be an Angle")
-        self.SBProfile.applyRotation(theta)
-        self.__class__ = GSObject
-        
-    def applyShift(self, dx, dy):
-        """@brief Apply a (dx, dy) shift to this object.
-           
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
-        are no longer available.
-        """
-        self.SBProfile.applyShift(dx, dy)
-        self.__class__ = GSObject
+        new_obj = GSObject(self.SBProfile.shear(shear._shear))
+        if hasattr(self,'original'):
+            new_obj.original = self.original
+        else:
+            new_obj.original = self
 
-    # Also add methods which create a new GSObject with the transformations applied...
-    #
-    def createTransformed(self, ellipse):
-        """@brief Returns a new GSObject by applying a galsim.ellipse.Ellipse transformation 
-        (shear, dilate, and/or shift).
-
-        Note that Ellipse objects can be initialized in a variety of ways (see documentation 
-        of this class for details).
-        """
-        if not isinstance(ellipse, galsim.Ellipse):
-            raise TypeError("Argument to createTransformed must be a galsim.ellipse.Ellipse!")
-        ret = self.copy()
-        ret.applyTransformation(ellipse)
-        return ret
-
-    def createDilated(self, scale):
-        """@brief Returns a new GSObject by applying a dilation of the linear size by the 
-        given scale.
-        
-        Scales the linear dimensions of the image by the factor scale.
-        e.g. half_light_radius <-- half_light_radius * scale
-
-        This operation preserves flux.  
-        See createMagnified for a version that preserves surface brightness, and thus 
-        changes the flux.
-        """
-        import math
-        ret = self.copy()
-        flux = self.getFlux()
-        ret.applyTransformation(galsim.Ellipse(math.log(scale)))
-        ret.setFlux(flux)
-        return ret
-
-    def createMagnified(self, scale):
-        """@brief Returns a new GSObject by applying a magnification by the given scale,
-        scaling the linear size by scale and the flux by scale^2.  
-
-        Scales the linear dimensions of the image by the factor scale.
-        e.g. half_light_radius <-- half_light_radius * scale
-
-        This operation preserves surface brightness, which means that the flux
-        is also scaled by a factor of scale^2.
-        See createDilated for a version that preserves flux.
-        """
-        import math
-        ret = self.copy()
-        ret.applyTransformation(galsim.Ellipse(math.log(scale)))
-        return ret
+        if hasattr(self,'noise'):
+            new_obj.noise = self.noise.shear(shear)
+        return new_obj
 
     def createSheared(self, *args, **kwargs):
-        """@brief Returns a new GSObject by applying a shear, where arguments are either a
-        galsim.shear.Shear or keyword arguments that can be used to create one.
-        """
-        ret = self.copy()
-        ret.applyShear(*args, **kwargs)
-        return ret
+        """This is an obsolete synonym for shear(shear)"""
+        return self.shear(*args, **kwargs)
 
-    def createRotated(self, theta):
-        """@brief Returns a new GSObject by applying a rotation theta (Angle object, +ve
-        anticlockwise).
+    def applyShear(self, *args, **kwargs):
+        """This is an obsolete method that is roughly equivalent to obj = obj.shear(shear)"""
+        new_obj = self.shear(*args, **kwargs)
+        self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
+        self.__class__ = new_obj.__class__
+
+    def lens(self, g1, g2, mu):
+        """Create a version of the current object with both a lensing shear and magnification
+        applied to it.
+
+        This GSObject method applies a lensing (reduced) shear and magnification.  The shear must be
+        specified using the g1, g2 definition of shear (see Shear documentation for more details).
+        This is the same definition as the outputs of the PowerSpectrum and NFWHalo classes, which
+        compute shears according to some lensing power spectrum or lensing by an NFW dark matter
+        halo.  The magnification determines the rescaling factor for the object area and flux,
+        preserving surface brightness.
+
+        @param g1       First component of lensing (reduced) shear to apply to the object.
+        @param g2       Second component of lensing (reduced) shear to apply to the object.
+        @param mu       Lensing magnification to apply to the object.  This is the factor by which
+                        the solid angle subtended by the object is magnified, preserving surface
+                        brightness.
+
+        @returns the lensed object.
+        """
+        return self.shear(g1=g1,g2=g2).magnify(mu)
+
+    def createLensed(self, g1, g2, mu):
+        """This is an obsolete synonym for lens(g1,g2,mu)"""
+        return self.lens(g1,g2,mu)
+
+    def applyLensing(self, g1, g2, mu):
+        """This is an obsolete method that is roughly equivalent to obj = obj.lens(g1,g2,mu)"""
+        new_obj = self.lens(g1,g2,mu)
+        self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
+        self.__class__ = new_obj.__class__
+
+    def rotate(self, theta):
+        """Rotate this object by an Angle `theta`.
+
+        @param theta    Rotation angle (Angle object, +ve anticlockwise).
+
+        @returns the rotated object.
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
-        ret = self.copy()
-        ret.applyRotation(theta)
-        return ret
-        
-    def createShifted(self, dx, dy):
-        """@brief Returns a new GSObject by applying a (dx, dy) shift.
+        new_obj = GSObject(self.SBProfile.rotate(theta))
+        if hasattr(self,'original'):
+            new_obj.original = self.original
+        else:
+            new_obj.original = self
+
+        if hasattr(self,'noise'):
+            new_obj.noise = self.noise.rotate(theta)
+        return new_obj
+
+    def createRotated(self, theta):
+        """This is an obsolete synonym for rotate(theta)"""
+        return self.rotate(theta)
+
+    def applyRotation(self, theta):
+        """This is an obsolete method that is roughly equivalent to obj = obj.rotate(theta)"""
+        new_obj = self.rotate(theta)
+        self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
+        self.__class__ = new_obj.__class__
+
+    def transform(self, dudx, dudy, dvdx, dvdy):
+        """Create a version of the current object with an arbitrary Jacobian matrix transformation
+        applied to it.
+
+        This applies a Jacobian matrix to the coordinate system in which this object
+        is defined.  It changes a profile defined in terms of (x,y) to one defined in
+        terms of (u,v) where:
+
+            u = dudx x + dudy y
+            v = dvdx x + dvdy y
+
+        That is, an arbitrary affine transform, but without the translation (which is
+        easily effected via the shift() method).
+
+        Note that this function is similar to expand in that it preserves surface brightness,
+        not flux.  If you want to preserve flux, you should also do
+
+            >>> prof *= 1./abs(dudx*dvdy - dudy*dvdx)
+
+        @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+
+        @returns the transformed object
         """
-        ret = self.copy()
-        ret.applyShift(dx, dy)
-        return ret
+        new_obj = GSObject(self.SBProfile.transform(dudx,dudy,dvdx,dvdy))
+        if hasattr(self,'original'):
+            new_obj.original = self.original
+        else:
+            new_obj.original = self
 
-    def draw(self, image=None, dx=None, gain=1., wmult=1, normalization="flux", add_to_image=False):
-        """@brief Draws an Image of the object, with bounds optionally set by an input Image.
+        if hasattr(self,'noise'):
+            new_obj.noise = self.noise.transform(dudx,dudy,dvdx,dvdy)
+        return new_obj
 
-        @param image  If provided, this will be the image on which to draw the profile.
-                      If image=None, then an automatically-sized image will be created.
-                      (Default = None)
-        @param dx     If provided, use this as the pixel scale for the image.
-                      If dx is None and image != None, then take the provided image's pixel scale.
-                      If dx is None and image == None, then use pi/maxK()
-                      (Default = None)
-        @param gain   The number of ADU to place on the image per photon.  (Default = 1)
-        @param wmult  A factor by which to make the intermediate images larger than 
-                      they are normally made.  The size is normally automatically chosen 
-                      to reach some preset accuracy targets (see include/galsim/SBProfile.h); 
-                      however, if you see strange artifacts in the image, you might try using 
-                      wmult > 1.  This will take longer of course, but it will produce more 
-                      accurate images, since they will have less "folding" in Fourier space.
-                      (Default = 1.)
-        @param normalization  Two options for the normalization:
-                              "flux" or "f" means that the sum of the output pixels is normalized
-                                     to be equal to the total flux.  (Modulo any flux that
-                                     falls off the edge of the image of course.)
-                              "surface brightness" or "sb" means that the output pixels sample
-                                     the surface brightness distribution at each location.
-                              (Default = "flux")
-        @param add_to_image  Whether to add flux to the existing image rather than clear out
-                             anything in the image before shooting.
-                             (Default = False)
-        @returns      The drawn image.
+    def createTransformed(self, dudx, dudy, dvdx, dvdy):
+        """This is an obsolete sysnonym for transform()"""
+        return self.transform(dudx,dudy,dvdx,dvdy)
+
+    def applyTransformation(self, dudx, dudy, dvdx, dvdy):
+        """This is an obsolete method that is roughly equivalent to obj = obj.transform(...)"""
+        new_obj = self.transform(dudx,dudy,dvdx,dvdy)
+        self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
+        self.__class__ = new_obj.__class__
+
+    def shift(self, *args, **kwargs):
+        """Create a version of the current object shifted by some amount in real space.
+
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
+        are no longer available.
+
+        Note: in addition to the dx,dy parameter names, you may also supply dx,dy as a tuple,
+        or as a PositionD or PositionI object.
+
+        @param dx       Horizontal shift to apply.
+        @param dy       Vertical shift to apply.
+
+        @returns the shifted object.
         """
-        # Raise an exception immediately if the normalization type is not recognized
-        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
-            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
-                              "'f', 'surface brightness' or 'sb'.") % normalization)
-        # Raise an exception here since C++ is picky about the input types
-        if type(wmult) != int:
-            raise TypeError("Input wmult should be an int")
-        if type(gain) != float:
-            gain = float(gain)
-        if dx is None: 
-            dx = 0.
-        if type(dx) != float:
-            dx = float(dx)
+        delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
+        new_obj = GSObject(self.SBProfile.shift(delta))
+        if hasattr(self,'original'):
+            new_obj.original = self.original
+        else:
+            new_obj.original = self
 
-        if image == None:
+        if hasattr(self,'noise'):
+            new_obj.noise = self.noise.copy()
+        return new_obj
+
+    def createShifted(self, *args, **kwargs):
+        """This is an obsolete synonym for shift(dx,dy)"""
+        return self.shift(*args,**kwargs)
+
+    def applyShift(self, *args, **kwargs):
+        """This is an obsolete method that is roughly equivalent to obj = obj.shift(dx,dy)"""
+        new_obj = self.shift(*args,**kwargs)
+        self.SBProfile = new_obj.SBProfile
+        if hasattr(self,'noise'): self.noise = new_obj.noise
+        self.__class__ = new_obj.__class__
+
+
+    # Make sure the image is defined with the right size and wcs for drawImage()
+    def _setup_image(self, image, nx, ny, bounds, wmult, add_to_image, dtype):
+        # Check validity of nx,ny,bounds:
+        if image is not None:
+            if bounds is not None:
+                raise ValueError("Cannot provide bounds if image is provided")
+            if nx is not None or ny is not None:
+                raise ValueError("Cannot provide nx,ny if image is provided")
+            if dtype is not None:
+                raise ValueError("Cannot specify dtype if image is provided")
+
+        # Make image if necessary
+        if image is None:
             # Can't add to image if none is provided.
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image is None")
+            # Use bounds or nx,ny if provided
+            if bounds is not None:
+                if nx is not None or ny is not None:
+                    raise ValueError("Cannot set both bounds and (nx, ny)")
+                image = galsim.Image(bounds=bounds, dtype=dtype)
+            elif nx is not None or ny is not None:
+                if nx is None or ny is None:
+                    raise ValueError("Must set either both or neither of nx, ny")
+                image = galsim.Image(nx, ny, dtype=dtype)
+            else:
+                N = self.SBProfile.getGoodImageSize(1.0, wmult)
+                image = galsim.Image(N, N, dtype=dtype)
 
-            image = self.SBProfile.draw(dx, gain, wmult)
+        # Resize the given image if necessary
+        elif not image.bounds.isDefined():
+            # Can't add to image if need to resize
+            if add_to_image:
+                raise ValueError("Cannot add_to_image if image bounds are not defined")
+            N = self.SBProfile.getGoodImageSize(1.0, wmult)
+            bounds = galsim.BoundsI(1,N,1,N)
+            image.resize(bounds)
+            image.setZero()
 
-            # In this case, the draw command may set dx automatically, so we need to 
-            # adjust the flux after the fact.  But this is ok, since add_to_image is
-            # invalid in this case.
-            if normalization.lower() == "flux" or normalization.lower() == "f":
-                dx = image.getScale()
-                image *= dx*dx
-
-        else :
-            
-            # Set dx based on the image if not provided something else.
-            if dx <= 0.:
-                dx = image.getScale()
-
+        # Else use the given image as is
+        else:
             # Clear the image if we are not adding to it.
             if not add_to_image:
                 image.setZero()
 
-            # SBProfile draw command uses surface brightness normalization.  So if we
-            # want flux normalization, we need to scale the flux by dx^2
-            if normalization.lower() == "flux" or normalization.lower() == "f":
-                gain *= dx**2
-
-            self.SBProfile.draw(image, dx, gain, wmult)
-         
         return image
 
-    def drawShoot(self, image, n_photons=0., dx=None, gain=1., uniform_deviate=None,
-                  normalization="flux", noise=0., poisson_flux=True, add_to_image=False):
-        """@brief Draw an image of the object by shooting individual photons drawn from the 
-        surface brightness profile of the object.
+    def _local_wcs(self, wcs, image, offset, use_true_center):
+        # Get the local WCS at the location of the object.
 
-        @param image  The image on which to draw the profile.
-                      Note: Unlike for the regular draw command, image is a required
-                      parameter.  drawShoot will not make the image for you.
-        @param n_photons    If provided, the number of photons to use.
-                            If not provided, use as many photons as necessary to end up with
-                            an image with the correct poisson shot noise for the object's flux.
-                            For positive definite profiles, this is equivalent to n_photons = flux.
-                            However, some profiles need more than this because some of the shot
-                            photons are negative (usually due to interpolants).
-                            (Default = 0)
-        @param dx     If provided, use this as the pixel scale for the image.
-                      If dx is None then use the provided image's pixel scale.
-                      (Default = None)
-        @param gain  The number of ADU to place on the image per photon.  (Default = 1)
-        @param uniform_deviate  If provided, a UniformDeviate to use for the random numbers
-                                If uniform_deviate=None, one will be automatically created, 
-                                using the time as a seed.
-                                (Default = None)
-        @param normalization  Two options for the normalization:
-                              "flux" or "f" means that the sum of the output pixels is normalized
-                                     to be equal to the total flux.  (Modulo any flux that
-                                     falls off the edge of the image of course.)
-                              "surface brightness" or "sb" means that the output pixels sample
-                                     the surface brightness distribution at each location.
-                              (Default = "flux")
-        @param noise  If provided, the allowed extra noise in each pixel.
-                      This is only relevant if n_photons=0, so the number of photons is being 
-                      automatically calculated.  In that case, if the image noise is 
-                      dominated by the sky background, you can get away with using fewer
-                      shot photons than the full n_photons = flux.  Essentially each shot photon
-                      can have a flux > 1, which increases the noise in each pixel.
-                      The noise parameter specifies how much extra noise per pixel is allowed 
-                      because of this approximation.  A typical value for this might be
-                      noise = sky_level / 100 where sky_level is the flux per pixel 
-                      due to the sky.  If the natural number of photons produces less noise 
-                      than this value for all pixels, we lower the number of photons to bring 
-                      the resultant noise up to this value.  If the natural value produces 
-                      more noise than this, we accept it and just use the natural value.
-                      Note that this uses a "variance" definition of noise, not a "sigma" 
-                      definition.
-                      (Default = 0.)
-        @param poisson_flux  Whether to allow total object flux scaling to vary according to 
-                             Poisson statistics for n_photons samples.
-                             (Default = True)
-        @param add_to_image  Whether to add flux to the existing image rather than clear out
-                             anything in the image before shooting.
-                             (Default = False)
-                              
-        @returns  The tuple (image, added_flux), where image is the input with drawn photons 
-                  added and added_flux is the total flux of photons that landed inside the image 
-                  bounds.
+        if wcs.isUniform():
+            return wcs.local()
+        elif image is None:
+            # Should have already checked for this, but just to be safe, repeat the check here.
+            raise ValueError("Cannot provide non-local wcs when image is None")
+        elif not image.bounds.isDefined():
+            raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
+        elif use_true_center:
+            obj_cen = image.bounds.trueCenter()
+        else:
+            obj_cen = image.bounds.center()
+            # Convert from PositionI to PositionD
+            obj_cen = galsim.PositionD(obj_cen.x, obj_cen.y)
+        if offset:
+            obj_cen += offset
+        return wcs.local(image_pos=obj_cen)
 
-        The second part of the return tuple may be useful as a sanity check that you have
-        provided a large enough image to catch most of the flux.  For example:
-        @code
-        image, added_flux = obj.drawShoot(image)
-        assert added_flux > 0.99 * obj.getFlux()
-        @endcode
-        However, the appropriate threshold will depend things like whether you are 
-        keeping poisson_flux=True, how high the flux is, how big your images are relative to
-        the size of your object, etc.
+    def _parse_offset(self, offset):
+        if offset is None:
+            return galsim.PositionD(0,0)
+        else:
+            if isinstance(offset, galsim.PositionD) or isinstance(offset, galsim.PositionI):
+                return galsim.PositionD(offset.x, offset.y)
+            else:
+                # Let python raise the appropriate exception if this isn't valid.
+                return galsim.PositionD(offset[0], offset[1])
 
-        The input image must have defined boundaries and pixel scale.  The photons generated by
-        the drawShoot() method will be binned into the target image.  The input image will be 
-        cleared before drawing in the photons by default, unless the keyword add_to_image is 
-        set to True.  Scale and location of the image pixels will not be altered. 
 
-        It is important to remember that the image produced by drawShoot() represents the object
-        as convolved with the square image pixel.  So when using drawShoot() instead of draw(),
-        you should not convolve with a Pixel.  This will produce the equivalent image (for very 
-        large n_photons) as draw() produces when the same object is convolved with Pixel(xw=dx) 
-        when drawing onto an image with pixel scale dx.
+    def _fix_center(self, image, offset, use_true_center, reverse):
+        # Note: this assumes self is in terms of image coordinates.
+        if image is None or not image.bounds.isDefined():
+            shape = (0,0)
+        else:
+            shape = image.array.shape
+
+        if use_true_center:
+            # For even-sized images, the SBProfile draw function centers the result in the
+            # pixel just up and right of the real center.  So shift it back to make sure it really
+            # draws in the center.
+            # Also, remember that numpy's shape is ordered as [y,x]
+            dx = offset.x
+            dy = offset.y
+            if shape[1] % 2 == 0: dx -= 0.5
+            if shape[0] % 2 == 0: dy -= 0.5
+            offset = galsim.PositionD(dx,dy)
+
+        # For InterpolatedImage offsets, we apply the offset in the opposite direction.
+        if reverse:
+            offset = -offset
+
+        if offset == galsim.PositionD(0,0):
+            return self.copy()
+        else:
+            return self.shift(offset)
+
+    def _determine_wcs(self, scale, wcs, image):
+        # Determine the correct wcs given the input scale, wcs and image.
+        if wcs is not None:
+            if scale is not None:
+                raise ValueError("Cannot provide both wcs and scale")
+            if not wcs.isUniform():
+                if image is None:
+                    raise ValueError("Cannot provide non-local wcs when image is None")
+                if not image.bounds.isDefined():
+                    raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
+            if not isinstance(wcs, galsim.BaseWCS):
+                raise TypeError("wcs must be a BaseWCS instance")
+            if image is not None: image.wcs = None
+        elif scale is not None:
+            wcs = galsim.PixelScale(scale)
+            if image is not None: image.wcs = None
+        elif image is not None and image.wcs is not None:
+            wcs = image.wcs
+
+        # If the input scale <= 0, or wcs is still None at this point, then use the Nyquist scale:
+        if wcs is None or (wcs.isPixelScale() and wcs.scale <= 0):
+            wcs = galsim.PixelScale(self.nyquistScale())
+
+        return wcs
+
+    def drawImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None, dtype=None,
+                  method='auto', gain=1., wmult=1., add_to_image=False, use_true_center=True,
+                  offset=None, n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None,
+                  setup_only=False, dx=None):
+        """Draws an Image of the object.
+
+        The drawImage() method is used to draw an Image of the current object using one of several
+        possible rendering methods (see below).  It can create a new Image or can draw onto an
+        existing one if provided by the `image` parameter.  If the `image` is given, you can also
+        optionally add to the given Image if `add_to_image = True`, but the default is to replace
+        the current contents with new values.
+
+        Note that if you provide an `image` parameter, it is the image onto which the profile
+        will be drawn.  The provided image *will be modified*.  A reference to the same image
+        is also returned to provide a parallel return behavior to when `image` is `None`
+        (described above).
+
+        This option is useful in practice because you may want to construct the image first and
+        then draw onto it, perhaps multiple times. For example, you might be drawing onto a
+        subimage of a larger image. Or you may want to draw different components of a complex
+        profile separately.  In this case, the returned value is typically ignored.  For example:
+
+                >>> im1 = bulge.drawImage()
+                >>> im2 = disk.drawImage(image=im1, add_to_image=True)
+                >>> assert im1 is im2
+
+                >>> full_image = galsim.Image(2048, 2048, scale=pixel_scale)
+                >>> b = galsim.BoundsI(x-32, x+32, y-32, y+32)
+                >>> stamp = obj.drawImage(image = full_image[b])
+                >>> assert (stamp.array == full_image[b].array).all()
+
+        If drawImage() will be creating the image from scratch for you, then there are several ways
+        to control the size of the new image.  If the `nx` and `ny` keywords are present, then an
+        image with these numbers of pixels on a side will be created.  Similarly, if the `bounds`
+        keyword is present, then an image with the specified bounds will be created.  Note that it
+        is an error to provide an existing Image when also specifying `nx`, `ny`, or `bounds`. In
+        the absence of `nx`, `ny`, and `bounds`, drawImage will decide a good size to use based on
+        the size of the object being drawn.  Basically, it will try to use an area large enough to
+        include at least 99.5% of the flux.  (Note: the value 0.995 is really `1 -
+        folding_threshold`.  You can change the value of `folding_threshold` for any object via
+        GSParams.  See `help(GSParams)` for more details.)  You can set the pixel scale of the
+        constructed image with the `scale` parameter, or set a WCS function with `wcs`.  If you do
+        not provide either `scale` or `wcs`, then drawImage() will default to using the Nyquist
+        scale for the current object.  You can also set the data type used in the new Image with the
+        `dtype` parameter that has the same options as for the Image constructor.
+
+        There are several different possible methods drawImage() can use for rendering the image.
+        This is set by the `method` parameter.  The options are:
+
+            'auto'      This is the default, which will normally be equivalent to 'fft'.  However,
+                        if the object being rendered is simple (no convolution) and has hard edges
+                        (e.g. a Box or a truncated Moffat or Sersic), then it will switch to
+                        'real_space', since that is often both faster and more accurate in these
+                        cases (due to ringing in Fourier space).
+
+            'fft'       The integration of the light within each pixel is mathematically equivalent
+                        to convolving by the pixel profile (a Pixel object) and sampling the result
+                        at the centers of the pixels.  This method will do that convolution using
+                        a discrete Fourier transform.  Furthermore, if the object (or any component
+                        of it) has been transformed via shear(), dilate(), etc., then these
+                        transformations are done in Fourier space as well.
+
+            'real_space'  This uses direct integrals (using the Gauss-Kronrod-Patterson algorithm)
+                        in real space for the integration over the pixel response.  It is usually
+                        slower than the 'fft' method, but if the profile has hard edges that cause
+                        ringing in Fourier space, it can be faster and/or more accurate.  If you
+                        use 'real_space' with something that is already a Convolution, then this
+                        will revert to 'fft', since the double convolution that is required to also
+                        handle the pixel response is far too slow to be practical using real-space
+                        integrals.
+
+            'phot'      This uses a technique called photon shooting to render the image.
+                        Essentially, the object profile is taken as a probability distribution
+                        from which a finite number of photons are "shot" onto the image.  Each
+                        photon's flux gets added to whichever pixel the photon hits.  This process
+                        automatically accounts for the integration of the light over the pixel
+                        area, since all photons that hit any part of the pixel are counted.
+                        Convolutions and transformations are simple geometric processes in this
+                        framework.  However, there are two caveats with this method: (1) the
+                        resulting image will have Poisson noise from the finite number of photons,
+                        and (2) it is not available for all object types (notably anything that
+                        includes a Deconvolution).
+
+            'no_pixel'  Instead of integrating over the pixels, this method will sample the profile
+                        at the centers of the pixels and multiply by the pixel area.  If there is
+                        a convolution involved, the choice of whether this will use an FFT or
+                        real-space calculation is governed by the `real_space` parameter of the
+                        Convolution class.  This method is the appropriate choice if you are using
+                        a PSF that already includes a convolution by the pixel response.  For
+                        example, if you are using a PSF from an observed image of a star, then it
+                        has already been convolved by the pixel, so you would not want to do so
+                        again.  Note: The multiplication by the pixel area gets the flux
+                        normalization right for the above use case.  cf. `method = 'sb'`.
+
+            'sb'        This is a lot like 'no_pixel', except that the image values will simply be
+                        the sampled object profile's surface brightness, not multiplied by the
+                        pixel area.  This does not correspond to any real observing scenario, but
+                        it could be useful if you want to view the surface brightness profile of an
+                        object directly, without including the pixel integration.
+
+        Normally, the flux of the object should be equal to the sum of all the pixel values in the
+        image, less some small amount of flux that may fall off the edge of the image (assuming you
+        don't use `method='sb'`).  However, you may optionally set a `gain` value, which converts
+        between photons and ADU (so-called analog-to-digital units), the units of the pixel values
+        in real images.  Normally, the gain of a CCD is in electrons/ADU, but in GalSim, we fold
+        the quantum efficiency into the gain as well, so the units are photons/ADU.  The flux of
+        the object is then taken to be in photons, and the `gain` converts this to ADU.
+
+        The 'phot' method has a few extra parameters that adjust how it functions.  The total
+        number of photons to shoot is normally calculated from the object's flux.  This flux is
+        taken to be given in photons, so for most simple profiles, this will equal the number of
+        photons shot.  (See the discussion in Rowe et al, 2014, for why this might be modified for
+        InterpolatedImage and related profiles.)  However, you can manually set a different number
+        of photons with `n_photons`.  You can also set `max_extra_noise` to tell drawImage() to use
+        fewer photons than normal (and so is faster) such that no more than that much extra noise
+        is added to any pixel.  This is particularly useful if you will be subsequently adding sky
+        noise, and you can thus tolerate more noise than the normal number of photons would give
+        you, since using fewer photons is of course faster.  Finally, the default behavior is to
+        have the total flux vary as a Poisson random variate, which is normally appropriate with
+        photon shooting.  But you can turn this off with `poisson_flux=False`.  It also defaults to
+        False if you set an explicit value for `n_photons`.
+
+        The object will by default be drawn with its nominal center at the center location of the
+        image.  There is thus a qualitative difference in the appearance of the rendered profile
+        when drawn on even- and odd-sized images.  For a profile with a maximum at (0,0), this
+        maximum will fall in the central pixel of an odd-sized image, but in the corner of the four
+        central pixels of an even-sized image.  There are two parameters that can affect this
+        behavior.  If you want the nominal center to always fall at the center of a pixel, you can
+        use `use_true_center=False`.  This will put the object's center at the position
+        `image.center()` which is an integer pixel value, and is not the true center of an
+        even-sized image.  You can also arbitrarily offset the profile from the image center with
+        the `offset` parameter to handle any sub-pixel dithering you want.
+
+        On return, the image will have an attribute `added_flux`, which will be set to be the total
+        flux added to the image.  This may be useful as a sanity check that you have provided a
+        large enough image to catch most of the flux.  For example:
+
+            >>> obj.drawImage(image)
+            >>> assert image.added_flux > 0.99 * obj.getFlux()
+
+        The appropriate threshold will depend on your particular application, including what kind
+        of profile the object has, how big your image is relative to the size of your object,
+        whether you are keeping `poisson_flux=True`, etc.
+
+        Given the periodicity implicit in the use of FFTs, there can occasionally be artifacts due
+        to wrapping at the edges, particularly for objects that are quite extended (e.g., due to
+        the nature of the radial profile).  Use of the keyword parameter `wmult > 1` can be used to
+        reduce the size of these artifacts (by making larger FFT images), at the expense of the
+        calculations taking longer and using more memory.  Alternatively, the objects that go into
+        the image can be created with a `gsparams` keyword that has a lower-than-default value for
+        `folding_threshold`; see `help(galsim.GSParams)` for more information.
+
+        @param image        If provided, this will be the image on which to draw the profile.
+                            If `image` is None, then an automatically-sized Image will be created.
+                            If `image` is given, but its bounds are undefined (e.g. if it was
+                            constructed with `image = galsim.Image()`), then it will be resized
+                            appropriately based on the profile's size [default: None].
+        @param nx           If provided and `image` is None, use to set the x-direction size of the
+                            image.  Must be accompanied by `ny`.
+        @param ny           If provided and `image` is None, use to set the y-direction size of the
+                            image.  Must be accompanied by `nx`.
+        @param bounds       If provided and `image` is None, use to set the bounds of the image.
+        @param scale        If provided, use this as the pixel scale for the image.
+                            If `scale` is None and `image` is given, then take the provided
+                            image's pixel scale.
+                            If `scale` is None and `image` is None, then use the Nyquist scale.
+                            If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
+                            If `scale > 0` and `image` is given, then override `image.scale` with
+                            the value given as a keyword.
+                            [default: None]
+        @param wcs          If provided, use this as the wcs for the image (possibly overriding any
+                            existing `image.wcs`).  At most one of `scale` or `wcs` may be provided.
+                            [default: None]
+        @param dtype        The data type to use for an automatically constructed image.  Only
+                            valid if `image` is None. [default: None, which means to use
+                            numpy.float32]
+        @param method       Which method to use for rendering the image.  See discussion above
+                            for the various options and what they do. [default: 'auto']
+        @param gain         The number of photons per ADU ("analog to digital units", the units of
+                            the numbers output from a CCD).  [default: 1]
+        @param wmult        A multiplicative factor by which to enlarge (in each direction) the
+                            default automatically calculated FFT grid size used for any
+                            intermediate calculations in Fourier space.  The size of the
+                            intermediate images is normally automatically chosen to reach some
+                            preset accuracy targets [cf. GSParams]; however, if you see strange
+                            artifacts in the image, you might try using `wmult > 1`.  This will
+                            take longer of course, but it will produce more accurate images, since
+                            they will have less "folding" in Fourier space. If the image size is
+                            not specified, then the output real-space image will be enlarged by
+                            a factor of `wmult`.  If the image size is specified by the user,
+                            rather than automatically-sized, use of `wmult>1` will still affect the
+                            size of the images used for the Fourier-space calculations and hence
+                            can reduce image artifacts, even though the image that is returned will
+                            be the requested size. [default: 1]
+        @param add_to_image Whether to add flux to the existing image rather than clear out
+                            anything in the image before drawing.
+                            Note: This requires that `image` be provided and that it have defined
+                            bounds. [default: False]
+        @param use_true_center  Normally, the profile is drawn to be centered at the true center
+                            of the image (using the function image.bounds.trueCenter()).
+                            If you would rather use the integer center (given by
+                            image.bounds.center()), set this to `False`.  [default: True]
+        @param offset       The location at which to center the profile being drawn relative to the
+                            center of the image (either the true center if `use_true_center=True`,
+                            or the nominal center if `use_true_center=False`). [default: None]
+        @param n_photons    If provided, the number of photons to use for photon shooting.
+                            If not provided (i.e. `n_photons = 0`), use as many photons as
+                            necessary to result in an image with the correct Poisson shot
+                            noise for the object's flux.  For positive definite profiles, this
+                            is equivalent to `n_photons = flux`.  However, some profiles need
+                            more than this because some of the shot photons are negative
+                            (usually due to interpolants).
+                            [default: 0]
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @param max_extra_noise  If provided, the allowed extra noise in each pixel when photon
+                            shooting.  This is only relevant if `n_photons=0`, so the number of
+                            photons is being automatically calculated.  In that case, if the image
+                            noise is dominated by the sky background, then you can get away with
+                            using fewer shot photons than the full `n_photons = flux`.  Essentially
+                            each shot photon can have a `flux > 1`, which increases the noise in
+                            each pixel.  The `max_extra_noise` parameter specifies how much extra
+                            noise per pixel is allowed because of this approximation.  A typical
+                            value for this might be `max_extra_noise = sky_level / 100` where
+                            `sky_level` is the flux per pixel due to the sky.  Note that this uses
+                            a "variance" definition of noise, not a "sigma" definition.
+                            [default: 0.]
+        @param poisson_flux Whether to allow total object flux scaling to vary according to
+                            Poisson statistics for `n_photons` samples when photon shooting.
+                            [default: True, unless `n_photons` is given, in which case the default
+                            is False]
+        @param setup_only   Don't actually draw anything on the image.  Just make sure the image
+                            is set up correctly.  This is used internally by GalSim, but there
+                            may be cases where the user will want the same functionality.
+                            [default: False]
+
+        @returns the drawn Image.
         """
+        # Check for obsolete dx parameter
+        if dx is not None and scale is None: scale = dx
 
-        # Raise an exception immediately if the normalization type is not recognized
-        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
-            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
-                              "'f', 'surface brightness' or 'sb'.") % normalization)
-        # Raise an exception here since C++ is picky about the input types
-        if image is None:
-            raise TypeError("drawShoot requires the image to be provided.")
+        # Check that image is sane
+        if image is not None and not isinstance(image, galsim.Image):
+            raise ValueError("image is not an Image instance")
 
-        if type(n_photons) != float:
-            # if given an int, just convert it to a float
-            n_photons = float(n_photons)
-        if dx is None: 
-            dx = 0.
-        if type(dx) != float:
-            dx = float(dx)
+        # Make sure the type of gain is correct and has a valid value:
         if type(gain) != float:
             gain = float(gain)
-        if type(noise) != float:
-            noise = float(noise)
-        if uniform_deviate == None:
-            uniform_deviate = galsim.UniformDeviate()
+        if gain <= 0.:
+            raise ValueError("Invalid gain <= 0.")
 
-        # Check that either n_photons is set to something or flux is set to something
-        if n_photons == 0. and self.getFlux() == 1.:
-            import warnings
-            msg = "Warning: drawShoot for object with flux == 1, but n_photons == 0.\n"
-            msg += "This will only shoot a single photon."
-            warnings.warn(msg)
+        # Make sure the type of wmult is correct and has a valid value
+        if type(wmult) != float:
+            wmult = float(wmult)
+        if wmult <= 0:
+            raise ValueError("Invalid wmult <= 0.")
 
-        # Clear the image if we are not adding to it.
-        if not add_to_image:
-            image.setZero()
+        if method not in ['auto', 'fft', 'real_space', 'phot', 'no_pixel', 'sb']:
+            raise ValueError("Invalid method name = %s"%method)
 
-        # Set dx based on the image if not provided something else.
-        if dx <= 0.:
-            dx = image.getScale()
+        # Some checks that are only relevant for method == 'phot'
+        if method == 'phot':
+            # Make sure the type of n_photons is correct and has a valid value:
+            if type(n_photons) != float:
+                n_photons = float(n_photons)
+            if n_photons < 0.:
+                raise ValueError("Invalid n_photons < 0.")
 
-        # SBProfile draw command uses surface brightness normalization.  So if we
-        # want flux normalization, we need to scale the flux by dx^2
-        if normalization.lower() == "flux" or normalization.lower() == "f":
-            gain *= dx**2
-            
-        added_flux = self.SBProfile.drawShoot(
-                image, n_photons, uniform_deviate, dx, gain, noise, poisson_flux)
+            if poisson_flux is None:
+                if n_photons == 0.: poisson_flux = True
+                else: poisson_flux = False
 
-        return image, added_flux
-         
+            # Make sure the type of max_extra_noise is correct and has a valid value:
+            if type(max_extra_noise) != float:
+                max_extra_noise = float(max_extra_noise)
 
-# Now define some of the simplest derived classes, those which are otherwise empty containers for
-# SBPs...
+            # Setup the uniform_deviate if not provided one.
+            if rng is None:
+                uniform_deviate = galsim.UniformDeviate()
+            elif isinstance(rng,galsim.BaseDeviate):
+                # If it's a BaseDeviate, we can convert to UniformDeviate
+                uniform_deviate = galsim.UniformDeviate(rng)
+            else:
+                raise TypeError("The rng provided is not a BaseDeviate")
+
+            # Check that either n_photons is set to something or flux is set to something
+            if n_photons == 0. and self.getFlux() == 1.:
+                import warnings
+                msg = "Warning: drawImage for object with flux == 1, but n_photons == 0.\n"
+                msg += "This will only shoot a single photon (since flux = 1)."
+                warnings.warn(msg)
+        else:
+            if n_photons != 0.:
+                raise ValueError("n_photons is only relevant for method='phot'")
+            if rng is not None:
+                raise ValueError("rng is only relevant for method='phot'")
+            if max_extra_noise != 0.:
+                raise ValueError("max_extra_noise is only relevant for method='phot'")
+            if poisson_flux is not None:
+                raise ValueError("poisson_flux is only relevant for method='phot'")
+
+        # Check that the user isn't convolving by a Pixel already.  This is almost always an error.
+        if method == 'auto' and isinstance(self, galsim.Convolution):
+            if any([ isinstance(obj, galsim.Pixel) for obj in self.obj_list ]):
+                import warnings
+                warnings.warn(
+                    "You called drawImage with no `method` parameter "
+                    "for an object that includes convolution by a Pixel.  "
+                    "This is probably an error.  Normally, you should let GalSim "
+                    "handle the Pixel convolution for you.  If you want to handle the Pixel "
+                    "convolution yourself, you can use method=no_pixel.  Or if you really meant "
+                    "for your profile to include the Pixel and also have GalSim convolve by "
+                    "an _additional_ Pixel, you can suppress this warning by using method=fft.")
+
+        # Check for scale if using nx, ny, or bounds
+        if (scale is None and wcs is None and
+            (nx is not None or ny is not None or bounds is not None)):
+            raise ValueError("Must provide scale if providing nx,ny or bounds")
+
+        # Figure out what wcs we are going to use.
+        wcs = self._determine_wcs(scale, wcs, image)
+
+        # Make sure offset is a PositionD
+        offset = self._parse_offset(offset)
+
+        # Get the local WCS, accounting for the offset correctly.
+        local_wcs = self._local_wcs(wcs, image, offset, use_true_center)
+
+        # Convert the profile in world coordinates to the profile in image coordinates:
+        prof = local_wcs.toImage(self)
+
+        # If necessary, convolve by the pixel
+        if method in ['auto', 'fft', 'real_space']:
+            if method == 'auto':
+                real_space = None
+            elif method == 'fft':
+                real_space = False
+            else:
+                real_space = True
+            prof = galsim.Convolve(prof, galsim.Pixel(scale = 1.0), real_space=real_space)
+
+        # Apply the offset, and possibly fix the centering for even-sized images
+        prof = prof._fix_center(image, offset, use_true_center, reverse=False)
+
+        # Make sure image is setup correctly
+        image = prof._setup_image(image, nx, ny, bounds, wmult, add_to_image, dtype)
+        image.wcs = wcs
+
+        if setup_only:
+            image.added_flux = 0.
+            return image
+
+        # For surface brightness normalization, scale gain by the pixel area.
+        if method == 'sb':
+            gain *= local_wcs.pixelArea()
+
+        # Making a view of the image lets us change the center without messing up the original.
+        imview = image.view()
+        imview.setCenter(0,0)
+
+        if method == 'phot':
+            try:
+                image.added_flux = prof.SBProfile.drawShoot(
+                    imview.image, n_photons, uniform_deviate, gain, max_extra_noise,
+                    poisson_flux, add_to_image)
+            except RuntimeError:
+                # Give some extra explanation as a warning, then raise the original exception
+                # so the traceback shows as much detail as possible.
+                import warnings
+                warnings.warn(
+                    "Unable to draw this GSObject with method='phot'.  Perhaps it is a "+
+                    "Deconvolve or is a compound including one or more Deconvolve objects.")
+                raise
+        else:
+            image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
+
+        return image
+
+    def draw(self, *args, **kwargs):
+        """An obsolete synonym for obj.drawImage(method='no_pixel')
+        """
+        normalization = kwargs.pop('normalization','f')
+        if normalization in ['flux','f']:
+            return self.drawImage(*args, method='no_pixel', **kwargs)
+        else:
+            return self.drawImage(*args, method='sb', **kwargs)
+
+    def drawShoot(self, *args, **kwargs):
+        """An obsolete synonym for obj.drawImage(method='phot')
+        """
+        normalization = kwargs.pop('normalization','f')
+        if normalization in ['flux','f']:
+            return self.drawImage(*args, method='phot', **kwargs)
+        else:
+            # We don't have a method for this, but I think it must be rare.  Photon shooting
+            # with surface brightness normalization seems pretty odd.  We do use it in the test
+            # suite a few times though.  So, need to reproduce a bit of code to get the
+            # pixel area to switch to sb normalization (via the gain).
+            if len(args) > 0:
+                image = args[0]
+            else:
+                image = kwargs.get('image', None)
+            scale = kwargs.get('scale', None)
+            wcs = kwargs.get('wcs', None)
+            offset = kwargs.get('offset', None)
+            use_true_center = kwargs.get('use_true_center', None)
+            wcs = self._determine_wcs(scale, wcs, image)
+            offset = self._parse_offset(offset)
+            local_wcs = self._local_wcs(wcs, image, offset, use_true_center)
+            gain = kwargs.pop('gain',1.)
+            gain *= local_wcs.pixelArea()
+            return self.drawImage(*args, method='phot', gain=gain, **kwargs)
+
+    def drawKImage(self, re=None, im=None, nx=None, ny=None, bounds=None, scale=None, dtype=None,
+                   gain=1., wmult=1., add_to_image=False, dk=None):
+        """Draws the k-space Image (both real and imaginary parts) of the object, with bounds
+        optionally set by input Image instances.
+
+        Normalization is always such that re(0,0) = flux.  Unlike the real-space drawImage()
+        function, the (0,0) point will always be one of the actual pixel values.  For even-sized
+        images, it will be 1/2 pixel above and to the right of the true center of the image.
+
+        Another difference from  drawImage() is that a wcs other than a simple pixel scale is not
+        allowed.  There is no `wcs` parameter here, and if the images have a non-trivial wcs (and
+        you don't override it with the `scale` parameter), a TypeError will be raised.
+
+        Also, there is no convolution by a pixel.  This is just a direct image of the Fourier
+        transform of the surface brightness profile.
+
+        @param re           If provided, this will be the real part of the k-space image.
+                            If `re` and `im` are None, then automatically-sized images will be
+                            created.  If they are given, but their bounds are undefined, then they
+                            will be resized appropriately based on the profile's size.
+                            [default: None]
+        @param im           If provided, this will be the imaginary part of the k-space image.
+                            A provided `im` must match the size and scale of `re`.
+                            If `im` is None, then `re` must also be None. [default: None]
+        @param scale        If provided, use this as the pixel scale, dk, for the images.
+                            If `scale` is None and `re` and `im` are given, then take the provided
+                            images' pixel scale (which must be equal).
+                            If `scale` is None and `re` and `im` are None, then use the Nyquist
+                            scale.
+                            If `scale <= 0` (regardless of `re`, `im`), then use the Nyquist scale.
+                            [default: None]
+        @param dtype        The data type to use for automatically constructed images.  Only
+                            valid if `re` and `im` are None. [default: None, which means to
+                            use numpy.float32]
+        @param gain         The number of photons per ADU ("analog to digital units", the units of
+                            the numbers output from a CCD).  [default: 1.]
+        @param wmult        A multiplicative factor by which to enlarge (in each direction) the
+                            size of the image, if you are having drawKImage() automatically
+                            construct the images for you.  [default: 1]
+        @param add_to_image Whether to add to the existing images rather than clear out
+                            anything in the image before drawing.
+                            Note: This requires that `re` and `im` be provided and that they have
+                            defined bounds. [default: False]
+
+        @returns the tuple of Image instances, `(re, im)` (created if necessary)
+        """
+        # Check for obsolete dk parameter
+        if dk is not None and scale is None: scale = dk
+
+        # Make sure the type of gain is correct and has a valid value:
+        if type(gain) != float:
+            gain = float(gain)
+        if gain <= 0.:
+            raise ValueError("Invalid gain <= 0.")
+
+        # Make sure the type of wmult is correct and has a valid value
+        if type(wmult) != float:
+            wmult = float(wmult)
+        if wmult <= 0:
+            raise ValueError("Invalid wmult <= 0.")
+
+        # Check for scale if using nx, ny, or bounds
+        if (scale is None and
+            (nx is not None or ny is not None or bounds is not None)):
+            raise ValueError("Must provide scale if providing nx,ny or bounds")
+
+        # Check that the images are consistent, and possibly get the scale from them.
+        if re is None:
+            if im is not None:
+                raise ValueError("re is None, but im is not None")
+        else:
+            if im is None:
+                raise ValueError("im is None, but re is not None")
+            if scale is None:
+                # This check will raise a TypeError if re.wcs or im.wcs is not a PixelScale
+                if re.scale != im.scale:
+                    raise ValueError("re and im do not have the same input scale")
+                # Grab the scale to use from the image.
+                scale = re.scale
+            if re.bounds.isDefined() or im.bounds.isDefined():
+                if re.bounds != im.bounds:
+                    raise ValueError("re and im do not have the same defined bounds")
+
+        # The input scale (via scale or re.scale) is really a dk value, so call it that for
+        # clarity here, since we also need the real-space pixel scale, which we will call dx.
+        if scale is None or scale <= 0:
+            dk = self.stepK()
+        else:
+            dk = float(scale)
+        if re is not None and re.bounds.isDefined():
+            dx = 2.*np.pi/( np.max(re.array.shape) * dk )
+        else:
+            dx = self.nyquistScale()
+
+        # If the profile needs to be constructed from scratch, the _setup_image function will
+        # do that, but only if the profile is in image coordinates for the real space image.
+        # So make that profile.
+        real_prof = galsim.PixelScale(dx).toImage(self)
+        re = real_prof._setup_image(re, nx, ny, bounds, wmult, add_to_image, dtype)
+        im = real_prof._setup_image(im, nx, ny, bounds, wmult, add_to_image, dtype)
+
+        # Set the wcs of the images to use the dk scale size
+        re.scale = dk
+        im.scale = dk
+
+        # Now, for drawing the k-space image, we need the profile to be in the image coordinates
+        # that correspond to having unit-sized pixels in k space. The conversion to image
+        # coordinates in this case is to apply the inverse dk pixel scale.
+        prof = galsim.PixelScale(1./dk).toImage(self)
+
+        # Making views of the images lets us change the centers without messing up the originals.
+        review = re.view()
+        review.setCenter(0,0)
+        imview = im.view()
+        imview.setCenter(0,0)
+
+        prof.SBProfile.drawK(review.image, imview.image, gain, wmult)
+
+        return re,im
+
+    def drawK(self, *args, **kwargs):
+        """An obsolete synonym for drawKImage()
+        """
+        return self.drawKImage(*args, **kwargs)
+
+
+# --- Now defining the derived classes ---
 #
-# Gaussian class inherits the GSObject method interface, but therefore has a "has a" relationship 
-# with the C++ SBProfile class rather than an "is a"... The __init__ method is very simple and all
-# the GSObject methods & attributes are inherited.
-# 
-# In particular, the SBGaussian is now an attribute of the Gaussian, an attribute named 
-# "SBProfile", which can be queried for type as desired.
+# All derived classes inherit the GSObject method interface, but therefore have a "has a"
+# relationship with the C++ SBProfile class rather than an "is a" one...
+#
+# The __init__ method is usually simple and all the GSObject methods & attributes are inherited.
 #
 class Gaussian(GSObject):
-    """@brief GalSim Gaussian, which has an SBGaussian in the SBProfile attribute.
+    """A class describing a 2D Gaussian surface brightness profile.
+
+    The Gaussian surface brightness profile is characterized by two properties, its `flux`
+    and the characteristic size `sigma` where the radial profile of the circular Gaussian
+    drops off as `exp[-r^2 / (2. * sigma^2)]`.
+
+    Initialization
+    --------------
+
+    A Gaussian can be initialized using one (and only one) of three possible size parameters:
+    `sigma`, `fwhm`, or `half_light_radius`.  Exactly one of these three is required.
+
+    @param sigma            The value of sigma of the profile.  Typically given in arcsec.
+                            [One of `sigma`, `fwhm`, or `half_light_radius` is required.]
+    @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
+                            [One of `sigma`, `fwhm`, or `half_light_radius` is required.]
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of `sigma`, `fwhm`, or `half_light_radius` is required.]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    In addition to the usual GSObject methods, Gaussian has the following access methods:
+
+        >>> sigma = gauss.getSigma()
+        >>> fwhm = gauss.getFWHM()
+        >>> hlr = gauss.getHalfLightRadius()
     """
-    def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
-        GSObject.__init__(self, galsim.SBGaussian(half_light_radius=half_light_radius, 
-                                                  fwhm=fwhm, sigma=sigma, flux=flux))
-        
+
+    # Initialization parameters of the object, with type information, to indicate
+    # which attributes are allowed / required in a config file for this object.
+    # _req_params are required
+    # _opt_params are optional
+    # _single_params are a list of sets for which exactly one in the list is required.
+    # _takes_rng indicates whether the constructor should be given the current rng.
+    # _takes_logger indicates whether the constructor takes a logger object for debug logging.
+    _req_params = {}
+    _opt_params = { "flux" : float }
+    _single_params = [ { "sigma" : float, "half_light_radius" : float, "fwhm" : float } ]
+    _takes_rng = False
+    _takes_logger = False
+
+    # --- Public Class methods ---
+    def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1., gsparams=None):
+        # Initialize the SBProfile
+        GSObject.__init__(
+            self, galsim._galsim.SBGaussian(
+                sigma=sigma, half_light_radius=half_light_radius, fwhm=fwhm, flux=flux,
+                gsparams=gsparams))
+
     def getSigma(self):
-        """@brief Return the sigma scale length for this Gaussian profile.
+        """Return the sigma scale length for this Gaussian profile.
         """
         return self.SBProfile.getSigma()
 
     def getFWHM(self):
-        """@brief Return the FWHM for this Gaussian profile.
+        """Return the FWHM for this Gaussian profile.
         """
         return self.SBProfile.getSigma() * 2.3548200450309493 # factor = 2 sqrt[2ln(2)]
 
     def getHalfLightRadius(self):
-        """@brief Return the half light radius for this Gaussian profile.
+        """Return the half light radius for this Gaussian profile.
         """
         return self.SBProfile.getSigma() * 1.1774100225154747 # factor = sqrt[2ln(2)]
 
 
 class Moffat(GSObject):
-    """@brief GalSim Moffat, which has an SBMoffat in the SBProfile attribute.
+    """A class describing a Moffat surface brightness profile.
+
+    The Moffat surface brightness profile is I(R) ~ [1 + (r/scale_radius)^2]^(-beta).  The
+    GalSim representation of a Moffat profile also includes an optional truncation beyond a given
+    radius.
+
+    For more information, refer to
+
+        http://home.fnal.gov/~neilsen/notebook/astroPSF/astroPSF.html
+
+    Initialization
+    --------------
+
+    A Moffat can be initialized using one (and only one) of three possible size parameters:
+    `scale_radius`, `fwhm`, or `half_light_radius`.  Exactly one of these three is required.
+
+    @param beta             The `beta` parameter of the profile.
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
+                            [One of `scale_radius`, `fwhm`, or `half_light_radius` is required.]
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of `scale_radius`, `fwhm`, or `half_light_radius` is required.]
+    @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
+                            [One of `scale_radius`, `fwhm`, or `half_light_radius` is required.]
+    @param trunc            An optional truncation radius at which the profile is made to drop to
+                            zero, in the same units as the size parameter.
+                            [default: 0, indicating no truncation]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    In addition to the usual GSObject methods, Moffat has the following access methods:
+
+        >>> beta = moffat_obj.getBeta()
+        >>> rD = moffat_obj.getScaleRadius()
+        >>> fwhm = moffat_obj.getFWHM()
+        >>> hlr = moffat_obj.getHalfLightRadius()
     """
-    def __init__(self, beta, fwhm=None, scale_radius=None, half_light_radius=None,
-                 trunc=0., flux=1.):
-        GSObject.__init__(self, galsim.SBMoffat(beta, fwhm=fwhm, scale_radius=scale_radius,
-                                                half_light_radius=half_light_radius, trunc=trunc,
-                                                flux=flux))
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "beta" : float }
+    _opt_params = { "trunc" : float , "flux" : float }
+    _single_params = [ { "scale_radius" : float, "half_light_radius" : float, "fwhm" : float } ]
+    _takes_rng = False
+    _takes_logger = False
+
+    # --- Public Class methods ---
+    def __init__(self, beta, scale_radius=None, half_light_radius=None, fwhm=None, trunc=0.,
+                 flux=1., gsparams=None):
+        GSObject.__init__(
+            self, galsim._galsim.SBMoffat(
+                beta, scale_radius=scale_radius, half_light_radius=half_light_radius, fwhm=fwhm,
+                trunc=trunc, flux=flux, gsparams=gsparams))
+
     def getBeta(self):
-        """@brief Return the beta parameter for this Moffat profile.
+        """Return the beta parameter for this Moffat profile.
         """
         return self.SBProfile.getBeta()
 
     def getScaleRadius(self):
-        """@brief Return the scale radius for this Moffat profile.
+        """Return the scale radius for this Moffat profile.
         """
         return self.SBProfile.getScaleRadius()
-        
+
     def getFWHM(self):
-        """@brief Return the FWHM for this Moffat profile.
+        """Return the FWHM for this Moffat profile.
         """
         return self.SBProfile.getFWHM()
 
     def getHalfLightRadius(self):
-        """@brief Return the half light radius for this Moffat profile.
-        """
-        return self.SBProfile.getHalfLightRadius()
-    
-
-class Sersic(GSObject):
-    """@brief GalSim Sersic, which has an SBSersic in the SBProfile attribute.
-    """
-    def __init__(self, n, half_light_radius, flux=1.):
-        GSObject.__init__(self, galsim.SBSersic(n, half_light_radius=half_light_radius, flux=flux))
-
-    def getN(self):
-        """@brief Return the Sersic index for this profile.
-        """
-        return self.SBProfile.getN()
-
-    def getHalfLightRadius(self):
-        """@brief Return the half light radius for this Sersic profile.
-        """
-        return self.SBProfile.getHalfLightRadius()
-
-
-class Exponential(GSObject):
-    """@brief GalSim Exponential, which has an SBExponential in the SBProfile attribute.
-    """
-    def __init__(self, half_light_radius=None, scale_radius=None, flux=1.):
-        GSObject.__init__(self, galsim.SBExponential(half_light_radius=half_light_radius,
-                                                     scale_radius=scale_radius, flux=flux))
-
-    def getScaleRadius(self):
-        """@brief Return the scale radius for this Exponential profile.
-        """
-        return self.SBProfile.getScaleRadius()
-
-    def getHalfLightRadius(self):
-        """@brief Return the half light radius for this Exponential profile.
-        """
-        # Factor not analytic, but can be calculated by iterative solution of equation:
-        #  (re / r0) = ln[(re / r0) + 1] + ln(2)
-        return self.SBProfile.getScaleRadius() * 1.6783469900166605
-
-
-class DeVaucouleurs(GSObject):
-    """@brief GalSim De-Vaucouleurs, which has an SBDeVaucouleurs in the SBProfile attribute.
-    """
-    def __init__(self, half_light_radius=None, flux=1.):
-        GSObject.__init__(self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius,
-                                                       flux=flux))
-
-    def getHalfLightRadius(self):
-        """@brief Return the half light radius for this DeVaucouleurs profile.
+        """Return the half light radius for this Moffat profile.
         """
         return self.SBProfile.getHalfLightRadius()
 
 
 class Airy(GSObject):
-    """@brief GalSim Airy, which has an SBAiry in the SBProfile attribute.
+    """A class describing the surface brightness profile for an Airy disk (perfect
+    diffraction-limited PSF for a circular aperture), with an optional central obscuration.
+
+    For more information, refer to
+
+        http://en.wikipedia.org/wiki/Airy_disc
+
+    Initialization
+    --------------
+
+    The Airy profile is defined in terms of the diffraction angle, which is a function of the
+    ratio lambda / D, where lambda is the wavelength of the light (say in the middle of the
+    bandpass you are using) and D is the diameter of the telescope.  This ratio is the input
+    parameter to pass to the Airy constructor, but as it is naturally in radians, you would
+    typically convert to arcsec.  e.g.
+
+        >>> lam = 700  # nm
+        >>> diam = 4.0    # meters
+        >>> lam_over_diam = (lam * 1.e-9) / diam  # radians
+        >>> lam_over_diam *= 206265  # Convert to arcsec
+        >>> airy = galsim.Airy(lam_over_diam)
+
+    Or, use separate keywords for the telescope diameter and wavelength in meters and nanometers,
+    respectively:
+
+        >>> airy = galsim.Airy(lam=lam, diam=diam)
+
+    in which case the user can also choose what units to use for internal descriptions of the light
+    profile using the `scale_unit` keyword (default: galsim.arcsec).  When drawing images, users
+    should then use units of `scale_unit` to specify the pixel scale.
+
+
+    @param lam_over_diam    The parameter that governs the scale size of the profile.
+                            See above for details about calculating it.
+    @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with
+                            `diam`, and in this case, image scales (`scale`) should be specified in
+                            units of `scale_unit`.
+    @param diam             Telescope diameter in units of meters.  Must be supplied with
+                            `lam`, and in this case, image scales (`scale`) should be specified in
+                            units of `scale_unit`.
+    @param obscuration      The linear dimension of a central obscuration as a fraction of the
+                            pupil dimension.  [default: 0]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param scale_unit       Units used to define the diffraction limit and draw images, if the user
+                            has supplied a separate value for `lam` and `diam`.  Note that the
+                            results of calling methods like getFWHM() will be returned in units of
+                            `scale_unit`, as well.  Should be either a galsim.AngleUnit, or a string
+                            that can be used to construct one (e.g., 'arcsec', 'radians', etc.).
+                            [default: galsim.arcsec]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    In addition to the usual GSObject methods, Airy has the following access methods:
+
+        >>> lam_over_diam = airy_obj.getLamOverD()
+        >>> fwhm = airy_obj.getFWHM()
+        >>> hlr = airy_obj.getHalfLightRadius()
+
+    The latter two are only available if the obscuration is 0.
     """
-    def __init__(self, lam_over_D, obscuration=0., flux=1.):
-        GSObject.__init__(self, galsim.SBAiry(lam_over_D=lam_over_D, obscuration=obscuration,
-                                              flux=flux))
+
+    # Initialization parameters of the object, with type information.
+    # Note that this is not quite right; it's true that either lam_over_diam or lam should be
+    # supplied, but if lam is supplied then diam is required.  Errors in which parameters are used
+    # may be caught either by config or by the python code itself, depending on the particular
+    # error.
+    _req_params = { }
+    _opt_params = { "flux" : float , "obscuration" : float, "diam" : float,
+                    "scale_unit" : str }
+    _single_params = [{ "lam_over_diam" : float , "lam" : float } ]
+    _takes_rng = False
+    _takes_logger = False
+
+    # --- Public Class methods ---
+    def __init__(self, lam_over_diam=None, lam=None, diam=None, obscuration=0., flux=1.,
+                 scale_unit=galsim.arcsec, gsparams=None):
+        # Parse arguments: either lam_over_diam in arbitrary units, or lam in nm and diam in m.
+        # If the latter, then get lam_over_diam in units of `scale_unit`, as specified in
+        # docstring.
+        if lam_over_diam is not None:
+            if lam is not None or diam is not None:
+                raise TypeError("If specifying lam_over_diam, then do not specify lam or diam")
+        else:
+            if lam is None or diam is None:
+                raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
+            # In this case we're going to use scale_unit, so parse it in case of string input:
+            if isinstance(scale_unit, basestring):
+                scale_unit = galsim.angle.get_angle_unit(scale_unit)
+            lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
+
+        GSObject.__init__(
+            self, galsim._galsim.SBAiry(lam_over_diam=lam_over_diam, obscuration=obscuration,
+                                        flux=flux, gsparams=gsparams))
 
     def getHalfLightRadius(self):
-        """Return the half light radius of this Airy profile (only supported for obscuration = 0.).
+        """Return the half light radius of this Airy profile (only supported for
+        obscuration = 0.).
         """
         if self.SBProfile.getObscuration() == 0.:
             # For an unobscured Airy, we have the following factor which can be derived using the
@@ -670,7 +1676,7 @@ class Airy(GSObject):
             # Type "Solve[BesselJ0(x)^2+BesselJ1(x)^2=1/2]" ... and divide the result by pi
             return self.SBProfile.getLamOverD() * 0.5348321477242647
         else:
-            # In principle can find the half light radius as a function of lam_over_D and
+            # In principle can find the half light radius as a function of lam_over_diam and
             # obscuration too, but it will be much more involved...!
             raise NotImplementedError("Half light radius calculation not implemented for Airy "+
                                       "objects with non-zero obscuration.")
@@ -682,542 +1688,778 @@ class Airy(GSObject):
         if self.SBProfile.getObscuration() == 0.:
             return self.SBProfile.getLamOverD() * 1.028993969962188;
         else:
-            # In principle can find the FWHM as a function of lam_over_D and obscuration too,
+            # In principle can find the FWHM as a function of lam_over_diam and obscuration too,
             # but it will be much more involved...!
             raise NotImplementedError("FWHM calculation not implemented for Airy "+
                                       "objects with non-zero obscuration.")
 
     def getLamOverD(self):
-        """Return the lam_over_D parameter of this Airy profile.
+        """Return the `lam_over_diam` parameter of this Airy profile.
         """
         return self.SBProfile.getLamOverD()
 
 
-class Pixel(GSObject):
-    """@brief GalSim Pixel, which has an SBBox in the SBProfile attribute.
-    """
-    def __init__(self, xw, yw=None, flux=1.):
-        if yw is None:
-            yw = xw
-        GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux))
+class Kolmogorov(GSObject):
+    """A class describing a Kolmogorov surface brightness profile, which represents a long
+    exposure atmospheric PSF.
 
-    def getXWidth(self):
-        """@brief Return the width of the pixel in the x dimension.
-        """
-        return self.SBProfile.getXWidth()
+    For more information, refer to
 
-    def getYWidth(self):
-        """@brief Return the width of the pixel in the y dimension.
-        """
-        return self.SBProfile.getYWidth()
-
-
-class OpticalPSF(GSObject):
-    """@brief Class describing aberrated PSFs due to telescope optics.
-
-    Input aberration coefficients are assumed to be supplied in units of incident light wavelength,
-    and correspond to the conventions adopted here:
-    http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
+        http://en.wikipedia.org/wiki/Atmospheric_seeing#The_Kolmogorov_model_of_turbulence
 
     Initialization
     --------------
-    @code
-    optical_psf = galsim.OpticalPSF(lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0.,
-                                        coma2=0., spher=0., circular_pupil=True, obscuration=0.,
-                                        interpolantxy=None, oversampling=1.5, pad_factor=1.5)
-    @endcode
 
-    Initializes optical_psf as a galsim.OpticalPSF() instance.
+    The Kolmogorov profile is normally defined in terms of the ratio lambda / r0, where lambda is
+    the wavelength of the light (say in the middle of the bandpass you are using) and r0 is the
+    Fried parameter.  Typical values for the Fried parameter are on the order of 10cm for
+    most observatories and up to 20cm for excellent sites. The values are usually quoted at
+    lambda = 500nm and r0 depends on wavelength as [r0 ~ lambda^(-6/5)].
 
-    @param lam_over_D      lambda / D in the physical units adopted (user responsible for 
-                           consistency).
-    @param defocus         defocus in units of incident light wavelength.
-    @param astig1          first component of astigmatism (like e1) in units of incident light
-                           wavelength.
-    @param astig2          second component of astigmatism (like e2) in units of incident light
-                           wavelength.
-    @param coma1           coma along x in units of incident light wavelength.
-    @param coma2           coma along y in units of incident light wavelength.
-    @param spher           spherical aberration in units of incident light wavelength.
-    @param circular_pupil  adopt a circular pupil?
-    @param obscuration     linear dimension of central obscuration as fraction of pupil linear 
-                           dimension, [0., 1.) [default = 0.]
-    @param interpolantxy   optional keyword for specifying the interpolation scheme [default =
-                           galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))].
-    @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
-                           [default = 1.5], setting oversampling < 1 will produce aliasing in the 
-                           PSF (not good).
-    @param pad_factor      additional multiple by which to zero-pad the PSF image to avoid folding
-                           compared to what would be required for a simple Airy [default = 1.5].
-                           Note that padFactor may need to be increased for stronger aberrations,
-                           i.e. those larger than order unity. 
+    This ratio is naturally in radians, so you would typically convert to arcsec.  e.g.
+
+        >>> lam = 700  # nm
+        >>> r0 = 0.15 * (lam/500)**(-1.2)  # meters
+        >>> lam_over_r0 = (lam * 1.e-9) / r0  # radians
+        >>> lam_over_r0 *= 206265  # Convert to arcsec
+
+    The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
+
+    A Kolmogorov can be initialized using one (and only one) of three possible size parameters:
+    `lam_over_r0`, `fwhm`, or `half_light_radius`.  Exactly one of these three is required.
+
+    @param lam_over_r0      The parameter that governs the scale size of the profile.
+                            See above for details about calculating it.  [One of `lam_over_r0`,
+                            `fwhm`, or `half_light_radius` is required.]
+    @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
+                            [One of `lam_over_r0`, `fwhm`, or `half_light_radius` is required.]
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of `lam_over_r0`, `fwhm`, or `half_light_radius` is required.]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    In addition to the usual GSObject methods, Kolmogorov has the following access methods:
+
+        >>> lam_over_r0 = kolm.getLamOverR0()
+        >>> fwhm = kolm.getFWHM()
+        >>> hlr = kolm.getHalfLightRadius()
     """
-    def __init__(self, lam_over_D, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
-                 circular_pupil=True, obscuration=0., interpolantxy=None, oversampling=1.5,
-                 pad_factor=1.5):
-        # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
-        import galsim.optics
-        # Choose dx for lookup table using Nyquist for optical aperture and the specified
-        # oversampling factor
-        dx_lookup = .5 * lam_over_D / oversampling
-        # Use a similar prescription as SBAiry to set Airy stepK and thus reference unpadded image
-        # size in physical units
-        stepk_airy = min(ALIAS_THRESHOLD * .5 * np.pi**3 * (1. - obscuration) / lam_over_D,
-                         np.pi / 5. / lam_over_D)
-        # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs,
-        # also make npix always *odd* so that opticalPSF lookup table array is correctly centred:
-        npix = 1 + 2 * (np.ceil(pad_factor * (np.pi / stepk_airy) / dx_lookup)).astype(int)
-        # Make the psf image using this dx and array shape
-        optimage = galsim.optics.psf_image(lam_over_D=lam_over_D, dx=dx_lookup,
-                                           array_shape=(npix, npix), defocus=defocus, astig1=astig1,
-                                           astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-                                           circular_pupil=circular_pupil, obscuration=obscuration)
-        # If interpolant not specified on input, use a high-ish n lanczos
-        if interpolantxy == None:
-            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)
-            self.Interpolant2D = galsim.InterpolantXY(lan5)
-        else:
-            self.Interpolant2D = interpolantxy
-        GSObject.__init__(self, galsim.SBInterpolatedImage(optimage, self.Interpolant2D,
-                                                           dx=dx_lookup))
-    def getHalfLightRadius(self):
-        # The half light radius is a complex function for aberrated optical PSFs, so just give
-        # up gracelessly...
-        raise NotImplementedError("Half light radius calculation not implemented for OpticalPSF "
-                                   +"objects.")
 
-class AtmosphericPSF(GSObject):
-    """Base class for long exposure Kolmogorov PSF.
+    # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
+    # In SBKolmogorov.cpp we refine this factor to 0.975865
+    _fwhm_factor = 0.975865
+    # Similarly, SBKolmogorov calculates the relation between lambda/r0 and half-light radius
+    _hlr_factor = 0.554811
 
-    Initialization
-    --------------
-    @code
-    atmospheric_psf = galsim.AtmosphericPSF(lam_over_r0, interpolantxy=None, oversampling=1.5)
-    @endcode
+    # Initialization parameters of the object, with type information
+    _req_params = {}
+    _opt_params = { "flux" : float }
+    _single_params = [ { "lam_over_r0" : float, "fwhm" : float, "half_light_radius" : float } ]
+    _takes_rng = False
+    _takes_logger = False
 
-    Initialized atmospheric_psf as a galsim.AtmosphericPSF() instance.
+    # --- Public Class methods ---
+    def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.,
+                 gsparams=None):
 
-    @param lam_over_r0     lambda / r0 in the physical units adopted (user responsible for 
-                           consistency), where r0 is the Fried parameter. The FWHM of the Kolmogorov
-                           PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108). Typical 
-                           values for the Fried parameter are on the order of 10 cm for most 
-                           observatories and up to 20 cm for excellent sites. The values are 
-                           usually quoted at lambda = 500 nm and r0 depends on wavelength as
-                           [r0 ~ lambda^(-6/5)].
-    @param fwhm            FWHM of the Kolmogorov PSF.
-                           Either fwhm or lam_over_r0 (and only one) must be specified.
-    @param oversampling    optional oversampling factor for the SBInterpolatedImage table 
-                           [default = 1.5], setting oversampling < 1 will produce aliasing in the 
-                           PSF (not good).
-    """
-    def __init__(self, lam_over_r0=None, fwhm=None, interpolantxy=None, oversampling=1.5):
-        # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
-        if lam_over_r0 is None :
-            if fwhm is not None :
-                lam_over_r0 = fwhm / 0.976
-            else:
-                raise TypeError("Either lam_over_r0 or fwhm must be specified for AtmosphericPSF")
-        else :
-            if fwhm is None:
-                fwhm = 0.976 * lam_over_r0
-            else:
+        if fwhm is not None :
+            if lam_over_r0 is not None or half_light_radius is not None:
                 raise TypeError(
-                        "Only one of lam_over_r0 and fwhm may be specified for AtmosphericPSF")
-        dx_lookup = .5 * fwhm / oversampling
-        # Fold at 10 times the FWHM
-        stepk_kolmogorov = np.pi / (10. * fwhm)
-        # Odd array to center the interpolant on the centroid. Might want to pad this later to
-        # make a nice size array for FFT, but for typical seeing, arrays will be very small.
-        npix = 1 + 2 * (np.ceil(np.pi / stepk_kolmogorov)).astype(int)
-        atmoimage = galsim.atmosphere.kolmogorov_psf_image(array_shape=(npix, npix), dx=dx_lookup, 
-                                                           lam_over_r0=lam_over_r0)
-        if interpolantxy == None:
-            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1e-4)
-            self.Interpolant2D = galsim.InterpolantXY(lan5)
-        else:
-            self.Interpolant2D = interpolantxy
-        GSObject.__init__(self, galsim.SBInterpolatedImage(atmoimage, self.Interpolant2D, 
-                                                           dx=dx_lookup))
-    def getHalfLightRadius(self):
-        # TODO: This seems like it would not be impossible to calculate
-        raise NotImplementedError("Half light radius calculation not yet implemented for "+
-                                  "Atmospheric PSF objects (could be though).")
-        
-class RealGalaxy(GSObject):
-    """@brief Class describing real galaxies from some training dataset.
+                        "Only one of lam_over_r0, fwhm, and half_light_radius may be " +
+                        "specified for Kolmogorov")
+            else:
+                lam_over_r0 = fwhm / Kolmogorov._fwhm_factor
+        elif half_light_radius is not None:
+            if lam_over_r0 is not None:
+                raise TypeError(
+                        "Only one of lam_over_r0, fwhm, and half_light_radius may be " +
+                        "specified for Kolmogorov")
+            else:
+                lam_over_r0 = half_light_radius / Kolmogorov._hlr_factor
+        elif lam_over_r0 is None:
+                raise TypeError(
+                        "One of lam_over_r0, fwhm, or half_light_radius must be " +
+                        "specified for Kolmogorov")
 
-    This class uses a catalog describing galaxies in some training data to read in data about
-    realistic galaxies that can be used for simulations based on those galaxies.  Also included in
-    the class is additional information that might be needed to make or interpret the simulations,
-    e.g., the noise properties of the training data.
+        GSObject.__init__(self, galsim._galsim.SBKolmogorov(lam_over_r0=lam_over_r0, flux=flux,
+                                                            gsparams=gsparams))
+
+    def getLamOverR0(self):
+        """Return the `lam_over_r0` parameter of this Kolmogorov profile.
+        """
+        return self.SBProfile.getLamOverR0()
+
+    def getFWHM(self):
+        """Return the FWHM of this Kolmogorov profile.
+        """
+        return self.SBProfile.getLamOverR0() * Kolmogorov._fwhm_factor
+
+    def getHalfLightRadius(self):
+        """Return the half light radius of this Kolmogorov profile.
+        """
+        return self.SBProfile.getLamOverR0() * Kolmogorov._hlr_factor
+
+
+class Pixel(GSObject):
+    """A class describing a pixel profile.  This is just a 2D square top-hat function.
+
+    This class is typically used to represent a pixel response function.  It is used internally by
+    the drawImage() function, but there may be cases where the user would want to use this profile
+    directly.
 
     Initialization
     --------------
-    @code
-    real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index = None, ID = None, ID_string = None,
-                                    random = False, uniform_deviate = None, interpolant = None)
-    @endcode
 
-    This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
-    galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
-    keywords for choosing a galaxy; exactly one must be set.  In future we may add more such
-    options, e.g., to choose at random but accounting for the non-constant weight factors
-    (probabilities for objects to make it into the training sample).
+    @param scale            The linear scale size of the pixel.  Typically given in arcsec.
+    @param flux             The flux (in photons) of the profile.  This should almost certainly
+                            be left at the default value of 1. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
-    @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
-                                find the data, etc.
-    @param index                Index of the desired galaxy in the catalog.
-    @param ID                   Object ID for the desired galaxy in the catalog.
-    @param random               If true, then just select a completely random galaxy from the
-                                catalog.
-    @param uniform_deviate      A uniform deviate to use for selecting a random galaxy (optional)
-    @param interpolant          optional keyword for specifying the
-                                real-space interpolation scheme
-                                [default = galsim.InterpolantXY(galsim.Lanczos(5, 
-                                           conserve_flux=True, tol=1.e-4))].
+    Methods
+    -------
+
+    In addition to the usual GSObject methods, Pixel has the following access method:
+
+        >>> scale = pixel.getScale()
+
     """
-    def __init__(self, real_galaxy_catalog, index = None, ID = None, random = False,
-                 uniform_deviate = None, interpolant = None):
 
-        import pyfits
+    # Initialization parameters of the object, with type information
+    _req_params = { "scale" : float }
+    _opt_params = { "flux" : float }
+    _single_params = []
+    _takes_rng = False
+    _takes_logger = False
 
-        # Code block below will be for galaxy selection; not all are currently implemented.  Each
-        # option must return an index within the real_galaxy_catalog.
-        use_index = -1
-        if index != None:
-            if (ID != None or random == True):
-                raise RuntimeError('Too many methods for selecting a galaxy!')
-            use_index = index
-        elif ID != None:
-            if (random == True):
-                raise RuntimeError('Too many methods for selecting a galaxy!')
-            use_index = real_galaxy_catalog.get_index_for_id(ID)
-        elif random == True:
-            if uniform_deviate == None:
-                uniform_deviate = galsim.UniformDeviate()
-            use_index = int(real_galaxy_catalog.n * uniform_deviate()) 
-            # this will round down, to get index in range [0, n-1]
-        else:
-            raise RuntimeError('No method specified for selecting a galaxy!')
-        if random == False and uniform_deviate != None:
-            import warnings
-            msg = "Warning: uniform_deviate supplied, but random selection method was not chosen!"
-            warnings.warn(msg)
+    # --- Public Class methods ---
+    def __init__(self, scale, flux=1., gsparams=None):
+        GSObject.__init__(self, galsim._galsim.SBBox(scale, scale, flux=flux, gsparams=gsparams))
 
-        # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors. Should
-        # consider exporting this code into fits.py in some function that takes a filename and HDU,
-        # and returns an ImageView
-        gal_image = real_galaxy_catalog.getGal(use_index)
-        PSF_image = real_galaxy_catalog.getPSF(use_index)
+    def getScale(self):
+        """Return the pixel scale.
+        """
+        return self.SBProfile.getWidth()
 
-        # choose proper interpolant
-        if interpolant != None and isinstance(interpolant, galsim.InterpolantXY) == False:
-            raise RuntimeError('Specified interpolant is not an InterpolantXY!')
-        elif interpolant == None:
-            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
-            self.Interpolant2D = galsim.InterpolantXY(lan5)
-        else:
-            self.Interpolant2D = interpolant
 
-        # read in data about galaxy from FITS binary table; store as members of RealGalaxy
+class Box(GSObject):
+    """A class describing a box profile.  This is just a 2D top-hat function, where the
+    width and height are allowed to be different.
 
-        # save any other relevant information
-        self.catalog_file = real_galaxy_catalog.filename
-        self.index = use_index
-        self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
-        # note: will be adding more parameters here about noise properties etc., but let's be basic
-        # for now
+    Initialization
+    --------------
 
-        self.original_image = galsim.SBInterpolatedImage(gal_image, self.Interpolant2D, dx =
-                                                         self.pixel_scale)
-        self.original_PSF = galsim.SBInterpolatedImage(PSF_image, self.Interpolant2D,
-                                                         dx=self.pixel_scale)
-        self.original_PSF.setFlux(1.0)
-        psf_inv = galsim.SBDeconvolve(self.original_PSF)
+    @param width            The width of the Box.
+    @param height           The height of the Box.
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
 
-        GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
+    Methods
+    -------
+
+    In addition to the usual GSObject methods, Box has the following access methods:
+
+        >>> width = box.getWidth()
+        >>> height = box.getHeight()
+
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "width" : float, "height" : float }
+    _opt_params = { "flux" : float }
+    _single_params = []
+    _takes_rng = False
+    _takes_logger = False
+
+    # --- Public Class methods ---
+    def __init__(self, width, height, flux=1., gsparams=None):
+        width = float(width)
+        height = float(height)
+        GSObject.__init__(self, galsim._galsim.SBBox(width, height, flux=flux, gsparams=gsparams))
+
+    def getWidth(self):
+        """Return the width of the box in the x dimension.
+        """
+        return self.SBProfile.getWidth()
+
+    def getHeight(self):
+        """Return the height of the box in the y dimension.
+        """
+        return self.SBProfile.getHeight()
+
+
+class TopHat(GSObject):
+    """A class describing a radial tophat profile.  This profile is a constant value within some
+    radius, and zero outside this radius.
+
+    Initialization
+    --------------
+
+    @param radius           The radius of the TopHat, where the surface brightness drops to 0.
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    In addition to the usual GSObject methods, TopHat has the following access method:
+
+        >>> radius = tophat.getRadius()
+
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "radius" : float }
+    _opt_params = { "flux" : float }
+    _single_params = []
+    _takes_rng = False
+    _takes_logger = False
+
+    # --- Public Class methods ---
+    def __init__(self, radius, flux=1., gsparams=None):
+        radius = float(radius)
+        GSObject.__init__(self, galsim._galsim.SBTopHat(radius, flux=flux, gsparams=gsparams))
+
+    def getRadius(self):
+        """Return the radius of the tophat profile.
+        """
+        return self.SBProfile.getRadius()
+
+
+class Sersic(GSObject):
+    """A class describing a Sersic profile.
+
+    The Sersic surface brightness profile is characterized by three properties: its Sersic index
+    `n`, its `flux`, and either the `half_light_radius` or `scale_radius`.  Given these properties,
+    the surface brightness profile scales as I(r) ~ exp[-(r/scale_radius)^{1/n}], or
+    I(r) ~ exp[-b*(r/half_light_radius)^{1/n}] (where b is calculated to give the right
+    half-light radius).
+
+    For more information, refer to
+
+        http://en.wikipedia.org/wiki/Sersic_profile
+
+    Initialization
+    --------------
+
+    The allowed range of values for the `n` parameter is 0.3 <= n <= 6.2.  An exception will be
+    thrown if you provide a value outside that range.  Below n=0.3, there are severe numerical
+    problems.  Above n=6.2, we found that the code begins to be inaccurate when sheared or
+    magnified (at the level of upcoming shear surveys), so we do not recommend extending beyond
+    this.  See Issues #325 and #450 for more details.
+
+    Sersic profile calculations take advantage of Hankel transform tables that are precomputed for a
+    given value of n when the Sersic profile is initialized.  Making additional objects with the
+    same n can therefore be many times faster than making objects with different values of n that
+    have not been used before.  Moreover, these Hankel transforms are only cached for a maximum of
+    100 different n values at a time.  For this reason, for large sets of simulations, it is worth
+    considering the use of only discrete n values rather than allowing it to vary continuously.  For
+    more details, see https://github.com/GalSim-developers/GalSim/issues/566.
+
+    Note that if you are building many Sersic profiles using truncation, the code will be more
+    efficient if the truncation is always the same multiple of `scale_radius`, since it caches
+    many calculations that depend on the ratio `trunc/scale_radius`.
+
+    A Sersic can be initialized using one (and only one) of two possible size parameters:
+    `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
+
+    @param n                The Sersic index, n.
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of `scale_radius` or `half_light_radius` is required.]
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
+                            [One of `scale_radius` or `half_light_radius` is required.]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param trunc            An optional truncation radius at which the profile is made to drop to
+                            zero, in the same units as the size parameter.
+                            [default: 0, indicating no truncation]
+    @param flux_untruncated Should the provided `flux` and `half_light_radius` refer to the
+                            untruncated profile? See below for more details. [default: False]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Flux of a truncated profile
+    ---------------------------
+
+    If you are truncating the profile, the optional parameter, `flux_untruncated`, specifies
+    whether the `flux` and `half_light_radius` specifications correspond to the untruncated
+    profile (`True`) or to the truncated profile (`False`, default).  The impact of this parameter
+    is a little subtle, so we'll go through a few examples to show how it works.
+
+    First, let's examine the case where we specify the size according to the half-light radius.
+    If `flux_untruncated` is True (and `trunc > 0`), then the profile will be identical
+    to the version without truncation up to the truncation radius, beyond which it drops to 0.
+    In this case, the actual half-light radius will be different from the specified half-light
+    radius.  The getHalfLightRadius() method will return the true half-light radius.  Similarly,
+    the actual flux will not be the same as the specified value; the true flux is also returned
+    by the getFlux() method.
+
+    Example:
+
+        >>> sersic_obj1 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40.)
+        >>> sersic_obj2 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10.)
+        >>> sersic_obj3 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10., \\
+                                        flux_untruncated=True)
+
+        >>> sersic_obj1.xValue(galsim.PositionD(0.,0.))
+        237.3094228615618
+        >>> sersic_obj2.xValue(galsim.PositionD(0.,0.))
+        142.54505376530574    # Normalization and scale radius adjusted (same half-light radius)
+        >>> sersic_obj3.xValue(galsim.PositionD(0.,0.))
+        237.30942286156187
+
+        >>> sersic_obj1.xValue(galsim.PositionD(10.0001,0.))
+        0.011776164687304694
+        >>> sersic_obj2.xValue(galsim.PositionD(10.0001,0.))
+        0.0
+        >>> sersic_obj3.xValue(galsim.PositionD(10.0001,0.))
+        0.0
+
+        >>> sersic_obj1.getHalfLightRadius()
+        2.5
+        >>> sersic_obj2.getHalfLightRadius()
+        2.5
+        >>> sersic_obj3.getHalfLightRadius()
+        1.9795101383056892    # The true half-light radius is smaller than the specified value
+
+        >>> sersic_obj1.getFlux()
+        40.0
+        >>> sersic_obj2.getFlux()
+        40.0
+        >>> sersic_obj3.getFlux()
+        34.56595186009519     # Flux is missing due to truncation
+
+        >>> sersic_obj1.getScaleRadius()
+        0.003262738739834598
+        >>> sersic_obj2.getScaleRadius()
+        0.004754602453641744  # the scale radius needed adjustment to accommodate HLR
+        >>> sersic_obj3.getScaleRadius()
+        0.003262738739834598  # the scale radius is still identical to the untruncated case
+
+    When the truncated Sersic scale is specified with `scale_radius`, the behavior between the
+    three cases (untruncated, `flux_untruncated=True` and `flux_untruncated=False`) will be
+    somewhat different from above.  Since it is the scale radius that is being specified, and since
+    truncation does not change the scale radius the way it can change the half-light radius, the
+    scale radius will remain unchanged in all cases.  This also results in the half-light radius
+    being the same between the two truncated cases (although different from the untruncated case).
+    The flux normalization is the only difference between `flux_untruncated=True` and
+    `flux_untruncated=False` in this case.
+
+    Example:
+
+        >>> sersic_obj1 = galsim.Sersic(n=3.5, scale_radius=0.05, flux=40.)
+        >>> sersic_obj2 = galsim.Sersic(n=3.5, scale_radius=0.05, flux=40., trunc=10.)
+        >>> sersic_obj3 = galsim.Sersic(n=3.5, scale_radius=0.05, flux=40., trunc=10., \\
+                                        flux_untruncated=True)
+
+        >>> sersic_obj1.xValue(galsim.PositionD(0.,0.))
+        1.010507575186637
+        >>> sersic_obj2.xValue(galsim.PositionD(0.,0.))
+        5.786692612210923     # Normalization adjusted to accomodate the flux within trunc radius
+        >>> sersic_obj3.xValue(galsim.PositionD(0.,0.))
+        1.010507575186637
+
+        >>> sersic_obj1.getHalfLightRadius()
+        38.311372735390016
+        >>> sersic_obj2.getHalfLightRadius()
+        5.160062547614234
+        >>> sersic_obj3.getHalfLightRadius()
+        5.160062547614234     # For the truncated cases, the half-light radii are the same
+
+        >>> sersic_obj1.getFlux()
+        40.0
+        >>> sersic_obj2.getFlux()
+        40.0
+        >>> sersic_obj3.getFlux()
+        6.985044085834393     # Flux is missing due to truncation
+
+        >>> sersic_obj1.getScaleRadius()
+        0.05
+        >>> sersic_obj2.getScaleRadius()
+        0.05
+        >>> sersic_obj3.getScaleRadius()
+        0.05
+
+    Methods
+    -------
+
+    In addition to the usual GSObject methods, Sersic has the following access methods:
+
+        >>> n = sersic_obj.getN()
+        >>> r0 = sersic_obj.getScaleRadius()
+        >>> hlr = sersic_obj.getHalfLightRadius()
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "n" : float }
+    _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
+    _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
+    _takes_rng = False
+    _takes_logger = False
+
+    # --- Public Class methods ---
+    def __init__(self, n, half_light_radius=None, scale_radius=None,
+                 flux=1., trunc=0., flux_untruncated=False, gsparams=None):
+        GSObject.__init__(
+            self, galsim._galsim.SBSersic(n, half_light_radius=half_light_radius,
+                                          scale_radius=scale_radius, flux=flux,
+                                          trunc=trunc, flux_untruncated=flux_untruncated,
+                                          gsparams=gsparams))
+
+    def getN(self):
+        """Return the Sersic index `n` for this profile.
+        """
+        return self.SBProfile.getN()
 
     def getHalfLightRadius(self):
-        raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
-                                   +"objects.")
+        """Return the half light radius for this Sersic profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
 
-class Add(GSObject):
-    """@brief Base class for defining the python interface to the SBAdd C++ class.
+    def getScaleRadius(self):
+        """Return the scale radius for this Sersic profile.
+        """
+        return self.SBProfile.getScaleRadius()
+
+
+class Exponential(GSObject):
+    """A class describing an exponential profile.
+
+    Surface brightness profile with I(r) ~ exp[-r/scale_radius].  This is a special case of
+    the Sersic profile, but is given a separate class since the Fourier transform has closed form
+    and can be generated without lookup tables.
+
+    Initialization
+    --------------
+
+    An Exponential can be initialized using one (and only one) of two possible size parameters:
+    `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
+
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of `scale_radius` or `half_light_radius` is required.]
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
+                            [One of `scale_radius` or `half_light_radius` is required.]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    In addition to the usual GSObject methods, Exponential has the following access methods:
+
+        >>> r0 = exp_obj.getScaleRadius()
+        >>> hlr = exp_obj.getHalfLightRadius()
     """
-    def __init__(self, *args):
-        # This is a workaround for the fact that Python doesn't allow multiple constructors.
-        # So check the number and type of the arguments here in the single __init__ method.
-        if len(args) == 0:
-            # No arguments.  Start with none and add objects later with add(obj)
-            GSObject.__init__(self, galsim.SBAdd())
-        elif len(args) == 1:
-            # 1 argment.  Should be either a GSObject or a list of GSObjects
-            if isinstance(args[0], GSObject):
-                # If single argument is a GSObject, then use the SBAdd for a single SBProfile.
-                GSObject.__init__(self, galsim.SBAdd(args[0].SBProfile))
-            else:
-                # Otherwise, should be a list of GSObjects
-                SBList = [obj.SBProfile for obj in args[0]]
-                GSObject.__init__(self, galsim.SBAdd(SBList))
-        elif len(args) == 2:
-            # 2 arguments.  Should both be GSObjects.
-            GSObject.__init__(self, galsim.SBAdd(args[0].SBProfile,args[1].SBProfile))
-        else:
-            # > 2 arguments.  Convert to a list of SBProfiles
-            SBList = [obj.SBProfile for obj in args]
-            GSObject.__init__(self, galsim.SBAdd(SBList))
 
-    def add(self, obj, scale=1.):
-        self.SBProfile.add(obj.SBProfile, scale)
+    # Initialization parameters of the object, with type information
+    _req_params = {}
+    _opt_params = { "flux" : float }
+    _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
+    _takes_rng = False
+    _takes_logger = False
+
+    # --- Public Class methods ---
+    def __init__(self, half_light_radius=None, scale_radius=None, flux=1., gsparams=None):
+        GSObject.__init__(
+            self, galsim._galsim.SBExponential(
+                half_light_radius=half_light_radius, scale_radius=scale_radius, flux=flux,
+                gsparams=gsparams))
+
+    def getScaleRadius(self):
+        """Return the scale radius for this Exponential profile.
+        """
+        return self.SBProfile.getScaleRadius()
+
+    def getHalfLightRadius(self):
+        """Return the half light radius for this Exponential profile.
+        """
+        # Factor not analytic, but can be calculated by iterative solution of equation:
+        #  (re / r0) = ln[(re / r0) + 1] + ln(2)
+        return self.SBProfile.getScaleRadius() * 1.6783469900166605
 
 
-class Convolve(GSObject):
-    """@brief A class for convolving 2 or more GSObjects.
+class DeVaucouleurs(GSObject):
+    """A class describing DeVaucouleurs profile objects.
 
-    The objects to be convolved may be provided either as multiple unnamed arguments
-    (e.g. Convolve(psf,gal,pix)) or as a list (e.g. Convolve[psf,gal,pix]).
-    Any number of objects may be provided using either syntax.  (Even 0 or 1, although
-    that doesn't really make much sense.)
-   
-    The convolution will normally be done using discrete Fourier transforms of 
-    each of the component profiles, multiplying them together, and then transforming
-    back to real space.
-   
-    The stepK used for the k-space image will be (Sum 1/stepK()^2)^(-1/2)
-    where the sum is over all teh components being convolved.  Since the size of 
-    the convolved image scales roughly as the quadrature sum of the components,
-    this should be close to Pi/Rmax where Rmax is the radius that encloses
-    all but (1-alias_threshold) of the flux in the final convolved image..
-    
-    The maxK used for the k-space image will be the minimum of the maxK calculated for
-    each component.  Since the k-space images are multiplied, if one of them is 
-    essentially zero beyond some k value, then that will be true of the final image
-    as well.
-    
-    There is also an option to do the convolution as integrals in real space.
-    To do this, use the optional keyword argument real_space=True.
-    Currently, the real-space integration is only enabled for 2 profiles.
-    (Aside from the trivial implementaion for 1 profile.)  If you try to use it 
-    for more than 2 profiles, an exception will be raised.
-    
-    The real-space convolution is normally slower than the DFT convolution.
-    The exception is if both component profiles have hard edges.  e.g. a truncated
-    Moffat with a Pixel.  In that case, the maxK for each component is quite large
-    since the ringing dies off fairly slowly.  So it can be quicker to use 
-    real-space convolution instead.  Also, real-space convolution tends to be more
-    accurate in this case as well.
+    Surface brightness profile with I(r) ~ exp[-(r/scale_radius)^{1/4}].  This is completely
+    equivalent to a Sersic with n=4.
 
-    If you do not specify either True or False explicitly, then we check if 
-    there are 2 profiles, both of which have hard edges.  In this case, we 
-    automatically use real-space convolution.  In all other cases, the 
-    default is to use the DFT algorithm.
+    For more information, refer to
+
+        http://en.wikipedia.org/wiki/De_Vaucouleurs'_law
+
+
+    Initialization
+    --------------
+
+    A DeVaucouleurs can be initialized using one (and only one) of two possible size parameters:
+    `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
+
+    @param scale_radius     The value of sigma of the profile.  Typically given in arcsec.
+                            [One of `scale_radius` or `half_light_radius` is required.]
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of `scale_radius` or `half_light_radius` is required.]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param trunc            An optional truncation radius at which the profile is made to drop to
+                            zero, in the same units as the size parameter.
+                            [default: 0, indicating no truncation]
+    @param flux_untruncated Should the provided `flux` and `half_light_radius` refer to the
+                            untruncated profile? See the docstring for Sersic for more details.
+                            [default: False]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    In addition to the usual GSObject methods, DeVaucouleurs has the following access methods:
+
+        >>> r0 = devauc_obj.getScaleRadius()
+        >>> hlr = devauc_obj.getHalfLightRadius()
     """
-    def __init__(self, *args, **kwargs):
-        # Check kwargs first
-        # The only kwarg we're looking for is real_space, which can be True or False
-        # (default if omitted is None), which specifies whether to do the convolution
-        # as an integral in real space rather than as a product in fourier space.
-        # If the parameter is omitted (or explicitly given as None I guess), then
-        # we will usually do the fourier method.  However, if there are 2 components
-        # _and_ both of them have hard edges, then we use real-space convolution.
-        real_space = kwargs.pop("real_space",None)
 
-        if kwargs:
-            raise TypeError(
-                "Convolve constructor got unexpected keyword argument(s): %s"%kwargs.keys())
+    # Initialization parameters of the object, with type information
+    _req_params = {}
+    _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
+    _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
+    _takes_rng = False
+    _takes_logger = False
 
-        # If 1 argument, check if it is a list:
-        if len(args) == 1 and isinstance(args[0],list):
-            args = args[0]
+    # --- Public Class methods ---
+    def __init__(self, half_light_radius=None, scale_radius=None, flux=1., trunc=0.,
+                 flux_untruncated=False, gsparams=None):
+        GSObject.__init__(
+            self, galsim._galsim.SBDeVaucouleurs(half_light_radius=half_light_radius,
+                                                 scale_radius=scale_radius, flux=flux, trunc=trunc,
+                                                 flux_untruncated=flux_untruncated,
+                                                 gsparams=gsparams))
 
-        hard_edge = True
-        for obj in args:
-            if not obj.hasHardEdges():
-                hard_edge = False
+    def getHalfLightRadius(self):
+        """Return the half light radius for this DeVaucouleurs profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
 
-        if real_space is None:
-            # Figure out if it makes more sense to use real-space convolution.
-            if len(args) == 2:
-                real_space = hard_edge
-            elif len(args) == 1:
-                real_space = obj.isAnalyticX()
-            else:
-                real_space = False
-
-        # Warn if doing DFT convolution for objects with hard edges.
-        if not real_space and hard_edge:
-            import warnings
-            if len(args) == 2:
-                msg = """
-                Doing convolution of 2 objects, both with hard edges.
-                This might be more accurate and/or faster using real_space=True"""
-            else:
-                msg = """
-                Doing convolution where all objects have hard edges.
-                There might be some inaccuracies due to ringing in k-space."""
-            warnings.warn(msg)
-
-        if real_space:
-            # Can't do real space if nobj > 2
-            if len(args) > 2:
-                import warnings
-                msg = """
-                Real-space convolution of more than 2 objects is not implemented.
-                Switching to DFT method."""
-                warnings.warn(msg)
-                real_space = False
-
-            # Also can't do real space if any object is not analytic, so check for that.
-            else:
-                for obj in args:
-                    if not obj.isAnalyticX():
-                        import warnings
-                        msg = """
-                        A component to be convolved is not analytic in real space.
-                        Cannot use real space convolution.
-                        Switching to DFT method."""
-                        warnings.warn(msg)
-                        real_space = False
-                        break
-
-        if len(args) == 0:
-            GSObject.__init__(self, galsim.SBConvolve(real_space=real_space))
-        elif len(args) == 1:
-            GSObject.__init__(self, galsim.SBConvolve(args[0].SBProfile,real_space=real_space))
-        elif len(args) == 2:
-            GSObject.__init__(self, galsim.SBConvolve(
-                    args[0].SBProfile,args[1].SBProfile,real_space=real_space))
-        else:
-            # > 2 arguments.  Convert to a list of SBProfiles
-            SBList = [obj.SBProfile for obj in args]
-            GSObject.__init__(self, galsim.SBConvolve(SBList,real_space=real_space))
-
-    def add(self, obj):
-        self.SBProfile.add(obj.SBProfile)
+    def getScaleRadius(self):
+        """Return the scale radius for this DeVaucouleurs profile.
+        """
+        return self.SBProfile.getScaleRadius()
 
 
-class Deconvolve(GSObject):
-    """@brief Base class for defining the python interface to the SBDeconvolve C++ class.
+class Spergel(GSObject):
+    """A class describing a Spergel profile.
+
+    The Spergel surface brightness profile is characterized by three properties: its Spergel index
+    `nu`, its `flux`, and either the `half_light_radius` or `scale_radius`.  Given these properties,
+    the surface brightness profile scales as I(r) ~ r^{nu} * K_{nu}(r), where K_{nu} is the
+    modified Bessel function of the second kind.
+
+    The Spergel profile is intended as a generic galaxy profile, somewhat like a Sersic profile, but
+    with the advantage of being analytic in both real space and Fourier space.  The Spergel index
+    `nu` plays a similar role to the Sersic index `n`, in that it adjusts the relative peakiness of
+    the profile core and the relative prominence of the profile wings.  At `nu = 0.5`, the Spergel
+    profile is equivalent to an Exponential profile (or alternatively an `n = 1.0` Sersic profile).
+    At `nu = -0.6` (and in the radial range near the half-light radius), the Spergel profile is
+    similar to a DeVaucouleurs profile or `n = 4.0` Sersic profile.
+
+    Note that for `nu <= 0.0`, the Spergel profile surface brightness diverges at the origin.  This
+    may lead to rendering problems if the profile is not convolved by either a PSF or a pixel and
+    the profile center is precisely on a pixel center.
+
+    Due to its analytic Fourier transform and depending on the indices `n` and `nu`, the Spergel
+    profile can be considerably faster to draw than the roughly equivalent Sersic profile.  For
+    example, the `nu = -0.6` Spergel profile is roughly 3x faster to draw than an `n = 4.0` Sersic
+    profile once the Sersic profile cache has been set up.  However, if not taking advantage of
+    the cache, for example, if drawing Sersic profiles with `n` continuously varying near 4.0 and
+    Spergel profiles with `nu` continuously varying near -0.6, then the Spergel profiles are about
+    50x faster to draw.  At the other end of the galaxy profile spectrum, the `nu = 0.5` Spergel
+    profile, `n = 1.0` Sersic profile, and the Exponential profile all take about the same amount
+    of time to draw if cached, and the Spergel profile is about 2x faster than the Sersic profile
+    if uncached.
+
+    For more information, refer to
+
+        D. N. Spergel, "ANALYTICAL GALAXY PROFILES FOR PHOTOMETRIC AND LENSING ANALYSIS,"
+        ASTROPHYS J SUPPL S 191(1), 58-65 (2010) [doi:10.1088/0067-0049/191/1/58].
+
+    Initialization
+    --------------
+
+    The allowed range of values for the `nu` parameter is -0.85 <= nu <= 4.  An exception will be
+    thrown if you provide a value outside that range.  The lower limit is set above the theoretical
+    lower limit of -1 due to numerical difficulties integrating the *very* peaky nu < -0.85
+    profiles.  The upper limit is set to avoid numerical difficulties evaluating the modified
+    Bessel function of the second kind.
+
+    A Spergel profile can be initialized using one (and only one) of two possible size parameters:
+    `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
+
+    @param nu               The Spergel index, nu.
+    @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
+                            [One of `scale_radius` or `half_light_radius` is required.]
+    @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
+                            [One of `scale_radius` or `half_light_radius` is required.]
+    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    In addition to the usual GSObject methods, the Spergel profile has the following access methods:
+
+        >>> nu = spergel_obj.getNu()
+        >>> r0 = spergel_obj.getScaleRadius()
+        >>> hlr = spergel_obj.getHalfLightRadius()
     """
-    def __init__(self, farg):
-        # the single argument should be one of our base classes
-        GSObject.__init__(self, galsim.SBDeconvolve(farg.SBProfile))
 
-class DoubleGaussian(Add):
-    """Double Gaussian, which is the sum of two Gaussian profiles
-    """
-    def __init__(self, flux1, flux2, sigma1=None, sigma2=None, fwhm1=None, fwhm2=None):
-        sblist = []
-        # Note: we do not have to check for improper args (0 or 2 radii specified) because this is
-        # done in the C++
-        sblist.append(galsim.Gaussian(sigma=sigma1, fwhm=fwhm1, flux=flux1))
-        sblist.append(galsim.Gaussian(sigma=sigma2, fwhm=fwhm2, flux=flux2))
-        galsim.Add.__init__(self, sblist)
+    # Initialization parameters of the object, with type information
+    _req_params = { "nu" : float }
+    _opt_params = { "flux" : float}
+    _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
+    _takes_rng = False
+    _takes_logger = False
 
+    # --- Public Class methods ---
+    def __init__(self, nu, half_light_radius=None, scale_radius=None,
+                 flux=1., gsparams=None):
+        GSObject.__init__(
+            self, galsim._galsim.SBSpergel(nu, half_light_radius=half_light_radius,
+                                           scale_radius=scale_radius, flux=flux,
+                                           gsparams=gsparams))
 
+    def getNu(self):
+        """Return the Spergel index `nu` for this profile.
+        """
+        return self.SBProfile.getNu()
 
-# Now we define a dictionary containing all the GSobject subclass names as keys, referencing a
-# nested dictionary containing the names of their required parameters (not including size), size
-# specification parameters (one of which only must be set), and optional parameters, stored as a
-# tuple of string names in each case.
-#
-# This is useful for I/O, and as a reference.
-#
-# NOTE TO DEVELOPERS: This dict should be kept updated to reflect changes in parameter names or new
-#                     objects.
-#
-object_param_dict = {"Gaussian":       { "required" : (),
-                                         "size" :     ("half_light_radius", "sigma", "fwhm",),
-                                         "optional" : ("flux",) },
-                     "Moffat":         { "required" : ("beta",),
-                                         "size"     : ("half_light_radius", "scale_radius", 
-                                                       "fwhm",),
-                                         "optional" : ("trunc", "flux",) },
-                     "Sersic":         { "required" : ("n",) ,
-                                         "size"     : ("half_light_radius",),
-                                         "optional" : ("flux",) },
-                     "Exponential":    { "required" : (),
-                                         "size"     : ("half_light_radius", "scale_radius"),
-                                         "optional" : ("flux",) },
-                     "DeVaucouleurs":  { "required" : (),
-                                         "size"     : ("half_light_radius",),
-                                         "optional" : ("flux",) },
-                     "Airy":           { "required" : () ,
-                                         "size"     : ("D",) ,
-                                         "optional" : ("obs", "flux",)},
-                     "Pixel":          { "required" : ("xw", "yw",),
-                                         "size"     : (),
-                                         "optional" : ("flux",) },
-                     "OpticalPSF":     { "required" : (),
-                                         "size"     : ("lam_over_D",),
-                                         "optional" : ("defocus", "astig1", "astig2", "coma1",
-                                                       "coma2", "spher", "circular_pupil",
-                                                       "interpolantxy", "dx", "oversampling",
-                                                       "pad_factor") },
-                     "DoubleGaussian": { "required" : (), 
-                                         "size"     : ("sigma1, sigma2, fwhm1, fwhm2",), 
-                                         "optional" : () },
-                     "AtmosphericPSF": { "required" : (),
-                                         "size"     : ("fwhm", "lam_over_r0"),
-                                         "optional" : ("dx", "oversampling") } }
+    def getHalfLightRadius(self):
+        """Return the half light radius for this Spergel profile.
+        """
+        return self.SBProfile.getHalfLightRadius()
+
+    def getScaleRadius(self):
+        """Return the scale radius for this Spergel profile.
+        """
+        return self.SBProfile.getScaleRadius()
 
 
-class AttributeDict(object):
-    """@brief Dictionary class that allows for easy initialization and refs to key values via
-    attributes.
+# GSParams is defined in C++ and wrapped.  But we want to modify it here slightly to add
+# the obsolete name alias_threshold as a valid synonym for folding_threshold
+GSParams.alias_threshold = property(lambda self: self.folding_threshold,
+                                    lambda self, val: setattr(self,'folding_threshold',val))
 
-    NOTE: Modified a little from Jim's bot.git AttributeDict class  (Jim, please review!) so that...
-
-    ...Tab completion now works in ipython (it didn't with the bot.git version on my build) since
-    attributes are actually added to __dict__.
-    
-    HOWEVER this means I have redefined the __dict__ attribute to be a collections.defaultdict()
-    so that Jim's previous default attrbiute behaviour is also replicated.
-
-    I prefer this, as a newbie who uses ipython and the tab completion function to aid development,
-    but does it potentially break something down the line or add undesirable behaviour? (I guessed
-    not, since collections.defaultdict objects have all the usual dict() methods, but I cannot be
-    sure.)
-    """
-    def __init__(self):
-        object.__setattr__(self, "__dict__", collections.defaultdict(AttributeDict))
-
-    def __getattr__(self, name):
-        return self.__dict__[name]
-
-    def __setattr__(self, name, value):
-        self.__dict__[name] = value
-
-    def merge(self, other):
-        self.__dict__.update(other.__dict__)
-
-    def _write(self, output, prefix=""):
-        for k, v in self.__dict__.iteritems():
-            if isinstance(v, AttributeDict):
-                v._write(output, prefix="{0}{1}.".format(prefix, k))
-            else:
-                output.append("{0}{1} = {2}".format(prefix, k, repr(v)))
-
-    def __nonzero__(self):
-        return not not self.__dict__
-
-    def __repr__(self):
-        output = []
-        self._write(output, "")
-        return "\n".join(output)
-
-    __str__ = __repr__
-
-    def __len__(self):
-        return len(self.__dict__)
+# Also update the constructor to allow this name.
+_orig_GSP_init = GSParams.__init__
+def _new_GSP_init(self, *args, **kwargs):
+    if 'alias_threshold' in kwargs:
+        if 'folding_threshold' in kwargs:
+            raise TypeError('Cannot specify both alias_threshold and folding_threshold')
+        kwargs['folding_threshold'] = kwargs.pop('alias_threshold')
+    _orig_GSP_init(self, *args, **kwargs)
+GSParams.__init__ = _new_GSP_init
 
 
-class Config(AttributeDict):
-    """@brief Config class that is basically a renamed AttributeDict, and allows for easy
-    initialization and refs to key values via attributes.
-    """
-    def __init__(self):
-        AttributeDict.__init__(self)
+# Set the docstring for GSParams here.  It's easier to edit in the python layer than using
+# the boost python doc parameter.
+GSParams.__doc__ = """
+GSParams stores a set of numbers that govern how GSObjects make various speed/accuracy tradeoff
+decisions.  All GSObjects can take an optional parameter named `gsparams`, which would be an
+instance of this class.  e.g.
 
+    >>> gsp = galsim.GSParams(folding_threshold=1.e-3)
+    >>> gal = galsim.Sersic(n=3.4, half_light_radius=3.2, flux=200, gsparams=gsp)
 
+Note that `gsparams` needs to be provided when the object is initialized, rather than when the
+object is drawn (as would perhaps be slightly more intuitive), because most of the relevant
+approximations happen during the initialization of the object, rather than during the actual
+rendering.
 
+Initialization
+--------------
+
+All parameters have reasonable default values.  You only need to specify the ones you want
+to change.
+
+@param minimum_fft_size     The minimum size of any FFT that may need to be performed.
+                            [default: 128]
+@param maximum_fft_size     The maximum allowed size of an image for performing an FFT.  This
+                            is more about memory use than accuracy.  We have this maximum
+                            value to help prevent the user from accidentally trying to perform
+                            an extremely large FFT that crashes the program. Instead, GalSim
+                            will raise an exception indicating that the image is too large,
+                            which is often a sign of an error in the user's code. However, if
+                            you have the memory to handle it, you can raise this limit to
+                            allow the calculation to happen. [default: 4096]
+@param folding_threshold    This sets a maximum amount of real space folding that is allowed,
+                            an effect caused by the periodic nature of FFTs.  FFTs implicitly
+                            use periodic boundary conditions, and a profile specified on a
+                            finite grid in Fourier space corresponds to a real space image
+                            that will have some overlap with the neighboring copies of the real
+                            space profile.  As the step size in k increases, the spacing between
+                            neighboring aliases in real space decreases, increasing the amount of
+                            folded, overlapping flux.  `folding_threshold` is used to set an
+                            appropriate step size in k to allow at most this fraction of the flux
+                            to be folded.
+                            This parameter is also relevant when you let GalSim decide how large
+                            an image to use for your object.  The image is made to be large enough
+                            that at most a fraction `folding_threshold` of the total flux is
+                            allowed to fall off the edge of the image. [default: 5.e-3]
+@param stepk_minimum_hlr    In addition to the above constraint for aliasing, also set stepk
+                            such that pi/stepk is at least `stepk_minimum_hlr` times the
+                            profile's half-light radius (for profiles that have a well-defined
+                            half-light radius). [default: 5]
+@param maxk_threshold       This sets the maximum amplitude of the high frequency modes in
+                            Fourier space that are excluded by truncating the FFT at some
+                            maximum k value. Lowering this parameter can help minimize the
+                            effect of "ringing" if you see that in your images. [default: 1.e-3]
+@param kvalue_accuracy      This sets the accuracy of values in Fourier space. Whenever there is
+                            some kind of approximation to be made in the calculation of a
+                            Fourier space value, the error in the approximation is constrained
+                            to be no more than this value times the total flux. [default: 1.e-5]
+@param xvalue_accuracy      This sets the accuracy of values in real space. Whenever there is
+                            some kind of approximation to be made in the calculation of a
+                            real space value, the error in the approximation is constrained
+                            to be no more than this value times the total flux. [default: 1.e-5]
+@param table_spacing        Several profiles use lookup tables for either the Hankel transform
+                            (Sersic, Moffat) or the real space radial function (Kolmogorov).
+                            We try to estimate a good spacing between values in the lookup
+                            tables based on either `xvalue_accuracy` or `kvalue_accuracy` as
+                            appropriate. However, you may change the spacing with this
+                            parameter. Using `table_spacing < 1` will use a spacing value that
+                            is that much smaller than the default, which should produce more
+                            accurate interpolations. [default: 1]
+@param realspace_relerr     This sets the relative error tolerance for real-space integration.
+                            [default: 1.e-4]
+@param realspace_abserr     This sets the absolute error tolerance for real-space integration.
+                            [default: 1.e-6]
+                            The estimated integration error for the flux value in each pixel
+                            when using the real-space rendering method (either explicitly with
+                            `method='real_space'` or if it is triggered automatically with
+                            `method='auto'`) is constrained to be no larger than either
+                            `realspace_relerr` times the pixel flux or `realspace_abserr`
+                            times the object's total flux.
+@param integration_relerr   The relative error tolerance for integrations other than real-space
+                            rendering. [default: 1.e-6]
+@param integration_abserr   The absolute error tolerance for integrations other than real-space
+                            rendering. [default: 1.e-8]
+@param shoot_accuracy       This sets the relative accuracy on the total flux when photon
+                            shooting.  The photon shooting algorithm at times needs to make
+                            approximations, such as how high in radius it needs to sample the
+                            radial profile. When such approximations need to be made, it makes
+                            sure that the resulting fractional error in the flux will be at
+                            most this much. [default: 1.e-5]
+allowed_flux_variation      The maximum range of allowed (abs value of) photon fluxes within
+                            an interval before the rejection sampling algorithm is invoked for
+                            photon shooting. [default: 0.81]
+range_division_for_extrema  The number of parts into which to split a range to bracket extrema
+                            when photon shooting. [default: 32]
+small_fraction_of_flux      When photon shooting, intervals with less than this fraction of
+                            probability are considered ok to use with the dominant-sampling
+                            algorithm. [default: 1.e-4]
+"""

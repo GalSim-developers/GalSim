@@ -1,39 +1,68 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
 
 //#define DEBUGLOGGING
 
 #include "SBConvolve.h"
 #include "SBConvolveImpl.h"
+#include "SBTransform.h"
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
 
-    SBConvolve::SBConvolve(const SBProfile& s1, const SBProfile& s2, bool real_space) :
-        SBProfile(new SBConvolveImpl(s1,s2,real_space)) {}
-
-    SBConvolve::SBConvolve(const SBProfile& s1, const SBProfile& s2, const SBProfile& s3,
-                           bool real_space) :
-        SBProfile(new SBConvolveImpl(s1,s2,s3,real_space)) {}
-
-    SBConvolve::SBConvolve(const std::list<SBProfile>& slist, bool real_space) :
-        SBProfile(new SBConvolveImpl(slist,real_space)) {}
+    SBConvolve::SBConvolve(const std::list<SBProfile>& slist, bool real_space,
+                           const GSParamsPtr& gsparams) :
+        SBProfile(new SBConvolveImpl(slist,real_space,gsparams)) {}
 
     SBConvolve::SBConvolve(const SBConvolve& rhs) : SBProfile(rhs) {}
 
     SBConvolve::~SBConvolve() {}
+
+    SBConvolve::SBConvolveImpl::SBConvolveImpl(const std::list<SBProfile>& slist, bool real_space,
+                                               const GSParamsPtr& gsparams) :
+        SBProfileImpl(gsparams ? gsparams : GetImpl(slist.front())->gsparams),
+        _real_space(real_space)
+    {
+        for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)
+            add(*sptr);
+        initialize(); 
+    }
 
     void SBConvolve::SBConvolveImpl::add(const SBProfile& rhs) 
     {
         dbg<<"Start SBConvolveImpl::add.  Adding item # "<<_plist.size()+1<<std::endl;
 
         // Add new terms(s) to the _plist:
-        assert(SBProfile::GetImpl(rhs));
-        const SBConvolveImpl *sbc = dynamic_cast<const SBConvolveImpl*>(SBProfile::GetImpl(rhs));
-        if (sbc) {  
+        assert(GetImpl(rhs));
+        const SBProfileImpl* p = GetImpl(rhs);
+        const SBConvolveImpl* sbc = dynamic_cast<const SBConvolveImpl*>(p);
+        const SBAutoConvolve::SBAutoConvolveImpl* sbc2 =
+            dynamic_cast<const SBAutoConvolve::SBAutoConvolveImpl*>(p);
+        const SBAutoCorrelate::SBAutoCorrelateImpl* sbc3 =
+            dynamic_cast<const SBAutoCorrelate::SBAutoCorrelateImpl*>(p);
+        if (sbc) {
+            dbg<<"  (Item is really "<<sbc->_plist.size()<<" items.)"<<std::endl;
             // If rhs is an SBConvolve, copy its list here
             for (ConstIter pptr = sbc->_plist.begin(); pptr!=sbc->_plist.end(); ++pptr) {
                 if (!pptr->isAnalyticK() && !_real_space) 
@@ -42,6 +71,27 @@ namespace galsim {
                     throw SBError("Real_space SBConvolve requires members to be analytic in x");
                 _plist.push_back(*pptr);
             }
+        } else if (sbc2) {
+            dbg<<"  (Item is really AutoConvolve.)"<<std::endl;
+            // If rhs is an SBAutoConvolve, put two of its item here:
+            const SBProfile& obj = sbc2->getAdaptee();
+            if (!obj.isAnalyticK() && !_real_space) 
+                throw SBError("SBConvolve requires members to be analytic in k");
+            if (!obj.isAnalyticX() && _real_space)
+                throw SBError("Real_space SBConvolve requires members to be analytic in x");
+            _plist.push_back(obj);
+            _plist.push_back(obj);
+        } else if (sbc3) {
+            dbg<<"  (Item is really AutoCorrelate items.)"<<std::endl;
+            // If rhs is an SBAutoCorrelate, put its item and 180 degree rotated verion here:
+            const SBProfile& obj = sbc3->getAdaptee();
+            if (!obj.isAnalyticK() && !_real_space) 
+                throw SBError("SBConvolve requires members to be analytic in k");
+            if (!obj.isAnalyticX() && _real_space)
+                throw SBError("Real_space SBConvolve requires members to be analytic in x");
+            _plist.push_back(obj);
+            SBProfile temp = obj.rotate(180. * degrees);
+            _plist.push_back(temp);
         } else {
             if (!rhs.isAnalyticK() && !_real_space) 
                 throw SBError("SBConvolve requires members to be analytic in k");
@@ -74,22 +124,6 @@ namespace galsim {
         dbg<<"Net maxK, stepK = "<<_minMaxK<<" , "<<_netStepK<<std::endl;
     }
 
-    void SBConvolve::SBConvolveImpl::fillKGrid(KTable& kt) const 
-    {
-        if (_plist.empty()) kt.clear();
-        ConstIter pptr = _plist.begin();
-        assert(SBProfile::GetImpl(*pptr));
-        SBProfile::GetImpl(*pptr)->fillKGrid(kt);
-        if (++pptr != _plist.end()) {
-            KTable k2(kt.getN(),kt.getDk());
-            for ( ; pptr!= _plist.end(); ++pptr) {
-                assert(SBProfile::GetImpl(*pptr));
-                SBProfile::GetImpl(*pptr)->fillKGrid(k2);
-                kt *= k2;
-            }
-        }
-    }
-
     double SBConvolve::SBConvolveImpl::xValue(const Position<double>& pos) const
     {
         // Perform a direct calculation of the convolution at a particular point by
@@ -102,9 +136,9 @@ namespace galsim {
             const SBProfile& p1 = _plist.front();
             const SBProfile& p2 = _plist.back();
             if (p2.isAxisymmetric())
-                return RealSpaceConvolve(p2,p1,pos,_fluxProduct);
+                return RealSpaceConvolve(p2,p1,pos,_fluxProduct,this->gsparams);
             else 
-                return RealSpaceConvolve(p1,p2,pos,_fluxProduct);
+                return RealSpaceConvolve(p1,p2,pos,_fluxProduct,this->gsparams);
         } else if (_plist.empty()) 
             return 0.;
         else if (_plist.size() == 1) 
@@ -118,11 +152,47 @@ namespace galsim {
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
         std::complex<double> kv = pptr->kValue(k);
-        for (++pptr; pptr != _plist.end(); ++pptr)
-            kv *= pptr->kValue(k);
+        for (++pptr; pptr != _plist.end(); ++pptr) kv *= pptr->kValue(k);
         return kv;
     } 
 
+    void SBConvolve::SBConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                double kx0, double dkx, int izero,
+                                                double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBConvolve fillKValue\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        ConstIter pptr = _plist.begin();
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
+        if (++pptr != _plist.end()) {
+            tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
+            for (; pptr != _plist.end(); ++pptr) {
+                GetImpl(*pptr)->fillKValue(val2.view(),kx0,dkx,izero,ky0,dky,jzero);
+                val = ElemProd(val,val2);
+            }
+        }
+    }
+
+    void SBConvolve::SBConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                double kx0, double dkx, double dkxy,
+                                                double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBConvolve fillKValue\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        ConstIter pptr = _plist.begin();
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
+        if (++pptr != _plist.end()) {
+            tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
+            for (; pptr != _plist.end(); ++pptr) {
+                GetImpl(*pptr)->fillKValue(val2.view(),kx0,dkx,dkxy,ky0,dky,dkyx);
+                val = ElemProd(val,val2);
+            }
+        }
+    }
 
     double SBConvolve::SBConvolveImpl::getPositiveFlux() const 
     {
@@ -175,4 +245,148 @@ namespace galsim {
         dbg<<"Convolve Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
+
+    //
+    // AutoConvolve 
+    // 
+
+    SBAutoConvolve::SBAutoConvolve(const SBProfile& s, bool real_space,
+                                   const GSParamsPtr& gsparams) :
+        SBProfile(new SBAutoConvolveImpl(s, real_space, gsparams)) {}
+    SBAutoConvolve::SBAutoConvolve(const SBAutoConvolve& rhs) : SBProfile(rhs) {}
+    SBAutoConvolve::~SBAutoConvolve() {}
+
+    SBAutoConvolve::SBAutoConvolveImpl::SBAutoConvolveImpl(const SBProfile& s, bool real_space,
+                                                           const GSParamsPtr& gsparams) :
+        SBProfileImpl(gsparams ? gsparams : GetImpl(s)->gsparams),
+        _adaptee(s), _real_space(real_space) {}
+
+    double SBAutoConvolve::SBAutoConvolveImpl::xValue(const Position<double>& pos) const
+    { return RealSpaceConvolve(_adaptee,_adaptee,pos,getFlux(),this->gsparams); }
+
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                        double kx0, double dkx, int izero,
+                                                        double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBAutoConvolve fillKValue\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
+        val = ElemProd(val,val);
+    }
+
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                        double kx0, double dkx, double dkxy,
+                                                        double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBAutoConvolve fillKValue\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
+        val = ElemProd(val,val);
+    }
+
+    double SBAutoConvolve::SBAutoConvolveImpl::getPositiveFlux() const 
+    {
+        double p = _adaptee.getPositiveFlux();
+        double n = _adaptee.getNegativeFlux();
+        return p*p + n*n;
+    }
+
+    double SBAutoConvolve::SBAutoConvolveImpl::getNegativeFlux() const 
+    {
+        double p = _adaptee.getPositiveFlux();
+        double n = _adaptee.getNegativeFlux();
+        return 2.*p*n;
+    }
+
+    boost::shared_ptr<PhotonArray> SBAutoConvolve::SBAutoConvolveImpl::shoot(
+        int N, UniformDeviate u) const 
+    {
+        dbg<<"AutoConvolve shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
+        boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N, u);
+        result->convolve(*_adaptee.shoot(N, u), u);
+        dbg<<"AutoConvolve Realized flux = "<<result->getTotalFlux()<<std::endl;
+        return result;
+    }
+
+
+    //
+    // AutoCorrelate
+    // 
+
+    SBAutoCorrelate::SBAutoCorrelate(const SBProfile& s, bool real_space,
+                                     const GSParamsPtr& gsparams) :
+        SBProfile(new SBAutoCorrelateImpl(s, real_space, gsparams)) {}
+    SBAutoCorrelate::SBAutoCorrelate(const SBAutoCorrelate& rhs) : SBProfile(rhs) {}
+    SBAutoCorrelate::~SBAutoCorrelate() {}
+
+    SBAutoCorrelate::SBAutoCorrelateImpl::SBAutoCorrelateImpl(
+        const SBProfile& s, bool real_space,
+        const GSParamsPtr& gsparams) :
+        SBProfileImpl(gsparams ? gsparams : GetImpl(s)->gsparams),
+        _adaptee(s), _real_space(real_space) {}
+
+    double SBAutoCorrelate::SBAutoCorrelateImpl::xValue(const Position<double>& pos) const
+    { 
+        SBProfile temp = _adaptee.rotate(180. * degrees);
+        return RealSpaceConvolve(_adaptee,temp,pos,getFlux(),this->gsparams);
+    }
+
+    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKValue(
+        tmv::MatrixView<std::complex<double> > val,
+        double kx0, double dkx, int izero,
+        double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBAutoCorrelate fillKValue\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
+        val = ElemProd(val,val.conjugate());
+    }
+
+    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKValue(
+        tmv::MatrixView<std::complex<double> > val,
+        double kx0, double dkx, double dkxy,
+        double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBCorrelate fillKValue\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
+        val = ElemProd(val,val.conjugate());
+    }
+
+    double SBAutoCorrelate::SBAutoCorrelateImpl::getPositiveFlux() const 
+    {
+        double p = _adaptee.getPositiveFlux();
+        double n = _adaptee.getNegativeFlux();
+        return p*p + n*n;
+    }
+
+    double SBAutoCorrelate::SBAutoCorrelateImpl::getNegativeFlux() const 
+    {
+        double p = _adaptee.getPositiveFlux();
+        double n = _adaptee.getNegativeFlux();
+        return 2.*p*n;
+    }
+
+    boost::shared_ptr<PhotonArray> SBAutoCorrelate::SBAutoCorrelateImpl::shoot(
+        int N, UniformDeviate u) const 
+    {
+        dbg<<"AutoCorrelate shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
+        boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N, u);
+        boost::shared_ptr<PhotonArray> result2 = _adaptee.shoot(N, u);
+        // Flip sign of (x,y) in one of the results
+        for (int i=0; i<result2->size(); i++) {
+            Position<double> negxy = -Position<double>(result2->getX(i), result2->getY(i));
+            result2->setPhoton(i, negxy.x, negxy.y, result2->getFlux(i));
+        }
+        result->convolve(*result2, u);
+        dbg<<"AutoCorrelate Realized flux = "<<result->getTotalFlux()<<std::endl;
+        return result;
+    }
+
 }

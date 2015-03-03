@@ -1,6 +1,24 @@
-// -*- c++ -*-
-#ifndef SBTRANSFORM_H
-#define SBTRANSFORM_H
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+#ifndef GalSim_SBTransform_H
+#define GalSim_SBTransform_H
 /** 
  * @file SBTransform.h @brief SBProfile adapter that transforms another SBProfile.
  * Includes shear, dilation, rotation, translation, and flux scaling.
@@ -27,27 +45,23 @@ namespace galsim {
          * @brief General constructor.
          *
          * @param[in] sbin SBProfile being transform
-         * @param[in] mA A element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
-         * @param[in] mB B element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
-         * @param[in] mC C element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
-         * @param[in] mD D element of 2x2 distortion matrix `M = [(A B), (C D)]` = [row1, row2]
-         * @param[in] cen 2-element (x, y) Position for the translational shift.
+         * @param[in] mA          A element of 2x2 distortion matrix `M = [(A B), (C D)]`
+         *                        = [row1, row2]
+         * @param[in] mB          B element of 2x2 distortion matrix `M = [(A B), (C D)]`
+         *                        = [row1, row2]
+         * @param[in] mC          C element of 2x2 distortion matrix `M = [(A B), (C D)]`
+         *                        = [row1, row2]
+         * @param[in] mD          D element of 2x2 distortion matrix `M = [(A B), (C D)]`
+         *                        = [row1, row2]
+         * @param[in] cen         2-element (x, y) Position for the translational shift.
          * @param[in] fluxScaling Amount by which the flux should be multiplied.
+         * @param[in] gsparams    GSParams object storing constants that control the accuracy of
+         *                        image operations and rendering, if different from the default.
          */
-        SBTransform(const SBProfile& sbin,
-                    double mA, double mB, double mC, double mD,
-                    const Position<double>& cen=Position<double>(0.,0.), double fluxScaling=1.);
-
-        /** 
-         * @brief Construct from an input Ellipse 
-         *
-         * @param[in] sbin SBProfile being transformed
-         * @param[in] e  Ellipse.
-         * @param[in] fluxScaling Amount by which the flux should be multiplied.
-         */
-        SBTransform(const SBProfile& sbin,
-                    const Ellipse& e=Ellipse(),
-                    double fluxScaling=1.);
+        SBTransform(const SBProfile& sbin, double mA, double mB, double mC, double mD,
+                    const Position<double>& cen=Position<double>(0.,0.), 
+                    double fluxScaling=1.,
+                    const GSParamsPtr& gsparams=GSParamsPtr());
 
         /// @brief Copy constructor
         SBTransform(const SBTransform& rhs);
@@ -59,26 +73,6 @@ namespace galsim {
 
         class SBTransformImpl;
 
-        static std::complex<double> _kValueNoPhaseNoDet(
-            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
-            const Position<double>& , const Position<double>& );
-        static std::complex<double> _kValueNoPhaseWithDet(
-            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
-            const Position<double>& , const Position<double>& );
-        static std::complex<double> _kValueWithPhase(
-            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
-            const Position<double>& k, const Position<double>& cen);
-
-        static Position<double> _fwd_normal(
-            double mA, double mB, double mC, double mD, double x, double y, double )
-        { return Position<double>(mA*x + mB*y, mC*x + mD*y); }
-        static Position<double> _inv_normal(
-            double mA, double mB, double mC, double mD, double x, double y, double invdet)
-        { return Position<double>(invdet*(mD*x - mB*y), invdet*(-mC*x + mA*y)); }
-        static Position<double> _ident(
-            double , double , double , double , double x, double y, double )
-        { return Position<double>(x,y); }
-
     private:
         // op= is undefined
         void operator=(const SBTransform& rhs);
@@ -86,5 +80,5 @@ namespace galsim {
 
 }
 
-#endif // SBTRANSFORM_H
+#endif 
 

@@ -1,0 +1,21 @@
+The 1904_66*.fits files were downloaded from the web site:
+
+http://www.atnf.csiro.au/people/mcalabre/WCS/example_data.html
+
+Dr. Mark Calabretta gave us (MJ -- private communication) the OK to include 
+them in the GalSim distribution, so thanks very much to him for making these
+available to us to use for unit tests!  From Mark:
+
+    I'm happy for you to include whichever test files you want with
+    the GalSim package.
+
+
+The files region.fits, sipsample.fits, tnx.fits, tpv.fits, zpx.fits are
+the sample files for the corresponding registrations of these WCS FITS
+conventions.  They are all in the public domain.  See:
+
+http://fits.gsfc.nasa.gov/fits_registry.html
+
+The file tanpv.fits is just a copy of tpv.fits with the CTYPE tags
+changed from TPV to TAN.
+

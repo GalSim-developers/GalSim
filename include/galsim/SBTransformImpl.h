@@ -1,6 +1,24 @@
-// -*- c++ -*-
-#ifndef SBTRANSFORM_IMPL_H
-#define SBTRANSFORM_IMPL_H
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+#ifndef GalSim_SBTransformImpl_H
+#define GalSim_SBTransformImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBTransform.h"
@@ -12,9 +30,8 @@ namespace galsim {
     public:
 
         SBTransformImpl(const SBProfile& sbin, double mA, double mB, double mC, double mD,
-                        const Position<double>& cen, double fluxScaling);
-
-        SBTransformImpl(const SBProfile& sbin, const Ellipse& e, double fluxScaling);
+                        const Position<double>& cen, double fluxScaling,
+                        const GSParamsPtr& gsparams);
 
         ~SBTransformImpl() {}
 
@@ -28,8 +45,8 @@ namespace galsim {
         bool isAnalyticX() const { return _adaptee.isAnalyticX(); }
         bool isAnalyticK() const { return _adaptee.isAnalyticK(); }
 
-        double maxK() const { return _adaptee.maxK() / _minor; }
-        double stepK() const { return _adaptee.stepK() / _major; }
+        double maxK() const { return _maxk; }
+        double stepK() const { return _stepk; }
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const;
 
@@ -58,8 +75,19 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        // Override for better efficiency:
-        void fillKGrid(KTable& kt) const; 
+        // Overrides for better efficiency
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, int izero,
+                        double y0, double dy, int jzero) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
 
     private:
         SBProfile _adaptee; ///< SBProfile being adapted/transformed
@@ -74,12 +102,13 @@ namespace galsim {
         double _absdet;  ///< Determinant (flux magnification) of `M` matrix * fluxScaling
         double _fluxScaling;  ///< Amount to multiply flux by.
         double _invdet;  ///< Inverse determinant of `M` matrix.
-        double _major; ///< Major axis of ellipse produced from unit circle.
-        double _minor; ///< Minor axis of ellipse produced from unit circle.
+        double _maxk;
+        double _stepk;
         bool _stillIsAxisymmetric; ///< Is output SBProfile shape still circular?
         double _xmin, _xmax, _ymin, _ymax; ///< Ranges propagated from adaptee
         double _coeff_b, _coeff_c, _coeff_c2; ///< Values used in getYRangeX(x,ymin,ymax);
         std::vector<double> _xsplits, _ysplits; ///< Good split points for the intetegrals
+        bool _zeroCen;
 
         void initialize();
 
@@ -115,11 +144,31 @@ namespace galsim {
         Position<double> (*_inv)(
             double mA, double mB, double mC, double mD, double x, double y, double invdet);
 
+        static std::complex<double> _kValueNoPhaseNoDet(
+            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& , const Position<double>& );
+        static std::complex<double> _kValueNoPhaseWithDet(
+            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& , const Position<double>& );
+        static std::complex<double> _kValueWithPhase(
+            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& k, const Position<double>& cen);
+
+        static Position<double> _fwd_normal(
+            double mA, double mB, double mC, double mD, double x, double y, double )
+        { return Position<double>(mA*x + mB*y, mC*x + mD*y); }
+        static Position<double> _inv_normal(
+            double mA, double mB, double mC, double mD, double x, double y, double invdet)
+        { return Position<double>(invdet*(mD*x - mB*y), invdet*(-mC*x + mA*y)); }
+        static Position<double> _ident(
+            double , double , double , double , double x, double y, double )
+        { return Position<double>(x,y); }
+
         // Copy constructor and op= are undefined.
         SBTransformImpl(const SBTransformImpl& rhs);
         void operator=(const SBTransformImpl& rhs);
     };
 }
 
-#endif // SBTRANSFORM_IMPL_H
+#endif
 

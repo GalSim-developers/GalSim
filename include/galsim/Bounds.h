@@ -1,7 +1,25 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
 /// @file Bounds.h @brief Classes defining 2d positions and rectangles.
 
-#ifndef Bounds_H
-#define Bounds_H
+#ifndef GalSim_Bounds_H
+#define GalSim_Bounds_H
 
 #include <vector>
 #include <iostream>
@@ -11,56 +29,64 @@
 
 namespace galsim {
 
-    template <class T>
     /// @brief Class for storing 2d position vectors in an (x, y) format.
+    template <class T>
     class Position 
     {
     public:
         /// @brief Publicly visible x & y attributes of the position.
         T x,y;
 
+        ///@brief Default Constructor = (0,0)
+        Position() : x(0), y(0) {}
+
         ///@brief Constructor.
-        Position(const T xin=0, const T yin=0) : x(xin), y(yin) {}
+        Position(const T xin, const T yin) : x(xin), y(yin) {}
 
         ///@brief Assignment.
-        Position& operator=(const Position rhs) 
+        Position& operator=(const Position<T>& rhs) 
         {
             if (&rhs == this) return *this;
             else { x=rhs.x; y=rhs.y; return *this; }
         }
 
         /// @brief Overloaded += operator, following standard vector algebra rules.
-        Position& operator+=(const Position rhs) { x+=rhs.x; y+=rhs.y; return *this; }
+        Position<T>& operator+=(const Position<T>& rhs) { x+=rhs.x; y+=rhs.y; return *this; }
 
         /// @brief Overloaded -= operator, following standard vector algebra rules.
-        Position& operator-=(const Position rhs) { x-=rhs.x; y-=rhs.y; return *this; }
+        Position<T>& operator-=(const Position<T>& rhs) { x-=rhs.x; y-=rhs.y; return *this; }
 
         /// @brief Overloaded *= operator for scalar multiplication.
-        Position& operator*=(const T rhs) { x*=rhs; y*=rhs; return *this; }
+        Position<T>& operator*=(const T rhs) { x*=rhs; y*=rhs; return *this; }
 
         /// @brief Overloaded /= operator for scalar division.
-        Position& operator/=(const T rhs) { x/=rhs; y/=rhs; return *this; }
+        Position<T>& operator/=(const T rhs) { x/=rhs; y/=rhs; return *this; }
 
-        /// @brief Overloaded * vector multiplication operator for scalar on rhs.
-        Position operator*(const T rhs) const { return Position(x*rhs, y*rhs); }
+        /// @brief Overloaded * operator for scalar on rhs.
+        Position<T> operator*(const T rhs) const { return Position<T>(x*rhs, y*rhs); }
 
-        /// @brief Overloaded / vector division operator for scalar on rhs.
-        Position operator/(const T rhs) const { return Position(x/rhs, y/rhs); }
+        /// @brief Allow T * Position as well.
+        friend Position<T> operator*(const T lhs, const Position<T>& rhs) { return rhs*lhs; }
+
+        /// @brief Overloaded / operator for scalar on rhs.
+        Position<T> operator/(const T rhs) const { return Position<T>(x/rhs, y/rhs); }
 
         /// @brief Unary negation (x, y) -> (-x, -y).
-        Position operator-() const { return Position(-x,-y); }
+        Position<T> operator-() const { return Position<T>(-x,-y); }
 
         /// @brief Overloaded vector + addition operator with a Position on the rhs.
-        Position operator+(Position<T> rhs) const { return Position(x+rhs.x,y+rhs.y); }
+        Position<T> operator+(const Position<T>& rhs) const 
+        { return Position<T>(x+rhs.x,y+rhs.y); }
 
         /// @brief Overloaded vector - subtraction operator with a Position on the rhs.
-        Position operator-(const Position<T> rhs) const { return Position(x-rhs.x,y-rhs.y); }
+        Position<T> operator-(const Position<T>& rhs) const 
+        { return Position<T>(x-rhs.x,y-rhs.y); }
 
         /// @brief Overloaded == relational equality operator.
-        bool operator==(const Position& rhs) const { return (x==rhs.x && y==rhs.y); }
+        bool operator==(const Position<T>& rhs) const { return (x==rhs.x && y==rhs.y); }
         
         /// @brief Overloaded != relational non-equality operator.
-        bool operator!=(const Position& rhs) const { return (x!=rhs.x || y!=rhs.y); }
+        bool operator!=(const Position<T>& rhs) const { return (x!=rhs.x || y!=rhs.y); }
 
         /// @brief Write (x, y) position to output stream.
         void write(std::ostream& fout) const { fout << "(" << x << "," << y << ")"; }
@@ -96,25 +122,29 @@ namespace galsim {
     class Bounds 
     {
     public:
-    //TODO: Write more dox here, needed to start from scratch!
         /// @brief Constructor using four scalar positions (xmin, xmax, ymin, ymax).
         Bounds(const T x1, const T x2, const T y1, const T y2) :
-            defined(x1<=x2 && y1<=y2),xmin(x1),xmax(x2),ymin(y1),ymax(y2) {}
+            defined(x1<=x2 && y1<=y2), xmin(x1), xmax(x2), ymin(y1), ymax(y2) {}
 
         /// @brief Constructor using a single Position vector x/ymin = x/ymax.
         Bounds(const Position<T>& pos) :
-            defined(1),xmin(pos.x),xmax(pos.x),ymin(pos.y),ymax(pos.y) {}
+            defined(1), xmin(pos.x), xmax(pos.x), ymin(pos.y), ymax(pos.y) {}
 
         /// @brief Constructor using two Positions, first for x/ymin, second for x/ymax.
         Bounds(const Position<T>& pos1, const Position<T>& pos2) :
-            defined(1),xmin(std::min(pos1.x,pos2.x)),xmax(std::max(pos1.x,pos2.x)),
-            ymin(std::min(pos1.y,pos2.y)),ymax(std::max(pos1.y,pos2.y)) {}
+            defined(1), xmin(std::min(pos1.x,pos2.x)), xmax(std::max(pos1.x,pos2.x)),
+            ymin(std::min(pos1.y,pos2.y)), ymax(std::max(pos1.y,pos2.y)) {}
 
         /// @brief Constructor for empty Bounds, .isDefined() method will return false.
-        Bounds() : defined(0),xmin(0),xmax(0),ymin(0),ymax(0) {}
+        Bounds() : defined(0), xmin(0), xmax(0), ymin(0), ymax(0) {}
 
         /// @brief Destructor.
         ~Bounds() {}
+
+        // NB. The default copy constructor and operator= are fine.
+
+        /// @brief Make a copy of this Bounds object
+        Bounds<T> copy() const { return Bounds<T>(*this); }
 
         /// @brief Set the xmin of the Bounds rectangle.
         void setXMin(const T x) { xmin = x; defined= xmin<=xmax && ymin<=ymax; }
@@ -143,26 +173,80 @@ namespace galsim {
         /// @brief Query whether the Bounds rectangle is defined.
         bool isDefined() const { return defined; }
 
-        // TODO: Understand what these do and document...
+        /// @brief Return the origin of the image (xmin, ymin)
+        Position<T> origin() const { return Position<T>(xmin, ymin); }
+
+        /// @brief Return the nominal center of the image. 
+        ///
+        /// This is the position of the pixel that is considered to be (0,0)
         Position<T> center() const;
-        void operator+=(const Position<T>& pos); //expand to include point
-        void operator+=(const Bounds<T>& rec); //bounds of union
+
+        /// @brief Return the true center of the image.
+        ///
+        /// For even-sized, integer bounds, this will not be an integer, since the center in 
+        /// that case falls between two pixels.
+        Position<double> trueCenter() const;
+
+        //@{
+        /// @brief expand bounds to include this point
+        void operator+=(const Position<T>& pos);
+        Bounds<T> operator+(const Position<T>& pos) const
+        { Bounds<T> ret = copy(); ret += pos; return ret; }
+        //@}
+
+        //@{
+        /// @brief expand bounds to include these bounds
+        void operator+=(const Bounds<T>& rec);
+        Bounds<T> operator+(const Bounds<T>& rec) const
+        { Bounds<T> ret = copy(); ret += rec; return ret; }
+        //@}
+
+        //@{
+        /// @brief add a border of size d around existing bounds
         void addBorder(const T d);
         void operator+=(const T d) { addBorder(d); }
-        void expand(const double m); // expand by a multiple m, about bounds center
-        const Bounds<T> operator&(const Bounds<T>& rhs) const; // Finds intersection
+        Bounds<T> withBorder(const T d) const
+        { Bounds<T> ret = copy(); ret += d; return ret; }
+        Bounds<T> operator+(const T d) const { return withBorder(d); }
+        //@}
+
+        //@{
+        /// @brief expand bounds by a factor m around the current center.
+        void expand(const double m); 
+        Bounds<T> makeExpanded(const double m) const
+        { Bounds<T> ret = copy(); ret.expand(m); return ret; }
+        //@}
+
+        /// @brief find the intersection of two bounds
+        const Bounds<T> operator&(const Bounds<T>& rhs) const; 
+
+        //@{
+        /// @brief shift the bounding box by some amount.
         void shift(const T dx, const T dy) { xmin+=dx; xmax+=dx; ymin+=dy; ymax+=dy; }
-        void shift(Position<T> dx) { shift(dx.x,dx.y); }
+        void shift(const Position<T>& delta) { shift(delta.x,delta.y); }
+        Bounds<T> makeShifted(const T dx, const T dy) const
+        { Bounds<T> ret = copy(); ret.shift(dx,dy); return ret; }
+        Bounds<T> makeShifted(const Position<T>& delta) const
+        { Bounds<T> ret = copy(); ret.shift(delta); return ret; }
+        //@}
+
+        //@{
+        /// @brief return whether the bounded region includes a given point
         bool includes(const Position<T>& pos) const
         { return (defined && pos.x<=xmax && pos.x>=xmin && pos.y<=ymax && pos.y>=ymin); }
         bool includes(const T x, const T y) const
         { return (defined && x<=xmax && x>=xmin && y<=ymax && y>=ymin); }
+        //@}
+
+        /// @brief return whether the bounded region includes all of the given bounds
         bool includes(const Bounds<T>& rhs) const
         { 
             return (defined && rhs.defined && 
                     rhs.xmin>=xmin && rhs.xmax<=xmax &&
                     rhs.ymin>=ymin && rhs.ymax<=ymax);
         }
+
+        /// @brief check equality of two bounds
         bool operator==(const Bounds<T>& rhs) const 
         {
             return defined && rhs.defined && (xmin==rhs.xmin) &&
@@ -173,9 +257,8 @@ namespace galsim {
             return !defined || !rhs.defined || (xmin!=rhs.xmin) ||
                 (ymin!=rhs.ymin) || (xmax!=rhs.xmax) || (ymax!=rhs.ymax);
         }
-        /**
-         *  @brief Check if two bounds have same shape, but maybe different origin.
-         */
+
+        ///  @brief Check if two bounds have same shape, but maybe different origin.
         bool isSameShapeAs(const Bounds<T>& rhs) const
         {
             return defined && rhs.defined && 
@@ -200,12 +283,17 @@ namespace galsim {
                 T(0); 
         }
 
+        /// @brief divide the current bounds into (nx x ny) sub-regions
         typename std::vector<Bounds<T> > divide(int nx, int ny) const;
+
+        /// @brief write out to a file
         void write(std::ostream& fout) const
         { 
             if (defined) fout << xmin << ' ' << xmax << ' ' << ymin << ' ' << ymax << ' ';
             else fout << "Undefined ";
         }
+
+        /// @brief read in from a file
         void read(std::istream& fin)
         { fin >> xmin >> xmax >> ymin >> ymax; defined = xmin<=xmax && ymin<=ymax; }
 
@@ -257,9 +345,36 @@ namespace galsim {
         }
     }
 
+    // First the generic version:
+    template <class T, class U, bool is_int>
+    struct CalculateCenter 
+    {
+        static Position<U> call(const Bounds<T>& b)
+        { return Position<U>((b.getXMin() + b.getXMax())/U(2),(b.getYMin() + b.getYMax())/U(2)); }
+    };
+    // Slightly different for integer types:
+    template <class T, class U>
+    struct CalculateCenter<T, U, true>
+    {
+        static Position<U> call(const Bounds<T>& b)
+        {
+            // Write it this way to make sure the integer rounding goes the same way regardless
+            // of whether the values are positive or negative.
+            // e.g. (1,10,1,10) -> (6,6)
+            //      (-10,-1,-10,-1) -> (-5,-5)
+            // Just up and to the right of the true center in both cases.
+            return Position<U>(b.getXMin() + (b.getXMax()-b.getXMin()+1)/U(2),
+                               b.getYMin() + (b.getYMax()-b.getYMin()+1)/U(2)); 
+        }
+    };
+
     template <class T>
     Position<T> Bounds<T>::center() const
-    { return Position<T>((xmin + xmax)/2.,(ymin + ymax)/2.); }
+    { return CalculateCenter<T,T,std::numeric_limits<T>::is_integer>::call(*this); }
+
+    template <class T>
+    Position<double> Bounds<T>::trueCenter() const
+    { return CalculateCenter<T,double,false>::call(*this); }
 
     // & operator finds intersection, if any
     template <class T>
@@ -303,8 +418,8 @@ namespace galsim {
     {
         T dx = xmax-xmin;
         T dy = ymax-ymin;
-        dx = dx*0.5*(m-1); 
-        dy = dy*0.5*(m-1);
+        dx = T(dx*0.5*(m-1.)); 
+        dy = T(dy*0.5*(m-1.));
         xmax += dx;  xmin -= dx;
         ymax += dy;  ymin -= dy;
     }

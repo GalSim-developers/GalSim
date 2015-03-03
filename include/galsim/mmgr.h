@@ -1,3 +1,22 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Copyright 2000, Paul Nettle. All rights reserved.
 //
@@ -10,8 +29,8 @@
 // [NOTE: Best when viewed with 8-character tabs]
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-#ifndef _H_MMGR
-#define _H_MMGR
+#ifndef GalSim_MMGR_H
+#define GalSim_MMGR_H
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // For systems that don't have the __FUNCTION__ variable, we can just define it here
@@ -134,7 +153,6 @@ void operator delete[](void *reportedAddress) throw();
 // Macros -- "Kids, please don't try this at home. We're trained professionals here." :)
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-#include "nommgr.h"
 #define new (m_setOwner (__FILE__,__LINE__,__FUNCTION__),false) ? NULL : new
 #define delete (m_setOwner (__FILE__,__LINE__,__FUNCTION__),false) ? m_setOwner("",0,"") : delete
 #define malloc(sz) m_allocator (__FILE__,__LINE__,__FUNCTION__,m_alloc_malloc,sz)

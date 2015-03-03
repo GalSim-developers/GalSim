@@ -1,6 +1,25 @@
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
 import numpy as np
 import os
 import sys
+
+from galsim_test_helpers import *
 
 try:
     import galsim
@@ -14,10 +33,6 @@ import galsim.utilities
 testshape = (512, 512)  # shape of image arrays for all tests
 decimal = 6     # Last decimal place used for checking equality of float arrays, see
                 # np.testing.assert_array_almost_equal(), low since many are ImageF
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 def test_roll2d_circularity():
     """Test both integer and float arrays are unchanged by full circular roll.

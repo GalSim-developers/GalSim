@@ -1,16 +1,36 @@
-// -*- c++ -*-
-#ifndef ImageArith_H
-#define ImageArith_H
+/* -*- c++ -*-
+ * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+#ifndef GalSim_ImageArith_H
+#define GalSim_ImageArith_H
 
 namespace galsim {
+
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
+    //! @cond
 
     /**
      *  @brief Exception class usually thrown by images.
      */
     class ImageError : public std::runtime_error {
     public: 
-        ImageError(const std::string& m="") : 
-            std::runtime_error("Image Error: " + m) {}
+        ImageError(const std::string& m) : std::runtime_error("Image Error: " + m) {}
 
     };
 
@@ -19,7 +39,7 @@ namespace galsim {
      */
     class ImageBoundsError : public ImageError {
     public: 
-        ImageBoundsError(const std::string& m="") : 
+        ImageBoundsError(const std::string& m) : 
             ImageError("Access to out-of-bounds pixel " + m) {}
 
         ImageBoundsError(const std::string& m, int min, int max, int tried);
@@ -27,10 +47,12 @@ namespace galsim {
         ImageBoundsError(int x, int y, const Bounds<int> b);
     };
 
+    //! @endcond
+
 
     template <typename T> class AssignableToImage;
     template <typename T> class BaseImage;
-    template <typename T> class Image;
+    template <typename T> class ImageAlloc;
     template <typename T> class ImageView;
 
     //
@@ -88,12 +110,12 @@ namespace galsim {
             if (image.isContiguous()) {
                 const Iter ee = image.rowEnd(image.getYMax());
                 for (Iter it = image.rowBegin(image.getYMin()); it != ee; ++it) 
-                    *it = f(*it);
+                    *it = T(f(*it));
             } else {
                 for (int y = image.getYMin(); y <= image.getYMax(); ++y) {
                     const Iter ee = image.rowEnd(y);
                     for (Iter it = image.rowBegin(y); it != ee; ++it) 
-                        *it = f(*it);
+                        *it = T(f(*it));
                 }
             }
         }
@@ -116,7 +138,7 @@ namespace galsim {
             for (int y = bounds.getYMin(); y <= bounds.getYMax(); ++y) {
                 const Iter ee = image.getIter(bounds.getXMax()+1,y);      
                 for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it) 
-                    *it = f(*it);
+                    *it = T(f(*it));
             }
         }
         return f;
@@ -134,7 +156,7 @@ namespace galsim {
                 int x = image.getXMin();
                 const Iter ee = image.rowEnd(y);
                 for (Iter it = image.rowBegin(y); it != ee; ++it, ++x) 
-                    *it += f(x,y);
+                    *it += T(f(x,y));
             }
         }
         return f;
@@ -158,7 +180,7 @@ namespace galsim {
                 int x = bounds.getXMin();
                 const Iter ee = image.getIter(bounds.getXMax()+1,y);      
                 for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it, ++x) 
-                    *it += f(x,y);
+                    *it += T(f(x,y));
             }
         }
         return f;
@@ -176,7 +198,7 @@ namespace galsim {
                 int x = image.getXMin();
                 const Iter ee = image.rowEnd(y);      
                 for (Iter it = image.rowBegin(y); it != ee; ++it, ++x) 
-                    *it = f(x,y);
+                    *it = T(f(x,y));
             }
         }
         return f;
@@ -199,7 +221,7 @@ namespace galsim {
                 int x = bounds.getXMin();
                 const Iter ee = image.getIter(bounds.getXMax()+1,y);      
                 for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it, ++x) 
-                    *it = f(x,y);
+                    *it = T(f(x,y));
             }
         }
         return f;
@@ -271,7 +293,7 @@ namespace galsim {
     {
         if (image1.getData()) {
             typedef typename ImageView<T1>::iterator Iter1;
-            typedef typename Image<T2>::iterator Iter2;
+            typedef typename BaseImage<T2>::iterator Iter2;
             if (!image1.getBounds().includes(bounds) || !image2.getBounds().includes(bounds))
                 throw ImageError("transform_pixel range exceeds image range");
 
@@ -288,6 +310,9 @@ namespace galsim {
         return f;
     }
 
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
+    //! @cond
+
     // Default uses T1 as the result type
     template <typename T1, typename T2>
     struct ResultType { typedef T1 type; };
@@ -296,17 +321,17 @@ namespace galsim {
     template <>
     struct ResultType<float,double> { typedef double type; };
     template <>
-    struct ResultType<int,double> { typedef double type; };
+    struct ResultType<int32_t,double> { typedef double type; };
     template <>
-    struct ResultType<short,double> { typedef double type; };
+    struct ResultType<int16_t,double> { typedef double type; };
 
     template <>
-    struct ResultType<int,float> { typedef float type; };
+    struct ResultType<int32_t,float> { typedef float type; };
     template <>
-    struct ResultType<short,float> { typedef float type; };
+    struct ResultType<int16_t,float> { typedef float type; };
 
     template <>
-    struct ResultType<short,int> { typedef int type; };
+    struct ResultType<int16_t,int32_t> { typedef int32_t type; };
 
     //
     // Image + Scalar
@@ -328,7 +353,7 @@ namespace galsim {
     // Currently, the only valid type for x is the value type of im.
     // The reason is that making the type of x a template opens the door
     // to any class, not just POD.  I don't know of an easy way to make 
-    // this only valid for T2 = POD types like short, int, float, double.
+    // this only valid for T2 = POD types like int16_t, int32_t, float, double.
     // So if we do want to allow mixed types for these, we'd probably have to 
     // specifically overload each one by hand.
     template <typename T>
@@ -344,12 +369,12 @@ namespace galsim {
     { transform_pixel(im, bind2nd(std::plus<T>(),x)); return im; }
 
     template <typename T>
-    inline Image<T>& operator+=(Image<T>& im, const T& x) 
+    inline ImageAlloc<T>& operator+=(ImageAlloc<T>& im, const T& x) 
     { im.view() += x; return im; }
 
 
     //
-    // Image + Scalar
+    // Image - Scalar
     //
 
     template <typename T>
@@ -361,7 +386,7 @@ namespace galsim {
     { im += T(-x); return im; }
 
     template <typename T>
-    inline Image<T>& operator-=(Image<T>& im, const T& x) 
+    inline ImageAlloc<T>& operator-=(ImageAlloc<T>& im, const T& x) 
     { im.view() -= x; return im; }
 
 
@@ -395,7 +420,7 @@ namespace galsim {
     { transform_pixel(im, bind2nd(std::multiplies<T>(),x)); return im; }
 
     template <typename T>
-    inline Image<T>& operator*=(Image<T>& im, const T& x) 
+    inline ImageAlloc<T>& operator*=(ImageAlloc<T>& im, const T& x) 
     { im.view() *= x; return im; }
 
     //
@@ -428,7 +453,7 @@ namespace galsim {
     { transform_pixel(im, bind2nd(std::divides<T>(),x)); return im; }
 
     template <typename T>
-    inline Image<T>& operator/=(Image<T>& im, const T& x) 
+    inline ImageAlloc<T>& operator/=(ImageAlloc<T>& im, const T& x) 
     { im.view() /= x; return im; }
 
     //
@@ -466,7 +491,7 @@ namespace galsim {
     }
 
     template <typename T1, typename T2> 
-    inline Image<T1>& operator+=(Image<T1>& im, const BaseImage<T2>& x) 
+    inline ImageAlloc<T1>& operator+=(ImageAlloc<T1>& im, const BaseImage<T2>& x) 
     { im.view() += x; return im; }
 
 
@@ -505,7 +530,7 @@ namespace galsim {
     }
 
     template <typename T1, typename T2> 
-    inline Image<T1>& operator-=(Image<T1>& im, const BaseImage<T2>& x) 
+    inline ImageAlloc<T1>& operator-=(ImageAlloc<T1>& im, const BaseImage<T2>& x) 
     { im.view() -= x; return im; }
 
 
@@ -544,7 +569,7 @@ namespace galsim {
     }
 
     template <typename T1, typename T2>
-    inline Image<T1>& operator*=(Image<T1>& im, const BaseImage<T2>& x) 
+    inline ImageAlloc<T1>& operator*=(ImageAlloc<T1>& im, const BaseImage<T2>& x) 
     { im.view() *= x; return im; }
 
 
@@ -583,8 +608,10 @@ namespace galsim {
     }
 
     template <typename T1, typename T2>
-    inline Image<T1>& operator/=(Image<T1>& im, const BaseImage<T2>& x) 
+    inline ImageAlloc<T1>& operator/=(ImageAlloc<T1>& im, const BaseImage<T2>& x) 
     { im.view() /= x; return im; }
+
+    //! @endcond
 
 } // namespace galsim
 

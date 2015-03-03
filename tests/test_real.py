@@ -1,7 +1,25 @@
+# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
 import numpy as np
 import os
 import sys
-import pyfits
+
+from galsim_test_helpers import *
 
 try:
     import galsim
@@ -9,13 +27,12 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
-import galsim.utilities
 
 # set up any necessary info for tests
 ### Note: changes to either of the tests below might require regeneration of the catalog and image
 ### files that are saved here.  Modify with care!!!
-catalog_file = 'real_comparison_images/test_catalog.fits'
-image_dir = 'real_comparison_images'
+image_dir = './real_comparison_images'
+catalog_file = os.path.join(image_dir,'test_catalog.fits')
 
 ind_fake = 1 # index of mock galaxy (Gaussian) in catalog
 fake_gal_fwhm = 0.7 # arcsec
@@ -58,31 +75,6 @@ def moments_to_ellip(mxx, myy, mxy):
     sig = (mxx*myy - mxy**2)**(0.25)
     return e1, e2, sig
 
-def printval(image1, image2):
-    print "New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array)
-    print "Sum of values: ", np.sum(image1.array), np.sum(image2.array)
-    print "Minimum image value: ", np.min(image1.array), np.min(image2.array)
-    print "Maximum image value: ", np.max(image1.array), np.max(image2.array)
-    print "Peak location: ", image1.array.argmax(), image2.array.argmax()
-    print "Moments Mx, My, Mxx, Myy, Mxy for new array: "
-    getmoments(image1)
-    print "Moments Mx, My, Mxx, Myy, Mxy for saved array: "
-    getmoments(image2)
-
-def getmoments(image1):
-    xgrid, ygrid = np.meshgrid(np.arange(np.shape(image1.array)[0]) + image1.getXMin(), 
-                               np.arange(np.shape(image1.array)[1]) + image1.getYMin())
-    mx = np.mean(xgrid * image1.array) / np.mean(image1.array)
-    my = np.mean(ygrid * image1.array) / np.mean(image1.array)
-    mxx = np.mean(((xgrid-mx)**2) * image1.array) / np.mean(image1.array)
-    myy = np.mean(((ygrid-my)**2) * image1.array) / np.mean(image1.array)
-    mxy = np.mean((xgrid-mx) * (ygrid-my) * image1.array) / np.mean(image1.array)
-    print "    ", mx-image1.getXMin(), my-image1.getYMin(), mxx, myy, mxy
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
-
 def test_real_galaxy_ideal():
     """Test accuracy of various calculations with fake Gaussian RealGalaxy vs. ideal expectations"""
     import time
@@ -90,6 +82,18 @@ def test_real_galaxy_ideal():
     # read in faked Gaussian RealGalaxy from file
     rgc = galsim.RealGalaxyCatalog(catalog_file, image_dir)
     rg = galsim.RealGalaxy(rgc, index = ind_fake)
+    # as a side note, make sure it behaves okay given a legit RNG and a bad RNG
+    # or when trying to specify the galaxy too many ways
+    rg_1 = galsim.RealGalaxy(rgc, index = ind_fake, rng = galsim.BaseDeviate(1234))
+    rg_2 = galsim.RealGalaxy(rgc, random=True)
+    try:
+        np.testing.assert_raises(TypeError, galsim.RealGalaxy, rgc, index=ind_fake, rng='foo')
+        np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc, index=ind_fake, id=0)
+        np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc, index=ind_fake, random=True)
+        np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc, id=0, random=True)
+        np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc)
+    except ImportError:
+        print 'The assert_raises tests require nose'
 
     ## for the generation of the ideal right answer, we need to add the intrinsic shape of the
     ## galaxy and the lensing shear using the rule for addition of distortions which is ugly, but oh
@@ -136,7 +140,7 @@ def test_real_galaxy_ideal():
                     expected_gaussian.applyShear(e1 = tot_e1, e2 = tot_e2)
                     expected_image = galsim.ImageD(
                             sim_image.array.shape[0], sim_image.array.shape[1])
-                    expected_gaussian.draw(expected_image, dx = tps)
+                    expected_gaussian.draw(expected_image, scale = tps)
                     printval(expected_image,sim_image)
                     np.testing.assert_array_almost_equal(
                         sim_image.array, expected_image.array, decimal = 3,
@@ -166,11 +170,11 @@ def test_real_galaxy_saved():
     sbp_res = sim_image.FindAdaptiveMom()
     shera_res = shera_image.FindAdaptiveMom()
 
-    np.testing.assert_almost_equal(sbp_res.observed_shape.getE1(),
-                                   shera_res.observed_shape.getE1(), 2,
+    np.testing.assert_almost_equal(sbp_res.observed_shape.e1,
+                                   shera_res.observed_shape.e1, 2,
                                    err_msg = "Error in comparison with SHERA result: e1")
-    np.testing.assert_almost_equal(sbp_res.observed_shape.getE2(),
-                                   shera_res.observed_shape.getE2(), 2,
+    np.testing.assert_almost_equal(sbp_res.observed_shape.e2,
+                                   shera_res.observed_shape.e2, 2,
                                    err_msg = "Error in comparison with SHERA result: e2")
     np.testing.assert_almost_equal(sbp_res.moments_sigma, shera_res.moments_sigma, 2,
                                    err_msg = "Error in comparison with SHERA result: sigma")
