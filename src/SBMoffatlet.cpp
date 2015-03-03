@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-// #define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBMoffatlet.h"
 #include "SBMoffatletImpl.h"
@@ -39,8 +39,8 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
-//std::ostream* dbgout = &std::cout;
-//int verbose_level = 1;
+std::ostream* dbgout = &std::cout;
+int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -96,7 +96,8 @@ namespace galsim {
 
         _r0_sq = _r0 * _r0;
         _inv_r0 = 1. / _r0;
-        _xnorm = 1. / _r0_sq;
+        _xnorm = _info->getXNorm() / _r0_sq;
+        //_xnorm = boost::math::tgamma(_beta+_j) / boost::math::tgamma(_beta) / _r0_sq;
     }
 
     double SBMoffatlet::SBMoffatletImpl::maxK() const { return _info->maxK() * _inv_r0; }
@@ -259,12 +260,23 @@ namespace galsim {
     MoffatletInfo::MoffatletInfo(double beta, int j, int q, const GSParamsPtr& gsparams) :
         _beta(beta), _j(j), _q(q), _gsparams(gsparams),
         _maxk(0.), _stepk(0.),
+        _xnorm(0.),
         _ft(Table<double,double>::spline)
     {
         dbg<<"Start MoffatletInfo constructor for beta = "<<_beta<<std::endl;
 
         if (_beta < sbp::minimum_moffat_beta || _beta > sbp::maximum_moffat_beta)
             throw SBError("Requested Moffat index out of range");
+    }
+
+    double MoffatletInfo::getXNorm() const
+    {
+        if (_xnorm == 0.0) {
+            dbg<<"_beta = "<<_beta<<std::endl;
+            dbg<<"_j = "<<_j<<std::endl;
+            _xnorm = (_beta-1.0)/M_PI * boost::math::tgamma(_beta+_j)/boost::math::tgamma(_beta);
+        }
+        return _xnorm;
     }
 
     // Use Moffat properties to set Moffatlet properties (maxK, stepK)
@@ -410,8 +422,8 @@ namespace galsim {
         dbg<<"Building Moffatlet Hankel transform"<<std::endl;
         dbg<<"beta = "<<_beta<<std::endl;
         // Do a Hankel transform and store the results in a lookup table.
-        // double prefactor = _knorm;
-        // dbg<<"prefactor = "<<prefactor<<std::endl;
+        double prefactor = _xnorm;
+        dbg<<"prefactor = "<<prefactor<<std::endl;
 
         // // Along the way, find the last k that has a kValue > 1.e-3
         // double maxk_val = this->_gsparams->maxk_threshold;
@@ -455,7 +467,7 @@ namespace galsim {
                 I, reg,
                 this->_gsparams->integration_relerr,
                 this->_gsparams->integration_abserr);
-            //val *= prefactor;
+            val *= prefactor;
 
             xdbg<<"ft("<<k<<") = "<<val<<"   "<<val<<std::endl;
 

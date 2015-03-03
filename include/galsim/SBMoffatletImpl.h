@@ -51,6 +51,7 @@ namespace galsim {
          */
         double kValue(double ksq, double phi) const;
 
+        double getXNorm() const;
         double maxK() const;
         double stepK() const;
 
@@ -70,6 +71,7 @@ namespace galsim {
         // Parameters calculated when they are first needed, and then stored:
         mutable double _maxk;    ///< Value of k beyond which aliasing can be neglected.
         mutable double _stepk;   ///< Sampling in k space necessary to avoid folding.
+        mutable double _xnorm;   ///< Real space normalization.
 
         // Parameters for the Hankel transform:
         mutable Table<double,double> _ft; ///< Lookup table for Fourier transform

@@ -146,6 +146,11 @@ class Series(object):
         coeffs = self.getCoeffs()
         return np.dot(kvals, coeffs)
 
+    def xValue(self, *args, **kwargs):
+        xvals = [obj.xValue(*args, **kwargs) for obj in self.getBasisFuncs()]
+        coeffs = self.getCoeffs()
+        return np.dot(xvals, coeffs)
+        
     def getCoeffs(self):
         raise NotImplementedError("subclasses of Series must define getCoeffs() method")
 
@@ -507,7 +512,7 @@ class MoffatSeries(Series):
                 f -= 1.0
                 i += 1
             scale_radius = np.exp(self.dlnr*i)
-            Delta = 1.0 - (r0/scale_radius)**2
+            Delta = 1.0 - (scale_radius/r0)**2
             self.ellip = ellip
             self.phi0 = phi0+beta/2
             self.scale_radius = scale_radius
