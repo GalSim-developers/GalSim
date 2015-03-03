@@ -53,7 +53,7 @@ Currently, the module includes the following numbers:
     nonlinearity_beta - The coefficient of the (counts)^2 term in the detector nonlinearity
                         function.  This will not ordinarily be accessed directly by users; instead,
                         it will be accessed by the convenience function in this module that defines
-                        the nonlinearity function.
+                        the nonlinearity function as counts_out = counts_in + beta*counts_in^2.
 
     reciprocity_alpha - The normalization factor that determines the effect of reciprocity failure
                         of the detectors for a given exposure time.  Typically, users would then
