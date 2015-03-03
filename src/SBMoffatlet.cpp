@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "SBMoffatlet.h"
 #include "SBMoffatletImpl.h"
@@ -39,8 +39,8 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
-std::ostream* dbgout = &std::cout;
-int verbose_level = 1;
+//std::ostream* dbgout = &std::cout;
+//int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -368,7 +368,7 @@ namespace galsim {
             temp = std::log(temp);
             _maxk = -temp;
             dbg<<"temp = "<<temp<<std::endl;
-            for (int i=0;i<5;++i) {
+            for (int i=0;i<10;++i) {
                 _maxk = (_beta-0.5) * std::log(_maxk) - temp;
                 dbg<<"_maxk = "<<_maxk<<std::endl;
             }
@@ -422,7 +422,7 @@ namespace galsim {
         dbg<<"Building Moffatlet Hankel transform"<<std::endl;
         dbg<<"beta = "<<_beta<<std::endl;
         // Do a Hankel transform and store the results in a lookup table.
-        double prefactor = _xnorm;
+        double prefactor = 2*M_PI*_xnorm/boost::math::tgamma(_j+1);
         dbg<<"prefactor = "<<prefactor<<std::endl;
 
         // // Along the way, find the last k that has a kValue > 1.e-3
@@ -442,7 +442,7 @@ namespace galsim {
         dbg<<"Using dk = "<<dk<<std::endl;
         dbg<<"Max k = "<<kmax<<std::endl;
 
-        double kmin = dk; // have to begin somewhere...
+        double kmin = 0.0;
         for (double k = kmin; k < kmax; k += dk) {
             MoffatletIntegrand I(_beta, _j, _q, k);
 
@@ -455,11 +455,13 @@ namespace galsim {
 
             // Add explicit splits at first several roots of Jn.
             // This tends to make the integral more accurate.
-            for (int s=1; s<=30; ++s) {
-                double root = boost::math::cyl_bessel_j_zero(double(2*_q), s);
-                //if (root > r*30.0) break;
-                xxdbg<<"root="<<root/k<<std::endl;
-                reg.addSplit(root/k);
+            if (k != 0.0) {
+                for (int s=1; s<=30; ++s) {
+                    double root = boost::math::cyl_bessel_j_zero(double(2*_q), s);
+                    //if (root > r*30.0) break;
+                    xxdbg<<"root="<<root/k<<std::endl;
+                    reg.addSplit(root/k);
+                }
             }
             xxdbg<<"int reg = ("<<0<<","<<30<<")"<<std::endl;
 

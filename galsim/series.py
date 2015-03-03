@@ -410,7 +410,7 @@ class MoffatSeries(Series):
                     if (m+q)%2 == 1:
                         continue
                     n = (q+m)/2
-                    num = (Delta-1.0)**m
+                    num = (1-Delta)**m
                     # Have to catch 0^0=1 situations...
                     if not (Delta == 0.0 and j==m):
                         num *= Delta**(j-m)
