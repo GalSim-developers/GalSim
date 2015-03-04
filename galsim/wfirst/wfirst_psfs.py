@@ -58,7 +58,11 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     configuration.  The simplicity of this arrangement leads to a much faster calculation, and
     somewhat simplifies the configuration of the diffraction spikes.  Also note that currently the
     orientation of the struts is fixed, rather than rotating depending on the orientation of the
-    focal plane.
+    focal plane.  Rotation of the PSF can easily be affected by the user via
+
+       psf = galsim.wfirst.getPSF(...).rotate(angle)
+
+    which will rotate the entire PSF (including the diffraction spikes and any other features).
 
     The calculation takes advantage of the fact that the diffraction limit and aberrations have a
     simple, understood wavelength-dependence.  The resulting object can be used to draw into any of
