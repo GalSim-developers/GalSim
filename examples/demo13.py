@@ -229,13 +229,15 @@ def main(argv):
         logger.info('Adding the sky level, noise and detector non-idealities.')
 
         # First we get the amount of zodaical light for a position corresponding to the center of
-        # this SCA.  The results will be returned to us in e-/pix, using the default WFIRST exposure
-        # time since we did not explicitly specify one.  Then we multiply this by a factor >1 to
-        # account for the amount of stray light that is expected.  Technically one should make a
-        # position-dependent sky level, but this will be a fairly flat function of position, so
-        # using a constant is not too bad.
+        # this SCA.  The results will be returned to us in e-/arcsec^2, using the default WFIRST
+        # exposure time since we did not explicitly specify one.  Then we multiply this by a factor
+        # >1 to account for the amount of stray light that is expected.  Technically one should make
+        # a position-dependent sky level using wcs.makeSkyImage() to account for variable pixel
+        # area, but this will be a fairly flat function of position, so using a constant is not too
+        # bad.
         sky_level_pix = wfirst.getSkyLevel(filters[filter_name], world_pos=SCA_cent_pos)
         sky_level_pix *= (1.0 + wfirst.stray_light_fraction)
+        sky_level_pix *= wfirst.pixel_scale**2 # convert to e-/pix
         # Finally we add the expected thermal backgrounds in this band.  These are provided in
         # e-/pix/s, so we have to multiply by the exposure time.
         sky_level_pix += wfirst.thermal_backgrounds[filter_name]*wfirst.exptime

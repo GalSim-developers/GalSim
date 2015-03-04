@@ -134,9 +134,9 @@ def test_wfirst_backgrounds():
     level_m = galsim.wfirst.getSkyLevel(bp, world_pos=test_pos_m)
     np.testing.assert_almost_equal(level_m, level_p, decimal=8)
 
-    # The routine should handle an input exposure time sensibly.  Our original level_p was in e-/pix
-    # using the WFIRST exposure time.  We will define another exposure time, pass it in, and confirm
-    # that the output is consistent with this.
+    # The routine should handle an input exposure time sensibly.  Our original level_p was in
+    # e-/arcsec^2 using the WFIRST exposure time.  We will define another exposure time, pass it in,
+    # and confirm that the output is consistent with this.
     level_p_2 = galsim.wfirst.getSkyLevel(bp, world_pos=test_pos_p,
                                           exptime=1.7*galsim.wfirst.exptime)
     np.testing.assert_almost_equal(1.7*level_p, level_p_2, decimal=8)

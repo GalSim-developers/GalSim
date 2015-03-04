@@ -39,9 +39,10 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None):
 
     The numbers that are stored in the Bandpass object `bandpass` are background level in units of
     e-/m^2/s/arcsec^2.  To get rid of the m^2, this routine multiplies by the total effective
-    collecting area in m^2, and to get rid of the arcsec^2 it multiplies by the pixel area in
-    arcsec^2.  This will give a result in e-/s/pix, which is then multiplied by the exposure time to
-    give results in e-/pix.
+    collecting area in m^2.  Multiplying by the exposure time gives a result in e-/arcsec^2.  The
+    result can either be multiplied by the approximate pixel area to get e-/pix, or the result can
+    be used with wcs.makeSkyImage() to make an image of the sky that properly includes the actual
+    pixel area as a function of position on the detector.
 
     The source of the tables that are being interpolated is Chris Hirata's publicly-available WFIRST
     exposure time calculator (ETC):
@@ -65,7 +66,7 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None):
     @param exptime      Exposure time in seconds.  If None, use the default WFIRST exposure time.
                         [default: None]
 
-    @returns the expected sky level in e-/pix.
+    @returns the expected sky level in e-/arcsec^2.
     """
     # Check for cached sky level information for this filter.  If not, raise exception
     if not hasattr(bandpass, '_sky_level'):
@@ -124,12 +125,10 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None):
     # First, multiply by the effective collecting area in m^2.
     eff_area = 0.25 * np.pi * galsim.wfirst.diameter**2 * (1. - galsim.wfirst.obscuration**2)
     sky_val *= eff_area
-    # Then multiply by pixel area in arcsec^2.
-    sky_val *= galsim.wfirst.pixel_scale**2
     # Multiply by exposure time.
     if exptime is None:
         exptime = galsim.wfirst.exptime
     sky_val *= exptime
 
-    # The result is now the sky level in e-/pix.
+    # The result is now the sky level in e-/arcsec^2.
     return sky_val
