@@ -371,8 +371,8 @@ def test_wfirst_psfs():
             img_stored.array, test_im.array, decimal=2,
             err_msg='PSF from stored file and actual PSF object disagree.')
 
-    # Delete test files when done.
-    os.remove(test_file)
+        # Delete test files when done.
+        os.remove(test_file)
 
     # Check for exceptions if we:
     # (1) Include optional aberrations in an unacceptable form.
