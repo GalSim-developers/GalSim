@@ -35,7 +35,71 @@ except ImportError:
 from numpy import sin, cos, tan, arcsin, arccos, arctan, sqrt, pi
 
 
+def test_angle():
+    """Test basic construction and use of Angle and AngleUnit classes
+    """
+    import time
+    t1 = time.time()
+
+    # First Angle:
+    theta1 = numpy.pi/4. * galsim.radians
+    theta2 = 45 * galsim.degrees
+    theta3 = 3 * galsim.hours
+    theta4 = 45 * 60 * galsim.arcmin
+    theta5 = galsim.Angle(45 * 3600 , galsim.arcsec) # Check explicit installation too.
+
+    assert theta1.rad() == numpy.pi/4.
+    numpy.testing.assert_almost_equal(theta2.rad(), numpy.pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta3.rad(), numpy.pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta4.rad(), numpy.pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta5.rad(), numpy.pi/4., decimal=12)
+
+    # Check wrapping
+    theta6 = (45 + 360) * galsim.degrees
+    assert abs(theta6.rad() - theta1.rad()) > 6.
+    numpy.testing.assert_almost_equal(theta6.wrap().rad(), theta1.rad(), decimal=12)
+    
+    theta7 = (45 - 360) * galsim.degrees
+    assert abs(theta7.rad() - theta1.rad()) > 6.
+    numpy.testing.assert_almost_equal(theta7.wrap().rad(), theta1.rad(), decimal=12)
+
+    # Make a new AngleUnit as described in the AngleUnit docs
+    gradians = galsim.AngleUnit(2. * numpy.pi / 400.)
+    theta8 = 50 * gradians
+    numpy.testing.assert_almost_equal(theta8.rad(), numpy.pi/4., decimal=12)
+
+    # Check simple math
+    numpy.testing.assert_almost_equal((theta1 + theta2).rad(), numpy.pi/2., decimal=12)
+    numpy.testing.assert_almost_equal((4*theta3).rad(), numpy.pi, decimal=12)
+    numpy.testing.assert_almost_equal((4*theta4 - theta2).rad(), 0.75 * numpy.pi, decimal=12)
+    numpy.testing.assert_almost_equal((theta5/2.).rad(), numpy.pi / 8., decimal=12)
+
+    numpy.testing.assert_almost_equal(theta3 / galsim.radians, numpy.pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta1 / galsim.hours, 3., decimal=12)
+    numpy.testing.assert_almost_equal(galsim.hours / galsim.arcmin, 15*60, decimal=12)
+
+    # Check picklability
+    do_pickle(galsim.radians)
+    do_pickle(galsim.degrees)
+    do_pickle(galsim.hours)
+    do_pickle(galsim.arcmin)
+    do_pickle(galsim.arcsec)
+    do_pickle(gradians)
+    do_pickle(theta1)
+    do_pickle(theta2)
+    do_pickle(theta3)
+    do_pickle(theta4)
+    do_pickle(theta5)
+    do_pickle(theta6)
+    do_pickle(theta7)
+    do_pickle(theta8)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_distance():
+    import time
+    t1 = time.time()
 
     # First, let's test some distances that are easy to figure out
     # without any spherical trig.
@@ -97,7 +161,12 @@ def test_distance():
     numpy.testing.assert_almost_equal(c1.distanceTo(c8).rad()/true_d, 1.0)
 
 
-def test_angle():
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_angleBetween():
+    import time
+    t1 = time.time()
 
     # Again, let's start with some answers we can get by inspection.
     eq1 = galsim.CelestialCoord(0. * galsim.radians, 0. * galsim.radians)  # point on the equator
@@ -164,8 +233,12 @@ def test_angle():
     # L'Huilier's formula for spherical excess:
     numpy.testing.assert_almost_equal(tan(E/4)**2, tan(s/2)*tan((s-a)/2)*tan((s-b)/2)*tan((s-c)/2))
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_projection():
+    import time
+    t1 = time.time()
 
     # Test that a small triangle has the correct properties for each kind of projection
     center = galsim.CelestialCoord(0.234 * galsim.radians, 0.342 * galsim.radians)
@@ -370,7 +443,13 @@ def test_projection():
     numpy.testing.assert_almost_equal(jac_area, E/area, decimal=5)
 
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_precess():
+    import time
+    t1 = time.time()
+
     # I don't have much of a test here.  The formulae are what they are.
     # But it should at least be the case that a precession trip that ends up
     # back at the original epoch should leave the coord unchanged.
@@ -399,7 +478,13 @@ def test_precess():
     numpy.testing.assert_almost_equal(dra_1900, c2.ra.rad()-orig.ra.rad(), decimal=5)
     numpy.testing.assert_almost_equal(ddec_1900, c2.dec.rad()-orig.dec.rad(), decimal=5)
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_galactic():
+    import time
+    t1 = time.time()
+
     # According to wikipedia: http://en.wikipedia.org/wiki/Galactic_coordinate_system
     # the galactic center is located at 17h:45.6m, -28.94d
     center = galsim.CelestialCoord( (17.+45.6/60.) * galsim.hours, -28.94 * galsim.degrees)
@@ -427,9 +512,13 @@ def test_galactic():
     numpy.testing.assert_almost_equal(el.rad(), pi, decimal=3)
     numpy.testing.assert_almost_equal(b.rad(), 0., decimal=3)
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == '__main__':
-    test_distance()
     test_angle()
+    test_distance()
+    test_angleBetween()
     test_projection()
     test_precess()
     test_galactic()

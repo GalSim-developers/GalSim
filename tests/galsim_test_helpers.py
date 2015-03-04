@@ -226,9 +226,10 @@ def radial_integrate(prof, minr, maxr):
 def do_pickle(obj):
     """Check that the object is picklable.  Also that it has basic == and != functionality.
     """
-    import cPickle
+    import cPickle, copy
     print 'Try pickling ',obj
 
+    print 'pickled obj = ',cPickle.dumps(obj)
     obj1 = cPickle.loads(cPickle.dumps(obj))
     assert obj1 is not obj
     assert obj1 == obj

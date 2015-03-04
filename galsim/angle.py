@@ -59,7 +59,7 @@ AngleUnit.__repr__ = AngleUnit_repr
 
 # Enable pickling
 def AngleUnit_getinitargs(self):
-    return self.getValue()
+    return self.getValue(),
 AngleUnit.__getinitargs__ = AngleUnit_getinitargs
 
 
