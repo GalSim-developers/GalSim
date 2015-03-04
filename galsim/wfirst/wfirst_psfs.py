@@ -37,19 +37,17 @@ zemax_filesuff = '_F01_W04.txt'
 zemax_wavelength = 1293. #nm
 
 def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=None,
-           wavelength_limits=None, verbose=True, achromatic=False):
+           wavelength_limits=None, logger=None, wavelength=None)
     """
     Get the PSF for WFIRST observations.
 
-    By default, this routine returns a list of ChromaticOpticalPSF objects, with the list index
-    corresponding to the SCA (Sensor Chip Array, the equivalent of a chip in an optical CCD).  The
-    PSF corresponds to a location in the center of the SCA.  Currently we do not have information
-    about PSF variation across the SCAs, which is expected to be relatively small.
+    By default, this routine returns a dict of ChromaticOpticalPSF objects, with the dict indexed by
+    the SCA (Sensor Chip Array, the equivalent of a chip in an optical CCD).  The PSF for a given
+    SCA corresponds to that for the center of the SCA.  Currently we do not have information about
+    PSF variation across the SCAs, which is expected to be relatively small.
 
-    This routine also takes an optional keyword `SCAs`, which can be a single value or a list; if
-    this is specified then results are not included for the other SCAs.  However, to preserve the
-    indexing, the list of results has the same length, with the result being None for the SCAs that
-    are not of interest.
+    This routine also takes an optional keyword `SCAs`, which can be a single number or an iterable;
+    if this is specified then results are not included for the other SCAs.
 
     The default is to do the calculations using the full specification of the WFIRST pupil plane,
     which is a costly calculation in terms of memory.  To turn this off, use the optional keyword
@@ -91,12 +89,10 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     The PSFs are always defined assuming the user will specify length scales in arcsec.
 
     @param    SCAs                 Specific SCAs for which the PSF should be loaded.  This can be
-                                   either a single number, a tuple, a NumPy array, or a list.  If
-                                   None, then the PSF will be loaded for all SCAs.  Note that the
-                                   objected that is returned is always a list of the same length,
-                                   regardless of whether `SCAs` is specified or not, but if `SCAs`
-                                   was specified then the list entry will be None for all SCAs that
-                                   were not requested.  [default: None]
+                                   either a single number or an iterable.  If None, then the PSF
+                                   will be loaded for all SCAs (1...18).  Note that the object that
+                                   is returned is a dict indexed by the requested SCA indices.
+                                   [default: None]
     @param    approximate_struts   Should the routine use an approximate representation of the pupil
                                    plane, with 6 equally-spaced radial struts, instead of the exact
                                    representation of the pupil plane?  Setting this parameter to
@@ -121,41 +117,35 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                    wavelengths if only one passband (or a subset of passbands) is to
                                    be used for making the images.
                                    [default: None]
-    @param    verbose              Should the routine provide information about its progress in
-                                   loading the per-SCA PSFs?  This can be valuable in tracking
-                                   progress, since the full calculations including the real WFIRST
-                                   pupil plane can be quite expensive.  [default: True]
-    @param    achromatic           An option to get an achromatic PSF for a single wavelength, for
-                                   users who do not care about chromaticity of the PSF.  If False,
+    @param    logger               A logger object for output of progress statements if the user
+                                   wants them.  [default: None]
+    @param    wavelength           An option to get an achromatic PSF for a single wavelength, for
+                                   users who do not care about chromaticity of the PSF.  If None,
                                    then the fully chromatic PSF is returned.  Alternatively the user
                                    should supply either (a) a wavelength in nanometers, and they
-                                   will get a list of achromatic OpticalPSF objects for that
-                                   wavelength, or (b) a bandpass object, in which case they will get
-                                   a list of achromatic OpticalPSF objects defined at the effective
-                                   wavelength of that bandpass.
+                                   will get achromatic OpticalPSF objects for that wavelength, or
+                                   (b) a bandpass object, in which case they will get achromatic
+                                   OpticalPSF objects defined at the effective wavelength of that
+                                   bandpass.
                                    [default: False]
-    @returns  A list of ChromaticOpticalPSF objects, one for each SCA.  The SCAs in WFIRST are
-              1-indexed, and the list is indexed according go the SCA, meaning that the 0th object
-              in the list is always None, the 1st is the PSF for SCA 1, and so on.
+    @returns  A dict of ChromaticOpticalPSF or OpticalPSF objects for each SCA.
     """
-    # Check which SCAs are to be done.  Default is all.
-    # SCAs are 1-indexed, so we make a list that is one longer than needed, with the 0th element
-    # being None.
-    all_SCAs = np.arange(galsim.wfirst.n_sca + 1)
+    # Check which SCAs are to be done.  Default is all (and they are 1-indexed).
+    all_SCAs = np.arange(1, galsim.wfirst.n_sca + 1, 1)
     # Later we will use the list of selected SCAs to decide which ones we're actually going to do
     # the calculations for.  For now, just check for invalid numbers.
     if SCAs is not None:
-        if hasattr(SCAs, '__iter__'):
-            if min(SCAs) < 0 or max(SCAs) > galsim.wfirst.n_sca:
-                raise ValueError(
-                    "Invalid SCA!  Indices must be positive and <=%d."%galsim.wfirst.n_sca)
-            if min(SCAs) == 0:
-                import warnings
-                warnings.warn("SCA 0 requested, but SCAs are 1-indexed.  Ignoring 0.")
-        else:
+        # Make sure SCAs is iterable.
+        if not hasattr(SCAs, '__iter__'):
             SCAs = [SCAs]
+        # Then check for reasonable values.
+        if min(SCAs) <= 0 or max(SCAs) > galsim.wfirst.n_sca:
+            raise ValueError(
+                "Invalid SCA!  Indices must be positive and <=%d."%galsim.wfirst.n_sca)
+    else:
+        SCAs = all_SCAs
 
-    if not achromatic:
+    if wavelength is None:
         if n_waves is not None:
             if wavelength_limits is None:
                 # To decide the range of wavelengths to use (if none were passed in by the user),
@@ -172,59 +162,48 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                      "Input: blue limit=%f, red limit=%f nanometers"%
                                      (blue_limit, red_limit))
     else:
-        if isinstance(achromatic, galsim.Bandpass):
-            achromatic_lam = achromatic.effective_wavelength
-        elif isinstance(achromatic, float):
-            achromatic_lam = achromatic
+        if isinstance(wavelength, galsim.Bandpass):
+            wavelength_nm = wavelength.effective_wavelength
+        elif isinstance(wavelength, float):
+            wavelength_nm = wavelength
         else:
-            raise TypeError("Keyword 'achromatic' should either be a Bandpass, float,"
-                            " or False.")
+            raise TypeError("Keyword 'wavelength' should either be a Bandpass, float,"
+                            " or None.")
 
     # Start reading in the aberrations for the relevant SCAs.  Take advantage of symmetries, so we
     # don't have to call the reading routine too many times.
-    aberration_list = []
-    PSF_list = []
-    if verbose: print 'Beginning to loop over SCAs and get the PSF:'
-    for SCA in all_SCAs:
-        # First, if the SCA is zero or if it's not in SCAs (user-supplied list) then just stick None
-        # on the list.
-        if SCA == 0:
-            aberration_list.append(None)
-            PSF_list.append(None)
-            continue
-        if SCAs is not None:
-            if SCA not in SCAs:
-                aberration_list.append(None)
-                PSF_list.append(None)
-                continue
-
+    aberration_dict = {}
+    PSF_dict = {}
+    if logger: logger.debug('Beginning to loop over SCAs and get the PSF:')
+    for SCA in SCAs:
         # Check if it's above 10.  If it is, the design aberrations are the same as for the SCA with
         # index that is 9 lower, except for certain sign flips (astig1, coma2, trefoil2) that result
         # in symmetry about the FPA y axis (except for the struts).
         read_SCA = SCA
         if SCA >= 10:
-            if aberration_list[SCA-9] is not None:
-                read_SCA = -1
-                tmp_aberrations = aberration_list[SCA-9]
+            read_SCA -= 9
+            # Check if we already read it in.  If so, just take the previously-read one, but do the
+            # necessary flips to account for symmetry.
+            if read_SCA in aberration_dict.keys():
+                tmp_aberrations = aberration_dict[read_SCA]
                 tmp_aberrations *= np.array([1.,1.,1.,1.,1.,-1.,1.,1.,-1.,1.,-1.,1.])
-                aberration_list.append(tmp_aberrations)
-            else:
-                read_SCA -= 9
+                aberration_dict[SCA]=tmp_aberrations
+                read_SCA = -1 # This tells the routine not to bother reading it in.
 
         # If we got here, then it means we have to read in the aberrations.
         if read_SCA > 0:
             aberrations = _read_aberrations(read_SCA)
             if read_SCA != SCA:
                 aberrations *= np.array([1.,1.,1.,1.,1.,-1.,1.,1.,-1.,1.,-1.,1.])
-            aberration_list.append(aberrations)
+            aberration_dict[SCA]=aberrations
 
-        use_aberrations = aberration_list[SCA]
+        use_aberrations = aberration_dict[SCA]
         if extra_aberrations is not None:
             use_aberrations += extra_aberrations
 
         # Now set up the PSF for this SCA, including the option to simplify the pupil plane.
-        if verbose: print '   ... SCA',SCA
-        if not achromatic:
+        if logger: logger.debug('   ... SCA'%SCA)
+        if wavelength is not None:
             if approximate_struts:
                 PSF = galsim.ChromaticOpticalPSF(
                     lam=zemax_wavelength,
@@ -241,66 +220,61 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                 PSF.setupInterpolation(waves=np.linspace(blue_limit, red_limit, n_waves),
                                        oversample_fac=1.5)
         else:
-            tmp_aberrations = use_aberrations * zemax_wavelength / achromatic_lam
+            tmp_aberrations = use_aberrations * zemax_wavelength / wavelength_lam
             if approximate_struts:
-                PSF = galsim.OpticalPSF(lam=achromatic_lam, diam=galsim.wfirst.diameter,
+                PSF = galsim.OpticalPSF(lam=wavelength_lam, diam=galsim.wfirst.diameter,
                                         aberrations=tmp_aberrations,
                                         obscuration=galsim.wfirst.obscuration, nstruts=6)
             else:
-                PSF = galsim.OpticalPSF(lam=achromatic_lam, diam=galsim.wfirst.diameter,
+                PSF = galsim.OpticalPSF(lam=wavelength_lam, diam=galsim.wfirst.diameter,
                                         aberrations=tmp_aberrations,
                                         obscuration=galsim.wfirst.obscuration,
                                         pupil_plane_im=galsim.wfirst.pupil_plane_file,
                                         oversampling=1.2, pad_factor=2.)
 
-        PSF_list.append(PSF)
+        PSF_dict[SCA]=PSF
 
-    return PSF_list
+    return PSF_dict
 
-def tabulatePSFImages(PSF_list, image_filename, data_filename, bandpass_list=None,
-                      clobber=False):
+def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
     """
-    This is a routine to store images of WFIRST PSFs in different bands for each SCA.  It takes an
-    output list of PSFs (`PSF_list`) directly from getPSF().  The output will be a file
-    (`image_filename`) that has all the images, and another file (`data_filename`) that contains a
-    FITS table indicating the bandpasses, SCAs, and other information needed to reconstruct the PSF
-    information.
+    This is a routine to store images of chromatic WFIRST PSFs in different bands for each SCA.  It
+    takes an output dict of PSFs (`PSF_dict`) directly from getPSF().  The output will be a file
+    (`filename`) that has all the images, along with an HDU that contains a FITS table indicating
+    the bandpasses, SCAs, and other information needed to reconstruct the PSF information.
 
-    Note that the image files can take up space, but if `image_filename` has an extension that
-    GalSim recognizes as corresponding to a compressed format, the compression will automatically be
-    done.
+    Note that the image files can take up space, but if `filename` has an extension that GalSim
+    recognizes as corresponding to a compressed format, the compression will automatically be done.
 
     This routine is not meant to work for PSFs from getPSF() that are completely achromatic.  The
     reason for this is that those PSFs are quite fast to generate, so there is little benefit to
     storing them.
 
-    @param PSF_list            A list of PSF objects for each SCA, in the same format as output by
+    @param PSF_dict            A dict of PSF objects for each SCA, in the same format as output by
                                the getPSF() routine (though it can take versions that have been
                                modified, for example in the inclusion of an SED).
-    @param image_filename      The name of the file to which the images should be written, possibly
-                               including extensions for any compression that is to be done.  See
-                               galsim.fits.write documentation for information about compression
-                               options.
-    @param data_filename       The name of the file to which information about the PSF images is to
-                               be written, for use by the getStoredPSF() routine.
+    @param filename            The name of the file to which the images and metadata should be
+                               written, possibly including extensions for any compression that is to
+                               be done.  See galsim.fits.write documentation for information about
+                               compression options.
     @param bandpass_list       A list of bandpasses for which images should be generated and
                                stored.  If None, all WFIRST imaging passbands are used.
                                [default: None]
-    @param clobber             Should the routine clobber `PSF_list` and `image_filename` (if they
-                               already exist? [default: False]
+    @param clobber             Should the routine clobber `filename` (if they already exist)?
+                               [default: False]
     """
-    # Check for sane input PSF_list.
-    if len(PSF_list) != galsim.wfirst.n_sca+1:
-        raise ValueError("PSF_list must have length %d, as output by getPSF!"
-                         %(galsim.wfirst.n_sca+1))
+    # Check for sane input PSF_dict.
+    if len(PSF_dict) == 0 or len(PSF_dict) > galsim.wfirst.n_sca or \
+            min(PSF_dict.keys()) < 1 or max(PSF_dict.keys()) > galsim.wfirst.n_sca:
+        raise ValueError("PSF_dict must come from getPSF()!")
 
     # Check if file already exists and warn about clobbering.
-    if os.path.exists(image_filename) or os.path.exists(data_filename):
+    if os.path.exists(filename):
         if clobber is False:
-            raise ValueError("At least one output file already exists, and clobber is not set!")
+            raise ValueError("Output file already exists, and clobber is not set!")
         else:
             import warnings
-            warnings.warn("At least one output file already exists, and will be clobbered.")
+            warnings.warn("Output file already exists, and will be clobbered.")
 
     # Check that bandpass list input is okay.  It should be strictly a subset of the default list of
     # bandpasses.
@@ -321,67 +295,67 @@ def tabulatePSFImages(PSF_list, image_filename, data_filename, bandpass_list=Non
     im_list = []
     bp_name_list = []
     SCA_index_list = []
-    for bp_name in bandpass_list:
-        bandpass = bandpass_dict[bp_name]
+    for SCA in PSF_dict.keys():
+        PSF = PSF_dict[SCA]
+        if not isinstance(PSF, galsim.ChromaticOpticalPSF):
+            raise RuntimeError("Error, PSFs are not ChromaticOpticalPSFs.")
+        star = galsim.Gaussian(sigma=1.e-8, flux=1.)
 
-        for SCA in range(galsim.wfirst.n_sca+1):
-            if PSF_list[SCA] is None:
-                continue
+        for bp_name in bandpass_list:
+            bandpass = bandpass_dict[bp_name]
+            star_sed = galsim.SED(lambda x:1).withFlux(1, bandpass)
+            obj = galsim.Convolve(star*star_sed, PSF)
 
-            PSF = PSF_list[SCA]
-            if not isinstance(PSF, galsim.ChromaticOpticalPSF):
-                raise RuntimeError("Error, PSFs are not ChromaticOpticalPSFs.")
-            im = PSF.drawImage(bandpass, scale=0.5*galsim.wfirst.pixel_scale)
+            im = obj.drawImage(bandpass, scale=0.5*galsim.wfirst.pixel_scale,
+                               method='no_pixel')
             im_list.append(im)
             bp_name_list.append(bp_name)
             SCA_index_list.append(SCA)
 
     # Save images to file.
     n_ims = len(im_list)
-    galsim.fits.writeMulti(im_list, image_filename, clobber=clobber)
-    print 'Saved %d images to file %s'%(n_ims, image_filename)
+    galsim.fits.writeMulti(im_list, filename, clobber=clobber)
 
-    # Save data to file, after constructing a FITS table.  Watch out for clobbering.
+    # Add data to file, after constructing a FITS table.  Watch out for clobbering.
     bp_names = pyfits.Column(name='bandpass', format='A10', array=np.array(bp_name_list))
     SCA_indices = pyfits.Column(name='SCA', format='J', array=np.array(SCA_index_list))
     cols = pyfits.ColDefs([bp_names, SCA_indices])
     tbhdu = pyfits.new_table(cols)
-    prhdu = pyfits.PrimaryHDU()
-    thdulist = pyfits.HDUList([prhdu, tbhdu])
-    galsim.fits.writeFile(data_filename, thdulist, clobber=clobber)
-    print 'Saved metadata to file %s'%data_filename
+    f = pyfits.open(filename, mode='update')
+    f.append(tbhdu)
+    f.flush()
+    f.close()
 
-def getStoredPSF(image_filename, data_filename):
+def loadPSFImages(filename):
     """
-    Get an achromatic representation of the WFIRST PSF in each passband.
+    Get an achromatic representation of the WFIRST PSF in each passband (originally generated for an
+    object with a flat SED).
 
     If the user has generated WFIRST PSFs and stored their images in each passband using getPSF()
-    followed by tabulatePSF(), then the getStoredPSF() routine can read in those stored images and
+    followed by storePSFImages(), then loadPSFImages() can read in those stored images and
     associated data, and return an InterpolatedImage for each one.  These are intrinsically not
     chromatic objects themselves, so they can be used only if the user does not care about the
-    variation of the PSF with wavelength within each passband.  In that case, use of getStoredPSF()
+    variation of the PSF with wavelength within each passband.  In that case, use of loadPSFImages()
     can represent significant time savings compared to doing the full PSF calculation each time.
 
-    @param  image_filename     Name of file containing the PSF images from tabulatePSF().
-    @param  data_filename      Name of file containing the PSF image-related data from
-                               tabulatePSF().
-    @returns A dict containing the GSObject representing the PSF, where the keys are the bandpasses,
-    and the values are lists containing the PSF for that bandpass in each SCA.  Any entries for
-    which no PSF image was stored will be None.
-    """
-    # Get the image data.
-    im_list = galsim.fits.readMulti(image_filename)
+    @param filename    Name of file containing the PSF images and metadata from storePSFImages().
 
-    # Get the metadata from the FITS table, and close the file when done.
-    hdu, hdu_list, fin = galsim.fits.readFile(data_filename)
-    bp_list = list(hdu_list[1].data.bandpass)
-    SCA_list = list(hdu_list[1].data.SCA)
+    @returns A nested dict containing the GSObject representing the PSF, where the keys are the
+    bandpasses, and the values are dicts containing the PSF for each SCA for which results were
+    tabulated.
+    """
+    # Get the image data and metadata.
+    hdu, hdu_list, fin = galsim.fits.readFile(filename)
+    metadata_hdu = hdu_list.pop()
+    im_list = galsim.fits.readMulti(hdu_list)
+    bp_list = list(metadata_hdu.data.bandpass)
+    SCA_list = list(metadata_hdu.data.SCA)
     galsim.fits.closeHDUList(hdu_list, fin)
 
     # Set up the dict of PSF objects, indexed by bandpass (and then SCA).
-    PSF_dict = {}
+    full_PSF_dict = {}
     for band_name in default_bandpass_list:
-        PSF_list = []
+        band_PSF_dict = {}
 
         # Find all indices in `bp_list` that correspond to this bandpass.
         bp_indices = []
@@ -394,11 +368,7 @@ def getStoredPSF(image_filename, data_filename):
                 except ValueError:
                     break
 
-        for SCA in range(galsim.wfirst.n_sca+1):
-            if SCA == 0 or len(bp_indices)==0:
-                PSF_list.append(None)
-                continue
-
+        for SCA in SCA_list:
             # Now find which element has both the right band_name and is for this SCA.  There might
             # not be any, depending on what exactly was stored.
             use_idx = -1
@@ -406,18 +376,16 @@ def getStoredPSF(image_filename, data_filename):
                 if SCA_list[index] == SCA:
                     use_idx = index
                     break
-            if use_idx<0:
-                PSF_list.append(None)
-                continue
 
             # Now we know which PSF image is the right one.  So we should just make an
             # InterpolatedImage out of it.
             PSF = galsim.InterpolatedImage(im_list[use_idx])
-            PSF_list.append(PSF)
+            band_PSF_dict[SCA]=PSF
 
-        PSF_dict[band_name] = PSF_list
+        full_PSF_dict[band_name] = band_PSF_dict
 
-    return PSF_dict
+    hdulist.close()
+    return full_PSF_dict
 
 def _read_aberrations(SCA):
     """
