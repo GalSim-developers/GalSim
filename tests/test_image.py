@@ -211,7 +211,7 @@ def test_Image_basic():
         do_pickle(im1_view)
         do_pickle(im2)
         do_pickle(im2_view)
-        do_pickle(im3)
+        do_pickle(im3_view)
 
     # Also check picklability of Bounds, Position here.
     do_pickle(galsim.PositionI(2,3))

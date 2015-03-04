@@ -542,6 +542,11 @@ class Image(object):
         """
         self.image.invertSelf()
 
+    def __eq__(self, other):
+        return ( self.bounds == other.bounds and
+                 self.wcs == other.wcs and
+                 (self.array == other.array).all() )
+
 
 # These are essentially aliases for the regular Image with the correct dtype
 def ImageS(*args, **kwargs):
