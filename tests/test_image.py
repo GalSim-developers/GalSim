@@ -1751,6 +1751,89 @@ def test_Image_constructor():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+def test_Image_view():
+    """Test the functionality of image.view(...)
+    """
+    import time
+    t1 = time.time()
+
+    im = galsim.ImageI(25,25, wcs=galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13)))
+    im.fill(17)
+    assert im.wcs == galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13))
+    assert im.bounds == galsim.BoundsI(1,25,1,25)
+    assert im(11,19) == 17  # I'll keep editing this pixel to new values.
+
+    # Test view with no arguments
+    imv = im.view()
+    assert imv.wcs == im.wcs
+    assert imv.bounds == im.bounds
+    imv.setValue(11,19, 20)
+    assert imv(11,19) == 20
+    assert im(11,19) == 20
+
+    # Test view with new origin
+    imv = im.view(origin=(0,0))
+    assert im.wcs == galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13))
+    assert imv.wcs == galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(12,12))
+    assert im.bounds == galsim.BoundsI(1,25,1,25)
+    assert imv.bounds == galsim.BoundsI(0,24,0,24)
+    imv.setValue(10,18, 30)
+    assert imv(10,18) == 30
+    assert im(11,19) == 30
+    imv2 = im.view()
+    imv2.setOrigin(0,0)
+    assert imv.bounds == imv2.bounds
+    assert imv.wcs == imv2.wcs
+
+    # Test view with new center
+    imv = im.view(center=(0,0))
+    assert im.wcs == galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13))
+    assert imv.wcs == galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(0,0))
+    assert im.bounds == galsim.BoundsI(1,25,1,25)
+    assert imv.bounds == galsim.BoundsI(-12,12,-12,12)
+    imv.setValue(-2,6, 40)
+    assert imv(-2,6) == 40
+    assert im(11,19) == 40
+    imv2 = im.view()
+    imv2.setCenter(0,0)
+    assert imv.bounds == imv2.bounds
+    assert imv.wcs == imv2.wcs
+
+    # Test view with new scale
+    imv = im.view(scale=0.17)
+    assert im.wcs == galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13))
+    assert imv.wcs == galsim.PixelScale(0.17)
+    assert imv.bounds == im.bounds
+    imv.setValue(11,19, 50)
+    assert imv(11,19) == 50
+    assert im(11,19) == 50
+    imv2 = im.view()
+    imv2.wcs = None
+    imv2.scale = 0.17
+    assert imv.bounds == imv2.bounds
+    assert imv.wcs == imv2.wcs
+
+    # Test view with new wcs
+    imv = im.view(wcs=galsim.JacobianWCS(0., 0.23, -0.23, 0.))
+    assert im.wcs == galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13))
+    assert imv.wcs == galsim.JacobianWCS(0., 0.23, -0.23, 0.)
+    assert imv.bounds == im.bounds
+    imv.setValue(11,19, 60)
+    assert imv(11,19) == 60
+    assert im(11,19) == 60
+    imv2 = im.view()
+    imv2.wcs = galsim.JacobianWCS(0.,0.23,-0.23,0.)
+    assert imv.bounds == imv2.bounds
+    assert imv.wcs == imv2.wcs
+
+    # Go back to original value for that pixel and make sure all are still equal to 17
+    im.setValue(11,19, 17)
+    assert im.array.min() == 17
+    assert im.array.max() == 17
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_Image_basic()
     test_Image_obsolete()
@@ -1781,3 +1864,4 @@ if __name__ == "__main__":
     test_ConstImage_array_constness()
     test_BoundsI_init_with_non_pure_ints()
     test_Image_constructor()
+    test_Image_view()

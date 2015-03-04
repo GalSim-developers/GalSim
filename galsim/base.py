@@ -845,7 +845,7 @@ class GSObject(object):
         else:
             return self.shift(offset)
 
-    def _determine_wcs(self, scale, wcs, image):
+    def _determine_wcs(self, scale, wcs, image, default_wcs=None):
         # Determine the correct wcs given the input scale, wcs and image.
         if wcs is not None:
             if scale is not None:
@@ -866,7 +866,10 @@ class GSObject(object):
 
         # If the input scale <= 0, or wcs is still None at this point, then use the Nyquist scale:
         if wcs is None or (wcs.isPixelScale() and wcs.scale <= 0):
-            wcs = galsim.PixelScale(self.nyquistScale())
+            if default_wcs is None:
+                wcs = galsim.PixelScale(self.nyquistScale())
+            else:
+                wcs = default_wcs
 
         return wcs
 
