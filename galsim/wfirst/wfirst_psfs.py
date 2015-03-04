@@ -20,7 +20,7 @@ import galsim
 import galsim.wfirst
 import numpy as np
 import os
-import pyfits
+from galsim import pyfits
 
 """
 @file wfirst_psfs.py
@@ -37,7 +37,7 @@ zemax_filesuff = '_F01_W04.txt'
 zemax_wavelength = 1293. #nm
 
 def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=None,
-           wavelength_limits=None, logger=None, wavelength=None)
+           wavelength_limits=None, logger=None, wavelength=None):
     """
     Get the PSF for WFIRST observations.
 
@@ -142,6 +142,8 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
         if min(SCAs) <= 0 or max(SCAs) > galsim.wfirst.n_sca:
             raise ValueError(
                 "Invalid SCA!  Indices must be positive and <=%d."%galsim.wfirst.n_sca)
+        # Check for uniqueness.  If not unique, make it unique.
+        SCAs = list(set(SCAs))
     else:
         SCAs = all_SCAs
 
@@ -203,7 +205,7 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
 
         # Now set up the PSF for this SCA, including the option to simplify the pupil plane.
         if logger: logger.debug('   ... SCA'%SCA)
-        if wavelength is not None:
+        if wavelength is None:
             if approximate_struts:
                 PSF = galsim.ChromaticOpticalPSF(
                     lam=zemax_wavelength,
@@ -220,13 +222,13 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                 PSF.setupInterpolation(waves=np.linspace(blue_limit, red_limit, n_waves),
                                        oversample_fac=1.5)
         else:
-            tmp_aberrations = use_aberrations * zemax_wavelength / wavelength_lam
+            tmp_aberrations = use_aberrations * zemax_wavelength / wavelength_nm
             if approximate_struts:
-                PSF = galsim.OpticalPSF(lam=wavelength_lam, diam=galsim.wfirst.diameter,
+                PSF = galsim.OpticalPSF(lam=wavelength_nm, diam=galsim.wfirst.diameter,
                                         aberrations=tmp_aberrations,
                                         obscuration=galsim.wfirst.obscuration, nstruts=6)
             else:
-                PSF = galsim.OpticalPSF(lam=wavelength_lam, diam=galsim.wfirst.diameter,
+                PSF = galsim.OpticalPSF(lam=wavelength_nm, diam=galsim.wfirst.diameter,
                                         aberrations=tmp_aberrations,
                                         obscuration=galsim.wfirst.obscuration,
                                         pupil_plane_im=galsim.wfirst.pupil_plane_file,
@@ -243,9 +245,6 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
     (`filename`) that has all the images, along with an HDU that contains a FITS table indicating
     the bandpasses, SCAs, and other information needed to reconstruct the PSF information.
 
-    Note that the image files can take up space, but if `filename` has an extension that GalSim
-    recognizes as corresponding to a compressed format, the compression will automatically be done.
-
     This routine is not meant to work for PSFs from getPSF() that are completely achromatic.  The
     reason for this is that those PSFs are quite fast to generate, so there is little benefit to
     storing them.
@@ -254,10 +253,8 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
                                the getPSF() routine (though it can take versions that have been
                                modified, for example in the inclusion of an SED).
     @param filename            The name of the file to which the images and metadata should be
-                               written, possibly including extensions for any compression that is to
-                               be done.  See galsim.fits.write documentation for information about
-                               compression options.
-    @param bandpass_list       A list of bandpasses for which images should be generated and
+                               written; extension should be *.fits.
+    @param bandpass_list       A list of bandpass names for which images should be generated and
                                stored.  If None, all WFIRST imaging passbands are used.
                                [default: None]
     @param clobber             Should the routine clobber `filename` (if they already exist)?
@@ -281,6 +278,8 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
     if bandpass_list is None:
         bandpass_list = default_bandpass_list
     else:
+        if not isinstance(bandpass_list[0], str):
+            raise ValueError("Expected input list of bandpass names!")
         if not set(bandpass_list).issubset(default_bandpass_list):
             err_msg = ''
             for item in default_bandpass_list:
@@ -320,7 +319,7 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
     bp_names = pyfits.Column(name='bandpass', format='A10', array=np.array(bp_name_list))
     SCA_indices = pyfits.Column(name='SCA', format='J', array=np.array(SCA_index_list))
     cols = pyfits.ColDefs([bp_names, SCA_indices])
-    tbhdu = pyfits.new_table(cols)
+    tbhdu = pyfits.BinTableHDU.from_columns(cols)
     f = pyfits.open(filename, mode='update')
     f.append(tbhdu)
     f.flush()
@@ -347,14 +346,14 @@ def loadPSFImages(filename):
     # Get the image data and metadata.
     hdu, hdu_list, fin = galsim.fits.readFile(filename)
     metadata_hdu = hdu_list.pop()
-    im_list = galsim.fits.readMulti(hdu_list)
+    im_list = galsim.fits.readMulti(hdu_list=hdu_list)
     bp_list = list(metadata_hdu.data.bandpass)
     SCA_list = list(metadata_hdu.data.SCA)
     galsim.fits.closeHDUList(hdu_list, fin)
 
     # Set up the dict of PSF objects, indexed by bandpass (and then SCA).
     full_PSF_dict = {}
-    for band_name in default_bandpass_list:
+    for band_name in set(bp_list):
         band_PSF_dict = {}
 
         # Find all indices in `bp_list` that correspond to this bandpass.
@@ -384,7 +383,6 @@ def loadPSFImages(filename):
 
         full_PSF_dict[band_name] = band_PSF_dict
 
-    hdulist.close()
     return full_PSF_dict
 
 def _read_aberrations(SCA):
