@@ -40,13 +40,16 @@ of noise at appropriate stages.
 New features introduced in this demo:
 - galsim.makeCOSMOSCatalog(...)
 - galsim.makeCOSMOSObj(...)
-- Adding sky level and dark current.
-- galsim.wfirst.addReciprocityFailure(image)
 - image.quantize()
-- galsim.wfirst.applyNonlinearity(image)
-- galsim.wfirst.applyIPC(image)
-- readnoise.setReadNoise(readnoise_level)
-- All functionality in the galsim.wfirst module.
+- Routines to include WFIRST-specific detector effects:
+  - galsim.wfirst.addReciprocityFailure(image)
+  - galsim.wfirst.applyNonlinearity(image)
+  - galsim.wfirst.applyIPC(image)
+- Routines to get basic information about WFIRST bandpasses, PSFs, and WCS:
+  - galsim.wfirst.getBandpasses()
+  - galsim.wfirst.getPSF()
+  - galsim.wfirst.getWCS()
+  - galsim.wfirst.getSkyLevel()
 """
 
 import numpy
