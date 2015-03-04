@@ -62,83 +62,83 @@ class Series(object):
         root = Series.root
         link = cache.get(key)
         if link is not None:
-            link_prev, link_next, _, cube = link
+            link_prev, link_next, _, result = link
             link_prev[1] = link_next
             link_next[0] = link_prev
             last = root[0]
             last[1] = root[0] = link
             link[0] = last
             link[1] = root
-            return cube
+            return result
         cubeidx, args, kwargs = key
         kwargs = dict(kwargs)
         objs = self.getBasisFuncs()
         im0 = objs[0].drawImage(*args, **kwargs)
-        cube = np.empty((len(objs), im0.array.shape[0], im0.array.shape[1]),
-                        dtype=im0.array.dtype)
+        shape = im0.array.shape
+        # It's faster to store the basis images as a series of 1D vectors (i.e. a 2D numpy array)
+        # This makes the linear combination step a matrix multiply, which is like lightning.
+        cube = np.empty((len(objs), shape[0]*shape[1]), dtype=im0.array.dtype)
         for i, obj in enumerate(objs):
-            cube[i] = obj.drawImage(*args, **kwargs).array
+            cube[i] = obj.drawImage(*args, **kwargs).array.ravel()
         root[2] = key
-        root[3] = cube
+        root[3] = (cube, shape)
         oldroot = root
         root = Series.root = root[1]
         root[2], oldkey = None, root[2]
         root[3], oldvalue = None, root[3]
         del cache[oldkey]
         cache[key] = oldroot
-        return cube
+        return cube, shape
 
     def basisKCube(self, key):
         cache = Series.kcache
         root = Series.kroot
         link = cache.get(key)
         if link is not None:
-            link_prev, link_next, _, kcubes = link
+            link_prev, link_next, _, result = link
             link_prev[1] = link_next
             link_next[0] = link_prev
             last = root[0]
             last[1] = root[0] = link
             link[0] = last
             link[1] = root
-            return kcubes[0], kcubes[1]
+            return result
         cubeidx, args, kwargs = key
         kwargs = dict(kwargs)
         objs = self.getBasisFuncs()
         re0, im0 = objs[0].drawKImage(*args, **kwargs)
-        recube = np.empty((len(objs), im0.array.shape[0], im0.array.shape[1]),
-                          dtype=im0.array.dtype)
+        shape = im0.array.shape
+        # It's faster to store the basis images as a series of 1D vectors (i.e. a 2D numpy array)
+        # This makes the linear combination step a matrix multiply, which is like lightning.
+        recube = np.empty((len(objs), shape[0]*shape[1]), dtype=im0.array.dtype)
         imcube = np.empty_like(recube)
         for i, obj in enumerate(objs):
             tmp = obj.drawKImage(*args, **kwargs)
-            recube[i] = tmp[0].array
-            imcube[i] = tmp[1].array
+            recube[i] = tmp[0].array.ravel()
+            imcube[i] = tmp[1].array.ravel()
         root[2] = key
-        root[3] = (recube, imcube)
+        root[3] = (recube, imcube, shape)
         oldroot = root
         root = Series.kroot = root[1]
         root[2], oldkey = None, root[2]
         root[3], oldvalue = None, root[3]
         del cache[oldkey]
         cache[key] = oldroot
-        return recube, imcube
+        return recube, imcube, shape
 
     def drawImage(self, *args, **kwargs):
         key = (self.cubeidx(), args, tuple(sorted(kwargs.items())))
-        # if key in Series.cache:
-        #     cube = Series.cache[key]
-        # else:
-        #     Series.cache[key] = cube = self.basisCube(key)
-        cube = self.basisCube(key)
-        coeffs = self.getCoeffs()
-        im = np.einsum('ijk,i', cube, coeffs)
+        cube, shape = self.basisCube(key)
+        coeffs = np.array(self.getCoeffs(), dtype=cube.dtype)
+        im = np.dot(coeffs, cube).reshape(shape)
         return galsim.Image(im)
         
     def drawKImage(self, *args, **kwargs):
         key = (self.cubeidx(), args, tuple(sorted(kwargs.items())))
-        recube, imcube = self.basisKCube(key)
-        coeffs = self.getCoeffs()
-        reim = np.einsum('ijk,i', recube, coeffs)
-        imim = np.einsum('ijk,i', imcube, coeffs)
+        recube, imcube, shape = self.basisKCube(key)
+        coeffs = np.array(self.getCoeffs(), dtype=recube.dtype)
+        reim = np.dot(coeffs, recube).reshape(shape)
+        imim = np.dot(coeffs, imcube).reshape(shape)
         return galsim.Image(reim), galsim.Image(imim)
 
     def kValue(self, *args, **kwargs):
@@ -196,8 +196,12 @@ class SeriesConvolution(Series):
         super(SeriesConvolution, self).__init__()
 
     def getCoeffs(self):
-        return np.multiply.reduce([c for c in product(*[obj.getCoeffs()
-                                                        for obj in self.objlist])], axis=1)
+        # This is a faster, but somewhat more opaque version of
+        # return np.multiply.reduce([c for c in product(*[obj.getCoeffs()
+        #                                                 for obj in self.objlist])], axis=1)
+        # The above use to be the limiting step, but the new version is ~100 times faster.
+        return np.multiply.reduce(np.ix_(*[np.array(obj.getCoeffs())
+                                           for obj in self.objlist])).ravel()
 
     def getBasisFuncs(self):
         return [galsim.Convolve(*o) for o in product(*[obj.getBasisFuncs()
