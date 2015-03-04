@@ -182,12 +182,13 @@ class RealGalaxy(GSObject):
             logger.debug('RealGalaxy %d: Got noise_image',use_index)
 
         if noise_image is None:
-            self.noise = galsim.UncorrelatedNoise(var, rng=rng, scale=pixel_scale, gsparams=gsparams)
+            self.noise = galsim.UncorrelatedNoise(var, rng=rng, scale=pixel_scale,
+                                                  gsparams=gsparams)
         else:
-            ii = galsim.InterpolatedImage(noise_image, scale=pixel_scale, normalization="sb",
+            ii = galsim.InterpolatedImage(noise_image, normalization="sb",
                                           calculate_stepk=False, calculate_maxk=False,
                                           x_interpolant='linear', gsparams=gsparams)
-            self.noise = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii)
+            self.noise = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii, noise_image.wcs)
             self.noise = self.noise.withVariance(var)
         if logger:
             logger.debug('RealGalaxy %d: Finished building noise',use_index)
@@ -206,7 +207,7 @@ class RealGalaxy(GSObject):
         # Build the InterpolatedImage of the PSF.
         self.original_psf = galsim.InterpolatedImage(
             self.psf_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
-            flux=1.0, scale=self.pixel_scale, gsparams=gsparams)
+            flux=1.0, gsparams=gsparams)
         if logger:
             logger.debug('RealGalaxy %d: Made original_psf',use_index)
 
@@ -216,7 +217,7 @@ class RealGalaxy(GSObject):
         # leads to problems.)
         self.original_image = galsim.InterpolatedImage(
                 self.gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
-                scale=self.pixel_scale, pad_factor=pad_factor, noise_pad_size=noise_pad_size,
+                pad_factor=pad_factor, noise_pad_size=noise_pad_size,
                 calculate_stepk=self.original_psf.stepK(),
                 calculate_maxk=self.original_psf.maxK(),
                 noise_pad=noise_pad, rng=rng, gsparams=gsparams)
@@ -474,7 +475,8 @@ class RealGalaxyCatalog(object):
         self.gal_lock.acquire()
         array = f[self.gal_hdu[i]].data
         self.gal_lock.release()
-        im = galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)))
+        im = galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)),
+                          scale=self.pixel_scale[i])
         return im
 
 
@@ -491,7 +493,8 @@ class RealGalaxyCatalog(object):
         self.psf_lock.acquire()
         array = f[self.psf_hdu[i]].data
         self.psf_lock.release()
-        return galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)))
+        return galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)),
+                            scale=self.pixel_scale[i])
 
     def getNoiseProperties(self, i):
         """Returns the components needed to make the noise correlation function at index `i`.
@@ -522,7 +525,8 @@ class RealGalaxyCatalog(object):
                 else:
                     import numpy
                     array = pyfits.getdata(self.noise_file_name[i])
-                    im = galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)))
+                    im = galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)),
+                                      scale=self.pixel_scale[i])
                     self.saved_noise_im[self.noise_file_name[i]] = im
                     if self.logger:
                         self.logger.debug('RealGalaxyCatalog %d: Built noise im',i)
@@ -539,10 +543,10 @@ class RealGalaxyCatalog(object):
         if im is None:
             cf = galsim.UncorrelatedNoise(var, rng=rng, scale=pixel_scale, gsparams=gsparams)
         else:
-            ii = galsim.InterpolatedImage(im, scale=scale, normalization="sb",
+            ii = galsim.InterpolatedImage(im, normalization="sb",
                                           calculate_stepk=False, calculate_maxk=False,
                                           x_interpolant='linear', gsparams=gsparams)
-            cf = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii)
+            cf = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii, im.wcs)
             cf = cf.withVariance(var)
         return cf
 

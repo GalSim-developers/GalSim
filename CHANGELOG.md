@@ -5,6 +5,7 @@ Changes from v1.2 to v1.3
 New Features
 ------------
 
+- Updated CorrelatedNoise to work with images that have a non-trivial WCS. (#501)
 - Added new methods of the image class to simulate detector effects:
   inter-pixel capacitance (#555) and image quantization (#558).
 - Enable constructing a FitsHeader object from a dict.  This had been a hidden
@@ -34,6 +35,12 @@ New Features
 - Added TopHat class implementing a circular tophat profile. (#639)
 
 
+Deprecated Features
+-------------------
+
+- Deprecated CorrelatedNoise.calculateCovarianceMatrix, since it is not used anywhere. (#630)
+
+
 Bug Fixes and Improvements
 --------------------------
 
@@ -41,6 +48,7 @@ Bug Fixes and Improvements
   The sign is now positive when the angle as seen from the ground sweeps in
   the counter-clockwise direction, which is a more sensible definition than
   what it had used. (#590)
+- Fixed a bug in UncorrelatedNoise where the variance was set incorrectly. (#630)
 - Changed the implementation of drawing Box and Pixel profiles in real space
   (i.e. without being convolved by anything) to actually draw the surface 
   brightness at the center of each pixel.  This is what all other profiles do,
