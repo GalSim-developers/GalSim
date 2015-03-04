@@ -102,11 +102,11 @@ def main(argv):
 
     # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
-    # (diameter, bandpasses, obscuration, etc.).  Note that we are going to arbitrarily choose a
-    # single SCA (Sensor Chip Assembly) rather than all of them, for faster calculations, and we're
-    # going to use a simple representation of the struts for faster calculations.  To do a more
-    # exact calculation of the chromaticity and pupil plane configuration, remove the
-    # `approximate_struts` and the `n_waves` keyword from the call to getPSF():
+    # (diameter, bandpasses, obscuration, etc.).  Note that we arbitrarily choose a single SCA
+    # (Sensor Chip Assembly) rather than all of them, for faster calculations, and use a simple
+    # representation of the struts for faster calculations.  To do a more exact calculation of the
+    # chromaticity and pupil plane configuration, remove the `approximate_struts` and the `n_waves`
+    # keyword from the call to getPSF():
     use_SCA = 7 # This could be any number from 1...18
     logger.info('Doing expensive pre-computation of PSF.')
     t1 = time.time()
@@ -117,25 +117,25 @@ def main(argv):
     t2 = time.time()
     logger.info('Done PSF precomputation in %.1f seconds!'%(t2-t1))
 
-    # Define the size of the postage stamp that we will use for each individual galaxy within the
-    # larger image, and for the PSF images.
+    # Define the size of the postage stamp that we use for each individual galaxy within the larger
+    # image, and for the PSF images.
     stamp_size = 128
 
-    # We are going to choose a particular (RA, dec) location on the sky for our observation.
+    # We choose a particular (RA, dec) location on the sky for our observation.
     ra_targ = 30.*galsim.degrees
     dec_targ = -10.*galsim.degrees
     targ_pos = galsim.CelestialCoord(ra=ra_targ, dec=dec_targ)
     ang = 0.*galsim.degrees
     # Get the WCS for an observation at this position, with the focal plane array oriented at an
     # angle of `ang` with respect to North.  The output of this routine is a list of WCS objects,
-    # one for each SCA.  We will then take the WCS for the SCA that we are going to use.
+    # one for each SCA.  We then take the WCS for the SCA that we are using.
     wcs_list = wfirst.getWCS(ang, pos=targ_pos, PA_is_FPA=True)
     wcs = wcs_list[use_SCA]
     # We need to find the center position for this SCA.  We'll tell it to give us a CelestialCoord
     # corresponding to (X, Y) = (wfirst.n_pix/2, wfirst.n_pix/2).
     SCA_cent_pos = wcs.toWorld(galsim.PositionD(wfirst.n_pix/2, wfirst.n_pix/2))
 
-    # We are going to just randomly distribute points in (X, Y).
+    # We randomly distribute points in (X, Y) on the CCD.
     # If we had a real galaxy catalog with positions in terms of RA, dec we could use wcs.toImage()
     # to find where those objects should be in terms of (X, Y).
     pos_rng = galsim.UniformDeviate(random_seed)
@@ -175,7 +175,7 @@ def main(argv):
         # this does mean that the PSF image being drawn here is not quite the right PSF for
         # the galaxy.  Indeed, the PSF for the galaxy effectively varies within it, since it
         # differs for the bulge and the disk.  To make a real image, one would have to choose SEDs
-        # for stars and convolve with a star that has a reasonable SED, but we are just going to
+        # for stars and convolve with a star that has a reasonable SED, but we just 
         # draw with a flat SED for this demo.
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
         img_psf = galsim.ImageF(64,64)
@@ -194,7 +194,7 @@ def main(argv):
             logger.info('Drawing image for the object at row %d in the input catalog'%i_gal)
 
             # We want to only draw the galaxy once (for speed), not over and over with different
-            # sub-pixel offsets.  For this reason we will ignore the sub-pixel offset entirely.
+            # sub-pixel offsets.  For this reason we ignore the sub-pixel offset entirely.
             stamp = galsim.Image(stamp_size, stamp_size)
             gal_list[i_gal].drawImage(filter_, image=stamp)
 
@@ -203,7 +203,7 @@ def main(argv):
                 # Account for the fractional part of the position:
                 ix = int(math.floor(x_stamp[i_gal_use]+0.5))
                 iy = int(math.floor(y_stamp[i_gal_use]+0.5))
-                # We're not going to actually use this offset.
+                # We don't actually use this offset.
                 offset = galsim.PositionD(x_stamp[i_gal]-ix, y_stamp[i_gal]-iy)
 
                 # Create a nominal bound for the postage stamp given the integer part of the
@@ -227,11 +227,11 @@ def main(argv):
         logger.info('Adding the sky level, noise and detector non-idealities.')
 
         # First we get the amount of zodaical light for a position corresponding to the center of
-        # this SCA.  The results will be returned to us in e-/arcsec^2, using the default WFIRST
+        # this SCA.  The results are provided in units of e-/arcsec^2, using the default WFIRST
         # exposure time since we did not explicitly specify one.  Then we multiply this by a factor
         # >1 to account for the amount of stray light that is expected.  Technically one should make
         # a position-dependent sky level using wcs.makeSkyImage() to account for variable pixel
-        # area, but this will be a fairly flat function of position, so using a constant is not too
+        # area, but this is a fairly flat function of position, so using a constant is not too
         # bad.
         sky_level_pix = wfirst.getSkyLevel(filters[filter_name], world_pos=SCA_cent_pos)
         sky_level_pix *= (1.0 + wfirst.stray_light_fraction)
