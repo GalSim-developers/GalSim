@@ -251,8 +251,149 @@ def test_wfirst_detectors():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_wfirst_psfs():
+    """Test the WFIRST PSF routines for reasonable behavior.
+    """
+    import time
+    t1 = time.time()
+
+    # The WFIRST PSF routines can take a long time under some circumstances.  For example, storing
+    # images for interpolation can be expensive, particularly when using the full pupil plane
+    # functionality.  To speed up our calculations, we will limit the unit tests to certain
+    # situations:
+    # - fully chromatic PSFs without interpolation and without loading the pupil plane image.  But
+    #   then we just want to play with the objects in a fast way (e.g., evaluating at one
+    #   wavelength, not integrating over a bandpass).
+    # - fully chromatic PSFs with interpolation, but only interpolating between two wavelengths.
+    # - achromatic PSFs without loading the pupil plane image.
+
+    # First test: check that if we don't specify SCAs, then we get all the expected ones.
+    wfirst_psfs = galsim.wfirst.getPSF(approximate_struts=True)
+    got_scas = np.array(wfirst_psfs.keys())
+    expected_scas = np.arange(1, galsim.wfirst.n_sca+1, 1)
+    np.testing.assert_array_equal(
+        got_scas, expected_scas,
+        err_msg='List of SCAs was not as expected when using defaults.')
+
+    # Check that if we specify SCAs, then we get the ones we specified.
+    expected_scas = [5, 7, 14]
+    wfirst_psfs = galsim.wfirst.getPSF(SCAs=expected_scas,
+                                       approximate_struts=True)
+    got_scas = wfirst_psfs.keys()
+    # Have to sort it in numerical order for this comparison.
+    got_scas.sort()
+    got_scas = np.array(got_scas)
+    np.testing.assert_array_equal(
+        got_scas, expected_scas, err_msg='List of SCAs was not as requested')
+
+    # Check that if we specify a particular wavelength, the PSF that is drawn is the same as if we
+    # had gotten chromatic PSFs and then used evaluateAtWavelength.  Note that this nominally seems
+    # like a test of the chromatic functionality, but there are ways that getPSF() could mess up
+    # inputs such that there is a disagreement.  That's why this unit test belongs here.
+    use_sca = 5
+    use_lam = 900. # nm
+    wfirst_psfs_chrom = galsim.wfirst.getPSF(SCAs=use_sca,
+                                             approximate_struts=True)
+    psf_chrom = wfirst_psfs_chrom[use_sca]
+    wfirst_psfs_achrom = galsim.wfirst.getPSF(SCAs=use_sca,
+                                              approximate_struts=True,
+                                              wavelength=use_lam)
+    psf_achrom = wfirst_psfs_achrom[use_sca]
+    # First, we can draw the achromatic PSF.
+    im_achrom = psf_achrom.drawImage(scale=galsim.wfirst.pixel_scale)
+    im_chrom = im_achrom.copy()
+    obj_chrom = psf_achrom.evaluateAtWavelength(use_lam)
+    im_chrom = obj_chrom.drawImage(image=im_chrom, scale=galsim.wfirst.pixel_scale)
+    # Normalization should probably not be right.
+    im_chrom *= im_achrom.array.sum()/im_chrom.array.sum()
+    # But otherwise these images should agree *extremely* well.
+    np.testing.assert_array_almost_equal(
+        im_chrom.array, im_achrom.array, decimal=8,
+        err_msg='PSF at a given wavelength and chromatic one evaluated at that wavelength disagree.')
+
+    # Below are some more expensive tests that will run only when running test_wfirst.py directly,
+    # but not when doing "scons tests"
+    if __name__ == "__main__":
+        # Make a very limited check that interpolation works: just 2 wavelengths, 1 SCA.
+        # Note that the limits below are the blue and red limits for the Y106 filter.
+        blue_limit = 900. # nm
+        red_limit = 1230. # nm
+        n_waves = 2
+        other_sca = 12
+        wfirst_psfs_int = galsim.wfirst.getPSF(SCAs=[use_sca, other_sca],
+                                               approximate_struts=True, n_waves=2,
+                                               wavelength_limits=(blue_limit, red_limit))
+        psf_int = wfirst_psfs_int[use_sca]
+        # Check that evaluation at the edge wavelength, which we used for previous test, is consistent
+        # with previous results.
+        im_int = im_achrom.copy()
+        obj_int = psf_int.evaluateAtWavelength(use_lam)
+        im_int = obj_int.drawImage(image=im_int, scale=galsim.wfirst.pixel_scale)
+        # Normalization should probably not be right.
+        im_int *= im_achrom.array.sum()/im_int.array.sum()
+        # But otherwise these images should agree *extremely* well.
+        np.testing.assert_array_almost_equal(
+            im_int.array, im_achrom.array, decimal=8,
+            err_msg='PSF at a given wavelength and interpolated chromatic one evaluated at that '
+            'wavelength disagree.')
+
+        # Check that if we store and reload, what we get back is consistent with what we put in.
+        test_file = 'tmp_store.fits'
+        # Make sure we clear out any old versions
+        import os
+        if os.path.exists(test_file):
+            os.remove(test_file)
+        full_bp_list = galsim.wfirst.getBandpasses()
+        bp_list = ['Y106']
+        galsim.wfirst.storePSFImages(bandpass_list=bp_list, PSF_dict=wfirst_psfs_int,
+                                     filename=test_file)
+        new_dict = galsim.wfirst.loadPSFImages(test_file)
+        # Check that it contains the right list of bandpasses.
+        np.testing.assert_array_equal(
+            new_dict.keys(), bp_list, err_msg='Wrong list of bandpasses in stored file')
+        # Check that when we take the dict for that bandpass, we get the right list of SCAs.
+        np.testing.assert_array_equal(
+            new_dict[bp_list[0]].keys(), wfirst_psfs_int.keys(),
+            err_msg='Wrong list of SCAs in stored file')
+        # Now draw an image from the stored object.
+        img_stored = new_dict[bp_list[0]][other_sca].drawImage(scale=1.3*galsim.wfirst.pixel_scale)
+        # Make a comparable image from the original interpolated object.  This requires convolving with
+        # a star that has a flat SED.
+        star = galsim.Gaussian(sigma=1.e-8, flux=1.)
+        star_sed = galsim.SED(lambda x:1).withFlux(1, full_bp_list[bp_list[0]])
+        obj = galsim.Convolve(wfirst_psfs_int[other_sca], star*star_sed)
+        test_im = img_stored.copy()
+        test_im = obj.drawImage(full_bp_list[bp_list[0]],
+                                image=test_im, scale=1.3*galsim.wfirst.pixel_scale)
+        # We have made some approximations here, so we cannot expect it to be great.
+        # Request 1% accuracy.
+        np.testing.assert_array_almost_equal(
+            img_stored.array, test_im.array, decimal=2,
+            err_msg='PSF from stored file and actual PSF object disagree.')
+
+    # Delete test files when done.
+    os.remove(test_file)
+
+    # Check for exceptions if we:
+    # (1) Include optional aberrations in an unacceptable form.
+    # (2) Invalid SCA numbers.
+    try:
+        np.testing.assert_raises(ValueError, galsim.wfirst.getPSF,
+                                 extra_aberrations=[0.03, -0.06])
+        np.testing.assert_raises(ValueError, galsim.wfirst.getPSF,
+                                 SCAs=30)
+        np.testing.assert_raises(ValueError, galsim.wfirst.getPSF,
+                                 SCAs=0)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_wfirst_wcs()
     test_wfirst_backgrounds()
     test_wfirst_bandpass()
     test_wfirst_detectors()
+    test_wfirst_psfs()
+
