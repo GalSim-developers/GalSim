@@ -114,7 +114,9 @@ def main(argv):
     use_SCA = 7 # This could be any number from 1...18
     logger.info('Doing expensive pre-computation of PSF.')
     t1 = time.time()
-    PSFs = wfirst.getPSF(SCAs=use_SCA, approximate_struts=True, n_waves=10)
+    logger.setLevel(logging.DEBUG)
+    PSFs = wfirst.getPSF(SCAs=use_SCA, approximate_struts=True, n_waves=10, logger=logger)
+    logger.setLevel(logging.INFO)
     PSF = PSFs[use_SCA]
     t2 = time.time()
     logger.info('Done PSF precomputation in %.1f seconds!'%(t2-t1))

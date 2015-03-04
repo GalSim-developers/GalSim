@@ -204,7 +204,7 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
             use_aberrations += extra_aberrations
 
         # Now set up the PSF for this SCA, including the option to simplify the pupil plane.
-        if logger: logger.debug('   ... SCA'%SCA)
+        if logger: logger.debug('   ... SCA %d'%SCA)
         if wavelength is None:
             if approximate_struts:
                 PSF = galsim.ChromaticOpticalPSF(
