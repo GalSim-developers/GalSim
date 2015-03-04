@@ -102,6 +102,26 @@ def test_roundtrip():
         test_im = galsim.Image(16,16,scale=0.2)
         do_kvalue(interp,test_im,"InterpolatedImage")
 
+        # Check picklability
+        do_pickle(interp)
+
+    # Also check picklability of the Interpolants
+    do_pickle(galsim.Delta())
+    do_pickle(galsim.Delta(width=0.1))
+    do_pickle(galsim.Nearest())
+    do_pickle(galsim.Nearest(tol=0.1))
+    do_pickle(galsim.Sinc())
+    do_pickle(galsim.Sinc(tol=0.1))
+    do_pickle(galsim.Linear())
+    do_pickle(galsim.Linear(tol=0.1))
+    do_pickle(galsim.Lanczos())
+    do_pickle(galsim.Lanczos(n=7, conserve_dc=False, tol=0.1))
+    do_pickle(galsim.Cubic())
+    do_pickle(galsim.Cubic(tol=0.1))
+    do_pickle(galsim.Quintic())
+    do_pickle(galsim.Quintic(tol=0.1))
+    do_pickle(galsim.Interpolant('quintic'))
+    do_pickle(galsim.Interpolant2D('lanczos7'))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

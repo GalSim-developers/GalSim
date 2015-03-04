@@ -108,6 +108,9 @@ def test_smallshear():
     # Test kvalues
     do_kvalue(gauss,myImg,"sheared Gaussian")
 
+    # Check picklability
+    do_pickle(gauss)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -166,6 +169,9 @@ def test_largeshear():
     gauss.applyShear(myShear)
     do_kvalue(gauss,myImg, "sheared Gaussian")
 
+    # Check picklability
+    do_pickle(gauss)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -214,6 +220,9 @@ def test_rotate():
 
     # Test kvalues
     do_kvalue(gal,myImg,"rotated sheared Sersic")
+
+    # Check picklability
+    do_pickle(gal)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -314,6 +323,9 @@ def test_mag():
     # Test kvalues
     do_kvalue(gal,myImg,"dilated Exponential")
 
+    # Check picklability
+    do_pickle(gal)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -384,6 +396,9 @@ def test_shift():
     gauss = galsim.Gaussian(sigma=2.3)
     gauss.applyShift(dx,-dx)
     do_kvalue(gauss,myImg, "shifted Gaussian")
+
+    # Check picklability
+    do_pickle(gauss)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -530,6 +545,9 @@ def test_rescale():
 
     # Test kvalues
     do_kvalue(sersic2,myImg, "scaled Sersic")
+
+    # Check picklability
+    do_pickle(sersic2)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

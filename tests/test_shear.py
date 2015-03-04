@@ -153,6 +153,7 @@ def test_shear_initialization():
         # initialize with a wrapped C++ Shear object
         s2 = galsim.Shear(s._shear)
         all_shear_vals(s2, ind)
+
     # finally check some examples of invalid initializations for Shear
     try:
         np.testing.assert_raises(TypeError,galsim.Shear,0.3)
@@ -184,6 +185,9 @@ def test_shear_initialization():
         np.testing.assert_raises(TypeError,galsim.Shear,q=0.1,beta=0.)
     except ImportError:
         print 'The assert_raises tests require nose'
+
+    # Check picklability
+    do_pickle(s)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

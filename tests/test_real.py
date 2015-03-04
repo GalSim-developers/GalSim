@@ -178,6 +178,11 @@ def test_real_galaxy_saved():
                                    err_msg = "Error in comparison with SHERA result: e2")
     np.testing.assert_almost_equal(sbp_res.moments_sigma, shera_res.moments_sigma, 2,
                                    err_msg = "Error in comparison with SHERA result: sigma")
+
+    # Check picklability
+    do_pickle(rgc)
+    do_pickle(rg)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 

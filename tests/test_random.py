@@ -447,6 +447,10 @@ def test_gaussian():
             gn.getSigma(), 2., precision, 
             err_msg="GaussianNoise().withScaledVariance results in wrong sigma")
  
+    # Check picklability
+    do_pickle(g)
+    do_pickle(gn)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -555,6 +559,9 @@ def test_binomial():
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(bResult), precision,
             err_msg='Wrong binomial random number sequence generated when applied to image.')
+
+    # Check picklability
+    do_pickle(b)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -766,6 +773,10 @@ def test_poisson():
             pn.getSkyLevel(), 36., precision, 
             err_msg="PoissonNoise().withScaledVariance results in wrong skyLevel")
 
+    # Check picklability
+    do_pickle(p)
+    do_pickle(pn)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -883,6 +894,9 @@ def test_weibull():
             testimage.array.flatten(), np.array(wResult), precision,
             err_msg='Wrong weibull random number sequence generated when applied to image.')
 
+    # Check picklability
+    do_pickle(w)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -990,6 +1004,9 @@ def test_gamma():
             testimage.array.flatten(), np.array(gammaResult), precision,
             err_msg='Wrong gamma random number sequence generated when applied to image.')
 
+    # Check picklability
+    do_pickle(g)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1096,6 +1113,9 @@ def test_chi2():
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(chi2Result), precision,
             err_msg='Wrong Chi^2 random number sequence generated when applied to image.')
+
+    # Check picklability
+    do_pickle(c)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1244,6 +1264,9 @@ def test_distfunction():
             testimage.array.flatten(), np.array(dFunctionResult), precision,
             err_msg='Wrong DistDeviate random number sequence generated when applied to image.')
  
+    # Check picklability
+    do_pickle(d)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1319,6 +1342,9 @@ def test_distLookupTable():
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(dLookupTableResult), precision,
             err_msg='Wrong DistDeviate random number sequence generated when applied to image.')
+
+    # Check picklability
+    do_pickle(d)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1535,6 +1561,9 @@ def test_ccdnoise():
     np.testing.assert_almost_equal(
             ccdnoise.getReadNoise(), 0., precision, 
             err_msg="CCDNoise().withScaledVariance results in wrong ReadNoise")
+
+    # Check picklability
+    do_pickle(ccdnoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

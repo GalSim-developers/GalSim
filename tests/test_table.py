@@ -135,6 +135,11 @@ def test_table():
         np.testing.assert_equal(table2.getInterp(), table2x.getInterp(),
                 err_msg="Pickled LookupTable does not preserve correct interp")
 
+        # Check picklability
+        do_pickle(table1)
+        do_pickle(table2)
+
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 

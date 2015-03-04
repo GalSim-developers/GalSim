@@ -223,6 +223,25 @@ def radial_integrate(prof, minr, maxr):
     f = lambda r: 2 * np.pi * r * prof.SBProfile.xValue(galsim.PositionD(r,0))
     return galsim.integ.int1d(f, minr, maxr)
 
+def do_pickle(obj):
+    """Check that the object is picklable.  Also that it has basic == and != functionality.
+    """
+    import cPickle
+    print 'Try pickling ',obj
+
+    obj1 = cPickle.loads(cPickle.dumps(obj))
+    assert obj1 is not obj
+    assert obj1 == obj
+
+    obj2 = copy.copy(obj)
+    assert obj2 is not obj
+    assert obj2 == obj
+
+    obj3 = copy.deepcopy(obj)
+    assert obj3 is not obj
+    assert obj3 == obj
+
+
 def funcname():
     import inspect
     return inspect.stack()[1][3]

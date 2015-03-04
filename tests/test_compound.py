@@ -302,6 +302,9 @@ def test_realspace_convolve():
     # Test kvalues
     do_kvalue(conv,img,"Truncated Moffat convolved with Box")
 
+    # Check picklability
+    do_pickle(conv)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
  
@@ -503,6 +506,9 @@ def test_add():
     # Test kvalues
     do_kvalue(sum,myImg,"sum of 2 Gaussians")
 
+    # Check picklability
+    do_pickle(sum)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -639,6 +645,9 @@ def test_autoconvolve():
             err_msg="Asymmetric sum of Gaussians convolved with self disagrees with "+
             "AutoConvolve result")
 
+    # Check picklability
+    do_pickle(conv2)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -677,6 +686,9 @@ def test_autocorrelate():
 
     # Test photon shooting.
     do_shoot(corr,myImg2,"AutoCorrelate")
+
+    # Check picklability
+    do_pickle(corr)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

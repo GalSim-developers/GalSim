@@ -205,6 +205,20 @@ def test_Image_basic():
                 assert im2(x,y) == 10*x+y
                 assert im2_view(x+dx,y+dy) == 10*x+y
                 assert im3_view(x+dx,y+dy) == 10*x+y
+
+        # Check picklability
+        do_pickle(im1)
+        do_pickle(im1_view)
+        do_pickle(im2)
+        do_pickle(im2_view)
+        do_pickle(im3)
+
+    # Also check picklability of Bounds, Position here.
+    do_pickle(galsim.PositionI(2,3))
+    do_pickle(galsim.PositionD(2.2,3.3))
+    do_pickle(galsim.BoundsI(2,3,7,8))
+    do_pickle(galsim.BoundsD(2.1, 4.3, 6.5, 9.1))
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 

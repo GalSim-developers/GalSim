@@ -118,6 +118,9 @@ def test_gaussian():
     # Test kvalues
     do_kvalue(gauss,myImg,"Gaussian")
 
+    # Check picklability
+    do_pickle(gauss)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -395,6 +398,9 @@ def test_exponential():
     # Test kvalues
     do_kvalue(expon,myImg,"Exponential")
 
+    # Check picklability
+    do_pickle(expon)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -569,6 +575,9 @@ def test_sersic():
     # Test kvalues
     do_kvalue(sersic,myImg,"Sersic")
 
+    # Check picklability
+    do_pickle(sersic)
+
 
     # Now repeat everything using a truncation.  (Above had no truncation.)
 
@@ -590,6 +599,9 @@ def test_sersic():
 
     # Test kvalues
     do_kvalue(sersic,myImg, "Truncated Sersic")
+
+    # Check picklability
+    do_pickle(sersic)
 
     # Check for normalization consistencies with kValue checks. xValues tested in test_sersic_radii.
 
@@ -968,6 +980,9 @@ def test_airy():
     do_kvalue(airy,myImg, "Airy obscuration=0.0")
     do_kvalue(airy2,myImg, "Airy obscuration=0.1")
 
+    # Check picklability
+    do_pickle(airy)
+
     # Test initialization separately with lam and diam, in various units.  Since the above profiles
     # have lam/diam = 1./0.8 in arbitrary units, we will tell it that lam=1.e9 nm and diam=0.8 m,
     # and use `scale_unit` of galsim.radians.  This is rather silly, but it should work.
@@ -979,7 +994,6 @@ def test_airy():
     np.testing.assert_array_almost_equal(
             test_im1.array, test_im2.array, 8,
             err_msg="Using GSObject Airy with different kwargs disagrees with expected result")
-
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1112,6 +1126,9 @@ def test_box():
     # Test photon shooting.
     do_shoot(pixel,myImg,"Pixel")
 
+    # Check picklability
+    do_pickle(box)
+
     # Check that non-square Box profiles work correctly
     scale = 0.2939  # Use a strange scale here to make sure that the centers of the pixels
                     # never fall on the box edge, otherwise it gets a bit weird to know what
@@ -1135,6 +1152,9 @@ def test_box():
     do_shoot(box,im, "Sheared Box")
     if __name__ == '__main__':
         do_kvalue(box,im, "Sheared Box")
+
+    # Check picklability of sheared box
+    do_pickle(box)
 
     # This is also a profile that may be convolved using real space convolution, so test that.
     if __name__ == '__main__':
@@ -1207,6 +1227,9 @@ def test_tophat():
     conv = galsim.Convolve(tophat, galsim.Pixel(scale=scale), real_space=True)
     do_kvalue(conv,im, "Sheared TopHat convolved with pixel in real space")
 
+    # Check picklability
+    do_pickle(tophat)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1254,6 +1277,9 @@ def test_moffat():
 
     # Test kvalues
     do_kvalue(moffat,myImg, "Moffat")
+
+    # Check picklability
+    do_pickle(moffat)
 
     # The code for untruncated Moffat profiles is specialized for particular beta values, so
     # test each of these:
@@ -1608,6 +1634,9 @@ def test_kolmogorov():
     # Test kvalues
     do_kvalue(kolm,myImg, "Kolmogorov")
 
+    # Check picklability
+    do_pickle(kolm)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1850,6 +1879,8 @@ def test_spergel():
             spergel.SBProfile.calculateIntegratedFlux(1.e-5)/enclosed_flux, 1.0, 4,
             err_msg="Calculated incorrect Spergel(nu={}) enclosed flux.".format(nu))
 
+        # Check picklability
+        do_pickle(spergel)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
