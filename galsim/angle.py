@@ -58,9 +58,7 @@ def AngleUnit_repr(self):
 AngleUnit.__repr__ = AngleUnit_repr
 
 # Enable pickling
-def AngleUnit_getinitargs(self):
-    return self.getValue(),
-AngleUnit.__getinitargs__ = AngleUnit_getinitargs
+AngleUnit.__getinitargs__ = lambda self: (self.getValue(), )
 
 
 def get_angle_unit(unit):

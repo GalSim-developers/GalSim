@@ -639,35 +639,20 @@ _galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution `n` degree
 
 
 # Some functions to enable pickling of deviates
-def BaseDeviate_getinitargs(self):
-    return self.serialize(), 
-_galsim.BaseDeviate.__getinitargs__ = BaseDeviate_getinitargs
+_galsim.BaseDeviate.__getinitargs__ = lambda self: self.serialize()
 
-def UniformDeviate_getinitargs(self):
-    return self.serialize(),
-_galsim.UniformDeviate.__getinitargs__ = UniformDeviate_getinitargs
+_galsim.UniformDeviate.__getinitargs__ = lambda self: self.serialize()
 
-def GaussianDeviate_getinitargs(self):
-    return self.serialize(), self.getMean(), self.getSigma()
-_galsim.GaussianDeviate.__getinitargs__ = GaussianDeviate_getinitargs
+_galsim.GaussianDeviate.__getinitargs__ = lambda self: \
+        (self.serialize(), self.getMean(), self.getSigma())
 
-def BinomialDeviate_getinitargs(self):
-    return self.serialize(), self.getN(), self.getP()
-_galsim.BinomialDeviate.__getinitargs__ = BinomialDeviate_getinitargs
+_galsim.BinomialDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getN(), self.getP())
 
-def PoissonDeviate_getinitargs(self):
-    return self.serialize(), self.getMean()
-_galsim.PoissonDeviate.__getinitargs__ = PoissonDeviate_getinitargs
+_galsim.PoissonDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getMean())
 
-def WeibullDeviate_getinitargs(self):
-    return self.serialize(), self.getA(), self.getB()
-_galsim.WeibullDeviate.__getinitargs__ = WeibullDeviate_getinitargs
+_galsim.WeibullDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getA(), self.getB())
 
-def GammaDeviate_getinitargs(self):
-    return self.serialize(), self.getK(), self.getTheta()
-_galsim.GammaDeviate.__getinitargs__ = GammaDeviate_getinitargs
+_galsim.GammaDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getK(), self.getTheta())
 
-def Chi2Deviate_getinitargs(self):
-    return self.serialize(), self.getN()
-_galsim.Chi2Deviate.__getinitargs__ = Chi2Deviate_getinitargs
+_galsim.Chi2Deviate.__getinitargs__ = lambda self: (self.serialize(), self.getN())
 

@@ -209,7 +209,5 @@ class LookupTable(object):
 
 
 # A function to enable pickling of tables
-def LookupTable_getinitargs(self):
-    return self.getArgs(), self.getVals(), self.getInterp()
-
-_galsim._LookupTable.__getinitargs__ = LookupTable_getinitargs
+_galsim._LookupTable.__getinitargs__ = lambda self: \
+        (self.getArgs(), self.getVals(), self.getInterp())

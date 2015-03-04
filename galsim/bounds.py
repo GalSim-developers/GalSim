@@ -22,20 +22,16 @@ A few adjustments to the Bounds class at the Python layer.
 from . import _galsim
 from ._galsim import BoundsI, BoundsD
 
-def Bounds_repr(self):
-    return (self.__class__.__name__+"(xmin="+str(self.xmin)+", xmax="+str(self.xmax)+
-            ", ymin="+str(self.ymin)+", ymax="+str(self.ymax)+")")
-
-def Bounds_str(self):
-    return "("+str(self.xmin)+", "+str(self.xmax)+", "+str(self.ymin)+", "+str(self.ymax)+")"
-
-def Bounds_getinitargs(self):
-    return self.xmin, self.xmax, self.ymin, self.ymax
-
 for Class in (_galsim.BoundsD, _galsim.BoundsI):
-    Class.__repr__ = Bounds_repr
-    Class.__str__ = Bounds_str
-    Class.__getinitargs__ = Bounds_getinitargs
+    Class.__repr__ = lambda self: \
+            self.__class__.__name__+"(xmin="+str(self.xmin)+", xmax="+str(self.xmax)+ \
+            ", ymin="+str(self.ymin)+", ymax="+str(self.ymax)+")" 
+
+    Class.__str__ = lambda self: \
+            "("+str(self.xmin)+", "+str(self.xmax)+", "+str(self.ymin)+", "+str(self.ymax)+")"
+
+    Class.__getinitargs__ = lambda self: (self.xmin, self.xmax, self.ymin, self.ymax)
+
     Class.__doc__ = """A class for representing image bounds as 2D rectangles.
 
     BoundsD describes bounds with floating point values in `x` and `y`.
