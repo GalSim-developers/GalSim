@@ -109,8 +109,8 @@ nature of the detectors are subject to change as further lab tests are done.
 This module also contains the following routines:
 
     getBandpasses() - A utility to get a dictionary containing galsim.Bandpass objects for each of
-                      the WFIRST-AFTA bandpasses, which by default will have their zero point set
-                      for the WFIRST-AFTA effective diameter and typical exposure time.
+                      the WFIRST-AFTA imaging bandpasses, which by default will have their zero
+                      point set for the WFIRST-AFTA effective diameter and typical exposure time.
 
     getSkyLevel() - A utility to find the expected sky level due to zodiacal light at a given
                     position, in a given band..

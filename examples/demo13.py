@@ -79,10 +79,6 @@ def main(argv):
     # diameter and (since we didn't use any keyword arguments to modify this) using the typical
     # exposure time for WFIRST images.
     filters = wfirst.getBandpasses(AB_zeropoint=True)
-    # We care about the NIR imaging, not the prism and grism, so let's remove them from the dict
-    # containing the filters:
-    del filters['SNPrism']
-    del filters['BAO-Grism']
     logger.debug('Read in WFIRST imaging filters.')
 
     logger.info('Reading from a parametric COSMOS catalog.')

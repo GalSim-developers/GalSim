@@ -26,7 +26,7 @@ import numpy as np
 import os
 
 def getBandpasses(AB_zeropoint=True, exptime=None, thin_err=1.e-4):
-    """Utility to get a dictionary containing the WFIRST bandpasses.
+    """Utility to get a dictionary containing the WFIRST bandpasses used for imaging.
 
     This routine reads in a file containing a list of wavelengths and throughput for all WFIRST
     bandpasses, and uses the information in the file to create a dictionary.
@@ -67,7 +67,7 @@ def getBandpasses(AB_zeropoint=True, exptime=None, thin_err=1.e-4):
                             WFIRST exposure time, taken from galsim.wfirst.exptime.  [default: None]
     @param thin_err         Relative error allowed when thinning the bandpasses.  [default: 1e-4]
 
-    @returns A dictionary containing bandpasses for all WFIRST filters and grisms.
+    @returns A dictionary containing bandpasses for all WFIRST imaging filters.
     """
     # Begin by reading in the file containing the info.
     datafile = os.path.join(galsim.meta_data.share_dir, "afta_throughput.txt")
@@ -99,8 +99,10 @@ def getBandpasses(AB_zeropoint=True, exptime=None, thin_err=1.e-4):
     i_band = 0
     # Loop over the bands.
     for index in range(len(first_line)):
-        # Need to skip the entry for wavelength.
-        if index==wave_ind:
+        # Need to skip the entry for wavelength, and for the prism and grism (not used for weak
+        # lensing imaging).
+        bp_name = first_line[index]
+        if index==wave_ind or bp_name=='SNPrism' or bp_name=='BAO-Grism':
             continue
 
         # Initialize the bandpass object.
