@@ -320,7 +320,7 @@ class CelestialCoord(object):
     def deproject(self, pos, projection='lambert'):
         """Do the reverse process from the project() function.
 
-        i.e. This takes in a position (u,v) as a PositionD object and returns the
+        i.e. This takes in a position (u,v) in arcsec as a PositionD object and returns the
         corresponding celestial coordinate, using the current coordinate as the center
         point of the tangent plane projection.
         """
