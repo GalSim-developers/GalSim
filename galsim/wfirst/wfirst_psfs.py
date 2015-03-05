@@ -130,22 +130,8 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                    [default: False]
     @returns  A dict of ChromaticOpticalPSF or OpticalPSF objects for each SCA.
     """
-    # Check which SCAs are to be done.  Default is all (and they are 1-indexed).
-    all_SCAs = np.arange(1, galsim.wfirst.n_sca + 1, 1)
-    # Later we will use the list of selected SCAs to decide which ones we're actually going to do
-    # the calculations for.  For now, just check for invalid numbers.
-    if SCAs is not None:
-        # Make sure SCAs is iterable.
-        if not hasattr(SCAs, '__iter__'):
-            SCAs = [SCAs]
-        # Then check for reasonable values.
-        if min(SCAs) <= 0 or max(SCAs) > galsim.wfirst.n_sca:
-            raise ValueError(
-                "Invalid SCA!  Indices must be positive and <=%d."%galsim.wfirst.n_sca)
-        # Check for uniqueness.  If not unique, make it unique.
-        SCAs = list(set(SCAs))
-    else:
-        SCAs = all_SCAs
+    # Check which SCAs are to be done using a helper routine in this module.
+    SCAs = galsim.wfirst._parse_SCAs(SCAs)
 
     if wavelength is None:
         if n_waves is not None:

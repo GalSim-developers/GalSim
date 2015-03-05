@@ -58,9 +58,10 @@ def test_wfirst_wcs():
     for i_test in range(len(ra_test)):
         # Make the WCS for this test.
         try:
+            world_pos = galsim.CelestialCoord(ra_test[i_test]*galsim.degrees,
+                                              dec_test[i_test]*galsim.degrees)
             all_gs_wcs = galsim.wfirst.getWCS(pa_test[i_test]*galsim.degrees,
-                                              ra=ra_test[i_test]*galsim.degrees,
-                                              dec=dec_test[i_test]*galsim.degrees,
+                                              world_pos=world_pos,
                                               PA_is_FPA=pa_is_fpa_test[i_test])
         except ImportError:
             print "Cannot find any software to read the WFIRST WCS.  Skipping this test."

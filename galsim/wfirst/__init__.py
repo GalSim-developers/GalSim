@@ -195,3 +195,25 @@ from wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)
+
+def _parse_SCAs(SCAs):
+    # This is a helper routine to parse the input SCAs (single number or iterable) and put it into a
+    # convenient format.  It is used in wfirst_wcs.py and wfirst_psfs.py.
+    #
+    # Check which SCAs are to be done.  Default is all (and they are 1-indexed).
+    all_SCAs = numpy.arange(1, n_sca + 1, 1)
+    # Later we will use the list of selected SCAs to decide which ones we're actually going to do
+    # the calculations for.  For now, just check for invalid numbers.
+    if SCAs is not None:
+        # Make sure SCAs is iterable.
+        if not hasattr(SCAs, '__iter__'):
+            SCAs = [SCAs]
+        # Then check for reasonable values.
+        if min(SCAs) <= 0 or max(SCAs) > galsim.wfirst.n_sca:
+            raise ValueError(
+                "Invalid SCA!  Indices must be positive and <=%d."%galsim.wfirst.n_sca)
+        # Check for uniqueness.  If not unique, make it unique.
+        SCAs = list(set(SCAs))
+    else:
+        SCAs = all_SCAs
+    return SCAs

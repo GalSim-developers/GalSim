@@ -68,14 +68,15 @@ theta_fpa = 32.5*galsim.degrees
 # File with SIP coefficients.
 sip_filename = os.path.join(galsim.meta_data.share_dir, 'sip_422.txt')
 
-def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
+def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
     """
-    This routine gets a list of WCS, one for each of the WFIRST SCAs (Sensor Chip Array, the
-    equivalent of a chip in an optical CCD).  Since the WFIRST SCAs are labeled 1-18, the zeroth
-    list item is simply None.
+    This routine returns a dict containing a WCS for each of the WFIRST SCAs (Sensor Chip Array, the
+    equivalent of a chip in an optical CCD).  The WFIRST SCAs are labeled 1-18, so these numbers are
+    used as the keys in the dict.  Alternatively the user can request a subset of the SCAs using the
+    `SCAs` option.
 
-    The user must specify a position for the center of the focal plane array (either as (ra, dec),
-    or a CelestialCoord `pos`) and the orientation.
+    The user must specify a position for the center of the focal plane array (as a CelestialCoord
+    `world_pos`) and the orientation.
 
     For this routine, we define several coordinate systems for WFIRST.  The diagram
     located on the GalSim wiki,
@@ -110,24 +111,25 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
 
     @param PA        Position angle of the observatory Y axis, unless `PA_is_FPA=True`, in which
                      case it's the position angle of the FPA.  Must be provided as a galsim.Angle.
-    @param ra        Right ascension of the center of the FPA, as a galsim.Angle.  Must be provided
-                     with `dec`.
-    @param dec       Declination of the center of the FPA, as a galsim.Angle.  Must be provided
-                     with `ra`.
-    @param pos       A galsim.CelestialCoord indicating the center of the FPA, as an alternative to
-                     providing `ra` and `dec`.
+    @param world_pos A galsim.CelestialCoord indicating the center of the FPA.
     @param PA_is_FPA If True, then the position angle that was provided was the PA of the focal
                      plane array, not the observatory. [default: False]
-    @param as_header If True, then instead of returning a list of WCS objects, return a list of
-                     galsim.FitsHeader objects defining the WCS.
-    @returns a list of WCS or FitsHeader objects for each SCA.
+    @param SCAs      A single number or iterable giving the SCAs for which the WCS should be
+                     obtained.  If None, then the WCS is calculated for all SCAs.
+                     [default: None]
+    @returns a dict of WCS objects for each SCA.
     """
+    # Check which SCAs are to be done using a helper routine in this module.
+    SCAs = galsim.wfirst._parse_SCAs(SCAs)
+
     # Enforce type for PA
     if not isinstance(PA, galsim.Angle):
         raise TypeError("Position angle must be a galsim.Angle!")
 
     # Parse input position
-    use_ra, use_dec = _parse_input_position(ra, dec, pos)
+    if not isinstance(world_pos, galsim.CelestialCoord):
+        raise TypeError("Position on the sky must be given as a galsim.CelestialCoord!")
+    use_ra, use_dec = world_pos.ra, world_pos.dec
 
     # Compute position angle of FPA f2 axis, where positive corresponds to the angle east of North.
     if PA_is_FPA:
@@ -146,12 +148,8 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
     a_sip, b_sip = _parse_sip_file(sip_filename)
 
     # Loop over SCAs:
-    wcs_list = []
-    for i_sca in range(galsim.wfirst.n_sca+1):
-        if i_sca == 0:
-            wcs_list.append(None)
-            continue
-
+    wcs_dict = {}
+    for i_sca in SCAs:
         # Set up the header.
         header = galsim.FitsHeader()
         # Populate some necessary variables in the FITS header that are always the same, regardless of
@@ -309,22 +307,18 @@ def getWCS(PA, ra=None, dec=None, pos=None, PA_is_FPA=False, as_header=False):
                     sipstr = "B_%d_%d"%(i,j)
                     header[sipstr] = b_sip[i_sca,i,j]
 
-        if not as_header:
-            wcs = galsim.GSFitsWCS(header=header)
-            wcs_list.append(wcs)
-        else:
-            wcs_list.append(header)
+        wcs = galsim.GSFitsWCS(header=header)
+        wcs_dict[i_sca]=wcs
 
-    return wcs_list
+    return wcs_dict
 
-def findSCA(wcs_list, ra=None, dec=None, pos=None, include_border=False):
+def findSCA(wcs_dict, world_pos, include_border=False):
     """
-    This is a subroutine to take a list of WCS (one per SCA) from galsim.wfirst.getWCS() and query
-    which SCA a particular real-world coordinate would be located on.  If the position is not
-    located on any of the SCAs, the result will be None.
-
-    The position should be specified in a way similar to how it is specified for
-    galsim.wfirst.getWCS().
+    This is a subroutine to take a dict of WCS (one per SCA) from galsim.wfirst.getWCS() and query
+    which SCA a particular real-world coordinate would be located on.  The position (`world_pos`)
+    should be specified as a galsim.CelestialCoord.  If the position is not located on any of the
+    SCAs, the result will be None.  Note that if `wcs_dict` does not include all SCAs in it, then
+    it's possible the position might lie on one of the SCAs that was not included.
 
     Depending on what the user wants to do with the results, they may wish to use the
     `include_border` keyword.  This keyword determines whether or not to include an additional
@@ -332,38 +326,37 @@ def findSCA(wcs_list, ra=None, dec=None, pos=None, include_border=False):
     single image they may wish to only know whether a given position falls onto an SCA, and if so,
     which one (ignoring everything in the gaps).  In contrast, a user who plans to make a sequence
     of dithered images might find it most useful to know whether the position is either on an SCA or
-    close enough that in a typical dither sequence it might appear on the SCA at some point.  Use of
+    close enough that in a small dither sequence it might appear on the SCA at some point.  Use of
     `include_border` switches between these scenarios.
 
-    @param ra               Right ascension of the sky position of interest, as a galsim.Angle.
-                            Must be provided with `dec`.
-    @param dec              Declination of the sky position of interest, as a galsim.Angle.  Must be
-                            provided with `ra`.
-    @param pos              A galsim.CelestialCoord indicating the sky position of interest, as an
-                            alternative to providing `ra` and `dec`.
+    @param world_pos        A galsim.CelestialCoord indicating the sky position of interest.
     @param include_border   If True, then include the half-border around SCA to cover the gap
                             between each sensor. [default: False]
     @returns an integer value of the SCA on which the position falls, or None if the position is not
              on any SCA.
 
     """
-    if len(wcs_list) != galsim.wfirst.n_sca+1:
-        raise ValueError("wcs_list should be a list of length %d output by"
-                         " galsim.wfirst.getWCS!"%(galsim.wfirst.n_sca+1))
+    # Sanity check args.
+    if not isinstance(wcs_dict, dict):
+        raise ValueError("wcs_dict should be a dict containing WCS output by"
+                         " galsim.wfirst.getWCS!"%galsim.wfirst.n_sca)
 
-    # Parse input position
-    use_ra, use_dec = _parse_input_position(ra, dec, pos)
+    if not isinstance(world_pos, galsim.CelestialCoord):
+        raise TypeError("Position on the sky must be given as a galsim.CelestialCoord!")
 
     # Set up the minimum and maximum pixel values, depending on whether or not to include the
-    # border.
-    min_x_pix, max_x_pix, min_y_pix, max_y_pix = _calculate_minmax_pix(include_border)
+    # border.  We put it immediately into a galsim.BoundsI(), since the routine returns xmin, xmax,
+    # ymin, ymax:
+    xmin, xmax, ymin, ymax = _calculate_minmax_pix(include_border)
+    bounds_list = []
+    for ind in range(len(xmin)):
+        bounds_list.append(galsim.BoundsI(xmin[ind], xmax[ind], ymin[ind], ymax[ind]))
 
     sca = None
-    for i_sca in range(1, galsim.wfirst.n_sca+1):
-        wcs = wcs_list[i_sca]
-        image_pos = wcs.toImage(galsim.CelestialCoord(use_ra, use_dec))
-        if image_pos.x >= min_x_pix[i_sca] and image_pos.x <= max_x_pix[i_sca] and \
-                image_pos.y >= min_y_pix[i_sca] and image_pos.y <= max_y_pix[i_sca]:
+    for i_sca in wcs_dict.keys():
+        wcs = wcs_dict[i_sca]
+        image_pos = wcs.toImage(world_pos)
+        if bounds_list[i_sca-1].includes(int(image_pos.x), int(image_pos.y)):
             sca = i_sca
             break
 
@@ -382,8 +375,8 @@ def _calculate_minmax_pix(include_border=False):
     """
     # First, set up the default (no border).
     # The minimum and maximum pixel values are (1, n_pix).
-    min_x_pix = np.ones(galsim.wfirst.n_sca+1)
-    max_x_pix = min_x_pix + galsim.wfirst.n_pix - 1.0
+    min_x_pix = np.ones(galsim.wfirst.n_sca+1).astype(int)
+    max_x_pix = min_x_pix + galsim.wfirst.n_pix - 1
     min_y_pix = min_x_pix.copy()
     max_y_pix = max_x_pix.copy()
 
@@ -440,23 +433,6 @@ def _calculate_minmax_pix(include_border=False):
         max_y_pix[list_3] += half_border_pix
 
     return min_x_pix, max_x_pix, min_y_pix, max_y_pix
-
-def _parse_input_position(ra, dec, pos):
-    if ra is not None:
-        if dec is None:
-            raise ValueError("Must provide (RA, dec) pair!")
-        if not isinstance(ra, galsim.Angle) or not isinstance(dec, galsim.Angle):
-            raise TypeError("(RA, dec) pair must be galsim.Angles")
-        if pos is not None:
-            raise ValueError("Can provide either pos or (RA, dec), not both!")
-    if pos is not None:
-        if ra is not None or dec is not None:
-            raise ValueError("Can provide either pos or (RA, dec), not both!")
-        ra = pos.ra
-        dec = pos.dec
-    if ra is None:
-        raise ValueError("Must provide either pos or (RA, dec)!")
-    return ra, dec
 
 def _populate_required_fields(header):
     """

@@ -132,7 +132,7 @@ def main(argv):
     # Get the WCS for an observation at this position, with the focal plane array oriented at an
     # angle of `ang` with respect to North.  The output of this routine is a list of WCS objects,
     # one for each SCA.  We then take the WCS for the SCA that we are using.
-    wcs_list = wfirst.getWCS(ang, pos=targ_pos, PA_is_FPA=True)
+    wcs_list = wfirst.getWCS(ang, world_pos=targ_pos, PA_is_FPA=True, SCAs=use_SCA)
     wcs = wcs_list[use_SCA]
     # We need to find the center position for this SCA.  We'll tell it to give us a CelestialCoord
     # corresponding to (X, Y) = (wfirst.n_pix/2, wfirst.n_pix/2).
