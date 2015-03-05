@@ -142,12 +142,12 @@ def main(argv):
     # If we had a real galaxy catalog with positions in terms of RA, dec we could use wcs.toImage()
     # to find where those objects should be in terms of (X, Y).
     pos_rng = galsim.UniformDeviate(random_seed)
-    # Make a list of (X, Y) values, eliminating the 10% of the edge pixels as the object centroids.
+    # Make a list of (X, Y) values.
     x_stamp = []
     y_stamp = []
     for i_gal in xrange(n_tot):
-        x_stamp.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
-        y_stamp.append(pos_rng()*0.8*wfirst.n_pix + 0.1*wfirst.n_pix)
+        x_stamp.append(pos_rng()*wfirst.n_pix)
+        y_stamp.append(pos_rng()*wfirst.n_pix)
         # Note that we could use wcs.toWorld() to get the (RA, dec) for these (x, y) positions.  Or,
         # if we had started with (RA, dec) positions, we could have used wcs.toImage() to get the
         # CCD coordinates for those positions.
