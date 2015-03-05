@@ -37,8 +37,8 @@ namespace galsim {
     {
 
         static SBMoffat* construct(
-            double beta, const bp::object & fwhm, const bp::object & scale_radius,
-            const bp::object & half_light_radius, double trunc, double flux,
+            double beta, const bp::object & scale_radius, const bp::object & half_light_radius,
+            const bp::object & fwhm, double trunc, double flux,
             boost::shared_ptr<GSParams> gsparams)
         {
             double s = 1.0;
@@ -64,9 +64,8 @@ namespace galsim {
                 .def("__init__",
                      bp::make_constructor(
                          &construct, bp::default_call_policies(),
-                         (bp::arg("beta"), bp::arg("fwhm")=bp::object(),
-                          bp::arg("scale_radius")=bp::object(),
-                          bp::arg("half_light_radius")=bp::object(),
+                         (bp::arg("beta"), bp::arg("scale_radius")=bp::object(),
+                          bp::arg("half_light_radius")=bp::object(), bp::arg("fwhm")=bp::object(),
                           bp::arg("trunc")=0., bp::arg("flux")=1.,
                           bp::arg("gsparams")=bp::object())
                      )
@@ -76,6 +75,8 @@ namespace galsim {
                 .def("getScaleRadius", &SBMoffat::getScaleRadius)
                 .def("getFWHM", &SBMoffat::getFWHM)
                 .def("getHalfLightRadius", &SBMoffat::getHalfLightRadius)
+                .def("getTrunc", &SBMoffat::getTrunc)
+                .enable_pickling()
                 ;
         }
     };

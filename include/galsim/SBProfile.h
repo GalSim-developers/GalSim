@@ -136,6 +136,9 @@ namespace galsim {
         /// Destructor isn't virtual, since derived classes don't have anything to cleanup.
         ~SBProfile();
 
+        /// Get the GSParams object for this SBProfile
+        const boost::shared_ptr<GSParams> getGSParams() const;
+
         /** 
          * @brief Return value of SBProfile at a chosen 2D position in real space.
          *

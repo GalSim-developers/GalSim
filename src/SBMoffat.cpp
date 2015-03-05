@@ -92,6 +92,13 @@ namespace galsim {
         return static_cast<const SBMoffatImpl&>(*_pimpl).getHalfLightRadius();
     }
 
+    double SBMoffat::getTrunc() const
+    {
+        assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
+        return static_cast<const SBMoffatImpl&>(*_pimpl).getTrunc();
+    }
+
+
     class MoffatScaleRadiusFunc
     {
     public:

@@ -184,6 +184,8 @@ namespace galsim {
         double getHalfLightRadius() const { return _re; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
+        /// @brief Returns the truncation radius
+        double getTrunc() const { return _trunc; }
 
         // Overrides for better efficiency
         void fillXValue(tmv::MatrixView<double> val,

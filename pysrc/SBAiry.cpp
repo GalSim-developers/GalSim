@@ -44,6 +44,7 @@ namespace galsim {
                 .def(bp::init<const SBAiry &>())
                 .def("getLamOverD", &SBAiry::getLamOverD)
                 .def("getObscuration", &SBAiry::getObscuration)
+                .enable_pickling()
                 ;
         }
     };

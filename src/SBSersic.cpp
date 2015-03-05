@@ -77,6 +77,12 @@ namespace galsim {
         return static_cast<const SBSersicImpl&>(*_pimpl).getScaleRadius();
     }
 
+    double SBSersic::getTrunc() const
+    {
+        assert(dynamic_cast<const SBSersicImpl*>(_pimpl.get()));
+        return static_cast<const SBSersicImpl&>(*_pimpl).getTrunc();
+    }
+
     LRUCache< boost::tuple<double, double, GSParamsPtr >, SersicInfo >
         SBSersic::SBSersicImpl::cache(sbp::max_sersic_cache);
 

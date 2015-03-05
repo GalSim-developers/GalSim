@@ -74,6 +74,7 @@ namespace galsim {
         double getBeta() const { return _beta; }
         double getScaleRadius() const { return _rD; }
         double getFWHM() const { return _FWHM; }
+        double getTrunc() const { return _trunc; }
         double getHalfLightRadius() const;
 
         // Overrides for better efficiency

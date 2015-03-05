@@ -40,8 +40,7 @@ namespace galsim {
 
         static void wrap() {
 
-            bp::class_<GSParams> pyGSParams("GSParams", "", bp::no_init);
-            pyGSParams
+            bp::class_<GSParams, boost::shared_ptr<GSParams> > ("GSParams", bp::no_init)
                 .def(bp::init<
                     int, int, double, double, double, double, double, double, double, double,
                     double, double, double, double, int, double>((
@@ -79,6 +78,8 @@ namespace galsim {
                 .def_readwrite("allowed_flux_variation", &GSParams::allowed_flux_variation)
                 .def_readwrite("range_division_for_extrema", &GSParams::range_division_for_extrema)
                 .def_readwrite("small_fraction_of_flux", &GSParams::small_fraction_of_flux)
+                .def(bp::self == bp::other<GSParams>())
+                .enable_pickling()
                 ;
         }
     };
@@ -158,6 +159,7 @@ namespace galsim {
             bp::class_<SBProfile> pySBProfile("SBProfile", doc, bp::no_init);
             pySBProfile
                 .def(bp::init<const SBProfile &>())
+                .def("getGSParams", &SBProfile::getGSParams)
                 .def("xValue", &SBProfile::xValue,
                      "Return value of SBProfile at a chosen 2d position in real space.\n"
                      "May not be implemented for derived classes (e.g. SBConvolve) that\n"

@@ -197,6 +197,8 @@ namespace galsim {
         const GSParams* get() const { return _p.get(); }
         GSParams* get() { return _p.get(); }
         operator bool() const { return _p.get(); }
+        const boost::shared_ptr<GSParams> getP() const { return _p; }
+        boost::shared_ptr<GSParams> getP() { return _p; }
 
         GSParamsPtr duplicate() const { return GSParamsPtr(new GSParams(*_p)); }
 

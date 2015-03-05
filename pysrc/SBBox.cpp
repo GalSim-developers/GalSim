@@ -45,6 +45,7 @@ namespace galsim {
                 .def(bp::init<const SBBox&>())
                 .def("getWidth", &SBBox::getWidth)
                 .def("getHeight", &SBBox::getHeight)
+                .enable_pickling()
                 ;
         }
     };
@@ -61,6 +62,7 @@ namespace galsim {
                 ))
                 .def(bp::init<const SBTopHat&>())
                 .def("getRadius", &SBTopHat::getRadius)
+                .enable_pickling()
                 ;
         }
     };

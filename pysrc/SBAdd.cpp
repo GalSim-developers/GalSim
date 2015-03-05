@@ -56,6 +56,7 @@ namespace galsim {
                          bp::arg("gsparams")=bp::object())
                 ))
                 .def(bp::init<const SBAdd &>())
+                .enable_pickling()
                 ;
         }
 

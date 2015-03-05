@@ -215,14 +215,18 @@ class GSObject(object):
             self.SBProfile = obj.SBProfile
             if hasattr(obj,'noise'):
                 self.noise = obj.noise.copy()
-        elif isinstance(obj, galsim._galsim.SBProfile):
+        elif isinstance(obj, _galsim.SBProfile):
             self.SBProfile = obj
         else:
             raise TypeError("GSObject must be initialized with an SBProfile or another GSObject!")
-        # a couple of definitions for using GSObjects as duck-typed ChromaticObjects
-        self.separable = True
-        self.SED = lambda w: 1.0 # flat spectrum in photons/nanometer
-        self.wave_list = np.array([], dtype=float)
+
+    # a couple of definitions for using GSObjects as duck-typed ChromaticObjects
+    @property
+    def separable(self): return True
+    @property
+    def SED(self): return lambda w: 1.0
+    @property
+    def wave_list(self): return np.array([], dtype=float)
 
     # Also need this method to duck-type as a ChromaticObject
     def evaluateAtWavelength(self, wave):
@@ -1450,7 +1454,6 @@ class Gaussian(GSObject):
         >>> fwhm = gauss.getFWHM()
         >>> hlr = gauss.getHalfLightRadius()
     """
-
     # Initialization parameters of the object, with type information, to indicate
     # which attributes are allowed / required in a config file for this object.
     # _req_params are required
@@ -1464,13 +1467,32 @@ class Gaussian(GSObject):
     _takes_rng = False
     _takes_logger = False
 
-    # --- Public Class methods ---
+    # The FWHM of a Gaussian is 2 sqrt(2 ln2) sigma
+    _fwhm_factor = 2.3548200450309493
+    # The half-light-radius is sqrt(2 ln2) sigma
+    _hlr_factor =  1.1774100225154747
+
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1., gsparams=None):
-        # Initialize the SBProfile
-        GSObject.__init__(
-            self, galsim._galsim.SBGaussian(
-                sigma=sigma, half_light_radius=half_light_radius, fwhm=fwhm, flux=flux,
-                gsparams=gsparams))
+        if fwhm is not None :
+            if sigma is not None or half_light_radius is not None:
+                raise TypeError(
+                        "Only one of sigma, fwhm, and half_light_radius may be " +
+                        "specified for Gaussian")
+            else:
+                sigma = fwhm / Gaussian._fwhm_factor
+        elif half_light_radius is not None:
+            if sigma is not None:
+                raise TypeError(
+                        "Only one of sigma, fwhm, and half_light_radius may be " +
+                        "specified for Gaussian")
+            else:
+                sigma = half_light_radius / Gaussian._hlr_factor
+        elif sigma is None:
+                raise TypeError(
+                        "One of sigma, fwhm, or half_light_radius must be " +
+                        "specified for Gaussian")
+
+        GSObject.__init__(self, _galsim.SBGaussian(sigma, flux, gsparams))
 
     def getSigma(self):
         """Return the sigma scale length for this Gaussian profile.
@@ -1480,12 +1502,15 @@ class Gaussian(GSObject):
     def getFWHM(self):
         """Return the FWHM for this Gaussian profile.
         """
-        return self.SBProfile.getSigma() * 2.3548200450309493 # factor = 2 sqrt[2ln(2)]
+        return self.SBProfile.getSigma() * Gaussian._fwhm_factor
 
     def getHalfLightRadius(self):
         """Return the half light radius for this Gaussian profile.
         """
-        return self.SBProfile.getSigma() * 1.1774100225154747 # factor = sqrt[2ln(2)]
+        return self.SBProfile.getSigma() * Gaussian._hlr_factor
+
+_galsim.SBGaussian.__getinitargs__ = lambda self: \
+        (self.getSigma(), self.getFlux(), self.getGSParams())
 
 
 class Moffat(GSObject):
@@ -1529,21 +1554,19 @@ class Moffat(GSObject):
         >>> fwhm = moffat_obj.getFWHM()
         >>> hlr = moffat_obj.getHalfLightRadius()
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = { "beta" : float }
     _opt_params = { "trunc" : float , "flux" : float }
     _single_params = [ { "scale_radius" : float, "half_light_radius" : float, "fwhm" : float } ]
     _takes_rng = False
     _takes_logger = False
 
-    # --- Public Class methods ---
+    # The conversion from hlr or fwhm to scale radius is complicated for Moffat, especially
+    # since we allow it to be truncated, which matters for hlr.  So we do these calculations
+    # in the C++-layer constructor.
     def __init__(self, beta, scale_radius=None, half_light_radius=None, fwhm=None, trunc=0.,
                  flux=1., gsparams=None):
-        GSObject.__init__(
-            self, galsim._galsim.SBMoffat(
-                beta, scale_radius=scale_radius, half_light_radius=half_light_radius, fwhm=fwhm,
-                trunc=trunc, flux=flux, gsparams=gsparams))
+        GSObject.__init__(self, _galsim.SBMoffat(beta, scale_radius, half_light_radius, fwhm,
+                                                 trunc, flux, gsparams))
 
     def getBeta(self):
         """Return the beta parameter for this Moffat profile.
@@ -1564,6 +1587,10 @@ class Moffat(GSObject):
         """Return the half light radius for this Moffat profile.
         """
         return self.SBProfile.getHalfLightRadius()
+
+_galsim.SBMoffat.__getinitargs__ = lambda self: \
+        (self.getBeta(), self.getScaleRadius(), None, None, self.getTrunc(), 
+         self.getFlux(), self.getGSParams())
 
 
 class Airy(GSObject):
@@ -1630,20 +1657,25 @@ class Airy(GSObject):
 
     The latter two are only available if the obscuration is 0.
     """
-
-    # Initialization parameters of the object, with type information.
+    _req_params = { }
+    _opt_params = { "flux" : float , "obscuration" : float, "diam" : float,
+                    "scale_unit" : str }
     # Note that this is not quite right; it's true that either lam_over_diam or lam should be
     # supplied, but if lam is supplied then diam is required.  Errors in which parameters are used
     # may be caught either by config or by the python code itself, depending on the particular
     # error.
-    _req_params = { }
-    _opt_params = { "flux" : float , "obscuration" : float, "diam" : float,
-                    "scale_unit" : str }
     _single_params = [{ "lam_over_diam" : float , "lam" : float } ]
     _takes_rng = False
     _takes_logger = False
 
-    # --- Public Class methods ---
+    # For an unobscured Airy, we have the following factor which can be derived using the
+    # integral result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk),
+    # solved for half total flux using the free online tool Wolfram Alpha.
+    # At www.wolframalpha.com:
+    # Type "Solve[BesselJ0(x)^2+BesselJ1(x)^2=1/2]" ... and divide the result by pi
+    _hlr_factor = 0.5348321477242647
+    _fwhm_factor = 1.028993969962188
+
     def __init__(self, lam_over_diam=None, lam=None, diam=None, obscuration=0., flux=1.,
                  scale_unit=galsim.arcsec, gsparams=None):
         # Parse arguments: either lam_over_diam in arbitrary units, or lam in nm and diam in m.
@@ -1660,21 +1692,14 @@ class Airy(GSObject):
                 scale_unit = galsim.angle.get_angle_unit(scale_unit)
             lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
 
-        GSObject.__init__(
-            self, galsim._galsim.SBAiry(lam_over_diam=lam_over_diam, obscuration=obscuration,
-                                        flux=flux, gsparams=gsparams))
+        GSObject.__init__(self, _galsim.SBAiry(lam_over_diam, obscuration, flux, gsparams))
 
     def getHalfLightRadius(self):
         """Return the half light radius of this Airy profile (only supported for
         obscuration = 0.).
         """
         if self.SBProfile.getObscuration() == 0.:
-            # For an unobscured Airy, we have the following factor which can be derived using the
-            # integral result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk),
-            # solved for half total flux using the free online tool Wolfram Alpha.
-            # At www.wolframalpha.com:
-            # Type "Solve[BesselJ0(x)^2+BesselJ1(x)^2=1/2]" ... and divide the result by pi
-            return self.SBProfile.getLamOverD() * 0.5348321477242647
+            return self.SBProfile.getLamOverD() * Airy._hlr_factor
         else:
             # In principle can find the half light radius as a function of lam_over_diam and
             # obscuration too, but it will be much more involved...!
@@ -1686,7 +1711,7 @@ class Airy(GSObject):
         """
         # As above, likewise, FWHM only easy to define for unobscured Airy
         if self.SBProfile.getObscuration() == 0.:
-            return self.SBProfile.getLamOverD() * 1.028993969962188;
+            return self.SBProfile.getLamOverD() * Airy._fwhm_factor
         else:
             # In principle can find the FWHM as a function of lam_over_diam and obscuration too,
             # but it will be much more involved...!
@@ -1697,6 +1722,9 @@ class Airy(GSObject):
         """Return the `lam_over_diam` parameter of this Airy profile.
         """
         return self.SBProfile.getLamOverD()
+
+_galsim.SBAiry.__getinitargs__ = lambda self: \
+        (self.getLamOverD(), self.getObscuration(), self.getFlux(), self.getGSParams())
 
 
 class Kolmogorov(GSObject):
@@ -1748,6 +1776,11 @@ class Kolmogorov(GSObject):
         >>> fwhm = kolm.getFWHM()
         >>> hlr = kolm.getHalfLightRadius()
     """
+    _req_params = {}
+    _opt_params = { "flux" : float }
+    _single_params = [ { "lam_over_r0" : float, "fwhm" : float, "half_light_radius" : float } ]
+    _takes_rng = False
+    _takes_logger = False
 
     # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
     # In SBKolmogorov.cpp we refine this factor to 0.975865
@@ -1755,14 +1788,6 @@ class Kolmogorov(GSObject):
     # Similarly, SBKolmogorov calculates the relation between lambda/r0 and half-light radius
     _hlr_factor = 0.554811
 
-    # Initialization parameters of the object, with type information
-    _req_params = {}
-    _opt_params = { "flux" : float }
-    _single_params = [ { "lam_over_r0" : float, "fwhm" : float, "half_light_radius" : float } ]
-    _takes_rng = False
-    _takes_logger = False
-
-    # --- Public Class methods ---
     def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.,
                  gsparams=None):
 
@@ -1785,8 +1810,7 @@ class Kolmogorov(GSObject):
                         "One of lam_over_r0, fwhm, or half_light_radius must be " +
                         "specified for Kolmogorov")
 
-        GSObject.__init__(self, galsim._galsim.SBKolmogorov(lam_over_r0=lam_over_r0, flux=flux,
-                                                            gsparams=gsparams))
+        GSObject.__init__(self, _galsim.SBKolmogorov(lam_over_r0, flux, gsparams))
 
     def getLamOverR0(self):
         """Return the `lam_over_r0` parameter of this Kolmogorov profile.
@@ -1802,6 +1826,9 @@ class Kolmogorov(GSObject):
         """Return the half light radius of this Kolmogorov profile.
         """
         return self.SBProfile.getLamOverR0() * Kolmogorov._hlr_factor
+
+_galsim.SBKolmogorov.__getinitargs__ = lambda self: \
+        (self.getLamOverR0(), self.getFlux(), self.getGSParams())
 
 
 class Pixel(GSObject):
@@ -1828,17 +1855,14 @@ class Pixel(GSObject):
         >>> scale = pixel.getScale()
 
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = { "scale" : float }
     _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
-    # --- Public Class methods ---
     def __init__(self, scale, flux=1., gsparams=None):
-        GSObject.__init__(self, galsim._galsim.SBBox(scale, scale, flux=flux, gsparams=gsparams))
+        GSObject.__init__(self, _galsim.SBBox(scale, scale, flux, gsparams))
 
     def getScale(self):
         """Return the pixel scale.
@@ -1868,19 +1892,16 @@ class Box(GSObject):
         >>> height = box.getHeight()
 
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = { "width" : float, "height" : float }
     _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
-    # --- Public Class methods ---
     def __init__(self, width, height, flux=1., gsparams=None):
         width = float(width)
         height = float(height)
-        GSObject.__init__(self, galsim._galsim.SBBox(width, height, flux=flux, gsparams=gsparams))
+        GSObject.__init__(self, _galsim.SBBox(width, height, flux, gsparams))
 
     def getWidth(self):
         """Return the width of the box in the x dimension.
@@ -1891,6 +1912,9 @@ class Box(GSObject):
         """Return the height of the box in the y dimension.
         """
         return self.SBProfile.getHeight()
+
+_galsim.SBBox.__getinitargs__ = lambda self: \
+        (self.getWidth(), self.getHeight(), self.getFlux(), self.getGSParams())
 
 
 class TopHat(GSObject):
@@ -1913,23 +1937,23 @@ class TopHat(GSObject):
         >>> radius = tophat.getRadius()
 
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = { "radius" : float }
     _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
-    # --- Public Class methods ---
     def __init__(self, radius, flux=1., gsparams=None):
         radius = float(radius)
-        GSObject.__init__(self, galsim._galsim.SBTopHat(radius, flux=flux, gsparams=gsparams))
+        GSObject.__init__(self, _galsim.SBTopHat(radius, flux=flux, gsparams=gsparams))
 
     def getRadius(self):
         """Return the radius of the tophat profile.
         """
         return self.SBProfile.getRadius()
+
+_galsim.SBTopHat.__getinitargs__ = lambda self: \
+        (self.getRadius(), self.getFlux(), self.getGSParams())
 
 
 class Sersic(GSObject):
@@ -2094,22 +2118,18 @@ class Sersic(GSObject):
         >>> r0 = sersic_obj.getScaleRadius()
         >>> hlr = sersic_obj.getHalfLightRadius()
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = { "n" : float }
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
     _takes_logger = False
 
-    # --- Public Class methods ---
+    # The conversion from hlr to scale radius is complicated for Sersic, especially since we
+    # allow it to be truncated.  So we do these calculations in the C++-layer constructor.
     def __init__(self, n, half_light_radius=None, scale_radius=None,
                  flux=1., trunc=0., flux_untruncated=False, gsparams=None):
-        GSObject.__init__(
-            self, galsim._galsim.SBSersic(n, half_light_radius=half_light_radius,
-                                          scale_radius=scale_radius, flux=flux,
-                                          trunc=trunc, flux_untruncated=flux_untruncated,
-                                          gsparams=gsparams))
+        GSObject.__init__(self, _galsim.SBSersic(n, scale_radius, half_light_radius,flux, trunc,
+                                                 flux_untruncated, gsparams))
 
     def getN(self):
         """Return the Sersic index `n` for this profile.
@@ -2125,6 +2145,10 @@ class Sersic(GSObject):
         """Return the scale radius for this Sersic profile.
         """
         return self.SBProfile.getScaleRadius()
+
+_galsim.SBSersic.__getinitargs__ = lambda self: \
+        (self.getN(), self.getScaleRadius(), None, self.getFlux(), self.getTrunc(),
+         False, self.getGSParams())
 
 
 class Exponential(GSObject):
@@ -2156,20 +2180,28 @@ class Exponential(GSObject):
         >>> r0 = exp_obj.getScaleRadius()
         >>> hlr = exp_obj.getHalfLightRadius()
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = {}
     _opt_params = { "flux" : float }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
     _takes_logger = False
 
-    # --- Public Class methods ---
+    # The half-light-radius is not analytic, but can be calculated numerically.
+    _hlr_factor = 1.6783469900166605
+
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., gsparams=None):
-        GSObject.__init__(
-            self, galsim._galsim.SBExponential(
-                half_light_radius=half_light_radius, scale_radius=scale_radius, flux=flux,
-                gsparams=gsparams))
+        if half_light_radius is not None:
+            if scale_radius is not None:
+                raise TypeError(
+                        "Only one of scale_radius and half_light_radius may be " +
+                        "specified for Exponential")
+            else:
+                scale_radius = half_light_radius / Exponential._hlr_factor
+        elif scale_radius is None:
+                raise TypeError(
+                        "Either scale_radius or half_light_radius must be " +
+                        "specified for Exponential")
+        GSObject.__init__(self, _galsim.SBExponential(scale_radius, flux, gsparams))
 
     def getScaleRadius(self):
         """Return the scale radius for this Exponential profile.
@@ -2181,7 +2213,10 @@ class Exponential(GSObject):
         """
         # Factor not analytic, but can be calculated by iterative solution of equation:
         #  (re / r0) = ln[(re / r0) + 1] + ln(2)
-        return self.SBProfile.getScaleRadius() * 1.6783469900166605
+        return self.SBProfile.getScaleRadius() * Exponential._hlr_factor
+
+_galsim.SBExponential.__getinitargs__ = lambda self: \
+        (self.getScaleRadius(), self.getFlux(), self.getGSParams())
 
 
 class DeVaucouleurs(GSObject):
@@ -2223,22 +2258,16 @@ class DeVaucouleurs(GSObject):
         >>> r0 = devauc_obj.getScaleRadius()
         >>> hlr = devauc_obj.getHalfLightRadius()
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = {}
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
     _takes_logger = False
 
-    # --- Public Class methods ---
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., trunc=0.,
                  flux_untruncated=False, gsparams=None):
-        GSObject.__init__(
-            self, galsim._galsim.SBDeVaucouleurs(half_light_radius=half_light_radius,
-                                                 scale_radius=scale_radius, flux=flux, trunc=trunc,
-                                                 flux_untruncated=flux_untruncated,
-                                                 gsparams=gsparams))
+        GSObject.__init__(self, _galsim.SBDeVaucouleurs(scale_radius, half_light_radius, flux,
+                                                        trunc, flux_untruncated, gsparams))
 
     def getHalfLightRadius(self):
         """Return the half light radius for this DeVaucouleurs profile.
@@ -2249,6 +2278,9 @@ class DeVaucouleurs(GSObject):
         """Return the scale radius for this DeVaucouleurs profile.
         """
         return self.SBProfile.getScaleRadius()
+
+_galsim.SBDeVaucouleurs.__getinitargs__ = lambda self: \
+        (self.getScaleRadius(), None, self.getFlux(), self.getTrunc(), False, self.getGSParams())
 
 
 class Spergel(GSObject):
@@ -2317,21 +2349,16 @@ class Spergel(GSObject):
         >>> r0 = spergel_obj.getScaleRadius()
         >>> hlr = spergel_obj.getHalfLightRadius()
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = { "nu" : float }
     _opt_params = { "flux" : float}
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
     _takes_logger = False
 
-    # --- Public Class methods ---
     def __init__(self, nu, half_light_radius=None, scale_radius=None,
                  flux=1., gsparams=None):
-        GSObject.__init__(
-            self, galsim._galsim.SBSpergel(nu, half_light_radius=half_light_radius,
-                                           scale_radius=scale_radius, flux=flux,
-                                           gsparams=gsparams))
+        GSObject.__init__(self, _galsim.SBSpergel(nu, scale_radius, half_light_radius, flux, 
+                                                  gsparams))
 
     def getNu(self):
         """Return the Spergel index `nu` for this profile.
@@ -2347,6 +2374,9 @@ class Spergel(GSObject):
         """Return the scale radius for this Spergel profile.
         """
         return self.SBProfile.getScaleRadius()
+
+_galsim.SBSpergel.__getinitargs__ = lambda self: \
+        (self.getNu(), self.getScaleRadius(), None, self.getFlux(), self.getGSParams())
 
 
 # GSParams is defined in C++ and wrapped.  But we want to modify it here slightly to add
@@ -2463,3 +2493,23 @@ small_fraction_of_flux      When photon shooting, intervals with less than this 
                             probability are considered ok to use with the dominant-sampling
                             algorithm. [default: 1.e-4]
 """
+
+_galsim.GSParams.__getinitargs__ = lambda self: \
+        (self.minimum_fft_size, self.maximum_fft_size, 
+         self.folding_threshold, self.stepk_minimum_hlr, self.maxk_threshold,
+         self.kvalue_accuracy, self.xvalue_accuracy, self.table_spacing,
+         self.realspace_relerr, self.realspace_abserr, 
+         self.integration_relerr, self.integration_abserr,
+         self.shoot_accuracy, self.allowed_flux_variation,
+         self.range_division_for_extrema, self.small_fraction_of_flux)
+
+_galsim.GSParams.__repr__ = lambda self: \
+        ('galsim.GSParams({0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},' +\
+         '{13},{14},{15})').format(
+            self.minimum_fft_size, self.maximum_fft_size, 
+            self.folding_threshold, self.stepk_minimum_hlr, self.maxk_threshold,
+            self.kvalue_accuracy, self.xvalue_accuracy, self.table_spacing,
+            self.realspace_relerr, self.realspace_abserr, 
+            self.integration_relerr, self.integration_abserr,
+            self.shoot_accuracy, self.allowed_flux_variation,
+            self.range_division_for_extrema, self.small_fraction_of_flux)

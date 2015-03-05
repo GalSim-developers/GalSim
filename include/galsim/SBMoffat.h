@@ -79,6 +79,9 @@ namespace galsim {
         /// @brief Returns the half light radius of the Moffat profile.
         double getHalfLightRadius() const;
 
+        /// @brief Returns thre truncation radius.
+        double getTrunc() const;
+
     protected:
 
         class SBMoffatImpl;
