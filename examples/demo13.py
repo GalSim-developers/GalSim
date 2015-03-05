@@ -173,18 +173,23 @@ def main(argv):
     for filter_name, filter_ in filters.iteritems():
         logger.info('Beginning work for {0}.'.format(filter_name))
 
-        # Drawing PSF.  Note that the PSF object intrinsically has a flat SED, so if we
-        # convolve it with a galaxy, it will properly take on the SED of the galaxy.  However,
-        # this does mean that the PSF image being drawn here is not quite the right PSF for
-        # the galaxy.  Indeed, the PSF for the galaxy effectively varies within it, since it
-        # differs for the bulge and the disk.  To make a real image, one would have to choose SEDs
-        # for stars and convolve with a star that has a reasonable SED, but we just 
-        # draw with a flat SED for this demo.
+        # Drawing PSF.  Note that the PSF object intrinsically has a flat SED, so if we convolve it
+        # with a galaxy, it will properly take on the SED of the galaxy.  For the sake of this demo,
+        # we will simply convolve with a 'star' that has a flat SED and unit flux in this band, so
+        # that the PSF image will be normalized to unit flux. This does mean that the PSF image
+        # being drawn here is not quite the right PSF for the galaxy.  Indeed, the PSF for the
+        # galaxy effectively varies within it, since it differs for the bulge and the disk.  To make
+        # a real image, one would have to choose SEDs for stars and convolve with a star that has a
+        # reasonable SED, but we just draw with a flat SED for this demo.
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
+        # Approximate a point source.
+        point = galsim.Gaussian(sigma=1.e-8, flux=1.)
+        # Use a flat SED here, but could use something else.  A stellar SED for instance.  
+        # Or a typical galaxy SED.  Depending on your purpose for drawing the PSF.
+        star_sed = galsim.SED(lambda x:1).withFlux(1.,filter_)  # Give it unit flux in this filter.
+        star = galsim.Convolve(point*star_sed, PSF)
         img_psf = galsim.ImageF(64,64)
-        PSF.drawImage(bandpass=filter_, image=img_psf, scale=wfirst.pixel_scale)
-        # Artificially normalize to a total flux of 1 for display purposes.
-        img_psf /= img_psf.array.sum()
+        star.drawImage(bandpass=filter_, image=img_psf, scale=wfirst.pixel_scale)
         img_psf.write(out_filename)
         logger.debug('Created PSF with flat SED for {0}-band'.format(filter_name))
 
