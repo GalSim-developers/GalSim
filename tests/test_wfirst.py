@@ -57,20 +57,33 @@ def test_wfirst_wcs():
     pix_area_ratio = []
     for i_test in range(len(ra_test)):
         # Make the WCS for this test.
-        try:
-            world_pos = galsim.CelestialCoord(ra_test[i_test]*galsim.degrees,
-                                              dec_test[i_test]*galsim.degrees)
-            all_gs_wcs = galsim.wfirst.getWCS(pa_test[i_test]*galsim.degrees,
-                                              world_pos=world_pos,
-                                              PA_is_FPA=pa_is_fpa_test[i_test])
-        except ImportError:
-            print "Cannot find any software to read the WFIRST WCS.  Skipping this test."
-            return
+        world_pos = galsim.CelestialCoord(ra_test[i_test]*galsim.degrees,
+                                          dec_test[i_test]*galsim.degrees)
+        if i_test == 0:
+            # Just for this case, we want to get the WCS for all SCAs.  This will enable some
+            # additional tests that we don't do for the other test case.
+            gs_wcs_dict = galsim.wfirst.getWCS(pa_test[i_test]*galsim.degrees,
+                                               world_pos=world_pos,
+                                               PA_is_FPA=pa_is_fpa_test[i_test])
+            np.testing.assert_equal(
+                len(gs_wcs_dict), galsim.wfirst.n_sca,
+                err_msg='WCS dict has wrong length: %d vs. %d'%(len(gs_wcs_dict),
+                                                                galsim.wfirst.n_sca))
+        else:
+            # Use the SCAs keyword to just get the WCS for the SCA that we want.
+            gs_wcs_dict = galsim.wfirst.getWCS(pa_test[i_test]*galsim.degrees,
+                                               world_pos=world_pos,
+                                               PA_is_FPA=pa_is_fpa_test[i_test],
+                                               SCAs=sca_test[i_test])
+            np.testing.assert_equal(
+                len(gs_wcs_dict), 1,
+                err_msg='WCS dict has wrong length: %d vs. %d'%(len(gs_wcs_dict), 1))
+
         # Read in reference.
         test_file = 'test%d_sca_%02d.fits'%(i_test+1, sca_test[i_test])
         ref_wcs = galsim.FitsWCS(os.path.join('wfirst_files',test_file))
 
-        gs_wcs = all_gs_wcs[sca_test[i_test]]
+        gs_wcs = gs_wcs_dict[sca_test[i_test]]
 
         # Check center position:
         im_cent_pos = galsim.PositionD(galsim.wfirst.n_pix/2., galsim.wfirst.n_pix/2)
@@ -87,6 +100,25 @@ def test_wfirst_wcs():
         ref_other_pos = ref_wcs.toWorld(im_other_pos)
         gs_other_pos = gs_wcs.toWorld(im_other_pos)
         dist_2_arcsec.append(ref_other_pos.distanceTo(gs_other_pos) / galsim.arcsec)
+
+        if i_test == 0:
+            # For just one of our tests cases, we'll do some additional tests.  These will target
+            # the findSCA() functionality.  First, we'll choose an SCA and check that its center is
+            # found to be in that SCA.
+            found_sca = galsim.wfirst.findSCA(gs_wcs_dict, gs_cent_pos)
+            np.testing.assert_equal(found_sca, sca_test[i_test],
+                                    err_msg='Did not find SCA center position to be on that SCA!')
+
+            # Then, we go to a place that should be off the side by a tiny bit, and check that it is
+            # NOT on an SCA if we exclude borders, but IS on the SCA if we include borders.
+            im_off_edge_pos = galsim.PositionD(-2., galsim.wfirst.n_pix/2.)
+            world_off_edge_pos = gs_wcs.toWorld(im_off_edge_pos)
+            found_sca = galsim.wfirst.findSCA(gs_wcs_dict, world_off_edge_pos)
+            assert found_sca is None
+            found_sca = galsim.wfirst.findSCA(gs_wcs_dict, world_off_edge_pos, include_border=True)
+            np.testing.assert_equal(found_sca, sca_test[i_test],
+                                    err_msg='Did not find slightly off-edge position on the SCA'
+                                    ' when including borders!')
 
     np.testing.assert_array_less(
         np.array(dist_arcsec),
