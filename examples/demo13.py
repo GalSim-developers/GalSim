@@ -89,19 +89,17 @@ def main(argv):
     cat_file_name = 'real_galaxy_23.5_500_fits.fits'
     dir = 'data'
     # Use the routine that can take COSMOS real or parametric galaxy information, and tell it we
-    # want parametric galaxies.
-    cat = galsim.makeCOSMOSCatalog(cat_file_name, dir=dir, use_real=False)
+    # want parametric galaxies that represent an I<25 sample.
+    cat = galsim.makeCOSMOSCatalog(cat_file_name, dir=dir, use_real=False, deep_sample=True)
     logger.info('Read in %d galaxies from catalog'%len(cat))
     # Just use a few galaxies, to save time.  Note that we are going to put 4000 galaxy images into
     # our big image, so if we have n_use=10, each galaxy will appear 400 times.  Users who want a
     # more interesting image with greater variation in the galaxy population can change `n_use` to
-    # something larger that evenly divides 4000 (but it should be <=500, which is the number of
-    # galaxies in the catalog).  The code is not set up to handle values of n_use that do not evenly
-    # divide n_tot, though it would not be very hard to do so.  With 4000 galaxies in a 4k x 4k
-    # image with the WFIRST pixel scale, the effective galaxy number density is 74/arcmin^2
+    # something larger (but it should be <=500, which is the number of galaxies in this small
+    # example catalog).  With 4000 galaxies in a 4k x 4k image with the WFIRST pixel scale, the
+    # effective galaxy number density is 74/arcmin^2
     n_use = 10
     n_tot = 4000
-    n_per_gal = n_tot / n_use
 
     # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
@@ -207,7 +205,7 @@ def main(argv):
             gal_list[i_gal].drawImage(filter_, image=stamp)
 
             # Have to find where to place it:
-            for i_gal_use in range(i_gal*n_per_gal, i_gal*(n_per_gal+1)):
+            for i_gal_use in range(i_gal*n_tot/n_use, (i_gal+1)*n_tot/n_use):
                 # Account for the fractional part of the position:
                 ix = int(math.floor(x_stamp[i_gal_use]+0.5))
                 iy = int(math.floor(y_stamp[i_gal_use]+0.5))
