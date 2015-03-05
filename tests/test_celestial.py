@@ -460,8 +460,8 @@ def test_ecliptic():
 
     # Use locations of ecliptic poles from http://en.wikipedia.org/wiki/Ecliptic_pole
     north_pole = galsim.CelestialCoord(
-        galsim.angle.HMS_Angle('18:00:00.00'),
-        galsim.angle.parse_dms('66:33:38.55')*galsim.degrees)
+        galsim.HMS_Angle('18:00:00.00'),
+        galsim.DMS_Angle('66:33:38.55'))
     el, b = north_pole.ecliptic()
     # North pole should have b=90 degrees, with el being completely arbitrary.  Note that
     # imprecision of test is because the routine does not have the most accurate expression for the
@@ -469,11 +469,22 @@ def test_ecliptic():
     numpy.testing.assert_almost_equal(b.rad(), pi/2, decimal=2)
 
     south_pole = galsim.CelestialCoord(
-        galsim.angle.HMS_Angle('06:00:00.00'),
-        galsim.angle.parse_dms('-66:33:38.55')*galsim.degrees)
+        galsim.HMS_Angle('06:00:00.00'),
+        galsim.DMS_Angle('-66:33:38.55'))
     el, b = south_pole.ecliptic()
     # South pole should have b=-90 degrees, with el being completely arbitrary.
     numpy.testing.assert_almost_equal(b.rad(), -pi/2, decimal=2)
+
+    # Also confirm that positions that should be the same in equatorial and ecliptic coordinates are
+    # actually the same:
+    vernal_equinox = galsim.CelestialCoord(0.*galsim.radians, 0.*galsim.radians)
+    el, b = vernal_equinox.ecliptic()
+    numpy.testing.assert_almost_equal(b.rad(), 0., decimal=6)
+    numpy.testing.assert_almost_equal(el.rad(), 0., decimal=6)
+    autumnal_equinox = galsim.CelestialCoord(numpy.pi*galsim.radians, 0.*galsim.radians)
+    el, b = autumnal_equinox.ecliptic()
+    numpy.testing.assert_almost_equal(el.rad(), np.pi, decimal=6)
+    numpy.testing.assert_almost_equal(b.rad(), 0., decimal=6)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
