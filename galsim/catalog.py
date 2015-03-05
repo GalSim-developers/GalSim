@@ -415,11 +415,11 @@ def makeCOSMOSCatalog(file_name, use_real=True, image_dir=None, dir=None, noise_
         return cat
 
     else:
-        from real import parse_files_dirs
+        from real import _parse_files_dirs
 
         # Find the file.
         use_file_name, _, _ = \
-            parse_files_dirs(file_name, image_dir, dir, noise_dir)
+            _parse_files_dirs(file_name, image_dir, dir, noise_dir)
 
         # Read in data.
         cat = pyfits.getdata(use_file_name)

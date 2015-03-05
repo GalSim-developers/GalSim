@@ -328,7 +328,7 @@ class RealGalaxyCatalog(object):
                  noise_dir=None, logger=None, nobjects_only=False):
 
         self.file_name, self.image_dir, self.noise_dir = \
-            parse_files_dirs(file_name, image_dir, dir, noise_dir)
+            _parse_files_dirs(file_name, image_dir, dir, noise_dir)
 
         cat = pyfits.getdata(self.file_name)
         self.nobjects = len(cat) # number of objects in the catalog
@@ -636,7 +636,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     # return simulated image
     return image
 
-def parse_files_dirs(file_name, image_dir, dir, noise_dir):
+def _parse_files_dirs(file_name, image_dir, dir, noise_dir):
     if file_name is None:
         if dir is not None:
             raise ValueError('Cannot specify dir when using default file_name.')
@@ -649,7 +649,7 @@ def parse_files_dirs(file_name, image_dir, dir, noise_dir):
         if not os.path.isfile(full_file_name):
             raise RuntimeError('No RealGalaxy catalog found in %s.  '%dir +
                                'Run the program galsim_download_cosmos to download catalog '+
-                               'and accompanying image file.')
+                               'and accompanying image files.')
     elif dir is None:
         full_file_name = file_name
         if image_dir is None:
