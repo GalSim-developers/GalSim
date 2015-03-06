@@ -121,6 +121,11 @@ dLookupTableResult = (0.23721845680847731, 0.42913599265739233, 0.86176396813243
 # File with the same values
 dLookupTableFile = os.path.join('random_data','dLookupTable.dat')
 
+# A short helper function to test pickling of noise objects
+def drawNoise(noise):
+    im = galsim.ImageD(10,10)
+    im.addNoise(noise)
+    return im.array.astype(np.float32).tolist()
 
 def test_uniform():
     """Test uniform random number generator
@@ -448,8 +453,10 @@ def test_gaussian():
             err_msg="GaussianNoise().withScaledVariance results in wrong sigma")
  
     # Check picklability
-    do_pickle(g)
-    do_pickle(gn)
+    do_pickle(g, lambda x: (x.serialize(), x.getMean(), x.getSigma()))
+    do_pickle(g, lambda x: (x(), x(), x(), x()))
+    do_pickle(gn, lambda x: (x.rng.serialize(), x.sigma))
+    do_pickle(gn, drawNoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -561,7 +568,8 @@ def test_binomial():
             err_msg='Wrong binomial random number sequence generated when applied to image.')
 
     # Check picklability
-    do_pickle(b)
+    do_pickle(b, lambda x: (x.serialize(), x.getN(), x.getP()))
+    do_pickle(b, lambda x: (x(), x(), x(), x()))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -774,8 +782,10 @@ def test_poisson():
             err_msg="PoissonNoise().withScaledVariance results in wrong skyLevel")
 
     # Check picklability
-    do_pickle(p)
-    do_pickle(pn)
+    do_pickle(p, lambda x: (x.serialize(), x.getMean()))
+    do_pickle(p, lambda x: (x(), x(), x(), x()))
+    do_pickle(pn, lambda x: (x.rng.serialize(), x.sky_level))
+    do_pickle(pn, drawNoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -895,7 +905,8 @@ def test_weibull():
             err_msg='Wrong weibull random number sequence generated when applied to image.')
 
     # Check picklability
-    do_pickle(w)
+    do_pickle(w, lambda x: (x.serialize(), x.getA(), x.getB()))
+    do_pickle(w, lambda x: (x(), x(), x(), x()))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1005,7 +1016,8 @@ def test_gamma():
             err_msg='Wrong gamma random number sequence generated when applied to image.')
 
     # Check picklability
-    do_pickle(g)
+    do_pickle(g, lambda x: (x.serialize(), x.getK(), x.getTheta()))
+    do_pickle(g, lambda x: (x(), x(), x(), x()))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1115,7 +1127,8 @@ def test_chi2():
             err_msg='Wrong Chi^2 random number sequence generated when applied to image.')
 
     # Check picklability
-    do_pickle(c)
+    do_pickle(c, lambda x: (x.serialize(), x.getN()))
+    do_pickle(c, lambda x: (x(), x(), x(), x()))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1265,7 +1278,7 @@ def test_distfunction():
             err_msg='Wrong DistDeviate random number sequence generated when applied to image.')
  
     # Check picklability
-    do_pickle(d)
+    do_pickle(d, lambda x: (x(), x(), x(), x()))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1344,7 +1357,7 @@ def test_distLookupTable():
             err_msg='Wrong DistDeviate random number sequence generated when applied to image.')
 
     # Check picklability
-    do_pickle(d)
+    do_pickle(d, lambda x: (x(), x(), x(), x()))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1563,7 +1576,8 @@ def test_ccdnoise():
             err_msg="CCDNoise().withScaledVariance results in wrong ReadNoise")
 
     # Check picklability
-    do_pickle(ccdnoise)
+    do_pickle(ccdnoise, lambda x: (x.rng.serialize(), x.sky_level, x.gain, x.read_noise))
+    do_pickle(ccdnoise, drawNoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

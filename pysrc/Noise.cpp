@@ -102,7 +102,7 @@ namespace galsim {
             bp::class_<BaseNoiseCallBack,boost::noncopyable> pyBaseNoise(
                 "BaseNoise", "", bp::no_init);
             pyBaseNoise
-                .def(bp::init<boost::shared_ptr<BaseDeviate> >(bp::arg("rng")=bp::object()))
+                // No init defined.  Cannot create a bare BaseNoise class.
                 .def("getRNG", &BaseNoise::getRNG, "")
                 .def("setRNG", &BaseNoise::setRNG, "")
                 .add_property("rng", &BaseNoise::getRNG)
@@ -131,6 +131,7 @@ namespace galsim {
                 .def("getSigma", &GaussianNoise::getSigma, "")
                 .def("setSigma", &GaussianNoise::setSigma, "")
                 .add_property("sigma", &GaussianNoise::getSigma)
+                .enable_pickling()
                 ;
         }
 
@@ -149,6 +150,7 @@ namespace galsim {
                 .def("getSkyLevel", &PoissonNoise::getSkyLevel, "")
                 .def("setSkyLevel", &PoissonNoise::setSkyLevel, "")
                 .add_property("sky_level", &PoissonNoise::getSkyLevel)
+                .enable_pickling()
                 ;
         }
 
@@ -174,6 +176,7 @@ namespace galsim {
                 .add_property("sky_level", &CCDNoise::getSkyLevel)
                 .add_property("gain", &CCDNoise::getGain)
                 .add_property("read_noise", &CCDNoise::getReadNoise)
+                .enable_pickling()
                 ;
         }
 
@@ -189,6 +192,7 @@ namespace galsim {
                 "DeviateNoise", "", bp::no_init);
             pyDeviateNoise
                 .def(bp::init<boost::shared_ptr<BaseDeviate> >(bp::arg("dev")))
+                .enable_pickling()
                 ;
         }
 
@@ -206,6 +210,7 @@ namespace galsim {
             pyVarGaussianNoise
                 .def("getVarImage", &VarGaussianNoise::getVarImage, "")
                 .add_property("var_image", &VarGaussianNoise::getVarImage)
+                .enable_pickling()
                 ;
         }
 

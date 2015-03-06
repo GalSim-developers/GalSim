@@ -160,7 +160,7 @@ _galsim.BaseNoise.__mul__ = Noise_mul
 _galsim.BaseNoise.__rmul__ = Noise_mul
 _galsim.BaseNoise.__div__ = Noise_div
 _galsim.BaseNoise.__truediv__ = Noise_div
- 
+
 # GaussianNoise docstrings
 _galsim.GaussianNoise.__doc__ = """
 Class implementing simple Gaussian noise.
@@ -493,3 +493,11 @@ class VariableGaussianNoise(_galsim.BaseNoise):
     def scaleVariance(self, variance):
         raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
 
+# Enable pickling of the boost-python wrapped classes
+_galsim.GaussianNoise.__getinitargs__ = lambda self: (self.rng, self.sigma)
+_galsim.PoissonNoise.__getinitargs__ = lambda self: (self.rng, self.sky_level)
+_galsim.CCDNoise.__getinitargs__ = \
+        lambda self: (self.rng, self.sky_level, self.gain, self.read_noise)
+_galsim.DeviateNoise.__getinitargs__ = lambda self: (self.rng, )
+_galsim.VarGaussianNoise.__getinitargs__ = lambda self: (self.rng, self.var_image)
+ 

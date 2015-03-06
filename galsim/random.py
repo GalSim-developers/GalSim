@@ -232,6 +232,12 @@ class DistDeviate(_galsim.BaseDeviate):
     >>> d()
     -0.00909781188974034
     """    
+    # A little boiler plate here is required to override the effect of BaseDeviate.__getinitargs__
+    def __getinitargs__(self): return (0,None,None,None,None,256,False)
+    def __getstate__(self): return self.__dict__
+    def __setstate__(self,d): self.__dict__ = d
+    __getstate_manages_dict__ = True
+
     def __init__(self, seed=0, function=None, x_min=None, 
                  x_max=None, interpolant=None, npoints=256, _init=True, lseed=None):
         # lseed is an obsolete synonym for seed
@@ -374,6 +380,9 @@ class DistDeviate(_galsim.BaseDeviate):
         dup.__dict__.update(self.__dict__)
         dup._ud = self._ud.duplicate()
         return dup
+
+    def __copy__(self):
+        return self.duplicate()
 
 
 
@@ -639,20 +648,12 @@ _galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution `n` degree
 
 
 # Some functions to enable pickling of deviates
-_galsim.BaseDeviate.__getinitargs__ = lambda self: self.serialize()
-
-_galsim.UniformDeviate.__getinitargs__ = lambda self: self.serialize()
-
+_galsim.BaseDeviate.__getinitargs__ = lambda self: (self.serialize(),)
+_galsim.UniformDeviate.__getinitargs__ = lambda self: (self.serialize(),)
 _galsim.GaussianDeviate.__getinitargs__ = lambda self: \
         (self.serialize(), self.getMean(), self.getSigma())
-
 _galsim.BinomialDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getN(), self.getP())
-
 _galsim.PoissonDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getMean())
-
 _galsim.WeibullDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getA(), self.getB())
-
 _galsim.GammaDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getK(), self.getTheta())
-
 _galsim.Chi2Deviate.__getinitargs__ = lambda self: (self.serialize(), self.getN())
-

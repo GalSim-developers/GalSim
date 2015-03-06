@@ -162,6 +162,9 @@ namespace galsim {
         /// @brief return a serialization string for this BaseDeviate
         std::string serialize()
         { 
+            // When serializing, we need to make sure there is no cache being stored
+            // by the derived class.
+            clearCache();
             std::ostringstream oss;
             oss << *_rng; 
             return oss.str();

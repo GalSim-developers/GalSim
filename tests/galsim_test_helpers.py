@@ -229,15 +229,18 @@ def do_pickle(obj, func = lambda x : x):
     import cPickle, copy
     print 'Try pickling ',obj
 
-    print 'pickled obj = ',cPickle.dumps(obj)
+    #print 'pickled obj = ',cPickle.dumps(obj)
     obj1 = cPickle.loads(cPickle.dumps(obj))
     assert obj1 is not obj
-    print 'obj1 = ',obj1
+    #print 'obj1 = ',obj1
+    #print 'func(obj) = ',func(obj)
+    #print 'func(obj1) = ',func(obj1)
     assert func(obj1) == func(obj)
 
     obj2 = copy.copy(obj)
     assert obj2 is not obj
-    assert func(obj2) == func(obj)
+    if not hasattr(obj, 'rng'):  # Things with an rng attribute won't be identical on copy.
+        assert func(obj2) == func(obj)
 
     obj3 = copy.deepcopy(obj)
     assert obj3 is not obj
