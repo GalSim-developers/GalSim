@@ -93,22 +93,9 @@ galsim.Image.addNoiseSNR = addNoiseSNR
 _galsim.BaseNoise.getRNG.__func__.__doc__ = """
 Get the BaseDeviate used to generate random numbers for the current noise model.
 """
-_galsim.BaseNoise.setRNG.__func__.__doc__ = """
-Set the BaseDeviate used to generate random numbers for the current noise model.
-Discouraged; will be deprecated.
-"""
+
+
 _galsim.BaseNoise.getVariance.__func__.__doc__ = "Get variance in current noise model."
-
-def Noise_setVariance(self, variance):
-    """This is an obsolete method that is roughly equivalent to
-    `noise = noise.withVariance(variance)`.
-    """
-    self._setVariance(variance)
-
-def Noise_scaleVariance(self, variance_ratio):
-    """This is an obsolete method that is roughly equivalent to `noise = noise * variance_ratio`.
-    """
-    self._scaleVariance(variance_ratio)
 
 def Noise_withVariance(self, variance):
     """Return a new noise object (of the same type as the current one) with the specified variance.
@@ -135,8 +122,6 @@ def Noise_withScaledVariance(self, variance_ratio):
     ret._scaleVariance(variance_ratio)
     return ret
 
-_galsim.BaseNoise.setVariance = Noise_setVariance
-_galsim.BaseNoise.scaleVariance = Noise_scaleVariance
 _galsim.BaseNoise.withVariance = Noise_withVariance
 _galsim.BaseNoise.withScaledVariance = Noise_withScaledVariance
 
@@ -204,13 +189,18 @@ def GaussianNoise_applyTo(self, image):
 _galsim.GaussianNoise.applyTo = GaussianNoise_applyTo
 
 _galsim.GaussianNoise.getSigma.__func__.__doc__ = "Get `sigma` in current noise model."
-_galsim.GaussianNoise.setSigma.__func__.__doc__ = """
-Set `sigma` in current noise model.
-Discouraged; will be deprecated.
-"""
 
-def GaussianNoise_copy(self):
-    return _galsim.GaussianNoise(self.getRNG(),self.getSigma())
+def GaussianNoise_copy(self, rng=None):
+    """Returns a copy of the Gaussian noise model.
+
+    By default, the copy will share the BaseDeviate random number generator with the parent
+    instance.  However, you can provide a new rng to use in the copy if want with
+
+        >>> noise_copy = noise.copy(rng=new_rng)
+    """
+    if rng is None: rng = self.rng
+    return _galsim.GaussianNoise(rng, self.getSigma())
+
 _galsim.GaussianNoise.copy = GaussianNoise_copy
 
 
@@ -268,14 +258,20 @@ def PoissonNoise_applyTo(self, image):
 _galsim.PoissonNoise.applyTo = PoissonNoise_applyTo
 
 _galsim.PoissonNoise.getSkyLevel.__func__.__doc__ = "Get sky level in current noise model."
-_galsim.PoissonNoise.setSkyLevel.__func__.__doc__ = """
-Set sky level in current noise model.
-Discouraged; will be deprecated.
-"""
 
-def PoissonNoise_copy(self):
-    return _galsim.PoissonNoise(self.getRNG(),self.getSkyLevel())
+def PoissonNoise_copy(self, rng=None):
+    """Returns a copy of the Poisson noise model.
+
+    By default, the copy will share the BaseDeviate random number generator with the parent
+    instance.  However, you can provide a new rng to use in the copy if want with
+
+        >>> noise_copy = noise.copy(rng=new_rng)
+    """
+    if rng is None: rng = self.rng
+    return _galsim.PoissonNoise(rng, self.getSkyLevel())
+
 _galsim.PoissonNoise.copy = PoissonNoise_copy
+
 
 
 # CCDNoise docstrings
@@ -342,21 +338,18 @@ _galsim.CCDNoise.applyTo = CCDNoise_applyTo
 _galsim.CCDNoise.getSkyLevel.__func__.__doc__ = "Get sky level in current noise model."
 _galsim.CCDNoise.getGain.__func__.__doc__ = "Get gain in current noise model."
 _galsim.CCDNoise.getReadNoise.__func__.__doc__ = "Get read noise in current noise model."
-_galsim.CCDNoise.setSkyLevel.__func__.__doc__ = """
-Set sky level in current noise model.
-Discouraged; will be deprecated.
-"""
-_galsim.CCDNoise.setGain.__func__.__doc__ = """
-Set gain in current noise model.
-Discouraged; will be deprecated.
-"""
-_galsim.CCDNoise.setReadNoise.__func__.__doc__ = """
-Set read noise in current noise model.
-Discouraged; will be deprecated.
-"""
 
-def CCDNoise_copy(self):
-    return _galsim.CCDNoise(self.getRNG(),self.getSkyLevel(),self.getGain(),self.getReadNoise())
+def CCDNoise_copy(self, rng=None):
+    """Returns a copy of the CCD noise model.
+
+    By default, the copy will share the BaseDeviate random number generator with the parent
+    instance.  However, you can provide a new rng to use in the copy if want with
+
+        >>> noise_copy = noise.copy(rng=new_rng)
+    """
+    if rng is None: rng = self.rng
+    return _galsim.CCDNoise(rng, self.getSkyLevel(), self.getGain(), self.getReadNoise())
+
 _galsim.CCDNoise.copy = CCDNoise_copy
 
 
@@ -404,8 +397,18 @@ def DeviateNoise_applyTo(self, image):
     self.applyToView(image.image.view())
 _galsim.DeviateNoise.applyTo = DeviateNoise_applyTo
 
-def DeviateNoise_copy(self):
-    return _galsim.DeviateNoise(self.getRNG())
+def DeviateNoise_copy(self, rng=None):
+    """Returns a copy of the Deviate noise model.
+
+    By default, the copy will share the BaseDeviate random number generator with the parent
+    instance.  However, you can provide a new rng to use in the copy if want with
+
+        >>> noise_copy = noise.copy(rng=new_rng)
+    """
+    if rng is None: rng = self.rng
+    else: rng = self.rng.duplicate().reset(rng)
+    return _galsim.DeviateNoise(rng)
+
 _galsim.DeviateNoise.copy = DeviateNoise_copy
 
 # VariableGaussianNoise is a thin wrapper of the C++ VarGaussianNoise
@@ -478,8 +481,16 @@ class VariableGaussianNoise(_galsim.BaseNoise):
     @property
     def var_image(self): return self.getVarImage()
 
-    def copy(self):
-        return VariableGaussianNoise(self.getRNG(),self.getVarImage())
+    def copy(self, rng=None):
+        """Returns a copy of the variable Gaussian noise model.
+
+        By default, the copy will share the BaseDeviate random number generator with the parent
+        instance.  However, you can provide a new rng to use in the copy if want with
+
+            >>> noise_copy = noise.copy(rng=new_rng)
+        """
+        if rng is None: rng = self.rng
+        return VariableGaussianNoise(rng, self.getVarImage())
 
     def getVariance(self):
         raise RuntimeError("No single variance value for VariableGaussianNoise")

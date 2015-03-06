@@ -140,38 +140,32 @@ def test_float_value():
         np.testing.assert_almost_equal(ran2, rng() * 5 - 5)
 
     # Test values generated from a Gaussian deviate
-    gd = galsim.GaussianDeviate(rng)
     for k in range(6):
         config['obj_num'] = k
         gauss1 = galsim.config.ParseValue(config,'gauss1',config, float)[0]
-        gd.setMean(0)
-        gd.setSigma(1)
+        gd = galsim.GaussianDeviate(rng,mean=0,sigma=1)
         np.testing.assert_almost_equal(gauss1, gd())
 
         gauss2 = galsim.config.ParseValue(config,'gauss2',config, float)[0]
-        gd.setMean(4)
-        gd.setSigma(3)
+        gd = galsim.GaussianDeviate(rng,mean=4,sigma=3)
         np.testing.assert_almost_equal(gauss2, gd())
 
         gauss3 = galsim.config.ParseValue(config,'gauss3',config, float)[0]
-        gd.setMean(0)
-        gd.setSigma(1.5)
+        gd = galsim.GaussianDeviate(rng,mean=0,sigma=1.5)
         gd_val = gd()
         while math.fabs(gd_val) > 2:
             gd_val = gd()
         np.testing.assert_almost_equal(gauss3, gd_val)
 
         gauss4 = galsim.config.ParseValue(config,'gauss4',config, float)[0]
-        gd.setMean(0)
-        gd.setSigma(0.5)
+        gd = galsim.GaussianDeviate(rng,mean=0,sigma=0.5)
         gd_val = math.fabs(gd())
         while gd_val > 0.8:
             gd_val = math.fabs(gd())
         np.testing.assert_almost_equal(gauss4, gd_val)
 
         gauss5 = galsim.config.ParseValue(config,'gauss5',config, float)[0]
-        gd.setMean(0.5)
-        gd.setSigma(0.3)
+        gd = galsim.GaussianDeviate(rng,mean=0.5,sigma=0.3)
         gd_val = gd()
         if gd_val > 0.5: 
             gd_val = 1-gd_val

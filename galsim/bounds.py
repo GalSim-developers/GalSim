@@ -138,10 +138,6 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.getXMax.__func__.__doc__ = "Get the value of xmax."
     Class.getYMin.__func__.__doc__ = "Get the value of ymin."
     Class.getYMax.__func__.__doc__ = "Get the value of ymax."
-    Class.setXMin.__func__.__doc__ = "Set the value of xmin. (discouraged, will be deprecated)"
-    Class.setXMax.__func__.__doc__ = "Set the value of xmax. (discouraged, will be deprecated)"
-    Class.setYMin.__func__.__doc__ = "Set the value of ymin. (discouraged, will be deprecated)"
-    Class.setYMax.__func__.__doc__ = "Set the value of ymax. (discouraged, will be deprecated)"
     Class.shift.__func__.__doc__ = """Shift the Bounds instance by a supplied position
 
     Calling Examples

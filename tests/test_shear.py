@@ -198,26 +198,7 @@ def test_shear_methods():
     import time
     t1 = time.time()
     for ind in range(n_shear):
-        # check setE1E2
-        s = galsim.Shear()
-        s.setE1E2(e1[ind], e2[ind])
-        all_shear_vals(s, ind)
-        # check setEBeta
-        s = galsim.Shear()
-        s.setEBeta(e[ind], beta[ind]*galsim.radians)
-        all_shear_vals(s, ind)
-        # check setEta1Eta2
-        s = galsim.Shear()
-        s.setEta1Eta2(eta1[ind], eta2[ind])
-        all_shear_vals(s, ind)
-        # check setEtaBeta
-        s = galsim.Shear()
-        s.setEtaBeta(eta[ind], beta[ind]*galsim.radians)
-        all_shear_vals(s, ind)
-        # check setG1G2
-        s = galsim.Shear()
-        s.setG1G2(g1[ind], g2[ind])
-        all_shear_vals(s, ind)
+        s = galsim.Shear(e1=e1[ind], e2=e2[ind])
         # check negation
         s2 = -s
         all_shear_vals(s2, ind, mult_val = -1.0)

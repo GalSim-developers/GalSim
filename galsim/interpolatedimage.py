@@ -256,7 +256,10 @@ class InterpolatedImage(GSObject):
                  use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None,
                  _force_stepk=None, _force_maxk=None):
         # Check for obsolete dx parameter
-        if dx is not None and scale is None: scale = dx
+        if dx is not None and scale is None:
+            from galsim.deprecated import depr
+            depr('dx', 1.1, 'scale')
+            scale = dx
 
         import numpy
 
@@ -446,7 +449,7 @@ class InterpolatedImage(GSObject):
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note reverse=True, since we want to fix the center in the opposite sense of what the 
         # draw function does.
-        prof = self._fix_center(self.image, offset, use_true_center, reverse=True)
+        prof = self._fix_center(self.image.array.shape, offset, use_true_center, reverse=True)
 
         # Bring the profile from image coordinates into world coordinates
         prof = local_wcs.toWorld(prof)
@@ -473,9 +476,7 @@ class InterpolatedImage(GSObject):
         if isinstance(noise_pad, float):
             noise = galsim.GaussianNoise(rng, sigma = np.sqrt(noise_pad))
         elif isinstance(noise_pad, galsim.correlatednoise._BaseCorrelatedNoise):
-            noise = noise_pad.copy()
-            if rng: # Let a user supplied RNG take precedence over that in user CN
-                noise.rng = rng
+            noise = noise_pad.copy(rng=rng)
         elif isinstance(noise_pad,galsim.Image):
             noise = galsim.CorrelatedNoise(noise_pad, rng)
         elif self.use_cache and noise_pad in InterpolatedImage._cache_noise_pad:
@@ -483,7 +484,7 @@ class InterpolatedImage(GSObject):
             if rng:
                 # Make sure that we are using a specified RNG by resetting that in this cached
                 # CorrelatedNoise instance, otherwise preserve the cached RNG
-                noise.rng = rng
+                noise = noise.copy(rng=rng)
         elif isinstance(noise_pad, str):
             noise = galsim.CorrelatedNoise(galsim.fits.read(noise_pad), rng)
             if self.use_cache: 

@@ -47,7 +47,6 @@ import utilities
 from . import _galsim
 from ._galsim import GSParams
 
-
 class GSObject(object):
     """Base class for all GalSim classes that represent some kind of surface brightness profile.
 
@@ -87,11 +86,6 @@ class GSObject(object):
         >>> obj = obj.lens(g1,g2,mu)    # Apply both a lensing shear and magnification.
         >>> obj = obj.withFlux(flux)    # Set a new flux value.
         >>> obj = obj * ratio           # Scale the surface brightness profile by some factor.
-
-    [1]: Technically, there are some methods that do modify the object directly.  However, these
-    methods are only present for backwards compatibitility with previous versions of GalSim,
-    and they are currently discouraged.  They will be deprecated in a future version and
-    removed entirely in version 2.0.
 
     Access Methods
     --------------
@@ -304,10 +298,6 @@ class GSObject(object):
         """
         return self.SBProfile.nyquistDx()
 
-    def nyquistDx(self):
-        """An obsolete synonym for nyquistScale()"""
-        return self.nyquistScale()
-
     def stepK(self):
         """Returns sampling in k space necessary to avoid folding of image in x space.
         """
@@ -445,20 +435,6 @@ class GSObject(object):
             new_obj.noise = self.noise * flux_ratio**2
         return new_obj
 
-    def setFlux(self, flux):
-        """This is an obsolete method that is roughly equivalent to obj = obj.withFlux(flux)"""
-        new_obj = self.withFlux(flux)
-        self.SBProfile = new_obj.SBProfile
-        if hasattr(self,'noise'): self.noise = new_obj.noise
-        self.__class__ = new_obj.__class__
-
-    def scaleFlux(self, flux_ratio):
-        """This is an obsolete method that is roughly equivalent to obj = obj * flux_ratio"""
-        new_obj = self * flux_ratio
-        self.SBProfile = new_obj.SBProfile
-        if hasattr(self,'noise'): self.noise = new_obj.noise
-        self.__class__ = new_obj.__class__
-
     def expand(self, scale):
         """Expand the linear size of the profile by the given `scale` factor, while preserving
         surface brightness.
@@ -489,17 +465,6 @@ class GSObject(object):
             new_obj.noise = self.noise.expand(scale)
         return new_obj
 
-    def createExpanded(self, scale):
-        """This is an obsolete synonym for expand(scale)"""
-        return self.expand(scale)
-
-    def applyExpansion(self, scale):
-        """This is an obsolete method that is roughly equivalent to obj = obj.expand(scale)."""
-        new_obj = self.expand(scale)
-        self.SBProfile = new_obj.SBProfile
-        if hasattr(self,'noise'): self.noise = new_obj.noise
-        self.__class__ = new_obj.__class__
-
     def dilate(self, scale):
         """Dilate the linear size of the profile by the given `scale` factor, while preserving
         flux.
@@ -514,17 +479,6 @@ class GSObject(object):
         @returns the dilated object.
         """
         return self.expand(scale) * (1./scale**2)  # conserve flux
-
-    def createDilated(self, scale):
-        """This is an obsolete synonym for dilate(scale)"""
-        return self.dilate(scale)
-
-    def applyDilation(self, scale):
-        """This is an obsolete method that is roughly equivalent to obj = obj.dilate(scale)."""
-        new_obj = self.dilate(scale)
-        self.SBProfile = new_obj.SBProfile
-        if hasattr(self,'noise'): self.noise = new_obj.noise
-        self.__class__ = new_obj.__class__
 
     def magnify(self, mu):
         """Create a version of the current object with a lensing magnification applied to it,
@@ -545,17 +499,6 @@ class GSObject(object):
         """
         import math
         return self.expand(math.sqrt(mu))
-
-    def createMagnified(self, mu):
-        """This is an obsolete synonym for magnify(mu)"""
-        return self.magnify(mu)
-
-    def applyMagnification(self, mu):
-        """This is an obsolete method that is roughly equivalent to obj = obj.magnify(mu)"""
-        new_obj = self.magnify(mu)
-        self.SBProfile = new_obj.SBProfile
-        if hasattr(self,'noise'): self.noise = new_obj.noise
-        self.__class__ = new_obj.__class__
 
     def shear(self, *args, **kwargs):
         """Create a version of the current object with an area-preserving shear applied to it.
@@ -595,17 +538,6 @@ class GSObject(object):
             new_obj.noise = self.noise.shear(shear)
         return new_obj
 
-    def createSheared(self, *args, **kwargs):
-        """This is an obsolete synonym for shear(shear)"""
-        return self.shear(*args, **kwargs)
-
-    def applyShear(self, *args, **kwargs):
-        """This is an obsolete method that is roughly equivalent to obj = obj.shear(shear)"""
-        new_obj = self.shear(*args, **kwargs)
-        self.SBProfile = new_obj.SBProfile
-        if hasattr(self,'noise'): self.noise = new_obj.noise
-        self.__class__ = new_obj.__class__
-
     def lens(self, g1, g2, mu):
         """Create a version of the current object with both a lensing shear and magnification
         applied to it.
@@ -627,17 +559,6 @@ class GSObject(object):
         """
         return self.shear(g1=g1,g2=g2).magnify(mu)
 
-    def createLensed(self, g1, g2, mu):
-        """This is an obsolete synonym for lens(g1,g2,mu)"""
-        return self.lens(g1,g2,mu)
-
-    def applyLensing(self, g1, g2, mu):
-        """This is an obsolete method that is roughly equivalent to obj = obj.lens(g1,g2,mu)"""
-        new_obj = self.lens(g1,g2,mu)
-        self.SBProfile = new_obj.SBProfile
-        if hasattr(self,'noise'): self.noise = new_obj.noise
-        self.__class__ = new_obj.__class__
-
     def rotate(self, theta):
         """Rotate this object by an Angle `theta`.
 
@@ -656,17 +577,6 @@ class GSObject(object):
         if hasattr(self,'noise'):
             new_obj.noise = self.noise.rotate(theta)
         return new_obj
-
-    def createRotated(self, theta):
-        """This is an obsolete synonym for rotate(theta)"""
-        return self.rotate(theta)
-
-    def applyRotation(self, theta):
-        """This is an obsolete method that is roughly equivalent to obj = obj.rotate(theta)"""
-        new_obj = self.rotate(theta)
-        self.SBProfile = new_obj.SBProfile
-        if hasattr(self,'noise'): self.noise = new_obj.noise
-        self.__class__ = new_obj.__class__
 
     def transform(self, dudx, dudy, dvdx, dvdy):
         """Create a version of the current object with an arbitrary Jacobian matrix transformation
@@ -704,17 +614,6 @@ class GSObject(object):
             new_obj.noise = self.noise.transform(dudx,dudy,dvdx,dvdy)
         return new_obj
 
-    def createTransformed(self, dudx, dudy, dvdx, dvdy):
-        """This is an obsolete sysnonym for transform()"""
-        return self.transform(dudx,dudy,dvdx,dvdy)
-
-    def applyTransformation(self, dudx, dudy, dvdx, dvdy):
-        """This is an obsolete method that is roughly equivalent to obj = obj.transform(...)"""
-        new_obj = self.transform(dudx,dudy,dvdx,dvdy)
-        self.SBProfile = new_obj.SBProfile
-        if hasattr(self,'noise'): self.noise = new_obj.noise
-        self.__class__ = new_obj.__class__
-
     def shift(self, *args, **kwargs):
         """Create a version of the current object shifted by some amount in real space.
 
@@ -741,17 +640,6 @@ class GSObject(object):
         if hasattr(self,'noise'):
             new_obj.noise = self.noise.copy()
         return new_obj
-
-    def createShifted(self, *args, **kwargs):
-        """This is an obsolete synonym for shift(dx,dy)"""
-        return self.shift(*args,**kwargs)
-
-    def applyShift(self, *args, **kwargs):
-        """This is an obsolete method that is roughly equivalent to obj = obj.shift(dx,dy)"""
-        new_obj = self.shift(*args,**kwargs)
-        self.SBProfile = new_obj.SBProfile
-        if hasattr(self,'noise'): self.noise = new_obj.noise
-        self.__class__ = new_obj.__class__
 
 
     # Make sure the image is defined with the right size and wcs for drawImage()
@@ -831,14 +719,19 @@ class GSObject(object):
                 # Let python raise the appropriate exception if this isn't valid.
                 return galsim.PositionD(offset[0], offset[1])
 
-
-    def _fix_center(self, image, offset, use_true_center, reverse):
-        # Note: this assumes self is in terms of image coordinates.
-        if image is None or not image.bounds.isDefined():
-            shape = (0,0)
-        else:
+    def _get_shape(self, image, nx, ny, bounds):
+        if image is not None and image.bounds.isDefined():
             shape = image.array.shape
+        elif nx is not None and ny is not None:
+            shape = (ny,nx)
+        elif bounds is not None and bounds.isDefined():
+            shape = (bounds.ymax-bounds.ymin+1, bounds.xmax-bounds.xmin+1)
+        else:
+            shape = (0,0)
+        return shape
 
+    def _fix_center(self, shape, offset, use_true_center, reverse):
+        # Note: this assumes self is in terms of image coordinates.
         if use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the
             # pixel just up and right of the real center.  So shift it back to make sure it really
@@ -1128,7 +1021,10 @@ class GSObject(object):
         @returns the drawn Image.
         """
         # Check for obsolete dx parameter
-        if dx is not None and scale is None: scale = dx
+        if dx is not None and scale is None:
+            from .deprecated import depr
+            depr('dx', 1.1, 'scale')
+            scale = dx
 
         # Check that image is sane
         if image is not None and not isinstance(image, galsim.Image):
@@ -1231,7 +1127,8 @@ class GSObject(object):
             prof = galsim.Convolve(prof, galsim.Pixel(scale = 1.0), real_space=real_space)
 
         # Apply the offset, and possibly fix the centering for even-sized images
-        prof = prof._fix_center(image, offset, use_true_center, reverse=False)
+        shape = prof._get_shape(image, nx, ny, bounds)
+        prof = prof._fix_center(shape, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
         image = prof._setup_image(image, nx, ny, bounds, wmult, add_to_image, dtype)
@@ -1266,41 +1163,6 @@ class GSObject(object):
             image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
 
         return image
-
-    def draw(self, *args, **kwargs):
-        """An obsolete synonym for obj.drawImage(method='no_pixel')
-        """
-        normalization = kwargs.pop('normalization','f')
-        if normalization in ['flux','f']:
-            return self.drawImage(*args, method='no_pixel', **kwargs)
-        else:
-            return self.drawImage(*args, method='sb', **kwargs)
-
-    def drawShoot(self, *args, **kwargs):
-        """An obsolete synonym for obj.drawImage(method='phot')
-        """
-        normalization = kwargs.pop('normalization','f')
-        if normalization in ['flux','f']:
-            return self.drawImage(*args, method='phot', **kwargs)
-        else:
-            # We don't have a method for this, but I think it must be rare.  Photon shooting
-            # with surface brightness normalization seems pretty odd.  We do use it in the test
-            # suite a few times though.  So, need to reproduce a bit of code to get the
-            # pixel area to switch to sb normalization (via the gain).
-            if len(args) > 0:
-                image = args[0]
-            else:
-                image = kwargs.get('image', None)
-            scale = kwargs.get('scale', None)
-            wcs = kwargs.get('wcs', None)
-            offset = kwargs.get('offset', None)
-            use_true_center = kwargs.get('use_true_center', None)
-            wcs = self._determine_wcs(scale, wcs, image)
-            offset = self._parse_offset(offset)
-            local_wcs = self._local_wcs(wcs, image, offset, use_true_center)
-            gain = kwargs.pop('gain',1.)
-            gain *= local_wcs.pixelArea()
-            return self.drawImage(*args, method='phot', gain=gain, **kwargs)
 
     def drawKImage(self, re=None, im=None, nx=None, ny=None, bounds=None, scale=None, dtype=None,
                    gain=1., wmult=1., add_to_image=False, dk=None):
@@ -1349,7 +1211,10 @@ class GSObject(object):
         @returns the tuple of Image instances, `(re, im)` (created if necessary)
         """
         # Check for obsolete dk parameter
-        if dk is not None and scale is None: scale = dk
+        if dk is not None and scale is None:
+            from .deprecated import depr
+            depr('dx', 1.1, 'scale')
+            scale = dk
 
         # Make sure the type of gain is correct and has a valid value:
         if type(gain) != float:
@@ -1421,11 +1286,6 @@ class GSObject(object):
         prof.SBProfile.drawK(review.image, imview.image, gain, wmult)
 
         return re,im
-
-    def drawK(self, *args, **kwargs):
-        """An obsolete synonym for drawKImage()
-        """
-        return self.drawKImage(*args, **kwargs)
 
 
 # --- Now defining the derived classes ---
@@ -2591,22 +2451,6 @@ _galsim.SBSpergel.__getinitargs__ = lambda self: \
         (self.getNu(), self.getScaleRadius(), None, self.getFlux(), self.getGSParams())
 _galsim.SBSpergel.__repr__ = lambda self: 'galsim._galsim.SBSpergel(%r, %r, %r, %r, %r)'%(
         self.getNu(), self.getScaleRadius(), None, self.getFlux(), self.getGSParams())
-
-
-# GSParams is defined in C++ and wrapped.  But we want to modify it here slightly to add
-# the obsolete name alias_threshold as a valid synonym for folding_threshold
-GSParams.alias_threshold = property(lambda self: self.folding_threshold,
-                                    lambda self, val: setattr(self,'folding_threshold',val))
-
-# Also update the constructor to allow this name.
-_orig_GSP_init = GSParams.__init__
-def _new_GSP_init(self, *args, **kwargs):
-    if 'alias_threshold' in kwargs:
-        if 'folding_threshold' in kwargs:
-            raise TypeError('Cannot specify both alias_threshold and folding_threshold')
-        kwargs['folding_threshold'] = kwargs.pop('alias_threshold')
-    _orig_GSP_init(self, *args, **kwargs)
-GSParams.__init__ = _new_GSP_init
 
 
 # Set the docstring for GSParams here.  It's easier to edit in the python layer than using

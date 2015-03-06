@@ -120,8 +120,6 @@ def test_scattered():
     image2 = galsim.ImageF(size,size, scale=scale)
     image2.setZero()
     gal = galsim.Gaussian(sigma=sigma, flux=flux)
-    pix = galsim.Pixel(scale)
-    conv = galsim.Convolve([pix,gal])
 
     for (i,x,y) in [ (0,x1,y1), (1,x2,y2), (2,x3,y3) ]:
         stamp = galsim.ImageF(stamp_size+i,stamp_size+i, scale=scale)
@@ -133,8 +131,7 @@ def test_scattered():
         stamp.setCenter(ix,iy)
         dx = x-ix
         dy = y-iy
-        conv2 = conv.createShifted(dx*scale,dy*scale)
-        conv2.draw(stamp)
+        gal.drawImage(stamp, offset=(dx, dy))
         b = image2.bounds & stamp.bounds
         image2[b] += stamp[b]
 
