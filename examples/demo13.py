@@ -244,18 +244,23 @@ def main(argv):
         # First we get the amount of zodaical light for a position corresponding to the center of
         # this SCA.  The results are provided in units of e-/arcsec^2, using the default WFIRST
         # exposure time since we did not explicitly specify one.  Then we multiply this by a factor
-        # >1 to account for the amount of stray light that is expected.  Technically one should make
-        # a position-dependent sky level using wcs.makeSkyImage() to account for variable pixel
-        # area, but this is a fairly flat function of position, so using a constant is not too
-        # bad.
-        sky_level_pix = wfirst.getSkyLevel(filters[filter_name], world_pos=SCA_cent_pos)
-        sky_level_pix *= (1.0 + wfirst.stray_light_fraction)
-        sky_level_pix *= wfirst.pixel_scale**2 # convert to e-/pix
-        # Finally we add the expected thermal backgrounds in this band.  These are provided in
-        # e-/pix/s, so we have to multiply by the exposure time.
-        sky_level_pix += wfirst.thermal_backgrounds[filter_name]*wfirst.exptime
+        # >1 to account for the amount of stray light that is expected.
+        sky_level = wfirst.getSkyLevel(filters[filter_name], world_pos=SCA_cent_pos)
+        sky_level *= (1.0 + wfirst.stray_light_fraction)
+        # Make a image of the sky that takes into account the spatially variable pixel scale.
+        # Note that makeSkyImage() takes a bit of time.  If you do not care about the variable pixel
+        # scale, you could simply compute an approximate sky level in e-/pix by multiplying
+        # sky_level by wfirst.pixel_scale**2, and add that to final_image.
+        sky_image = final_image.copy()
+        wcs.makeSkyImage(sky_image, sky_level)
+        # TODO: Rachel is checking on units - before/after gain conversion - will update routines
+        # and/or demo once this is finalized.  (Images will not change since we use gain=1, but
+        # it would be good to be precise.)
+        # This image is in units of e-/pix.  Finally we add the expected thermal backgrounds in this
+        # band.  These are provided in e-/pix/s, so we have to multiply by the exposure time.
+        sky_image += wfirst.thermal_backgrounds[filter_name]*wfirst.exptime
         # Adding sky level to the image.  
-        final_image += sky_level_pix
+        final_image += sky_image
 
         # Now that all sources of signal (from astronomical objects and background) have been added,
         # we can include the expected Poisson noise:
@@ -381,9 +386,9 @@ def main(argv):
 
         # Since many people are used to viewing background-subtracted images, we provide a
         # version with the background subtracted (also rounding that to an int).
-        tot_sky_level = (sky_level_pix + wfirst.dark_current*wfirst.exptime)/wfirst.gain
-        tot_sky_level = numpy.round(tot_sky_level)
-        final_image -= tot_sky_level
+        tot_sky_image = (sky_image + wfirst.dark_current*wfirst.exptime)/wfirst.gain
+        tot_sky_image.quantize()
+        final_image -= tot_sky_image
 
         logger.debug('Subtracted background for {0}-band image'.format(filter_name))
         # Write the final image to a file.
