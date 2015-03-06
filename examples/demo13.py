@@ -298,13 +298,12 @@ def main(argv):
         # Even when the detector is unexposed to any radiation, the electron-hole pairs that
         # are generated within the depletion region due to finite temperature are swept by the
         # high electric field at the junction of the photodiode. This small reverse bias
-        # leakage current is referred to as 'Dark current'. It is specified by the average
+        # leakage current is referred to as 'dark current'. It is specified by the average
         # number of electrons reaching the detectors per unit time and has an associated
         # Poisson noise since it is a random event.
-        dark_img = galsim.ImageF(bounds=final_image.bounds,
-                                 init_value=wfirst.dark_current*wfirst.exptime)
-        dark_img.addNoise(poisson_noise)
-        final_image += dark_img
+        dark_current = wfirst.dark_current*wfirst.exptime
+        dark_noise = galsim.DeviateNoise(galsim.PoissonDeviate(rng, dark_current))
+        final_image.addNoise(dark_noise)
 
         # NOTE: Sky level and dark current might appear like a constant background that can be
         # simply subtracted. However, these contribute to the shot noise and matter for the
