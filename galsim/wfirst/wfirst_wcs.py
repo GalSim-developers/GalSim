@@ -129,7 +129,6 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
     # Parse input position
     if not isinstance(world_pos, galsim.CelestialCoord):
         raise TypeError("Position on the sky must be given as a galsim.CelestialCoord!")
-    use_ra, use_dec = world_pos.ra, world_pos.dec
 
     # Compute position angle of FPA f2 axis, where positive corresponds to the angle east of North.
     if PA_is_FPA:
@@ -144,7 +143,8 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
     # Figure out tangent-plane positions for FPA center:
     xc_fpa_tp, yc_fpa_tp = _det_to_tangplane_positions(xc_fpa, yc_fpa)
 
-    # Note, this routine reads in the coeffs.
+    # Note, this routine reads in the coeffs.  We don't use them until later, but read them in for
+    # all SCAs at once.
     a_sip, b_sip = _parse_sip_file(sip_filename)
 
     # Loop over SCAs:
@@ -158,8 +158,10 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
 
         # And populate some things that just depend on the overall locations or other input, not on
         # the SCA.
-        header['RA_TARG'] = (use_ra / galsim.degrees, "right ascension of the target (deg) (J2000)")
-        header['DEC_TARG'] = (use_dec / galsim.degrees, "declination of the target (deg) (J2000)")
+        header['RA_TARG'] = (world_pos.ra / galsim.degrees,
+                             "right ascension of the target (deg) (J2000)")
+        header['DEC_TARG'] = (world_pos.dec / galsim.degrees,
+                              "declination of the target (deg) (J2000)")
         header['PA_OBSY'] = (pa_obsy / galsim.degrees, "position angle of observatory Y axis (deg)")
         header['PA_FPA'] = (pa_fpa / galsim.degrees, "position angle of FPA Y axis (deg)")
 
@@ -173,21 +175,19 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
         # Figure out tangent plane positions after distortion, and subtract off those for FPA center
         # (calculated in header).
         sca_xc_tp, sca_yc_tp = _det_to_tangplane_positions(sca_xc_fpa, sca_yc_fpa)
+        # These define the tangent plane (X, Y) distance of the center of this SCA from the center
+        # of the overall FPA.
         sca_xc_tp_f = sca_xc_tp - xc_fpa_tp
         sca_yc_tp_f = sca_yc_tp - yc_fpa_tp
 
-        # phi is measured clockwise from the -Ytp axis
-        delta_phi = np.arctan2(-sca_xc_tp_f.rad(), sca_yc_tp_f.rad())*galsim.radians
-        delta_phi -= pa_fpa
         # Leave phi_p at 180 (0 if dec_targ==-90), so that tangent plane axes remain oriented along
-        # celestial coordinates.
-        if use_dec / galsim.degrees > -90.:
+        # celestial coordinates. In other words, phi_p is the angle of the +Y axis in the tangent
+        # plane, which is of course pi if we're measuring these phi angles clockwise from the -Y
+        # axis.
+        if world_pos.dec / galsim.degrees > -90.:
             phi_p = np.pi*galsim.radians
         else:
             phi_p = 0.*galsim.radians
-        phi = delta_phi + phi_p
-        cos_decp = np.cos(use_dec.rad())
-        sin_decp = np.sin(use_dec.rad())
 
         # Go from the tangent plane position of the SCA center, to the actual celestial coordinate,
         # using `world_pos` as the center point of the tangent plane projection.  This celestial
@@ -203,72 +203,38 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
 
         # Compute the position angle of the local pixel Y axis.
         # This requires projecting local North onto the detector axes.
-        # Start by adding any SCA-unique rotation relative to FPA axes
+        # Start by adding any SCA-unique rotation relative to FPA axes:
         sca_tp_rot = pa_fpa + sca_rot[i_sca]*galsim.degrees
-        cos_sca_rot = np.cos(sca_tp_rot.rad()) 
-        sin_sca_rot = np.sin(sca_tp_rot.rad())
 
-        # Compute X,Y position of reference pixel in tangent plane.
-        # This is first point in pair that will define a vector pointing North.
-        # A few lines here are redundant with what is done earlier, but keeps the code simpler and
-        # easier to follow.
-        alpha1 = crval1
-        delta1 = crval2
-        alpha2 = alpha1
-        # Increment dec by half-way from center to edge of the SCA.
-        # This seems a reasonable compromise in making the step big enough to avoid round-off errors
-        # becoming too large and avoiding non-linearities in the trigonometric functions.
-        delta2 = delta1 + float(galsim.wfirst.n_pix) * pix_scale / 4
+        # Set up a point that defines the vector going through the SCA center (crval) pointing North.
+        # Use a distance in declination that is halfway from the center to the edge of the SCA
+        # (local_dist). This seems a reasonable compromise in making the step big enough to avoid
+        # round-off errors becoming too large and avoiding non-linearities in the trigonometric
+        # functions.
+        local_dist = float(galsim.wfirst.n_pix) * pix_scale / 4
+        if crval2 + local_dist > 90.*galsim.degrees:
+            pos2 = galsim.CelestialCoord(crval1, crval2-local_dist)
+        else:
+            pos2 = galsim.CelestialCoord(crval1, crval2+local_dist)
 
-        # If these two points straddle dec = 90, shift points the other direction.
-        if delta2/galsim.degrees > 90.:
-            delta2 = delta1
-            delta1 = delta2 - float(galsim.wfirst.n_pix) * pix_scale / 4
-        # Only need to check North pole: if near South pole, the step above always takes the second
-        # point farther from the pole.
-
-        # Project onto tangent plane.
-        sin_dec1 = np.sin(delta1.rad())
-        cos_dec1 = np.cos(delta1.rad())
-        sin_dec2 = np.sin(delta2.rad())
-        cos_dec2 = np.cos(delta2.rad())
-        cos_dalpha1 = np.cos((alpha1 - use_ra).rad())
-        sin_dalpha1 = np.sin((alpha1 - use_ra).rad())
-        cos_dalpha2 = cos_dalpha1
-        sin_dalpha2 = sin_dalpha1
-
-        # Can compute sin_theta1 and sin_theta2 directly without first computing theta1:
-        sin_theta1 = sin_dec1*sin_decp + cos_dec1*cos_decp*cos_dalpha1
-        sin_theta2 = sin_dec2*sin_decp + cos_dec2*cos_decp*cos_dalpha2
-        # These should always be in range 0-1, but look out for roundoff error:
-        if sin_theta1 < 0.: sin_theta1 = 0.
-        if sin_theta1 > 1.: sin_theta1 = 1.
-        if sin_theta2 < 0.: sin_theta2 = 0.
-        if sin_theta2 > 1.: sin_theta2 = 1.
-        # This is always in the range 0-90, so can compute cos_theta simply:
-        cos_theta1 = np.sqrt(1.-sin_theta1*sin_theta1)
-        cos_theta2 = np.sqrt(1.-sin_theta2*sin_theta2)
-
-        phi1 = phi_p + \
-            np.arctan2(-cos_dec1*sin_dalpha1, 
-                        sin_dec1*cos_decp-cos_dec1*sin_decp*cos_dalpha1)*galsim.radians
-        phi2 = phi_p + \
-            np.arctan2(-cos_dec2*sin_dalpha2,
-                        sin_dec2*cos_decp-cos_dec2*sin_decp*cos_dalpha2)*galsim.radians
-
-        # Convert to X-Y positions:
-        # Don't need to protect against divide by zero as theta is always near 90 degrees.
-        xtp1 = cos_theta1*np.sin(phi1.rad())*galsim.radians/sin_theta1
-        ytp1 = -cos_theta1*np.cos(phi1.rad())*galsim.radians/sin_theta1
-        xtp2 = cos_theta2*np.sin(phi2.rad())*galsim.radians/sin_theta2
-        ytp2 = -cos_theta2*np.cos(phi2.rad())*galsim.radians/sin_theta2
-        dxtp = xtp2 - xtp1
-        dytp = ytp2 - ytp1
-
-        # Finally have the ingredients for computing the position angle of this SCA Y axis.
-        pa_sca = np.arctan2(-cos_sca_rot*dxtp.rad()+sin_sca_rot*dytp.rad(),
-                             sin_sca_rot*dxtp.rad()+cos_sca_rot*dytp.rad())*galsim.radians
-        #print 'Orig calculation: ',pa_sca.rad()
+        # Convert to tangent plane X-Y positions (outputs are in arcsec and have opposite
+        # handedness, so must be careful of units and flip sign of x coordinate).  We only care
+        # about X-distance and Y-distance between pos2 and crval (position of SCA center), which
+        # tells us how the line that points north is oriented on the detector.
+        tp2 = world_pos.project(pos2, 'gnomonic')
+        if pos2.dec > crval2:
+            dxtp = -tp2.x + u/galsim.arcsec
+            dytp = tp2.y - v/galsim.arcsec
+        else:
+            dxtp = -u/galsim.arcsec+tp2.x
+            dytp = v/galsim.arcsec-tp2.y
+        # A few things to note about the next line.
+        # First, we appear to be putting the Delta(x) value in the place where the "y" coordinate
+        # should go for the np.arctan2, and Delta(y) value in the place of the "x" coordinate.  This
+        # is because of how our tangent plane (x, y) positions are defined: we define the rotation
+        # angle with respect to the -Y axis (not X).  The minus sign in front also comes from this
+        # convention (the fact that it's the -Y axis, not +Y).
+        pa_sca = sca_tp_rot - np.arctan2(dxtp, dytp)*galsim.radians
 
         # Compute CD coefficients: extract the linear terms from the a_sip, b_sip arrays.  These
         # linear terms are stored in the SIP arrays for convenience, but are defined differently.
