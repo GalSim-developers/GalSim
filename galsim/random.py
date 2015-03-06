@@ -232,12 +232,6 @@ class DistDeviate(_galsim.BaseDeviate):
     >>> d()
     -0.00909781188974034
     """    
-    # A little boiler plate here is required to override the effect of BaseDeviate.__getinitargs__
-    def __getinitargs__(self): return (0,None,None,None,None,256,False)
-    def __getstate__(self): return self.__dict__
-    def __setstate__(self,d): self.__dict__ = d
-    __getstate_manages_dict__ = True
-
     def __init__(self, seed=0, function=None, x_min=None, 
                  x_max=None, interpolant=None, npoints=256, _init=True, lseed=None):
         # lseed is an obsolete synonym for seed
@@ -258,6 +252,13 @@ class DistDeviate(_galsim.BaseDeviate):
         # Basic input checking and setups
         if not function:
             raise TypeError('You must pass a function to DistDeviate!')
+
+        self._function = function # Save the inputs to be used in repr
+        self._interpolant = interpolant
+        self._npoints = npoints
+        self._xmin = x_min
+        self._xmax = x_max
+
         # Figure out if a string is a filename or something we should be using in an eval call
         if isinstance(function, str):
             input_function = function
@@ -345,7 +346,6 @@ class DistDeviate(_galsim.BaseDeviate):
         self._inverseprobabilitytable = galsim.LookupTable(cdf, xarray, interpolant='linear')
         self.x_min = x_min
         self.x_max = x_max
-
         
     def val(self,p):
         """
@@ -383,6 +383,20 @@ class DistDeviate(_galsim.BaseDeviate):
 
     def __copy__(self):
         return self.duplicate()
+
+    def __repr__(self):
+        return ('galsim.DistDeviate(seed=%r, function=%r, x_min=%r, x_max=%r, interpolant=%r, '+
+                'npoints=%r)')%(self._ud.serialize(), self._function, self._xmin, self._xmax, 
+                                self._interpolant, self._npoints)
+    def __str__(self):
+        return 'galsim.DistDeviate(function="%s", x_min=%s, x_max=%s, interpolant=%s, npoints=%s)'%(
+                self._function, self._xmin, self._xmax, self._interpolant, self._npoints)
+
+    # Functions aren't picklable, so for pickling, we reinitialize the DistDeviate using the
+    # original function parameter, which may be a string or a file name.
+    def __getinitargs__(self):
+        return (self._ud.serialize(), self._function, self._xmin, self._xmax, 
+                self._interpolant, self._npoints)
 
 
 

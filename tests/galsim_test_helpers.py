@@ -244,7 +244,14 @@ def do_pickle(obj, func = lambda x : x):
 
     obj3 = copy.deepcopy(obj)
     assert obj3 is not obj
-    assert func(obj3) == func(obj)
+    assert func(obj3) == func(obj)  # But everythong should be idenical with deepcopy.
+
+    # Also test that the repr is an accurate representation of the object.
+    # The gold standard is that eval(repr(obj)) == obj.  So check that here as well.
+    #print 'repr = ',repr(obj)
+    obj4 = eval(repr(obj))
+    assert obj4 is not obj
+    assert func(obj4) == func(obj)
 
 
 def funcname():

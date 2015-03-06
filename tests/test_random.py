@@ -224,6 +224,12 @@ def test_uniform():
             testimage.array.flatten(), np.array(uResult), precision,
             err_msg='Wrong uniform random number sequence generated when applied to image.')
 
+    # Check picklability
+    do_pickle(u, lambda x: x.serialize())
+    do_pickle(u, lambda x: (x(), x(), x(), x()))
+    do_pickle(galsim.DeviateNoise(u), drawNoise)
+
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -457,6 +463,7 @@ def test_gaussian():
     do_pickle(g, lambda x: (x(), x(), x(), x()))
     do_pickle(gn, lambda x: (x.rng.serialize(), x.sigma))
     do_pickle(gn, drawNoise)
+    do_pickle(galsim.DeviateNoise(g), drawNoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -570,6 +577,7 @@ def test_binomial():
     # Check picklability
     do_pickle(b, lambda x: (x.serialize(), x.getN(), x.getP()))
     do_pickle(b, lambda x: (x(), x(), x(), x()))
+    do_pickle(galsim.DeviateNoise(b), drawNoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -786,6 +794,7 @@ def test_poisson():
     do_pickle(p, lambda x: (x(), x(), x(), x()))
     do_pickle(pn, lambda x: (x.rng.serialize(), x.sky_level))
     do_pickle(pn, drawNoise)
+    do_pickle(galsim.DeviateNoise(p), drawNoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -907,6 +916,7 @@ def test_weibull():
     # Check picklability
     do_pickle(w, lambda x: (x.serialize(), x.getA(), x.getB()))
     do_pickle(w, lambda x: (x(), x(), x(), x()))
+    do_pickle(galsim.DeviateNoise(w), drawNoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1018,6 +1028,7 @@ def test_gamma():
     # Check picklability
     do_pickle(g, lambda x: (x.serialize(), x.getK(), x.getTheta()))
     do_pickle(g, lambda x: (x(), x(), x(), x()))
+    do_pickle(galsim.DeviateNoise(g), drawNoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1129,6 +1140,7 @@ def test_chi2():
     # Check picklability
     do_pickle(c, lambda x: (x.serialize(), x.getN()))
     do_pickle(c, lambda x: (x(), x(), x(), x()))
+    do_pickle(galsim.DeviateNoise(c), drawNoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1279,6 +1291,7 @@ def test_distfunction():
  
     # Check picklability
     do_pickle(d, lambda x: (x(), x(), x(), x()))
+    do_pickle(galsim.DeviateNoise(d), drawNoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1358,6 +1371,7 @@ def test_distLookupTable():
 
     # Check picklability
     do_pickle(d, lambda x: (x(), x(), x(), x()))
+    do_pickle(galsim.DeviateNoise(d), drawNoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

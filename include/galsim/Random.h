@@ -179,6 +179,18 @@ namespace galsim {
         { return BaseDeviate(serialize()); }
 
         /**
+         * @brief Return a string that can act as the repr in python
+         */
+        std::string repr() { return make_repr(true); }
+
+        /**
+         * @brief Return a string that can act as the str in python
+         *
+         * For this we use the same thing as the repr, but omit the (verbose!) seed parameter.
+         */
+        std::string str() { return make_repr(false); }
+
+        /**
          * @brief Re-seed the PRNG using specified seed
          *
          * If lseed == 0, this means to use a random seed from the system: either /dev/urandom
@@ -240,6 +252,9 @@ namespace galsim {
         virtual double _val() 
         { throw std::runtime_error("Cannot draw random values from a pure BaseDeviate object."); }
 
+        /// Helper to make the repr with or without the (lengthy!) seed item.
+        virtual std::string make_repr(bool incl_seed);
+
         /**
          * @brief Private routine to seed with microsecond counter from time-of-day structure.
          */
@@ -300,6 +315,7 @@ namespace galsim {
 
     protected:
         double _val() { return operator()(); }
+        std::string make_repr(bool incl_seed);
 
     private:
         boost::random::uniform_real_distribution<> _urd;
@@ -405,6 +421,7 @@ namespace galsim {
 
     protected:
         double _val() { return operator()(); }
+        std::string make_repr(bool incl_seed);
 
     private:
         boost::random::normal_distribution<> _normal;
@@ -506,6 +523,7 @@ namespace galsim {
 
     protected:
         double _val() { return double(operator()()); }
+        std::string make_repr(bool incl_seed);
 
     private:
         boost::random::binomial_distribution<> _bd;
@@ -588,6 +606,7 @@ namespace galsim {
 
     protected:
         double _val() { return double(operator()()); }
+        std::string make_repr(bool incl_seed);
 
     private:
         boost::random::poisson_distribution<> _pd;
@@ -699,6 +718,7 @@ namespace galsim {
 
     protected:
         double _val() { return operator()(); }
+        std::string make_repr(bool incl_seed);
 
     private:
         boost::random::weibull_distribution<> _weibull;
@@ -808,6 +828,7 @@ namespace galsim {
 
     protected:
         double _val() { return operator()(); }
+        std::string make_repr(bool incl_seed);
 
     private:
         // Note: confusingly, boost calls the internal values alpha and beta, even though they
@@ -897,6 +918,7 @@ namespace galsim {
 
     protected:
         double _val() { return operator()(); }
+        std::string make_repr(bool incl_seed);
 
     private:
         boost::random::chi_squared_distribution<> _chi_squared;
