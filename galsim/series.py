@@ -283,6 +283,8 @@ class SpergelSeries(Series):
     def _applyMatrix(self, J):
         ret = self.copy()
         ret._A *= J
+        if hasattr(ret, 'ellip'): # reset lazy affine transformation evaluation
+            del ret.ellip
         return ret
 
     def dilate(self, scale):
@@ -414,7 +416,7 @@ class MoffatSeries(Series):
                     if (m+q)%2 == 1:
                         continue
                     n = (q+m)/2
-                    num = (1-Delta)**m
+                    num = (1-Delta)**(m+1)
                     # Have to catch 0^0=1 situations...
                     if not (Delta == 0.0 and j==m):
                         num *= Delta**(j-m)
@@ -423,11 +425,11 @@ class MoffatSeries(Series):
                     den = 2**(m-1) * math.factorial(j-m) * math.factorial(m-n) * math.factorial(n)
                     coeff += num/den
                 if q > 0:
-                    coeff *= self.flux * math.cos(2*q*phi0)
+                    coeff *= self.flux * math.sqrt(1.0 - ellip**2) * math.cos(2*q*phi0)
                 elif q < 0:
-                    coeff *= self.flux * math.sin(2*q*phi0)
+                    coeff *= self.flux * math.sqrt(1.0 - ellip**2) * math.sin(2*q*phi0)
                 else:
-                    coeff *= self.flux * 0.5
+                    coeff *= self.flux * math.sqrt(1.0 - ellip**2) * 0.5
                 coeffs.append(coeff)
         return coeffs
                 
@@ -455,6 +457,8 @@ class MoffatSeries(Series):
     def _applyMatrix(self, J):
         ret = self.copy()
         ret._A *= J
+        if hasattr(ret, 'ellip'): # reset lazy affine transformation evaluation
+            del ret.ellip
         return ret
 
     def dilate(self, scale):

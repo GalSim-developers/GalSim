@@ -96,6 +96,7 @@ namespace galsim {
 
         _r0_sq = _r0 * _r0;
         _inv_r0 = 1. / _r0;
+        _inv_r0_sq = _inv_r0 * _inv_r0;
         _xnorm = _info->getXNorm() / _r0_sq;
         //_xnorm = boost::math::tgamma(_beta+_j) / boost::math::tgamma(_beta) / _r0_sq;
     }
@@ -105,9 +106,9 @@ namespace galsim {
 
     double SBMoffatlet::SBMoffatletImpl::xValue(const Position<double>& p) const
     {
-        double r = sqrt(p.x * p.x + p.y * p.y) * _inv_r0;
+        double rsq = (p.x * p.x + p.y * p.y) * _inv_r0_sq;
         double phi = atan2(p.y, p.x);
-        return _xnorm * _info->xValue(r, phi);
+        return _xnorm * _info->xValue(rsq, phi);
     }
 
     std::complex<double> SBMoffatlet::SBMoffatletImpl::kValue(const Position<double>& k) const
@@ -148,9 +149,9 @@ namespace galsim {
                 double ysq = y0*y0;
                 It valit = val.col(j).begin();
                 for (int i=0;i<m;++i,x+=dx) {
-                    double r = sqrt(x*x + ysq);
+                    double rsq = x*x + ysq;
                     double phi = atan2(y0, x);
-                    *valit++ = _xnorm * _info->xValue(r, phi);
+                    *valit++ = _xnorm * _info->xValue(rsq, phi);
                 }
             }
         // }
@@ -218,9 +219,9 @@ namespace galsim {
             double y = y0;
             It valit = val.col(j).begin();
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
-                double r = sqrt(x*x + y*y);
+                double rsq = x*x + y*y;
                 double phi = atan2(y,x);
-                *valit++ = _xnorm * _info->xValue(r, phi);
+                *valit++ = _xnorm * _info->xValue(rsq, phi);
             }
         }
     }
@@ -391,11 +392,17 @@ namespace galsim {
     {
         if (_ft.size() == 0) buildFT();
         double amplitude = _ft(std::sqrt(ksq));
-        if (_q > 0)
-            return amplitude * cos(2*_q*phi);
-        else if (_q < 0)
-            return amplitude * sin(2*_q*phi);
-        else
+        if (_q > 0) {
+            if (_q & 1) // if q is odd
+                return -amplitude * cos(2*_q*phi);
+            else // q even
+                return amplitude * cos(2*_q*phi);
+        } else if (_q < 0) {
+            if (_q & 1) // if q is odd
+                return -amplitude * sin(2*_q*phi);
+            else // q even
+                return amplitude * sin(2*_q*phi);
+        } else
             return amplitude;
     }
 
@@ -422,7 +429,8 @@ namespace galsim {
         dbg<<"Building Moffatlet Hankel transform"<<std::endl;
         dbg<<"beta = "<<_beta<<std::endl;
         // Do a Hankel transform and store the results in a lookup table.
-        double prefactor = 2*M_PI*_xnorm/boost::math::tgamma(_j+1);
+        //double prefactor = 2*M_PI*_xnorm/boost::math::tgamma(_j+1);
+        double prefactor = 2.0*(_beta-1.0)*boost::math::tgamma(_beta+_j)/boost::math::tgamma(_beta);
         dbg<<"prefactor = "<<prefactor<<std::endl;
 
         // // Along the way, find the last k that has a kValue > 1.e-3

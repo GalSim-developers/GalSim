@@ -180,6 +180,17 @@ def test_spergelseries_dilate():
         im_dilate = obj_dilate.drawImage(nx=32, ny=32, scale=0.2)
         np.testing.assert_almost_equal(im_direct.array, im_dilate.array, 5)
 
+def test_moffatlet():
+    betas = [2,3,4,5]
+    srs = [1,1.1,1.2,1.3]
+    js = [0,1,2,3]
+    qs = [0,1,2,-2]
+    for beta, sr, j, q in zip(betas, srs, js, qs):
+        moffatlet = galsim.Moffatlet(beta=beta, scale_radius=sr, j=j, q=q)
+        test_im = galsim.Image(16, 16, scale=0.2)
+        do_kvalue(moffatlet, test_im, "Moffatlet ")
+
+        
 if __name__ == "__main__":
     test_spergelet()
     test_series_draw()
@@ -188,3 +199,4 @@ if __name__ == "__main__":
     test_spergelseries_kValue()
     test_spergelseries()
     test_spergelseries_dilate()
+    test_moffatlet()

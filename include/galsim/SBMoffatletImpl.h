@@ -144,6 +144,7 @@ namespace galsim {
 
         double _r0_sq;
         double _inv_r0;
+        double _inv_r0_sq;
 
         boost::shared_ptr<MoffatletInfo> _info; ///< Points to info structure for this beta, jq
 
