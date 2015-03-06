@@ -176,15 +176,10 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
         sca_xc_tp_f = sca_xc_tp - xc_fpa_tp
         sca_yc_tp_f = sca_yc_tp - yc_fpa_tp
 
-        # Convert to polar coordinates in tangent plane: 
-        # Define theta, phi as in Calabretta & Greisen 2002 A&A 395 1077, fig 3
-        # and eqns 12-15
-        rtheta = np.sqrt(sca_xc_tp_f.rad()**2 + sca_yc_tp_f.rad()**2)*galsim.radians
-        theta = np.arctan(1./rtheta.rad())*galsim.radians
         # phi is measured clockwise from the -Ytp axis
         delta_phi = np.arctan2(-sca_xc_tp_f.rad(), sca_yc_tp_f.rad())*galsim.radians
         delta_phi -= pa_fpa
-        # Leave phi_p at 180 (0 if dec_targ=-90), so that tangent plane axes remain oriented along
+        # Leave phi_p at 180 (0 if dec_targ==-90), so that tangent plane axes remain oriented along
         # celestial coordinates.
         if use_dec / galsim.degrees > -90.:
             phi_p = np.pi*galsim.radians
@@ -193,31 +188,18 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
         phi = delta_phi + phi_p
         cos_decp = np.cos(use_dec.rad())
         sin_decp = np.sin(use_dec.rad())
-        if True:
-            cos_delta_phi = np.cos(delta_phi.rad())
-            sin_delta_phi = np.sin(delta_phi.rad())
-            cos_theta = np.cos(theta.rad())
-            sin_theta = np.sin(theta.rad())
 
-            # Compute RA, DEC of center of SCA.
-            # (Add pos_targ offsets when implemented.)
-            crval1 = np.arctan2(-sin_delta_phi*cos_theta,
-                            sin_theta*cos_decp - cos_theta*sin_decp*cos_delta_phi)*galsim.radians
-            crval1 += use_ra
-            header['CRVAL1'] = (crval1 / galsim.degrees, "first axis value at reference pixel")
-            crval2 = np.arcsin(sin_theta*sin_decp + cos_theta*cos_decp*cos_delta_phi)*galsim.radians
-            header['CRVAL2'] = (crval2 / galsim.degrees, "second axis value at reference pixel")
-            print 'original calculation:', header['CRVAL1'], header['CRVAL2']
-        else:
-            u = -sca_xc_tp_f * cos_pa - sca_yc_tp_f * sin_pa
-            v = -sca_xc_tp_f * sin_pa + sca_yc_tp_f * cos_pa
-            crval = world_pos.deproject(galsim.PositionD(u/galsim.arcsec, v/galsim.arcsec),
-                                        projection='gnomonic')
-            crval1 = crval.ra
-            crval2 = crval.dec
-            header['CRVAL1'] = (crval1 / galsim.degrees, "first axis value at reference pixel")
-            header['CRVAL2'] = (crval2 / galsim.degrees, "second axis value at reference pixel")
-            print 'new calc:', header['CRVAL1'], header['CRVAL2']
+        # Go from the tangent plane position of the SCA center, to the actual celestial coordinate,
+        # using `world_pos` as the center point of the tangent plane projection.  This celestial
+        # coordinate for the SCA center is `crval`, which goes into the WCS as CRVAL1, CRVAL2.
+        u = -sca_xc_tp_f * cos_pa - sca_yc_tp_f * sin_pa
+        v = -sca_xc_tp_f * sin_pa + sca_yc_tp_f * cos_pa
+        crval = world_pos.deproject(galsim.PositionD(u/galsim.arcsec, v/galsim.arcsec),
+                                    projection='gnomonic')
+        crval1 = crval.ra
+        crval2 = crval.dec
+        header['CRVAL1'] = (crval1 / galsim.degrees, "first axis value at reference pixel")
+        header['CRVAL2'] = (crval2 / galsim.degrees, "second axis value at reference pixel")
 
         # Compute the position angle of the local pixel Y axis.
         # This requires projecting local North onto the detector axes.
@@ -301,12 +283,16 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
         b11 = b_sip[i_sca,0,1]
 
         # Rotate by pa_fpa.
-        cos_pa = np.cos(pa_sca.rad())
-        sin_pa = np.sin(pa_sca.rad())
-        header['CD1_1'] = (cos_pa * a10 + sin_pa * b10, "partial of first axis coordinate w.r.t. x")
-        header['CD1_2'] = (cos_pa * a11 + sin_pa * b11, "partial of first axis coordinate w.r.t. y")
-        header['CD2_1'] = (-sin_pa * a10 + cos_pa * b10, "partial of second axis coordinate w.r.t. x")
-        header['CD2_2'] = (-sin_pa * a11 + cos_pa * b11, "partial of second axis coordinate w.r.t. y")
+        cos_pa_sca = np.cos(pa_sca.rad())
+        sin_pa_sca = np.sin(pa_sca.rad())
+        header['CD1_1'] = (cos_pa_sca * a10 + sin_pa_sca * b10,
+                           "partial of first axis coordinate w.r.t. x")
+        header['CD1_2'] = (cos_pa_sca * a11 + sin_pa_sca * b11,
+                           "partial of first axis coordinate w.r.t. y")
+        header['CD2_1'] = (-sin_pa_sca * a10 + cos_pa_sca * b10,
+                            "partial of second axis coordinate w.r.t. x")
+        header['CD2_2'] = (-sin_pa_sca * a11 + cos_pa_sca * b11,
+                            "partial of second axis coordinate w.r.t. y")
         header['ORIENTAT'] = (pa_sca / galsim.degrees, 
                               "position angle of image y axis (deg. e of n)")
         header['LONPOLE'] = (phi_p / galsim.degrees,
