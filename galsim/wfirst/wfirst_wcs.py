@@ -191,21 +191,33 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
         else:
             phi_p = 0.*galsim.radians
         phi = delta_phi + phi_p
-        cos_delta_phi = np.cos(delta_phi.rad())
-        sin_delta_phi = np.sin(delta_phi.rad())
-        cos_theta = np.cos(theta.rad())
-        sin_theta = np.sin(theta.rad())
         cos_decp = np.cos(use_dec.rad())
         sin_decp = np.sin(use_dec.rad())
+        if True:
+            cos_delta_phi = np.cos(delta_phi.rad())
+            sin_delta_phi = np.sin(delta_phi.rad())
+            cos_theta = np.cos(theta.rad())
+            sin_theta = np.sin(theta.rad())
 
-        # Compute RA, DEC of center of SCA.
-        # (Add pos_targ offsets when implemented.)
-        crval1 = np.arctan2(-sin_delta_phi*cos_theta,
-                             sin_theta*cos_decp - cos_theta*sin_decp*cos_delta_phi)*galsim.radians
-        crval1 += use_ra
-        header['CRVAL1'] = (crval1 / galsim.degrees, "first axis value at reference pixel")
-        crval2 = np.arcsin(sin_theta*sin_decp + cos_theta*cos_decp*cos_delta_phi)*galsim.radians
-        header['CRVAL2'] = (crval2 / galsim.degrees, "second axis value at reference pixel")
+            # Compute RA, DEC of center of SCA.
+            # (Add pos_targ offsets when implemented.)
+            crval1 = np.arctan2(-sin_delta_phi*cos_theta,
+                            sin_theta*cos_decp - cos_theta*sin_decp*cos_delta_phi)*galsim.radians
+            crval1 += use_ra
+            header['CRVAL1'] = (crval1 / galsim.degrees, "first axis value at reference pixel")
+            crval2 = np.arcsin(sin_theta*sin_decp + cos_theta*cos_decp*cos_delta_phi)*galsim.radians
+            header['CRVAL2'] = (crval2 / galsim.degrees, "second axis value at reference pixel")
+            print 'original calculation:', header['CRVAL1'], header['CRVAL2']
+        else:
+            u = -sca_xc_tp_f * cos_pa - sca_yc_tp_f * sin_pa
+            v = -sca_xc_tp_f * sin_pa + sca_yc_tp_f * cos_pa
+            crval = world_pos.deproject(galsim.PositionD(u/galsim.arcsec, v/galsim.arcsec),
+                                        projection='gnomonic')
+            crval1 = crval.ra
+            crval2 = crval.dec
+            header['CRVAL1'] = (crval1 / galsim.degrees, "first axis value at reference pixel")
+            header['CRVAL2'] = (crval2 / galsim.degrees, "second axis value at reference pixel")
+            print 'new calc:', header['CRVAL1'], header['CRVAL2']
 
         # Compute the position angle of the local pixel Y axis.
         # This requires projecting local North onto the detector axes.
@@ -274,6 +286,7 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
         # Finally have the ingredients for computing the position angle of this SCA Y axis.
         pa_sca = np.arctan2(-cos_sca_rot*dxtp.rad()+sin_sca_rot*dytp.rad(),
                              sin_sca_rot*dxtp.rad()+cos_sca_rot*dytp.rad())*galsim.radians
+        #print 'Orig calculation: ',pa_sca.rad()
 
         # Compute CD coefficients: extract the linear terms from the a_sip, b_sip arrays.  These
         # linear terms are stored in the SIP arrays for convenience, but are defined differently.
@@ -298,7 +311,6 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
                               "position angle of image y axis (deg. e of n)")
         header['LONPOLE'] = (phi_p / galsim.degrees,
                              "Native longitude of celestial pole")
-
         for i in range(n_sip):
             for j in range(n_sip):
                 if i+j >= 2 and i+j < n_sip:
