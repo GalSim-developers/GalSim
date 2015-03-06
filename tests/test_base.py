@@ -125,7 +125,7 @@ def test_gaussian():
     do_pickle(galsim.GSParams(
         minimum_fft_size = 12,
         maximum_fft_size = 40,
-        alias_threshold = 1.e-1,
+        folding_threshold = 1.e-1,
         maxk_threshold = 2.e-1,
         kvalue_accuracy = 3.e-1,
         xvalue_accuracy = 4.e-1,

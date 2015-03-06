@@ -83,6 +83,7 @@ class _BaseCorrelatedNoise(object):
             raise TypeError(
                 "Supplied gsobject argument not a galsim.GSObject or derived class instance.")
 
+        if rng is None: rng = galsim.BaseDeviate()
         self._rng = rng
         # Act as a container for the GSObject used to represent the correlation funcion.
         self._profile = gsobject

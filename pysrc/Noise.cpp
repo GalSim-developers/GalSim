@@ -92,7 +92,7 @@ namespace galsim {
         static void wrapTemplates(W& wrapper) {
             typedef void (BaseNoise::* applyTo_func_type)(ImageView<U>);
             wrapper
-                .def("applyToView", applyTo_func_type(&BaseNoise::applyToView), "", 
+                .def("applyToView", applyTo_func_type(&BaseNoise::applyToView), 
                      (bp::arg("image")))
                 ;
         }
@@ -100,15 +100,15 @@ namespace galsim {
         static void wrap() {
             // Note that class docstrings are now added in galsim/random.py
             bp::class_<BaseNoiseCallBack,boost::noncopyable> pyBaseNoise(
-                "BaseNoise", "", bp::no_init);
+                "BaseNoise", bp::no_init);
             pyBaseNoise
                 // No init defined.  Cannot create a bare BaseNoise class.
-                .def("getRNG", &BaseNoise::getRNG, "")
+                .def("getRNG", &BaseNoise::getRNG)
                 .add_property("rng", &BaseNoise::getRNG)
-                .def("getVariance", &BaseNoise::getVariance, "")
-                .def("_setRNG", &BaseNoise::setRNG, "")
-                .def("_setVariance", &BaseNoise::setVariance, "")
-                .def("_scaleVariance", &BaseNoise::scaleVariance, "")
+                .def("getVariance", &BaseNoise::getVariance)
+                .def("_setRNG", &BaseNoise::setRNG)
+                .def("_setVariance", &BaseNoise::setVariance)
+                .def("_scaleVariance", &BaseNoise::scaleVariance)
                 ;
             wrapTemplates<double>(pyBaseNoise);
             wrapTemplates<float>(pyBaseNoise);
@@ -124,13 +124,13 @@ namespace galsim {
         static void wrap() {
             // Note that class docstrings are now added in galsim/random.py
             bp::class_<GaussianNoise, bp::bases<BaseNoise> > pyGaussianNoise(
-                "GaussianNoise", "", bp::init<boost::shared_ptr<BaseDeviate>, double>(
+                "GaussianNoise", bp::init<boost::shared_ptr<BaseDeviate>, double>(
                     (bp::arg("rng")=bp::object(), bp::arg("sigma")=1.))
             );
             pyGaussianNoise
-                .def("getSigma", &GaussianNoise::getSigma, "")
+                .def("getSigma", &GaussianNoise::getSigma)
                 .add_property("sigma", &GaussianNoise::getSigma)
-                .def("_setSigma", &GaussianNoise::setSigma, "")
+                .def("_setSigma", &GaussianNoise::setSigma)
                 .enable_pickling()
                 ;
         }
@@ -143,13 +143,13 @@ namespace galsim {
             // Note that class docstrings are now added in galsim/random.py
 
             bp::class_<PoissonNoise, bp::bases<BaseNoise> > pyPoissonNoise(
-                "PoissonNoise", "", bp::init<boost::shared_ptr<BaseDeviate>, double>(
+                "PoissonNoise", bp::init<boost::shared_ptr<BaseDeviate>, double>(
                     (bp::arg("rng")=bp::object(), bp::arg("sky_level")=0.))
             );
             pyPoissonNoise
-                .def("getSkyLevel", &PoissonNoise::getSkyLevel, "")
+                .def("getSkyLevel", &PoissonNoise::getSkyLevel)
                 .add_property("sky_level", &PoissonNoise::getSkyLevel)
-                .def("_setSkyLevel", &PoissonNoise::setSkyLevel, "")
+                .def("_setSkyLevel", &PoissonNoise::setSkyLevel)
                 .enable_pickling()
                 ;
         }
@@ -161,21 +161,21 @@ namespace galsim {
         static void wrap() {
             // Note that class docstrings are now added in galsim/random.py
 
-            bp::class_<CCDNoise, bp::bases<BaseNoise> > pyCCDNoise("CCDNoise", "", bp::no_init);
+            bp::class_<CCDNoise, bp::bases<BaseNoise> > pyCCDNoise("CCDNoise", bp::no_init);
             pyCCDNoise
                 .def(bp::init<boost::shared_ptr<BaseDeviate>, double, double, double>(
                         (bp::arg("rng")=bp::object(),
                          bp::arg("sky_level")=0.,  bp::arg("gain")=1., bp::arg("read_noise")=0.)
                 ))
-                .def("getSkyLevel", &CCDNoise::getSkyLevel, "")
-                .def("getGain", &CCDNoise::getGain, "")
-                .def("getReadNoise", &CCDNoise::getReadNoise, "")
+                .def("getSkyLevel", &CCDNoise::getSkyLevel)
+                .def("getGain", &CCDNoise::getGain)
+                .def("getReadNoise", &CCDNoise::getReadNoise)
                 .add_property("sky_level", &CCDNoise::getSkyLevel)
                 .add_property("gain", &CCDNoise::getGain)
                 .add_property("read_noise", &CCDNoise::getReadNoise)
-                .def("_setSkyLevel", &CCDNoise::setSkyLevel, "")
-                .def("_setGain", &CCDNoise::setGain, "")
-                .def("_setReadNoise", &CCDNoise::setReadNoise, "")
+                .def("_setSkyLevel", &CCDNoise::setSkyLevel)
+                .def("_setGain", &CCDNoise::setGain)
+                .def("_setReadNoise", &CCDNoise::setReadNoise)
                 .enable_pickling()
                 ;
         }
@@ -189,7 +189,7 @@ namespace galsim {
             // Note that class docstrings are now added in galsim/random.py
 
             bp::class_<DeviateNoise, bp::bases<BaseNoise> > pyDeviateNoise(
-                "DeviateNoise", "", bp::no_init);
+                "DeviateNoise", bp::no_init);
             pyDeviateNoise
                 .def(bp::init<boost::shared_ptr<BaseDeviate> >(bp::arg("dev")))
                 .enable_pickling()
@@ -203,12 +203,12 @@ namespace galsim {
         static void wrap() {
             // Note that class docstrings are now added in galsim/random.py
             bp::class_<VarGaussianNoise, bp::bases<BaseNoise> > pyVarGaussianNoise(
-                "VarGaussianNoise", "", 
+                "VarGaussianNoise",  
                 bp::init<boost::shared_ptr<BaseDeviate>, const BaseImage<float>& >(
                     (bp::arg("rng")=bp::object(), bp::arg("var_image")))
             );
             pyVarGaussianNoise
-                .def("getVarImage", &VarGaussianNoise::getVarImage, "")
+                .def("getVarImage", &VarGaussianNoise::getVarImage)
                 .add_property("var_image", &VarGaussianNoise::getVarImage)
                 .enable_pickling()
                 ;

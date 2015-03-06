@@ -94,7 +94,6 @@ _galsim.BaseNoise.getRNG.__func__.__doc__ = """
 Get the BaseDeviate used to generate random numbers for the current noise model.
 """
 
-
 _galsim.BaseNoise.getVariance.__func__.__doc__ = "Get variance in current noise model."
 
 def Noise_withVariance(self, variance):
