@@ -24,7 +24,7 @@ The thirteenth script in our tutorial about using Galsim in python scripts: exam
 This script currently doesn't have an equivalent demo*.yaml or demo*.json file.
 
 This script introduces non-idealities arising from NIR detectors, in particular those that will be
-observed and accounted for in the WFIRST surveys. Three such non-ideal effects are demonstrated, in
+observed and accounted for in the WFIRST survey. Three such non-ideal effects are demonstrated, in
 the order in which they are introduced in the detectors:
 
 1) Reciprocity failure: Flux-dependent sensitivity of the detector.
@@ -36,6 +36,10 @@ the order in which they are introduced in the detectors:
 The purpose of the demo is two-fold: (1) to show the effects of detector non-idealities on images
 from NIR detectors, and (2) to illustrate the full image generation process, including all sources
 of noise at appropriate stages.
+
+Note that the output images in all the passbands take up a bit under 400M of space, but when running
+the code in 'diff mode' (which is not the default, but which makes difference images showing the
+impact of each detector effect separately) they take up a bit over 2G.
 
 New features introduced in this demo:
 - galsim.makeCOSMOSCatalog(...)
@@ -59,6 +63,11 @@ import logging
 import time
 import galsim as galsim
 import galsim.wfirst as wfirst
+
+# This is a setting that decides whether or not to output differences images showing what each
+# detector effect does.  Since they take up quite a bit of space, we set this to False by default,
+# but users who want to see the difference images can change it to True.
+diff_mode = False
 
 def main(argv):
     # Where to find and output data.
@@ -263,20 +272,23 @@ def main(argv):
         # failure', and the approximate amount of reciprocity failure for the WFIRST detectors is
         # known, so we can include this detector effect in our images.
 
-        # Save the image before applying the transformation to see the difference
-        final_image_orig = final_image.copy()
+        if diff_mode:
+            # Save the image before applying the transformation to see the difference
+            save_image = final_image.copy()
+
         # If we had wanted to, we could have specified a different exposure time than the default
         # one for WFIRST, but otherwise the following routine does not take any arguments.
         wfirst.addReciprocityFailure(final_image)
         logger.debug('Included reciprocity failure in {0}-band image'.format(filter_name))
-        final_image_2 = final_image.copy()
-        # Isolate the changes due to reciprocity failure.
-        diff = final_image_2-final_image_orig
 
-        out_filename = os.path.join(outpath,'demo13_RecipFail_{0}.fits'.format(filter_name))
-        final_image_2.write(out_filename)
-        out_filename = os.path.join(outpath,'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
-        diff.write(out_filename)
+        if diff_mode:
+            # Isolate the changes due to reciprocity failure.
+            diff = final_image-save_image
+
+            out_filename = os.path.join(outpath,'demo13_RecipFail_{0}.fits'.format(filter_name))
+            final_image.write(out_filename)
+            out_filename = os.path.join(outpath,'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
+            diff.write(out_filename)
 
         # At this point in the image generation process, an integer number of photons gets
         # detected, hence we have to round the pixel values to integers:
@@ -306,7 +318,8 @@ def main(argv):
         # a constant nominal gain later, which is unity in our demo.
 
         # Save the image before applying the transformation to see the difference:
-        final_image_3 = final_image.copy()
+        if diff_mode:
+            save_image = final_image.copy()
 
         # Apply the WFIRST nonlinearity routine, which knows all about the nonlinearity expected in
         # the WFIRST detectors.
@@ -318,14 +331,16 @@ def main(argv):
         # with NLfunc being a callable function that specifies how the output image pixel values
         # should relate to the input ones.
         logger.debug('Applied nonlinearity to {0}-band image'.format(filter_name))
-        final_image_4 = final_image.copy()
-        # Isolate the changes due to non-linear gain.
-        diff = final_image_4-final_image_3
+        if diff_mode:
+            diff = final_image-save_image
 
-        out_filename = os.path.join(outpath,'demo13_NL_{0}.fits'.format(filter_name))
-        final_image_4.write(out_filename)
-        out_filename = os.path.join(outpath,'demo13_diff_NL_{0}.fits'.format(filter_name))
-        diff.write(out_filename)
+            out_filename = os.path.join(outpath,'demo13_NL_{0}.fits'.format(filter_name))
+            final_image.write(out_filename)
+            out_filename = os.path.join(outpath,'demo13_diff_NL_{0}.fits'.format(filter_name))
+            diff.write(out_filename)
+
+            # Save this image to do the diff after applying IPC.
+            save_image = final_image.copy()
 
         # 4) Including Interpixel capacitance:
         # The voltage read at a given pixel location is influenced by the charges present in
@@ -337,14 +352,15 @@ def main(argv):
         # Here, we use `edge_treatment='extend'`, which pads the image with zeros before
         # applying the kernel. The central part of the image is retained.
         logger.debug('Applied interpixel capacitance to {0}-band image'.format(filter_name))
-        final_image_5 = final_image.copy()
-        # Isolate the changes due to the interpixel capacitance effect.
-        diff = final_image_5-final_image_4
 
-        out_filename = os.path.join(outpath,'demo13_IPC_{0}.fits'.format(filter_name))
-        final_image_5.write(out_filename)
-        out_filename = os.path.join(outpath,'demo13_diff_IPC_{0}.fits'.format(filter_name))
-        diff.write(out_filename)
+        if diff_mode:
+            # Isolate the changes due to the interpixel capacitance effect.
+            diff = final_image-save_image
+
+            out_filename = os.path.join(outpath,'demo13_IPC_{0}.fits'.format(filter_name))
+            final_image.write(out_filename)
+            out_filename = os.path.join(outpath,'demo13_diff_IPC_{0}.fits'.format(filter_name))
+            diff.write(out_filename)
 
         # 5) Adding read noise:
         # Read noise is the noise due to the on-chip amplifier that converts the charge into an
@@ -352,8 +368,6 @@ def main(argv):
         # should just be added as Gaussian noise:
         read_noise = galsim.GaussianNoise(rng, sigma=wfirst.read_noise)
         final_image.addNoise(read_noise)
-        final_image_6 = final_image.copy()
-
         logger.debug('Added readnoise to {0}-band image'.format(filter_name))
 
         # Technically we have to apply the gain, dividing the signal in e- by the voltage gain
