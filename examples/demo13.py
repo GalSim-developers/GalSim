@@ -348,9 +348,9 @@ def main(argv):
 
         # 5) Adding read noise:
         # Read noise is the noise due to the on-chip amplifier that converts the charge into an
-        # analog voltage.
-        read_noise = galsim.CCDNoise(rng)
-        read_noise.setReadNoise(wfirst.read_noise)
+        # analog voltage.  We already applied the Poisson noise due to the sky level, so read noise
+        # should just be added as Gaussian noise:
+        read_noise = galsim.GaussianNoise(rng, sigma=wfirst.read_noise)
         final_image.addNoise(read_noise)
         final_image_6 = final_image.copy()
 
