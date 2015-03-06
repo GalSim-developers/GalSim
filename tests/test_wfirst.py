@@ -96,7 +96,7 @@ def test_wfirst_wcs():
         pix_area_ratio.append(rat-1.)
 
         # Check another position, just in case rotations are messed up.
-        im_other_pos = galsim.PositionD(im_cent_pos.x+500., im_cent_pos.y)
+        im_other_pos = galsim.PositionD(im_cent_pos.x+500., im_cent_pos.y-200.)
         ref_other_pos = ref_wcs.toWorld(im_other_pos)
         gs_other_pos = gs_wcs.toWorld(im_other_pos)
         dist_2_arcsec.append(ref_other_pos.distanceTo(gs_other_pos) / galsim.arcsec)
