@@ -58,7 +58,7 @@ def symmetrizeNoise(self, noise, order=4):
 galsim.Image.whitenNoise = whitenNoise
 galsim.Image.symmetrizeNoise = symmetrizeNoise
 
-class _BaseCorrelatedNoise(galsim.BaseNoise):
+class _BaseCorrelatedNoise(object):
     """A Base Class describing 2D correlated Gaussian random noise fields.
 
     A _BaseCorrelatedNoise will not generally be instantiated directly.  This is recommended as the
@@ -83,8 +83,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             raise TypeError(
                 "Supplied gsobject argument not a galsim.GSObject or derived class instance.")
 
-        # Initialize the BaseNoise with our input random deviate (which may be None).
-        galsim.BaseNoise.__init__(self, rng)
+        self.rng = rng
         # Act as a container for the GSObject used to represent the correlation funcion.
         self._profile = gsobject
 
@@ -105,13 +104,17 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
     def __add__(self, other):
-        return _BaseCorrelatedNoise(self.getRNG(), self._profile + other._profile)
+        return _BaseCorrelatedNoise(self.rng, self._profile + other._profile)
 
     def __sub__(self, other):
-        return _BaseCorrelatedNoise(self.getRNG(), self._profile - other._profile)
+        return _BaseCorrelatedNoise(self.rng, self._profile - other._profile)
 
-    # NB: op* and op/ already work to adjust the overall variance of an object using the operator
-    # methods defined in BaseNoise.
+    def __mul__(self, variance_ratio):
+        return self.withScaledVariance(variance_ratio)
+    def __div__(self, variance_ratio):
+        return self.withScaledVariance(1./variance_ratio)
+    def __truediv__(self, variance_ratio):
+        return self.withScaledVariance(1./variance_ratio)
 
     def copy(self):
         """Returns a copy of the correlated noise model.
@@ -120,7 +123,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         Use the setRNG() method after copying if you wish to use a different random number
         sequence.
         """
-        return _BaseCorrelatedNoise(self.getRNG(), self._profile.copy())
+        return _BaseCorrelatedNoise(self.rng, self._profile.copy())
 
     def applyTo(self, image):
         """Apply this correlated Gaussian random noise field to an input Image.
@@ -179,7 +182,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         rootps = self._get_update_rootps(image.array.shape, image.wcs)
 
         # Finally generate a random field in Fourier space with the right PS
-        noise_array = _generate_noise_from_rootps(self.getRNG(), image.array.shape, rootps)
+        noise_array = _generate_noise_from_rootps(self.rng, image.array.shape, rootps)
 
         # Add it to the image
         image += galsim.Image(noise_array, wcs=image.wcs)
@@ -273,7 +276,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         # Finally generate a random field in Fourier space with the right PS and add to image
         noise_array = _generate_noise_from_rootps(
-            self.getRNG(), image.array.shape, rootps_whitening)
+            self.rng, image.array.shape, rootps_whitening)
         image += galsim.Image(noise_array)
 
         # Return the variance to the interested user
@@ -365,7 +368,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         # Finally generate a random field in Fourier space with the right PS and add to image.
         noise_array = _generate_noise_from_rootps(
-            self.getRNG(), image.array.shape, rootps_symmetrizing)
+            self.rng, image.array.shape, rootps_symmetrizing)
         image += galsim.Image(noise_array)
 
         # Return the variance to the interested user
@@ -381,7 +384,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @returns a new CorrelatedNoise object with the specified expansion.
         """
-        return _BaseCorrelatedNoise(self.getRNG(), self._profile.expand(scale))
+        return _BaseCorrelatedNoise(self.rng, self._profile.expand(scale))
 
     def createExpanded(self, scale):
         """This is an obsolete synonym for expand(scale)"""
@@ -404,7 +407,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """
         # Expansion changes the flux by scale**2, dilate reverses that to conserve flux,
         # so the variance needs to change by scale**-4.
-        return _BaseCorrelatedNoise(self.getRNG(), self._profile.expand(scale) * (1./scale**4))
+        return _BaseCorrelatedNoise(self.rng, self._profile.expand(scale) * (1./scale**4))
 
     def createDilated(self, scale):
         """This is an obsolete synonym for dilate(scale)"""
@@ -425,7 +428,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @returns a new CorrelatedNoise object with the specified magnification.
         """
-        return _BaseCorrelatedNoise(self.getRNG(), self._profile.magnify(mu))
+        return _BaseCorrelatedNoise(self.rng, self._profile.magnify(mu))
 
     def createMagnified(self, mu):
         """This is an obsolete synonym for magnify(mu)"""
@@ -447,7 +450,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @returns a new CorrelatedNoise object with the specified shear and magnification.
         """
-        return _BaseCorrelatedNoise(self.getRNG(), self._profile.lens(g1,g2,mu))
+        return _BaseCorrelatedNoise(self.rng, self._profile.lens(g1,g2,mu))
 
     def createLensed(self, g1, g2, mu):
         """This is an obsolete synonym for lens(g1,g2,mu)"""
@@ -469,7 +472,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
-        return _BaseCorrelatedNoise(self.getRNG(), self._profile.rotate(theta))
+        return _BaseCorrelatedNoise(self.rng, self._profile.rotate(theta))
 
     def createRotated(self, theta):
         """This is an obsolete synonym for rotate(theta)"""
@@ -494,7 +497,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @returns a new CorrelatedNoise object with the specified shear.
         """
-        return _BaseCorrelatedNoise(self.getRNG(), self._profile.shear(*args,**kwargs))
+        return _BaseCorrelatedNoise(self.rng, self._profile.shear(*args,**kwargs))
 
     def createSheared(self, *args, **kwargs):
         """This is an obsolete synonym for shear(shear)"""
@@ -517,7 +520,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @returns a new CorrelatedNoise object with the specified transformation.
         """
-        return _BaseCorrelatedNoise(self.getRNG(), self._profile.transform(dudx,dudy,dvdx,dvdy))
+        return _BaseCorrelatedNoise(self.rng, self._profile.transform(dudx,dudy,dvdx,dvdy))
 
     def createTransformed(self, dudx, dudy, dvdx, dvdy):
         """This is an obsolete synonym for transform(dudx,dudy,dvdx,dvdy)"""
@@ -583,7 +586,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         @returns a CorrelatedNoise object whose variance and covariances have been scaled up by
                  the given factor.
         """
-        return _BaseCorrelatedNoise(self.getRNG(), self._profile * variance_ratio)
+        return _BaseCorrelatedNoise(self.rng, self._profile * variance_ratio)
 
     def setVariance(self, variance):
         """This is an obsolete method that is roughly equivalent to
@@ -649,7 +652,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         @returns the new CorrelatedNoise of the convolved profile.
         """
         conv = galsim.Convolve([self._profile, galsim.AutoCorrelate(gsobject)], gsparams=gsparams)
-        return _BaseCorrelatedNoise(self.getRNG(), conv)
+        return _BaseCorrelatedNoise(self.rng, conv)
 
     def convolveWith(self, gsobject, gsparams=None):
         """This is an obsolete method that is roughly equivalent to
@@ -1101,9 +1104,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     Methods and Use
     ---------------
-    The main way that a CorrelatedNoise is used is to add or assign correlated noise to an image.
-    This is common to all the classes that inherit from BaseNoise: to add deviates to every element
-    of an image, the syntax
+    The main way that a CorrelatedNoise is used is to add correlated noise to an image.  The syntax
 
         >>> im.addNoise(cn)
 
@@ -1134,7 +1135,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     See the individual method docstrings for more details.  The shift() method is not available
     since a correlation function must always be centred and peaked at the origin.
 
-    The BaseNoise methods
+    The methods
 
         >>> var = cn.getVariance()
         >>> cn1 = cn.withVariance(variance)

@@ -632,9 +632,9 @@ def test_copy():
     cn = galsim.CorrelatedNoise(noise_image, ud, subtract_mean=True, correct_periodicity=False)
     cn_copy = cn.copy()
     # Fundamental checks on RNG
-    assert cn.getRNG() is cn_copy.getRNG(), "Copied correlated noise does not keep same RNG."
-    cn_copy.setRNG(galsim.UniformDeviate(rseed + 1))
-    assert cn.getRNG() is not cn_copy.getRNG(), \
+    assert cn.rng is cn_copy.rng, "Copied correlated noise does not keep same RNG."
+    cn_copy.rng = galsim.UniformDeviate(rseed + 1)
+    assert cn.rng is not cn_copy.rng, \
         "Copied correlated noise keeps same RNG despite reset."
     # Then check the profile in the copy is *NOT* shared, so that changes in one aren't manifest
     # in the other
@@ -658,8 +658,8 @@ def test_copy():
     outim1 = galsim.ImageD(smallim_size, smallim_size, scale=1.)
     outim2 = galsim.ImageD(smallim_size, smallim_size, scale=1.)
     cn_copy = cn.copy()
-    cn.setRNG(galsim.UniformDeviate(rseed))
-    cn_copy.setRNG(galsim.UniformDeviate(rseed))
+    cn.rng = galsim.UniformDeviate(rseed)
+    cn_copy.rng = galsim.UniformDeviate(rseed)
     outim1.addNoise(cn)
     outim2.addNoise(cn_copy)
     # The test below does not yield *exactly* equivalent results, plausibly due to the fact that the
@@ -675,8 +675,8 @@ def test_copy():
     outim2.setZero()
     cn = galsim.CorrelatedNoise(noise_image, ud, subtract_mean=True, correct_periodicity=True)
     cn_copy = cn.copy()
-    cn.setRNG(galsim.UniformDeviate(rseed))
-    cn_copy.setRNG(galsim.UniformDeviate(rseed))
+    cn.rng = galsim.UniformDeviate(rseed)
+    cn_copy.rng = galsim.UniformDeviate(rseed)
     outim1.addNoise(cn)
     outim2.addNoise(cn_copy)
     decimal_very_precise = 14
@@ -700,7 +700,7 @@ def test_cosmos_and_whitening():
     outimage = galsim.ImageD(3 * largeim_size, 3 * largeim_size, scale=cosmos_scale)
     outimage.addNoise(ccn)  # Add the COSMOS noise
     # Then estimate correlation function from generated noise
-    cntest_correlated = galsim.CorrelatedNoise(outimage, ccn.getRNG())
+    cntest_correlated = galsim.CorrelatedNoise(outimage, ccn.rng)
     # Check basic correlation function values of the 3x3 pixel region around (0,0)
     pos = galsim.PositionD(0., 0.)
     cf00 = ccn._profile.xValue(pos)
@@ -724,7 +724,7 @@ def test_cosmos_and_whitening():
     # (non-zero distance correlations ~ 0!)
     whitened_variance = ccn.applyWhiteningTo(outimage)
     #whitened_variance = ccn.whitenImage(outimage)
-    cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
+    cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.rng) # Get the correlation function
     cftest00 = cntest_whitened._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
@@ -748,7 +748,7 @@ def test_cosmos_and_whitening():
     outimage.addNoise(ccn_transformed)
     #wht_variance = ccn_transformed.applyWhiteningTo(outimage)  # Whiten noise correlation
     wht_variance = ccn_transformed.whitenImage(outimage)  # Whiten noise correlation
-    cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
+    cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.rng) # Get the correlation function
     cftest00 = cntest_whitened._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
@@ -781,7 +781,7 @@ def test_cosmos_and_whitening():
     #wht_variance = ccn_convolved.whitenImage(outimage)
     wht_variance = outimage.whitenNoise(ccn_convolved)
     # Then test
-    cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
+    cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.rng) # Get the correlation function
     cftest00 = cntest_whitened._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
@@ -815,11 +815,11 @@ def test_symmetrizing():
                              symm_size_mult * largeim_size, scale=cosmos_scale)
     outimage.addNoise(ccn)  # Add the COSMOS noise
     # Then estimate correlation function from generated noise
-    cntest_correlated = galsim.CorrelatedNoise(outimage, ccn.getRNG())
+    cntest_correlated = galsim.CorrelatedNoise(outimage, ccn.rng)
     # Now apply 4-fold symmetry to the noise field, and check that its variance and covariances are
     # as expected (non-zero distance correlations should be symmetric)
     symmetrized_variance = ccn.symmetrizeImage(outimage, order=4)
-    cntest_symmetrized = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
+    cntest_symmetrized = galsim.CorrelatedNoise(outimage, ccn.rng) # Get the correlation function
     cftest00 = cntest_symmetrized._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
@@ -849,7 +849,7 @@ def test_symmetrizing():
                              symm_size_mult*largeim_size + 1, scale=cosmos_scale)
     outimage.addNoise(ccn_transformed)
     sym_variance = ccn_transformed.symmetrizeImage(outimage, order=4)  # Symmetrize noise correlation
-    cntest_symmetrized = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
+    cntest_symmetrized = galsim.CorrelatedNoise(outimage, ccn.rng) # Get the correlation function
     cftest00 = cntest_symmetrized._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
@@ -887,7 +887,7 @@ def test_symmetrizing():
     # Then symmetrize
     sym_variance = outimage.symmetrizeNoise(ccn_convolved, order=20)
     # Then test
-    cntest_symmetrized = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
+    cntest_symmetrized = galsim.CorrelatedNoise(outimage, ccn.rng) # Get the correlation function
     cftest00 = cntest_symmetrized._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
