@@ -97,6 +97,41 @@ def test_angle():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_basic():
+    """Basic tests of CelestialCoord construction. etc.
+    """
+    import time
+    t1 = time.time()
+
+    c1 = galsim.CelestialCoord(0. * galsim.radians, 0. * galsim.radians)
+    numpy.testing.assert_almost_equal(c1.ra.rad(), 0., decimal=12)
+    numpy.testing.assert_almost_equal(c1.dec.rad(), 0., decimal=12)
+
+    c2 = galsim.CelestialCoord(11. * galsim.hours, -37. * galsim.degrees)
+    numpy.testing.assert_almost_equal(c2.ra / galsim.hours, 11., decimal=12)
+    numpy.testing.assert_almost_equal(c2.dec / galsim.degrees, -37., decimal=12)
+
+    c3 = galsim.CelestialCoord(35. * galsim.hours, -37. * galsim.degrees)
+    numpy.testing.assert_almost_equal(c3.ra / galsim.hours, 11., decimal=12)
+    numpy.testing.assert_almost_equal(c3.dec / galsim.degrees, -37., decimal=12)
+
+    c4 = galsim.CelestialCoord(-13. * galsim.hours, -37. * galsim.degrees)
+    numpy.testing.assert_almost_equal(c4.ra / galsim.hours, 11., decimal=12)
+    numpy.testing.assert_almost_equal(c4.dec / galsim.degrees, -37., decimal=12)
+
+    numpy.testing.assert_almost_equal(c2.distanceTo(c3).rad(), 0., decimal=12)
+    numpy.testing.assert_almost_equal(c2.distanceTo(c4).rad(), 0., decimal=12)
+
+    # Check picklability
+    do_pickle(c1, lambda x: (x.ra, x.dec))
+    do_pickle(c2, lambda x: (x.ra, x.dec))
+    do_pickle(c3, lambda x: (x.ra, x.dec))
+    do_pickle(c4, lambda x: (x.ra, x.dec))
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 def test_distance():
     import time
     t1 = time.time()
@@ -517,6 +552,7 @@ def test_galactic():
 
 if __name__ == '__main__':
     test_angle()
+    test_basic()
     test_distance()
     test_angleBetween()
     test_projection()

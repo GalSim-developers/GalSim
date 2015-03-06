@@ -48,13 +48,13 @@ def AngleUnit_repr(self):
     elif self is galsim.degrees:
         return 'galsim.degrees'
     elif self is galsim.hours:
-        return 'galsim.house'
+        return 'galsim.hours'
     elif self is galsim.arcmin:
         return 'galsim.arcmin'
     elif self is galsim.arcsec:
         return 'galsim.arcsec'
     else:
-        return 'galsim.AngleUnit(' + str(self.getValue()) + ')'
+        return 'galsim.AngleUnit(%r)'%self.getValue()
 AngleUnit.__repr__ = AngleUnit_repr
 
 # Enable pickling
@@ -161,16 +161,9 @@ calculating the difference between them.
 
 """
 
-def __str__(self):
-    angle_rad = self.rad()
-    return str(angle_rad)+" radians"
-
-def __repr__(self):
-    angle_rad = self.rad()
-    return str(angle_rad)+" * galsim.radians"
-
-def __neg__(self):
-    return -1. * self
+Angle.__str__ = lambda self: str(self.rad()) + ' radians'
+Angle.__repr__ = lambda self: 'galsim.Angle(%r, galsim.radians)'%self.rad()
+Angle.__neg__ = lambda self: -1. * self
 
 def _make_dms_string(decimal, sep):
     if decimal >= 0:
@@ -244,9 +237,6 @@ def dms(self, sep=":"):
     d = self.wrap() / galsim.degrees
     return _make_dms_string(d,sep)
 
-Angle.__str__ = __str__
-Angle.__repr__ = __repr__
-Angle.__neg__ = __neg__
 Angle.hms = hms
 Angle.dms = dms
 

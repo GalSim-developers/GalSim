@@ -250,7 +250,6 @@ def do_pickle(obj, func = lambda x : x):
     # The gold standard is that eval(repr(obj)) == obj.  So check that here as well.
     #print 'repr = ',repr(obj)
     obj4 = eval(repr(obj))
-    assert obj4 is not obj
     assert func(obj4) == func(obj)
 
 
