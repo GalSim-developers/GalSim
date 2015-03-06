@@ -189,8 +189,34 @@ def test_moffatlet():
         moffatlet = galsim.Moffatlet(beta=beta, scale_radius=sr, j=j, q=q)
         test_im = galsim.Image(16, 16, scale=0.2)
         do_kvalue(moffatlet, test_im, "Moffatlet ")
-
         
+def test_moffatseries():
+    """Test that MoffatSeries converges to Moffat.
+    """
+    # Higher |e| profiles require more terms to converge, so include jmax as a param to vary.
+    #       [ beta,    e1,   e2,  mu, jmax]
+    vals = [
+            [  2.6,  0.01, 0.01, 0.9, 2], # Misses 24% of pixels for jmax=1
+            [  3.2, -0.01, 0.02, 1.1, 1], # Misses 32% of pixels for jmax=0
+            [  4.4,  0.03, 0.02, 0.7, 1], # Misses 16% of pixels for jmax=0
+            [  5.1,  0.01, 0.02, 0.2, 3]  # Misses 0.4% of pixels for jmax=2
+    ]
+    for beta, e1, e2, mu, jmax in vals:
+        psf_exact = galsim.Moffat(beta=beta, half_light_radius=1.0).shear(e1=e1, e2=e2).dilate(mu)
+        psf_series = (galsim.MoffatSeries(beta=beta, half_light_radius=1.0, jmax=jmax)
+                      .shear(e1=e1, e2=e2).dilate(mu))
+        im_exact = psf_exact.drawImage(nx=32, ny=32, scale=0.2)
+        im_series = psf_series.drawImage(nx=32, ny=32, scale=0.2)
+        if False:
+            import matplotlib.pyplot as plt
+            plt.subplot(121)
+            plt.imshow(im_exact.array)
+            plt.subplot(122)
+            plt.imshow(im_series.array)
+            plt.show()
+        np.testing.assert_array_almost_equal(im_exact.array, im_series.array, 4,
+            "MoffatSeries failed to converge for beta={:0}".format(beta))
+
 if __name__ == "__main__":
     test_spergelet()
     test_series_draw()
@@ -200,3 +226,4 @@ if __name__ == "__main__":
     test_spergelseries()
     test_spergelseries_dilate()
     test_moffatlet()
+    test_moffatseries()
