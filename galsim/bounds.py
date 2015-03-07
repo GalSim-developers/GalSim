@@ -23,13 +23,10 @@ from . import _galsim
 from ._galsim import BoundsI, BoundsD
 
 for Class in (_galsim.BoundsD, _galsim.BoundsI):
-    Class.__repr__ = lambda self: \
-            self.__class__.__name__+"(xmin="+str(self.xmin)+", xmax="+str(self.xmax)+ \
-            ", ymin="+str(self.ymin)+", ymax="+str(self.ymax)+")" 
-
-    Class.__str__ = lambda self: \
-            "("+str(self.xmin)+", "+str(self.xmax)+", "+str(self.ymin)+", "+str(self.ymax)+")"
-
+    Class.__repr__ = lambda self: "galsim.%s(xmin=%r, xmax=%r, ymin=%r, ymax=%r)"%(
+            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
+    Class.__str__ = lambda self: "galsim.%s(%f,%f,%f,%f)"%(
+            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
     Class.__getinitargs__ = lambda self: (self.xmin, self.xmax, self.ymin, self.ymax)
 
     Class.__doc__ = """A class for representing image bounds as 2D rectangles.

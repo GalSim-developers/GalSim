@@ -230,6 +230,14 @@ class Image(object):
                 xmin = kwargs.pop('xmin',1)
                 ymin = kwargs.pop('ymin',1)
                 make_const = kwargs.pop('make_const',False)
+                if 'bounds' in kwargs:
+                    b = kwargs.pop('bounds')
+                    if b.xmax-b.xmin+1 != array.shape[1]:
+                        raise ValueError("Shape of array is inconsistent with provided bounds")
+                    if b.ymax-b.ymin+1 != array.shape[0]:
+                        raise ValueError("Shape of array is inconsistent with provided bounds")
+                    xmin = b.xmin
+                    ymin = b.ymin
             elif 'bounds' in kwargs:
                 bounds = kwargs.pop('bounds')
             elif 'image' in kwargs:
@@ -348,6 +356,16 @@ class Image(object):
             if wcs is not None and not isinstance(wcs,galsim.BaseWCS):
                 raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
             self.wcs = wcs
+
+    def __repr__(self):
+        return 'galsim.Image(bounds=%r, array=array(%r, dtype=%s), wcs=%r)'%(
+                self.bounds, self.array.tolist(), self.array.dtype, self.wcs)
+
+    def __str__(self):
+        if self.wcs is not None and self.wcs.isPixelScale():
+            return 'galsim.Image(bounds=%s, scale=%f)'%(self.bounds, self.scale)
+        else:
+            return 'galsim.Image(bounds=%s, wcs=%s)'%(self.bounds, self.wcs)
 
     # bounds and array are really properties which pass the request to the image
     @property
@@ -765,6 +783,7 @@ def ImageAlloc_setstate(self, args):
     self.__class__ = _galsim.ImageView[self_type]
     self.__init__(*args)
 
+
 # inject the arithmetic operators as methods of the Image class:
 Image.__add__ = Image_add
 Image.__radd__ = Image_add
@@ -871,3 +890,37 @@ for int_type in [ numpy.int16, numpy.int32 ]:
         Class.__ior__ = Image_ior
 
 del Class    # cleanup public namespace
+
+galsim._galsim.ImageAllocS.__repr__ = lambda self: 'galsim._galsim.ImageAllocS(%r,%r)'%(
+        self.bounds, self.array)
+galsim._galsim.ImageAllocI.__repr__ = lambda self: 'galsim._galsim.ImageAllocI(%r,%r)'%(
+        self.bounds, self.array)
+galsim._galsim.ImageAllocF.__repr__ = \
+        lambda self: 'galsim._galsim.ImageAllocF(%r,array(%r, dtype=%s))'%(
+            self.bounds, self.array.tolist(), self.array.dtype)
+galsim._galsim.ImageAllocD.__repr__ = \
+        lambda self: 'galsim._galsim.ImageAllocD(%r,array(%r, dtype=%s))'%(
+            self.bounds, self.array.tolist(), self.array.dtype)
+
+galsim._galsim.ImageViewS.__repr__ = lambda self: 'galsim._galsim.ImageViewS(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
+galsim._galsim.ImageViewI.__repr__ = lambda self: 'galsim._galsim.ImageViewI(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
+galsim._galsim.ImageViewF.__repr__ = \
+        lambda self: 'galsim._galsim.ImageViewF(array(%r, dtype=%s),%r,%r)'%(
+            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
+galsim._galsim.ImageViewD.__repr__ = \
+        lambda self: 'galsim._galsim.ImageViewD(array(%r, dtype=%s),%r,%r)'%(
+            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
+
+galsim._galsim.ConstImageViewS.__repr__ = lambda self: 'galsim._galsim.ConstImageViewS(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
+galsim._galsim.ConstImageViewI.__repr__ = lambda self: 'galsim._galsim.ConstImageViewI(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
+galsim._galsim.ConstImageViewF.__repr__ = \
+        lambda self: 'galsim._galsim.ConstImageViewF(array(%r, dtype=%s),%r,%r)'%(
+            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
+galsim._galsim.ConstImageViewD.__repr__ = \
+        lambda self: 'galsim._galsim.ConstImageViewD(array(%r, dtype=%s),%r,%r)'%(
+            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
+

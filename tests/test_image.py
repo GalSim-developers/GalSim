@@ -1459,6 +1459,9 @@ def test_Image_subImage():
         image[bounds] = galsim.Image((2*sub_array**2).astype(types[i]))
         np.testing.assert_array_equal(image.array, (2*ref_array**2),
             err_msg="image[bounds] /= im2 set wrong locations for dtype = "+str(types[i]))
+
+        do_pickle(image)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1539,6 +1542,9 @@ def test_Image_resize():
             np.testing.assert_array_equal(
                 im3_full.array, 23, err_msg="im3_full changed")
 
+            do_pickle(im1)
+            do_pickle(im2)
+            do_pickle(im3)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1550,6 +1556,7 @@ def test_ConstImage_array_constness():
     """
     import time
     t1 = time.time()
+
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
         image = galsim.Image(ref_array.astype(types[i]), make_const=True)
@@ -1566,6 +1573,7 @@ def test_ConstImage_array_constness():
             pass
         except:
             assert False, "Unexpected error: "+str(sys.exc_info()[0])
+
         # Then try using the eval command to mimic use via ImageD, etc.
         image_init_func = eval("galsim.Image"+tchar[i])
         image = image_init_func(ref_array.astype(types[i]), make_const=True)
@@ -1575,6 +1583,9 @@ def test_ConstImage_array_constness():
             pass
         except:
             assert False, "Unexpected error: "+str(sys.exc_info()[0])
+
+        do_pickle(image)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
             
@@ -1655,6 +1666,8 @@ def test_Image_constructor():
             test_arr, test_im.array,
             err_msg="Image constructor mangled input NumPy array (endian issues).")
 
+        do_pickle(test_im)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1665,11 +1678,13 @@ def test_Image_view():
     import time
     t1 = time.time()
 
-    im = galsim.ImageI(25,25, wcs=galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13)))
+    im = galsim.ImageI(25,25, wcs=galsim.AffineTransform(0.23,0.01,-0.02,0.22,
+                       galsim.PositionI(13,13)))
     im.fill(17)
     assert im.wcs == galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13))
     assert im.bounds == galsim.BoundsI(1,25,1,25)
     assert im(11,19) == 17  # I'll keep editing this pixel to new values.
+    do_pickle(im)
 
     # Test view with no arguments
     imv = im.view()
@@ -1678,6 +1693,8 @@ def test_Image_view():
     imv.setValue(11,19, 20)
     assert imv(11,19) == 20
     assert im(11,19) == 20
+    do_pickle(im)
+    do_pickle(imv)
 
     # Test view with new origin
     imv = im.view(origin=(0,0))
@@ -1692,6 +1709,8 @@ def test_Image_view():
     imv2.setOrigin(0,0)
     assert imv.bounds == imv2.bounds
     assert imv.wcs == imv2.wcs
+    do_pickle(imv)
+    do_pickle(imv2)
 
     # Test view with new center
     imv = im.view(center=(0,0))
@@ -1706,6 +1725,8 @@ def test_Image_view():
     imv2.setCenter(0,0)
     assert imv.bounds == imv2.bounds
     assert imv.wcs == imv2.wcs
+    do_pickle(imv)
+    do_pickle(imv2)
 
     # Test view with new scale
     imv = im.view(scale=0.17)
@@ -1720,6 +1741,8 @@ def test_Image_view():
     imv2.scale = 0.17
     assert imv.bounds == imv2.bounds
     assert imv.wcs == imv2.wcs
+    do_pickle(imv)
+    do_pickle(imv2)
 
     # Test view with new wcs
     imv = im.view(wcs=galsim.JacobianWCS(0., 0.23, -0.23, 0.))
@@ -1733,6 +1756,8 @@ def test_Image_view():
     imv2.wcs = galsim.JacobianWCS(0.,0.23,-0.23,0.)
     assert imv.bounds == imv2.bounds
     assert imv.wcs == imv2.wcs
+    do_pickle(imv)
+    do_pickle(imv2)
 
     # Go back to original value for that pixel and make sure all are still equal to 17
     im.setValue(11,19, 17)
