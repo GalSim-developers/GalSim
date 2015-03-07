@@ -134,14 +134,11 @@ class Shapelet(GSObject):
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec, gsparams))
 
     @property
-    def sigma(self): 
-        return self.SBProfile.getSigma()
+    def sigma(self): return self.SBProfile.getSigma()
     @property
-    def order(self): 
-        return self.SBProfile.getBVec().order
+    def order(self): return self.SBProfile.getBVec().order
     @property
-    def bvec(self): 
-        return self.SBProfile.getBVec().array
+    def bvec(self): return self.SBProfile.getBVec().array
 
     def getPQ(self,p,q):
         return self.SBProfile.getBVec().getPQ(p,q)
@@ -164,6 +161,21 @@ class Shapelet(GSObject):
     def dilate(self, scale):
         sigma = self.sigma * scale
         return Shapelet(sigma, self.order, self.bvec)
+
+    def __repr__(self): 
+        return 'galsim.Shapelet(sigma=%r, order=%r, bvec=%r, gsparams=%r)'%(
+                self.sigma, self.order, self.bvec, self.gsparams)
+
+    def __str__(self): 
+        return 'galsim.Shapelet(sigma=%f, order=%d, bvec=%s)'%(self.sigma, self.order, self.bvec)
+
+_galsim.SBShapelet.__getinitargs__ = lambda self: \
+        (self.getSigma(), self.getBVec(), self.getGSParams())
+_galsim.SBShapelet.__repr__ = lambda self: 'galsim._galsim.SBShapelet(%r, %r, %r)'%(
+        self.getSigma(), self.getBVec(), self.getGSParams())
+_galsim.LVector.__getinitargs__ = lambda self: (self.order, self.bvec)
+_galsim.LVector.__repr__ = lambda self: 'galsim._galsim.LVector(%r, %r)'%(self.order, self.array)
+
 
 
 def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams=None):
