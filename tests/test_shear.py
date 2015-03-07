@@ -59,13 +59,6 @@ eta1 = [-0.69314718, 0.0, 2.3025851, -0.17833748]
 eta2 = [0.0, 1.2039728, 0.0, 0.30888958]
 decimal = 5
 
-# some ellipse properties over which we will loop - use the shear values above, and:
-mu = [0.0, 0.5, -0.1]
-n_mu = len(mu)
-x_shift = [0.0, 1.7, -3.0]
-y_shift = [-1.3, 0.0, 9.1]
-n_shift = len(x_shift)
-
 #### some helper functions
 def all_shear_vals(test_shear, index, mult_val = 1.0):
     # this function tests that all values of some Shear object are consistent with the tabulated
@@ -240,6 +233,40 @@ def test_shear_methods():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_shear_matrix():
+    """Test that the shear matrix is calculated correctly.
+    """
+    import time
+    t1 = time.time()
+
+    for ind in range(n_shear):
+        s1 = galsim.Shear(g1=g1[ind], g2=g2[ind])
+
+        true_m1 = np.matrix([[ 1.+g1[ind],  g2[ind]  ],
+                              [   g2[ind], 1.-g1[ind] ]]) / np.sqrt(1.-g1[ind]**2-g2[ind]**2)
+        m1 = np.matrix(s1.getMatrix())
+
+        np.testing.assert_array_almost_equal(m1, true_m1, decimal=12,
+                                             err_msg="getMatrix returned wrong matrix")
+
+        for ind2 in range(n_shear):
+            s2 = galsim.Shear(g1=g1[ind2], g2=g2[ind2])
+            m2 = np.matrix(s2.getMatrix())
+
+            s3 = s1 + s2
+            m3 = np.matrix(s3.getMatrix())
+
+            theta = s1.rotationWith(s2._shear)
+            r = np.matrix([[  np.cos(theta.rad()), -np.sin(theta.rad()) ],
+                           [  np.sin(theta.rad()),  np.cos(theta.rad()) ]])
+            np.testing.assert_array_almost_equal(m3*r, m1*m2, decimal=12,
+                                                 err_msg="rotationWith returned wrong angle")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
     test_shear_initialization()
     test_shear_methods()
+    test_shear_matrix()
