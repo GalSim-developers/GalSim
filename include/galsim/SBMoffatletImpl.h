@@ -105,7 +105,7 @@ namespace galsim {
         Position<double> centroid() const
         { return Position<double>(0., 0.); } // TODO: Is this true?
 
-        double getFlux() const
+        double getFlux() const // TODO: This is definitely not true...
         { return 1.0; }
 
         /// @brief Returns the Moffat index beta
@@ -140,7 +140,7 @@ namespace galsim {
         double _r0;    ///< Scale radius specified at the constructor.
         int _j, _q;    ///< Radial and azimuthal indices.
 
-        double _xnorm; ///< Normalization of xValue relative to what SersicInfo returns.
+        double _xnorm; ///< Normalization of xValue relative to what MoffatletInfo returns.
 
         double _r0_sq;
         double _inv_r0;
