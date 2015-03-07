@@ -32,6 +32,7 @@
 #include <map>
 #include <vector>
 #include <algorithm>
+#include <complex>
 
 // Some versions of boost don't have the right guard to avoid C++-11 extensions. 
 // This #define helps avoid warnings on clang, and it doesn't hurt elsewhere.
@@ -39,7 +40,6 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Std.h"
-#include "CppShear.h"
 #include "Random.h"
 #include "Angle.h"
 #include "GSParams.h"
@@ -246,11 +246,6 @@ namespace galsim {
          * @brief Apply an overall scale change to the profile, preserving surface brightness.
          */
         SBTransform expand(double scale) const;
-
-        /**
-         * @brief Apply a given shear.
-         */
-        SBTransform shear(CppShear s) const;
 
         /**
          * @brief Apply a given rotation.

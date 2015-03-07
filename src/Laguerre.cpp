@@ -44,6 +44,7 @@ namespace galsim {
         }
     }
 
+#if 0
     // routines to retrieve and save complex elements of LTransform:
     // ???? Check these ???
     std::complex<double> LTransform::operator()(PQIndex pq1, PQIndex pq2) const 
@@ -166,6 +167,7 @@ namespace galsim {
         _orderIn = rhs._orderOut;
         return *this;
     }
+#endif
 
     //----------------------------------------------------------------
     //----------------------------------------------------------------
@@ -568,6 +570,7 @@ namespace galsim {
             << "," << std::setw(2) << getQ() ;
     }
 
+#if 0
     // Transformation generators - these return a view into static quantities:
     const tmv::ConstMatrixView<double> LVector::Generator(
         GType iparam, int orderOut, int orderIn)
@@ -813,6 +816,7 @@ namespace galsim {
             throw std::runtime_error("Unknown parameter for LVector::Generator()");
         }
     }
+#endif
 
     // Function to solve for radius enclosing a specified flux.
     // Return negative radius if no root is apparent.

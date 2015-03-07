@@ -901,12 +901,12 @@ class ChromaticObject(object):
         if hasattr(shear, '__call__'):
             def buildSMatrix(w):
                 S = np.matrix(np.identity(3), dtype=float)
-                S[0:2,0:2] = shear(w)._shear.getMatrix()
+                S[0:2,0:2] = shear(w).getMatrix()
                 return S
             S = buildSMatrix
         else:
             S = np.matrix(np.identity(3), dtype=float)
-            S[0:2,0:2] = shear._shear.getMatrix()
+            S[0:2,0:2] = shear.getMatrix()
         return self._applyMatrix(S)
 
     def lens(self, g1, g2, mu):

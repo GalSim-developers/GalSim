@@ -139,7 +139,7 @@ class ShapeData(object):
                 raise TypeError("Argument to initialize ShapeData must be a _CppShapeData!")
             self.image_bounds = args[0].image_bounds
             self.moments_status = args[0].moments_status
-            self.observed_shape = galsim.Shear(args[0].observed_shape)
+            self.observed_shape = galsim.Shear(e1=args[0].observed_e1, e2=args[0].observed_e2)
             self.moments_sigma = args[0].moments_sigma
             self.moments_amp = args[0].moments_amp
             self.moments_centroid = args[0].moments_centroid
@@ -155,7 +155,7 @@ class ShapeData(object):
             self.correction_method = args[0].correction_method
             self.resolution_factor = args[0].resolution_factor
             self.psf_sigma = args[0].psf_sigma
-            self.psf_shape = galsim.Shear(args[0].psf_shape)
+            self.psf_shape = galsim.Shear(e1=args[0].psf_e1, e2=args[0].psf_e2)
             self.error_message = args[0].error_message
         else:
             self.image_bounds = _galsim.BoundsI()

@@ -182,7 +182,8 @@ struct PyCppShapeData {
         bp::class_<CppShapeData>("_CppShapeData", doc, bp::init<>())
             .def_readwrite("image_bounds", &CppShapeData::image_bounds)
             .def_readwrite("moments_status", &CppShapeData::moments_status)
-            .def_readwrite("observed_shape", &CppShapeData::observed_shape)
+            .def_readwrite("observed_e1", &CppShapeData::observed_e1)
+            .def_readwrite("observed_e2", &CppShapeData::observed_e2)
             .def_readwrite("moments_sigma", &CppShapeData::moments_sigma)
             .def_readwrite("moments_amp", &CppShapeData::moments_amp)
             .def_readwrite("moments_rho4", &CppShapeData::moments_rho4)
@@ -198,7 +199,8 @@ struct PyCppShapeData {
             .def_readwrite("correction_method", &CppShapeData::correction_method)
             .def_readwrite("resolution_factor", &CppShapeData::resolution_factor)
             .def_readwrite("psf_sigma", &CppShapeData::psf_sigma)
-            .def_readwrite("psf_shape", &CppShapeData::psf_shape)
+            .def_readwrite("psf_e1", &CppShapeData::psf_e1)
+            .def_readwrite("psf_e2", &CppShapeData::psf_e2)
             .def_readwrite("error_message", &CppShapeData::error_message)
             ;
 

@@ -528,7 +528,7 @@ class GSObject(object):
         else:
             shear = galsim.Shear(**kwargs)
 
-        new_obj = GSObject(self.SBProfile.shear(shear._shear))
+        new_obj = GSObject(self.SBProfile.transform(*shear.getMatrix().flatten().tolist()))
         if hasattr(self,'original'):
             new_obj.original = self.original
         else:

@@ -181,13 +181,6 @@ namespace galsim {
     SBTransform SBProfile::expand(double scale) const
     { return SBTransform(*this,scale,0.,0.,scale); }
 
-    SBTransform SBProfile::shear(CppShear s) const
-    {
-        double a, b, c;
-        s.getMatrix(a,b,c);
-        return SBTransform(*this,a,c,c,b);
-    }
-
     SBTransform SBProfile::rotate(const Angle& theta) const
     {
 #ifdef _GLIBCXX_HAVE_SINCOS

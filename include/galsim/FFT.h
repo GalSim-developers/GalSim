@@ -64,6 +64,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "fftw3.h"
+#include "TMV.h"
 
 #include "Std.h"
 #include "Interpolant.h"
