@@ -421,6 +421,9 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
     # Check that (x,y) -> (u,v) and converse work correctly
     do_wcs_pos(wcs, ufunc, vfunc, name)
 
+    # Check picklability
+    do_pickle(wcs)
+
     # Test the transformation of a GSObject
     # These only work for local WCS projections!
 
@@ -546,7 +549,7 @@ def do_jac_decomp(wcs, name):
     gsobject_compare(obj1, obj2)
 
 
-def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
+def do_nonlocal_wcs(wcs, ufunc, vfunc, name, test_pickle=True):
 
     print 'Start testing non-local WCS '+name
     #print 'wcs = ',wcs
@@ -590,6 +593,9 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
     # Check that (x,y) -> (u,v) and converse work correctly
     # These tests work regardless of whether the WCS is local or not.
     do_wcs_pos(wcs, ufunc, vfunc, name)
+
+    # Check picklability
+    if test_pickle: do_pickle(wcs)
 
     # The GSObject transformation tests are only valid for a local WCS. 
     # But it should work for wcs.local()
@@ -655,7 +661,7 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
                 pass
 
 
-def do_celestial_wcs(wcs, name):
+def do_celestial_wcs(wcs, name, test_pickle=True):
     # It's a bit harder to test WCS functions that return a CelestialCoord, since 
     # (usually) we don't have an exact formula to compare with.  So the tests here
     # are a bit sparer.
@@ -690,6 +696,9 @@ def do_celestial_wcs(wcs, name):
         digits2 = 2
     else:
         digits2 = digits
+
+    # Check picklability
+    if test_pickle: do_pickle(wcs)
 
     for x0,y0 in zip(near_x_list, near_y_list):
         #print 'x0,y0 = ',x0,y0
@@ -1102,13 +1111,13 @@ def test_uvfunction():
     ufunc = lambda x,y: x * scale
     vfunc = lambda x,y: y * scale
     wcs = galsim.UVFunction(ufunc, vfunc)
-    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like PixelScale')
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like PixelScale', test_pickle=False)
 
     # Also check with inverse functions.
     xfunc = lambda u,v: u / scale
     yfunc = lambda u,v: v / scale
     wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc)
-    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like PixelScale with inverse')
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like PixelScale with inverse', test_pickle=False)
  
     # 2. Like ShearWCS
     scale = 0.23
@@ -1118,13 +1127,13 @@ def test_uvfunction():
     ufunc = lambda x,y: (x - g1*x - g2*y) * scale * factor
     vfunc = lambda x,y: (y + g1*y - g2*x) * scale * factor
     wcs = galsim.UVFunction(ufunc, vfunc)
-    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like ShearWCS')
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like ShearWCS', test_pickle=False)
     
     # Also check with inverse functions.
     xfunc = lambda u,v: (u + g1*u + g2*v) / scale * factor
     yfunc = lambda u,v: (v - g1*v + g2*u) / scale * factor
     wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc)
-    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like ShearWCS with inverse')
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like ShearWCS with inverse', test_pickle=False)
 
     # 3. Like an AffineTransform
     dudx = 0.2342
@@ -1135,11 +1144,11 @@ def test_uvfunction():
     ufunc = lambda x,y: dudx*x + dudy*y
     vfunc = lambda x,y: dvdx*x + dvdy*y
     wcs = galsim.UVFunction(ufunc, vfunc)
-    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like AffineTransform')
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like AffineTransform', test_pickle=False)
 
     # Check that passing functions as strings works correctly.
     wcs = galsim.UVFunction(ufunc='%f*x + %f*y'%(dudx,dudy), vfunc='%f*x + %f*y'%(dvdx,dvdy))
-    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction with string funcs')
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction with string funcs', test_pickle=True)
 
     # Check that using a wcs in the context of an image works correctly
     do_wcs_image(wcs, 'UVFunction_string')
@@ -1151,7 +1160,7 @@ def test_uvfunction():
             vfunc='%f*x + %f*y'%(dvdx,dvdy),
             xfunc='(%f*u + %f*v)/(%.8f)'%(dvdy,-dudy,det),
             yfunc='(%f*u + %f*v)/(%.8f)'%(-dvdx,dudx,det) )
-    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction with string inverse funcs')
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction with string inverse funcs', test_pickle=True)
 
     # 4. Next some UVFunctions with non-trivial offsets
     x0 = 1.3
@@ -1163,9 +1172,9 @@ def test_uvfunction():
     ufunc2 = lambda x,y: dudx*(x-x0) + dudy*(y-y0) + u0
     vfunc2 = lambda x,y: dvdx*(x-x0) + dvdy*(y-y0) + v0
     wcs = galsim.UVFunction(ufunc2, vfunc2)
-    do_nonlocal_wcs(wcs, ufunc2, vfunc2, 'UVFunction with origins in funcs')
+    do_nonlocal_wcs(wcs, ufunc2, vfunc2, 'UVFunction with origins in funcs', test_pickle=False)
     wcs = galsim.UVFunction(ufunc, vfunc, origin=origin, world_origin=world_origin)
-    do_nonlocal_wcs(wcs, ufunc2, vfunc2, 'UVFunction with origin arguments')
+    do_nonlocal_wcs(wcs, ufunc2, vfunc2, 'UVFunction with origin arguments', test_pickle=False)
 
     # Check that using a wcs in the context of an image works correctly
     do_wcs_image(wcs, 'UVFunction_lambda')
@@ -1212,7 +1221,7 @@ def test_uvfunction():
 
     ufunc = lambda x,y: radial_u(x-x0, y-y0)
     vfunc = lambda x,y: radial_v(x-x0, y-y0)
-    do_nonlocal_wcs(wcs, ufunc, vfunc, 'Cubic radial UVFunction')
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'Cubic radial UVFunction', test_pickle=False)
 
     # Check that using a wcs in the context of an image works correctly
     do_wcs_image(wcs, 'UVFunction_func')
@@ -1224,7 +1233,7 @@ def test_uvfunction():
     wcs = galsim.UVFunction(cubic_u, cubic_v, origin=galsim.PositionD(x0,y0))
     ufunc = lambda x,y: cubic_u(x-x0, y-y0)
     vfunc = lambda x,y: cubic_v(x-x0, y-y0)
-    do_nonlocal_wcs(wcs, ufunc, vfunc, 'Cubic object UVFunction')
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'Cubic object UVFunction', test_pickle=False)
 
     # Check that using a wcs in the context of an image works correctly
     do_wcs_image(wcs, 'UVFunction_object')
@@ -1252,14 +1261,14 @@ def test_uvfunction():
             100.*v/w*(( 5*math.sqrt(w**2+5.e3/27.)+5*w )**(1./3.) -
                       ( 5*math.sqrt(w**2+5.e3/27.)-5*w )**(1./3.))) )(math.sqrt(u**2+v**2))
     wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc)
-    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction from demo9')
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction from demo9', test_pickle=False)
 
     # This version doesn't work with numpy arrays because of the math functions.
     # This provides a test of that branch of the makeSkyImage function.
     ufunc = lambda x,y : 0.17 * x * (1. + 1.e-5 * math.sqrt(x**2 + y**2))
     vfunc = lambda x,y : 0.17 * y * (1. + 1.e-5 * math.sqrt(x**2 + y**2))
     wcs = galsim.UVFunction(ufunc, vfunc)
-    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction with math funcs')
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction with math funcs', test_pickle=False)
     if __name__ == "__main__":
         do_wcs_image(wcs, 'UVFunction_math')
 
@@ -1356,6 +1365,14 @@ def test_radecfunction():
             dec_func = lambda x,y: center.deproject(
                     galsim.PositionD(ufunc(x,y), vfunc(x,y))).dec.rad()
             wcs3 = galsim.RaDecFunction(ra_func, dec_func)
+
+            # The pickle tests need to have a string for ra_func, dec_func, which is
+            # a bit tough with the ufunc,vfunc stuff.  So do something simpler for that.
+            radec_str = '%r.deproject_rad(x,y)'%center
+            wcs4 = galsim.RaDecFunction(radec_str, origin=galsim.PositionD(17.,34.))
+            ra_str = '%r.deproject(galsim.PositionD(x,y)).ra.rad()'%center
+            dec_str = '%r.deproject(galsim.PositionD(x,y)).dec.rad()'%center
+            wcs5 = galsim.RaDecFunction(ra_str, dec_str, origin=galsim.PositionD(-9.,-8.))
 
             # Check that distance, jacobian for some x,y positions match the UV values.
             for x,y in zip(far_x_list, far_y_list):
@@ -1466,9 +1483,14 @@ def test_radecfunction():
                 # do_celestial because of the high non-linearities in the projection, so just
                 # skip them.
                 do_celestial_wcs(wcs2, 'RaDecFunc 1 centered at '+str(center.ra/galsim.degrees)+
-                                 ', '+str(center.dec/galsim.degrees))
+                                 ', '+str(center.dec/galsim.degrees), test_pickle=False)
                 do_celestial_wcs(wcs3, 'RaDecFunc 2 centered at '+str(center.ra/galsim.degrees)+
-                                 ', '+str(center.dec/galsim.degrees))
+                                 ', '+str(center.dec/galsim.degrees), test_pickle=False)
+
+                do_celestial_wcs(wcs4, 'RaDecFunc 3 centered at '+str(center.ra/galsim.degrees)+
+                                 ', '+str(center.dec/galsim.degrees), test_pickle=True)
+                do_celestial_wcs(wcs5, 'RaDecFunc 4 centered at '+str(center.ra/galsim.degrees)+
+                                 ', '+str(center.dec/galsim.degrees), test_pickle=True)
 
     # Check that using a wcs in the context of an image works correctly
     # (Uses the last wcs2, wcs3 set in the above loops.)

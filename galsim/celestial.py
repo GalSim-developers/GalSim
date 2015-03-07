@@ -587,3 +587,5 @@ class CelestialCoord(object):
     def __repr__(self): return 'galsim.CelestialCoord(%r, %r)'%(self._ra,self._dec)
     def __str__(self): return 'galsim.CelestialCoord(%s, %s)'%(self._ra,self._dec)
 
+    def __eq__(self, other): return self.ra == other.ra and self.dec == other.dec
+

@@ -211,6 +211,8 @@ def do_pickle(obj, func = lambda x : x):
     """Check that the object is picklable.  Also that it has basic == and != functionality.
     """
     import cPickle, copy
+    if hasattr(obj,'array') or hasattr(obj,'pv'):
+        from numpy import array, int16, int32, float32, float64
     print 'Try pickling ',obj
 
     #print 'pickled obj = ',cPickle.dumps(obj)
@@ -234,6 +236,7 @@ def do_pickle(obj, func = lambda x : x):
     # The gold standard is that eval(repr(obj)) == obj.  So check that here as well.
     #print 'repr = ',repr(obj)
     obj4 = eval(repr(obj))
+    #print 'obj4 = ',repr(obj4)
     assert func(obj4) == func(obj)
 
 

@@ -1117,7 +1117,7 @@ class PixelScale(LocalWCS):
         return ( isinstance(other, PixelScale) and
                  self.scale == other.scale )
 
-    def __repr__(self): return "PixelScale(%r)"%self.scale
+    def __repr__(self): return "galsim.PixelScale(%r)"%self.scale
 
 
 class ShearWCS(LocalWCS):
@@ -1248,7 +1248,7 @@ class ShearWCS(LocalWCS):
                  self.scale == other.scale and
                  self.shear == other.shear )
 
-    def __repr__(self): return "ShearWCS(%r,%r)"%(self.scale,self.shear)
+    def __repr__(self): return "galsim.ShearWCS(%r, %r)"%(self.scale,self.shear)
 
 
 class JacobianWCS(LocalWCS):
@@ -1478,7 +1478,8 @@ class JacobianWCS(LocalWCS):
                  self.dvdx == other.dvdx and
                  self.dvdy == other.dvdy )
 
-    def __repr__(self): return "JacobianWCS(%r,%r,%r,%r)"%(self.dudx,self.dudy,self.dvdx,self.dvdy)
+    def __repr__(self): return "galsim.JacobianWCS(%r, %r, %r, %r)"%(
+            self.dudx,self.dudy,self.dvdx,self.dvdy)
 
 
 #########################################################################################
@@ -1589,8 +1590,8 @@ class OffsetWCS(UniformWCS):
     def copy(self):
         return OffsetWCS(self._scale, self.origin, self.world_origin)
 
-    def __repr__(self): return "OffsetWCS(%r,%r,%r)"%(self.scale, self.origin,
-                                                      self.world_origin)
+    def __repr__(self): return "galsim.OffsetWCS(%r, %r, %r)"%(
+            self.scale, self.origin, self.world_origin)
 
 
 class OffsetShearWCS(UniformWCS):
@@ -1688,8 +1689,8 @@ class OffsetShearWCS(UniformWCS):
         return OffsetShearWCS(self.scale, self.shear, self.origin, self.world_origin)
 
     def __repr__(self):
-        return "OffsetShearWCS(%r,%r, %r,%r)"%(self.scale, self.shear,
-                                               self.origin, self.world_origin)
+        return "galsim.OffsetShearWCS(%r, %r, %r, %r)"%(
+                self.scale, self.shear, self.origin, self.world_origin)
 
 
 class AffineTransform(UniformWCS):
@@ -1812,8 +1813,8 @@ class AffineTransform(UniformWCS):
                                self.origin, self.world_origin)
 
     def __repr__(self):
-        return "AffineTransform(%r,%r,%r,%r,%r,%r)"%(self.dudx, self.dudy, self.dvdx, self.dvdy,
-                                                     self.origin, self.world_origin)
+        return ("galsim.AffineTransform(%r, %r, %r, %r, %r, %r)")%(
+                self.dudx, self.dudy, self.dvdx, self.dvdy, self.origin, self.world_origin)
 
 
 #########################################################################################
@@ -2017,8 +2018,6 @@ class UVFunction(EuclideanWCS):
     _takes_logger = False
 
     def __init__(self, ufunc, vfunc, xfunc=None, yfunc=None, origin=None, world_origin=None):
-        import math  # In case needed by function evals
-        import numpy
 
         # Keep these to use in copies, etc.
         self._orig_ufunc = ufunc
@@ -2026,25 +2025,8 @@ class UVFunction(EuclideanWCS):
         self._orig_xfunc = xfunc
         self._orig_yfunc = yfunc
 
-        if isinstance(ufunc, basestring):
-            self._ufunc = eval('lambda x,y : ' + ufunc)
-        else:
-            self._ufunc = ufunc
-
-        if isinstance(vfunc, basestring):
-            self._vfunc = eval('lambda x,y : ' + vfunc)
-        else:
-            self._vfunc = vfunc
-
-        if isinstance(xfunc, basestring):
-            self._xfunc = eval('lambda u,v : ' + xfunc)
-        else:
-            self._xfunc = xfunc
-
-        if isinstance(yfunc, basestring):
-            self._yfunc = eval('lambda u,v : ' + yfunc)
-        else:
-            self._yfunc = yfunc
+        # Turn these into the real functions
+        self._initialize_funcs()
 
         if origin is None:
             self._origin = galsim.PositionD(0,0)
@@ -2060,6 +2042,30 @@ class UVFunction(EuclideanWCS):
             if not isinstance(world_origin, galsim.PositionD):
                 raise TypeError("world_origin must be a PositionD argument")
             self._world_origin = world_origin
+
+    def _initialize_funcs(self):
+        import math  # In case needed by function evals
+        import numpy
+
+        if isinstance(self._orig_ufunc, basestring):
+            self._ufunc = eval('lambda x,y : ' + self._orig_ufunc)
+        else:
+            self._ufunc = self._orig_ufunc
+
+        if isinstance(self._orig_vfunc, basestring):
+            self._vfunc = eval('lambda x,y : ' + self._orig_vfunc)
+        else:
+            self._vfunc = self._orig_vfunc
+
+        if isinstance(self._orig_xfunc, basestring):
+            self._xfunc = eval('lambda u,v : ' + self._orig_xfunc)
+        else:
+            self._xfunc = self._orig_xfunc
+
+        if isinstance(self._orig_yfunc, basestring):
+            self._yfunc = eval('lambda u,v : ' + self._orig_yfunc)
+        else:
+            self._yfunc = self._orig_yfunc
 
     @property
     def ufunc(self): return self._ufunc
@@ -2140,17 +2146,29 @@ class UVFunction(EuclideanWCS):
 
     def __eq__(self, other):
         return ( isinstance(other, UVFunction) and
-                 self._ufunc == other._ufunc and
-                 self._vfunc == other._vfunc and
-                 self._xfunc == other._xfunc and
-                 self._yfunc == other._yfunc and
+                 self._orig_ufunc == other._orig_ufunc and
+                 self._orig_vfunc == other._orig_vfunc and
+                 self._orig_xfunc == other._orig_xfunc and
+                 self._orig_yfunc == other._orig_yfunc and
                  self.origin == other.origin and
                  self.world_origin == other.world_origin )
 
     def __repr__(self):
-        return "UVFunction(%r,%r,%r,%r,%r,%r)"%(self._orig_ufunc, self._orig_vfunc,
-                                                self._orig_xfunc, self._orig_yfunc,
-                                                self.origin, self.world_origin)
+        return ("galsim.UVFunction(%r, %r, %r, %r, %r, %r)")%(
+                self._orig_ufunc, self._orig_vfunc, self._orig_xfunc, self._orig_yfunc,
+                self.origin, self.world_origin)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['_ufunc']
+        del d['_vfunc']
+        del d['_xfunc']
+        del d['_yfunc']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self._initialize_funcs()
 
 
 class RaDecFunction(CelestialWCS):
@@ -2202,27 +2220,13 @@ class RaDecFunction(CelestialWCS):
     _takes_logger = False
 
     def __init__(self, ra_func, dec_func=None, origin=None):
-        # Allow the input function to use either math or numpy functions
+
+        # Keep these to use in copies, etc.
         self._orig_ra_func = ra_func
         self._orig_dec_func = dec_func
 
-        if dec_func is None:
-            if isinstance(ra_func, basestring):
-                import math
-                import numpy
-                self._radec_func = eval('lambda x,y : ' + ra_func)
-            else:
-                self._radec_func = ra_func
-        else:
-            if isinstance(ra_func, basestring):
-                import math
-                import numpy
-                ra_func = eval('lambda x,y : ' + ra_func)
-            if isinstance(dec_func, basestring):
-                import math
-                import numpy
-                dec_func = eval('lambda x,y : ' + dec_func)
-            self._radec_func = lambda x,y : (ra_func(x,y), dec_func(x,y))
+        # Turn these into the real functions
+        self._initialize_funcs()
 
         if origin is None:
             self._origin = galsim.PositionD(0,0)
@@ -2232,6 +2236,26 @@ class RaDecFunction(CelestialWCS):
             elif not isinstance(origin, galsim.PositionD):
                 raise TypeError("origin must be a PositionD or PositionI argument")
             self._origin = origin
+
+    def _initialize_funcs(self):
+        import math  # In case needed by function evals
+        import numpy
+
+        if self._orig_dec_func is None:
+            if isinstance(self._orig_ra_func, basestring):
+                self._radec_func = eval('lambda x,y : ' + self._orig_ra_func)
+            else:
+                self._radec_func = self._orig_ra_func
+        else:
+            if isinstance(self._orig_ra_func, basestring):
+                ra_func = eval('lambda x,y : ' + self._orig_ra_func)
+            else:
+                ra_func = self._orig_ra_func
+            if isinstance(self._orig_dec_func, basestring):
+                dec_func = eval('lambda x,y : ' + self._orig_dec_func)
+            else:
+                dec_func = self._orig_dec_func
+            self._radec_func = lambda x,y : (ra_func(x,y), dec_func(x,y))
 
     @property
     def radec_func(self): return self._radec_func
@@ -2273,9 +2297,21 @@ class RaDecFunction(CelestialWCS):
 
     def __eq__(self, other):
         return ( isinstance(other, RaDecFunction) and
-                 self._radec_func == other._radec_func and
+                 self._orig_ra_func == other._orig_ra_func and
+                 self._orig_dec_func == other._orig_dec_func and
                  self.origin == other.origin )
 
     def __repr__(self):
-        return "RaDecFunction(%r,%r,%r)"%(self._orig_ra_func, self._orig_dec_func, self.origin)
+        return "galsim.RaDecFunction(%r, %r, %r)"%(
+                self._orig_ra_func, self._orig_dec_func, self.origin)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['_radec_func']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self._initialize_funcs()
+
 
