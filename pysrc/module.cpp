@@ -34,7 +34,6 @@ namespace galsim {
 
     void pyExportAngle();
     void pyExportBounds();
-    void pyExportCppShear();
     void pyExportImage();
     void pyExportSBProfile();
     void pyExportSBAdd();
@@ -76,7 +75,6 @@ BOOST_PYTHON_MODULE(_galsim) {
     import_array(); // for numpy
     galsim::pyExportAngle();
     galsim::pyExportBounds();
-    galsim::pyExportCppShear();
     galsim::pyExportImage();
     galsim::pyExportSBProfile();
     galsim::pyExportSBAdd();
