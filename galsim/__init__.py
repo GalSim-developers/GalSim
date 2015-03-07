@@ -134,8 +134,10 @@ from interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInte
 from interpolatedimage import InterpolatedImage
 from compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
 from compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
-from series import Series, SeriesConvolution, Spergelet, SpergelSeries
+from series import Series, SeriesConvolution
+from series import Spergelet, SpergelSeries
 from series import Moffatlet, MoffatSeries
+from series import LinearOpticalet
 
 # Chromatic
 from chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum

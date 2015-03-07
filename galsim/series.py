@@ -555,4 +555,25 @@ class Moffatlet(galsim.GSObject):
         """Return the jq indices for this Moffatlet.
         """
         return self.SBProfile.getJ(), self.SBProfile.getQ()
-            
+
+class LinearOpticalet(galsim.GSObject):
+    """A basis function in the Taylor series expansion of the optical wavefront.
+
+    @param scale_radius   Set the size.
+    @param n1             First radial index.
+    @param m1             First azimuthal index.
+    @param n2             Second radial index.
+    @param m2             Second azimuthal index.
+    """
+    def __init__(self, scale_radius, n1, m1, n2, m2, gsparams=None):
+        galsim.GSObject.__init__(
+            self, galsim._galsim.SBLinearOpticalet(scale_radius,
+                                                   n1, m1, n2, m2, gsparams=gsparams))
+
+    def getScaleRadius(self):
+        return self.SBProfile.getScaleRadius()
+
+    def getIndices(self):
+        return (self.SBProfile.getN1(), self.SBProfile.getM1(),
+                self.SBProfile.getN2(), self.SBProfile.getM2())
+        
