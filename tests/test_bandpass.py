@@ -110,8 +110,7 @@ def test_Bandpass_basic():
         # Only the first one is not picklable
         if k > 0:
             do_pickle(b)
-            do_pickle(b, lambda x: (x(470), x(490), x(510)) )
-
+            do_pickle(b, lambda x: (x(390), x(470), x(490), x(510), x(560)) )
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

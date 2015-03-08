@@ -30,6 +30,10 @@ API Changes
 New Features
 ------------
 
+- Added ability to set the zeropoint of a bandpass on construction.  (Only
+  a numeric value; more complicated calculations still need to use the method
+  `bandpass.withZeropoint()`.) (#218)
+- Added ability to set the redshift of an SED on construction. (#218)
 - Updated CorrelatedNoise to work with images that have a non-trivial WCS. (#501)
 - Added new methods of the image class to simulate detector effects:
   inter-pixel capacitance (#555) and image quantization (#558).
@@ -53,6 +57,7 @@ New Features
 Bug Fixes and Improvements
 --------------------------
 
+- Fixed a bug in the normalization of SEDs that use `wave_type='A'`. (#218)
 - Fixed a bug in UncorrelatedNoise where the variance was set incorrectly. (#630)
 - Changed the implementation of drawing Box and Pixel profiles in real space
   (i.e. without being convolved by anything) to actually draw the surface 

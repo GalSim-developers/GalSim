@@ -62,37 +62,69 @@ class SED(object):
     the GalSim github issues page: https://github.com/GalSim-developers/GalSim/issues
 
     The argument `flux_type` specifies the type of spectral density and must be one of:
-    1. 'flambda':  `spec` is proportional to erg/nm
+    1. 'flambda':  `spec` is proportional to erg/nm or erg/Angstrom (according to wave_type)
     2. 'fnu':      `spec` is proportional to erg/Hz
-    3. 'fphotons': `spec` is proportional to photons/nm
+    3. 'fphotons': `spec` is proportional to photons/nm or photons/Angstrom (according to wave_type)
 
     Note that the `wave_type` and `flux_type` parameters do not propagate into other methods of
     `SED`.  For instance, SED.__call__ assumes its input argument is in nanometers and returns
     flux proportional to photons/nm.
 
-    @param spec          Function defining the spectrum at each wavelength.  See above for
+    @param spec          Function defining the z=0 spectrum at each wavelength.  See above for
                          valid options for this parameter.
     @param wave_type     String specifying units for wavelength input to `spec`. [default: 'nm']
     @param flux_type     String specifying what type of spectral density `spec` represents.  See
                          above for valid options for this parameter. [default: 'flambda']
-
+    @param redshift      Optionally shift the spectrum to the given redshift. [default: 0]
     """
-    def __init__(self, spec, wave_type='nm', flux_type='flambda'):
-        # Figure out input wavelength type
-        if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
-            wave_factor = 1.0
-        elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
-            wave_factor = 10.0
-        else:
-            raise ValueError("Unknown wave_type '{0}'".format(wave_type))
+    def __init__(self, spec, wave_type='nm', flux_type='flambda', redshift=0.,
+                 _blue_limit=None, _red_limit=None, _wave_list=None, _spec=None ):
 
-        # Figure out input flux density type
-        if isinstance(spec, basestring):
+        self._orig_spec = spec  # Save this for pickling
+        self._spec = _spec      # This is orig_spec turned into a function
+
+        self.wave_type = wave_type
+        self.flux_type = flux_type
+        self.redshift = redshift
+
+        # Figure out wavelength type
+        if self.wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
+            self.wave_factor = 1.0
+        elif self.wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
+            self.wave_factor = 10.0
+        else:
+            raise ValueError("Unknown wave_type '{0}'".format(self.wave_type))
+
+        # Convert string input into a real function (possibly a LookupTable)
+        self._initialize_spec()
+
+        if _wave_list is not None:
+            self.wave_list = _wave_list
+            self.blue_limit = _blue_limit
+            self.red_limit = _red_limit
+            return
+
+        if isinstance(self._spec, galsim.LookupTable):
+            self.blue_limit = self._spec.x_min / self.wave_factor
+            self.red_limit = self._spec.x_max / self.wave_factor
+            self.wave_list = np.array(self._spec.getArgs())/self.wave_factor
+        else:
+            self.blue_limit = None
+            self.red_limit = None
+            self.wave_list = np.array([], dtype=float)
+
+
+    def _initialize_spec(self):
+        # Turrn the input spec into a real function self._rest_photons
+        # The function cannot be pickled, so will need to do this in getstate as well as init.
+
+        if self._spec is not None:
+            pass
+        elif isinstance(self._orig_spec, basestring):
             import os
-            if os.path.isfile(spec):
-                spec = galsim.LookupTable(file=spec, interpolant='linear')
+            if os.path.isfile(self._orig_spec):
+                self._spec = galsim.LookupTable(file=self._orig_spec, interpolant='linear')
             else:
-                origspec = spec
                 # Don't catch ArithmeticErrors when testing to see if the the result of `eval()`
                 # is valid since `spec = '1./(wave-700)'` will generate a ZeroDivisionError (which
                 # is a subclass of ArithmeticError) despite being a valid spectrum specification,
@@ -100,44 +132,42 @@ class SED(object):
                 # a valid spectrum specification.
                 # Are there any other types of errors we should trap here?
                 try:
-                    spec = eval('lambda wave : ' + spec)   # This can raise SyntaxError
-                    spec(700)   # This can raise NameError or ZeroDivisionError
+                    self._spec = eval('lambda wave : ' + self._orig_spec)
+                    self._spec(700)
                 except ArithmeticError:
                     pass
                 except:
                     raise ValueError(
                         "String spec must either be a valid filename or something that "+
-                        "can eval to a function of wave. Input provided: {0}".format(origspec))
-
-        if isinstance(spec, galsim.LookupTable):
-            self.blue_limit = spec.x_min / wave_factor
-            self.red_limit = spec.x_max / wave_factor
-            self.wave_list = np.array(spec.getArgs())/wave_factor
+                        "can eval to a function of wave. Input provided: {0}".format(
+                            self._orig_spec))
         else:
-            self.blue_limit = None
-            self.red_limit = None
-            self.wave_list = np.array([], dtype=float)
+            self._spec = self._orig_spec
 
         # Do some SED unit conversions to make internal representation proportional to photons/nm.
         # Note that w should have units of nm below.
         c = 2.99792458e17  # speed of light in nm/s
         h = 6.62606957e-27 # Planck's constant in erg seconds
-        if flux_type == 'flambda':
+        if self.flux_type == 'flambda':
             # photons/nm = (erg/nm) * (photons/erg)
             #            = spec(w) * 1/(h nu) = spec(w) * lambda / hc
-            self._rest_photons = lambda w: (spec(np.array(w) * wave_factor) * w / (h*c))
-        elif flux_type == 'fnu':
+            self._rest_photons = lambda w: (
+                    self._spec(w * self.wave_factor) * w * self.wave_factor / (h*c))
+        elif self.flux_type == 'fnu':
             # photons/nm = (erg/Hz) * (photons/erg) * (Hz/nm)
             #            = spec(w) * 1/(h nu) * |dnu/dlambda|
             # [Use dnu/dlambda = d(c/lambda)/dlambda = -c/lambda^2 = -nu/lambda]
             #            = spec(w) * 1/(h lambda)
-            self._rest_photons = lambda w: (spec(np.array(w) * wave_factor) / (w * h))
-        elif flux_type == 'fphotons':
+            self._rest_photons = lambda w: (self._spec(w * self.wave_factor) / (w * h))
+        elif self.flux_type == 'fphotons':
             # Already basically correct.  Just convert the units of lambda
-            self._rest_photons = lambda w: spec(np.array(w) * wave_factor)
+            if self.wave_factor == 1.:
+                self._rest_photons = self._spec
+            else:
+                # photons/nm = (photons/A) * (A/nm)
+                self._rest_photons = lambda w: self._spec(w * self.wave_factor) * self.wave_factor
         else:
-            raise ValueError("Unknown flux_type '{0}'".format(flux_type))
-        self.redshift = 0
+            raise ValueError("Unknown flux_type '{0}'".format(self.flux_type))
 
     def _wavelength_intersection(self, other):
         blue_limit = self.blue_limit
@@ -198,42 +228,46 @@ class SED(object):
             return self._rest_photons(wave / wave_factor)
 
     def __mul__(self, other):
+
         if isinstance(other, galsim.GSObject):
             return galsim.Chromatic(other, self)
+
         # SEDs can be multiplied by scalars or functions (callables)
-        ret = self.copy()
         if hasattr(other, '__call__'):
             wave_factor = 1.0 + self.redshift
-            ret._rest_photons = lambda w: self._rest_photons(w) * other(w * wave_factor)
+            spec = lambda w: self._rest_photons(w) * other(w * wave_factor)
         else:
-            ret._rest_photons = lambda w: self._rest_photons(w) * other
-        return ret
+            spec = lambda w: self._rest_photons(w) * other
+        return SED(spec, flux_type='fphotons', redshift=self.redshift,
+                   _wave_list=self.wave_list,
+                   _blue_limit=self.blue_limit, _red_limit=self.red_limit)
 
     def __rmul__(self, other):
         return self*other
 
     def __div__(self, other):
-        # SEDs can be divided by scalars or functions (callables)
-        ret = self.copy()
         if hasattr(other, '__call__'):
             wave_factor = 1.0 + self.redshift
-            ret._rest_photons = lambda w: self._rest_photons(w) / other(w * wave_factor)
+            spec = lambda w: self._rest_photons(w) / other(w * wave_factor)
         else:
-            ret._rest_photons = lambda w: self._rest_photons(w) / other
-        return ret
-
-    def __rdiv__(self, other):
-        # SEDs can be divided by scalars or functions (callables)
-        ret = self.copy()
-        if hasattr(other, '__call__'):
-            wave_factor = 1.0 + self.redshift
-            ret._rest_photons = lambda w: other(w * wave_factor) / self._rest_photons(w)
-        else:
-            ret._rest_photons = lambda w: other / self._rest_photons(w)
-        return ret
+            spec = lambda w: self._rest_photons(w) / other
+        return SED(spec, flux_type='fphotons', redshift=self.redshift,
+                   _wave_list=self.wave_list,
+                   _blue_limit=self.blue_limit, _red_limit=self.red_limit)
 
     def __truediv__(self, other):
         return self.__div__(other)
+
+    def __rdiv__(self, other):
+        # MJ: Does this make sense?  Is there a use case for 1/sed or f(wave) / sed?
+        if hasattr(other, '__call__'):
+            wave_factor = 1.0 + self.redshift
+            spec = lambda w: other(w * wave_factor) /  self._rest_photons(w)
+        else:
+            spec = lambda w: other / self._rest_photons(w)
+        return SED(spec, flux_type='fphotons', redshift=self.redshift,
+                   _wave_list=self.wave_list,
+                   _blue_limit=self.blue_limit, _red_limit=self.red_limit)
 
     def __rtruediv__(self, other):
         return self.__rdiv__(other)
@@ -249,18 +283,15 @@ class SED(object):
 
         if self.redshift != other.redshift:
             raise ValueError("Can only add SEDs with same redshift.")
-        # Find overlapping wavelength interval
+
         blue_limit, red_limit = self._wavelength_intersection(other)
-        ret = self.copy()
-        ret.blue_limit = blue_limit
-        ret.red_limit = red_limit
-        ret._rest_photons = lambda w: self._rest_photons(w) + other._rest_photons(w)
-        if len(self.wave_list) > 0 and len(other.wave_list) > 0:
-            wave_list = np.union1d(self.wave_list, other.wave_list)
-            wave_list = wave_list[wave_list <= red_limit]
-            wave_list = wave_list[wave_list >= blue_limit]
-            ret.wave_list = wave_list
-        return ret
+        spec = lambda w: self._rest_photons(w) + other._rest_photons(w)
+        wave_list = np.union1d(self.wave_list, other.wave_list)
+        wave_list = wave_list[wave_list <= red_limit]
+        wave_list = wave_list[wave_list >= blue_limit]
+
+        return SED(spec, flux_type='fphotons', redshift=self.redshift,
+                   _wave_list=wave_list, _blue_limit=blue_limit, _red_limit=red_limit)
 
     def __sub__(self, other):
         # Subtract two SEDs, with the same caveats as adding two SEDs.
@@ -282,9 +313,7 @@ class SED(object):
         """
         current_flux_density = self(wavelength)
         factor = target_flux_density / current_flux_density
-        ret = self.copy()
-        ret._rest_photons = lambda w: self._rest_photons(w) * factor
-        return ret
+        return self * factor
 
     def withFlux(self, target_flux, bandpass):
         """ Return a new SED with flux through the Bandpass `bandpass` set to `target_flux`. Note
@@ -297,9 +326,7 @@ class SED(object):
         """
         current_flux = self.calculateFlux(bandpass)
         norm = target_flux/current_flux
-        ret = self.copy()
-        ret._rest_photons = lambda w: self._rest_photons(w) * norm
-        return ret
+        return self * norm
 
     def withMagnitude(self, target_magnitude, bandpass):
         """ Return a new SED with magnitude through `bandpass` set to `target_magnitude`.  Note
@@ -320,9 +347,7 @@ class SED(object):
                                " have a zeropoint.  See Bandpass.withZeropoint()")
         current_magnitude = self.calculateMagnitude(bandpass)
         norm = 10**(-0.4*(target_magnitude - current_magnitude))
-        ret = self.copy()
-        ret._rest_photons = lambda w: self._rest_photons(w) * norm
-        return ret
+        return self * norm
 
     def atRedshift(self, redshift):
         """ Return a new SED with redshifted wavelengths.
@@ -331,15 +356,17 @@ class SED(object):
 
         @returns the redshifted SED.
         """
-        ret = self.copy()
-        ret.redshift = redshift
         wave_factor = (1.0 + redshift) / (1.0 + self.redshift)
-        ret.wave_list = self.wave_list * wave_factor
-        if ret.blue_limit is not None:
-            ret.blue_limit = self.blue_limit * wave_factor
-        if ret.red_limit is not None:
-            ret.red_limit = self.red_limit * wave_factor
-        return ret
+        wave_list = self.wave_list * wave_factor
+        blue_limit = self.blue_limit
+        red_limit = self.red_limit
+        if blue_limit is not None:
+            blue_limit *= wave_factor
+        if red_limit is not None:
+            red_limit *= wave_factor
+
+        return SED(self._orig_spec, self.wave_type, self.flux_type, redshift,
+                   _wave_list=wave_list, _blue_limit=blue_limit, _red_limit=red_limit)
 
     def calculateFlux(self, bandpass):
         """ Return the SED flux through a Bandpass `bandpass`.
@@ -405,16 +432,19 @@ class SED(object):
         """
         if len(self.wave_list) > 0:
             wave_factor = 1.0 + self.redshift
-            x = np.array(self.wave_list) / wave_factor
+            x = self.wave_list / wave_factor
             f = self._rest_photons(x)
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
                                                          preserve_range=preserve_range)
-            ret = self.copy()
-            ret.blue_limit = np.min(newx) * wave_factor
-            ret.red_limit = np.max(newx) * wave_factor
-            ret.wave_list = np.array(newx) * wave_factor
-            ret._rest_photons = galsim.LookupTable(newx, newf, interpolant='linear')
-            return ret
+            spec = galsim.LookupTable(newx, newf, interpolant='linear')
+            blue_limit = np.min(newx) * wave_factor
+            red_limit = np.max(newx) * wave_factor
+            wave_list = np.array(newx) * wave_factor
+            return SED(spec, flux_type='fphotons', redshift=self.redshift,
+                       _wave_list=wave_list, _blue_limit=blue_limit, _red_limit=red_limit)
+        else:
+            return self
+
 
     def calculateDCRMomentShifts(self, bandpass, **kwargs):
         """ Calculates shifts in first and second moments of PSF due to differential chromatic
@@ -511,4 +541,46 @@ class SED(object):
             weight = lambda w: bandpass(w) * self(w)
             kernel = lambda w: (w/base_wavelength)**(2*alpha)
             return galsim.integ.int1d(lambda w: weight(w) * kernel(w),
-                                      bandpass.blue_limit, bandpass.red_limit) / flux
+                                     bandpass.blue_limit, bandpass.red_limit) / flux
+
+    def __eq__(self, other):
+        return (isinstance(other, SED) and
+                self._orig_spec == other._orig_spec and
+                self.wave_factor == other.wave_factor and
+                self.flux_type == other.flux_type and
+                self.redshift == other.redshift and
+                self.red_limit == other.red_limit and
+                self.blue_limit == other.blue_limit and
+                (self.wave_list == other.wave_list).all())
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['_spec']
+        del d['_rest_photons']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self._spec = None
+        self._initialize_spec()
+
+    def __repr__(self):
+        red = self.red_limit
+        blue = self.blue_limit
+        wave_type = ''
+        flux_type = ''
+        if self.wave_factor == 10.0:
+            wave_type = ' wave_type="Angstroms",'
+        if self.flux_type != 'flambda':
+            flux_type = ' flux_type=%r,'%self.flux_type
+        return ('galsim.SED(%r, redshift=%r,%s%s' +
+                ' _wave_list=array(%r), _blue_limit=%r, _red_limit=%r)')%(
+                    self._orig_spec, self.redshift, wave_type, flux_type,
+                    self.wave_list.tolist(), self.blue_limit, self.red_limit)
+
+    def __str__(self):
+        orig_spec = repr(self._orig_spec)
+        if len(orig_spec) > 80:
+            orig_spec = str(self._orig_spec)
+        return 'galsim.SED(%s, redshift=%f)'%(orig_spec, self.redshift)
+

@@ -353,24 +353,19 @@ class Bandpass(object):
             if zeropoint.upper()=='AB':
                 AB_source = 3631e-23 # 3631 Jy in units of erg/s/Hz/cm^2
                 c = 2.99792458e17 # speed of light in nm/s
-                AB_flambda = AB_source * c / self.wave_list**2
-                AB_sed = galsim.SED(galsim.LookupTable(self.wave_list, AB_flambda))
-                flux = AB_sed.calculateFlux(self)
-            # If zeropoint.upper() is 'ST', then use HST STmags:
-            # http://www.stsci.edu/hst/acs/analysis/zeropoints
+                sed = galsim.SED(lambda wave: AB_source, flux_type='fnu')
             elif zeropoint.upper()=='ST':
+                # Use HST STmags: http://www.stsci.edu/hst/acs/analysis/zeropoints
                 ST_flambda = 3.63e-8 # erg/s/cm^2/nm
-                ST_sed = galsim.SED(galsim.LookupTable(self.wave_list, ST_flambda))
-                flux = ST_sed.calculateFlux(self)
-            # If zeropoint.upper() is 'VEGA', then load vega spectrum stored in repository,
-            # and use that for zeropoint spectrum.
+                sed = galsim.SED(lambda wave: ST_flambda, flux_type='flambda')
             elif zeropoint.upper()=='VEGA':
+                # Use vega spectrum for SED
                 import os
                 vegafile = os.path.join(galsim.meta_data.share_dir, "vega.txt")
                 sed = galsim.SED(vegafile)
-                flux = sed.calculateFlux(self)
             else:
                 raise ValueError("Do not recognize Zeropoint string {0}.".format(zeropoint))
+            flux = sed.calculateFlux(self)
             flux *= np.pi*effective_diameter**2/4 * exptime
             new_zeropoint = 2.5 * np.log10(flux)
         # If `zeropoint` is an `SED`, then compute the SED flux through the bandpass, and
@@ -387,7 +382,7 @@ class Bandpass(object):
                 "Don't know how to handle zeropoint of type: {0}".format(type(zeropoint)))
 
         return Bandpass(self._orig_tp, self.blue_limit, self.red_limit, self.wave_type,
-                        zeropoint, self.wave_list, self._tp)
+                        new_zeropoint, self.wave_list, self._tp)
 
     def truncate(self, blue_limit=None, red_limit=None, relative_throughput=None):
         """Return a bandpass with its wavelength range truncated.
@@ -499,6 +494,9 @@ class Bandpass(object):
                 self.wave_list.tolist())
 
     def __str__(self):
-        return 'galsim.Bandpass(%r)'%self._orig_tp
+        orig_tp = repr(self._orig_tp)
+        if len(orig_tp) > 80:
+            orig_tp = str(self._orig_tp)
+        return 'galsim.Bandpass(%s)'%self._orig_tp
 
 
