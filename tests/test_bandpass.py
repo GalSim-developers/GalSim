@@ -30,6 +30,49 @@ except ImportError:
 path, filename = os.path.split(__file__)
 datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
 
+def test_basic():
+    """Basic tests of Bandpass functionality
+    """
+    import time
+    t1 = time.time()
+
+    # All of these should be equivalent
+    b1 = galsim.Bandpass(throughput=lambda x: x/1000, blue_limit=400, red_limit=550)
+    b2 = galsim.Bandpass(throughput='wave/1000', blue_limit=400, red_limit=550)
+    b3 = galsim.Bandpass(throughput='wave/10000', blue_limit=4000, red_limit=5500, wave_type='A')
+    b4 = galsim.Bandpass('wave/1000', 400, 550)
+    b5 = galsim.Bandpass(galsim.LookupTable([400,550], [0.4, 0.55], interpolant='linear'))
+    b6 = galsim.Bandpass(galsim.LookupTable([4000,5500], [0.4, 0.55], interpolant='linear'),
+                         wave_type='ang')
+    b7 = galsim.Bandpass(galsim.LookupTable([3000,8500], [0.3, 0.85], interpolant='linear'),
+                         wave_type='Angstroms', red_limit=5500, blue_limit=4000)
+    b8 = galsim.Bandpass('chromatic_reference_images/simple_bandpass.dat')
+    b9 = galsim.Bandpass('chromatic_reference_images/simple_bandpass.dat', 
+                         blue_limit=400, red_limit=550)
+
+    for b in [b1, b2, b3, b4, b5, b6, b7, b8, b9]:
+        np.testing.assert_almost_equal(b.blue_limit, 400, decimal=12)
+        np.testing.assert_almost_equal(b.red_limit, 550, decimal=12)
+        np.testing.assert_almost_equal(b(400), 0.4, decimal=12)
+        np.testing.assert_almost_equal(b(490), 0.49, decimal=12)
+        np.testing.assert_almost_equal(b(550), 0.55, decimal=12)
+        np.testing.assert_almost_equal(b(399), 0., decimal=12)
+        np.testing.assert_almost_equal(b(551), 0., decimal=12)
+        np.testing.assert_array_almost_equal(b([410,430,450,470]), [0.41,0.43,0.45,0.47], 12)
+        np.testing.assert_array_almost_equal(b((410,430,450,470)), [0.41,0.43,0.45,0.47], 12)
+        np.testing.assert_array_almost_equal(b(np.array([410,430,450,470])),
+                                             [0.41,0.43,0.45,0.47], 12)
+
+        lam_eff = b.calculateEffectiveWavelength(precise=True)
+        np.testing.assert_almost_equal(lam_eff, 9100./19., 12) # analytic answer
+        
+        # Only the first one is not picklable
+        if b is not b1:
+            do_pickle(b)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_Bandpass_mul():
     """Check that Bandpasses multiply like I think they should...
     """
@@ -165,6 +208,7 @@ def test_Bandpass_wave_type():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
+    test_basic()
     test_Bandpass_mul()
     test_Bandpass_div()
     test_Bandpass_wave_type()

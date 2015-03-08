@@ -116,28 +116,11 @@ def test_table():
         # Check 2d arrays (non-square)
         table1(np.array(testargs1).reshape((2,3)))
 
-        # Check that a LookupTable is picklable.
-        p1 = pickle.dumps(table1)
-        table1x = pickle.loads(p1)
-        np.testing.assert_equal(table1.getArgs(), table1x.getArgs(),
-                err_msg="Pickled LookupTable does not preserve correct args")
-        np.testing.assert_equal(table1.getVals(), table1x.getVals(),
-                err_msg="Pickled LookupTable does not preserve correct vals")
-        np.testing.assert_equal(table1.getInterp(), table1x.getInterp(),
-                err_msg="Pickled LookupTable does not preserve correct interp")
-
-        p2 = pickle.dumps(table2)
-        table2x = pickle.loads(p2)
-        np.testing.assert_equal(table2.getArgs(), table2x.getArgs(),
-                err_msg="Pickled LookupTable does not preserve correct args")
-        np.testing.assert_equal(table2.getVals(), table2x.getVals(),
-                err_msg="Pickled LookupTable does not preserve correct vals")
-        np.testing.assert_equal(table2.getInterp(), table2x.getInterp(),
-                err_msg="Pickled LookupTable does not preserve correct interp")
-
         # Check picklability
         do_pickle(table1)
         do_pickle(table2)
+        do_pickle(table1, lambda x: (x.getArgs(), x.getVals(), x.getInterp()))
+        do_pickle(table2, lambda x: (x.getArgs(), x.getVals(), x.getInterp()))
 
 
     t2 = time.time()
@@ -166,8 +149,10 @@ def test_init():
         print 'The assert_raises tests require nose'
     # Also make sure nothing bad happens when we try to read in a stored power spectrum and assume
     # we can use the default interpolant (spline).
-    tab_ps = galsim.LookupTable(
-        file='../examples/data/cosmo-fid.zmed1.00_smoothed.out')
+    tab_ps = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00_smoothed.out')
+
+    # Check picklability
+    do_pickle(tab_ps)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -198,13 +183,19 @@ def test_log():
         print result_1, result_2, result_3, result_4
         np.testing.assert_almost_equal(
             result_2, result_1, decimal=3,
-            err_msg='Disagreement when interpolating in log(f) and log(x) vs. using the values directly.')
+            err_msg='Disagreement when interpolating in log(f) and log(x)')
         np.testing.assert_almost_equal(
             result_3, result_1, decimal=3,
-            err_msg='Disagreement when interpolating in log(x) vs. using the values directly.')
+            err_msg='Disagreement when interpolating in log(x)')
         np.testing.assert_almost_equal(
             result_4, result_1, decimal=3,
-            err_msg='Disagreement when interpolating in log(f) vs. using the values directly.')
+            err_msg='Disagreement when interpolating in log(f)')
+
+    # Check picklability
+    do_pickle(tab_1)
+    do_pickle(tab_2)
+    do_pickle(tab_3)
+    do_pickle(tab_4)
 
     # Check storage of args and vals for log vs. linear, which should be the same to high precision.
     np.testing.assert_array_almost_equal(tab_1.getArgs(), tab_3.getArgs(), decimal=12,

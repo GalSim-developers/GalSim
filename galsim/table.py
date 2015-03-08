@@ -83,6 +83,7 @@ class LookupTable(object):
         import numpy as np
         self.x_log = x_log
         self.f_log = f_log
+        self.file = file
 
         # read in from file if a filename was specified
         if file:
@@ -103,6 +104,8 @@ class LookupTable(object):
             x = np.array(x).astype(float)
         if not isinstance(f, np.ndarray):
             f = np.array(f).astype(float)
+        self.x = x
+        self.f = f
 
         # check for proper interpolant
         if interpolant is None:
@@ -110,11 +113,7 @@ class LookupTable(object):
         else:
             if interpolant not in ['spline', 'linear', 'ceil', 'floor']:
                 raise ValueError("Unknown interpolant: %s" % interpolant)
-
-        # store some information that will be useful later
-        self.x_min = min(x)
-        self.x_max = max(x)
-        self.n_x = len(x)
+        self.interpolant = interpolant
 
         # make and store table
         if x_log:
@@ -129,6 +128,13 @@ class LookupTable(object):
         # table is the thing the does the actual work.  It is a C++ Table object, wrapped
         # as _LookupTable.
         self.table = _galsim._LookupTable(x, f, interpolant)
+
+    @property
+    def x_min(self): return min(self.x)
+    @property
+    def x_max(self): return max(self.x)
+    @property
+    def n_x(self): return len(self.x)
 
     def __call__(self, x):
         """Interpolate the LookupTable to get `f(x)` at some `x` value(s).
@@ -206,8 +212,30 @@ class LookupTable(object):
     def isLogF(self):
         return self.f_log
 
+    def __eq__(self, other):
+        return (isinstance(other, LookupTable) and
+                (self.x == other.x).all() and
+                (self.f == other.f).all() and
+                self.x_log == other.x_log and
+                self.f_log == other.f_log and
+                self.interpolant == other.interpolant)
+
+    def __repr__(self):
+        return 'galsim.LookupTable(x=array(%r), f=array(%r), x_log=%r, f_log=%r, interpolant=%r)'%(
+            self.x.tolist(), self.f.tolist(), self.x_log, self.f_log, self.interpolant)
+
+    def __str__(self):
+        if self.file is not None:
+            return 'galsim.LookupTable(file=%r, interpolant=%r)'%(
+                self.file, self.interpolant)
+        else:
+            return 'galsim.LookupTable(x=[%f,..,%f], f=[%f,...,%f], interpolant=%r)'%(
+                self.x[0], self.x[-1], self.f[0], self.f[-1], self.interpolant)
 
 
 # A function to enable pickling of tables
 _galsim._LookupTable.__getinitargs__ = lambda self: \
         (self.getArgs(), self.getVals(), self.getInterp())
+_galsim._LookupTable.__repr__ = lambda self: \
+        'galsim._galsim._LookupTable(array(%r), array(%r), %r)'%(
+            self.getArgs(), self.getVals(), self.getInterp())
