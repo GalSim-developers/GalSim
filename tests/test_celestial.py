@@ -97,7 +97,7 @@ def test_angle():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_basic():
+def test_celestialcoord_basic():
     """Basic tests of CelestialCoord construction. etc.
     """
     import time
@@ -132,7 +132,7 @@ def test_basic():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_distance():
+def test_celestialcoord_distance():
     import time
     t1 = time.time()
 
@@ -199,7 +199,7 @@ def test_distance():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_angleBetween():
+def test_celestialcoord_angleBetween():
     import time
     t1 = time.time()
 
@@ -552,9 +552,9 @@ def test_galactic():
 
 if __name__ == '__main__':
     test_angle()
-    test_basic()
-    test_distance()
-    test_angleBetween()
+    test_celestialcoord_basic()
+    test_celestialcoord_distance()
+    test_celestialcoord_angleBetween()
     test_projection()
     test_precess()
     test_galactic()

@@ -331,7 +331,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     # Check for trivial noop.
     if len(x) <= 2:
         # Nothing to do
-        return
+        return x,f
 
     # Start by calculating the complete integral of |f|
     total_integ = numpy.trapz(abs(f),x)
