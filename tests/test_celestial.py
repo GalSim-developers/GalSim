@@ -479,10 +479,29 @@ def test_ecliptic():
     el, b = vernal_equinox.ecliptic()
     numpy.testing.assert_almost_equal(b.rad(), 0., decimal=6)
     numpy.testing.assert_almost_equal(el.rad(), 0., decimal=6)
-    autumnal_equinox = galsim.CelestialCoord(numpy.pi*galsim.radians, 0.*galsim.radians)
+    autumnal_equinox = galsim.CelestialCoord(pi*galsim.radians, 0.*galsim.radians)
     el, b = autumnal_equinox.ecliptic()
-    numpy.testing.assert_almost_equal(el.rad(), np.pi, decimal=6)
+    numpy.testing.assert_almost_equal(el.rad(), pi, decimal=6)
     numpy.testing.assert_almost_equal(b.rad(), 0., decimal=6)
+
+    # Finally, test the results of using a date to get absolute ecliptic coordinates instead of ones
+    # defined with respect to the sun. For this, use dates and times of vernal and autumnal equinox
+    # in 2014 from
+    # http://wwp.greenwichmeantime.com/longest-day/
+    # and the conversion to Julian dates from
+    # http://www.aavso.org/jd-calculator
+    vernal_eq_jd = 2456737.20625
+    el, b = vernal_equinox.ecliptic(epoch=2014.)
+    el_abs, b_abs = vernal_equinox.ecliptic(epoch=2014, julian_date=vernal_eq_jd)
+    # Vernal equinox: should have (el, b) = (el_abs, b_abs) = 0.0
+    numpy.testing.assert_almost_equal(el_abs.rad(), el.rad(), decimal=3)
+    numpy.testing.assert_almost_equal(b_abs.rad(), b.rad(), decimal=6)
+    # Now do the autumnal equinox: should have (el_abs, b_abs) = (el, b) = (pi, 0).
+    autumnal_eq_jd = 2456923.60347
+    el, b = autumnal_equinox.ecliptic(epoch=2014.)
+    el_abs, b_abs = autumnal_equinox.ecliptic(epoch=2014, julian_date=vernal_eq_jd)
+    numpy.testing.assert_almost_equal(el_abs.rad(), el.rad(), decimal=3)
+    numpy.testing.assert_almost_equal(b_abs.rad(), b.rad(), decimal=6)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

@@ -26,11 +26,10 @@ import galsim
 import numpy as np
 import os
 
-def getSkyLevel(bandpass, world_pos=None, exptime=None):
+def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2015, julian_date=None):
     """
     Get the expected sky level for a WFIRST observation due to zodiacal light for this bandpass and
-    position, for an observation on March 21 (when the Sun is at ecliptic latitude and longitude of
-    0).
+    position.
 
     This routine requires Bandpass objects that were loaded by galsim.wfirst.getBandpasses().  That
     routine will have stored tables containing the sky background as a function of position on the
@@ -60,11 +59,18 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None):
 
     @param bandpass     A Bandpass object.
     @param world_pos    A position, given as a CelestialCoord object.  If None, then the routine
-                        will use an ecliptic longitude of 90 degrees (as a fair compromise between 0
-                        and 180), and an ecliptic latitude of 30 degrees (decently out of the plane
+                        will use an ecliptic longitude of 90 degrees with respect to the sun
+                        position (as a fair compromise between 0 and 180), and an ecliptic latitude
+                        of 30 degrees with respect to the sun position (decently out of the plane
                         of the Earth-sun orbit). [default: None]
     @param exptime      Exposure time in seconds.  If None, use the default WFIRST exposure time.
                         [default: None]
+    @param epoch        The epoch to be used for estimating the obliquity of the ecliptic when
+                        converting to ecliptic coordinates.
+                        [default: 2015.]
+    @param julian_date  The Julian date of the observation.  If None, then the conversion to
+                        ecliptic coordinates assumes the sun is at ecliptic coordinates of (0,0), as
+                        it is at the vernal equinox. [default: None]
 
     @returns the expected sky level in e-/arcsec^2.
     """
@@ -81,7 +87,7 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None):
     else:
         if not isinstance(world_pos, galsim.CelestialCoord):
             raise ValueError("Position (world_pos) must be supplied as a CelestialCoord!")
-        ecliptic_lon, ecliptic_lat = world_pos.ecliptic()
+        ecliptic_lon, ecliptic_lat = world_pos.ecliptic(epoch=epoch, julian_date=julian_date)
 
     # Check the position in our table, and make sure to take advantage of the latitude / longitude
     # symmetries:

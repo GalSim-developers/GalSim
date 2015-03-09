@@ -585,15 +585,16 @@ class CelestialCoord(object):
 
         return (el, b)
 
-    def ecliptic(self, epoch=2000.):
+    def ecliptic(self, epoch=2000., julian_date=None):
         """Get the longitude and latitude in ecliptic coordinates corresponding to this position.
 
-        Technically, this routine actually returns the ecliptic coordinates with respect to those of
-        the sun.  Equivalently one can think of it as returning the ecliptic coordinates at the
+        Technically, this routine by default returns the ecliptic coordinates with respect to those
+        of the sun.  Equivalently one can think of it as returning the ecliptic coordinates at the
         vernal equinox, when the sun is located at (0,0) in ecliptic coordinates.  The `epoch`
         parameter is used to get an accurate value for the (time-varying) obliquity of the ecliptic,
         but not to account for the sun's varying position in ecliptic coordinates as a function of
-        time.
+        time.  To get an absolute value of the ecliptic coordinates for some arbitrary Julian date
+        taking into account the sun position on that date, use the `julian_date` argument.
 
         The formulae for this are quite straightforward.  It requires just a single parameter for
         the transformation, the obliquity of the ecliptic (the Earth's axial tilt).  This routine
@@ -605,8 +606,13 @@ class CelestialCoord(object):
         accuracy then this routine would require improvements (not just higher precision on the
         axial tilt but also including its very slight time dependence).
 
-        @param   epoch     The epoch to be used for estimating the obliquity of the ecliptic.
-                           [default: 2000.]
+        @param  epoch        The epoch to be used for estimating the obliquity of the ecliptic.
+                             [default: 2000.]
+        @param  julian_date  The Julian date to be used to calculate the ecliptic coordinates.  If
+                             None, then the ecliptic coordinates that are returned should be
+                             interpreted as those with respect to the sun (i.e., assuming the sun is
+                             at (0,0) as it is at the vernal equinox).
+                             [default: None]
 
         @returns the longitude and latitude as a tuple (lambda, beta), given as Angle instances.
         """
@@ -638,9 +644,27 @@ class CelestialCoord(object):
         beta = math.asin(z_ecl)*galsim.radians
         lam = math.atan2(y_ecl, x_ecl)*galsim.radians
 
+        if julian_date is not None:
+            lam_sun, _ = _sun_position_ecliptic(julian_date)
+            lam += lam_sun
+
         return (lam, beta)
 
     def copy(self): return CelestialCoord(self._ra, self._dec)
 
     def __repr__(self): return 'CelestialCoord('+repr(self._ra)+','+repr(self._dec)+')'
+
+def _sun_position_ecliptic(date):
+    # This is a helper routine to calculate the position of the sun in ecliptic coordinates given a
+    # Julian date.  It is most precise for dates between 1950-2050, and is based on
+    # http://en.wikipedia.org/wiki/Position_of_the_Sun#Ecliptic_coordinates
+    # We start by getting the number of days since Greenwich noon on 1 January 2000 (J2000).
+    import math
+    n = date - 2451545.0
+    L = (280.46*galsim.degrees + (0.9856474*galsim.degrees)*n).wrap()
+    g = (357.528*galsim.degrees + (0.9856003*galsim.degrees)*n).wrap()
+    lam = L + (1.915*galsim.degrees)*math.sin(g.rad()) + \
+        (0.020*galsim.degrees)*math.sin((2*g).rad())
+    lam += 360.*galsim.degrees
+    return (lam.wrap(), 0.*galsim.degrees)
 
