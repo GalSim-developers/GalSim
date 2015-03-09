@@ -597,14 +597,7 @@ class CelestialCoord(object):
         taking into account the sun position on that date, use the `julian_date` argument.
 
         The formulae for this are quite straightforward.  It requires just a single parameter for
-        the transformation, the obliquity of the ecliptic (the Earth's axial tilt).  This routine
-        gives results that agree with a pre-existing online calculator,
-        http://lambda.gsfc.nasa.gov/toolbox/tb_coordconv.cfm, to very good precision, but it's not
-        perfect.  Based on the pattern of the errors, it seems that that converter has a more
-        precise value for the axial tilt.  However, this routine is not currently being used for
-        really precise calculations, so a percent error is tolerable.  If you need really high
-        accuracy then this routine would require improvements (not just higher precision on the
-        axial tilt but also including its very slight time dependence).
+        the transformation, the obliquity of the ecliptic (the Earth's axial tilt).
 
         @param  epoch        The epoch to be used for estimating the obliquity of the ecliptic.
                              [default: 2000.]
