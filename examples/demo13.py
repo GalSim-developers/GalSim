@@ -106,7 +106,11 @@ def main(argv):
     # more interesting image with greater variation in the galaxy population can change `n_use` to
     # something larger (but it should be <=500, which is the number of galaxies in this small
     # example catalog).  With 4000 galaxies in a 4k x 4k image with the WFIRST pixel scale, the
-    # effective galaxy number density is 74/arcmin^2
+    # effective galaxy number density is 74/arcmin^2.  This is not the number density that is
+    # expected for a sample that is so bright (I<23.5) but it makes the image more visually
+    # interesting.  One could think of it as what you'd get if you added up several images at once,
+    # making the images for a sample that is much deeper have the same S/N as that for an I<23.5
+    # sample in a single image.
     n_use = 10
     n_tot = 4000
 
