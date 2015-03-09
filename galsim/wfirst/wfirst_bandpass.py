@@ -72,15 +72,8 @@ def getBandpasses(AB_zeropoint=True, exptime=None, thin_err=1.e-4):
     # Begin by reading in the file containing the info.
     datafile = os.path.join(galsim.meta_data.share_dir, "afta_throughput.txt")
     # One line with the column headings, and the rest as a NumPy array.
-    data = np.loadtxt(datafile, skiprows=1).transpose()
-    first_line = open(datafile).readline().rstrip().split()
-    if len(first_line) != data.shape[0]:
-        raise RuntimeError("Inconsistency in number of columns and header line in file %s"%datafile)
-
-    # Identify the index of the column containing the wavelength in microns.  Get the wavelength and
-    # convert to nm.
-    wave_ind = first_line.index('Wave')
-    wave = 1000.*data[wave_ind,:]
+    data = np.genfromtxt(datafile, names=True)
+    wave = 1000.*data['Wave']
 
     if AB_zeropoint:
         # Note that withZeropoint wants an effective diameter in cm, not m.  Also, the effective
@@ -96,17 +89,16 @@ def getBandpasses(AB_zeropoint=True, exptime=None, thin_err=1.e-4):
 
     # Set up a dictionary.
     bandpass_dict = {}
-    i_band = 0
     # Loop over the bands.
-    for index in range(len(first_line)):
-        # Need to skip the entry for wavelength, and for the prism and grism (not used for weak
-        # lensing imaging).
-        bp_name = first_line[index]
-        if index==wave_ind or bp_name=='SNPrism' or bp_name=='BAO-Grism':
+    band_list = data.dtype.names[1:]
+    for index in range(len(band_list)):
+        # Need to skip the prism and grism (not used for weak lensing imaging).
+        bp_name = band_list[index]
+        if bp_name=='SNPrism' or bp_name=='BAO-Grism':
             continue
 
         # Initialize the bandpass object.
-        bp = galsim.Bandpass(galsim.LookupTable(wave, data[index,:]), wave_type='nm').thin(thin_err)
+        bp = galsim.Bandpass(galsim.LookupTable(wave, data[bp_name]), wave_type='nm').thin(thin_err)
         # Set the zeropoint if requested by the user:
         if AB_zeropoint:
             if exptime is None:
@@ -116,11 +108,10 @@ def getBandpasses(AB_zeropoint=True, exptime=None, thin_err=1.e-4):
         # Store the sky level information as an attribute.
         bp._ecliptic_lat = ecliptic_lat
         bp._ecliptic_lon = ecliptic_lon
-        bp._sky_level = sky_data[2+i_band, :]
+        bp._sky_level = sky_data[2+index, :]
 
         # Add it to the dictionary.
-        bandpass_dict[first_line[index]] = bp
-        i_band += 1
+        bandpass_dict[bp_name] = bp
 
     return bandpass_dict
 
