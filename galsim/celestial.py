@@ -585,8 +585,15 @@ class CelestialCoord(object):
 
         return (el, b)
 
-    def ecliptic(self):
+    def ecliptic(self, epoch=2000.):
         """Get the longitude and latitude in ecliptic coordinates corresponding to this position.
+
+        Technically, this routine actually returns the ecliptic coordinates with respect to those of
+        the sun.  Equivalently one can think of it as returning the ecliptic coordinates at the
+        vernal equinox, when the sun is located at (0,0) in ecliptic coordinates.  The `epoch`
+        parameter is used to get an accurate value for the (time-varying) obliquity of the ecliptic,
+        but not to account for the sun's varying position in ecliptic coordinates as a function of
+        time.
 
         The formulae for this are quite straightforward.  It requires just a single parameter for
         the transformation, the obliquity of the ecliptic (the Earth's axial tilt).  This routine
@@ -598,6 +605,9 @@ class CelestialCoord(object):
         accuracy then this routine would require improvements (not just higher precision on the
         axial tilt but also including its very slight time dependence).
 
+        @param   epoch     The epoch to be used for estimating the obliquity of the ecliptic.
+                           [default: 2000.]
+
         @returns the longitude and latitude as a tuple (lambda, beta), given as Angle instances.
         """
         import math
@@ -605,7 +615,18 @@ class CelestialCoord(object):
         # We are going to work in terms of the (x, y, z) projections.
         self._set_aux()
 
-        ep = 23.4*galsim.degrees # obliquity of the ecliptic, epsilon
+        # We need to figure out the time in Julian centuries from J2000 for this epoch.
+        t = (epoch - 2000.)/100.
+        # Then we use the last (most recent) formula listed under
+        # http://en.wikipedia.org/wiki/Ecliptic#Obliquity_of_the_ecliptic, from
+        # JPL's 2010 calculations.
+        ep = galsim.DMS_Angle('23:26:21.406')
+        ep -= galsim.DMS_Angle('00:00:46.836769')*t
+        ep -= galsim.DMS_Angle('00:00:0.0001831')*(t**2)
+        ep += galsim.DMS_Angle('00:00:0.0020034')*(t**3)
+        # There are even higher order terms, but they are really not important for any reasonable
+        # calculation we could ever do with GalSim.
+
         cos_ep = math.cos(ep.rad())
         sin_ep = math.sin(ep.rad())
 

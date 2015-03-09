@@ -463,17 +463,15 @@ def test_ecliptic():
         galsim.HMS_Angle('18:00:00.00'),
         galsim.DMS_Angle('66:33:38.55'))
     el, b = north_pole.ecliptic()
-    # North pole should have b=90 degrees, with el being completely arbitrary.  Note that
-    # imprecision of test is because the routine does not have the most accurate expression for the
-    # obliquity of the ecliptic.  So percent-level precision is the best we can do at this point.
-    numpy.testing.assert_almost_equal(b.rad(), pi/2, decimal=2)
+    # North pole should have b=90 degrees, with el being completely arbitrary.
+    numpy.testing.assert_almost_equal(b.rad(), pi/2, decimal=6)
 
     south_pole = galsim.CelestialCoord(
         galsim.HMS_Angle('06:00:00.00'),
         galsim.DMS_Angle('-66:33:38.55'))
     el, b = south_pole.ecliptic()
     # South pole should have b=-90 degrees, with el being completely arbitrary.
-    numpy.testing.assert_almost_equal(b.rad(), -pi/2, decimal=2)
+    numpy.testing.assert_almost_equal(b.rad(), -pi/2, decimal=6)
 
     # Also confirm that positions that should be the same in equatorial and ecliptic coordinates are
     # actually the same:
