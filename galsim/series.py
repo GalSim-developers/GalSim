@@ -24,7 +24,7 @@ import numpy as np
 import copy
 import math
 import operator
-from itertools import product, combinations_with_replacement, count
+from itertools import product, combinations, count
 
 
 class Series(object):
@@ -635,39 +635,44 @@ class LinearOpticalSeries(Series):
                           coma1, coma2, trefoil1, trefoil2, spher]) != 0):
                 raise TypeError("Cannot pass in individual aberrations and array!")
         # Finally, just in case it was a tuple/list, make sure we end up with NumPy array:
-        self.aberrations = np.array(aberrations)
+        self.aberrations = np.array(aberrations) * np.pi * 4.0
 
         # Now separate into terms that are pure real and pure imag in the complex PSF
-        self.real_aberrations = [1.0]
-        self.imag_aberrations = []
-        self.real_indices = [(0,0)]
-        self.imag_indices = []
+        self.realcoeffs = [1.0]
+        self.imagcoeffs = []
+        self.realindices = [(0,0)]
+        self.imagindices = []
         for j, ab in enumerate(self.aberrations):
             if j < 2:
                 continue
             n,m = nZ[j]
-            if (m % 4) == 0:
-                self.imag_aberrations.append(ab)
-                self.imag_indices.append((n,m))
-            elif (m % 4) == 1:
-                self.real_aberrations.append(-ab)
-                self.real_indices.append((n, m))
-            elif (m % 4) == 2:
-                self.imag_aberrations.append(-ab)
-                self.imag_indices.append((n,m))
-            elif (m % 4) == 3:
-                self.real_aberrations.append(ab)
-                self.real_indices.append((n, m))
+            ipower = (m+1)%4    
+            if ipower == 0:
+                self.realcoeffs.append(ab)
+                self.realindices.append((n,m))
+            elif ipower == 1:
+                self.imagcoeffs.append(ab)
+                self.imagindices.append((n, m))
+            elif ipower == 2:
+                self.realcoeffs.append(-ab)
+                self.realindices.append((n,m))
+            elif ipower == 3:
+                self.imagcoeffs.append(-ab)
+                self.imagindices.append((n, m))
             else:
                 raise RuntimeError("What!?  How'd that happen?")
-        self.coeffs = [np.multiply.reduce(c) for c in
-                       combinations_with_replacement(self.real_aberrations, 2)]
-        self.coeffs.extend([np.multiply.reduce(c) for c in
-                            combinations_with_replacement(self.imag_aberrations, 2)])
+        # First do the square indices
+        self.coeffs = [c**2 for c in self.realcoeffs]
+        self.coeffs.extend([c**2 for c in self.imagcoeffs])
+        # Now handle the cross-indices
+        self.coeffs.extend([2*np.multiply.reduce(c) for c in combinations(self.realcoeffs, 2)])
+        self.coeffs.extend([2*np.multiply.reduce(c) for c in combinations(self.imagcoeffs, 2)])
 
-        self.indices = [i for i in combinations_with_replacement(self.real_indices, 2)]
-        self.indices.extend([i for i in
-                             combinations_with_replacement(self.imag_indices, 2)])
+        # Do the same with the indices
+        self.indices = [(i, i) for i in self.realindices]
+        self.indices.extend([(i, i) for i in self.imagindices])
+        self.indices.extend([i for i in combinations(self.realindices, 2)])
+        self.indices.extend([i for i in combinations(self.imagindices, 2)])
 
         super(LinearOpticalSeries, self).__init__()
         

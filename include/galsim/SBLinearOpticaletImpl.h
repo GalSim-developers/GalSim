@@ -55,8 +55,6 @@ namespace galsim {
         double getXNorm() const;
         double maxK() const;
         double stepK() const;
-
-        double getHalfLightRadius() const;
     private:
 
         LinearOpticaletInfo(const LinearOpticaletInfo& rhs); ///< Hide the copy constructor.
@@ -78,6 +76,8 @@ namespace galsim {
         // Helper functions used internally:
         void buildFT() const;
         double calculateFluxRadius(const double& flux_frac) const;
+        double Vnm(int n, int m, double r) const;
+        double jinc(int n, double r) const;
     };
 
     class SBLinearOpticalet::SBLinearOpticaletImpl : public SBProfileImpl
