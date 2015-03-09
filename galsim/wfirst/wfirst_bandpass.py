@@ -94,7 +94,7 @@ def getBandpasses(AB_zeropoint=True, exptime=None, thin_err=1.e-4):
     for index in range(len(band_list)):
         # Need to skip the prism and grism (not used for weak lensing imaging).
         bp_name = band_list[index]
-        if bp_name=='SNPrism' or bp_name=='BAO-Grism':
+        if bp_name=='SNPrism' or bp_name=='BAOGrism':
             continue
 
         # Initialize the bandpass object.
