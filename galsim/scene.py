@@ -43,8 +43,22 @@ class COSMOSCatalog(object):
         https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy-Data
 
     option (1) for more information.  Note that if you want to make real galaxies you need to
-    download the full tarball with all galaxy images, whereas if you want to make parametric
-    galaxies you only need the supplemental catalogs, not the images.
+    download and store the full tarball with all galaxy images, whereas if you want to make
+    parametric galaxies you only need the catalog real_galaxy_catalog_23.5_fits.fits and can delete
+    the other files.
+
+    Finally, we provide a program that will download the large COSMOS sample for you and
+    put it in the $PREFIX/share/galsim directory of your installation path.  The program is
+
+            galsim_download_cosmos
+
+    which gets installed in the $PREFIX/bin directory when you install GalSim.  If you use
+    this program to download the COSMOS catalog, then you can use it with
+
+            cat = galsim.COSMOSCatalog()
+
+    GalSim knows the location of the installation share directory, so it will automatically
+    look for it there.
 
     After getting the catalogs, there is a method makeObj() that can make an object corresponding to
     any chosen galaxy in the catalog (whether real or parametric).  See
@@ -81,7 +95,9 @@ class COSMOSCatalog(object):
     Initialization
     --------------
 
-    @param file_name    The file containing the catalog.
+    @param file_name    The file containing the catalog. [default: None, which will look for the
+                        COSMOS catalog in $PREFIX/share/galsim.  It will raise an exception if the
+                        catalog is not there telling you to run galsim_download_cosmos.]
     @param use_real     Use realistic galaxies or parametric ones?  [default: True]
     @param preload      Keyword that is only used for real galaxies, not parametric ones, to choose
                         whether to preload the header information.  If `preload=True`, the bulk of  
@@ -89,7 +105,8 @@ class COSMOSCatalog(object):
                         approximately the same total I/O time (assuming you eventually use most of
                         the image files referenced in the catalog), but it is spread over the
                         various calls to getGal() and getPSF().  [default: False]
-    @param image_dir    Keyword that is only used for real galaxies, not parametric ones.
+    @param image_dir    Keyword that is only used for real galaxies, not parametric ones, to specify
+                        the directory of the image files.
                         If a string containing no `/`, it is the relative path from the location of
                         the catalog file to the directory containing the galaxy/PDF images.
                         If a path (a string containing `/`), it is the full path to the directory
@@ -115,7 +132,7 @@ class COSMOSCatalog(object):
                  and fluxes were used to simulate a deeper I<25 sample ('True') or not.
 
     """
-    def __init__(self, file_name, use_real=True, image_dir=None, dir=None, noise_dir=None,
+    def __init__(self, file_name=None, use_real=True, image_dir=None, dir=None, noise_dir=None,
                       preload=False, deep_sample=False, exclude_fail=True):
         # Make fake deeper sample if necessary.
         if deep_sample:
