@@ -42,8 +42,8 @@ the code in 'diff mode' (which is not the default, but which makes difference im
 impact of each detector effect separately) they take up a bit over 2G.
 
 New features introduced in this demo:
-- galsim.makeCOSMOSCatalog(...)
-- galsim.makeCOSMOSObj(...)
+- galsim.COSMOSCatalog(...)
+- galsim.COSMOSCatalog.makeObj()
 - image.quantize()
 - Routines to include WFIRST-specific detector effects:
   - galsim.wfirst.addReciprocityFailure(image)
@@ -99,8 +99,8 @@ def main(argv):
     dir = 'data'
     # Use the routine that can take COSMOS real or parametric galaxy information, and tell it we
     # want parametric galaxies that represent an I<25 sample.
-    cat = galsim.makeCOSMOSCatalog(cat_file_name, dir=dir, use_real=False, deep_sample=True)
-    logger.info('Read in %d galaxies from catalog'%len(cat))
+    cat = galsim.COSMOSCatalog(cat_file_name, dir=dir, use_real=False, deep_sample=True)
+    logger.info('Read in %d galaxies from catalog'%cat.nobjects)
     # Just use a few galaxies, to save time.  Note that we are going to put 4000 galaxy images into
     # our big image, so if we have n_use=10, each galaxy will appear 400 times.  Users who want a
     # more interesting image with greater variation in the galaxy population can change `n_use` to
@@ -163,16 +163,13 @@ def main(argv):
     # appropriate SEDs per galaxy component, at the appropriate galaxy redshift).  Note that since
     # the PSF is position-independent within the SCA, we can simply do the convolution with that PSF
     # now instead of using a different one for each position.
+    logger.info('Processing the objects in the catalog to get GSObject representations')
+    obj_list = cat.makeObj(numpy.arange(n_use), chromatic=True)
     gal_list = []
-    for i_gal in xrange(n_use):
-        logger.info('Processing the object at row %d in the input catalog.'%i_gal)
-
-        # Use built-in routines for constructing COSMOS objects:
-        gal = galsim.makeCOSMOSObj(cat, i_gal, chromatic=True)
-
+    for ind in range(len(obj_list)):
         # Convolve the chromatic galaxy and the chromatic PSF
-        final = galsim.Convolve(gal, PSF)
-        logger.debug('Pre-processing for galaxy %d completed.'%i_gal)
+        final = galsim.Convolve(obj_list[ind], PSF)
+        logger.debug('Pre-processing for galaxy %d completed.'%ind)
         gal_list.append(final)
 
     # Calculate the sky level for each filter, and draw the PSF and the galaxies through the
