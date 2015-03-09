@@ -98,8 +98,8 @@ def main(argv):
     cat_file_name = 'real_galaxy_23.5_500_fits.fits'
     dir = 'data'
     # Use the routine that can take COSMOS real or parametric galaxy information, and tell it we
-    # want parametric galaxies that represent an I<25 sample.
-    cat = galsim.COSMOSCatalog(cat_file_name, dir=dir, use_real=False, deep_sample=True)
+    # want parametric galaxies that represent an I<23.5 sample.
+    cat = galsim.COSMOSCatalog(cat_file_name, dir=dir, use_real=False)
     logger.info('Read in %d galaxies from catalog'%cat.nobjects)
     # Just use a few galaxies, to save time.  Note that we are going to put 4000 galaxy images into
     # our big image, so if we have n_use=10, each galaxy will appear 400 times.  Users who want a
