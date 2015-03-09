@@ -167,8 +167,8 @@ class COSMOSCatalog(object):
 
             # If requested, select galaxies based on existence of a usable fit.
             if exclude_fail:
-                sersicfit_status = cat.data['fit_status'][:,4]
-                bulgefit_status = cat.data['fit_status'][:,0]
+                sersicfit_status = cat['fit_status'][:,4]
+                bulgefit_status = cat['fit_status'][:,0]
                 use_fit_ind = np.where(
                     (sersicfit_status > 0) &
                     (sersicfit_status < 5) &
