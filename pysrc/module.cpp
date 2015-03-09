@@ -49,6 +49,7 @@ namespace galsim {
     void pyExportSBSpergelet();
     void pyExportSBMoffat();
     void pyExportSBMoffatlet();
+    void pyExportSBLinearOpticalet();
     void pyExportSBAiry();
     void pyExportSBShapelet();
     void pyExportSBInterpolatedImage();
@@ -93,6 +94,7 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportSBSpergelet();
     galsim::pyExportSBMoffat();
     galsim::pyExportSBMoffatlet();
+    galsim::pyExportSBLinearOpticalet();
     galsim::pyExportSBAiry();
     galsim::pyExportSBShapelet();
     galsim::pyExportSBInterpolatedImage();

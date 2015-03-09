@@ -35,10 +35,10 @@ namespace galsim {
     struct PySBLinearOpticalet
     {
 
-        static SBLinearOpticalet* construct(double beta, double r0, int j, int q,
+        static SBLinearOpticalet* construct(double r0, int n1, int m1, int n2, int m2,
                                             boost::shared_ptr<GSParams> gsparams)
         {
-            return new SBLinearOpticalet(beta, r0, j, q, gsparams);
+            return new SBLinearOpticalet(r0, n1, m1, n2, m2, gsparams);
         }
 
         static void wrap()

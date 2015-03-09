@@ -22,6 +22,7 @@ SBDeconvolve.cpp
 SBKolmogorov.cpp
 SBSpergel.cpp
 SBSpergelet.cpp
+SBLinearOpticalet.cpp
 CppShear.cpp
 Table.cpp
 RealSpaceConvolve.cpp

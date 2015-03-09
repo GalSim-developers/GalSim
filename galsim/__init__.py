@@ -137,7 +137,7 @@ from compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelati
 from series import Series, SeriesConvolution
 from series import Spergelet, SpergelSeries
 from series import Moffatlet, MoffatSeries
-from series import LinearOpticalet
+from series import LinearOpticalet, LinearOpticalSeries
 
 # Chromatic
 from chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum

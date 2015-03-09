@@ -20,6 +20,7 @@ SBInterpolatedImage.cpp
 SBKolmogorov.cpp
 SBSpergel.cpp
 SBSpergelet.cpp
+SBLinearOpticalet.cpp
 Random.cpp
 Noise.cpp
 HSM.cpp

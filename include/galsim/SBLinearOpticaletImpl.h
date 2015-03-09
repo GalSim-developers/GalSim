@@ -50,19 +50,19 @@ namespace galsim {
          *
          * The input `ksq` should be (k_actual * r0)**2.
          */
-        double kValue(double ksq, double phi) const;
+        std::complex<double> kValue(double ksq, double phi) const;
 
         double getXNorm() const;
         double maxK() const;
         double stepK() const;
 
+        double getHalfLightRadius() const;
     private:
 
         LinearOpticaletInfo(const LinearOpticaletInfo& rhs); ///< Hide the copy constructor.
         void operator=(const LinearOpticaletInfo& rhs); ///<Hide assignment operator.
 
         // Input variables:
-        double _r0;                  ///< scale radius
         int _n1, _m1, _n2, _m2;      ///< LinearOpticalet indices.
         const GSParamsPtr _gsparams; ///< The GSParams object.
 
@@ -72,7 +72,8 @@ namespace galsim {
         mutable double _xnorm;   ///< Real space normalization.
 
         // Parameters for the Hankel transform:
-        mutable Table<double,double> _ft; ///< Lookup table for Fourier transform
+        mutable Table<double,double> _ftsum; ///< Lookup table for Hankel transform
+        mutable Table<double,double> _ftdiff; ///< Lookup table for Hankel transform
 
         // Helper functions used internally:
         void buildFT() const;

@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBLinearOpticalet.h"
 #include "SBLinearOpticaletImpl.h"
@@ -39,8 +39,8 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
-//std::ostream* dbgout = &std::cout;
-//int verbose_level = 1;
+std::ostream* dbgout = &std::cout;
+int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -84,7 +84,7 @@ namespace galsim {
     }
 
     LRUCache<boost::tuple<int,int,int,int,GSParamsPtr>,LinearOpticaletInfo>
-        SBLinearOpticalet::SBLinearOpticaletImpl::cache(sbp::max_linearopticalet_cache);
+    SBLinearOpticalet::SBLinearOpticaletImpl::cache(sbp::max_linearopticalet_cache);
 
     SBLinearOpticalet::SBLinearOpticaletImpl::SBLinearOpticaletImpl(double r0,
                                                                     int n1, int m1,
@@ -166,42 +166,6 @@ namespace galsim {
         // }
     }
 
-    // void SBLinearOpticalet::SBLinearOpticaletImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-    //                                               double kx0, double dkx, int izero,
-    //                                               double ky0, double dky, int jzero) const
-    // {
-    //     dbg<<"SBLinearOpticalet fillKValue\n";
-    //     dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
-    //     dbg<<"ky = "<<ky0<<" + i * "<<dky<<", jzero = "<<jzero<<std::endl;
-    //     // Not sure about quadrant.  LinearOpticalets are sometimes even, sometimes odd.
-    //     // if (izero != 0 || jzero != 0) {
-    //     //     xdbg<<"Use Quadrant\n";
-    //     //     fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
-    //     // } else {
-    //         xdbg<<"Non-Quadrant\n";
-    //         assert(val.stepi() == 1);
-    //         const int m = val.colsize();
-    //         const int n = val.rowsize();
-    //         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-
-    //         kx0 *= _r0;
-    //         dkx *= _r0;
-    //         ky0 *= _r0;
-    //         dky *= _r0;
-
-    //         for (int j=0;j<n;++j,ky0+=dky) {
-    //             double kx = kx0;
-    //             double kysq = ky0*ky0;
-    //             It valit = val.col(j).begin();
-    //             for (int i=0;i<m;++i,kx+=dkx) {
-    //                 double ksq = kx*kx + kysq;
-    //                 double phi = atan2(ky0, kx);
-    //                 *valit++ = _info->kValue(ksq, phi);
-    //             }
-    //         }
-    //     // }
-    // }
-
     void SBLinearOpticalet::SBLinearOpticaletImpl::fillXValue(tmv::MatrixView<double> val,
                                                               double x0, double dx, double dxy,
                                                               double y0, double dy, double dyx) const
@@ -235,44 +199,13 @@ namespace galsim {
         }
     }
 
-    // void SBLinearOpticalet::SBLinearOpticaletImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-    //                                               double kx0, double dkx, double dkxy,
-    //                                               double ky0, double dky, double dkyx) const
-    // {
-    //     dbg<<"SBLinearOpticalet fillKValue\n";
-    //     dbg<<"x = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
-    //     dbg<<"y = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
-    //     assert(val.stepi() == 1);
-    //     assert(val.canLinearize());
-    //     const int m = val.colsize();
-    //     const int n = val.rowsize();
-    //     typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-
-    //     kx0 *= _r0;
-    //     dkx *= _r0;
-    //     dkxy *= _r0;
-    //     ky0 *= _r0;
-    //     dky *= _r0;
-    //     dkyx *= _r0;
-
-    //     It valit = val.linearView().begin();
-    //     for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
-    //         double kx = kx0;
-    //         double ky = ky0;
-    //         for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) {
-    //             double ksq = kx*kx + ky*ky;
-    //             double phi = atan2(ky,kx);
-    //             *valit++ = _info->kValue(ksq, phi);
-    //         }
-    //     }
-    // }
-
     LinearOpticaletInfo::LinearOpticaletInfo(int n1, int m1, int n2, int m2,
                                              const GSParamsPtr& gsparams) :
         _n1(n1), _m1(m1), _n2(n2), _m2(m2), _gsparams(gsparams),
         _maxk(0.), _stepk(0.),
         _xnorm(0.),
-        _ft(Table<double,double>::spline)
+        _ftsum(Table<double,double>::spline),
+        _ftdiff(Table<double,double>::spline)
     {
         dbg<<"Start LinearOpticaletInfo constructor for (n1,m1,n2,m2) = ("
            <<_n1<<","<<_m1<<","<<_n2<<","<<_m2<<")"<<std::endl;
@@ -282,17 +215,18 @@ namespace galsim {
     {
         if (_xnorm == 0.0) {
             dbg<<"(n1,m1,n2,m2) = ("<<_n1<<","<<_m1<<","<<_n2<<","<<_m2<<")"<<std::endl;
+            _xnorm = 1.0;
             //_xnorm = (_beta-1.0)/M_PI * boost::math::tgamma(_beta+_j)/boost::math::tgamma(_beta);
         }
         return _xnorm;
     }
 
     // work with respect to Airy
-    double LinearOpticaletInfo::getHalfLightRadius() const
-    {
-        return 1.0;
-        //return std::sqrt(std::pow(0.5, 1./(1.-_beta)) - 1.);
-    }
+    // double LinearOpticaletInfo::getHalfLightRadius() const
+    // {
+    //     return 1.0;
+    //     //return std::sqrt(std::pow(0.5, 1./(1.-_beta)) - 1.);
+    // }
 
     // Use code from SBAiry, but ignore obscuration.
     double LinearOpticaletInfo::stepK() const
@@ -314,9 +248,19 @@ namespace galsim {
         return _maxk;
     }
 
+    double LinearOpticaletInfo::jinc(n, r) const
+    {
+        return boost::math::cyl_bessel_j(n+1, r)/r;
+    }
+
     // The workhorse routines...
     double LinearOpticaletInfo::xValue(double r, double phi) const
     {
+        if (r == 0.0) {
+            if (_n1==0 && _n2 == 0)
+                return 0.25;
+            return 0.0;
+        }
         double ret = boost::math::cyl_bessel_j(_n1+1, r)*boost::math::cyl_bessel_j(_n2+1, r)/r/r;
         if ((_n1-_m1+_n2-_m2) & 2) // if (n1-m1 + n2-m2) = 2 mod 4
             ret *= -1;
@@ -328,7 +272,7 @@ namespace galsim {
             ret *= cos(_m2 * phi);
         else if (_m2 < 0)
             ret *= sin(_m2 * phi);
-        return ret
+        return ret;
     }
 
     std::complex<double> LinearOpticaletInfo::kValue(double ksq, double phi) const
@@ -357,7 +301,7 @@ namespace galsim {
                 diffcoeff = sin(mdiff*phi);
             }
         }
-        ret = std::complex<double>(0.0, 0.0);
+        std::complex<double> ret = std::complex<double>(0.0, 0.0);
         // contribution from m1+m2 order Hankel transform
         if (msum & 1) { // imag sum output
             if (msum & 2) // neg
@@ -393,7 +337,7 @@ namespace galsim {
         double operator()(double r) const
         {
             return boost::math::cyl_bessel_j(_n1+1, r) * boost::math::cyl_bessel_j(_n2+1, r)
-                * boost::math::cyl_bessel_j(_m1+_m2, r*_k);
+                * boost::math::cyl_bessel_j(_m1+_m2, r*_k) / r;
         }
     private:
         int _n1, _m1, _n2, _m2;
@@ -408,7 +352,7 @@ namespace galsim {
         double operator()(double r) const
         {
             return boost::math::cyl_bessel_j(_n1+1, r) * boost::math::cyl_bessel_j(_n2+1, r)
-                * boost::math::cyl_bessel_j(_m1-_m2, r*_k);
+                * boost::math::cyl_bessel_j(_m1-_m2, r*_k) / r;
         }
     private:
         int _n1, _m1, _n2, _m2;
@@ -417,7 +361,7 @@ namespace galsim {
 
     void LinearOpticaletInfo::buildFT() const
     {
-        if (_ft.size() > 0) return;
+        if (_ftsum.size() > 0) return;
         dbg<<"Building LinearOpticalet Hankel transform"<<std::endl;
         dbg<<"(n1,m1,n2,m2) = ("<<_n1<<","<<_m1<<","<<_n2<<","<<_m2<<")"<<std::endl;
         // Do a Hankel transform and store the results in a lookup table.
@@ -448,26 +392,53 @@ namespace galsim {
 
 #ifdef DEBUGLOGGING
             std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
-            integ::IntRegion<double> regsum(0, integ::MOCK_INF, integ_dbgout);
-            integ::IntRegion<double> regdiff(0, integ::MOCK_INF, integ_dbgout);
+            integ::IntRegion<double> regsum(0, 10000.0, integ_dbgout);
+            integ::IntRegion<double> regdiff(0, 10000.0, integ_dbgout);
 #else
-            integ::IntRegion<double> regsum(0, integ::MOCK_INF);
-            integ::IntRegion<double> regdiff(0, integ::MOCK_INF);
+            integ::IntRegion<double> regsum(0, 10000.0);
+            integ::IntRegion<double> regdiff(0, 10000.0);
 #endif
+// #ifdef DEBUGLOGGING
+//             std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
+//             integ::IntRegion<double> regsum(0, integ::MOCK_INF, integ_dbgout);
+//             integ::IntRegion<double> regdiff(0, integ::MOCK_INF, integ_dbgout);
+// #else
+//             integ::IntRegion<double> regsum(0, integ::MOCK_INF);
+//             integ::IntRegion<double> regdiff(0, integ::MOCK_INF);
+// #endif
 
             // Add explicit splits at first several roots of Jn.
             // This tends to make the integral more accurate.
+            // First the zeros of J(msum, k r) and J(mdiff, k r)
             if (k != 0.0) {
                 for (int s=1; s<=30; ++s) {
-                    double rootsum = boost::math::cyl_bessel_j_zero(double(_m1+_m2), s);
-                    double rootdiff = boost::math::cyl_bessel_j_zero(double(_m1-_m2), s);
-                    //if (root > r*30.0) break;
-                    xxdbg<<"rootsum="<<rootsum/k<<std::endl;
-                    xxdbg<<"rootdiff="<<rootdiff/k<<std::endl;
-                    regsum.addSplit(rootsum/k);
-                    regdiff.addSplit(rootdiff/k);
+                    double root = boost::math::cyl_bessel_j_zero(double(_m1+_m2), s);
+                    if (root > k*10000.0) break;
+                    xxdbg<<"root="<<root/k<<std::endl;
+                    regsum.addSplit(root/k);
+                }
+                for (int s=1; s<=30; ++s) {
+                    double root = boost::math::cyl_bessel_j_zero(double(_m1-_m2), s);
+                    if (root > k*10000.0) break;
+                    xxdbg<<"root="<<root/k<<std::endl;
+                    regdiff.addSplit(root/k);
                 }
             }
+            // Now zeros of J(n1+1, r)
+            for (int s=1; s<30; ++s) {
+                double root = boost::math::cyl_bessel_j_zero(double(_n1+1), s);
+                if (root > 10000.0) break;
+                regsum.addSplit(root);
+                regdiff.addSplit(root);
+            }
+            // And finally zeros of J(n2+1, r)
+            for (int s=1; s<30; ++s) {
+                double root = boost::math::cyl_bessel_j_zero(double(_n2+1), s);
+                if (root > 10000.0) break;
+                regsum.addSplit(root);
+                regdiff.addSplit(root);
+            }
+
             xxdbg<<"int reg = ("<<0<<",inf)"<<std::endl;
 
             double valsum = integ::int1d(
@@ -482,8 +453,8 @@ namespace galsim {
                 this->_gsparams->integration_abserr);
             valdiff *= prefactor;
 
-            xdbg<<"ftsum("<<k<<") = "<<valsum<<"   "<<val<<std::endl;
-            xdbg<<"ftdiff("<<k<<") = "<<valdiff<<"   "<<val<<std::endl;
+            xdbg<<"ftsum("<<k<<") = "<<valsum<<"   "<<valsum<<std::endl;
+            xdbg<<"ftdiff("<<k<<") = "<<valdiff<<"   "<<valdiff<<std::endl;
 
             _ftsum.addEntry(k, valsum);
             _ftdiff.addEntry(k, valdiff);
