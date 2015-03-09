@@ -258,7 +258,7 @@ class RealGalaxyCatalog(object):
     postage stamps will in general need to be different sizes depending on the galaxy size.  
 
     While you could create your own catalog to use with this class, the typical use cases would
-    be to use one of the catalogs that we have created and distribute.  There are three such
+    be to use one of the catalogs that we have created and distributed.  There are three such
     catalogs currently, which can be use with one of the following initializations:
 
     1. A small example catalog is distributed with the GalSim distribution.  This catalog only
@@ -280,7 +280,7 @@ class RealGalaxyCatalog(object):
        Be warned that the catalogs are quite large.  The larger one is around 11 GB after unpacking
        the tarball.  To use one of these catalogs, you would initialize with
 
-           >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits',
+           >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_23.5.fits',
                                               dir='path/to/download/directory')
 
        There is also an optional `image_dir` parameter that lets you have the image files in
@@ -303,7 +303,7 @@ class RealGalaxyCatalog(object):
                       COSMOS catalog in $PREFIX/share/galsim.  It will raise an exception if the
                       catalog is not there telling you to run galsim_download_cosmos.]
     @param image_dir  The directory of the image files.  If the string contains '/', then it is an
-                      absoule path, else it is taken to be a relative path from the location of
+                      absolute path, else it is taken to be a relative path from the location of
                       the catalog file.  [default: None, which means to use the same directory
                       as the catalog file.]
     @param dir        The directory of catalog file. [default: None]
