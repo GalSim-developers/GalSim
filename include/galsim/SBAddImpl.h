@@ -132,6 +132,8 @@ namespace galsim {
         typedef std::list<SBProfile>::iterator Iter;
         typedef std::list<SBProfile>::const_iterator ConstIter;
 
+        std::string repr() const;
+
     protected:  // This is protected since we want inheritance by AddCorrelationFunctionImpl
 
         /// @brief The plist content is a pointer to a fresh copy of the summands.

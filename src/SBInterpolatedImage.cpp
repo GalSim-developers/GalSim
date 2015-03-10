@@ -77,6 +77,16 @@ namespace galsim {
         return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).forceMaxK(maxk); 
     }
 
+    std::string SBInterpolatedImage::SBInterpolatedImageImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBInterpolatedImage(";
+        oss << "image repr, xinterp repr, kinterp repr, pad_factor"; // TBD
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     template <class T>
     MultipleImageHelper::MultipleImageHelper(
         const std::vector<boost::shared_ptr<BaseImage<T> > >& images, double pad_factor) :

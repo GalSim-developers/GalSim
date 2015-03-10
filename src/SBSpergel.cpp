@@ -71,6 +71,16 @@ namespace galsim {
         return static_cast<const SBSpergelImpl&>(*_pimpl).getHalfLightRadius();
     }
 
+    std::string SBSpergel::SBSpergelImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBSpergel("<<getNu()<<", "<<getScaleRadius();
+        oss << ", None, "<<getFlux();
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     double SBSpergel::calculateIntegratedFlux(const double& r) const
     {
         assert(dynamic_cast<const SBSpergelImpl*>(_pimpl.get()));

@@ -101,7 +101,8 @@ def test_smallshear():
     do_kvalue(gauss,myImg,"sheared Gaussian")
 
     # Check picklability
-    do_pickle(gauss)
+    do_pickle(gauss.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
+    do_pickle(gauss, lambda x: x.drawImage())
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -156,7 +157,8 @@ def test_largeshear():
     do_kvalue(gauss,myImg, "sheared Gaussian")
 
     # Check picklability
-    do_pickle(gauss)
+    do_pickle(gauss.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
+    do_pickle(gauss, lambda x: x.drawImage())
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -205,7 +207,8 @@ def test_rotate():
     do_kvalue(gal,myImg,"rotated sheared Sersic")
 
     # Check picklability
-    do_pickle(gal)
+    do_pickle(gal.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
+    do_pickle(gal, lambda x: x.drawImage())
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -277,7 +280,8 @@ def test_mag():
     do_kvalue(gal,myImg,"dilated Exponential")
 
     # Check picklability
-    do_pickle(gal)
+    do_pickle(gal.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
+    do_pickle(gal, lambda x: x.drawImage())
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -350,7 +354,8 @@ def test_shift():
     do_kvalue(gauss,myImg, "shifted Gaussian")
 
     # Check picklability
-    do_pickle(gauss)
+    do_pickle(gauss.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
+    do_pickle(gauss, lambda x: x.drawImage())
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -492,7 +497,8 @@ def test_rescale():
     do_kvalue(sersic2,myImg, "scaled Sersic")
 
     # Check picklability
-    do_pickle(sersic2)
+    do_pickle(sersic2.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
+    do_pickle(sersic2, lambda x: x.drawImage())
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -708,85 +714,90 @@ def test_flip():
         image_k2 = prof.shear(s).drawImage(image=im.copy())
 
         # Flip around y axis (i.e. x -> -x)
-        flip = prof.transform(-1, 0, 0, 1)
-        image2_x = flip.drawImage(image=im.copy(), method='no_pixel')
+        flip1 = prof.transform(-1, 0, 0, 1)
+        image2_x = flip1.drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x.array, image2_x.array[:,::-1], decimal=decimal,
             err_msg="Flipping image around y-axis failed x test")
-        image2_x1 = flip.shear(q1).drawImage(image=im.copy(), method='no_pixel')
+        image2_x1 = flip1.shear(q1).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x1.array, image2_x1.array[:,::-1], decimal=decimal,
             err_msg="Flipping image around y-axis failed x1 test")
-        image2_x2 = flip.shear(s1).drawImage(image=im.copy(), method='no_pixel')
+        image2_x2 = flip1.shear(s1).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x2.array, image2_x2.array[:,::-1], decimal=decimal,
             err_msg="Flipping image around y-axis failed x2 test")
-        image2_k = flip.drawImage(image=im.copy())
+        image2_k = flip1.drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k.array, image2_k.array[:,::-1], decimal=decimal,
             err_msg="Flipping image around y-axis failed k test")
-        image2_k1 = flip.shear(q1).drawImage(image=im.copy())
+        image2_k1 = flip1.shear(q1).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k1.array, image2_k1.array[:,::-1], decimal=decimal,
             err_msg="Flipping image around y-axis failed k1 test")
-        image2_k2 = flip.shear(s1).drawImage(image=im.copy())
+        image2_k2 = flip1.shear(s1).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k2.array, image2_k2.array[:,::-1], decimal=decimal,
             err_msg="Flipping image around y-axis failed k2 test")
 
         # Flip around x axis (i.e. y -> -y)
-        flip = prof.transform(1, 0, 0, -1)
-        image2_x = flip.drawImage(image=im.copy(), method='no_pixel')
+        flip2 = prof.transform(1, 0, 0, -1)
+        image2_x = flip2.drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x.array, image2_x.array[::-1,:], decimal=decimal,
             err_msg="Flipping image around x-axis failed x test")
-        image2_x1 = flip.shear(q1).drawImage(image=im.copy(), method='no_pixel')
+        image2_x1 = flip2.shear(q1).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x1.array, image2_x1.array[::-1,:], decimal=decimal,
             err_msg="Flipping image around x-axis failed x1 test")
-        image2_x2 = flip.shear(s1).drawImage(image=im.copy(), method='no_pixel')
+        image2_x2 = flip2.shear(s1).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x2.array, image2_x2.array[::-1,:], decimal=decimal,
             err_msg="Flipping image around x-axis failed x2 test")
-        image2_k = flip.drawImage(image=im.copy())
+        image2_k = flip2.drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k.array, image2_k.array[::-1,:], decimal=decimal,
             err_msg="Flipping image around x-axis failed k test")
-        image2_k1 = flip.shear(q1).drawImage(image=im.copy())
+        image2_k1 = flip2.shear(q1).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k1.array, image2_k1.array[::-1,:], decimal=decimal,
             err_msg="Flipping image around x-axis failed k1 test")
-        image2_k2 = flip.shear(s1).drawImage(image=im.copy())
+        image2_k2 = flip2.shear(s1).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k2.array, image2_k2.array[::-1,:], decimal=decimal,
             err_msg="Flipping image around x-axis failed k2 test")
 
         # Flip around x=y (i.e. y -> x, x -> y)
-        flip = prof.transform(0, 1, 1, 0)
-        image2_x = flip.drawImage(image=im.copy(), method='no_pixel')
+        flip3 = prof.transform(0, 1, 1, 0)
+        image2_x = flip3.drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x.array, np.transpose(image2_x.array), decimal=decimal,
             err_msg="Flipping image around x=y failed x test")
-        image2_x1 = flip.shear(q2).drawImage(image=im.copy(), method='no_pixel')
+        image2_x1 = flip3.shear(q2).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x1.array, np.transpose(image2_x1.array), decimal=decimal,
             err_msg="Flipping image around x=y failed x1 test")
-        image2_x2 = flip.shear(s2).drawImage(image=im.copy(), method='no_pixel')
+        image2_x2 = flip3.shear(s2).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x2.array, np.transpose(image2_x2.array), decimal=decimal,
             err_msg="Flipping image around x=y failed x2 test")
-        image2_k = flip.drawImage(image=im.copy())
+        image2_k = flip3.drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k.array, np.transpose(image2_k.array), decimal=decimal,
             err_msg="Flipping image around x=y failed k test")
-        image2_k1 = flip.shear(q2).drawImage(image=im.copy())
+        image2_k1 = flip3.shear(q2).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k1.array, np.transpose(image2_k1.array), decimal=decimal,
             err_msg="Flipping image around x=y failed k1 test")
-        image2_k2 = flip.shear(s2).drawImage(image=im.copy())
+        image2_k2 = flip3.shear(s2).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k2.array, np.transpose(image2_k2.array), decimal=decimal,
             err_msg="Flipping image around x=y failed k2 test")
+
+        do_pickle(prof, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
+        do_pickle(flip1, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
+        do_pickle(flip2, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
+        do_pickle(flip3, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

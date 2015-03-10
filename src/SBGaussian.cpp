@@ -55,6 +55,15 @@ namespace galsim {
         return static_cast<const SBGaussianImpl&>(*_pimpl).getSigma(); 
     }
 
+    std::string SBGaussian::SBGaussianImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBGaussian("<<getSigma()<<", "<<getFlux();
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     SBGaussian::SBGaussianImpl::SBGaussianImpl(double sigma, double flux,
                                                const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),

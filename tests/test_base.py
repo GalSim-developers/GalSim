@@ -615,6 +615,8 @@ def test_sersic():
     do_kvalue(sersic,myImg, "Truncated Sersic")
 
     # Check picklability
+    do_pickle(sersic.SBProfile,
+              lambda x: (x.getScaleRadius(), x.getTrunc(), x.getFlux(), x.getGSParams()))
     do_pickle(sersic, lambda x: x.drawImage())
 
     # Check for normalization consistencies with kValue checks. xValues tested in test_sersic_radii.
@@ -1178,7 +1180,7 @@ def test_box():
         do_kvalue(box,im, "Sheared Box")
 
     # Check picklability of sheared box
-    #do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
 
     # This is also a profile that may be convolved using real space convolution, so test that.
     if __name__ == '__main__':
@@ -1259,7 +1261,7 @@ def test_tophat():
     do_kvalue(tophat,im, "Sheared TopHat")
 
     # Check picklability
-    #do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
 
     # Check real-space convolution of the sheared tophat.
     conv = galsim.Convolve(tophat, galsim.Pixel(scale=scale), real_space=True)

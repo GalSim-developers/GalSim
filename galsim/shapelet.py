@@ -169,13 +169,14 @@ class Shapelet(GSObject):
     def __str__(self): 
         return 'galsim.Shapelet(sigma=%f, order=%d, bvec=%s)'%(self.sigma, self.order, self.bvec)
 
-_galsim.SBShapelet.__getinitargs__ = lambda self: \
-        (self.getSigma(), self.getBVec(), self.getGSParams())
+_galsim.SBShapelet.__getinitargs__ = lambda self: (
+        self.getSigma(), self.getBVec(), self.getGSParams())
+_galsim.SBShapelet.__getstate__ = lambda self: None
+_galsim.SBShapelet.__setstate__ = lambda self, state: 1
 _galsim.SBShapelet.__repr__ = lambda self: 'galsim._galsim.SBShapelet(%r, %r, %r)'%(
         self.getSigma(), self.getBVec(), self.getGSParams())
-_galsim.LVector.__getinitargs__ = lambda self: (self.order, self.bvec)
+_galsim.LVector.__getinitargs__ = lambda self: (self.order, self.array)
 _galsim.LVector.__repr__ = lambda self: 'galsim._galsim.LVector(%r, %r)'%(self.order, self.array)
-
 
 
 def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams=None):

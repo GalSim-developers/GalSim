@@ -164,6 +164,8 @@ namespace galsim {
         mutable double _negativeFlux;    ///< Sum of all negative pixels' flux
         mutable ProbabilityTree<Pixel> _pt; ///< Binary tree of pixels, for photon-shooting
 
+        std::string repr() const;
+
     private:
 
         // Copy constructor and op= are undefined.

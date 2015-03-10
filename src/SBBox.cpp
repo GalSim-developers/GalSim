@@ -58,6 +58,15 @@ namespace galsim {
         return static_cast<const SBBoxImpl&>(*_pimpl).getHeight(); 
     }
 
+    std::string SBBox::SBBoxImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBBox("<<getWidth()<<", "<<getHeight()<<", "<<
+            getFlux()<<", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     SBBox::SBBoxImpl::SBBoxImpl(double width, double height, double flux,
                                 const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams), _width(width), _height(height), _flux(flux)
@@ -347,6 +356,15 @@ namespace galsim {
     {
         assert(dynamic_cast<const SBTopHatImpl*>(_pimpl.get()));
         return static_cast<const SBTopHatImpl&>(*_pimpl).getRadius(); 
+    }
+
+    std::string SBTopHat::SBTopHatImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBTopHat("<<getRadius()<<", "<<
+            getFlux()<<", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
     }
 
     SBTopHat::SBTopHatImpl::SBTopHatImpl(double radius, double flux,

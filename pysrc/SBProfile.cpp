@@ -158,6 +158,7 @@ namespace galsim {
 
             bp::class_<SBProfile> pySBProfile("SBProfile", doc, bp::no_init);
             pySBProfile
+                .def(bp::init<>())
                 .def(bp::init<const SBProfile &>())
                 .def("getGSParams", &SBProfile::getGSParams)
                 .def("xValue", &SBProfile::xValue,
@@ -189,6 +190,8 @@ namespace galsim {
                 .def("expand", &SBProfile::expand, bp::args("scale"))
                 .def("transform", &SBProfile::transform, bp::args("dudx", "dudy", "dvdx", "dvdy"))
                 .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
+                .def("__repr__", &SBProfile::repr)
+                .enable_pickling()
                 ;
             wrapTemplates<float>(pySBProfile);
             wrapTemplates<double>(pySBProfile);

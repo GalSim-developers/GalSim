@@ -74,6 +74,8 @@ namespace galsim {
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
+        std::string repr() const;
+
     private:
         double _width;
         double _height;
@@ -143,6 +145,8 @@ namespace galsim {
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
+
+        std::string repr() const;
 
     private:
         double _r0;

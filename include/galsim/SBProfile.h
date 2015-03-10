@@ -525,6 +525,9 @@ namespace galsim {
         template <typename T>
         void fourierDrawK(ImageView<T> re, ImageView<T> im, double gain, double wmult) const; 
 
+        /// @brief Return a string that can act as the repr in python
+        std::string repr() const;
+
     protected:
 
         class SBProfileImpl;

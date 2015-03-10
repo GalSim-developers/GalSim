@@ -63,6 +63,15 @@ namespace galsim {
         return static_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); 
     }
 
+    std::string SBExponential::SBExponentialImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBExponential("<<getScaleRadius()<<", "<<getFlux();
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     LRUCache<GSParamsPtr, ExponentialInfo> SBExponential::SBExponentialImpl::cache(
         sbp::max_exponential_cache);
 

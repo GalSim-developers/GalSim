@@ -113,8 +113,6 @@ class Sum(galsim.GSObject):
 
     There are no additional methods for Sum beyond the usual GSObject methods.
     """
-
-    # --- Public Class methods ---
     def __init__(self, *args, **kwargs):
 
         # Check kwargs first:
@@ -248,8 +246,6 @@ class Convolution(galsim.GSObject):
 
     There are no additional methods for Convolution beyond the usual GSObject methods.
     """
-
-    # --- Public Class methods ---
     def __init__(self, *args, **kwargs):
 
         # First check for number of arguments != 0
@@ -420,7 +416,6 @@ class Deconvolution(galsim.GSObject):
 
     There are no additional methods for Deconvolution beyond the usual GSObject methods.
     """
-    # --- Public Class methods ---
     def __init__(self, obj, gsparams=None):
         if not isinstance(obj, galsim.GSObject):
             raise TypeError("Argument to Deconvolution must be a GSObject.")
@@ -484,7 +479,6 @@ class AutoConvolution(galsim.GSObject):
 
     There are no additional methods for AutoConvolution beyond the usual GSObject methods.
     """
-    # --- Public Class methods ---
     def __init__(self, obj, real_space=None, gsparams=None):
         if not isinstance(obj, galsim.GSObject):
             raise TypeError("Argument to AutoConvolution must be a GSObject.")
@@ -581,7 +575,6 @@ class AutoCorrelation(galsim.GSObject):
 
     There are no additional methods for AutoCorrelation beyond the usual GSObject methods.
     """
-    # --- Public Class methods ---
     def __init__(self, obj, real_space=None, gsparams=None):
         if not isinstance(obj, galsim.GSObject):
             raise TypeError("Argument to AutoCorrelation must be a GSObject.")
@@ -624,3 +617,114 @@ class AutoCorrelation(galsim.GSObject):
         if hasattr(obj,'noise'):
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")
+
+class Transform(galsim.GSObject):
+    """A class for modeling an affine transformation of a GSObject instance.
+
+    Initialization
+    --------------
+
+    Typically, you do not need to construct a Transform object explicitly.  This is the type
+    returned by the various transformation methods of GSObject such as shear(), rotat(), 
+    shift(), transform(), etc.  All the various transformations can be described as a combination
+    of transform() and shift(), which are described by (dudx,dudy,dvdx,dvdy) and (dx,dy)
+    respectively.
+
+    @param obj              The object to be transformed.
+    @param jac              A list or tuple ( dudx, dudy, dvdx, dvdy ) describing the Jacobian
+                            of the transformation. [default: (1,0,0,1)]
+    @param offset           A galsim.PositionD giving the offset by which to shift the profile.
+    @param flux_ratio       A factor by which to multiply the flux of the object. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Attributes
+    ----------
+
+    original        The original object that is being transformed.
+    jac             The jacobian of the transformation matrix.
+    offset          The offset being applied.
+    flux_ratio      The amount by which the original flux is multiplied.
+    gsparams        The usual gsparams attribute that all GSObjects have.
+
+    Note: if `gsparams` is unspecified (or None), then the Transform instance inherits the GSParams
+    from obj.  Also, note that parameters related to the Fourier-space calculations must be set
+    when initializing obj, NOT when creating the Transform (at which point the accuracy and
+    threshold parameters will simply be ignored).
+    """
+    def __init__(self, obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio=1.,
+                 gsparams=None):
+        dudx, dudy, dvdx, dvdy = jac
+        if hasattr(obj, 'original'):
+            self._original = obj.original
+        else:
+            self._original = obj
+        sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
+                                  gsparams)
+        galsim.GSObject.__init__(self, sbt)
+
+    def getJac(self):
+        """Return the Jacobian of the transformation
+        """
+        return self.SBProfile.getJac()
+
+    def getOffset(self):
+        """Return the offset of the transformation
+        """
+        return self.SBProfile.getOffset()
+
+    def getFluxRatio(self):
+        """Return the flux ratio of the transformation
+        """
+        return self.SBProfile.getFluxScaling()
+
+    @property
+    def original(self): return self._original
+    @property
+    def jac(self): return self.getJac()
+    @property
+    def offset(self): return self.getOffset()
+    @property
+    def flux_ratio(self): return self.getFluxRatio()
+
+    def __repr__(self):
+        return 'galsim.Transform(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(
+            self.original, self.jac.tolist(), self.offset, self.flux_ratio, self.gsparams)
+
+    def __str__(self):
+        s = str(self.original)
+        dudx, dudy, dvdx, dvdy = self.jac
+        if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
+            # MJ: If we want to get fancy, we could try to determine the minimal call to make.
+            #     e.g. is it just a shear?  just a rotation? etc.  Probably not worth it though.
+            s += '.transform(%f,%f,%f,%f)'%(dudx,dudy,dvdx,dvdy)
+        offset = self.offset
+        if offset.x != 0 or offset.y != 0:
+            s += '.shift(%f,%f)'%(offset.x,offset.y)
+        if self.flux_ratio != 1.:
+            s += '.withScaledFlux(%f)'%self.flux_ratio
+        return s
+
+def SBTransform_init(self):
+    obj = self.getObj()
+    dudx, dudy, dvdx, dvdy = self.getJac()
+    offset = self.getOffset()
+    flux_ratio = self.getFluxScaling()
+    gsparams = self.getGSParams()
+    return (obj, dudx, dudy, dvdx, dvdy, offset, flux_ratio, gsparams)
+_galsim.SBTransform.__getinitargs__ = SBTransform_init
+_galsim.SBTransform.__getstate__ = lambda self: None
+_galsim.SBTransform.__setstate__ = lambda self, state: 1
+
+#def SBTransform_repr(self):
+    #obj = self.getObj()
+    #dudx, dudy, dvdx, dvdy = self.getJac()
+    #offset = self.getOffset()
+    #flux_ratio = self.getFluxScaling()
+    #gsparams = self.getGSParams()
+    #return 'galsim._galsim.SBTransform(%r, %r, %r, %r, %r, %r, %r, %r)'%(*self.__getinitargs__())
+            #obj, dudx, dudy, dvdx, dvdy, offset, flux_ratio, gsparams)
+#_galsim.SBTransform.__repr__ = SBTransform_repr
+_galsim.SBTransform.__repr__ = lambda self: \
+        'galsim._galsim.SBTransform(%r, %r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
+

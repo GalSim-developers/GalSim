@@ -285,6 +285,8 @@ namespace galsim {
 
         int getOrder() const { return _order; }
 
+        std::string repr() const;
+
         // Returns number of real DOF = number of complex coeffs
         int size() const { return _v->size(); }
 

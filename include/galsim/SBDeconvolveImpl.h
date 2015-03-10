@@ -62,6 +62,8 @@ namespace galsim {
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
+        std::string repr() const;
+
     private:
         SBProfile _adaptee;
         double _maxksq;

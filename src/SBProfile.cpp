@@ -64,6 +64,12 @@ namespace galsim {
         _pimpl.reset();
     }
 
+    std::string SBProfile::repr() const 
+    {
+        assert(_pimpl.get());
+        return _pimpl->repr();
+    }
+
     const boost::shared_ptr<GSParams> SBProfile::getGSParams() const
     {
         assert(_pimpl.get());

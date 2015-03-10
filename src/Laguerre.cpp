@@ -28,6 +28,33 @@
 
 namespace galsim {
 
+    std::string LVector::repr() const
+    {
+        std::ostringstream oss(" ");
+        oss << "galsim._galsim.LVector("<<getOrder()<<", array([";
+
+        // This is copied from the write() function, but then modified.
+        // Should probably make a version of write() that could be called directly here
+        // and also work for the os << lv usage.  OTOH, I'm planning to revamp all the
+        // Shapelet code pretty significantly for #502 (and do more than that issue mentions),
+        // so it's probably not worth worrying about at the moment.
+        oss.precision(15);
+        oss.setf(std::ios::scientific,std::ios::floatfield);
+        oss << (*_v)[0];
+        for (int n=1; n<=_order; n++) {
+            for(PQIndex pq(n,0); !pq.needsConjugation(); pq.decm()) {
+                if (pq.isReal()) {
+                    oss << ", " << (*this)[pq].real() << std::endl;
+                } else {
+                    oss << ", " << (*this)[pq].real() 
+                        << ", " << (*this)[pq].imag() << std::endl;
+                }
+            }
+        }
+        oss <<"]))";
+        return oss.str();
+    }
+
     void LVector::rotate(const Angle& theta) 
     {
         take_ownership();
