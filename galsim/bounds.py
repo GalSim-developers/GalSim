@@ -104,9 +104,7 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     box.
     """
 
-    Class.addBorder.__func__.__doc__ = """Add a border of the specified width to the Bounds.
-
-    The bounds rectangle must be defined, i.e. `xmax > xmin`, `ymax > ymin`.
+    Class.withBorder.__func__.__doc__ = """Return a new Bounds object that expands the current bounds by the specified width.
     """
 
     Class.center.__func__.__doc__ = "Return the central point of the Bounds as a Position."

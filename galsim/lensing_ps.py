@@ -870,8 +870,7 @@ class PowerSpectrum(object):
         # this process doesn't make sense.
         if im.bounds.xmax - im.bounds.xmin < border:
             raise RuntimeError("Periodic wrapping does not work with images this small!")
-        expanded_bounds = galsim.BoundsI(im.bounds.xmin-border, im.bounds.xmax+border,
-                                         im.bounds.ymin-border, im.bounds.xmax+border)
+        expanded_bounds = im.bounds.withBorder(border)
         # Make new image with those bounds.
         im_new = galsim.ImageD(expanded_bounds)
         # Make the central subarray equal to what we want.

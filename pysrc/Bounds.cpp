@@ -75,7 +75,7 @@ struct PyBounds {
             // Note: the python methods always use the version that returns a new bounds object.
             // This matches the typical python style of objects being immutable, and you get
             // new objects back when you want to change them.
-            .def("addBorder", &Bounds<T>::withBorder)
+            .def("withBorder", &Bounds<T>::withBorder)
             .def("expand", &Bounds<T>::makeExpanded, "grow by the given factor about center")
             .def(bp::self & bp::self)
             .def("shift", (Bounds<T> (Bounds<T>::*)(const Position<T>&) const)&Bounds<T>::makeShifted,

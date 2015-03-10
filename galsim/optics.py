@@ -395,7 +395,7 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
         # input image.
         if array_shape[0] > pupil_plane_im.array.shape[0]:
             border_size = int(0.5*(array_shape[0] - pupil_plane_im.array.shape[0]))
-            new_im = galsim.Image(pupil_plane_im.bounds.addBorder(border_size))
+            new_im = galsim.Image(pupil_plane_im.bounds.withBorder(border_size))
             new_im[pupil_plane_im.bounds] = pupil_plane_im
             pupil_plane_im = new_im.copy()
         # If the requested shape is smaller than the input one, we do nothing at this stage.  All

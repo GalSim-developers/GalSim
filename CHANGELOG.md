@@ -13,6 +13,8 @@ Installation Changes
 API Changes
 -----------
 
+- Changed the name of the `bounds.addBorder()` method to `withBorder` to make
+  it clearer that the method returns a new Bounds object. (#218)
 - Deprecated CorrelatedNoise.calculateCovarianceMatrix, since it is not used 
   anywhere, and we think no one really has a need for it. (#630)
 - Officially deprecated the methods and functions that had been described as

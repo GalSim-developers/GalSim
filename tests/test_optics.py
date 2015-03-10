@@ -724,7 +724,7 @@ def test_OpticalPSF_pupil_plane():
     # Now supply the pupil plane at the original resolution, but remove some of the padding.  We
     # want it to properly recognize that it needs more padding, and include it.
     remove_pad = -23
-    sub_im = im[im.bounds.addBorder(remove_pad)]
+    sub_im = im[im.bounds.withBorder(remove_pad)]
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  pupil_plane_im=sub_im, oversampling=pp_oversampling,
                                  pad_factor=pp_pad_factor)
@@ -738,7 +738,7 @@ def test_OpticalPSF_pupil_plane():
 
     # Now supply the pupil plane at the original resolution, with extra padding.
     new_pad = 76
-    big_im = galsim.Image(im.bounds.addBorder(new_pad))
+    big_im = galsim.Image(im.bounds.withBorder(new_pad))
     big_im[im.bounds] = im
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  pupil_plane_im=big_im, oversampling=pp_oversampling,

@@ -47,11 +47,18 @@ def Bounds_setYMax(self, ymax):
          'bounds = galsim.'+self.__class__.__name__+'(bounds.xmin,bounds.xmax,bounds.ymin,ymax)')
     self._setYMax(ymax)
 
+def Bounds_addBorder(self, border):
+    """Deprecated name for the current withBorder.
+    """
+    depr('addBorder', 1.3, 'withBorder')
+    return self.withBorder(border)
+
 for Class in (galsim._galsim.BoundsD, galsim._galsim.BoundsI):
     Class.setXMin = Bounds_setXMin
     Class.setXMax = Bounds_setXMax
     Class.setYMin = Bounds_setYMin
     Class.setYMax = Bounds_setYMax
+    Class.addBorder = Bounds_addBorder
 
 del Class    # cleanup public namespace
 
