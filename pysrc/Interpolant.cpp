@@ -34,25 +34,31 @@ namespace galsim {
     struct PyInterpolant
     {
 
-        static Interpolant* ConstructInterpolant(std::string str)
+        static Interpolant* ConstructInterpolant(std::string str, double tol)
         {
             // Make it lowercase
             std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
             // Return the right Interpolant according to the given string.
-            if (str == "delta") return new Delta();
-            else if (str == "nearest") return new Nearest();
-            else if (str == "sinc") return new SincInterpolant();
-            else if (str == "linear") return new Linear();
-            else if (str == "cubic") return new Cubic();
-            else if (str == "quintic") return new Quintic();
+            if (str == "delta") return new Delta(tol);
+            else if (str == "nearest") return new Nearest(tol);
+            else if (str == "sinc") return new SincInterpolant(tol);
+            else if (str == "linear") return new Linear(tol);
+            else if (str == "cubic") return new Cubic(tol);
+            else if (str == "quintic") return new Quintic(tol);
             else if (str.substr(0,7) == "lanczos") {
-                int n = strtol(str.substr(7).c_str(),0,0);
+                int end = str.size();
+                bool conserve = true;
+                if (str[end-1] == 'F') {
+                    --end;
+                    conserve = false;
+                }
+                int n = strtol(str.substr(7,end).c_str(),0,0);
                 if (n <= 0) {
                     PyErr_SetString(PyExc_TypeError, "Invalid Lanczos order");
                     bp::throw_error_already_set();
                 }
-                return new Lanczos(n);
+                return new Lanczos(n, conserve, tol);
             } else {
                 PyErr_SetString(PyExc_TypeError, "Invalid interpolant string");
                 bp::throw_error_already_set();
@@ -60,9 +66,9 @@ namespace galsim {
             }
         }
 
-        static Interpolant2d* ConstructInterpolant2d(const std::string& str)
+        static Interpolant2d* ConstructInterpolant2d(const std::string& str, double tol)
         {
-            boost::shared_ptr<Interpolant> i1d(ConstructInterpolant(str));
+            boost::shared_ptr<Interpolant> i1d(ConstructInterpolant(str,tol));
             return new InterpolantXY(i1d);
         }
 
@@ -75,12 +81,16 @@ namespace galsim {
             // modifications of power spectra of objects that have been interpolated).
             bp::class_<Interpolant,boost::noncopyable>("Interpolant", bp::no_init)
                 .def("__init__", bp::make_constructor(
-                        &ConstructInterpolant, bp::default_call_policies(), bp::arg("str")))
-                .def("uval", &Interpolant::uval, (bp::arg("uval")=0));
+                        &ConstructInterpolant, bp::default_call_policies(),
+                        (bp::arg("str"), bp::arg("tol")=1.e-4)))
+                .def("uval", &Interpolant::uval, (bp::arg("uval")=0))
+                ;
             bp::class_<Interpolant2d,boost::noncopyable>("Interpolant2d", bp::no_init)
                 .def("__init__", bp::make_constructor(
-                        &ConstructInterpolant2d, bp::default_call_policies(), bp::arg("str")))
-                .def("uval", &Interpolant2d::uval, (bp::arg("u")=0,bp::arg("v")=0));
+                        &ConstructInterpolant2d, bp::default_call_policies(),
+                        (bp::arg("str"), bp::arg("tol")=1.e-4)))
+                .def("uval", &Interpolant2d::uval, (bp::arg("u")=0,bp::arg("v")=0))
+                ;
             bp::class_<InterpolantXY,bp::bases<Interpolant2d>,boost::noncopyable>(
                 "InterpolantXY",
                 bp::init<boost::shared_ptr<Interpolant> >(bp::arg("i1d"))
@@ -94,10 +104,10 @@ namespace galsim {
             "where it is trivially implemented as no displacements.\n\n"
             "The `width` argument in the constructor is used to make a crude box approximation\n"
             "to the x-space delta function and to give a large but finite urange\n"
-            "(default `width=1e-3`).\n";
-            bp::class_<Delta,bp::bases<Interpolant>,boost::noncopyable>(
-                "Delta", delta_doc, bp::init<double>(bp::arg("width")=1E-3)
-            );
+            "(default `width=1e-4`).\n";
+            bp::class_<Delta,bp::bases<Interpolant> >("Delta", delta_doc, bp::no_init)
+                .def(bp::init<double>(bp::arg("tol")=1e-4))
+                ;
 
             static const char* nearest_doc =
             "Nearest-neighbor interpolation (boxcar): The nearest-neighbor interpolant performs\n"
@@ -107,10 +117,10 @@ namespace galsim {
             "generate an image; in that case, the nearest-neighbor interpolant is quite efficient\n"
             "(but not necessarily the best choice in terms of accuracy).\n\n"
             "Tolerance `tol` determines how far onto sinc wiggles the uval will go.  Very far, by\n"
-            "default! (default `tol=1e-3`)\n";
-            bp::class_<Nearest,bp::bases<Interpolant>,boost::noncopyable>(
-                "Nearest", nearest_doc, bp::init<double>(bp::arg("tol")=1E-3)
-            );
+            "default! (default `tol=1e-4`)\n";
+            bp::class_<Nearest,bp::bases<Interpolant> >("Nearest", nearest_doc, bp::no_init)
+                .def(bp::init<double>(bp::arg("tol")=1e-4))
+                ;
 
             static const char* sinc_doc =
             "Sinc interpolation (inverse of nearest-neighbor): The Sinc interpolant\n"
@@ -122,10 +132,11 @@ namespace galsim {
             "extremely slow.  The usual compromise between sinc accuracy vs. speed is the Lanczos\n"
             "interpolant (see its documentation for details).\n\n"
             "Tolerance `tol` determines how far onto sinc wiggles the xval will go.  Very far, by\n"
-            "default! (default `tol=1e-3`)\n";
-            bp::class_<SincInterpolant,bp::bases<Interpolant>,boost::noncopyable>(
-                "SincInterpolant", sinc_doc, bp::init<double>(bp::arg("tol")=1E-3)
-            );
+            "default! (default `tol=1e-4`)\n";
+            bp::class_<SincInterpolant,bp::bases<Interpolant> >("SincInterpolant", sinc_doc, 
+                                                                bp::no_init)
+                .def(bp::init<double>(bp::arg("tol")=1e-4))
+                ;
 
             static const char* linear_doc =
             "Linear interpolant: The linear interpolant is a poor choice for FFT-based operations\n"
@@ -134,10 +145,10 @@ namespace galsim {
             "when shooting photons, in which case the linear interpolant is quite efficient (but\n"
             "not necessarily the best choice in terms of accuracy).\n\n"
             "Tolerance `tol` determines how far onto sinc^2 wiggles the uval will go.  Very far,\n"
-            "by default! (default `tol=1e-3`)\n";
-            bp::class_<Linear,bp::bases<Interpolant>,boost::noncopyable>(
-                "Linear", linear_doc, bp::init<double>(bp::arg("tol")=1E-3)
-            );
+            "by default! (default `tol=1e-4`)\n";
+            bp::class_<Linear,bp::bases<Interpolant> >("Linear", linear_doc, bp::no_init)
+                .def(bp::init<double>(bp::arg("tol")=1e-4))
+                ;
 
             static const char* lanczos_doc =
             "The Lanczos interpolation filter, nominally sinc(x)*sinc(x/n): The Lanczos filter\n"
@@ -152,11 +163,10 @@ namespace galsim {
             "not return this constant.  Setting `conserve_dc` in the constructor tweaks the\n"
             "function so that it approximately conserves the value of constant (DC) input data\n"
             "(accurate to better than 1.e-5 when used in two dimensions).\n";
-            bp::class_<Lanczos,bp::bases<Interpolant>,boost::noncopyable>(
-                "Lanczos", lanczos_doc, bp::init<int,bool,double>(
-                    (bp::arg("n"), bp::arg("conserve_dc")=true, bp::arg("tol")=1E-4)
-                )
-            );
+            bp::class_<Lanczos,bp::bases<Interpolant> >("Lanczos", lanczos_doc, bp::no_init)
+                .def(bp::init<int,bool,double>(
+                    (bp::arg("n"), bp::arg("conserve_dc")=true, bp::arg("tol")=1e-4)))
+                ;
 
             static const char* cubic_doc =
             "Cubic interpolator exact to 3rd order Taylor expansion (from R. G. Keys,\n"
@@ -164,17 +174,17 @@ namespace galsim {
             "The cubic interpolant is a reasonable choice for a four-point interpolant for\n"
             "interpolated images.  (See Bernstein & Gruen, http://arxiv.org/abs/1401.2636.)\n\n"
             "Default tolerance parameter `tol=1e-4`.\n";
-            bp::class_<Cubic,bp::bases<Interpolant>,boost::noncopyable>(
-                "Cubic", cubic_doc, bp::init<double>(bp::arg("tol")=1E-4)
-            );
+            bp::class_<Cubic,bp::bases<Interpolant> >("Cubic", cubic_doc, bp::no_init)
+                .def(bp::init<double>(bp::arg("tol")=1e-4))
+                ;
 
             static const char* quintic_doc =
             "Piecewise-quintic polynomial interpolant, ideal for k-space interpolation:\n"
             "See Bernstein & Gruen, http://arxiv.org/abs/1401.2636.\n\n"
             "Default tolerance parameter `tol=1e-4`.\n";
-            bp::class_<Quintic,bp::bases<Interpolant>,boost::noncopyable>(
-                "Quintic", quintic_doc, bp::init<double>(bp::arg("tol")=1E-4)
-            );
+            bp::class_<Quintic,bp::bases<Interpolant> >("Quintic", quintic_doc, bp::no_init)
+                .def(bp::init<double>(bp::arg("tol")=1e-4))
+                ;
         }
 
     };

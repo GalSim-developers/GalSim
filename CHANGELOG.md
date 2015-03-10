@@ -15,6 +15,9 @@ API Changes
 
 - Changed the name of the `bounds.addBorder()` method to `withBorder` to make
   it clearer that the method returns a new Bounds object. (#218)
+- Made the default tolerance for all Interpolants equal to 1.e-4.  It already
+  was for Cubic, Quintic, and Lanczos, which are the ones we normally use,
+  so this just changes the default for the others. (#218)
 - Deprecated CorrelatedNoise.calculateCovarianceMatrix, since it is not used 
   anywhere, and we think no one really has a need for it. (#630)
 - Officially deprecated the methods and functions that had been described as
