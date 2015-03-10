@@ -17,6 +17,9 @@ API Changes
   it clearer that the method returns a new Bounds object. (#218)
 - Removed (from the python layer) Interpolant2d and InterpolantXY, since we
   we have only actually implemented 1-d interpolants. (#218)
+- Removed the MultipleImage way of constructing an SBInterpolatedImage, since
+  we do not use it anywhere, nor are there unit tests for it.  The C++ layer
+  still has the implementation of it if we ever find a need for it. (#218)
 - Made the default tolerance for all Interpolants equal to 1.e-4.  It already
   was for Cubic, Quintic, and Lanczos, which are the ones we normally use,
   so this just changes the default for the others. (#218)

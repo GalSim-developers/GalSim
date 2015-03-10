@@ -32,7 +32,7 @@ namespace galsim {
 
     struct PySBInterpolatedImage 
     {
-
+#if 0
         template <typename U, typename W>
         static void wrapTemplates_Multi(W& wrapper) 
         {
@@ -46,6 +46,7 @@ namespace galsim {
                 ))
                 ;
         }
+#endif
 
         template <typename U, typename W>
         static void wrapTemplates(W& wrapper) 
@@ -67,6 +68,7 @@ namespace galsim {
 
         static void wrap() 
         {
+#if 0
             bp::class_< MultipleImageHelper > pyMultipleImageHelper(
                 "MultipleImageHelper", bp::init<const MultipleImageHelper &>()
             );
@@ -74,11 +76,13 @@ namespace galsim {
             wrapTemplates_Multi<double>(pyMultipleImageHelper);
             wrapTemplates_Multi<int32_t>(pyMultipleImageHelper);
             wrapTemplates_Multi<int16_t>(pyMultipleImageHelper);
+#endif
 
             bp::class_< SBInterpolatedImage, bp::bases<SBProfile> > pySBInterpolatedImage(
                 "SBInterpolatedImage", bp::init<const SBInterpolatedImage &>()
             );
             pySBInterpolatedImage
+#if 0
                 .def(bp::init<const MultipleImageHelper&, const std::vector<double>&,
                      boost::shared_ptr<InterpolantXY>,
                      boost::shared_ptr<InterpolantXY>,
@@ -89,6 +93,7 @@ namespace galsim {
                           bp::arg("gsparams")=bp::object())
                      )
                 )
+#endif
                 .def("calculateStepK", &SBInterpolatedImage::calculateStepK,
                      bp::arg("max_stepk")=0.)
                 .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK,
