@@ -302,6 +302,9 @@ namespace galsim {
         return result;
     }
 
+    std::string Delta::makeStr() const
+    { return "delta"; }
+
 
     //
     // Nearest
@@ -328,6 +331,9 @@ namespace galsim {
         dbg<<"Nearest Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
+
+    std::string Nearest::makeStr() const
+    { return "nearest"; }
 
 
     //
@@ -362,6 +368,9 @@ namespace galsim {
         return boost::shared_ptr<PhotonArray>();
     }
 
+    std::string SincInterpolant::makeStr() const
+    { return "sinc"; }
+
 
     //
     // Linear
@@ -392,6 +401,9 @@ namespace galsim {
         dbg<<"Linear Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
+
+    std::string Linear::makeStr() const
+    { return "linear"; }
 
 
     //
@@ -489,6 +501,9 @@ namespace galsim {
 
     std::map<double,boost::shared_ptr<Table<double,double> > > Cubic::_cache_tab;
     std::map<double,double> Cubic::_cache_umax;
+
+    std::string Cubic::makeStr() const
+    { return "cubic"; }
 
 
     //
@@ -655,6 +670,9 @@ namespace galsim {
 
     std::map<double,boost::shared_ptr<Table<double,double> > > Quintic::_cache_tab;
     std::map<double,double> Quintic::_cache_umax;
+
+    std::string Quintic::makeStr() const
+    { return "quintic"; }
 
 
     //
@@ -1011,6 +1029,14 @@ namespace galsim {
         // For this one, we always use the lookup table.
         u = std::abs(u);
         return u>_uMax ? 0. : (*_utab)(u);
+    }
+
+    std::string Lanczos::makeStr() const
+    {
+        std::ostringstream oss(" ");
+        oss << "lanczos" << _n;
+        if (_conserve_dc) oss << "F";
+        return oss.str();
     }
 
 }

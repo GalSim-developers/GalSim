@@ -175,6 +175,8 @@ namespace galsim {
         virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
         { checkSampler(); return _sampler->shoot(N, ud); }
 
+        virtual std::string makeStr() const =0;
+
     protected:
 
         const GSParamsPtr _gsparams;
@@ -308,6 +310,8 @@ namespace galsim {
         double getNegativeFlux() const { return 0.; }
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        std::string makeStr() const;
+
     private:
         double _width;
     };
@@ -350,6 +354,8 @@ namespace galsim {
         double getNegativeFlux() const { return 0.; }
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        std::string makeStr() const;
+
     private:
         double _tolerance;
     };
@@ -388,6 +394,8 @@ namespace galsim {
         double uval(double u) const;
 
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+
+        std::string makeStr() const;
 
     private:
         double _tolerance;
@@ -430,6 +438,8 @@ namespace galsim {
         // Linear interpolant has fast photon-shooting by adding two uniform deviates per
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        std::string makeStr() const;
+
     private:
         double _tolerance;
     };
@@ -466,6 +476,8 @@ namespace galsim {
         // Override numerical calculation with known analytic integral
         double getPositiveFlux() const { return 13./12.; }
         double getNegativeFlux() const { return 1./12.; }
+
+        std::string makeStr() const;
 
     private:
         // x range, reduced slightly from n=2 so we're not using zero-valued endpoints.
@@ -508,6 +520,8 @@ namespace galsim {
 
         double xval(double x) const;
         double uval(double u) const;
+
+        std::string makeStr() const;
 
     protected:
         // Override default sampler configuration because Quintic filter has sign change in
@@ -566,9 +580,13 @@ namespace galsim {
         int ixrange() const { return 2*_n; }
         double urange() const { return _uMax; }
         double getTolerance() const { return _tolerance; }
+        int getN() const { return _n; }
+        bool conservesDC() const { return _conserve_dc; }
 
         double xval(double x) const;
         double uval(double u) const;
+
+        std::string makeStr() const;
 
     private:
         int _n; // Store the filter order, n

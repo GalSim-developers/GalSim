@@ -78,6 +78,9 @@ namespace galsim {
                         &ConstructInterpolant, bp::default_call_policies(),
                         (bp::arg("str"), bp::arg("tol")=1.e-4)))
                 .def("uval", &Interpolant::uval, (bp::arg("uval")=0))
+                .def("makeStr", &Interpolant::makeStr)
+                .def("getTol", &Interpolant::getTolerance)
+                .enable_pickling()
                 ;
 
             static const char* delta_doc =
@@ -91,6 +94,7 @@ namespace galsim {
             "(default `width=1e-4`).\n";
             bp::class_<Delta,bp::bases<Interpolant> >("Delta", delta_doc, bp::no_init)
                 .def(bp::init<double>(bp::arg("tol")=1e-4))
+                .enable_pickling()
                 ;
 
             static const char* nearest_doc =
@@ -104,6 +108,7 @@ namespace galsim {
             "default! (default `tol=1e-4`)\n";
             bp::class_<Nearest,bp::bases<Interpolant> >("Nearest", nearest_doc, bp::no_init)
                 .def(bp::init<double>(bp::arg("tol")=1e-4))
+                .enable_pickling()
                 ;
 
             static const char* sinc_doc =
@@ -120,6 +125,7 @@ namespace galsim {
             bp::class_<SincInterpolant,bp::bases<Interpolant> >("SincInterpolant", sinc_doc, 
                                                                 bp::no_init)
                 .def(bp::init<double>(bp::arg("tol")=1e-4))
+                .enable_pickling()
                 ;
 
             static const char* linear_doc =
@@ -132,6 +138,7 @@ namespace galsim {
             "by default! (default `tol=1e-4`)\n";
             bp::class_<Linear,bp::bases<Interpolant> >("Linear", linear_doc, bp::no_init)
                 .def(bp::init<double>(bp::arg("tol")=1e-4))
+                .enable_pickling()
                 ;
 
             static const char* lanczos_doc =
@@ -150,6 +157,9 @@ namespace galsim {
             bp::class_<Lanczos,bp::bases<Interpolant> >("Lanczos", lanczos_doc, bp::no_init)
                 .def(bp::init<int,bool,double>(
                     (bp::arg("n"), bp::arg("conserve_dc")=true, bp::arg("tol")=1e-4)))
+                .def("getN", &Lanczos::getN)
+                .def("conservesDC", &Lanczos::conservesDC)
+                .enable_pickling()
                 ;
 
             static const char* cubic_doc =
@@ -160,6 +170,7 @@ namespace galsim {
             "Default tolerance parameter `tol=1e-4`.\n";
             bp::class_<Cubic,bp::bases<Interpolant> >("Cubic", cubic_doc, bp::no_init)
                 .def(bp::init<double>(bp::arg("tol")=1e-4))
+                .enable_pickling()
                 ;
 
             static const char* quintic_doc =
@@ -168,6 +179,7 @@ namespace galsim {
             "Default tolerance parameter `tol=1e-4`.\n";
             bp::class_<Quintic,bp::bases<Interpolant> >("Quintic", quintic_doc, bp::no_init)
                 .def(bp::init<double>(bp::arg("tol")=1e-4))
+                .enable_pickling()
                 ;
         }
 

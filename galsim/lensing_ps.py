@@ -477,11 +477,11 @@ class PowerSpectrum(object):
         else:
             raise TypeError("The rng provided to buildGrid is not a BaseDeviate")
 
+        # Check that the interpolant is valid.
         if interpolant is None:
-            self.interpolant = 'lanczos5'
+            self.interpolant = galsim.Lanczos(5)
         else:
-            self.interpolant = interpolant
-            galsim.utilities.convert_interpolant(interpolant)
+            self.interpolant = galsim.utilities.convert_interpolant(interpolant)
 
         # Convert power_functions into callables:
         e_power_function = self._convert_power_function(self.e_power_function,'e_power_function')

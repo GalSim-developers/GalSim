@@ -497,3 +497,21 @@ class InterpolatedImage(GSObject):
 
         return pad_image
 
+_galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())
+_galsim.Delta.__getinitargs__ = lambda self: (self.getTol(), )
+_galsim.Nearest.__getinitargs__ = lambda self: (self.getTol(), )
+_galsim.SincInterpolant.__getinitargs__ = lambda self: (self.getTol(), )
+_galsim.Linear.__getinitargs__ = lambda self: (self.getTol(), )
+_galsim.Cubic.__getinitargs__ = lambda self: (self.getTol(), )
+_galsim.Quintic.__getinitargs__ = lambda self: (self.getTol(), )
+_galsim.Lanczos.__getinitargs__ = lambda self: (self.getN(), self.conservesDC(), self.getTol())
+
+_galsim.Interpolant.__repr__ = lambda self: 'galsim.Interpolant(%r, %r)'%self.__getinitargs__()
+_galsim.Delta.__repr__ = lambda self: 'galsim.Delta(%r)'%self.getTol()
+_galsim.Nearest.__repr__ = lambda self: 'galsim.Nearest(%r)'%self.getTol()
+_galsim.SincInterpolant.__repr__ = lambda self: 'galsim.SincInterpolant(%r)'%self.getTol()
+_galsim.Linear.__repr__ = lambda self: 'galsim.Linear(%r)'%self.getTol()
+_galsim.Cubic.__repr__ = lambda self: 'galsim.Cubic(%r)'%self.getTol()
+_galsim.Quintic.__repr__ = lambda self: 'galsim.Quintic(%r)'%self.getTol()
+_galsim.Lanczos.__repr__ = lambda self: 'galsim.Lanczos(%r, %r, %r)'%self.__getinitargs__()
+
