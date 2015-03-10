@@ -33,6 +33,9 @@ namespace galsim {
                        const GSParamsPtr& gsparams);
         ~SBConvolveImpl() {}
 
+        std::list<SBProfile> getObjs() const { return _plist; }
+        bool isRealSpace() const { return _real_space; }
+
         void add(const SBProfile& rhs); 
 
         // Do the real-space convolution to calculate this.
@@ -152,6 +155,9 @@ namespace galsim {
 
         ~SBAutoConvolveImpl() {}
 
+        SBProfile getObj() const { return _adaptee; }
+        bool isRealSpace() const { return _real_space; }
+
         double xValue(const Position<double>& p) const;
 
         std::complex<double> kValue(const Position<double>& k) const
@@ -204,6 +210,9 @@ namespace galsim {
         SBAutoCorrelateImpl(const SBProfile& s, bool real_space, const GSParamsPtr& gsparams);
 
         ~SBAutoCorrelateImpl() {}
+
+        SBProfile getObj() const { return _adaptee; }
+        bool isRealSpace() const { return _real_space; }
 
         double xValue(const Position<double>& p) const;
 

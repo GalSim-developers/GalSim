@@ -300,7 +300,8 @@ def test_realspace_convolve():
     do_kvalue(conv,img,"Truncated Moffat convolved with Box")
 
     # Check picklability
-    do_pickle(conv)
+    do_pickle(conv.SBProfile, lambda x: (repr(x.getObjs()), x.isRealSpace(), x.getGSParams()))
+    do_pickle(conv, lambda x: x.drawImage())
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -501,7 +502,8 @@ def test_add():
     do_kvalue(sum,myImg,"sum of 2 Gaussians")
 
     # Check picklability
-    do_pickle(sum)
+    do_pickle(sum.SBProfile, lambda x: (repr(x.getObjs()), x.getGSParams()))
+    do_pickle(sum, lambda x: x.drawImage())
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -638,7 +640,8 @@ def test_autoconvolve():
             "AutoConvolve result")
 
     # Check picklability
-    do_pickle(conv2)
+    do_pickle(conv2.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
+    do_pickle(conv2, lambda x: x.drawImage())
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -678,7 +681,8 @@ def test_autocorrelate():
     do_shoot(corr,myImg2,"AutoCorrelate")
 
     # Check picklability
-    do_pickle(corr)
+    do_pickle(corr.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
+    do_pickle(corr, lambda x: x.drawImage())
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

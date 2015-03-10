@@ -37,6 +37,12 @@ namespace galsim {
     
     SBAdd::~SBAdd() {}
 
+    std::list<SBProfile> SBAdd::getObjs() const
+    {
+        assert(dynamic_cast<const SBAddImpl*>(_pimpl.get()));
+        return static_cast<const SBAddImpl&>(*_pimpl).getObjs();
+    }
+
     std::string SBAdd::SBAddImpl::repr() const 
     {
         std::ostringstream oss(" ");

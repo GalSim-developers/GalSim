@@ -39,6 +39,18 @@ namespace galsim {
 
     SBConvolve::~SBConvolve() {}
 
+    std::list<SBProfile> SBConvolve::getObjs() const
+    {
+        assert(dynamic_cast<const SBConvolveImpl*>(_pimpl.get()));
+        return static_cast<const SBConvolveImpl&>(*_pimpl).getObjs();
+    }
+
+    bool SBConvolve::isRealSpace() const
+    {
+        assert(dynamic_cast<const SBConvolveImpl*>(_pimpl.get()));
+        return static_cast<const SBConvolveImpl&>(*_pimpl).isRealSpace();
+    }
+
     std::string SBConvolve::SBConvolveImpl::repr() const 
     {
         std::ostringstream oss(" ");
@@ -268,6 +280,18 @@ namespace galsim {
     SBAutoConvolve::SBAutoConvolve(const SBAutoConvolve& rhs) : SBProfile(rhs) {}
     SBAutoConvolve::~SBAutoConvolve() {}
 
+    SBProfile SBAutoConvolve::getObj() const
+    {
+        assert(dynamic_cast<const SBAutoConvolveImpl*>(_pimpl.get()));
+        return static_cast<const SBAutoConvolveImpl&>(*_pimpl).getObj();
+    }
+
+    bool SBAutoConvolve::isRealSpace() const
+    {
+        assert(dynamic_cast<const SBAutoConvolveImpl*>(_pimpl.get()));
+        return static_cast<const SBAutoConvolveImpl&>(*_pimpl).isRealSpace();
+    }
+
     std::string SBAutoConvolve::SBAutoConvolveImpl::repr() const 
     {
         std::ostringstream oss(" ");
@@ -344,6 +368,18 @@ namespace galsim {
         SBProfile(new SBAutoCorrelateImpl(s, real_space, gsparams)) {}
     SBAutoCorrelate::SBAutoCorrelate(const SBAutoCorrelate& rhs) : SBProfile(rhs) {}
     SBAutoCorrelate::~SBAutoCorrelate() {}
+
+    SBProfile SBAutoCorrelate::getObj() const
+    {
+        assert(dynamic_cast<const SBAutoCorrelateImpl*>(_pimpl.get()));
+        return static_cast<const SBAutoCorrelateImpl&>(*_pimpl).getObj();
+    }
+
+    bool SBAutoCorrelate::isRealSpace() const
+    {
+        assert(dynamic_cast<const SBAutoCorrelateImpl*>(_pimpl.get()));
+        return static_cast<const SBAutoCorrelateImpl&>(*_pimpl).isRealSpace();
+    }
 
     std::string SBAutoCorrelate::SBAutoCorrelateImpl::repr() const 
     {

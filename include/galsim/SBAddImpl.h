@@ -31,6 +31,8 @@ namespace galsim {
         SBAddImpl(const std::list<SBProfile>& slist, const GSParamsPtr& gsparams);
         ~SBAddImpl() {}
 
+        std::list<SBProfile> getObjs() const { return _plist; }
+
         void add(const SBProfile& rhs);
 
         double xValue(const Position<double>& p) const;

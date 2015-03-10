@@ -51,6 +51,9 @@ namespace galsim {
         /// @brief Destructor.
         ~SBAdd();
 
+        /// @brief Get the list of SBProfiles that are being added together
+        std::list<SBProfile> getObjs() const;
+
     protected:
 
         class SBAddImpl;

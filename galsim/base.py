@@ -1396,8 +1396,8 @@ _galsim.SBGaussian.__getinitargs__ = lambda self: (
 # clear, but pass doesn't work for a lambda expression since it needs to return something.
 _galsim.SBGaussian.__getstate__ = lambda self: None
 _galsim.SBGaussian.__setstate__ = lambda self, state: 1 
-_galsim.SBGaussian.__repr__ = lambda self: 'galsim._galsim.SBGaussian(%r, %r, %r)'%(
-        self.getSigma(), self.getFlux(), self.getGSParams())
+_galsim.SBGaussian.__repr__ = lambda self: \
+        'galsim._galsim.SBGaussian(%r, %r, %r)'%self.__getinitargs__()
 
 
 class Moffat(GSObject):
@@ -1504,9 +1504,8 @@ _galsim.SBMoffat.__getinitargs__ = lambda self: (
         self.getFlux(), self.getGSParams())
 _galsim.SBMoffat.__getstate__ = lambda self: None
 _galsim.SBMoffat.__setstate__ = lambda self, state: 1
-_galsim.SBMoffat.__repr__ = lambda self: 'galsim._galsim.SBMoffat(%r, %r, %r, %r, %r, %r, %r)'%(
-        self.getBeta(), self.getScaleRadius(), None, None, self.getTrunc(), 
-        self.getFlux(), self.getGSParams())
+_galsim.SBMoffat.__repr__ = lambda self: \
+        'galsim._galsim.SBMoffat(%r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
 
 
 class Airy(GSObject):
@@ -1665,8 +1664,8 @@ _galsim.SBAiry.__getinitargs__ = lambda self: (
         self.getLamOverD(), self.getObscuration(), self.getFlux(), self.getGSParams())
 _galsim.SBAiry.__getstate__ = lambda self: None
 _galsim.SBAiry.__setstate__ = lambda self, state: 1
-_galsim.SBAiry.__repr__ = lambda self: 'galsim._galsim.SBAiry(%r, %r, %r, %r)'%(
-        self.getLamOverD(), self.getObscuration(), self.getFlux(), self.getGSParams())
+_galsim.SBAiry.__repr__ = lambda self: \
+        'galsim._galsim.SBAiry(%r, %r, %r, %r)'%self.__getinitargs__()
 
 
 class Kolmogorov(GSObject):
@@ -1787,8 +1786,8 @@ _galsim.SBKolmogorov.__getinitargs__ = lambda self: (
         self.getLamOverR0(), self.getFlux(), self.getGSParams())
 _galsim.SBKolmogorov.__getstate__ = lambda self: None
 _galsim.SBKolmogorov.__setstate__ = lambda self, state: 1
-_galsim.SBKolmogorov.__repr__ = lambda self: 'galsim._galsim.SBKolmogorov(%r, %r, %r)'%(
-        self.getLamOverR0(), self.getFlux(), self.getGSParams())
+_galsim.SBKolmogorov.__repr__ = lambda self: \
+        'galsim._galsim.SBKolmogorov(%r, %r, %r)'%self.__getinitargs__()
 
 
 class Pixel(GSObject):
@@ -1899,8 +1898,8 @@ _galsim.SBBox.__getinitargs__ = lambda self: (
         self.getWidth(), self.getHeight(), self.getFlux(), self.getGSParams())
 _galsim.SBBox.__getstate__ = lambda self: None
 _galsim.SBBox.__setstate__ = lambda self, state: 1
-_galsim.SBBox.__repr__ = lambda self: 'galsim._galsim.SBBox(%r, %r, %r, %r)'%(
-        self.getWidth(), self.getHeight(), self.getFlux(), self.getGSParams())
+_galsim.SBBox.__repr__ = lambda self: \
+        'galsim._galsim.SBBox(%r, %r, %r, %r)'%self.__getinitargs__()
 
 
 class TopHat(GSObject):
@@ -1952,8 +1951,8 @@ _galsim.SBTopHat.__getinitargs__ = lambda self: (
         self.getRadius(), self.getFlux(), self.getGSParams())
 _galsim.SBTopHat.__getstate__ = lambda self: None
 _galsim.SBTopHat.__setstate__ = lambda self, state: 1
-_galsim.SBTopHat.__repr__ = lambda self: 'galsim._galsim.SBTopHat(%r, %r, %r)'%(
-        self.getRadius(), self.getFlux(), self.getGSParams())
+_galsim.SBTopHat.__repr__ = lambda self: \
+        'galsim._galsim.SBTopHat(%r, %r, %r)'%self.__getinitargs__()
 
 
 class Sersic(GSObject):
@@ -2176,9 +2175,8 @@ _galsim.SBSersic.__getinitargs__ = lambda self: (
         False, self.getGSParams())
 _galsim.SBSersic.__getstate__ = lambda self: None
 _galsim.SBSersic.__setstate__ = lambda self, state: 1
-_galsim.SBSersic.__repr__ = lambda self: 'galsim._galsim.SBSersic(%r, %r, %r, %r, %r, %r, %r)'%(
-        self.getN(), self.getScaleRadius(), None, self.getFlux(), self.getTrunc(),
-        False, self.getGSParams())
+_galsim.SBSersic.__repr__ = lambda self: \
+        'galsim._galsim.SBSersic(%r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
 
 
 class Exponential(GSObject):
@@ -2261,8 +2259,8 @@ _galsim.SBExponential.__getinitargs__ = lambda self: (
         self.getScaleRadius(), self.getFlux(), self.getGSParams())
 _galsim.SBExponential.__getstate__ = lambda self: None
 _galsim.SBExponential.__setstate__ = lambda self, state: 1
-_galsim.SBExponential.__repr__ = lambda self: 'galsim._galsim.SBExponential(%r, %r, %r)'%(
-        self.getScaleRadius(), self.getFlux(), self.getGSParams())
+_galsim.SBExponential.__repr__ = lambda self: \
+        'galsim._galsim.SBExponential(%r, %r, %r)'%self.__getinitargs__()
 
 
 class DeVaucouleurs(GSObject):
@@ -2349,9 +2347,8 @@ _galsim.SBDeVaucouleurs.__getinitargs__ = lambda self: (
         self.getScaleRadius(), None, self.getFlux(), self.getTrunc(), False, self.getGSParams())
 _galsim.SBDeVaucouleurs.__getstate__ = lambda self: None
 _galsim.SBDeVaucouleurs.__setstate__ = lambda self, state: 1
-_galsim.SBDeVaucouleurs.__repr__ = \
-        lambda self: 'galsim._galsim.SBDeVaucouleurs(%r, %r, %r, %r, %r, %r)'%(
-            self.getScaleRadius(), None, self.getFlux(), self.getTrunc(), False, self.getGSParams())
+_galsim.SBDeVaucouleurs.__repr__ = lambda self: \
+        'galsim._galsim.SBDeVaucouleurs(%r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
 
 
 class Spergel(GSObject):
@@ -2465,8 +2462,8 @@ _galsim.SBSpergel.__getinitargs__ = lambda self: (
         self.getNu(), self.getScaleRadius(), None, self.getFlux(), self.getGSParams())
 _galsim.SBSpergel.__getstate__ = lambda self: None
 _galsim.SBSpergel.__setstate__ = lambda self, state: 1
-_galsim.SBSpergel.__repr__ = lambda self: 'galsim._galsim.SBSpergel(%r, %r, %r, %r, %r)'%(
-        self.getNu(), self.getScaleRadius(), None, self.getFlux(), self.getGSParams())
+_galsim.SBSpergel.__repr__ = lambda self: \
+        'galsim._galsim.SBSpergel(%r, %r, %r, %r, %r)'%self.__getinitargs__()
 
 
 # Set the docstring for GSParams here.  It's easier to edit in the python layer than using
@@ -2568,21 +2565,13 @@ small_fraction_of_flux      When photon shooting, intervals with less than this 
                             algorithm. [default: 1.e-4]
 """
 
-_galsim.GSParams.__getinitargs__ = lambda self: \
-        (self.minimum_fft_size, self.maximum_fft_size, 
-         self.folding_threshold, self.stepk_minimum_hlr, self.maxk_threshold,
-         self.kvalue_accuracy, self.xvalue_accuracy, self.table_spacing,
-         self.realspace_relerr, self.realspace_abserr, 
-         self.integration_relerr, self.integration_abserr,
-         self.shoot_accuracy, self.allowed_flux_variation,
-         self.range_division_for_extrema, self.small_fraction_of_flux)
-
+_galsim.GSParams.__getinitargs__ = lambda self: (
+        self.minimum_fft_size, self.maximum_fft_size, 
+        self.folding_threshold, self.stepk_minimum_hlr, self.maxk_threshold,
+        self.kvalue_accuracy, self.xvalue_accuracy, self.table_spacing,
+        self.realspace_relerr, self.realspace_abserr, 
+        self.integration_relerr, self.integration_abserr,
+        self.shoot_accuracy, self.allowed_flux_variation,
+        self.range_division_for_extrema, self.small_fraction_of_flux)
 _galsim.GSParams.__repr__ = lambda self: \
-        'galsim.GSParams(%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r)'%(
-            self.minimum_fft_size, self.maximum_fft_size, 
-            self.folding_threshold, self.stepk_minimum_hlr, self.maxk_threshold,
-            self.kvalue_accuracy, self.xvalue_accuracy, self.table_spacing,
-            self.realspace_relerr, self.realspace_abserr, 
-            self.integration_relerr, self.integration_abserr,
-            self.shoot_accuracy, self.allowed_flux_variation,
-            self.range_division_for_extrema, self.small_fraction_of_flux)
+        'galsim.GSParams(%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r)'%self.__getinitargs__()
