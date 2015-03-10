@@ -121,12 +121,6 @@ dLookupTableResult = (0.23721845680847731, 0.42913599265739233, 0.86176396813243
 # File with the same values
 dLookupTableFile = os.path.join('random_data','dLookupTable.dat')
 
-# A short helper function to test pickling of noise objects
-def drawNoise(noise):
-    im = galsim.ImageD(10,10)
-    im.addNoise(noise)
-    return im.array.astype(np.float32).tolist()
-
 def test_uniform():
     """Test uniform random number generator
     """

@@ -207,6 +207,12 @@ def radial_integrate(prof, minr, maxr):
     f = lambda r: 2 * np.pi * r * prof.SBProfile.xValue(galsim.PositionD(r,0))
     return galsim.integ.int1d(f, minr, maxr)
 
+# A short helper function to test pickling of noise objects
+def drawNoise(noise):
+    im = galsim.ImageD(10,10)
+    im.addNoise(noise)
+    return im.array.astype(np.float32).tolist()
+
 def do_pickle(obj, func = lambda x : x):
     """Check that the object is picklable.  Also that it has basic == and != functionality.
     """

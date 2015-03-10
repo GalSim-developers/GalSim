@@ -1439,6 +1439,10 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
         else:
             wcs = galsim.PixelScale(1.0)
 
+        # Save the things that won't get saved by the base class, for use in repr.
+        self.variance = variance
+        self.gsparams = gsparams
+
         # Need variance == xvalue(0,0) after autoconvolution
         # So the Pixel needs to have an amplitude of sigma at (0,0)
         import math
@@ -1450,4 +1454,7 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
         world_cf *= wcs.pixelArea()
         _BaseCorrelatedNoise.__init__(self, rng, world_cf, wcs)
 
+    def __repr__(self):
+        return "galsim.UncorrelatedNoise(variance=%r, rng=%r, wcs=%r, gsparams=%r)"%(
+            self.variance, self.rng, self.wcs, self.gsparams)
 

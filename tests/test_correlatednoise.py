@@ -96,6 +96,12 @@ def test_uncorrelated_noise_zero_lag():
             err_msg="Zero distance noise correlation value does not match variance value " + 
             "provided to UncorrelatedNoise.")
 
+        # Check picklability
+        do_pickle(ucn, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
+        do_pickle(ucn, drawNoise)
+        do_pickle(cn, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
+        do_pickle(cn, drawNoise)
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
@@ -695,6 +701,11 @@ def test_copy():
         outim1.array, outim2.array, decimal=12,
         err_msg="Copied correlated noise does not produce the same noise field as the parent "+
         "despite sharing the same RNG (high precision test).")
+
+    # Check picklability
+    do_pickle(cn, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
+    do_pickle(cn, drawNoise)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
@@ -1201,6 +1212,10 @@ def test_cosmos_wcs():
                     cf_orig/var, cf_raw/var, decimal=2,
                     err_msg='Drawing COSMOS noise on view with cosmos pixel scale did not '+
                     'recover correct covariance at positions '+str(pos))
+
+        # Check picklability
+        do_pickle(cn_test, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
+        do_pickle(cn_test, drawNoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
