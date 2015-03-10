@@ -89,8 +89,7 @@ def test_roundtrip():
         # He applied the 1st order correction to the flux, but expect to be wrong at around
         # the 10^-5 level.
         # Anyway, Quintic seems to be accurate enough.
-        quint = galsim.Quintic(1.e-4)
-        interp = galsim.InterpolatedImage(image_in, x_interpolant=quint, scale=test_scale, flux=1.)
+        # And this is now the default, so no need to do anything special here.
         do_shoot(interp,image_out,"InterpolatedImage")
 
         # Test kvalues
@@ -116,7 +115,7 @@ def test_roundtrip():
     do_pickle(galsim.Quintic())
     do_pickle(galsim.Quintic(tol=0.1))
     do_pickle(galsim.Interpolant('quintic'))
-    do_pickle(galsim.Interpolant2D('lanczos7'))
+    do_pickle(galsim.Interpolant('lanczos7'))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -874,7 +873,7 @@ def test_conserve_dc():
                 im2.array,init_val,5,
                 '%s did not preserve a flat input flux using uvals.'%interp)
 
-    for n in [3,4,5,6,7,8]:  # 8 tests the generic formulae, since not specialized.
+    for n in [3,4,5,6,7,8]:  # n=8 tests the generic formulae, since not specialized.
         print 'Testing Lanczos interpolant with n = ',n
         lan = galsim.Lanczos(n, conserve_dc=True)
         obj = galsim.InterpolatedImage(im1, x_interpolant=lan, normalization='sb')

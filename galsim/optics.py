@@ -149,10 +149,10 @@ class OpticalPSF(GSObject):
                             dimension, [0., 1.). This should be specified even if you are providing
                             a `pupil_plane_im`, since we need an initial value of obscuration to use
                             to figure out the necessary image sampling. [default: 0]
-    @param interpolant      Either an Interpolant2d (or Interpolant) instance or a string indicating
-                            which interpolant should be used.  Options are 'nearest', 'sinc', 
-                            'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
-                            integer order to use. [default: galsim.Quintic()]
+    @param interpolant      Either an Interpolant instance or a string indicating which interpolant
+                            should be used.  Options are 'nearest', 'sinc', 'linear', 'cubic',
+                            'quintic', or 'lanczosN' where N should be the integer order to use.
+                            [default: galsim.Quintic()]
     @param oversampling     Optional oversampling factor for the InterpolatedImage. Setting 
                             `oversampling < 1` will produce aliasing in the PSF (not good).
                             Usually `oversampling` should be somewhat larger than 1.  1.5 is 

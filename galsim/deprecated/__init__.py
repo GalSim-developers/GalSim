@@ -37,6 +37,7 @@ from . import bounds
 from . import chromatic
 from . import correlatednoise
 from . import image
+from . import interpolatedimage
 from . import noise
 from . import random
 from . import shapelet

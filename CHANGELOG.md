@@ -15,6 +15,8 @@ API Changes
 
 - Changed the name of the `bounds.addBorder()` method to `withBorder` to make
   it clearer that the method returns a new Bounds object. (#218)
+- Removed (from the python layer) Interpolant2d and InterpolantXY, since we
+  we have only actually implemented 1-d interpolants. (#218)
 - Made the default tolerance for all Interpolants equal to 1.e-4.  It already
   was for Cubic, Quintic, and Lanczos, which are the ones we normally use,
   so this just changes the default for the others. (#218)

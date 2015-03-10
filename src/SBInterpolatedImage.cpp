@@ -35,10 +35,22 @@ namespace galsim {
     template <typename T> 
     SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<T>& image,
+        boost::shared_ptr<Interpolant> xInterp, boost::shared_ptr<Interpolant> kInterp,
+        double pad_factor, const GSParamsPtr& gsparams) :
+        SBProfile(
+            new SBInterpolatedImageImpl(
+                image,
+                boost::shared_ptr<Interpolant2d>(new InterpolantXY(xInterp)),
+                boost::shared_ptr<Interpolant2d>(new InterpolantXY(kInterp)),
+                pad_factor,gsparams)
+        ) {}
+
+    template <typename T> 
+    SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<T>& image,
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double pad_factor, const GSParamsPtr& gsparams) :
-        SBProfile(new SBInterpolatedImageImpl(
-                image,xInterp,kInterp,pad_factor,gsparams)) {}
+        SBProfile(new SBInterpolatedImageImpl(image,xInterp,kInterp,pad_factor,gsparams)) {}
 
     SBInterpolatedImage::SBInterpolatedImage(
         const MultipleImageHelper& multi,
@@ -847,7 +859,7 @@ namespace galsim {
         // Last step is to convolve with the interpolation kernel. 
         // Can skip if using a 2d delta function
         const InterpolantXY* xyPtr = dynamic_cast<const InterpolantXY*> (_xInterp.get());
-        if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d()))) {
+        if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d().get()))) {
             boost::shared_ptr<PhotonArray> pa_interp = _xInterp->shoot(N, ud);
             pa_interp->scaleXY(_xtab->getDx());
             result->convolve(*pa_interp, ud);
@@ -873,6 +885,23 @@ namespace galsim {
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<int16_t>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
+        const GSParamsPtr& gsparams);
+
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<float>& image, boost::shared_ptr<Interpolant> xInterp,
+        boost::shared_ptr<Interpolant> kInterp, double pad_factor,
+        const GSParamsPtr& gsparams);
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<double>& image, boost::shared_ptr<Interpolant> xInterp,
+        boost::shared_ptr<Interpolant> kInterp, double pad_factor,
+        const GSParamsPtr& gsparams);
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<int32_t>& image, boost::shared_ptr<Interpolant> xInterp,
+        boost::shared_ptr<Interpolant> kInterp, double pad_factor,
+        const GSParamsPtr& gsparams);
+    template SBInterpolatedImage::SBInterpolatedImage(
+        const BaseImage<int16_t>& image, boost::shared_ptr<Interpolant> xInterp,
+        boost::shared_ptr<Interpolant> kInterp, double pad_factor,
         const GSParamsPtr& gsparams);
 
     template MultipleImageHelper::MultipleImageHelper(

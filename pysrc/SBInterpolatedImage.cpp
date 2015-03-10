@@ -52,8 +52,8 @@ namespace galsim {
         {
             wrapper
                 .def(bp::init<const BaseImage<U> &,
-                     boost::shared_ptr<InterpolantXY>,
-                     boost::shared_ptr<InterpolantXY>,
+                     boost::shared_ptr<Interpolant>,
+                     boost::shared_ptr<Interpolant>,
                      double, boost::shared_ptr<GSParams> >(
                          (bp::arg("image"),
                           bp::arg("xInterp"),

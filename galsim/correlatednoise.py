@@ -1190,10 +1190,9 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         # If x_interpolant not specified on input, use bilinear
         if x_interpolant is None:
-            linear = galsim.Linear(tol=1.e-4)
-            x_interpolant = galsim.InterpolantXY(linear)
+            x_interpolant = galsim.Linear(tol=1.e-4)
         else:
-            x_interpolant = utilities.convert_interpolant_to_2d(x_interpolant)
+            x_interpolant = utilities.convert_interpolant(x_interpolant)
 
         # Then initialize...
         cf_object = galsim.InterpolatedImage(
@@ -1278,12 +1277,11 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
 
     @returns a _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.
 
-    The default `x_interpolant` is a `galsim.InterpolantXY(galsim.Linear(tol=1.e-4))`, which uses
-    bilinear interpolation.  The use of this interpolant is an approximation that gives good
-    empirical results without requiring internal convolution of the correlation function profile by
-    a Pixel object when applying correlated noise to images: such an internal convolution has
-    been found to be computationally costly in practice, requiring the Fourier transform of very
-    large arrays.
+    The default `x_interpolant` is a `galsim.Linear(tol=1.e-4)`, which uses bilinear interpolation.
+    The use of this interpolant is an approximation that gives good empirical results without
+    requiring internal convolution of the correlation function profile by a Pixel object when
+    applying correlated noise to images: such an internal convolution has been found to be
+    computationally costly in practice, requiring the Fourier transform of very large arrays.
 
     The use of the bilinear interpolants means that the representation of correlated noise will be
     noticeably inaccurate in at least the following two regimes:
@@ -1368,10 +1366,9 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
 
     # If x_interpolant not specified on input, use bilinear
     if x_interpolant is None:
-        linear = galsim.Linear(tol=1.e-4)
-        x_interpolant = galsim.InterpolantXY(linear)
+        x_interpolant = galsim.Linear(tol=1.e-4)
     else:
-        x_interpolant = utilities.convert_interpolant_to_2d(x_interpolant)
+        x_interpolant = utilities.convert_interpolant(x_interpolant)
 
     # Use this info to then generate a correlated noise model DIRECTLY: note this is non-standard
     # usage, but tolerated since we can be sure that the input cfimage is appropriately symmetric

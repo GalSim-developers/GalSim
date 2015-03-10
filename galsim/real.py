@@ -90,16 +90,15 @@ class RealGalaxy(GSObject):
                             generator takes precedence over any stored within a user-input
                             CorrelatedNoise instance (see `noise_pad` parameter below).
                             [default: None]
-    @param x_interpolant    Either an Interpolant2d (or Interpolant) instance or a string
-                            indicating which real-space interpolant should be used.  Options
-                            are 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN'
-                            where N should be the integer order to use. [default: Quintic]
-    @param k_interpolant    Either an Interpolant2d (or Interpolant) instance or a string
-                            indicating which k-space interpolant should be used.  Options are
-                            'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN'
-                            where N should be the integer order to use.  We strongly recommend
-                            leaving this parameter at its default value; see text above for
-                            details.  [default: Quintic]
+    @param x_interpolant    Either an Interpolant instance or a string indicating which real-space
+                            interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
+                            'cubic', 'quintic', or 'lanczosN' where N should be the integer order
+                            to use. [default: galsim.Quintic()]
+    @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
+                            interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
+                            'cubic', 'quintic', or 'lanczosN' where N should be the integer order
+                            to use.  We strongly recommend leaving this parameter at its default
+                            value; see text above for details.  [default: galsim.Quintic()]
     @param flux             Total flux, if None then original flux in galaxy is adopted without
                             change. [default: None]
     @param pad_factor       Factor by which to pad the Image when creating the

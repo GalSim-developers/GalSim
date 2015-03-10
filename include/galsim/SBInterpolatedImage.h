@@ -190,6 +190,14 @@ namespace galsim {
         template <typename T> 
         SBInterpolatedImage(
             const BaseImage<T>& image,
+            boost::shared_ptr<Interpolant> xInterp,
+            boost::shared_ptr<Interpolant> kInterp,
+            double pad_factor, const GSParamsPtr& gsparams);
+
+        /// @brief Same as above, but take 2-d interpolants.
+        template <typename T> 
+        SBInterpolatedImage(
+            const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
             double pad_factor, const GSParamsPtr& gsparams);

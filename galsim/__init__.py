@@ -125,7 +125,7 @@ from base import Exponential, Sersic, DeVaucouleurs, Spergel
 from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
 from shapelet import Shapelet, ShapeletSize, FitShapelet
-from interpolatedimage import Interpolant, Interpolant2d, InterpolantXY
+from interpolatedimage import Interpolant
 from interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 from interpolatedimage import InterpolatedImage
 from compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution, Transform

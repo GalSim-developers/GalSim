@@ -23,7 +23,7 @@ InterpolatedImage is a class that allows one to treat an image as a profile.
 import galsim
 from galsim import GSObject
 from . import _galsim
-from ._galsim import Interpolant, Interpolant2d, InterpolantXY
+from ._galsim import Interpolant
 from ._galsim import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 
 class InterpolatedImage(GSObject):
@@ -117,16 +117,15 @@ class InterpolatedImage(GSObject):
     @param image            The Image from which to construct the object.
                             This may be either an Image instance or a string indicating a fits
                             file from which to read the image.
-    @param x_interpolant    Either an Interpolant2d (or Interpolant) instance or a string indicating
-                            which real-space interpolant should be used.  Options are 'nearest',
-                            'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be
-                            the integer order to use. [default: Quintic]
-    @param k_interpolant    Either an Interpolant2d (or Interpolant) instance or a string indicating
-                            which k-space interpolant should be used.  Options are 'nearest',
-                            'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be
-                            the integer order to use.  We strongly recommend leaving this parameter
-                            at its default value; see text above for details.  [default:
-                            Quintic]
+    @param x_interpolant    Either an Interpolant instance or a string indicating which real-space
+                            interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
+                            'cubic', 'quintic', or 'lanczosN' where N should be the integer order
+                            to use. [default: galsim.Quintic()]
+    @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
+                            interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
+                            'cubic', 'quintic', or 'lanczosN' where N should be the integer order
+                            to use.  We strongly recommend leaving this parameter at its default
+                            value; see text above for details.  [default: galsim.Quintic()]
     @param normalization    Two options for specifying the normalization of the input Image:
                               "flux" or "f" means that the sum of the pixels is normalized
                                   to be equal to the total flux.
@@ -289,13 +288,13 @@ class InterpolatedImage(GSObject):
         # set up the interpolants if none was provided by user, or check that the user-provided ones
         # are of a valid type
         if x_interpolant is None:
-            self.x_interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1e-4))
+            self.x_interpolant = galsim.Quintic(tol=1e-4)
         else:
-            self.x_interpolant = galsim.utilities.convert_interpolant_to_2d(x_interpolant)
+            self.x_interpolant = galsim.utilities.convert_interpolant(x_interpolant)
         if k_interpolant is None:
-            self.k_interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1e-4))
+            self.k_interpolant = galsim.Quintic(tol=1e-4)
         else:
-            self.k_interpolant = galsim.utilities.convert_interpolant_to_2d(k_interpolant)
+            self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
         # Store the image as an attribute and make sure we don't change the original image
         # in anything we do here.  (e.g. set scale, etc.)

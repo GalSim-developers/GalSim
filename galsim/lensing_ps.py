@@ -477,13 +477,11 @@ class PowerSpectrum(object):
         else:
             raise TypeError("The rng provided to buildGrid is not a BaseDeviate")
 
-        # Check that the interpolant is valid.  (Don't save the result though in case it is
-        # a string -- we don't want to mess up picklability.)
         if interpolant is None:
             self.interpolant = 'lanczos5'
         else:
             self.interpolant = interpolant
-            galsim.utilities.convert_interpolant_to_2d(interpolant)
+            galsim.utilities.convert_interpolant(interpolant)
 
         # Convert power_functions into callables:
         e_power_function = self._convert_power_function(self.e_power_function,'e_power_function')
@@ -1024,10 +1022,10 @@ class PowerSpectrum(object):
 
         # Set the interpolant:
         if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(interpolant)
+            xinterp = galsim.utilities.convert_interpolant(interpolant)
         else:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
-        kinterp = galsim.InterpolantXY(galsim.Quintic())
+            xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+        kinterp = galsim.Quintic()
 
         if reduced:
             # get reduced shear (just discard magnification)
@@ -1169,10 +1167,10 @@ class PowerSpectrum(object):
 
         # Set the interpolant:
         if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(interpolant)
+            xinterp = galsim.utilities.convert_interpolant(interpolant)
         else:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
-        kinterp = galsim.InterpolantXY(galsim.Quintic())
+            xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+        kinterp = galsim.Quintic()
 
         # Make an SBInterpolatedImage, which will do the heavy lifting for the interpolation.
         # However, if we are doing wrapped interpolation then we will want to manually stick the
@@ -1282,10 +1280,10 @@ class PowerSpectrum(object):
 
         # Set the interpolant:
         if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(interpolant)
+            xinterp = galsim.utilities.convert_interpolant(interpolant)
         else:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
-        kinterp = galsim.InterpolantXY(galsim.Quintic())
+            xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+        kinterp = galsim.Quintic()
 
         # Calculate the magnification based on the convergence and shear
         _, _, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
@@ -1404,10 +1402,10 @@ class PowerSpectrum(object):
 
         # Set the interpolant:
         if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(interpolant)
+            xinterp = galsim.utilities.convert_interpolant(interpolant)
         else:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
-        kinterp = galsim.InterpolantXY(galsim.Quintic())
+            xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+        kinterp = galsim.Quintic()
 
         # Calculate the magnification based on the convergence and shear
         g1_r, g2_r, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,

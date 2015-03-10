@@ -260,7 +260,7 @@ namespace galsim {
         double xval1d(double x) const { return _i1d->xval(x); }
         double xvalWrapped1d(double x, int N) const { return _i1d->xvalWrapped(x,N); }
         double uval1d(double u) const { return _i1d->uval(u); }
-        const Interpolant* get1d() const { return _i1d.get(); }
+        boost::shared_ptr<Interpolant> get1d() const { return _i1d; }
 
     private:
         boost::shared_ptr<Interpolant> _i1d;  // The 1d function used in both axes here.

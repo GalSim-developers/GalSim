@@ -66,12 +66,6 @@ namespace galsim {
             }
         }
 
-        static Interpolant2d* ConstructInterpolant2d(const std::string& str, double tol)
-        {
-            boost::shared_ptr<Interpolant> i1d(ConstructInterpolant(str,tol));
-            return new InterpolantXY(i1d);
-        }
-
         static void wrap()
         {
             // We wrap Interpolant classes as opaque, construct-only objects; we just
@@ -85,16 +79,6 @@ namespace galsim {
                         (bp::arg("str"), bp::arg("tol")=1.e-4)))
                 .def("uval", &Interpolant::uval, (bp::arg("uval")=0))
                 ;
-            bp::class_<Interpolant2d,boost::noncopyable>("Interpolant2d", bp::no_init)
-                .def("__init__", bp::make_constructor(
-                        &ConstructInterpolant2d, bp::default_call_policies(),
-                        (bp::arg("str"), bp::arg("tol")=1.e-4)))
-                .def("uval", &Interpolant2d::uval, (bp::arg("u")=0,bp::arg("v")=0))
-                ;
-            bp::class_<InterpolantXY,bp::bases<Interpolant2d>,boost::noncopyable>(
-                "InterpolantXY",
-                bp::init<boost::shared_ptr<Interpolant> >(bp::arg("i1d"))
-            );
 
             static const char* delta_doc =
             "Delta-function interpolant in 1d: The interpolant for when you do not want to\n"

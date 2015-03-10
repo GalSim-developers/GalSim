@@ -234,18 +234,16 @@ def rand_arr(shape, deviate):
     tmp_img.addNoise(galsim.DeviateNoise(deviate))
     return tmp_img.array
 
-def convert_interpolant_to_2d(interpolant):
-    """Convert a given interpolant to an Interpolant2d if it is given as a string or 1-d.
+def convert_interpolant(interpolant):
+    """Convert a given interpolant to an Interpolant if it is given as a string.
     """
     if interpolant is None:
         return None  # caller is responsible for setting a default if desired.
-    elif isinstance(interpolant, galsim.Interpolant2d):
-        return interpolant
     elif isinstance(interpolant, galsim.Interpolant):
-        return galsim.InterpolantXY(interpolant)
+        return interpolant
     else:
         # Will raise an appropriate exception if this is invalid.
-        return galsim.Interpolant2d(interpolant)
+        return galsim.Interpolant(interpolant)
 
 # A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
 def _convertPositions(pos, units, func):
