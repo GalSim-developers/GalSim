@@ -202,13 +202,8 @@ namespace galsim {
                                         y*(4.01839087307656620e13 + 
                                            y*(3.99653257887490811e13))))))))));
 
-#ifdef _GLIBCXX_HAVE_SINCOS
             double sinx,cosx;
-            sincos(x,&sinx,&cosx);
-#else
-            double cosx = std::cos(x);
-            double sinx = std::sin(x);
-#endif
+            (x * radians).sincos(sinx,cosx);
             return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cosx - g*sinx;
         } else {
             // Here I used Maple to calculate the Pade approximation for Si(x), which is accurate
@@ -695,14 +690,8 @@ namespace galsim {
                   // Let sn = sin(pi x/2), cn = cos(pi x/2)
                   // Then sin(pi x) = 2 * sn * cn
                   // xval = 4/pi^2 sn^2 cn / x^2
-                  double temp = M_PI/2. * x;
-#ifdef _GLIBCXX_HAVE_SINCOS
                   double sn, cn;
-                  sincos(temp, &sn, &cn);
-#else
-                  double sn = sin(temp);
-                  double cn = cos(temp);
-#endif
+                  (x * M_PI/2. * radians).sincos(sn,cn);
                   s = 2.*sn*cn;
                   res = (2./(M_PI*M_PI)) * s*sn/(x*x);
                   break;
@@ -718,14 +707,8 @@ namespace galsim {
                   break;
               }
               case 4 : {
-                  double temp = M_PI/4. * x;
-#ifdef _GLIBCXX_HAVE_SINCOS
                   double sn, cn;
-                  sincos(temp, &sn, &cn);
-#else
-                  double sn = sin(temp);
-                  double cn = cos(temp);
-#endif
+                  (x * M_PI/4. * radians).sincos(sn,cn);
                   s = sn*cn*(4.-8.*sn*sn);
                   res = (4./(M_PI*M_PI)) * s*sn/(x*x);
                   break;
@@ -738,14 +721,8 @@ namespace galsim {
                   break;
               }
               case 6 : {
-                  double temp = M_PI/6. * x;
-#ifdef _GLIBCXX_HAVE_SINCOS
                   double sn, cn;
-                  sincos(temp, &sn, &cn);
-#else
-                  double sn = sin(temp);
-                  double cn = cos(temp);
-#endif
+                  (x * M_PI/6. * radians).sincos(sn, cn);
                   double snsq = sn*sn;
                   s = sn*cn*(6.-32.*snsq*(1.-snsq));
                   res = (6./(M_PI*M_PI)) * s*sn/(x*x);

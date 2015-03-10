@@ -513,8 +513,8 @@ class SED(object):
                                    bandpass.blue_limit, bandpass.red_limit)
         # Rbar and V are computed above assuming that the parallactic angle is 0.  Hence we
         # need to rotate our frame by the parallactic angle to get the desired output.
-        rot = np.matrix([[np.cos(parallactic_angle.rad()), -np.sin(parallactic_angle.rad())],
-                         [np.sin(parallactic_angle.rad()), np.cos(parallactic_angle.rad())]])
+        sinp, cosp = parallactic_angle.sincos()
+        rot = np.matrix([[cosp, -sinp], [sinp, cosp]])
         Rbar = rot * Rbar * np.matrix([0,1]).T
         V = rot * np.matrix([[0, 0], [0, V]]) * rot.T
         return Rbar, V

@@ -31,7 +31,9 @@ namespace galsim {
     void LVector::rotate(const Angle& theta) 
     {
         take_ownership();
-        std::complex<double> z(std::cos(theta.rad()), -std::sin(theta.rad()));
+        double s, c;
+        theta.sincos(s,c);
+        std::complex<double> z(c, -s);
         std::complex<double> imz(1., 0.);
         for (int m=1; m<=_order; m++) {
             imz *= z;

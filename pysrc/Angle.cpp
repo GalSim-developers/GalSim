@@ -25,6 +25,7 @@
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 #include "Angle.h"
+#include "NumpyHelper.h"
 
 namespace bp = boost::python;
 
@@ -49,6 +50,17 @@ struct PyAngleUnit {
 
 struct PyAngle {
 
+    static bp::handle<> sincos(const Angle& self) {
+        static npy_intp dim[1] = {2};
+        double ar[2];
+        self.sincos(ar[0], ar[1]);
+        PyObject* r = PyArray_SimpleNewFromData(1, dim, NPY_DOUBLE, ar);
+        if (!r) throw bp::error_already_set();
+        PyObject* r2 = PyArray_FROM_OF(r, NPY_ARRAY_ENSURECOPY);
+        Py_DECREF(r);
+        return bp::handle<>(r2);
+    }
+
     static void wrap() {
         bp::class_< Angle > pyAngle("Angle", bp::init<>());
         pyAngle
@@ -56,6 +68,10 @@ struct PyAngle {
             .def(bp::init<const Angle&>(bp::args("rhs")))
             .def("rad", &Angle::rad)
             .def("wrap", &Angle::wrap)
+            .def("sin", &Angle::sin)
+            .def("cos", &Angle::cos)
+            .def("tan", &Angle::tan)
+            .def("sincos", sincos)
             .def(bp::self / bp::other<AngleUnit>())
             .def(bp::self * bp::other<double>())
             .def(bp::other<double>() * bp::self)

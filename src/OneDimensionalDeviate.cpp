@@ -344,9 +344,9 @@ namespace galsim {
                 chosen->drawWithin(unitRandom, radius, flux, ud);
                 // Draw second ud to get azimuth 
                 double theta = 2.*M_PI*ud();
-                result->setPhoton(i,
-                                  radius*std::cos(theta), radius*std::sin(theta),
-                                  flux*fluxPerPhoton);
+                double sintheta, costheta;
+                (theta * radians).sincos(sintheta,costheta);
+                result->setPhoton(i, radius*costheta, radius*sintheta, flux*fluxPerPhoton);
 #else
                 // Alternate method: doesn't need sin & cos but needs sqrt
                 // First get a point uniformly distributed in unit circle
@@ -364,7 +364,7 @@ namespace galsim {
                 chosen->drawWithin(unitRandom, radius, flux, ud);
                 // Rescale x & y:
                 double rScale = radius / std::sqrt(rsq);
-                result->setPhoton(i,xu*rScale, yu*rScale, flux*fluxPerPhoton);
+                result->setPhoton(i, xu*rScale, yu*rScale, flux*fluxPerPhoton);
 #endif            
             } else {
                 // Simple 1d interpolation

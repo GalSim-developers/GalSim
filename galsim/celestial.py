@@ -79,11 +79,8 @@ class CelestialCoord(object):
 
     def _set_aux(self):
         if self._x is None:
-            import math
-            self._cosdec = math.cos(self._dec.rad())
-            self._sindec = math.sin(self._dec.rad())
-            self._cosra = math.cos(self._ra.rad())
-            self._sinra = math.sin(self._ra.rad())
+            self._sindec, self._cosdec = self._dec.sincos()
+            self._sinra, self._cosra = self._ra.sincos()
             self._x = self._cosdec * self._cosra
             self._y = -self._cosdec * self._sinra
             self._z = self._sindec
@@ -499,6 +496,7 @@ class CelestialCoord(object):
            and (c) Lieske (1979) A&A 73, 282-284.
         """
         if from_epoch == to_epoch: return self
+        import math
 
         # t0, t below correspond to Lieske's big T and little T
         t0 = (from_epoch-2000.)/100.
@@ -514,13 +512,9 @@ class CelestialCoord(object):
               (1.09468 + 0.000066*t0) * t2 + 0.018203 * t3 ) * galsim.arcsec
         c = ( (2004.3109 - 0.85330*t0 - 0.000217*t02) * t +
               (-0.42665 - 0.000217*t0) * t2 - 0.041833 * t3 ) * galsim.arcsec
-        import math
-        cosa = math.cos(a.rad())
-        sina = math.sin(a.rad())
-        cosb = math.cos(b.rad())
-        sinb = math.sin(b.rad())
-        cosc = math.cos(c.rad())
-        sinc = math.sin(c.rad())
+        sina, cosa = a.sincos()
+        sinb, cosb = b.sincos()
+        sinc, cosc = c.sincos()
 
         # This is the precession rotation matrix:
         xx = cosa*cosc*cosb - sina*sinb
@@ -562,16 +556,11 @@ class CelestialCoord(object):
         el0 = 33. * galsim.degrees
         r0 = 282.25 * galsim.degrees
         d0 = 62.6 * galsim.degrees
-        cosd0 = math.cos(d0.rad())
-        sind0 = math.sin(d0.rad())
+        sind0, cosd0 = d0.sincos()
 
         temp = self.precess(epoch, 1950.)
-        d = temp.dec
-        r = temp.ra
-        cosd = math.cos(d.rad())
-        sind = math.sin(d.rad())
-        cosr = math.cos(r.rad() - r0.rad())
-        sinr = math.sin(r.rad() - r0.rad())
+        sind, cosd = temp.dec.sincos()
+        sinr, cosr = (temp.ra-r0).sincos()
 
         cbcl = cosd*cosr
         cbsl = sind*sind0 + cosd*sinr*cosd0

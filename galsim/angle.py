@@ -148,6 +148,15 @@ Operations on NumPy arrays containing Angles are permitted, provided that they a
 of the allowed operations on Angles listed above (e.g., addition/subtraction of Angles,
 multiplication of an Angle by a float, but not multiplication of Angles together).
 
+There are convenience function for getting the sin, cos, and tan of an angle, along with
+one for getting sin and cos together, which should be more efficient than doing sin and 
+cos separately:
+
+    >>> sint = theta.sin()  # equivalent to sint = math.sin(theta.rad())
+    >>> cost = theta.cos()  # equivalent to sint = math.cos(theta.rad())
+    >>> tant = theta.tan()  # equivalent to sint = math.tan(theta.rad())
+    >>> sint, cost = theta.sincos()
+
 Wrapping
 --------
 

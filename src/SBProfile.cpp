@@ -183,14 +183,8 @@ namespace galsim {
 
     SBTransform SBProfile::rotate(const Angle& theta) const
     {
-#ifdef _GLIBCXX_HAVE_SINCOS
-        // Most optimizing compilers will do this automatically, but just in case...
         double sint,cost;
-        sincos(theta.rad(),&sint,&cost);
-#else
-        double cost = std::cos(theta.rad());
-        double sint = std::sin(theta.rad());
-#endif
+        theta.sincos(sint,cost);
         return SBTransform(*this,cost,-sint,sint,cost);
     }
 

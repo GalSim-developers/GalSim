@@ -197,6 +197,19 @@ namespace galsim {
             return Angle(new_val, radians);
         }
 
+        double sin() const { return std::sin(_val); }
+        double cos() const { return std::cos(_val); }
+        double tan() const { return std::tan(_val); }
+
+        void sincos(double& sint, double& cost) const {
+#ifdef _GLIBCXX_HAVE_SINCOS
+            sincos(_val,&sint,&cost);
+#else
+            cost = std::cos(_val);
+            sint = std::sin(_val);
+#endif
+        }
+
     private:
         double _val;
     };

@@ -540,14 +540,8 @@ namespace galsim {
 #ifdef USE_COS_SIN
             double theta = 2.*M_PI*u();
             double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
-#ifdef _GLIBCXX_HAVE_SINCOS
-            // Most optimizing compilers will do this automatically, but just in case...
             double sint,cost;
-            sincos(theta,&sint,&cost);
-#else
-            double cost = std::cos(theta);
-            double sint = std::sin(theta);
-#endif
+            (theta * radians).sincos(sint,cost);
             // Then map radius to the desired Gaussian with analytic transformation
             double r = sqrt(rsq) * _r0;;
             result->setPhoton(i, r*cost, r*sint, fluxPerPhoton);

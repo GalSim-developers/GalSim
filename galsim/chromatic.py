@@ -956,16 +956,14 @@ class ChromaticObject(object):
         import math
         if hasattr(theta, '__call__'):
             def buildRMatrix(w):
-                cth = math.cos(theta(w).rad())
-                sth = math.sin(theta(w).rad())
+                sth, cth = theta(w).sincos()
                 R = np.matrix([[cth, -sth, 0],
                                [sth,  cth, 0],
                                [  0,    0, 1]], dtype=float)
                 return R
             R = buildRMatrix
         else:
-            cth = math.cos(theta.rad())
-            sth = math.sin(theta.rad())
+            sth, cth = theta.sincos()
             R = np.matrix([[cth, -sth, 0],
                            [sth,  cth, 0],
                            [  0,    0, 1]], dtype=float)
@@ -1172,8 +1170,8 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
         shift_magnitude = galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
         shift_magnitude -= base_refraction
         shift_magnitude = shift_magnitude * (galsim.radians / galsim.arcsec)
-        shift = (-shift_magnitude*np.sin(parallactic_angle.rad()),
-                 shift_magnitude*np.cos(parallactic_angle.rad()))
+        sinp, cosp = parallactic_angle.sincos()
+        shift = (-shift_magnitude * sinp, shift_magnitude * cosp)
         return shift
     ret = ret.shift(shift_fn)
     return ret

@@ -96,8 +96,7 @@ def rotate_xy(x, y, theta):
     """
     if not isinstance(theta, galsim.Angle):
         raise TypeError("Input rotation angle theta must be a galsim.Angle instance.")
-    cost = np.cos(theta.rad())
-    sint = np.sin(theta.rad())
+    sint, cost = theta.sincos()
     x_rot = x * cost - y * sint
     y_rot = x * sint + y * cost
     return x_rot, y_rot

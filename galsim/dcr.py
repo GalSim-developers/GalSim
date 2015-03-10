@@ -77,7 +77,7 @@ def get_refraction(wave, zenith_angle, **kwargs):
     # n_squared = (nm1 + 1)**2
     # r0 = (n_squared - 1.0) / (2.0 * n_squared)
     r0 = nm1 * (nm1+2) / 2.0 / (nm1**2 + 2*nm1 + 1)
-    return r0 * numpy.tan(zenith_angle.rad())
+    return r0 * zenith_angle.tan()
 
 def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=None):
     """Compute the zenith angle and parallactic angle of a celestial coordinate, given either

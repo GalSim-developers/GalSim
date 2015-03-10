@@ -659,14 +659,8 @@ namespace galsim {
             // First get a point uniformly distributed on unit circle
             double theta = 2.*M_PI*u();
             double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
-#ifdef _GLIBCXX_HAVE_SINCOS
-            // Most optimizing compilers will do this automatically, but just in case...
             double sint,cost;
-            sincos(theta,&sint,&cost);
-#else
-            double cost = std::cos(theta);
-            double sint = std::sin(theta);
-#endif
+            (theta * radians).sincos(sint,cost);
             // Then map radius to the Moffat flux distribution
             double newRsq = std::pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
             double rFactor = _rD * std::sqrt(newRsq);
