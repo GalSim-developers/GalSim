@@ -151,6 +151,36 @@ class Series(object):
         coeffs = self.getCoeffs()
         return np.dot(xvals, coeffs)
         
+    @classmethod
+    def inspectCache(self):
+        i=0
+        ik=0
+        mem=0
+        for k,v in self.cache.iteritems():
+            if not isinstance(k, tuple):
+                continue
+            i += 1
+            print
+            print "Cached image object: "
+            print v[2]
+            print "# of basis images: {:0}".format(v[3][0].shape[0])
+            print "images are {:0} x {:1} pixels".format(*v[3][1])
+            mem += v[3][0].nbytes
+            if k in self.kcache:
+                v = self.kcache[k]
+                ik += 1
+                print
+                print "Cached kimage object: "
+                print v[2]
+                print "# of basis kimages: {:0}".format(v[3][0].shape[0])
+                print "kimages are {:0} x {:1} pixels".format(*v[3][2])
+                mem += v[3][0].nbytes
+                mem += v[3][1].nbytes
+        print
+        print "Found {:0} image caches".format(i)
+        print "Found {:0} kimage caches".format(ik)
+        print "Cache occupies ~{:0} bytes".format(mem)
+
     def getCoeffs(self):
         raise NotImplementedError("subclasses of Series must define getCoeffs() method")
 
