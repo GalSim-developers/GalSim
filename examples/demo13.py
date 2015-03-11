@@ -254,9 +254,6 @@ def main(argv):
         # sky_level by wfirst.pixel_scale**2, and add that to final_image.
         sky_image = final_image.copy()
         wcs.makeSkyImage(sky_image, sky_level)
-        # TODO: Rachel is checking on units - before/after gain conversion - will update routines
-        # and/or demo once this is finalized.  (Images will not change since we use gain=1, but
-        # it would be good to be precise.)
         # This image is in units of e-/pix.  Finally we add the expected thermal backgrounds in this
         # band.  These are provided in e-/pix/s, so we have to multiply by the exposure time.
         sky_image += wfirst.thermal_backgrounds[filter_name]*wfirst.exptime
@@ -316,11 +313,11 @@ def main(argv):
         # non-linear effects that follow. Hence, these must be included at this stage of the 
         # image generation process. We subtract these backgrounds in the end.
 
-        # 3) Applying a quadratic non-linearity:
-        # In order to convert the units from electrons to ADU, we must multiply the image by a
-        # gain factor. The gain has a weak dependency on the charge present in each pixel. This
-        # dependency is accounted for by changing the pixel values (in electrons) and applying
-        # a constant nominal gain later, which is unity in our demo.
+        # 3) Applying a quadratic non-linearity: 
+        # In order to convert the units from electrons to ADU, we must use the gain factor. The gain
+        # has a weak dependency on the charge present in each pixel. This dependency is accounted
+        # for by changing the pixel values (in electrons) and applying a constant nominal gain
+        # later, which is unity in our demo.
 
         # Save the image before applying the transformation to see the difference:
         if diff_mode:
@@ -375,9 +372,11 @@ def main(argv):
         final_image.addNoise(read_noise)
         logger.debug('Added readnoise to {0}-band image'.format(filter_name))
 
-        # Technically we have to apply the gain, dividing the signal in e- by the voltage gain
-        # in e-/ADU to get a signal in ADU.  For WFIRST the gain is expected to be around 1,
-        # so it doesn't really matter, but for completeness we include this step.
+        # We divide by the gain to convert from e- to ADU. Currently, the gain value in the WFIRST
+        # module is just set to 1, since we don't know what the exact gain will be, although it is
+        # expected to be approximately 1. Eventually, this may change when the camera is assembled,
+        # and there may be a different value for each SCA. For now, there is just a single number,
+        # which is equal to 1.
         final_image /= wfirst.gain
 
         # Finally, the analog-to-digital converter reads in an integer value.
