@@ -208,7 +208,7 @@ class GSObject(object):
         if isinstance(obj, GSObject):
             self.SBProfile = obj.SBProfile
             if hasattr(obj,'noise'):
-                self.noise = obj.noise.copy()
+                self.noise = obj.noise
         elif isinstance(obj, _galsim.SBProfile):
             self.SBProfile = obj
         else:
@@ -606,7 +606,7 @@ class GSObject(object):
         new_obj = galsim.Transform(self, offset=offset)
 
         if hasattr(self,'noise'):
-            new_obj.noise = self.noise.copy()
+            new_obj.noise = self.noise
         return new_obj
 
 
@@ -716,7 +716,7 @@ class GSObject(object):
             offset = -offset
 
         if offset == galsim.PositionD(0,0):
-            return self.copy()
+            return self
         else:
             return self.shift(offset)
 
@@ -1385,7 +1385,7 @@ class Gaussian(GSObject):
             self.sigma, self.flux, self.gsparams)
 
     def __str__(self):
-        return 'galsim.Gaussian(sigma=%f, flux=%f)'%(self.sigma, self.flux)
+        return 'galsim.Gaussian(sigma=%s, flux=%s)'%(self.sigma, self.flux)
 
 _galsim.SBGaussian.__getinitargs__ = lambda self: (
         self.getSigma(), self.getFlux(), self.getGSParams())
@@ -1496,7 +1496,7 @@ class Moffat(GSObject):
             self.beta, self.scale_radius, self.trunc, self.flux, self.gsparams)
 
     def __str__(self):
-        return 'galsim.Moffat(beta=%f, scale_radius=%f, trunc=%f, flux=%f)'%(
+        return 'galsim.Moffat(beta=%s, scale_radius=%s, trunc=%s, flux=%s)'%(
             self.beta, self.scale_radius, self.trunc, self.flux)
 
 _galsim.SBMoffat.__getinitargs__ = lambda self: (
@@ -1657,7 +1657,7 @@ class Airy(GSObject):
             self.lam_over_diam, self.obscuration, self.flux, self.gsparams)
 
     def __str__(self):
-        return 'galsim.Airy(lam_over_diam=%f, obscuration=%f, flux=%f)'%(
+        return 'galsim.Airy(lam_over_diam=%s, obscuration=%s, flux=%s)'%(
             self.lam_over_diam, self.obscuration, self.flux)
 
 _galsim.SBAiry.__getinitargs__ = lambda self: (
@@ -1780,7 +1780,7 @@ class Kolmogorov(GSObject):
             self.lam_over_r0, self.flux, self.gsparams)
 
     def __str__(self):
-        return 'galsim.Kolmogorov(lam_over_r0=%f, flux=%f)'%(self.lam_over_r0, self.flux)
+        return 'galsim.Kolmogorov(lam_over_r0=%s, flux=%s)'%(self.lam_over_r0, self.flux)
 
 _galsim.SBKolmogorov.__getinitargs__ = lambda self: (
         self.getLamOverR0(), self.getFlux(), self.getGSParams())
@@ -1836,7 +1836,7 @@ class Pixel(GSObject):
             self.scale, self.flux, self.gsparams)
 
     def __str__(self):
-        return 'galsim.Pixel(scale=%f, flux=%f)'%(self.scale, self.flux)
+        return 'galsim.Pixel(scale=%s, flux=%s)'%(self.scale, self.flux)
 
 
 class Box(GSObject):
@@ -1892,7 +1892,7 @@ class Box(GSObject):
             self.width, self.height, self.flux, self.gsparams)
 
     def __str__(self):
-        return 'galsim.Box(width=%f, height=%f, flux=%f)'%(self.width, self.height, self.flux)
+        return 'galsim.Box(width=%s, height=%s, flux=%s)'%(self.width, self.height, self.flux)
 
 _galsim.SBBox.__getinitargs__ = lambda self: (
         self.getWidth(), self.getHeight(), self.getFlux(), self.getGSParams())
@@ -1945,7 +1945,7 @@ class TopHat(GSObject):
             self.radius, self.flux, self.gsparams)
 
     def __str__(self):
-        return 'galsim.TopHat(radius=%f, flux=%f)'%(self.radius, self.flux)
+        return 'galsim.TopHat(radius=%s, flux=%s)'%(self.radius, self.flux)
 
 _galsim.SBTopHat.__getinitargs__ = lambda self: (
         self.getRadius(), self.getFlux(), self.getGSParams())
@@ -2167,7 +2167,7 @@ class Sersic(GSObject):
         # Note: for the repr, we use the scale_radius, since that should just flow as is through
         # the constructor, so it should be exact.  But most people use half_light_radius
         # for Sersics, so use that in the looser str() function.
-        return 'galsim.Sersic(n=%f, half_light_radius=%f, trunc=%f, flux=%f)'%(
+        return 'galsim.Sersic(n=%s, half_light_radius=%s, trunc=%s, flux=%s)'%(
             self.n, self.half_light_radius, self.trunc, self.flux)
 
 _galsim.SBSersic.__getinitargs__ = lambda self: (
@@ -2253,7 +2253,7 @@ class Exponential(GSObject):
             self.scale_radius, self.flux, self.gsparams)
 
     def __str__(self):
-        return 'galsim.Exponential(scale_radius=%f, flux=%f)'%(self.scale_radius, self.flux)
+        return 'galsim.Exponential(scale_radius=%s, flux=%s)'%(self.scale_radius, self.flux)
 
 _galsim.SBExponential.__getinitargs__ = lambda self: (
         self.getScaleRadius(), self.getFlux(), self.getGSParams())
@@ -2340,7 +2340,7 @@ class DeVaucouleurs(GSObject):
             self.scale_radius, self.trunc, self.flux, self.gsparams)
 
     def __str__(self):
-        return 'galsim.DeVaucouleurs(half_light_radius=%f, trunc=%f, flux=%f)'%(
+        return 'galsim.DeVaucouleurs(half_light_radius=%s, trunc=%s, flux=%s)'%(
             self.half_light_radius, self.trunc, self.flux)
 
 _galsim.SBDeVaucouleurs.__getinitargs__ = lambda self: (
@@ -2455,7 +2455,7 @@ class Spergel(GSObject):
             self.nu, self.scale_radius, self.flux, self.gsparams)
 
     def __str__(self):
-        return 'galsim.Spergel(nu=%f, half_light_radius=%f, flux=%f)'%(
+        return 'galsim.Spergel(nu=%s, half_light_radius=%s, flux=%s)'%(
             self.nu, self.half_light_radius, self.flux)
 
 _galsim.SBSpergel.__getinitargs__ = lambda self: (

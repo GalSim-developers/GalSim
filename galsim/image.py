@@ -363,7 +363,7 @@ class Image(object):
 
     def __str__(self):
         if self.wcs is not None and self.wcs.isPixelScale():
-            return 'galsim.Image(bounds=%s, scale=%f)'%(self.bounds, self.scale)
+            return 'galsim.Image(bounds=%s, scale=%s)'%(self.bounds, self.scale)
         else:
             return 'galsim.Image(bounds=%s, wcs=%s)'%(self.bounds, self.wcs)
 

@@ -229,7 +229,7 @@ class LookupTable(object):
             return 'galsim.LookupTable(file=%r, interpolant=%r)'%(
                 self.file, self.interpolant)
         else:
-            return 'galsim.LookupTable(x=[%f,..,%f], f=[%f,...,%f], interpolant=%r)'%(
+            return 'galsim.LookupTable(x=[%s,..,%s], f=[%s,...,%s], interpolant=%r)'%(
                 self.x[0], self.x[-1], self.f[0], self.f[-1], self.interpolant)
 
 

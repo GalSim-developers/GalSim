@@ -166,6 +166,17 @@ class Sum(galsim.GSObject):
         str_list = [ str(obj) for obj in self.obj_list ]
         return 'galsim.Sum([%s])'%', '.join(str_list)
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        d['_gsparams'] = self.gsparams
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._obj_list, gsparams=self._gsparams)
+
+
 _galsim.SBAdd.__getinitargs__ = lambda self: (self.getObjs(), self.getGSParams())
 _galsim.SBAdd.__getstate__ = lambda self: None
 _galsim.SBAdd.__setstate__ = lambda self, state: 1
@@ -395,6 +406,17 @@ class Convolution(galsim.GSObject):
             real = ''
         return 'galsim.Convolution([%s]%s)'%(', '.join(str_list), real)
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        d['_gsparams'] = self.gsparams
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._obj_list, real_space=self._real_space, gsparams=self._gsparams)
+
+
 _galsim.SBConvolve.__getinitargs__ = lambda self: (
         self.getObjs(), self.isRealSpace(), self.getGSParams())
 _galsim.SBConvolve.__getstate__ = lambda self: None
@@ -474,6 +496,17 @@ class Deconvolution(galsim.GSObject):
 
     def __str__(self):
         return 'galsim.Deconvolution(%s)'%self.orig_obj
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        d['_gsparams'] = self.gsparams
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._orig_obj, self._gsparams)
+
 
 
 _galsim.SBDeconvolve.__getinitargs__ = lambda self: (self.getObj(), self.getGSParams())
@@ -588,6 +621,17 @@ class AutoConvolution(galsim.GSObject):
         else:
             real = ''
         return 'galsim.AutoConvolution(%s%s)'%(self.orig_obj, real)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        d['_gsparams'] = self.gsparams
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._orig_obj, self._real_space, self._gsparams)
+
 
 
 _galsim.SBAutoConvolve.__getinitargs__ = lambda self: (
@@ -709,6 +753,17 @@ class AutoCorrelation(galsim.GSObject):
             real = ''
         return 'galsim.AutoCorrelation(%s%s)'%(self.orig_obj, real)
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        d['_gsparams'] = self.gsparams
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._orig_obj, self._real_space, self._gsparams)
+
+
 
 _galsim.SBAutoCorrelate.__getinitargs__ = lambda self: (
         self.getObj(), self.isRealSpace(), self.getGSParams())
@@ -797,13 +852,31 @@ class Transform(galsim.GSObject):
         if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
             # MJ: If we want to get fancy, we could try to determine the minimal call to make.
             #     e.g. is it just a shear?  just a rotation? etc.  Probably not worth it though.
-            s += '.transform(%f,%f,%f,%f)'%(dudx,dudy,dvdx,dvdy)
+            s += '.transform(%s,%s,%s,%s)'%(dudx,dudy,dvdx,dvdy)
         offset = self.offset
         if offset.x != 0 or offset.y != 0:
-            s += '.shift(%f,%f)'%(offset.x,offset.y)
+            s += '.shift(%s,%s)'%(offset.x,offset.y)
         if self.flux_ratio != 1.:
-            s += '.withScaledFlux(%f)'%self.flux_ratio
+            s += '.withScaledFlux(%s)'%self.flux_ratio
         return s
+
+    def __getstate__(self):
+        # While the SBProfile should be picklable, it is better to reconstruct it from the
+        # original object, which will pickle better.  The SBProfile is only picklable via its
+        # repr, which is not the most efficient serialization.  Especially for things like
+        # SBInterpolatedImage.
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        d['_jac'] = self.jac
+        d['_offset'] = self.offset
+        d['_flux_ratio'] = self.flux_ratio
+        d['_gsparams'] = self.gsparams
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._original, self._jac, self._offset, self._flux_ratio, self._gsparams)
+
 
 def SBTransform_init(self):
     obj = self.getObj()

@@ -246,12 +246,12 @@ class InterpolatedImage(GSObject):
     _takes_logger = False
     _cache_noise_pad = {}
 
-    # --- Public Class methods ---
     def __init__(self, image, x_interpolant=None, k_interpolant=None, normalization='flux',
                  scale=None, wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0.,
                  rng=None, pad_image=None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None,
                  _force_stepk=0., _force_maxk=0.):
+
         # Check for obsolete dx parameter
         if dx is not None and scale is None:
             from galsim.deprecated import depr
@@ -350,6 +350,8 @@ class InterpolatedImage(GSObject):
             im_cen = self.image.bounds.center()
 
         local_wcs = self.image.wcs.local(image_pos = im_cen)
+        self.min_scale = local_wcs.minLinearScale()
+        self.max_scale = local_wcs.maxLinearScale()
 
         # Make sure the image fits in the noise pad image:
         if noise_pad_size:
@@ -357,8 +359,7 @@ class InterpolatedImage(GSObject):
             # Convert from arcsec to pixels according to the local wcs.
             # Use the minimum scale, since we want to make sure noise_pad_size is
             # as large as we need in any direction.
-            scale = local_wcs.minLinearScale()
-            noise_pad_size = int(math.ceil(noise_pad_size / scale))
+            noise_pad_size = int(math.ceil(noise_pad_size / self.min_scale))
             # Round up to a good size for doing FFTs
             noise_pad_size = galsim._galsim.goodFFTSize(noise_pad_size)
             if noise_pad_size <= min(self.image.array.shape):
@@ -397,6 +398,7 @@ class InterpolatedImage(GSObject):
             self.image.setCenter(0,0)
             if pad_image.bounds.includes(self.image.bounds):
                 pad_image[self.image.bounds] = self.image
+                pad_image.wcs = self.image.wcs
             else:
                 # If padding was smaller than original image, just use the original image.
                 pad_image = self.image
@@ -404,7 +406,7 @@ class InterpolatedImage(GSObject):
             pad_image = self.image
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
-        # input image.  So it is usually worth it to do a manual calculation here (see below).
+        # input image.  So it is usually worth it to do a manual calculation (below).
         #
         # However, there is also a hidden option to force it to use specific values of stepK and
         # maxK (caveat user!).  The values of _force_stepk and _force_maxk should be provided in
@@ -415,40 +417,54 @@ class InterpolatedImage(GSObject):
         # below what is provided here, while maxK is preserved.
         if _force_stepk > 0.:
             calculate_stepk = False
-            _force_stepk *= image.scale
+            _force_stepk *= self.min_scale
         if _force_maxk > 0.:
             calculate_maxk = False
-            _force_maxk *= image.scale
+            _force_maxk *= self.max_scale
+
+        # Save these values for pickling
+        self._pad_image = pad_image
+        self._pad_factor = pad_factor
+        self._gsparams = gsparams
 
         # Make the SBInterpolatedImage out of the image.
-        sbinterpolatedimage = galsim._galsim.SBInterpolatedImage(
-                pad_image.image, self.x_interpolant, self.k_interpolant,
-                pad_factor, _force_stepk, _force_maxk, gsparams)
+        sbii = galsim._galsim.SBInterpolatedImage(
+                pad_image.image, self.x_interpolant, self.k_interpolant, pad_factor,
+                _force_stepk, _force_maxk, gsparams)
 
         if calculate_stepk:
             if calculate_stepk is True:
-                sbinterpolatedimage.calculateStepK()
+                sbii.calculateStepK()
             else:
                 # If not a bool, then value is max_stepk
-                sbinterpolatedimage.calculateStepK(max_stepk=calculate_stepk)
+                sbii.calculateStepK(max_stepk=calculate_stepk)
         if calculate_maxk:
             if calculate_maxk is True:
-                sbinterpolatedimage.calculateMaxK()
+                sbii.calculateMaxK()
             else:
                 # If not a bool, then value is max_maxk
-                sbinterpolatedimage.calculateMaxK(max_maxk=calculate_maxk)
+                sbii.calculateMaxK(max_maxk=calculate_maxk)
 
-        self.sbii = sbinterpolatedimage
-        # Initialize the SBProfile
-        GSObject.__init__(self, sbinterpolatedimage)
+        # Save this intermediate profile
+        self._sbii = sbii
+        self._stepk = sbii.stepK() / self.min_scale
+        self._maxk = sbii.maxK() / self.max_scale
+
+        prof = GSObject(sbii)
 
         # Make sure offset is a PositionD
-        offset = self._parse_offset(offset)
+        offset = prof._parse_offset(offset)
 
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note reverse=True, since we want to fix the center in the opposite sense of what the 
         # draw function does.
-        prof = self._fix_center(self.image.array.shape, offset, use_true_center, reverse=True)
+        prof = prof._fix_center(self.image.array.shape, offset, use_true_center, reverse=True)
+
+        # Save the offset we will need when pickling.
+        if hasattr(prof, 'offset'):
+            self._offset = -prof.offset
+        else:
+            self._offset = None
 
         # Bring the profile from image coordinates into world coordinates
         prof = local_wcs.toWorld(prof)
@@ -461,7 +477,15 @@ class InterpolatedImage(GSObject):
         elif normalization.lower() in ['surface brightness','sb']:
             prof *= local_wcs.pixelArea()
 
-        GSObject.__init__(self, prof)
+        # Also save the final flux.
+        self._flux = prof.flux
+
+        # Now, in order for these to pickle correctly if they are the "original" object in a
+        # Transform object, we need to hide the current transformation.  An easy way to do that
+        # is to hide the SBProfile in an SBAdd object.
+        sbp = galsim._galsim.SBAdd([prof.SBProfile])
+
+        GSObject.__init__(self, sbp)
 
     def buildNoisePadImage(self, noise_pad_size, noise_pad, rng):
         """A helper function that builds the `pad_image` from the given `noise_pad` specification.
@@ -496,6 +520,36 @@ class InterpolatedImage(GSObject):
         pad_image.addNoise(noise)
 
         return pad_image
+
+    def __repr__(self):
+        return ('galsim.InterpolatedImage(%r, %r, %r, pad_factor=%r, flux=%r, offset=%r, '+
+                'use_true_center=False, gsparams=%r, _force_stepk=%r, _force_maxk=%r)')%(
+                self._pad_image, self.x_interpolant, self.k_interpolant,
+                self._pad_factor, self._flux, self._offset, self._gsparams,
+                self._stepk, self._maxk)
+
+    def __str__(self): return 'galsim.InterpolatedImage(image=%s)'%self.image
+
+    def __getstate__(self):
+        # The SBInterpolatedImage and the SBProfile both are picklable, but they are pretty
+        # inefficient, due to the large images being written as strings.  Better to pickle
+        # the intermediate products and then call init again on the other side.  There's still
+        # an image to be pickled, but at least it will be through the normal pickling rules,
+        # rather than the repr.
+        d = self.__dict__.copy()
+        del d['_sbii']
+        del d['image']
+        del d['SBProfile']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._pad_image,
+                      x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant,
+                      pad_factor=self._pad_factor, flux=self._flux,
+                      offset=self._offset, use_true_center=False, gsparams=self._gsparams,
+                      _force_stepk=self._stepk, _force_maxk=self._maxk)
+
 
 _galsim.SBInterpolatedImage.__getinitargs__ = lambda self: (
         self.getImage(), self.getXInterp(), self.getKInterp(), 1.0,

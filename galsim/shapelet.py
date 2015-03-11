@@ -167,7 +167,7 @@ class Shapelet(GSObject):
                 self.sigma, self.order, self.bvec, self.gsparams)
 
     def __str__(self): 
-        return 'galsim.Shapelet(sigma=%f, order=%d, bvec=%s)'%(self.sigma, self.order, self.bvec)
+        return 'galsim.Shapelet(sigma=%s, order=%s, bvec=%s)'%(self.sigma, self.order, self.bvec)
 
 _galsim.SBShapelet.__getinitargs__ = lambda self: (
         self.getSigma(), self.getBVec(), self.getGSParams())

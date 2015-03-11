@@ -213,38 +213,49 @@ def drawNoise(noise):
     im.addNoise(noise)
     return im.array.astype(np.float32).tolist()
 
-def do_pickle(obj, func = lambda x : x):
+def do_pickle(obj1, func = lambda x : x):
     """Check that the object is picklable.  Also that it has basic == and != functionality.
     """
     import cPickle, copy
     # In case the repr uses these:
     from numpy import array, int16, int32, float32, float64
-    print 'Try pickling ',obj
+    print 'Try pickling ',obj1
 
-    #print 'pickled obj = ',cPickle.dumps(obj)
-    obj1 = cPickle.loads(cPickle.dumps(obj))
-    assert obj1 is not obj
-    #print 'obj = ',repr(obj)
+    #print 'pickled obj1 = ',cPickle.dumps(obj1)
+    obj2 = cPickle.loads(cPickle.dumps(obj1))
+    assert obj2 is not obj1
     #print 'obj1 = ',repr(obj1)
-    #print 'func(obj) = ',func(obj)
-    #print 'func(obj1) = ',func(obj1)
-    assert func(obj1) == func(obj)
+    #print 'obj2 = ',repr(obj2)
+    f1 = func(obj1)
+    f2 = func(obj2)
+    #print 'func(obj1) = ',f1
+    #print 'func(obj2) = ',f2
+    #if isinstance(f1, galsim.Image):
+        #printval(f1,f2)
+    assert f1 == f2
 
-    obj2 = copy.copy(obj)
-    assert obj2 is not obj
-    if not hasattr(obj, 'rng'):  # Things with an rng attribute won't be identical on copy.
-        assert func(obj2) == func(obj)
+    obj3 = copy.copy(obj1)
+    assert obj3 is not obj1
+    random = hasattr(obj1, 'rng') or isinstance(obj1, galsim.BaseDeviate)
+    if not hasattr(obj1, 'rng'):  # Things with an rng attribute won't be identical on copy.
+        if random: f1 = func(obj1)  # But BaseDeviates will be ok.  Just need to remake f1.
+        f3 = func(obj3)
+        assert f3 == f1
 
-    obj3 = copy.deepcopy(obj)
-    assert obj3 is not obj
-    assert func(obj3) == func(obj)  # But everythong should be idenical with deepcopy.
+    obj4 = copy.deepcopy(obj1)
+    assert obj4 is not obj1
+    f4 = func(obj4)
+    if random: f1 = func(obj1)
+    assert f4 == f1  # But everythong should be idenical with deepcopy.
 
     # Also test that the repr is an accurate representation of the object.
     # The gold standard is that eval(repr(obj)) == obj.  So check that here as well.
-    #print 'repr = ',repr(obj)
-    obj4 = eval(repr(obj))
-    #print 'obj4 = ',repr(obj4)
-    assert func(obj4) == func(obj)
+    #print 'repr = ',repr(obj1)
+    obj5 = eval(repr(obj1))
+    #print 'obj5 = ',repr(obj5)
+    f5 = func(obj5)
+    if random: f1 = func(obj1)
+    assert f5 == f1
 
 
 def funcname():

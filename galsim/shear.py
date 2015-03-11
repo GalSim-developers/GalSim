@@ -350,4 +350,4 @@ class Shear(object):
         return 'galsim.Shear(%r)'%(self.shear)
 
     def __str__(self):
-        return 'galsim.Shear(g1=%f,g2=%f)'%(self.g1,self.g2)
+        return 'galsim.Shear(g1=%s,g2=%s)'%(self.g1,self.g2)

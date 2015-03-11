@@ -536,11 +536,11 @@ _galsim.VarGaussianNoise.__repr__ = \
         lambda self: 'galsim.VarGaussianNoise(rng=%r, var_image%r)'%(self.rng, self.var_image)
         
 _galsim.GaussianNoise.__str__ = \
-        lambda self: 'galsim.GaussianNoise(sigma=%f)'%(self.sigma)
+        lambda self: 'galsim.GaussianNoise(sigma=%s)'%(self.sigma)
 _galsim.PoissonNoise.__str__ = \
-        lambda self: 'galsim.PoissonNoise(sky_level=%f)'%(self.sky_level)
+        lambda self: 'galsim.PoissonNoise(sky_level=%s)'%(self.sky_level)
 _galsim.CCDNoise.__str__ = \
-        lambda self: 'galsim.CCDNoise(sky_level=%f, gain=%f, read_noise=%f)'%(
+        lambda self: 'galsim.CCDNoise(sky_level=%s, gain=%s, read_noise=%s)'%(
             self.sky_level, self.gain, self.read_noise)
 _galsim.DeviateNoise.__str__ = \
         lambda self: 'galsim.DeviateNoise(dev=%s)'%(self.rng)

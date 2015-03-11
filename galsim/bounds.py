@@ -25,7 +25,7 @@ from ._galsim import BoundsI, BoundsD
 for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.__repr__ = lambda self: "galsim.%s(xmin=%r, xmax=%r, ymin=%r, ymax=%r)"%(
             self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
-    Class.__str__ = lambda self: "galsim.%s(%f,%f,%f,%f)"%(
+    Class.__str__ = lambda self: "galsim.%s(%s,%s,%s,%s)"%(
             self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
     Class.__getinitargs__ = lambda self: (self.xmin, self.xmax, self.ymin, self.ymax)
 

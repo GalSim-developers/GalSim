@@ -113,7 +113,7 @@ namespace galsim {
             for (; it != im.rowEnd(y); ++it) oss << "," << *it;
             oss << "]";
         }
-        oss<<"])), ";
+        oss<<"],dtype=float)), ";
 
         boost::shared_ptr<Interpolant> xinterp = getXInterp();
         boost::shared_ptr<Interpolant> kinterp = getKInterp();
@@ -322,23 +322,21 @@ namespace galsim {
         }
 
         _uscale = 1. / (2.*M_PI);
+        _maxk1 = _xInterp->urange()/_uscale;
         if (_maxk <= 0.) {
             // Calculate maxk:
             //
-            // Set maxK to the value where the FT is down to maxk_threshold
-            //
-            // Notice that interpolant other than sinc may make max frequency higher than
-            // the Nyquist frequency of the initial image.
-            //
-            // Also, since we used kvalue_accuracy for the threshold of _xInterp
+            // For now, just set this to where the interpolant's FT is <= maxk_threshold.
+            // Note: since we used kvalue_accuracy for the threshold of _xInterp
             // (at least for the default quintic interpolant) rather than maxk_threshold,
             // this will probably be larger than we really need.
             // We could modify the urange method of Interpolant to take a threshold value
             // at that point, rather than just use the constructor's value, but it's 
-            // probably not worth it.  It will probably be very rare that the final maxK
-            // value of the FFT will be due to an SBInterpolatedImage.  Usually, this will
-            // be convolved by a PSF that will have a smaller maxK.
-            _maxk = _maxk1 = _xInterp->urange()/_uscale;
+            // probably not worth it.
+            //
+            // In practice, we will generally call calculateMaxK() after construction to 
+            // refine the value of maxk based on the actual FT of the image.
+            _maxk = _maxk1;
             dbg<<"maxk = "<<_maxk<<std::endl;
         }
 

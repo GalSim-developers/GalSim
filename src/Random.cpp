@@ -90,8 +90,8 @@ namespace galsim {
         // Remember: Don't start with nothing!  See discussion in FormatAndThrow in Std.h
         std::ostringstream oss(" ");
         oss << "galsim.BaseDeviate(";
-        if (incl_seed) oss << "seed='"<<serialize();
-        oss<<"')";
+        if (incl_seed) oss << "seed='"<<serialize()<<"'";
+        oss<<")";
         return oss.str();
     }
 
@@ -99,8 +99,8 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss << "galsim.UniformDeviate(";
-        if (incl_seed) oss << "seed='"<<serialize();
-        oss<<"')";
+        if (incl_seed) oss << "seed='"<<serialize()<<"'";
+        oss<<")";
         return oss.str();
     }
 

@@ -24,7 +24,7 @@ from ._galsim import PositionD, PositionI
 
 for Class in (_galsim.PositionD, _galsim.PositionI):
     Class.__repr__ = lambda self: "galsim.%s(x=%r, y=%r)"%(self.__class__.__name__, self.x, self.y)
-    Class.__str__ = lambda self: "galsim.%s(%f,%f)"%(self.__class__.__name__, self.x, self.y)
+    Class.__str__ = lambda self: "galsim.%s(%s,%s)"%(self.__class__.__name__, self.x, self.y)
     Class.__getinitargs__ = lambda self: (self.x, self.y)
 
     Class.__doc__ = """A class for representing 2D positions on the plane.

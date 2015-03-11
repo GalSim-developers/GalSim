@@ -582,5 +582,5 @@ class SED(object):
         orig_spec = repr(self._orig_spec)
         if len(orig_spec) > 80:
             orig_spec = str(self._orig_spec)
-        return 'galsim.SED(%s, redshift=%f)'%(orig_spec, self.redshift)
+        return 'galsim.SED(%s, redshift=%s)'%(orig_spec, self.redshift)
 
