@@ -83,7 +83,7 @@ def test_roundtrip():
                 ref_array.astype(array_type),image_out.array,
                 err_msg="Array from output Image differs from reference array for type %s"%
                         array_type)
- 
+
         # Lanczos doesn't quite get the flux right.  Wrong at the 5th decimal place.
         # Gary says that's expected -- Lanczos isn't technically flux conserving.  
         # He applied the 1st order correction to the flux, but expect to be wrong at around
@@ -97,6 +97,8 @@ def test_roundtrip():
         do_kvalue(interp,test_im,"InterpolatedImage")
 
         # Check picklability
+        do_pickle(interp.sbii, lambda x: (galsim.Image(x.getImage()), x.stepK(), x.maxK()))
+        do_pickle(interp.SBProfile, lambda x: (repr(x), repr(x.getObj())))
         #do_pickle(interp, lambda x: x.drawImage(method='no_pixel'))
 
     # Also check picklability of the Interpolants

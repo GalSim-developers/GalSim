@@ -55,11 +55,11 @@ namespace galsim {
                 .def(bp::init<const BaseImage<U> &,
                      boost::shared_ptr<Interpolant>,
                      boost::shared_ptr<Interpolant>,
-                     double, boost::shared_ptr<GSParams> >(
+                     double, double, double, boost::shared_ptr<GSParams> >(
                          (bp::arg("image"),
-                          bp::arg("xInterp"),
-                          bp::arg("kInterp"),
+                          bp::arg("xInterp"), bp::arg("kInterp"),
                           bp::arg("pad_factor")=4.,
+                          bp::arg("stepk")=0., bp::arg("maxk")=0.,
                           bp::arg("gsparams")=bp::object())
                      )
                 )
@@ -96,12 +96,10 @@ namespace galsim {
 #endif
                 .def("calculateStepK", &SBInterpolatedImage::calculateStepK,
                      bp::arg("max_stepk")=0.)
-                .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK,
-                     bp::arg("max_maxk")=0.)
-                .def("forceStepK", &SBInterpolatedImage::forceStepK,
-                     bp::arg("stepk"))
-                .def("forceMaxK", &SBInterpolatedImage::forceMaxK,
-                     bp::arg("maxk"))
+                .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK, bp::arg("max_maxk")=0.)
+                .def("getImage", &SBInterpolatedImage::getImage)
+                .def("getXInterp", &SBInterpolatedImage::getXInterp)
+                .def("getKInterp", &SBInterpolatedImage::getKInterp)
                 ;
             wrapTemplates<float>(pySBInterpolatedImage);
             wrapTemplates<double>(pySBInterpolatedImage);

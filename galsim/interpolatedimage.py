@@ -226,8 +226,6 @@ class InterpolatedImage(GSObject):
 
     There are no additional methods for InterpolatedImage beyond the usual GSObject methods.
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = { 'image' : str }
     _opt_params = {
         'x_interpolant' : str ,
@@ -253,7 +251,7 @@ class InterpolatedImage(GSObject):
                  scale=None, wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0.,
                  rng=None, pad_image=None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None,
-                 _force_stepk=None, _force_maxk=None):
+                 _force_stepk=0., _force_maxk=0.):
         # Check for obsolete dx parameter
         if dx is not None and scale is None:
             from galsim.deprecated import depr
@@ -405,13 +403,8 @@ class InterpolatedImage(GSObject):
         else:
             pad_image = self.image
 
-        # Make the SBInterpolatedImage out of the image.
-        sbinterpolatedimage = galsim._galsim.SBInterpolatedImage(
-                pad_image.image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
-                pad_factor=pad_factor, gsparams=gsparams)
-
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
-        # input image.  So it is usually worth it to do a manual calculation here.
+        # input image.  So it is usually worth it to do a manual calculation here (see below).
         #
         # However, there is also a hidden option to force it to use specific values of stepK and
         # maxK (caveat user!).  The values of _force_stepk and _force_maxk should be provided in
@@ -420,12 +413,18 @@ class InterpolatedImage(GSObject):
         # units required by the C++ layer below.  Also note that profile recentering for even-sized
         # images (see the ._fix_center step below) leads to automatic reduction of stepK slightly
         # below what is provided here, while maxK is preserved.
-        if _force_stepk is not None:
+        if _force_stepk > 0.:
             calculate_stepk = False
-            sbinterpolatedimage.forceStepK(_force_stepk*image.scale)
-        if _force_maxk is not None:
+            _force_stepk *= image.scale
+        if _force_maxk > 0.:
             calculate_maxk = False
-            sbinterpolatedimage.forceMaxK(_force_maxk*image.scale)
+            _force_maxk *= image.scale
+
+        # Make the SBInterpolatedImage out of the image.
+        sbinterpolatedimage = galsim._galsim.SBInterpolatedImage(
+                pad_image.image, self.x_interpolant, self.k_interpolant,
+                pad_factor, _force_stepk, _force_maxk, gsparams)
+
         if calculate_stepk:
             if calculate_stepk is True:
                 sbinterpolatedimage.calculateStepK()
@@ -439,6 +438,7 @@ class InterpolatedImage(GSObject):
                 # If not a bool, then value is max_maxk
                 sbinterpolatedimage.calculateMaxK(max_maxk=calculate_maxk)
 
+        self.sbii = sbinterpolatedimage
         # Initialize the SBProfile
         GSObject.__init__(self, sbinterpolatedimage)
 
@@ -496,6 +496,14 @@ class InterpolatedImage(GSObject):
         pad_image.addNoise(noise)
 
         return pad_image
+
+_galsim.SBInterpolatedImage.__getinitargs__ = lambda self: (
+        self.getImage(), self.getXInterp(), self.getKInterp(), 1.0,
+        self.stepK(), self.maxK(), self.getGSParams())
+_galsim.SBInterpolatedImage.__getstate__ = lambda self: None
+_galsim.SBInterpolatedImage.__setstate__ = lambda self, state: 1
+_galsim.SBInterpolatedImage.__repr__ = lambda self: \
+        'galsim._galsim.SBInterpolatedImage(%r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
 
 _galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())
 _galsim.Delta.__getinitargs__ = lambda self: (self.getTol(), )
