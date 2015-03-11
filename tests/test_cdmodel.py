@@ -216,7 +216,7 @@ def test_fluxconservation():
         "Flat image flux is not left invariant by charge deflection")
 
     # Check picklability
-    do_pickle(cd)
+    do_pickle(cd, lambda x: x.applyForward(image))
 
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
