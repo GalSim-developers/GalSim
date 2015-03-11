@@ -1077,6 +1077,7 @@ def test_uncorrelated_noise_tracking():
     # here, we just want to check the ability of GalSim to track what happens to `noise'
     # attributes.
     int_im.noise = orig_ucn
+    print 'int_im.noise = ',int_im.noise
 
     # Manipulate the object in various non-trivial ways: shear, magnify, rotate, convolve
     test_shear = 0.15

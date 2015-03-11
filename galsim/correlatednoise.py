@@ -142,6 +142,13 @@ class _BaseCorrelatedNoise(object):
             rng = self.rng
         return _BaseCorrelatedNoise(rng, self._profile.copy(), self.wcs)
 
+    def __repr__(self):
+        return "galsim.correlatednoise._BaseCorrelatedNoise(%r,%r,%r)"%(
+                self.rng, self._profile, self.wcs)
+
+    def __str__(self):
+        return "galsim.correlatednoise._BaseCorrelatedNoise(%s,%s)"%(self._profile, self.wcs)
+
     def applyTo(self, image):
         """Apply this correlated Gaussian random noise field to an input Image.
 
@@ -1208,6 +1215,11 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             self._profile_for_stored = self._profile
             self._rootps_store.append((np.sqrt(ps_array), cf_image.wcs))
 
+        self._image = image
+
+    def __str__(self):
+        return "galsim.CorrelatedNoise(%s, wcs=%s)"%(self._image, self.wcs)
+
 
 def _cf_periodicity_dilution_correction(cf_shape):
     """Return an array containing the correction factor required for wrongly assuming periodicity
@@ -1452,6 +1464,9 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
         _BaseCorrelatedNoise.__init__(self, rng, world_cf, wcs)
 
     def __repr__(self):
-        return "galsim.UncorrelatedNoise(variance=%r, rng=%r, wcs=%r, gsparams=%r)"%(
+        return "galsim.UncorrelatedNoise(%r, %r, wcs=%r, gsparams=%r)"%(
             self.variance, self.rng, self.wcs, self.gsparams)
+
+    def __str__(self):
+        return "galsim.UncorrelatedNoise(variance=%r, wcs=%s)"%(self.variance, self.wcs)
 
