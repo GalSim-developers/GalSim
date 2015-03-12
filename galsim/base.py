@@ -2264,7 +2264,7 @@ to change.
 @param maxk_threshold       This sets the maximum amplitude of the high frequency modes in
                             Fourier space that are excluded by truncating the FFT at some
                             maximum k value. Lowering this parameter can help minimize the
-                            effect of "ringing" if you see that in your imags. [default: 1.e-3]
+                            effect of "ringing" if you see that in your images. [default: 1.e-3]
 @param kvalue_accuracy      This sets the accuracy of values in Fourier space. Whenever there is
                             some kind of approximation to be made in the calculation of a
                             Fourier space value, the error in the approximation is constrained
