@@ -665,8 +665,14 @@ class LinearOpticalSeries(Series):
                           coma1, coma2, trefoil1, trefoil2, spher]) != 0):
                 raise TypeError("Cannot pass in individual aberrations and array!")
         # Finally, just in case it was a tuple/list, make sure we end up with NumPy array:
-        self.aberrations = np.array(aberrations) * np.pi * 4.0
+        self.aberrations = np.array(aberrations) * 2.0 * np.pi
 
+        def norm(n, m):
+            if m==0:
+                return np.sqrt(n+1)
+            else:
+                return np.sqrt(2*n+2)
+            
         # Now separate into terms that are pure real and pure imag in the complex PSF
         self.realcoeffs = [1.0]
         self.imagcoeffs = []
@@ -678,16 +684,16 @@ class LinearOpticalSeries(Series):
             n,m = nZ[j]
             ipower = (m+1)%4    
             if ipower == 0:
-                self.realcoeffs.append(ab)
+                self.realcoeffs.append(norm(n,m)*ab)
                 self.realindices.append((n,m))
             elif ipower == 1:
-                self.imagcoeffs.append(ab)
+                self.imagcoeffs.append(norm(n,m)*ab)
                 self.imagindices.append((n, m))
             elif ipower == 2:
-                self.realcoeffs.append(-ab)
+                self.realcoeffs.append(-norm(n,m)*ab)
                 self.realindices.append((n,m))
             elif ipower == 3:
-                self.imagcoeffs.append(-ab)
+                self.imagcoeffs.append(-norm(n,m)*ab)
                 self.imagindices.append((n, m))
             else:
                 raise RuntimeError("What!?  How'd that happen?")
