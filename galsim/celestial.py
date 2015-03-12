@@ -658,6 +658,5 @@ def _sun_position_ecliptic(date):
     g = (357.528*galsim.degrees + (0.9856003*galsim.degrees)*n).wrap()
     lam = L + (1.915*galsim.degrees)*math.sin(g.rad()) + \
         (0.020*galsim.degrees)*math.sin((2*g).rad())
-    lam += 360.*galsim.degrees
     return (lam.wrap(), 0.*galsim.degrees)
 
