@@ -29,37 +29,69 @@ from itertools import product, combinations, count
 
 class Series(object):
     # Share caches among all subclasses of Series
-    cache = {}
-    kcache = {}
-    root = None
-    kroot = None
+    _cache = {}
+    _kcache = {}
+    _root = None
+    _kroot = None
 
     def __init__(self, maxcache=100):
+        """Abstract base class for GalSim profiles represented as a series of basis profiles.
+        Generally, coefficients of the basis profiles can be manipulated to set parameters of the 
+        series profile, such as size and ellipticity for SpergelSeries and MoffatSeries, or
+        wavefront expansion coefficients for LinearOpticalSeries.  This allows one to rapidly
+        create images with arbitrary values of these parameters by forming linear combinations of
+        images of the basis profiles, which can be precomputed and cached in memory.  The
+        convolution of two series objects can also be rapidly computed once the convolution of each
+        term in the Cartesian product of each series' basis profiles is computed, drawn to an image,
+        and cached.
+
+        One drawback for Series objects is that a cache is only good for a single combination of
+        image parameters, such as the shape and scale.  If you want to draw a new image at a
+        different scale or with a different shape, the precomputation of the basis profile images
+        will be done again and cached for future use.
+
+        The first Series object created can set the `maxcache` keyword, which sets how many Series
+        objects will be cached in memory before new cache entries begin to over-write earlier cache
+        entries.  This may be important to conserve RAM, as its not too hard to create caches that
+        occupy 10s to 100s (or more!) MB of memory.  You can check the current state of the cache
+        with the Series.inspectCache() method.
+        """
         # Initialize caches
-        if self.root is None:
+        if self._root is None:
             # Steal some ideas from http://code.activestate.com/recipes/577970-simplified-lru-cache/
-            # Note that self.root = ... doesn't work since this will set [subclass].root instead
-            # of Series.root.
+            # Note that self._root = ... doesn't work since this will set [subclass]._root instead
+            # of Series._root.
             # Link layout:       [PREV, NEXT, KEY, RESULT]
-            Series.root = root = [None, None, None, None]
-            cache = self.cache
+            Series._root = root = [None, None, None, None]
+            cache = self._cache
             last = root
             for i in range(maxcache):
                 key = object()
                 cache[key] = last[1] = last = [last, root, key, None]
             root[0] = last
             # And similarly for Fourier-space cache
-            Series.kroot = kroot = [None, None, None, None]
-            kcache = self.kcache
+            Series._kroot = kroot = [None, None, None, None]
+            kcache = self._kcache
             klast = kroot
             for i in range(maxcache):
                 key = object()
                 kcache[key] = klast[1] = klast = [klast, kroot, key, None]
             kroot[0] = last
-
-    def basisCube(self, key):
-        cache = Series.cache
-        root = Series.root
+            
+    # TODO: could probably combine _basisCube and _basisKCube with the addition of a few helper
+    # methods
+            
+    def _basisCube(self, key):
+        # Query the cache of image cubes and find the one corresponding to a particular Series object
+        # with particular image settings.  If it's not present in the cache, then create it.
+        # `key` here is a 3-tuple with indices:
+        #       0: Class-specific parameters
+        #       1: args to be used in drawImage
+        #       2: kwargs to be used in drawImage, as a tuple of tuples to make it hashable.
+        #          The first item of each interior tuple is the kwarg name as a string, and the
+        #          second item is the associated value.
+        cache = Series._cache
+        root = Series._root
         link = cache.get(key)
         if link is not None:
             link_prev, link_next, _, result = link
@@ -70,29 +102,42 @@ class Series(object):
             link[0] = last
             link[1] = root
             return result
-        cubeidx, args, kwargs = key
+        # Didn't find the cube we were looking for, so create it.
+        series_idx, args, kwargs = key
         kwargs = dict(kwargs)
-        objs = self.getBasisFuncs()
+        objs = self._getBasisFuncs()
         im0 = objs[0].drawImage(*args, **kwargs)
         shape = im0.array.shape
-        # It's faster to store the basis images as a series of 1D vectors (i.e. a 2D numpy array)
+        # It's faster to store the stack of basis images as a series of 1D vectors (i.e. a 2D
+        # numpy array instead of a cube (or rectangular prism I guess...))
         # This makes the linear combination step a matrix multiply, which is like lightning.
+        # I still think of this data structure as a cube though, so that's what I'm calling it.
         cube = np.empty((len(objs), shape[0]*shape[1]), dtype=im0.array.dtype)
         for i, obj in enumerate(objs):
             cube[i] = obj.drawImage(*args, **kwargs).array.ravel()
         root[2] = key
+        # Need to store the image shape here so we can eventually turn 1D image vector back into a
+        # 2D image.
         root[3] = (cube, shape)
         oldroot = root
-        root = Series.root = root[1]
+        root = Series._root = root[1]
         root[2], oldkey = None, root[2]
         root[3], oldvalue = None, root[3]
         del cache[oldkey]
         cache[key] = oldroot
         return cube, shape
 
-    def basisKCube(self, key):
-        cache = Series.kcache
-        root = Series.kroot
+    def _basisKCube(self, key):
+        # Query the cache of kimage cubes and find the one corresponding to a particular Series
+        # object with particular image settings.  If it's not present in the cache, then create it.
+        # `key` here is a 3-tuple with indices:
+        #       0: Class-specific parameters
+        #       1: args to be used in drawKImage
+        #       2: kwargs to be used in drawKImage, as a tuple of tuples to make it hashable.
+        #          The first item of each interior tuple is the kwarg name as a string, and the
+        #          second item is the associated value.
+        cache = Series._kcache
+        root = Series._kroot
         link = cache.get(key)
         if link is not None:
             link_prev, link_next, _, result = link
@@ -103,13 +148,16 @@ class Series(object):
             link[0] = last
             link[1] = root
             return result
-        cubeidx, args, kwargs = key
+        # Didn't find the cube we were looking for, so create it.
+        series_idx, args, kwargs = key
         kwargs = dict(kwargs)
-        objs = self.getBasisFuncs()
+        objs = self._getBasisFuncs()
         re0, im0 = objs[0].drawKImage(*args, **kwargs)
         shape = im0.array.shape
-        # It's faster to store the basis images as a series of 1D vectors (i.e. a 2D numpy array)
+        # It's faster to store the stack of basis images as a series of 1D vectors (i.e. a 2D
+        # numpy array instead of a cube (or rectangular prism I guess...))
         # This makes the linear combination step a matrix multiply, which is like lightning.
+        # I still think of this data structure as a cube though, so that's what I'm calling it.
         recube = np.empty((len(objs), shape[0]*shape[1]), dtype=im0.array.dtype)
         imcube = np.empty_like(recube)
         for i, obj in enumerate(objs):
@@ -117,9 +165,11 @@ class Series(object):
             recube[i] = tmp[0].array.ravel()
             imcube[i] = tmp[1].array.ravel()
         root[2] = key
+        # Need to store the image shape here so we can eventually turn 1D kimage vectors back into 
+        # 2D kimages.
         root[3] = (recube, imcube, shape)
         oldroot = root
-        root = Series.kroot = root[1]
+        root = Series._kroot = root[1]
         root[2], oldkey = None, root[2]
         root[3], oldvalue = None, root[3]
         del cache[oldkey]
@@ -127,36 +177,72 @@ class Series(object):
         return recube, imcube, shape
 
     def drawImage(self, *args, **kwargs):
-        key = (self.cubeidx(), args, tuple(sorted(kwargs.items())))
-        cube, shape = self.basisCube(key)
-        coeffs = np.array(self.getCoeffs(), dtype=cube.dtype)
+        """Draw a Series object by forming the appropriate linear combination of basis profile
+        images.  This method will search the Series cache to see if the basis images for this
+        object already exist, and if not then create and cache them.  Note that a separate cache is
+        created for each combination of image parameters (such as shape, wcs, scale, etc.) and also
+        certain profile parameters (such as the SpergelSeries `nu` parameter or the MoffatSeries
+        `beta` parameter.)
+
+        See GSObject.drawImage() for a description of available arguments for this method.
+        """
+        key = (self._series_idx(), args, tuple(sorted(kwargs.items())))
+        cube, shape = self._basisCube(key)
+        coeffs = np.array(self._getCoeffs(), dtype=cube.dtype)
         im = np.dot(coeffs, cube).reshape(shape)
         return galsim.Image(im)
         
     def drawKImage(self, *args, **kwargs):
-        key = (self.cubeidx(), args, tuple(sorted(kwargs.items())))
-        recube, imcube, shape = self.basisKCube(key)
-        coeffs = np.array(self.getCoeffs(), dtype=recube.dtype)
+        """Draw the Fourier-space image of a Series object by forming the appropriate linear
+        combination of basis profile Fourier-space images.  This method will search the Series cache
+        to see if the basis images for this object already exist, and if not then create and cache
+        them.  Note that a separate cache is created for each combination of image parameters (such
+        as shape, wcs, scale, etc.) and also certain profile parameters (such as the SpergelSeries
+        `nu` parameter or the MoffatSeries `beta` parameter.)
+
+        See GSObject.drawKImage() for a description of available arguments for this method.
+        """
+        key = (self._series_idx(), args, tuple(sorted(kwargs.items())))
+        recube, imcube, shape = self._basisKCube(key)
+        coeffs = np.array(self._getCoeffs(), dtype=recube.dtype)
         reim = np.dot(coeffs, recube).reshape(shape)
         imim = np.dot(coeffs, imcube).reshape(shape)
         return galsim.Image(reim), galsim.Image(imim)
 
     def kValue(self, *args, **kwargs):
-        kvals = [obj.kValue(*args, **kwargs) for obj in self.getBasisFuncs()]
-        coeffs = self.getCoeffs()
+        """Calculate the value of the Fourier-space image of this Series object at a particular
+        coordinate by forming the appropriate linear combination of Fourier-space values of basis
+        profiles.
+
+        This method does not use the Series cache.
+
+        See GSObject.kValue() for a description of available arguments for this method.
+        """
+        kvals = [obj.kValue(*args, **kwargs) for obj in self._getBasisFuncs()]
+        coeffs = self._getCoeffs()
         return np.dot(kvals, coeffs)
 
     def xValue(self, *args, **kwargs):
-        xvals = [obj.xValue(*args, **kwargs) for obj in self.getBasisFuncs()]
-        coeffs = self.getCoeffs()
+        """Calculate the value of the image of this Series object at a particular coordinate by
+        forming the appropriate linear combination of values of basis profiles.
+
+        This method does not use the Series cache.
+
+        See GSObject.xValue() for a description of available arguments for this method.
+        """
+        xvals = [obj.xValue(*args, **kwargs) for obj in self._getBasisFuncs()]
+        coeffs = self._getCoeffs()
         return np.dot(xvals, coeffs)
         
     @classmethod
     def inspectCache(self):
+        """ Report details of the Series cache, including the number of cached profiles and an
+        estimate of the memory footprint of the cache.
+        """
         i=0
         ik=0
         mem=0
-        for k,v in self.cache.iteritems():
+        for k,v in self._cache.iteritems():
             if not isinstance(k, tuple):
                 continue
             i += 1
@@ -166,8 +252,8 @@ class Series(object):
             print "# of basis images: {:0}".format(v[3][0].shape[0])
             print "images are {:0} x {:1} pixels".format(*v[3][1])
             mem += v[3][0].nbytes
-            if k in self.kcache:
-                v = self.kcache[k]
+            if k in self._kcache:
+                v = self._kcache[k]
                 ik += 1
                 print
                 print "Cached kimage object: "
@@ -181,15 +267,21 @@ class Series(object):
         print "Found {:0} kimage caches".format(ik)
         print "Cache occupies ~{:0} bytes".format(mem)
 
-    def getCoeffs(self):
-        raise NotImplementedError("subclasses of Series must define getCoeffs() method")
+    def _getCoeffs(self):
+        raise NotImplementedError("subclasses of Series must define _getCoeffs() method")
 
-    def getBasisFuncs(self):
-        raise NotImplementedError("subclasses of Series must define getBasisFuncs() method")
+    def _getBasisFuncs(self):
+        raise NotImplementedError("subclasses of Series must define _getBasisFuncs() method")
 
+    def _series_idx(self):
+        raise NotImplementedError("subclasses of Series must define _series_idx() method")
 
+        
 class SeriesConvolution(Series):
     def __init__(self, *args, **kwargs):
+        """A Series profile representing the convolution of multiple Series objects and/or
+        GSObjects.
+        """
         # First check for number of arguments != 0
         if len(args) == 0:
             # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
@@ -219,27 +311,34 @@ class SeriesConvolution(Series):
         # Magically transform GSObjects into super-simple Series objects
         for obj in self.objlist:
             if isinstance(obj, galsim.GSObject):
-                obj.getCoeffs = lambda : [1.0]
-                obj.getBasisFuncs = lambda :[obj]
-                obj.cubeidx = lambda :id(obj)
+                obj._getCoeffs = lambda : [1.0]
+                obj._getBasisFuncs = lambda :[obj]
+                # This could be better...  Currently this will create two entries in the cache if
+                # separate-in-memory, but identical-in-value GSObjects are convolved with the same
+                # Series object.  One could imagine making GSObjects hashable and defining their
+                # hashes via their values (e.g., scale_radius, affine transformations, interpolated
+                # arrays, etc.).
+                obj._series_idx = lambda : id(obj)
 
         super(SeriesConvolution, self).__init__()
 
-    def getCoeffs(self):
+    def _getCoeffs(self):
         # This is a faster, but somewhat more opaque version of
-        # return np.multiply.reduce([c for c in product(*[obj.getCoeffs()
+        # return np.multiply.reduce([c for c in product(*[obj._getCoeffs()
         #                                                 for obj in self.objlist])], axis=1)
-        # The above use to be the limiting step, but the new version is ~100 times faster.
-        return np.multiply.reduce(np.ix_(*[np.array(obj.getCoeffs())
+        # The above use to be the limiting step in some convolutions.  The new version is
+        # ~100 times faster, which doesn't mean the convolution is 100 times faster, but now
+        # another piece of code is the rate-limiting-step.
+        return np.multiply.reduce(np.ix_(*[np.array(obj._getCoeffs())
                                            for obj in self.objlist])).ravel()
 
-    def getBasisFuncs(self):
-        return [galsim.Convolve(*o) for o in product(*[obj.getBasisFuncs()
+    def _getBasisFuncs(self):
+        return [galsim.Convolve(*o) for o in product(*[obj._getBasisFuncs()
                                                        for obj in self.objlist])]
 
-    def cubeidx(self):
+    def _series_idx(self):
         out = [self.__class__]
-        out.extend([o.cubeidx() for o in self.objlist])
+        out.extend([o._series_idx() for o in self.objlist])
         return tuple(out)
 
     
@@ -262,7 +361,7 @@ class SpergelSeries(Series):
         self._A = np.matrix(np.identity(2)*self.scale_radius, dtype=float)
         super(SpergelSeries, self).__init__()
 
-    def getCoeffs(self):
+    def _getCoeffs(self):
         ellip, phi0, scale_radius, Delta = self._decomposeA()
         coeffs = []
         for j in xrange(self.jmax+1):
@@ -289,7 +388,7 @@ class SpergelSeries(Series):
                 coeffs.append(coeff)
         return coeffs
                 
-    def getBasisFuncs(self):
+    def _getBasisFuncs(self):
         ellip, phi0, scale_radius, Delta = self._decomposeA()
         objs = []
         for j in xrange(self.jmax+1):
@@ -298,8 +397,8 @@ class SpergelSeries(Series):
                                       j=j, q=q, gsparams=self.gsparams))
         return objs
 
-    def cubeidx(self):
-        ellip, phi0, scale_radius, Delta = self._decomposeA()
+    def _series_idx(self):
+        _, _, scale_radius, _ = self._decomposeA()
         return (self.__class__, self.nu, self.jmax, scale_radius)
     
     def copy(self):
@@ -413,6 +512,7 @@ class Spergelet(galsim.GSObject):
         """
         return self.SBProfile.getJ(), self.SBProfile.getQ()
 
+
 class MoffatSeries(Series):
     def __init__(self, beta, jmax, dlnr=None,
                  half_light_radius=None, scale_radius=None, fwhm=None,
@@ -436,7 +536,7 @@ class MoffatSeries(Series):
         self._A = np.matrix(np.identity(2)*self.scale_radius, dtype=float)
         super(MoffatSeries, self).__init__()
 
-    def getCoeffs(self):
+    def _getCoeffs(self):
         ellip, phi0, scale_radius, Delta = self._decomposeA()
         coeffs = []
         for j in xrange(self.jmax+1):
@@ -463,7 +563,7 @@ class MoffatSeries(Series):
                 coeffs.append(coeff)
         return coeffs
                 
-    def getBasisFuncs(self):
+    def _getBasisFuncs(self):
         ellip, phi0, scale_radius, Delta = self._decomposeA()
         objs = []
         for j in xrange(self.jmax+1):
@@ -472,8 +572,8 @@ class MoffatSeries(Series):
                                       j=j, q=q, gsparams=self.gsparams))
         return objs
 
-    def cubeidx(self):
-        ellip, phi0, scale_radius, Delta = self._decomposeA()
+    def _series_idx(self):
+        _, _, scale_radius, _ = self._decomposeA()
         return (self.__class__, self.beta, self.jmax, scale_radius)
     
     def copy(self):
@@ -557,6 +657,7 @@ class MoffatSeries(Series):
             self.Delta = Delta
         return self.ellip, self.phi0, self.scale_radius, self.Delta
 
+        
 class Moffatlet(galsim.GSObject):
     """A basis function in the Taylor series expansion of the Moffat profile.
 
@@ -586,7 +687,8 @@ class Moffatlet(galsim.GSObject):
         """
         return self.SBProfile.getJ(), self.SBProfile.getQ()
 
-def nollZernike(jmax):
+        
+def nollZernikeDict(jmax):
     # Return dictionary for Noll Zernike convention taking index j -> n,m.
     ret = {}
     j=1
@@ -609,8 +711,9 @@ def nollZernike(jmax):
                 return ret
     return ret
 
-nZ = nollZernike(100)
-    
+nollZernike = nollZernikeDict(100)
+
+
 class LinearOpticalSeries(Series):
     def __init__(self, lam_over_diam=None, lam=None, diam=None, flux=1.0,
                  tip=0., tilt=0., defocus=0., astig1=0., astig2=0.,
@@ -681,7 +784,7 @@ class LinearOpticalSeries(Series):
         for j, ab in enumerate(self.aberrations):
             if j < 2:
                 continue
-            n,m = nZ[j]
+            n,m = nollZernike[j]
             ipower = (m+1)%4    
             if ipower == 0:
                 self.realcoeffs.append(norm(n,m)*ab)
@@ -712,15 +815,16 @@ class LinearOpticalSeries(Series):
 
         super(LinearOpticalSeries, self).__init__()
         
-    def getCoeffs(self):
+    def _getCoeffs(self):
         return self.coeffs
         
-    def getBasisFuncs(self):
+    def _getBasisFuncs(self):
         return [LinearOpticalet(self.lam_over_diam, o[0][0], o[0][1], o[1][0], o[1][1]) for o in
                 self.indices]
         
-    def cubeidx(self):
+    def _series_idx(self):
         return (self.__class__, self.lam_over_diam, len(self.aberrations))
+
         
 class LinearOpticalet(galsim.GSObject):
     """A basis function in the Taylor series expansion of the optical wavefront.
