@@ -66,7 +66,7 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, julian_date=
     @param exptime      Exposure time in seconds.  If None, use the default WFIRST exposure time.
                         [default: None]
     @param epoch        The epoch to be used for estimating the obliquity of the ecliptic when
-                        converting to ecliptic coordinates.
+                        converting `world_pos` to ecliptic coordinates.
                         [default: 2025]
     @param julian_date  The Julian date of the observation.  If None, then the conversion to
                         ecliptic coordinates assumes the sun is at ecliptic coordinates of (0,0), as
