@@ -200,8 +200,6 @@ class OpticalPSF(GSObject):
 
     There are no additional methods for OpticalPSF beyond the usual GSObject methods.
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = { }
     _opt_params = {
         "diam" : float ,
@@ -231,11 +229,10 @@ class OpticalPSF(GSObject):
     _takes_rng = False
     _takes_logger = False
 
-    # --- Public Class methods ---
     def __init__(self, lam_over_diam=None, lam=None, diam=None, defocus=0., astig1=0., astig2=0.,
                  coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., aberrations=None,
                  circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
-                 pad_factor=1.5, suppress_warning=False, _warning=False, max_size=None, flux=1.,
+                 pad_factor=1.5, suppress_warning=False, max_size=None, flux=1.,
                  nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None):
 
@@ -310,22 +307,42 @@ class OpticalPSF(GSObject):
                 warnings.warn(
                     "Detected non-zero value in aberrations[0:4] -- these values are ignored!")
 
+        self._lam_over_diam = lam_over_diam
+        self._aberrations = aberrations.tolist()
+        self._oversampling = oversampling
+        self._pad_factor = pad_factor
+        self._max_size = max_size
+        self._circular_pupil = circular_pupil
+        self._flux = flux
+        self._obscuration = obscuration
+        self._nstruts = nstruts
+        self._strut_thick = strut_thick
+        self._strut_angle = strut_angle
+        self._pupil_plane_im = pupil_plane_im
+        self._pupil_angle = pupil_angle
+        self._interpolant = interpolant
+
         # Make the psf image using this scale and array shape
         optimage = galsim.optics.psf_image(
             lam_over_diam=lam_over_diam, scale=scale_lookup, array_shape=(npix, npix),
             aberrations=aberrations, circular_pupil=circular_pupil, obscuration=obscuration,
             flux=flux, nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
             pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle, oversampling=oversampling)
-        
+
         # Initialize the GSObject (InterpolatedImage)
-        GSObject.__init__(
-            self, galsim.InterpolatedImage(optimage, x_interpolant=interpolant,
-                                           calculate_stepk=True, calculate_maxk=True,
-                                           use_true_center=False, normalization='sb',
-                                           gsparams=gsparams))
+        ii =  galsim.InterpolatedImage(optimage, x_interpolant=interpolant,
+                                       calculate_stepk=True, calculate_maxk=True,
+                                       use_true_center=False, normalization='sb',
+                                       gsparams=gsparams)
         # The above procedure ends up with a larger image than we really need, which
         # means that the default stepK value will be smaller than we need.  
         # Hence calculate_stepk=True and calculate_maxk=True above.
+
+        self._optimage = optimage
+        self._stepk = ii._stepk
+        self._maxk = ii._maxk
+
+        GSObject.__init__(self, ii)
 
         if not suppress_warning:
             # Check the calculated stepk value.  If it is smaller than stepk, then there might
@@ -338,6 +355,58 @@ class OpticalPSF(GSObject):
                     "than what was used to build the wavefront (%g). "%stepk +
                     "This could lead to aliasing problems. " +
                     "Using pad_factor >= %f is recommended."%(pad_factor * stepk / final_stepk))
+
+    def __repr__(self):
+        s = 'galsim.OpticalPSF(lam_over_diam=%r, aberrations=%r, oversampling=%r, pad_factor=%r'%(
+                self._lam_over_diam, self._aberrations, self._oversampling, self._pad_factor)
+        if self._obscuration != 0.:
+            s += ', obscuration=%r'%self._obscuration
+        if self._nstruts != 0:
+            s += ', nstruts=%r, strut_thick=%r, strut_angle=%r'%(
+                    self._nstruts, self._strut_thick, self._strut_angle)
+        if self._pupil_plane_im != None:
+            s += ', pupil_plane_im=%r, pupil_angle=%r'%(
+                    self._pupil_plane_im, self._pupil_angle)
+        if self._circular_pupil == False:
+            s += ', circular_pupil=False'
+        if self._max_size is not None:
+            s += ', max_size=%r'%self._max_size
+        if self._interpolant is not None:
+            s += ', interpolant=%r'%self._interpolant
+        s += ', flux=%r, gsparams=%r)'%(self._flux, self.gsparams)
+        return s
+
+    def __str__(self):
+        s = 'galsim.OpticalPSF(lam_over_diam=%s, aberrations=%s'%(
+                self._lam_over_diam, self._aberrations)
+        if self._obscuration != 0.:
+            s += ', obscuration=%s'%self._obscuration
+        if self._nstruts != 0:
+            s += ', nstruts=%s, strut_thick=%s, strut_angle=%s'%(
+                    self._nstruts, self._strut_thick, self._strut_angle)
+        if self._pupil_plane_im != None:
+            s += ', pupil_plane_im=%s, pupil_angle=%s'%(
+                    self._pupil_plane_im, self._pupil_angle)
+        if self._circular_pupil == False:
+            s += ', circular_pupil=False'
+        s += ', flux=%s)'%self._flux
+        return s
+ 
+    def __getstate__(self):
+        # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
+        # written as a string.  Better to pickle the image and remake the InterpolatedImage.
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        d['_gsparams'] = self.gsparams
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        ii =  galsim.InterpolatedImage(self._optimage, x_interpolant=self._interpolant,
+                                       _force_stepk=self._stepk, _force_maxk=self._maxk,
+                                       use_true_center=False, normalization='sb',
+                                       gsparams=self._gsparams)
+        GSObject.__init__(self, ii)
 
 
 def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=None,
