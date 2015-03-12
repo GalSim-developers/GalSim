@@ -252,7 +252,11 @@ def main(argv):
         # this SCA.  The results are provided in units of e-/arcsec^2, using the default WFIRST
         # exposure time since we did not explicitly specify one.  Then we multiply this by a factor
         # >1 to account for the amount of stray light that is expected.
-        sky_level = wfirst.getSkyLevel(filters[filter_name], world_pos=SCA_cent_pos)
+        # If we do not provide a date for the observation, then it will assume that it's the vernal
+        # equinox (sun at (0,0) in ecliptic coordinates).  We'll give it a date around that time,
+        # early March 2025.:
+        sky_level = wfirst.getSkyLevel(filters[filter_name], world_pos=SCA_cent_pos,
+                                       date=datetime.date(2025,3,0))
         sky_level *= (1.0 + wfirst.stray_light_fraction)
         # Make a image of the sky that takes into account the spatially variable pixel scale.
         # Note that makeSkyImage() takes a bit of time.  If you do not care about the variable pixel

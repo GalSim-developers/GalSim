@@ -140,17 +140,23 @@ def test_wfirst_backgrounds():
     """Test the WFIRST background estimation routines for basic sanity.
     """
     import time
+    import datetime
     t1 = time.time()
 
     # The routine should not allow us to look directly at the sun since the background there is high
-    # (to understate the problem).  The routine works for a date where RA=dec=0 means we are looking
-    # at the sun.
+    # (to understate the problem).  If no date is supplied, then the routine assumes RA=dec=0 means
+    # we are looking at the sun.
     bp_dict = galsim.wfirst.getBandpasses()
     bp = bp_dict['J129'] # one of the standard filters, doesn't really matter which
     try:
         np.testing.assert_raises(ValueError, galsim.wfirst.getSkyLevel, bp,
                                  world_pos=galsim.CelestialCoord(0.*galsim.degrees,
                                                                  0.*galsim.degrees))
+        # near autumn equinox
+        np.testing.assert_raises(ValueError, galsim.wfirst.getSkyLevel, bp,
+                                 world_pos=galsim.CelestialCoord(180.*galsim.degrees,
+                                                                 5.*galsim.degrees),
+                                 date=datetime.date(2025,9,15))
     except ImportError:
         print 'The assert_raises tests require nose'
 

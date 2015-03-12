@@ -585,7 +585,7 @@ class CelestialCoord(object):
 
         return (el, b)
 
-    def ecliptic(self, epoch=2000., julian_date=None):
+    def ecliptic(self, epoch=2000., date=None):
         """Get the longitude and latitude in ecliptic coordinates corresponding to this position.
 
         The `epoch` parameter is used to get an accurate value for the (time-varying) obliquity of
@@ -594,9 +594,9 @@ class CelestialCoord(object):
 
         @param  epoch        The epoch to be used for estimating the obliquity of the ecliptic.
                              [default: 2000.]
-        @param  julian_date  If a Julian date is given, then return the position in ecliptic
-                             coordinates with respect to the sun position at that date.  If None,
-                             then return the true ecliptic coordiantes.
+        @param  date         If a date is given as a python datetime object, then return the
+                             position in ecliptic coordinates with respect to the sun position at
+                             that date.  If None, then return the true ecliptic coordiantes.
                              [default: None]
 
         @returns the longitude and latitude as a tuple (lambda, beta), given as Angle instances.
@@ -629,9 +629,11 @@ class CelestialCoord(object):
         beta = math.asin(z_ecl)*galsim.radians
         lam = math.atan2(y_ecl, x_ecl)*galsim.radians
 
-        if julian_date is not None:
-            # Find the sun position in ecliptic coordinates on this date.
-            lam_sun, _ = _sun_position_ecliptic(julian_date)
+        if date is not None:
+            # Find the sun position in ecliptic coordinates on this date.  We have to convert to
+            # Julian day in order to use our helper routine to find the Sun position in ecliptic
+            # coordinates.
+            lam_sun, _ = _sun_position_ecliptic(_date_to_julian_day(date))
             # Subtract it off, to get ecliptic coordinates relative to the sun.
             lam -= lam_sun
 
@@ -654,3 +656,22 @@ def _sun_position_ecliptic(date):
         (0.020*galsim.degrees)*math.sin((2*g).rad())
     return (lam.wrap(), 0.*galsim.degrees)
 
+def _date_to_julian_day(date):
+    """
+    From http://code-highlights.blogspot.com/2013/01/julian-date-in-python.html, this code returns
+    the Julian day for a given date.  If 'date' is a datetime.datetime instance, then it uses the
+    full time info.  If it's a datetime.date, then it does the calculation for noon of that day.
+    """
+    import datetime
+    if not (isinstance(date, datetime.date) or isinstance(date, datetime.datetime)):
+        raise ValueError("Date must be a python datetime object!")
+    a = (14. - date.month)//12
+    y = date.year + 4800 - a
+    m = date.month + 12*a - 3
+    retval = date.day + ((153*m + 2)//5) + 365*y + y//4 - y//100 + y//400 - 32045
+    if isinstance(date, datetime.datetime):
+        dayfrac = (date.hour + date.minute/60. + date.second/3600.)/24
+        # The default is the value at noon, so we want to add 0 if dayfrac = 0.5
+        dayfrac -= 0.5
+        retval += dayfrac
+    return retval

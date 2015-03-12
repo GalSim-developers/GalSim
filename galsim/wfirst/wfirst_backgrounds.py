@@ -26,7 +26,7 @@ import galsim
 import numpy as np
 import os
 
-def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, julian_date=None):
+def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     """
     Get the expected sky level for a WFIRST observation due to zodiacal light for this bandpass and
     position.
@@ -66,11 +66,12 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, julian_date=
     @param exptime      Exposure time in seconds.  If None, use the default WFIRST exposure time.
                         [default: None]
     @param epoch        The epoch to be used for estimating the obliquity of the ecliptic when
-                        converting `world_pos` to ecliptic coordinates.
+                        converting `world_pos` to ecliptic coordinates.  This keyword is only used
+                        if `date` is None, otherwise the `date` is used to determine the `epoch`.
                         [default: 2025]
-    @param julian_date  The Julian date of the observation.  If None, then the conversion to
-                        ecliptic coordinates assumes the sun is at ecliptic coordinates of (0,0), as
-                        it is at the vernal equinox. [default: None]
+    @param date         The date of the observation, provided as a python datetime object.  If None,
+                        then the conversion to ecliptic coordinates assumes the sun is at ecliptic
+                        coordinates of (0,0), as it is at the vernal equinox. [default: None]
 
     @returns the expected sky level in e-/arcsec^2.
     """
@@ -87,7 +88,9 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, julian_date=
     else:
         if not isinstance(world_pos, galsim.CelestialCoord):
             raise ValueError("Position (world_pos) must be supplied as a CelestialCoord!")
-        ecliptic_lon, ecliptic_lat = world_pos.ecliptic(epoch=epoch, julian_date=julian_date)
+        if date is not None:
+            epoch = date.year
+        ecliptic_lon, ecliptic_lat = world_pos.ecliptic(epoch=epoch, date=date)
 
     # Check the position in our table, and make sure to take advantage of the latitude / longitude
     # symmetries:

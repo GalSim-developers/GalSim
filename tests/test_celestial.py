@@ -490,26 +490,28 @@ def test_ecliptic():
     # http://wwp.greenwichmeantime.com/longest-day/
     # and the conversion to Julian dates from
     # http://www.aavso.org/jd-calculator
-    vernal_eq_jd = 2456737.20625
-    el, b = vernal_equinox.ecliptic(epoch=2014.)
-    el_rel, b_rel = vernal_equinox.ecliptic(epoch=2014, julian_date=vernal_eq_jd)
+    import datetime
+    vernal_eq_date = datetime.datetime(2014,3,20,16,57,0)
+    el, b = vernal_equinox.ecliptic(epoch=2014)
+    el_rel, b_rel = vernal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
     # Vernal equinox: should have (el, b) = (el_rel, b_rel) = 0.0
     numpy.testing.assert_almost_equal(el_rel.rad(), el.rad(), decimal=3)
     numpy.testing.assert_almost_equal(b_rel.rad(), b.rad(), decimal=6)
-    # Now do the autumnal equinox: should have (el_rel, b_rel) = (el, b) = (pi, 0).
-    autumnal_eq_jd = 2456923.60347
-    el, b = autumnal_equinox.ecliptic(epoch=2014.)
-    el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, julian_date=vernal_eq_jd)
+    # Now do the autumnal equinox: should have (el, b) = (pi, 0) = (el_rel, b_rel) when we look at
+    # the time of the vernal equinox.
+    el, b = autumnal_equinox.ecliptic(epoch=2014)
+    el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
     numpy.testing.assert_almost_equal(el_rel.rad(), el.rad(), decimal=3)
     numpy.testing.assert_almost_equal(b_rel.rad(), b.rad(), decimal=6)
     # And check that if it's the date of the autumnal equinox (sun at (180, 0)) but we're looking at
     # the position of the vernal equinox (0, 0), then (el_rel, b_rel) = (-180, 0)
-    el_rel, b_rel = vernal_equinox.ecliptic(epoch=2014, julian_date=autumnal_eq_jd)
+    autumnal_eq_date = datetime.datetime(2014,9,23,2,29,0)
+    el_rel, b_rel = vernal_equinox.ecliptic(epoch=2014, date=autumnal_eq_date)
     numpy.testing.assert_almost_equal(el_rel.rad(), -pi, decimal=3)
     numpy.testing.assert_almost_equal(b_rel.rad(), 0., decimal=6)
     # Finally check that if it's the date of the vernal equinox (sun at (0, 0)) but we're looking at
     # the position of the autumnal equinox (180, 0), then (el_rel, b_rel) = (180, 0)
-    el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, julian_date=vernal_eq_jd)
+    el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
     numpy.testing.assert_almost_equal(el_rel.rad(), pi, decimal=3)
     numpy.testing.assert_almost_equal(b_rel.rad(), 0., decimal=6)
 
