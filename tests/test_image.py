@@ -1834,6 +1834,33 @@ def test_Image_view():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_Image_writeheader():
+    """Test the functionality of image.write(...) for images that have header attributes
+    """
+    import time
+    t1 = time.time()
+
+    # First check: if we have an image.header attribute, it gets written to file.
+    im_test = galsim.Image(10, 10)
+    key_name = 'test_key'
+    im_test.header = galsim.FitsHeader(header={key_name : 'test_val'})
+    test_file = os.path.join(datadir, "test_header.fits")
+    im_test.write(test_file)
+    new_header = galsim.FitsHeader(test_file)
+    assert key_name.upper() in new_header.keys()
+
+    # Second check: if we have an image.header attribute that modifies some keywords used by the
+    # WCS, then make sure it doesn't overwrite the WCS.
+    im_test.wcs = galsim.JacobianWCS(0., 0.23, -0.23, 0.)
+    im_test.header = galsim.FitsHeader(header={'CD1_1' : 10., key_name : 'test_val'})
+    im_test.write(test_file)
+    new_header = galsim.FitsHeader(test_file)
+    assert key_name.upper() in new_header.keys()
+    assert new_header['CD1_1'] == 0.0
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_Image_basic()
     test_Image_obsolete()
@@ -1865,3 +1892,4 @@ if __name__ == "__main__":
     test_BoundsI_init_with_non_pure_ints()
     test_Image_constructor()
     test_Image_view()
+    test_Image_writeheader()
