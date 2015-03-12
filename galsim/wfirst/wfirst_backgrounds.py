@@ -26,7 +26,7 @@ import galsim
 import numpy as np
 import os
 
-def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2015, julian_date=None):
+def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, julian_date=None):
     """
     Get the expected sky level for a WFIRST observation due to zodiacal light for this bandpass and
     position.
@@ -67,7 +67,7 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2015, julian_date=
                         [default: None]
     @param epoch        The epoch to be used for estimating the obliquity of the ecliptic when
                         converting to ecliptic coordinates.
-                        [default: 2015.]
+                        [default: 2025.]
     @param julian_date  The Julian date of the observation.  If None, then the conversion to
                         ecliptic coordinates assumes the sun is at ecliptic coordinates of (0,0), as
                         it is at the vernal equinox. [default: None]
