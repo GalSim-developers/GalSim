@@ -38,17 +38,23 @@ def test_spergelet():
                 myImg.array, savedImg.array, 5,
                 err_msg="GSObject Spergelet disagrees with expected result")
 
+            # The nu = -0.5 case requires maximum_fft_size larger than 8150
+            if not nu < 0:
+                test_im = galsim.Image(16, 16, scale=0.2)
+                do_kvalue(spergelet, test_im, "Spergelet")
+
+
 def test_series_draw():
     """ Test that we can draw Series objects
     """
     a = galsim.SpergelSeries(nu=0.0, scale_radius=1.0, jmax=4)
     im = a.drawImage(nx=15, ny=15, scale=0.2)
     re, im = a.drawKImage(nx=15, ny=15, scale=0.2)
-    
+
     b = galsim.SeriesConvolution(a, a)
     im = b.drawImage(nx=15, ny=15, scale=0.2)
     re, im = b.drawKImage(nx=15, ny=15, scale=0.2)
-    
+
 def test_series_gsobject_convolution():
     """ Test that we can convolve a Series and a GSObject.
     """
@@ -56,7 +62,7 @@ def test_series_gsobject_convolution():
     b = galsim.SeriesConvolution(a, galsim.Gaussian(fwhm=1))
     im = b.drawImage(nx=15, ny=15, scale=0.2)
     re, im = b.drawKImage(nx=15, ny=15, scale=0.2)
-    
+
 def test_spergelseries_decomposeA():
     """ Test that the SpergelSeries decomposition of the A matrix works.
     """
@@ -86,7 +92,7 @@ def test_spergelseries_kValue():
         gal.Delta = Delta
         gal.scale_radius = 1.0
         np.testing.assert_almost_equal(gal.kValue(x,y), kval, 6)
-    
+
 # def test_spergelseries_coeff():
 #     """Check a_jq coefficient by generating a_jmn coefficients and forming the appropriate sum.
 #     """
@@ -144,7 +150,7 @@ def test_spergelseries():
             plt.imshow(im_series.array)
             plt.show()
         np.testing.assert_array_almost_equal(im_exact.array, im_series.array, 4)
-            
+
 
 def test_spergelseries_dilate():
     """ Check that SpergelSeries with .scale_radius = mu gives same image as SpergelSeries with
@@ -181,6 +187,7 @@ def test_spergelseries_dilate():
         np.testing.assert_almost_equal(im_direct.array, im_dilate.array, 5)
 
 def test_moffatlet():
+    import warnings
     betas = [2,3,4,5]
     srs = [1,1.1,1.2,1.3]
     js = [0,1,2,3]
@@ -188,8 +195,12 @@ def test_moffatlet():
     for beta, sr, j, q in zip(betas, srs, js, qs):
         moffatlet = galsim.Moffatlet(beta=beta, scale_radius=sr, j=j, q=q)
         test_im = galsim.Image(16, 16, scale=0.2)
-        do_kvalue(moffatlet, test_im, "Moffatlet ")
-        
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            # This complains about a divide-by-zero, which is a consequence of some Moffatlets
+            # having equal amounts of positive and negative surface brightness values.
+            do_kvalue(moffatlet, test_im, "Moffatlet")
+
 def test_moffatseries():
     """Test that MoffatSeries converges to Moffat.
     """
