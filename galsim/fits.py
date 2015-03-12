@@ -481,7 +481,9 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
 
     @param image        The image to write to file.  Per the description of this method, it may be
                         given explicitly via `galsim.fits.write(image, ...)` or the method may be 
-                        called directly as an image method, `image.write(...)`.
+                        called directly as an image method, `image.write(...)`.  Note that if the
+                        image has a 'header' attribute containing a FitsHeader, then the FitsHeader
+                        is written to the header in the PrimaryHDU, followed by the WCS as usual.
     @param file_name    The name of the file to write to.  [Either `file_name` or `hdu_list` is 
                         required.]
     @param dir          Optionally a directory name can be provided if `file_name` does not 
@@ -521,6 +523,9 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
         hdu_list = pyfits.HDUList()
 
     hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
+    if hasattr(image, 'header'):
+        for key in image.header.keys():
+            hdu.header[key] = image.header[key]
     if image.wcs:
         image.wcs.writeToFitsHeader(hdu.header, image.bounds)
 
