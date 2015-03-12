@@ -65,32 +65,31 @@ class COSMOSCatalog(object):
     help(galsim.COSMOSCatalog.makeObj) for more information.  As an interesting application and
     example of the usage of these routines, consider the following code:
 
-        >>>> im_size = 64
-        >>>> pix_scale = 0.05
-        >>>> bandpass = galsim.Bandpass('share/wfc_F814W.dat.gz',
-                                        wave_type='ang').thin().withZeropoint(25.94)
-        >>>> real_cat = galsim.COSMOSCatalog('real_galaxy_catalog_23.5.fits',
-                                             dir='/path/to/COSMOS/data')
-        >>>> param_cat = galsim.COSMOSCatalog('real_galaxy_catalog_23.5_fits.fits',
-                                              dir='/path/to/COSMOS/data',
-                                              use_real=False, exclude_fail=False)
-        >>>> psf = galsim.OpticalPSF(diam=2.4, lam=1000.) # bigger than HST F814W PSF.
-        >>>> indices = np.arange(10)
-        >>>> real_gal_list = real_cat.makeObj(indices, pad_size=im_size*pix_scale)
-        >>>> param_gal_list = param_cat.makeObj(indices, chromatic=True)
-        >>>> for ind in indices:
-        >>>>     real_obj = galsim.Convolve(real_gal_list[ind], psf)
-        >>>>     param_obj = galsim.Convolve(param_gal_list[ind], psf)
-        >>>>     im_real = galsim.Image(im_size, im_size)
-        >>>>     im_param = galsim.Image(im_size, im_size)
-        >>>>     real_obj.drawImage(image=im_real, scale=pix_scale)
-        >>>>     param_obj.drawImage(bandpass, image=im_param, scale=pix_scale)
-        >>>>     im_real.write('im_real_'+str(ind)+'.fits')
-        >>>>     im_param.write('im_param_'+str(ind)+'.fits')
+        >>> im_size = 64
+        >>> pix_scale = 0.05
+        >>> bandpass = galsim.Bandpass('share/wfc_F814W.dat.gz',
+                                       wave_type='ang').thin().withZeropoint(25.94)
+        >>> real_cat = galsim.COSMOSCatalog()
+        >>> param_cat = galsim.COSMOSCatalog(use_real=False)
+        >>> psf = galsim.OpticalPSF(diam=2.4, lam=1000.) # bigger than HST F814W PSF.
+        >>> indices = np.arange(10)
+        >>> real_gal_list = real_cat.makeObj(indices, pad_size=im_size*pix_scale)
+        >>> param_gal_list = param_cat.makeObj(indices, chromatic=True)
+        >>> for ind in indices:
+        >>>     real_obj = galsim.Convolve(real_gal_list[ind], psf)
+        >>>     param_obj = galsim.Convolve(param_gal_list[ind], psf)
+        >>>     im_real = galsim.Image(im_size, im_size)
+        >>>     im_param = galsim.Image(im_size, im_size)
+        >>>     real_obj.drawImage(image=im_real, scale=pix_scale)
+        >>>     param_obj.drawImage(bandpass, image=im_param, scale=pix_scale)
+        >>>     im_real.write('im_real_'+str(ind)+'.fits')
+        >>>     im_param.write('im_param_'+str(ind)+'.fits')
 
     This code snippet will draw images of the first 10 objects in the COSMOS catalog, at slightly
     lower resolution than in COSMOS, with a real image and its parametric representation for each of
-    those objects.
+    those objects.  Note that we are automatically excluding galaxies that do not have parametric
+    representations.  These are rare and do not occur in the first ten objects in the catalog, which
+    is why we can assume that the real and parametric objects will be comparable.
 
     Initialization
     --------------
