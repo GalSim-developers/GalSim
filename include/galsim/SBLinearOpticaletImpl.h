@@ -77,7 +77,6 @@ namespace galsim {
         void buildFT() const;
         double calculateFluxRadius(const double& flux_frac) const;
         double Vnm(int n, int m, double r) const;
-        double jinc(int n, double r) const;
     };
 
     class SBLinearOpticalet::SBLinearOpticaletImpl : public SBProfileImpl

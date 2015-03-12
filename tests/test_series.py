@@ -198,7 +198,7 @@ def test_moffatseries():
     vals = [
             [  2.6,  0.01, 0.01, 0.9, 2], # Misses 24% of pixels for jmax=1
             [  3.2, -0.01, 0.02, 1.1, 1], # Misses 32% of pixels for jmax=0
-            [  4.4,  0.03, 0.02, 0.7, 1], # Misses 16% of pixels for jmax=0
+            [  4.4,  0.03, 0.02, 0.7, 2], # Misses 12% of pixels for jmax=1
             [  5.1,  0.01, 0.02, 0.2, 3]  # Misses 0.4% of pixels for jmax=2
     ]
     for beta, e1, e2, mu, jmax in vals:

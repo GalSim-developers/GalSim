@@ -242,38 +242,11 @@ namespace galsim {
 
     double LinearOpticaletInfo::Vnm(int n, int m, double r) const
     {
-        double ret = jinc(n+1, r);
         if ((abs(m)+n) & 2)
-            return -ret;
-        return ret;
-    }
-
-    double LinearOpticaletInfo::jinc(int n, double r) const
-    {
+            return -boost::math::cyl_bessel_j(n, r)/r;
         return boost::math::cyl_bessel_j(n, r)/r;
     }
 
-    // // The workhorse routines...
-    // double LinearOpticaletInfo::xValue(double r, double phi) const
-    // {
-    //     if (r == 0.0) {
-    //         if (_n1==0 && _n2 == 0)
-    //             return 0.25;
-    //         return 0.0;
-    //     }
-    //     double ret = boost::math::cyl_bessel_j(_n1+1, r)*boost::math::cyl_bessel_j(_n2+1, r)/r/r;
-    //     if ((_n1-_m1+_n2-_m2) & 2) // if (n1-m1 + n2-m2) = 2 mod 4
-    //         ret *= -1;
-    //     if (_m1 > 0)
-    //         ret *= cos(_m1 * phi);
-    //     else if (_m1 < 0)
-    //         ret *= sin(_m1 * phi);
-    //     if (_m2 > 0)
-    //         ret *= cos(_m2 * phi);
-    //     else if (_m2 < 0)
-    //         ret *= sin(_m2 * phi);
-    //     return ret;
-    // }
     // The workhorse routines...
     double LinearOpticaletInfo::xValue(double r, double phi) const
     {
@@ -286,11 +259,11 @@ namespace galsim {
         if (_m1 > 0)
             ret *= cos(_m1 * phi);
         else if (_m1 < 0)
-            ret *= sin(-_m1 * phi);
+            ret *= sin(_m1 * phi);
         if (_m2 > 0)
             ret *= cos(_m2 * phi);
         else if (_m2 < 0)
-            ret *= sin(-_m2 * phi);
+            ret *= sin(_m2 * phi);
         return ret;
     }
 
