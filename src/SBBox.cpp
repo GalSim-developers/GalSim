@@ -97,9 +97,9 @@ namespace galsim {
 
         // It will be useful to do everything in units of dx,dy
         x0 /= dx;
-        double wo2 = _wo2 / dx;
+        double wo2 = _wo2 / std::abs(dx);
         y0 /= dy;
-        double ho2 = _ho2 / dy;
+        double ho2 = _ho2 / std::abs(dy);
         xdbg<<"x0,y0 -> "<<x0<<','<<y0<<std::endl;
         xdbg<<"width,height -> "<<wo2*2.<<','<<ho2*2.<<std::endl;
 
@@ -399,16 +399,18 @@ namespace galsim {
         val.setZero();
         // The columns to consider have -r0 <= y < r0
         // given that y = y0 + j dy
-        int j1 = std::max(0, int(std::ceil((-_r0 - y0)/dy)));
-        int j2 = std::min(n, int(std::ceil((_r0 - y0)/dy)));
+        double absdx = std::abs(dx);
+        double absdy = std::abs(dy);
+        int j1 = std::max(0, int(std::ceil(-_r0/absdy - y0/dy)));
+        int j2 = std::min(n, int(std::ceil(_r0/absdy - y0/dy)));
         y0 += j1 * dy;
         for (int j=j1;j<j2;++j,y0+=dy) {
             double ysq = y0*y0;
             double xmax = std::sqrt(_r0sq - ysq);
             // Set to _norm all pixels with -xmax <= x < xmax
             // given that x = x0 + i dx.
-            int i1 = std::max(0, int(std::ceil((-xmax - x0)/dx)));
-            int i2 = std::min(m, int(std::ceil((xmax - x0)/dx)));
+            int i1 = std::max(0, int(std::ceil(-xmax/absdx - x0/dx)));
+            int i2 = std::min(m, int(std::ceil(xmax/absdx - x0/dx)));
             if (i1 < i2)
                 val.col(j,i1,i2).setAllTo(_norm);
         }

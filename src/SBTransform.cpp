@@ -492,11 +492,18 @@ namespace galsim {
         if (!_zeroCen) {
             x0 -= _cen.x;
             y0 -= _cen.y;
-            int dix = int(_cen.x/dx);
-            int diy = int(_cen.y/dy);
-            if (std::abs(_cen.x - dix*dx) < 1.e-10) izero += dix;
+            // Check if the new center falls on an integer index.
+            // 0 = x0 + iz * dx
+            // 0 = y0 + jz * dy
+            xdbg<<"x0,y0 = "<<x0<<','<<y0<<std::endl;
+            int iz = int(-x0/dx+0.5);
+            int jz = int(-y0/dy+0.5);
+            xdbg<<"iz,jz = "<<iz<<','<<jz<<std::endl;
+            xdbg<<"near zero at "<<(x0+iz*dx)<<"  "<<(y0+jz*dy)<<std::endl;
+
+            if (std::abs(x0 + iz*dx) < 1.e-10 && iz > 0 && iz < int(val.colsize())) izero = iz;
             else izero = 0;
-            if (std::abs(_cen.y - diy*dy) < 1.e-10) jzero += diy;
+            if (std::abs(y0 + jz*dy) < 1.e-10 && jz > 0 && jz < int(val.rowsize())) jzero = jz;
             else jzero = 0;
         }
 

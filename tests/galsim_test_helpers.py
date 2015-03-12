@@ -67,19 +67,21 @@ def printval(image1, image2):
         ax2.imshow(image2.array)
         plt.show()
 
+def getmoments(image):
+    #print 'shape = ',image.array.shape
+    #print 'bounds = ',image.bounds
+    a = image.array.astype(float) # Use float for better accuracy calculations.
+                                  # This matters more for numpy version <= 1.7
+    xgrid, ygrid = np.meshgrid(np.arange(image.array.shape[1]) + image.getXMin(),
+                               np.arange(image.array.shape[0]) + image.getYMin())
+    mx = np.sum(xgrid * a) / np.sum(a)
+    my = np.sum(ygrid * a) / np.sum(a)
+    mxx = np.sum(((xgrid-mx)**2) * a) / np.sum(a)
+    myy = np.sum(((ygrid-my)**2) * a) / np.sum(a)
+    mxy = np.sum((xgrid-mx) * (ygrid-my) * a) / np.sum(a)
 
-def getmoments(image1):
-    #print 'shape = ',image1.array.shape
-    #print 'bounds = ',image1.bounds
-    xgrid, ygrid = np.meshgrid(np.arange(image1.array.shape[1]) + image1.getXMin(),
-                               np.arange(image1.array.shape[0]) + image1.getYMin())
-    mx = np.sum(xgrid * image1.array) / np.sum(image1.array)
-    my = np.sum(ygrid * image1.array) / np.sum(image1.array)
-    mxx = np.sum(((xgrid-mx)**2) * image1.array) / np.sum(image1.array)
-    myy = np.sum(((ygrid-my)**2) * image1.array) / np.sum(image1.array)
-    mxy = np.sum((xgrid-mx) * (ygrid-my) * image1.array) / np.sum(image1.array)
     print '      {0:<15.8g}  {1:<15.8g}  {2:<15.8g}  {3:<15.8g}  {4:<15.8g}'.format(
-            mx-image1.getXMin(), my-image1.getYMin(), mxx, myy, mxy)
+            mx-image.getXMin(), my-image.getYMin(), mxx, myy, mxy)
     return mx, my, mxx, myy, mxy
 
 def convertToShear(e1,e2):

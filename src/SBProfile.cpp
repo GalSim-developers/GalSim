@@ -29,7 +29,7 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
-std::ostream* dbgout = &std::cout;
+std::ostream* dbgout = &std::cerr;
 int verbose_level = 1;
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
@@ -611,6 +611,7 @@ namespace galsim {
 
     void SBProfile::SBProfileImpl::fillKGrid(KTable& kt) const
     {
+        dbg<<"Start fillKGrid\n";
         int N = kt.getN();
         double dk = kt.getDk();
         kt.clearCache();
