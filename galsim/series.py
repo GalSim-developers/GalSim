@@ -249,7 +249,7 @@ class SpergelSeries(Series):
         self.nu = nu
         self.jmax = jmax
         if dlnr is None:
-            dlnr = np.log(np.sqrt(2.0))
+            dlnr = np.log(1.3)
         self.dlnr = dlnr
         if half_light_radius is not None:
             prof = galsim.Spergel(nu=nu, half_light_radius=half_light_radius)
@@ -420,7 +420,7 @@ class MoffatSeries(Series):
         self.beta = beta
         self.jmax = jmax
         if dlnr is None:
-            dlnr = np.log(np.sqrt(2.0))
+            dlnr = np.log(1.3)
         self.dlnr = dlnr
         if half_light_radius is not None:
             prof = galsim.Moffat(beta=beta, half_light_radius=half_light_radius)
@@ -697,10 +697,10 @@ class LinearOpticalSeries(Series):
                 self.imagindices.append((n, m))
             else:
                 raise RuntimeError("What!?  How'd that happen?")
-        # First do the square indices
+        # First do the square coefficients
         self.coeffs = [c**2 for c in self.realcoeffs]
         self.coeffs.extend([c**2 for c in self.imagcoeffs])
-        # Now handle the cross-indices
+        # Now handle the cross-coefficients
         self.coeffs.extend([2*np.multiply.reduce(c) for c in combinations(self.realcoeffs, 2)])
         self.coeffs.extend([2*np.multiply.reduce(c) for c in combinations(self.imagcoeffs, 2)])
 
