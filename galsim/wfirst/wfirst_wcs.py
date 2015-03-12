@@ -251,6 +251,9 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
                     header[sipstr] = b_sip[i_sca,i,j]
 
         wcs = galsim.GSFitsWCS(header=header)
+        # Specifically identify the extra information that the WFIRST WCS should have stored with
+        # it, and save that as an attribute of this WCS object:
+        _store_extra_keywords(wcs, header)
         wcs_dict[i_sca]=wcs
 
     return wcs_dict
@@ -398,6 +401,27 @@ def _populate_required_fields(header):
     header['TELESCOP'] = (tel_name, "telescope used to acquire data")
     header['INSTRUME'] = (instr_name, "identifier for instrument used to acquire data")
 
+def _store_extra_keywords(wcs, header):
+    """
+    Utility routine to store a dict with extra keywords from a header ('header') in a WFIRST WCS
+    (`wcs`), so that our header-writing routines can have that information when writing to file.
+    """
+    extra_dict = {}
+    extra_dict['EQUINOX'] = header['EQUINOX']
+    extra_dict['WCSAXES'] = header['WCSAXES']
+    extra_dict['WCSNAME'] = header['WCSNAME']
+    extra_dict['TELESCOP'] = header['TELESCOP']
+    extra_dict['INSTRUME'] = header['INSTRUME']
+    extra_dict['RA_TARG'] = header['RA_TARG']
+    extra_dict['DEC_TARG'] = header['DEC_TARG']
+    extra_dict['PA_OBSY'] = header['PA_OBSY']
+    extra_dict['PA_FPA'] = header['PA_FPA']
+    extra_dict['SCA_NUM'] = header['SCA_NUM']
+    extra_dict['ORIENTAT'] = header['ORIENTAT']
+    extra_dict['LONPOLE'] = header['LONPOLE']
+
+    wcs.extra_dict = extra_dict
+
 def _parse_sip_file(file):
     """
     Utility routine to parse the file with the SIP coefficients and hand back some arrays to be used
@@ -453,3 +477,28 @@ def _det_to_tangplane_positions(x_in, y_in):
     dist_fac = 1. + img_dist_coeff[0] + img_dist_coeff[1]*r + img_dist_coeff[2]*r_sq
     return x_in/dist_fac, y_in/dist_fac
 
+def makeFitsHeader(wcs):
+    """
+    This routine takes one of the WFIRST WCS output by galsim.wfirst.getWCS(), and writes it to a
+    FitsHeader() object.  Example usage, given a previously existing wcs object:
+
+        im = galsim.Image(galsim.wfirst.n_pix, galsim.wfirst.n_pix)
+        im.wcs = wcs
+        im.header = galsim.wfirst.makeFitsHeader(wcs)
+        im.write(output_file)
+
+    @param wcs      The WCS from galsim.wfirst.getWCS()
+    @returns a FitsHeader
+    """
+    # First, check that this actually is a WCS that contains the WFIRST keywords and so on.
+    if not hasattr(wcs, 'extra_dict'):
+        raise RuntimeError("Error, this routine only works for WCS from galsim.wfirst.getWCS()!")
+
+    header = galsim.FitsHeader()
+    # First we transfer over the extra stuff.
+    for key in wcs.extra_dict.keys():
+        header[key] = wcs.extra_dict[key]
+    # Then we write the WCS into the header.
+    wcs._writeHeader(header, galsim.BoundsI())
+
+    return header
