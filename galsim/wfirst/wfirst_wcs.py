@@ -183,7 +183,9 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
         # Leave phi_p at 180 (0 if dec_targ==-90), so that tangent plane axes remain oriented along
         # celestial coordinates. In other words, phi_p is the angle of the +Y axis in the tangent
         # plane, which is of course pi if we're measuring these phi angles clockwise from the -Y
-        # axis.
+        # axis.  Note that this quantity is not used in any calculations at all, but for consistency
+        # with the WCS code that comes from the WFIRST project office, we calculate this quantity
+        # and put it in the FITS header.
         if world_pos.dec / galsim.degrees > -90.:
             phi_p = np.pi*galsim.radians
         else:
