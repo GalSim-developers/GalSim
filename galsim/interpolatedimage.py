@@ -446,7 +446,7 @@ class InterpolatedImage(GSObject):
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note reverse=True, since we want to fix the center in the opposite sense of what the 
         # draw function does.
-        prof = self._fix_center(self.image, offset, use_true_center, reverse=True)
+        prof = self._fix_center(self.image.array.shape, offset, use_true_center, reverse=True)
 
         # Bring the profile from image coordinates into world coordinates
         prof = local_wcs.toWorld(prof)
