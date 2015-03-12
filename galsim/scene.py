@@ -180,7 +180,7 @@ class COSMOSCatalog(object):
             self.obj_type = 'parametric'
             self.nobjects = len(self.cat)
 
-    def makeObj(self, indices, chromatic=False, pad_size=None):
+    def makeObj(self, indices=None, chromatic=False, pad_size=None, rng=None):
         """
         Routine to construct GSObjects corresponding to catalog entries with particular indices.
 
@@ -188,7 +188,9 @@ class COSMOSCatalog(object):
         should give the right pixel values to mimic the actual COSMOS image.
 
         @param indices    The indices of the catalog entries for which GSObjects should be
-                          constructed. This should be either a single number or an iterable.
+                          constructed. This should be either a single number or an iterable.  If
+                          None, then a single galaxy is chosen at random.
+                          [default: None]
         @param chromatic  Make this a chromatic object, or not?  [default: False]
                           It is important to bear in mind that we do not actually have
                           spatially-resolved color information for these galaxies, so this keyword
@@ -205,11 +207,23 @@ class COSMOSCatalog(object):
         @param pad_size   For realistic galaxies, the size of region requiring noise padding, in
                           arcsec.  If None, then a region that is 0.25 arcsec in size is used.
                           [default: None]
+        @param rng        A random number generator to use for selecting a random galaxy
+                          (may be any kind of BaseDeviate or None).  This is only relevant if
+                          `indices=None`.  [default: None]
 
         @returns A list of GSObjects or chromatic objects representing the galaxy of interest,
         unless `indices` is just a single number, in which case the object for that index is
         returned directly.
         """
+        # Deal with random galaxy selection if necessary.
+        if indices is None:
+            if rng is None:
+                rng = galsim.BaseDeviate()
+            elif not isinstance(rng, galsim.BaseDeviate):
+                raise TypeError("The rng provided to makeObj is not a BaseDeviate")
+            ud = galsim.UniformDeviate(rng)
+            indices = int(self.nobjects * ud())
+
         # Check whether this is a COSMOSCatalog meant to represent real or parametric objects, then
         # call the appropriate helper routine for that case.
         if self.obj_type == 'real':
