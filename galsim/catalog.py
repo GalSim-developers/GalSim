@@ -20,10 +20,6 @@ Routines for controlling catalog input/output with GalSim.
 """
 
 import galsim
-from galsim import pyfits
-import numpy as np
-import math
-import os
 
 
 class Catalog(object):
