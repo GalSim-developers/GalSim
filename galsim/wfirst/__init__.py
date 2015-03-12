@@ -144,6 +144,9 @@ This module also contains the following routines:
                some software that can handle TAN-SIP style WCS (either Astropy, starlink.Ast,
                WCSTools).
 
+    makeFitsHeader() - A routine to write the additional information in WFIRST WCS to a FITS header
+                       that will be output to file.
+
     findSCA() - A routine that can take the WCS from getWCS() and some sky position, and indicate in
                 which SCA that position can be found, optionally including half of the gaps between
                 SCAs (to identify positions that are in the focal plane array but in the gap between
@@ -190,7 +193,7 @@ charge_diffusion = 0.1
 from wfirst_bandpass import getBandpasses
 from wfirst_backgrounds import getSkyLevel
 from wfirst_psfs import getPSF, storePSFImages, loadPSFImages
-from wfirst_wcs import getWCS, findSCA
+from wfirst_wcs import getWCS, findSCA, makeFitsHeader
 from wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC
 
 def NLfunc(x):
