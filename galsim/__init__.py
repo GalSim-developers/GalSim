@@ -170,5 +170,3 @@ from . import dcr
 from . import meta_data
 from . import cdmodel
 
-# This now depends on chromatic stuff.
-
