@@ -698,7 +698,7 @@ def test_flip():
             galsim.Convolve([ galsim.RealGalaxy(rgc, index=0, flux=1.7),  # "Real" RealGalaxy
                               galsim.Gaussian(sigma=0.08) ]),
             galsim.Convolve([ galsim.RealGalaxy(rgc, index=1, flux=1.7),  # "Fake" RealGalaxy
-                              galsim.Gaussian(sigma=0.08) ]),
+                              galsim.Gaussian(sigma=0.08) ]),             # (cf. test_real.py)
             galsim.Spergel(nu=-0.19, half_light_radius=0.17, flux=1.7),
             galsim.Sersic(n=2.3, half_light_radius=0.17, flux=1.7),
             galsim.Sersic(n=2.3, half_light_radius=0.17, flux=1.7, trunc=0.82),
@@ -713,6 +713,16 @@ def test_flip():
                               galsim.Gaussian(sigma=0.09) ]),
             galsim.Convolve([ galsim.TopHat(0.17, flux=1.7).shift(-0.275,0.125),
                               galsim.Gaussian(sigma=0.09) ]),
+            # Test something really crazy with several layers worth of transformations
+            galsim.Convolve([
+                galsim.Sum([
+                    galsim.Gaussian(sigma=0.17, flux=1.7).shear(g1=0.1,g2=0.2).shift(2,3),
+                    galsim.Kolmogorov(fwhm=0.33, flux=3.9).transform(0.31,0.19,-0.23,0.33) * 88.,
+                    galsim.Box(0.11, 0.44, flux=4).rotate(33 * galsim.degrees) / 1.9
+                ]).shift(-0.3,1),
+                galsim.AutoConvolve(galsim.TopHat(0.5).shear(g1=0.3,g2=0)).rotate(3*galsim.degrees),
+                (galsim.AutoCorrelate(galsim.Box(0.2, 0.3)) * 11).shift(3,2).shift(2,-3) * 0.31
+            ]).shift(0,0).transform(0,-1,-1,0).shift(-1,1)
         ]
      
     s = galsim.Shear(g1=0.11, g2=-0.21)
