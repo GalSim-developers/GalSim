@@ -206,35 +206,12 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
         # Start by adding any SCA-unique rotation relative to FPA axes:
         sca_tp_rot = pa_fpa + sca_rot[i_sca]*galsim.degrees
 
-        # Set up a point that defines the vector going through the SCA center (crval) pointing North.
-        # Use a distance in declination that is halfway from the center to the edge of the SCA
-        # (local_dist). This seems a reasonable compromise in making the step big enough to avoid
-        # round-off errors becoming too large and avoiding non-linearities in the trigonometric
-        # functions.
-        local_dist = float(galsim.wfirst.n_pix) * pix_scale / 4
-        if crval2 + local_dist > 90.*galsim.degrees:
-            pos2 = galsim.CelestialCoord(crval1, crval2-local_dist)
-        else:
-            pos2 = galsim.CelestialCoord(crval1, crval2+local_dist)
-
-        # Convert to tangent plane X-Y positions (outputs are in arcsec and have opposite
-        # handedness, so must be careful of units and flip sign of x coordinate).  We only care
-        # about X-distance and Y-distance between pos2 and crval (position of SCA center), which
-        # tells us how the line that points north is oriented on the detector.
-        tp2 = world_pos.project(pos2, 'gnomonic')
-        if pos2.dec > crval2:
-            dxtp = -tp2.x + u/galsim.arcsec
-            dytp = tp2.y - v/galsim.arcsec
-        else:
-            dxtp = -u/galsim.arcsec+tp2.x
-            dytp = v/galsim.arcsec-tp2.y
-        # A few things to note about the next line.
-        # First, we appear to be putting the Delta(x) value in the place where the "y" coordinate
-        # should go for the np.arctan2, and Delta(y) value in the place of the "x" coordinate.  This
-        # is because of how our tangent plane (x, y) positions are defined: we define the rotation
-        # angle with respect to the -Y axis (not X).  The minus sign in front also comes from this
-        # convention (the fact that it's the -Y axis, not +Y).
-        pa_sca = sca_tp_rot - np.arctan2(dxtp, dytp)*galsim.radians
+        # Go some reasonable distance from crval in the +y direction.  Say, 1 degree.
+        plus_y = world_pos.deproject(galsim.PositionD(u/galsim.arcsec, v/galsim.arcsec + 3600),
+                                    projection='gnomonic')
+        # Find the angle between this point, crval and due north.
+        north = galsim.CelestialCoord(0.*galsim.degrees, 90.*galsim.degrees)
+        pa_sca = sca_tp_rot - crval.angleBetween(plus_y, north)
 
         # Compute CD coefficients: extract the linear terms from the a_sip, b_sip arrays.  These
         # linear terms are stored in the SIP arrays for convenience, but are defined differently.
@@ -312,9 +289,7 @@ def findSCA(wcs_dict, world_pos, include_border=False):
     # border.  We put it immediately into a galsim.BoundsI(), since the routine returns xmin, xmax,
     # ymin, ymax:
     xmin, xmax, ymin, ymax = _calculate_minmax_pix(include_border)
-    bounds_list = []
-    for ind in range(len(xmin)):
-        bounds_list.append(galsim.BoundsI(xmin[ind], xmax[ind], ymin[ind], ymax[ind]))
+    bounds_list = [ galsim.BoundsI(x1,x2,y1,y2) for x1,x2,y1,y2 in zip(xmin,xmax,ymin,ymax) ]
 
     sca = None
     for i_sca in wcs_dict.keys():
