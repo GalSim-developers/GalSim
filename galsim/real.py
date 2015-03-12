@@ -113,7 +113,7 @@ class RealGalaxy(GSObject):
                             [default: None]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
-    @param    logger        A logger object for output of progress statements if the user wants
+    @param logger           A logger object for output of progress statements if the user wants
                             them.  [default: None]
 
     Methods
