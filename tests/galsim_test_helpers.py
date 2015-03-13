@@ -228,10 +228,19 @@ def do_pickle(obj1, func = lambda x : x):
     #print 'obj2 = ',repr(obj2)
     f1 = func(obj1)
     f2 = func(obj2)
-    #print 'func(obj1) = ',f1
-    #print 'func(obj2) = ',f2
+    #print 'func(obj1) = ',repr(f1)
+    #print 'func(obj2) = ',repr(f2)
     #if isinstance(f1, galsim.Image):
-        #printval(f1,f2)
+    if False:
+        printval(f1,f2)
+        print f1.array.tolist()
+        print f2.array.tolist()
+        print (f1-f2).array.tolist()
+        print repr(f1.wcs)
+        print repr(f2.wcs)
+        print repr(f1.bounds)
+        print repr(f2.bounds)
+        print (f1.bounds == f2.bounds), (f1.wcs == f2.wcs), (f1.array == f2.array).all()
     assert f1 == f2
 
     obj3 = copy.copy(obj1)
@@ -246,6 +255,8 @@ def do_pickle(obj1, func = lambda x : x):
     assert obj4 is not obj1
     f4 = func(obj4)
     if random: f1 = func(obj1)
+    #print 'func(obj1) = ',repr(f1)
+    #print 'func(obj4) = ',repr(f4)
     assert f4 == f1  # But everythong should be idenical with deepcopy.
 
     # Also test that the repr is an accurate representation of the object.
@@ -255,6 +266,8 @@ def do_pickle(obj1, func = lambda x : x):
     #print 'obj5 = ',repr(obj5)
     f5 = func(obj5)
     if random: f1 = func(obj1)
+    #print 'func(obj1) = ',repr(f1)
+    #print 'func(obj5) = ',repr(f5)
     assert f5 == f1
 
 

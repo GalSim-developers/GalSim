@@ -449,6 +449,7 @@ class InterpolatedImage(GSObject):
         self._sbii = sbii
         self._stepk = sbii.stepK() / self.min_scale
         self._maxk = sbii.maxK() / self.max_scale
+        self._flux = flux
 
         prof = GSObject(sbii)
 
@@ -476,9 +477,7 @@ class InterpolatedImage(GSObject):
         # need to rescale flux by the pixel area to get proper normalization.
         elif normalization.lower() in ['surface brightness','sb']:
             prof *= local_wcs.pixelArea()
-
-        # Also save the final flux.
-        self._flux = prof.flux
+            self._flux = prof.flux
 
         # Now, in order for these to pickle correctly if they are the "original" object in a
         # Transform object, we need to hide the current transformation.  An easy way to do that
@@ -528,7 +527,7 @@ class InterpolatedImage(GSObject):
                 self._pad_factor, self._flux, self._offset, self._gsparams,
                 self._stepk, self._maxk)
 
-    def __str__(self): return 'galsim.InterpolatedImage(image=%s)'%self.image
+    def __str__(self): return 'galsim.InterpolatedImage(image=%s, flux=%s)'%(self.image, self.flux)
 
     def __getstate__(self):
         # The SBInterpolatedImage and the SBProfile both are picklable, but they are pretty

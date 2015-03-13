@@ -95,6 +95,14 @@ def test_real_galaxy_ideal():
     except ImportError:
         print 'The assert_raises tests require nose'
 
+    do_pickle(rgc, lambda x: [ x.getGal(ind_fake), x.getPSF(ind_fake),
+                               x.getNoiseProperties(ind_fake) ])
+    do_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_fake,rng=galsim.BaseDeviate(123))))
+    do_pickle(rg, lambda x: [ x.gal_image, x.psf_image, repr(x.noise),
+                              x.original_psf.flux, x.original_gal.flux, x.flux ])
+    do_pickle(rg, lambda x: x.drawImage(nx=20, ny=20, scale=0.7))
+    do_pickle(rg_1, lambda x: x.drawImage(nx=20, ny=20, scale=0.7))
+
     ## for the generation of the ideal right answer, we need to add the intrinsic shape of the
     ## galaxy and the lensing shear using the rule for addition of distortions which is ugly, but oh
     ## well:
@@ -144,6 +152,7 @@ def test_real_galaxy_ideal():
                     np.testing.assert_array_almost_equal(
                         sim_image.array, expected_image.array, decimal = 3,
                         err_msg = "Error in comparison of ideal Gaussian RealGalaxy calculations")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -179,8 +188,11 @@ def test_real_galaxy_saved():
                                    err_msg = "Error in comparison with SHERA result: sigma")
 
     # Check picklability
-    do_pickle(rgc)
-    do_pickle(rg)
+    do_pickle(rgc, lambda x: [ x.getGal(ind_real), x.getPSF(ind_real),
+                               x.getNoiseProperties(ind_real) ])
+    do_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_real,rng=galsim.BaseDeviate(123))))
+    do_pickle(rg, lambda x: galsim.Convolve([x,galsim.Gaussian(sigma=1.7)]).drawImage(
+                                nx=20, ny=20, scale=0.7))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
