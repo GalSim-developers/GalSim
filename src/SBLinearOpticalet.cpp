@@ -96,6 +96,8 @@ namespace galsim {
     {
         if ((n1 < 0) or (n2 < 0) or (m1 < -n1) or (m1 > n1) or (m2 < -n2) or (m2 > n2))
             throw SBError("Requested LinearOpticalet indices out of range");
+        if (((n1+m1) & 1) or ((n2+m2) & 1))
+            throw SBError("Invalid LinearOpticalet m, n combination");
 
         dbg<<"Start LinearOpticalet constructor:\n";
         dbg<<"r0 = "<<_r0<<std::endl;
