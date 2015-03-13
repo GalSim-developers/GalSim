@@ -107,15 +107,12 @@ class Shapelet(GSObject):
     Furthermore, there are specializations of the rotate() and expand() methods that let
     them be performed more efficiently than the usual GSObject implementation.
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = { "sigma" : float, "order" : int }
     _opt_params = {}
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
-    # --- Public Class methods ---
     def __init__(self, sigma, order, bvec=None, gsparams=None):
         # Make sure order and sigma are the right type:
         order = int(order)
@@ -132,6 +129,7 @@ class Shapelet(GSObject):
             bvec = LVector(order,numpy.array(bvec))
 
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec, gsparams))
+        self._gsparams = gsparams
 
     def getSigma(self):
         return self.SBProfile.getSigma()
@@ -173,7 +171,7 @@ class Shapelet(GSObject):
 
     def __repr__(self): 
         return 'galsim.Shapelet(sigma=%r, order=%r, bvec=%r, gsparams=%r)'%(
-                self.sigma, self.order, self.bvec, self.gsparams)
+                self.sigma, self.order, self.bvec, self._gsparams)
 
     def __str__(self): 
         return 'galsim.Shapelet(sigma=%s, order=%s, bvec=%s)'%(self.sigma, self.order, self.bvec)

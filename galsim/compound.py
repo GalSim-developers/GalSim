@@ -115,6 +115,7 @@ class Sum(galsim.GSObject):
 
         # Check kwargs first:
         gsparams = kwargs.pop("gsparams", None)
+        self._gsparams = gsparams
 
         # Make sure there is nothing left in the dict.
         if kwargs:
@@ -136,7 +137,7 @@ class Sum(galsim.GSObject):
         # Save the list as an attribute, so it can be inspected later if necessary.
         self._obj_list = args
 
-        if len(args) == 1:
+        if len(args) == 1 and gsparams is None:
             # No need to make an SBAdd in this case.
             galsim.GSObject.__init__(self, args[0])
             if hasattr(args[0],'noise'):
@@ -160,7 +161,7 @@ class Sum(galsim.GSObject):
     def obj_list(self): return self._obj_list
 
     def __repr__(self):
-        return 'galsim.Sum(%r, gsparams=%r)'%(self.obj_list, self.gsparams)
+        return 'galsim.Sum(%r, gsparams=%r)'%(self.obj_list, self._gsparams)
 
     def __str__(self):
         str_list = [ str(obj) for obj in self.obj_list ]
@@ -169,7 +170,6 @@ class Sum(galsim.GSObject):
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['SBProfile']
-        d['_gsparams'] = self.gsparams
         return d
 
     def __setstate__(self, d):
@@ -292,13 +292,14 @@ class Convolution(galsim.GSObject):
         # them have hard edges, then we use real-space convolution.
         real_space = kwargs.pop("real_space", None)
         gsparams = kwargs.pop("gsparams", None)
+        self._gsparams = gsparams
 
         # Make sure there is nothing left in the dict.
         if kwargs:
             raise TypeError(
                 "Convolution constructor got unexpected keyword argument(s): %s"%kwargs.keys())
 
-        if len(args) == 1:
+        if len(args) == 1 and gsparams is None:
             # No need to make an SBConvolve in this case.  Can early exit.
             galsim.GSObject.__init__(self, args[0])
             if hasattr(args[0],'noise'):
@@ -396,7 +397,7 @@ class Convolution(galsim.GSObject):
 
     def __repr__(self):
         return 'galsim.Convolution(%r, real_space=%r, gsparams=%r)'%(
-                self.obj_list, self.real_space, self.gsparams)
+                self.obj_list, self.real_space, self._gsparams)
 
     def __str__(self):
         str_list = [ str(obj) for obj in self.obj_list ]
@@ -409,7 +410,6 @@ class Convolution(galsim.GSObject):
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['SBProfile']
-        d['_gsparams'] = self.gsparams
         return d
 
     def __setstate__(self, d):
@@ -481,6 +481,7 @@ class Deconvolution(galsim.GSObject):
 
         # Save the original object as an attribute, so it can be inspected later if necessary.
         self._orig_obj = obj
+        self._gsparams = gsparams
 
         sbp = galsim._galsim.SBDeconvolve(obj.SBProfile, gsparams)
         galsim.GSObject.__init__(self, sbp)
@@ -492,7 +493,7 @@ class Deconvolution(galsim.GSObject):
     def orig_obj(self): return self._orig_obj
 
     def __repr__(self):
-        return 'galsim.Deconvolution(%r, gsparams=%r)'%(self.orig_obj, self.gsparams)
+        return 'galsim.Deconvolution(%r, gsparams=%r)'%(self.orig_obj, self._gsparams)
 
     def __str__(self):
         return 'galsim.Deconvolution(%s)'%self.orig_obj
@@ -500,7 +501,6 @@ class Deconvolution(galsim.GSObject):
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['SBProfile']
-        d['_gsparams'] = self.gsparams
         return d
 
     def __setstate__(self, d):
@@ -599,6 +599,7 @@ class AutoConvolution(galsim.GSObject):
         # can be inspected later if necessary.
         self._real_space = real_space
         self._orig_obj = obj
+        self._gsparams = gsparams
 
         sbp = galsim._galsim.SBAutoConvolve(obj.SBProfile, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
@@ -613,7 +614,7 @@ class AutoConvolution(galsim.GSObject):
 
     def __repr__(self):
         return 'galsim.AutoConvolution(%r, real_space=%r, gsparams=%r)'%(
-                self.orig_obj, self.real_space, self.gsparams)
+                self.orig_obj, self.real_space, self._gsparams)
 
     def __str__(self):
         if self.real_space:
@@ -625,7 +626,6 @@ class AutoConvolution(galsim.GSObject):
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['SBProfile']
-        d['_gsparams'] = self.gsparams
         return d
 
     def __setstate__(self, d):
@@ -729,6 +729,7 @@ class AutoCorrelation(galsim.GSObject):
         # can be inspected later if necessary.
         self._real_space = real_space
         self._orig_obj = obj
+        self._gsparams = gsparams
 
         sbp = galsim._galsim.SBAutoCorrelate(obj.SBProfile, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
@@ -744,7 +745,7 @@ class AutoCorrelation(galsim.GSObject):
 
     def __repr__(self):
         return 'galsim.AutoCorrelation(%r, real_space=%r, gsparams=%r)'%(
-                self.orig_obj, self.real_space, self.gsparams)
+                self.orig_obj, self.real_space, self._gsparams)
 
     def __str__(self):
         if self.real_space:
@@ -756,7 +757,6 @@ class AutoCorrelation(galsim.GSObject):
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['SBProfile']
-        d['_gsparams'] = self.gsparams
         return d
 
     def __setstate__(self, d):
@@ -817,6 +817,7 @@ class Transform(galsim.GSObject):
         sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
                                   gsparams)
         galsim.GSObject.__init__(self, sbt)
+        self._gsparams = gsparams
 
     def getJac(self):
         """Return the Jacobian of the transformation
@@ -844,7 +845,7 @@ class Transform(galsim.GSObject):
 
     def __repr__(self):
         return 'galsim.Transform(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(
-            self.original, self.jac.tolist(), self.offset, self.flux_ratio, self.gsparams)
+            self.original, self.jac.tolist(), self.offset, self.flux_ratio, self._gsparams)
 
     def __str__(self):
         s = str(self.original)
@@ -870,7 +871,6 @@ class Transform(galsim.GSObject):
         d['_jac'] = self.jac
         d['_offset'] = self.offset
         d['_flux_ratio'] = self.flux_ratio
-        d['_gsparams'] = self.gsparams
         return d
 
     def __setstate__(self, d):

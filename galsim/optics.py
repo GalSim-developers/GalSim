@@ -321,6 +321,7 @@ class OpticalPSF(GSObject):
         self._pupil_plane_im = pupil_plane_im
         self._pupil_angle = pupil_angle
         self._interpolant = interpolant
+        self._gsparams = gsparams
 
         # Make the psf image using this scale and array shape
         optimage = galsim.optics.psf_image(
@@ -373,7 +374,7 @@ class OpticalPSF(GSObject):
             s += ', max_size=%r'%self._max_size
         if self._interpolant is not None:
             s += ', interpolant=%r'%self._interpolant
-        s += ', flux=%r, gsparams=%r)'%(self._flux, self.gsparams)
+        s += ', flux=%r, gsparams=%r)'%(self._flux, self._gsparams)
         return s
 
     def __str__(self):
@@ -397,7 +398,6 @@ class OpticalPSF(GSObject):
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
         d = self.__dict__.copy()
         del d['SBProfile']
-        d['_gsparams'] = self.gsparams
         return d
 
     def __setstate__(self, d):
