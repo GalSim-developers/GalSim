@@ -592,7 +592,9 @@ class CelestialCoord(object):
         the ecliptic.  The formulae for this are quite straightforward.  It requires just a single
         parameter for the transformation, the obliquity of the ecliptic (the Earth's axial tilt).
 
-        @param  epoch        The epoch to be used for estimating the obliquity of the ecliptic.
+        @param  epoch        The epoch to be used for estimating the obliquity of the ecliptic, if
+                             `date` is None.  But if `date` is given, then use that to determine the
+                             epoch.
                              [default: 2000.]
         @param  date         If a date is given as a python datetime object, then return the
                              position in ecliptic coordinates with respect to the sun position at
@@ -606,18 +608,10 @@ class CelestialCoord(object):
         # We are going to work in terms of the (x, y, z) projections.
         self._set_aux()
 
-        # We need to figure out the time in Julian centuries from J2000 for this epoch.
-        t = (epoch - 2000.)/100.
-        # Then we use the last (most recent) formula listed under
-        # http://en.wikipedia.org/wiki/Ecliptic#Obliquity_of_the_ecliptic, from
-        # JPL's 2010 calculations.
-        ep = galsim.DMS_Angle('23:26:21.406')
-        ep -= galsim.DMS_Angle('00:00:46.836769')*t
-        ep -= galsim.DMS_Angle('00:00:0.0001831')*(t**2)
-        ep += galsim.DMS_Angle('00:00:0.0020034')*(t**3)
-        # There are even higher order terms, but they are really not important for any reasonable
-        # calculation we could ever do with GalSim.
-
+        # Get the obliquity of the ecliptic.
+        if date is not None:
+            epoch = date.year
+        ep = _ecliptic_obliquity(epoch)
         cos_ep = math.cos(ep.rad())
         sin_ep = math.sin(ep.rad())
 
@@ -633,7 +627,7 @@ class CelestialCoord(object):
             # Find the sun position in ecliptic coordinates on this date.  We have to convert to
             # Julian day in order to use our helper routine to find the Sun position in ecliptic
             # coordinates.
-            lam_sun, _ = _sun_position_ecliptic(_date_to_julian_day(date))
+            lam_sun, _ = _sun_position_ecliptic(date)
             # Subtract it off, to get ecliptic coordinates relative to the sun.
             lam -= lam_sun
 
@@ -645,11 +639,12 @@ class CelestialCoord(object):
 
 def _sun_position_ecliptic(date):
     # This is a helper routine to calculate the position of the sun in ecliptic coordinates given a
-    # Julian date.  It is most precise for dates between 1950-2050, and is based on
+    # python datetime object.  It is most precise for dates between 1950-2050, and is based on
     # http://en.wikipedia.org/wiki/Position_of_the_Sun#Ecliptic_coordinates
     # We start by getting the number of days since Greenwich noon on 1 January 2000 (J2000).
     import math
-    n = date - 2451545.0
+    jd = _date_to_julian_day(date)
+    n = jd - 2451545.0
     L = (280.46*galsim.degrees + (0.9856474*galsim.degrees)*n).wrap()
     g = (357.528*galsim.degrees + (0.9856003*galsim.degrees)*n).wrap()
     lam = L + (1.915*galsim.degrees)*math.sin(g.rad()) + \
@@ -657,11 +652,9 @@ def _sun_position_ecliptic(date):
     return (lam.wrap(), 0.*galsim.degrees)
 
 def _date_to_julian_day(date):
-    """
-    From http://code-highlights.blogspot.com/2013/01/julian-date-in-python.html, this code returns
-    the Julian day for a given date.  If 'date' is a datetime.datetime instance, then it uses the
-    full time info.  If it's a datetime.date, then it does the calculation for noon of that day.
-    """
+    # From http://code-highlights.blogspot.com/2013/01/julian-date-in-python.html, this code returns
+    # the Julian day for a given date.  If 'date' is a datetime.datetime instance, then it uses the
+    # full time info.  If it's a datetime.date, then it does the calculation for noon of that day.
     import datetime
     if not (isinstance(date, datetime.date) or isinstance(date, datetime.datetime)):
         raise ValueError("Date must be a python datetime object!")
@@ -675,3 +668,45 @@ def _date_to_julian_day(date):
         dayfrac -= 0.5
         retval += dayfrac
     return retval
+
+def _ecliptic_to_equatorial(ecliptic_pos, epoch):
+    # Helper routine to go backwards from ecliptic coordinates to equatorial using a given epoch for
+    # the obliquity of the ecliptic.
+    # Should input a tuple of (lam, beta) values and an epoch, and get back a CelestialCoord.
+    lam, beta = ecliptic_pos
+    import math
+    # Get the (x, y, z)_ecliptic from (lam, beta).
+    cosbeta = math.cos(beta.rad())
+    sinbeta = math.sin(beta.rad())
+    coslam = math.cos(lam.rad())
+    sinlam = math.sin(lam.rad())
+    x_ecl = cosbeta*coslam
+    y_ecl = cosbeta*sinlam
+    z_ecl = sinbeta
+    # Transform to (x, y, z)_equatorial.
+    ep = _ecliptic_obliquity(epoch)
+    cos_ep = math.cos(ep.rad())
+    sin_ep = math.sin(ep.rad())
+    x_eq = x_ecl
+    y_eq = cos_ep*y_ecl - sin_ep*z_ecl
+    z_eq = sin_ep*y_ecl + cos_ep*z_ecl
+    # Transform to RA, dec.
+    dec = math.asin(z_eq)*galsim.radians
+    ra = math.atan2(y_eq, x_eq)*galsim.radians
+    # Return as a CelestialCoord
+    return galsim.CelestialCoord(ra, dec)
+
+def _ecliptic_obliquity(epoch):
+    # Routine to return the obliquity of the ecliptic for a given date.
+    # We need to figure out the time in Julian centuries from J2000 for this epoch.
+    t = (epoch - 2000.)/100.
+    # Then we use the last (most recent) formula listed under
+    # http://en.wikipedia.org/wiki/Ecliptic#Obliquity_of_the_ecliptic, from
+    # JPL's 2010 calculations.
+    ep = galsim.DMS_Angle('23:26:21.406')
+    ep -= galsim.DMS_Angle('00:00:46.836769')*t
+    ep -= galsim.DMS_Angle('00:00:0.0001831')*(t**2)
+    ep += galsim.DMS_Angle('00:00:0.0020034')*(t**3)
+    # There are even higher order terms, but they are really not important for any reasonable
+    # calculation we could ever do with GalSim.
+    return ep

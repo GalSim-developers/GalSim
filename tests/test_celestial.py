@@ -509,11 +509,31 @@ def test_ecliptic():
     el_rel, b_rel = vernal_equinox.ecliptic(epoch=2014, date=autumnal_eq_date)
     numpy.testing.assert_almost_equal(el_rel.rad(), -pi, decimal=3)
     numpy.testing.assert_almost_equal(b_rel.rad(), 0., decimal=6)
-    # Finally check that if it's the date of the vernal equinox (sun at (0, 0)) but we're looking at
+    # And check that if it's the date of the vernal equinox (sun at (0, 0)) but we're looking at
     # the position of the autumnal equinox (180, 0), then (el_rel, b_rel) = (180, 0)
     el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
     numpy.testing.assert_almost_equal(el_rel.rad(), pi, decimal=3)
     numpy.testing.assert_almost_equal(b_rel.rad(), 0., decimal=6)
+
+    # Check round-trips: go from CelestialCoord to ecliptic back to equatorial, and make sure
+    # results are the same.  This includes use of a function that isn't available to users, but we
+    # use it for a few things so we should still make sure it's working properly.
+    from galsim.celestial import _ecliptic_to_equatorial
+    north_pole_2 = _ecliptic_to_equatorial(north_pole.ecliptic(epoch=2014), 2014)
+    numpy.testing.assert_almost_equal(north_pole.ra.rad(), north_pole_2.ra.rad(), decimal=6)
+    numpy.testing.assert_almost_equal(north_pole.dec.rad(), north_pole_2.dec.rad(), decimal=6)
+    south_pole_2 = _ecliptic_to_equatorial(south_pole.ecliptic(epoch=2014), 2014)
+    numpy.testing.assert_almost_equal(south_pole.ra.rad(), south_pole_2.ra.rad(), decimal=6)
+    numpy.testing.assert_almost_equal(south_pole.dec.rad(), south_pole_2.dec.rad(), decimal=6)
+    vernal_equinox_2 = _ecliptic_to_equatorial(vernal_equinox.ecliptic(epoch=2014), 2014)
+    numpy.testing.assert_almost_equal(vernal_equinox.ra.rad(), vernal_equinox_2.ra.rad(), decimal=6)
+    numpy.testing.assert_almost_equal(vernal_equinox.dec.rad(), vernal_equinox_2.dec.rad(),
+                                      decimal=6)
+    autumnal_equinox_2 = _ecliptic_to_equatorial(autumnal_equinox.ecliptic(epoch=2014), 2014)
+    numpy.testing.assert_almost_equal(autumnal_equinox.ra.rad(), autumnal_equinox_2.ra.rad(),
+                                      decimal=6)
+    numpy.testing.assert_almost_equal(autumnal_equinox.dec.rad(), autumnal_equinox_2.dec.rad(),
+                                      decimal=6)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
