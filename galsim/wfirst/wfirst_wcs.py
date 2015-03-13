@@ -502,3 +502,35 @@ def makeFitsHeader(wcs):
     wcs._writeHeader(header, galsim.BoundsI())
 
     return header
+
+def allowedPos(world_pos, date):
+    """
+    This routine can be used to check whether WFIRST would be allowed to look at a particular
+    position (`world_pos`) on a given `date`.   This is determined by the angle of this position
+    relative to the Sun.
+
+    In general, WFIRST can point at angles relative to the Sun in the range 90+/-36 degrees.
+    Obviously, pointing too close to the Sun would result in overly high sky backgrounds.  It is
+    less obvious why WFIRST cannot look at a spot directly opposite from the Sun (180 degrees on the
+    sky).  The reason is that the observatory is aligned such that if the observer is looking at
+    some sky position, the solar panels are oriented at 90 degrees from that position.  So it's
+    always optimal for the observatory to be pointing at an angle of 90 degrees relative to the
+    Sun.  It is also permitted to look within 36 degrees of that optimal position. 
+
+    @param world_pos      A galsim.CelestialCoord indicating the position at which the observer
+                          wishes to look.
+    @param date           A python datetime object indicating the desired date of observation.
+    @returns True or False, indicating whether it is permitted to look at this position on this
+             date.
+    """
+    # Find the Sun's location on the sky on this date.
+    from galsim.celestial import _ecliptic_to_equatorial, _sun_position_ecliptic
+    sun = _ecliptic_to_equatorial(_sun_position_ecliptic(date), date.year)
+
+    # Find the angle between that and the supplied position
+    angle_deg = abs(world_pos.distanceTo(sun)/galsim.degrees)
+
+    # Check if it's within tolerance.
+    min_ang = 90. - 36.
+    max_ang = 90. + 36.
+    return angle_deg >= min_ang and angle_deg <= max_ang

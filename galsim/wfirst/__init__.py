@@ -152,6 +152,8 @@ This module also contains the following routines:
                 SCAs (to identify positions that are in the focal plane array but in the gap between
                 SCAs).
 
+    allowedPos() - Is WFIRST allowed to look at a given position on a given date?
+
 All of the above routines have docstrings that can be accessed using
 help(galsim.wfirst.getBandpasses), and so on.
 """
@@ -193,7 +195,7 @@ charge_diffusion = 0.1
 from wfirst_bandpass import getBandpasses
 from wfirst_backgrounds import getSkyLevel
 from wfirst_psfs import getPSF, storePSFImages, loadPSFImages
-from wfirst_wcs import getWCS, findSCA, makeFitsHeader
+from wfirst_wcs import getWCS, findSCA, makeFitsHeader, allowedPos
 from wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC
 
 def NLfunc(x):
