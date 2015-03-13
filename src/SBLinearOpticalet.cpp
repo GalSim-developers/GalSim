@@ -140,9 +140,6 @@ namespace galsim {
         // if (izero != 0 || jzero != 0) {
         //     xdbg<<"Use Quadrant\n";
         //     fillXValueQuadrant(val,x0,dx,izero,y0,dy,jzero);
-        //     // Spergels can be super peaky at the center, so handle explicitly like Sersics
-        //     if (izero != 0 && jzero != 0)
-        //         val(izero, jzero) = _xnorm * _info->xValue(0.);
         // } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -197,6 +194,77 @@ namespace galsim {
                 double r = sqrt(x*x + y*y);
                 double phi = atan2(y,x);
                 *valit++ = _xnorm * _info->xValue(r, phi);
+            }
+        }
+    }
+
+    void SBLinearOpticalet::SBLinearOpticaletImpl::fillKValue(
+                                                  tmv::MatrixView<std::complex<double> > val,
+                                                  double kx0, double dkx, int izero,
+                                                  double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBLinearOpticalet fillKValue\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dky<<", jzero = "<<jzero<<std::endl;
+        // Not sure about quadrant.  LinearOpticalets have different symmetries than most other profiles.
+        // if (izero != 0 || jzero != 0) {
+        //     xdbg<<"Use Quadrant\n";
+        //     fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
+        // } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+            kx0 *= _r0;
+            dkx *= _r0;
+            ky0 *= _r0;
+            dky *= _r0;
+
+            for (int j=0;j<n;++j,ky0+=dky) {
+                double kx = kx0;
+                double kysq = ky0*ky0;
+                //It valit(val.col(j).begin().getP(),1);
+                It valit = val.col(j).begin();
+                for (int i=0;i<m;++i,kx+=dkx) {
+                    double ksq = kx*kx + kysq;
+                    double phi = atan2(ky0, kx);
+                    *valit++ = _info->kValue(ksq, phi);
+                }
+            }
+        // }
+    }
+
+    void SBLinearOpticalet::SBLinearOpticaletImpl::fillKValue(
+                                                  tmv::MatrixView<std::complex<double> > val,
+                                                  double kx0, double dkx, double dkxy,
+                                                  double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBLinearOpticalet fillKValue\n";
+        dbg<<"x = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"y = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+        kx0 *= _r0;
+        dkx *= _r0;
+        dkxy *= _r0;
+        ky0 *= _r0;
+        dky *= _r0;
+        dkyx *= _r0;
+
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) {
+                double ksq = kx*kx + ky*ky;
+                double phi = atan2(ky,kx);
+                *valit++ = _info->kValue(ksq, phi);
             }
         }
     }

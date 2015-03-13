@@ -128,12 +128,12 @@ namespace galsim {
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
-        // void fillKValue(tmv::MatrixView<std::complex<double> > val,
-        //                 double kx0, double dkx, int izero,
-        //                 double ky0, double dky, int jzero) const;
-        // void fillKValue(tmv::MatrixView<std::complex<double> > val,
-        //                 double kx0, double dkx, double dkxy,
-        //                 double ky0, double dky, double dkyx) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
 
     private:
         double _r0;             ///< Scale radius specified at the constructor.
