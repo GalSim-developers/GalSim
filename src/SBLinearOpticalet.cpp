@@ -105,7 +105,7 @@ namespace galsim {
         _r0_sq = _r0 * _r0;
         _inv_r0 = 1. / _r0;
         _inv_r0_sq = _inv_r0 * _inv_r0;
-        _xnorm = _info->getXNorm() / _r0_sq;
+        _xnorm = M_PI / _r0_sq;
     }
 
     double SBLinearOpticalet::SBLinearOpticaletImpl::maxK() const
@@ -209,15 +209,6 @@ namespace galsim {
     {
         dbg<<"Start LinearOpticaletInfo constructor for (n1,m1,n2,m2) = ("
            <<_n1<<","<<_m1<<","<<_n2<<","<<_m2<<")"<<std::endl;
-    }
-
-    double LinearOpticaletInfo::getXNorm() const
-    {
-        if (_xnorm == 0.0) {
-            dbg<<"(n1,m1,n2,m2) = ("<<_n1<<","<<_m1<<","<<_n2<<","<<_m2<<")"<<std::endl;
-            _xnorm = M_PI;
-        }
-        return _xnorm;
     }
 
     // Use code from SBAiry, but ignore obscuration.

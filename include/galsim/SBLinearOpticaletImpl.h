@@ -52,7 +52,6 @@ namespace galsim {
          */
         std::complex<double> kValue(double ksq, double phi) const;
 
-        double getXNorm() const;
         double maxK() const;
         double stepK() const;
     private:
