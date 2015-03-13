@@ -24,18 +24,6 @@ def LVectorSize(order):
     depr('LVectorSize', 1.1, 'ShapeletSize')
     return galsim.ShapeletSize(order)
 
-def Shapelet_getSigma(self):
-    depr('getSigma',1.1,'shapelet.sigma')
-    return self.sigma
-
-def Shapelet_getOrder(self):
-    depr('getOrder',1.1,'shapelet.order')
-    return self.order
-
-def Shapelet_getBVec(self):
-    depr('getBVec',1.1,'shapelet.bvec')
-    return self.bvec
-
 def Shapelet_setSigma(self,sigma):
     """Deprecated method to change the value of sigma"""
     depr('setSigma',1.1,'shapelet = galsim.Shapelet(sigma, order, ...)')
@@ -87,9 +75,6 @@ def Shapelet_fitImage(self, image, center=None, normalization='flux'):
     galsim.GSObject.__init__(self, galsim._galsim.SBShapelet(self.sigma, bvec))
 
 galsim.LVectorSize = LVectorSize
-galsim.Shapelet.getSigma = Shapelet_getSigma
-galsim.Shapelet.getOrder = Shapelet_getOrder
-galsim.Shapelet.getBVec = Shapelet_getBVec
 galsim.Shapelet.setSigma = Shapelet_setSigma
 galsim.Shapelet.setOrder = Shapelet_setOrder
 galsim.Shapelet.setBVec = Shapelet_setBVec

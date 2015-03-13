@@ -250,7 +250,6 @@ class DES_PSFEx(object):
 
         @returns the PSF as a GSObject
         """
-        depr('pixel_scale',1.1,'wcs in the constructor for DES_PSFEx')
         # Build an image version of the numpy array
         im = galsim.Image(self.getPSFArray(image_pos))
 
@@ -262,6 +261,7 @@ class DES_PSFEx(object):
         if self.wcs:
             psf = self.wcs.toWorld(psf, image_pos=image_pos)
         elif pixel_scale:
+            depr('pixel_scale',1.1,'wcs=PixelScale(pixel_scale) in the constructor for DES_PSFEx')
             psf = galsim.PixelScale(pixel_scale).toWorld(psf)
 
         return psf

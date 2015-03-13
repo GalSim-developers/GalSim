@@ -133,12 +133,21 @@ class Shapelet(GSObject):
 
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec, gsparams))
 
+    def getSigma(self):
+        return self.SBProfile.getSigma()
+
+    def getOrder(self):
+        return self.SBProfile.getBVec().order
+
+    def getBVec(self):
+        return self.SBProfile.getBVec().array
+
     @property
-    def sigma(self): return self.SBProfile.getSigma()
+    def sigma(self): return self.getSigma()
     @property
-    def order(self): return self.SBProfile.getBVec().order
+    def order(self): return self.getOrder()
     @property
-    def bvec(self): return self.SBProfile.getBVec().array
+    def bvec(self): return self.getBVec()
 
     def getPQ(self,p,q):
         return self.SBProfile.getBVec().getPQ(p,q)
