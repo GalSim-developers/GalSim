@@ -53,6 +53,7 @@ New features introduced in this demo:
   - galsim.wfirst.getBandpasses()
   - galsim.wfirst.getPSF()
   - galsim.wfirst.getWCS()
+  - galsim.wfirst.allowedPos()
   - galsim.wfirst.makeFitsHeader()
   - galsim.wfirst.getSkyLevel()
 """
@@ -134,17 +135,19 @@ def main(argv):
 
     # Define the size of the postage stamp that we use for each individual galaxy within the larger
     # image, and for the PSF images.
-    stamp_size = 128
+    stamp_size = 256
 
     # We choose a particular (RA, dec) location on the sky for our observation.
-    ra_targ = 30.*galsim.degrees
+    ra_targ = 90.*galsim.degrees
     dec_targ = -10.*galsim.degrees
     targ_pos = galsim.CelestialCoord(ra=ra_targ, dec=dec_targ)
-    ang = 0.*galsim.degrees
-    # Get the WCS for an observation at this position, with the focal plane array oriented at an
-    # angle of `ang` with respect to North.  The output of this routine is a list of WCS objects,
-    # one for each SCA.  We then take the WCS for the SCA that we are using.
-    wcs_list = wfirst.getWCS(ang, world_pos=targ_pos, PA_is_FPA=True, SCAs=use_SCA)
+    # Get the WCS for an observation at this position.  We are not supplying a date, so the routine
+    # will assume it's the vernal equinox.  We are also not supplying a position angle for the
+    # observatory, which means that it will just find the optimal one (the one that has the solar
+    # panels pointed most directly towards the Sun given this targ_pos and date).  The output of
+    # this routine is a dict of WCS objects, one for each SCA.  We then take the WCS for the SCA
+    # that we are using.
+    wcs_list = wfirst.getWCS(world_pos=targ_pos, SCAs=use_SCA)
     wcs = wcs_list[use_SCA]
     # We need to find the center position for this SCA.  We'll tell it to give us a CelestialCoord
     # corresponding to (X, Y) = (wfirst.n_pix/2, wfirst.n_pix/2).
@@ -253,10 +256,8 @@ def main(argv):
         # exposure time since we did not explicitly specify one.  Then we multiply this by a factor
         # >1 to account for the amount of stray light that is expected.
         # If we do not provide a date for the observation, then it will assume that it's the vernal
-        # equinox (sun at (0,0) in ecliptic coordinates).  We'll give it a date around that time,
-        # early March 2025.:
-        sky_level = wfirst.getSkyLevel(filters[filter_name], world_pos=SCA_cent_pos,
-                                       date=datetime.date(2025,3,0))
+        # equinox (sun at (0,0) in ecliptic coordinates) in 2025.
+        sky_level = wfirst.getSkyLevel(filters[filter_name], world_pos=SCA_cent_pos)
         sky_level *= (1.0 + wfirst.stray_light_fraction)
         # Make a image of the sky that takes into account the spatially variable pixel scale.
         # Note that makeSkyImage() takes a bit of time.  If you do not care about the variable pixel
