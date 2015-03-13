@@ -54,7 +54,6 @@ New features introduced in this demo:
   - galsim.wfirst.getPSF()
   - galsim.wfirst.getWCS()
   - galsim.wfirst.allowedPos()
-  - galsim.wfirst.makeFitsHeader()
   - galsim.wfirst.getSkyLevel()
 """
 
@@ -208,11 +207,6 @@ def main(argv):
         # Set up the full image that will contain all the individual galaxy images, with information
         # about WCS:
         final_image = galsim.ImageF(wfirst.n_pix,wfirst.n_pix, wcs=wcs)
-        # We're going to immediately store some optional WFIRST-related WCS information as a
-        # 'header' attribute of this image, so it will get written to file.  Note that if we don't
-        # do this, the output images will still have a readable WCS that can be interpreted
-        # properly, it just won't have some extra WFIRST-related keywords.
-        final_image.header = wfirst.makeFitsHeader(wcs)
 
         # Draw the galaxies into the image.
         for i_gal in xrange(n_use):
