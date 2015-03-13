@@ -236,8 +236,8 @@ namespace galsim {
     double LinearOpticaletInfo::Vnm(int n, int m, double r) const
     {
         if ((abs(m)+n) & 2)
-            return -boost::math::cyl_bessel_j(n, r)/r;
-        return boost::math::cyl_bessel_j(n, r)/r;
+            return -boost::math::cyl_bessel_j(n+1, r)/r;
+        return boost::math::cyl_bessel_j(n+1, r)/r;
     }
 
     // The workhorse routines...
