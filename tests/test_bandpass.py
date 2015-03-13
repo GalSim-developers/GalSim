@@ -219,8 +219,41 @@ def test_Bandpass_div():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_Bandpass_wave_type():
+    """Check that `wave_type='ang'` works in Bandpass.__init__
+    """
+    import time
+    t1 = time.time()
+
+    a0 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
+    a1 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), wave_type='ang')
+
+    np.testing.assert_approx_equal(a0.red_limit, a1.red_limit*10,
+                                   err_msg="Bandpass.red_limit doesn't respect wave_type")
+    np.testing.assert_approx_equal(a0.blue_limit, a1.blue_limit*10,
+                                   err_msg="Bandpass.blue_limit doesn't respect wave_type")
+    np.testing.assert_approx_equal(a0.effective_wavelength, a1.effective_wavelength*10,
+                                   err_msg="Bandpass.effective_wavelength doesn't respect"
+                                           +" wave_type")
+
+    b0 = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
+    b1 = galsim.Bandpass(galsim.LookupTable([10,20,30,40,50], [1,2,3,4,5]), wave_type='ang')
+    np.testing.assert_approx_equal(b0.red_limit, b1.red_limit,
+                                   err_msg="Bandpass.red_limit doesn't respect wave_type")
+    np.testing.assert_approx_equal(b0.blue_limit, b1.blue_limit,
+                                   err_msg="Bandpass.blue_limit doesn't respect wave_type")
+    np.testing.assert_approx_equal(b0.effective_wavelength, b1.effective_wavelength,
+                                   err_msg="Bandpass.effective_wavelength doesn't respect"
+                                           +" wave_type")
+    np.testing.assert_array_almost_equal(b0([1,2,3,4,5]), b1([1,2,3,4,5]), decimal=7,
+                               err_msg="Bandpass.__call__ doesn't respect wave_type")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 if __name__ == "__main__":
     test_Bandpass_basic()
     test_Bandpass_mul()
     test_Bandpass_div()
+    test_Bandpass_wave_type()
