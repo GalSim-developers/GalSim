@@ -68,50 +68,36 @@ theta_fpa = 32.5*galsim.degrees
 # File with SIP coefficients.
 sip_filename = os.path.join(galsim.meta_data.share_dir, 'sip_422.txt')
 
-def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
+def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     """
     This routine returns a dict containing a WCS for each of the WFIRST SCAs (Sensor Chip Array, the
     equivalent of a chip in an optical CCD).  The WFIRST SCAs are labeled 1-18, so these numbers are
     used as the keys in the dict.  Alternatively the user can request a subset of the SCAs using the
     `SCAs` option.
 
-    The user must specify a position for the center of the focal plane array (as a CelestialCoord
-    `world_pos`) and the orientation.
+    The user must specify a position for observation, at which the center of the focal plane array
+    will point.  This must be supplied as a CelestialCoord `world_pos`.  In general, only certain
+    positions are observable on certain dates, and for a given position there is an optimal position
+    angle for the observatory (with the solar panels pointed as directly towards the sun as
+    possible).  Users who are knowledgable about these details may choose to supply a position angle
+    as `PA`, either for the observatory or for the focal plane (using `PA_is_FPA` to indicate this).
+    But otherwise, the routine will simply choose the optimal position angle for a given date.
 
-    For this routine, we define several coordinate systems for WFIRST.  The diagram
-    located on the GalSim wiki,
+    To fully understand all possible inputs and outputs to this routine, users may wish to consult
+    the diagram on the GalSim wiki,
     https://github.com/GalSim-developers/GalSim/wiki/GalSim-WFIRST-module-diagrams
-    will be useful in understanding the description of these coordinate systems below.
 
-    Observatory coordinate system: +X_obs points along the boresight into the sky, +Z_obs points
-    towards the Sun in the absence of a roll offset, +Y_obs makes a right-handed system.
-
-    Payload coordinate system: +X_pl points along -Y_obs, +Y_pl points along +Z_obs, +Z_pl points
-    along -X_obs (back towards observer).
-
-    Wide field imager (WFI) focal plane assembly (FPA) coordinate system: This is defined by a
-    left-handed system f1, f2, that is rotated by an angle `theta_fpa` with respect to the payload
-    axes.  +f1 points along the long axis of the focal plane, transverse to the radius from the
-    telescope optic axis.  +f2 points radially out from the telescope optic axis, along the narrow
-    dimension of the focal plane.  If +f2 points North, then +f1 points East.  `theta_fpa` is a
-    positive CCW rotation of the f2 axis relative to -Y_pl, and of f1 relative to +X_pl.  In terms
-    of focal plane geometry, if +Y_fp is pointing North, then SCAs 3 and 12 will be at highest
-    declination, 8 and 17 at the lowest.  +Y_fp is aligned with the short axis of the focal plane
-    array.
-
-    There is also a detector coordinate system (P1, P2).  +P1 and +P2 point along the fast- and
-    slow-scan directions of the pixel readout, respectively.
-
-    So, for reference, if the boresight is pointed at RA=90, DEC=0 on March 21st (Sun at vernal
-    equinox), then +X_obs points at (RA,DEC)=(90,0), +Y_obs points North, and +Z_obs points at the
-    Sun.  The payload coordinates are +X_pl points South, -Y_pl points East.  Finally, the FPA
-    coordinate system is defined by +f2 being at a position angle 90+theta_fpa east of North.  If
-    the observatory +Y axis is at a position angle `pa_obsy` East of North, then the focal plane
-    (+f2) is at a position angle pa_fpa = pa_obsy + 90 + theta_fpa.
-
-    @param PA        Position angle of the observatory Y axis, unless `PA_is_FPA=True`, in which
-                     case it's the position angle of the FPA.  Must be provided as a galsim.Angle.
-    @param world_pos A galsim.CelestialCoord indicating the center of the FPA.
+    @param world_pos A galsim.CelestialCoord indicating the position to observe at the center of the
+                     focal plane array (FPA).  Note that if the given position is not observable on
+                     the given date, then the routine will raise an exception.
+    @param PA        galsim.Angle representing the position angle of the observatory +Y axis, unless
+                     `PA_is_FPA=True`, in which case it's the position angle of the FPA.  For users
+                     to do not care about this, then leaving this as None will result in the routine
+                     using the supplied `date` and `world_pos` to select the optimal orientation for
+                     the observatory.  Note that if a user supplies a `PA` value, the routine does
+                     not check whether this orientation is actually allowed.  [default: None]
+    @param date      The date of the observation, as a python datetime object.  If None, then the
+                     vernal equinox in 2025 will be used.  [default: None]
     @param PA_is_FPA If True, then the position angle that was provided was the PA of the focal
                      plane array, not the observatory. [default: False]
     @param SCAs      A single number or iterable giving the SCAs for which the WCS should be
@@ -119,16 +105,59 @@ def getWCS(PA, world_pos, SCAs=None, PA_is_FPA=False):
                      [default: None]
     @returns a dict of WCS objects for each SCA.
     """
-    # Check which SCAs are to be done using a helper routine in this module.
-    SCAs = galsim.wfirst._parse_SCAs(SCAs)
-
-    # Enforce type for PA
-    if not isinstance(PA, galsim.Angle):
-        raise TypeError("Position angle must be a galsim.Angle!")
+    # Further gory details on coordinate systems, for developers: Observatory coordinate system is
+    # defined such that +X_obs points along the boresight into the sky, +Z_obs points towards the
+    # Sun in the absence of a roll offset (i.e., roll offset = 0 defines the optimal position angle
+    # for the observatory), +Y_obs makes a right-handed system.
+    #
+    # Payload coordinate system: +X_pl points along -Y_obs, +Y_pl points along +Z_obs, +Z_pl points
+    # along -X_obs (back towards observer).
+    # 
+    # Wide field imager (WFI) focal plane assembly (FPA) coordinate system: This is defined by a
+    # left-handed system f1, f2, that is rotated by an angle `theta_fpa` with respect to the payload
+    # axes.  +f1 points along the long axis of the focal plane, transverse to the radius from the
+    # telescope optic axis.  +f2 points radially out from the telescope optic axis, along the narrow
+    # dimension of the focal plane.  If +f2 points North, then +f1 points East.  `theta_fpa` is a
+    # positive CCW rotation of the f2 axis relative to -Y_pl, and of f1 relative to +X_pl.  In terms
+    # of focal plane geometry, if +Y_fp is pointing North, then SCAs 3 and 12 will be at highest
+    # declination, 8 and 17 at the lowest.  +Y_fp is aligned with the short axis of the focal plane
+    # array.
+    #
+    # There is also a detector coordinate system (P1, P2).  +P1 and +P2 point along the fast- and
+    # slow-scan directions of the pixel readout, respectively.
+    #
+    # So, for reference, if the boresight is pointed at RA=90, DEC=0 on March 21st (Sun at vernal
+    # equinox), then +X_obs points at (RA,DEC)=(90,0), +Y_obs points North, and +Z_obs points at the
+    # Sun.  The payload coordinates are +X_pl points South, -Y_pl points East.  Finally, the FPA
+    # coordinate system is defined by +f2 being at a position angle 90+theta_fpa east of North.  If
+    # the observatory +Y axis is at a position angle `pa_obsy` East of North, then the focal plane
+    # (+f2) is at a position angle pa_fpa = pa_obsy + 90 + theta_fpa.
 
     # Parse input position
     if not isinstance(world_pos, galsim.CelestialCoord):
         raise TypeError("Position on the sky must be given as a galsim.CelestialCoord!")
+
+    # Get the date. (Vernal equinox in 2025, taken from
+    # http://www.astropixels.com/ephemeris/soleq2001.html, if none was supplied.)
+    if date is None:
+        import datetime
+        date = datetime.datetime(2025,3,20,9,2,0)
+
+    # Are we allowed to look here?
+    if not allowedPos(world_pos, date):
+        raise RuntimeError("Error, WFIRST cannot look at this position on this date!")
+
+    # If position angle was not given, then get the optimal one:
+    if PA is None:
+        PA_is_FPA = False
+        PA = bestPA(world_pos, date)
+    else:
+        # Just enforce type
+        if not isinstance(PA, galsim.Angle):
+            raise TypeError("Position angle must be a galsim.Angle!")
+
+    # Check which SCAs are to be done using a helper routine in this module.
+    SCAs = galsim.wfirst._parse_SCAs(SCAs)
 
     # Compute position angle of FPA f2 axis, where positive corresponds to the angle east of North.
     if PA_is_FPA:
@@ -534,3 +563,40 @@ def allowedPos(world_pos, date):
     min_ang = 90. - 36.
     max_ang = 90. + 36.
     return angle_deg >= min_ang and angle_deg <= max_ang
+
+def bestPA(world_pos, date):
+    """
+    This routine determines the best position angle for the observatory for a given observation date
+    and position on the sky.
+
+    The best/optimal position angle is determined by the fact that the solar panels are at 90
+    degrees to the position being observed, and it is best to have those facing the Sun as directly
+    as possible.  Note that if a given `world_pos` is not actually observable on the given `date`,
+    then this routine will return None.
+
+    @param world_pos      A galsim.CelestialCoord indicating the position at which the observer
+                          wishes to look.
+    @param date           A python datetime object indicating the desired date of observation.
+    @returns the best position angle for the observatory, as a galsim.Angle, or None if the position
+             is not observable.
+    """
+    # First check for observability.
+    if not allowedPos(world_pos, date):
+        return None
+
+    # Find the location of the sun on this date.  +X_observatory points out into the sky, towards
+    # world_pos, while +Z is in the plane of the sky pointing towards the sun as much as possible.
+    from galsim.celestial import _ecliptic_to_equatorial, _sun_position_ecliptic
+    sun = _ecliptic_to_equatorial(_sun_position_ecliptic(date), date.year)
+    # Now we do a projection onto the sky centered at world_pos to find the (u, v) for the Sun.
+    sun_tp = world_pos.project(sun, 'gnomonic')
+    # We want to rotate around by 90 degrees to find the +Y obs direction.  Specifically, we want
+    # (+X, +Y, +Z)_obs to form a right-handed coordinate system.
+    y_obs_tp = galsim.PositionD(-sun_tp.y, sun_tp.x)
+    y_obs = world_pos.deproject(y_obs_tp, 'gnomonic')
+    
+    # Finally the observatory position angle is defined by the angle between +Y_observatory and the
+    # celestial north pole.  It is defined as position angle east of north.
+    north = galsim.CelestialCoord(y_obs.ra, 90.*galsim.degrees)
+    obs_pa = world_pos.angleBetween(y_obs, north)
+    return obs_pa

@@ -154,6 +154,9 @@ This module also contains the following routines:
 
     allowedPos() - Is WFIRST allowed to look at a given position on a given date?
 
+    bestPA() - A routine to calculate the best observatory orientation angle for WFIRST when looking
+               at a given position on a given date.
+
 All of the above routines have docstrings that can be accessed using
 help(galsim.wfirst.getBandpasses), and so on.
 """
@@ -195,7 +198,7 @@ charge_diffusion = 0.1
 from wfirst_bandpass import getBandpasses
 from wfirst_backgrounds import getSkyLevel
 from wfirst_psfs import getPSF, storePSFImages, loadPSFImages
-from wfirst_wcs import getWCS, findSCA, makeFitsHeader, allowedPos
+from wfirst_wcs import getWCS, findSCA, makeFitsHeader, allowedPos, bestPA
 from wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC
 
 def NLfunc(x):

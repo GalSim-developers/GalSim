@@ -50,6 +50,9 @@ def test_wfirst_wcs():
     dec_test = [-70., 50., 22.7, 0.0]
     pa_test = [160., 79., 23.4, -3.1]
     sca_test = [2, 13, 7, 18]
+    import datetime
+    ve = datetime.datetime(2025,3,20,9,2,0)
+    date_test = [ve, ve, ve, datetime.date(2025,6,20)]
     pa_is_fpa_test = [True, False, True, False]
 
     dist_arcsec = []
@@ -62,19 +65,21 @@ def test_wfirst_wcs():
         if i_test == 0:
             # Just for this case, we want to get the WCS for all SCAs.  This will enable some
             # additional tests that we don't do for the other test case.
-            gs_wcs_dict = galsim.wfirst.getWCS(pa_test[i_test]*galsim.degrees,
+            gs_wcs_dict = galsim.wfirst.getWCS(PA=pa_test[i_test]*galsim.degrees,
                                                world_pos=world_pos,
-                                               PA_is_FPA=pa_is_fpa_test[i_test])
+                                               PA_is_FPA=pa_is_fpa_test[i_test],
+                                               date=date_test[i_test])
             np.testing.assert_equal(
                 len(gs_wcs_dict), galsim.wfirst.n_sca,
                 err_msg='WCS dict has wrong length: %d vs. %d'%(len(gs_wcs_dict),
                                                                 galsim.wfirst.n_sca))
         else:
             # Use the SCAs keyword to just get the WCS for the SCA that we want.
-            gs_wcs_dict = galsim.wfirst.getWCS(pa_test[i_test]*galsim.degrees,
+            gs_wcs_dict = galsim.wfirst.getWCS(PA=pa_test[i_test]*galsim.degrees,
                                                world_pos=world_pos,
                                                PA_is_FPA=pa_is_fpa_test[i_test],
-                                               SCAs=sca_test[i_test])
+                                               SCAs=sca_test[i_test],
+                                               date=date_test[i_test])
             np.testing.assert_equal(
                 len(gs_wcs_dict), 1,
                 err_msg='WCS dict has wrong length: %d vs. %d'%(len(gs_wcs_dict), 1))
@@ -132,6 +137,30 @@ def test_wfirst_wcs():
         np.array(pix_area_ratio),
         np.ones(len(ra_test))*0.0001,
         err_msg='For at least one WCS, pixel areas differ from reference by >0.01%.')
+
+    # Check whether we're allowed to look at certain positions on certain dates.
+    # Let's choose RA=90 degrees, dec=10 degrees.
+    # We know that it's best to look about 90 degrees from the Sun.  So on the vernal and autumnal
+    # equinox, this should be a great place to look, but not midway in between.  We'll use
+    # approximate dates for these.
+    pos = galsim.CelestialCoord(90.*galsim.degrees, 10.*galsim.degrees)
+    import datetime
+    assert galsim.wfirst.allowedPos(pos, datetime.date(2025,3,20))
+    assert galsim.wfirst.allowedPos(pos, datetime.date(2025,9,20))
+    assert not galsim.wfirst.allowedPos(pos, datetime.date(2025,6,20))
+
+    # Finally make sure it does something reasonable for the observatory position angle.
+    # When the sun is at (0,0), and we look at (90,0), then +Z points towards the Sun and +Y points
+    # North, giving a PA of 0 degrees.
+    pos = galsim.CelestialCoord(90.*galsim.degrees, 0.*galsim.degrees)
+    test_date = datetime.datetime(2025,3,20,9,2)
+    pa = galsim.wfirst.bestPA(pos, test_date)
+    np.testing.assert_almost_equal(pa.rad(), 0., decimal=3)
+    # Now make it look at the same RA as the sun but quite different declination.  It wants +Z
+    # pointing North toward Sun, so we'll get a -90 degree angle for the PA.
+    pos = galsim.CelestialCoord(0.*galsim.degrees, -70.*galsim.degrees)
+    pa = galsim.wfirst.bestPA(pos, test_date)
+    np.testing.assert_almost_equal(pa.rad(), -np.pi/2, decimal=3)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
