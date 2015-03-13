@@ -261,6 +261,13 @@ namespace galsim {
     }
 
     std::complex<double> LinearOpticaletInfo::kValue(double ksq, double phi) const
+    // Need to take the FT of a function with azimuthal product {cos, sin} x {cos, sin}.
+    // So use the trig product-to-sum rules to construct two single-azimuthal-mode transforms:
+    // cos(a)cos(b) = 0.5*(cos(a+b) + cos(a-b))
+    // sin(a)sin(b) = 0.5*(cos(a-b) - cos(a+b))
+    // sin(a)cos(b) = 0.5*(sin(a+b) + sin(a-b))
+    // cos(a)sin(b) = 0.5*(sin(a+b) - sin(a-b))
+    // This means we need to compute 2 Hankel transforms instead of just one: _ftsum and _ftdiff.
     {
         if (_ftsum.size() == 0) buildFT();
         int msum = _m1+_m2;
@@ -271,46 +278,79 @@ namespace galsim {
         double diffcoeff = 0.0;
         if (_m1 >= 0) { // cos term
             if (_m2 >= 0) { // cos term
-                sumcoeff = cos(msum*phi);
-                diffcoeff = cos(mdiff*phi);
+                sumcoeff = 0.5*cos(msum*phi);
+                diffcoeff = 0.5*cos(mdiff*phi);
             } else { // sin term
-                sumcoeff = sin(msum*phi);
-                diffcoeff = -sin(mdiff*phi);
+                sumcoeff = 0.5*sin(msum*phi);
+                diffcoeff = -0.5*sin(mdiff*phi);
             }
         } else { // sin term
             if (_m2 >= 0) { // cos term
-                sumcoeff = cos(msum*phi);
-                diffcoeff = cos(mdiff*phi);
+                sumcoeff = 0.5*sin(msum*phi);
+                diffcoeff = 0.5*sin(mdiff*phi);
             } else { // sin term
-                sumcoeff = -sin(msum*phi);
-                diffcoeff = sin(mdiff*phi);
+                sumcoeff = -0.5*cos(msum*phi);
+                diffcoeff = 0.5*cos(mdiff*phi);
             }
         }
         std::complex<double> ret = std::complex<double>(0.0, 0.0);
         // contribution from m1+m2 order Hankel transform
-        if (msum & 1) { // imag sum output
-            if (msum & 2) // neg
-                ret += std::complex<double>(0.0, -0.5*ampsum*sumcoeff);
-            else // pos
-                ret += std::complex<double>(0.0, 0.5*ampsum*sumcoeff);
-        } else { // real sum output
-            if (msum & 2) // neg
-                ret += -0.5*ampsum*sumcoeff;
-            else
-                ret += 0.5*ampsum*sumcoeff;
+        int ipower = msum % 4;
+        switch(ipower) {
+        case 0:
+            ret += std::complex<double>(ampsum*sumcoeff, 0.0);
+            break;
+        case 1:
+            ret += std::complex<double>(0.0, ampsum*sumcoeff);
+            break;
+        case 2:
+            ret += std::complex<double>(-ampsum*sumcoeff, 0.0);
+            break;
+        case 3:
+            ret += std::complex<double>(0.0, -ampsum*sumcoeff);
+            break;
         }
+        // contribution from m1+m2 order Hankel transform
+        ipower = mdiff % 4;
+        switch(ipower) {
+        case 0:
+            ret += std::complex<double>(ampdiff*diffcoeff, 0.0);
+            break;
+        case 1:
+            ret += std::complex<double>(0.0, ampdiff*diffcoeff);
+            break;
+        case 2:
+            ret += std::complex<double>(-ampdiff*diffcoeff, 0.0);
+            break;
+        case 3:
+            ret += std::complex<double>(0.0, -ampdiff*diffcoeff);
+            break;
+        }
+
+        // if (msum & 1) { // contributes to imaginary component
+        //     if (msum & 2) // neg
+        //         ret += std::complex<double>(0.0, ampsum*sumcoeff);
+        //     else // pos
+        //         ret += std::complex<double>(0.0, ampsum*sumcoeff);
+        // } else { // contributes to real component
+        //     if (msum & 2) // neg
+        //         ret += ampsum*sumcoeff;
+        //     else
+        //         ret += ampsum*sumcoeff;
+        // }
+
         // contribution from m1-m2 order Hankel transform
-        if (mdiff & 1) { // imag diff output
-            if (mdiff & 2) // neg
-                ret += std::complex<double>(0.0, -0.5*ampdiff*diffcoeff);
-            else // pos
-                ret += std::complex<double>(0.0, 0.5*ampdiff*diffcoeff);
-        } else { // real diff output
-            if (mdiff & 2) // neg
-                ret += -0.5*ampdiff*diffcoeff;
-            else
-                ret += 0.5*ampdiff*diffcoeff;
-        }
+        // if (mdiff & 1) { // contributes to imaginary component
+        //     if (mdiff & 2) // neg
+        //         ret += std::complex<double>(0.0, ampdiff*diffcoeff);
+        //     else // pos
+        //         ret += std::complex<double>(0.0, ampdiff*diffcoeff);
+        // } else { // contributes to real component
+        //     if (mdiff & 2) // neg
+        //         ret += ampdiff*diffcoeff;
+        //     else
+        //         ret += ampdiff*diffcoeff;
+        // }
         return ret;
     }
 
@@ -321,8 +361,9 @@ namespace galsim {
             _n1(n1), _m1(m1), _n2(n2), _m2(m2), _k(k) {}
         double operator()(double r) const
         {
-            return boost::math::cyl_bessel_j(_n1+1, r) * boost::math::cyl_bessel_j(_n2+1, r)
-                * boost::math::cyl_bessel_j(_m1+_m2, r*_k) / r;
+            double rpi = M_PI*r;
+            return boost::math::cyl_bessel_j(_n1+1, rpi) * boost::math::cyl_bessel_j(_n2+1, rpi)
+                * boost::math::cyl_bessel_j(_m1+_m2, r*_k) / r / M_PI / M_PI;
         }
     private:
         int _n1, _m1, _n2, _m2;
@@ -336,8 +377,9 @@ namespace galsim {
             _n1(n1), _m1(m1), _n2(n2), _m2(m2), _k(k) {}
         double operator()(double r) const
         {
-            return boost::math::cyl_bessel_j(_n1+1, r) * boost::math::cyl_bessel_j(_n2+1, r)
-                * boost::math::cyl_bessel_j(_m1-_m2, r*_k) / r;
+            double rpi = M_PI*r;
+            return boost::math::cyl_bessel_j(_n1+1, rpi) * boost::math::cyl_bessel_j(_n2+1, rpi)
+                * boost::math::cyl_bessel_j(_m1-_m2, r*_k) / r / M_PI / M_PI;
         }
     private:
         int _n1, _m1, _n2, _m2;
@@ -350,7 +392,7 @@ namespace galsim {
         dbg<<"Building LinearOpticalet Hankel transform"<<std::endl;
         dbg<<"(n1,m1,n2,m2) = ("<<_n1<<","<<_m1<<","<<_n2<<","<<_m2<<")"<<std::endl;
         // Do a Hankel transform and store the results in a lookup table.
-        double prefactor = 1;
+        double prefactor = 2.0*M_PI*M_PI;
         dbg<<"prefactor = "<<prefactor<<std::endl;
 
         // // Along the way, find the last k that has a kValue > 1.e-3
