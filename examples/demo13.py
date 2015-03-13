@@ -271,8 +271,13 @@ def main(argv):
         # Adding sky level to the image.  
         final_image += sky_image
 
-        # Now that all sources of signal (from astronomical objects and background) have been added,
-        # we can include the expected Poisson noise:
+        # Now that all sources of signal (from astronomical objects and background) have been added
+        # to the image, we can start adding noise and detector effects.  There is a utility,
+        # galsim.wfirst.allDetectorEffects(), that can apply ALL implemented noise and detector
+        # effects in the proper order.  Here we step through the process and explain these in a bit
+        # more detail without using that utility.
+
+        # First, we include the expected Poisson noise:
         final_image.addNoise(poisson_noise)
 
         # The subsequent steps account for the non-ideality of the detectors.

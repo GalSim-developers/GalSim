@@ -81,4 +81,58 @@ def applyIPC(img, edge_treatment='extend', fill_value=None):
     """
     img.applyIPC(galsim.wfirst.ipc_kernel, edge_treatment=edge_treatment, fill_value=fill_value)
 
+def allDetectorEffects(img, rng=None, exptime=None):
+    """
+    This utility applies all sources of noise and detector effects for WFIRST that are implemented
+    in GalSim.  In terms of noise, this includes the Poisson noise due to the signal (sky +
+    background), dark current, and read noise.  The detector effects that are included are
+    reciprocity failure, quantization, nonlinearity, and interpixel capacitance.  It also includes
+    the necessary factors of gain.  In short, the user should be able to pass in an Image with all
+    sources of signal (background plus astronomical objects), and the Image will be modified to
+    include all subsequent steps in the image generation process for WFIRST that are implemented in
+    GalSim.
 
+    @param img       The Image to be modified.
+    @param rng       An optional galsim.BaseDeviate to use for the addition of noise.  If None, a
+                     new one will be initialized.  [default: None]
+    @param exptime   The exposure time, in seconds.  If None, then the WFIRST default exposure time
+                     will be used.  [default: None]
+    """
+    # Deal appropriately with passed-in RNG, exposure time.
+    if rng is None:
+        rng = galsim.BaseDeviate()
+    elif not isinstance(rng, galsim.BaseDeviate):
+        raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
+    if exptime is None:
+        exptime=galsim.wfirst.exptime
+
+    # Add Poisson noise.
+    poisson_noise = galsim.PoissonNoise(rng) 
+    img.addNoise(poisson_noise)
+
+    # Reciprocity failure (use WFIRST routine, with the supplied exposure time).
+    addReciprocityFailure(img, exptime=exptime)
+
+    # Quantize.
+    img.quantize()
+
+    # Dark current (use exposure time).
+    dark_current = galsim.wfirst.dark_current*exptime
+    dark_noise = galsim.DeviateNoise(galsim.PoissonDeviate(rng, dark_current))
+    img.addNoise(dark_noise)
+
+    # Nonlinearity (use WFIRST routine).
+    applyNonlinearity(img)
+
+    # IPC (use WFIRST routine).
+    applyIPC(img)
+
+    # Read noise.
+    read_noise = galsim.GaussianNoise(rng, sigma=galsim.wfirst.read_noise)
+    img.addNoise(read_noise)
+
+    # Gain.
+    img /= galsim.wfirst.gain
+
+    # Quantize.
+    img.quantize()

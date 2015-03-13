@@ -127,6 +127,11 @@ This module also contains the following routines:
 
     applyIPC() - A routine to incorporate the effects of interpixel capacitance in WFIRST images.
 
+    allDetectorEffects() - A routine to add all sources of noise and all (implemented) detector
+                           effects to an image containing astronomical objects plus background.  In
+                           principle, users can simply use this routine instead of separately using
+                           the various routines like applyNonlinearity().
+
     getPSF() - A routine to get a chromatic representation of the PSF in each SCAs.
 
     storePSFImages() - A routine to take outputs of getPSF() and write them to file as a set of
@@ -199,7 +204,7 @@ from wfirst_bandpass import getBandpasses
 from wfirst_backgrounds import getSkyLevel
 from wfirst_psfs import getPSF, storePSFImages, loadPSFImages
 from wfirst_wcs import getWCS, findSCA, makeFitsHeader, allowedPos, bestPA
-from wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC
+from wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, allDetectorEffects
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)
