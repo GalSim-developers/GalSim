@@ -17,6 +17,7 @@
 "#" : "- obj type : OpticalPSF (lam, diam, ..., trefoil1, trefoil2, nstruts, strut_thick, strut_angle)",
 "#" : "- shear_value : NFWHaloShear (redshift)",
 "#" : "- float_value : NFWHaloMagnification (redshift)",
+"#" : "- float type : RandomDistribution(function, x_min, x_max)",
 "#" : "- input : nfw_halo (mass, conc, redshift)",
 "#" : "- wcs type : UVFunction (ufunc, vfunc, xfunc, yfunc, origin)",
 "#" : "- shear_value : Eta1Eta2 (eta1, eta2)",
@@ -35,9 +36,9 @@
 "#" : "Define the PSF profile",
 "psf" : {
     "#" : "We use OpticalPSF with a few new features we haven't mentioned before:",
-    "#" : "1) We separately specify the light wavelength and telescope diameter, relying on"
-    "#" : "   OpticalPSF to convert to appropriate units (arcsec by default, though the routine"
-    "#" : "   can be told otherwise)."
+    "#" : "1) We separately specify the light wavelength and telescope diameter, relying on",
+    "#" : "   OpticalPSF to convert to appropriate units (arcsec by default, though the routine",
+    "#" : "   can be told otherwise).",
     "#" : "2) We introduce the parameters trefoil1 and trefoil2, which are 3rd order Zernike",
     "#" : "   terms.",
     "#" : "3) We specify support struts that hold the secondary mirror.  You can specify how",
@@ -68,7 +69,19 @@
 
     "type" : "Exponential",
     "half_light_radius" : { "type" : "Random" , "min" : 0.1 , "max" : 0.3 },
-    "flux" : { "type" : "Random" , "min" : 1.0e4 , "max" : 1.0e6 },
+
+    "flux" : {
+        "#" : "We draw the flux from a power law distribution with values from 1.e4 to 1.e6.",
+        "#" : "You can use any arbitrary function here, along with a min and max value,",
+        "#" : "and values will be drawn within this probability distribution.",
+        "#" : "The function should be given in terms of the variable x, since internally",
+        "#" : "it is parsed with eval('lambda x : ' + function).",
+        "type" : "RandomDistribution",
+        "function" : "x**-1.5",
+        "x_min" : 1.0e4,
+        "x_max" : 1.0e6
+    },
+
     "ellip" : {
         "#" : "The eta definition of shear is |eta| = ln(a/b) where a and b are (as usual)",
         "#" : "the semi-major and semi-minor axes.  This definition has the advantage that ",
