@@ -323,18 +323,18 @@ class RealGalaxyCatalog(object):
     _takes_rng = False
     _takes_logger = True
 
-    # nobject_only is an intentionally undocumented kwarg that should be used only by
+    # _nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
     def __init__(self, file_name=None, image_dir=None, dir=None, preload=False,
-                 noise_dir=None, logger=None, nobjects_only=False):
+                 noise_dir=None, logger=None, _nobjects_only=False):
 
         self.file_name, self.image_dir, self.noise_dir = \
             _parse_files_dirs(file_name, image_dir, dir, noise_dir)
 
         cat = pyfits.getdata(self.file_name)
         self.nobjects = len(cat) # number of objects in the catalog
-        if nobjects_only: return  # Exit early if that's all we needed.
+        if _nobjects_only: return  # Exit early if that's all we needed.
         ident = cat.field('ident') # ID for object in the training sample
 
         # We want to make sure that the ident array contains all strings.

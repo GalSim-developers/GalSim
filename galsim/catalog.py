@@ -57,11 +57,11 @@ class Catalog(object):
     _takes_rng = False
     _takes_logger = False
 
-    # nobjects_only is an intentionally undocumented kwarg that should be used only by
+    # _nobjects_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
     def __init__(self, file_name, dir=None, file_type=None, comments='#', hdu=1,
-                 nobjects_only=False):
+                 _nobjects_only=False):
 
         # First build full file_name
         self.file_name = file_name.strip()
@@ -80,20 +80,20 @@ class Catalog(object):
         self.file_type = file_type
 
         if file_type == 'FITS':
-            self.read_fits(hdu, nobjects_only)
+            self.read_fits(hdu, _nobjects_only)
         else:
-            self.read_ascii(comments, nobjects_only)
+            self.read_ascii(comments, _nobjects_only)
             
     # When we make a proxy of this class (cf. galsim/config/stamp.py), the attributes
     # don't get proxied.  Only callable methods are.  So make method versions of these.
     def getNObjects(self) : return self.nobjects
     def isFits(self) : return self.isfits
 
-    def read_ascii(self, comments, nobjects_only):
+    def read_ascii(self, comments, _nobjects_only=False):
         """Read in an input catalog from an ASCII file.
         """
         # If all we care about is nobjects, this is quicker:
-        if nobjects_only:
+        if _nobjects_only:
             # See the script devel/testlinecounting.py that tests several possibilities.
             # An even faster version using buffering is possible although it requires some care
             # around edge cases, so we use this one instead, which is "correct by inspection".
@@ -121,7 +121,7 @@ class Catalog(object):
         self.ncols = self.data.shape[1]
         self.isfits = False
 
-    def read_fits(self, hdu, nobjects_only):
+    def read_fits(self, hdu, _nobjects_only=False):
         """Read in an input catalog from a FITS file.
         """
         from galsim import pyfits, pyfits_version
@@ -131,7 +131,7 @@ class Catalog(object):
         else:
             self.names = raw_data.dtype.names
         self.nobjects = len(raw_data.field(self.names[0]))
-        if (nobjects_only): return
+        if (_nobjects_only): return
         # The pyfits raw_data is a FITS_rec object, which isn't picklable, so we need to 
         # copy the fields into a new structure to make sure our Catalog is picklable.
         # The simplest is probably a dict keyed by the field names, which we save as self.data.
