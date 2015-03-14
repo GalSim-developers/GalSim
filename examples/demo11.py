@@ -184,6 +184,13 @@ def main(argv):
     # image, with grid points spaced by 90 arcsec (hence interpolation only happens below 90"
     # scales, below the interesting scales on which we want the shear power spectrum to be
     # represented exactly).  The lensing engine wants positions in arcsec, so calculate that:
+
+    # Also, because of some technical details about how the config stuff handles the random
+    # number generator here, we need to duplicate the rng object if we want to have the 
+    # two output files match.  This means that technically, the same sequence of random numbers
+    # will be used in building the grid as will be used later to add noise.  But since they are
+    # used in such completely different ways, it is hard to imagine how this could lead to any
+    # kind of bias in the images.
     ps.buildGrid(grid_spacing = grid_spacing,
                  ngrid = int(math.ceil(image_size_arcsec / grid_spacing)),
                  rng = rng.duplicate())
