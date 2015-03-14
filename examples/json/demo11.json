@@ -61,7 +61,7 @@
     "#" : "objects, dilations, shears, etc.  So we require the user to provide the size with",
     "#" : "the noise_pad_size parameter.",
 
-    "#" : "In this case, the postage stamp will be 32 arcsec for the undilated galaxies.",
+    "#" : "In this case, the postage stamp will be 32 pixels for the undilated galaxies.",
     "#" : "We expand the postage stamp as we dilate the galaxies, so that factor doesn't",
     "#" : "come into play here.  The shear and magnification are not significant, but the ",
     "#" : "image can be rotated, which adds an extra factor of sqrt(2). So the net required ",
