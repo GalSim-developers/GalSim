@@ -232,6 +232,55 @@ def test_wfirst_bandpass():
             err_msg="Zeropoint not set accurately enough for bandpass filter \
             {0}".format(filter_name))
 
+    # Do a slightly less trivial check of bandpass-related calculations:
+    # Jeff Kruk (at Goddard) took an SED template from the Castelli-Kurucz library, normalized it to
+    # a particular magnitude in SDSS g band, and checked the count rates he expects for the WFIRST
+    # bands.  I (RM) independently did the same calculation (downloading the templates and bandpass
+    # myself and using GalSim for all the important bits of the calculation) and my results agree a
+    # the 5% level.  Given that I didn't quite have the same SED, we were very happy with this level
+    # of agreement.  The unit test below reproduces this test, and requires agreement at the 10%
+    # level.
+    # Jeff used the C-K template with solar metallicity, T=9550K, surface gravity logg=3.95.  I
+    # downloaded a grid of templates and just used the nearest one, which has solar metallicity,
+    # T=9500K, surface gravity logg=4.0.
+    sed_data = galsim.pyfits.getdata(os.path.join('wfirst_files','ckp00_9500.fits'))
+    lam = sed_data.WAVELENGTH.astype(np.float64)
+    t = sed_data.g40.astype(np.float64)
+    sed_tab = galsim.LookupTable(x=lam, f=t, interpolant='linear')
+    sed = galsim.SED(sed_tab, wave_type='A')
+
+    # Now take the SDSS g bandpass:
+    gfile =  '/Users/rmandelb/Downloads/g.dat'
+    bp_dat = np.loadtxt(os.path.join('wfirst_files','g.dat')).transpose()
+    bp_tab = galsim.LookupTable(x=bp_dat[0,:], f=bp_dat[1,:], interpolant='linear')
+    bp_ref = galsim.Bandpass(bp_tab, wave_type='A')
+    # Set an AB zeropoint using WFIRST params:
+    eff_diam = 100.*galsim.wfirst.diameter*np.sqrt(1.-galsim.wfirst.obscuration**2)
+    bp_ref = bp_ref.withZeropoint('AB', effective_diameter=eff_diam, exptime=galsim.wfirst.exptime)
+    # Now get a new SED that has magnitude -0.093 in this filter, since that's the normalization
+    # that Jeff imposed for his tests.
+    sed = sed.withMagnitude(-0.093, bp_ref)
+
+    # Reference count rates, from Jeff:
+    reference = {}
+    reference['Z087'] = 1.98e10
+    reference['Y106'] = 1.97e10
+    reference['J129'] = 1.52e10
+    reference['H158'] = 1.11e10
+    reference['F184'] = 0.58e10
+    reference['W149'] = 4.34e10
+
+    # Only 10% accuracy required because did not use quite the same stellar template.  Fortunately,
+    # bugs can easily lead to orders of magnitude errors, so this unit test is still pretty
+    # non-trivial.
+    for filter_name, filter_ in bp.iteritems():
+        flux = sed.calculateFlux(filter_)
+        count_rate = flux / galsim.wfirst.exptime
+        np.testing.assert_allclose(
+            count_rate, reference[filter_name], rtol=0.1,
+            err_msg="Count rate for stellar model not as expected for bandpass "
+            "{0}".format(filter_name))
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
