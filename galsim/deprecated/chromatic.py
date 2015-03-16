@@ -24,8 +24,8 @@ def Chromatic_draw(self, *args, **kwargs):
     """
     raise RuntimeError("Chromatic.draw")
     depr('draw', 1.1, "drawImage(..., method='no_pixel'",
-            'Note: drawImage has different args than draw did.  Read the docs for the method ' +
-            'keyword carefully.')
+            'Note: drawImage has different args than draw did.  '+
+            'Read the docs for the method keywords carefully.')
     normalization = kwargs.pop('normalization','f')
     if normalization in ['flux','f']:
         return self.drawImage(*args, method='no_pixel', **kwargs)

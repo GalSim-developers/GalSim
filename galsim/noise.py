@@ -194,7 +194,7 @@ def GaussianNoise_copy(self, rng=None):
     """Returns a copy of the Gaussian noise model.
 
     By default, the copy will share the BaseDeviate random number generator with the parent
-    instance.  However, you can provide a new rng to use in the copy if want with
+    instance.  However, you can provide a new rng to use in the copy if you want with
 
         >>> noise_copy = noise.copy(rng=new_rng)
     """
@@ -263,7 +263,7 @@ def PoissonNoise_copy(self, rng=None):
     """Returns a copy of the Poisson noise model.
 
     By default, the copy will share the BaseDeviate random number generator with the parent
-    instance.  However, you can provide a new rng to use in the copy if want with
+    instance.  However, you can provide a new rng to use in the copy if you want with
 
         >>> noise_copy = noise.copy(rng=new_rng)
     """
@@ -343,7 +343,7 @@ def CCDNoise_copy(self, rng=None):
     """Returns a copy of the CCD noise model.
 
     By default, the copy will share the BaseDeviate random number generator with the parent
-    instance.  However, you can provide a new rng to use in the copy if want with
+    instance.  However, you can provide a new rng to use in the copy if you want with
 
         >>> noise_copy = noise.copy(rng=new_rng)
     """
@@ -401,7 +401,7 @@ def DeviateNoise_copy(self, rng=None):
     """Returns a copy of the Deviate noise model.
 
     By default, the copy will share the BaseDeviate random number generator with the parent
-    instance.  However, you can provide a new rng to use in the copy if want with
+    instance.  However, you can provide a new rng to use in the copy if you want with
 
         >>> noise_copy = noise.copy(rng=new_rng)
     """
@@ -480,7 +480,7 @@ class VariableGaussianNoise(_galsim.BaseNoise):
         """Returns a copy of the variable Gaussian noise model.
 
         By default, the copy will share the BaseDeviate random number generator with the parent
-        instance.  However, you can provide a new rng to use in the copy if want with
+        instance.  However, you can provide a new rng to use in the copy if you want with
 
             >>> noise_copy = noise.copy(rng=new_rng)
         """
