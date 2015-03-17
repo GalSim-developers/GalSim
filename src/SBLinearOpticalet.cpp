@@ -90,14 +90,37 @@ namespace galsim {
                                                                     int n1, int m1,
                                                                     int n2, int m2,
                                                                     const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams),
-        _r0(r0), _n1(n1), _m1(m1), _n2(n2), _m2(m2),
-        _info(cache.get(boost::make_tuple(_n1, _m1, _n2, _m2, this->gsparams.duplicate())))
+        SBProfileImpl(gsparams), _r0(r0)
+        //_n1(n1), _m1(m1), _n2(n2), _m2(m2),
+        //_info(cache.get(boost::make_tuple(_n1, _m1, _n2, _m2, this->gsparams.duplicate())))
     {
         if ((n1 < 0) or (n2 < 0) or (m1 < -n1) or (m1 > n1) or (m2 < -n2) or (m2 > n2))
             throw SBError("Requested LinearOpticalet indices out of range");
         if (((n1+m1) & 1) or ((n2+m2) & 1))
             throw SBError("Invalid LinearOpticalet m, n combination");
+        if (n1 > n2) { // Keep order: n1 <= n2;
+            _n1 = n2;
+            _m1 = m2;
+            _n2 = n1;
+            _m2 = m1;
+        } else if (n1 < n2) {
+            _n1 = n1;
+            _m1 = m1;
+            _n2 = n2;
+            _m2 = m2;
+        } else { // n1 == n2
+            _n1 = n1;
+            _n2 = n2;
+            if (m1 > m2) {
+                _m1 = m2;
+                _m2 = m1;
+            } else {
+                _m1 = m1;
+                _m2 = m2;
+            }
+        }
+
+        _info = cache.get(boost::make_tuple(_n1, _m1, _n2, _m2, this->gsparams.duplicate()));
 
         dbg<<"Start LinearOpticalet constructor:\n";
         dbg<<"r0 = "<<_r0<<std::endl;
