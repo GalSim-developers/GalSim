@@ -456,18 +456,21 @@ namespace galsim {
 
     void LinearOpticaletInfo::buildFT() const
     {
+        // TODO: should really be integrating out to MOCK_INF here, but that seems to be running
+        // into difficulties.  Maybe should continually extend the upper limit until the marginal
+        // difference in the integral is smaller than kvalue_accuracy.  Using 2000 as the upper
+        // limit for now...
+        // Note that the asymptotic formula for a Bessel function doesn't help much here.  An
+        // individual Bessel function is bounded by sqrt(2 / (pi r)), so the product of three
+        // goes something like 1/r^(3/2).  This integral diverges for the lower limit of r=0
+        // though, and also grossly over estimates the highly oscillatory triple Bessel product.
+
         if (_ftsum.size() > 0) return;
         dbg<<"Building LinearOpticalet Hankel transform"<<std::endl;
         dbg<<"(n1,m1,n2,m2) = ("<<_n1<<","<<_m1<<","<<_n2<<","<<_m2<<")"<<std::endl;
         // Do a Hankel transform and store the results in a lookup table.
         double prefactor = 2.0*M_PI*M_PI;
         dbg<<"prefactor = "<<prefactor<<std::endl;
-
-        // // Along the way, find the last k that has a kValue > 1.e-3
-        // double maxk_val = this->_gsparams->maxk_threshold;
-        // dbg<<"Looking for maxk_val = "<<maxk_val<<std::endl;
-        // // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
-        // // (It's oscillatory, so want to make sure not to stop at a zero crossing.)
 
         // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
         // I have no idea what range the fourth derivative can take for the Hankel transform,
@@ -485,13 +488,14 @@ namespace galsim {
             LinearOpticaletIntegrandSum Isum(_n1, _m1, _n2, _m2, k);
             LinearOpticaletIntegrandDiff Idiff(_n1, _m1, _n2, _m2, k);
 
+            double upperlimit = 2000.0; // arbitrary, but roughly tested in Mathematica
 #ifdef DEBUGLOGGING
             std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
-            integ::IntRegion<double> regsum(0, 10000.0, integ_dbgout);
-            integ::IntRegion<double> regdiff(0, 10000.0, integ_dbgout);
+            integ::IntRegion<double> regsum(0, upperlimit, integ_dbgout);
+            integ::IntRegion<double> regdiff(0, upperlimit, integ_dbgout);
 #else
-            integ::IntRegion<double> regsum(0, 10000.0);
-            integ::IntRegion<double> regdiff(0, 10000.0);
+            integ::IntRegion<double> regsum(0, upperlimit);
+            integ::IntRegion<double> regdiff(0, upperlimit);
 #endif
 // #ifdef DEBUGLOGGING
 //             std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
@@ -506,30 +510,30 @@ namespace galsim {
             // This tends to make the integral more accurate.
             // First the zeros of J(msum, k r) and J(mdiff, k r)
             if (k != 0.0) {
-                for (int s=1; s<=30; ++s) {
+                for (int s=1; s<=100; ++s) {
                     double root = boost::math::cyl_bessel_j_zero(double(_m1+_m2), s);
-                    if (root > k*10000.0) break;
+                    if (root > k*upperlimit) break;
                     xxdbg<<"root="<<root/k<<std::endl;
                     regsum.addSplit(root/k);
                 }
-                for (int s=1; s<=30; ++s) {
+                for (int s=1; s<=100; ++s) {
                     double root = boost::math::cyl_bessel_j_zero(double(_m1-_m2), s);
-                    if (root > k*10000.0) break;
+                    if (root > k*upperlimit) break;
                     xxdbg<<"root="<<root/k<<std::endl;
                     regdiff.addSplit(root/k);
                 }
             }
             // Now zeros of J(n1+1, r)
-            for (int s=1; s<30; ++s) {
+            for (int s=1; s<100; ++s) {
                 double root = boost::math::cyl_bessel_j_zero(double(_n1+1), s);
-                if (root > 10000.0) break;
+                if (root > upperlimit) break;
                 regsum.addSplit(root);
                 regdiff.addSplit(root);
             }
             // And finally zeros of J(n2+1, r)
-            for (int s=1; s<30; ++s) {
+            for (int s=1; s<100; ++s) {
                 double root = boost::math::cyl_bessel_j_zero(double(_n2+1), s);
-                if (root > 10000.0) break;
+                if (root > upperlimit) break;
                 regsum.addSplit(root);
                 regdiff.addSplit(root);
             }
