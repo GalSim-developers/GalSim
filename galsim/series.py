@@ -308,18 +308,6 @@ class SeriesConvolution(Series):
             else:
                 self.objlist.append(obj)
 
-        # Magically transform GSObjects into super-simple Series objects
-        for obj in self.objlist:
-            if isinstance(obj, galsim.GSObject):
-                obj._getCoeffs = lambda : [1.0]
-                obj._getBasisFuncs = lambda :[obj]
-                # This could be better...  Currently this will create two entries in the cache if
-                # separate-in-memory, but identical-in-value GSObjects are convolved with the same
-                # Series object.  One could imagine making GSObjects hashable and defining their
-                # hashes via their values (e.g., scale_radius, affine transformations, interpolated
-                # arrays, etc.).
-                obj._series_idx = lambda : id(obj)
-
         super(SeriesConvolution, self).__init__()
 
     def _getCoeffs(self):
@@ -329,16 +317,22 @@ class SeriesConvolution(Series):
         # The above use to be the limiting step in some convolutions.  The new version is
         # ~100 times faster, which doesn't mean the convolution is 100 times faster, but now
         # another piece of code is the rate-limiting-step.
-        return np.multiply.reduce(np.ix_(*[np.array(obj._getCoeffs())
-                                           for obj in self.objlist])).ravel()
+        return np.multiply.reduce( np.ix_(*[np.array(obj._getCoeffs())
+                                            for obj in self.objlist
+                                            if not isinstance(obj, galsim.GSObject)]) ).ravel()
 
     def _getBasisFuncs(self):
-        return [galsim.Convolve(*o) for o in product(*[obj._getBasisFuncs()
+        return [galsim.Convolve(*o) for o in product(*[[obj]
+                                                       if isinstance(obj, galsim.GSObject)
+                                                       else obj._getBasisFuncs()
                                                        for obj in self.objlist])]
 
     def _series_idx(self):
         out = [self.__class__]
-        out.extend([o._series_idx() for o in self.objlist])
+        out.extend([o._series_idx()
+                    if not isinstance(o, galsim.GSObject)
+                    else id(o)
+                    for o in self.objlist])
         return tuple(out)
 
     
