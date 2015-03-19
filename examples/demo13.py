@@ -95,8 +95,8 @@ def main(argv):
     logger.debug('Read in WFIRST imaging filters.')
 
     logger.info('Reading from a parametric COSMOS catalog.')
-    # Read in a galaxy catalog - just a random subsample of 500 galaxies for F814W<23.5 from COSMOS.
-    cat_file_name = 'real_galaxy_23.5_500_fits.fits'
+    # Read in a galaxy catalog - just a random subsample of 100 galaxies for F814W<23.5 from COSMOS.
+    cat_file_name = 'real_galaxy_catalog_example_fits.fits'
     dir = 'data'
     # Use the routine that can take COSMOS real or parametric galaxy information, and tell it we
     # want parametric galaxies that represent an I<23.5 sample.
@@ -105,7 +105,7 @@ def main(argv):
     # Just use a few galaxies, to save time.  Note that we are going to put 4000 galaxy images into
     # our big image, so if we have n_use=10, each galaxy will appear 400 times.  Users who want a
     # more interesting image with greater variation in the galaxy population can change `n_use` to
-    # something larger (but it should be <=500, which is the number of galaxies in this small
+    # something larger (but it should be <=100, the number of galaxies in this small
     # example catalog).  With 4000 galaxies in a 4k x 4k image with the WFIRST pixel scale, the
     # effective galaxy number density is 74/arcmin^2.  This is not the number density that is
     # expected for a sample that is so bright (I<23.5) but it makes the image more visually
