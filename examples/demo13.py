@@ -408,8 +408,8 @@ def main(argv):
         logger.info('Completed {0}-band image.'.format(filter_name))
 
     logger.info('You can display the output in ds9 with a command line that looks something like:')
-    logger.info('ds9 -rgb -blue -scale limits -0.2 0.8 output/demo13_J129.fits -green '
-        +'-scale limits'+' -0.25 1.0 output/demo13_W149.fits -red -scale limits -0.25'
+    logger.info('ds9 -rgb -red -scale limits -0.2 0.8 output/demo13_F184.fits -green '
+        +'-scale limits'+' -0.25 1.0 output/demo13_J129.fits -blue -scale limits -0.25'
         +' 1.0 output/demo13_Z087.fits -zoom 2 &')
 
 if __name__ == "__main__":
