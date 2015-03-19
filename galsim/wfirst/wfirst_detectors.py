@@ -48,7 +48,8 @@ def addReciprocityFailure(img, exptime=None):
 
     For more information about reciprocity failure, see the docstring for
     galsim.Image.addReciprocityFailure.  Unlike that routine, this one does not need the parameters
-    for reciprocity failure to be provided, though it still takes exposure time as an argument.
+    for reciprocity failure to be provided, though it still takes exposure time as an optional
+    argument.
 
     @param img              The Image to be transformed.
     @param exptime          The exposure time (t) in seconds, which goes into the expression for
