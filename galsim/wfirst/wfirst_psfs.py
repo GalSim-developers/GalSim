@@ -44,7 +44,7 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     By default, this routine returns a dict of ChromaticOpticalPSF objects, with the dict indexed by
     the SCA (Sensor Chip Array, the equivalent of a chip in an optical CCD).  The PSF for a given
     SCA corresponds to that for the center of the SCA.  Currently we do not have information about
-    PSF variation across the SCAs, which is expected to be relatively small.
+    PSF variation within each SCA, though it is expected to be relatively small.
 
     This routine also takes an optional keyword `SCAs`, which can be a single number or an iterable;
     if this is specified then results are not included for the other SCAs.
@@ -75,16 +75,9 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     trefoil, and spherical aberrations (NOT defocus).  This information might serve as a guide for
     reasonable `extra_aberrations` inputs.
 
-    Likewise, jitter and charge diffusion are, by default, not included.  Users who wish to include
-    these can find some guidelines for typical length scales of the Gaussians that can represent
-    these effects, and convolve the ChromaticOpticalPSF with appropriate achromatic Gaussians.
-
-    The default is to instantiate the ChromaticOpticalPSF objects with coverage of the full
-    wavelength range of all WFIRST passbands.  Since this is typically done with a fixed wavelength
-    sampling over a wide wavelength range, there is significant overhead in this process.  If the
-    intent is to only use the PSFs for a limited wavelength range (e.g., within a single one of the
-    bandpasses), it can be significantly faster to use the `wavelength_limits` keyword to pass in a
-    tuple with the lower and upper limits in wavelength.
+    Jitter and charge diffusion are, by default, not included.  Users who wish to include these can
+    find some guidelines for typical length scales of the Gaussians that can represent these
+    effects, and convolve the ChromaticOpticalPSF with appropriate achromatic Gaussians.
 
     The PSFs are always defined assuming the user will specify length scales in arcsec.
 

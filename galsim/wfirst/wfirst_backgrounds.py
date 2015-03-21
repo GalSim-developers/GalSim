@@ -67,7 +67,7 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
                         [default: None]
     @param epoch        The epoch to be used for estimating the obliquity of the ecliptic when
                         converting `world_pos` to ecliptic coordinates.  This keyword is only used
-                        if `date` is None, otherwise the `date` is used to determine the `epoch`.
+                        if `date` is None, otherwise `date` is used to determine the `epoch`.
                         [default: 2025]
     @param date         The date of the observation, provided as a python datetime object.  If None,
                         then the conversion to ecliptic coordinates assumes the sun is at ecliptic

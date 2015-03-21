@@ -27,17 +27,27 @@ CCD) and therefore are indexed based on the SCA.  All SCA-related arrays are 1-i
 entry with index 0 is None and the entries from 1 to n_sca are the relevant ones.  This is
 consistent with diagrams and so on provided by the WFIRST project, which are 1-indexed.
 
+The NIR detectors that will be used for WFIRST have a different photon detection process from CCDs.
+In particular, the photon detection process begins with charge generation.  However, instead of
+being read out along columns (as for CCDs), they are read directly from each pixel.  Moreover, the
+actual quantity that is measured is technically not charge, but rather voltage.  The charge is
+inferred based on the capacitance.  To use a common language with that for CCDs, we will often refer
+to quantities measured in units of e-/pixel, but for some detector non-idealities, it is important
+to keep in mind that it is voltage that is sensed.
+
 Currently, the module includes the following numbers:
 
-    gain - The gain for all SCAs (sensor chip assemblies) is expected to be the same, so this is a
-           single value rather than a list of values.
+    gain - The gain for all SCAs (sensor chip assemblies) is expected to be the roughly the same,
+           and we currently have no information about how different they will be, so this is a
+           single value rather than a list of values.  Once the actual detectors exist and have been
+           characterized, it might be updated to be a dict with entries for each SCA.
 
     pixel_scale - The pixel scale in units of arcsec/pixel.  This value is approximate and does not
                   include effects like distortion, which are included in the WCS.
 
     diameter - The telescope diameter in meters.
 
-    obscuration - The linear obscuration of the telescope, in terms of fraction of the diameter.
+    obscuration - The linear obscuration of the telescope, expressed as a fraction of the diameter.
 
     exptime - The typical exposure time in units of seconds.  The number that is stored is for a
               single dither.  Each location within the survey will be observed with a total of 5-7
@@ -61,7 +71,7 @@ Currently, the module includes the following numbers:
     reciprocity_alpha - The normalization factor that determines the effect of reciprocity failure
                         of the detectors for a given exposure time.  Alternatively, users can use
                         the galsim.wfirst.addReciprocityFailure() routine, which knows about this
-                        normalization factor already, and allows them to choose an exposure time or
+                        normalization factor already, and allows users to choose an exposure time or
                         use the default WFIRST exposure time.
 
     read_noise - A total of 10e-.  This comes from 20 e- per correlated double sampling (CDS) and a
@@ -79,7 +89,9 @@ Currently, the module includes the following numbers:
                           below).
 
     pupil_plane_file - The name of the file containing the image of the pupil plane for WFIRST-AFTA,
-                       to be used when constructing PSFs.
+                       to be used when constructing PSFs.  If using the galsim.wfirst.getPSF()
+                       routine, users will not need to supply this filename, since the routine
+                       already knows about it.
 
     stray_light_fraction - The fraction of the sky background that is allowed to contribute as stray
                            light.  Currently this is required to be <10% of the background due to
@@ -95,7 +107,7 @@ Currently, the module includes the following numbers:
 
     n_pix - The number of pixels that are actively used.  The 4 outer rows and columns will be
             attached internally to capacitors rather than to detector pixels, and used to monitor
-            bias voltage drifts).  Thus, images seen by users will be n_pix x n_pix.
+            bias voltage drifts.  Thus, images seen by users will be n_pix x n_pix.
 
     jitter_rms - The worst-case RMS jitter per axis for WFIRST in the current design (reality
                  will likely be much better than this).  Units: arcsec.
@@ -103,8 +115,8 @@ Currently, the module includes the following numbers:
     charge_diffusion - The per-axis sigma to use for a Gaussian representing charge diffusion for
                        WFIRST.  Units: pixels.
 
-For example, to get the gain value, use galsim.wfirst.gain.  Some of the numbers related to the
-nature of the detectors are subject to change as further lab tests are done.
+For example, to get the gain value, use galsim.wfirst.gain.  Most numbers related to the nature of
+the detectors are subject to change as further lab tests are done.
 
 This module also contains the following routines:
 
@@ -113,12 +125,12 @@ This module also contains the following routines:
                       point set for the WFIRST-AFTA effective diameter and typical exposure time.
 
     getSkyLevel() - A utility to find the expected sky level due to zodiacal light at a given
-                    position, in a given band..
+                    position, in a given band.
 
     NLfunc() - A function to take an input image and simulate detector nonlinearity.  This will
                ordinarily be used as an input to GalSim routines for applying nonlinearity, though
-               it is not needed for users who want to use galsim.wfirst.applyNonlinearity() (which
-               is what we actually recommmend).
+               it is not needed for users of galsim.wfirst.applyNonlinearity() (which is what we
+               actually recommmend).
 
     applyNonlinearity() - A routine to apply detector nonlinearity of the type expected for WFIRST.
 
@@ -145,16 +157,15 @@ This module also contains the following routines:
                       less overhead than getPSF() but also is less flexible.
 
     getWCS() - A routine to get the WCS for each SCA in the focal plane, for a given target RA, dec,
-               and orientation angle.  Use of this routine requires that GalSim be able to access
-               some software that can handle TAN-SIP style WCS (either Astropy, starlink.Ast,
-               WCSTools).
+               and orientation angle.
 
     findSCA() - A routine that can take the WCS from getWCS() and some sky position, and indicate in
                 which SCA that position can be found, optionally including half of the gaps between
                 SCAs (to identify positions that are in the focal plane array but in the gap between
                 SCAs).
 
-    allowedPos() - Is WFIRST allowed to look at a given position on a given date?
+    allowedPos() - A routine to check whether WFIRST is allowed to look at a given position on a
+                   given date, given the constraints on orientation with respect to the sun.
 
     bestPA() - A routine to calculate the best observatory orientation angle for WFIRST when looking
                at a given position on a given date.
