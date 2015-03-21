@@ -773,13 +773,38 @@ _galsim.SBAutoCorrelate.__repr__ = lambda self: \
         'galsim._galsim.SBAutoCorrelate(%r, %r, %r)'%self.__getinitargs__()
 
 
-class Transform(galsim.GSObject):
+def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio=1.,
+              gsparams=None):
+    """A function for transforming either a GSObject or ChromaticObject.
+
+    This function will inspect its input argument to decide if a Transformation object or a
+    ChromaticTransformation object is required to represent the resulting transformed object.
+
+    @param obj              The object to be transformed.
+    @param jac              A list or tuple ( dudx, dudy, dvdx, dvdy ) describing the Jacobian
+                            of the transformation. [default: (1,0,0,1)]
+    @param offset           A galsim.PositionD giving the offset by which to shift the profile.
+    @param flux_ratio       A factor by which to multiply the flux of the object. [default: 1]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    @returns a Transformation or ChromaticTransformation instance as appropriate.
+    """
+    if isinstance(obj, galsim.ChromaticObject):
+        return galsim.ChromaticTransformation(obj, jac, offset, flux_ratio, gsparams)
+    elif isinstance(obj, galsim.GSObject):
+        return Transformation(obj, jac, offset, flux_ratio, gsparams)
+    else:
+        raise TypeError("Argument to Transform must be either a GSObject or a ChromaticObject.")
+
+
+class Transformation(galsim.GSObject):
     """A class for modeling an affine transformation of a GSObject instance.
 
     Initialization
     --------------
 
-    Typically, you do not need to construct a Transform object explicitly.  This is the type
+    Typically, you do not need to construct a Transformation object explicitly.  This is the type
     returned by the various transformation methods of GSObject such as shear(), rotat(), 
     shift(), transform(), etc.  All the various transformations can be described as a combination
     of transform() and shift(), which are described by (dudx,dudy,dvdx,dvdy) and (dx,dy)
@@ -802,9 +827,9 @@ class Transform(galsim.GSObject):
     flux_ratio      The amount by which the original flux is multiplied.
     gsparams        The usual gsparams attribute that all GSObjects have.
 
-    Note: if `gsparams` is unspecified (or None), then the Transform instance inherits the GSParams
-    from obj.  Also, note that parameters related to the Fourier-space calculations must be set
-    when initializing obj, NOT when creating the Transform (at which point the accuracy and
+    Note: if `gsparams` is unspecified (or None), then the Transformation instance inherits the
+    GSParams from obj.  Also, note that parameters related to the Fourier-space calculations must
+    be set when initializing obj, NOT when creating the Transform (at which point the accuracy and
     threshold parameters will simply be ignored).
     """
     def __init__(self, obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio=1.,
@@ -844,7 +869,7 @@ class Transform(galsim.GSObject):
     def flux_ratio(self): return self.getFluxRatio()
 
     def __repr__(self):
-        return 'galsim.Transform(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(
+        return 'galsim.Transformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(
             self.original, self.jac.tolist(), self.offset, self.flux_ratio, self._gsparams)
 
     def __str__(self):

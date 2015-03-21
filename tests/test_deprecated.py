@@ -190,6 +190,16 @@ def test_dep_bounds():
         np.testing.assert_almost_equal(b.ymin, 201)
         np.testing.assert_almost_equal(b.ymax, 501)
 
+        b2 = check_dep(b.addBorder,2)
+        np.testing.assert_almost_equal(b.xmin, 101)
+        np.testing.assert_almost_equal(b.xmax, 401)
+        np.testing.assert_almost_equal(b.ymin, 201)
+        np.testing.assert_almost_equal(b.ymax, 501)
+        np.testing.assert_almost_equal(b2.xmin,  99)
+        np.testing.assert_almost_equal(b2.xmax, 403)
+        np.testing.assert_almost_equal(b2.ymin, 199)
+        np.testing.assert_almost_equal(b2.ymax, 503)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
  
