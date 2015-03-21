@@ -63,7 +63,9 @@ def Shapelet_setPQ(self,p,q,re,im=0.):
 def Shapelet_setNM(self,N,m,re,im=0.):
     """Deprecated method to change a single element (N,m)"""
     depr('setNM',1.1,'bvec with correct values in the constructor')
-    self.setPQ((N+m)/2,(N-m)/2,re,im)
+    bvec = self.SBProfile.getBVec().copy()
+    bvec.setPQ((N+m)/2,(N-m)/2,re,im)
+    galsim.GSObject.__init__(self, galsim._galsim.SBShapelet(self.sigma, bvec))
 
 def Shapelet_fitImage(self, image, center=None, normalization='flux'):
     """A deprecated method that is roughly equivalent to 

@@ -88,10 +88,10 @@ galsim.ImageViewS = ImageViewS
 galsim.ImageViewI = ImageViewI
 galsim.ImageViewF = ImageViewF
 galsim.ImageViewD = ImageViewD
-galsim.ConsImageViewS = ConstImageViewS
-galsim.ConsImageViewI = ConstImageViewI
-galsim.ConsImageViewF = ConstImageViewF
-galsim.ConsImageViewD = ConstImageViewD
+galsim.ConstImageViewS = ConstImageViewS
+galsim.ConstImageViewI = ConstImageViewI
+galsim.ConstImageViewF = ConstImageViewF
+galsim.ConstImageViewD = ConstImageViewD
 
 galsim.ImageView = {
     numpy.int16 : ImageViewS,

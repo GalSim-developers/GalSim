@@ -21,7 +21,7 @@ from galsim.deprecated import depr
 
 def CN_applyWhiteningTo(self, image):
     """A deprecated synonym for whitenImage"""
-    epr('applyWhiteningTo', 1.2, 'whitenImage')
+    depr('applyWhiteningTo', 1.2, 'whitenImage')
     return self.whitenImage(image)
 
 def CN_createExpanded(self, scale):

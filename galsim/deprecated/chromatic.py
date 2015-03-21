@@ -22,7 +22,6 @@ from galsim.deprecated import depr
 def Chromatic_draw(self, *args, **kwargs):
     """A deprecated synonym for obj.drawImage(method='no_pixel')
     """
-    raise RuntimeError("Chromatic.draw")
     depr('draw', 1.1, "drawImage(..., method='no_pixel'",
             'Note: drawImage has different args than draw did.  '+
             'Read the docs for the method keywords carefully.')
