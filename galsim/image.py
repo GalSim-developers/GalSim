@@ -629,9 +629,15 @@ def Image_add(self, other):
 def Image_iadd(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] += other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] += other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] += a
+    else:
+        self.array[:,:] = (self.array + a).astype(self.array.dtype)
     return self
 
 def Image_sub(self, other):
@@ -648,9 +654,15 @@ def Image_rsub(self, other):
 def Image_isub(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] -= other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] -= other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] -= a
+    else:
+        self.array[:,:] = (self.array - a).astype(self.array.dtype)
     return self
 
 def Image_mul(self, other):
@@ -661,9 +673,15 @@ def Image_mul(self, other):
 def Image_imul(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] *= other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] *= other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] *= a
+    else:
+        self.array[:,:] = (self.array * a).astype(self.array.dtype)
     return self
 
 def Image_div(self, other):
@@ -680,9 +698,15 @@ def Image_rdiv(self, other):
 def Image_idiv(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] /= other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] /= other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] /= a
+    else:
+        self.array[:,:] = (self.array / a).astype(self.array.dtype)
     return self
 
 def Image_pow(self, other):
