@@ -244,7 +244,7 @@ class DES_PSFEx(object):
 
         @param image_pos    The position in image coordinates at which to build the PSF.
         @param gsparams     (Optional) A GSParams instance to pass to the constructed GSObject.
-        @param pixel_scale  An obsolete parameter that is only present for backwards compatibility.
+        @param pixel_scale  A deprecated parameter that is only present for backwards compatibility.
                             If the constructor did not provide an image file or wcs, then 
                             this will use the pixel scale for an approximate wcs.
 
@@ -261,6 +261,7 @@ class DES_PSFEx(object):
         if self.wcs:
             psf = self.wcs.toWorld(psf, image_pos=image_pos)
         elif pixel_scale:
+            depr('pixel_scale',1.1,'wcs=PixelScale(pixel_scale) in the constructor for DES_PSFEx')
             psf = galsim.PixelScale(pixel_scale).toWorld(psf)
 
         return psf

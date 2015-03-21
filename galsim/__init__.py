@@ -91,10 +91,10 @@ version = __version__
 # Two options for pyfits module:
 try:
     import astropy.io.fits as pyfits
-    pyfits_version = '4.0'  # astropy.io.fits doesn't define a __version__ attribute,
-                            # so mock it up as 4.0.  We might need to revisit this if
-                            # we need to start discriminating on different astropy
-                            # versions.
+    # astropy started their versioning over at 0.  (Understandably.)
+    # To make this seamless with pyfits versions, we add 4 to the astropy version.
+    from astropy import version as astropy_version
+    pyfits_version = str( (4 + astropy_version.major) + astropy_version.minor/10.)
 except:
     import pyfits
     pyfits_version = pyfits.__version__
@@ -111,10 +111,6 @@ from table import LookupTable
 
 # Image
 from image import Image, ImageS, ImageI, ImageF, ImageD
-# These are obsolete, but we currently still support them.  They will be deprecated and
-# removed eventually.
-from image import ImageView, ImageViewS, ImageViewI, ImageViewF, ImageViewD
-from image import ConstImageView, ConstImageViewS, ConstImageViewI, ConstImageViewF, ConstImageViewD
 
 # Noise
 from random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate, DistDeviate
@@ -128,7 +124,7 @@ from base import GSParams, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, 
 from base import Exponential, Sersic, DeVaucouleurs, Spergel
 from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
-from shapelet import Shapelet, ShapeletSize, FitShapelet, LVectorSize
+from shapelet import Shapelet, ShapeletSize, FitShapelet
 from interpolatedimage import Interpolant, Interpolant2d, InterpolantXY
 from interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 from interpolatedimage import InterpolatedImage
@@ -155,7 +151,11 @@ from lensing_ps import PowerSpectrum
 from nfw_halo import NFWHalo, Cosmology
 
 # Detector effects
+# Everything here is migrated into the Image class, so nothing to import by name.
 from . import detectors
+
+# Deprecation warning class
+from deprecated import GalSimDeprecationWarning
 
 # Packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)
 from . import fits
@@ -164,7 +164,6 @@ from . import integ
 from . import bessel
 from . import pse
 from . import hsm
-from . import deprecated
 from . import dcr
 from . import meta_data
 from . import cdmodel
