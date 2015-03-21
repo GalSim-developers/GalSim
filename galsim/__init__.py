@@ -91,10 +91,10 @@ version = __version__
 # Two options for pyfits module:
 try:
     import astropy.io.fits as pyfits
-    pyfits_version = '4.0'  # astropy.io.fits doesn't define a __version__ attribute,
-                            # so mock it up as 4.0.  We might need to revisit this if
-                            # we need to start discriminating on different astropy
-                            # versions.
+    # astropy started their versioning over at 0.  (Understandably.)
+    # To make this seamless with pyfits versions, we add 4 to the astropy version.
+    from astropy import version as astropy_version
+    pyfits_version = str( (4 + astropy_version.major) + astropy_version.minor/10.)
 except:
     import pyfits
     pyfits_version = pyfits.__version__
