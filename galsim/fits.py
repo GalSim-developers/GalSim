@@ -398,7 +398,10 @@ def _add_hdu(hdu_list, data, pyfits_compress):
     if pyfits_compress:
         if len(hdu_list) == 0:
             hdu_list.append(pyfits.PrimaryHDU())  # Need a blank PrimaryHDU
-        hdu = pyfits.CompImageHDU(data, compressionType=pyfits_compress)
+        if pyfits_version < '4.3':
+            hdu = pyfits.CompImageHDU(data, compressionType=pyfits_compress)
+        else:
+            hdu = pyfits.CompImageHDU(data, compression_type=pyfits_compress)
     else:
         if len(hdu_list) == 0:
             hdu = pyfits.PrimaryHDU(data)

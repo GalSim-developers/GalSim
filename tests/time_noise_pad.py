@@ -52,7 +52,7 @@ def test_corr_padding_cf():
     # first, make the base image
     orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
     gal = galsim.Gaussian(sigma=2.5, flux=100.)
-    gal.draw(orig_img)
+    gal.drawImage(orig_img, method='no_pixel')
 
     for iter in range(n_iter):
         # make it into an InterpolatedImage padded with cf
@@ -86,7 +86,7 @@ def test_corr_padding_im():
     # first, make the base image
     orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
     gal = galsim.Gaussian(sigma=2.5, flux=100.)
-    gal.draw(orig_img)
+    gal.drawImage(orig_img, method='no_pixel')
 
     for iter in range(n_iter):
         # make it into an InterpolatedImage padded with im
@@ -119,7 +119,7 @@ def test_corr_padding_imgfile():
     # first, make the base image
     orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
     gal = galsim.Gaussian(sigma=2.5, flux=100.)
-    gal.draw(orig_img)
+    gal.drawImage(orig_img, method='no_pixel')
 
     for iter in range(n_iter):
         # make it into an InterpolatedImage padded with imgfile
@@ -148,7 +148,7 @@ def test_corr_nopadding():
     # first, make the base image
     orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
     gal = galsim.Gaussian(sigma=2.5, flux=100.)
-    gal.draw(orig_img)
+    gal.drawImage(orig_img, method='no_pixel')
 
     for iter in range(n_iter):
         # make it into an InterpolatedImage padded with imgfile

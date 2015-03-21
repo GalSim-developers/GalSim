@@ -140,9 +140,9 @@ namespace galsim {
                 .def("duplicate", &GaussianDeviate::duplicate, "")
                 .def("__call__", &GaussianDeviate::operator(), "")
                 .def("getMean", &GaussianDeviate::getMean, "")
-                .def("setMean", &GaussianDeviate::setMean, "")
                 .def("getSigma", &GaussianDeviate::getSigma, "")
-                .def("setSigma", &GaussianDeviate::setSigma, "")
+                .def("_setMean", &GaussianDeviate::setMean, "")
+                .def("_setSigma", &GaussianDeviate::setSigma, "")
                 .enable_pickling()
                 ;
         }
@@ -167,9 +167,9 @@ namespace galsim {
                 .def("duplicate", &BinomialDeviate::duplicate, "")
                 .def("__call__", &BinomialDeviate::operator(), "")
                 .def("getN", &BinomialDeviate::getN, "")
-                .def("setN", &BinomialDeviate::setN, "")
                 .def("getP", &BinomialDeviate::getP, "")
-                .def("setP", &BinomialDeviate::setP, "")
+                .def("_setN", &BinomialDeviate::setN, "")
+                .def("_setP", &BinomialDeviate::setP, "")
                 .enable_pickling()
                 ;
         }
@@ -194,7 +194,7 @@ namespace galsim {
                 .def("duplicate", &PoissonDeviate::duplicate, "")
                 .def("__call__", &PoissonDeviate::operator(), "")
                 .def("getMean", &PoissonDeviate::getMean, "")
-                .def("setMean", &PoissonDeviate::setMean, "")
+                .def("_setMean", &PoissonDeviate::setMean, "")
                 .enable_pickling()
                 ;
         }
@@ -220,9 +220,9 @@ namespace galsim {
                 .def("duplicate", &WeibullDeviate::duplicate, "")
                 .def("__call__", &WeibullDeviate::operator(), "")
                 .def("getA", &WeibullDeviate::getA, "")
-                .def("setA", &WeibullDeviate::setA, "")
                 .def("getB", &WeibullDeviate::getB, "")
-                .def("setB", &WeibullDeviate::setB, "")
+                .def("_setA", &WeibullDeviate::setA, "")
+                .def("_setB", &WeibullDeviate::setB, "")
                 .enable_pickling()
                 ;
         }
@@ -247,9 +247,9 @@ namespace galsim {
                 .def("duplicate", &GammaDeviate::duplicate, "")
                 .def("__call__", &GammaDeviate::operator(), "")
                 .def("getK", &GammaDeviate::getK, "")
-                .def("setK", &GammaDeviate::setK, "")
                 .def("getTheta", &GammaDeviate::getTheta, "")
-                .def("setTheta", &GammaDeviate::setTheta, "")
+                .def("_setK", &GammaDeviate::setK, "")
+                .def("_setTheta", &GammaDeviate::setTheta, "")
                 .enable_pickling()
                 ;
         }
@@ -274,7 +274,7 @@ namespace galsim {
                 .def("duplicate", &Chi2Deviate::duplicate, "")
                 .def("__call__", &Chi2Deviate::operator(), "")
                 .def("getN", &Chi2Deviate::getN, "")
-                .def("setN", &Chi2Deviate::setN, "")
+                .def("_setN", &Chi2Deviate::setN, "")
                 .enable_pickling()
                 ;
         }

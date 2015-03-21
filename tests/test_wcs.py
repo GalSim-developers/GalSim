@@ -40,8 +40,8 @@ far_y_list = [ 10, 12.5, 103.3, 500 ]
 # Make a few different profiles to check.  Make sure to include ones that 
 # aren't symmetrical so we don't get fooled by symmetries.
 prof1 = galsim.Gaussian(sigma = 1.7, flux = 100)
-prof2 = prof1.createSheared(g1=0.3, g2=-0.12)
-prof3 = prof2 + galsim.Exponential(scale_radius = 1.3, flux = 20).createShifted(-0.1,-0.4)
+prof2 = prof1.shear(g1=0.3, g2=-0.12)
+prof3 = prof2 + galsim.Exponential(scale_radius = 1.3, flux = 20).shift(-0.1,-0.4)
 profiles = [ prof1, prof2, prof3 ]
 
 if __name__ != "__main__":
@@ -475,8 +475,8 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
                 'round trip xValue gave different result for PositionI for '+name)
 
         # Test drawing the profile on an image with the given wcs
-        world_profile.draw(im1)
-        image_profile.draw(im2)
+        world_profile.drawImage(im1, method='no_pixel')
+        image_profile.drawImage(im2, method='no_pixel')
         np.testing.assert_array_almost_equal(
                 im1.array, im2.array, digits,
                 'world_profile and image_profile were different when drawn for '+name)
@@ -533,18 +533,15 @@ def do_jac_decomp(wcs, name):
     # for getDecomposition.
     base_obj = galsim.Gaussian(sigma=2)
     # Make sure it doesn't have any initial symmetry!
-    base_obj.applyShear(g1=0.1, g2=0.23)
-    base_obj.applyShift(0.17, -0.37)
+    base_obj = base_obj.shear(g1=0.1, g2=0.23).shift(0.17, -0.37)
 
-    obj1 = base_obj.copy()
-    obj1.applyTransformation(wcs.dudx, wcs.dudy, wcs.dvdx, wcs.dvdy)
+    obj1 = base_obj.transform(wcs.dudx, wcs.dudy, wcs.dvdx, wcs.dvdy)
 
-    obj2 = base_obj.copy()
     if flip:
-        obj2.applyTransformation(0,1,1,0)
-    obj2.applyRotation(theta)
-    obj2.applyShear(shear)
-    obj2.applyExpansion(scale)
+        obj2 = base_obj.transform(0,1,1,0)
+    else:
+        obj2 = base_obj
+    obj2 = obj2.rotate(theta).shear(shear).expand(scale)
 
     gsobject_compare(obj1, obj2)
 
@@ -638,8 +635,8 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
             #print 'profile = ',world_profile
             image_profile = wcs.toImage(world_profile, image_pos=image_pos)
 
-            world_profile.draw(im1, offset=(dx,dy))
-            image_profile.draw(im2, offset=(dx,dy))
+            world_profile.drawImage(im1, offset=(dx,dy), method='no_pixel')
+            image_profile.drawImage(im2, offset=(dx,dy), method='no_pixel')
             np.testing.assert_array_almost_equal(
                     im1.array, im2.array, digits,
                     'world_profile and image_profile differed when drawn for '+name)
@@ -649,8 +646,8 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
                 # So guard against NotImplementedError.
                 image_profile = wcs.toImage(world_profile, world_pos=world_pos)
 
-                world_profile.draw(im1, offset=(dx,dy))
-                image_profile.draw(im2, offset=(dx,dy))
+                world_profile.drawImage(im1, offset=(dx,dy), method='no_pixel')
+                image_profile.drawImage(im2, offset=(dx,dy), method='no_pixel')
                 np.testing.assert_array_almost_equal(
                         im1.array, im2.array, digits,
                         'world_profile and image_profile differed when drawn for '+name)
@@ -732,8 +729,8 @@ def do_celestial_wcs(wcs, name):
             #print 'profile = ',world_profile
             image_profile = wcs.toImage(world_profile, image_pos=image_pos)
 
-            world_profile.draw(im1, offset=(dx,dy))
-            image_profile.draw(im2, offset=(dx,dy))
+            world_profile.drawImage(im1, offset=(dx,dy), method='no_pixel')
+            image_profile.drawImage(im2, offset=(dx,dy), method='no_pixel')
             np.testing.assert_array_almost_equal(
                     im1.array, im2.array, digits,
                     'world_profile and image_profile differed when drawn for '+name)
@@ -743,8 +740,8 @@ def do_celestial_wcs(wcs, name):
                 # So guard against NotImplementedError.
                 image_profile = wcs.toImage(world_profile, world_pos=world_pos)
 
-                world_profile.draw(im1, offset=(dx,dy))
-                image_profile.draw(im2, offset=(dx,dy))
+                world_profile.drawImage(im1, offset=(dx,dy), method='no_pixel')
+                image_profile.drawImage(im2, offset=(dx,dy), method='no_pixel')
                 np.testing.assert_array_almost_equal(
                         im1.array, im2.array, digits,
                         'world_profile and image_profile differed when drawn for '+name)

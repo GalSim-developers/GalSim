@@ -188,25 +188,6 @@ class Shear(object):
 
             self._shear = use_shear
 
-    # below, we propagate through all the methods from C++
-
-    # define all the methods for setting shear values
-    def setE1E2(self, e1=0.0, e2=0.0):
-        """Discouraged method that will be deprecated eventually."""
-        self._shear.setE1E2(e1, e2)
-    def setEBeta(self, e=0.0, beta=None): 
-        """Discouraged method that will be deprecated eventually."""
-        self._shear.setEBeta(e, beta)
-    def setEta1Eta2(self, eta1=0.0, eta2=0.0): 
-        """Discouraged method that will be deprecated eventually."""
-        self._shear.setEta1Eta2(eta1, eta2)
-    def setEtaBeta(self, eta=0.0, beta=None): 
-        """Discouraged method that will be deprecated eventually."""
-        self._shear.setEtaBeta(eta, beta)
-    def setG1G2(self, g1=0.0, g2=0.0): 
-        """Discouraged method that will be deprecated eventually."""
-        self._shear.setG1G2(g1, g2)
-
     # define all the methods to get shear values
     def getE1(self): return self._shear.getE1()
     def getE2(self): return self._shear.getE2()
@@ -217,6 +198,7 @@ class Shear(object):
     def getG(self): return self._shear.getG()
     def getG1(self): return self._shear.getG1()
     def getG2(self): return self._shear.getG2()
+
     # make it possible to access g, e, etc. of some Shear object called name using name.g, name.e
     e1 = property(getE1)
     e2 = property(getE2)
@@ -227,23 +209,31 @@ class Shear(object):
     g = property(getG)
     g1 = property(getG1)
     g2 = property(getG2)
+
     # define all the various operators on Shear objects
     def __neg__(self): return Shear(-self._shear)
+
     # order of operations: shear by other._shear, then by self._shear
     def __add__(self, other): return Shear(self._shear + other._shear)
+
     # order of operations: shear by -other._shear, then by self._shear
     def __sub__(self, other): return Shear(self._shear - other._shear)
+
     def __iadd__(self, other):
         self._shear += other._shear
         return self
     def __isub__(self, other):
         self._shear -= other._shear
         return self
+
     def rotationWith(self, other): return self._shear.rotationWith(other)
+
     def __eq__(self, other): return self._shear == other._shear
     def __ne__(self, other): return self._shear != other._shear
+
     def fwd(self, p): return self._shear.fwd(p)
     def inv(self, p): return self._shear.inv(p)
+
     def getMatrix(self): return self._shear.getMatrix()
 
     def __repr__(self):

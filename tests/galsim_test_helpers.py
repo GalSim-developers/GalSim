@@ -39,8 +39,12 @@ def gsobject_compare(obj1, obj2, conv=None, decimal=10):
 
     im1 = galsim.ImageD(16,16)
     im2 = galsim.ImageD(16,16)
-    obj1.draw(scale=0.2, image=im1, normalization='sb')
-    obj2.draw(scale=0.2, image=im2, normalization='sb')
+    if isinstance(obj1,galsim.correlatednoise._BaseCorrelatedNoise):
+        obj1.drawImage(scale=0.2, image=im1)
+        obj2.drawImage(scale=0.2, image=im2)
+    else:
+        obj1.drawImage(scale=0.2, image=im1, method='no_pixel')
+        obj2.drawImage(scale=0.2, image=im2, method='no_pixel')
     np.testing.assert_array_almost_equal(im1.array, im2.array, decimal=decimal)
 
 
@@ -109,14 +113,9 @@ def do_shoot(prof, img, name):
 
     print 'Start do_shoot'
     # Test photon shooting for a particular profile (given as prof).
-    # Since shooting implicitly convolves with the pixel, we need to compare it to
-    # the given profile convolved with a pixel.
-    pix = galsim.Pixel(scale=img.scale)
-    compar = galsim.Convolve(prof,pix)
-    compar.draw(img)
+    prof.drawImage(img)
     flux_max = img.array.max()
     print 'prof.getFlux = ',prof.getFlux()
-    print 'compar.getFlux = ',compar.getFlux()
     print 'flux_max = ',flux_max
     flux_tot = img.array.sum()
     print 'flux_tot = ',flux_tot
@@ -124,9 +123,8 @@ def do_shoot(prof, img, name):
         # Since the number of photons required for a given accuracy level (in terms of
         # number of decimal places), we rescale the comparison by the flux of the
         # brightest pixel.
-        compar /= flux_max
-        img /= flux_max
         prof /= flux_max
+        img /= flux_max
         # The formula for number of photons needed is:
         # nphot = flux_max * flux_tot / photon_shoot_accuracy**2
         # But since we rescaled the image by 1/flux_max, it becomes
@@ -135,14 +133,12 @@ def do_shoot(prof, img, name):
         # If the max is very small, at least bring it up to 0.1, so we are testing something.
         scale = 0.1 / flux_max;
         print 'scale = ',scale
-        compar *= scale
-        img *= scale
         prof *= scale
+        img *= scale
         nphot = flux_max * flux_tot * scale * scale / photon_shoot_accuracy**2
     else:
         nphot = flux_max * flux_tot / photon_shoot_accuracy**2
     print 'prof.getFlux => ',prof.getFlux()
-    print 'compar.getFlux => ',compar.getFlux()
     print 'img.sum => ',img.array.sum()
     print 'img.max => ',img.array.max()
     print 'nphot = ',nphot
@@ -152,7 +148,7 @@ def do_shoot(prof, img, name):
     # in the random numbers.
     rng = galsim.UniformDeviate(12345)
 
-    prof.drawShoot(img2, n_photons=nphot, poisson_flux=False, rng=rng)
+    prof.drawImage(img2, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
     print 'img2.sum => ',img2.array.sum()
     #printval(img2,img)
     np.testing.assert_array_almost_equal(
@@ -169,32 +165,22 @@ def do_shoot(prof, img, name):
         img = galsim.ImageD(512,512, scale=dx)
     else:
         img = galsim.ImageD(128,128, scale=dx)
-    compar.setFlux(test_flux)
-    compar.draw(img, normalization="surface brightness")
-    print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
-    np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, 4,
-            err_msg="Surface brightness normalization for %s disagrees with expected result"%name)
-    compar.draw(img, normalization="flux")
+    prof = prof.withFlux(test_flux)
+    prof.drawImage(img)
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux
     np.testing.assert_almost_equal(img.array.sum(), test_flux, 4,
             err_msg="Flux normalization for %s disagrees with expected result"%name)
 
-    prof.setFlux(test_flux)
     scale = test_flux / flux_tot # from above
     nphot *= scale * scale
     print 'nphot -> ',nphot
     if 'InterpolatedImage' in name:
         nphot *= 10
         print 'nphot -> ',nphot
-    prof.drawShoot(img, n_photons=nphot, normalization="surface brightness", poisson_flux=False,
-                   rng=rng)
-    print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
-    np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, photon_decimal_test,
-            err_msg="Photon shooting SB normalization for %s disagrees with expected result"%name)
-    prof.drawShoot(img, n_photons=nphot, normalization="flux", poisson_flux=False, rng=rng)
+    prof.drawImage(img, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux
     np.testing.assert_almost_equal(img.array.sum(), test_flux, photon_decimal_test,
-            err_msg="Photon shooting flux normalization for %s disagrees with expected result"%name)
+            err_msg="Photon shooting normalization for %s disagrees with expected result"%name)
 
 
 def do_kvalue(prof, im1, name):
@@ -203,11 +189,11 @@ def do_kvalue(prof, im1, name):
     Gaussian (effectively a delta function).
     """
 
-    prof.draw(im1)
+    prof.drawImage(im1, method='no_pixel')
 
     delta = galsim.Gaussian(sigma = 1.e-8)
     conv = galsim.Convolve([prof,delta])
-    im2 = conv.draw(im1.copy())
+    im2 = conv.drawImage(im1.copy(), method='no_pixel')
     printval(im1,im2)
     np.testing.assert_array_almost_equal(
             im2.array, im1.array, 3,
