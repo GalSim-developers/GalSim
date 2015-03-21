@@ -24,6 +24,26 @@ class GalSimDeprecationWarning(UserWarning):
         super(GalSimDeprecationWarning, self).__init__(self, s)
 
 def depr(f, v, s1, s2=None):
+    """A helper function for emitting a GalSimDeprecationWarning.
+
+    Example usage:
+
+    1. Normally, you would simply warn that a deprecated function has a new preferred syntax:
+
+            depr('applyShear', 1.1, 'obj = obj.shear(..)`)
+
+    2. You can add extra information if you want to point out something about the new syntax:
+    
+            depr('draw', 1.1, "drawImage(..., method='no_pixel')",
+                 'Note: drawImage has different args than draw did.  ' +
+                 'Read the docs for the method keywords carefully.')
+
+    3. If the deprecated function has no replacement, you can use '' for the first string.
+
+            depr('calculateCovarianceMatrix', 1.3, '',
+                'This functionality has been removed. If you have a need for it, please open '+
+                'an issue requesting the functionality.')
+    """
     import warnings
     s = str(f)+' has been deprecated since GalSim version '+str(v)+'.'
     if s1:

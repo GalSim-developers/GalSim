@@ -169,7 +169,7 @@ def CN_calculateCovarianceMatrix(self, bounds, scale):
 
     @returns the covariance matrix (as an Image).
     """
-    depr('calculateCovarianceMatrix','1.3','',
+    depr('calculateCovarianceMatrix',1.3,'',
          'This functionality has been removed. If you have a need for it, please open '+
          'an issue requesting the functionality.')
     return galsim._galsim._calculateCovarianceMatrix(self._profile.SBProfile, bounds, scale)

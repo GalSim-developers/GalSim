@@ -134,7 +134,7 @@ class _BaseCorrelatedNoise(object):
         """Returns a copy of the correlated noise model.
 
         By default, the copy will share the BaseDeviate random number generator with the parent
-        instance.  However, you can provide a new rng to use in the copy if want with
+        instance.  However, you can provide a new rng to use in the copy if you want with
 
             >>> cn_copy = cn.copy(rng=new_rng)
         """

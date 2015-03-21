@@ -39,8 +39,12 @@ def gsobject_compare(obj1, obj2, conv=None, decimal=10):
 
     im1 = galsim.ImageD(16,16)
     im2 = galsim.ImageD(16,16)
-    obj1.drawImage(scale=0.2, image=im1, method='no_pixel')
-    obj2.drawImage(scale=0.2, image=im2, method='no_pixel')
+    if isinstance(obj1,galsim.correlatednoise._BaseCorrelatedNoise):
+        obj1.drawImage(scale=0.2, image=im1)
+        obj2.drawImage(scale=0.2, image=im2)
+    else:
+        obj1.drawImage(scale=0.2, image=im1, method='no_pixel')
+        obj2.drawImage(scale=0.2, image=im2, method='no_pixel')
     np.testing.assert_array_almost_equal(im1.array, im2.array, decimal=decimal)
 
 

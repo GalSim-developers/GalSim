@@ -150,9 +150,9 @@ def GSObject_applyShift(self, *args, **kwargs):
 def GSObject_draw(self, *args, **kwargs):
     """A deprecated synonym for obj.drawImage(method='no_pixel')
     """
-    depr('draw', 1.1, "drawImage(..., method='no_pixel'",
-         'Note: drawImage has different args than draw did.  Read the docs for the method ' +
-         'keyword carefully.')
+    depr('draw', 1.1, "drawImage(..., method='no_pixel')",
+         'Note: drawImage has different args than draw did.  '+
+         'Read the docs for the method keywords carefully.')
     normalization = kwargs.pop('normalization','f')
     if normalization in ['flux','f']:
         return self.drawImage(*args, method='no_pixel', **kwargs)
@@ -162,9 +162,9 @@ def GSObject_draw(self, *args, **kwargs):
 def GSObject_drawShoot(self, *args, **kwargs):
     """A deprecated synonym for obj.drawImage(method='phot')
     """
-    depr('draw', 1.1, "drawImage(..., method='phot')",
-         'Note: drawImage has different args than draw did.  Read the docs for the method ' +
-         'keyword carefully.')
+    depr('drawShoot', 1.1, "drawImage(..., method='phot')",
+         'Note: drawImage has different args than draw did.  '+
+         'Read the docs for the method keywords carefully.')
     normalization = kwargs.pop('normalization','f')
     if normalization in ['flux','f']:
         return self.drawImage(*args, method='phot', **kwargs)

@@ -20,27 +20,27 @@ import galsim
 from galsim.deprecated import depr
 
 def Shear_setE1E2(self, e1=0.0, e2=0.0):
-    """Deprecated method that will be deprecated eventually."""
+    """Deprecated method for setting the Shear to have some e1,e2"""
     depr('setE1E2',1.1,'shear = galsim.Shear(e1=e1,e2=e2)')
     self._shear.setE1E2(e1, e2)
 
 def Shear_setEBeta(self, e=0.0, beta=None): 
-    """Deprecated method that will be deprecated eventually."""
+    """Deprecated method for setting the Shear to have some e,beta"""
     depr('setEBeta',1.1,'shear = galsim.Shear(e=e,beta=beta)')
     self._shear.setEBeta(e, beta)
 
 def Shear_setEta1Eta2(self, eta1=0.0, eta2=0.0): 
-    """Deprecated method that will be deprecated eventually."""
+    """Deprecated method for setting the Shear to have some eta1,eta2"""
     depr('setEta1Eta2',1.1,'shear = galsim.Shear(eta1=eta1,eta2=eta2)')
     self._shear.setEta1Eta2(eta1, eta2)
 
 def Shear_setEtaBeta(self, eta=0.0, beta=None): 
-    """Deprecated method that will be deprecated eventually."""
+    """Deprecated method for setting the Shear to have some eta,beta"""
     depr('setEtaBeta',1.1,'shear = galsim.Shear(e=e,beta=beta)')
     self._shear.setEtaBeta(eta, beta)
 
 def Shear_setG1G2(self, g1=0.0, g2=0.0): 
-    """Deprecated method that will be deprecated eventually."""
+    """Deprecated method for setting the Shear to have some g1,g2"""
     depr('setG1G2',1.1,'shear = galsim.Shear(g1=g1,g2=g2)')
     self._shear.setG1G2(g1, g2)
 
