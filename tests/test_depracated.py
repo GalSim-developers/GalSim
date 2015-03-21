@@ -31,7 +31,7 @@ except ImportError:
 def check_dep(f, *args, **kwargs):
     """Check that some function raises a GalSimDeprecationWarning as a warning, but not an error.
     """
-    print 'Check dep: ',f,args,kwargs
+    #print 'Check dep: ',f,args,kwargs
     import warnings
     # Cause all warnings to always be triggered.
     # Important in case we want to trigger the same one twice in the test suite.
@@ -42,7 +42,7 @@ def check_dep(f, *args, **kwargs):
         res = f(*args, **kwargs)
     #print 'w = ',w
     assert len(w) == 1, "Calling %s did not raise a warning"%str(f)
-    #print 'Caught w = ',w[0]
+    print str(w[0].message)
     return res
 
 
