@@ -605,7 +605,7 @@ def _GenerateFromRandomBinomial(param, param_name, base, value_type):
     req = {}
     opt = { 'p' : float }
 
-    # Let N be optional for bool, since N=2 is the only value that makes sense.
+    # Let N be optional for bool, since N=1 is the only value that makes sense.
     if value_type is bool:
         opt['N'] = int
     else:
