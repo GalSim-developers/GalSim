@@ -42,8 +42,6 @@ the code in 'diff mode' (which is not the default, but which makes difference im
 impact of each detector effect separately) they take up a bit over 2G.
 
 New features introduced in this demo:
-- galsim.COSMOSCatalog(...)
-- galsim.COSMOSCatalog.makeObj()
 - image.quantize()
 - Routines to include WFIRST-specific detector effects:
   - galsim.wfirst.addReciprocityFailure(image)
@@ -171,7 +169,7 @@ def main(argv):
     # the PSF is position-independent within the SCA, we can simply do the convolution with that PSF
     # now instead of using a different one for each position.
     logger.info('Processing the objects in the catalog to get GSObject representations')
-    obj_list = cat.makeObj(numpy.arange(n_use), chromatic=True)
+    obj_list = cat.makeGalaxy(numpy.arange(n_use), chromatic=True, gal_type='parametric')
     gal_list = []
     for ind in range(len(obj_list)):
         # Convolve the chromatic galaxy and the chromatic PSF

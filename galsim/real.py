@@ -332,18 +332,18 @@ class RealGalaxyCatalog(object):
         self.file_name, self.image_dir, self.noise_dir = \
             _parse_files_dirs(file_name, image_dir, dir, noise_dir)
 
-        cat = pyfits.getdata(self.file_name)
-        self.nobjects = len(cat) # number of objects in the catalog
+        self.cat = pyfits.getdata(self.file_name)
+        self.nobjects = len(self.cat) # number of objects in the catalog
         if _nobjects_only: return  # Exit early if that's all we needed.
-        ident = cat.field('ident') # ID for object in the training sample
+        ident = self.cat.field('ident') # ID for object in the training sample
 
         # We want to make sure that the ident array contains all strings.
         # Strangely, ident.astype(str) produces a string with each element == '1'.
         # Hence this way of doing the conversion:
         self.ident = [ "%s"%val for val in ident ]
 
-        self.gal_file_name = cat.field('gal_filename') # file containing the galaxy image
-        self.psf_file_name = cat.field('PSF_filename') # file containing the PSF image
+        self.gal_file_name = self.cat.field('gal_filename') # file containing the galaxy image
+        self.psf_file_name = self.cat.field('PSF_filename') # file containing the PSF image
 
         # Add the directories:
         self.gal_file_name = [ os.path.join(self.image_dir,f) for f in self.gal_file_name ]
@@ -352,21 +352,21 @@ class RealGalaxyCatalog(object):
         # We don't require the noise_filename column.  If it is not present, we will use
         # Uncorrelated noise based on the variance column.
         try:
-            self.noise_file_name = cat.field('noise_filename') # file containing the noise cf
+            self.noise_file_name = self.cat.field('noise_filename') # file containing the noise cf
             self.noise_file_name = [ os.path.join(self.noise_dir,f) for f in self.noise_file_name ]
         except:
             self.noise_file_name = None
 
-        self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
-        self.psf_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
-        self.pixel_scale = cat.field('pixel_scale') # pixel scale for image (could be different
+        self.gal_hdu = self.cat.field('gal_hdu') # HDU containing the galaxy image
+        self.psf_hdu = self.cat.field('PSF_hdu') # HDU containing the PSF image
+        self.pixel_scale = self.cat.field('pixel_scale') # pixel scale for image (could be different
         # if we have training data from other datasets... let's be general here and make it a 
         # vector in case of mixed training set)
-        self.variance = cat.field('noise_variance') # noise variance for image
-        self.mag = cat.field('mag')   # apparent magnitude
-        self.band = cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
-        self.weight = cat.field('weight') # weight factor to account for size-dependent
-                                          # probability
+        self.variance = self.cat.field('noise_variance') # noise variance for image
+        self.mag = self.cat.field('mag')   # apparent magnitude
+        self.band = self.cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
+        self.weight = self.cat.field('weight') # weight factor to account for size-dependent
+                                               # probability
 
         self.saved_noise_im = {}
         self.loaded_files = {}
