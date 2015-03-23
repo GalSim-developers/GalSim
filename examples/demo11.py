@@ -112,6 +112,10 @@ def main(argv):
     logger.info('Starting demo script 11')
  
     # Read in galaxy catalog
+    # The COSMOSCatalog uses the same input file as we have been usign for RealGalaxyCatalogs
+    # along with a second file called real_galaxy_catalog_examples_fits.fits, which stores
+    # the information about the parameteric fits.  There is no need to specify the second file
+    # name, since the name is derivable from the name of the main catalog.
     if True:
         # The catalog we distribute with the GalSim code only has 100 galaxies.
         # The galaxies will typically be reused several times here.
@@ -246,12 +250,11 @@ def main(argv):
 
         # Now we will have the COSMOSCatalog make a galaxy profile for us.  It can make either
         # a RealGalaxy using the original HST image and PSF, or a parametric model based on
-        # parametric fits to the light distribution of the HST observation.
+        # parametric fits to the light distribution of the HST observation.  The parametric
+        # models are either a Sersic fit to the data or a bulge + disk fit according to which
+        # one gave the better chisq value.
 
-        # First determine which index in the catalog we will use for this object.
-        index = ud() * cosmos_cat.nobjects
-
-        # Next determine whether we will make a real galaxy (`gal_type = 'real'`) or a parametric
+        # First determine whether we will make a real galaxy (`gal_type = 'real'`) or a parametric
         # galaxy (`gal_type = 'parametric'`).  The real galaxies take longer to render, so for this
         # script, we just use them 30% of the time and use parametric galaxies the other 70%. 
 
@@ -261,6 +264,9 @@ def main(argv):
         # i.e. How many heads you get after N flips if each flip has a chance, p, of being heads.
         binom = galsim.BinomialDeviate(ud, N=1, p=0.3)
         real = binom()
+
+        # Next determine which index in the catalog we will use for this object.
+        index = int(ud() * cosmos_cat.nobjects)
 
         if real:
             # For real galaxies, we will want to whiten the noise in the image (below).
@@ -288,6 +294,10 @@ def main(argv):
         theta = ud()*2.0*numpy.pi*galsim.radians
         gal = gal.rotate(theta)
 
+        # Rescale the flux to match our telescope configuration.
+        # This automatically scales up the noise variance by flux_scaling**2.
+        gal *= flux_scaling
+
         # Apply the cosmological (reduced) shear and magnification at this position using a single
         # GSObject method.
         gal = gal.lens(g1, g2, mu)
@@ -295,14 +305,25 @@ def main(argv):
         # Convolve with the PSF.  
         final = galsim.Convolve(psf, gal)
 
-        # Account for the fractional part of the position:
-        ix = int(math.floor(x+0.5))
-        iy = int(math.floor(y+0.5))
-        offset = galsim.PositionD(x-ix, y-iy)
+        # Account for the fractional part of the position
+        # cf. demo9.py for an explanation of this nominal position stuff.
+        x_nominal = image_pos.x + 0.5
+        y_nominal = image_pos.y + 0.5
+        ix_nominal = int(math.floor(x_nominal+0.5))
+        iy_nominal = int(math.floor(y_nominal+0.5))
+        dx = x_nominal - ix_nominal
+        dy = y_nominal - iy_nominal
+        offset = galsim.PositionD(dx,dy)
 
         # We use method='no_pixel' here because the SDSS PSF image that we are using includes the
         # pixel response already.
         stamp = final.drawImage(wcs=wcs.local(image_pos), offset=offset, method='no_pixel')
+
+        # Recenter the stamp at the desired position:
+        stamp.setCenter(ix_nominal,iy_nominal)
+
+        # Find the overlapping bounds:
+        bounds = stamp.bounds & full_image.bounds
 
         # Now, if we are using a real galaxy, we want to ether whiten or at least symmetrize the
         # noise on the postage stamp to avoid having to deal with correlated noise in any kind of
@@ -328,25 +349,13 @@ def main(argv):
             else:
                 # Here is how you would do it if you wanted to fully whiten the image.
                 new_variance = stamp.whitenNoise(final.noise)
-        else:
-            # Parametric galaxies don't have any noise in them.
-            new_variance = 0
 
-        # Rescale the flux to match our telescope configuration.
-        stamp *= flux_scaling
-        # This also scales up the current variance by flux_scaling**2.
-        new_variance *= flux_scaling**2
+            # We need to keep track of how much variance we have currently in the image, so when
+            # we add more noise, we can omit what is already there.
+            noise_image[bounds] += new_variance
 
-        # Recenter the stamp at the desired position:
-        stamp.setCenter(ix,iy)
-
-        # Find the overlapping bounds:
-        bounds = stamp.bounds & full_image.bounds
+        # Finally, add the stamp to the full image.
         full_image[bounds] += stamp[bounds]
-
-        # We need to keep track of how much variance we have currently in the image, so when
-        # we add more noise, we can omit what is already there.
-        noise_image[bounds] += new_variance
 
         time2 = time.time()
         tot_time = time2-time1
