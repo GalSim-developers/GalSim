@@ -206,8 +206,18 @@ class COSMOSCatalog(object):
         Routine to construct GSObjects corresponding to the catalog entry with a particular index 
         or indices.
 
-        The flux is set such that drawing into an image with the COSMOS bandpass and pixel scale
-        should give the right pixel values to mimic the actual COSMOS image.
+        The flux of the galaxy corresponds to a 1 second exposure time with the Hubble Space
+        Telescope.  Users who wish to simulate F814W images with a different telescope and an
+        exposure time longer than 1 second should multiply by that exposure time, and by the square
+        of the ratio of the effective diameter of their telescope compared to that of HST.
+        (Effective diameter may differ from the actual diameter if there is significant
+        obscuration.)  See demo11.py for an example that explicitly takes this normalization into
+        account.
+
+        Due to the adopted flux normalization, drawing into an image with the COSMOS bandpass and
+        pixel scale should give the right pixel values to mimic the actual COSMOS science images.
+        The COSMOS science images that we use are normalized to a count rate of 1 second, which is
+        why there is no need to rescale to account for the COSMOS exposure time.
 
         There is an option to make chromatic objects (`chromatic=True`); however, it is important
         to bear in mind that we do not actually have spatially-resolved color information for these
@@ -219,6 +229,10 @@ class COSMOSCatalog(object):
         galaxies).  For the given SED and redshift, we then normalize to give the right (observed)
         flux in F814W.  Note that for a mock "deep" sample, the redshift distributions of the
         galaxies would be modified, which is not included here.
+
+        For this chromatic option, it is still the case that the output flux normalization is
+        appropriate for the HST effective telescope diameter and a 1 second exposure time, so users
+        who are simulating another scenario should account for this.
 
         @param index            Index of the desired galaxy in the catalog for which a GSObject
                                 should be constructed.  You may also provide a list or array of

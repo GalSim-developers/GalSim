@@ -99,9 +99,14 @@ def main(argv):
     tel_diam = 4                      # Let's figure out the flux for a 4 m class telescope
     exp_time = 300                    # exposing for 300 seconds.
 
-    # The catalog returns objects that are appropriate for HST in 1 second exposures.
-    # So for our telescope we scale up by the relative area and exposure time.
-    flux_scaling = (tel_diam/2.4)**2 * exp_time
+    # The catalog returns objects that are appropriate for HST in 1 second exposures.  So for our
+    # telescope we scale up by the relative area and exposure time.  Note that what is important is
+    # the *effective* area after taking into account obscuration.  For HST, the telescope diameter
+    # is 2.4 but there is obscuration (a linear factor of 0.33).  Here, we assume that the telescope
+    # we're simulating effectively has no obscuration factor.  We're also ignoring the pi/4 factor
+    # since it appears in the numerator and denominator, so we use area = diam^2.
+    hst_eff_area = 2.4**2 * (1.-0.33**2)
+    flux_scaling = (tel_diam**2/hst_eff_area) * exp_time
 
     # random_seed is used for both the power spectrum realization and the random properties
     # of the galaxies.
