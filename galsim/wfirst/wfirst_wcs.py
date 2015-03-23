@@ -425,7 +425,7 @@ def _populate_required_fields(header):
     header['BITPIX'] = 16
     header['NAXIS'] = 0
     header['EXTEND'] = 'True'
-    header['BZERO'] = 32768
+    header['BZERO'] = 0
     header['BSCALE'] = 1
     header['TELESCOP'] = (tel_name, "telescope used to acquire data")
     header['INSTRUME'] = (instr_name, "identifier for instrument used to acquire data")
