@@ -1915,10 +1915,10 @@ def test_spergel():
         spergel = galsim.Spergel(nu=nu, scale_radius=1.0)
         np.testing.assert_almost_equal(
             spergel.SBProfile.calculateFluxRadius(1.e-5)/enclosing_radius, 1.0, 4,
-            err_msg="Calculated incorrect Spergel(nu={}) flux-enclosing-radius.".format(nu))
+            err_msg="Calculated incorrect Spergel(nu={0}) flux-enclosing-radius.".format(nu))
         np.testing.assert_almost_equal(
             spergel.SBProfile.calculateIntegratedFlux(1.e-5)/enclosed_flux, 1.0, 4,
-            err_msg="Calculated incorrect Spergel(nu={}) enclosed flux.".format(nu))
+            err_msg="Calculated incorrect Spergel(nu={0}) enclosed flux.".format(nu))
 
         # Use non-unity values.
         spergel = galsim.Spergel(nu=0.37, flux=1.7, half_light_radius=2.3)

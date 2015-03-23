@@ -1000,7 +1000,7 @@ def test_convolve_cosmos():
                                          # zero convimage and write over it later!
     mnsq_list = [np.mean(convimage.array**2)]
     var_list = [convimage.array.var()]
-    print 'start set of {} iterations to build up the correlation function'.format(
+    print 'start set of {0} iterations to build up the correlation function'.format(
             nsum_test_convolve_cosmos)
     for i in range(nsum_test_convolve_cosmos - 1):
         print 'iteration ',i
