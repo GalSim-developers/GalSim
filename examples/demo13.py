@@ -233,10 +233,8 @@ def main(argv):
                 # stamp.
                 bounds = stamp_bounds & final_image.bounds
 
-                # Copy the image into the right place in the big image.  There is a difference in
-                # normalization between COSMOS images and these that we account for using a
-                # numerical factor.
-                final_image[bounds] += stamp[bounds]/0.03**2
+                # Copy the image into the right place in the big image.
+                final_image[bounds] += stamp[bounds]
 
         # Now we're done with the per-galaxy drawing for this image.  The rest will be done for the
         # entire image at once.

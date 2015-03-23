@@ -50,9 +50,10 @@ class RealGalaxy(GSObject):
     RealGalaxyCatalog documentation) to read in data about realistic galaxies that can be used for
     simulations based on those galaxies.  Also included in the class is additional information that
     might be needed to make or interpret the simulations, e.g., the noise properties of the training
-    data.
+    data.  Users who wish to draw RealGalaxies that have well-defined flux scalings in various
+    passbands, and/or parametric representations, should use the COSMOSGalaxy class.
 
-    Because RealGalaxy involved a Deconvolution, `method = 'phot'` is unavailable for the
+    Because RealGalaxy involves a Deconvolution, `method = 'phot'` is unavailable for the
     drawImage() function.
 
     Initialization
@@ -102,6 +103,8 @@ class RealGalaxy(GSObject):
                             details.  [default: Quintic]
     @param flux             Total flux, if None then original flux in galaxy is adopted without
                             change. [default: None]
+    @param flux_rescale     Flux rescaling factor; if None, then no rescaling is done.  Either
+                            `flux` or `flux_rescale` may be set, but not both. [default: None]
     @param pad_factor       Factor by which to pad the Image when creating the
                             InterpolatedImage.  We strongly recommend leaving this parameter
                             at its default value; see text above for details.  [default: 4]
@@ -136,8 +139,8 @@ class RealGalaxy(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
-                 rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=4,
-                 noise_pad_size=0, gsparams=None, logger=None):
+                 rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
+                 pad_factor=4, noise_pad_size=0, gsparams=None, logger=None):
 
         import numpy as np
 
@@ -145,6 +148,8 @@ class RealGalaxy(GSObject):
             rng = galsim.BaseDeviate()
         elif not isinstance(rng, galsim.BaseDeviate):
             raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
+        if flux is not None and flux_rescale is not None:
+            raise TypeError("Cannot supply a flux and a flux rescaling factor!")
  
         # Code block below will be for galaxy selection; not all are currently implemented.  Each
         # option must return an index within the real_galaxy_catalog.        
@@ -229,6 +234,8 @@ class RealGalaxy(GSObject):
         # If flux is None, leave flux as given by original image
         if flux is not None:
             self.original_image = self.original_image.withFlux(flux)
+        if flux_rescale is not None:
+            self.original_image = self.original_image.withScaledFlux(flux_rescale)
 
         # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.Deconvolve(self.original_psf, gsparams=gsparams)

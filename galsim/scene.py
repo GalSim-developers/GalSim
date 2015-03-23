@@ -68,7 +68,7 @@ class COSMOSCatalog(object):
         >>> im_size = 64
         >>> pix_scale = 0.05
         >>> bandpass = galsim.Bandpass('wfc_F814W.dat.gz', dir=galsim.meta_data.share_dir,
-                                       wave_type='ang').thin().withZeropoint(25.94)
+                                       wave_type='ang').thin().withZeropoint(34.19)
         >>> real_cat = galsim.COSMOSCatalog()
         >>> param_cat = galsim.COSMOSCatalog(use_real=False)
         >>> psf = galsim.OpticalPSF(diam=2.4, lam=1000.) # bigger than HST F814W PSF.
@@ -301,8 +301,11 @@ class COSMOSCatalog(object):
             return gal_list[0]
 
     def _makeReal(self, indices, noise_pad_size, rng, gsparams):
+        # The only interesting thing here is that we apply a flux-rescaling factor to get into units
+        # of counts, instead of count rates (which are units of the default COSMOS science images).
         return [ galsim.RealGalaxy(self.real_cat, index=self.orig_index[i],
-                                   noise_pad_size=noise_pad_size, rng=rng, gsparams=gsparams)
+                                   noise_pad_size=noise_pad_size, rng=rng, gsparams=gsparams,
+                                   flux_rescale=2000.)
                  for i in indices ]
 
     def _makeParam(self, indices, chromatic, gsparams):
@@ -310,9 +313,19 @@ class COSMOSCatalog(object):
             # Defer making the Bandpass and reading in SEDs until we actually are going to use them.
             # It's not a huge calculation, but the thin() call especially isn't trivial.
             if not hasattr(self, '_COSMOS_bandpass'):
+                # We have to set an appropriate zeropoint.  This is slightly complicated:
+                # The nominal COSMOS zeropoint for single-orbit depth (2000s of usable exposure
+                # time, across 4 dithered exposures) is supposedly 25.94.  But the science images
+                # that we are using were normalized to count rate, not counts, meaning that an
+                # object with mag=25.94 has a count rate of 1 photon/sec, not 1 photon total.  In
+                # GalSim we normally assume a normalization of zero points in terms of counts, so we
+                # have to define the zero-point in a way that takes this into account:
+                zp = 25.94 + 2.5*math.log10(2000.)
                 self._COSMOS_bandpass = galsim.Bandpass(
                     os.path.join(galsim.meta_data.share_dir, 'wfc_F814W.dat.gz'),
-                    wave_type='ang').thin().withZeropoint(25.94)
+                    wave_type='ang').thin().withZeropoint(zp)
+                # This means that when drawing chromatic parametric galaxies, the outputs will be
+                # properly normalized in terms of counts.
 
                 # Read in some SEDs.
                 self.sed_bulge = \
