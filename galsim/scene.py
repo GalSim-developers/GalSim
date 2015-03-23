@@ -301,11 +301,8 @@ class COSMOSCatalog(object):
             return gal_list[0]
 
     def _makeReal(self, indices, noise_pad_size, rng, gsparams):
-        # The only interesting thing here is that we apply a flux-rescaling factor to get into units
-        # of counts, instead of count rates (which are units of the default COSMOS science images).
         return [ galsim.RealGalaxy(self.real_cat, index=self.orig_index[i],
-                                   noise_pad_size=noise_pad_size, rng=rng, gsparams=gsparams,
-                                   flux_rescale=2000.)
+                                   noise_pad_size=noise_pad_size, rng=rng, gsparams=gsparams)
                  for i in indices ]
 
     def _makeParam(self, indices, chromatic, gsparams):

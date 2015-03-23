@@ -77,6 +77,12 @@ class RealGalaxy(GSObject):
     https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621 and the following
     comments.
 
+    If you don't set a flux, the flux of the returned object will be the flux of the original
+    COSMOS data, scaled to correspond to a 1 second HST exposure.  If you want a flux approproriate
+    for a longer exposure, you can set flux_rescale = the exposure time.  You can also account
+    for exposures taken with a different telescope diameter than the HST 2.4 meter diameter
+    this way.
+
     @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
                             find the data, etc.
     @param index            Index of the desired galaxy in the catalog. [One of `index`, `id`, or
@@ -130,6 +136,7 @@ class RealGalaxy(GSObject):
     _opt_params = { "x_interpolant" : str ,
                     "k_interpolant" : str ,
                     "flux" : float ,
+                    "flux_rescale" : float ,
                     "pad_factor" : float,
                     "noise_pad_size" : float,
                   }
@@ -233,9 +240,11 @@ class RealGalaxy(GSObject):
 
         # If flux is None, leave flux as given by original image
         if flux is not None:
+            self.noise *= (flux / self.original_image.flux)**2
             self.original_image = self.original_image.withFlux(flux)
         if flux_rescale is not None:
-            self.original_image = self.original_image.withScaledFlux(flux_rescale)
+            self.noise *= flux_rescale**2
+            self.original_image *= flux_rescale
 
         # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.Deconvolve(self.original_psf, gsparams=gsparams)
