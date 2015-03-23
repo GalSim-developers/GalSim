@@ -158,42 +158,49 @@ class RealGalaxy(GSObject):
         if flux is not None and flux_rescale is not None:
             raise TypeError("Cannot supply a flux and a flux rescaling factor!")
  
-        # Code block below will be for galaxy selection; not all are currently implemented.  Each
-        # option must return an index within the real_galaxy_catalog.        
-        if index is not None:
-            if id is not None or random is True:
-                raise AttributeError('Too many methods for selecting a galaxy!')
-            use_index = index
-        elif id is not None:
-            if random is True:
-                raise AttributeError('Too many methods for selecting a galaxy!')
-            use_index = real_galaxy_catalog.getIndexForID(id)
-        elif random is True:
-            uniform_deviate = galsim.UniformDeviate(rng)
-            use_index = int(real_galaxy_catalog.nobjects * uniform_deviate()) 
+        if isinstance(real_galaxy_catalog, tuple):
+            # Special (undocumented) way to build a RealGalaxy without needing the rgc directly
+            # by providing the things we need from it.  Used by COSMOSGalaxy.
+            self.gal_image, self.psf_image, noise_image, pixel_scale, var = real_galaxy_catalog
+            use_index = 0  # For the logger statements below.
+            if logger:
+                logger.debug('Start RealGalaxy constructor.',use_index)
+            self.catalog_file = None
         else:
-            raise AttributeError('No method specified for selecting a galaxy!')
+            # Get the index to use in the catalog
+            if index is not None:
+                if id is not None or random is True:
+                    raise AttributeError('Too many methods for selecting a galaxy!')
+                use_index = index
+            elif id is not None:
+                if random is True:
+                    raise AttributeError('Too many methods for selecting a galaxy!')
+                use_index = real_galaxy_catalog.getIndexForID(id)
+            elif random is True:
+                uniform_deviate = galsim.UniformDeviate(self.rng)
+                use_index = int(real_galaxy_catalog.nobjects * uniform_deviate()) 
+            else:
+                raise AttributeError('No method specified for selecting a galaxy!')
+            if logger:
+                logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
 
-        if logger:
-            logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
+            # Read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
+            self.gal_image = real_galaxy_catalog.getGal(use_index)
+            if logger:
+                logger.debug('RealGalaxy %d: Got gal_image',use_index)
 
+            self.psf_image = real_galaxy_catalog.getPSF(use_index)
+            if logger:
+                logger.debug('RealGalaxy %d: Got psf_image',use_index)
 
-        # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
-        self.gal_image = real_galaxy_catalog.getGal(use_index)
-        if logger:
-            logger.debug('RealGalaxy %d: Got gal_image',use_index)
-
-        self.psf_image = real_galaxy_catalog.getPSF(use_index)
-        if logger:
-            logger.debug('RealGalaxy %d: Got psf_image',use_index)
-
-        #self.noise = real_galaxy_catalog.getNoise(use_index, rng, gsparams)
-        # This is a duplication of the RealGalaxyCatalog.getNoise() function, since we
-        # want it to be possible to have the RealGalaxyCatalog in another process, and the
-        # BaseCorrelatedNoise object is not picklable.  So we just build it here instead.
-        noise_image, pixel_scale, var = real_galaxy_catalog.getNoiseProperties(use_index)
-        if logger:
-            logger.debug('RealGalaxy %d: Got noise_image',use_index)
+            #self.noise = real_galaxy_catalog.getNoise(use_index, self.rng, gsparams)
+            # We need to duplication some of the RealGalaxyCatalog.getNoise() function, since we
+            # want it to be possible to have the RealGalaxyCatalog in another process, and the
+            # BaseCorrelatedNoise object is not picklable.  So we just build it here instead.
+            noise_image, pixel_scale, var = real_galaxy_catalog.getNoiseProperties(use_index)
+            if logger:
+                logger.debug('RealGalaxy %d: Got noise_image',use_index)
+            self.catalog_file = real_galaxy_catalog.getFileName()
 
         if noise_image is None:
             self.noise = galsim.UncorrelatedNoise(var, rng=rng, scale=pixel_scale,
@@ -208,7 +215,6 @@ class RealGalaxy(GSObject):
             logger.debug('RealGalaxy %d: Finished building noise',use_index)
 
         # Save any other relevant information as instance attributes
-        self.catalog_file = real_galaxy_catalog.getFileName()
         self.index = use_index
         self.pixel_scale = float(pixel_scale)
 

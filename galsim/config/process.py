@@ -36,6 +36,7 @@ valid_input_types = {
     'dict' : ('galsim.Dict', [], False, True, None, ['Dict']), 
     'real_catalog' : ('galsim.RealGalaxyCatalog', [], True, False, None, 
                       ['RealGalaxy', 'RealGalaxyOriginal']),
+    'cosmos_catalog' : ('galsim.COSMOSCatalog', [], True, False, None, ['COSMOSGalaxy']),
     'nfw_halo' : ('galsim.NFWHalo', [], False, False, None,
                   ['NFWHaloShear','NFWHaloMagnification']),
     'power_spectrum' : ('galsim.PowerSpectrum',
