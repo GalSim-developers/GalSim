@@ -27,7 +27,6 @@
 #include "boost/python/stl_iterator.hpp"
 
 #include "SBExponential.h"
-#include "RadiusHelper.h"
 
 namespace bp = boost::python;
 

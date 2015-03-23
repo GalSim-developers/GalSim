@@ -203,7 +203,7 @@ namespace galsim {
 
         void sincos(double& sint, double& cost) const {
 #ifdef _GLIBCXX_HAVE_SINCOS
-            sincos(_val,&sint,&cost);
+            ::sincos(_val,&sint,&cost);
 #else
             cost = std::cos(_val);
             sint = std::sin(_val);
