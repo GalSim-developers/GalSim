@@ -99,10 +99,10 @@ class LookupTable(object):
                 raise ValueError("Must specify either file or x,f for LookupTable")
 
         # turn x and f into numpy arrays so that all subsequent math is possible (unlike for
-        # lists, tuples).
-        if not isinstance(x, np.ndarray):
+        # lists, tuples).  Also make sure the dtype is float
+        if not (isinstance(x, np.ndarray) and x.dtype == float):
             x = np.array(x).astype(float)
-        if not isinstance(f, np.ndarray):
+        if not (isinstance(f, np.ndarray) and x.dtype == float):
             f = np.array(f).astype(float)
         self.x = x
         self.f = f
