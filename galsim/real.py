@@ -663,12 +663,11 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
 
 def _parse_files_dirs(file_name, image_dir, dir, noise_dir):
     if file_name is None:
-        if dir is not None:
-            raise ValueError('Cannot specify dir when using default file_name.')
         if image_dir is not None:
             raise ValueError('Cannot specify image_dir when using default file_name.')
         file_name = 'real_galaxy_catalog_23.5.fits'
-        dir = os.path.join(galsim.meta_data.share_dir, 'COSMOS_23.5_training_sample')
+        if dir is None:
+            dir = os.path.join(galsim.meta_data.share_dir, 'COSMOS_23.5_training_sample')
         full_file_name = os.path.join(dir,file_name)
         full_image_dir = dir
         if not os.path.isfile(full_file_name):
