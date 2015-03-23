@@ -67,14 +67,14 @@ class COSMOSCatalog(object):
 
         >>> im_size = 64
         >>> pix_scale = 0.05
-        >>> bandpass = galsim.Bandpass('wfc_F814W.dat.gz', dir=galsim.meta_data.share_dir,
-                                       wave_type='ang').thin().withZeropoint(34.19)
-        >>> real_cat = galsim.COSMOSCatalog()
-        >>> param_cat = galsim.COSMOSCatalog(use_real=False)
+        >>> bp_file = os.path.join(galsim.meta_data.share_dir, 'wfc_F814W.dat.gz')
+        >>> bandpass = galsim.Bandpass(bp_file, wave_type='ang').thin().withZeropoint(34.19)
+        >>> cosmos_cat = galsim.COSMOSCatalog()
         >>> psf = galsim.OpticalPSF(diam=2.4, lam=1000.) # bigger than HST F814W PSF.
         >>> indices = np.arange(10)
-        >>> real_gal_list = real_cat.makeGalaxy(indices, noise_pad_size=im_size*pix_scale)
-        >>> param_gal_list = param_cat.makeGalaxy(indices, chromatic=True)
+        >>> real_gal_list = cosmos_cat.makeGalaxy(indices, gal_type='real',
+        ...                                       noise_pad_size=im_size*pix_scale)
+        >>> param_gal_list = cosmosm_cat.makeGalaxy(indices, gal_type='parametric', chromatic=True)
         >>> for ind in indices:
         >>>     real_gal = galsim.Convolve(real_gal_list[ind], psf)
         >>>     param_gal = galsim.Convolve(param_gal_list[ind], psf)
