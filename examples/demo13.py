@@ -170,9 +170,7 @@ def main(argv):
     # now instead of using a different one for each position.  We also have to include the correct
     # flux scaling: The catalog returns objects that would be observed by HST in 1 second
     # exposures. So for our telescope we scale up by the relative area and exposure time.  Note that
-    # what is important is the *effective* area after taking into account obscuration.  For HST, the
-    # telescope diameter is 2.4 but there is obscuration (a linear factor of 0.33).  Here, we assume
-    # that the telescope we're simulating effectively has no obscuration factor.
+    # what is important is the *effective* area after taking into account obscuration.
     logger.info('Processing the objects in the catalog to get GSObject representations')
     obj_list = cat.makeGalaxy(numpy.arange(n_use), chromatic=True, gal_type='parametric')
     gal_list = []
