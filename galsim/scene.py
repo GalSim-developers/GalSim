@@ -68,7 +68,7 @@ class COSMOSCatalog(object):
         >>> im_size = 64
         >>> pix_scale = 0.05
         >>> bp_file = os.path.join(galsim.meta_data.share_dir, 'wfc_F814W.dat.gz')
-        >>> bandpass = galsim.Bandpass(bp_file, wave_type='ang').thin().withZeropoint(34.19)
+        >>> bandpass = galsim.Bandpass(bp_file, wave_type='ang').thin().withZeropoint(25.94)
         >>> cosmos_cat = galsim.COSMOSCatalog()
         >>> psf = galsim.OpticalPSF(diam=2.4, lam=1000.) # bigger than HST F814W PSF.
         >>> indices = np.arange(10)
