@@ -167,13 +167,21 @@ def main(argv):
     # Make the 2-component parametric GSObjects for each object, including chromaticity (roughly
     # appropriate SEDs per galaxy component, at the appropriate galaxy redshift).  Note that since
     # the PSF is position-independent within the SCA, we can simply do the convolution with that PSF
-    # now instead of using a different one for each position.
+    # now instead of using a different one for each position.  We also have to include the correct
+    # flux scaling: The catalog returns objects that would be observed by HST in 1 second
+    # exposures. So for our telescope we scale up by the relative area and exposure time.  Note that
+    # what is important is the *effective* area after taking into account obscuration.  For HST, the
+    # telescope diameter is 2.4 but there is obscuration (a linear factor of 0.33).  Here, we assume
+    # that the telescope we're simulating effectively has no obscuration factor.
     logger.info('Processing the objects in the catalog to get GSObject representations')
     obj_list = cat.makeGalaxy(numpy.arange(n_use), chromatic=True, gal_type='parametric')
     gal_list = []
+    hst_eff_area = 2.4**2 * (1.-0.33**2)
+    wfirst_eff_area = galsim.wfirst.diameter**2 * (1.-galsim.wfirst.obscuration**2)
+    flux_scaling = (wfirst_eff_area/hst_eff_area) * wfirst.exptime
     for ind in range(len(obj_list)):
-        # Convolve the chromatic galaxy and the chromatic PSF
-        final = galsim.Convolve(obj_list[ind], PSF)
+        # Convolve the chromatic galaxy and the chromatic PSF, and rescale flux.
+        final = galsim.Convolve(flux_scaling*obj_list[ind], PSF)
         logger.debug('Pre-processing for galaxy %d completed.'%ind)
         gal_list.append(final)
 
