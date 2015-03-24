@@ -214,10 +214,11 @@ class COSMOSCatalog(object):
         obscuration.)  See demo11.py for an example that explicitly takes this normalization into
         account.
 
-        Due to the adopted flux normalization, drawing into an image with the COSMOS bandpass and
-        pixel scale should give the right pixel values to mimic the actual COSMOS science images.
-        The COSMOS science images that we use are normalized to a count rate of 1 second, which is
-        why there is no need to rescale to account for the COSMOS exposure time.
+        Due to the adopted flux normalization, drawing into an image with the COSMOS bandpass,
+        zeropoint of 25.94, and pixel scale should give the right pixel values to mimic the actual
+        COSMOS science images.  The COSMOS science images that we use are normalized to a count rate
+        of 1 second, which is why there is no need to rescale to account for the COSMOS exposure
+        time.
 
         There is an option to make chromatic objects (`chromatic=True`); however, it is important
         to bear in mind that we do not actually have spatially-resolved color information for these
@@ -319,14 +320,14 @@ class COSMOSCatalog(object):
             # Defer making the Bandpass and reading in SEDs until we actually are going to use them.
             # It's not a huge calculation, but the thin() call especially isn't trivial.
             if self._bandpass is None:
-                # We have to set an appropriate zeropoint.  This is slightly complicated:
-                # The nominal COSMOS zeropoint for single-orbit depth (2000s of usable exposure
-                # time, across 4 dithered exposures) is supposedly 25.94.  But the science images
-                # that we are using were normalized to count rate, not counts, meaning that an
-                # object with mag=25.94 has a count rate of 1 photon/sec, not 1 photon total.  In
-                # GalSim we normally assume a normalization of zero points in terms of counts, so we
-                # have to define the zero-point in a way that takes this into account:
-                zp = 25.94 + 2.5*math.log10(2000.)
+                # We have to set an appropriate zeropoint.  This is slightly complicated: The
+                # nominal COSMOS zeropoint for single-orbit depth (2000s of usable exposure time,
+                # across 4 dithered exposures) is supposedly 25.94.  But the science images that we
+                # are using were normalized to count rate, not counts, meaning that an object with
+                # mag=25.94 has a count rate of 1 photon/sec, not 1 photon total.  Since we've
+                # declared our flux normalization for the outputs to be appropriate for a 1s
+                # exposure, we use this zeropoint directly.
+                zp = 25.94
                 self._bandpass = galsim.Bandpass(
                     os.path.join(galsim.meta_data.share_dir, 'wfc_F814W.dat.gz'),
                     wave_type='ang').thin().withZeropoint(zp)
