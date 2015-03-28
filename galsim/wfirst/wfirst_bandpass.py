@@ -90,10 +90,8 @@ def getBandpasses(AB_zeropoint=True, exptime=None, thin_err=1.e-4):
     # Set up a dictionary.
     bandpass_dict = {}
     # Loop over the bands.
-    band_list = data.dtype.names[1:]
-    for index in range(len(band_list)):
+    for index, bp_name in enumerate(data.dtype.names[1:]):
         # Need to skip the prism and grism (not used for weak lensing imaging).
-        bp_name = band_list[index]
         if bp_name=='SNPrism' or bp_name=='BAOGrism':
             continue
 
