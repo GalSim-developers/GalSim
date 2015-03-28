@@ -631,7 +631,7 @@ class CelestialCoord(object):
             # Subtract it off, to get ecliptic coordinates relative to the sun.
             lam -= lam_sun
 
-        return (lam, beta)
+        return (lam.wrap(), beta)
 
     def copy(self): return CelestialCoord(self._ra, self._dec)
 
