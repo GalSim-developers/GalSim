@@ -363,8 +363,6 @@ def main(argv):
         # convolution of a 3x3 kernel with the image.  The WFIRST IPC routine knows about the kernel
         # already, so the user does not have to supply it.
         wfirst.applyIPC(final_image)
-        # Here, we use `edge_treatment='extend'`, which pads the image with zeros before
-        # applying the kernel. The central part of the image is retained.
         logger.debug('Applied interpixel capacitance to {0}-band image'.format(filter_name))
 
         if diff_mode:
