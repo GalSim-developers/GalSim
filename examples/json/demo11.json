@@ -136,7 +136,7 @@
         "#" : "(a 2.4 m telescope with a linear obscuration factor of 0.33) with 1 second",
         "#" : "exposures. So the flux should be scaled by (4**2/(2.4*(1-0.33**2))) * 300",
         "type" : "Eval",
-        "str" : "(tel_diam**2 / (2.4*(1.-0.33**2))) * exp_time"
+        "str" : "(tel_diam**2 / (2.4**2*(1.-0.33**2))) * exp_time"
     }
 
 },
