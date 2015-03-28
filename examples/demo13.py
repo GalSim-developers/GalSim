@@ -411,6 +411,9 @@ def main(argv):
     logger.info('ds9 -rgb -red -scale limits -0.2 0.8 output/demo13_F184.fits -green '
         +'-scale limits'+' -0.25 1.0 output/demo13_J129.fits -blue -scale limits -0.25'
         +' 1.0 output/demo13_Z087.fits -zoom 2 &')
+    # MJ: Here is an alternate ds9 call that looks a bit better, but still has too much green.
+    #     I played around with it for a bit, but can't really get the colors to look good.
+    # ds9 -rgb -red -scale limits -500 1000 output/demo13_F184.fits -green -scale limits -200 400 output/demo13_J129.fits -blue -scale limits -100 200 output/demo13_Z087.fits -zoom 0.5 &
 
 if __name__ == "__main__":
     main(sys.argv)
