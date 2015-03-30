@@ -79,7 +79,7 @@ def main(argv):
     logger = logging.getLogger("demo13")
 
     # Initialize (pseudo-)random number generator.
-    random_seed = 1234567
+    random_seed = 123456
     rng = galsim.BaseDeviate(random_seed)
 
     # Generate a Poisson noise model.
@@ -172,7 +172,14 @@ def main(argv):
     # exposures. So for our telescope we scale up by the relative area and exposure time.  Note that
     # what is important is the *effective* area after taking into account obscuration.
     logger.info('Processing the objects in the catalog to get GSObject representations')
-    obj_list = cat.makeGalaxy(numpy.arange(n_use), chromatic=True, gal_type='parametric')
+    # Choose a random set of unique indices in the catalog (will be the same each time script is
+    # run, due to use of the same random seed):
+    rand_indices = []
+    while len(rand_indices)<n_use:
+        tmp_ind = int(pos_rng()*cat.nobjects)
+        if tmp_ind not in rand_indices:
+            rand_indices.append(tmp_ind)
+    obj_list = cat.makeGalaxy(rand_indices, chromatic=True, gal_type='parametric')
     gal_list = []
     hst_eff_area = 2.4**2 * (1.-0.33**2)
     wfirst_eff_area = galsim.wfirst.diameter**2 * (1.-galsim.wfirst.obscuration**2)
