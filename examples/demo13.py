@@ -103,13 +103,12 @@ def main(argv):
     # Just use a few galaxies, to save time.  Note that we are going to put 4000 galaxy images into
     # our big image, so if we have n_use=10, each galaxy will appear 400 times.  Users who want a
     # more interesting image with greater variation in the galaxy population can change `n_use` to
-    # something larger (but it should be <=100, the number of galaxies in this small
-    # example catalog).  With 4000 galaxies in a 4k x 4k image with the WFIRST pixel scale, the
-    # effective galaxy number density is 74/arcmin^2.  This is not the number density that is
-    # expected for a sample that is so bright (I<23.5) but it makes the image more visually
-    # interesting.  One could think of it as what you'd get if you added up several images at once,
-    # making the images for a sample that is much deeper have the same S/N as that for an I<23.5
-    # sample in a single image.
+    # something larger (but it should be <=100, the number of galaxies in this small example
+    # catalog).  With 4000 galaxies in a 4k x 4k image with the WFIRST pixel scale, the effective
+    # galaxy number density is 74/arcmin^2.  This is not the number density that is expected for a
+    # sample that is so bright (I<23.5) but it makes the image more visually interesting.  One could
+    # think of it as what you'd get if you added up several images at once, making the images for a
+    # sample that is much deeper have the same S/N as that for an I<23.5 sample in a single image.
     n_use = 10
     n_tot = 4000
 
@@ -224,8 +223,15 @@ def main(argv):
             logger.info('Drawing image for the object at row %d in the input catalog'%i_gal)
 
             # We want to only draw the galaxy once (for speed), not over and over with different
-            # sub-pixel offsets.  For this reason we ignore the sub-pixel offset entirely.
-            stamp = galsim.Image(stamp_size, stamp_size)
+            # sub-pixel offsets.  For this reason we ignore the sub-pixel offset entirely.  Note
+            # that we are setting the postage stamp to have the average WFIRST pixel scale.  This is
+            # simply an approximation for the purpose of speed; really, one should draw directly
+            # into final_image, which has the appropriate WCS for WFIRST.  In that case, the image
+            # of the galaxy might look different in different parts of the detector due to the WCS
+            # (including distortion), and we would have to re-draw each time.  To keep the demo
+            # relatively quick, we are just using the approximate average pixel scale and drawing
+            # once.
+            stamp = galsim.Image(stamp_size, stamp_size, scale=wfirst.pixel_scale)
             gal_list[i_gal].drawImage(filter_, image=stamp)
 
             # Have to find where to place it:
@@ -240,14 +246,26 @@ def main(argv):
                 # position.
                 stamp_bounds = galsim.BoundsI(ix-0.5*stamp_size, ix+0.5*stamp_size-1, 
                                               iy-0.5*stamp_size, iy+0.5*stamp_size-1)
-                stamp.setOrigin(galsim.PositionI(stamp_bounds.xmin, stamp_bounds.ymin))
 
                 # Find the overlapping bounds between the large image and the individual postage
                 # stamp.
                 bounds = stamp_bounds & final_image.bounds
 
+                # Just to inject a bit of variety into the image, so it isn't *quite* as obvious
+                # that we've repeated the same 10 objects over and over, we will randomly rotate the
+                # postage stamp by some factor of 90 degrees.
+                n_rot = int(4*pos_rng()) # this gives us a random integer = 0, 1, 2, or 3
+                # And an optional flip 1/2 the time:
+                if pos_rng() > 0.5:
+                    new_arr = numpy.ascontiguousarray(numpy.rot90(stamp.array, n_rot))
+                else:
+                    new_arr = numpy.ascontiguousarray(
+                        numpy.fliplr(numpy.rot90(stamp.array, n_rot)))
+                stamp_rot = galsim.Image(new_arr, scale=stamp.scale)
+                stamp_rot.setOrigin(galsim.PositionI(stamp_bounds.xmin, stamp_bounds.ymin))
+
                 # Copy the image into the right place in the big image.
-                final_image[bounds] += stamp[bounds]
+                final_image[bounds] += stamp_rot[bounds]
 
         # Now we're done with the per-galaxy drawing for this image.  The rest will be done for the
         # entire image at once.
@@ -257,13 +275,13 @@ def main(argv):
         # First we get the amount of zodaical light for a position corresponding to the center of
         # this SCA.  The results are provided in units of e-/arcsec^2, using the default WFIRST
         # exposure time since we did not explicitly specify one.  Then we multiply this by a factor
-        # >1 to account for the amount of stray light that is expected.
-        # If we do not provide a date for the observation, then it will assume that it's the vernal
-        # equinox (sun at (0,0) in ecliptic coordinates) in 2025.
+        # >1 to account for the amount of stray light that is expected.  If we do not provide a date
+        # for the observation, then it will assume that it's the vernal equinox (sun at (0,0) in
+        # ecliptic coordinates) in 2025.
         sky_level = wfirst.getSkyLevel(filters[filter_name], world_pos=SCA_cent_pos)
         sky_level *= (1.0 + wfirst.stray_light_fraction)
-        # Make a image of the sky that takes into account the spatially variable pixel scale.
-        # Note that makeSkyImage() takes a bit of time.  If you do not care about the variable pixel
+        # Make a image of the sky that takes into account the spatially variable pixel scale.  Note
+        # that makeSkyImage() takes a bit of time.  If you do not care about the variable pixel
         # scale, you could simply compute an approximate sky level in e-/pix by multiplying
         # sky_level by wfirst.pixel_scale**2, and add that to final_image.
         sky_image = final_image.copy()
@@ -287,12 +305,12 @@ def main(argv):
 
         # 1) Reciprocity failure:
         # Reciprocity, in the context of photography, is the inverse relationship between the
-        # incident flux (I) of a source object and the exposure time (t) required to produce a
-        # given response(p) in the detector, i.e., p = I*t. However, in NIR detectors, this
-        # relation does not hold always. The pixel response to a high flux is larger than its
-        # response to a low flux. This flux-dependent non-linearity is known as 'reciprocity
-        # failure', and the approximate amount of reciprocity failure for the WFIRST detectors is
-        # known, so we can include this detector effect in our images.
+        # incident flux (I) of a source object and the exposure time (t) required to produce a given
+        # response(p) in the detector, i.e., p = I*t. However, in NIR detectors, this relation does
+        # not hold always. The pixel response to a high flux is larger than its response to a low
+        # flux. This flux-dependent non-linearity is known as 'reciprocity failure', and the
+        # approximate amount of reciprocity failure for the WFIRST detectors is known, so we can
+        # include this detector effect in our images.
 
         if diff_mode:
             # Save the image before applying the transformation to see the difference
@@ -309,7 +327,8 @@ def main(argv):
 
             out_filename = os.path.join(outpath,'demo13_RecipFail_{0}.fits'.format(filter_name))
             final_image.write(out_filename)
-            out_filename = os.path.join(outpath,'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
+            out_filename = os.path.join(outpath,
+                                        'demo13_diff_RecipFail_{0}.fits'.format(filter_name))
             diff.write(out_filename)
 
         # At this point in the image generation process, an integer number of photons gets
@@ -364,11 +383,11 @@ def main(argv):
             save_image = final_image.copy()
 
         # 4) Including Interpixel capacitance:
-        # The voltage read at a given pixel location is influenced by the charges present in
-        # the neighboring pixel locations due to capacitive coupling of sense nodes. This
-        # interpixel capacitance effect is modeled as a linear effect that is described as a
-        # convolution of a 3x3 kernel with the image.  The WFIRST IPC routine knows about the kernel
-        # already, so the user does not have to supply it.
+        # The voltage read at a given pixel location is influenced by the charges present in the
+        # neighboring pixel locations due to capacitive coupling of sense nodes. This interpixel
+        # capacitance effect is modeled as a linear effect that is described as a convolution of a
+        # 3x3 kernel with the image.  The WFIRST IPC routine knows about the kernel already, so the
+        # user does not have to supply it.
         wfirst.applyIPC(final_image)
         logger.debug('Applied interpixel capacitance to {0}-band image'.format(filter_name))
 
