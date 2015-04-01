@@ -153,15 +153,30 @@ def main(argv):
     # If we had a real galaxy catalog with positions in terms of RA, dec we could use wcs.toImage()
     # to find where those objects should be in terms of (X, Y).
     pos_rng = galsim.UniformDeviate(random_seed)
-    # Make a list of (X, Y) values.
+    # Make a list of (X, Y, F814W magnitude, n_rot, flip) values.
+    # (X, Y) give the position of the galaxy centroid (or the center of the postage stamp into which
+    # we draw the galaxy) in the big image.
+    # F814W magnitudes are randomly drawn from the catalog, and are used to create a more realistic
+    # flux distribution for the galaxies instead of just having the 10 flux values for the galaxies
+    # we have chosen to draw.
+    # n_rot says how many 90 degree rotations to include for a given realization of each galaxy, so
+    # it doesn't appear completely identical each time we put it in the image.
+    # flip is a random number that will determine whether we include an x-y flip for this appearance
+    # of the galaxy or not.
     x_stamp = []
     y_stamp = []
+    mag_stamp = []
+    n_rot_stamp = []
+    flip_stamp = []
     for i_gal in xrange(n_tot):
         x_stamp.append(pos_rng()*wfirst.n_pix)
         y_stamp.append(pos_rng()*wfirst.n_pix)
         # Note that we could use wcs.toWorld() to get the (RA, dec) for these (x, y) positions.  Or,
         # if we had started with (RA, dec) positions, we could have used wcs.toImage() to get the
         # CCD coordinates for those positions.
+        mag_stamp.append(cat.param_cat.mag_auto[pos_rng()*cat.nobjects])
+        n_rot_stamp.append(int(4*pos_rng()))
+        flip_stamp.append(pos_rng())
 
     # Make the 2-component parametric GSObjects for each object, including chromaticity (roughly
     # appropriate SEDs per galaxy component, at the appropriate galaxy redshift).  Note that since
@@ -178,12 +193,21 @@ def main(argv):
         tmp_ind = int(pos_rng()*cat.nobjects)
         if tmp_ind not in rand_indices:
             rand_indices.append(tmp_ind)
-    obj_list = cat.makeGalaxy(rand_indices, chromatic=True, gal_type='parametric')
+    obj_list = cat.makeGalaxy(rand_indices, chromatic=True, gal_type='parametric', deep=True)
     gal_list = []
     hst_eff_area = 2.4**2 * (1.-0.33**2)
     wfirst_eff_area = galsim.wfirst.diameter**2 * (1.-galsim.wfirst.obscuration**2)
     flux_scaling = (wfirst_eff_area/hst_eff_area) * wfirst.exptime
+    mag_list = []
     for ind in range(len(obj_list)):
+        # First, let's check what magnitude this object has in F814W.  We want to do this because
+        # (to inject some variety into our images) we are going to rescale the fluxes in all bands
+        # for different instances of this galaxy in the final image in order to get a reasonable S/N
+        # distribution.  So we need to save the original magnitude in F814W, to compare with a
+        # randomly drawn one from the catalog.  This is not something that most users would need to
+        # do.
+        mag_list.append(cat.param_cat.mag_auto[cat.orig_index[rand_indices[ind]]])
+
         # Convolve the chromatic galaxy and the chromatic PSF, and rescale flux.
         final = galsim.Convolve(flux_scaling*obj_list[ind], PSF)
         logger.debug('Pre-processing for galaxy %d completed.'%ind)
@@ -253,19 +277,23 @@ def main(argv):
 
                 # Just to inject a bit of variety into the image, so it isn't *quite* as obvious
                 # that we've repeated the same 10 objects over and over, we will randomly rotate the
-                # postage stamp by some factor of 90 degrees.
-                n_rot = int(4*pos_rng()) # this gives us a random integer = 0, 1, 2, or 3
-                # And an optional flip 1/2 the time:
-                if pos_rng() > 0.5:
-                    new_arr = numpy.ascontiguousarray(numpy.rot90(stamp.array, n_rot))
+                # postage stamp by some factor of 90 degrees and possibly include a random flip.
+                if flip_stamp[i_gal_use] > 0.5:
+                    new_arr = numpy.ascontiguousarray(
+                        numpy.rot90(stamp.array, n_rot_stamp[i_gal_use]))
                 else:
                     new_arr = numpy.ascontiguousarray(
-                        numpy.fliplr(numpy.rot90(stamp.array, n_rot)))
+                        numpy.fliplr(numpy.rot90(stamp.array, n_rot_stamp[i_gal_use])))
                 stamp_rot = galsim.Image(new_arr, scale=stamp.scale)
                 stamp_rot.setOrigin(galsim.PositionI(stamp_bounds.xmin, stamp_bounds.ymin))
 
                 # Copy the image into the right place in the big image.
-                final_image[bounds] += stamp_rot[bounds]
+                # We will also rescale the flux to match that of a randomly chosen galaxy in the
+                # galaxy, but keeping the same SED as for this particular galaxy.  This gives a bit
+                # more variety in the flux values and SNR of the galaxies in the image without
+                # having to render images of many more objects.
+                final_image[bounds] += \
+                    10**(-0.4*(mag_stamp[i_gal_use]-mag_list[i_gal])) * stamp_rot[bounds]
 
         # Now we're done with the per-galaxy drawing for this image.  The rest will be done for the
         # entire image at once.
