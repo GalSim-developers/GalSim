@@ -876,12 +876,20 @@ class Transformation(galsim.GSObject):
         s = str(self.original)
         dudx, dudy, dvdx, dvdy = self.jac
         if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
-            # MJ: If we want to get fancy, we could try to determine the minimal call to make.
-            #     e.g. is it just a shear?  just a rotation? etc.  Probably not worth it though.
-            s += '.transform(%s,%s,%s,%s)'%(dudx,dudy,dvdx,dvdy)
-        offset = self.offset
-        if offset.x != 0 or offset.y != 0:
-            s += '.shift(%s,%s)'%(offset.x,offset.y)
+            #s += '.transform(%s,%s,%s,%s)'%(dudx,dudy,dvdx,dvdy)
+            # Figure out the shear/rotate/dilate calls that are equivalent.
+            jac = galsim.JacobianWCS(dudx,dudy,dvdx,dvdy)
+            scale, shear, theta, flip = jac.getDecomposition()
+            if flip:
+                s += '.transform(0,1,1,0)'
+            if abs(theta.rad() > 1.e-12):
+                s += '.rotate(%s)'%theta
+            if shear.getG() > 1.e-12:
+                s += '.shear(%s)'%shear
+            if abs(scale-1.0 > 1.e-12):
+                s += '.expand(%s)'%scale
+        if self.offset.x != 0 or self.offset.y != 0:
+            s += '.shift(%s,%s)'%(self.offset.x,self.offset.y)
         if self.flux_ratio != 1.:
             s += '.withScaledFlux(%s)'%self.flux_ratio
         return s
