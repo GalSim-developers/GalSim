@@ -183,7 +183,7 @@ class ShapeData(object):
             self.resolution_factor = -1.0
             self.psf_sigma = -1.0
             self.psf_shape = galsim.Shear()
-            self.error_message = " "
+            self.error_message = ""
 
         self.image_bounds = kwargs.pop('image_bounds', self.image_bounds)
         self.moments_status = kwargs.pop('moments_status', self.moments_status)
@@ -233,7 +233,7 @@ class ShapeData(object):
         if self.resolution_factor != -1.: s += ', resolution_factor=%r'%self.resolution_factor
         if self.psf_sigma != -1.: s += ', psf_sigma=%r'%self.psf_sigma
         if self.psf_shape != galsim.Shear(): s += ', psf_shape=%r'%self.psf_shape
-        if self.error_message != " ": s += ', error_message=%r'%self.error_message
+        if self.error_message != "": s += ', error_message=%r'%self.error_message
         s += ')'
         return s
 
@@ -366,7 +366,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
         >>> for i=0, range(n_image):
         >>>     #...some code defining this_image, this_final_epsf_image...
         >>>     result = galsim.hsm.EstimateShear(this_image, this_final_epsf_image, strict=False)
-        >>>     if result.error_message != " ":
+        >>>     if result.error_message != "":
         >>>         n_fail += 1
         >>> print "Number of failures: ", n_fail
 
