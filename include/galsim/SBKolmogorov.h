@@ -51,7 +51,7 @@ namespace galsim {
          *                         Typical values for the Fried parameter are on the order of 
          *                         10 cm for most observatories and up to 20 cm for excellent 
          *                         sites. The values are usually quoted at lambda = 500 nm and 
-         *                         r0 depends on wavelength as [r0 ~ lambda^(-6/5)].
+         *                         r0 depends on wavelength as [r0 ~ lambda^(6/5)].
          * @param[in] flux         Flux.
          * @param[in] gsparams     GSParams object storing constants that control the accuracy of
          *                         image operations and rendering, if different from the default.
