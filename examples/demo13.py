@@ -276,7 +276,7 @@ def main(argv):
                 bounds = stamp_bounds & final_image.bounds
 
                 # Just to inject a bit of variety into the image, so it isn't *quite* as obvious
-                # that we've repeated the same 10 objects over and over, we will randomly rotate the
+                # that we've repeated the same 10 objects over and over, we randomly rotate the
                 # postage stamp by some factor of 90 degrees and possibly include a random flip.
                 if flip_stamp[i_gal_use] > 0.5:
                     new_arr = numpy.ascontiguousarray(
@@ -287,13 +287,14 @@ def main(argv):
                 stamp_rot = galsim.Image(new_arr, scale=stamp.scale)
                 stamp_rot.setOrigin(galsim.PositionI(stamp_bounds.xmin, stamp_bounds.ymin))
 
+                # Rescale the flux to match that of a randomly chosen galaxy in the galaxy, but
+                # keeping the same SED as for this particular galaxy.  This gives a bit more
+                # variety in the flux values and SNR of the galaxies in the image without having
+                # to render images of many more objects.
+                flux_scaling = 10**(-0.4*(mag_stamp[i_gal_use]-mag_list[i_gal]))
+
                 # Copy the image into the right place in the big image.
-                # We will also rescale the flux to match that of a randomly chosen galaxy in the
-                # galaxy, but keeping the same SED as for this particular galaxy.  This gives a bit
-                # more variety in the flux values and SNR of the galaxies in the image without
-                # having to render images of many more objects.
-                final_image[bounds] += \
-                    10**(-0.4*(mag_stamp[i_gal_use]-mag_list[i_gal])) * stamp_rot[bounds]
+                final_image[bounds] += flux_scaling * stamp_rot[bounds]
 
         # Now we're done with the per-galaxy drawing for this image.  The rest will be done for the
         # entire image at once.
