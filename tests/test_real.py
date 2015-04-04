@@ -98,10 +98,13 @@ def test_real_galaxy_ideal():
     do_pickle(rgc, lambda x: [ x.getGal(ind_fake), x.getPSF(ind_fake),
                                x.getNoiseProperties(ind_fake) ])
     do_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_fake,rng=galsim.BaseDeviate(123))))
+    do_pickle(rgc)
     do_pickle(rg, lambda x: [ x.gal_image, x.psf_image, repr(x.noise),
                               x.original_psf.flux, x.original_gal.flux, x.flux ])
     do_pickle(rg, lambda x: x.drawImage(nx=20, ny=20, scale=0.7))
     do_pickle(rg_1, lambda x: x.drawImage(nx=20, ny=20, scale=0.7))
+    do_pickle(rg)
+    do_pickle(rg_1)
 
     ## for the generation of the ideal right answer, we need to add the intrinsic shape of the
     ## galaxy and the lensing shear using the rule for addition of distortions which is ugly, but oh
@@ -193,6 +196,8 @@ def test_real_galaxy_saved():
     do_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_real,rng=galsim.BaseDeviate(123))))
     do_pickle(rg, lambda x: galsim.Convolve([x,galsim.Gaussian(sigma=1.7)]).drawImage(
                                 nx=20, ny=20, scale=0.7))
+    do_pickle(rgc)
+    do_pickle(rg)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

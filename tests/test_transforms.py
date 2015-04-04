@@ -103,6 +103,8 @@ def test_smallshear():
     # Check picklability
     do_pickle(gauss.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
     do_pickle(gauss, lambda x: x.drawImage())
+    do_pickle(gauss)
+    do_pickle(gauss.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -159,6 +161,8 @@ def test_largeshear():
     # Check picklability
     do_pickle(gauss.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
     do_pickle(gauss, lambda x: x.drawImage())
+    do_pickle(gauss)
+    do_pickle(gauss.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -209,6 +213,8 @@ def test_rotate():
     # Check picklability
     do_pickle(gal.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
     do_pickle(gal, lambda x: x.drawImage())
+    do_pickle(gal)
+    do_pickle(gal.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -282,6 +288,8 @@ def test_mag():
     # Check picklability
     do_pickle(gal.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
     do_pickle(gal, lambda x: x.drawImage())
+    do_pickle(gal)
+    do_pickle(gal.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -356,6 +364,8 @@ def test_shift():
     # Check picklability
     do_pickle(gauss.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
     do_pickle(gauss, lambda x: x.drawImage())
+    do_pickle(gauss)
+    do_pickle(gauss.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -499,6 +509,8 @@ def test_rescale():
     # Check picklability
     do_pickle(sersic2.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
     do_pickle(sersic2, lambda x: x.drawImage())
+    do_pickle(sersic2)
+    do_pickle(sersic2.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -808,6 +820,10 @@ def test_flip():
         do_pickle(flip1, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
         do_pickle(flip2, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
         do_pickle(flip3, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
+        do_pickle(prof)
+        do_pickle(flip1)
+        do_pickle(flip2)
+        do_pickle(flip3)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

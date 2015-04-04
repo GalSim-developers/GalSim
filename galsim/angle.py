@@ -56,6 +56,8 @@ def AngleUnit_repr(self):
     else:
         return 'galsim.AngleUnit(%r)'%self.getValue()
 AngleUnit.__repr__ = AngleUnit_repr
+AngleUnit.__eq__ = lambda self, other: (
+    isinstance(other,AngleUnit) and self.getValue() == other.getValue())
 
 # Enable pickling
 AngleUnit.__getinitargs__ = lambda self: (self.getValue(), )
@@ -172,6 +174,7 @@ calculating the difference between them.
 
 Angle.__str__ = lambda self: str(self.rad()) + ' radians'
 Angle.__repr__ = lambda self: 'galsim.Angle(%r, galsim.radians)'%self.rad()
+Angle.__eq__ = lambda self, other: isinstance(other,Angle) and self.rad() == other.rad()
 Angle.__neg__ = lambda self: -1. * self
 
 def _make_dms_string(decimal, sep):

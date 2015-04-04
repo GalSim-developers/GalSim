@@ -136,6 +136,8 @@ def test_gaussian():
         integration_abserr = 9.e-1))
     do_pickle(gauss.SBProfile, lambda x: (x.getSigma(), x.getFlux(), x.getGSParams()))
     do_pickle(gauss, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(gauss)
+    do_pickle(gauss.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -406,6 +408,8 @@ def test_exponential():
     # Check picklability
     do_pickle(expon.SBProfile, lambda x: (x.getScaleRadius(), x.getFlux(), x.getGSParams()))
     do_pickle(expon, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(expon)
+    do_pickle(expon.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -588,6 +592,8 @@ def test_sersic():
     do_pickle(sersic.SBProfile,
               lambda x: (x.getScaleRadius(), x.getTrunc(), x.getFlux(), x.getGSParams()))
     do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(sersic)
+    do_pickle(sersic.SBProfile)
 
 
     # Now repeat everything using a truncation.  (Above had no truncation.)
@@ -618,6 +624,8 @@ def test_sersic():
     do_pickle(sersic.SBProfile,
               lambda x: (x.getScaleRadius(), x.getTrunc(), x.getFlux(), x.getGSParams()))
     do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(sersic)
+    do_pickle(sersic.SBProfile)
 
     # Check for normalization consistencies with kValue checks. xValues tested in test_sersic_radii.
 
@@ -999,6 +1007,8 @@ def test_airy():
     # Check picklability
     do_pickle(airy.SBProfile, lambda x: (x.getLamOverD(), x.getFlux(), x.getGSParams()))
     do_pickle(airy, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(airy)
+    do_pickle(airy.SBProfile)
 
     # Test initialization separately with lam and diam, in various units.  Since the above profiles
     # have lam/diam = 1./0.8 in arbitrary units, we will tell it that lam=1.e9 nm and diam=0.8 m,
@@ -1150,6 +1160,8 @@ def test_box():
     do_pickle(pixel.SBProfile,
               lambda x: (x.getWidth(), x.getHeight(), x.getFlux(), x.getGSParams()))
     do_pickle(pixel, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(pixel)
+    do_pickle(pixel.SBProfile)
 
     # Check that non-square Box profiles work correctly
     scale = 0.2939  # Use a strange scale here to make sure that the centers of the pixels
@@ -1171,6 +1183,8 @@ def test_box():
     # Check picklability
     do_pickle(box.SBProfile, lambda x: (x.getWidth(), x.getHeight(), x.getFlux(), x.getGSParams()))
     do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(box)
+    do_pickle(box.SBProfile)
 
     # Check sheared boxes the same way
     box = galsim.Box(width=3, height=2, flux=test_flux, gsparams=gsp)
@@ -1179,12 +1193,14 @@ def test_box():
     if __name__ == '__main__':
         do_kvalue(box,im, "Sheared Box")
         do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
+        do_pickle(box)
 
     # This is also a profile that may be convolved using real space convolution, so test that.
     if __name__ == '__main__':
         conv = galsim.Convolve(box, galsim.Pixel(scale=scale), real_space=True)
         do_kvalue(conv,im, "Sheared Box convolved with pixel in real space")
         do_pickle(conv, lambda x: x.xValue(0.123,-0.456))
+        do_pickle(conv)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1249,6 +1265,8 @@ def test_tophat():
     # Check picklability
     do_pickle(tophat.SBProfile, lambda x: (x.getRadius(), x.getFlux(), x.getGSParams()))
     do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(tophat)
+    do_pickle(tophat.SBProfile)
 
     # Check sheared tophat the same way
     tophat = galsim.TopHat(radius=1.2, flux=test_flux)
@@ -1261,6 +1279,7 @@ def test_tophat():
 
     # Check picklability
     do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(tophat)
 
     # Check real-space convolution of the sheared tophat.
     conv = galsim.Convolve(tophat, galsim.Pixel(scale=scale), real_space=True)
@@ -1322,6 +1341,8 @@ def test_moffat():
               lambda x: (x.getBeta(), x.getScaleRadius(), x.getTrunc(), x.getFlux(),\
                          x.getGSParams()))
     do_pickle(moffat, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(moffat)
+    do_pickle(moffat.SBProfile)
 
     # The code for untruncated Moffat profiles is specialized for particular beta values, so
     # test each of these:
@@ -1679,6 +1700,8 @@ def test_kolmogorov():
     # Check picklability
     do_pickle(kolm.SBProfile, lambda x: (x.getLamOverR0(), x.getFlux(), x.getGSParams()))
     do_pickle(kolm, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(kolm)
+    do_pickle(kolm.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1927,6 +1950,8 @@ def test_spergel():
         do_pickle(spergel.SBProfile,
                   lambda x: (x.getNu(), x.getScaleRadius(), x.getFlux(), x.getGSParams()))
         do_pickle(spergel, lambda x: x.drawImage(method='no_pixel'))
+        do_pickle(spergel)
+        do_pickle(spergel.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

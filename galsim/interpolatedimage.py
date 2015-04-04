@@ -576,3 +576,5 @@ _galsim.Cubic.__repr__ = lambda self: 'galsim.Cubic(%r)'%self.getTol()
 _galsim.Quintic.__repr__ = lambda self: 'galsim.Quintic(%r)'%self.getTol()
 _galsim.Lanczos.__repr__ = lambda self: 'galsim.Lanczos(%r, %r, %r)'%self.__getinitargs__()
 
+# Quick and dirty.  Just check reprs are equal.
+_galsim.Interpolant.__eq__ = lambda self, other: repr(self) == repr(other)

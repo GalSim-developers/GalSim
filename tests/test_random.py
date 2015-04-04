@@ -222,6 +222,8 @@ def test_uniform():
     do_pickle(u, lambda x: x.serialize())
     do_pickle(u, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(u), drawNoise)
+    do_pickle(u)
+    do_pickle(galsim.DeviateNoise(u))
 
 
     t2 = time.time()
@@ -426,6 +428,9 @@ def test_gaussian():
     do_pickle(gn, lambda x: (x.rng.serialize(), x.sigma))
     do_pickle(gn, drawNoise)
     do_pickle(galsim.DeviateNoise(g), drawNoise)
+    do_pickle(g)
+    do_pickle(gn)
+    do_pickle(galsim.DeviateNoise(g))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -540,6 +545,8 @@ def test_binomial():
     do_pickle(b, lambda x: (x.serialize(), x.getN(), x.getP()))
     do_pickle(b, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(b), drawNoise)
+    do_pickle(b)
+    do_pickle(galsim.DeviateNoise(b))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -740,6 +747,9 @@ def test_poisson():
     do_pickle(pn, lambda x: (x.rng.serialize(), x.sky_level))
     do_pickle(pn, drawNoise)
     do_pickle(galsim.DeviateNoise(p), drawNoise)
+    do_pickle(p)
+    do_pickle(pn)
+    do_pickle(galsim.DeviateNoise(p))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -862,6 +872,8 @@ def test_weibull():
     do_pickle(w, lambda x: (x.serialize(), x.getA(), x.getB()))
     do_pickle(w, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(w), drawNoise)
+    do_pickle(w)
+    do_pickle(galsim.DeviateNoise(w))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -974,6 +986,8 @@ def test_gamma():
     do_pickle(g, lambda x: (x.serialize(), x.getK(), x.getTheta()))
     do_pickle(g, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(g), drawNoise)
+    do_pickle(g)
+    do_pickle(galsim.DeviateNoise(g))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1086,6 +1100,8 @@ def test_chi2():
     do_pickle(c, lambda x: (x.serialize(), x.getN()))
     do_pickle(c, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(c), drawNoise)
+    do_pickle(c)
+    do_pickle(galsim.DeviateNoise(c))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1237,6 +1253,8 @@ def test_distfunction():
     # Check picklability
     do_pickle(d, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(d), drawNoise)
+    do_pickle(d)
+    do_pickle(galsim.DeviateNoise(d))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1317,6 +1335,8 @@ def test_distLookupTable():
     # Check picklability
     do_pickle(d, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(d), drawNoise)
+    do_pickle(d)
+    do_pickle(galsim.DeviateNoise(d))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1484,6 +1504,7 @@ def test_ccdnoise():
     # Check picklability
     do_pickle(ccdnoise, lambda x: (x.rng.serialize(), x.sky_level, x.gain, x.read_noise))
     do_pickle(ccdnoise, drawNoise)
+    do_pickle(ccdnoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

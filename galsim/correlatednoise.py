@@ -149,6 +149,10 @@ class _BaseCorrelatedNoise(object):
     def __str__(self):
         return "galsim.correlatednoise._BaseCorrelatedNoise(%s,%s)"%(self._profile, self.wcs)
 
+    # Quick and dirty.  Just check reprs are equal.
+    def __eq__(self, other): return repr(self) == repr(other)
+
+
     def applyTo(self, image):
         """Apply this correlated Gaussian random noise field to an input Image.
 

@@ -26,6 +26,8 @@ for Class in (_galsim.PositionD, _galsim.PositionI):
     Class.__repr__ = lambda self: "galsim.%s(x=%r, y=%r)"%(self.__class__.__name__, self.x, self.y)
     Class.__str__ = lambda self: "galsim.%s(%s,%s)"%(self.__class__.__name__, self.x, self.y)
     Class.__getinitargs__ = lambda self: (self.x, self.y)
+    # Quick and dirty.  Just check reprs are equal.
+    Class.__eq__ = lambda self, other: repr(self) == repr(other)
 
     Class.__doc__ = """A class for representing 2D positions on the plane.
 

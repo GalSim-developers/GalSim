@@ -123,10 +123,10 @@ def test_celestialcoord_basic():
     numpy.testing.assert_almost_equal(c2.distanceTo(c4).rad(), 0., decimal=12)
 
     # Check picklability
-    do_pickle(c1, lambda x: (x.ra, x.dec))
-    do_pickle(c2, lambda x: (x.ra, x.dec))
-    do_pickle(c3, lambda x: (x.ra, x.dec))
-    do_pickle(c4, lambda x: (x.ra, x.dec))
+    do_pickle(c1)
+    do_pickle(c2)
+    do_pickle(c3)
+    do_pickle(c4)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

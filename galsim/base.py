@@ -1255,6 +1255,9 @@ class GSObject(object):
 
         return re,im
 
+    # Quick and dirty.  Just check reprs are equal.
+    def __eq__(self, other): return repr(self) == repr(other)
+
 # Pickling an SBProfile is a bit tricky, since it's a base class for lots of other classes.
 # Normally, we'll know what the derived class is, so we can just use the pickle stuff that is
 # appropriate for that.  But if we get a SBProfile back from say the getObj() method of
@@ -1277,6 +1280,8 @@ def SBProfile_setstate(self, state):
     self.__class__ = eval(cls)
     self.__init__(*args)
 _galsim.SBProfile.__setstate__ = SBProfile_setstate
+# Quick and dirty.  Just check reprs are equal.
+_galsim.SBProfile.__eq__ = lambda self, other: repr(self) == repr(other)
 
 
 # --- Now defining the derived classes ---

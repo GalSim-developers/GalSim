@@ -370,34 +370,6 @@ class RealGalaxyCatalog(object):
     _takes_rng = False
     _takes_logger = True
 
-    def __repr__(self):
-        s = 'galsim.RealGalaxyCatalog(%r,%r'%(self.file_name,self.image_dir)
-        if self.noise_dir != self.image_dir: s += ',noise_dir=%r'%self.noise_dir
-        s += ')'
-        return s
-
-    def __str__(self):
-        return 'galsim.RealGalaxyCatalog(%r)'%(self.file_name)
-
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        d['loaded_files'] = {}
-        d['saved_noise_im'] = {}
-        del d['gal_lock']
-        del d['psf_lock']
-        del d['loaded_lock']
-        del d['noise_lock']
-        return d
-
-    def __setstate__(self, d): 
-        from multiprocessing import Lock
-        self.__dict__ = d
-        self.gal_lock = Lock()
-        self.psf_lock = Lock()
-        self.loaded_lock = Lock()
-        self.noise_lock = Lock()
-        pass
-
     # nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
@@ -648,6 +620,41 @@ class RealGalaxyCatalog(object):
             cf = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii, im.wcs)
             cf = cf.withVariance(var)
         return cf
+
+    def __repr__(self):
+        s = 'galsim.RealGalaxyCatalog(%r,%r'%(self.file_name,self.image_dir)
+        if self.noise_dir != self.image_dir: s += ',noise_dir=%r'%self.noise_dir
+        s += ')'
+        return s
+
+    def __str__(self):
+        return 'galsim.RealGalaxyCatalog(%r)'%(self.file_name)
+
+    def __eq__(self, other): 
+        return (isinstance(other, RealGalaxyCatalog) and
+                self.file_name == other.file_name and
+                self.image_dir == other.image_dir and
+                self.noise_dir == other.noise_dir)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d['loaded_files'] = {}
+        d['saved_noise_im'] = {}
+        del d['gal_lock']
+        del d['psf_lock']
+        del d['loaded_lock']
+        del d['noise_lock']
+        return d
+
+    def __setstate__(self, d): 
+        from multiprocessing import Lock
+        self.__dict__ = d
+        self.gal_lock = Lock()
+        self.psf_lock = Lock()
+        self.loaded_lock = Lock()
+        self.noise_lock = Lock()
+        pass
+
 
 
 def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotation_angle=None, 

@@ -237,6 +237,7 @@ class ShapeData(object):
         s += ')'
         return s
 
+    # Quick and dirty.  Just check reprs are equal.
     def __eq__(self, other): return repr(self) == repr(other)
 
 _galsim.CppShapeData.__getinitargs__ = lambda self: (

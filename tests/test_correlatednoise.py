@@ -101,6 +101,8 @@ def test_uncorrelated_noise_zero_lag():
         do_pickle(ucn, drawNoise)
         do_pickle(cn, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
         do_pickle(cn, drawNoise)
+        do_pickle(ucn)
+        do_pickle(cn)
 
 
     t2 = time.time()
@@ -705,6 +707,7 @@ def test_copy():
     # Check picklability
     do_pickle(cn, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
     do_pickle(cn, drawNoise)
+    do_pickle(cn)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
@@ -1217,6 +1220,7 @@ def test_cosmos_wcs():
         # Check picklability
         do_pickle(cn_test, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
         do_pickle(cn_test, drawNoise)
+        do_pickle(cn_test)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)

@@ -117,10 +117,10 @@ def test_table():
         table1(np.array(testargs1).reshape((2,3)))
 
         # Check picklability
-        do_pickle(table1)
-        do_pickle(table2)
         do_pickle(table1, lambda x: (x.getArgs(), x.getVals(), x.getInterp()))
         do_pickle(table2, lambda x: (x.getArgs(), x.getVals(), x.getInterp()))
+        do_pickle(table1)
+        do_pickle(table2)
 
 
     t2 = time.time()

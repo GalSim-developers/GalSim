@@ -28,6 +28,8 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.__str__ = lambda self: "galsim.%s(%s,%s,%s,%s)"%(
             self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
     Class.__getinitargs__ = lambda self: (self.xmin, self.xmax, self.ymin, self.ymax)
+    # Quick and dirty.  Just check reprs are equal.
+    Class.__eq__ = lambda self, other: repr(self) == repr(other)
 
     Class.__doc__ = """A class for representing image bounds as 2D rectangles.
 

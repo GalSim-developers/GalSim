@@ -217,6 +217,7 @@ def test_fluxconservation():
 
     # Check picklability
     do_pickle(cd, lambda x: x.applyForward(image))
+    do_pickle(cd)
 
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)

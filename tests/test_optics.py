@@ -228,6 +228,7 @@ def test_OpticalPSF_flux():
         np.testing.assert_almost_equal(optics_array.sum(), 1., 2, 
                 err_msg="Unaberrated Optical flux not quite unity.")
     do_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics_test)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -270,6 +271,7 @@ def test_OpticalPSF_vs_Airy_with_obs():
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
                 err_msg="Unaberrated Optical with obscuration not quite equal to Airy")
     do_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics_test)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -365,6 +367,7 @@ def test_OpticalPSF_aberrations_struts():
         myImg.array, savedImg.array, 6,
         err_msg="Optical aberration (all aberrations) disagrees with expected result")
     do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics)
 
     # test struts
     savedImg = galsim.fits.read(os.path.join(imgdir, "optics_struts.fits"))
@@ -377,6 +380,7 @@ def test_OpticalPSF_aberrations_struts():
     except ImportError:
         print 'The assert_raises tests require nose'
     do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics)
 
     # Make sure it doesn't have some weird error if strut_angle=0 (should be the easiest case, but
     # check anyway...)
@@ -394,6 +398,7 @@ def test_OpticalPSF_aberrations_struts():
         lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=8.*galsim.degrees,
         astig2=0.04, coma1=-0.07, defocus=0.09, oversampling=1, circular_pupil=False)
     do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics)
 
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
@@ -433,6 +438,7 @@ def test_OpticalPSF_aberrations_kwargs():
         opt2.drawImage(scale=0.2*lod, method='no_pixel').array,
         err_msg="Optical PSF depends on how aberrations are specified (full list)")
     do_pickle(opt2, lambda x: x.drawImage(nx=20, ny=20, scale=0.01, method='no_pixel'))
+    do_pickle(opt2)
 
     # Also, check for proper response to weird inputs.
     try:
@@ -583,6 +589,7 @@ def test_OpticalPSF_pupil_plane():
             err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane.")
     if __name__ == '__main__':
         do_pickle(test_psf, lambda x: x.drawImage(nx=20, ny=20, scale=0.07, method='no_pixel'))
+        do_pickle(test_psf)
 
     # It is supposed to be able to figure this out even if we *don't* tell it the pad factor. So
     # make sure that it still works even if we don't tell it that value.

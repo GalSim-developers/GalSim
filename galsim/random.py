@@ -133,6 +133,8 @@ GaussianDeviate, since it generates two values at a time, saving the second one 
 next output value.
 """
 
+# Quick and dirty.  Just check reprs are equal.
+_galsim.BaseDeviate.__eq__ = lambda self, other: repr(self) == repr(other)
 
 def permute(rng, *args):
     """Randomly permute one or more lists.

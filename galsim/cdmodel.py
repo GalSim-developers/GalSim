@@ -115,6 +115,9 @@ class BaseCDModel(object):
                 self.a_l.array.tolist(), self.a_r.array.tolist(),
                 self.a_b.array.tolist(), self.a_t.array.tolist())
 
+    # Quick and dirty.  Just check reprs are equal.
+    def __eq__(self, other): return repr(self) == repr(other)
+
 # The _modelShiftCoeffX functions are used by the PowerLawCD class
 def _modelShiftCoeffR(x, y, r0, t0, rx, tx, r, t, alpha):
     """Calculate the model shift coeff of right pixel border as a function of int pixel position

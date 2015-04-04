@@ -109,8 +109,8 @@ def test_SED_basic():
 
         # Only the first one is not picklable
         if k > 0:
-            do_pickle(s)
             do_pickle(s, lambda x: (x(470), x(490), x(910)) )
+            do_pickle(s)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

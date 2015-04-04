@@ -302,6 +302,8 @@ def test_realspace_convolve():
     # Check picklability
     do_pickle(conv.SBProfile, lambda x: (repr(x.getObjs()), x.isRealSpace(), x.getGSParams()))
     do_pickle(conv, lambda x: x.drawImage())
+    do_pickle(conv)
+    do_pickle(conv.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -504,6 +506,8 @@ def test_add():
     # Check picklability
     do_pickle(sum.SBProfile, lambda x: (repr(x.getObjs()), x.getGSParams()))
     do_pickle(sum, lambda x: x.drawImage())
+    do_pickle(sum)
+    do_pickle(sum.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -642,6 +646,8 @@ def test_autoconvolve():
     # Check picklability
     do_pickle(conv2.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
     do_pickle(conv2, lambda x: x.drawImage())
+    do_pickle(conv2)
+    do_pickle(conv2.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -683,6 +689,8 @@ def test_autocorrelate():
     # Check picklability
     do_pickle(corr.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
     do_pickle(corr, lambda x: x.drawImage())
+    do_pickle(corr)
+    do_pickle(corr.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
