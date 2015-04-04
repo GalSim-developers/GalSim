@@ -1691,12 +1691,12 @@ class Kolmogorov(GSObject):
     the wavelength of the light (say in the middle of the bandpass you are using) and r0 is the
     Fried parameter.  Typical values for the Fried parameter are on the order of 10cm for
     most observatories and up to 20cm for excellent sites. The values are usually quoted at
-    lambda = 500nm and r0 depends on wavelength as [r0 ~ lambda^(-6/5)].
+    lambda = 500nm and r0 depends on wavelength as [r0 ~ lambda^(6/5)].
 
     This ratio is naturally in radians, so you would typically convert to arcsec.  e.g.
 
         >>> lam = 700  # nm
-        >>> r0 = 0.15 * (lam/500)**(-1.2)  # meters
+        >>> r0 = 0.15 * (lam/500)**1.2  # meters
         >>> lam_over_r0 = (lam * 1.e-9) / r0  # radians
         >>> lam_over_r0 *= 206265  # Convert to arcsec
 
