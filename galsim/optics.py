@@ -141,9 +141,11 @@ class OpticalPSF(GSObject):
                             individual aberration.  Currently GalSim supports aberrations from
                             defocus through third-order spherical (`spher`), which are aberrations
                             4-11 in the Noll convention, and hence `aberrations` should be an
-                            object of length 12, with the first four numbers being ignored, the 5th
-                            (index 4) being defocus, and so on through index 11 corresponding to
-                            `spher`. [default: None]
+                            object of length 12, with the 5th number (index 4) being the defocus,
+                            and so on through index 11 corresponding to `spher`.  Orders 1-3
+                            (piston, tip, and tilt), while not true optical aberrations, are
+                            permitted to be non-zero and will be treated appropriately, while the
+                            first number will be ignored. [default: None]
     @param circular_pupil   Adopt a circular pupil?  [default: True]
     @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
                             dimension, [0., 1.). This should be specified even if you are providing
@@ -304,11 +306,11 @@ class OpticalPSF(GSObject):
             if len(aberrations) < 12:
                 aberrations = np.append(aberrations, [0] * (12-len(aberrations)))
 
-            # Check for non-zero elements in first 4 values.  Probably a mistake.
-            if np.any(aberrations[0:4] != 0.0):
+            # Check for non-zero elements in first value.  Probably a mistake.
+            if aberrations[0] != 0.0:
                 import warnings
                 warnings.warn(
-                    "Detected non-zero value in aberrations[0:4] -- these values are ignored!")
+                    "Detected non-zero value in aberrations[0] -- this value is ignored!")
 
         # Make the psf image using this scale and array shape
         optimage = galsim.optics.psf_image(
@@ -643,18 +645,19 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
 
     # Faster to use Horner's method in rho:
     temp = (
-            # Constant terms: includes defocus (4)
-            -np.sqrt(3.) * aberrations[4]
+            # Constant terms: includes defocus (4) and piston (1)
+            -np.sqrt(3.) * aberrations[4] + aberrations[1]
 
             # Terms with rhosq, but no rho, rho**2, etc.: includes defocus (4) and spher (11)
             + rhosq * ( 2. * np.sqrt(3.) * aberrations[4]
                         - 6. * np.sqrt(5.) * aberrations[11]
                         + rhosq * (6. * np.sqrt(5.) * aberrations[11]) )
 
-            # Now the powers of rho: includes coma2 (8), coma1 (7), astig2 (6), astig1 (5), trefoil2
-            # (10), trefoil1 (9).
-            # We eventually take the real part
-            + ( rho * ( (rhosq-2./3.) * (3. * np.sqrt(8.) * (aberrations[8] - 1j * aberrations[7]))
+            # Now the powers of rho: includes tip (2), tilt (3), coma2 (8), coma1 (7), astig2 (6),
+            # astig1 (5), trefoil2 (10), trefoil1 (9).
+            # We eventually take the real part.
+            + ( rho * ( 2. * (aberrations[2] - 1j * aberrations[3])
+                + (rhosq-2./3.) * (3. * np.sqrt(8.) * (aberrations[8] - 1j * aberrations[7]))
                         + rho * ( (np.sqrt(6.) * (aberrations[6] - 1j * aberrations[5]))
                                    + rho * (np.sqrt(8.) * (aberrations[10] - 1j * aberrations[9])) 
                                 )

@@ -48,7 +48,9 @@ if len(diff_output) > 0:
     for hdu in range(len(f1)):
         d0 = f1[hdu].data
         d1 = f2[hdu].data
-        if (d0 != d1).any():
+        if d0 is None and d1 is None:
+            pass
+        elif (d0 != d1).any():
             print '    HDU %d shows differences in %d pixels'%(hdu, (d0!=d1).sum())
             print '    The maximum absolute difference is %e.'%(abs(d0-d1).max())
             print '    The maximum relative difference is %e.'%(abs((d0-d1)/(d0+1.e-10)).max())

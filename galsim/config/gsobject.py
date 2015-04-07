@@ -31,7 +31,8 @@ valid_gsobject_types = {
     'Ring' : '_BuildRing',
     'RealGalaxy' : '_BuildRealGalaxy',
     'RealGalaxyOriginal' : '_BuildRealGalaxyOriginal',
-    'OpticalPSF' : '_BuildOpticalPSF'
+    'OpticalPSF' : '_BuildOpticalPSF',
+    'COSMOSGalaxy' : '_BuildCOSMOSGalaxy',
 }
 
 class SkipThisObject(Exception):
@@ -378,7 +379,7 @@ def _BuildRing(config, key, base, ignore, gsparams, logger):
 
 
 def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
-    """@brief Build a RealGalaxy type GSObject from user input.
+    """@brief Build a RealGalaxy from the real_catalog input item.
     """
     if 'real_catalog' not in base:
         raise ValueError("No real galaxy catalog available for building type = RealGalaxy")
@@ -396,7 +397,8 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
 
     real_cat = base['real_catalog'][num]
 
-    # Special: if index is Sequence or Random, and max isn't set, set it to real_cat.getNObjects()-1
+    # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
+    # But not if they specify 'id' which overrides that.
     if 'id' not in config:
         galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
 
@@ -429,7 +431,7 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
 
 
 def _BuildRealGalaxyOriginal(config, key, base, ignore, gsparams, logger):
-    """@brief Return the original image from a RealGalaxy instance defined by user input.
+    """@brief Return the original image from a RealGalaxy using the real_catalog input item.
     """
     image, safe = _BuildRealGalaxy(config, key, base, ignore, gsparams, logger)
     return image.original_image, safe    
@@ -458,6 +460,60 @@ def _BuildOpticalPSF(config, key, base, ignore, gsparams, logger):
             
     return galsim.OpticalPSF(**kwargs), safe
 
+
+def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
+    """@brief Build a COSMOS galaxy using the cosmos_catalog input item.
+    """
+    if 'cosmos_catalog' not in base:
+        raise ValueError("No COSMOS galaxy catalog available for building type = COSMOSGalaxy")
+
+    if 'num' in config:
+        num, safe = ParseValue(config, 'num', base, int)
+    else:
+        num, safe = (0, True)
+    ignore.append('num')
+
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for COSMOSGalaxy: num = %d"%num)
+    if num >= len(base['cosmos_catalog']):
+        raise ValueError("Invalid num supplied for COSMOSGalaxy (too large): num = %d"%num)
+
+    cosmos_cat = base['cosmos_catalog'][num]
+
+    # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
+    galsim.config.SetDefaultIndex(config, cosmos_cat.getNObjects())
+
+    kwargs, safe1 = galsim.config.GetAllParams(config, key, base,
+        req = galsim.COSMOSCatalog.makeGalaxy._req_params,
+        opt = galsim.COSMOSCatalog.makeGalaxy._opt_params,
+        single = galsim.COSMOSCatalog.makeGalaxy._single_params,
+        ignore = ignore)
+    safe = safe and safe1
+    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
+    if logger and galsim.COSMOSCatalog.makeGalaxy._takes_logger: kwargs['logger'] = logger
+
+    if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
+        if 'rng' not in base:
+            raise ValueError("No base['rng'] available for %s.type = COSMOSGalaxy"%(key))
+        kwargs['rng'] = base['rng']
+
+    if 'index' in kwargs:
+        index = kwargs['index']
+        if index >= cosmos_cat.getNObjects():
+            raise IndexError(
+                "%s index has gone past the number of entries in the catalog"%index)
+
+    if logger:
+        logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base['obj_num'],str(kwargs))
+
+    kwargs['cosmos_catalog'] = cosmos_cat
+
+    # Use a staticmethod of COSMOSCatalog to avoid pickling the result of makeGalaxy()
+    # The RealGalaxy in particular has a large serialization, so it is more efficient to
+    # make it in this process, which is what happens here.
+    gal = galsim.COSMOSCatalog._makeSingleGalaxy(**kwargs)
+
+    return gal, safe
 
 
 def _BuildSimple(config, key, base, ignore, gsparams, logger):
@@ -497,7 +553,7 @@ def _BuildSimple(config, key, base, ignore, gsparams, logger):
 
 def _TransformObject(gsobject, config, base, logger):
     """@brief Applies ellipticity, rotation, gravitational shearing and centroid shifting to a
-    supplied GSObject, in that order, from user input.
+    supplied GSObject, in that order.
 
     @returns transformed GSObject.
     """
@@ -535,8 +591,7 @@ def _TransformObject(gsobject, config, base, logger):
     return gsobject, safe
 
 def _EllipObject(gsobject, config, key, base, logger):
-    """@brief Applies ellipticity to a supplied GSObject from user input, also used for
-    gravitational shearing.
+    """@brief Applies ellipticity to a supplied GSObject, also used for gravitational shearing.
 
     @returns transformed GSObject.
     """
@@ -547,7 +602,7 @@ def _EllipObject(gsobject, config, key, base, logger):
     return gsobject, safe
 
 def _RotateObject(gsobject, config, key, base, logger):
-    """@brief Applies rotation to a supplied GSObject based on user input.
+    """@brief Applies rotation to a supplied GSObject.
 
     @returns transformed GSObject.
     """
@@ -558,7 +613,7 @@ def _RotateObject(gsobject, config, key, base, logger):
     return gsobject, safe
 
 def _ScaleFluxObject(gsobject, config, key, base, logger):
-    """@brief Scales the flux of a supplied GSObject based on user input.
+    """@brief Scales the flux of a supplied GSObject.
 
     @returns transformed GSObject.
     """
@@ -569,7 +624,7 @@ def _ScaleFluxObject(gsobject, config, key, base, logger):
     return gsobject, safe
 
 def _DilateObject(gsobject, config, key, base, logger):
-    """@brief Applies dilation to a supplied GSObject based on user input.
+    """@brief Applies dilation to a supplied GSObject.
 
     @returns transformed GSObject.
     """
@@ -580,7 +635,7 @@ def _DilateObject(gsobject, config, key, base, logger):
     return gsobject, safe
 
 def _MagnifyObject(gsobject, config, key, base, logger):
-    """@brief Applies magnification to a supplied GSObject based on user input.
+    """@brief Applies magnification to a supplied GSObject.
 
     @returns transformed GSObject.
     """
@@ -591,7 +646,7 @@ def _MagnifyObject(gsobject, config, key, base, logger):
     return gsobject, safe
 
 def _ShiftObject(gsobject, config, key, base, logger):
-    """@brief Applies centroid shift to a supplied GSObject based on user input.
+    """@brief Applies centroid shift to a supplied GSObject.
 
     @returns transformed GSObject.
     """

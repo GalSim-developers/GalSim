@@ -161,15 +161,17 @@ Demonstration scripts
 ---------------------
 
 There are a number of scripts in `examples/` that demonstrate how the code can
-be used.  These are called `demo1.py`...`demo12.py`.  You can run them by
+be used.  These are called `demo1.py`...`demo13.py`.  You can run them by
 typing (e.g.) `python demo1.py` while sitting in `examples/`, All demo scripts
 are designed to be run in the `examples/` directory.  Some of them access
 files in subdirectories of the `examples/` directory, so they would not work
 correctly from other locations.
 
 A completely parallel sequence of configuration files, called `demo1.yaml`...
-`demo12.yaml`, demonstrates how to make the same set of simulations using
-config files that are parsed by the executable `bin/galsim`.
+`demo11.yaml`, demonstrates how to make the same set of simulations using
+config files that are parsed by the executable `bin/galsim`.  (There are no
+corresponding .yaml files for demo12 and demo13 yet, because some of the
+functionality cannot yet be carried out using config files.)
 
 As the project develops through further versions, and adds further
 capabilities to the software, more demo scripts may be added to `examples/`
@@ -235,7 +237,8 @@ Currently, GalSim has the following capabilities:
 
 * Can add noise using a variety of noise models, including correlated noise.
 
-* Can whiten existing correlated noise that is already in an image.
+* Can whiten or apply N-fold symmetry to existing correlated noise that is 
+  already in an image.
 
 * Can read in input values from a catalog, a dictionary file (such as a JSON
   or YAML file), or a fits header.
@@ -254,7 +257,10 @@ Currently, GalSim has the following capabilities:
   including a variety of common FITS WCS specifications.
 
 * Can include a range of simple detector effects such as nonlinearity,
-  brighter-fatter, etc.
+  brighter-fatter effect, etc.
+
+* Has a module that is particularly meant to simulate images for the WFIRST
+  survey.
 
 
 Summary of planned future development

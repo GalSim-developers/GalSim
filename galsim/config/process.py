@@ -25,7 +25,7 @@ valid_input_types = {
     # - a list of keys to ignore on the initial creation (e.g. PowerSpectrum has values that are 
     #   used later in PowerSpectrumInit).
     # - whether the class has a getNObjects method, in which case it also must have a constructor
-    #   kwarg nobjects_only to efficiently do only enough to calculate nobjects.
+    #   kwarg _nobjects_only to efficiently do only enough to calculate nobjects.
     # - whether the class might be relevant at the file- or image-scope level, rather than just
     #   at the object level.  Notably, this is true for dict.
     # - A function to call at the start of each image (or None)
@@ -36,6 +36,7 @@ valid_input_types = {
     'dict' : ('galsim.Dict', [], False, True, None, ['Dict']), 
     'real_catalog' : ('galsim.RealGalaxyCatalog', [], True, False, None, 
                       ['RealGalaxy', 'RealGalaxyOriginal']),
+    'cosmos_catalog' : ('galsim.COSMOSCatalog', [], True, False, None, ['COSMOSGalaxy']),
     'nfw_halo' : ('galsim.NFWHalo', [], False, False, None,
                   ['NFWHaloShear','NFWHaloMagnification']),
     'power_spectrum' : ('galsim.PowerSpectrum',
@@ -326,7 +327,7 @@ def ProcessInputNObjects(config, logger=None):
                                                         opt = init_func._opt_params,
                                                         single = init_func._single_params,
                                                         ignore = ignore)[0]
-                    kwargs['nobjects_only'] = True
+                    kwargs['_nobjects_only'] = True
                     input_obj = init_func(**kwargs)
                 if logger:
                     logger.debug('file %d: Found nobjects = %d for %s',

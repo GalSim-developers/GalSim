@@ -107,6 +107,7 @@ from bounds import BoundsI, BoundsD
 from shear import Shear
 from angle import Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec, HMS_Angle, DMS_Angle
 from catalog import Catalog, Dict
+from scene import COSMOSCatalog
 from table import LookupTable
 
 # Image
@@ -167,3 +168,4 @@ from . import hsm
 from . import dcr
 from . import meta_data
 from . import cdmodel
+
