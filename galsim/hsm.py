@@ -162,7 +162,12 @@ class ShapeData(object):
             self.correction_method = data.correction_method
             self.resolution_factor = data.resolution_factor
             self.psf_sigma = data.psf_sigma
-            self.error_message = data.error_message
+            # We use "None" in CppShapeData to indicate no error messages to avoid problems on 
+            # (some) Macs using zero-length strings.  Here, we revert that back to "".
+            if data.error_message == "None":
+                self.error_message = ""
+            else:
+                self.error_message = data.error_message
         else:
             self.image_bounds = _galsim.BoundsI()
             self.moments_status = -1
