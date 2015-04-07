@@ -165,7 +165,7 @@ class RealGalaxy(GSObject):
             self.gal_image, self.psf_image, noise_image, pixel_scale, var = real_galaxy_catalog
             use_index = 0  # For the logger statements below.
             if logger:
-                logger.debug('Start RealGalaxy constructor.',use_index)
+                logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
             self.catalog_file = None
         else:
             # Get the index to use in the catalog
