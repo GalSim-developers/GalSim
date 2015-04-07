@@ -391,7 +391,7 @@ class Bandpass(object):
         `red_limit` or both) or automatically, just trimming off leading and trailing wavelength
         ranges where the relative throughput is less than some amount (`relative_throughput`).
 
-        This second option using relative_throughpt is only available for bandpasses initialized
+        This second option using relative_throughput is only available for bandpasses initialized
         with a LookupTable or from a file, not when using a regular python function or a string
         evaluation.
 
