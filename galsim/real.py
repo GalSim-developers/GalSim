@@ -178,7 +178,7 @@ class RealGalaxy(GSObject):
                     raise AttributeError('Too many methods for selecting a galaxy!')
                 use_index = real_galaxy_catalog.getIndexForID(id)
             elif random is True:
-                uniform_deviate = galsim.UniformDeviate(rng)
+                uniform_deviate = galsim.UniformDeviate(self.rng)
                 use_index = int(real_galaxy_catalog.nobjects * uniform_deviate()) 
             else:
                 raise AttributeError('No method specified for selecting a galaxy!')
@@ -194,7 +194,7 @@ class RealGalaxy(GSObject):
             if logger:
                 logger.debug('RealGalaxy %d: Got psf_image',use_index)
 
-            #self.noise = real_galaxy_catalog.getNoise(use_index, rng, gsparams)
+            #self.noise = real_galaxy_catalog.getNoise(use_index, self.rng, gsparams)
             # We need to duplication some of the RealGalaxyCatalog.getNoise() function, since we
             # want it to be possible to have the RealGalaxyCatalog in another process, and the
             # BaseCorrelatedNoise object is not picklable.  So we just build it here instead.
@@ -254,12 +254,10 @@ class RealGalaxy(GSObject):
 
         # If flux is None, leave flux as given by original image
         if flux is not None:
-            self.original_gal = self.original_gal.withFlux(flux)
-            self.noise *= (flux / self.original_image.getFlux())**2
-            self.original_image = self.original_image.withFlux(flux)
+            flux_rescale = flux / self.original_gal.getFlux()
         if flux_rescale is not None:
+            self.original_gal *= flux_rescale
             self.noise *= flux_rescale**2
-            self.original_image *= flux_rescale
 
         # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.Deconvolve(self.original_psf, gsparams=gsparams)

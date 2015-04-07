@@ -1615,7 +1615,12 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                  (self.cd == other.cd).all() and
                  self.center == other.center and
                  ( (self.pv is None and other.pv is None) or
-                   (self.pv == other.pv).all() ) )
+                   (self.pv == other.pv).all() ) and
+                 ( (self.ab is None and other.ab is None) or
+                   (self.ab == other.ab).all() ) and
+                 ( (self.abp is None and other.abp is None) or
+                   (self.abp == other.abp).all() ) 
+               )
 
     def __repr__(self):
         import numpy
@@ -1623,8 +1628,17 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             pv_repr = repr(self.pv)
         else:
             pv_repr = 'array(%r)'%self.pv.tolist()
-        return "galsim.GSFitsWCS(_data = [%r, array(%r), array(%r), %r, %s])"%(
-                self.wcs_type, self.crpix.tolist(), self.cd.tolist(), self.center, pv_repr)
+        if self.ab is None:
+            ab_repr = repr(self.ab)
+        else:
+            ab_repr = 'array(%r)'%self.ab.tolist()
+        if self.abp is None:
+            abp_repr = repr(self.abp)
+        else:
+            abp_repr = 'array(%r)'%self.abp.tolist()
+        return "galsim.GSFitsWCS(_data = [%r, array(%r), array(%r), %r, %s, %s, %s])"%(
+                self.wcs_type, self.crpix.tolist(), self.cd.tolist(), self.center, 
+                pv_repr, ab_repr, abp_repr)
 
     def __str__(self):
         if self._tag is None:
