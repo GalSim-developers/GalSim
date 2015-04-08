@@ -23,6 +23,9 @@ API Changes
 - Made the default tolerance for all Interpolants equal to 1.e-4.  It already
   was for Cubic, Quintic, and Lanczos, which are the ones we normally use,
   so this just changes the default for the others. (#218)
+- Deprecated the __rdiv__ operator from Bandpass and SED, since we realized
+  that they did not have any clear use cases.  If you have one, please open an
+  issue, and we can add them back. (#218)
 - Deprecated CorrelatedNoise.calculateCovarianceMatrix, since it is not used 
   anywhere, and we think no one really has a need for it. (#630)
 - Officially deprecated the methods and functions that had been described as

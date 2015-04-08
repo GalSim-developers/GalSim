@@ -242,10 +242,6 @@ def test_SED_div():
         x = 3.0
         np.testing.assert_almost_equal(c(x), a(x)/b(x), 10,
                                        err_msg="Found wrong value in SED.__div__")
-        # function divided by SED
-        c = b/a
-        np.testing.assert_almost_equal(c(x), b(x)/a(x), 10,
-                                       err_msg="Found wrong value in SED.__rdiv__")
         # SED divided by scalar
         d = c/4.2
         np.testing.assert_almost_equal(d(x), c(x)/4.2, 10,

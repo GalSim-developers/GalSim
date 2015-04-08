@@ -236,33 +236,8 @@ class Bandpass(object):
 
         return Bandpass(tp, blue_limit, red_limit, _wave_list=wave_list)
 
-    # Doesn't check for divide by zero, so be careful.
-    def __rdiv__(self, other):
-        # MJ: I can't think what the use case is here.  Why would we want to divide 
-        #     something (scalar or funct) by a bandpass?
-        blue_limit = self.blue_limit
-        red_limit = self.red_limit
-        wave_list = self.wave_list
-
-        if isinstance(other, Bandpass):
-            if len(other.wave_list) > 0:
-                wave_list = np.union1d(wave_list, other.wave_list)
-            blue_limit = max([self.blue_limit, other.blue_limit])
-            red_limit = min([self.red_limit, other.red_limit])
-            wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
-
-        if hasattr(other, '__call__'):
-            tp = lambda w: other(w) / self.func(w) 
-        else:
-            tp = lambda w: other / self.func(w) 
-
-        return Bandpass(tp, blue_limit, red_limit, _wave_list=wave_list)
-
     def __truediv__(self, other):
         return __div__(self, other)
-
-    def __rtruediv__(self, other):
-        return __rdiv__(self, other)
 
     def copy(self):
         import copy

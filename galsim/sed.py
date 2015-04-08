@@ -258,20 +258,6 @@ class SED(object):
     def __truediv__(self, other):
         return self.__div__(other)
 
-    def __rdiv__(self, other):
-        # MJ: Does this make sense?  Is there a use case for 1/sed or f(wave) / sed?
-        if hasattr(other, '__call__'):
-            wave_factor = 1.0 + self.redshift
-            spec = lambda w: other(w * wave_factor) /  self._rest_photons(w)
-        else:
-            spec = lambda w: other / self._rest_photons(w)
-        return SED(spec, flux_type='fphotons', redshift=self.redshift,
-                   _wave_list=self.wave_list,
-                   _blue_limit=self.blue_limit, _red_limit=self.red_limit)
-
-    def __rtruediv__(self, other):
-        return self.__rdiv__(other)
-
     def __add__(self, other):
         # Add together two SEDs, with the following caveats:
         # 1) The SEDs must have the same redshift.
