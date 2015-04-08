@@ -301,7 +301,7 @@ def test_realspace_convolve():
 
     # Check picklability
     do_pickle(conv.SBProfile, lambda x: (repr(x.getObjs()), x.isRealSpace(), x.getGSParams()))
-    do_pickle(conv, lambda x: x.drawImage())
+    do_pickle(conv, lambda x: x.drawImage(method='sb'))
     do_pickle(conv)
     do_pickle(conv.SBProfile)
 
@@ -505,7 +505,7 @@ def test_add():
 
     # Check picklability
     do_pickle(sum.SBProfile, lambda x: (repr(x.getObjs()), x.getGSParams()))
-    do_pickle(sum, lambda x: x.drawImage())
+    do_pickle(sum, lambda x: x.drawImage(method='sb'))
     do_pickle(sum)
     do_pickle(sum.SBProfile)
 
@@ -645,7 +645,7 @@ def test_autoconvolve():
 
     # Check picklability
     do_pickle(conv2.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
-    do_pickle(conv2, lambda x: x.drawImage())
+    do_pickle(conv2, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(conv2)
     do_pickle(conv2.SBProfile)
 
@@ -688,7 +688,7 @@ def test_autocorrelate():
 
     # Check picklability
     do_pickle(corr.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
-    do_pickle(corr, lambda x: x.drawImage())
+    do_pickle(corr, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(corr)
     do_pickle(corr.SBProfile)
 
