@@ -123,7 +123,7 @@ class Bandpass(object):
             return
 
         # Account for wave_factor in wavelength limits
-        if self.wave_factor != 1.9:
+        if self.wave_factor != 1.0:
             if self.blue_limit is not None:
                 self.blue_limit /= self.wave_factor
             if self.red_limit is not None:
