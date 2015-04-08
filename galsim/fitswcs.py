@@ -112,7 +112,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             if hdu is not None:
                 self._tag += ', hdu=%r'%hdu
             if compression is not 'auto':
-                self._tag += ', compression=%r'%copression
+                self._tag += ', compression=%r'%compression
             if header is not None:
                 raise TypeError("Cannot provide both file_name and pyfits header")
             if wcs is not None:
@@ -422,7 +422,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             if hdu is not None:
                 self._tag += ', hdu=%r'%hdu
             if compression is not 'auto':
-                self._tag += ', compression=%r'%copression
+                self._tag += ', compression=%r'%compression
             if header is not None:
                 raise TypeError("Cannot provide both file_name and pyfits header")
             if wcsinfo is not None:
@@ -936,7 +936,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             if hdu is not None:
                 self._tag += ', hdu=%r'%hdu
             if compression is not 'auto':
-                self._tag += ', compression=%r'%copression
+                self._tag += ', compression=%r'%compression
             if header is not None:
                 raise TypeError("Cannot provide both file_name and pyfits header")
             hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
@@ -1802,7 +1802,7 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
                 if hdu is not None:
                     wcs._tag += ', hdu=%r'%hdu
                 if compression is not 'auto':
-                    wcs._tag += ', compression=%r'%copression
+                    wcs._tag += ', compression=%r'%compression
             return wcs
         except Exception as err:
             #print 'caught ',err
