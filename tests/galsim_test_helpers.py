@@ -228,8 +228,8 @@ def do_pickle(obj1, func = lambda x : x):
     #print 'pickled obj1 = ',cPickle.dumps(obj1)
     obj2 = cPickle.loads(cPickle.dumps(obj1))
     assert obj2 is not obj1
-    #print 'obj1 = ',repr(obj1)
-    #print 'obj2 = ',repr(obj2)
+    print 'obj1 = ',repr(obj1)
+    print 'obj2 = ',repr(obj2)
     f1 = func(obj1)
     f2 = func(obj2)
     #print 'func(obj1) = ',repr(f1)
@@ -246,6 +246,10 @@ def do_pickle(obj1, func = lambda x : x):
         print repr(f2.bounds)
         print (f1.bounds == f2.bounds), (f1.wcs == f2.wcs), (f1.array == f2.array).all()
     assert f1 == f2
+
+    # Test the hash values are equal for two equivalent objects.
+    print 'hash = ',hash(obj1),hash(obj2)
+    assert hash(obj1) == hash(obj2)
 
     obj3 = copy.copy(obj1)
     assert obj3 is not obj1

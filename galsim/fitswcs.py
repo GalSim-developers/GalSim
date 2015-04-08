@@ -332,6 +332,14 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
     def __repr__(self):
         return "galsim.AstropyWCS(%s, origin=%r)"%(self._tag, self.origin)
 
+    def __hash__(self):
+        if 'wcsinfo' in self._tag:
+            return hash( (repr(self), self._wcsinfo) )
+        elif 'header' in self._tag:
+            return hash( (repr(self), self._header) )
+        else:
+            return hash(repr(self))
+
     def __getstate__(self):
         d = self.__dict__.copy()
         # If header or wcs is in the tag, then it might still be picklable, so let pickle
@@ -584,6 +592,14 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
     def __repr__(self):
         return "galsim.PyAstWCS(%s, origin=%r)"%(self._tag, self.origin)
 
+    def __hash__(self):
+        if 'wcsinfo' in self._tag:
+            return hash( (repr(self), self._wcsinfo) )
+        elif 'header' in self._tag:
+            return hash( (repr(self), self._header) )
+        else:
+            return hash(repr(self))
+
     def __getstate__(self):
         d = self.__dict__.copy()
         # If header or wcsinfo is in the tag, then we can't pickle.  Just leave it alone
@@ -833,6 +849,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
     def __repr__(self):
         return "galsim.WcsToolsWCS(%r, origin=%r)"%(self._file_name, self.origin)
 
+    def __hash__(self): return hash(repr(self))
 
 class GSFitsWCS(galsim.wcs.CelestialWCS):
     """This WCS uses a GalSim implementation to read a WCS from a FITS file.
@@ -1645,6 +1662,8 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             return self.__repr__()
         else:
             return "galsim.GSFitsWCS(%s, origin=%r)"%(self._tag, self.origin)
+
+    def __hash__(self): return hash(repr(self))
 
 
 def TanWCS(affine, world_origin, units=galsim.arcsec):

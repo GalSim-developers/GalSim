@@ -632,6 +632,8 @@ class RealGalaxyCatalog(object):
                 self.image_dir == other.image_dir and
                 self.noise_dir == other.noise_dir)
 
+    def __hash__(self): return hash(repr(self))
+
     def __getstate__(self):
         d = self.__dict__.copy()
         d['loaded_files'] = {}

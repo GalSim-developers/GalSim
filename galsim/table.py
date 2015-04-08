@@ -232,6 +232,8 @@ class LookupTable(object):
             return 'galsim.LookupTable(x=[%s,..,%s], f=[%s,...,%s], interpolant=%r)'%(
                 self.x[0], self.x[-1], self.f[0], self.f[-1], self.interpolant)
 
+    def __hash__(self): return hash(repr(self))
+
 
 # A function to enable pickling of tables
 _galsim._LookupTable.__getinitargs__ = lambda self: \
@@ -239,3 +241,5 @@ _galsim._LookupTable.__getinitargs__ = lambda self: \
 _galsim._LookupTable.__repr__ = lambda self: \
         'galsim._galsim._LookupTable(array(%r), array(%r), %r)'%(
             self.getArgs(), self.getVals(), self.getInterp())
+_galsim._LookupTable.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim._LookupTable.__hash__ = lambda self: hash(repr(other))

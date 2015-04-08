@@ -151,7 +151,7 @@ class _BaseCorrelatedNoise(object):
 
     # Quick and dirty.  Just check reprs are equal.
     def __eq__(self, other): return repr(self) == repr(other)
-
+    def __hash__(self): return hash(repr(self))
 
     def applyTo(self, image):
         """Apply this correlated Gaussian random noise field to an input Image.

@@ -499,4 +499,5 @@ class Bandpass(object):
             orig_tp = str(self._orig_tp)
         return 'galsim.Bandpass(%s)'%self._orig_tp
 
+    def __hash__(self): return hash(repr(self))
 

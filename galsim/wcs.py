@@ -1125,6 +1125,7 @@ class PixelScale(LocalWCS):
                  self.scale == other.scale )
 
     def __repr__(self): return "galsim.PixelScale(%r)"%self.scale
+    def __hash__(self): return hash(repr(self))
 
 
 class ShearWCS(LocalWCS):
@@ -1256,6 +1257,7 @@ class ShearWCS(LocalWCS):
                  self.shear == other.shear )
 
     def __repr__(self): return "galsim.ShearWCS(%r, %r)"%(self.scale,self.shear)
+    def __hash__(self): return hash(repr(self))
 
 
 class JacobianWCS(LocalWCS):
@@ -1487,6 +1489,7 @@ class JacobianWCS(LocalWCS):
 
     def __repr__(self): return "galsim.JacobianWCS(%r, %r, %r, %r)"%(
             self.dudx,self.dudy,self.dvdx,self.dvdy)
+    def __hash__(self): return hash(repr(self))
 
 
 #########################################################################################
@@ -1599,6 +1602,7 @@ class OffsetWCS(UniformWCS):
 
     def __repr__(self): return "galsim.OffsetWCS(%r, %r, %r)"%(
             self.scale, self.origin, self.world_origin)
+    def __hash__(self): return hash(repr(self))
 
 
 class OffsetShearWCS(UniformWCS):
@@ -1698,6 +1702,7 @@ class OffsetShearWCS(UniformWCS):
     def __repr__(self):
         return "galsim.OffsetShearWCS(%r, %r, %r, %r)"%(
                 self.scale, self.shear, self.origin, self.world_origin)
+    def __hash__(self): return hash(repr(self))
 
 
 class AffineTransform(UniformWCS):
@@ -1822,6 +1827,7 @@ class AffineTransform(UniformWCS):
     def __repr__(self):
         return ("galsim.AffineTransform(%r, %r, %r, %r, %r, %r)")%(
                 self.dudx, self.dudy, self.dvdx, self.dvdy, self.origin, self.world_origin)
+    def __hash__(self): return hash(repr(self))
 
 
 #########################################################################################
@@ -2165,6 +2171,8 @@ class UVFunction(EuclideanWCS):
                 self._orig_ufunc, self._orig_vfunc, self._orig_xfunc, self._orig_yfunc,
                 self.origin, self.world_origin)
 
+    def __hash__(self): return hash(repr(self))
+
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['_ufunc']
@@ -2311,6 +2319,8 @@ class RaDecFunction(CelestialWCS):
     def __repr__(self):
         return "galsim.RaDecFunction(%r, %r, %r)"%(
                 self._orig_ra_func, self._orig_dec_func, self.origin)
+
+    def __hash__(self): return hash(repr(self))
 
     def __getstate__(self):
         d = self.__dict__.copy()

@@ -147,6 +147,7 @@ _galsim.BaseNoise.__truediv__ = Noise_div
 
 # Quick and dirty.  Just check reprs are equal.
 _galsim.BaseNoise.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.BaseNoise.__hash__ = lambda self: hash(repr(self))
 
 # GaussianNoise docstrings
 _galsim.GaussianNoise.__doc__ = """

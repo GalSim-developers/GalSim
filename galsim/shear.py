@@ -351,3 +351,5 @@ class Shear(object):
 
     def __str__(self):
         return 'galsim.Shear(g1=%s,g2=%s)'%(self.g1,self.g2)
+
+    def __hash__(self): return hash(self._g)

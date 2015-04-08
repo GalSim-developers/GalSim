@@ -584,3 +584,4 @@ class SED(object):
             orig_spec = str(self._orig_spec)
         return 'galsim.SED(%s, redshift=%s)'%(orig_spec, self.redshift)
 
+    def __hash__(self): return hash(repr(self))

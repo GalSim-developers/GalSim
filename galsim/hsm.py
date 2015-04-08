@@ -244,6 +244,7 @@ class ShapeData(object):
 
     # Quick and dirty.  Just check reprs are equal.
     def __eq__(self, other): return repr(self) == repr(other)
+    def __hash__(self): return hash(repr(self))
 
 _galsim.CppShapeData.__getinitargs__ = lambda self: (
         self.image_bounds, self.moments_status, self.observed_e1, self.observed_e2,
@@ -257,6 +258,7 @@ _galsim.CppShapeData.__repr__ = lambda self: \
         ('galsim._galsim.CppShapeData(' + 21*'%r,' + '%r)')%self.__getinitargs__()
 
 _galsim.CppShapeData.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.CppShapeData.__hash__ = lambda self: hash(repr(self))
 
 _galsim.HSMParams.__getinitargs__ = lambda self: (
         self.nsig_rg, self.nsig_rg2, self.max_moment_nsig2, self.regauss_too_small,
@@ -267,6 +269,7 @@ _galsim.HSMParams.__repr__ = lambda self: \
         ('galsim.hsm.HSMParams(' + 11*'%r,' + '%r)')%self.__getinitargs__()
 
 _galsim.HSMParams.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.HSMParams.__hash__ = lambda self: hash(repr(self))
 
 
 # A helper function for taking input weight and badpix Images, and returning a weight Image in the

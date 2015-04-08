@@ -367,6 +367,8 @@ class Image(object):
         else:
             return 'galsim.Image(bounds=%s, wcs=%s)'%(self.bounds, self.wcs)
 
+    def __hash__(self): return hash(repr(self))
+
     # bounds and array are really properties which pass the request to the image
     @property
     def bounds(self): return self.image.bounds
@@ -807,6 +809,8 @@ def ImageAlloc_setstate(self, args):
     self.__class__ = _galsim.ImageView[self_type]
     self.__init__(*args)
 
+def ImageHash(self):
+    return hash(repr(self))
 
 # inject the arithmetic operators as methods of the Image class:
 Image.__add__ = Image_add
@@ -860,6 +864,7 @@ for Class in _galsim.ImageAlloc.itervalues():
     Class.__getstate_manages_dict__ = 1
     Class.__getstate__ = ImageAlloc_getstate
     Class.__setstate__ = ImageAlloc_setstate
+    Class.__hash__ = ImageHash
 
 for Class in _galsim.ImageView.itervalues():
     Class.__setitem__ = Image_setitem
@@ -884,6 +889,7 @@ for Class in _galsim.ImageView.itervalues():
     Class.__neg__ = Image_neg
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
+    Class.__hash__ = ImageHash
 
 for Class in _galsim.ConstImageView.itervalues():
     Class.__getitem__ = Image_getitem
@@ -901,6 +907,7 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.__neg__ = Image_neg
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
+    Class.__hash__ = ImageHash
 
 for int_type in [ numpy.int16, numpy.int32 ]:
     for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type],

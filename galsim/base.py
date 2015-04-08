@@ -1257,6 +1257,7 @@ class GSObject(object):
 
     # Quick and dirty.  Just check reprs are equal.
     def __eq__(self, other): return repr(self) == repr(other)
+    def __hash__(self): return hash(repr(self))
 
 # Pickling an SBProfile is a bit tricky, since it's a base class for lots of other classes.
 # Normally, we'll know what the derived class is, so we can just use the pickle stuff that is
@@ -1282,6 +1283,7 @@ def SBProfile_setstate(self, state):
 _galsim.SBProfile.__setstate__ = SBProfile_setstate
 # Quick and dirty.  Just check reprs are equal.
 _galsim.SBProfile.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.SBProfile.__hash__ = lambda self: hash(repr(self))
 
 
 # --- Now defining the derived classes ---
@@ -2591,3 +2593,4 @@ _galsim.GSParams.__getinitargs__ = lambda self: (
         self.range_division_for_extrema, self.small_fraction_of_flux)
 _galsim.GSParams.__repr__ = lambda self: \
         'galsim.GSParams(%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r)'%self.__getinitargs__()
+_galsim.GSParams.__hash__ = lambda self: hash(repr(self))
