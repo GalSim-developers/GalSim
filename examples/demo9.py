@@ -37,6 +37,7 @@ New features introduced in this demo:
 - nfw = galsim.NFWHalo(mass, conc, z, omega_m, omega_lam)
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMagnification(pos, z)
+- distdev = galsim.DistDeviate(rng, function, x_min, x_max)
 - pos = bounds.trueCenter()
 - wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc, origin)
 - wcs.toWorld(profile, image_pos)
@@ -252,7 +253,7 @@ def main(argv):
         for k in range(nobj):
 
             # Initialize the random number generator we will be using for this object:
-            rng = galsim.UniformDeviate(seed+k)
+            ud = galsim.UniformDeviate(seed+k)
 
             # Determine where this object is going to go.
             # We choose points randomly within a donut centered at the center of the main image
@@ -264,8 +265,8 @@ def main(argv):
             max_rsq = radius**2
             min_rsq = inner_radius**2
             while True:  # (This is essentially a do..while loop.)
-                x = (2.*rng()-1) * radius
-                y = (2.*rng()-1) * radius
+                x = (2.*ud()-1) * radius
+                y = (2.*ud()-1) * radius
                 rsq = x**2 + y**2
                 if rsq >= min_rsq and rsq <= max_rsq: break
             pos = galsim.PositionD(x,y)
@@ -292,10 +293,20 @@ def main(argv):
             dy = y_nominal - iy_nominal
             offset = galsim.PositionD(dx,dy)
 
+            # Draw the flux from a power law distribution: N(f) ~ f^-1.5
+            # For this, we use the class DistDeviate which can draw deviates from an arbitrary
+            # probability distribution.  This distribution can be defined either as a functional
+            # form as we do here, or as tabulated lists of x and p values, from which the 
+            # function is interpolated.
+            distdev = galsim.DistDeviate(ud,
+                                         function = lambda x:x**-1.5,
+                                         x_min = gal_flux_min,
+                                         x_max = gal_flux_max)
+            flux = distdev()
+
             # Determine the random values for the galaxy:
-            flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
-            hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
-            gd = galsim.GaussianDeviate(rng, sigma = gal_eta_rms)
+            hlr = ud() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
+            gd = galsim.GaussianDeviate(ud, sigma = gal_eta_rms)
             eta1 = gd()  # Unlike g or e, large values of eta are valid, so no need to cutoff.
             eta2 = gd()
 

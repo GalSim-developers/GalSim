@@ -19,6 +19,7 @@
 "#" : "- obj type : Moffat (..., trunc)",
 "#" : "- obj type : DeVaucouleurs (flux, half_light_radius)",
 "#" : "- value type : Catalog (col)",
+"#" : "- obj : shift",
 "#" : "- shift type : XY (x, y)",
 "#" : "- shear type : E1E2 (e1, e2)",
 "#" : "- image : xsize, ysize",

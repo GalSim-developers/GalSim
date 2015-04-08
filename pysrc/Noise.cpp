@@ -104,9 +104,9 @@ namespace galsim {
             pyBaseNoise
                 .def(bp::init<boost::shared_ptr<BaseDeviate> >(bp::arg("rng")=bp::object()))
                 .def("getRNG", &BaseNoise::getRNG, "")
-                .def("setRNG", &BaseNoise::setRNG, "")
                 .add_property("rng", &BaseNoise::getRNG)
                 .def("getVariance", &BaseNoise::getVariance, "")
+                .def("_setRNG", &BaseNoise::setRNG, "")
                 .def("_setVariance", &BaseNoise::setVariance, "")
                 .def("_scaleVariance", &BaseNoise::scaleVariance, "")
                 ;
@@ -129,8 +129,8 @@ namespace galsim {
             );
             pyGaussianNoise
                 .def("getSigma", &GaussianNoise::getSigma, "")
-                .def("setSigma", &GaussianNoise::setSigma, "")
                 .add_property("sigma", &GaussianNoise::getSigma)
+                .def("_setSigma", &GaussianNoise::setSigma, "")
                 ;
         }
 
@@ -147,8 +147,8 @@ namespace galsim {
             );
             pyPoissonNoise
                 .def("getSkyLevel", &PoissonNoise::getSkyLevel, "")
-                .def("setSkyLevel", &PoissonNoise::setSkyLevel, "")
                 .add_property("sky_level", &PoissonNoise::getSkyLevel)
+                .def("_setSkyLevel", &PoissonNoise::setSkyLevel, "")
                 ;
         }
 
@@ -168,12 +168,12 @@ namespace galsim {
                 .def("getSkyLevel", &CCDNoise::getSkyLevel, "")
                 .def("getGain", &CCDNoise::getGain, "")
                 .def("getReadNoise", &CCDNoise::getReadNoise, "")
-                .def("setSkyLevel", &CCDNoise::setSkyLevel, "")
-                .def("setGain", &CCDNoise::setGain, "")
-                .def("setReadNoise", &CCDNoise::setReadNoise, "")
                 .add_property("sky_level", &CCDNoise::getSkyLevel)
                 .add_property("gain", &CCDNoise::getGain)
                 .add_property("read_noise", &CCDNoise::getReadNoise)
+                .def("_setSkyLevel", &CCDNoise::setSkyLevel, "")
+                .def("_setGain", &CCDNoise::setGain, "")
+                .def("_setReadNoise", &CCDNoise::setReadNoise, "")
                 ;
         }
 

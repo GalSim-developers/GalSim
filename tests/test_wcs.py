@@ -40,8 +40,8 @@ far_y_list = [ 10, 12.5, 103.3, 500 ]
 # Make a few different profiles to check.  Make sure to include ones that 
 # aren't symmetrical so we don't get fooled by symmetries.
 prof1 = galsim.Gaussian(sigma = 1.7, flux = 100)
-prof2 = prof1.createSheared(g1=0.3, g2=-0.12)
-prof3 = prof2 + galsim.Exponential(scale_radius = 1.3, flux = 20).createShifted(-0.1,-0.4)
+prof2 = prof1.shear(g1=0.3, g2=-0.12)
+prof3 = prof2 + galsim.Exponential(scale_radius = 1.3, flux = 20).shift(-0.1,-0.4)
 profiles = [ prof1, prof2, prof3 ]
 
 if __name__ != "__main__":
@@ -73,7 +73,7 @@ digits = 3
 # From that page: "The example maps and spectra are offered mainly as test material for 
 # software that deals with FITS WCS."
 #
-# I picked the 4 that GSFitsWCS can do plus a couple others that struck me as interstingly 
+# I picked the ones that GSFitsWCS can do plus a couple others that struck me as interstingly 
 # different, but there are a bunch more on that web page as well.  In particular, I included ZPN,
 # since that uses PV values, which the others don't, and HPX, since it is not implemented in 
 # wcstools.
@@ -475,8 +475,8 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
                 'round trip xValue gave different result for PositionI for '+name)
 
         # Test drawing the profile on an image with the given wcs
-        world_profile.draw(im1)
-        image_profile.draw(im2)
+        world_profile.drawImage(im1, method='no_pixel')
+        image_profile.drawImage(im2, method='no_pixel')
         np.testing.assert_array_almost_equal(
                 im1.array, im2.array, digits,
                 'world_profile and image_profile were different when drawn for '+name)
@@ -533,18 +533,15 @@ def do_jac_decomp(wcs, name):
     # for getDecomposition.
     base_obj = galsim.Gaussian(sigma=2)
     # Make sure it doesn't have any initial symmetry!
-    base_obj.applyShear(g1=0.1, g2=0.23)
-    base_obj.applyShift(0.17, -0.37)
+    base_obj = base_obj.shear(g1=0.1, g2=0.23).shift(0.17, -0.37)
 
-    obj1 = base_obj.copy()
-    obj1.applyTransformation(wcs.dudx, wcs.dudy, wcs.dvdx, wcs.dvdy)
+    obj1 = base_obj.transform(wcs.dudx, wcs.dudy, wcs.dvdx, wcs.dvdy)
 
-    obj2 = base_obj.copy()
     if flip:
-        obj2.applyTransformation(0,1,1,0)
-    obj2.applyRotation(theta)
-    obj2.applyShear(shear)
-    obj2.applyExpansion(scale)
+        obj2 = base_obj.transform(0,1,1,0)
+    else:
+        obj2 = base_obj
+    obj2 = obj2.rotate(theta).shear(shear).expand(scale)
 
     gsobject_compare(obj1, obj2)
 
@@ -638,8 +635,8 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
             #print 'profile = ',world_profile
             image_profile = wcs.toImage(world_profile, image_pos=image_pos)
 
-            world_profile.draw(im1, offset=(dx,dy))
-            image_profile.draw(im2, offset=(dx,dy))
+            world_profile.drawImage(im1, offset=(dx,dy), method='no_pixel')
+            image_profile.drawImage(im2, offset=(dx,dy), method='no_pixel')
             np.testing.assert_array_almost_equal(
                     im1.array, im2.array, digits,
                     'world_profile and image_profile differed when drawn for '+name)
@@ -649,8 +646,8 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
                 # So guard against NotImplementedError.
                 image_profile = wcs.toImage(world_profile, world_pos=world_pos)
 
-                world_profile.draw(im1, offset=(dx,dy))
-                image_profile.draw(im2, offset=(dx,dy))
+                world_profile.drawImage(im1, offset=(dx,dy), method='no_pixel')
+                image_profile.drawImage(im2, offset=(dx,dy), method='no_pixel')
                 np.testing.assert_array_almost_equal(
                         im1.array, im2.array, digits,
                         'world_profile and image_profile differed when drawn for '+name)
@@ -732,8 +729,8 @@ def do_celestial_wcs(wcs, name):
             #print 'profile = ',world_profile
             image_profile = wcs.toImage(world_profile, image_pos=image_pos)
 
-            world_profile.draw(im1, offset=(dx,dy))
-            image_profile.draw(im2, offset=(dx,dy))
+            world_profile.drawImage(im1, offset=(dx,dy), method='no_pixel')
+            image_profile.drawImage(im2, offset=(dx,dy), method='no_pixel')
             np.testing.assert_array_almost_equal(
                     im1.array, im2.array, digits,
                     'world_profile and image_profile differed when drawn for '+name)
@@ -743,8 +740,8 @@ def do_celestial_wcs(wcs, name):
                 # So guard against NotImplementedError.
                 image_profile = wcs.toImage(world_profile, world_pos=world_pos)
 
-                world_profile.draw(im1, offset=(dx,dy))
-                image_profile.draw(im2, offset=(dx,dy))
+                world_profile.drawImage(im1, offset=(dx,dy), method='no_pixel')
+                image_profile.drawImage(im2, offset=(dx,dy), method='no_pixel')
                 np.testing.assert_array_almost_equal(
                         im1.array, im2.array, digits,
                         'world_profile and image_profile differed when drawn for '+name)
@@ -1433,10 +1430,10 @@ def test_radecfunction():
                     # of the full jacobian that should be accurate to 5 digits.
                     # If A = coord, B = center, and C = the north pole, then the rotation angle is
                     # 180 deg - A - B.
-                    A = coord.angleBetween(north_pole, center)
-                    B = center.angleBetween(coord, north_pole)
-                    C = north_pole.angleBetween(center, coord)
-                    # The angle C should equal coord.ra - cneter.ra, so use this as a unit test of
+                    A = coord.angleBetween(center, north_pole)
+                    B = center.angleBetween(north_pole, coord)
+                    C = north_pole.angleBetween(coord, center)
+                    # The angle C should equal coord.ra - center.ra, so use this as a unit test of
                     # the angleBetween function:
                     np.testing.assert_almost_equal(
                             C / galsim.degrees, (coord.ra - center.ra) / galsim.degrees, digits,
@@ -1523,6 +1520,7 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
         pos = wcs.toImage(galsim.CelestialCoord(ra,dec))
         #print 'x,y = ',x,y
         #print 'pos = ',pos
+        #print 'dist = ',(x-pos.x)*pixel_scale, (y-pos.y)*pixel_scale
         np.testing.assert_almost_equal((x-pos.x)*pixel_scale, 0, digits2,
                                        'wcs.toImage differed from expected value')
         np.testing.assert_almost_equal((y-pos.y)*pixel_scale, 0, digits2,
@@ -1660,11 +1658,11 @@ def test_gsfitswcs():
 
     # These are all relatively fast (total time for all 7 and the TanWCS stuff below is about 
     # 1.6 seconds), but longer than my arbitrary 1 second goal for any unit test, so only do the 
-    # two most important ones as part of the regular test suite runs.
+    # three most important ones as part of the regular test suite runs.
     if __name__ == "__main__":
-        test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TNX' ]
+        test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TNX', 'SIP' ]
     else:
-        test_tags = [ 'TAN', 'TPV' ]
+        test_tags = [ 'TAN', 'TPV', 'SIP' ]
 
     dir = 'fits_files'
 
@@ -1751,17 +1749,15 @@ def test_fitswcs():
             import warnings
             warnings.warn("None of the existing WCS classes were able to read "+file_name)
         else:
-            approx1 = ( (tag == 'SIP' and isinstance(wcs, galsim.PyAstWCS)) or
-                        (tag in ['SIP', 'TPV'] and isinstance(wcs, galsim.WcsToolsWCS)) )
-            approx2 = tag == 'ZPX' and isinstance(wcs, galsim.PyAstWCS)
-            do_ref(wcs, ref_list, 'FitsWCS '+tag, approx1)
+            approx = tag == 'ZPX' and isinstance(wcs, galsim.PyAstWCS)
+            do_ref(wcs, ref_list, 'FitsWCS '+tag)
             do_celestial_wcs(wcs, 'FitsWCS '+file_name)
-            do_wcs_image(wcs, 'FitsWCS_'+tag, approx2)
+            do_wcs_image(wcs, 'FitsWCS_'+tag, approx)
 
             # Should also be able to build the file just from a fits.read() call, which 
             # uses FitsWCS behind the scenes.
             im = galsim.fits.read(file_name, dir=dir)
-            do_ref(im.wcs, ref_list, 'WCS from fits.read '+tag, approx1, im)
+            do_ref(im.wcs, ref_list, 'WCS from fits.read '+tag, im)
 
         # Finally, also check that AffineTransform can read the file.
         # We don't really have any accuracy checks here.  This really just checks that the

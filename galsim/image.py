@@ -56,7 +56,9 @@ _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 # cf. http://stackoverflow.com/questions/6187932/how-to-write-a-static-python-getitem-method
 class MetaImage(type):
     def __getitem__(cls,t):
-        """An obsolete syntax that treats Image as a dict indexed by type"""
+        """A deprecated syntax that treats Image as a dict indexed by type"""
+        from galsim.deprecated import depr
+        depr('Image[type]', 1.1, 'Image(..., dtype=type)')
         Image_dict = {
             numpy.int16 : ImageS,
             numpy.int32 : ImageI,
@@ -168,7 +170,7 @@ class Image(object):
     Methods
     -------
 
-        view        Return a view of the image.
+        view        Return a view of the image, possibly giving it a new scale or wcs.
         subImage    Return a view of a portion of the full image.
         shift       Shift the origin of the image by (dx,dy).
         setCenter   Set a new position for the center of the image.
@@ -185,6 +187,7 @@ class Image(object):
 
     """
     __metaclass__ = MetaImage
+
     cpp_valid_dtypes = _galsim.ImageView.keys()
     alias_dtypes = {
         int : numpy.int32,          # So that user gets what they would expect
@@ -430,17 +433,45 @@ class Image(object):
         """
         self.image.copyFrom(rhs.image)
 
-    def view(self, make_const=False):
+    def view(self, scale=None, wcs=None, origin=None, center=None, make_const=False):
         """Make a view of this image, which lets you change the scale, wcs, origin, etc.
         but view the same underlying data as the original image.
 
-        You can make this a const view with the `make_const` parameter.
+        If you do not provide either `scale` or `wcs`, the view will keep the same wcs
+        as the current Image object.
+
+        @param scale        If provided, use this as the pixel scale for the image. [default: None]
+        @param wcs          If provided, use this as the wcs for the image. [default: None]
+        @param origin       If profided, use this as the origin position of the view.
+                            [default: None]
+        @param center       If profided, use this as the center position of the view.
+                            [default: None]
+        @param make_const   Make the view's data array immutable. [default: False]
         """
-        if make_const:
-            return Image(image=_galsim.ConstImageView[self.dtype](self.image.view()),
-                         wcs=self.wcs)
+        if origin is not None and center is not None:
+            raise TypeError("Cannot provide both center and origin")
+
+        if scale is not None:
+            if wcs is not None:
+                raise TypeError("Cannot provide both scale and wcs")
+            wcs = galsim.PixelScale(scale)
+        elif wcs is not None:
+            if not isinstance(wcs,galsim.BaseWCS):
+                raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
         else:
-            return Image(image=self.image.view(), wcs=self.wcs)
+            wcs = self.wcs
+
+        if make_const:
+            ret = Image(image=_galsim.ConstImageView[self.dtype](self.image.view()), wcs=wcs)
+        else:
+            ret = Image(image=self.image.view(), wcs=wcs)
+
+        if origin is not None:
+            ret.setOrigin(origin)
+        elif center is not None:
+            ret.setCenter(center)
+
+        return ret
 
     def shift(self, *args, **kwargs):
         """Shift the pixel coordinates by some (integral) dx,dy.
@@ -568,74 +599,6 @@ def ImageD(*args, **kwargs):
     kwargs['dtype'] = numpy.float64
     return Image(*args, **kwargs)
 
-def ImageViewS(*args, **kwargs):
-    """Alias for galsim.Image(..., dtype=numpy.int16)
-    """
-    kwargs['dtype'] = numpy.int16
-    return Image(*args, **kwargs)
-
-def ImageViewI(*args, **kwargs):
-    """Alias for galsim.Image(..., dtype=numpy.int32)
-    """
-    kwargs['dtype'] = numpy.int32
-    return Image(*args, **kwargs)
-
-def ImageViewF(*args, **kwargs):
-    """Alias for galsim.Image(..., dtype=numpy.float32)
-    """
-    kwargs['dtype'] = numpy.float32
-    return Image(*args, **kwargs)
-
-def ImageViewD(*args, **kwargs):
-    """Alias for galsim.Image(..., dtype=numpy.float64)
-    """
-    kwargs['dtype'] = numpy.float64
-    return Image(*args, **kwargs)
-
-def ConstImageViewS(*args, **kwargs):
-    """An obsolete alias for galsim.Image(..., dtype=numpy.int16, make_const=True)
-    """
-    kwargs['dtype'] = numpy.int16
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-def ConstImageViewI(*args, **kwargs):
-    """An obsolete alias for galsim.Image(..., dtype=numpy.int32, make_const=True)
-    """
-    kwargs['dtype'] = numpy.int32
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-def ConstImageViewF(*args, **kwargs):
-    """An obsolete alias for galsim.Image(..., dtype=numpy.float32, make_const=True)
-    """
-    kwargs['dtype'] = numpy.float32
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-def ConstImageViewD(*args, **kwargs):
-    """An obsolete alias for galsim.Image(..., dtype=numpy.float64, make_const=True)
-    """
-    kwargs['dtype'] = numpy.float64
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-ImageView = {
-    numpy.int16 : ImageViewS,
-    numpy.int32 : ImageViewI,
-    numpy.float32 : ImageViewF,
-    numpy.float64 : ImageViewD
-}
-
-ConstImageView = {
-    numpy.int16 : ConstImageViewS,
-    numpy.int32 : ConstImageViewI,
-    numpy.float32 : ConstImageViewF,
-    numpy.float64 : ConstImageViewD
-}
-
-
-
 
 ################################################################################################
 #
@@ -666,9 +629,15 @@ def Image_add(self, other):
 def Image_iadd(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] += other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] += other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] += a
+    else:
+        self.array[:,:] = (self.array + a).astype(self.array.dtype)
     return self
 
 def Image_sub(self, other):
@@ -685,9 +654,15 @@ def Image_rsub(self, other):
 def Image_isub(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] -= other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] -= other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] -= a
+    else:
+        self.array[:,:] = (self.array - a).astype(self.array.dtype)
     return self
 
 def Image_mul(self, other):
@@ -698,9 +673,15 @@ def Image_mul(self, other):
 def Image_imul(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] *= other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] *= other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] *= a
+    else:
+        self.array[:,:] = (self.array * a).astype(self.array.dtype)
     return self
 
 def Image_div(self, other):
@@ -717,9 +698,15 @@ def Image_rdiv(self, other):
 def Image_idiv(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] /= other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] /= other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] /= a
+    else:
+        self.array[:,:] = (self.array / a).astype(self.array.dtype)
     return self
 
 def Image_pow(self, other):

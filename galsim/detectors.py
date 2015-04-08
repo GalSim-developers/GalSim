@@ -80,7 +80,7 @@ def applyNonlinearity(self, NLfunc, *args):
 
 def addReciprocityFailure(self, exp_time, alpha, base_flux):
     """
-    Accounts for the reciprocity failure and corrects the original Image for it directly.
+    Accounts for the reciprocity failure and includes it in the original Image directly.
 
     Reciprocity, in the context of photography, is the inverse relationship between the incident
     flux (I) of a source object and the exposure time (t) required to produce a given response (p)

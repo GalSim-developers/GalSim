@@ -23,11 +23,12 @@ The eleventh script in our tutorial about using GalSim in python scripts: exampl
 
 This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
 parametric model) and variable shear and magnification according to some cosmological model for
-which we have a tabulated power spectrum at specific k values only.  The 288 galaxies in the 0.2 x
-0.2 degree field (representing a low number density of 2/arcmin^2) are randomly located and
-permitted to overlap, but we do take care to avoid being too close to the edge of the large image.
-For the galaxies, we use a random selection from 5 specific RealGalaxy objects, selected to be 5
-particularly irregular ones.  These are taken from the same catalog of 100 objects that demo6 used.
+which we have a tabulated power spectrum at specific k values only.  The 288 galaxies in the 0.1 x
+0.1 degree field (representing a number density of 8/arcmin^2) are randomly located and
+permitted to overlap.  For the galaxies, we use a mix of real and parametric galaxies modeled off
+the COSMOS observations with the Hubble Space Telescope.  The real galaxies are similar to those
+used in demo10.  The parametric galaxies are based on parameter fits to the same observed galaxies.
+The flux and size distribution are thus realistic for an I < 23.5 magnitude limited sample.
 
 New features introduced in this demo:
 
@@ -36,9 +37,9 @@ New features introduced in this demo:
 - wcs = galsim.TanWCS(affine, world_origin, units)
 - psf = galsim.InterpolatedImage(psf_filename, scale, flux)
 - tab = galsim.LookupTable(file)
-- gal = galsim.RealGalaxy(..., noise_pad_size)
+- cosmos_cat = galsim.COSMOSCatalog(file_name, dir)
+- gal = cosmos_cat.makeGalaxy(index, gal_type, noise_pad_size, rng)
 - ps = galsim.PowerSpectrum(..., units)
-- distdev = galsim.DistDeviate(rng, function, x_min, x_max)
 - gal = gal.lens(g1, g2, mu)
 - image.whitenNoise(correlated_noise)
 - image.symmetrizeNoise(correlated_noise)
@@ -64,8 +65,8 @@ import galsim
 def main(argv):
     """
     Make images using constant PSF and variable shear:
-      - The main image is 0.2 x 0.2 degrees.
-      - Pixel scale is 0.2 arcsec, hence the image is 3600 x 3600 pixels.
+      - The main image is 6 x 6 arcmin
+      - Pixel scale is 0.2 arcsec, hence the image is 1800 x 1800 pixels.
       - Applied shear is from a cosmological power spectrum read in from file.
       - The PSF is a real one from SDSS, and corresponds to a convolution of atmospheric PSF,
         optical PSF, and pixel response, which has been sampled at pixel centers.  We used a PSF
@@ -73,9 +74,12 @@ def main(argv):
         telescope. However, in order that the galaxy resolution not be too poor, we tell GalSim that
         the pixel scale for that PSF image is 0.2" rather than 0.396".  We are simultaneously lying
         about the intrinsic size of the PSF and about the pixel scale when we do this.
-      - The galaxy images include some initial correlated noise from the original HST observation.
-        However, we whiten the noise of the final image so the final image has stationary 
-        Gaussian noise, rather than correlated noise.
+      - The galxies come from COSMOSCatalog, which can produce either RealGalaxy profiles
+        (like in demo10) and parametric fits to those profiles.  We choose 30% of the galaxies
+        to use the images, and the other 60% to use the parametric fits
+      - The real galaxy images include some initial correlated noise from the original HST
+        observation.  However, we whiten the noise of the final image so the final image has
+        stationary Gaussian noise, rather than correlated noise.
     """
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo11")
@@ -83,20 +87,26 @@ def main(argv):
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    base_stamp_size = 32              # number of pixels in each dimension of galaxy images
-                                      # This will be scaled up according to the dilation.
-                                      # Hence the "base_" prefix.
-
     pixel_scale = 0.2                 # arcsec/pixel
-    image_size = 0.2 * galsim.degrees # size of big image in each dimension
+    image_size = 0.1 * galsim.degrees # size of full image in each dimension
     image_size = int((image_size / galsim.arcsec) / pixel_scale) # convert to pixels
     image_size_arcsec = image_size*pixel_scale # size of big image in each dimension (arcsec)
-    noise_variance = 1.e4             # ADU^2
+    noise_variance = 5.e4             # ADU^2  (Just use simple Gaussian noise here.)
     nobj = 288                        # number of galaxies in entire field
                                       # (This corresponds to 2 galaxies / arcmin^2)
     grid_spacing = 90.0               # The spacing between the samples for the power spectrum 
                                       # realization (arcsec)
-    gal_signal_to_noise = 100         # S/N of each galaxy
+    tel_diam = 4                      # Let's figure out the flux for a 4 m class telescope
+    exp_time = 300                    # exposing for 300 seconds.
+
+    # The catalog returns objects that are appropriate for HST in 1 second exposures.  So for our
+    # telescope we scale up by the relative area and exposure time.  Note that what is important is
+    # the *effective* area after taking into account obscuration.  For HST, the telescope diameter
+    # is 2.4 but there is obscuration (a linear factor of 0.33).  Here, we assume that the telescope
+    # we're simulating effectively has no obscuration factor.  We're also ignoring the pi/4 factor
+    # since it appears in the numerator and denominator, so we use area = diam^2.
+    hst_eff_area = 2.4**2 * (1.-0.33**2)
+    flux_scaling = (tel_diam**2/hst_eff_area) * exp_time
 
     # random_seed is used for both the power spectrum realization and the random properties
     # of the galaxies.
@@ -107,20 +117,21 @@ def main(argv):
     logger.info('Starting demo script 11')
  
     # Read in galaxy catalog
-    cat_file_name = 'real_galaxy_catalog_example.fits'
-    dir = 'data'
-    real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
-    logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
-
-    # List of IDs to use.  We select 5 particularly irregular galaxies for this demo. 
-    # Then we'll choose randomly from this list.
-    id_list = [ 106416, 106731, 108402, 116045, 116448 ]
-
-    # We will cache the galaxies that we make in order to save some of the calculations that
-    # happen on construction.  In particular, we don't want to recalculate the Fourier transforms 
-    # of the real galaxy images, so it's more efficient so make a store of RealGalaxy instances.
-    # We start with them all = None, and fill them in as we make them.
-    gal_list = [ None ] * len(id_list)
+    # The COSMOSCatalog uses the same input file as we have been usign for RealGalaxyCatalogs
+    # along with a second file called real_galaxy_catalog_examples_fits.fits, which stores
+    # the information about the parameteric fits.  There is no need to specify the second file
+    # name, since the name is derivable from the name of the main catalog.
+    if True:
+        # The catalog we distribute with the GalSim code only has 100 galaxies.
+        # The galaxies will typically be reused several times here.
+        cat_file_name = 'real_galaxy_catalog_example.fits'
+        dir = 'data'
+        cosmos_cat = galsim.COSMOSCatalog(cat_file_name, dir=dir)
+    else:
+        # If you've run galsim_download_cosmos, you can leave out the cat_file_name and dir
+        # to use the full COSMOS catalog with 56,000 galaxies in it.
+        cosmos_cat = galsim.COSMOSCatalog()
+    logger.info('Read in %d galaxies from catalog', cosmos_cat.nobjects)
 
     # Setup the PowerSpectrum object we'll be using:
     # To do this, we first have to read in the tabulated shear power spectrum, often denoted
@@ -154,11 +165,10 @@ def main(argv):
     # the typical seeing is 1.2" and we want to simulate better seeing, so we will just tell GalSim
     # that the pixel scale is 0.2".  We have to be careful with SDSS PSF images, as they have an
     # added 'soft bias' of 1000 which has been removed before creation of this file, so that the sky
-    # level is properly zero.  Also, the file is bzipped, to demonstrate the new capability of
-    # reading in a file that has been compressed in various ways (which GalSim can infer from the
-    # filename).  We want to read the image directly into an InterpolatedImage GSObject, so we can
-    # manipulate it as needed (here, the only manipulation needed is convolution).  We want a PSF
-    # with flux 1, and we can set the pixel scale using a keyword.
+    # level is properly zero.  Also, the file is bzipped, to demonstrate the ability of GalSim
+    # handle this kind of compressed file (among others).  We read the image directly into an
+    # InterpolatedImage GSObject, so we can manipulate it as needed (here, the only manipulation
+    # needed is convolution).  The flux is 1 as needed for a PSF.
     psf_file = os.path.join('data','example_sdss_psf_sky0.fits.bz2')
     psf = galsim.InterpolatedImage(psf_file, scale = pixel_scale, flux = 1.)
     logger.info('Read in PSF image from bzipped FITS file')
@@ -184,6 +194,13 @@ def main(argv):
     # image, with grid points spaced by 90 arcsec (hence interpolation only happens below 90"
     # scales, below the interesting scales on which we want the shear power spectrum to be
     # represented exactly).  The lensing engine wants positions in arcsec, so calculate that:
+
+    # Also, because of some technical details about how the config stuff handles the random
+    # number generator here, we need to duplicate the rng object if we want to have the 
+    # two output files match.  This means that technically, the same sequence of random numbers
+    # will be used in building the grid as will be used later to add noise.  But since they are
+    # used in such completely different ways, it is hard to imagine how this could lead to any
+    # kind of bias in the images.
     ps.buildGrid(grid_spacing = grid_spacing,
                  ngrid = int(math.ceil(image_size_arcsec / grid_spacing)),
                  rng = rng.duplicate())
@@ -223,18 +240,6 @@ def main(argv):
         # The usual random number generator using a different seed for each galaxy.
         ud = galsim.UniformDeviate(random_seed+k)
 
-        # Draw the size from a plausible size distribution: N(r) ~ r^-2.5
-        # For this, we use the class DistDeviate which can draw deviates from an arbitrary
-        # probability distribution.  This distribution can be defined either as a functional
-        # form as we do here, or as tabulated lists of x and p values, from which the 
-        # function is interpolated.
-        # N.B. This calculation logically belongs later in the script, but given how the config 
-        #      structure works and the fact that we also use this value for the stamp size 
-        #      calculation, in order to get the output file to match the YAML output file, it
-        #      turns out this is where we need to put this use of the random number generator.
-        distdev = galsim.DistDeviate(ud, function=lambda x:x**-2.5, x_min=1, x_max=5)
-        dilat = distdev()
-
         # Choose a random position in the image
         x = ud()*(image_size-1)
         y = ud()*(image_size-1)
@@ -248,13 +253,28 @@ def main(argv):
         # Get the reduced shears and magnification at this point
         g1, g2, mu = ps.getLensing(pos = world_pos)
 
-        # Construct the galaxy:
-        # Select randomly from among our list of galaxies.
-        index = int(ud() * len(gal_list))
-        gal = gal_list[index]
+        # Now we will have the COSMOSCatalog make a galaxy profile for us.  It can make either
+        # a RealGalaxy using the original HST image and PSF, or a parametric model based on
+        # parametric fits to the light distribution of the HST observation.  The parametric
+        # models are either a Sersic fit to the data or a bulge + disk fit according to which
+        # one gave the better chisq value.
 
-        # If we haven't made this galaxy yet, we need to do so.
-        if gal is None:
+        # First determine whether we will make a real galaxy (`gal_type = 'real'`) or a parametric
+        # galaxy (`gal_type = 'parametric'`).  The real galaxies take longer to render, so for this
+        # script, we just use them 30% of the time and use parametric galaxies the other 70%. 
+
+        # We could just use `ud()<0.3` for this, but instead we introduce another Deviate type
+        # available in GalSim that we haven't used yet: BinomialDeviate.
+        # It takes an N and p value and returns integers according to a binomial distribution.
+        # i.e. How many heads you get after N flips if each flip has a chance, p, of being heads.
+        binom = galsim.BinomialDeviate(ud, N=1, p=0.3)
+        real = binom()
+
+        # Next determine which index in the catalog we will use for this object.
+        index = int(ud() * cosmos_cat.nobjects)
+
+        if real:
+            # For real galaxies, we will want to whiten the noise in the image (below).
             # When whitening the image, we need to make sure the original correlated noise is
             # present throughout the whole image, otherwise the whitening will do the wrong thing
             # to the parts of the image that don't include the original image.  The RealGalaxy
@@ -264,24 +284,24 @@ def main(argv):
             # code to figure out on its own, so we have to supply the size for noise padding 
             # with the noise_pad_size parameter.
         
-            # In this case, the postage stamp will be 32 pixels for the undilated galaxies. 
-            # We expand the postage stamp as we dilate the galaxies, so that factor doesn't
-            # come into play here.  The shear and magnification are not significant, but the 
-            # image can be rotated, which adds an extra factor of sqrt(2). So the net required 
-            # padded size is
-            #     noise_pad_size = 32 * sqrt(2) * 0.2 arcsec/pixel = 9.1 arcsec
-            # We round this up to 10 to be safe.
-            gal = galsim.RealGalaxy(real_galaxy_catalog, rng=ud, id=id_list[index],
-                                    noise_pad_size=10) 
-            # Save it for next time we use this galaxy.
-            gal_list[index] = gal
-
-        # Apply the dilation we calculated above.
-        gal = gal.dilate(dilat)
+            # The large galaxies will render fine without any noise padding, but the postage stamp
+            # for the smaller galaxies will be sized appropriately for the PSF, which may make the
+            # stamp larger than the original galaxy image.  The psf image is 40 x 40, although
+            # the bright part is much more concentrated than that.  If we pad out the galaxy image
+            # to at least 40 x sqrt(2), we should be safe even if the galaxy image is rotated
+            # with respect to the psf image.
+            #     noise_pad_size = 40 * sqrt(2) * 0.2 arcsec/pixel = 11.3 arcsec
+            gal = cosmos_cat.makeGalaxy(index=index, gal_type='real', rng=ud, noise_pad_size=11.3)
+        else:
+            gal = cosmos_cat.makeGalaxy(index=index, gal_type='parametric')
 
         # Apply a random rotation
         theta = ud()*2.0*numpy.pi*galsim.radians
         gal = gal.rotate(theta)
+
+        # Rescale the flux to match our telescope configuration.
+        # This automatically scales up the noise variance by flux_scaling**2.
+        gal *= flux_scaling
 
         # Apply the cosmological (reduced) shear and magnification at this position using a single
         # GSObject method.
@@ -290,26 +310,36 @@ def main(argv):
         # Convolve with the PSF.  
         final = galsim.Convolve(psf, gal)
 
-        # Account for the fractional part of the position:
-        ix = int(math.floor(x+0.5))
-        iy = int(math.floor(y+0.5))
-        offset = galsim.PositionD(x-ix, y-iy)
-
-        # Draw it with our desired stamp size (scaled up by the dilation factor):
-        # Note: We make the stamp size odd to make the above calculation of the offset easier.
-        this_stamp_size = 2 * int(math.ceil(base_stamp_size * dilat / 2)) + 1
-        stamp = galsim.ImageF(this_stamp_size,this_stamp_size)
+        # Account for the fractional part of the position
+        # cf. demo9.py for an explanation of this nominal position stuff.
+        x_nominal = image_pos.x + 0.5
+        y_nominal = image_pos.y + 0.5
+        ix_nominal = int(math.floor(x_nominal+0.5))
+        iy_nominal = int(math.floor(y_nominal+0.5))
+        dx = x_nominal - ix_nominal
+        dy = y_nominal - iy_nominal
+        offset = galsim.PositionD(dx,dy)
 
         # We use method='no_pixel' here because the SDSS PSF image that we are using includes the
         # pixel response already.
-        final.drawImage(image=stamp, wcs=wcs.local(image_pos), offset=offset, method='no_pixel')
+        stamp = final.drawImage(wcs=wcs.local(image_pos), offset=offset, method='no_pixel')
 
-        # Now we can whiten or symmetrize the noise on the postage stamp.  Galsim automatically
-        # propagates the noise correctly from the initial RealGalaxy object through the applied
-        # shear, distortion, rotation, and convolution into the final object's noise attribute.  To
-        # make the noise fully white, use the image.whitenNoise() method. The returned value is the
-        # variance of the Gaussian noise that is present after the whitening process.
-        #
+        # Recenter the stamp at the desired position:
+        stamp.setCenter(ix_nominal,iy_nominal)
+
+        # Find the overlapping bounds:
+        bounds = stamp.bounds & full_image.bounds
+
+        # Now, if we are using a real galaxy, we want to ether whiten or at least symmetrize the
+        # noise on the postage stamp to avoid having to deal with correlated noise in any kind of
+        # image processing you would want to do on the final image.  (Like measure galaxy shapes.)
+
+        # Galsim automatically propagates the noise correctly from the initial RealGalaxy object
+        # through the applied shear, distortion, rotation, and convolution into the final object's
+        # noise attribute.  To make the noise fully white, use the image.whitenNoise() method.
+        # The returned value is the variance of the Gaussian noise that is present after the
+        # whitening process.
+
         # However, this is often overkill for many applications.  If it is acceptable to merely end
         # up with noise with some degree of symmetry (say 4-fold or 8-fold symmetry), then you can
         # instead have GalSim just add enough noise to make the resulting noise have this kind of
@@ -317,29 +347,20 @@ def main(argv):
         # you can have the resulting total variance be somewhat smaller.  The returned variance
         # corresponds to the zero-lag value of the noise correlation function, which will still have
         # off-diagonal elements.  We can do this step using the image.symmetrizeNoise() method.
-        #new_variance = stamp.whitenNoise(final.noise)
-        new_variance = stamp.symmetrizeNoise(final.noise, 8)
+        if real:
+            if True:
+                # We use the symmetrizing option here.
+                new_variance = stamp.symmetrizeNoise(final.noise, 8)
+            else:
+                # Here is how you would do it if you wanted to fully whiten the image.
+                new_variance = stamp.whitenNoise(final.noise)
 
-        # Rescale flux to get the S/N we want.  We have to do that before we add it to the big 
-        # image, which might have another galaxy near that point (so our S/N calculation would 
-        # erroneously include the flux from the other object).
-        # See demo5.py for the math behind this calculation.
-        sn_meas = math.sqrt( numpy.sum(stamp.array**2) / noise_variance )
-        flux_scaling = gal_signal_to_noise / sn_meas
-        stamp *= flux_scaling
-        # This also scales up the current variance by flux_scaling**2.
-        new_variance *= flux_scaling**2
+            # We need to keep track of how much variance we have currently in the image, so when
+            # we add more noise, we can omit what is already there.
+            noise_image[bounds] += new_variance
 
-        # Recenter the stamp at the desired position:
-        stamp.setCenter(ix,iy)
-
-        # Find the overlapping bounds:
-        bounds = stamp.bounds & full_image.bounds
+        # Finally, add the stamp to the full image.
         full_image[bounds] += stamp[bounds]
-
-        # We need to keep track of how much variance we have currently in the image, so when
-        # we add more noise, we can omit what is already there.
-        noise_image[bounds] += new_variance
 
         time2 = time.time()
         tot_time = time2-time1

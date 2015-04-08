@@ -542,6 +542,13 @@ class BaseWCS(object):
 
         wcs._writeHeader(header, bounds)
 
+        if hasattr(self, 'header'):
+            # Store the items that are in self.header in the header if they weren't already put
+            # there by the call to wcs._writeHeader() call.  (We don't want to overwrite the WCS.)
+            for key in self.header.keys():
+                if key not in header.keys():
+                    header[key] = self.header[key]
+
     def makeSkyImage(self, image, sky_level):
         """Make an image of the sky, correctly accounting for the pixel area, which might be
         variable over the image.
@@ -1542,10 +1549,16 @@ class OffsetWCS(UniformWCS):
         if origin is None:
             self._origin = galsim.PositionD(0,0)
         else:
+            if isinstance(origin, galsim.PositionI):
+                origin = galsim.PositionD(origin.x, origin.y)
+            elif not isinstance(origin, galsim.PositionD):
+                raise TypeError("origin must be a PositionD or PositionI argument")
             self._origin = origin
         if world_origin is None:
             self._world_origin = galsim.PositionD(0,0)
         else:
+            if not isinstance(world_origin, galsim.PositionD):
+                raise TypeError("world_origin must be a PositionD argument")
             self._world_origin = world_origin
 
     @property
@@ -1629,10 +1642,16 @@ class OffsetShearWCS(UniformWCS):
         if origin is None:
             self._origin = galsim.PositionD(0,0)
         else:
+            if isinstance(origin, galsim.PositionI):
+                origin = galsim.PositionD(origin.x, origin.y)
+            elif not isinstance(origin, galsim.PositionD):
+                raise TypeError("origin must be a PositionD or PositionI argument")
             self._origin = origin
         if world_origin is None:
             self._world_origin = galsim.PositionD(0,0)
         else:
+            if not isinstance(world_origin, galsim.PositionD):
+                raise TypeError("world_origin must be a PositionD argument")
             self._world_origin = world_origin
 
 
@@ -1725,10 +1744,16 @@ class AffineTransform(UniformWCS):
         if origin is None:
             self._origin = galsim.PositionD(0,0)
         else:
+            if isinstance(origin, galsim.PositionI):
+                origin = galsim.PositionD(origin.x, origin.y)
+            elif not isinstance(origin, galsim.PositionD):
+                raise TypeError("origin must be a PositionD or PositionI argument")
             self._origin = origin
         if world_origin is None:
             self._world_origin = galsim.PositionD(0,0)
         else:
+            if not isinstance(world_origin, galsim.PositionD):
+                raise TypeError("world_origin must be a PositionD argument")
             self._world_origin = world_origin
 
     @property
@@ -2031,10 +2056,16 @@ class UVFunction(EuclideanWCS):
         if origin is None:
             self._origin = galsim.PositionD(0,0)
         else:
+            if isinstance(origin, galsim.PositionI):
+                origin = galsim.PositionD(origin.x, origin.y)
+            elif not isinstance(origin, galsim.PositionD):
+                raise TypeError("origin must be a PositionD or PositionI argument")
             self._origin = origin
         if world_origin is None:
             self._world_origin = galsim.PositionD(0,0)
         else:
+            if not isinstance(world_origin, galsim.PositionD):
+                raise TypeError("world_origin must be a PositionD argument")
             self._world_origin = world_origin
 
     @property
@@ -2203,6 +2234,10 @@ class RaDecFunction(CelestialWCS):
         if origin is None:
             self._origin = galsim.PositionD(0,0)
         else:
+            if isinstance(origin, galsim.PositionI):
+                origin = galsim.PositionD(origin.x, origin.y)
+            elif not isinstance(origin, galsim.PositionD):
+                raise TypeError("origin must be a PositionD or PositionI argument")
             self._origin = origin
 
     @property

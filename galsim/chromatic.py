@@ -232,8 +232,7 @@ class ChromaticObject(object):
         fluxes = np.array([ obj.getFlux() for obj in objs ])
         if np.any(abs(fluxes - 1.0) > 10.*np.finfo(fluxes.dtype.type).eps):
             # Figure out the rescaling factor for the SED.
-            for obj in objs:
-                obj.setFlux(1.)
+            objs = [ obj.withFlux(1.0) for obj in objs ]
             if not hasattr(self, 'SED'):
                 self.SED = lambda w : 1.0
             self.SED = galsim.LookupTable(x=self.waves, f=self.SED(self.waves)*fluxes,
@@ -622,15 +621,6 @@ class ChromaticObject(object):
         f1 = self._fluxFactor(bandpass.red_limit)
         return (np.any(abs(A1-A0) > 10.*np.finfo(A0.dtype.type).eps) or
                 abs(f1-f0) > 10.*np.finfo(A0.dtype.type).eps)
-
-    def draw(self, *args, **kwargs):
-        """An obsolete synonym for obj.drawImage(method='no_pixel')
-        """
-        normalization = kwargs.pop('normalization','f')
-        if normalization in ['flux','f']:
-            return self.drawImage(*args, method='no_pixel', **kwargs)
-        else:
-            return self.drawImage(*args, method='sb', **kwargs)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.

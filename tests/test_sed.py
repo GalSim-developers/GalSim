@@ -366,8 +366,21 @@ def test_SED_calculateDCRMomentShifts():
                                              parallactic_angle=90*galsim.degrees)
     np.testing.assert_almost_equal(Rbar[0], Rbar3[1], 15)
     np.testing.assert_almost_equal(V[1,1], V3[0,0], 25)
-    # and now test against an external known result.
-    np.testing.assert_almost_equal(V[1,1] * (180.0/np.pi * 3600)**2, 0.0065, 4)
+    # and now do the integral right here to compare.
+    # \bar{R} = \frac{\int{sed(\lambda) * bandpass(\lambda) * R(\lambda) d\lambda}}
+    #                {\int{sed(\lambda) * bandpass(\lambda) d\lambda}}
+    # where sed is in units of photons/nm (which is the default)
+    waves = np.union1d(sed.wave_list, bandpass.wave_list)
+    R = galsim.dcr.get_refraction(waves, 45.*galsim.degrees)
+    Rnum = np.trapz(sed(waves) * bandpass(waves) * R, waves)
+    den = np.trapz(sed(waves) * bandpass(waves), waves)
+    rad2arcsec = galsim.radians / galsim.arcsec
+
+    np.testing.assert_almost_equal(Rnum/den*rad2arcsec, Rbar[1]*rad2arcsec, 5)
+    # and for the second moment, V, the numerator is:
+    # \int{sed(\lambda) * bandpass(\lambda) * (R(\lambda) - Rbar)^2 d\lambda}
+    Vnum = np.trapz(sed(waves) * bandpass(waves) * (R - Rnum/den)**2, waves)
+    np.testing.assert_almost_equal(Vnum/den, V[1,1], 5)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -380,7 +393,15 @@ def test_SED_calculateSeeingMomentRatio():
     sed = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'))
     bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
     relative_size = sed.calculateSeeingMomentRatio(bandpass)
-    np.testing.assert_almost_equal(relative_size, 0.919577157172, 4)
+
+    # and now do the integral right here to compare.
+    # \Delta r^2/r^2 = \frac{\int{sed(\lambda) * bandpass(\lambda) * (\lambda/500)^-0.4 d\lambda}}
+    #                       {\int{sed(\lambda) * bandpass(\lambda) d\lambda}}
+    waves = np.union1d(sed.wave_list, bandpass.wave_list)
+    num = np.trapz(sed(waves) * bandpass(waves) * (waves/500.0)**(-0.4), waves)
+    den = np.trapz(sed(waves) * bandpass(waves), waves)
+
+    np.testing.assert_almost_equal(relative_size, num/den, 5)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

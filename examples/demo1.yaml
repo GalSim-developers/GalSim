@@ -63,6 +63,7 @@
 # - top level fields gal, psf, image, output
 # - obj type : Gaussian (flux, sigma)
 # - image : pixel_scale
+# - image : noise
 # - noise type : Gaussian (sigma)
 # - output : dir, file_name
 

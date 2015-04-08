@@ -611,6 +611,7 @@ namespace galsim {
 
     void SBProfile::SBProfileImpl::fillKGrid(KTable& kt) const
     {
+        dbg<<"Start fillKGrid\n";
         int N = kt.getN();
         double dk = kt.getDk();
         kt.clearCache();

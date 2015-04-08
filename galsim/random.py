@@ -237,7 +237,10 @@ class DistDeviate(_galsim.BaseDeviate):
         # lseed is an obsolete synonym for seed
         # I think this was the only place that the name lseed was actually used in the docs.
         # so we keep it for now for backwards compatibility.
-        if lseed is not None: seed = lseed
+        if lseed is not None:
+            from galsim.deprecated import depr
+            depr('lseed', 1.1, 'seed')
+            seed = lseed
 
         import numpy
         import galsim
@@ -436,9 +439,7 @@ Draw a new random number from the distribution.
 Returns a Gaussian deviate with current `mean` and `sigma`.
 """
 _galsim.GaussianDeviate.getMean.__func__.__doc__ = "Get current distribution `mean`."
-_galsim.GaussianDeviate.setMean.__func__.__doc__ = "Set current distribution `mean`. Discouraged."
 _galsim.GaussianDeviate.getSigma.__func__.__doc__ = "Get current distribution `sigma`."
-_galsim.GaussianDeviate.setSigma.__func__.__doc__ = "Set current distribution `sigma`. Discouraged."
 
 
 # BinomialDeviate docstrings
@@ -476,9 +477,7 @@ Draw a new random number from the distribution.
 Returns a Binomial deviate with current `N` and `p`.
 """
 _galsim.BinomialDeviate.getN.__func__.__doc__ = "Get current distribution `N`."
-_galsim.BinomialDeviate.setN.__func__.__doc__ = "Set current distribution `N`. Discouraged."
 _galsim.BinomialDeviate.getP.__func__.__doc__ = "Get current distribution `p`."
-_galsim.BinomialDeviate.setP.__func__.__doc__ = "Set current distribution `p`. Discouraged."
 
 
 # PoissonDeviate docstrings
@@ -515,8 +514,6 @@ Draw a new random number from the distribution.
 Returns a Poisson deviate with current `mean`.
 """
 _galsim.PoissonDeviate.getMean.__func__.__doc__ = "Get current distribution `mean`."
-_galsim.PoissonDeviate.setMean.__func__.__doc__ = "Set current distribution `mean`. Discouraged."
-
 
 
 # WeibullDeviate docstrings
@@ -556,9 +553,7 @@ Draw a new random number from the distribution.
 Returns a Weibull-distributed deviate with current `a` and `b`.
 """
 _galsim.WeibullDeviate.getA.__func__.__doc__ = "Get current distribution shape parameter `a`."
-_galsim.WeibullDeviate.setA.__func__.__doc__ = "Set current distribution shape parameter `a`. Discouraged."
 _galsim.WeibullDeviate.getB.__func__.__doc__ = "Get current distribution shape parameter `b`."
-_galsim.WeibullDeviate.setB.__func__.__doc__ = "Set current distribution shape parameter `b`. Discouraged."
 
 
 # GammaDeviate docstrings
@@ -595,9 +590,7 @@ Draw a new random number from the distribution.
 Returns a Gamma-distributed deviate with current k and theta.
 """
 _galsim.GammaDeviate.getK.__func__.__doc__ = "Get current distribution shape parameter `k`."
-_galsim.GammaDeviate.setK.__func__.__doc__ = "Set current distribution shape parameter `k`. Discouraged."
 _galsim.GammaDeviate.getTheta.__func__.__doc__ = "Get current distribution shape parameter `theta`."
-_galsim.GammaDeviate.setTheta.__func__.__doc__ = "Set current distribution shape parameter `theta`. Discouraged."
 
 
 # Chi2Deviate docstrings
@@ -635,7 +628,6 @@ Draw a new random number from the distribution.
 Returns a Chi2-distributed deviate with current `n` degrees of freedom.
 """
 _galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution `n` degrees of freedom."
-_galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution `n` degrees of freedom. Discouraged."
 
 
 # Some functions to enable pickling of deviates
