@@ -78,6 +78,8 @@ class Catalog(object):
         if file_type not in ['FITS', 'ASCII']:
             raise ValueError("file_type must be either FITS or ASCII if specified.")
         self.file_type = file_type
+        self.comments = comments
+        self.hdu = hdu
 
         if file_type == 'FITS':
             self.read_fits(hdu, _nobjects_only)
@@ -175,6 +177,20 @@ class Catalog(object):
         """Return the data for the given `index` and `col` as an int if possible
         """
         return int(self.get(index,col))
+
+    def __repr__(self):
+        s = "galsim.Catalog(file_name=%r, file_type=%r"%(self.file_name, self.file_type)
+        if self.comments != '#':
+            s += ', comments=%r'%self.comments
+        if self.hdu != 1:
+            s += ', hdu=%r'%self.hdu
+        s += ')'
+        return s
+
+    def __str__(self): return "galsim.Catalog(file_name=%r)"%self.file_name
+
+    def __eq__(self, other): return repr(self) == repr(other)
+    def __hash__(self): return hash(repr(self))
 
 
 class Dict(object):
@@ -312,4 +328,18 @@ class Dict(object):
 
     def iteritems(self):
         return self.dict.iteritems()
+
+    def __repr__(self):
+        s = "galsim.Dict(file_name=%r, file_type=%r"%(self.file_name, self.file_type)
+        if self.key_split != '.':
+            s += ', key_split=%r'%self.key_split
+        s += ')'
+        return s
+
+    def __str__(self): return "galsim.Dict(file_name=%r)"%self.file_name
+
+    def __eq__(self, other): return repr(self) == repr(other)
+    def __hash__(self): return hash(repr(self))
+
+
 
