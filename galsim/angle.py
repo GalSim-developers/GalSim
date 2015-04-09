@@ -43,15 +43,15 @@ There are five built-in AngleUnits which are always available for use:
 """
 
 def AngleUnit_repr(self):
-    if self is galsim.radians:
+    if self == galsim.radians:
         return 'galsim.radians'
-    elif self is galsim.degrees:
+    elif self == galsim.degrees:
         return 'galsim.degrees'
-    elif self is galsim.hours:
+    elif self == galsim.hours:
         return 'galsim.hours'
-    elif self is galsim.arcmin:
+    elif self == galsim.arcmin:
         return 'galsim.arcmin'
-    elif self is galsim.arcsec:
+    elif self == galsim.arcsec:
         return 'galsim.arcsec'
     else:
         return 'galsim.AngleUnit(%r)'%self.getValue()

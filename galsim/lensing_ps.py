@@ -189,6 +189,7 @@ class PowerSpectrum(object):
         self.e_power_function = e_power_function
         self.b_power_function = b_power_function
         self.delta2 = delta2
+        self.units = units
 
         # Try these conversions, but we don't actually keep the output.  This just
         # provides a way to test if the arguments are sane.
@@ -210,6 +211,33 @@ class PowerSpectrum(object):
         else:
             self.scale = 1. * units / galsim.arcsec
 
+    def __repr__(self):
+        s = 'galsim.PowerSpectrum(e_power_function=%r'%self.e_power_function
+        if self.b_power_function is not None:
+            s += ', b_power_function=%r'%self.b_power_function
+        if self.delta2:
+            s += ', delta2=%r'%self.delta2
+        if self.units != galsim.arcsec:
+            s += ', units=%r'%self.units
+        s += ')'
+        return s
+
+    def __str__(self):
+        s = 'galsim.PowerSpectrum(e_power_function=%s'%self.e_power_function
+        if self.b_power_function is not None:
+            s += ', b_power_function=%s'%self.b_power_function
+        s += ')'
+        return s
+
+    def __eq__(self, other):
+        return (isinstance(other, PowerSpectrum) and
+                self.e_power_function == other.e_power_function and
+                self.b_power_function == other.b_power_function and
+                self.delta2 == other.delta2 and
+                self.scale == other.scale)
+    def __ne__(self, other): return not self.__eq__(other)
+
+    def __hash__(self): return hash(repr(self))
 
     def buildGrid(self, grid_spacing=None, ngrid=None, rng=None, interpolant=None,
                   center=galsim.PositionD(0,0), units=galsim.arcsec, get_convergence=False,
@@ -1498,15 +1526,25 @@ class PowerSpectrumRealizer(object):
     @param ngrid            The size of the grid in one dimension.
     @param pixel_size       The size of the pixel sides, in units consistent with the units expected
                             by the power spectrum functions.
-    @param e_power_function See description of this parameter in the documentation for the
+    @param p_E              Equivalent to e_power_function in the documentation for the
                             PowerSpectrum class.
-    @param b_power_function See description of this parameter in the documentation for the
+    @param p_B              Equivalent to b_power_function in the documentation for the
                             PowerSpectrum class.
     """
     def __init__(self, ngrid, pixel_size, p_E, p_B):
         # Set up the k grids in x and y, and the instance variables
         self.set_size(ngrid, pixel_size)
         self.set_power(p_E, p_B)
+
+    def __repr__(self):
+        return "galsim.lensing_ps.PowerSpectrumRealizer(ngrid=%r, pixel_size=%r, p_E=%r, p_B=%r)"%(
+                self.nx, self.pixel_size, self.p_E, self.p_B)
+    def __str__(self):
+        return "galsim.lensing_ps.PowerSpectrumRealizer(ngrid=%r, pixel_size=%r, p_E=%s, p_B=%s)"%(
+                self.nx, self.pixel_size, self.p_E, self.p_B)
+    def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
+    def __hash__(self): return hash(repr(self))
 
     def set_size(self, ngrid, pixel_size):
         self.nx = ngrid

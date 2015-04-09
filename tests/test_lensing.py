@@ -166,6 +166,7 @@ def test_shear_variance():
                                units=galsim.degrees)
     assert g1.shape == (ngrid, ngrid)
     assert g2.shape == (ngrid, ngrid)
+
     # Now we should compare the variance with the predictions.  We use
     # ../devel/modules/lensing_engine.pdf section 5.3 to get
     # Var(g1) + Var(g2) = (1/pi^2) [(pi klim^2 / 4) - kmin^2]
@@ -589,6 +590,7 @@ def test_tabulated():
     # make a LookupTable to initialize another PowerSpectrum
     tab = galsim.LookupTable(k_arr, p_arr)
     ps_tab = galsim.PowerSpectrum(tab)
+    do_pickle(ps_tab)  # This is the first one that doesn't use a function, so it is picklable.
 
     # draw shears on a grid from both PowerSpectrum objects, with same random seed
     seed = 12345
@@ -610,6 +612,7 @@ def test_tabulated():
     np.savetxt(filename, data)
     tab2 = galsim.LookupTable(file = filename)
     ps_tab2 = galsim.PowerSpectrum(tab2)
+    do_pickle(ps_tab2)
     g1_tab2, g2_tab2 = ps_tab2.buildGrid(grid_spacing = 1.7, ngrid = 10,
                                          rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab2, 6,
@@ -619,6 +622,7 @@ def test_tabulated():
     # check that we get the same answer whether we use interpolation in log for k, P, or both
     tab = galsim.LookupTable(k_arr, p_arr, x_log = True)
     ps_tab = galsim.PowerSpectrum(tab)
+    do_pickle(ps_tab2)
     g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1.7, ngrid = 10,
                                       rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
@@ -627,6 +631,7 @@ def test_tabulated():
         err_msg = "g2 of shear field from tabulated P(k) with x_log differs from expectation!")
     tab = galsim.LookupTable(k_arr, p_arr, f_log = True)
     ps_tab = galsim.PowerSpectrum(tab)
+    do_pickle(ps_tab)
     g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1.7, ngrid = 10,
                                       rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
@@ -635,6 +640,7 @@ def test_tabulated():
         err_msg = "g2 of shear field from tabulated P(k) with f_log differs from expectation!")
     tab = galsim.LookupTable(k_arr, p_arr, x_log = True, f_log = True)
     ps_tab = galsim.PowerSpectrum(tab)
+    do_pickle(ps_tab)
     g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1.7, ngrid = 10,
                                       rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
@@ -658,6 +664,7 @@ def test_tabulated():
         ## exception should be raised)
         t = galsim.LookupTable((0.99,1.,1.01),(0.99,1.,1.01))
         ps = galsim.PowerSpectrum(t)
+        do_pickle(ps)
         np.testing.assert_raises(RuntimeError, ps.buildGrid, grid_spacing=1.7, ngrid=100)
         ## try to interpolate in log, but with zero values included
         np.testing.assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.),
@@ -783,6 +790,7 @@ def test_power_spectrum_with_kappa():
 
     # Begin with E-mode input power
     psE = galsim.PowerSpectrum(tab_ps, None, units=galsim.radians)
+    do_pickle(psE)
     g1E, g2E, k_test = psE.buildGrid(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
         rng=galsim.BaseDeviate(rseed), get_convergence=True)
@@ -799,6 +807,7 @@ def test_power_spectrum_with_kappa():
 
     # Then do B-mode only input power
     psB = galsim.PowerSpectrum(None, tab_ps, units=galsim.radians)
+    do_pickle(psB)
     g1B, g2B, k_test = psB.buildGrid(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
         rng=galsim.BaseDeviate(rseed), get_convergence=True)
@@ -824,6 +833,7 @@ def test_power_spectrum_with_kappa():
 
     # Finally, do E- and B-mode power
     psB = galsim.PowerSpectrum(tab_ps, tab_ps, units=galsim.radians)
+    do_pickle(psB)
     g1EB, g2EB, k_test = psB.buildGrid(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
         rng=galsim.BaseDeviate(rseed), get_convergence=True)
@@ -974,6 +984,7 @@ def test_periodic():
     tab_ps = galsim.LookupTable(
         file='../examples/data/cosmo-fid.zmed1.00_smoothed.out', interpolant='linear')
     ps = galsim.PowerSpectrum(tab_ps, units=galsim.radians)
+    do_pickle(ps)
 
     # Set up a grid.  Make it GREAT10/GREAT3-like.
     ngrid = 100
@@ -1001,6 +1012,7 @@ def test_periodic():
     # Compute shear power spectra for the original grid and the new grid.  We can use all the
     # default settings for the power spectrum estimator.
     pse = galsim.pse.PowerSpectrumEstimator()
+    do_pickle(pse)
     k, pe, pb, peb = pse.estimate(g1, g2)
     _, pe_r, pb_r, peb_r = pse.estimate(g1_r, g2_r)
     _, pe_shift, pb_shift, peb_shift = pse.estimate(g1_shift, g2_shift)
@@ -1099,6 +1111,7 @@ def test_bandlimit():
     # Start with a cosmological power spectrum that is not band-limited.
     ps_tab = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00.out')
     ps = galsim.PowerSpectrum(ps_tab, units=galsim.radians)
+    do_pickle(ps)
 
     # Generate shears without and with band-limiting
     g1, g2 = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
@@ -1110,6 +1123,23 @@ def test_bandlimit():
     var = np.var(g1)+np.var(g2)
     varb = np.var(g1b)+np.var(g2b)
     assert var>1.05*varb,"Comparison of shear variances without/with band-limiting is not as expected"
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_psr():
+    """Test PowerSpectrumRealizer"""
+    import time
+    t1 = time.time()
+
+    # Most of the tests of this class are implicit in its use by PowerSpectrum.
+    # But since it is technically documented, we should make sure things like the repr and ==
+    # work correctly.
+
+    pe = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00.out')
+    pb = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00_smoothed.out')
+    psr = galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pe, pb)
+    do_pickle(psr)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1127,3 +1157,4 @@ if __name__ == "__main__":
     test_corr_func()
     test_periodic()
     test_bandlimit()
+    test_psr()
