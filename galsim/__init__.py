@@ -95,9 +95,11 @@ try:
     # To make this seamless with pyfits versions, we add 4 to the astropy version.
     from astropy import version as astropy_version
     pyfits_version = str( (4 + astropy_version.major) + astropy_version.minor/10.)
+    pyfits_str = 'astropy.io.fits'
 except:
     import pyfits
     pyfits_version = pyfits.__version__
+    pyfits_str = 'pyfits'
 
 # Import things from other files we want to be in the galsim namespace
 

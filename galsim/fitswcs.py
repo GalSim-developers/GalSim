@@ -122,14 +122,14 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
         # Load the wcs from the header.
         if header is not None:
-            if self._tag is None: self._tag = 'header'
+            if self._tag is None: self._tag = 'header=%r'%galsim.FitsHeader(header)
             if wcs is not None:
                 raise TypeError("Cannot provide both pyfits header and wcs")
             wcs = self._load_from_header(header, hdu)
 
         if wcs is None:
             raise TypeError("Must provide one of file_name, header, or wcs")
-        if self._tag is None: self._tag = 'wcs'
+        if self._tag is None: self._tag = 'wcs=%r'%wcs
         if file_name is not None:
             galsim.fits.closeHDUList(hdu_list, fin)
 
@@ -298,7 +298,9 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         return x, y
 
     def _newOrigin(self, origin):
-        return AstropyWCS(wcs=self._wcs, origin=origin)
+        ret = self.copy()
+        ret._origin = origin
+        return ret
 
     def _writeHeader(self, header, bounds):
         # Make a new header with the contents of this WCS.
@@ -332,13 +334,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
     def __repr__(self):
         return "galsim.AstropyWCS(%s, origin=%r)"%(self._tag, self.origin)
 
-    def __hash__(self):
-        if 'wcsinfo' in self._tag:
-            return hash( (repr(self), self._wcsinfo) )
-        elif 'header' in self._tag:
-            return hash( (repr(self), self._header) )
-        else:
-            return hash(repr(self))
+    def __hash__(self): return hash(repr(self))
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -350,10 +346,10 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        hdu, hdu_list, fin = eval('galsim.fits.readFile('+d['_tag']+')')
-        self._wcs = self._load_from_header(hdu.header, hdu)
-        galsim.fits.closeHDUList(hdu_list, fin)
-
+        if '_wcs' not in d:
+            hdu, hdu_list, fin = eval('galsim.fits.readFile('+d['_tag']+')')
+            self._wcs = self._load_from_header(hdu.header, hdu)
+            galsim.fits.closeHDUList(hdu_list, fin)
 
 
 class PyAstWCS(galsim.wcs.CelestialWCS):
@@ -432,14 +428,15 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
 
         # Load the wcs from the header.
         if header is not None:
-            if self._tag is None: self._tag = 'header'
+            if self._tag is None: self._tag = 'header=%r'%galsim.FitsHeader(header)
             if wcsinfo is not None:
                 raise TypeError("Cannot provide both pyfits header and wcsinfo")
             wcsinfo = self._load_from_header(header, hdu)
 
         if wcsinfo is None:
             raise TypeError("Must provide one of file_name, header, or wcsinfo")
-        if self._tag is None: self._tag = 'wcsinfo'
+        # Ast doesn't have a good repr for a FrameSet, so do it ourselves.
+        if self._tag is None: self._tag = 'wcsinfo=<starlink.Ast.FrameSet at %s>'%id(wcsinfo)
 
         #  We can only handle WCS with 2 pixel axes (given by Nin) and 2 WCS axes
         # (given by Nout).
@@ -537,7 +534,9 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         return x, y
 
     def _newOrigin(self, origin):
-        return PyAstWCS(wcsinfo=self._wcsinfo, origin=origin)
+        ret = self.copy()
+        ret._origin = origin
+        return ret
 
     def _writeHeader(self, header, bounds):
         # See https://github.com/Starlink/starlink/issues/24 for helpful information from 
@@ -592,13 +591,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
     def __repr__(self):
         return "galsim.PyAstWCS(%s, origin=%r)"%(self._tag, self.origin)
 
-    def __hash__(self):
-        if 'wcsinfo' in self._tag:
-            return hash( (repr(self), self._wcsinfo) )
-        elif 'header' in self._tag:
-            return hash( (repr(self), self._header) )
-        else:
-            return hash(repr(self))
+    def __hash__(self): return hash(repr(self))
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -610,9 +603,11 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        hdu, hdu_list, fin = eval('galsim.fits.readFile('+d['_tag']+')')
-        self._wcsinfo = self._load_from_header(hdu.header, hdu)
-        galsim.fits.closeHDUList(hdu_list, fin)
+        if '_wcsinfo' not in d:
+            hdu, hdu_list, fin = eval('galsim.fits.readFile('+d['_tag']+')')
+            self._wcsinfo = self._load_from_header(hdu.header, hdu)
+            galsim.fits.closeHDUList(hdu_list, fin)
+
 
 class WcsToolsWCS(galsim.wcs.CelestialWCS):
     """This WCS uses wcstools executables to perform the appropriate WCS transformations
@@ -802,7 +797,9 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             return x[0], y[0]
  
     def _newOrigin(self, origin):
-        return WcsToolsWCS(self._file_name, origin=origin)
+        ret = self.copy()
+        ret._origin = origin
+        return ret
 
     def _writeHeader(self, header, bounds):
         # These are all we need to load it back.  Just use the original file.
@@ -944,7 +941,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
         if header is None:
             raise TypeError("Must provide either file_name or header")
-        if self._tag is None: self._tag = 'header'
+        if self._tag is None: self._tag = 'header=%r'%galsim.FitsHeader(header)
 
         # Read the wcs information from the header.
         self._read_header(header)
@@ -1661,7 +1658,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         if self._tag is None:
             return self.__repr__()
         else:
-            return "galsim.GSFitsWCS(%s, origin=%r)"%(self._tag, self.origin)
+            return "galsim.GSFitsWCS(%s)"%(self._tag)
 
     def __hash__(self): return hash(repr(self))
 

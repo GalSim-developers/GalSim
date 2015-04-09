@@ -58,9 +58,11 @@ def test_read():
     # First option: give a file_name
     header = galsim.FitsHeader(file_name=os.path.join(dir,file_name))
     check_tpv(header)
+    do_pickle(header)
     # Let the FitsHeader init handle the dir
     header = galsim.FitsHeader(file_name=file_name, dir=dir)
     check_tpv(header)
+    do_pickle(header)
     # If the first arg is a str, then it should be interpreted as a file name
     header = galsim.FitsHeader(file_name, dir=dir)
     check_tpv(header)
@@ -68,20 +70,27 @@ def test_read():
     hdu_list = pyfits.open(os.path.join(dir,file_name))
     header = galsim.FitsHeader(hdu_list=hdu_list)
     check_tpv(header)
+    do_pickle(header)
     # Can explicitly give an hdu number to use.  In this case, there is only 1, so need to use 0.
     header = galsim.FitsHeader(hdu_list=hdu_list, hdu=0)
     check_tpv(header)
+    do_pickle(header)
     # If you pass in a pyfits Header object, that should also work
     header = galsim.FitsHeader(header=hdu_list[0].header)
     check_tpv(header)
+    do_pickle(header)
     # The header is the first parameter, so don't need to name it.
     header = galsim.FitsHeader(hdu_list[0].header)
     check_tpv(header)
 
+
     # Remove an item from the header
+    # Start with file_name constructor, to test that the repr is changed by the edit.
+    header = galsim.FitsHeader(file_name=os.path.join(dir,file_name))
     del header['AIRMASS']
     assert 'AIRMASS' not in header
     assert len(header) == 214
+    do_pickle(header)
 
     # Should be able to get with a default value if the key is not present
     assert header.get('AIRMASS', 2.0) == 2.0
@@ -110,12 +119,14 @@ def test_read():
     # But if we add back another one of these, we should be back to the original values.
     header.append('','', useblanks=False)
     check_tpv(header)
+    do_pickle(header)
 
     # Clear all values
     header.clear()
     assert 'AIRMASS' not in header
     assert 'FILTER' not in header
     assert len(header) == 0
+    do_pickle(header)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -135,6 +146,7 @@ def test_scamp():
     assert header['RADECSYS'] == 'FK5'
     assert header['MAGZEROP'] == 30.
     assert header['ASTINST'] == 39
+    do_pickle(header)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -161,29 +173,36 @@ def test_dict():
     # Construct from a given dict
     header = galsim.FitsHeader(header = d)
     check_dict(header)
+    do_pickle(header)
 
     # Start with a blank dict and add elements individually
     header = galsim.FitsHeader(header = {})
+    do_pickle(header)
     for k in d:
         header[k] = d[k]
     check_dict(header)
+    do_pickle(header)
 
     # Set with a comment field
     header = galsim.FitsHeader(header = {})
     for k in d:
         header[k] = (d[k], 'The value of ' + k)
     check_dict(header)
+    do_pickle(header)
     
     # Use update
     header = galsim.FitsHeader({})
     header.update(d)
     check_dict(header)
+    do_pickle(header)
 
     # Use default constructor
     header = galsim.FitsHeader()
+    do_pickle(header)
     assert len(header) == 0
     header.update(d)
     check_dict(header)
+    do_pickle(header)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
