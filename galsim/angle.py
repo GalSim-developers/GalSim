@@ -58,6 +58,7 @@ def AngleUnit_repr(self):
 AngleUnit.__repr__ = AngleUnit_repr
 AngleUnit.__eq__ = lambda self, other: (
     isinstance(other,AngleUnit) and self.getValue() == other.getValue())
+AngleUnit.__ne__ = lambda self, other: not self.__eq__(other)
 AngleUnit.__hash__ = lambda self: hash(self.getValue())
 
 # Enable pickling
@@ -176,6 +177,7 @@ calculating the difference between them.
 Angle.__str__ = lambda self: str(self.rad()) + ' radians'
 Angle.__repr__ = lambda self: 'galsim.Angle(%r, galsim.radians)'%self.rad()
 Angle.__eq__ = lambda self, other: isinstance(other,Angle) and self.rad() == other.rad()
+Angle.__ne__ = lambda self, other: not self.__eq__(other)
 Angle.__neg__ = lambda self: -1. * self
 Angle.__hash__ = lambda self: hash(repr(self))
 

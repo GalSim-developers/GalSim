@@ -578,4 +578,5 @@ _galsim.Lanczos.__repr__ = lambda self: 'galsim.Lanczos(%r, %r, %r)'%self.__geti
 
 # Quick and dirty.  Just check reprs are equal.
 _galsim.Interpolant.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.Interpolant.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim.Interpolant.__hash__ = lambda self: hash(repr(self))

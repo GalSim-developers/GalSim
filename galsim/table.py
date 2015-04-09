@@ -219,6 +219,7 @@ class LookupTable(object):
                 self.x_log == other.x_log and
                 self.f_log == other.f_log and
                 self.interpolant == other.interpolant)
+    def __ne__(self, other): return not self.__eq__(other)
 
     def __repr__(self):
         return 'galsim.LookupTable(x=array(%r), f=array(%r), x_log=%r, f_log=%r, interpolant=%r)'%(
@@ -242,4 +243,5 @@ _galsim._LookupTable.__repr__ = lambda self: \
         'galsim._galsim._LookupTable(array(%r), array(%r), %r)'%(
             self.getArgs(), self.getVals(), self.getInterp())
 _galsim._LookupTable.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim._LookupTable.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim._LookupTable.__hash__ = lambda self: hash(repr(other))

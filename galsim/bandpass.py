@@ -446,6 +446,7 @@ class Bandpass(object):
                 self.wave_factor == other.wave_factor and
                 self.zeropoint == other.zeropoint and
                 (self.wave_list == other.wave_list).all())
+    def __ne__(self, other): return not self.__eq__(other)
 
     def __getstate__(self):
         d = self.__dict__.copy()

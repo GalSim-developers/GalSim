@@ -244,6 +244,7 @@ class ShapeData(object):
 
     # Quick and dirty.  Just check reprs are equal.
     def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 
 _galsim.CppShapeData.__getinitargs__ = lambda self: (
@@ -258,6 +259,7 @@ _galsim.CppShapeData.__repr__ = lambda self: \
         ('galsim._galsim.CppShapeData(' + 21*'%r,' + '%r)')%self.__getinitargs__()
 
 _galsim.CppShapeData.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.CppShapeData.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim.CppShapeData.__hash__ = lambda self: hash(repr(self))
 
 _galsim.HSMParams.__getinitargs__ = lambda self: (
@@ -269,6 +271,7 @@ _galsim.HSMParams.__repr__ = lambda self: \
         ('galsim.hsm.HSMParams(' + 11*'%r,' + '%r)')%self.__getinitargs__()
 
 _galsim.HSMParams.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.HSMParams.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim.HSMParams.__hash__ = lambda self: hash(repr(self))
 
 

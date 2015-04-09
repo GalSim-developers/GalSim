@@ -30,6 +30,7 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.__getinitargs__ = lambda self: (self.xmin, self.xmax, self.ymin, self.ymax)
     # Quick and dirty.  Just check reprs are equal.
     Class.__eq__ = lambda self, other: repr(self) == repr(other)
+    Class.__ne__ = lambda self, other: not self.__eq__(other)
     Class.__hash__ = lambda self: hash(repr(self))
 
     Class.__doc__ = """A class for representing image bounds as 2D rectangles.

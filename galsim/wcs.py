@@ -802,8 +802,7 @@ class EuclideanWCS(BaseWCS):
         image.image.array[:,:] = area * sky_level
 
     # Each class should define the __eq__ function.  Then __ne__ is obvious.
-    def __ne__(self, other):
-        return not self.__eq__(other)
+    def __ne__(self, other): return not self.__eq__(other)
 
 
 class UniformWCS(EuclideanWCS):
@@ -999,8 +998,7 @@ class CelestialWCS(BaseWCS):
         return galsim.PositionD(x,y) + self.origin
 
     # Each class should define the __eq__ function.  Then __ne__ is obvious.
-    def __ne__(self, other):
-        return not self.__eq__(other)
+    def __ne__(self, other): return not self.__eq__(other)
 
 
 

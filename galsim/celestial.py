@@ -631,6 +631,7 @@ class CelestialCoord(object):
     def __eq__(self, other): 
         return (isinstance(other, CelestialCoord) and 
                 self.ra == other.ra and self.dec == other.dec)
+    def __ne__(self, other): return not self.__eq__(other)
 
 def _sun_position_ecliptic(date):
     # This is a helper routine to calculate the position of the sun in ecliptic coordinates given a

@@ -190,6 +190,7 @@ class Catalog(object):
     def __str__(self): return "galsim.Catalog(file_name=%r)"%self.file_name
 
     def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 
 
@@ -339,6 +340,7 @@ class Dict(object):
     def __str__(self): return "galsim.Dict(file_name=%r)"%self.file_name
 
     def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 
 

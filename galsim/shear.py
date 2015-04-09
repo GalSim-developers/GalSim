@@ -307,7 +307,7 @@ class Shear(object):
     def __sub__(self, other): return self + (-other)
 
     def __eq__(self, other): return self._g == other._g
-    def __ne__(self, other): return self._g != other._g
+    def __ne__(self, other): return not self.__eq__(other)
 
     def getMatrix(self): 
         """Return the matrix that tells how this shear acts on a position vector:

@@ -538,6 +538,7 @@ class SED(object):
                 self.red_limit == other.red_limit and
                 self.blue_limit == other.blue_limit and
                 (self.wave_list == other.wave_list).all())
+    def __ne__(self, other): return not self.__eq__(other)
 
     def __getstate__(self):
         d = self.__dict__.copy()

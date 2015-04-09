@@ -135,6 +135,7 @@ next output value.
 
 # Quick and dirty.  Just check reprs are equal.
 _galsim.BaseDeviate.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.BaseDeviate.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim.BaseDeviate.__hash__ = lambda self: hash(repr(self))
 
 def permute(rng, *args):

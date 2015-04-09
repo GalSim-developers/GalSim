@@ -594,9 +594,11 @@ class Image(object):
         self.image.invertSelf()
 
     def __eq__(self, other):
-        return ( self.bounds == other.bounds and
+        return ( isinstance(other, Image) and
+                 self.bounds == other.bounds and
                  self.wcs == other.wcs and
                  (self.array == other.array).all() )
+    def __ne__(self, other): return not self.__eq__(other)
 
 
 # These are essentially aliases for the regular Image with the correct dtype

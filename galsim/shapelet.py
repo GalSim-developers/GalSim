@@ -185,6 +185,7 @@ _galsim.SBShapelet.__repr__ = lambda self: 'galsim._galsim.SBShapelet(%r, %r, %r
 _galsim.LVector.__getinitargs__ = lambda self: (self.order, self.array)
 _galsim.LVector.__repr__ = lambda self: 'galsim._galsim.LVector(%r, %r)'%(self.order, self.array)
 _galsim.LVector.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.LVector.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim.LVector.__hash__ = lambda self: hash(repr(self))
 
 

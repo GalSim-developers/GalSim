@@ -140,6 +140,7 @@ class PowerSpectrumEstimator(object):
         return "galsim.pse.PowerSpectrumEstimator(N=%r, sky_size_deg=%r, nbin=%r)"%(
                 self.N, self.sky_size_deg, self.nbin)
     def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 
     def _generate_eb_rotation(self):

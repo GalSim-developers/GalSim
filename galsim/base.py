@@ -1257,6 +1257,7 @@ class GSObject(object):
 
     # Quick and dirty.  Just check reprs are equal.
     def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 
 # Pickling an SBProfile is a bit tricky, since it's a base class for lots of other classes.
@@ -1283,6 +1284,7 @@ def SBProfile_setstate(self, state):
 _galsim.SBProfile.__setstate__ = SBProfile_setstate
 # Quick and dirty.  Just check reprs are equal.
 _galsim.SBProfile.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.SBProfile.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim.SBProfile.__hash__ = lambda self: hash(repr(self))
 
 

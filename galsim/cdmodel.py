@@ -117,6 +117,7 @@ class BaseCDModel(object):
 
     # Quick and dirty.  Just check reprs are equal.
     def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 
 # The _modelShiftCoeffX functions are used by the PowerLawCD class
