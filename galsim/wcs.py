@@ -1267,7 +1267,7 @@ class JacobianWCS(LocalWCS):
         v = dvdx x + dvdy y
 
     A JacobianWCS has attributes dudx, dudy, dvdx, dvdy that you can access directly if that 
-    is convenient.  You can also access these as a NumPy matrix directly with 
+    is convenient.  You can also access these as a NumPy array directly with 
 
         >>> J = jac_wcs.getMatrix()
 
@@ -1351,12 +1351,12 @@ class JacobianWCS(LocalWCS):
     def getMatrix(self):
         """Get the Jacobian as a NumPy matrix:
 
-                numpy.matrix( [[ dudx, dudy ],
-                               [ dvdx, dvdy ]] )
+                numpy.array( [[ dudx, dudy ],
+                              [ dvdx, dvdy ]] )
         """
         import numpy
-        return numpy.matrix( [[ self._dudx, self._dudy ],
-                              [ self._dvdx, self._dvdy ]] )
+        return numpy.array( [[ self._dudx, self._dudy ],
+                             [ self._dvdx, self._dvdy ]] )
 
     def getDecomposition(self):
         """Get the equivalent expansion, shear, rotation and possible flip corresponding to 

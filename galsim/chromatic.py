@@ -130,7 +130,7 @@ class ChromaticObject(object):
         # _A is a 3x3 augmented affine transformation matrix that holds both translation and
         # shear/rotate/dilate specifications.
         # (see http://en.wikipedia.org/wiki/Affine_transformation#Augmented_matrix)
-        self._A = lambda w: np.matrix(np.identity(3), dtype=float)
+        self._A = lambda w: np.array(np.identity(3), dtype=float)
         # _fluxFactor holds a wavelength-dependent flux rescaling.  This is only needed because
         # a wavelength-dependent dilate(f(w)) is implemented as a combination of a
         # wavelength-dependent expansion and wavelength-dependent flux rescaling.
@@ -222,7 +222,7 @@ class ChromaticObject(object):
             self._save_A = self._A
             self._save_fluxFactor = self._fluxFactor
             # Then reset the one that is stored as part of this profile.
-            self._A = lambda w: np.matrix(np.identity(3), dtype=float)
+            self._A = lambda w: np.array(np.identity(3), dtype=float)
             self._fluxFactor = lambda w: 1.0
 
         # Check the fluxes for the objects.  If they are unity (within some tolerance) then that
@@ -275,7 +275,7 @@ class ChromaticObject(object):
                     self._A = self._save_A
                 else:
                     tmp_A = self._A
-                    self._A = lambda w: tmp_A(w) * self._save_A
+                    self._A = lambda w: tmp_A(w).dot(self._save_A)
 
                 if all([self._nullFluxTransformation(w) for w in self.waves]):
                     self._fluxFactor = self._save_fluxFactor
@@ -585,7 +585,7 @@ class ChromaticObject(object):
         @returns True/False (True if the transformation corresponds to no shear, shift dilation,
         or flux rescaling)
         """
-        null_A = np.matrix(np.identity(3), dtype=float)
+        null_A = np.array(np.identity(3), dtype=float)
         A0 = self._A(wave)
         f0 = self._fluxFactor(wave)
         # Check whether any transformation was done.
@@ -772,10 +772,10 @@ class ChromaticObject(object):
             if hasattr(self, '_A'):
                 ret = self.copy()
                 if hasattr(J, '__call__'):
-                    ret._A = lambda w: J(w) * self._A(w)
+                    ret._A = lambda w: J(w).dot(self._A(w))
                     ret.separable = False
                 else:
-                    ret._A = lambda w: J * self._A(w)
+                    ret._A = lambda w: J.dot(self._A(w))
             else:
                 ret = ChromaticObject(self)
                 if hasattr(J, '__call__'):
@@ -811,7 +811,7 @@ class ChromaticObject(object):
         @returns the expanded object
         """
         if hasattr(scale, '__call__'):
-            E = lambda w: np.matrix(np.diag([scale(w), scale(w), 1]))
+            E = lambda w: np.array(np.diag([scale(w), scale(w), 1]))
         else:
             E = np.diag([scale, scale, 1])
         return self._applyMatrix(E)
@@ -900,12 +900,12 @@ class ChromaticObject(object):
             shear = galsim.Shear(**kwargs)
         if hasattr(shear, '__call__'):
             def buildSMatrix(w):
-                S = np.matrix(np.identity(3), dtype=float)
+                S = np.array(np.identity(3), dtype=float)
                 S[0:2,0:2] = shear(w).getMatrix()
                 return S
             S = buildSMatrix
         else:
-            S = np.matrix(np.identity(3), dtype=float)
+            S = np.array(np.identity(3), dtype=float)
             S[0:2,0:2] = shear.getMatrix()
         return self._applyMatrix(S)
 
@@ -957,16 +957,16 @@ class ChromaticObject(object):
         if hasattr(theta, '__call__'):
             def buildRMatrix(w):
                 sth, cth = theta(w).sincos()
-                R = np.matrix([[cth, -sth, 0],
-                               [sth,  cth, 0],
-                               [  0,    0, 1]], dtype=float)
+                R = np.array([[cth, -sth, 0],
+                              [sth,  cth, 0],
+                              [  0,    0, 1]], dtype=float)
                 return R
             R = buildRMatrix
         else:
             sth, cth = theta.sincos()
-            R = np.matrix([[cth, -sth, 0],
-                           [sth,  cth, 0],
-                           [  0,    0, 1]], dtype=float)
+            R = np.array([[cth, -sth, 0],
+                          [sth,  cth, 0],
+                          [  0,    0, 1]], dtype=float)
         return self._applyMatrix(R)
 
     def transform(self, dudx, dudy, dvdx, dvdy):
@@ -995,13 +995,13 @@ class ChromaticObject(object):
             if not hasattr(dudy, '__call__'): _dudy = lambda w: dudy
             if not hasattr(dvdx, '__call__'): _dvdx = lambda w: dvdx
             if not hasattr(dvdy, '__call__'): _dvdy = lambda w: dvdy
-            J = lambda w: np.matrix([[_dudx(w), _dudy(w), 0],
-                                     [_dvdx(w), _dvdy(w), 0],
-                                     [       0,        0, 1]], dtype=float)
+            J = lambda w: np.array([[_dudx(w), _dudy(w), 0],
+                                    [_dvdx(w), _dvdy(w), 0],
+                                    [       0,        0, 1]], dtype=float)
         else:
-            J = np.matrix([[dudx, dudy, 0],
-                           [dvdx, dvdy, 0],
-                           [   0,    0, 1]], dtype=float)
+            J = np.array([[dudx, dudy, 0],
+                          [dvdx, dvdy, 0],
+                          [   0,    0, 1]], dtype=float)
         return self._applyMatrix(J)
 
     def shift(self, *args, **kwargs):
@@ -1063,13 +1063,13 @@ class ChromaticObject(object):
                 tmpdy = dy
                 dy = lambda w: tmpdy
             # Then create augmented affine transform matrix and multiply or set as necessary
-            T = lambda w: np.matrix([[1, 0, dx(w)],
-                                     [0, 1, dy(w)],
-                                     [0, 0,     1]], dtype=float)
+            T = lambda w: np.array([[1, 0, dx(w)],
+                                    [0, 1, dy(w)],
+                                    [0, 0,     1]], dtype=float)
         else:
-            T = np.matrix([[1, 0, dx],
-                           [0, 1, dy],
-                           [0, 0,  1]], dtype=float)
+            T = np.array([[1, 0, dx],
+                          [0, 1, dy],
+                          [0, 0,  1]], dtype=float)
         return self._applyMatrix(T)
 
 def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):

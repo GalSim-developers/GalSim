@@ -500,9 +500,9 @@ class SED(object):
         # Rbar and V are computed above assuming that the parallactic angle is 0.  Hence we
         # need to rotate our frame by the parallactic angle to get the desired output.
         sinp, cosp = parallactic_angle.sincos()
-        rot = np.matrix([[cosp, -sinp], [sinp, cosp]])
-        Rbar = rot * Rbar * np.matrix([0,1]).T
-        V = rot * np.matrix([[0, 0], [0, V]]) * rot.T
+        rot = np.array([[cosp, -sinp], [sinp, cosp]])
+        Rbar = Rbar * rot.dot(np.array([0,1]))
+        V = rot.dot(np.array([[0, 0], [0, V]])).dot(rot.T)
         return Rbar, V
 
     def calculateSeeingMomentRatio(self, bandpass, alpha=-0.2, base_wavelength=500):

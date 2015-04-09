@@ -26,6 +26,10 @@ API Changes
 - Deprecated the __rdiv__ operator from Bandpass and SED, since we realized
   that they did not have any clear use cases.  If you have one, please open an
   issue, and we can add them back. (#218)
+- Made all returned matrices consistently use numpy.array, rather than
+  numpy.matrix.  We had been inconsistent with which type different functions
+  returned, so now all matrices are numpy.arrays.  If you rely on the 
+  numpy.matrix behavior, you should recast with numpy.asmatrix(M). (#218)
 - Deprecated CorrelatedNoise.calculateCovarianceMatrix, since it is not used 
   anywhere, and we think no one really has a need for it. (#630)
 - Officially deprecated the methods and functions that had been described as

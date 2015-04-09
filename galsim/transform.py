@@ -20,6 +20,7 @@ A class that handles affine tranformations of a profile including a possible flu
 """
 
 import galsim
+import numpy
 from . import _galsim
 
 def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio=1.,
@@ -83,7 +84,7 @@ class Transformation(galsim.GSObject):
     """
     def __init__(self, obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio=1.,
                  gsparams=None):
-        dudx, dudy, dvdx, dvdy = jac
+        dudx, dudy, dvdx, dvdy = numpy.asarray(jac, dtype=float).flatten()
         if hasattr(obj, 'original'):
             self._original = obj.original
         else:
@@ -111,7 +112,7 @@ class Transformation(galsim.GSObject):
     @property
     def original(self): return self._original
     @property
-    def jac(self): return self.getJac()
+    def jac(self): return numpy.asarray(self.getJac()).reshape(2,2)
     @property
     def offset(self): return self.getOffset()
     @property
@@ -123,7 +124,7 @@ class Transformation(galsim.GSObject):
 
     def __str__(self):
         s = str(self.original)
-        dudx, dudy, dvdx, dvdy = self.jac
+        dudx, dudy, dvdx, dvdy = self.jac.flatten()
         if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
             #s += '.transform(%s,%s,%s,%s)'%(dudx,dudy,dvdx,dvdy)
             # Figure out the shear/rotate/dilate calls that are equivalent.

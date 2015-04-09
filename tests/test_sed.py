@@ -457,7 +457,7 @@ def test_SED_calculateDCRMomentShifts():
     den = np.trapz(sed(waves) * bandpass(waves), waves)
     rad2arcsec = galsim.radians / galsim.arcsec
 
-    np.testing.assert_almost_equal(Rnum/den*rad2arcsec, Rbar[1]*rad2arcsec, 5)
+    np.testing.assert_almost_equal(Rnum/den*rad2arcsec, Rbar[1]*rad2arcsec, 4)
     # and for the second moment, V, the numerator is:
     # \int{sed(\lambda) * bandpass(\lambda) * (R(\lambda) - Rbar)^2 d\lambda}
     Vnum = np.trapz(sed(waves) * bandpass(waves) * (R - Rnum/den)**2, waves)
