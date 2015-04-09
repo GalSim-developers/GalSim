@@ -449,13 +449,16 @@ class Bandpass(object):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['_tp']
+        if not isinstance(d['_tp'], galsim.LookupTable):
+            del d['_tp']
         del d['func']
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self._tp = None
+        if '_tp' not in d:
+            self._tp = None
+        # If _tp is already set, this is will just set func.
         self._initialize_tp()
 
     def __repr__(self):

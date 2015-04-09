@@ -541,13 +541,16 @@ class SED(object):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['_spec']
+        if not isinstance(d['_spec'], galsim.LookupTable):
+            del d['_spec']
         del d['_rest_photons']
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self._spec = None
+        if '_spec' not in d:
+            self._spec = None
+        # If _spec is already set, this is will just set _rest_photons
         self._initialize_spec()
 
     def __repr__(self):
