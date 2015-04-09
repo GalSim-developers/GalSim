@@ -112,6 +112,8 @@ class PowerSpectrumEstimator(object):
         """
         # Set up the scales of the sky and pixels
         self.N = N
+        self.sky_size_deg = sky_size_deg
+        self.nbin = nbin
         self.sky_size = np.radians(sky_size_deg)
         self.dx = self.sky_size / N
 
@@ -133,6 +135,12 @@ class PowerSpectrumEstimator(object):
         # These are the lengths of the wavevector |ell| for each point in the space, and the complex
         # valued spin-weighting that takes the complex shear fields -> E,B
         self.l_abs, self.eb_rot = self._generate_eb_rotation()
+
+    def __repr__(self):
+        return "galsim.pse.PowerSpectrumEstimator(N=%r, sky_size_deg=%r, nbin=%r)"%(
+                self.N, self.sky_size_deg, self.nbin)
+    def __eq__(self, other): return repr(self) == repr(other)
+    def __hash__(self): return hash(repr(self))
 
     def _generate_eb_rotation(self):
         # Set up the Fourier space grid lx, ly.

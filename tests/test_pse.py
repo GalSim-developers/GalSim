@@ -58,6 +58,8 @@ def test_PSE_basic():
                                                sky_size_deg=array_size*grid_spacing,
                                                nbin=n_ell)
 
+    do_pickle(my_pse)
+
     # Estimate the power spectrum using the PSE, without weighting.
     ell, P_e1, P_b1, P_eb1 = my_pse.estimate(g1, g2)
 
