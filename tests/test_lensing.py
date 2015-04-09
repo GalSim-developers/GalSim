@@ -110,6 +110,8 @@ def test_nfwhalo():
     np.testing.assert_array_equal(g2, np.zeros_like(g2),
                                   err_msg="Computation of reduced shear g2 incorrect.")
 
+    do_pickle(halo)
+
     # comparison to reference:
     # tangential shear in x-direction is purely negative in g1
     try:
@@ -133,6 +135,50 @@ def test_nfwhalo():
         np.testing.assert_array_almost_equal(
             ref[:,4], kappa, decimal=4,
             err_msg="Computation of convergence deviates from reference.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_cosmology():
+    """Test the NFWHalo class in conjunction with non-default cosmologies"""
+    import time
+    t1 = time.time()
+
+    # MJ: I don't really have a good way to test that the NFWHalo class is accurate with respect
+    # to the cosmology.  If someone with a more theoretical bent is interested in writing some
+    # unit tests here, that would be fabulous!
+    # All I'm doing here is testing that pickling, repr, etc. work correctly.
+    # And the internal consistency checks from above.
+
+    pos_x = np.arange(1,600)
+    pos_y = np.zeros_like(pos_x)
+    z_s = 2
+
+    for wm, wl in [ (0.4,0.0), (0.3,0.7), (0.25, 0.8) ]:
+        cosmo = galsim.Cosmology(omega_m=wm, omega_lam=wl)
+
+        np.testing.assert_equal(cosmo.omega_m, wm)
+        np.testing.assert_equal(cosmo.omega_lam, wl)
+        np.testing.assert_equal(cosmo.omega_c, 1.-wm-wl)
+
+        halo = galsim.NFWHalo(mass=1e15, conc=4, redshift=1, cosmo=cosmo)
+        halo2 = galsim.NFWHalo(mass=1e15, conc=4, redshift=1, omega_m=wm, omega_lam=wl)
+
+        kappa = halo.getConvergence((pos_x, pos_y), z_s)
+        gamma1, gamma2 = halo.getShear((pos_x, pos_y), z_s, reduced=False)
+        g1, g2 = halo.getShear((pos_x, pos_y), z_s, reduced=True)
+
+        # check internal correctness:
+        # g1 = gamma1/(1-kappa), and g2 = 0
+        np.testing.assert_array_equal(g1, gamma1/(1-np.array(kappa)),
+                                      err_msg="Computation of reduced shear g incorrect.")
+        np.testing.assert_array_equal(g2, np.zeros_like(g2),
+                                      err_msg="Computation of reduced shear g2 incorrect.")
+
+        do_pickle(cosmo)
+        do_pickle(halo)
+        do_pickle(halo2)
+        assert halo == halo2
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1146,6 +1192,7 @@ def test_psr():
 
 if __name__ == "__main__":
     test_nfwhalo()
+    test_cosmology()
     test_shear_variance()
     test_shear_seeds()
     test_shear_reference()

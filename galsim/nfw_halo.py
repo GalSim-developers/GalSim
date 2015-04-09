@@ -42,7 +42,15 @@ class Cosmology(object):
         self.omega_lam = omega_lam
         self.omega_c = (1. - omega_m - omega_lam)
         #self.omega_r = 0
-    
+
+    def __repr__(self):
+        return "galsim.Cosmology(omega_m=%r, omega_lam=%r)"%(self.omega_m, self.omega_lam)
+    def __str__(self):
+        return "galsim.Cosmology(%s,%s)"%(self.omega_m, self.omega_lam)
+    def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
+    def __hash__(self): return hash(repr(self))
+
     def a(self, z):
         """Compute scale factor.
 
@@ -88,9 +96,9 @@ class Cosmology(object):
             rk = (abs(self.omega_c))**0.5
             if (rk*d > 0.01):
                 if self.omega_c > 0:
-                    d = sinh(rk*d)/rk
+                    d = np.sinh(rk*d)/rk
                 if self.omega_c < 0:
-                    d = sin(rk*d)/rk
+                    d = np.sin(rk*d)/rk
             return d/(1+z)
 
 class NFWHalo(object):
@@ -123,13 +131,13 @@ class NFWHalo(object):
 
     def __init__(self, mass, conc, redshift, halo_pos=galsim.PositionD(0,0), 
                  omega_m=None, omega_lam=None, cosmo=None):
-        if omega_m or omega_lam:
-            if cosmo:
+        if omega_m is not None or omega_lam is not None:
+            if cosmo is not None:
                 raise TypeError("NFWHalo constructor received both cosmo and omega parameters")
-            if not omega_m: omega_m = 1.-omega_lam
-            if not omega_lam: omega_lam = 1.-omega_m
+            if omega_m is None: omega_m = 1.-omega_lam
+            if omega_lam is None: omega_lam = 1.-omega_m
             cosmo = Cosmology(omega_m=omega_m, omega_lam=omega_lam)
-        elif not cosmo:
+        elif cosmo is None:
             cosmo = Cosmology()
         elif not isinstance(cosmo,Cosmology):
             raise TypeError("Invalid cosmo parameter in NFWHalo constructor")
@@ -168,6 +176,20 @@ class NFWHalo(object):
         scale = self.rs / dl
         arcsec2rad = 1./206265;
         self.rs_arcsec = scale/arcsec2rad;
+
+    def __repr__(self):
+        s = "galsim.NFWHalo(mass=%r, conc=%r, redshift=%r"%(self.M, self.c, self.z)
+        if self.halo_pos != galsim.PositionD(0,0):
+            s += ", halo_pos=%r"%self.halo_pos
+        if self.cosmo != Cosmology():
+            s += ", cosmo=%r"%self.cosmo
+        s += ")"
+        return s
+    def __str__(self):
+        return "galsim.NFWHalo(mass=%s, conc=%s, redshift=%s)"%(self.M, self.c, self.z)
+    def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
+    def __hash__(self): return hash(repr(self))
 
     def __omega(self, a):
         """Matter density at scale factor a.
