@@ -100,10 +100,8 @@ class LookupTable(object):
 
         # turn x and f into numpy arrays so that all subsequent math is possible (unlike for
         # lists, tuples).  Also make sure the dtype is float
-        if not (isinstance(x, np.ndarray) and x.dtype == float):
-            x = np.array(x).astype(float)
-        if not (isinstance(f, np.ndarray) and x.dtype == float):
-            f = np.array(f).astype(float)
+        x = np.asarray(x).astype(float)
+        f = np.asarray(f).astype(float)
         self.x = x
         self.f = f
 
@@ -213,9 +211,10 @@ class LookupTable(object):
         return self.f_log
 
     def __eq__(self, other):
+        import numpy as np
         return (isinstance(other, LookupTable) and
-                (self.x == other.x).all() and
-                (self.f == other.f).all() and
+                np.array_equal(self.x,other.x) and
+                np.array_equal(self.f,other.f) and
                 self.x_log == other.x_log and
                 self.f_log == other.f_log and
                 self.interpolant == other.interpolant)

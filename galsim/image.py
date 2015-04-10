@@ -597,7 +597,7 @@ class Image(object):
         return ( isinstance(other, Image) and
                  self.bounds == other.bounds and
                  self.wcs == other.wcs and
-                 (self.array == other.array).all() )
+                 numpy.array_equal(self.array,other.array) )
     def __ne__(self, other): return not self.__eq__(other)
 
 

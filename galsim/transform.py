@@ -59,8 +59,8 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
         # NB. Even better, if the flux scaling is chromatic, would be to find a component
         # that is already non-separable.  But we don't bother trying to do that currently.
         elif (isinstance(obj, galsim.ChromaticConvolution or isinstance(obj, galsim.Convolution))
-              and (numpy.asarray(jac).flatten() == (1,0,0,1)).all()
-              and (offset == galsim.PositionD(0.,0.))):
+              and numpy.array_equal(numpy.asarray(jac).flatten(),(1,0,0,1))
+              and offset == galsim.PositionD(0.,0.)):
             first = Transform(obj.objlist[0],flux_ratio=flux_ratio,gsparams=gsparams)
             return galsim.ChromaticConvolution( [first] + [o for o in obj.objlist[1:]] )
 

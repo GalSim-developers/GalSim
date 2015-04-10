@@ -1623,17 +1623,16 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         return copy.copy(self)
 
     def __eq__(self, other):
+        import numpy
         return ( isinstance(other, GSFitsWCS) and
                  self.wcs_type == other.wcs_type and
-                 (self.crpix == other.crpix).all() and
-                 (self.cd == other.cd).all() and
+                 numpy.array_equal(self.crpix,other.crpix) and
+                 numpy.array_equal(self.cd,other.cd) and
+                 numpy.array_equal(self.cd,other.cd) and
                  self.center == other.center and
-                 ( (self.pv is None and other.pv is None) or
-                   (self.pv == other.pv).all() ) and
-                 ( (self.ab is None and other.ab is None) or
-                   (self.ab == other.ab).all() ) and
-                 ( (self.abp is None and other.abp is None) or
-                   (self.abp == other.abp).all() ) 
+                 numpy.array_equal(self.pv,other.pv) and
+                 numpy.array_equal(self.ab,other.ab) and
+                 numpy.array_equal(self.abp,other.abp) 
                )
 
     def __repr__(self):
