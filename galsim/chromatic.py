@@ -2043,7 +2043,7 @@ class ChromaticOpticalPSF(ChromaticObject):
         self.lam = lam
 
         if aberrations is not None:
-            self.aberrations = aberrations
+            self.aberrations = np.asarray(aberrations)
         else:
             self.aberrations = np.zeros(12)
         self.kwargs = kwargs
@@ -2055,7 +2055,7 @@ class ChromaticOpticalPSF(ChromaticObject):
 
     def __repr__(self):
         s = 'galsim.ChromaticOpticalPSF(lam=%r, lam_over_diam=%r, aberrations=%r'%(
-                self.lam, self.lam_over_diam, self.aberrations)
+                self.lam, self.lam_over_diam, self.aberrations.tolist())
         if self.scale_unit != galsim.arcsec:
             s += ', scale_unit=%r'%self.scale_unit
         for k,v in self.kwargs.items():
@@ -2065,7 +2065,7 @@ class ChromaticOpticalPSF(ChromaticObject):
 
     def __str__(self):
         return 'galsim.ChromaticOpticalPSF(lam=%s, lam_over_diam=%s, aberrations=%s)'%(
-                self.lam, self.lam_over_diam, self.aberrations)
+                self.lam, self.lam_over_diam, self.aberrations.tolist())
 
     def evaluateAtWavelength(self, wave):
         """
