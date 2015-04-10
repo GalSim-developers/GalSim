@@ -35,7 +35,6 @@ class ChromaticObject(object):
 
     This class primarily serves as the base class for chromatic subclasses, including Chromatic,
     ChromaticSum, and ChromaticConvolution.  See the docstrings for these classes for more details.
-    The ChromaticAtmosphere() function also creates a ChromaticObject.
 
     Initialization
     --------------
@@ -947,8 +946,8 @@ class InterpolatedChromaticObject(ChromaticObject):
         return image
 
 
-def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
-    """Return a ChromaticObject implementing two atmospheric chromatic effects: differential
+class ChromaticAtmosphere(ChromaticObject):
+    """A ChromaticObject implementing two atmospheric chromatic effects: differential
     chromatic refraction (DCR) and wavelength-dependent seeing.
 
     Due to DCR, blue photons land closer to the zenith than red photons.  Kolmogorov turbulence
@@ -1005,51 +1004,121 @@ def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     @param pressure             Air pressure in kiloPascals.  [default: 69.328 kPa]
     @param temperature          Temperature in Kelvins.  [default: 293.15 K]
     @param H2O_pressure         Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
-
-    @returns a ChromaticObject representing a chromatic atmospheric PSF.
     """
-    alpha = kwargs.pop('alpha', -0.2)
-    # Determine zenith_angle and parallactic_angle from kwargs
-    if 'zenith_angle' in kwargs:
-        zenith_angle = kwargs.pop('zenith_angle')
-        parallactic_angle = kwargs.pop('parallactic_angle', 0.0*galsim.degrees)
-        if not isinstance(zenith_angle, galsim.Angle) or \
-                not isinstance(parallactic_angle, galsim.Angle):
-            raise TypeError("zenith_angle and parallactic_angle must be galsim.Angles!")
-    elif 'obj_coord' in kwargs:
-        obj_coord = kwargs.pop('obj_coord')
-        if 'zenith_coord' in kwargs:
-            zenith_coord = kwargs.pop('zenith_coord')
-            zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
-                obj_coord=obj_coord, zenith_coord=zenith_coord)
+    def __init__(self, base_obj, base_wavelength, **kwargs):
+
+        self.separable = False
+        self.wave_list = np.array([], dtype=float)
+
+        self.base_obj = base_obj
+        self.base_wavelength = base_wavelength
+
+        self.alpha = kwargs.pop('alpha', -0.2)
+        # Determine zenith_angle and parallactic_angle from kwargs
+        if 'zenith_angle' in kwargs:
+            self.zenith_angle = kwargs.pop('zenith_angle')
+            self.parallactic_angle = kwargs.pop('parallactic_angle', 0.0*galsim.degrees)
+            if not isinstance(self.zenith_angle, galsim.Angle) or \
+                    not isinstance(self.parallactic_angle, galsim.Angle):
+                raise TypeError("zenith_angle and parallactic_angle must be galsim.Angles!")
+        elif 'obj_coord' in kwargs:
+            obj_coord = kwargs.pop('obj_coord')
+            if 'zenith_coord' in kwargs:
+                zenith_coord = kwargs.pop('zenith_coord')
+                self.zenith_angle, self.parallactic_angle = galsim.dcr.zenith_parallactic_angles(
+                    obj_coord=obj_coord, zenith_coord=zenith_coord)
+            else:
+                if 'HA' not in kwargs or 'latitude' not in kwargs:
+                    raise TypeError("ChromaticAtmosphere requires either zenith_coord or (HA, "
+                                    +"latitude) when obj_coord is specified!")
+                HA = kwargs.pop('HA')
+                latitude = kwargs.pop('latitude')
+                self.zenith_angle, self.parallactic_angle = galsim.dcr.zenith_parallactic_angles(
+                    obj_coord=obj_coord, HA=HA, latitude=latitude)
         else:
-            if 'HA' not in kwargs or 'latitude' not in kwargs:
-                raise TypeError("ChromaticAtmosphere requires either zenith_coord or (HA, "
-                                +"latitude) when obj_coord is specified!")
-            HA = kwargs.pop('HA')
-            latitude = kwargs.pop('latitude')
-            zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
-                obj_coord=obj_coord, HA=HA, latitude=latitude)
-    else:
-        raise TypeError("Need to specify zenith_angle and parallactic_angle!")
-    # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
-    # Check that they're valid
-    for kw in kwargs.keys():
-        if kw not in ['temperature', 'pressure', 'H2O_pressure']:
-            raise TypeError("Got unexpected keyword: {0}".format(kw))
+            raise TypeError("Need to specify zenith_angle and parallactic_angle!")
 
-    ret = ChromaticObject(base_obj).dilate(lambda w: (w/base_wavelength)**alpha)
-    base_refraction = galsim.dcr.get_refraction(base_wavelength, zenith_angle, **kwargs)
-    def shift_fn(w):
-        shift_magnitude = galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
-        shift_magnitude -= base_refraction
-        shift_magnitude = shift_magnitude * (galsim.radians / galsim.arcsec)
-        sinp, cosp = parallactic_angle.sincos()
-        shift = (-shift_magnitude * sinp, shift_magnitude * cosp)
-        return shift
-    ret = ret.shift(shift_fn)
-    return ret
+        # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
+        # Check that they're valid
+        for kw in kwargs.keys():
+            if kw not in ['temperature', 'pressure', 'H2O_pressure']:
+                raise TypeError("Got unexpected keyword: {0}".format(kw))
+        self.kw = kwargs
 
+        self.base_refraction = galsim.dcr.get_refraction(self.base_wavelength, self.zenith_angle,
+                                                         **kwargs)
+    def __repr__(self):
+        s = 'galsim.ChromaticAtmosphere(%r, base_wavelength=%r, alpha=%r'%(
+                self.base_obj, self.base_wavelength, self.alpha)
+        s += ', zenith_angle=%r, parallactic_angle=%r'%(self.zenith_angle, self.parallactic_angle)
+        for k,v in self.kw.items():
+            s += ', %s=%r'%(k,v)
+        s += ')'
+        return s
+
+    def __str__(self):
+        return 'galsim.ChromaticAtmosphere(%s, base_wavelength=%s, alpha=%s)'%(
+                self.base_obj, self.base_wavelength, self.alpha)
+
+    def build_obj(self):
+        """Build a ChromaticTransformation object for this ChromaticAtmosphere.
+
+        We don't do this right away to help make ChromaticAtmosphere objects be picklable.
+        Building this is quite fast, so we do it on the fly in evaluateAtWavelength and
+        drawImage.
+        """
+        def shift_fn(w):
+            shift_magnitude = galsim.dcr.get_refraction(w, self.zenith_angle, **self.kw)
+            shift_magnitude -= self.base_refraction
+            shift_magnitude = shift_magnitude * (galsim.radians / galsim.arcsec)
+            sinp, cosp = self.parallactic_angle.sincos()
+            shift = (-shift_magnitude * sinp, shift_magnitude * cosp)
+            return shift
+
+        def jac_fn(w):
+            scale = (w/self.base_wavelength)**self.alpha
+            return np.diag([scale, scale])
+
+        frat = lambda w: (w/self.base_wavelength)**(-2.*self.alpha)
+
+        return ChromaticTransformation(self.base_obj, jac=jac_fn, offset=shift_fn, flux_ratio=frat)
+
+    def evaluateAtWavelength(self, wave):
+        """Evaluate this chromatic object at a particular wavelength.
+
+        @param wave     Wavelength in nanometers.
+
+        @returns the monochromatic object at the given wavelength.
+        """
+        return self.build_obj().evaluateAtWavelength(wave)
+
+    def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
+        """
+        See ChromaticObject.drawImage for a full description.
+
+        This version usually just calls that one, but if the transformed object has had
+        setupInterpolation called on it, then there is an optimization we can apply here.
+
+        @param bandpass         A Bandpass object representing the filter against which to
+                                integrate.
+        @param image            Optionally, the Image to draw onto.  (See GSObject.drawImage()
+                                for details.)  [default: None]
+        @param integrator       When doing the exact evaluation of the profile, this argument should
+                                be one of the image integrators from galsim.integ, or a string
+                                'trapezoidal' or 'midpoint', in which case the routine will use a
+                                SampleIntegrator or ContinuousIntegrator depending on whether or not
+                                the object has a `wave_list`.  [default: 'trapezoidal',
+                                which will try to select an appropriate integrator using the
+                                trapezoidal integration rule automatically.]
+                                If setupInterpolation() has been called for this object, then
+                                `integrator` can only be a string, either 'midpoint' or
+                                'trapezoidal'.
+        @param **kwargs         For all other kwarg options, see GSObject.drawImage()
+
+        @returns the drawn Image.
+        """
+        return self.build_obj().drawImage(bandpass, image, integrator, **kwargs)
+ 
 
 class Chromatic(ChromaticObject):
     """Construct chromatic versions of galsim GSObjects.

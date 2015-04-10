@@ -134,9 +134,6 @@ def test_draw_add_commutativity():
     # make galaxy
     mono_gal = galsim.Sersic(n=bulge_n, half_light_radius=bulge_hlr)
     chromatic_gal = mono_gal * bulge_SED
-
-    # Check picklability here.  Once we transform with functional transformations, the 
-    # picklability is shot.
     do_pickle(bulge_SED)
     do_pickle(chromatic_gal, lambda x: x.drawImage(bandpass, method='no_pixel',
                                                    nx=10, ny=10, scale=1))
@@ -207,6 +204,10 @@ def test_ChromaticConvolution_InterpolatedImage():
     final = galsim.Convolve([star, PSF])
     image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
+    do_pickle(star)
+    do_pickle(PSF)
+    do_pickle(final)
+
     # draw image using speed tricks in ChromaticConvolution.draw
     # For this particular test, need to set iimult=4 in order to pass.
     II_image = final.drawImage(bandpass, image=image, iimult=4)
@@ -255,7 +256,6 @@ def test_chromatic_add():
     # test `+` operator
     bdgal = bulge + disk
     bdgal = bdgal.shear(g1=shear_g1, g2=shear_g2)
-    do_pickle(bdgal)
 
     # now shear the indiv profiles
     bulge = bulge.shear(g1=shear_g1, g2=shear_g2)
@@ -271,6 +271,12 @@ def test_chromatic_add():
     final = galsim.Convolve([bdgal, chromatic_PSF])
     image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     image = final.drawImage(bandpass, image=image)
+
+    do_pickle(bulge)
+    do_pickle(disk)
+    do_pickle(bdgal)
+    do_pickle(chromatic_PSF)
+    do_pickle(final)
 
     bulge_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     bulge_part = galsim.Convolve([bulge, chromatic_PSF])
