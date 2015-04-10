@@ -113,7 +113,6 @@ class SED(object):
             self.red_limit = None
             self.wave_list = np.array([], dtype=float)
 
-
     def _initialize_spec(self):
         # Turrn the input spec into a real function self._rest_photons
         # The function cannot be pickled, so will need to do this in getstate as well as init.
@@ -228,17 +227,30 @@ class SED(object):
             return self._rest_photons(wave / wave_factor)
 
     def __mul__(self, other):
-
         if isinstance(other, galsim.GSObject):
             return galsim.Chromatic(other, self)
 
         # SEDs can be multiplied by scalars or functions (callables)
+        wave_factor = 1.0 + self.redshift
+        wave_type = 'nm'
+        flux_type = 'fphotons'
         if hasattr(other, '__call__'):
-            wave_factor = 1.0 + self.redshift
             spec = lambda w: self._rest_photons(w) * other(w * wave_factor)
+        elif isinstance(self._spec, galsim.LookupTable):
+            # If other is not a function, then there is no loss of accuracy by applying the 
+            # factor directly to the LookupTable, if that's what we are using.
+            # Make sure to keep the same properties about the table, flux_type, wave_type.
+            if self.wave_factor == 10.0:
+                wave_type = 'Angstroms'
+            flux_type = self.flux_type
+            x = self._spec.getArgs()
+            f = [ val * other for val in self._spec.getVals() ]
+            spec = galsim.LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
+                                      interpolant=self._spec.interpolant)
         else:
             spec = lambda w: self._rest_photons(w) * other
-        return SED(spec, flux_type='fphotons', redshift=self.redshift,
+
+        return SED(spec, flux_type=flux_type, wave_type=wave_type, redshift=self.redshift,
                    _wave_list=self.wave_list,
                    _blue_limit=self.blue_limit, _red_limit=self.red_limit)
 
@@ -246,14 +258,29 @@ class SED(object):
         return self*other
 
     def __div__(self, other):
+        wave_factor = 1.0 + self.redshift
+        wave_type = 'nm'
+        flux_type = 'fphotons'
         if hasattr(other, '__call__'):
-            wave_factor = 1.0 + self.redshift
             spec = lambda w: self._rest_photons(w) / other(w * wave_factor)
+        elif isinstance(self._spec, galsim.LookupTable):
+            # If other is not a function, then there is no loss of accuracy by applying the 
+            # factor directly to the LookupTable, if that's what we are using.
+            # Make sure to keep the same properties about the table, flux_type, wave_type.
+            if self.wave_factor == 10.0:
+                wave_type = 'Angstroms'
+            flux_type = self.flux_type
+            x = self._spec.getArgs()
+            f = [ val / other for val in self._spec.getVals() ]
+            spec = galsim.LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
+                                      interpolant=self._spec.interpolant)
         else:
             spec = lambda w: self._rest_photons(w) / other
-        return SED(spec, flux_type='fphotons', redshift=self.redshift,
+
+        return SED(spec, flux_type=flux_type, wave_type=wave_type, redshift=self.redshift,
                    _wave_list=self.wave_list,
                    _blue_limit=self.blue_limit, _red_limit=self.red_limit)
+
 
     def __truediv__(self, other):
         return self.__div__(other)

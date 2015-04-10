@@ -198,6 +198,7 @@ class Bandpass(object):
         blue_limit = self.blue_limit
         red_limit = self.red_limit
         wave_list = self.wave_list
+        wave_type = 'nm'
 
         if isinstance(other, (Bandpass, galsim.SED)):
             if len(other.wave_list) > 0:
@@ -208,10 +209,20 @@ class Bandpass(object):
 
         if hasattr(other, '__call__'):
             tp = lambda w: self.func(w) * other(w)
+        elif isinstance(self._tp, galsim.LookupTable):
+            # If other is not a function, then there is no loss of accuracy by applying the 
+            # factor directly to the LookupTable, if that's what we are using.
+            # Make sure to keep the same properties about the table, wave_type.
+            if self.wave_factor == 10.0:
+                wave_type = 'Angstroms'
+            x = self._tp.getArgs()
+            f = [ val * other for val in self._tp.getVals() ]
+            tp = galsim.LookupTable(x, f, x_log=self._tp.x_log, f_log=self._tp.f_log,
+                                      interpolant=self._tp.interpolant)
         else:
             tp = lambda w: self.func(w) * other
 
-        return Bandpass(tp, blue_limit, red_limit, _wave_list=wave_list)
+        return Bandpass(tp, blue_limit, red_limit, wave_type=wave_type, _wave_list=wave_list)
 
     def __rmul__(self, other):
         return self*other
@@ -221,6 +232,7 @@ class Bandpass(object):
         blue_limit = self.blue_limit
         red_limit = self.red_limit
         wave_list = self.wave_list
+        wave_type = 'nm'
 
         if isinstance(other, Bandpass):
             if len(other.wave_list) > 0:
@@ -231,10 +243,20 @@ class Bandpass(object):
 
         if hasattr(other, '__call__'):
             tp = lambda w: self.func(w) / other(w)
+        elif isinstance(self._tp, galsim.LookupTable):
+            # If other is not a function, then there is no loss of accuracy by applying the 
+            # factor directly to the LookupTable, if that's what we are using.
+            # Make sure to keep the same properties about the table, wave_type.
+            if self.wave_factor == 10.0:
+                wave_type = 'Angstroms'
+            x = self._tp.getArgs()
+            f = [ val / other for val in self._tp.getVals() ]
+            tp = galsim.LookupTable(x, f, x_log=self._tp.x_log, f_log=self._tp.f_log,
+                                      interpolant=self._tp.interpolant)
         else:
             tp = lambda w: self.func(w) / other
 
-        return Bandpass(tp, blue_limit, red_limit, _wave_list=wave_list)
+        return Bandpass(tp, blue_limit, red_limit, wave_type=wave_type, _wave_list=wave_list)
 
     def __truediv__(self, other):
         return __div__(self, other)

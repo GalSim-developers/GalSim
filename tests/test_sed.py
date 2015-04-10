@@ -203,24 +203,30 @@ def test_SED_mul():
                        flux_type='fphotons')
         if z != 0:
             a = a.atRedshift(z)
-        b = lambda w: w**2
+
         # SED multiplied by function
+        b = lambda w: w**2
         c = a*b
         x = 3.0
         np.testing.assert_almost_equal(c(x), a(x) * b(x), 10,
                                        err_msg="Found wrong value in SED.__mul__")
+
         # function multiplied by SED
         c = b*a
         np.testing.assert_almost_equal(c(x), a(x) * b(x), 10,
                                        err_msg="Found wrong value in SED.__rmul__")
+
         # SED multiplied by scalar
-        d = c*4.2
-        np.testing.assert_almost_equal(d(x), c(x) * 4.2, 10,
+        d = a*4.2
+        np.testing.assert_almost_equal(d(x), a(x) * 4.2, 10,
                                        err_msg="Found wrong value in SED.__mul__")
+        do_pickle(d)
+
         # assignment multiplication
         d *= 2
-        np.testing.assert_almost_equal(d(x), c(x) * 4.2 * 2, 10,
+        np.testing.assert_almost_equal(d(x), a(x) * 4.2 * 2, 10,
                                        err_msg="Found wrong value in SED.__mul__")
+        do_pickle(d)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -236,20 +242,25 @@ def test_SED_div():
                        flux_type='fphotons')
         if z != 0:
             a = a.atRedshift(z)
-        b = lambda w: w**2
+
         # SED divided by function
+        b = lambda w: w**2
         c = a/b
         x = 3.0
         np.testing.assert_almost_equal(c(x), a(x)/b(x), 10,
                                        err_msg="Found wrong value in SED.__div__")
+
         # SED divided by scalar
-        d = c/4.2
-        np.testing.assert_almost_equal(d(x), c(x)/4.2, 10,
+        d = a/4.2
+        np.testing.assert_almost_equal(d(x), a(x)/4.2, 10,
                                        err_msg="Found wrong value in SED.__div__")
+        do_pickle(d)
+
         # assignment division
         d /= 2
-        np.testing.assert_almost_equal(d(x), c(x)/4.2/2, 10,
+        np.testing.assert_almost_equal(d(x), a(x)/4.2/2, 10,
                                        err_msg="Found wrong value in SED.__div__")
+        do_pickle(d)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

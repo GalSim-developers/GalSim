@@ -123,6 +123,7 @@ def test_Bandpass_mul():
 
     a = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
     b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]))
+
     # Bandpass * Bandpass
     c = a*b
     np.testing.assert_almost_equal(c.blue_limit, 1.1, 10,
@@ -137,6 +138,7 @@ def test_Bandpass_mul():
                                    err_msg="Found wrong value in Bandpass.__mul__")
     np.testing.assert_array_almost_equal(c.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
                                          err_msg="wrong wave_list in Bandpass.__mul__")
+
     # Bandpass * fn
     d = lambda w: w**2
     e = c*d
@@ -144,26 +146,29 @@ def test_Bandpass_mul():
                                    err_msg="Found wrong value in Bandpass.__mul__")
     np.testing.assert_array_almost_equal(e.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
                                          err_msg="wrong wave_list in Bandpass.__mul__")
+
     # fn * Bandpass
     e = d*c
     np.testing.assert_almost_equal(e(3.0), 3.0 * 3.33 * 3.0**2, 10,
                                    err_msg="Found wrong value in Bandpass.__mul__")
     np.testing.assert_array_almost_equal(e.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
                                          err_msg="wrong wave_list in Bandpass.__mul__")
-    # Bandpass * scalar
-    f = e * 1.21
-    np.testing.assert_almost_equal(f(3.0), 3.0 * 3.33 * 3.0**2 * 1.21, 10,
-                                   err_msg="Found wrong value in Bandpass.__mul__")
-    np.testing.assert_array_almost_equal(f.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
-                                         err_msg="wrong wave_list in Bandpass.__mul__")
-    # scalar * Bandpass
-    f = 1.21 * e
-    np.testing.assert_almost_equal(f(3.0), 3.0 * 3.33 * 3.0**2 * 1.21, 10,
-                                   err_msg="Found wrong value in Bandpass.__mul__")
-    np.testing.assert_array_almost_equal(f.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
-                                         err_msg="wrong wave_list in Bandpass.__mul__")
 
-    # NB. These are not picklable.  C'est la vie.
+    # Bandpass * scalar
+    f = b * 1.21
+    np.testing.assert_almost_equal(f(3.0), 3.33 * 1.21, 10,
+                                   err_msg="Found wrong value in Bandpass.__mul__")
+    np.testing.assert_array_almost_equal(f.wave_list, [1.1, 2.2, 3, 4.4, 5.5],
+                                         err_msg="wrong wave_list in Bandpass.__mul__")
+    do_pickle(f)
+
+    # scalar * Bandpass
+    f = 1.21 * a
+    np.testing.assert_almost_equal(f(3.0), 3.0 * 1.21, 10,
+                                   err_msg="Found wrong value in Bandpass.__mul__")
+    np.testing.assert_array_almost_equal(f.wave_list, [1, 2, 3, 4, 5],
+                                         err_msg="wrong wave_list in Bandpass.__mul__")
+    do_pickle(f)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -176,6 +181,7 @@ def test_Bandpass_div():
 
     a = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
     b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]))
+
     # Bandpass / Bandpass
     c = a/b
     np.testing.assert_almost_equal(c.blue_limit, 1.1, 10,
@@ -190,6 +196,7 @@ def test_Bandpass_div():
                                    err_msg="Found wrong value in Bandpass.__div__")
     np.testing.assert_array_almost_equal(c.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
                                          err_msg="wrong wave_list in Bandpass.__div__")
+
     # Bandpass / fn
     d = lambda w: w**2
     e = c/d
@@ -197,12 +204,14 @@ def test_Bandpass_div():
                                    err_msg="Found wrong value in Bandpass.__div__")
     np.testing.assert_array_almost_equal(e.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
                                          err_msg="wrong wave_list in Bandpass.__div__")
+
     # Bandpass / scalar
-    f = e / 1.21
-    np.testing.assert_almost_equal(f(3.0), e(3.0)/1.21, 10,
+    f = b / 1.21
+    np.testing.assert_almost_equal(f(3.0), b(3.0)/1.21, 10,
                                    err_msg="Found wrong value in Bandpass.__div__")
-    np.testing.assert_array_almost_equal(f.wave_list, [1.1, 2, 2.2, 3, 4, 4.4, 5],
+    np.testing.assert_array_almost_equal(f.wave_list, [1.1, 2.2, 3, 4.4, 5.5],
                                          err_msg="wrong wave_list in Bandpass.__div__")
+    do_pickle(f)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
