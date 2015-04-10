@@ -40,12 +40,34 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
 
     @returns a Transformation or ChromaticTransformation instance as appropriate.
     """
-    if isinstance(obj, galsim.ChromaticObject):
-        return galsim.ChromaticTransformation(obj, jac, offset, flux_ratio, gsparams)
-    elif isinstance(obj, galsim.GSObject):
-        return Transformation(obj, jac, offset, flux_ratio, gsparams)
-    else:
+    if not (isinstance(obj, galsim.GSObject) or isinstance(obj, galsim.ChromaticObject)):
         raise TypeError("Argument to Transform must be either a GSObject or a ChromaticObject.")
+
+    elif (hasattr(jac,'__call__') or hasattr(offset,'__call__') or 
+          hasattr(flux_ratio,'__call__') or isinstance(obj, galsim.ChromaticObject)):
+
+        # Sometimes for Chromatic compound types, it is more efficient to apply the 
+        # transformation to the components rather than the whole.  In particular, this can
+        # help preserve separability in many cases.
+
+        # Don't transform ChromaticSum object, better to just transform the arguments.
+        if isinstance(obj, galsim.ChromaticSum) or isinstance(obj, galsim.Sum):
+            return galsim.ChromaticSum(
+                [ Transform(o,jac,offset,flux_ratio,gsparams) for o in obj.objlist ])
+
+        # If we are just flux scaling, then a Convolution can do that to the first element.
+        # NB. Even better, if the flux scaling is chromatic, would be to find a component
+        # that is already non-separable.  But we don't bother trying to do that currently.
+        elif (isinstance(obj, galsim.ChromaticConvolution or isinstance(obj, galsim.Convolution))
+              and (numpy.asarray(jac).flatten() == (1,0,0,1)).all()
+              and (offset == galsim.PositionD(0.,0.))):
+            first = Transform(obj.objlist[0],flux_ratio=flux_ratio,gsparams=gsparams)
+            return galsim.ChromaticConvolution( [first] + [o for o in obj.objlist[1:]] )
+
+        else:
+            return galsim.ChromaticTransformation(obj, jac, offset, flux_ratio, gsparams)
+    else:
+        return Transformation(obj, jac, offset, flux_ratio, gsparams)
 
 
 class Transformation(galsim.GSObject):
