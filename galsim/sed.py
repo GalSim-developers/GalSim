@@ -105,8 +105,8 @@ class SED(object):
             return
 
         if isinstance(self._spec, galsim.LookupTable):
-            self.blue_limit = self._spec.x_min / self.wave_factor
-            self.red_limit = self._spec.x_max / self.wave_factor
+            self.blue_limit = float(self._spec.x_min) / self.wave_factor
+            self.red_limit = float(self._spec.x_max) / self.wave_factor
             self.wave_list = np.array(self._spec.getArgs())/self.wave_factor
         else:
             self.blue_limit = None

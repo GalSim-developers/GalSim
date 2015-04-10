@@ -132,9 +132,9 @@ class Bandpass(object):
         # Assign blue and red limits of bandpass
         if isinstance(self._tp, galsim.LookupTable):
             if self.blue_limit is None:
-                self.blue_limit = self._tp.x_min/self.wave_factor
+                self.blue_limit = float(self._tp.x_min)/self.wave_factor
             if self.red_limit is None:
-                self.red_limit = self._tp.x_max/self.wave_factor
+                self.red_limit = float(self._tp.x_max)/self.wave_factor
         else:
             if self.blue_limit is None or self.red_limit is None:
                 raise AttributeError(
