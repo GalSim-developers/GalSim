@@ -148,18 +148,31 @@ class Transformation(galsim.GSObject):
         s = str(self.original)
         dudx, dudy, dvdx, dvdy = self.jac.flatten()
         if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
-            #s += '.transform(%s,%s,%s,%s)'%(dudx,dudy,dvdx,dvdy)
             # Figure out the shear/rotate/dilate calls that are equivalent.
             jac = galsim.JacobianWCS(dudx,dudy,dvdx,dvdy)
             scale, shear, theta, flip = jac.getDecomposition()
+            single = None
             if flip:
-                s += '.transform(0,1,1,0)'
-            if abs(theta.rad() > 1.e-12):
-                s += '.rotate(%s)'%theta
+                single = 0  # Special value indicating to just use transform.
+            if abs(theta.rad()) > 1.e-12:
+                if single is None:
+                    single = '.rotate(%s)'%theta
+                else:
+                    single = 0
             if shear.getG() > 1.e-12:
-                s += '.shear(%s)'%shear
-            if abs(scale-1.0 > 1.e-12):
-                s += '.expand(%s)'%scale
+                if single is None:
+                    single = '.shear(%s)'%shear
+                else:
+                    single = 0
+            if abs(scale-1.0) > 1.e-12:
+                if single is None:
+                    single = '.expand(%s)'%scale
+                else:
+                    single = 0
+            if single == 0:
+                # If flip or there are two components, then revert to transform as simpler.
+                single = '.transform(%s,%s,%s,%s)'%(dudx,dudy,dvdx,dvdy)
+            s += single
         if self.offset.x != 0 or self.offset.y != 0:
             s += '.shift(%s,%s)'%(self.offset.x,self.offset.y)
         if self.flux_ratio != 1.:
