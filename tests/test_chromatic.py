@@ -515,7 +515,7 @@ def test_chromatic_flux():
 
     # Also check that the flux is okay and the image fairly consistent when using interpolation
     # for the ChromaticAtmosphere.
-    PSF.setupInterpolation(waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30))
+    PSF = PSF.setupInterpolation(waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30))
     final_int = galsim.Convolve([star, PSF])
     image3 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     final_int.drawImage(bandpass, image=image3)
@@ -535,7 +535,7 @@ def test_chromatic_flux():
         print 'The assert_raises tests require nose'
 
     # Go back to no interpolation (this will effect the PSFs that are used below).
-    PSF.removeInterpolation()
+    PSF = PSF.original
 
     # Try adjusting flux to something else.
     target_flux = 2.63
@@ -1327,8 +1327,7 @@ def test_interpolated_ChromaticObject():
 
     # First, compare images that are drawn with exact and interpolated ChromaticGaussian.
     exact_psf = ChromaticGaussian(sigma_0)
-    interp_psf = exact_psf.copy()
-    interp_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
+    interp_psf = exact_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
     exact_obj = galsim.Convolve(star, exact_psf)
     interp_obj = galsim.Convolve(star, interp_psf)
     im_exact = exact_obj.drawImage(bandpass, scale=scale, nx=40, ny=40)
@@ -1347,8 +1346,7 @@ def test_interpolated_ChromaticObject():
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated (midpoint)')
 
     # Check that we can turn interpolation off and on at will.
-    other_psf = interp_psf.copy()
-    other_psf.removeInterpolation()
+    other_psf = interp_psf.original
     other_obj = galsim.Convolve(star, other_psf)
     im_other = im_exact.copy()
     im_other = other_obj.drawImage(bandpass, image=im_other, scale=scale)
@@ -1427,9 +1425,8 @@ def test_interpolated_ChromaticObject():
     # transformation to be a bit less extreme.
     chrom_dilate = lambda w: 1.0+0.05*(w-500.)/500.
     exact_psf = exact_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y).dilate(chrom_dilate)
-    interp_psf = exact_psf.copy()
     # Note here we are checking the use of more difficult input wavelengths.
-    interp_psf.setupInterpolation(tricky_waves, oversample_fac=oversample_fac)
+    interp_psf = exact_psf.setupInterpolation(tricky_waves, oversample_fac=oversample_fac)
     exact_obj = galsim.Convolve(star, exact_psf)
     interp_obj = galsim.Convolve(star, interp_psf)
     im_exact = exact_obj.drawImage(bandpass, scale=atm_scale)
@@ -1447,8 +1444,7 @@ def test_interpolated_ChromaticObject():
     exact_psf = galsim.ChromaticAtmosphere(
         galsim.Kolmogorov(atm_fwhm), 500., zenith_angle=0.*galsim.degrees,
         parallactic_angle=0.*galsim.degrees)
-    interp_psf = exact_psf.copy()
-    interp_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
+    interp_psf = exact_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
 
     achrom_shear = galsim.Shear(g1=0.05, g2=-0.1)
     exact_psf = exact_psf.shear(shear=achrom_shear)
@@ -1482,8 +1478,7 @@ def test_interpolated_ChromaticObject():
         parallactic_angle=0.*galsim.degrees)
     exact_psf = \
         exact_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y).dilate(chrom_dilate)
-    interp_psf = exact_psf.copy()
-    interp_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
+    interp_psf = exact_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
     trans_exact_psf = \
         exact_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y).dilate(chrom_dilate)
     # The object is going to emit a warning that we don't want to worry about (it's good for code
@@ -1575,13 +1570,15 @@ def test_ChromaticOpticalPSF():
     waves = np.linspace(bandpass.blue_limit, bandpass.red_limit, n_interp)
     psf = galsim.ChromaticOpticalPSF(lam=lam, diam=diam, aberrations=aberrations,
                                      obscuration=obscuration, nstruts=nstruts)
-    psf.setupInterpolation(waves, oversample_fac=oversample_fac)
+    do_pickle(psf)
+
+    psf = psf.setupInterpolation(waves, oversample_fac=oversample_fac)
     star = galsim.Gaussian(fwhm=1.e-8) * disk_SED
     obj = galsim.Convolve(star, psf)
 
-    do_pickle(psf)
-    do_pickle(star)
-    do_pickle(obj)
+    if __name__ == '__main__':
+        # This is slow, but it worth testing the pickling of InterpolatedChromaticObjects.
+        do_pickle(psf)
 
     im_r_ref = galsim.fits.read(os.path.join(refdir, 'r_exact.fits'))
     im_r = im_r_ref.copy()
@@ -1610,9 +1607,6 @@ def test_ChromaticOpticalPSF():
         frac_diff_exact, 0.0, decimal=2,
         err_msg='ChromaticObject flux is wrong when convolved with ChromaticOpticalPSF '
         ' (interpolated calculation)')
-
-    do_pickle(gal)
-    do_pickle(obj_conv)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1663,16 +1657,14 @@ def test_ChromaticAiry():
 
     # Make new object, and compare:
     psf = galsim.ChromaticAiry(lam=lam, diam=diam, obscuration=obscuration)
+    do_pickle(psf)
+
     star = galsim.Gaussian(fwhm=1.e-8) * disk_SED
     obj = galsim.Convolve(psf, star)
     obj.drawImage(bandpass, image=im_r_tmp, scale=scale)
     np.testing.assert_array_almost_equal(
         im_r_tmp.array, im_r_ref.array, decimal=8,
         err_msg='ChromaticAiry image disagrees with reference in r band')
-
-    do_pickle(psf)
-    do_pickle(star)
-    do_pickle(obj)
 
     # Initialize object in different way, make sure results are identical:
     lam_over_diam = (1.e-9*lam/diam)*galsim.radians
@@ -1685,9 +1677,6 @@ def test_ChromaticAiry():
         im_r_2.array, im_r_ref.array, decimal=8,
         err_msg='ChromaticAiry image disagrees with reference in r band when initializing'
                 ' a different way')
-
-    do_pickle(psf)
-    do_pickle(obj)
 
     # Also check evaluation at a single wavelength.
     chromatic_psf_400 = psf.evaluateAtWavelength(400.)
@@ -1713,9 +1702,6 @@ def test_ChromaticAiry():
     np.testing.assert_almost_equal(
         frac_diff_exact, 0.0, decimal=2,
         err_msg='ChromaticObject flux is wrong when convolved with ChromaticAiry')
-
-    do_pickle(gal)
-    do_pickle(obj_conv)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

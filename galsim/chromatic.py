@@ -176,8 +176,7 @@ class ChromaticObject(object):
 
         For use cases requiring a high level of precision, we recommend a comparison between the
         interpolated and the more accurate calculation for at least one case, to ensure that the
-        required precision has been reached.  Also note that after calling `setupInterpolation`, it
-        is possible to revert to the exact calculation by calling `removeInterpolation`.
+        required precision has been reached.
 
         The input parameter `waves` determines the input grid on which images are precomputed.  It
         is difficult to give completely general guidance as to how many wavelengths to choose or how
@@ -198,135 +197,12 @@ class ChromaticObject(object):
                                 whichever wavelength has the highest Nyquist frequency.
                                 `oversample_fac`>1 results in higher accuracy but costlier
                                 pre-computations (more memory and time). [default: 1]
+
+        @returns the version of the Chromatic object that uses interpolation
+                 (This will be an InterpolatedChromaticObject instance.)
         """
-        # Set up the interpolation (which can be a costly step, depending on the length of
-        # `waves`).
-        self.waves = np.sort(np.array(waves))
+        return InterpolatedChromaticObject(self, waves, oversample_fac)
 
-        # Make the objects between which we are going to interpolate.  Note that these do not have
-        # to be saved for later, unlike the images.
-        objs = [ self.evaluateAtWavelength(wave) for wave in self.waves ]
-
-        # The evaluation step (above) led to the incorporation of any shears and other
-        # transformations into the stored models between which we interpolation, so reset the
-        # internal attributes that store information about transformations, if indeed there were any
-        # transformations.
-        if hasattr(self, '_jac'):
-            # Store the old transformations.
-            self._save_jac = self._jac
-            self._save_off = self._off
-            self._save_frat = self._frat
-            # Then reset the one that is stored as part of this profile.
-            self._jac = np.identity(2, dtype=float)
-            self._off = np.array((0,0), dtype=float)
-            self._frat = 1.0
-
-        # Check the fluxes for the objects.  If they are unity (within some tolerance) then that
-        # makes things simple.  If they are not, however, then we have to reset them to unity, and
-        # modify the SED attribute, which now refers to the total flux at a given wavelength after
-        # integrating over the whole light profile.
-        fluxes = np.array([ obj.getFlux() for obj in objs ])
-        if np.any(abs(fluxes - 1.0) > 10.*np.finfo(fluxes.dtype.type).eps):
-            # Figure out the rescaling factor for the SED.
-            objs = [ obj.withFlux(1.0) for obj in objs ]
-            if not hasattr(self, 'SED'):
-                self.SED = lambda w : 1.0
-            self.SED = galsim.LookupTable(x=self.waves, f=self.SED(self.waves)*fluxes,
-                                          interpolant='linear')
-
-        # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for the
-        # array of images that is being stored.
-        nyquist_scale_vals = [ obj.nyquistScale() for obj in objs ]
-        scale = min(nyquist_scale_vals) / oversample_fac
-
-        # Find the suggested image size for each object given the choice of scale, and use the
-        # maximum just to be safe.
-        possible_im_sizes = [ obj.SBProfile.getGoodImageSize(scale, 1.0) for obj in objs ]
-        im_size = max(possible_im_sizes)
-
-        # Find the stepK and maxK values for each object.  These will be used later on, so that we
-        # can force these values when instantiating InterpolatedImages before drawing.
-        self.stepK_vals = [ obj.stepK() for obj in objs ]
-        self.maxK_vals = [ obj.maxK() for obj in objs ]
-
-        # Finally, now that we have an image scale and size, draw all the images.  Note that
-        # `no_pixel` is used (we want the object on its own, without a pixel response).
-        self.ims = [ obj.drawImage(scale=scale, nx=im_size, ny=im_size, method='no_pixel') \
-                         for obj in objs ]
-
-    def removeInterpolation(self):
-        """
-        A routine to force an object for which interpolation was previously set up go back to the
-        exact calculation.
-        """
-        if hasattr(self, 'waves'):
-            # Check whether some chromatic transformation was done when setting up the
-            # interpolation, and restore the associated _jac,etc.  n combination with any
-            # other transformations that have been done in the meantime.
-            if hasattr(self, '_save_jac'):
-                self._jac = self._save_jac
-                self._off = self._save_off
-                self._frat = self._save_frat
-                del self._save_jac
-                del self._save_off
-                del self._save_frat
-
-            # Get rid of the stored attributes related to interpolation.
-            del self.waves
-            del self.stepK_vals
-            del self.maxK_vals
-            del self.ims
-
-    def hasInterpolation(self):
-        """
-        A routine to check whether an object has interpolation set up or not.
-
-        @returns    True or False
-        """
-        return hasattr(self, 'waves')
-
-    def _evaluateAtWavelength(self, wave):
-        """
-        Evaluate this ChromaticObject at a particular wavelength, either using interpolation or via
-        direct calculation, depending on whether or not interpolation has been set up.
-
-        @param wave     Wavelength in nanometers.
-
-        @returns the monochromatic object at the given wavelength, as a GSObject.
-        """
-        if hasattr(self, 'waves'):
-            im, stepk, maxk = self._imageAtWavelength(wave)
-            return galsim.InterpolatedImage(im, _force_stepk=stepk, _force_maxk=maxk)
-        else:
-            return self.evaluateAtWavelength(wave)
-
-    def _imageAtWavelength(self, wave):
-        """
-        Get an image of the object at a particular wavelength, using linear interpolation between
-        the originally-stored images.  Also returns values for step_k and max_k, to be used to
-        expedite the instantation of InterpolatedImages.
-
-        @param wave     Wavelength in nanometers.
-
-        @returns an Image of the object at the given wavelength.
-        """
-        # First, some wavelength-related sanity checks.
-        if wave < min(self.waves) or wave > max(self.waves):
-            raise RuntimeError("Requested wavelength %.1f is outside the allowed range:"
-                               " %.1f to %.1f nm"%(wave, min(self.waves), max(self.waves)))
-
-        # Figure out where the supplied wavelength is compared to the list of wavelengths on which
-        # images were originally tabulated.
-        lower_idx, frac = _findWave(self.waves, wave)
-
-        # Actually do the interpolation for the image, stepK, and maxK.
-        im = _linearInterp(self.ims, frac, lower_idx)
-        stepk = _linearInterp(self.stepK_vals, frac, lower_idx)
-        maxk = _linearInterp(self.maxK_vals, frac, lower_idx)
-        if hasattr(self, 'SED'):
-            return self.SED(wave)*im, stepk, maxk
-        else:
-            return im, stepk, maxk
 
     def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
         """Base implementation for drawing an image of a ChromaticObject.
@@ -337,11 +213,7 @@ class ChromaticObject(object):
 
         The task of drawImage() in a chromatic context is to integrate a chromatic surface
         brightness profile multiplied by the throughput of `bandpass`, over the wavelength interval
-        indicated by `bandpass`.  This integration will take place either via brute-force drawing
-        the image at some number of wavelengths, or via an optimized version of the routine that
-        uses interpolation between stored images (see setupInterpolation() for more details).
-        `drawImage` chooses which method to use depending on whether the user has called
-        setupInterpolation().
+        indicated by `bandpass`.  
 
         Several integrators are available in galsim.integ to do this integration when using the
         first method (non-interpolated integration).  By default,
@@ -377,18 +249,6 @@ class ChromaticObject(object):
         @param **kwargs         For all other kwarg options, see GSObject.drawImage()
 
         @returns the drawn Image.
-        """
-        if hasattr(self, 'waves'):
-            int_im = self._get_interp_image(bandpass, image=image, integrator=integrator, **kwargs)
-            image = int_im.drawImage(image=image, **kwargs)
-            return image
-        else:
-            return self._normal_drawImage(bandpass, image=image, integrator=integrator, **kwargs)
-
-    def _normal_drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
-        """
-        Base implementation for drawing an image of a ChromaticObject without interpolation.
-        Users will not typically call this directly, and should instead use `drawImage`.
         """
         # To help developers debug extensions to ChromaticObject, check that ChromaticObject has
         # the expected attributes
@@ -458,87 +318,6 @@ class ChromaticObject(object):
             image.setZero()
         image += integral
         return image
-
-    def _get_interp_image(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
-        """Draw method adapted to work for ChromaticImage instances for which interpolation between
-        stored images is being used.  Users should not call this routine directly, and should
-        instead interact with the `drawImage` method.
-        """
-        if integrator not in ['trapezoidal', 'midpoint']:
-            if not isinstance(integrator, str):
-                raise TypeError("Integrator should be a string indicating trapezoidal"
-                                 " or midpoint rule for integration")
-            raise TypeError("Unknown integrator: %s"%integrator)
-
-        # setup output image (semi-arbitrarily using the bandpass effective wavelength).
-        # Note: we cannot just use self._imageAtWavelength, because that routine returns an image
-        # with whatever pixel scale was required to sample all the images properly.  We want to set
-        # up an output image that has the requested pixel scale, which might change the image size
-        # and so on.
-        prof0 = self._evaluateAtWavelength(bandpass.effective_wavelength)
-        image = prof0.drawImage(image=image, setup_only=True, **kwargs)
-        # Remove from kwargs anything that is only used for setting up image:
-        kwargs.pop('dtype', None)
-        kwargs.pop('scale', None)
-        kwargs.pop('wcs', None)
-        kwargs.pop('nx', None)
-        kwargs.pop('ny', None)
-
-        # determine combination of self.wave_list and bandpass.wave_list
-        wave_list = self._getCombinedWaveList(bandpass)
-
-        # The integration is carried out using the following two basic principles:
-        # (1) We use linear interpolation between the stored images to get an image at a given
-        #     wavelength.
-        # (2) We use the trapezoidal or midpoint rule for integration, depending on what the user
-        #     has selected.
-
-        # For the midpoint rule, we take the list of wavelengths in wave_list, and treat each of
-        # those as the midpoint of a narrow wavelength range with width given by `dw` (to be
-        # calculated below).  Then, we can take the summation over indices i:
-        #   integral ~ sum_i dw[i] * img[i].
-        # where the indices i run over the wavelengths in wave_list from i=0...N-1.
-        #
-        # For the trapezoidal rule, we treat the list of wavelengths in wave_list as the *edges* of
-        # the regions, and sum over the areas of the trapezoids, giving
-        #   integral ~ sum_j dw[j] * img[j] + sum_k dw[k] *img[k]/2.
-        # where indices j go from j=1...N-2 and k is (0, N-1).
-
-        # Figure out the dwave for each of the wavelengths in the combined wave_list.
-        dw = [wave_list[1]-wave_list[0]]
-        dw.extend(0.5*(wave_list[2:]-wave_list[0:-2]))
-        dw.append(wave_list[-1]-wave_list[-2])
-        # Set up arrays to accumulate the weights for each of the stored images.
-        weight_fac = np.zeros(len(self.waves))
-        for idx, w in enumerate(wave_list):
-            # Find where this is with respect to the wavelengths on which images are stored.
-            lower_idx, frac = _findWave(self.waves, w)
-            # Store the weight factors for the two stored images that can contribute at this
-            # wavelength.  Must include the dwave that is part of doing the integral.
-            if hasattr(self, 'SED'):
-                b = self.SED(w)*bandpass(w)*dw[idx]
-            else:
-                b = bandpass(w)*dw[idx]
-            if (idx > 0 and idx < len(wave_list)-1) or integrator == 'midpoint':
-                weight_fac[lower_idx] += (1.0-frac)*b
-                weight_fac[lower_idx+1] += frac*b
-            else:
-                # We're doing the trapezoidal rule, and we're at the endpoints.
-                weight_fac[lower_idx] += (1.0-frac)*b/2.
-                weight_fac[lower_idx+1] += frac*b/2.
-
-        # Do the integral as a weighted sum.
-        integral = sum([w*im for w,im in zip(weight_fac, self.ims)])
-
-        # Figure out stepK and maxK using the minimum and maximum (respectively) that have nonzero
-        # weight.  This is the most conservative possible choice, since it's possible that some of
-        # the images that have non-zero weights might have such tiny weights that they don't change
-        # the effective stepk and maxk we should use.
-        stepk = min(np.array(self.stepK_vals)[weight_fac>0])
-        maxk = max(np.array(self.maxK_vals)[weight_fac>0])
-
-        # Instantiate the InterpolatedImage, using these conservative stepK and maxK choices.
-        return galsim.InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
 
     def _getCombinedWaveList(self, bandpass):
         wave_list = bandpass.wave_list
@@ -937,6 +716,237 @@ class ChromaticObject(object):
 
         return galsim.Transform(self, offset=offset)
 
+
+class InterpolatedChromaticObject(ChromaticObject):
+    """A ChromaticObject that uses interpolation of predrawn images to speed up subsequent
+    rendering.
+
+    This class wraps another ChromaticObject, which is stored in the attribute `original`.
+    Any ChromaticObject can be used, although the interpolation procedure is most effective
+    for non-separable objects, which can sometimes be very slow to render.
+
+    Normally, you would not create an InterpolatedChromaticObject directly.  It is the 
+    return type from `chrom_obj.setupInterpolation()`.  See the description of that function
+    for more details.
+
+    @param obj              The ChromaticObject to be interpolated.
+    @param waves            The list, tuple, or NumPy array of wavelengths to be used when
+                            building up the grid of images for interpolation.  The wavelengths
+                            should be given in nanometers, and they should span the full range
+                            of wavelengths covered by any bandpass to be used for drawing Images
+                            (i.e., this class will not extrapolate beyond the given range of
+                            wavelengths).  They can be spaced any way the user likes, not
+                            necessarily linearly, though interpolation will be linear in
+                            wavelength between the specified wavelengths.
+    @param oversample_fac   Factor by which to oversample the stored profiles compared to the
+                            default, which is to sample them at the Nyquist frequency for
+                            whichever wavelength has the highest Nyquist frequency.
+                            `oversample_fac`>1 results in higher accuracy but costlier
+                            pre-computations (more memory and time). [default: 1]
+    """ 
+    def __init__(self, obj, waves, oversample_fac=1.0):
+
+        self.separable = obj.separable
+        if self.separable:
+            self.SED = obj.SED
+        self.wave_list = obj.wave_list
+
+        # Don't interpolate an interpolation.  Go back to the original.
+        if isinstance(obj, InterpolatedChromaticObject):
+            obj = obj.original
+        self.original = obj
+        self.waves = np.sort(np.array(waves))
+        self.oversample = oversample_fac
+
+        # Make the objects between which we are going to interpolate.  Note that these do not have
+        # to be saved for later, unlike the images.
+        objs = [ obj.evaluateAtWavelength(wave) for wave in self.waves ]
+
+        # Check the fluxes for the objects.  If they are unity (within some tolerance) then that
+        # makes things simple.  If they are not, however, then we have to reset them to unity, and
+        # modify the SED attribute, which now refers to the total flux at a given wavelength after
+        # integrating over the whole light profile.
+        fluxes = np.array([ obj.getFlux() for obj in objs ])
+        if np.any(abs(fluxes - 1.0) > 10.*np.finfo(fluxes.dtype.type).eps):
+            # Figure out the rescaling factor for the SED.
+            objs = [ obj.withFlux(1.0) for obj in objs ]
+            if not hasattr(self, 'SED'):
+                self.SED = lambda w : 1.0
+            self.SED = galsim.LookupTable(x=self.waves, f=self.SED(self.waves)*fluxes,
+                                          interpolant='linear')
+
+        # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for the
+        # array of images that is being stored.
+        nyquist_scale_vals = [ obj.nyquistScale() for obj in objs ]
+        scale = min(nyquist_scale_vals) / oversample_fac
+
+        # Find the suggested image size for each object given the choice of scale, and use the
+        # maximum just to be safe.
+        possible_im_sizes = [ obj.SBProfile.getGoodImageSize(scale, 1.0) for obj in objs ]
+        im_size = max(possible_im_sizes)
+
+        # Find the stepK and maxK values for each object.  These will be used later on, so that we
+        # can force these values when instantiating InterpolatedImages before drawing.
+        self.stepK_vals = [ obj.stepK() for obj in objs ]
+        self.maxK_vals = [ obj.maxK() for obj in objs ]
+
+        # Finally, now that we have an image scale and size, draw all the images.  Note that
+        # `no_pixel` is used (we want the object on its own, without a pixel response).
+        self.ims = [ obj.drawImage(scale=scale, nx=im_size, ny=im_size, method='no_pixel') \
+                         for obj in objs ]
+
+    def __repr__(self):
+        s = 'galsim.InterpolatedChromaticObject(%r,%r'%(self.original, self.waves)
+        if self.oversample != 1.0:
+            s += ', oversample_fac=%r'%self.oversample
+        s += ')'
+        return s
+
+    def __str__(self):
+        return 'galsim.InterpolatedChromaticObject(%s,%s)'%(self.original, self.waves)
+
+    def _imageAtWavelength(self, wave):
+        """
+        Get an image of the object at a particular wavelength, using linear interpolation between
+        the originally-stored images.  Also returns values for step_k and max_k, to be used to
+        expedite the instantation of InterpolatedImages.
+
+        @param wave     Wavelength in nanometers.
+
+        @returns an Image of the object at the given wavelength.
+        """
+        # First, some wavelength-related sanity checks.
+        if wave < min(self.waves) or wave > max(self.waves):
+            raise RuntimeError("Requested wavelength %.1f is outside the allowed range:"
+                               " %.1f to %.1f nm"%(wave, min(self.waves), max(self.waves)))
+
+        # Figure out where the supplied wavelength is compared to the list of wavelengths on which
+        # images were originally tabulated.
+        lower_idx, frac = _findWave(self.waves, wave)
+
+        # Actually do the interpolation for the image, stepK, and maxK.
+        im = _linearInterp(self.ims, frac, lower_idx)
+        stepk = _linearInterp(self.stepK_vals, frac, lower_idx)
+        maxk = _linearInterp(self.maxK_vals, frac, lower_idx)
+        if hasattr(self, 'SED'):
+            return self.SED(wave)*im, stepk, maxk
+        else:
+            return im, stepk, maxk
+
+    def evaluateAtWavelength(self, wave):
+        """
+        Evaluate this ChromaticObject at a particular wavelength using interpolation.
+
+        @param wave     Wavelength in nanometers.
+
+        @returns the monochromatic object at the given wavelength, as a GSObject.
+        """
+        im, stepk, maxk = self._imageAtWavelength(wave)
+        return galsim.InterpolatedImage(im, _force_stepk=stepk, _force_maxk=maxk)
+
+    def _get_interp_image(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
+        """Draw method adapted to work for ChromaticImage instances for which interpolation between
+        stored images is being used.  Users should not call this routine directly, and should
+        instead interact with the `drawImage` method.
+        """
+        if integrator not in ['trapezoidal', 'midpoint']:
+            if not isinstance(integrator, str):
+                raise TypeError("Integrator should be a string indicating trapezoidal"
+                                 " or midpoint rule for integration")
+            raise TypeError("Unknown integrator: %s"%integrator)
+
+        # setup output image (semi-arbitrarily using the bandpass effective wavelength).
+        # Note: we cannot just use self._imageAtWavelength, because that routine returns an image
+        # with whatever pixel scale was required to sample all the images properly.  We want to set
+        # up an output image that has the requested pixel scale, which might change the image size
+        # and so on.
+        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
+        image = prof0.drawImage(image=image, setup_only=True, **kwargs)
+        # Remove from kwargs anything that is only used for setting up image:
+        kwargs.pop('dtype', None)
+        kwargs.pop('scale', None)
+        kwargs.pop('wcs', None)
+        kwargs.pop('nx', None)
+        kwargs.pop('ny', None)
+
+        # determine combination of self.wave_list and bandpass.wave_list
+        wave_list = self._getCombinedWaveList(bandpass)
+
+        # The integration is carried out using the following two basic principles:
+        # (1) We use linear interpolation between the stored images to get an image at a given
+        #     wavelength.
+        # (2) We use the trapezoidal or midpoint rule for integration, depending on what the user
+        #     has selected.
+
+        # For the midpoint rule, we take the list of wavelengths in wave_list, and treat each of
+        # those as the midpoint of a narrow wavelength range with width given by `dw` (to be
+        # calculated below).  Then, we can take the summation over indices i:
+        #   integral ~ sum_i dw[i] * img[i].
+        # where the indices i run over the wavelengths in wave_list from i=0...N-1.
+        #
+        # For the trapezoidal rule, we treat the list of wavelengths in wave_list as the *edges* of
+        # the regions, and sum over the areas of the trapezoids, giving
+        #   integral ~ sum_j dw[j] * img[j] + sum_k dw[k] *img[k]/2.
+        # where indices j go from j=1...N-2 and k is (0, N-1).
+
+        # Figure out the dwave for each of the wavelengths in the combined wave_list.
+        dw = [wave_list[1]-wave_list[0]]
+        dw.extend(0.5*(wave_list[2:]-wave_list[0:-2]))
+        dw.append(wave_list[-1]-wave_list[-2])
+        # Set up arrays to accumulate the weights for each of the stored images.
+        weight_fac = np.zeros(len(self.waves))
+        for idx, w in enumerate(wave_list):
+            # Find where this is with respect to the wavelengths on which images are stored.
+            lower_idx, frac = _findWave(self.waves, w)
+            # Store the weight factors for the two stored images that can contribute at this
+            # wavelength.  Must include the dwave that is part of doing the integral.
+            if hasattr(self, 'SED'):
+                b = self.SED(w)*bandpass(w)*dw[idx]
+            else:
+                b = bandpass(w)*dw[idx]
+            if (idx > 0 and idx < len(wave_list)-1) or integrator == 'midpoint':
+                weight_fac[lower_idx] += (1.0-frac)*b
+                weight_fac[lower_idx+1] += frac*b
+            else:
+                # We're doing the trapezoidal rule, and we're at the endpoints.
+                weight_fac[lower_idx] += (1.0-frac)*b/2.
+                weight_fac[lower_idx+1] += frac*b/2.
+
+        # Do the integral as a weighted sum.
+        integral = sum([w*im for w,im in zip(weight_fac, self.ims)])
+
+        # Figure out stepK and maxK using the minimum and maximum (respectively) that have nonzero
+        # weight.  This is the most conservative possible choice, since it's possible that some of
+        # the images that have non-zero weights might have such tiny weights that they don't change
+        # the effective stepk and maxk we should use.
+        stepk = min(np.array(self.stepK_vals)[weight_fac>0])
+        maxk = max(np.array(self.maxK_vals)[weight_fac>0])
+
+        # Instantiate the InterpolatedImage, using these conservative stepK and maxK choices.
+        return galsim.InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
+
+    def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
+        """Draw an image as seen through a particular bandpass using the stored interpolated
+        images at the specified wavelengths.
+
+        This integration will take place using interpolation between stored images that were
+        setup by setupInterpolation().  (See setupInterpolation() for more details.) 
+
+        @param bandpass         A Bandpass object representing the filter against which to
+                                integrate.
+        @param image            Optionally, the Image to draw onto.  (See GSObject.drawImage()
+                                for details.)  [default: None]
+        @param integrator       The integration algorithm to use, given as a string.  Either
+                                'midpoint' or 'trapezoidal' is allowed. [default: 'trapezoidal']
+        @param **kwargs         For all other kwarg options, see GSObject.drawImage()
+
+        @returns the drawn Image.
+        """
+        int_im = self._get_interp_image(bandpass, image=image, integrator=integrator, **kwargs)
+        image = int_im.drawImage(image=image, **kwargs)
+        return image
+
+
 def ChromaticAtmosphere(base_obj, base_wavelength, **kwargs):
     """Return a ChromaticObject implementing two atmospheric chromatic effects: differential
     chromatic refraction (DCR) and wavelength-dependent seeing.
@@ -1147,14 +1157,14 @@ class ChromaticTransformation(ChromaticObject):
                           hasattr(flux_ratio,'__call__'))
         self.separable = obj.separable and not self.chromatic
 
-        if hasattr(obj, 'waves') and self.chromatic:
+        if isinstance(obj, InterpolatedChromaticObject) and self.chromatic:
             import warnings
             warnings.warn("Cannot render image with chromatic transformation applied to it "
-                          "using interpolation between stored images.  Reverting to "
-                          "non-interpolated version.")
-            obj.removeInterpolation()
+                            "using interpolation between stored images.  Reverting to "
+                            "non-interpolated version.")
+            obj = obj.original
 
-        if hasattr(obj, 'waves'):
+        if isinstance(obj, InterpolatedChromaticObject):
             self.original = obj
             self._jac = jac
             self._off = offset

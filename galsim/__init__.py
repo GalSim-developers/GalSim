@@ -139,7 +139,7 @@ from transform import Transform, Transformation
 from chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum
 from chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
 from chromatic import ChromaticAutoCorrelation, ChromaticTransformation
-from chromatic import ChromaticOpticalPSF, ChromaticAiry
+from chromatic import ChromaticOpticalPSF, ChromaticAiry, InterpolatedChromaticObject
 from sed import SED
 from bandpass import Bandpass
 
