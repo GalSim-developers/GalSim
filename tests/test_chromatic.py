@@ -615,6 +615,8 @@ def test_double_ChromaticSum():
     obj = galsim.Convolve(a+b, c+d)
     obj.drawImage(bandpass, image=image, method='no_pixel')
 
+    do_pickle(obj)
+
     image_a = galsim.ImageD(16, 16, scale=0.2)
     image_b = galsim.ImageD(16, 16, scale=0.2)
     obj_a = galsim.Convolve(a, c+d)

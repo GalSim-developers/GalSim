@@ -1632,14 +1632,7 @@ class ChromaticConvolution(ChromaticObject):
                 self.objlist.append(obj.copy())
         if all([obj.separable for obj in self.objlist]):
             self.separable = True
-            # pull out the non-trivial seds
-            sedlist = [ obj.SED for obj in self.objlist if obj.SED != galsim.SED('1') ]
-            if len(sedlist) == 0:
-                self.SED = galsim.SED('1')
-            elif len(sedlist) == 1:
-                self.SED = sedlist[0]
-            else:
-                self.SED = lambda w: reduce(lambda x,y:x*y, [sed(w) for sed in sedlist])
+            self._findSED()
         else:
             self.separable = False
 
@@ -1665,12 +1658,33 @@ class ChromaticConvolution(ChromaticObject):
         for obj in self.objlist:
             self.wave_list = np.union1d(self.wave_list, obj.wave_list)
 
+    def _findSED(self):
+        # pull out the non-trivial seds
+        sedlist = [ obj.SED for obj in self.objlist if obj.SED != galsim.SED('1') ]
+        if len(sedlist) == 0:
+            self.SED = galsim.SED('1')
+        elif len(sedlist) == 1:
+            self.SED = sedlist[0]
+        else:
+            self.SED = lambda w: reduce(lambda x,y:x*y, [sed(w) for sed in sedlist])
+
     def __repr__(self):
         return 'galsim.ChromaticConvolution(%r, gsparams=%r)'%(self.objlist, self.gsparams)
 
     def __str__(self):
         str_list = [ str(obj) for obj in self.objlist ]
         return 'galsim.ChromaticConvolution([%s])'%', '.join(str_list)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        if self.separable:
+            del d['SED']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        if self.separable:
+            self._findSED()
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
