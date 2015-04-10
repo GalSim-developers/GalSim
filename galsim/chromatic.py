@@ -121,7 +121,14 @@ class ChromaticObject(object):
                             "or ChromaticObject argument.")
 
     def __repr__(self):
-        return 'galsim.ChromaticObject(obj=%r)'%self.obj
+        return 'galsim.ChromaticObject(%r)'%self.obj
+
+    def __str__(self):
+        return 'galsim.ChromaticObject(%s)'%self.obj
+
+    def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
+    def __hash__(self): return hash(repr(self))
 
     def setupInterpolation(self, waves, oversample_fac=1.):
         """
@@ -210,9 +217,9 @@ class ChromaticObject(object):
             self._save_off = self._off
             self._save_frat = self._frat
             # Then reset the one that is stored as part of this profile.
-            self._jac = lambda w: np.identity(2, dtype=float)
-            self._off = lambda w: np.array((0,0), dtype=float)
-            self._frat = lambda w: 1.0
+            self._jac = np.identity(2, dtype=float)
+            self._off = np.array((0,0), dtype=float)
+            self._frat = 1.0
 
         # Check the fluxes for the objects.  If they are unity (within some tolerance) then that
         # makes things simple.  If they are not, however, then we have to reset them to unity, and
@@ -1083,9 +1090,15 @@ class Chromatic(ChromaticObject):
     def __init__(self, gsobj, SED):
         self.SED = SED
         self.wave_list = SED.wave_list
-        self.obj = gsobj.copy()
+        self.obj = gsobj
         # Chromaticized GSObjects are separable into spatial (x,y) and spectral (lambda) factors.
         self.separable = True
+
+    def __repr__(self):
+        return 'galsim.Chromatic(%r,%r)'%(self.obj, self.SED)
+
+    def __str__(self):
+        return 'galsim.Chromatic(%s,%s)'%(self.obj, self.SED)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.
@@ -1127,16 +1140,14 @@ class ChromaticTransformation(ChromaticObject):
             offset = (offset.x, offset.y)
         if not hasattr(jac,'__call__'):
             jac = np.asarray(jac).reshape(2,2)
-        self._obj = obj
-        self._jac = jac
-        self._offset = offset
-        self._flux_ratio = flux_ratio
+        if not hasattr(offset,'__call__'):
+            offset = np.asarray(offset)
 
-        mono_trans = not (hasattr(jac,'__call__') or hasattr(offset,'__call__') or
+        self.chromatic = (hasattr(jac,'__call__') or hasattr(offset,'__call__') or
                           hasattr(flux_ratio,'__call__'))
-        self.separable = mono_trans and obj.separable
+        self.separable = obj.separable and not self.chromatic
 
-        if hasattr(obj, 'waves') and not mono_trans:
+        if hasattr(obj, 'waves') and self.chromatic:
             import warnings
             warnings.warn("Cannot render image with chromatic transformation applied to it "
                           "using interpolation between stored images.  Reverting to "
@@ -1145,44 +1156,58 @@ class ChromaticTransformation(ChromaticObject):
 
         if hasattr(obj, 'waves'):
             self.original = obj
-            # Necessarily monochromatic, so don't need to check here.
-            self._jac = lambda w: jac
-            self._off = lambda w: offset
-            self._frat = lambda w: flux_ratio
+            self._jac = jac
+            self._off = offset
+            self._frat = flux_ratio
             
         elif isinstance(obj, ChromaticTransformation):
             self.original = obj.original
             if hasattr(jac, '__call__'):
-                self._jac = lambda w: jac(w).dot(obj._jac(w))
-                if hasattr(offset, '__call__'):
-                    self._off = lambda w: jac(w).dot(obj._off(w)) + offset(w)
+                if hasattr(obj._jac, '__call__'):
+                    self._jac = lambda w: jac(w).dot(obj._jac(w))
                 else:
-                    self._off = lambda w: jac(w).dot(obj._off(w)) + offset
+                    self._jac = lambda w: jac(w).dot(obj._jac)
+                if hasattr(offset, '__call__'):
+                    if hasattr(obj._off, '__call__'):
+                        self._off = lambda w: jac(w).dot(obj._off(w)) + offset(w)
+                    else:
+                        self._off = lambda w: jac(w).dot(obj._off) + offset(w)
+                else:
+                    if hasattr(obj._off, '__call__'):
+                        self._off = lambda w: jac(w).dot(obj._off(w)) + offset
+                    else:
+                        self._off = lambda w: jac(w).dot(obj._off) + offset
             else:
-                self._jac = lambda w: jac.dot(obj._jac(w))
-                if hasattr(offset, '__call__'):
-                    self._off = lambda w: jac.dot(obj._off(w)) + offset(w)
+                if hasattr(obj._jac, '__call__'):
+                    self._jac = lambda w: jac.dot(obj._jac(w))
                 else:
-                    self._off = lambda w: jac.dot(obj._off(w)) + offset
+                    self._jac = jac.dot(obj._jac)
+                if hasattr(offset, '__call__'):
+                    if hasattr(obj._off, '__call__'):
+                        self._off = lambda w: jac.dot(obj._off(w)) + offset(w)
+                    else:
+                        self._off = lambda w: jac.dot(obj._off) + offset(w)
+                else:
+                    if hasattr(obj._off, '__call__'):
+                        self._off = lambda w: jac.dot(obj._off(w)) + offset
+                    else:
+                        self._off = jac.dot(obj._off) + offset
             if hasattr(flux_ratio, '__call__'):
-                self._frat = lambda w: obj._frat(w) * flux_ratio(w)
+                if hasattr(obj._frat, '__call__'):
+                    self._frat = lambda w: obj._frat(w) * flux_ratio(w)
+                else:
+                    self._frat = lambda w: obj._frat * flux_ratio(w)
             else:
-                self._frat = lambda w: obj._frat(w) * flux_ratio
+                if hasattr(obj._frat, '__call__'):
+                    self._frat = lambda w: obj._frat(w) * flux_ratio
+                else:
+                    self._frat = obj._frat * flux_ratio
 
         else:
             self.original = obj
-            if hasattr(jac, '__call__'):
-                self._jac = jac
-            else:
-                self._jac = lambda w: jac
-            if hasattr(offset, '__call__'):
-                self._off = offset
-            else:
-                self._off = lambda w: offset
-            if hasattr(flux_ratio, '__call__'):
-                self._frat = flux_ratio
-            else:
-                self._frat = lambda w: flux_ratio
+            self._jac = jac
+            self._off = offset
+            self._frat = flux_ratio
 
         if self.separable:
             self.SED = self.original.SED
@@ -1196,6 +1221,75 @@ class ChromaticTransformation(ChromaticObject):
         else:
             self.gsparams = gsparams
 
+    def __repr__(self):
+        if hasattr(self._jac, '__call__'):
+            jac = self._jac
+        else:
+            jac = self._jac.flatten().tolist()
+        if hasattr(self._off, '__call__'):
+            off = self._off
+        else:
+            off = galsim.PositionD(*(self._off.tolist()))
+        return 'galsim.ChromaticTransformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(
+            self.original, jac, off, self._frat, self.gsparams)
+
+    def __str__(self):
+        s = str(self.original)
+        if hasattr(self._jac, '__call__'):
+            s += '.transform(%s)'%self._jac
+        else:
+            dudx, dudy, dvdx, dvdy = self._jac.flatten()
+            if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
+                # Figure out the shear/rotate/dilate calls that are equivalent.
+                jac = galsim.JacobianWCS(dudx,dudy,dvdx,dvdy)
+                scale, shear, theta, flip = jac.getDecomposition()
+                single = None
+                if flip:
+                    single = 0  # Special value indicating to just use transform.
+                if abs(theta.rad() > 1.e-12):
+                    if single is None:
+                        single = '.rotate(%s)'%theta
+                    else:
+                        single = 0
+                if shear.getG() > 1.e-12:
+                    if single is None:
+                        single = '.shear(%s)'%shear
+                    else:
+                        single = 0
+                if abs(scale-1.0 > 1.e-12):
+                    if single is None:
+                        single = '.expand(%s)'%scale
+                    else:
+                        single = 0
+                if single == 0:
+                    single = '.transform(%s,%s,%s,%s)'%(dudx,dudy,dvdx,dvdy)
+                s += single
+        if hasattr(self._off, '__call__'):
+            s += '.shift(%s)'%self._off
+        elif np.array_equal(self._off,(0,0)):
+            s += '.shift(%s,%s)'%(self._off[0],self._off[1])
+        if hasattr(self._frat, '__call__'):
+            s += '.withScaledFlux(%s)'%self._frat
+        elif self._frat != 1.:
+            s += '.withScaledFlux(%s)'%self._frat
+        return s
+
+    def _getTransformations(self, wave):
+        if hasattr(self._jac, '__call__'):
+            jac = self._jac(wave)
+        else:
+            jac = self._jac
+        if hasattr(self._off, '__call__'):
+            off = self._off(wave)
+        else:
+            off = self._off
+        off = galsim.PositionD(*off)
+        if hasattr(self._frat, '__call__'):
+            frat = self._frat(wave)
+        else:
+            frat = self._frat
+        return jac, off, frat
+
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.
 
@@ -1204,15 +1298,9 @@ class ChromaticTransformation(ChromaticObject):
         @returns the monochromatic object at the given wavelength.
         """
         ret = self.original.evaluateAtWavelength(wave)
-        jac = self._jac(wave)
-        off = self._off(wave)
-        frat = self._frat(wave)
-        return galsim.Transformation(ret, jac=jac, offset=galsim.PositionD(*off), flux_ratio=frat,
+        jac, off, frat = self._getTransformations(wave)
+        return galsim.Transformation(ret, jac=jac, offset=off, flux_ratio=frat,
                                      gsparams=self.gsparams)
-
-    def __repr__(self):
-        return 'galsim.ChromaticTransformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(
-            self._obj, self._jac, self._offset, self._flux_ratio, self.gsparams)
 
     def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
         """
@@ -1244,10 +1332,7 @@ class ChromaticTransformation(ChromaticObject):
                                                      **kwargs)
             # Get the transformations at bandpass.red_limit (they are achromatic so it doesn't
             # matter where you get them).
-            jac = self._jac(bandpass.red_limit)
-            off = self._off(bandpass.red_limit)
-            off = galsim.PositionD(*off)
-            frat = self._frat(bandpass.red_limit)
+            jac, off, frat = self._getTransformations(bandpass.red_limit)
             int_im = galsim.Transform(int_im, jac=jac, offset=off, flux_ratio=frat,
                                       gsparams=self.gsparams)
             image = int_im.drawImage(image=image, **kwargs)
@@ -1343,6 +1428,10 @@ class ChromaticSum(ChromaticObject):
 
     def __repr__(self):
         return 'galsim.ChromaticSum(%r, gsparams=%r)'%(self.objlist, self.gsparams)
+
+    def __str__(self):
+        str_list = [ str(obj) for obj in self.objlist ]
+        return 'galsim.ChromaticSum([%s])'%', '.join(str_list)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
@@ -1464,9 +1553,14 @@ class ChromaticConvolution(ChromaticObject):
                 self.objlist.append(obj.copy())
         if all([obj.separable for obj in self.objlist]):
             self.separable = True
-            # in practice, probably only one object in self.objlist has a nontrivial SED
-            # but go through all of them anyway.
-            self.SED = lambda w: reduce(lambda x,y:x*y, [obj.SED(w) for obj in self.objlist])
+            # pull out the non-trivial seds
+            sedlist = [ obj.SED for obj in self.objlist if obj.SED != galsim.SED('1') ]
+            if len(sedlist) == 0:
+                self.SED = galsim.SED('1')
+            elif len(sedlist) == 1:
+                self.SED = sedlist[0]
+            else:
+                self.SED = lambda w: reduce(lambda x,y:x*y, [sed(w) for sed in sedlist])
         else:
             self.separable = False
 
@@ -1494,6 +1588,10 @@ class ChromaticConvolution(ChromaticObject):
 
     def __repr__(self):
         return 'galsim.ChromaticConvolution(%r, gsparams=%r)'%(self.objlist, self.gsparams)
+
+    def __str__(self):
+        str_list = [ str(obj) for obj in self.objlist ]
+        return 'galsim.ChromaticConvolution([%s])'%', '.join(str_list)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
@@ -1698,6 +1796,9 @@ class ChromaticDeconvolution(ChromaticObject):
     def __repr__(self):
         return 'galsim.ChromaticDeconvolution(%r, %r)'%(self.obj, self.kwargs)
 
+    def __str__(self):
+        return 'galsim.ChromaticDeconvolution(%s)'%self.obj
+
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
 
@@ -1733,7 +1834,10 @@ class ChromaticAutoConvolution(ChromaticObject):
         self.wave_list = obj.wave_list
 
     def __repr__(self):
-        return 'galsim.ChromaticAutoCorrelation(%r, %r)'%(self.obj, self.kwargs)
+        return 'galsim.ChromaticAutoConvolution(%r, %r)'%(self.obj, self.kwargs)
+
+    def __str__(self):
+        return 'galsim.ChromaticAutoConvolution(%s)'%self.obj
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
@@ -1771,7 +1875,10 @@ class ChromaticAutoCorrelation(ChromaticObject):
         self.wave_list = obj.wave_list
 
     def __repr__(self):
-        return 'galsim.ChromaticAutoConvolution(%r, %r)'%(self.obj, self.kwargs)
+        return 'galsim.ChromaticAutoCorrelation(%r, %r)'%(self.obj, self.kwargs)
+
+    def __str__(self):
+        return 'galsim.ChromaticAutoCorrelation(%s)'%self.obj
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
@@ -1854,8 +1961,18 @@ class ChromaticOpticalPSF(ChromaticObject):
         self.wave_list = np.array([], dtype=float)
 
     def __repr__(self):
-        return 'galsim.ChromaticAiry(lam=%r, lam_over_diam=%r, scale_unit=%r, %r)'%(
-                self.lam, self.lam_over_diam, self.scale_unit, self.kwargs)
+        s = 'galsim.ChromaticOpticalPSF(lam=%r, lam_over_diam=%r, aberrations=%r'%(
+                self.lam, self.lam_over_diam, self.aberrations)
+        if self.scale_unit != galsim.arcsec:
+            s += ', scale_unit=%r'%self.scale_unit
+        for k,v in self.kwargs.items():
+            s += ', %s=%r'%(k,v)
+        s += ')'
+        return s
+
+    def __str__(self):
+        return 'galsim.ChromaticOpticalPSF(lam=%s, lam_over_diam=%s, aberrations=%s)'%(
+                self.lam, self.lam_over_diam, self.aberrations)
 
     def evaluateAtWavelength(self, wave):
         """
@@ -1916,8 +2033,16 @@ class ChromaticAiry(ChromaticObject):
         self.wave_list = np.array([], dtype=float)
 
     def __repr__(self):
-        return 'galsim.ChromaticOpticalPSF(lam=%r, lam_over_diam=%r, aberrations=%r, scale_unit=%r, %r)'%(
-                self.lam, self.lam_over_diam, self.aberrations, self.scale_unit, self.kwargs)
+        s = 'galsim.ChromaticAiry(lam=%r, lam_over_diam=%r'%(self.lam, self.lam_over_diam)
+        if self.scale_unit != galsim.arcsec:
+            s += ', scale_unit=%r'%self.scale_unit
+        for k,v in self.kwargs.items():
+            s += ', %s=%r'%(k,v)
+        s += ')'
+        return s
+
+    def __str__(self):
+        return 'galsim.ChromaticAiry(lam=%s, lam_over_diam=%s)'%(self.lam, self.lam_over_diam)
 
     def evaluateAtWavelength(self, wave):
         """

@@ -218,7 +218,7 @@ class GSObject(object):
     @property
     def separable(self): return True
     @property
-    def SED(self): return lambda w: 1.0
+    def SED(self): return galsim.SED('1')
     @property
     def wave_list(self): return np.array([], dtype=float)
 

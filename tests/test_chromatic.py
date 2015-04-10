@@ -134,13 +134,28 @@ def test_draw_add_commutativity():
     # make galaxy
     mono_gal = galsim.Sersic(n=bulge_n, half_light_radius=bulge_hlr)
     chromatic_gal = mono_gal * bulge_SED
+
+    # Check picklability here.  Once we transform with functional transformations, the 
+    # picklability is shot.
+    do_pickle(bulge_SED)
+    do_pickle(chromatic_gal, lambda x: x.drawImage(bandpass, method='no_pixel',
+                                                   nx=10, ny=10, scale=1))
+    do_pickle(chromatic_gal)
+
+    # Shear object
     chromatic_gal = chromatic_gal.shear(e1=bulge_e1, e2=bulge_e2)
     chromatic_gal = chromatic_gal.shear(g1=shear_g1, g2=shear_g2)
+    do_pickle(chromatic_gal, lambda x: x.drawImage(bandpass, method='no_pixel',
+                                                   nx=10, ny=10, scale=1))
+    do_pickle(chromatic_gal)
 
     # make chromatic PSF
     mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
     mono_PSF = mono_PSF.shear(e1=PSF_e1, e2=PSF_e2)
     chromatic_PSF = galsim.ChromaticObject(mono_PSF)
+    do_pickle(chromatic_PSF, lambda x: x.drawImage(bandpass, method='no_pixel',
+                                                   nx=10, ny=10, scale=1))
+    do_pickle(chromatic_PSF)
     chromatic_PSF = chromatic_PSF.dilate(dilate_fn)
     chromatic_PSF = chromatic_PSF.shift(shift_fn)
 
@@ -240,6 +255,7 @@ def test_chromatic_add():
     # test `+` operator
     bdgal = bulge + disk
     bdgal = bdgal.shear(g1=shear_g1, g2=shear_g2)
+    do_pickle(bdgal)
 
     # now shear the indiv profiles
     bulge = bulge.shear(g1=shear_g1, g2=shear_g2)
@@ -612,6 +628,7 @@ def test_ChromaticConvolution_of_ChromaticConvolution():
     """
     import time
     t1 = time.time()
+
     a = galsim.Gaussian(fwhm=1.0) * bulge_SED
     b = galsim.Gaussian(fwhm=2.0) * bulge_SED
     c = galsim.Gaussian(fwhm=3.0) * bulge_SED
@@ -622,12 +639,14 @@ def test_ChromaticConvolution_of_ChromaticConvolution():
     g = galsim.Convolve(e, f)
     if any([not isinstance(h, galsim.Chromatic) for h in g.objlist]):
         raise AssertionError("ChromaticConvolution did not expand ChromaticConvolution argument")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_ChromaticAutoConvolution():
     import time
     t1 = time.time()
+
     a = galsim.Gaussian(fwhm=1.0) * bulge_SED
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
@@ -654,6 +673,7 @@ def test_ChromaticAutoConvolution():
 def test_ChromaticAutoCorrelation():
     import time
     t1 = time.time()
+
     a = galsim.Gaussian(fwhm=1.0) * bulge_SED
     im1 = galsim.ImageD(32, 32, scale=0.2)
     im2 = galsim.ImageD(32, 32, scale=0.2)
@@ -690,6 +710,9 @@ def test_ChromaticObject_expand():
     printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticObject.expand not equal to Chromatic.expand")
+
+    do_pickle(a)
+    do_pickle(b)
 
     # Check flux scaling
     flux = im2.array.sum()
@@ -802,6 +825,9 @@ def test_ChromaticObject_rotate():
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticObject.rotate not equal to Chromatic.rotate")
 
+    do_pickle(a)
+    do_pickle(b)
+
     # Check flux scaling
     flux = im2.array.sum()
     im2 = (b * 2.).drawImage(bandpass, image=im2, method='no_pixel')
@@ -901,6 +927,9 @@ def test_ChromaticObject_shear():
     printval(im1, im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticObject.shear not equal to Chromatic.shear")
+
+    do_pickle(a)
+    do_pickle(b)
 
     # Check flux scaling
     flux = im2.array.sum()
@@ -1009,6 +1038,9 @@ def test_ChromaticObject_shift():
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticObject.shift not equal to Chromatic.shift")
 
+    do_pickle(a)
+    do_pickle(b)
+
     # Check flux scaling
     flux = im2.array.sum()
     im2 = (b * 2.).drawImage(bandpass, image=im2, method='no_pixel')
@@ -1050,6 +1082,9 @@ def test_ChromaticObject_compound_affine_transformation():
     np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
                                          "ChromaticObject affine transformation not equal to "
                                          "GSObject affine transformation")
+
+    do_pickle(a)
+    do_pickle(b)
 
     # Check flux scaling
     flux = im2.array.sum()
@@ -1139,6 +1174,8 @@ def test_gsparam():
     except ImportError:
         print 'The assert_raises tests require nose'
 
+    do_pickle(final)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1171,6 +1208,8 @@ def test_separable_ChromaticSum():
     np.testing.assert_array_almost_equal(img1.array, img2.array, 5,
                                          "separable ChromaticSum not correctly drawn")
 
+    do_pickle(final)
+
     # Check flux scaling
     img3 = galsim.ImageD(32, 32, scale=0.2)
     flux = img1.array.sum()
@@ -1187,6 +1226,8 @@ def test_separable_ChromaticSum():
         flux2, 2.*flux, 5,
         err_msg="separable ChromaticSum * 2 resulted in wrong flux.")
 
+    do_pickle(final2)
+
     # check that 3 summands, 2 with the same SED, 1 with a different SED, make an
     # inseparable sum.
     gal = galsim.Add(gal1 * bulge_SED, gal2 * bulge_SED, gal3 * disk_SED)
@@ -1201,11 +1242,15 @@ def test_separable_ChromaticSum():
     final = galsim.Convolve(gal, psf)
     final.drawImage(bandpass, image=img1)
 
+    do_pickle(final)
+
     component3 = galsim.Convolve(gal3*disk_SED, psf)
     component3.drawImage(bandpass, image=img2, add_to_image=True)
 
     np.testing.assert_array_almost_equal(img1.array, img2.array, 5,
                                          "inseparable ChromaticSum not correctly drawn")
+
+    do_pickle(component3)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1534,6 +1579,10 @@ def test_ChromaticOpticalPSF():
     star = galsim.Gaussian(fwhm=1.e-8) * disk_SED
     obj = galsim.Convolve(star, psf)
 
+    do_pickle(psf)
+    do_pickle(star)
+    do_pickle(obj)
+
     im_r_ref = galsim.fits.read(os.path.join(refdir, 'r_exact.fits'))
     im_r = im_r_ref.copy()
     obj.drawImage(bandpass, image=im_r, scale=scale)
@@ -1561,6 +1610,9 @@ def test_ChromaticOpticalPSF():
         frac_diff_exact, 0.0, decimal=2,
         err_msg='ChromaticObject flux is wrong when convolved with ChromaticOpticalPSF '
         ' (interpolated calculation)')
+
+    do_pickle(gal)
+    do_pickle(obj_conv)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1618,6 +1670,10 @@ def test_ChromaticAiry():
         im_r_tmp.array, im_r_ref.array, decimal=8,
         err_msg='ChromaticAiry image disagrees with reference in r band')
 
+    do_pickle(psf)
+    do_pickle(star)
+    do_pickle(obj)
+
     # Initialize object in different way, make sure results are identical:
     lam_over_diam = (1.e-9*lam/diam)*galsim.radians
     psf = galsim.ChromaticAiry(lam=lam, lam_over_diam=lam_over_diam/galsim.arcsec,
@@ -1629,6 +1685,9 @@ def test_ChromaticAiry():
         im_r_2.array, im_r_ref.array, decimal=8,
         err_msg='ChromaticAiry image disagrees with reference in r band when initializing'
                 ' a different way')
+
+    do_pickle(psf)
+    do_pickle(obj)
 
     # Also check evaluation at a single wavelength.
     chromatic_psf_400 = psf.evaluateAtWavelength(400.)
@@ -1654,6 +1713,9 @@ def test_ChromaticAiry():
     np.testing.assert_almost_equal(
         frac_diff_exact, 0.0, decimal=2,
         err_msg='ChromaticObject flux is wrong when convolved with ChromaticAiry')
+
+    do_pickle(gal)
+    do_pickle(obj_conv)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

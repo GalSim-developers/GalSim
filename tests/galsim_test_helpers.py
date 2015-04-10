@@ -238,17 +238,6 @@ def do_pickle(obj1, func = lambda x : x):
     f2 = func(obj2)
     #print 'func(obj1) = ',repr(f1)
     #print 'func(obj2) = ',repr(f2)
-    #if isinstance(f1, galsim.Image):
-    if False:
-        printval(f1,f2)
-        print f1.array.tolist()
-        print f2.array.tolist()
-        print (f1-f2).array.tolist()
-        print repr(f1.wcs)
-        print repr(f2.wcs)
-        print repr(f1.bounds)
-        print repr(f2.bounds)
-        print (f1.bounds == f2.bounds), (f1.wcs == f2.wcs), (f1.array == f2.array).all()
     assert f1 == f2
 
     # Test the hash values are equal for two equivalent objects.
