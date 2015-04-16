@@ -37,7 +37,7 @@ API Changes
   had been still valid, but no longer documented.  This was intentional to
   allow people time to change their code.  Now these methods are officially
   deprecated and will emit a warning message if used. (#643)
-- Made the classes PositionI, PositionD, and GSParams, HSMParams immutable.
+- Made the classes PositionI, PositionD, GSParams, and HSMParams immutable.
   It was an oversight that we failed to make them immutable in version 1.1 when
   we made most other GalSim classes immutable.  Now rather than write to their
   various attributes, you should make a new object. e.g. instead of `p.x = 4`
