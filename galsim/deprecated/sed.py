@@ -22,7 +22,7 @@ from galsim.deprecated import depr
 def SED_rdiv(self, other):
     depr('__rdiv__', 1.3, "SED(spec=lambda wave:other/bandpass(wave))",
             "We removed this function because we don't know of any clear use case. "+
-            "If you have one.  Please open an issue, and we can add this function back.")
+            "If you have one, please open an issue, and we can add this function back.")
     if hasattr(other, '__call__'):
         wave_factor = 1.0 + self.redshift
         spec = lambda w: other(w * wave_factor) /  self._rest_photons(w)
