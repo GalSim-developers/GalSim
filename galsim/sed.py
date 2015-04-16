@@ -554,7 +554,7 @@ class SED(object):
             weight = lambda w: bandpass(w) * self(w)
             kernel = lambda w: (w/base_wavelength)**(2*alpha)
             return galsim.integ.int1d(lambda w: weight(w) * kernel(w),
-                                     bandpass.blue_limit, bandpass.red_limit) / flux
+                                      bandpass.blue_limit, bandpass.red_limit) / flux
 
     def __eq__(self, other):
         return (isinstance(other, SED) and
