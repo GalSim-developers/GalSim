@@ -1205,7 +1205,7 @@ class ChromaticTransformation(ChromaticObject):
     @param obj              The object to be transformed.
     @param jac              A list or tuple ( dudx, dudy, dvdx, dvdy ), or a numpy.array object
                             [[dudx, dudy], [dvdx, dvdy]] describing the Jacobian to apply.  May
-                            also be a function of wavelegth returning a numpy array.
+                            also be a function of wavelength returning a numpy array.
                             [default: (1,0,0,1)]
     @param offset           A galsim.PositionD or list or tuple or numpy array giving the offset by
                             which to shift the profile.  May also be a function of wavelength
