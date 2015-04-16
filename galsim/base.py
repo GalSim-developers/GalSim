@@ -1266,7 +1266,7 @@ class GSObject(object):
 # SBTransform, then we won't know what class it should be.  So, in this case, we use the 
 # repr to do the pickling.  This isn't usually a great idea in general, but it provides a 
 # convenient way to get the SBProfile to be the correct type in this case.
-# So, getstate just returns the repr string.  And setstae builds the right kind of object
+# So, getstate just returns the repr string.  And setstate builds the right kind of object
 # by essentially doing `self = eval(repr)`.
 _galsim.SBProfile.__getstate__ = lambda self: self.__repr__()
 def SBProfile_setstate(self, state):
