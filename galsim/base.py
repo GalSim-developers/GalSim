@@ -1657,7 +1657,7 @@ class Airy(GSObject):
         return self.SBProfile.getLamOverD()
 
     def getObscuration(self):
-        """Return the `lam_over_diam` parameter of this Airy profile.
+        """Return the `obscuration` parameter of this Airy profile.
         """
         return self.SBProfile.getObscuration()
 
