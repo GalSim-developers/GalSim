@@ -24,7 +24,7 @@ def InterpolantXY(arg):
 
     This is no longer needed.
     """
-    depr('InterpolatedXY', 1.3, 'the 1-d Interpolant by iteself')
+    depr('InterpolatedXY', 1.3, 'the 1-d Interpolant by itself')
     return arg
 
 galsim.InterpolantXY = InterpolantXY
