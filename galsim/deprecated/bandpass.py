@@ -22,7 +22,7 @@ from galsim.deprecated import depr
 def Bandpass_rdiv(self, other):
     depr('__rdiv__', 1.3, "Bandpass(throughput=lambda wave:other/bandpass(wave))",
             "We removed this function because we don't know of any clear use case. "+
-            "If you have one.  Please open an issue, and we can add this function back.")
+            "If you have one, please open an issue, and we can add this function back.")
     blue_limit = self.blue_limit
     red_limit = self.red_limit
     wave_list = self.wave_list
