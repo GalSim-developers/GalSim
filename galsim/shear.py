@@ -206,13 +206,13 @@ class Shear(object):
         return self._g.imag
 
     def getG(self): 
-        """Return the magnitude of the reduced shear |g1 + 1j * g2| = sqrt(g1**2 + g2**2)
+        """Return the magnitude of the reduced shear |g1 + i g2| = sqrt(g1**2 + g2**2)
         Note: s.getG() is equivalent to s.g
         """
         return abs(self._g)
 
     def getBeta(self):
-        """Return the position angle of the reduced shear g exp(2j beta) == g1 + 1j * g2
+        """Return the position angle of the reduced shear g exp(2i beta) == g1 + i g2
         Note: s.getBeta() is equivalent to s.beta
         """
         return 0.5 * numpy.angle(self._g) * galsim.radians
