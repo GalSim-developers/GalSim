@@ -521,7 +521,7 @@ def test_chromatic_flux():
 
     # Also check that the flux is okay and the image fairly consistent when using interpolation
     # for the ChromaticAtmosphere.
-    PSF = PSF.setupInterpolation(waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30))
+    PSF = PSF.interpolate(waves=np.linspace(bandpass.blue_limit, bandpass.red_limit, 30))
     final_int = galsim.Convolve([star, PSF])
     image3 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     final_int.drawImage(bandpass, image=image3)
@@ -1335,7 +1335,7 @@ def test_interpolated_ChromaticObject():
 
     # First, compare images that are drawn with exact and interpolated ChromaticGaussian.
     exact_psf = ChromaticGaussian(sigma_0)
-    interp_psf = exact_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
+    interp_psf = exact_psf.interpolate(waves, oversample_fac=oversample_fac)
     exact_obj = galsim.Convolve(star, exact_psf)
     interp_obj = galsim.Convolve(star, interp_psf)
     im_exact = exact_obj.drawImage(bandpass, scale=scale, nx=40, ny=40)
@@ -1434,7 +1434,7 @@ def test_interpolated_ChromaticObject():
     chrom_dilate = lambda w: 1.0+0.05*(w-500.)/500.
     exact_psf = exact_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y).dilate(chrom_dilate)
     # Note here we are checking the use of more difficult input wavelengths.
-    interp_psf = exact_psf.setupInterpolation(tricky_waves, oversample_fac=oversample_fac)
+    interp_psf = exact_psf.interpolate(tricky_waves, oversample_fac=oversample_fac)
     exact_obj = galsim.Convolve(star, exact_psf)
     interp_obj = galsim.Convolve(star, interp_psf)
     im_exact = exact_obj.drawImage(bandpass, scale=atm_scale)
@@ -1452,7 +1452,7 @@ def test_interpolated_ChromaticObject():
     exact_psf = galsim.ChromaticAtmosphere(
         galsim.Kolmogorov(atm_fwhm), 500., zenith_angle=0.*galsim.degrees,
         parallactic_angle=0.*galsim.degrees)
-    interp_psf = exact_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
+    interp_psf = exact_psf.interpolate(waves, oversample_fac=oversample_fac)
 
     achrom_shear = galsim.Shear(g1=0.05, g2=-0.1)
     exact_psf = exact_psf.shear(shear=achrom_shear)
@@ -1486,7 +1486,7 @@ def test_interpolated_ChromaticObject():
         parallactic_angle=0.*galsim.degrees)
     exact_psf = \
         exact_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y).dilate(chrom_dilate)
-    interp_psf = exact_psf.setupInterpolation(waves, oversample_fac=oversample_fac)
+    interp_psf = exact_psf.interpolate(waves, oversample_fac=oversample_fac)
     trans_exact_psf = \
         exact_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y).dilate(chrom_dilate)
     # The object is going to emit a warning that we don't want to worry about (it's good for code
@@ -1580,7 +1580,7 @@ def test_ChromaticOpticalPSF():
                                      obscuration=obscuration, nstruts=nstruts)
     do_pickle(psf)
 
-    psf = psf.setupInterpolation(waves, oversample_fac=oversample_fac)
+    psf = psf.interpolate(waves, oversample_fac=oversample_fac)
     star = galsim.Gaussian(fwhm=1.e-8) * disk_SED
     obj = galsim.Convolve(star, psf)
 

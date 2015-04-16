@@ -52,7 +52,7 @@ class ChromaticObject(object):
     gsobj = chrom_obj.evaluateAtWavelength(lambda) returns the monochromatic surface brightness
     profile (as a GSObject) at a given wavelength (in nanometers).
 
-    The setupInterpolation() method can be used for non-separable ChromaticObjects to expedite the
+    The interpolate() method can be used for non-separable ChromaticObjects to expedite the
     image rendering process.  See the docstring of that method for more details and discussion of
     when this is a useful tool (and the interplay between interpolation, object
     transformations, and convolutions).
@@ -129,7 +129,7 @@ class ChromaticObject(object):
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 
-    def setupInterpolation(self, waves, oversample_fac=1.):
+    def interpolate(self, waves, oversample_fac=1.):
         """
         This method is used as a pre-processing step that can expedite image rendering using objects
         that have to be built up as sums of GSObjects with different parameters at each wavelength,
@@ -242,9 +242,6 @@ class ChromaticObject(object):
                                 the object has a `wave_list`.  [default: 'trapezoidal',
                                 which will try to select an appropriate integrator using the
                                 trapezoidal integration rule automatically.]
-                                If setupInterpolation() has been called for this object, then
-                                `integrator` can only be a string, either 'midpoint' or
-                                'trapezoidal'.
         @param **kwargs         For all other kwarg options, see GSObject.drawImage()
 
         @returns the drawn Image.
@@ -725,7 +722,7 @@ class InterpolatedChromaticObject(ChromaticObject):
     for non-separable objects, which can sometimes be very slow to render.
 
     Normally, you would not create an InterpolatedChromaticObject directly.  It is the 
-    return type from `chrom_obj.setupInterpolation()`.  See the description of that function
+    return type from `chrom_obj.interpolate()`.  See the description of that function
     for more details.
 
     @param obj              The ChromaticObject to be interpolated.
@@ -929,7 +926,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         images at the specified wavelengths.
 
         This integration will take place using interpolation between stored images that were
-        setup by setupInterpolation().  (See setupInterpolation() for more details.) 
+        setup when the object was constructed.  (See interpolate() for more details.) 
 
         @param bandpass         A Bandpass object representing the filter against which to
                                 integrate.
@@ -1096,9 +1093,6 @@ class ChromaticAtmosphere(ChromaticObject):
         """
         See ChromaticObject.drawImage for a full description.
 
-        This version usually just calls that one, but if the transformed object has had
-        setupInterpolation called on it, then there is an optimization we can apply here.
-
         @param bandpass         A Bandpass object representing the filter against which to
                                 integrate.
         @param image            Optionally, the Image to draw onto.  (See GSObject.drawImage()
@@ -1110,9 +1104,6 @@ class ChromaticAtmosphere(ChromaticObject):
                                 the object has a `wave_list`.  [default: 'trapezoidal',
                                 which will try to select an appropriate integrator using the
                                 trapezoidal integration rule automatically.]
-                                If setupInterpolation() has been called for this object, then
-                                `integrator` can only be a string, either 'midpoint' or
-                                'trapezoidal'.
         @param **kwargs         For all other kwarg options, see GSObject.drawImage()
 
         @returns the drawn Image.
@@ -1385,8 +1376,9 @@ class ChromaticTransformation(ChromaticObject):
         """
         See ChromaticObject.drawImage for a full description.
 
-        This version usually just calls that one, but if the transformed object has had
-        setupInterpolation called on it, then there is an optimization we can apply here.
+        This version usually just calls that one, but if the transformed object (self.original) is
+        an InterpolatedChromaticObject, and the transformation is achromatic, then it will still be
+        able to use the interpolation.
 
         @param bandpass         A Bandpass object representing the filter against which to
                                 integrate.
@@ -1399,14 +1391,14 @@ class ChromaticTransformation(ChromaticObject):
                                 the object has a `wave_list`.  [default: 'trapezoidal',
                                 which will try to select an appropriate integrator using the
                                 trapezoidal integration rule automatically.]
-                                If setupInterpolation() has been called for this object, then
-                                `integrator` can only be a string, either 'midpoint' or
+                                If the object being transformed is an InterpolatedChromaticObject,
+                                then `integrator` can only be a string, either 'midpoint' or
                                 'trapezoidal'.
         @param **kwargs         For all other kwarg options, see GSObject.drawImage()
 
         @returns the drawn Image.
         """
-        if hasattr(self.original, 'waves'):
+        if isinstance(self.original, InterpolatedChromaticObject):
             int_im = self.original._get_interp_image(bandpass, image=image, integrator=integrator,
                                                      **kwargs)
             # Get the transformations at bandpass.red_limit (they are achromatic so it doesn't
@@ -1543,9 +1535,6 @@ class ChromaticSum(ChromaticObject):
                                 the object has a `wave_list`.  [default: 'trapezoidal',
                                 which will try to select an appropriate integrator using the
                                 trapezoidal integration rule automatically.]
-                                If setupInterpolation() has been called for this object, then
-                                `integrator` can only be a string, either 'midpoint' or
-                                'trapezoidal'.
         @param **kwargs         For all other kwarg options, see GSObject.drawImage()
 
         @returns the drawn Image.
@@ -1646,7 +1635,7 @@ class ChromaticConvolution(ChromaticObject):
         n_interp = 0
         for obj in self.objlist:
             if not obj.separable and not isinstance(obj, galsim.ChromaticSum): n_nonsep += 1
-            if hasattr(obj, 'waves'): n_interp += 1
+            if isinstance(obj, InterpolatedChromaticObject): n_interp += 1
         if n_nonsep>1 and n_interp>0:
             import warnings
             warnings.warn(
@@ -1713,9 +1702,6 @@ class ChromaticConvolution(ChromaticObject):
                                 the object has a `wave_list`.  [default: 'trapezoidal',
                                 which will try to select an appropriate integrator using the
                                 trapezoidal integration rule automatically.]
-                                If setupInterpolation() has been called for this object, then
-                                `integrator` can only be a string, either 'midpoint' or
-                                'trapezoidal'.
         @param iimult           Oversample any intermediate InterpolatedImages created to hold
                                 effective profiles by this amount. [default: None]
         @param **kwargs         For all other kwarg options, see GSObject.drawImage()
@@ -1995,7 +1981,7 @@ class ChromaticOpticalPSF(ChromaticObject):
     ChromaticOpticalPSF implicitly defines diffraction limits in units of `scale_units`, which by
     default are arcsec, but can in principle be set to any of our GalSim angle units.
 
-    When using interpolation to speed up image rendering (see ChromaticObject.setupInterpolation()
+    When using interpolation to speed up image rendering (see ChromaticObject.interpolate()
     method for details), the ideal number of wavelengths to use across a given bandpass depends on
     the application and accuracy requirements.  In general it will be necessary to do a test in
     comparison with a more exact calculation to ensure convergence.  However, a typical calculation
