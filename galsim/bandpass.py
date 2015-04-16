@@ -93,9 +93,11 @@ class Bandpass(object):
         # `wave_list` is normally constructed (see `Bandpass.__mul__` below)
 
         self._orig_tp = throughput  # Save this for pickling.
-        self._tp = _tp              # This is orig_tp turned into an actual function
+        self._tp = _tp              # This will normally become orig_tp turned into an actual 
+                                    # function (see _initialize_tp()), although in some cases,
+                                    # it can be supplied directly as a constructor argument.
 
-        if blue_limit > red_limit:
+        if blue_limit is not None and red_limit is not None and blue_limit >= red_limit:
             raise ValueError("blue_limit must be less than red_limit")
         self.blue_limit = blue_limit # These may change as we go through this.
         self.red_limit = red_limit
@@ -161,6 +163,23 @@ class Bandpass(object):
         else:
             self.wave_list = np.array([], dtype=np.float)
 
+        # Sanity check that the throughput function can evaluate at the red and blue limits
+        test_waves = []
+        if self.red_limit is not None:
+            test_waves.append(self.red_limit * self.wave_factor)
+        if self.blue_limit is not None:
+            test_waves.append(self.blue_limit * self.wave_factor)
+        if len(test_waves) == 0:
+            # If neither `blue_limit` nor `red_limit` is defined, then the Bandpass should
+            # be able to be evaluated at any wavelength, so check something.
+            test_waves.append(700)
+        for test_wave in test_waves:
+            try:
+                self._tp(test_wave)
+            except:
+                raise ValueError(
+                    "Throughput function was unable to evaluate at wave = {0}.".format(test_wave))
+ 
 
     def _initialize_tp(self):
         # Turn the input tp into a real function self.func.
@@ -188,7 +207,7 @@ class Bandpass(object):
                 except:
                     raise ValueError(
                         "String throughput must either be a valid filename or something that "+
-                        "can eval to a function of wave. Input provided: {0}".format(throughput))
+                        "can eval to a function of wave. Input provided: {0}".format(self._orig_tp))
         else:
             self._tp = self._orig_tp
 
