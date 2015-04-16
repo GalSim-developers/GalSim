@@ -163,7 +163,7 @@ class Bandpass(object):
 
 
     def _initialize_tp(self):
-        # Turrn the input tp into a real function self.func.
+        # Turn the input tp into a real function self.func.
         # The function cannot be pickled, so will need to do this in setstate as well as init.
 
         if self._tp is not None:

@@ -114,7 +114,7 @@ class SED(object):
             self.wave_list = np.array([], dtype=float)
 
     def _initialize_spec(self):
-        # Turrn the input spec into a real function self._rest_photons
+        # Turn the input spec into a real function self._rest_photons
         # The function cannot be pickled, so will need to do this in getstate as well as init.
 
         if self._spec is not None:
