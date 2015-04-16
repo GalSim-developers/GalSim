@@ -187,7 +187,7 @@ class Shear(object):
             raise TypeError("beta provided to Shear constructor, but not g/e/eta/q")
 
         # check for the case where there are 1 or 2 kwargs that are not valid ones for
-        # initialization a Shear
+        # initializing a Shear
         if kwargs:
             raise TypeError(
                 "Shear constructor got unexpected extra argument(s): %s"%kwargs.keys())
