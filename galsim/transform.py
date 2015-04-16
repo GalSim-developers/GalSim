@@ -117,17 +117,17 @@ class Transformation(galsim.GSObject):
         self._gsparams = gsparams
 
     def getJac(self):
-        """Return the Jacobian of the transformation
+        """Return the Jacobian of the transformation.
         """
         return self.SBProfile.getJac()
 
     def getOffset(self):
-        """Return the offset of the transformation
+        """Return the offset of the transformation.
         """
         return self.SBProfile.getOffset()
 
     def getFluxRatio(self):
-        """Return the flux ratio of the transformation
+        """Return the flux ratio of the transformation.
         """
         return self.SBProfile.getFluxScaling()
 
