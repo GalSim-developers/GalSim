@@ -1076,9 +1076,10 @@ class ChromaticAtmosphere(ChromaticObject):
             scale = (w/self.base_wavelength)**self.alpha
             return np.diag([scale, scale])
 
-        frat = lambda w: (w/self.base_wavelength)**(-2.*self.alpha)
+        flux_ratio = lambda w: (w/self.base_wavelength)**(-2.*self.alpha)
 
-        return ChromaticTransformation(self.base_obj, jac=jac_fn, offset=shift_fn, flux_ratio=frat)
+        return ChromaticTransformation(self.base_obj, jac=jac_fn, offset=shift_fn,
+                                       flux_ratio=flux_ratio)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.
@@ -1227,8 +1228,8 @@ class ChromaticTransformation(ChromaticObject):
         if isinstance(obj, InterpolatedChromaticObject):
             self.original = obj
             self._jac = jac
-            self._off = offset
-            self._frat = flux_ratio
+            self._offset = offset
+            self._flux_ratio = flux_ratio
             
         elif isinstance(obj, ChromaticTransformation):
             self.original = obj.original
@@ -1238,46 +1239,46 @@ class ChromaticTransformation(ChromaticObject):
                 else:
                     self._jac = lambda w: jac(w).dot(obj._jac)
                 if hasattr(offset, '__call__'):
-                    if hasattr(obj._off, '__call__'):
-                        self._off = lambda w: jac(w).dot(obj._off(w)) + offset(w)
+                    if hasattr(obj._offset, '__call__'):
+                        self._offset = lambda w: jac(w).dot(obj._offset(w)) + offset(w)
                     else:
-                        self._off = lambda w: jac(w).dot(obj._off) + offset(w)
+                        self._offset = lambda w: jac(w).dot(obj._offset) + offset(w)
                 else:
-                    if hasattr(obj._off, '__call__'):
-                        self._off = lambda w: jac(w).dot(obj._off(w)) + offset
+                    if hasattr(obj._offset, '__call__'):
+                        self._offset = lambda w: jac(w).dot(obj._offset(w)) + offset
                     else:
-                        self._off = lambda w: jac(w).dot(obj._off) + offset
+                        self._offset = lambda w: jac(w).dot(obj._offset) + offset
             else:
                 if hasattr(obj._jac, '__call__'):
                     self._jac = lambda w: jac.dot(obj._jac(w))
                 else:
                     self._jac = jac.dot(obj._jac)
                 if hasattr(offset, '__call__'):
-                    if hasattr(obj._off, '__call__'):
-                        self._off = lambda w: jac.dot(obj._off(w)) + offset(w)
+                    if hasattr(obj._offset, '__call__'):
+                        self._offset = lambda w: jac.dot(obj._offset(w)) + offset(w)
                     else:
-                        self._off = lambda w: jac.dot(obj._off) + offset(w)
+                        self._offset = lambda w: jac.dot(obj._offset) + offset(w)
                 else:
-                    if hasattr(obj._off, '__call__'):
-                        self._off = lambda w: jac.dot(obj._off(w)) + offset
+                    if hasattr(obj._offset, '__call__'):
+                        self._offset = lambda w: jac.dot(obj._offset(w)) + offset
                     else:
-                        self._off = jac.dot(obj._off) + offset
+                        self._offset = jac.dot(obj._offset) + offset
             if hasattr(flux_ratio, '__call__'):
-                if hasattr(obj._frat, '__call__'):
-                    self._frat = lambda w: obj._frat(w) * flux_ratio(w)
+                if hasattr(obj._flux_ratio, '__call__'):
+                    self._flux_ratio = lambda w: obj._flux_ratio(w) * flux_ratio(w)
                 else:
-                    self._frat = lambda w: obj._frat * flux_ratio(w)
+                    self._flux_ratio = lambda w: obj._flux_ratio * flux_ratio(w)
             else:
-                if hasattr(obj._frat, '__call__'):
-                    self._frat = lambda w: obj._frat(w) * flux_ratio
+                if hasattr(obj._flux_ratio, '__call__'):
+                    self._flux_ratio = lambda w: obj._flux_ratio(w) * flux_ratio
                 else:
-                    self._frat = obj._frat * flux_ratio
+                    self._flux_ratio = obj._flux_ratio * flux_ratio
 
         else:
             self.original = obj
             self._jac = jac
-            self._off = offset
-            self._frat = flux_ratio
+            self._offset = offset
+            self._flux_ratio = flux_ratio
 
         if self.separable:
             self.SED = self.original.SED
@@ -1296,12 +1297,12 @@ class ChromaticTransformation(ChromaticObject):
             jac = self._jac
         else:
             jac = self._jac.flatten().tolist()
-        if hasattr(self._off, '__call__'):
-            off = self._off
+        if hasattr(self._offset, '__call__'):
+            offset = self._offset
         else:
-            off = galsim.PositionD(*(self._off.tolist()))
+            offset = galsim.PositionD(*(self._offset.tolist()))
         return 'galsim.ChromaticTransformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(
-            self.original, jac, off, self._frat, self.gsparams)
+            self.original, jac, offset, self._flux_ratio, self.gsparams)
 
     def __str__(self):
         s = str(self.original)
@@ -1334,14 +1335,14 @@ class ChromaticTransformation(ChromaticObject):
                 if single == 0:
                     single = '.transform(%s,%s,%s,%s)'%(dudx,dudy,dvdx,dvdy)
                 s += single
-        if hasattr(self._off, '__call__'):
-            s += '.shift(%s)'%self._off
-        elif np.array_equal(self._off,(0,0)):
-            s += '.shift(%s,%s)'%(self._off[0],self._off[1])
-        if hasattr(self._frat, '__call__'):
-            s += '.withScaledFlux(%s)'%self._frat
-        elif self._frat != 1.:
-            s += '.withScaledFlux(%s)'%self._frat
+        if hasattr(self._offset, '__call__'):
+            s += '.shift(%s)'%self._offset
+        elif np.array_equal(self._offset,(0,0)):
+            s += '.shift(%s,%s)'%(self._offset[0],self._offset[1])
+        if hasattr(self._flux_ratio, '__call__'):
+            s += '.withScaledFlux(%s)'%self._flux_ratio
+        elif self._flux_ratio != 1.:
+            s += '.withScaledFlux(%s)'%self._flux_ratio
         return s
 
     def _getTransformations(self, wave):
@@ -1349,16 +1350,16 @@ class ChromaticTransformation(ChromaticObject):
             jac = self._jac(wave)
         else:
             jac = self._jac
-        if hasattr(self._off, '__call__'):
-            off = self._off(wave)
+        if hasattr(self._offset, '__call__'):
+            offset = self._offset(wave)
         else:
-            off = self._off
-        off = galsim.PositionD(*off)
-        if hasattr(self._frat, '__call__'):
-            frat = self._frat(wave)
+            offset = self._offset
+        offset = galsim.PositionD(*offset)
+        if hasattr(self._flux_ratio, '__call__'):
+            flux_ratio = self._flux_ratio(wave)
         else:
-            frat = self._frat
-        return jac, off, frat
+            flux_ratio = self._flux_ratio
+        return jac, offset, flux_ratio
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.
@@ -1368,8 +1369,8 @@ class ChromaticTransformation(ChromaticObject):
         @returns the monochromatic object at the given wavelength.
         """
         ret = self.original.evaluateAtWavelength(wave)
-        jac, off, frat = self._getTransformations(wave)
-        return galsim.Transformation(ret, jac=jac, offset=off, flux_ratio=frat,
+        jac, offset, flux_ratio = self._getTransformations(wave)
+        return galsim.Transformation(ret, jac=jac, offset=offset, flux_ratio=flux_ratio,
                                      gsparams=self.gsparams)
 
     def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
@@ -1403,8 +1404,8 @@ class ChromaticTransformation(ChromaticObject):
                                                      **kwargs)
             # Get the transformations at bandpass.red_limit (they are achromatic so it doesn't
             # matter where you get them).
-            jac, off, frat = self._getTransformations(bandpass.red_limit)
-            int_im = galsim.Transform(int_im, jac=jac, offset=off, flux_ratio=frat,
+            jac, offset, flux_ratio = self._getTransformations(bandpass.red_limit)
+            int_im = galsim.Transform(int_im, jac=jac, offset=offset, flux_ratio=flux_ratio,
                                       gsparams=self.gsparams)
             image = int_im.drawImage(image=image, **kwargs)
             return image
