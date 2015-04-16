@@ -108,7 +108,8 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     box.
     """
 
-    Class.withBorder.__func__.__doc__ = """Return a new Bounds object that expands the current bounds by the specified width.
+    Class.withBorder.__func__.__doc__ = """Return a new Bounds object that expands the current
+    bounds by the specified width.
     """
 
     Class.center.__func__.__doc__ = "Return the central point of the Bounds as a Position."
