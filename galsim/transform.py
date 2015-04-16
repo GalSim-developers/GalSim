@@ -77,7 +77,7 @@ class Transformation(galsim.GSObject):
     --------------
 
     Typically, you do not need to construct a Transformation object explicitly.  This is the type
-    returned by the various transformation methods of GSObject such as shear(), rotat(), 
+    returned by the various transformation methods of GSObject such as shear(), rotate(), 
     shift(), transform(), etc.  All the various transformations can be described as a combination
     of transform() and shift(), which are described by (dudx,dudy,dvdx,dvdy) and (dx,dy)
     respectively.
