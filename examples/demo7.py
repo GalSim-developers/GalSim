@@ -37,6 +37,7 @@ New features introduced in this demo:
 - obj = galsim.Sersic(n, half_light_radius, trunc)
 - psf = galsim.OpticalPSF(..., aberrations=aberrations, ...)
 - obj = obj.dilate(scale)
+- str(obj)
 - image.scale = pixel_scale
 - obj.drawImage(image, method='fft')
 - obj.drawImage(image, method='phot', max_extra_noise, rng)
@@ -68,6 +69,9 @@ def main(argv):
 
     # To turn off logging:
     #logger.propagate = False
+
+    # To turn on the debugging messages:
+    #logger.setLevel(logging.DEBUG)
 
     # Define some parameters we'll use below.
 
@@ -200,11 +204,23 @@ def main(argv):
     for ipsf in range(len(psfs)):
         psf = psfs[ipsf]
         psf_name = psf_names[ipsf]
+        logger.info('psf %d: %s',ipsf+1,psf)
+        # Note that this implicitly calls str(psf).  We've made an effort to give all GalSim
+        # objects an informative but relatively succinct str representation.  Some details may
+        # be missing, but it should look essentially like how you would create the object.
+        logger.debug('repr = %r',psf)
+        # The repr() version are a bit more pedantic in form and should be completely informative, 
+        # to the point where two objects that are not identical should never have equal repr
+        # strings. As such the repr strings may in some cases be somewhat unwieldy.  For instance,
+        # since we set non-default gsparams in these, the repr includes that information, but
+        # it is omitted from the str for brevity.
         for igal in range(len(gals)):
             gal = gals[igal]
             gal_name = gal_names[igal]
+            logger.info('   galaxy %d: %s',igal+1,gal)
+            logger.debug('   repr = %r',gal)
             for i in range(4):
-                logger.debug('Start work on image %d',i)
+                logger.debug('      Start work on image %d',i)
                 t1 = time.time()
 
                 # Initialize the random number generator we will be using.
@@ -240,7 +256,7 @@ def main(argv):
                 fft_image = image[galsim.BoundsI(1, nx, 1, ny)]
                 phot_image = image[galsim.BoundsI(nx+3, 2*nx+2, 1, ny)]
 
-                logger.debug('   Read in training sample galaxy and PSF from file')
+                logger.debug('      Read in training sample galaxy and PSF from file')
                 t2 = time.time()
 
                 # Draw the profile
@@ -252,7 +268,7 @@ def main(argv):
                 # for illustrative purposes.)
                 final.drawImage(fft_image, method='fft')
 
-                logger.debug('   Drew fft image.  Total drawn flux = %f.  .flux = %f',
+                logger.debug('      Drew fft image.  Total drawn flux = %f.  .flux = %f',
                              fft_image.array.sum(),final.getFlux())
                 t3 = time.time()
 
@@ -285,7 +301,7 @@ def main(argv):
                 # image, we need to subtract the mean back off when we are done.
                 phot_image -= sky_level_pixel
 
-                logger.debug('   Added Poisson noise.  Image fluxes are now %f and %f',
+                logger.debug('      Added Poisson noise.  Image fluxes are now %f and %f',
                              fft_image.array.sum(), phot_image.array.sum())
                 t6 = time.time()
 
@@ -293,9 +309,9 @@ def main(argv):
                 all_images += [image]
 
                 k = k+1
-                logger.info('%d: %s * %s, flux = %.2e, hlr = %.2f, ellip = (%.2f,%.2f)',
-                            k,gal_name, psf_name, flux, hlr, gal_shape.getE1(), gal_shape.getE2())
-                logger.debug('   Times: %f, %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
+                logger.info('      %d: flux = %.2e, hlr = %.2f, ellip = (%.2f,%.2f)',
+                            k, flux, hlr, gal_shape.getE1(), gal_shape.getE2())
+                logger.debug('      Times: %f, %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
 
                 psf_times[ipsf] += t6-t1
                 psf_fft_times[ipsf] += t3-t2
