@@ -176,7 +176,8 @@ class Transformation(galsim.GSObject):
         if self.offset.x != 0 or self.offset.y != 0:
             s += '.shift(%s,%s)'%(self.offset.x,self.offset.y)
         if self.flux_ratio != 1.:
-            s += '.withScaledFlux(%s)'%self.flux_ratio
+            #s += '.withScaledFlux(%s)'%self.flux_ratio
+            s += ' * %s'%self.flux_ratio
         return s
 
     def __getstate__(self):

@@ -380,8 +380,11 @@ class OpticalPSF(GSObject):
         return s
 
     def __str__(self):
-        s = 'galsim.OpticalPSF(lam_over_diam=%s, aberrations=%s'%(
-                self._lam_over_diam, self._aberrations)
+        s = 'galsim.OpticalPSF(lam_over_diam=%s'%self._lam_over_diam
+        # The aberrations look a bit nicer without the spaces, since it tightens up that
+        # parameter, which makes it easier to distinguish from the others.
+        ab_str = [ str(ab) for ab in self._aberrations ]
+        s += ', aberrations=[' + ','.join(ab_str) + ']'
         if self._obscuration != 0.:
             s += ', obscuration=%s'%self._obscuration
         if self._nstruts != 0:
@@ -392,7 +395,9 @@ class OpticalPSF(GSObject):
                     self._pupil_plane_im, self._pupil_angle)
         if self._circular_pupil == False:
             s += ', circular_pupil=False'
-        s += ', flux=%s)'%self._flux
+        if self._flux != 1.0:
+            s += ', flux=%s'%self._flux
+        s += ')'
         return s
  
     def __getstate__(self):

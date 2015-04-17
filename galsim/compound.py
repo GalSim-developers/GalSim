@@ -164,7 +164,8 @@ class Sum(galsim.GSObject):
 
     def __str__(self):
         str_list = [ str(obj) for obj in self.obj_list ]
-        return 'galsim.Sum([%s])'%', '.join(str_list)
+        return '(' + ' + '.join(str_list) + ')'
+        #return 'galsim.Sum([%s])'%', '.join(str_list)
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -400,11 +401,11 @@ class Convolution(galsim.GSObject):
 
     def __str__(self):
         str_list = [ str(obj) for obj in self.obj_list ]
+        s = 'galsim.Convolve(%s'%(', '.join(str_list))
         if self.real_space:
-            real = ', real_space=True'
-        else:
-            real = ''
-        return 'galsim.Convolution([%s]%s)'%(', '.join(str_list), real)
+            s += ', real_space=True'
+        s += ')'
+        return s
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -495,7 +496,7 @@ class Deconvolution(galsim.GSObject):
         return 'galsim.Deconvolution(%r, gsparams=%r)'%(self.orig_obj, self._gsparams)
 
     def __str__(self):
-        return 'galsim.Deconvolution(%s)'%self.orig_obj
+        return 'galsim.Deconvolve(%s)'%self.orig_obj
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -616,11 +617,11 @@ class AutoConvolution(galsim.GSObject):
                 self.orig_obj, self.real_space, self._gsparams)
 
     def __str__(self):
+        s = 'galsim.AutoConvolve(%s'%self.orig_obj
         if self.real_space:
-            real = ', real_space=True'
-        else:
-            real = ''
-        return 'galsim.AutoConvolution(%s%s)'%(self.orig_obj, real)
+            s += ', real_space=True'
+        s += ')'
+        return s
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -747,11 +748,11 @@ class AutoCorrelation(galsim.GSObject):
                 self.orig_obj, self.real_space, self._gsparams)
 
     def __str__(self):
+        s = 'galsim.AutoCorrelate(%s'%self.orig_obj
         if self.real_space:
-            real = ', real_space=True'
-        else:
-            real = ''
-        return 'galsim.AutoCorrelation(%s%s)'%(self.orig_obj, real)
+            s += ', real_space=True'
+        s += ')'
+        return s
 
     def __getstate__(self):
         d = self.__dict__.copy()
