@@ -50,6 +50,15 @@ namespace galsim {
         return static_cast<const SBShapeletImpl&>(*_pimpl).getSigma();
     }
 
+    std::string SBShapelet::SBShapeletImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBShapelet("<<getSigma()<<", "<<getBVec().repr();
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     SBShapelet::SBShapeletImpl::SBShapeletImpl(double sigma, const LVector& bvec,
                                                const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),

@@ -133,6 +133,10 @@ GaussianDeviate, since it generates two values at a time, saving the second one 
 next output value.
 """
 
+# Quick and dirty.  Just check reprs are equal.
+_galsim.BaseDeviate.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.BaseDeviate.__ne__ = lambda self, other: not self.__eq__(other)
+_galsim.BaseDeviate.__hash__ = lambda self: hash(repr(self))
 
 def permute(rng, *args):
     """Randomly permute one or more lists.
@@ -255,6 +259,13 @@ class DistDeviate(_galsim.BaseDeviate):
         # Basic input checking and setups
         if not function:
             raise TypeError('You must pass a function to DistDeviate!')
+
+        self._function = function # Save the inputs to be used in repr
+        self._interpolant = interpolant
+        self._npoints = npoints
+        self._xmin = x_min
+        self._xmax = x_max
+
         # Figure out if a string is a filename or something we should be using in an eval call
         if isinstance(function, str):
             input_function = function
@@ -342,7 +353,6 @@ class DistDeviate(_galsim.BaseDeviate):
         self._inverseprobabilitytable = galsim.LookupTable(cdf, xarray, interpolant='linear')
         self.x_min = x_min
         self.x_max = x_max
-
         
     def val(self,p):
         """
@@ -377,6 +387,23 @@ class DistDeviate(_galsim.BaseDeviate):
         dup.__dict__.update(self.__dict__)
         dup._ud = self._ud.duplicate()
         return dup
+
+    def __copy__(self):
+        return self.duplicate()
+
+    def __repr__(self):
+        return ('galsim.DistDeviate(seed=%r, function=%r, x_min=%r, x_max=%r, interpolant=%r, '+
+                'npoints=%r)')%(self._ud.serialize(), self._function, self._xmin, self._xmax, 
+                                self._interpolant, self._npoints)
+    def __str__(self):
+        return 'galsim.DistDeviate(function="%s", x_min=%s, x_max=%s, interpolant=%s, npoints=%s)'%(
+                self._function, self._xmin, self._xmax, self._interpolant, self._npoints)
+
+    # Functions aren't picklable, so for pickling, we reinitialize the DistDeviate using the
+    # original function parameter, which may be a string or a file name.
+    def __getinitargs__(self):
+        return (self._ud.serialize(), self._function, self._xmin, self._xmax, 
+                self._interpolant, self._npoints)
 
 
 
@@ -631,35 +658,12 @@ _galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution `n` degree
 
 
 # Some functions to enable pickling of deviates
-def BaseDeviate_getinitargs(self):
-    return self.serialize(), 
-_galsim.BaseDeviate.__getinitargs__ = BaseDeviate_getinitargs
-
-def UniformDeviate_getinitargs(self):
-    return self.serialize(),
-_galsim.UniformDeviate.__getinitargs__ = UniformDeviate_getinitargs
-
-def GaussianDeviate_getinitargs(self):
-    return self.serialize(), self.getMean(), self.getSigma()
-_galsim.GaussianDeviate.__getinitargs__ = GaussianDeviate_getinitargs
-
-def BinomialDeviate_getinitargs(self):
-    return self.serialize(), self.getN(), self.getP()
-_galsim.BinomialDeviate.__getinitargs__ = BinomialDeviate_getinitargs
-
-def PoissonDeviate_getinitargs(self):
-    return self.serialize(), self.getMean()
-_galsim.PoissonDeviate.__getinitargs__ = PoissonDeviate_getinitargs
-
-def WeibullDeviate_getinitargs(self):
-    return self.serialize(), self.getA(), self.getB()
-_galsim.WeibullDeviate.__getinitargs__ = WeibullDeviate_getinitargs
-
-def GammaDeviate_getinitargs(self):
-    return self.serialize(), self.getK(), self.getTheta()
-_galsim.GammaDeviate.__getinitargs__ = GammaDeviate_getinitargs
-
-def Chi2Deviate_getinitargs(self):
-    return self.serialize(), self.getN()
-_galsim.Chi2Deviate.__getinitargs__ = Chi2Deviate_getinitargs
-
+_galsim.BaseDeviate.__getinitargs__ = lambda self: (self.serialize(),)
+_galsim.UniformDeviate.__getinitargs__ = lambda self: (self.serialize(),)
+_galsim.GaussianDeviate.__getinitargs__ = lambda self: \
+        (self.serialize(), self.getMean(), self.getSigma())
+_galsim.BinomialDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getN(), self.getP())
+_galsim.PoissonDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getMean())
+_galsim.WeibullDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getA(), self.getB())
+_galsim.GammaDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getK(), self.getTheta())
+_galsim.Chi2Deviate.__getinitargs__ = lambda self: (self.serialize(), self.getN())

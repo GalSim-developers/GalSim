@@ -25,7 +25,7 @@ routines for handling multiple Images.
 
 import os
 import galsim
-from galsim import pyfits, pyfits_version
+from galsim import pyfits, pyfits_version, pyfits_str
 
 
 ##############################################################################################
@@ -1095,16 +1095,32 @@ class FitsHeader(object):
             header = None
     
         file_compress, pyfits_compress = _parse_compression(compression,file_name)
+        self._tag = None # Used for the repr
 
-        if file_name:
-            if text_file:
+        if file_name is not None:
+            if dir is not None:
                 import os
-                if dir: file_name = os.path.join(dir,file_name)
+                self._tag = 'file_name='+repr(os.path.join(dir,file_name))
+            else:
+                self._tag = 'file_name='+repr(file_name)
+            if hdu is not None:
+                self._tag += ', hdu=%r'%hdu
+            if compression is not 'auto':
+                self._tag += ', compression=%r'%compression
+
+            if text_file:
+                self._tag += ', text_file=True'
+                if dir is not None:
+                    import os
+                    file_name = os.path.join(dir,file_name)
                 with open(file_name,"r") as fin:
-                    # Later pyfits versions changed this to a class method, so you can write
-                    # pyfits.Card.fromstring(text).  But in older pyfits versions, it was
-                    # a regular method.  This syntax should work in both cases.
-                    cards = [ pyfits.Card().fromstring(text) for text in fin ]
+                    lines = [ line.strip() for line in fin ]
+                if 'END' in lines:  # Don't include END (or later lines)
+                    lines = lines[:lines.index('END')]
+                # Later pyfits versions changed this to a class method, so you can write
+                # pyfits.Card.fromstring(text).  But in older pyfits versions, it was
+                # a regular method.  This syntax should work in both cases.
+                cards = [ pyfits.Card().fromstring(line) for line in lines ]
                 header = pyfits.Header(cards)
             else:
                 hdu_list, fin = _read_file(file_name, dir, file_compress)
@@ -1140,6 +1156,7 @@ class FitsHeader(object):
         return key in self.header
 
     def __delitem__(self, key):
+        self._tag = None
         # This is equivalent to the newer pyfits implementation, but older versions silently
         # did nothing if the key was not in the header.
         if key in self.header:
@@ -1160,6 +1177,7 @@ class FitsHeader(object):
             return len(self.header)
 
     def __setitem__(self, key, value):
+        self._tag = None
         if pyfits_version < '3.1':
             if isinstance(value, tuple):
                 # header[key] = (value, comment) syntax
@@ -1180,6 +1198,7 @@ class FitsHeader(object):
             self.header[key] = value
 
     def clear(self):
+        self._tag = None
         self.header.clear()
 
     def get(self, key, default=None):
@@ -1201,6 +1220,7 @@ class FitsHeader(object):
         return self.header.keys()
 
     def update(self, dict2):
+        self._tag = None
         # dict2 may be a dict or another FitsHeader (or anything that acts like a dict).
         if pyfits_version < '3.1':
             for k, v in dict2.iteritems():
@@ -1222,11 +1242,32 @@ class FitsHeader(object):
         @param useblanks    If there are blank entries currently at the end, should they be
                             overwritten with the new entry? [default: True]
         """
+        self._tag = None
         if pyfits_version < '3.1':
             self.header.ascardlist().append(pyfits.Card(key, value),
                                             useblanks=useblanks, bottom=True)
         else:
             self.header.append((key, value), useblanks=useblanks, bottom=True)
+
+    def __repr__(self):
+        if self._tag is None:
+            return "galsim.FitsHeader(header=%s.Header().fromstring(%r))"%(
+                    pyfits_str,str(self.header))
+        else:
+            return "galsim.FitsHeader(%s)"%self._tag
+
+    def __str__(self):
+        if self._tag is None:
+            return "galsim.FitsHeader(header=<Header object at %s>)"%id(self.header)
+        else:
+            return "galsim.FitsHeader(%s)"%self._tag
+
+    def __eq__(self, other):
+        return isinstance(other,FitsHeader) and self.header == other.header
+    def __ne__(self, other): return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(tuple(sorted(self.items())))
 
 
 # inject write as method of Image class

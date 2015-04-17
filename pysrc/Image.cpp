@@ -44,6 +44,19 @@ namespace galsim {
 template <typename T>
 struct PyImage {
 
+    // This one is mostly just used to enable a repr that actually gets back to the original.
+    static ImageAlloc<T>* MakeAllocFromArray(const Bounds<int>& bounds, const bp::object& array)
+    {
+        int stride = 0;
+        T* data = 0;
+        boost::shared_ptr<T> owner;
+        Bounds<int> bounds2;
+        BuildConstructorArgs(array, bounds.getXMin(), bounds.getYMin(), false, data, owner, 
+                             stride, bounds2);
+        ImageView<T>* imview = new ImageView<T>(data, owner, stride, bounds2);
+        return new ImageAlloc<T>(*imview);
+    }
+
     template <typename U>
     static ImageAlloc<T>* MakeFromImage(const BaseImage<U>& rhs)
     { return new ImageAlloc<T>(rhs); }
@@ -187,6 +200,9 @@ struct PyImage {
             .def(bp::init<const Bounds<int>&, T>(
                     (bp::arg("bounds"), bp::arg("init_value")=T(0))
             ))
+            .def("__init__", bp::make_constructor(
+                    &MakeAllocFromArray, bp::default_call_policies(),
+                    (bp::arg("bounds"), bp::arg("array"))))
             .def("subImage", subImage_func_type(&ImageAlloc<T>::subImage), bp::args("bounds"))
             .def("view", view_func_type(&ImageAlloc<T>::view))
             .add_property("array", &GetArray)
@@ -229,13 +245,9 @@ struct PyImage {
         bp::class_< ImageView<T>, bp::bases< BaseImage<T> > >
             pyImageView(("ImageView" + suffix).c_str(), "", bp::no_init);
         pyImageView
-            .def(
-                "__init__",
-                bp::make_constructor(
+            .def("__init__", bp::make_constructor(
                     &MakeFromArray, bp::default_call_policies(),
-                    (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1)
-                )
-            )
+                    (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1)))
             .def(bp::init<const ImageView<T>&>(bp::args("other")))
             .def("subImage", &ImageView<T>::subImage, bp::args("bounds"))
             .def("view", &ImageView<T>::view)
@@ -274,13 +286,9 @@ struct PyImage {
         bp::class_< ConstImageView<T>, bp::bases< BaseImage<T> > >
             pyConstImageView(("ConstImageView" + suffix).c_str(), "", bp::no_init);
         pyConstImageView
-            .def(
-                "__init__",
-                bp::make_constructor(
+            .def("__init__", bp::make_constructor(
                     &MakeConstFromArray, bp::default_call_policies(),
-                    (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1)
-                )
-            )
+                    (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1)))
             .def(bp::init<const BaseImage<T>&>(bp::args("other")))
             .def("view", &ConstImageView<T>::view)
             .def("__call__", at) // always used checked accessors in Python

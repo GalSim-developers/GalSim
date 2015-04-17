@@ -86,6 +86,12 @@ namespace galsim {
         /// @brief Destructor.
         ~SBConvolve();
 
+        /// @brief Get the list of SBProfiles that are being convolved
+        std::list<SBProfile> getObjs() const;
+
+        /// @brief Return whether the convolution should be done in real space
+        bool isRealSpace() const;
+
     protected:
 
         class SBConvolveImpl;
@@ -114,6 +120,12 @@ namespace galsim {
 
         /// @brief Destructor.
         ~SBAutoConvolve();
+
+        /// @brief Get the SBProfile being convolved
+        SBProfile getObj() const;
+
+        /// @brief Return whether the convolution should be done in real space
+        bool isRealSpace() const;
 
     protected:
 
@@ -144,6 +156,12 @@ namespace galsim {
 
         /// @brief Destructor.
         ~SBAutoCorrelate();
+
+        /// @brief Get the SBProfile being conrrelated
+        SBProfile getObj() const;
+
+        /// @brief Return whether the convolution should be done in real space
+        bool isRealSpace() const;
 
     protected:
 

@@ -96,6 +96,14 @@ def test_uncorrelated_noise_zero_lag():
             err_msg="Zero distance noise correlation value does not match variance value " + 
             "provided to UncorrelatedNoise.")
 
+        # Check picklability
+        do_pickle(ucn, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
+        do_pickle(ucn, drawNoise)
+        do_pickle(cn, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
+        do_pickle(cn, drawNoise)
+        do_pickle(ucn)
+        do_pickle(cn)
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
@@ -648,10 +656,9 @@ def test_copy():
     cn = galsim.CorrelatedNoise(noise_image, ud, subtract_mean=True, correct_periodicity=False)
     cn_copy = cn.copy()
     # Fundamental checks on RNG
-    assert cn.getRNG() is cn_copy.getRNG(), "Copied correlated noise does not keep same RNG."
+    assert cn.rng is cn_copy.rng, "Copied correlated noise does not keep same RNG."
     cn_copy = cn.copy(rng=galsim.UniformDeviate(rseed + 1))
-    assert cn.getRNG() is not cn_copy.getRNG(), \
-        "Copied correlated noise keeps same RNG despite reset."
+    assert cn.rng is not cn_copy.rng, "Copied correlated noise keeps same RNG despite reset."
     # Then check the profile in the copy is *NOT* shared, so that changes in one aren't manifest
     # in the other
     cn_copy = cn.copy()
@@ -673,7 +680,7 @@ def test_copy():
     # they are initialized with the same RNG immediately prior to noise generation
     outim1 = galsim.ImageD(smallim_size, smallim_size, scale=1.)
     outim2 = galsim.ImageD(smallim_size, smallim_size, scale=1.)
-    cn_copy = cn.copy(rng=cn.getRNG().duplicate())
+    cn_copy = cn.copy(rng=cn.rng.duplicate())
     outim1.addNoise(cn)
     outim2.addNoise(cn_copy)
     # The test below does not yield *exactly* equivalent results, plausibly due to the fact that the
@@ -688,14 +695,20 @@ def test_copy():
     outim1.setZero()
     outim2.setZero()
     cn = galsim.CorrelatedNoise(noise_image, ud, subtract_mean=True, correct_periodicity=True)
-    cn_copy = cn.copy(rng=cn.getRNG().duplicate())
-    cn = cn.copy(rng=cn.getRNG().duplicate())
+    cn_copy = cn.copy(rng=cn.rng.duplicate())
+    cn = cn.copy(rng=cn.rng.duplicate())
     outim1.addNoise(cn)
     outim2.addNoise(cn_copy)
     np.testing.assert_array_almost_equal(
         outim1.array, outim2.array, decimal=12,
         err_msg="Copied correlated noise does not produce the same noise field as the parent "+
         "despite sharing the same RNG (high precision test).")
+
+    # Check picklability
+    do_pickle(cn, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
+    do_pickle(cn, drawNoise)
+    do_pickle(cn)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
@@ -713,7 +726,7 @@ def test_cosmos_and_whitening():
     outimage = galsim.ImageD(3 * largeim_size + 11, 3 * largeim_size, scale=cosmos_scale)
     outimage.addNoise(ccn)  # Add the COSMOS noise
     # Then estimate correlation function from generated noise
-    cntest_correlated = galsim.CorrelatedNoise(outimage, ccn.getRNG())
+    cntest_correlated = galsim.CorrelatedNoise(outimage, ccn.rng)
     # Check basic correlation function values of the 3x3 pixel region around (0,0)
     pos = galsim.PositionD(0., 0.)
     cf00 = ccn._profile.xValue(pos)
@@ -736,7 +749,7 @@ def test_cosmos_and_whitening():
     # Now whiten the noise field, and check that its variance and covariances are as expected
     # (non-zero distance correlations ~ 0!)
     whitened_variance = ccn.whitenImage(outimage)
-    cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
+    cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.rng) # Get the correlation function
     cftest00 = cntest_whitened._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
@@ -757,7 +770,7 @@ def test_cosmos_and_whitening():
     outimage.setZero()
     outimage.addNoise(ccn_transformed)
     wht_variance = ccn_transformed.whitenImage(outimage)  # Whiten noise correlation
-    cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
+    cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.rng) # Get the correlation function
     cftest00 = cntest_whitened._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
@@ -789,7 +802,7 @@ def test_cosmos_and_whitening():
     #wht_variance = ccn_convolved.whitenImage(outimage)
     wht_variance = outimage.whitenNoise(ccn_convolved)
     # Then test
-    cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
+    cntest_whitened = galsim.CorrelatedNoise(outimage, ccn.rng) # Get the correlation function
     cftest00 = cntest_whitened._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
@@ -832,11 +845,11 @@ def test_symmetrizing():
                              symm_size_mult * largeim_size, scale=cosmos_scale)
     outimage.addNoise(ccn)  # Add the COSMOS noise
     # Then estimate correlation function from generated noise
-    cntest_correlated = galsim.CorrelatedNoise(outimage, ccn.getRNG())
+    cntest_correlated = galsim.CorrelatedNoise(outimage, ccn.rng)
     # Now apply 4-fold symmetry to the noise field, and check that its variance and covariances are
     # as expected (non-zero distance correlations should be symmetric)
     symmetrized_variance = ccn.symmetrizeImage(outimage, order=4)
-    cntest_symmetrized = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
+    cntest_symmetrized = galsim.CorrelatedNoise(outimage, ccn.rng) # Get the correlation function
     cftest00 = cntest_symmetrized._profile.xValue(galsim.PositionD(0., 0.))
 
     # Test variances first
@@ -865,7 +878,7 @@ def test_symmetrizing():
                              symm_size_mult*largeim_size + 1, scale=cosmos_scale)
     outimage.addNoise(ccn_transformed)
     sym_variance = ccn_transformed.symmetrizeImage(outimage, order=4)  # Symmetrize noise correlation
-    cntest_symmetrized = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
+    cntest_symmetrized = galsim.CorrelatedNoise(outimage, ccn.rng) # Get the correlation function
     cftest00 = cntest_symmetrized._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
@@ -902,7 +915,7 @@ def test_symmetrizing():
     # Then symmetrize
     sym_variance = outimage.symmetrizeNoise(ccn_convolved, order=20)
     # Then test
-    cntest_symmetrized = galsim.CorrelatedNoise(outimage, ccn.getRNG()) # Get the correlation function
+    cntest_symmetrized = galsim.CorrelatedNoise(outimage, ccn.rng) # Get the correlation function
     cftest00 = cntest_symmetrized._profile.xValue(galsim.PositionD(0., 0.))
     # Test variances first
     np.testing.assert_almost_equal(
@@ -990,7 +1003,7 @@ def test_convolve_cosmos():
                                          # zero convimage and write over it later!
     mnsq_list = [np.mean(convimage.array**2)]
     var_list = [convimage.array.var()]
-    print 'start set of {} iterations to build up the correlation function'.format(
+    print 'start set of {0} iterations to build up the correlation function'.format(
             nsum_test_convolve_cosmos)
     for i in range(nsum_test_convolve_cosmos - 1):
         print 'iteration ',i
@@ -1067,6 +1080,7 @@ def test_uncorrelated_noise_tracking():
     # here, we just want to check the ability of GalSim to track what happens to `noise'
     # attributes.
     int_im.noise = orig_ucn
+    print 'int_im.noise = ',int_im.noise
 
     # Manipulate the object in various non-trivial ways: shear, magnify, rotate, convolve
     test_shear = 0.15
@@ -1202,6 +1216,11 @@ def test_cosmos_wcs():
                     cf_orig/var, cf_raw/var, decimal=2,
                     err_msg='Drawing COSMOS noise on view with cosmos pixel scale did not '+
                     'recover correct covariance at positions '+str(pos))
+
+        # Check picklability
+        do_pickle(cn_test, lambda x: (x.rng.serialize(), x.getVariance(), x.wcs))
+        do_pickle(cn_test, drawNoise)
+        do_pickle(cn_test)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)

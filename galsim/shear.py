@@ -19,7 +19,8 @@
 Redefinition of the Shear class at the Python layer.
 """
 
-from . import _galsim
+import galsim
+import numpy
 
 class Shear(object):
     """A class to represent shears in a variety of ways.
@@ -76,169 +77,279 @@ class Shear(object):
     and shears.
     """
     def __init__(self, *args, **kwargs):
-        import numpy as np
 
-        # unnamed arg has to be a _CppShear
+        # There is no valid set of >2 keyword arguments, so raise an exception in this case:
+        if len(kwargs) > 2:
+            raise TypeError(
+                "Shear constructor received >2 keyword arguments: %s"%kwargs.keys())
+
+        if len(args) > 1:
+            raise TypeError(
+                "Shear constructor received >1 non-keyword arguments: %s"%args)
+
+        # If a component of e, g, or eta, then require that the other component is zero if not set,
+        # and don't allow specification of mixed pairs like e1 and g2. 
+        # Also, require a position angle if we didn't get g1/g2, e1/e2, or eta1/eta2
+
+        # Unnamed arg must be a complex shear
         if len(args) == 1:
-            if isinstance(args[0], _galsim._CppShear):
-                self._shear = args[0]
-            else:
-                raise TypeError("Unnamed argument to initialize Shear must be a _CppShear!")
-        elif len(args) > 1:
-            raise TypeError("Too many unnamed arguments to initialize Shear: %d"%len(args))
-        else:
+            self._g = args[0]
+            if not isinstance(self._g, complex):
+                raise TypeError("Non-keyword argument to Shear must be complex g1 + 1j * g2")
 
-            # There is no valid set of >2 keyword arguments, so raise an exception in this case:
-            if len(kwargs) > 2:
+        # Empty constructor means shear == (0,0)
+        elif not kwargs:
+            self._g = 0j
+
+        # g1,g2
+        elif 'g1' in kwargs or 'g2' in kwargs:
+            g1 = kwargs.pop('g1', 0.)
+            g2 = kwargs.pop('g2', 0.)
+            self._g = g1 + 1j * g2
+            if abs(self._g) > 1.:
+                raise ValueError("Requested shear exceeds 1: %f"%abs(self._g))
+
+        # e1,e2
+        elif 'e1' in kwargs or 'e2' in kwargs:
+            e1 = kwargs.pop('e1', 0.)
+            e2 = kwargs.pop('e2', 0.)
+            absesq = e1**2 + e2**2
+            if absesq > 1.:
+                raise ValueError("Requested distortion exceeds 1: %s"%numpy.sqrt(absesq))
+            self._g = (e1 + 1j * e2) * self._e2g(absesq)
+
+        # eta1,eta2
+        elif 'eta1' in kwargs or 'eta2' in kwargs:
+            eta1 = kwargs.pop('eta1', 0.)
+            eta2 = kwargs.pop('eta2', 0.)
+            eta = eta1 + 1j * eta2
+            abseta = abs(eta)
+            self._g = eta * self._eta2g(abseta)
+
+        # g,beta
+        elif 'g' in kwargs:
+            if 'beta' not in kwargs:
                 raise TypeError(
-                    "Shear constructor received >2 keyword arguments: %s"%kwargs.keys())
-
-            # Since there are no args, check the keyword args: if a component of e, g, or eta, then
-            # require that the other component is zero if not set, and don't allow specification of
-            # mixed pairs like e1 and g2.  Also, require also a position angle if we didn't get
-            # g1/g2, e1/e2, or eta1/eta2
-
-            # first case: an empty constructor (no args/kwargs)
-            if not kwargs:
-                use_shear = _galsim._CppShear(0.0, 0.0)
-            elif 'g1' in kwargs or 'g2' in kwargs:
-                g1 = kwargs.pop('g1', 0.)
-                g2 = kwargs.pop('g2', 0.)
-                g = np.sqrt(g1**2 + g2**2)
-                if g < 1:
-                    use_shear = _galsim._CppShear(g1, g2)
-                else:
-                    raise ValueError("Requested shear exceeds 1: %f"%g)
-            elif 'e1' in kwargs or 'e2' in kwargs:
-                e1 = kwargs.pop('e1', 0.)
-                e2 = kwargs.pop('e2', 0.)
-                e = np.sqrt(e1**2 + e2**2)
-                if e < 1:
-                    use_shear = _galsim._CppShear()
-                    use_shear.setE1E2(e1, e2)
-                else:
-                    raise ValueError("Requested distortion exceeds 1: %s"%e)
-            elif 'eta1' in kwargs or 'eta2' in kwargs:
-                eta1 = kwargs.pop('eta1', 0.)
-                eta2 = kwargs.pop('eta2', 0.)
-                use_shear = _galsim._CppShear()
-                use_shear.setEta1Eta2(eta1, eta2)
-            elif 'g' in kwargs:
-                if 'beta' not in kwargs:
-                    raise TypeError(
-                        "Shear constructor requires position angle when g is specified!") 
-                beta = kwargs.pop('beta')
-                if not isinstance(beta, _galsim.Angle):
-                    raise TypeError(
-                        "The position angle that was supplied is not an Angle instance!")
-                g = kwargs.pop('g')
-                if g > 1 or g < 0:
-                    raise ValueError("Requested |shear| is outside [0,1]: %f"%g)
-                g1 = np.cos(2.*beta.rad())*g
-                g2 = np.sin(2.*beta.rad())*g
-                use_shear = _galsim._CppShear(g1, g2)
-            elif 'e' in kwargs:
-                if 'beta' not in kwargs:
-                    raise TypeError(
-                        "Shear constructor requires position angle when e is specified!")
-                beta = kwargs.pop('beta')
-                if not isinstance(beta, _galsim.Angle):
-                    raise TypeError(
-                        "The position angle that was supplied is not an Angle instance!")
-                e = kwargs.pop('e')
-                if e > 1 or e < 0:
-                    raise ValueError("Requested distortion is outside [0,1]: %f"%e)
-                use_shear = _galsim._CppShear()
-                use_shear.setEBeta(e, beta)
-            elif 'eta' in kwargs:
-                if 'beta' not in kwargs:
-                    raise TypeError(
-                        "Shear constructor requires position angle when eta is specified!")
-                beta = kwargs.pop('beta')
-                if not isinstance(beta, _galsim.Angle):
-                    raise TypeError(
-                        "The position angle that was supplied is not an Angle instance!")
-                eta = kwargs.pop('eta')
-                if eta < 0:
-                    raise ValueError("Requested eta is below 0: %f"%eta)
-                use_shear = _galsim._CppShear()
-                use_shear.setEtaBeta(eta, beta)
-            elif 'q' in kwargs:
-                if 'beta' not in kwargs:
-                    raise TypeError(
-                        "Shear constructor requires position angle when q is specified!")
-                beta = kwargs.pop('beta')
-                if not isinstance(beta, _galsim.Angle):
-                    raise TypeError(
-                        "The position angle that was supplied is not an Angle instance!")
-                q = kwargs.pop('q')
-                if q <= 0 or q > 1:
-                    raise ValueError("Cannot use requested axis ratio of %f!"%q)
-                use_shear = _galsim._CppShear()
-                eta = -np.log(q)
-                use_shear.setEtaBeta(eta, beta)
-            elif 'beta' in kwargs:
-                raise TypeError("beta provided to Shear constructor, but not g/e/eta/q")
-
-            # check for the case where there are 1 or 2 kwargs that are not valid ones for
-            # initialization a Shear
-            if kwargs:
+                    "Shear constructor requires position angle when g is specified!") 
+            beta = kwargs.pop('beta')
+            if not isinstance(beta, galsim.Angle):
                 raise TypeError(
-                    "Shear constructor got unexpected extra argument(s): %s"%kwargs.keys())
+                    "The position angle that was supplied is not an Angle instance!")
+            g = kwargs.pop('g')
+            if g > 1 or g < 0:
+                raise ValueError("Requested |shear| is outside [0,1]: %f"%g)
+            self._g = g * numpy.exp(2j * beta.rad())
 
-            self._shear = use_shear
+        # e,beta
+        elif 'e' in kwargs:
+            if 'beta' not in kwargs:
+                raise TypeError(
+                    "Shear constructor requires position angle when e is specified!")
+            beta = kwargs.pop('beta')
+            if not isinstance(beta, galsim.Angle):
+                raise TypeError(
+                    "The position angle that was supplied is not an Angle instance!")
+            e = kwargs.pop('e')
+            if e > 1 or e < 0:
+                raise ValueError("Requested distortion is outside [0,1]: %f"%e)
+            self._g = self._e2g(e**2) * e * numpy.exp(2j * beta.rad())
+
+        # eta,beta
+        elif 'eta' in kwargs:
+            if 'beta' not in kwargs:
+                raise TypeError(
+                    "Shear constructor requires position angle when eta is specified!")
+            beta = kwargs.pop('beta')
+            if not isinstance(beta, galsim.Angle):
+                raise TypeError(
+                    "The position angle that was supplied is not an Angle instance!")
+            eta = kwargs.pop('eta')
+            if eta < 0:
+                raise ValueError("Requested eta is below 0: %f"%eta)
+            self._g = self._eta2g(eta) * eta * numpy.exp(2j * beta.rad())
+
+        # q,beta
+        elif 'q' in kwargs:
+            if 'beta' not in kwargs:
+                raise TypeError(
+                    "Shear constructor requires position angle when q is specified!")
+            beta = kwargs.pop('beta')
+            if not isinstance(beta, galsim.Angle):
+                raise TypeError(
+                    "The position angle that was supplied is not an Angle instance!")
+            q = kwargs.pop('q')
+            if q <= 0 or q > 1:
+                raise ValueError("Cannot use requested axis ratio of %f!"%q)
+            eta = -numpy.log(q)
+            self._g = self._eta2g(eta) * eta * numpy.exp(2j * beta.rad())
+
+        elif 'beta' in kwargs:
+            raise TypeError("beta provided to Shear constructor, but not g/e/eta/q")
+
+        # check for the case where there are 1 or 2 kwargs that are not valid ones for
+        # initializing a Shear
+        if kwargs:
+            raise TypeError(
+                "Shear constructor got unexpected extra argument(s): %s"%kwargs.keys())
 
     # define all the methods to get shear values
-    def getE1(self): return self._shear.getE1()
-    def getE2(self): return self._shear.getE2()
-    def getE(self): return self._shear.getE()
-    def getESq(self): return self._shear.getESq()
-    def getBeta(self): return self._shear.getBeta()
-    def getEta(self): return self._shear.getEta()
-    def getG(self): return self._shear.getG()
-    def getG1(self): return self._shear.getG1()
-    def getG2(self): return self._shear.getG2()
+    def getG1(self): 
+        """Return the g1 component of the reduced shear.
+        Note: s.getG1() is equivalent to s.g1
+        """
+        return self._g.real
+
+    def getG2(self):
+        """Return the g2 component of the reduced shear.
+        Note: s.getG2() is equivalent to s.g2
+        """
+        return self._g.imag
+
+    def getG(self): 
+        """Return the magnitude of the reduced shear |g1 + i g2| = sqrt(g1**2 + g2**2)
+        Note: s.getG() is equivalent to s.g
+        """
+        return abs(self._g)
+
+    def getBeta(self):
+        """Return the position angle of the reduced shear g exp(2i beta) == g1 + i g2
+        Note: s.getBeta() is equivalent to s.beta
+        """
+        return 0.5 * numpy.angle(self._g) * galsim.radians
+
+    def getShear(self):
+        """Return the reduced shear as a complex number g1 + 1j * g2
+        Note: s.getShear() is equivalent to s.shear
+        """
+        return self._g
+
+    def getE1(self):
+        """Return the e1 component of the distortion.
+        Note: s.getE1() is equivalent to s.e1
+        """
+        return self._g.real * self._g2e(abs(self._g)**2)
+
+    def getE2(self):
+        """Return the e2 component of the distortion.
+        Note: s.getE2() is equivalent to s.e2
+        """
+        return self._g.imag * self._g2e(abs(self._g)**2)
+
+    def getE(self):
+        """Return the magnitude of the distortion |e1 + i e2| = sqrt(e1**2 + e2**2)
+        Note: s.getE() is equivalent to s.e
+        """
+        return abs(self._g) * self._g2e(abs(self._g)**2)
+
+    def getESq(self):
+        """Return the magnitude squared of the distortion |e1 + i e2|**2 = e1**2 + e2**2
+        Note: s.getESq() is equivalent to s.esq
+        """
+        return self.e**2
+
+    def getEta(self):
+        """Return the magnitude of the conformal shear eta = atanh(e) = 2 atanh(g)
+        Note: s.getEta() is equivalent to s.eta
+        """
+        return abs(self._g) * self._g2eta(abs(self._g))
 
     # make it possible to access g, e, etc. of some Shear object called name using name.g, name.e
+    g1 = property(getG1)
+    g2 = property(getG2)
+    g = property(getG)
+    beta = property(getBeta)
+
+    shear = property(getShear)
+
     e1 = property(getE1)
     e2 = property(getE2)
     e = property(getE)
     esq = property(getESq)
-    beta = property(getBeta)
     eta = property(getEta)
-    g = property(getG)
-    g1 = property(getG1)
-    g2 = property(getG2)
+
+    # Helpers to convert between different conventions
+    # Note: These return the scale factor by which to multiply.  Not the final value.
+    def _g2e(self, absgsq):
+        return 2. / (1.+absgsq)
+
+    def _e2g(self, absesq): 
+        if absesq > 1.e-4:
+            #return (1. - numpy.sqrt(1.-absesq)) / absesq
+            return 1. / (1. + numpy.sqrt(1.-absesq)) 
+        else:
+            # Avoid numerical issues near e=0 using Taylor expansion
+            return 0.5 + absesq*(0.125 + absesq*(0.0625 + absesq*0.0390625))
+
+    def _g2eta(self, absg): 
+        if absg > 1.e-4:
+            return 2.*numpy.arctanh(absg)/absg
+        else:
+            # This doesn't have as much trouble with accuracy, but have to avoid absg=0,
+            # so might as well Taylor expand for small values.
+            absgsq = absg * absg
+            return 2. + absgsq*((2./3.) + absgsq*0.4)
+
+    def _eta2g(self, abseta):
+        if abseta > 1.e-4:
+            return numpy.tanh(0.5*abseta)/abseta
+        else:
+            absetasq = abseta * abseta
+            return 0.5 + absetasq*((-1./24.) + absetasq*(1./240.))
 
     # define all the various operators on Shear objects
-    def __neg__(self): return Shear(-self._shear)
+    def __neg__(self): return Shear(-self._g)
 
     # order of operations: shear by other._shear, then by self._shear
-    def __add__(self, other): return Shear(self._shear + other._shear)
+    def __add__(self, other): 
+        return Shear((self._g + other._g) / (1. + self._g.conjugate() * other._g))
 
     # order of operations: shear by -other._shear, then by self._shear
-    def __sub__(self, other): return Shear(self._shear - other._shear)
+    def __sub__(self, other): return self + (-other)
 
-    def __iadd__(self, other):
-        self._shear += other._shear
-        return self
-    def __isub__(self, other):
-        self._shear -= other._shear
-        return self
+    def __eq__(self, other): return self._g == other._g
+    def __ne__(self, other): return not self.__eq__(other)
 
-    def rotationWith(self, other): return self._shear.rotationWith(other)
+    def getMatrix(self): 
+        """Return the matrix that tells how this shear acts on a position vector:
 
-    def __eq__(self, other): return self._shear == other._shear
-    def __ne__(self, other): return self._shear != other._shear
+        If a field is sheared by some shear, s, then the position (x,y) -> (x',y')
+        according to:
 
-    def fwd(self, p): return self._shear.fwd(p)
-    def inv(self, p): return self._shear.inv(p)
+        [ x' ] = S [ x ]
+        [ y' ]     [ y ]
 
-    def getMatrix(self): return self._shear.getMatrix()
+        where S = s.getMatrix().
+
+        Specifically, the matrix is S = (1-g^2)^(-1/2) [ 1+g1 ,  g2  ] 
+                                                       [  g2  , 1-g1 ]
+        """
+        return numpy.array([[ 1.+self.g1,  self.g2   ],
+                            [  self.g2  , 1.-self.g1 ]]) / numpy.sqrt(1.-self.g**2)
+
+    def rotationWith(self, other):
+        """Return the rotation angle associated with the addition of two shears.
+
+        The effect of two shears is not just a single net shear.  There is also a rotation
+        associated with it.  This is easiest to understand in terms of the matrix representations:
+
+        If s3 = s1 + s2, and the corresponding shear matrices are S1,S2,S3, then S3 R = S1 S2,
+        where R is a rotation matrix:
+
+        R = [ cos(theta) , -sin(theta) ]
+            [ sin(theta) ,  cos(theta) ]
+
+        and theta is the return value (as a galsim.Angle) from s1.rotationWith(s2).
+        """
+        # Save a little time by only working on the first column.
+        S3 = self.getMatrix().dot(other.getMatrix()[:,:1])
+        R = (-(self + other)).getMatrix().dot(S3)
+        theta = numpy.arctan2(R[1,0], R[0,0])
+        return theta * galsim.radians
 
     def __repr__(self):
-        return (self.__class__.__name__+"(g1="+str(self.getG1())+", g2="+str(self.getG2())+")")
+        return 'galsim.Shear(%r)'%(self.shear)
 
     def __str__(self):
-        return ("("+str(self.getG1())+", "+str(self.getG2())+")")
+        return 'galsim.Shear(g1=%s,g2=%s)'%(self.g1,self.g2)
 
+    def __hash__(self): return hash(self._g)

@@ -27,6 +27,7 @@
 #include "boost/python/stl_iterator.hpp"
 
 #include "SBTransform.h"
+#include "NumpyHelper.h"
 
 namespace bp = boost::python;
 
@@ -34,6 +35,20 @@ namespace galsim {
 
     struct PySBTransform 
     {
+        static bp::handle<> getJac(const SBTransform& self) {
+            static npy_intp dim[1] = {4};
+            // Because the C++ version sets references that are passed in, and that's not possible
+            // in Python, we wrap this instead, which returns a numpy array.
+            double a=0., b=0., c=0., d=0.;
+            self.getJac(a, b, c, d);
+            double ar[4] = { a, b, c, d };
+            PyObject* r = PyArray_SimpleNewFromData(1, dim, NPY_DOUBLE, ar);
+            if (!r) throw bp::error_already_set();
+            PyObject* r2 = PyArray_FROM_OF(r, NPY_ARRAY_ENSURECOPY);
+            Py_DECREF(r);
+            return bp::handle<>(r2);
+        }
+
         static void wrap() 
         {
             static char const * doc = 
@@ -52,6 +67,11 @@ namespace galsim {
                      )
                 )
                 .def(bp::init<const SBTransform &>())
+                .def("getObj", &SBTransform::getObj)
+                .def("getJac", getJac)
+                .def("getOffset", &SBTransform::getOffset)
+                .def("getFluxScaling", &SBTransform::getFluxScaling)
+                .enable_pickling()
                 ;
         }
 

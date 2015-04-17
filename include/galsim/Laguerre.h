@@ -30,7 +30,6 @@
 #include "TMV.h"
 
 #include "Std.h"
-#include "CppShear.h"
 #include "Angle.h"
 
 namespace galsim {
@@ -286,6 +285,8 @@ namespace galsim {
 
         int getOrder() const { return _order; }
 
+        std::string repr() const;
+
         // Returns number of real DOF = number of complex coeffs
         int size() const { return _v->size(); }
 
@@ -431,6 +432,7 @@ namespace galsim {
         double flux(int maxP=-1) const;
         double apertureFlux(double R, int maxP=-1) const;
 
+#if 0
         // Return reference to a matrix that generates ???realPsi transformations
         // under infinitesimal point transforms (translate, dilate, shear).
         // Returned matrix is at least as large as needed to go order x (order+2)
@@ -438,6 +440,7 @@ namespace galsim {
         enum GType { iX = 0, iY, iMu, iE1, iE2, iRot, nGen };
         static const tmv::ConstMatrixView<double> Generator(
             GType iparam, int orderOut, int orderIn);
+#endif
 
         boost::shared_ptr<double> getOwner() const { return _owner; }
 
@@ -466,8 +469,10 @@ namespace galsim {
     std::ostream& operator<<(std::ostream& os, const LVector& lv);
     std::istream& operator>>(std::istream& is, LVector& lv);
 
+#if 0
     // To allow iteration over all the generators:
     inline LVector::GType& operator++(LVector::GType& g) { return g=LVector::GType(g+1); }
+#endif
 
     // This function finds the innermost radius at which the integrated flux
     // of the LVector's shape crosses the specified threshold, using the first
@@ -475,6 +480,10 @@ namespace galsim {
     extern double fluxRadius(const LVector& lv, double threshold, int maxP=-1);
 
 
+    // NB. The LTransform class is not currently used by anything in GalSim.
+    //     Plus, there are not even any implemenations of the MakeLTransform functions below.
+#if 0
+ 
     //--------------------------------------------------------------
     //
     // Next class is a transformation matrix for Laguerre vector.  Internal 
@@ -603,6 +612,8 @@ namespace galsim {
     LTransform MakeLTransform(
         const LVector psf, const double D,
         const int orderOut, const int orderIn, const int orderStar);
+
+#endif // LTransform section
 
 }
 

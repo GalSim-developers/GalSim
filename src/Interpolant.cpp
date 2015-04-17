@@ -202,13 +202,8 @@ namespace galsim {
                                         y*(4.01839087307656620e13 + 
                                            y*(3.99653257887490811e13))))))))));
 
-#ifdef _GLIBCXX_HAVE_SINCOS
             double sinx,cosx;
-            sincos(x,&sinx,&cosx);
-#else
-            double cosx = std::cos(x);
-            double sinx = std::sin(x);
-#endif
+            (x * radians).sincos(sinx,cosx);
             return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cosx - g*sinx;
         } else {
             // Here I used Maple to calculate the Pade approximation for Si(x), which is accurate
@@ -307,6 +302,9 @@ namespace galsim {
         return result;
     }
 
+    std::string Delta::makeStr() const
+    { return "delta"; }
+
 
     //
     // Nearest
@@ -333,6 +331,9 @@ namespace galsim {
         dbg<<"Nearest Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
+
+    std::string Nearest::makeStr() const
+    { return "nearest"; }
 
 
     //
@@ -367,6 +368,9 @@ namespace galsim {
         return boost::shared_ptr<PhotonArray>();
     }
 
+    std::string SincInterpolant::makeStr() const
+    { return "sinc"; }
+
 
     //
     // Linear
@@ -397,6 +401,9 @@ namespace galsim {
         dbg<<"Linear Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
+
+    std::string Linear::makeStr() const
+    { return "linear"; }
 
 
     //
@@ -494,6 +501,9 @@ namespace galsim {
 
     std::map<double,boost::shared_ptr<Table<double,double> > > Cubic::_cache_tab;
     std::map<double,double> Cubic::_cache_umax;
+
+    std::string Cubic::makeStr() const
+    { return "cubic"; }
 
 
     //
@@ -661,6 +671,9 @@ namespace galsim {
     std::map<double,boost::shared_ptr<Table<double,double> > > Quintic::_cache_tab;
     std::map<double,double> Quintic::_cache_umax;
 
+    std::string Quintic::makeStr() const
+    { return "quintic"; }
+
 
     //
     // Lanczos
@@ -695,14 +708,8 @@ namespace galsim {
                   // Let sn = sin(pi x/2), cn = cos(pi x/2)
                   // Then sin(pi x) = 2 * sn * cn
                   // xval = 4/pi^2 sn^2 cn / x^2
-                  double temp = M_PI/2. * x;
-#ifdef _GLIBCXX_HAVE_SINCOS
                   double sn, cn;
-                  sincos(temp, &sn, &cn);
-#else
-                  double sn = sin(temp);
-                  double cn = cos(temp);
-#endif
+                  (x * M_PI/2. * radians).sincos(sn,cn);
                   s = 2.*sn*cn;
                   res = (2./(M_PI*M_PI)) * s*sn/(x*x);
                   break;
@@ -718,14 +725,8 @@ namespace galsim {
                   break;
               }
               case 4 : {
-                  double temp = M_PI/4. * x;
-#ifdef _GLIBCXX_HAVE_SINCOS
                   double sn, cn;
-                  sincos(temp, &sn, &cn);
-#else
-                  double sn = sin(temp);
-                  double cn = cos(temp);
-#endif
+                  (x * M_PI/4. * radians).sincos(sn,cn);
                   s = sn*cn*(4.-8.*sn*sn);
                   res = (4./(M_PI*M_PI)) * s*sn/(x*x);
                   break;
@@ -738,14 +739,8 @@ namespace galsim {
                   break;
               }
               case 6 : {
-                  double temp = M_PI/6. * x;
-#ifdef _GLIBCXX_HAVE_SINCOS
                   double sn, cn;
-                  sincos(temp, &sn, &cn);
-#else
-                  double sn = sin(temp);
-                  double cn = cos(temp);
-#endif
+                  (x * M_PI/6. * radians).sincos(sn, cn);
                   double snsq = sn*sn;
                   s = sn*cn*(6.-32.*snsq*(1.-snsq));
                   res = (6./(M_PI*M_PI)) * s*sn/(x*x);
@@ -1034,6 +1029,14 @@ namespace galsim {
         // For this one, we always use the lookup table.
         u = std::abs(u);
         return u>_uMax ? 0. : (*_utab)(u);
+    }
+
+    std::string Lanczos::makeStr() const
+    {
+        std::ostringstream oss(" ");
+        oss << "lanczos" << _n;
+        if (_conserve_dc) oss << "F";
+        return oss.str();
     }
 
 }

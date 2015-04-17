@@ -27,6 +27,7 @@
 #include "PhotonArray.h"
 #include "ProbabilityTree.h"
 #include "SBProfile.h"
+#include "Std.h"
 
 namespace galsim {
 

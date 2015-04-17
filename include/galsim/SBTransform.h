@@ -44,15 +44,11 @@ namespace galsim {
         /** 
          * @brief General constructor.
          *
-         * @param[in] sbin SBProfile being transform
+         * @param[in] obj         SBProfile being transformed
          * @param[in] mA          A element of 2x2 distortion matrix `M = [(A B), (C D)]`
-         *                        = [row1, row2]
          * @param[in] mB          B element of 2x2 distortion matrix `M = [(A B), (C D)]`
-         *                        = [row1, row2]
          * @param[in] mC          C element of 2x2 distortion matrix `M = [(A B), (C D)]`
-         *                        = [row1, row2]
          * @param[in] mD          D element of 2x2 distortion matrix `M = [(A B), (C D)]`
-         *                        = [row1, row2]
          * @param[in] cen         2-element (x, y) Position for the translational shift.
          * @param[in] fluxScaling Amount by which the flux should be multiplied.
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
@@ -68,6 +64,14 @@ namespace galsim {
 
         /// @brief Destructor
         ~SBTransform();
+
+        SBProfile getObj() const;
+
+        void getJac(double& mA, double& mB, double& mC, double& mD) const;
+
+        Position<double> getOffset() const;
+
+        double getFluxScaling() const;
 
     protected:
 

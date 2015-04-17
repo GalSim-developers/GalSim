@@ -227,6 +227,8 @@ def test_OpticalPSF_flux():
         optics_array = optics_test.drawImage(scale=.25*lod, image=image, method='no_pixel').array 
         np.testing.assert_almost_equal(optics_array.sum(), 1., 2, 
                 err_msg="Unaberrated Optical flux not quite unity.")
+    do_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics_test)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -247,6 +249,7 @@ def test_OpticalPSF_vs_Airy():
         optics_array = optics_test.drawImage(scale=.25*lod, image=image, method='no_pixel').array 
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
                 err_msg="Unaberrated Optical not quite equal to Airy")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -267,6 +270,9 @@ def test_OpticalPSF_vs_Airy_with_obs():
         optics_array = optics_test.drawImage(scale=1.,image=image, method='no_pixel').array 
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
                 err_msg="Unaberrated Optical with obscuration not quite equal to Airy")
+    do_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics_test)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -360,6 +366,8 @@ def test_OpticalPSF_aberrations_struts():
     np.testing.assert_array_almost_equal(
         myImg.array, savedImg.array, 6,
         err_msg="Optical aberration (all aberrations) disagrees with expected result")
+    do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics)
 
     # test struts
     savedImg = galsim.fits.read(os.path.join(imgdir, "optics_struts.fits"))
@@ -371,6 +379,9 @@ def test_OpticalPSF_aberrations_struts():
                                  strut_angle=8.) # wrong units
     except ImportError:
         print 'The assert_raises tests require nose'
+    do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics)
+
     # Make sure it doesn't have some weird error if strut_angle=0 (should be the easiest case, but
     # check anyway...)
     optics_2 = galsim.OpticalPSF(
@@ -386,6 +397,8 @@ def test_OpticalPSF_aberrations_struts():
     optics = galsim.OpticalPSF(
         lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=8.*galsim.degrees,
         astig2=0.04, coma1=-0.07, defocus=0.09, oversampling=1, circular_pupil=False)
+    do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics)
 
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
@@ -424,6 +437,8 @@ def test_OpticalPSF_aberrations_kwargs():
         opt1.drawImage(scale=0.2*lod, method='no_pixel').array,
         opt2.drawImage(scale=0.2*lod, method='no_pixel').array,
         err_msg="Optical PSF depends on how aberrations are specified (full list)")
+    do_pickle(opt2, lambda x: x.drawImage(nx=20, ny=20, scale=0.01, method='no_pixel'))
+    do_pickle(opt2)
 
     # Also, check for proper response to weird inputs.
     try:
@@ -572,6 +587,9 @@ def test_OpticalPSF_pupil_plane():
         np.testing.assert_almost_equal(
             test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal,
             err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane.")
+    if __name__ == '__main__':
+        do_pickle(test_psf, lambda x: x.drawImage(nx=20, ny=20, scale=0.07, method='no_pixel'))
+        do_pickle(test_psf)
 
     # It is supposed to be able to figure this out even if we *don't* tell it the pad factor. So
     # make sure that it still works even if we don't tell it that value.
@@ -668,7 +686,6 @@ def test_OpticalPSF_pupil_plane():
                 err_msg="Inconsistent OpticalPSF image after rotating pupil plane by invariant "
                 "angle.")
 
-
     # Test that if we rotate pupil plane with no aberrations, that's equivalent to rotating the PSF
     # itself.  Use rotation angle of 90 degrees so numerical issues due to the interpolation should
     # be minimal.
@@ -724,7 +741,7 @@ def test_OpticalPSF_pupil_plane():
     # Now supply the pupil plane at the original resolution, but remove some of the padding.  We
     # want it to properly recognize that it needs more padding, and include it.
     remove_pad = -23
-    sub_im = im[im.bounds.addBorder(remove_pad)]
+    sub_im = im[im.bounds.withBorder(remove_pad)]
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  pupil_plane_im=sub_im, oversampling=pp_oversampling,
                                  pad_factor=pp_pad_factor)
@@ -738,7 +755,7 @@ def test_OpticalPSF_pupil_plane():
 
     # Now supply the pupil plane at the original resolution, with extra padding.
     new_pad = 76
-    big_im = galsim.Image(im.bounds.addBorder(new_pad))
+    big_im = galsim.Image(im.bounds.withBorder(new_pad))
     big_im[im.bounds] = im
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  pupil_plane_im=big_im, oversampling=pp_oversampling,

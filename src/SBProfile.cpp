@@ -30,7 +30,7 @@
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
 std::ostream* dbgout = &std::cerr;
-int verbose_level = 1;
+int verbose_level = 2;
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
 // It's Mike's way to have debug statements in the code that are really easy to turn
@@ -62,6 +62,18 @@ namespace galsim {
         // manages to use an SBProfile after it was deleted, the assert(_pimpl.get())
         // will trigger an exception.
         _pimpl.reset();
+    }
+
+    std::string SBProfile::repr() const 
+    {
+        assert(_pimpl.get());
+        return _pimpl->repr();
+    }
+
+    const boost::shared_ptr<GSParams> SBProfile::getGSParams() const
+    {
+        assert(_pimpl.get());
+        return _pimpl->gsparams.getP();
     }
 
     double SBProfile::xValue(const Position<double>& p) const
@@ -175,23 +187,10 @@ namespace galsim {
     SBTransform SBProfile::expand(double scale) const
     { return SBTransform(*this,scale,0.,0.,scale); }
 
-    SBTransform SBProfile::shear(CppShear s) const
-    {
-        double a, b, c;
-        s.getMatrix(a,b,c);
-        return SBTransform(*this,a,c,c,b);
-    }
-
     SBTransform SBProfile::rotate(const Angle& theta) const
     {
-#ifdef _GLIBCXX_HAVE_SINCOS
-        // Most optimizing compilers will do this automatically, but just in case...
         double sint,cost;
-        sincos(theta.rad(),&sint,&cost);
-#else
-        double cost = std::cos(theta.rad());
-        double sint = std::sin(theta.rad());
-#endif
+        theta.sincos(sint,cost);
         return SBTransform(*this,cost,-sint,sint,cost);
     }
 

@@ -588,7 +588,6 @@ namespace galsim {
             throw std::runtime_error("scaleVariance not implemented for DeviateNoise");
         }
 
-
         /**
          * @brief Add noise to an Image.
          *

@@ -107,15 +107,12 @@ class Shapelet(GSObject):
     Furthermore, there are specializations of the rotate() and expand() methods that let
     them be performed more efficiently than the usual GSObject implementation.
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = { "sigma" : float, "order" : int }
     _opt_params = {}
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
-    # --- Public Class methods ---
     def __init__(self, sigma, order, bvec=None, gsparams=None):
         # Make sure order and sigma are the right type:
         order = int(order)
@@ -132,6 +129,7 @@ class Shapelet(GSObject):
             bvec = LVector(order,numpy.array(bvec))
 
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec, gsparams))
+        self._gsparams = gsparams
 
     def getSigma(self):
         return self.SBProfile.getSigma()
@@ -170,6 +168,25 @@ class Shapelet(GSObject):
     def dilate(self, scale):
         sigma = self.sigma * scale
         return Shapelet(sigma, self.order, self.bvec)
+
+    def __repr__(self): 
+        return 'galsim.Shapelet(sigma=%r, order=%r, bvec=%r, gsparams=%r)'%(
+                self.sigma, self.order, self.bvec, self._gsparams)
+
+    def __str__(self): 
+        return 'galsim.Shapelet(sigma=%s, order=%s, bvec=%s)'%(self.sigma, self.order, self.bvec)
+
+_galsim.SBShapelet.__getinitargs__ = lambda self: (
+        self.getSigma(), self.getBVec(), self.getGSParams())
+_galsim.SBShapelet.__getstate__ = lambda self: None
+_galsim.SBShapelet.__setstate__ = lambda self, state: 1
+_galsim.SBShapelet.__repr__ = lambda self: 'galsim._galsim.SBShapelet(%r, %r, %r)'%(
+        self.getSigma(), self.getBVec(), self.getGSParams())
+_galsim.LVector.__getinitargs__ = lambda self: (self.order, self.array)
+_galsim.LVector.__repr__ = lambda self: 'galsim._galsim.LVector(%r, %r)'%(self.order, self.array)
+_galsim.LVector.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.LVector.__ne__ = lambda self, other: not self.__eq__(other)
+_galsim.LVector.__hash__ = lambda self: hash(repr(self))
 
 
 def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams=None):

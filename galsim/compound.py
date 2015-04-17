@@ -28,9 +28,6 @@ AutoCorrelation = convolution of a profile by its reflection
 import galsim
 from . import _galsim
 
-#
-# --- Compound GSObject classes: Sum, Convolution, AutoConvolve, and AutoCorrelate ---
-
 def Add(*args, **kwargs):
     """A function for adding 2 or more GSObject or ChromaticObject instances.
 
@@ -62,7 +59,7 @@ def Add(*args, **kwargs):
         # 1 argument.  Should be either a GSObject or a list of GSObjects
         if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
             args = [args[0]]
-        elif isinstance(args[0], list):
+        elif isinstance(args[0], list) or isinstance(args[0], tuple):
             args = args[0]
         else:
             raise TypeError("Single input argument must be a GSObject, ChromaticObject or "
@@ -113,12 +110,11 @@ class Sum(galsim.GSObject):
 
     There are no additional methods for Sum beyond the usual GSObject methods.
     """
-
-    # --- Public Class methods ---
     def __init__(self, *args, **kwargs):
 
         # Check kwargs first:
         gsparams = kwargs.pop("gsparams", None)
+        self._gsparams = gsparams
 
         # Make sure there is nothing left in the dict.
         if kwargs:
@@ -131,16 +127,16 @@ class Sum(galsim.GSObject):
             # 1 argument.  Should be either a GSObject or a list of GSObjects
             if isinstance(args[0], galsim.GSObject):
                 args = [args[0]]
-            elif isinstance(args[0], list):
+            elif isinstance(args[0], list) or isinstance(args[0], tuple):
                 args = args[0]
             else:
                 raise TypeError("Single input argument must be a GSObject or list of them.")
         # else args is already the list of objects
 
         # Save the list as an attribute, so it can be inspected later if necessary.
-        self.obj_list = args
+        self._obj_list = args
 
-        if len(args) == 1:
+        if len(args) == 1 and gsparams is None:
             # No need to make an SBAdd in this case.
             galsim.GSObject.__init__(self, args[0])
             if hasattr(args[0],'noise'):
@@ -156,9 +152,36 @@ class Sum(galsim.GSObject):
                     else:
                         noise += obj.noise
             SBList = [obj.SBProfile for obj in args]
-            galsim.GSObject.__init__(self, galsim._galsim.SBAdd(SBList, gsparams=gsparams))
+            galsim.GSObject.__init__(self, galsim._galsim.SBAdd(SBList, gsparams))
             if noise is not None:
                 self.noise = noise
+
+    @property
+    def obj_list(self): return self._obj_list
+
+    def __repr__(self):
+        return 'galsim.Sum(%r, gsparams=%r)'%(self.obj_list, self._gsparams)
+
+    def __str__(self):
+        str_list = [ str(obj) for obj in self.obj_list ]
+        return '(' + ' + '.join(str_list) + ')'
+        #return 'galsim.Sum([%s])'%', '.join(str_list)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._obj_list, gsparams=self._gsparams)
+
+
+_galsim.SBAdd.__getinitargs__ = lambda self: (self.getObjs(), self.getGSParams())
+_galsim.SBAdd.__getstate__ = lambda self: None
+_galsim.SBAdd.__setstate__ = lambda self, state: 1
+_galsim.SBAdd.__repr__ = lambda self: \
+        'galsim._galsim.SBAdd(%r, %r)'%self.__getinitargs__()
 
 
 def Convolve(*args, **kwargs):
@@ -183,7 +206,7 @@ def Convolve(*args, **kwargs):
     elif len(args) == 1:
         if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
             args = [args[0]]
-        elif isinstance(args[0], list):
+        elif isinstance(args[0], list) or isinstance(args[0], tuple):
             args = args[0]
         else:
             raise TypeError("Single input argument must be a GSObject, ChromaticObject, "
@@ -248,17 +271,14 @@ class Convolution(galsim.GSObject):
 
     There are no additional methods for Convolution beyond the usual GSObject methods.
     """
-
-    # --- Public Class methods ---
     def __init__(self, *args, **kwargs):
-
         # First check for number of arguments != 0
         if len(args) == 0:
             raise ValueError("At least one ChromaticObject or GSObject must be provided.")
         elif len(args) == 1:
             if isinstance(args[0], galsim.GSObject):
                 args = [args[0]]
-            elif isinstance(args[0], list):
+            elif isinstance(args[0], list) or isinstance(args[0], tuple):
                 args = args[0]
             else:
                 raise TypeError("Single input argument must be a GSObject or list of them.")
@@ -272,19 +292,20 @@ class Convolution(galsim.GSObject):
         # them have hard edges, then we use real-space convolution.
         real_space = kwargs.pop("real_space", None)
         gsparams = kwargs.pop("gsparams", None)
+        self._gsparams = gsparams
 
         # Make sure there is nothing left in the dict.
         if kwargs:
             raise TypeError(
                 "Convolution constructor got unexpected keyword argument(s): %s"%kwargs.keys())
 
-        if len(args) == 1:
+        if len(args) == 1 and gsparams is None:
             # No need to make an SBConvolve in this case.  Can early exit.
             galsim.GSObject.__init__(self, args[0])
             if hasattr(args[0],'noise'):
                 self.noise = args[0].noise
-            self.real_space = real_space
-            self.obj_list = args
+            self._real_space = real_space
+            self._obj_list = args
             return
 
         # Check whether to perform real space convolution...
@@ -359,15 +380,49 @@ class Convolution(galsim.GSObject):
 
         # Save the construction parameters (as they are at this point) as attributes so they
         # can be inspected later if necessary.
-        self.real_space = real_space
-        self.obj_list = args
+        self._real_space = real_space
+        self._obj_list = args
 
         # Then finally initialize the SBProfile using the objects' SBProfiles.
         SBList = [ obj.SBProfile for obj in args ]
-        sbp = galsim._galsim.SBConvolve(SBList, real_space=real_space, gsparams=gsparams)
+        sbp = galsim._galsim.SBConvolve(SBList, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
         if noise is not None:
             self.noise = noise
+
+    @property
+    def obj_list(self): return self._obj_list
+    @property
+    def real_space(self): return self._real_space
+
+    def __repr__(self):
+        return 'galsim.Convolution(%r, real_space=%r, gsparams=%r)'%(
+                self.obj_list, self.real_space, self._gsparams)
+
+    def __str__(self):
+        str_list = [ str(obj) for obj in self.obj_list ]
+        s = 'galsim.Convolve(%s'%(', '.join(str_list))
+        if self.real_space:
+            s += ', real_space=True'
+        s += ')'
+        return s
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._obj_list, real_space=self._real_space, gsparams=self._gsparams)
+
+
+_galsim.SBConvolve.__getinitargs__ = lambda self: (
+        self.getObjs(), self.isRealSpace(), self.getGSParams())
+_galsim.SBConvolve.__getstate__ = lambda self: None
+_galsim.SBConvolve.__setstate__ = lambda self, state: 1
+_galsim.SBConvolve.__repr__ = lambda self: \
+        'galsim._galsim.SBConvolve(%r, %r, %r)'%self.__getinitargs__()
 
 
 def Deconvolve(obj, gsparams=None):
@@ -420,19 +475,45 @@ class Deconvolution(galsim.GSObject):
 
     There are no additional methods for Deconvolution beyond the usual GSObject methods.
     """
-    # --- Public Class methods ---
     def __init__(self, obj, gsparams=None):
         if not isinstance(obj, galsim.GSObject):
             raise TypeError("Argument to Deconvolution must be a GSObject.")
 
         # Save the original object as an attribute, so it can be inspected later if necessary.
-        self.orig_obj = obj
+        self._orig_obj = obj
+        self._gsparams = gsparams
 
-        galsim.GSObject.__init__(
-                self, galsim._galsim.SBDeconvolve(obj.SBProfile, gsparams=gsparams))
+        sbp = galsim._galsim.SBDeconvolve(obj.SBProfile, gsparams)
+        galsim.GSObject.__init__(self, sbp)
         if hasattr(obj,'noise'):
             import warnings
             warnings.warn("Unable to propagate noise in galsim.Deconvolution")
+
+    @property
+    def orig_obj(self): return self._orig_obj
+
+    def __repr__(self):
+        return 'galsim.Deconvolution(%r, gsparams=%r)'%(self.orig_obj, self._gsparams)
+
+    def __str__(self):
+        return 'galsim.Deconvolve(%s)'%self.orig_obj
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._orig_obj, self._gsparams)
+
+
+
+_galsim.SBDeconvolve.__getinitargs__ = lambda self: (self.getObj(), self.getGSParams())
+_galsim.SBDeconvolve.__getstate__ = lambda self: None
+_galsim.SBDeconvolve.__setstate__ = lambda self, state: 1
+_galsim.SBDeconvolve.__repr__ = lambda self: \
+        'galsim._galsim.SBDeConvolve(%r, %r)'%self.__getinitargs__()
 
 
 def AutoConvolve(obj, real_space=None, gsparams=None):
@@ -484,7 +565,6 @@ class AutoConvolution(galsim.GSObject):
 
     There are no additional methods for AutoConvolution beyond the usual GSObject methods.
     """
-    # --- Public Class methods ---
     def __init__(self, obj, real_space=None, gsparams=None):
         if not isinstance(obj, galsim.GSObject):
             raise TypeError("Argument to AutoConvolution must be a GSObject.")
@@ -517,15 +597,49 @@ class AutoConvolution(galsim.GSObject):
 
         # Save the construction parameters (as they are at this point) as attributes so they
         # can be inspected later if necessary.
-        self.real_space = real_space
-        self.orig_obj = obj
+        self._real_space = real_space
+        self._orig_obj = obj
+        self._gsparams = gsparams
 
-        sbp = galsim._galsim.SBAutoConvolve(
-                obj.SBProfile, real_space=real_space, gsparams=gsparams)
+        sbp = galsim._galsim.SBAutoConvolve(obj.SBProfile, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
         if hasattr(obj,'noise'):
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
+
+    @property
+    def orig_obj(self): return self._orig_obj
+    @property
+    def real_space(self): return self._real_space
+
+    def __repr__(self):
+        return 'galsim.AutoConvolution(%r, real_space=%r, gsparams=%r)'%(
+                self.orig_obj, self.real_space, self._gsparams)
+
+    def __str__(self):
+        s = 'galsim.AutoConvolve(%s'%self.orig_obj
+        if self.real_space:
+            s += ', real_space=True'
+        s += ')'
+        return s
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._orig_obj, self._real_space, self._gsparams)
+
+
+
+_galsim.SBAutoConvolve.__getinitargs__ = lambda self: (
+        self.getObj(), self.isRealSpace(), self.getGSParams())
+_galsim.SBAutoConvolve.__getstate__ = lambda self: None
+_galsim.SBAutoConvolve.__setstate__ = lambda self, state: 1
+_galsim.SBAutoConvolve.__repr__ = lambda self: \
+        'galsim._galsim.SBAutoConvolve(%r, %r, %r)'%self.__getinitargs__()
 
 
 def AutoCorrelate(obj, real_space=None, gsparams=None):
@@ -581,7 +695,6 @@ class AutoCorrelation(galsim.GSObject):
 
     There are no additional methods for AutoCorrelation beyond the usual GSObject methods.
     """
-    # --- Public Class methods ---
     def __init__(self, obj, real_space=None, gsparams=None):
         if not isinstance(obj, galsim.GSObject):
             raise TypeError("Argument to AutoCorrelation must be a GSObject.")
@@ -614,13 +727,48 @@ class AutoCorrelation(galsim.GSObject):
 
         # Save the construction parameters (as they are at this point) as attributes so they
         # can be inspected later if necessary.
-        self.real_space = real_space
-        self.orig_obj = obj
+        self._real_space = real_space
+        self._orig_obj = obj
+        self._gsparams = gsparams
 
-        sbp = galsim._galsim.SBAutoCorrelate(
-                obj.SBProfile, real_space=real_space, gsparams=gsparams)
+        sbp = galsim._galsim.SBAutoCorrelate(obj.SBProfile, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
 
         if hasattr(obj,'noise'):
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")
+
+    @property
+    def orig_obj(self): return self._orig_obj
+    @property
+    def real_space(self): return self._real_space
+
+    def __repr__(self):
+        return 'galsim.AutoCorrelation(%r, real_space=%r, gsparams=%r)'%(
+                self.orig_obj, self.real_space, self._gsparams)
+
+    def __str__(self):
+        s = 'galsim.AutoCorrelate(%s'%self.orig_obj
+        if self.real_space:
+            s += ', real_space=True'
+        s += ')'
+        return s
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._orig_obj, self._real_space, self._gsparams)
+
+
+
+_galsim.SBAutoCorrelate.__getinitargs__ = lambda self: (
+        self.getObj(), self.isRealSpace(), self.getGSParams())
+_galsim.SBAutoCorrelate.__getstate__ = lambda self: None
+_galsim.SBAutoCorrelate.__setstate__ = lambda self, state: 1
+_galsim.SBAutoCorrelate.__repr__ = lambda self: \
+        'galsim._galsim.SBAutoCorrelate(%r, %r, %r)'%self.__getinitargs__()
+

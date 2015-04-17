@@ -75,6 +75,8 @@ namespace galsim {
                         const tmv::Matrix<double>& kx,
                         const tmv::Matrix<double>& ky) const;
 
+        std::string repr() const;
+
     private:
         double _sigma;
         LVector _bvec;  

@@ -74,6 +74,7 @@ namespace galsim {
         double getBeta() const { return _beta; }
         double getScaleRadius() const { return _rD; }
         double getFWHM() const { return _FWHM; }
+        double getTrunc() const { return _trunc; }
         double getHalfLightRadius() const;
 
         // Overrides for better efficiency
@@ -89,6 +90,8 @@ namespace galsim {
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
+
+        std::string repr() const;
 
     private:
         double _beta; ///< Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.

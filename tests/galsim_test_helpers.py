@@ -211,6 +211,67 @@ def radial_integrate(prof, minr, maxr):
     f = lambda r: 2 * np.pi * r * prof.SBProfile.xValue(galsim.PositionD(r,0))
     return galsim.integ.int1d(f, minr, maxr)
 
+# A short helper function to test pickling of noise objects
+def drawNoise(noise):
+    im = galsim.ImageD(10,10)
+    im.addNoise(noise)
+    return im.array.astype(np.float32).tolist()
+
+def do_pickle(obj1, func = lambda x : x):
+    """Check that the object is picklable.  Also that it has basic == and != functionality.
+    """
+    import cPickle, copy
+    # In case the repr uses these:
+    from numpy import array, int16, int32, float32, float64
+    try:
+        import astropy.io.fits
+    except:
+        import pyfits
+    print 'Try pickling ',obj1
+
+    #print 'pickled obj1 = ',cPickle.dumps(obj1)
+    obj2 = cPickle.loads(cPickle.dumps(obj1))
+    assert obj2 is not obj1
+    #print 'obj1 = ',repr(obj1)
+    #print 'obj2 = ',repr(obj2)
+    f1 = func(obj1)
+    f2 = func(obj2)
+    #print 'func(obj1) = ',repr(f1)
+    #print 'func(obj2) = ',repr(f2)
+    assert f1 == f2
+
+    # Test the hash values are equal for two equivalent objects.
+    #print 'hash = ',hash(obj1),hash(obj2)
+    assert hash(obj1) == hash(obj2)
+
+    obj3 = copy.copy(obj1)
+    assert obj3 is not obj1
+    random = hasattr(obj1, 'rng') or isinstance(obj1, galsim.BaseDeviate)
+    if not hasattr(obj1, 'rng'):  # Things with an rng attribute won't be identical on copy.
+        if random: f1 = func(obj1)  # But BaseDeviates will be ok.  Just need to remake f1.
+        f3 = func(obj3)
+        assert f3 == f1
+
+    obj4 = copy.deepcopy(obj1)
+    assert obj4 is not obj1
+    f4 = func(obj4)
+    if random: f1 = func(obj1)
+    #print 'func(obj1) = ',repr(f1)
+    #print 'func(obj4) = ',repr(f4)
+    assert f4 == f1  # But everythong should be idenical with deepcopy.
+
+    # Also test that the repr is an accurate representation of the object.
+    # The gold standard is that eval(repr(obj)) == obj.  So check that here as well.
+    #print 'repr = ',repr(obj1)
+    obj5 = eval(repr(obj1))
+    #print 'obj5 = ',repr(obj5)
+    f5 = func(obj5)
+    if random: f1 = func(obj1)
+    #print 'func(obj1) = ',repr(f1)
+    #print 'func(obj5) = ',repr(f5)
+    assert f5 == f1
+
+
 def funcname():
     import inspect
     return inspect.stack()[1][3]

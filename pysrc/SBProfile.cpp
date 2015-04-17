@@ -40,8 +40,7 @@ namespace galsim {
 
         static void wrap() {
 
-            bp::class_<GSParams> pyGSParams("GSParams", "", bp::no_init);
-            pyGSParams
+            bp::class_<GSParams, boost::shared_ptr<GSParams> > ("GSParams", bp::no_init)
                 .def(bp::init<
                     int, int, double, double, double, double, double, double, double, double,
                     double, double, double, double, int, double>((
@@ -79,6 +78,8 @@ namespace galsim {
                 .def_readonly("allowed_flux_variation", &GSParams::allowed_flux_variation)
                 .def_readonly("range_division_for_extrema", &GSParams::range_division_for_extrema)
                 .def_readonly("small_fraction_of_flux", &GSParams::small_fraction_of_flux)
+                .def(bp::self == bp::other<GSParams>())
+                .enable_pickling()
                 ;
         }
     };
@@ -157,7 +158,9 @@ namespace galsim {
 
             bp::class_<SBProfile> pySBProfile("SBProfile", doc, bp::no_init);
             pySBProfile
+                .def(bp::init<>())
                 .def(bp::init<const SBProfile &>())
+                .def("getGSParams", &SBProfile::getGSParams)
                 .def("xValue", &SBProfile::xValue,
                      "Return value of SBProfile at a chosen 2d position in real space.\n"
                      "May not be implemented for derived classes (e.g. SBConvolve) that\n"
@@ -182,12 +185,13 @@ namespace galsim {
                 .def("centroid", &SBProfile::centroid)
                 .def("getFlux", &SBProfile::getFlux)
                 .def("scaleFlux", &SBProfile::scaleFlux, bp::args("fluxRatio"))
-                .def("shear", &SBProfile::shear, bp::arg("shear"))
                 .def("rotate", &SBProfile::rotate, bp::args("theta"))
                 .def("shift", &SBProfile::shift, bp::args("delta"))
                 .def("expand", &SBProfile::expand, bp::args("scale"))
                 .def("transform", &SBProfile::transform, bp::args("dudx", "dudy", "dvdx", "dvdy"))
                 .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
+                .def("__repr__", &SBProfile::repr)
+                .enable_pickling()
                 ;
             wrapTemplates<float>(pySBProfile);
             wrapTemplates<double>(pySBProfile);

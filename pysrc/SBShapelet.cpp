@@ -129,6 +129,7 @@ namespace galsim {
                 .def("getSigma", &SBShapelet::getSigma)
                 .def("getBVec", &SBShapelet::getBVec,
                      bp::return_value_policy<bp::copy_const_reference>())
+                .enable_pickling()
                 ;
             wrapImageTemplates<float>();
             wrapImageTemplates<double>();

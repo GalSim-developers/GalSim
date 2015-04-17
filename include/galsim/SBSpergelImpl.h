@@ -178,6 +178,8 @@ namespace galsim {
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
+        std::string repr() const;
+
     private:
         double _nu;      ///< Spergel index
         double _flux;    ///< Flux

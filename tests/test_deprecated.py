@@ -31,7 +31,7 @@ except ImportError:
 def check_dep(f, *args, **kwargs):
     """Check that some function raises a GalSimDeprecationWarning as a warning, but not an error.
     """
-    print 'Check dep: ',f,args,kwargs
+    #print 'Check dep: ',f,args,kwargs
     import warnings
     # Cause all warnings to always be triggered.
     # Important in case we want to trigger the same one twice in the test suite.
@@ -42,12 +42,41 @@ def check_dep(f, *args, **kwargs):
         res = f(*args, **kwargs)
     #print 'w = ',w
     assert len(w) == 1, "Calling %s did not raise a warning"%str(f)
-    #print 'Caught w = ',w[0]
+    print str(w[0].message)
     return res
 
 
+def test_dep_bandpass():
+    """Test the deprecated methods in galsim/deprecated/bandpass.py.
+    """
+    import time
+    t1 = time.time()
+
+    b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]))
+    d = lambda w: w**2
+
+    # fn / Bandpass
+    #e = d/b
+    e = check_dep(b.__rdiv__, d)
+    np.testing.assert_almost_equal(e(3.0), 3.0**2 / 3.33, 10,
+                                   err_msg="Found wrong value in Bandpass.__rdiv__")
+    np.testing.assert_array_almost_equal(e.wave_list, [1.1, 2.2, 3.0, 4.4, 5.5],
+                                         err_msg="wrong wave_list in Bandpass.__rdiv__")
+
+    # scalar / Bandpass
+    #f = 1.21 / b
+    f = check_dep(b.__rdiv__, 1.21)
+    np.testing.assert_almost_equal(f(3.0), 1.21 / 3.33, 10,
+                                   err_msg="Found wrong value in Bandpass.__rdiv__")
+    np.testing.assert_array_almost_equal(f.wave_list, [1.1, 2.2, 3.0, 4.4, 5.5],
+                                         err_msg="wrong wave_list in Bandpass.__rdiv__")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 def test_dep_base():
-    """Test the depracated methods in galsim/deprecated/base.py
+    """Test the deprecated methods in galsim/deprecated/base.py
     """
     import time
     t1 = time.time()
@@ -156,7 +185,7 @@ def test_dep_base():
 
 
 def test_dep_bounds():
-    """Test the depracated methods in galsim/deprecated/bounds.py
+    """Test the deprecated methods in galsim/deprecated/bounds.py
     """
     import time
     t1 = time.time()
@@ -190,12 +219,22 @@ def test_dep_bounds():
         np.testing.assert_almost_equal(b.ymin, 201)
         np.testing.assert_almost_equal(b.ymax, 501)
 
+        b2 = check_dep(b.addBorder,2)
+        np.testing.assert_almost_equal(b.xmin, 101)
+        np.testing.assert_almost_equal(b.xmax, 401)
+        np.testing.assert_almost_equal(b.ymin, 201)
+        np.testing.assert_almost_equal(b.ymax, 501)
+        np.testing.assert_almost_equal(b2.xmin,  99)
+        np.testing.assert_almost_equal(b2.xmax, 403)
+        np.testing.assert_almost_equal(b2.ymin, 199)
+        np.testing.assert_almost_equal(b2.ymax, 503)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
  
 
 def test_dep_chromatic():
-    """Test the depracated methods in galsim/deprecated/chromatic.py
+    """Test the deprecated methods in galsim/deprecated/chromatic.py
     """
     import time
     t1 = time.time()
@@ -222,7 +261,7 @@ def test_dep_chromatic():
  
 
 def test_dep_correlatednoise():
-    """Test the depracated methods in galsim/deprecated/correlatednoise.py
+    """Test the deprecated methods in galsim/deprecated/correlatednoise.py
     """
     import time
     t1 = time.time()
@@ -432,7 +471,7 @@ def test_dep_image():
 
 
 def test_dep_noise():
-    """Test the depracated methods in galsim/deprecated/noise.py
+    """Test the deprecated methods in galsim/deprecated/noise.py
     """
     import time
     t1 = time.time()
@@ -481,7 +520,7 @@ def test_dep_noise():
 
 
 def test_dep_random():
-    """Test the depracated methods in galsim/deprecated/random.py
+    """Test the deprecated methods in galsim/deprecated/random.py
     """
     import time
     t1 = time.time()
@@ -558,8 +597,36 @@ def test_dep_random():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+def test_dep_sed():
+    """Test the deprecated methods in galsim/deprecated/sed.py.
+    """
+    import time
+    t1 = time.time()
+
+    z = 0.4
+    a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
+                   flux_type='fphotons', redshift=0.4)
+    b = lambda w: w**2
+
+    # function divided by SED
+    #c = b/a
+    c = check_dep(a.__rdiv__, b)
+    x = 3.0
+    np.testing.assert_almost_equal(c(x), b(x)/a(x), 10,
+                                   err_msg="Found wrong value in SED.__rdiv__")
+
+    # number divided by SED
+    #d = x/a
+    d = check_dep(a.__rdiv__, x)
+    np.testing.assert_almost_equal(d(x), x/a(x), 10,
+                                   err_msg="Found wrong value in SED.__rdiv__")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 def test_dep_shapelet():
-    """Test the depracated methods in galsim/deprecated/shapelet.py
+    """Test the deprecated methods in galsim/deprecated/shapelet.py
     """
     import time
     t1 = time.time()
@@ -685,7 +752,7 @@ def test_dep_shapelet():
 
 
 def test_dep_shear():
-    """Test the depracated methods in galsim/deprecated/shear.py
+    """Test the deprecated methods in galsim/deprecated/shear.py
     """
     import time
     t1 = time.time()
@@ -717,9 +784,9 @@ def test_dep_shear():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
- 
 
 if __name__ == "__main__":
+    test_dep_bandpass()
     test_dep_base()
     test_dep_bounds()
     test_dep_chromatic()
@@ -727,5 +794,6 @@ if __name__ == "__main__":
     test_dep_image()
     test_dep_noise()
     test_dep_random()
+    test_dep_sed()
     test_dep_shapelet()
     test_dep_shear()

@@ -84,4 +84,88 @@ namespace galsim {
         }
         clearCache();
     }
+
+    std::string BaseDeviate::make_repr(bool incl_seed)
+    {
+        // Remember: Don't start with nothing!  See discussion in FormatAndThrow in Std.h
+        std::ostringstream oss(" ");
+        oss << "galsim.BaseDeviate(";
+        if (incl_seed) oss << "seed='"<<serialize()<<"'";
+        oss<<")";
+        return oss.str();
+    }
+
+    std::string UniformDeviate::make_repr(bool incl_seed)
+    {
+        std::ostringstream oss(" ");
+        oss << "galsim.UniformDeviate(";
+        if (incl_seed) oss << "seed='"<<serialize()<<"'";
+        oss<<")";
+        return oss.str();
+    }
+
+
+    std::string GaussianDeviate::make_repr(bool incl_seed)
+    {
+        std::ostringstream oss(" ");
+        oss << "galsim.GaussianDeviate(";
+        if (incl_seed) oss << "seed='"<<serialize()<<"', ";
+        oss << "mean="<<getMean()<<", ";
+        oss << "sigma="<<getSigma()<<")";
+        return oss.str();
+    }
+
+
+    std::string BinomialDeviate::make_repr(bool incl_seed)
+    {
+        std::ostringstream oss(" ");
+        oss << "galsim.BinomialDeviate(";
+        if (incl_seed) oss << "seed='"<<serialize()<<"',";
+        oss << "N="<<getN()<<", ";
+        oss << "p="<<getP()<<")";
+        return oss.str();
+    }
+
+
+    std::string PoissonDeviate::make_repr(bool incl_seed)
+    {
+        std::ostringstream oss(" ");
+        oss << "galsim.PoissonDeviate(";
+        if (incl_seed) oss << "seed='"<<serialize()<<"',";
+        oss << "mean="<<getMean()<<")";
+        return oss.str();
+    }
+
+
+    std::string WeibullDeviate::make_repr(bool incl_seed)
+    {
+        std::ostringstream oss(" ");
+        oss << "galsim.WeibullDeviate(";
+        if (incl_seed) oss << "seed='"<<serialize()<<"',";
+        oss << "a="<<getA()<<", ";
+        oss << "b="<<getB()<<")";
+        return oss.str();
+    }
+
+
+    std::string GammaDeviate::make_repr(bool incl_seed)
+    {
+        std::ostringstream oss(" ");
+        oss << "galsim.GammaDeviate(";
+        if (incl_seed) oss << "seed='"<<serialize()<<"',";
+        oss << "k="<<getK()<<", ";
+        oss << "theta="<<getTheta()<<")";
+        return oss.str();
+    }
+
+
+    std::string Chi2Deviate::make_repr(bool incl_seed)
+    {
+        std::ostringstream oss(" ");
+        oss << "galsim.Chi2Deviate(";
+        if (incl_seed) oss << "seed='"<<serialize()<<"',";
+        oss << "n="<<getN()<<")";
+        return oss.str();
+    }
+
 }

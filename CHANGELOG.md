@@ -13,6 +13,23 @@ Installation Changes
 API Changes
 -----------
 
+- Changed the name of the `bounds.addBorder()` method to `withBorder` to make
+  it clearer that the method returns a new Bounds object. (#218)
+- Removed (from the python layer) Interpolant2d and InterpolantXY, since we
+  we have only actually implemented 1-d interpolants. (#218)
+- Removed the MultipleImage way of constructing an SBInterpolatedImage, since
+  we do not use it anywhere, nor are there unit tests for it.  The C++ layer
+  still has the implementation of it if we ever find a need for it. (#218)
+- Made the default tolerance for all Interpolants equal to 1.e-4.  It already
+  was for Cubic, Quintic, and Lanczos, which are the ones we normally use,
+  so this just changes the default for the others. (#218)
+- Deprecated the __rdiv__ operator from Bandpass and SED, since we realized
+  that they did not have any clear use cases.  If you have one, please open an
+  issue, and we can add them back. (#218)
+- Made all returned matrices consistently use numpy.array, rather than
+  numpy.matrix.  We had been inconsistent with which type different functions
+  returned, so now all matrices are numpy.arrays.  If you rely on the 
+  numpy.matrix behavior, you should recast with numpy.asmatrix(M). (#218)
 - Deprecated CorrelatedNoise.calculateCovarianceMatrix, since it is not used 
   anywhere, and we think no one really has a need for it. (#630)
 - Officially deprecated the methods and functions that had been described as
@@ -20,16 +37,20 @@ API Changes
   had been still valid, but no longer documented.  This was intentional to
   allow people time to change their code.  Now these methods are officially
   deprecated and will emit a warning message if used. (#643)
-- Made the classes PositionI, PositionD, and GSParams immutable.  It was an
-  oversight that we failed to make them immutable in version 1.1 when we made
-  most other GalSim classes immutable.  Now rather than write to their various
-  attributes, you should make a new object. e.g. instead of `p.x = 4` and
-  `p.y = 5`, you now need to do `p = galsim.PositionD(4,5)`. (#643)
+- Made the classes PositionI, PositionD, GSParams, and HSMParams immutable.
+  It was an oversight that we failed to make them immutable in version 1.1 when
+  we made most other GalSim classes immutable.  Now rather than write to their
+  various attributes, you should make a new object. e.g. instead of `p.x = 4`
+  and `p.y = 5`, you now need to do `p = galsim.PositionD(4,5)`. (#218, #643)
 
 
 New Features
 ------------
 
+- Added ability to set the zeropoint of a bandpass on construction.  (Only
+  a numeric value; more complicated calculations still need to use the method
+  `bandpass.withZeropoint()`.) (#218)
+- Added ability to set the redshift of an SED on construction. (#218)
 - Updated CorrelatedNoise to work with images that have a non-trivial WCS. (#501)
 - Added new methods of the image class to simulate detector effects:
   inter-pixel capacitance (#555) and image quantization (#558).
@@ -65,6 +86,7 @@ New Features
 Bug Fixes and Improvements
 --------------------------
 
+- Fixed a bug in the normalization of SEDs that use `wave_type='A'`. (#218)
 - Switched the sign of the angle returned by `CelestialCoord.angleBetween`.
   The sign is now positive when the angle as seen from the ground sweeps in
   the counter-clockwise direction, which is a more sensible definition than

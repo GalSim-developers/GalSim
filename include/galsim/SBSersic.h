@@ -123,6 +123,9 @@ namespace galsim {
         /// @brief Returns the half light radius of the Sersic profile.
         double getHalfLightRadius() const;
 
+        /// @brief Returns the truncation radius
+        double getTrunc() const;
+
     protected:
 
         class SBSersicImpl;

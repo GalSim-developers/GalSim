@@ -184,15 +184,27 @@ namespace galsim {
          * @param[in] kInterp     Interpolation scheme to adopt in k-space
          * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
          *                        for the Fourier transform.
+         * @param[in] stepk       If > 0, force stepk to this value.
+         * @param[in] maxk        If > 0, force maxk to this value.
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
          *                        image operations and rendering.
          */
         template <typename T> 
         SBInterpolatedImage(
             const BaseImage<T>& image,
+            boost::shared_ptr<Interpolant> xInterp,
+            boost::shared_ptr<Interpolant> kInterp,
+            double pad_factor, double stepk, double maxk,
+            const GSParamsPtr& gsparams);
+
+        /// @brief Same as above, but take 2-d interpolants.
+        template <typename T> 
+        SBInterpolatedImage(
+            const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double pad_factor, const GSParamsPtr& gsparams);
+            double pad_factor, double stepk, double maxk,
+            const GSParamsPtr& gsparams);
 
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
@@ -235,25 +247,9 @@ namespace galsim {
          */
         void calculateMaxK(double max_maxk=0.) const;
 
-        /**
-         * @brief Force the adoption of a particular value of stepK if the input image was larger
-         *        than necessary.
-         *
-         * @param[in] stepk  Value of stepk, if you have some a priori knowledge about an
-         *                   appropriate value.  Note that the code does *not* do a calculation to
-         *                   validate this choice!
-         */
-        void forceStepK(double stepk) const;
-
-        /**
-         * @brief Force the adoption of a particular value of maxK if the input image had a smaller
-         *        scale than necessary.
-         *
-         * @param[in] maxk   Value of maxk, if you have some a priori knowledge about an appropriate
-         *                   value.  Note that the code does *not* do a calculation to validate this
-         *                   choice!
-         */
-        void forceMaxK(double maxk) const;
+        ConstImageView<double> getImage() const;
+        boost::shared_ptr<Interpolant> getXInterp() const;
+        boost::shared_ptr<Interpolant> getKInterp() const;
 
     protected:
 

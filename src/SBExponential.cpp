@@ -63,6 +63,15 @@ namespace galsim {
         return static_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); 
     }
 
+    std::string SBExponential::SBExponentialImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBExponential("<<getScaleRadius()<<", "<<getFlux();
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     LRUCache<GSParamsPtr, ExponentialInfo> SBExponential::SBExponentialImpl::cache(
         sbp::max_exponential_cache);
 
@@ -347,14 +356,8 @@ namespace galsim {
             // Draw another (or multiple) randoms for azimuthal angle 
 #ifdef USE_COS_SIN
             double theta = 2. * M_PI * u();
-#ifdef _GLIBCXX_HAVE_SINCOS
-            // Most optimizing compilers will do this automatically, but just in case...
             double sint,cost;
-            sincos(theta,&sint,&cost);
-#else
-            double cost = std::cos(theta);
-            double sint = std::sin(theta);
-#endif
+            (theta * radians).sincos(sint,cost);
             double rFactor = r * _r0;
             result->setPhoton(i, rFactor * cost, rFactor * sint, fluxPerPhoton);
 #else

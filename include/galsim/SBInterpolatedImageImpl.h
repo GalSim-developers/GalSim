@@ -34,7 +34,7 @@ namespace galsim {
             const BaseImage<T>& image, 
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double pad_factor, const GSParamsPtr& gsparams);
+            double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams);
 
         SBInterpolatedImageImpl(
             const MultipleImageHelper& multi,
@@ -45,6 +45,10 @@ namespace galsim {
 
         ~SBInterpolatedImageImpl();
 
+        ConstImageView<double> getImage() const;
+        boost::shared_ptr<Interpolant> getXInterp() const;
+        boost::shared_ptr<Interpolant> getKInterp() const;
+
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& p) const;
 
@@ -53,8 +57,6 @@ namespace galsim {
 
         void calculateMaxK(double max_stepk) const;
         void calculateStepK(double max_maxk) const;
-        void forceStepK(double stepk) const;
-        void forceMaxK(double maxk) const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const;
         void getYRange(double& ymin, double& ymax, std::vector<double>& ) const;
@@ -163,6 +165,8 @@ namespace galsim {
         mutable double _positiveFlux;    ///< Sum of all positive pixels' flux
         mutable double _negativeFlux;    ///< Sum of all negative pixels' flux
         mutable ProbabilityTree<Pixel> _pt; ///< Binary tree of pixels, for photon-shooting
+
+        std::string repr() const;
 
     private:
 

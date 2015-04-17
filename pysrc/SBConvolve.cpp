@@ -44,6 +44,15 @@ namespace galsim {
             return new SBConvolve(plist, real_space, gsparams);
         }
 
+        static bp::list getObjs(const SBConvolve& sbp)
+        {
+            const std::list<SBProfile>& objs = sbp.getObjs();
+            std::list<SBProfile>::const_iterator it = objs.begin();
+            bp::list l;
+            for (; it != objs.end(); ++it) l.append(*it);
+            return l;
+        }
+
         static void wrap() 
         {
             bp::class_< SBConvolve, bp::bases<SBProfile> >("SBConvolve", bp::no_init)
@@ -55,6 +64,8 @@ namespace galsim {
                          bp::arg("gsparams")=bp::object()))
                 )
                 .def(bp::init<const SBConvolve&>())
+                .def("getObjs", getObjs)
+                .def("isRealSpace", &SBConvolve::isRealSpace)
                 ;
         }
 
@@ -68,6 +79,8 @@ namespace galsim {
                         (bp::arg("adaptee"), bp::arg("real_space")=false,
                          bp::arg("gsparams")=bp::object())))
                 .def(bp::init<const SBAutoConvolve&>())
+                .def("getObj", &SBAutoConvolve::getObj)
+                .def("isRealSpace", &SBAutoConvolve::isRealSpace)
                 ;
         }
 
@@ -81,6 +94,8 @@ namespace galsim {
                         (bp::arg("adaptee"), bp::arg("real_space")=false,
                          bp::arg("gsparams")=bp::object())))
                 .def(bp::init<const SBAutoCorrelate&>())
+                .def("getObj", &SBAutoCorrelate::getObj)
+                .def("isRealSpace", &SBAutoCorrelate::isRealSpace)
                 ;
         }
 

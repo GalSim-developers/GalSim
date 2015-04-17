@@ -52,12 +52,15 @@ def depr(f, v, s1, s2=None):
         s += '  ' + s2
     warnings.warn(s, GalSimDeprecationWarning)
 
+from . import bandpass
 from . import base
 from . import bounds
 from . import chromatic
 from . import correlatednoise
 from . import image
+from . import interpolatedimage
 from . import noise
 from . import random
+from . import sed
 from . import shapelet
 from . import shear

@@ -163,6 +163,9 @@ def test_shapelet_properties():
     np.testing.assert_almost_equal(shapelet.kValue(zero), flux+0j, 10)
     np.testing.assert_almost_equal(shapelet.xValue(zero), 0.0653321217013, 10)
 
+    # Check picklability
+    do_pickle(shapelet)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 

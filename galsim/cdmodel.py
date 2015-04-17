@@ -110,6 +110,16 @@ class BaseCDModel(object):
         retimage = self.applyForward(image, gain_ratio=-gain_ratio)
         return retimage
 
+    def __repr__(self):
+        return 'galsim.cdmodel.BaseCDModel(array(%r),array(%r),array(%r),array(%r))'%(
+                self.a_l.array.tolist(), self.a_r.array.tolist(),
+                self.a_b.array.tolist(), self.a_t.array.tolist())
+
+    # Quick and dirty.  Just check reprs are equal.
+    def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
+    def __hash__(self): return hash(repr(self))
+
 # The _modelShiftCoeffX functions are used by the PowerLawCD class
 def _modelShiftCoeffR(x, y, r0, t0, rx, tx, r, t, alpha):
     """Calculate the model shift coeff of right pixel border as a function of int pixel position

@@ -43,6 +43,7 @@ namespace galsim {
                 )
                 .def(bp::init<const SBKolmogorov &>())
                 .def("getLamOverR0", &SBKolmogorov::getLamOverR0)
+                .enable_pickling()
                 ;
         }
     };
