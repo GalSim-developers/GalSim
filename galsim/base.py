@@ -2425,8 +2425,8 @@ class Spergel(GSObject):
 
     The Spergel surface brightness profile is characterized by three properties: its Spergel index
     `nu`, its `flux`, and either the `half_light_radius` or `scale_radius`.  Given these properties,
-    the surface brightness profile scales as I(r) ~ r^{nu} * K_{nu}(r), where K_{nu} is the
-    modified Bessel function of the second kind.
+    the surface brightness profile scales as I(r) ~ (r/scale_radius)^{nu} * K_{nu}(r/scale_radius),
+    where K_{nu} is the modified Bessel function of the second kind.
 
     The Spergel profile is intended as a generic galaxy profile, somewhat like a Sersic profile, but
     with the advantage of being analytic in both real space and Fourier space.  The Spergel index
