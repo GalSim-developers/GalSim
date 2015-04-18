@@ -53,7 +53,7 @@ Use the galsim tag to flag it as a question about GalSim.
 
 
 
-Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 https://github.com/GalSim-developers
 
 Redistribution and use in source and binary forms, with or without
