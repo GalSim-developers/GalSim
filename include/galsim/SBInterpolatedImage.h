@@ -29,110 +29,110 @@
 
 namespace galsim {
 
-    /**
-     * @brief A Helper class that stores multiple images and their fourier transforms
-     *
-     * One of the ways to create an SBInterpolatedImage is to build it from a 
-     * weighted sum of several component images.  The idea is that the component
-     * images would be constant, but the weights might vary across the field of view.
-     * (E.g. they could be principal components of the PSF).
-     *
-     * This class stores those images along with helpful derived information
-     * (most notably, the fourier transforms), so that each SBInterpolatedImage
-     * doesn't have to recalculate everything from scratch.
-     */
-    class MultipleImageHelper
-    {
-    public:
-        /** 
-         * @brief Construct from a std::vector of images.
-         *
-         * @param[in] images      List of images to use
-         * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding 
-         *                        for the Fourier transform.
-         */
-        template <typename T>
-        MultipleImageHelper(const std::vector<boost::shared_ptr<BaseImage<T> > >& images,
-                            double pad_factor);
+    // /**
+    //  * @brief A Helper class that stores multiple images and their fourier transforms
+    //  *
+    //  * One of the ways to create an SBInterpolatedImage is to build it from a
+    //  * weighted sum of several component images.  The idea is that the component
+    //  * images would be constant, but the weights might vary across the field of view.
+    //  * (E.g. they could be principal components of the PSF).
+    //  *
+    //  * This class stores those images along with helpful derived information
+    //  * (most notably, the fourier transforms), so that each SBInterpolatedImage
+    //  * doesn't have to recalculate everything from scratch.
+    //  */
+    // class MultipleImageHelper
+    // {
+    // public:
+    //     /**
+    //      * @brief Construct from a std::vector of images.
+    //      *
+    //      * @param[in] images      List of images to use
+    //      * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
+    //      *                        for the Fourier transform.
+    //      */
+    //     template <typename T>
+    //     MultipleImageHelper(const std::vector<boost::shared_ptr<BaseImage<T> > >& images,
+    //                         double pad_factor);
 
-        /** 
-         * @brief Convenience constructor that only takes a single image.
-         *
-         * @param[in] image       Single input image
-         * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
-         *                        for the Fourier transform.
-         */
-        template <typename T>
-        MultipleImageHelper(const BaseImage<T>& image, double pad_factor);
+    //     /**
+    //      * @brief Convenience constructor that only takes a single image.
+    //      *
+    //      * @param[in] image       Single input image
+    //      * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
+    //      *                        for the Fourier transform.
+    //      */
+    //     template <typename T>
+    //     MultipleImageHelper(const BaseImage<T>& image, double pad_factor);
 
-        /// @brief Copies are shallow, so can pass by value without any copying.
-        MultipleImageHelper(const MultipleImageHelper& rhs) : _pimpl(rhs._pimpl) {}
+    //     /// @brief Copies are shallow, so can pass by value without any copying.
+    //     MultipleImageHelper(const MultipleImageHelper& rhs) : _pimpl(rhs._pimpl) {}
 
-        /// @brief Replace the current contents with the contents of rhs.
-        MultipleImageHelper& operator=(const MultipleImageHelper& rhs)
-        {
-            if (this != &rhs) _pimpl = rhs._pimpl;
-            return *this;
-        }
+    //     /// @brief Replace the current contents with the contents of rhs.
+    //     MultipleImageHelper& operator=(const MultipleImageHelper& rhs)
+    //     {
+    //         if (this != &rhs) _pimpl = rhs._pimpl;
+    //         return *this;
+    //     }
 
-        ~MultipleImageHelper() {}
+    //     ~MultipleImageHelper() {}
 
-        /// @brief How many images are being stored.
-        size_t size() const { return _pimpl->vx.size(); }
+    //     /// @brief How many images are being stored.
+    //     size_t size() const { return _pimpl->vx.size(); }
 
-        /// @brief Get the XTable for the i-th image.
-        boost::shared_ptr<XTable> getXTable(int i) const { return _pimpl->vx[i]; }
+    //     /// @brief Get the XTable for the i-th image.
+    //     boost::shared_ptr<XTable> getXTable(int i) const { return _pimpl->vx[i]; }
 
-        /// @brief Get the KTable for the i-th image.
-        boost::shared_ptr<KTable> getKTable(int i) const;
+    //     /// @brief Get the KTable for the i-th image.
+    //     boost::shared_ptr<KTable> getKTable(int i) const;
 
-        /// @brief Get the flux of the i-th image.
-        double getFlux(int i) const { return _pimpl->flux[i]; }
+    //     /// @brief Get the flux of the i-th image.
+    //     double getFlux(int i) const { return _pimpl->flux[i]; }
 
-        /// @brief Get the x-weighted flux of the i-th image.
-        double getXFlux(int i) const { return _pimpl->xflux[i]; }
+    //     /// @brief Get the x-weighted flux of the i-th image.
+    //     double getXFlux(int i) const { return _pimpl->xflux[i]; }
 
-        /// @brief Get the y-weighted flux of the i-th image.
-        double getYFlux(int i) const { return _pimpl->yflux[i]; }
+    //     /// @brief Get the y-weighted flux of the i-th image.
+    //     double getYFlux(int i) const { return _pimpl->yflux[i]; }
 
-        /// @brief Get the initial (unpadded) size of the images.
-        int getNin() const { return _pimpl->Ninitial; }
+    //     /// @brief Get the initial (unpadded) size of the images.
+    //     int getNin() const { return _pimpl->Ninitial; }
 
-        /// @brief Get the bounds of the original image. (Or union of them if multiple.)
-        const Bounds<int>& getInitBounds() const { return _pimpl->init_bounds; }
+    //     /// @brief Get the bounds of the original image. (Or union of them if multiple.)
+    //     const Bounds<int>& getInitBounds() const { return _pimpl->init_bounds; }
 
-        /// @brief Get the size of the images in k-space.
-        int getNft() const { return _pimpl->Nk; }
+    //     /// @brief Get the size of the images in k-space.
+    //     int getNft() const { return _pimpl->Nk; }
 
-    private:
-        // Note: I'm not bothering to make this a real class with setters and getters and all.
-        // A struct is good enough for what we need.
-        // Just want it to be easy to make shallow copies.
-        struct MultipleImageHelperImpl
-        {
-            int Ninitial; ///< maximum size of input images
-            int Nk;  ///< Size of the padded grids and Discrete Fourier transform table.
+    // private:
+    //     // Note: I'm not bothering to make this a real class with setters and getters and all.
+    //     // A struct is good enough for what we need.
+    //     // Just want it to be easy to make shallow copies.
+    //     struct MultipleImageHelperImpl
+    //     {
+    //         int Ninitial; ///< maximum size of input images
+    //         int Nk;  ///< Size of the padded grids and Discrete Fourier transform table.
 
-            Bounds<int> init_bounds;
+    //         Bounds<int> init_bounds;
 
-            /// @brief input images converted into XTables.
-            std::vector<boost::shared_ptr<XTable> > vx;
+    //         /// @brief input images converted into XTables.
+    //         std::vector<boost::shared_ptr<XTable> > vx;
 
-            /// @brief fourier transforms of the images
-            std::vector<boost::shared_ptr<KTable> > vk;
+    //         /// @brief fourier transforms of the images
+    //         std::vector<boost::shared_ptr<KTable> > vk;
 
-            /// @brief Vector of fluxes for each image plane of a multiple image.
-            std::vector<double> flux;
+    //         /// @brief Vector of fluxes for each image plane of a multiple image.
+    //         std::vector<double> flux;
 
-            /// @brief Vector x weighted fluxes for each image plane of a multiple image.
-            std::vector<double> xflux;
+    //         /// @brief Vector x weighted fluxes for each image plane of a multiple image.
+    //         std::vector<double> xflux;
 
-            /// @brief Vector of y weighted fluxes for each image plane of a multiple image.
-            std::vector<double> yflux;
-        };
+    //         /// @brief Vector of y weighted fluxes for each image plane of a multiple image.
+    //         std::vector<double> yflux;
+    //     };
 
-        boost::shared_ptr<MultipleImageHelperImpl> _pimpl;
-    };
+    //     boost::shared_ptr<MultipleImageHelperImpl> _pimpl;
+    // };
 
     /** 
      * @brief Surface Brightness Profile represented by interpolation over one or more data 
@@ -206,24 +206,24 @@ namespace galsim {
             double pad_factor, double stepk, double maxk,
             const GSParamsPtr& gsparams);
 
-        /** 
-         * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
-         * image.
-         *
-         * @param[in] multi     MultipleImageHelper object which stores the information about
-         *                      the component images and their fourier transforms.
-         * @param[in] weights   The weights to use for each component image.
-         * @param[in] xInterp   Interpolation scheme to adopt between pixels 
-         * @param[in] kInterp   Interpolation scheme to adopt in k-space
-         * @param[in] gsparams  GSParams object storing constants that control the accuracy of
-         *                      image operations and rendering.
-         */
-        SBInterpolatedImage(
-            const MultipleImageHelper& multi,
-            const std::vector<double>& weights,
-            boost::shared_ptr<Interpolant2d> xInterp,
-            boost::shared_ptr<Interpolant2d> kInterp,
-            const GSParamsPtr& gsparams);
+        // /**
+        //  * @brief Initialize internal quantities and allocate data tables based on a supplied 2D
+        //  * image.
+        //  *
+        //  * @param[in] multi     MultipleImageHelper object which stores the information about
+        //  *                      the component images and their fourier transforms.
+        //  * @param[in] weights   The weights to use for each component image.
+        //  * @param[in] xInterp   Interpolation scheme to adopt between pixels
+        //  * @param[in] kInterp   Interpolation scheme to adopt in k-space
+        //  * @param[in] gsparams  GSParams object storing constants that control the accuracy of
+        //  *                      image operations and rendering.
+        //  */
+        // SBInterpolatedImage(
+        //     const MultipleImageHelper& multi,
+        //     const std::vector<double>& weights,
+        //     boost::shared_ptr<Interpolant2d> xInterp,
+        //     boost::shared_ptr<Interpolant2d> kInterp,
+        //     const GSParamsPtr& gsparams);
 
         /// @brief Copy Constructor.
         SBInterpolatedImage(const SBInterpolatedImage& rhs);
