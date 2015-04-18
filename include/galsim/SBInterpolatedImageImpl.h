@@ -36,13 +36,6 @@ namespace galsim {
             boost::shared_ptr<Interpolant2d> kInterp,
             double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams);
 
-        // SBInterpolatedImageImpl(
-        //     const MultipleImageHelper& multi,
-        //     const std::vector<double>& weights,
-        //     boost::shared_ptr<Interpolant2d> xInterp,
-        //     boost::shared_ptr<Interpolant2d> kInterp,
-        //     const GSParamsPtr& gsparams);
-
         ~SBInterpolatedImageImpl();
 
         ConstImageView<double> getImage() const;
@@ -121,8 +114,6 @@ namespace galsim {
 
     protected:  // Made protected so that these can be used in the derived CorrelationFunction class
 
-        // MultipleImageHelper _multi;
-        // std::vector<double> _wts;
         int Ninitial;
         int Nk;
         Bounds<int> init_bounds;
