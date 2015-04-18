@@ -32,19 +32,25 @@ namespace galsim {
     class SBInterpolated : public SBProfile
     {
     public:
+
         /// @brief Copy Constructor.
         SBInterpolated(const SBInterpolated& rhs);
 
         /// @brief Destructor
         ~SBInterpolated();
 
+        boost::shared_ptr<Interpolant> getXInterp() const;
+        boost::shared_ptr<Interpolant> getKInterp() const;
+
     protected:
+
         class SBInterpolatedImpl;
 
         // Regular SBProfile pimpl constructor so as to be available to derived classes
         SBInterpolated(SBProfileImpl* pimpl) : SBProfile(pimpl) {}
 
     private:
+
         // op= is undefined
         void operator=(const SBInterpolated& rhs);
     };
@@ -139,14 +145,13 @@ namespace galsim {
         void calculateMaxK(double max_maxk=0.) const;
 
         ConstImageView<double> getImage() const;
-        boost::shared_ptr<Interpolant> getXInterp() const;
-        boost::shared_ptr<Interpolant> getKInterp() const;
 
     protected:
 
         class SBInterpolatedImageImpl;
 
-        // I'm not even sure how this works, but the tests seem to pass...
+        // Wow, three classes here... I'm not even sure how this works,
+        // but the tests seem to pass...
         SBInterpolatedImage(SBProfileImpl* pimpl) : SBInterpolated(pimpl) {}
 
     private:

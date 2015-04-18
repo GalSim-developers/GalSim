@@ -36,6 +36,42 @@ namespace galsim {
                            const GSParamsPtr& gsparams);
         ~SBInterpolatedImpl();
 
+        boost::shared_ptr<Interpolant> getXInterp() const;
+        boost::shared_ptr<Interpolant> getKInterp() const;
+
+        bool isAxisymmetric() const { return false; }
+
+        // We'll use false here, but really, there's not an easy way to tell.
+        // Certainly an Image _could_ have hard edges.
+        bool hasHardEdges() const { return false; }
+
+        // This class will be set up so that both x and k domain values
+        // are found by interpolation of a table:
+        bool isAnalyticX() const { return true; }
+        bool isAnalyticK() const { return true; }
+
+        double maxK() const { return _maxk; }
+        double stepK() const { return _stepk; }
+
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& p) const;
+
+        //Overrides for better efficiency
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, int izero,
+                        double y0, double dy, int jzero) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
+
+        double getFlux() const { return _flux; }
+
     protected:
 
         boost::shared_ptr<Interpolant2d> _xInterp; ///< Interpolant used in real space.
@@ -43,6 +79,16 @@ namespace galsim {
 
         mutable double _stepk; ///< Stored value of stepK
         mutable double _maxk; ///< Stored value of maxK
+
+        boost::shared_ptr<XTable> _xtab; ///< Final padded real-space image.
+        mutable boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
+
+        /// @brief Make ktab if necessary.
+        void checkK() const;
+
+        double _flux;
+        double _maxk1; ///< maxk based just on the xInterp urange
+        double _uscale; ///< conversion from k to u for xInterpolant
 
     private:
 
@@ -65,31 +111,12 @@ namespace galsim {
         ~SBInterpolatedImageImpl();
 
         ConstImageView<double> getImage() const;
-        boost::shared_ptr<Interpolant> getXInterp() const;
-        boost::shared_ptr<Interpolant> getKInterp() const;
-
-        double xValue(const Position<double>& p) const;
-        std::complex<double> kValue(const Position<double>& p) const;
-
-        double maxK() const { return _maxk; }
-        double stepK() const { return _stepk; }
 
         void calculateMaxK(double max_stepk) const;
         void calculateStepK(double max_maxk) const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const;
         void getYRange(double& ymin, double& ymax, std::vector<double>& ) const;
-
-        bool isAxisymmetric() const { return false; }
-
-        // We'll use false here, but really, there's not an easy way to tell.
-        // Certainly an Image _could_ have hard edges.
-        bool hasHardEdges() const { return false; }
-
-        // This class will be set up so that both x and k domain values
-        // are found by interpolation of a table:
-        bool isAnalyticX() const { return true; }
-        bool isAnalyticK() const { return true; }
 
         Position<double> centroid() const;
 
@@ -118,25 +145,10 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;
 
-        double getFlux() const { return _flux; }
         double calculateFlux() const;
 
         double getPositiveFlux() const { checkReadyToShoot(); return _positiveFlux; }
         double getNegativeFlux() const { checkReadyToShoot(); return _negativeFlux; }
-
-        // Overrides for better efficiency
-        void fillXValue(tmv::MatrixView<double> val,
-                        double x0, double dx, int izero,
-                        double y0, double dy, int jzero) const;
-        void fillXValue(tmv::MatrixView<double> val,
-                        double x0, double dx, double dxy,
-                        double y0, double dy, double dyx) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double kx0, double dkx, int izero,
-                        double ky0, double dky, int jzero) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double kx0, double dkx, double dkxy,
-                        double ky0, double dky, double dkyx) const;
 
     protected:  // Made protected so that these can be used in the derived CorrelationFunction class
 
@@ -146,15 +158,6 @@ namespace galsim {
         double xcentroid;
         double ycentroid;
 
-        boost::shared_ptr<XTable> _xtab; ///< Final padded real-space image.
-        mutable boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
-
-        /// @brief Make ktab if necessary.
-        void checkK() const;
-
-        double _maxk1; ///< maxk based just on the xInterp urange
-        double _uscale; ///< conversion from k to u for xInterpolant
-        double _flux;
         int _maxNin;
 
         /// @brief Set true if the data structures for photon-shooting are valid
@@ -189,7 +192,6 @@ namespace galsim {
         SBInterpolatedImageImpl(const SBInterpolatedImageImpl& rhs);
         void operator=(const SBInterpolatedImageImpl& rhs);
     };
-
 }
 
 #endif
