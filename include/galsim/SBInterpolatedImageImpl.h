@@ -29,8 +29,14 @@ namespace galsim {
     class SBInterpolated::SBInterpolatedImpl : public SBProfile::SBProfileImpl
     {
     public:
-        SBInterpolatedImpl(const GSParamsPtr& gsparams);
+        SBInterpolatedImpl(boost::shared_ptr<Interpolant2d> xInterp,
+                           boost::shared_ptr<Interpolant2d> kInterp,
+                           const GSParamsPtr& gsparams);
         ~SBInterpolatedImpl();
+
+    protected:
+        boost::shared_ptr<Interpolant2d> _xInterp; ///< Interpolant used in real space.
+        boost::shared_ptr<Interpolant2d> _kInterp; ///< Interpolant used in k space.
 
     private:
 
@@ -44,7 +50,7 @@ namespace galsim {
     public:
         template <typename T> 
         SBInterpolatedImageImpl(
-            const BaseImage<T>& image, 
+            const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
             double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams);
@@ -133,9 +139,6 @@ namespace galsim {
         double xcentroid;
         double ycentroid;
 
-        boost::shared_ptr<Interpolant2d> _xInterp; ///< Interpolant used in real space.
-        boost::shared_ptr<Interpolant2d> _kInterp; ///< Interpolant used in k space.
-
         boost::shared_ptr<XTable> _xtab; ///< Final padded real-space image.
         mutable boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
 
@@ -148,8 +151,6 @@ namespace galsim {
         double _uscale; ///< conversion from k to u for xInterpolant
         double _flux;
         int _maxNin;
-
-        void initialize(); ///< Put code common to both constructors here.
 
         /// @brief Set true if the data structures for photon-shooting are valid
         mutable bool _readyToShoot;

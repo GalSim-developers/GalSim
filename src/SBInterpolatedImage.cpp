@@ -36,8 +36,11 @@ namespace galsim {
 
     SBInterpolated::~SBInterpolated() {}
 
-    SBInterpolated::SBInterpolatedImpl::SBInterpolatedImpl(const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams) {}
+    SBInterpolated::SBInterpolatedImpl::SBInterpolatedImpl(
+        boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp,
+        const GSParamsPtr& gsparams) :
+        SBProfileImpl(gsparams), _xInterp(xInterp), _kInterp(kInterp) {}
 
     SBInterpolated::SBInterpolatedImpl::~SBInterpolatedImpl() {}
 
@@ -146,8 +149,7 @@ namespace galsim {
         const BaseImage<T>& image, 
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams) :
-        SBInterpolatedImpl(gsparams),
-        _xInterp(xInterp), _kInterp(kInterp),
+        SBInterpolatedImpl(xInterp, kInterp, gsparams),
         _stepk(stepk), _maxk(maxk), _readyToShoot(false)
     {
         dbg<<"image bounds = "<<image.getBounds()<<std::endl;
