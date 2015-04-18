@@ -29,6 +29,26 @@
 
 namespace galsim {
 
+    class SBInterpolated : public SBProfile
+    {
+    public:
+        /// @brief Copy Constructor.
+        SBInterpolated(const SBInterpolated& rhs);
+
+        /// @brief Destructor
+        ~SBInterpolated();
+
+    protected:
+        class SBInterpolatedImpl;
+
+        // Regular SBProfile pimpl constructor so as to be available to derived classes
+        SBInterpolated(SBProfileImpl* pimpl) : SBProfile(pimpl) {}
+
+    private:
+        // op= is undefined
+        void operator=(const SBInterpolated& rhs);
+    };
+
     /** 
      * @brief Surface Brightness Profile represented by interpolation over one or more data 
      * tables/images.
@@ -62,7 +82,7 @@ namespace galsim {
      * InterpolatedImage class takes care of converting between these units and the arcsec units
      * that are usually desired.
      */
-    class SBInterpolatedImage : public SBProfile 
+    class SBInterpolatedImage : public SBInterpolated
     {
     public:
         /** 
@@ -126,8 +146,8 @@ namespace galsim {
 
         class SBInterpolatedImageImpl;
 
-        // Regular SBProfile pimpl constructor so as to be available to derived classes
-        SBInterpolatedImage(SBProfileImpl* pimpl) : SBProfile(pimpl) {}
+        // I'm not even sure how this works, but the tests seem to pass...
+        SBInterpolatedImage(SBProfileImpl* pimpl) : SBInterpolated(pimpl) {}
 
     private:
         // op= is undefined

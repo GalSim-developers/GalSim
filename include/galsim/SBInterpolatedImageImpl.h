@@ -26,7 +26,20 @@
 
 namespace galsim {
 
-    class SBInterpolatedImage::SBInterpolatedImageImpl : public SBProfile::SBProfileImpl 
+    class SBInterpolated::SBInterpolatedImpl : public SBProfile::SBProfileImpl
+    {
+    public:
+        SBInterpolatedImpl(const GSParamsPtr& gsparams);
+        ~SBInterpolatedImpl();
+
+    private:
+
+        // Copy constructor and op= are undefined.
+        SBInterpolatedImpl(const SBInterpolatedImpl& rhs);
+        void operator=(const SBInterpolatedImpl& rhs);
+    };
+
+    class SBInterpolatedImage::SBInterpolatedImageImpl : public SBInterpolated::SBInterpolatedImpl
     {
     public:
         template <typename T> 

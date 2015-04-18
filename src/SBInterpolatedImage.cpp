@@ -32,12 +32,21 @@ int verbose_level = 2;
 
 namespace galsim {
 
+    SBInterpolated::SBInterpolated(const SBInterpolated& rhs) : SBProfile(rhs) {}
+
+    SBInterpolated::~SBInterpolated() {}
+
+    SBInterpolated::SBInterpolatedImpl::SBInterpolatedImpl(const GSParamsPtr& gsparams) :
+        SBProfileImpl(gsparams) {}
+
+    SBInterpolated::SBInterpolatedImpl::~SBInterpolatedImpl() {}
+
     template <typename T> 
     SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<T>& image,
         boost::shared_ptr<Interpolant> xInterp, boost::shared_ptr<Interpolant> kInterp,
         double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams) :
-        SBProfile(
+        SBInterpolated(
             new SBInterpolatedImageImpl(
                 image,
                 boost::shared_ptr<Interpolant2d>(new InterpolantXY(xInterp)),
@@ -50,11 +59,11 @@ namespace galsim {
         const BaseImage<T>& image,
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams) :
-        SBProfile(
+        SBInterpolated(
             new SBInterpolatedImageImpl(image,xInterp,kInterp,pad_factor,stepk,maxk,gsparams)
         ) {}
 
-    SBInterpolatedImage::SBInterpolatedImage(const SBInterpolatedImage& rhs) : SBProfile(rhs) {}
+    SBInterpolatedImage::SBInterpolatedImage(const SBInterpolatedImage& rhs) : SBInterpolated(rhs) {}
 
     SBInterpolatedImage::~SBInterpolatedImage() {}
 
@@ -137,7 +146,7 @@ namespace galsim {
         const BaseImage<T>& image, 
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams),
+        SBInterpolatedImpl(gsparams),
         _xInterp(xInterp), _kInterp(kInterp),
         _stepk(stepk), _maxk(maxk), _readyToShoot(false)
     {
