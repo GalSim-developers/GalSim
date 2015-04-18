@@ -29,14 +29,20 @@ namespace galsim {
     class SBInterpolated::SBInterpolatedImpl : public SBProfile::SBProfileImpl
     {
     public:
+
         SBInterpolatedImpl(boost::shared_ptr<Interpolant2d> xInterp,
                            boost::shared_ptr<Interpolant2d> kInterp,
+                           double stepk, double maxk,
                            const GSParamsPtr& gsparams);
         ~SBInterpolatedImpl();
 
     protected:
+
         boost::shared_ptr<Interpolant2d> _xInterp; ///< Interpolant used in real space.
         boost::shared_ptr<Interpolant2d> _kInterp; ///< Interpolant used in k space.
+
+        mutable double _stepk; ///< Stored value of stepK
+        mutable double _maxk; ///< Stored value of maxK
 
     private:
 
@@ -48,6 +54,7 @@ namespace galsim {
     class SBInterpolatedImage::SBInterpolatedImageImpl : public SBInterpolated::SBInterpolatedImpl
     {
     public:
+
         template <typename T> 
         SBInterpolatedImageImpl(
             const BaseImage<T>& image,
@@ -145,8 +152,6 @@ namespace galsim {
         /// @brief Make ktab if necessary.
         void checkK() const;
 
-        mutable double _stepk; ///< Stored value of stepK
-        mutable double _maxk; ///< Stored value of maxK
         double _maxk1; ///< maxk based just on the xInterp urange
         double _uscale; ///< conversion from k to u for xInterpolant
         double _flux;
