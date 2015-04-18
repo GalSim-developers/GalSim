@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include <algorithm>
 #include "SBInterpolatedImage.h"
@@ -271,16 +271,18 @@ namespace galsim {
         _stepk(stepk), _maxk(maxk), _readyToShoot(false)
     // { initialize(); }
     {
+        dbg<<"image bounds = "<<image.getBounds()<<std::endl;
+        dbg<<"pad_factor = "<<pad_factor<<std::endl;
         assert(_xInterp.get());
         assert(_kInterp.get());
 
-        dbg<<"xrange = "<<_xInterp->xrange()<<std::endl;
-
-        Ninitial = std::max(image.getYMax()-image.getYMin()+1,
+        Ninitial = std::max(image.getXMax()-image.getXMin()+1,
                             image.getYMax()-image.getYMin()+1);
         init_bounds = image.getBounds();
+        dbg<<"Ninitial = "<<Ninitial<<std::endl;
         assert(pad_factor > 0.);
         Nk = goodFFTSize(int(pad_factor*Ninitial));
+        dbg<<"Nk = "<<Nk<<std::endl;
         double sum = 0.;
         double sumx = 0.;
         double sumy = 0.;
@@ -306,6 +308,7 @@ namespace galsim {
         xcentroid = sumx/sum;
         ycentroid = sumy/sum;
         dbg<<"flux = "<<_flux<<", xcentroid = "<<xcentroid<<", ycentroid = "<<ycentroid<<std::endl;
+        dbg<<"N = "<<Ninitial<<", xrange = "<<_xInterp->xrange()<<std::endl;
         dbg<<"xtab size = "<<_xtab->getN()<<", scale = "<<_xtab->getDx()<<std::endl;
 
         if (_stepk <= 0.) {
