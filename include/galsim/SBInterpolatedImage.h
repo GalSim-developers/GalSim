@@ -158,6 +158,65 @@ namespace galsim {
         // op= is undefined
         void operator=(const SBInterpolatedImage& rhs);
     };
+
+    class SBInterpolatedKImage : public SBInterpolated
+    {
+    public:
+        /**
+         * @brief Initialize internal quantities and allocate data tables based on a supplied 2D
+         * image.
+         *
+         * @param[in] realImage   Input Image (any of ImageF, ImageD, ImageS, ImageI).
+         * @param[in] imagImage   Input Image (any of ImageF, ImageD, ImageS, ImageI).
+         * @param[in] xInterp     Interpolation scheme to adopt between pixels
+         * @param[in] kInterp     Interpolation scheme to adopt in k-space
+         * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
+         *                        for the Fourier transform.
+         * @param[in] stepk       If > 0, force stepk to this value.
+         * @param[in] maxk        If > 0, force maxk to this value.
+         * @param[in] gsparams    GSParams object storing constants that control the accuracy of
+         *                        image operations and rendering.
+         */
+        template <typename T>
+        SBInterpolatedKImage(
+            const BaseImage<T>& realImage,
+            const BaseImage<T>& imagImage,
+            boost::shared_ptr<Interpolant> xInterp,
+            boost::shared_ptr<Interpolant> kInterp,
+            double pad_factor, double stepk, double maxk,
+            const GSParamsPtr& gsparams);
+
+        /// @brief Same as above, but take 2-d interpolants.
+        template <typename T>
+        SBInterpolatedKImage(
+            const BaseImage<T>& realImage,
+            const BaseImage<T>& imagImage,
+            boost::shared_ptr<Interpolant2d> xInterp,
+            boost::shared_ptr<Interpolant2d> kInterp,
+            double pad_factor, double stepk, double maxk,
+            const GSParamsPtr& gsparams);
+
+        /// @brief Copy Constructor.
+        SBInterpolatedKImage(const SBInterpolatedKImage& rhs);
+
+        /// @brief Destructor
+        ~SBInterpolatedKImage();
+
+        ConstImageView<double> getRealImage() const;
+        ConstImageView<double> getImagImage() const;
+
+    protected:
+
+        class SBInterpolatedKImageImpl;
+
+        // Wow, three classes here... I'm not even sure how this works,
+        // but the tests seem to pass...
+        SBInterpolatedKImage(SBProfileImpl* pimpl) : SBInterpolated(pimpl) {}
+
+    private:
+        // op= is undefined
+        void operator=(const SBInterpolatedKImage& rhs);
+    };
 }
 
 #endif

@@ -158,8 +158,6 @@ namespace galsim {
         double xcentroid;
         double ycentroid;
 
-        int _maxNin;
-
         /// @brief Set true if the data structures for photon-shooting are valid
         mutable bool _readyToShoot;
 
@@ -191,6 +189,43 @@ namespace galsim {
         // Copy constructor and op= are undefined.
         SBInterpolatedImageImpl(const SBInterpolatedImageImpl& rhs);
         void operator=(const SBInterpolatedImageImpl& rhs);
+    };
+
+    class SBInterpolatedKImage::SBInterpolatedKImageImpl :
+        public SBInterpolated::SBInterpolatedImpl
+    {
+    public:
+
+        template <typename T>
+        SBInterpolatedKImageImpl(
+            const BaseImage<T>& realImage,
+            const BaseImage<T>& imagImage,
+            boost::shared_ptr<Interpolant2d> xInterp,
+            boost::shared_ptr<Interpolant2d> kInterp,
+            double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams);
+
+        ~SBInterpolatedKImageImpl();
+
+        ConstImageView<double> getRealImage() const;
+        ConstImageView<double> getImagImage() const;
+
+        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const;
+        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const;
+
+        Position<double> centroid() const;
+
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const
+        { throw SBError("SBInterpolatedKImage::shoot() is not implemented"); }
+
+    protected:  // Made protected so that these can be used in the derived CorrelationFunction class
+
+        std::string repr() const;
+
+    private:
+
+        // Copy constructor and op= are undefined.
+        SBInterpolatedKImageImpl(const SBInterpolatedKImageImpl& rhs);
+        void operator=(const SBInterpolatedKImageImpl& rhs);
     };
 }
 
