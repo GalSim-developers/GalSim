@@ -219,6 +219,9 @@ namespace galsim {
 
     protected:  // Made protected so that these can be used in the derived CorrelationFunction class
 
+        Bounds<int> init_bounds;
+        double xcentroid;
+        double ycentroid;
         std::string repr() const;
 
     private:
