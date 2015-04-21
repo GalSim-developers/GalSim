@@ -39,7 +39,6 @@ namespace galsim {
         /// @brief Destructor
         ~SBInterpolated();
 
-        boost::shared_ptr<Interpolant> getXInterp() const;
         boost::shared_ptr<Interpolant> getKInterp() const;
 
     protected:
@@ -128,6 +127,8 @@ namespace galsim {
         /// @brief Destructor
         ~SBInterpolatedImage();
 
+        boost::shared_ptr<Interpolant> getXInterp() const;
+
         /**
          * @brief Refine the value of stepK if the input image was larger than necessary.
          *
@@ -166,14 +167,13 @@ namespace galsim {
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D
          * image.
          *
-         * @param[in] realImage   Input Image (any of ImageF, ImageD, ImageS, ImageI).
-         * @param[in] imagImage   Input Image (any of ImageF, ImageD, ImageS, ImageI).
-         * @param[in] xInterp     Interpolation scheme to adopt between pixels
-         * @param[in] kInterp     Interpolation scheme to adopt in k-space
-         * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
-         *                        for the Fourier transform.
+         * @param[in] realKImage  Real part of input Fourier-space Image
+         *                        (any of ImageF, ImageD, ImageS, ImageI).
+         * @param[in] imagKImage  Imaginary part of input Fourier-space Image
+         *                        (any of ImageF, ImageD, ImageS, ImageI).
+         * @param[in] dk          Pitch of Fourier-space image.
          * @param[in] stepk       If > 0, force stepk to this value.
-         * @param[in] maxk        If > 0, force maxk to this value.
+         * @param[in] kInterp     Interpolation scheme to adopt in k-space
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
          *                        image operations and rendering.
          */
@@ -181,9 +181,8 @@ namespace galsim {
         SBInterpolatedKImage(
             const BaseImage<T>& realImage,
             const BaseImage<T>& imagImage,
-            boost::shared_ptr<Interpolant> xInterp,
+            double dk, double stepk,
             boost::shared_ptr<Interpolant> kInterp,
-            double pad_factor, double stepk, double maxk,
             const GSParamsPtr& gsparams);
 
         /// @brief Same as above, but take 2-d interpolants.
@@ -191,9 +190,8 @@ namespace galsim {
         SBInterpolatedKImage(
             const BaseImage<T>& realImage,
             const BaseImage<T>& imagImage,
-            boost::shared_ptr<Interpolant2d> xInterp,
+            double dk, double stepk,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double pad_factor, double stepk, double maxk,
             const GSParamsPtr& gsparams);
 
         /// @brief Copy Constructor.
@@ -202,8 +200,8 @@ namespace galsim {
         /// @brief Destructor
         ~SBInterpolatedKImage();
 
-        ConstImageView<double> getRealImage() const;
-        ConstImageView<double> getImagImage() const;
+        // ConstImageView<double> getRealKImage() const;
+        // ConstImageView<double> getImagKImage() const;
 
     protected:
 

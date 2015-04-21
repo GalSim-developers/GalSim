@@ -30,13 +30,11 @@ namespace galsim {
     {
     public:
 
-        SBInterpolatedImpl(boost::shared_ptr<Interpolant2d> xInterp,
-                           boost::shared_ptr<Interpolant2d> kInterp,
+        SBInterpolatedImpl(boost::shared_ptr<Interpolant2d> kInterp,
                            double stepk, double maxk,
                            const GSParamsPtr& gsparams);
         ~SBInterpolatedImpl();
 
-        boost::shared_ptr<Interpolant> getXInterp() const;
         boost::shared_ptr<Interpolant> getKInterp() const;
 
         bool isAxisymmetric() const { return false; }
@@ -53,42 +51,20 @@ namespace galsim {
         double maxK() const { return _maxk; }
         double stepK() const { return _stepk; }
 
-        double xValue(const Position<double>& p) const;
-        std::complex<double> kValue(const Position<double>& p) const;
-
         //Overrides for better efficiency
-        void fillXValue(tmv::MatrixView<double> val,
-                        double x0, double dx, int izero,
-                        double y0, double dy, int jzero) const;
-        void fillXValue(tmv::MatrixView<double> val,
-                        double x0, double dx, double dxy,
-                        double y0, double dy, double dyx) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double kx0, double dkx, int izero,
-                        double ky0, double dky, int jzero) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double kx0, double dkx, double dkxy,
-                        double ky0, double dky, double dkyx) const;
 
         double getFlux() const { return _flux; }
 
     protected:
 
-        boost::shared_ptr<Interpolant2d> _xInterp; ///< Interpolant used in real space.
         boost::shared_ptr<Interpolant2d> _kInterp; ///< Interpolant used in k space.
 
         mutable double _stepk; ///< Stored value of stepK
         mutable double _maxk; ///< Stored value of maxK
 
-        boost::shared_ptr<XTable> _xtab; ///< Final padded real-space image.
         mutable boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
 
-        /// @brief Make ktab if necessary.
-        void checkK() const;
-
         double _flux;
-        double _maxk1; ///< maxk based just on the xInterp urange
-        double _uscale; ///< conversion from k to u for xInterpolant
 
     private:
 
@@ -96,6 +72,7 @@ namespace galsim {
         SBInterpolatedImpl(const SBInterpolatedImpl& rhs);
         void operator=(const SBInterpolatedImpl& rhs);
     };
+
 
     class SBInterpolatedImage::SBInterpolatedImageImpl : public SBInterpolated::SBInterpolatedImpl
     {
@@ -109,6 +86,23 @@ namespace galsim {
             double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams);
 
         ~SBInterpolatedImageImpl();
+
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& p) const;
+        boost::shared_ptr<Interpolant> getXInterp() const;
+
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, int izero,
+                        double y0, double dy, int jzero) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
 
         ConstImageView<double> getImage() const;
 
@@ -158,6 +152,15 @@ namespace galsim {
         double xcentroid;
         double ycentroid;
 
+        boost::shared_ptr<Interpolant2d> _xInterp; ///< Interpolant used in real space.
+        boost::shared_ptr<XTable> _xtab; ///< Final padded real-space image.
+
+        double _maxk1; ///< maxk based just on the xInterp urange
+        double _uscale; ///< conversion from k to u for xInterpolant
+
+        /// @brief Make ktab if necessary.
+        void checkK() const;
+
         /// @brief Set true if the data structures for photon-shooting are valid
         mutable bool _readyToShoot;
 
@@ -191,6 +194,7 @@ namespace galsim {
         void operator=(const SBInterpolatedImageImpl& rhs);
     };
 
+
     class SBInterpolatedKImage::SBInterpolatedKImageImpl :
         public SBInterpolated::SBInterpolatedImpl
     {
@@ -198,19 +202,25 @@ namespace galsim {
 
         template <typename T>
         SBInterpolatedKImageImpl(
-            const BaseImage<T>& realImage,
-            const BaseImage<T>& imagImage,
-            boost::shared_ptr<Interpolant2d> xInterp,
+            const BaseImage<T>& realKImage,
+            const BaseImage<T>& imagKImage,
+            double dk, double stepk,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams);
+            const GSParamsPtr& gsparams);
 
         ~SBInterpolatedKImageImpl();
 
-        ConstImageView<double> getRealImage() const;
-        ConstImageView<double> getImagImage() const;
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& p) const;
+        // void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        //                 double kx0, double dkx, int izero,
+        //                 double ky0, double dky, int jzero) const;
+        // void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        //                 double kx0, double dkx, double dkxy,
+        //                 double ky0, double dky, double dkyx) const;
 
-        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const;
-        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const;
+        // ConstImageView<double> getRealKImage() const;
+        // ConstImageView<double> getImagKImage() const;
 
         Position<double> centroid() const;
 
@@ -219,10 +229,12 @@ namespace galsim {
 
     protected:  // Made protected so that these can be used in the derived CorrelationFunction class
 
-        Bounds<int> init_bounds;
+        std::string repr() const;
+        double _dk;
         double xcentroid;
         double ycentroid;
-        std::string repr() const;
+        int Ninitial;
+        int Nk;
 
     private:
 

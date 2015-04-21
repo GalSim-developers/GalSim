@@ -15,7 +15,7 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file interpolatedimage.py 
+"""@file interpolatedimage.py
 
 InterpolatedImage is a class that allows one to treat an image as a profile.
 """
@@ -25,15 +25,16 @@ from galsim import GSObject
 from . import _galsim
 from ._galsim import Interpolant
 from ._galsim import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
+import numpy as np
 
 class InterpolatedImage(GSObject):
-    """A class describing non-parametric profiles specified using an Image, which can be 
+    """A class describing non-parametric profiles specified using an Image, which can be
     interpolated for the purpose of carrying out transformations.
 
-    The InterpolatedImage class is useful if you have a non-parametric description of an object as 
+    The InterpolatedImage class is useful if you have a non-parametric description of an object as
     an Image, that you wish to manipulate / transform using GSObject methods such as shear(),
     magnify(), shift(), etc.  Note that when convolving an InterpolatedImage, the use of real-space
-    convolution is not recommended, since it is typically a great deal slower than Fourier-space 
+    convolution is not recommended, since it is typically a great deal slower than Fourier-space
     convolution for this kind of object.
 
     There are three options for determining the flux of the profile.  First, you can simply
@@ -59,25 +60,25 @@ class InterpolatedImage(GSObject):
 
     The user may optionally specify an interpolant, `x_interpolant`, for real-space manipulations
     (e.g., shearing, resampling).  If none is specified, then by default, a Quintic interpolant is
-    used.  The user may also choose to specify two quantities that can affect the Fourier space 
-    convolution: the k-space interpolant (`k_interpolant`) and the amount of padding to include 
+    used.  The user may also choose to specify two quantities that can affect the Fourier space
+    convolution: the k-space interpolant (`k_interpolant`) and the amount of padding to include
     around the original images (`pad_factor`).  The default values for `x_interpolant`,
     `k_interpolant`, and `pad_factor` were chosen based on the tests of branch #389 to reach good
-    accuracy without being excessively slow.  Users should be particularly wary about changing 
-    `k_interpolant` and `pad_factor` from the defaults without careful testing.  The user is given 
-    complete freedom to choose interpolants and pad factors, and no warnings are raised when the 
-    code is modified to choose some combination that is known to give significant error.  More 
-    details can be found in http://arxiv.org/abs/1401.2636, especially table 1, and in comment 
+    accuracy without being excessively slow.  Users should be particularly wary about changing
+    `k_interpolant` and `pad_factor` from the defaults without careful testing.  The user is given
+    complete freedom to choose interpolants and pad factors, and no warnings are raised when the
+    code is modified to choose some combination that is known to give significant error.  More
+    details can be found in http://arxiv.org/abs/1401.2636, especially table 1, and in comment
     https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621 and the following
     comments.
-    
+
     The user can choose to pad the image with a noise profile if desired.  To do so, specify
     the target size for the noise padding in `noise_pad_size`, and specify the kind of noise
     to use in `noise_pad`.  The `noise_pad` option may be a Gaussian random noise of some variance,
-    or a Gaussian but correlated noise field that is specified either as a CorrelatedNoise 
-    instance, an Image (from which a correlated noise model is derived), or a string (interpreted 
-    as a filename containing an image to use for deriving a CorrelatedNoise).  The user can also 
-    pass in a random number generator to be used for noise generation.  Finally, the user can pass 
+    or a Gaussian but correlated noise field that is specified either as a CorrelatedNoise
+    instance, an Image (from which a correlated noise model is derived), or a string (interpreted
+    as a filename containing an image to use for deriving a CorrelatedNoise).  The user can also
+    pass in a random number generator to be used for noise generation.  Finally, the user can pass
     in a `pad_image` for deterministic image padding.
 
     By default, the InterpolatedImage recalculates the Fourier-space step and number of points to
@@ -89,7 +90,7 @@ class InterpolatedImage(GSObject):
 
     Initialization
     --------------
-    
+
         >>> interpolated_image = galsim.InterpolatedImage(
                 image, x_interpolant=None, k_interpolant=None, normalization='flux', scale=None,
                 wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0., use_cache=True,
@@ -151,7 +152,7 @@ class InterpolatedImage(GSObject):
     @param noise_pad        Noise properties to use when padding the original image with
                             noise.  This can be specified in several ways:
                                (a) as a float, which is interpreted as being a variance to use when
-                                   padding with uncorrelated Gaussian noise; 
+                                   padding with uncorrelated Gaussian noise;
                                (b) as a galsim.CorrelatedNoise, which contains information about the
                                    desired noise power spectrum - any random number generator passed
                                    to the `rng` keyword will take precedence over that carried in an
@@ -258,8 +259,6 @@ class InterpolatedImage(GSObject):
             depr('dx', 1.1, 'scale')
             scale = dx
 
-        import numpy
-
         # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
         try:
@@ -270,7 +269,7 @@ class InterpolatedImage(GSObject):
         # make sure image is really an image and has a float type
         if not isinstance(image, galsim.Image):
             raise ValueError("Supplied image is not an Image instance")
-        if image.dtype != numpy.float32 and image.dtype != numpy.float64:
+        if image.dtype != np.float32 and image.dtype != np.float64:
             raise ValueError("Supplied image is not an image of floats or doubles!")
 
         # it must have well-defined bounds, otherwise seg fault in SBInterpolatedImage constructor
@@ -320,12 +319,11 @@ class InterpolatedImage(GSObject):
 
         # Check that given pad_image is valid:
         if pad_image:
-            import numpy
             if isinstance(pad_image, str):
                 pad_image = galsim.fits.read(pad_image)
             if not isinstance(pad_image, galsim.Image):
                 raise ValueError("Supplied pad_image is not an Image!")
-            if pad_image.dtype != numpy.float32 and pad_image.dtype != numpy.float64:
+            if pad_image.dtype != np.float32 and pad_image.dtype != np.float64:
                 raise ValueError("Supplied pad_image is not one of the allowed types!")
 
         # Check that the given noise_pad is valid:
@@ -376,16 +374,16 @@ class InterpolatedImage(GSObject):
                 # if both noise_pad and pad_image are set, then we need to build up a larger
                 # pad_image and place the given pad_image in the center.
 
-                # We will change the bounds here, so make a new view to avoid modifying the 
+                # We will change the bounds here, so make a new view to avoid modifying the
                 # input pad_image.
-                pad_image = pad_image.view()  
+                pad_image = pad_image.view()
                 pad_image.setCenter(0,0)
                 new_pad_image.setCenter(0,0)
                 if new_pad_image.bounds.includes(pad_image.bounds):
                     new_pad_image[pad_image.bounds] = pad_image
                 else:
                     new_pad_image = pad_image
-            
+
             pad_image = new_pad_image
 
         elif pad_image:
@@ -405,7 +403,7 @@ class InterpolatedImage(GSObject):
         else:
             pad_image = self.image
 
-        # GalSim cannot automatically know what stepK and maxK are appropriate for the 
+        # GalSim cannot automatically know what stepK and maxK are appropriate for the
         # input image.  So it is usually worth it to do a manual calculation (below).
         #
         # However, there is also a hidden option to force it to use specific values of stepK and
@@ -457,7 +455,7 @@ class InterpolatedImage(GSObject):
         offset = prof._parse_offset(offset)
 
         # Apply the offset, and possibly fix the centering for even-sized images
-        # Note reverse=True, since we want to fix the center in the opposite sense of what the 
+        # Note reverse=True, since we want to fix the center in the opposite sense of what the
         # draw function does.
         prof = prof._fix_center(self.image.array.shape, offset, use_true_center, reverse=True)
 
@@ -489,8 +487,6 @@ class InterpolatedImage(GSObject):
     def buildNoisePadImage(self, noise_pad_size, noise_pad, rng):
         """A helper function that builds the `pad_image` from the given `noise_pad` specification.
         """
-        import numpy as np
-
         # Make it with the same dtype as the image
         pad_image = galsim.Image(noise_pad_size, noise_pad_size, dtype=self.image.dtype)
 
@@ -509,7 +505,7 @@ class InterpolatedImage(GSObject):
                 noise = noise.copy(rng=rng)
         elif isinstance(noise_pad, str):
             noise = galsim.CorrelatedNoise(galsim.fits.read(noise_pad), rng)
-            if self.use_cache: 
+            if self.use_cache:
                 InterpolatedImage._cache_noise_pad[noise_pad] = noise
         else:
             raise ValueError(
@@ -548,6 +544,40 @@ class InterpolatedImage(GSObject):
                       pad_factor=self._pad_factor, flux=self._flux,
                       offset=self._offset, use_true_center=False, gsparams=self._gsparams,
                       _force_stepk=self._stepk, _force_maxk=self._maxk)
+
+
+class InterpolatedKImage(GSObject):
+    def __init__(self, real_kimage, imag_kimage, k_interpolant=None, stepk=0.,
+                 gsparams=None):
+
+        # make sure real_kimage, imag_kimage are really `Image`s and are congruent.
+        if not isinstance(real_kimage, galsim.Image) or not isinstance(imag_kimage, galsim.Image) :
+            raise ValueError("Supplied kimage is not an Image instance")
+        if ((real_kimage.dtype != np.float32 and real_kimage.dtype != np.float64)
+            or (imag_kimage.dtype != np.float32 and imag_kimage.dtype != np.float64)):
+            raise ValueError("Supplied image is not an image of floats or doubles!")
+        if real_kimage.bounds != imag_kimage.bounds:
+            raise ValueError("Real and Imag kimages must have same bounds.")
+        if real_kimage.scale != imag_kimage.scale:
+            raise ValueError("Real and Imag kimages must have same scale.")
+
+        # set up k_interpolant if none was provided by user, or check that the user-provided one
+        # is of a valid type
+        if k_interpolant is None:
+            self.k_interpolant = galsim.Quintic(tol=1e-4)
+        else:
+            self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
+
+        # TODO: check for symmetry properties of real_kimage and imag_kimage
+
+        scale = real_kimage.scale
+        if stepk == 0.0:
+            stepk = scale
+
+        sbii = galsim._galsim.SBInterpolatedKImage(
+            real_kimage.image, imag_kimage.image, stepk, scale, self.k_interpolant, gsparams)
+
+        GSObject.__init__(self, sbii)
 
 
 _galsim.SBInterpolatedImage.__getinitargs__ = lambda self: (

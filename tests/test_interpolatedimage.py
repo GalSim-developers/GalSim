@@ -1036,6 +1036,29 @@ def test_stepk_maxk():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_kround_trip():
+    a = final
+    real_a, imag_a = a.drawKImage()
+    b = galsim.InterpolatedKImage(real_a, imag_a)
+
+    for kx, ky in zip(KXVALS, KYVALS):
+        np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 2, 
+            err_msg=("InterpolatedKImage evaluated incorrectly at ({:0},{:1})"
+                     .format(kx, ky)))
+
+    np.testing.assert_almost_equal(a.getFlux(), b.getFlux(),6) #Fails at 7th decimal
+    
+    real_b, imag_b = b.drawKImage(real_a.copy(), imag_a.copy())
+    # Fails at 5th decimal
+    np.testing.assert_array_almost_equal(real_a.array/a.flux, real_b.array/b.flux, 4) 
+    # Fails at 4th decimal
+    np.testing.assert_array_almost_equal(imag_a.array/a.flux, imag_b.array/b.flux, 3) 
+    
+    img_a = a.drawImage()
+    img_b = b.drawImage(img_a.copy())
+    # Fails at 7th decimal
+    np.testing.assert_array_almost_equal(img_a.array/a.flux, img_a.array/b.flux, 6) 
+
 if __name__ == "__main__":
     test_roundtrip()
     test_fluxnorm()
@@ -1052,4 +1075,4 @@ if __name__ == "__main__":
     test_Lanczos7_ref()
     test_conserve_dc()
     test_stepk_maxk()
-
+    test_kround_trip()

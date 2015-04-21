@@ -30,14 +30,14 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBInterpolatedImage 
+    struct PySBInterpolatedImage
     {
 #if 0
         template <typename U, typename W>
-        static void wrapTemplates_Multi(W& wrapper) 
+        static void wrapTemplates_Multi(W& wrapper)
         {
             wrapper
-                .def(bp::init<const std::vector<boost::shared_ptr<BaseImage<U> > >&, 
+                .def(bp::init<const std::vector<boost::shared_ptr<BaseImage<U> > >&,
                      double>(
                         (bp::arg("images"), bp::arg("pad_factor")=4.)
                 ))
@@ -49,7 +49,7 @@ namespace galsim {
 #endif
 
         template <typename U, typename W>
-        static void wrapTemplates(W& wrapper) 
+        static void wrapTemplates(W& wrapper)
         {
             wrapper
                 .def(bp::init<const BaseImage<U> &,
@@ -66,7 +66,7 @@ namespace galsim {
                 ;
         }
 
-        static void wrap() 
+        static void wrap()
         {
 #if 0
             bp::class_< MultipleImageHelper > pyMultipleImageHelper(
@@ -109,9 +109,52 @@ namespace galsim {
 
     };
 
-    void pyExportSBInterpolatedImage() 
+    struct PySBInterpolatedKImage
+    {
+        template <typename U, typename W>
+        static void wrapTemplates(W& wrapper)
+        {
+            wrapper
+                .def(bp::init<const BaseImage<U> &,
+                     const BaseImage<U> &,
+                     double, double,
+                     boost::shared_ptr<Interpolant>,
+                     boost::shared_ptr<GSParams> >(
+                         (bp::arg("real_kimage"),
+                          bp::arg("imag_kimage"),
+                          bp::arg("stepk"),
+                          bp::arg("dk"),
+                          bp::arg("kInterp"),
+                          bp::arg("gsparams")=bp::object())
+                     )
+                )
+                ;
+        }
+
+        static void wrap()
+        {
+            bp::class_< SBInterpolatedKImage, bp::bases<SBProfile> > pySBInterpolatedKImage(
+                "SBInterpolatedKImage", bp::init<const SBInterpolatedKImage &>()
+            );
+            pySBInterpolatedKImage
+                .def("getKInterp", &SBInterpolatedImage::getKInterp)
+                ;
+            wrapTemplates<float>(pySBInterpolatedKImage);
+            wrapTemplates<double>(pySBInterpolatedKImage);
+            wrapTemplates<int32_t>(pySBInterpolatedKImage);
+            wrapTemplates<int16_t>(pySBInterpolatedKImage);
+        }
+
+    };
+
+    void pyExportSBInterpolatedImage()
     {
         PySBInterpolatedImage::wrap();
+    }
+
+    void pyExportSBInterpolatedKImage()
+    {
+        PySBInterpolatedKImage::wrap();
     }
 
 } // namespace galsim
