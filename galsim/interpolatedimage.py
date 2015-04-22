@@ -568,10 +568,10 @@ class InterpolatedKImage(GSObject):
         else:
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
-        # Check for symmetry properties of real_kimage and imag_kimage
+        # Check for Hermitian symmetry properties of real_kimage and imag_kimage
         shape = real_kimage.array.shape
-        # Ignore first row/column if image is even-sized since center is to upper-right of
-        # trueCenter in this case.
+        # If image is even-sized, ignore first row/column since in this case not every pixel has 
+        # a symmetric partner to which to compare.
         bd = galsim.BoundsI(real_kimage.xmin + (1 if shape[1]%2==0 else 0), 
                             real_kimage.xmax,
                             real_kimage.ymin + (1 if shape[0]%2==0 else 0),
