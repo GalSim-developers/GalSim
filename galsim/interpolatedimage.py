@@ -561,6 +561,11 @@ class InterpolatedKImage(GSObject):
         if real_kimage.scale != imag_kimage.scale:
             raise ValueError("Real and Imag kimages must have same scale.")
 
+        self._real_kimage = real_kimage
+        self._imag_kimage = imag_kimage
+        self._stepk = stepk
+        self._gsparams = gsparams
+
         # set up k_interpolant if none was provided by user, or check that the user-provided one
         # is of a valid type
         if k_interpolant is None:
@@ -569,25 +574,49 @@ class InterpolatedKImage(GSObject):
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
         # Check for Hermitian symmetry properties of real_kimage and imag_kimage
-        shape = real_kimage.array.shape
-        # If image is even-sized, ignore first row/column since in this case not every pixel has 
+        shape = self._real_kimage.array.shape
+        # If image is even-sized, ignore first row/column since in this case not every pixel has
         # a symmetric partner to which to compare.
-        bd = galsim.BoundsI(real_kimage.xmin + (1 if shape[1]%2==0 else 0), 
-                            real_kimage.xmax,
-                            real_kimage.ymin + (1 if shape[0]%2==0 else 0),
-                            real_kimage.ymax)
-        if not (np.allclose(real_kimage[bd].array, real_kimage[bd].array[::-1,::-1])
-                or np.allclose(imag_kimage[bd].array, -imag_kimage[bd].array[::-1,::-1])):
+        bd = galsim.BoundsI(self._real_kimage.xmin + (1 if shape[1]%2==0 else 0),
+                            self._real_kimage.xmax,
+                            self._real_kimage.ymin + (1 if shape[0]%2==0 else 0),
+                            self._real_kimage.ymax)
+        if not (np.allclose(self._real_kimage[bd].array,
+                            self._real_kimage[bd].array[::-1,::-1])
+                or np.allclose(self._imag_kimage[bd].array,
+                               -self._imag_kimage[bd].array[::-1,::-1])):
             raise ValueError("Real and Image kimages must form a Hermitian complex matrix.")
 
-        scale = real_kimage.scale
-        if stepk == 0.0:
-            stepk = scale
+        scale = self._real_kimage.scale
+        if self._stepk > scale:
+            self._stepk = scale
 
-        sbii = galsim._galsim.SBInterpolatedKImage(
-            real_kimage.image, imag_kimage.image, stepk, scale, self.k_interpolant, gsparams)
+        GSObject.__init__(self, galsim._galsim.SBInterpolatedKImage(
+            self._real_kimage.image, self._imag_kimage.image,
+            self._stepk, scale, self.k_interpolant, gsparams))
 
-        GSObject.__init__(self, sbii)
+    def __repr__(self):
+        return ('galsim.InterpolatedKImage(%r, %r, %r, stepk=%r, gsparams=%r)')%(
+            self._real_kimage, self._imag_kimage, self.k_interpolant,
+            self._stepk, self._gsparams)
+
+    def __str__(self): return 'galsim.InterpolatedKImage(real_kimage=%s)'%(
+            self._real_kimage)
+
+    def __getstate__(self):
+        # The SBInterpolatedImage and the SBProfile both are picklable, but they are pretty
+        # inefficient, due to the large images being written as strings.  Better to pickle
+        # the intermediate products and then call init again on the other side.  There's still
+        # an image to be pickled, but at least it will be through the normal pickling rules,
+        # rather than the repr.
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._real_kimage, self._imag_kimage, k_interpolant=self.k_interpolant,
+                      stepk=self._stepk, gsparams=self._gsparams)
 
 
 _galsim.SBInterpolatedImage.__getinitargs__ = lambda self: (
@@ -597,6 +626,14 @@ _galsim.SBInterpolatedImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedImage.__setstate__ = lambda self, state: 1
 _galsim.SBInterpolatedImage.__repr__ = lambda self: \
         'galsim._galsim.SBInterpolatedImage(%r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
+
+_galsim.SBInterpolatedKImage.__getinitargs__ = lambda self: (
+    self.getRealKImage(), self.getImagKImage(), self.getKInterp(), self.stepK(), 
+    self.getGSParams())
+_galsim.SBInterpolatedKImage.__getstate__ = lambda self: None
+_galsim.SBInterpolatedKImage.__setstate__ = lambda self, state: 1
+_galsim.SBInterpolatedKImage.__repr__ = lambda self: \
+        'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r)'%self.__getinitargs__()
 
 _galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())
 _galsim.Delta.__getinitargs__ = lambda self: (self.getTol(), )

@@ -1041,6 +1041,12 @@ def test_kround_trip():
     real_a, imag_a = a.drawKImage()
     b = galsim.InterpolatedKImage(real_a, imag_a)
 
+    # Check picklability
+    do_pickle(b)
+    do_pickle(b, lambda x: x.drawImage())
+    # do_pickle(b.SBProfile)
+    # do_pickle(b.SBProfile, lambda x: repr(x))
+
     for kx, ky in zip(KXVALS, KYVALS):
         np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 2, 
             err_msg=("InterpolatedKImage evaluated incorrectly at ({:0},{:1})"
