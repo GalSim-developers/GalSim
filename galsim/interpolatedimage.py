@@ -631,6 +631,44 @@ class InterpolatedKImage(GSObject):
         if real_kimage.scale != imag_kimage.scale:
             raise ValueError("Real and Imag kimages must have same scale.")
 
+        # Make sure any `wcs`s are `PixelScale`s.
+        if ((real_kimage.wcs is not None
+             and not isinstance(real_kimage.wcs, galsim.PixelScale))
+            or (imag_kimage.wcs is not None
+                and not isinstance(imag_kimage.wcs, galsim.PixelScale))):
+            raise ValueError("Real and Imag kimage wcs's must be PixelScale's or None.")
+
+        # Check for Hermitian symmetry properties of real_kimage and imag_kimage
+        shape = real_kimage.array.shape
+        # If image is even-sized, ignore first row/column since in this case not every pixel has
+        # a symmetric partner to which to compare.
+        bd = galsim.BoundsI(real_kimage.xmin + (1 if shape[1]%2==0 else 0),
+                            real_kimage.xmax,
+                            real_kimage.ymin + (1 if shape[0]%2==0 else 0),
+                            real_kimage.ymax)
+        if not (np.allclose(real_kimage[bd].array,
+                            real_kimage[bd].array[::-1,::-1])
+                or np.allclose(imag_kimage[bd].array,
+                               -imag_kimage[bd].array[::-1,::-1])):
+            raise ValueError("Real and Imag kimages must form a Hermitian complex matrix.")
+
+        # Check edges of input Images to see if gsparams.maxk_threshold criterion is met.  We
+        # can't actually know the values outside of the provide Images, of course, so this is
+        # only a warning.
+        if gsparams is None:
+            maxk_threshold = galsim.GSParams().maxk_threshold
+        else:
+            maxk_threshold = gsparams.maxk_threshold
+        edge_max = np.max([0.0,
+                           np.abs(real_kimage.array[0,:] + 1j*imag_kimage.array[0,:]).max(),
+                           np.abs(real_kimage.array[-1,:] + 1j*imag_kimage.array[-1,:]).max(),
+                           np.abs(real_kimage.array[:,0] + 1j*imag_kimage.array[:,0]).max(),
+                           np.abs(real_kimage.array[:,-1] + 1j*imag_kimage.array[:,-1]).max()])
+        if (edge_max / real_kimage.array.max()) > maxk_threshold:
+            import warnings
+            warnings.warn(
+                "Provided Real and Imag kimages do not meet GSParams.maxk_threshold criterion.")
+
         self._real_kimage = real_kimage
         self._imag_kimage = imag_kimage
         self._stepk = stepk
@@ -642,20 +680,6 @@ class InterpolatedKImage(GSObject):
             self.k_interpolant = galsim.Quintic(tol=1e-4)
         else:
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
-
-        # Check for Hermitian symmetry properties of real_kimage and imag_kimage
-        shape = self._real_kimage.array.shape
-        # If image is even-sized, ignore first row/column since in this case not every pixel has
-        # a symmetric partner to which to compare.
-        bd = galsim.BoundsI(self._real_kimage.xmin + (1 if shape[1]%2==0 else 0),
-                            self._real_kimage.xmax,
-                            self._real_kimage.ymin + (1 if shape[0]%2==0 else 0),
-                            self._real_kimage.ymax)
-        if not (np.allclose(self._real_kimage[bd].array,
-                            self._real_kimage[bd].array[::-1,::-1])
-                or np.allclose(self._imag_kimage[bd].array,
-                               -self._imag_kimage[bd].array[::-1,::-1])):
-            raise ValueError("Real and Image kimages must form a Hermitian complex matrix.")
 
         scale = self._real_kimage.scale
         if self._stepk > scale:
