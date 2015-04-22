@@ -547,10 +547,80 @@ class InterpolatedImage(GSObject):
 
 
 class InterpolatedKImage(GSObject):
-    def __init__(self, real_kimage, imag_kimage, k_interpolant=None, stepk=0.,
+    """A class describing non-parametric profiles specified by their complex Fourier transformed 
+    images.
+
+    The InterpolatedKImage class is useful if you have a non-parametric description of the Fourier
+    transform of an object as a pair of Images -- one for the real part and one for the imaginary 
+    part of the complex-valued profile -- that you wish to manipulate / transform using GSObject 
+    methods such as shear(), magnify(), shift(), etc.  Note that real-space convolution of 
+    InterpolatedKImages is not currently implemented.  Please submit an issue at
+    http://github.com/GalSim-developers/GalSim/issues if you require this use case.
+
+    You can also use images that were drawn with the `drawKImage()` method of a GSObject.
+
+    The real- and imaginary-part Images must have the same data type, same bounds, and same scale.
+    The only wcs permited is a simple pixel scale.  Furthermore, the complex-valued Fourier profile 
+    formed by `real_kimage` and `imag_kimage` must be Hermitian, since it represents a real-valued 
+    real-space profile.
+
+    The user may optionally specify an interpolant, `x_interpolant`, for real-space manipulations
+    (e.g., shearing, resampling).  If none is specified, then by default, a Quintic interpolant is
+    used.  The user may also choose to specify two quantities that can affect the Fourier space
+    convolution: the k-space interpolant (`k_interpolant`) and the amount of padding to include
+    around the original images (`pad_factor`).  The default values for `x_interpolant`,
+    `k_interpolant`, and `pad_factor` were chosen based on the tests of branch #389 to reach good
+    accuracy without being excessively slow.  Users should be particularly wary about changing
+    `k_interpolant` and `pad_factor` from the defaults without careful testing.  The user is given
+    complete freedom to choose interpolants and pad factors, and no warnings are raised when the
+    code is modified to choose some combination that is known to give significant error.  More
+    details can be found in http://arxiv.org/abs/1401.2636, especially table 1, and in comment
+    https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621 and the following
+    comments.
+
+    Initialization
+    --------------
+
+        >>> interpolated_kimage = galsim.InterpolatedKImage(real_kimage, imag_kimage, 
+                k_interpolant=None, stepk=0., gsparams=None)
+
+    Initializes `interpolated_kimage` as an InterpolatedKImage instance.
+
+    @param real_kimage      The Image corresponding to the real part of the Fourier transformed 
+                            profile.
+    @param imag_kimage      The Image corresponding to the imaginary part of the Fourier 
+                            transformed profile.
+    @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
+                            interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
+                            'cubic', 'quintic', or 'lanczosN' where N should be the integer order
+                            to use.  [default: galsim.Quintic()]
+    @param stepk            By default, the stepk value (the sampling frequency in Fourier-space)
+                            of the underlying SBProfile is set by the `scale` attribute of the
+                            supplied images.  This keyword allows the user to override this 
+                            parameter, which may increase efficiency at the potential expense of
+                            accuracy.
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    There are no additional methods for InterpolatedKImage beyond the usual GSObject methods.
+    """
+    _req_params = { 'real_kimage' : str,
+                    'imag_kimage' : str }
+    _opt_params = {
+        'k_interpolant' : str,
+        'stepk': float
+    }
+    _single_params = []
+    _takes_rng = False
+    _takes_logger = False
+
+    def __init__(self, real_kimage, imag_kimage, k_interpolant=None, stepk=0.0,
                  gsparams=None):
 
-        # make sure real_kimage, imag_kimage are really `Image`s and are congruent.
+        # make sure real_kimage, imag_kimage are really `Image`s, are floats, and are congruent.
         if not isinstance(real_kimage, galsim.Image) or not isinstance(imag_kimage, galsim.Image) :
             raise ValueError("Supplied kimage is not an Image instance")
         if ((real_kimage.dtype != np.float32 and real_kimage.dtype != np.float64)
