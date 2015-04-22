@@ -547,58 +547,54 @@ class InterpolatedImage(GSObject):
 
 
 class InterpolatedKImage(GSObject):
-    """A class describing non-parametric profiles specified by their complex Fourier transformed 
-    images.
+    """A class describing non-parametric profiles specified by samples (i.e., images) of their
+    complex Fourier transform.
 
     The InterpolatedKImage class is useful if you have a non-parametric description of the Fourier
-    transform of an object as a pair of Images -- one for the real part and one for the imaginary 
-    part of the complex-valued profile -- that you wish to manipulate / transform using GSObject 
-    methods such as shear(), magnify(), shift(), etc.  Note that real-space convolution of 
-    InterpolatedKImages is not currently implemented.  Please submit an issue at
-    http://github.com/GalSim-developers/GalSim/issues if you require this use case.
+    transform of an object as a pair of Images -- one for the real part and one for the imaginary
+    part -- of the complex-valued profile that you wish to manipulate / transform using GSObject
+    methods such as shear(), magnify(), shift(), etc.  Note that real-space convolution or
+    photon-shooting of InterpolatedKImages is not currently implemented.  Please submit an issue at
+    http://github.com/GalSim-developers/GalSim/issues if you require either of these use cases.
 
-    You can also use images that were drawn with the `drawKImage()` method of a GSObject.
+    The primary source of real- and imaginary- Fourier samples for most use cases is probably
+    the `drawKImage()` method of a GSObject.
 
     The real- and imaginary-part Images must have the same data type, same bounds, and same scale.
-    The only wcs permited is a simple pixel scale.  Furthermore, the complex-valued Fourier profile 
-    formed by `real_kimage` and `imag_kimage` must be Hermitian, since it represents a real-valued 
-    real-space profile.
+    The only wcs permited is a simple PixelScale.  Furthermore, the complex-valued Fourier profile
+    formed by `real_kimage` and `imag_kimage` must be Hermitian, since it represents a real-valued
+    real-space profile.  The outputs from `drawKImage` automatically meet all of these criteria.
 
-    The user may optionally specify an interpolant, `x_interpolant`, for real-space manipulations
-    (e.g., shearing, resampling).  If none is specified, then by default, a Quintic interpolant is
-    used.  The user may also choose to specify two quantities that can affect the Fourier space
-    convolution: the k-space interpolant (`k_interpolant`) and the amount of padding to include
-    around the original images (`pad_factor`).  The default values for `x_interpolant`,
-    `k_interpolant`, and `pad_factor` were chosen based on the tests of branch #389 to reach good
-    accuracy without being excessively slow.  Users should be particularly wary about changing
-    `k_interpolant` and `pad_factor` from the defaults without careful testing.  The user is given
-    complete freedom to choose interpolants and pad factors, and no warnings are raised when the
-    code is modified to choose some combination that is known to give significant error.  More
-    details can be found in http://arxiv.org/abs/1401.2636, especially table 1, and in comment
-    https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621 and the following
-    comments.
+    The user may optionally specify an interpolant, `k_interpolant`, for Fourier-space
+    manipulations (e.g., shearing, resampling).  If none is specified, then by default, a Quintic
+    interpolant is used.  The Quintic interpolant has been found to be a good compromise between
+    speed and accuracy for real-and Fourier-space interpolation of objects specified by samples of
+    their real-space profiles (e.g., in InterpolatedImage), though no extensive testing has been
+    performed for objects specified by samples of their Fourier-space profiles (e.g., this
+    class).
 
     Initialization
     --------------
 
-        >>> interpolated_kimage = galsim.InterpolatedKImage(real_kimage, imag_kimage, 
+        >>> interpolated_kimage = galsim.InterpolatedKImage(real_kimage, imag_kimage,
                 k_interpolant=None, stepk=0., gsparams=None)
 
     Initializes `interpolated_kimage` as an InterpolatedKImage instance.
 
-    @param real_kimage      The Image corresponding to the real part of the Fourier transformed 
-                            profile.
-    @param imag_kimage      The Image corresponding to the imaginary part of the Fourier 
-                            transformed profile.
+    @param real_kimage      The Image corresponding to the real part of the Fourier-space samples.
+    @param imag_kimage      The Image corresponding to the imaginary part of the Fourier-space
+                            samples.
     @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
                             interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
                             to use.  [default: galsim.Quintic()]
     @param stepk            By default, the stepk value (the sampling frequency in Fourier-space)
                             of the underlying SBProfile is set by the `scale` attribute of the
-                            supplied images.  This keyword allows the user to override this 
-                            parameter, which may increase efficiency at the potential expense of
-                            accuracy.
+                            supplied images.  This keyword allows the user to override this
+                            parameter, which may increase efficiency at the expense decreasing
+                            the separation between neighboring copies of the DFT-rendered
+                            real-space profile.  (See the GSParams docstring for the parameter
+                            `folding_threshold` for more information).
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -621,7 +617,7 @@ class InterpolatedKImage(GSObject):
                  gsparams=None):
 
         # make sure real_kimage, imag_kimage are really `Image`s, are floats, and are congruent.
-        if not isinstance(real_kimage, galsim.Image) or not isinstance(imag_kimage, galsim.Image) :
+        if not isinstance(real_kimage, galsim.Image) or not isinstance(imag_kimage, galsim.Image):
             raise ValueError("Supplied kimage is not an Image instance")
         if ((real_kimage.dtype != np.float32 and real_kimage.dtype != np.float64)
             or (imag_kimage.dtype != np.float32 and imag_kimage.dtype != np.float64)):
@@ -698,7 +694,7 @@ class InterpolatedKImage(GSObject):
             self._real_kimage)
 
     def __getstate__(self):
-        # The SBInterpolatedImage and the SBProfile both are picklable, but they are pretty
+        # The SBInterpolatedKImage and the SBProfile both are picklable, but they are pretty
         # inefficient, due to the large images being written as strings.  Better to pickle
         # the intermediate products and then call init again on the other side.  There's still
         # an image to be pickled, but at least it will be through the normal pickling rules,
@@ -722,7 +718,7 @@ _galsim.SBInterpolatedImage.__repr__ = lambda self: \
         'galsim._galsim.SBInterpolatedImage(%r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
 
 _galsim.SBInterpolatedKImage.__getinitargs__ = lambda self: (
-    self.getRealKImage(), self.getImagKImage(), self.getKInterp(), self.stepK(), 
+    self.getRealKImage(), self.getImagKImage(), self.getKInterp(), self.stepK(),
     self.getGSParams())
 _galsim.SBInterpolatedKImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedKImage.__setstate__ = lambda self, state: 1
