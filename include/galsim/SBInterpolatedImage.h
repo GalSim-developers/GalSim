@@ -200,8 +200,8 @@ namespace galsim {
         /// @brief Destructor
         ~SBInterpolatedKImage();
 
-        // ConstImageView<double> getRealKImage() const;
-        // ConstImageView<double> getImagKImage() const;
+        ConstImageView<double> getRealKImage() const;
+        ConstImageView<double> getImagKImage() const;
 
     protected:
 

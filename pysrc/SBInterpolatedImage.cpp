@@ -138,6 +138,8 @@ namespace galsim {
             );
             pySBInterpolatedKImage
                 .def("getKInterp", &SBInterpolatedImage::getKInterp)
+                .def("getRealKImage", &SBInterpolatedKImage::getRealKImage)
+                .def("getImagKImage", &SBInterpolatedKImage::getImagKImage)
                 ;
             wrapTemplates<float>(pySBInterpolatedKImage);
             wrapTemplates<double>(pySBInterpolatedKImage);

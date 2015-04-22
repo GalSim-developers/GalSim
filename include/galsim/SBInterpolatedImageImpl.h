@@ -219,8 +219,8 @@ namespace galsim {
         //                 double kx0, double dkx, double dkxy,
         //                 double ky0, double dky, double dkyx) const;
 
-        // ConstImageView<double> getRealKImage() const;
-        // ConstImageView<double> getImagKImage() const;
+        ConstImageView<double> getRealKImage() const;
+        ConstImageView<double> getImagKImage() const;
 
         Position<double> centroid() const;
 

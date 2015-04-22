@@ -813,17 +813,17 @@ namespace galsim {
 
     SBInterpolatedKImage::~SBInterpolatedKImage() {}
 
-    // ConstImageView<double> SBInterpolatedKImage::getRealKImage() const
-    // {
-    //     assert(dynamic_cast<const SBInterpolatedKImageImpl*>(_pimpl.get()));
-    //     return static_cast<const SBInterpolatedKImageImpl&>(*_pimpl).getRealKImage();
-    // }
+    ConstImageView<double> SBInterpolatedKImage::getRealKImage() const
+    {
+        assert(dynamic_cast<const SBInterpolatedKImageImpl*>(_pimpl.get()));
+        return static_cast<const SBInterpolatedKImageImpl&>(*_pimpl).getRealKImage();
+    }
 
-    // ConstImageView<double> SBInterpolatedKImage::getImagKImage() const
-    // {
-    //     assert(dynamic_cast<const SBInterpolatedKImageImpl*>(_pimpl.get()));
-    //     return static_cast<const SBInterpolatedKImageImpl&>(*_pimpl).getImagKImage();
-    // }
+    ConstImageView<double> SBInterpolatedKImage::getImagKImage() const
+    {
+        assert(dynamic_cast<const SBInterpolatedKImageImpl*>(_pimpl.get()));
+        return static_cast<const SBInterpolatedKImageImpl&>(*_pimpl).getImagKImage();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // SBInterpolatedKImageImpl methods
@@ -876,16 +876,29 @@ namespace galsim {
         return oss.str();
     }
 
-    // ConstImageView<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::getRealKImage() const
-    // {
-    //     // These are wrong!
-    //     return _realKImage;
-    // }
+    ConstImageView<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::getRealKImage() const
+    {
+        int N = _ktab->getN();
+        tmv::Matrix<std::complex<double> > val(N,N);
+        int Nko2 = Nk/2;
+        fillKValue(val.view(), -Nko2, 1, Nko2, -Nko2, 1, Nko2);
+        ImageAlloc<double> im(N, N);
+        tmv::MatrixView<double> m(im.getData(), N, N, 1, im.getStride(), tmv::NonConj);
+        m += val.realPart();
+        return im;
+    }
 
-    // ConstImageView<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::getImagKImage() const
-    // {
-    //     return _imagKImage;
-    // }
+    ConstImageView<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::getImagKImage() const
+    {
+        int N = _ktab->getN();
+        tmv::Matrix<std::complex<double> > val(N,N);
+        int Nko2 = Nk/2;
+        fillKValue(val.view(), -Nko2, 1, Nko2, -Nko2, 1, Nko2);
+        ImageAlloc<double> im(N, N);
+        tmv::MatrixView<double> m(im.getData(), N, N, 1, im.getStride(), tmv::NonConj);
+        m += val.realPart();
+        return im;
+    }
 
     template <typename T>
     SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
