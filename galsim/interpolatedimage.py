@@ -568,7 +568,17 @@ class InterpolatedKImage(GSObject):
         else:
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
-        # TODO: check for symmetry properties of real_kimage and imag_kimage
+        # Check for symmetry properties of real_kimage and imag_kimage
+        shape = real_kimage.array.shape
+        # Ignore first row/column if image is even-sized since center is to upper-right of
+        # trueCenter in this case.
+        bd = galsim.BoundsI(real_kimage.xmin + (1 if shape[1]%2==0 else 0), 
+                            real_kimage.xmax,
+                            real_kimage.ymin + (1 if shape[0]%2==0 else 0),
+                            real_kimage.ymax)
+        if not (np.allclose(real_kimage[bd].array, real_kimage[bd].array[::-1,::-1])
+                or np.allclose(imag_kimage[bd].array, -imag_kimage[bd].array[::-1,::-1])):
+            raise ValueError("Real and Image kimages must form a Hermitian complex matrix.")
 
         scale = real_kimage.scale
         if stepk == 0.0:
