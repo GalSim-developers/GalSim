@@ -906,15 +906,15 @@ namespace galsim {
 
         _ktab = boost::shared_ptr<KTable>(new KTable(Nk, _dk));
         _maxk = Ninitial/2 * _dk;
-        int xStart = -((realKImage.getXMax()-realKImage.getXMin()+1)/2);
+        // Only need to fill in x>=0 since the negative x's are the Hermitian
+        // conjugates of the positive x's.
+        int xStart = 0;
+        int ixStart = (realKImage.getXMin()+realKImage.getXMax()+1)/2;
         int y = -((realKImage.getYMax()-realKImage.getYMin()+1)/2);
         dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
-        // I was somewhat surprised this worked since I'm feeding _ktab redundant information here
-        // due to the Hermitian constraints.  Probably only need to run ix up to XMax/2 or
-        // something.
         for (int iy = realKImage.getYMin(); iy<= realKImage.getYMax(); ++iy, ++y) {
              int x = xStart;
-             for (int ix = realKImage.getXMin(); ix<= realKImage.getXMax(); ++ix, ++x) {
+             for (int ix = ixStart; ix<= realKImage.getXMax(); ++ix, ++x) {
                  std::complex<double> value(realKImage(ix,iy), imagKImage(ix, iy));
                  _ktab->kSet(x, y, value);
                  xxdbg<<"ix,iy,x,y = "<<ix<<','<<iy<<','<<x<<','<<y<<std::endl;
@@ -936,6 +936,9 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
+
+    // JM: Do the integer templates ever actually get used?  InterpolatedImage raises an
+    //     error on non-floating point input.
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
