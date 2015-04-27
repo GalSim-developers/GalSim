@@ -118,6 +118,98 @@ namespace galsim {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // SBInterpolatedImageImpl methods
 
+    template <typename T>
+    SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
+        const BaseImage<T>& image,
+        boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
+        double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams) :
+        SBInterpolatedImpl(kInterp, stepk, maxk, gsparams), _xInterp(xInterp),
+        _readyToShoot(false)
+    {
+        dbg<<"image bounds = "<<image.getBounds()<<std::endl;
+        dbg<<"pad_factor = "<<pad_factor<<std::endl;
+        assert(_xInterp.get());
+        assert(_kInterp.get());
+
+        Ninitial = std::max(image.getXMax()-image.getXMin()+1,
+                            image.getYMax()-image.getYMin()+1);
+        init_bounds = image.getBounds();
+        dbg<<"Ninitial = "<<Ninitial<<std::endl;
+        assert(pad_factor > 0.);
+        Nk = goodFFTSize(int(pad_factor*Ninitial));
+        dbg<<"Nk = "<<Nk<<std::endl;
+        double sum = 0.;
+        double sumx = 0.;
+        double sumy = 0.;
+
+        _xtab = boost::shared_ptr<XTable>(new XTable(Nk, 1.));
+        int xStart = -((image.getXMax()-image.getXMin()+1)/2);
+        int y = -((image.getYMax()-image.getYMin()+1)/2);
+        dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
+        for (int iy = image.getYMin(); iy<= image.getYMax(); ++iy, ++y) {
+            int x = xStart;
+            for (int ix = image.getXMin(); ix<= image.getXMax(); ++ix, ++x) {
+                double value = image(ix,iy);
+                _xtab->xSet(x, y, value);
+                sum += value;
+                sumx += value*x;
+                sumy += value*y;
+                xxdbg<<"ix,iy,x,y = "<<ix<<','<<iy<<','<<x<<','<<y<<std::endl;
+                xxdbg<<"value = "<<value<<", sums = "<<sum<<','<<sumx<<','<<sumy<<std::endl;
+            }
+        }
+
+        _flux = sum;
+        xcentroid = sumx/sum;
+        ycentroid = sumy/sum;
+        dbg<<"flux = "<<_flux<<", xcentroid = "<<xcentroid<<", ycentroid = "<<ycentroid<<std::endl;
+        dbg<<"N = "<<Ninitial<<", xrange = "<<_xInterp->xrange()<<std::endl;
+        dbg<<"xtab size = "<<_xtab->getN()<<", scale = "<<_xtab->getDx()<<std::endl;
+
+        if (_stepk <= 0.) {
+            // Calculate stepK:
+            //
+            // The amount of flux missed in a circle of radius pi/stepk should be at
+            // most folding_threshold of the flux.
+            //
+            // We add the size of the image and the size of the interpolant in quadrature.
+            // (Note: Since this isn't a radial profile, R isn't really a radius, but rather
+            //        the size of the square box that is enclosing all the flux.)
+            double R = Ninitial/2.;
+            // Add xInterp range in quadrature just like convolution:
+            double R2 = _xInterp->xrange();
+            dbg<<"R(image) = "<<R<<", R(interpolant) = "<<R2<<std::endl;
+            R = sqrt(R*R + R2*R2);
+            dbg<<"=> R = "<<R<<std::endl;
+            _stepk = M_PI / R;
+            dbg<<"stepk = "<<_stepk<<std::endl;
+        }
+
+        _uscale = 1. / (2.*M_PI);
+        _maxk1 = _xInterp->urange()/_uscale;
+        if (_maxk <= 0.) {
+            // Calculate maxk:
+            //
+            // For now, just set this to where the interpolant's FT is <= maxk_threshold.
+            // Note: since we used kvalue_accuracy for the threshold of _xInterp
+            // (at least for the default quintic interpolant) rather than maxk_threshold,
+            // this will probably be larger than we really need.
+            // We could modify the urange method of Interpolant to take a threshold value
+            // at that point, rather than just use the constructor's value, but it's
+            // probably not worth it.
+            //
+            // In practice, we will generally call calculateMaxK() after construction to
+            // refine the value of maxk based on the actual FT of the image.
+            _maxk = _maxk1;
+            dbg<<"maxk = "<<_maxk<<std::endl;
+        }
+
+        dbg<<"flux = "<<getFlux()<<std::endl;
+    }
+
+
+    SBInterpolatedImage::SBInterpolatedImageImpl::~SBInterpolatedImageImpl() {}
+
     boost::shared_ptr<Interpolant> SBInterpolatedImage::SBInterpolatedImageImpl::getXInterp() const
     {
         return static_cast<const InterpolantXY&>(*_xInterp).get1d();
@@ -143,6 +235,62 @@ namespace galsim {
         _ktab = _xtab->transform();
         dbg<<"Built ktab\n";
         dbg<<"ktab size = "<<_ktab->getN()<<", scale = "<<_ktab->getDk()<<std::endl;
+    }
+
+    void SBInterpolatedImage::SBInterpolatedImageImpl::fillXValue(
+        tmv::MatrixView<double> val,
+        double x0, double dx, int izero,
+        double y0, double dy, int jzero) const
+    {
+        dbg<<"SBInterpolatedImage fillXValue\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
+        assert(val.stepi() == 1);
+        const int m = val.colsize();
+        const int n = val.rowsize();
+
+        if (dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
+            // If the interpolant is separable, the XTable interpolation routine
+            // will go faster if we make y iteration the inner loop.
+            typedef tmv::VIt<double,tmv::Unknown,tmv::NonConj> RMIt;
+            for (int i=0;i<m;++i,x0+=dx) {
+                double y = y0;
+                RMIt valit = val.row(i).begin();
+                for (int j=0;j<n;++j,y+=dy) *valit++ = _xtab->interpolate(x0, y, *_xInterp);
+            }
+        } else {
+            // Otherwise, just do the values in storage order
+            typedef tmv::VIt<double,1,tmv::NonConj> CMIt;
+            for (int j=0;j<n;++j,y0+=dy) {
+                double x = x0;
+                CMIt valit = val.col(j).begin();
+                for (int i=0;i<m;++i,x+=dx) *valit++ = _xtab->interpolate(x, y0, *_xInterp);
+            }
+        }
+    }
+
+    void SBInterpolatedImage::SBInterpolatedImageImpl::fillXValue(
+        tmv::MatrixView<double> val,
+        double x0, double dx, double dxy,
+        double y0, double dy, double dyx) const
+    {
+        dbg<<"SBInterpolatedImage fillXValue\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
+                *valit++ = _xtab->interpolate(x, y, *_xInterp);
+            }
+        }
     }
 
     void SBInterpolatedImage::SBInterpolatedImageImpl::fillKValue(
@@ -296,62 +444,9 @@ namespace galsim {
         }
     }
 
-    void SBInterpolatedImage::SBInterpolatedImageImpl::fillXValue(
-        tmv::MatrixView<double> val,
-        double x0, double dx, int izero,
-        double y0, double dy, int jzero) const
-    {
-        dbg<<"SBInterpolatedImage fillXValue\n";
-        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
-        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
-        assert(val.stepi() == 1);
-        const int m = val.colsize();
-        const int n = val.rowsize();
-
-        if (dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
-            // If the interpolant is separable, the XTable interpolation routine
-            // will go faster if we make y iteration the inner loop.
-            typedef tmv::VIt<double,tmv::Unknown,tmv::NonConj> RMIt;
-            for (int i=0;i<m;++i,x0+=dx) {
-                double y = y0;
-                RMIt valit = val.row(i).begin();
-                for (int j=0;j<n;++j,y+=dy) *valit++ = _xtab->interpolate(x0, y, *_xInterp);
-            }
-        } else {
-            // Otherwise, just do the values in storage order
-            typedef tmv::VIt<double,1,tmv::NonConj> CMIt;
-            for (int j=0;j<n;++j,y0+=dy) {
-                double x = x0;
-                CMIt valit = val.col(j).begin();
-                for (int i=0;i<m;++i,x+=dx) *valit++ = _xtab->interpolate(x, y0, *_xInterp);
-            }
-        }
-    }
-
-    void SBInterpolatedImage::SBInterpolatedImageImpl::fillXValue(
-        tmv::MatrixView<double> val,
-        double x0, double dx, double dxy,
-        double y0, double dy, double dyx) const
-    {
-        dbg<<"SBInterpolatedImage fillXValue\n";
-        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
-            double x = x0;
-            double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
-                *valit++ = _xtab->interpolate(x, y, *_xInterp);
-            }
-        }
-    }
-
+    // JM: Does this ever get used?  _galsim.SBInterpolatedImage.__repr__ is defined
+    // in galsim/interpolatedimage.py, so not there, and there aren't any repr()s in
+    // pysrc/SBInterpolatedImage.cpp
     std::string SBInterpolatedImage::SBInterpolatedImageImpl::repr() const
     {
         std::ostringstream oss(" ");
@@ -385,98 +480,6 @@ namespace galsim {
         return ConstImageView<double>(_xtab->getArray(), boost::shared_ptr<double>(),
                                       N, Bounds<int>(0,N-1,0,N-1));
     }
-
-    template <typename T>
-    SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<T>& image,
-        boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
-        double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams) :
-        SBInterpolatedImpl(kInterp, stepk, maxk, gsparams), _xInterp(xInterp),
-        _readyToShoot(false)
-    {
-        dbg<<"image bounds = "<<image.getBounds()<<std::endl;
-        dbg<<"pad_factor = "<<pad_factor<<std::endl;
-        assert(_xInterp.get());
-        assert(_kInterp.get());
-
-        Ninitial = std::max(image.getXMax()-image.getXMin()+1,
-                            image.getYMax()-image.getYMin()+1);
-        init_bounds = image.getBounds();
-        dbg<<"Ninitial = "<<Ninitial<<std::endl;
-        assert(pad_factor > 0.);
-        Nk = goodFFTSize(int(pad_factor*Ninitial));
-        dbg<<"Nk = "<<Nk<<std::endl;
-        double sum = 0.;
-        double sumx = 0.;
-        double sumy = 0.;
-
-        _xtab = boost::shared_ptr<XTable>(new XTable(Nk, 1.));
-        int xStart = -((image.getXMax()-image.getXMin()+1)/2);
-        int y = -((image.getYMax()-image.getYMin()+1)/2);
-        dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
-        for (int iy = image.getYMin(); iy<= image.getYMax(); ++iy, ++y) {
-            int x = xStart;
-            for (int ix = image.getXMin(); ix<= image.getXMax(); ++ix, ++x) {
-                double value = image(ix,iy);
-                _xtab->xSet(x, y, value);
-                sum += value;
-                sumx += value*x;
-                sumy += value*y;
-                xxdbg<<"ix,iy,x,y = "<<ix<<','<<iy<<','<<x<<','<<y<<std::endl;
-                xxdbg<<"value = "<<value<<", sums = "<<sum<<','<<sumx<<','<<sumy<<std::endl;
-            }
-        }
-
-        _flux = sum;
-        xcentroid = sumx/sum;
-        ycentroid = sumy/sum;
-        dbg<<"flux = "<<_flux<<", xcentroid = "<<xcentroid<<", ycentroid = "<<ycentroid<<std::endl;
-        dbg<<"N = "<<Ninitial<<", xrange = "<<_xInterp->xrange()<<std::endl;
-        dbg<<"xtab size = "<<_xtab->getN()<<", scale = "<<_xtab->getDx()<<std::endl;
-
-        if (_stepk <= 0.) {
-            // Calculate stepK:
-            //
-            // The amount of flux missed in a circle of radius pi/stepk should be at
-            // most folding_threshold of the flux.
-            //
-            // We add the size of the image and the size of the interpolant in quadrature.
-            // (Note: Since this isn't a radial profile, R isn't really a radius, but rather
-            //        the size of the square box that is enclosing all the flux.)
-            double R = Ninitial/2.;
-            // Add xInterp range in quadrature just like convolution:
-            double R2 = _xInterp->xrange();
-            dbg<<"R(image) = "<<R<<", R(interpolant) = "<<R2<<std::endl;
-            R = sqrt(R*R + R2*R2);
-            dbg<<"=> R = "<<R<<std::endl;
-            _stepk = M_PI / R;
-            dbg<<"stepk = "<<_stepk<<std::endl;
-        }
-
-        _uscale = 1. / (2.*M_PI);
-        _maxk1 = _xInterp->urange()/_uscale;
-        if (_maxk <= 0.) {
-            // Calculate maxk:
-            //
-            // For now, just set this to where the interpolant's FT is <= maxk_threshold.
-            // Note: since we used kvalue_accuracy for the threshold of _xInterp
-            // (at least for the default quintic interpolant) rather than maxk_threshold,
-            // this will probably be larger than we really need.
-            // We could modify the urange method of Interpolant to take a threshold value
-            // at that point, rather than just use the constructor's value, but it's
-            // probably not worth it.
-            //
-            // In practice, we will generally call calculateMaxK() after construction to
-            // refine the value of maxk based on the actual FT of the image.
-            _maxk = _maxk1;
-            dbg<<"maxk = "<<_maxk<<std::endl;
-        }
-
-        dbg<<"flux = "<<getFlux()<<std::endl;
-    }
-
-
-    SBInterpolatedImage::SBInterpolatedImageImpl::~SBInterpolatedImageImpl() {}
 
     void SBInterpolatedImage::SBInterpolatedImageImpl::getXRange(
         double& xmin, double& xmax, std::vector<double>& splits) const
@@ -884,41 +887,41 @@ namespace galsim {
         return _ktab->interpolate(k.x, k.y, *_kInterp);
     }
 
+    // Adding this for symmetry with SBInterpolatedImageImpl::repr(), but I'm not sure that
+    // this actually gets used anywhere...
     std::string SBInterpolatedKImage::SBInterpolatedKImageImpl::repr() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBInterpolatedKImage(";
 
-        // oss << "galsim._galsim.ConstImageViewD(array([";
-        // ConstImageView<double> reim = getRealKImage();
-        // int N = _ktab->getN();
-        // for (int y = 0; y<N; ++y) {
-        //     if (y > 0) oss <<",";
-        //     BaseImage<double>::const_iterator it = reim.rowBegin(y);
-        //     oss << "[" << *it++;
-        //     for (; it != reim.rowEnd(y); ++it) oss << "," << *it;
-        //     oss << "]";
-        // }
-        // oss<<"],dtype=float)), ";
+        oss << "galsim._galsim.ConstImageViewD(array([";
+        ConstImageView<double> reim = getRealKImage();
+        int N = _ktab->getN();
+        for (int y = 0; y<N; ++y) {
+            if (y > 0) oss <<",";
+            BaseImage<double>::const_iterator it = reim.rowBegin(y);
+            oss << "[" << *it++;
+            for (; it != reim.rowEnd(y); ++it) oss << "," << *it;
+            oss << "]";
+        }
+        oss<<"],dtype=float)), ";
 
-        // oss << "galsim._galsim.ConstImageViewD(array([";
-        // ConstImageView<double> imim = getImagKImage();
-        // for (int y = 0; y<N; ++y) {
-        //     if (y > 0) oss <<",";
-        //     BaseImage<double>::const_iterator it = imim.rowBegin(y);
-        //     oss << "[" << *it++;
-        //     for (; it != imim.rowEnd(y); ++it) oss << "," << *it;
-        //     oss << "]";
-        // }
-        // oss<<"],dtype=float)), ";
+        oss << "galsim._galsim.ConstImageViewD(array([";
+        ConstImageView<double> imim = getImagKImage();
+        for (int y = 0; y<N; ++y) {
+            if (y > 0) oss <<",";
+            BaseImage<double>::const_iterator it = imim.rowBegin(y);
+            oss << "[" << *it++;
+            for (; it != imim.rowEnd(y); ++it) oss << "," << *it;
+            oss << "]";
+        }
+        oss<<"],dtype=float)), ";
 
-        //boost::shared_ptr<Interpolant> xinterp = getXInterp();
+        oss << _ktab->getDk() << ", " << stepK() << ", ";
         boost::shared_ptr<Interpolant> kinterp = getKInterp();
-       // oss << "galsim.Interpolant('"<<xinterp->makeStr()<<"', "<<xinterp->getTolerance()<<"), ";
-        oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), ";
-
-        oss << "1., "<<stepK()<<", "<<maxK()<<", galsim.GSParams("<<*gsparams<<"))";
+        oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), "
+            << "galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }
 
