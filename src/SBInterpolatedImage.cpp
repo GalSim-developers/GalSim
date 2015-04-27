@@ -27,7 +27,7 @@
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
 std::ostream* dbgout = &std::cout;
-int verbose_level = 2;
+int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -828,12 +828,58 @@ namespace galsim {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // SBInterpolatedKImageImpl methods
 
+    template <typename T>
+    SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
+        const BaseImage<T>& realKImage, const BaseImage<T>& imagKImage,
+        double dk, double stepk, boost::shared_ptr<Interpolant2d> kInterp,
+        const GSParamsPtr& gsparams) :
+        SBInterpolatedImpl(kInterp, stepk, 0., gsparams), //fill in maxk below
+        _dk(dk)
+    {
+        dbg<<"stepk = "<<stepk<<std::endl;
+        dbg<<"kimage bounds = "<<realKImage.getBounds()<<std::endl;
+        assert(_kInterp.get());
+
+        Ninitial = std::max(realKImage.getXMax()-realKImage.getXMin()+1,
+                            realKImage.getYMax()-realKImage.getYMin()+1);
+        dbg<<"Ninitial = "<<Ninitial<<std::endl;
+        Nk = goodFFTSize(int(Ninitial));
+        dbg<<"Nk = "<<Nk<<std::endl;
+
+        _ktab = boost::shared_ptr<KTable>(new KTable(Nk, _dk));
+        _maxk = Ninitial/2 * _dk;
+        dbg<<"_dk = "<<_dk<<std::endl;
+        dbg<<"_maxk = "<<_maxk<<std::endl;
+
+        // Only need to fill in x>=0 since the negative x's are the Hermitian
+        // conjugates of the positive x's.
+        int xStart = 0;
+        int ixStart = (realKImage.getXMin()+realKImage.getXMax()+1)/2;
+        int y = -((realKImage.getYMax()-realKImage.getYMin()+1)/2);
+        dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
+        for (int iy = realKImage.getYMin(); iy<= realKImage.getYMax(); ++iy, ++y) {
+             int x = xStart;
+             for (int ix = ixStart; ix<= realKImage.getXMax(); ++ix, ++x) {
+                 std::complex<double> value(realKImage(ix,iy), imagKImage(ix, iy));
+                 _ktab->kSet(x, y, value);
+                 xxdbg<<"ix,iy,x,y = "<<ix<<','<<iy<<','<<x<<','<<y<<std::endl;
+                 xxdbg<<"value = "<<value<<std::endl;
+             }
+        }
+        _flux = kValue(Position<double>(0.,0.)).real();
+        dbg<<"flux = "<<_flux<<std::endl;
+    }
+
+    SBInterpolatedKImage::SBInterpolatedKImageImpl::~SBInterpolatedKImageImpl() {}
+
     double SBInterpolatedKImage::SBInterpolatedKImageImpl::xValue(const Position<double>& p) const
     { throw SBError("SBInterpolatedKImage::xValue() not implemented"); }
 
     std::complex<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::kValue(
         const Position<double>& k) const
     {
+        xdbg<<"evaluating kValue("<<k.x<<","<<k.y<<")"<<std::endl;
+        xdbg<<"_maxk = "<<_maxk<<std::endl;
         if (std::abs(k.x) > _maxk || std::abs(k.y) > _maxk) return std::complex<double>(0.,0.);
         return _ktab->interpolate(k.x, k.y, *_kInterp);
     }
@@ -899,47 +945,6 @@ namespace galsim {
         m += val.realPart();
         return im;
     }
-
-    template <typename T>
-    SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
-        const BaseImage<T>& realKImage, const BaseImage<T>& imagKImage,
-        double dk, double stepk, boost::shared_ptr<Interpolant2d> kInterp,
-        const GSParamsPtr& gsparams) :
-        SBInterpolatedImpl(kInterp, stepk, 0., gsparams), //fill in maxk below
-        _dk(dk)
-    {
-        dbg<<"kimage bounds = "<<realKImage.getBounds()<<std::endl;
-        assert(_kInterp.get());
-
-        Ninitial = std::max(realKImage.getXMax()-realKImage.getXMin()+1,
-                            realKImage.getYMax()-realKImage.getYMin()+1);
-        dbg<<"Ninitial = "<<Ninitial<<std::endl;
-        Nk = goodFFTSize(int(Ninitial));
-        dbg<<"Nk = "<<Nk<<std::endl;
-
-        _ktab = boost::shared_ptr<KTable>(new KTable(Nk, _dk));
-        _maxk = Ninitial/2 * _dk;
-        // Only need to fill in x>=0 since the negative x's are the Hermitian
-        // conjugates of the positive x's.
-        int xStart = 0;
-        int ixStart = (realKImage.getXMin()+realKImage.getXMax()+1)/2;
-        int y = -((realKImage.getYMax()-realKImage.getYMin()+1)/2);
-        dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
-        for (int iy = realKImage.getYMin(); iy<= realKImage.getYMax(); ++iy, ++y) {
-             int x = xStart;
-             for (int ix = ixStart; ix<= realKImage.getXMax(); ++ix, ++x) {
-                 std::complex<double> value(realKImage(ix,iy), imagKImage(ix, iy));
-                 _ktab->kSet(x, y, value);
-                 xxdbg<<"ix,iy,x,y = "<<ix<<','<<iy<<','<<x<<','<<y<<std::endl;
-                 xxdbg<<"value = "<<value<<std::endl;
-             }
-        }
-
-        _flux = kValue(Position<double>(0.,0.)).real();
-        dbg<<"flux = "<<_flux<<std::endl;
-    }
-
-    SBInterpolatedKImage::SBInterpolatedKImageImpl::~SBInterpolatedKImageImpl() {}
 
     Position<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::centroid() const
     {

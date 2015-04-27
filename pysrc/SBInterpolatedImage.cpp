@@ -122,8 +122,8 @@ namespace galsim {
                      boost::shared_ptr<GSParams> >(
                          (bp::arg("real_kimage"),
                           bp::arg("imag_kimage"),
-                          bp::arg("stepk"),
                           bp::arg("dk"),
+                          bp::arg("stepk"),
                           bp::arg("kInterp"),
                           bp::arg("gsparams")=bp::object())
                      )

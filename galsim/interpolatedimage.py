@@ -678,12 +678,12 @@ class InterpolatedKImage(GSObject):
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
         scale = self._real_kimage.scale
-        if self._stepk > scale:
+        if self._stepk < scale:
             self._stepk = scale
 
         GSObject.__init__(self, galsim._galsim.SBInterpolatedKImage(
             self._real_kimage.image, self._imag_kimage.image,
-            self._stepk, scale, self.k_interpolant, gsparams))
+            scale, self._stepk, self.k_interpolant, gsparams))
 
     def __repr__(self):
         return ('galsim.InterpolatedKImage(%r, %r, %r, stepk=%r, gsparams=%r)')%(
