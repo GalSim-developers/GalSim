@@ -30,14 +30,14 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBInterpolatedImage 
+    struct PySBInterpolatedImage
     {
 #if 0
         template <typename U, typename W>
-        static void wrapTemplates_Multi(W& wrapper) 
+        static void wrapTemplates_Multi(W& wrapper)
         {
             wrapper
-                .def(bp::init<const std::vector<boost::shared_ptr<BaseImage<U> > >&, 
+                .def(bp::init<const std::vector<boost::shared_ptr<BaseImage<U> > >&,
                      double>(
                         (bp::arg("images"), bp::arg("pad_factor")=4.)
                 ))
@@ -49,7 +49,7 @@ namespace galsim {
 #endif
 
         template <typename U, typename W>
-        static void wrapTemplates(W& wrapper) 
+        static void wrapTemplates(W& wrapper)
         {
             wrapper
                 .def(bp::init<const BaseImage<U> &,
@@ -66,7 +66,7 @@ namespace galsim {
                 ;
         }
 
-        static void wrap() 
+        static void wrap()
         {
 #if 0
             bp::class_< MultipleImageHelper > pyMultipleImageHelper(
@@ -109,7 +109,7 @@ namespace galsim {
 
     };
 
-    void pyExportSBInterpolatedImage() 
+    void pyExportSBInterpolatedImage()
     {
         PySBInterpolatedImage::wrap();
     }

@@ -26,12 +26,12 @@
 
 namespace galsim {
 
-    class SBInterpolatedImage::SBInterpolatedImageImpl : public SBProfile::SBProfileImpl 
+    class SBInterpolatedImage::SBInterpolatedImageImpl : public SBProfile::SBProfileImpl
     {
     public:
-        template <typename T> 
+        template <typename T>
         SBInterpolatedImageImpl(
-            const BaseImage<T>& image, 
+            const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
             double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams);
@@ -84,11 +84,11 @@ namespace galsim {
          * image or the interpolation kernel have negative regions, then negative-flux photons can
          * be generated.  Noisy images or ring-y kernels will generate a lot of shot noise in
          * the shoot() output.  Not all kernels have photon-shooting implemented.  It may be best to
-         * stick to nearest-neighbor and linear interpolation kernels if you wish to avoid these 
+         * stick to nearest-neighbor and linear interpolation kernels if you wish to avoid these
          * issues.
          *
-         * Use the `Delta` Interpolant if you do not want to waste time moving the photons from 
-         * their pixel centers.  But you will regret any attempt to draw images analytically with 
+         * Use the `Delta` Interpolant if you do not want to waste time moving the photons from
+         * their pixel centers.  But you will regret any attempt to draw images analytically with
          * that one.
          *
          * Photon shooting with the Sinc kernel is a bad idea and is currently forbidden.
@@ -158,7 +158,7 @@ namespace galsim {
             bool isPositive;
             double flux;
 
-            Pixel(double x_, double y_, double flux_): 
+            Pixel(double x_, double y_, double flux_):
                 x(x_), y(y_), flux(flux_) { isPositive = flux>=0.; }
             double getFlux() const { return flux; }
         };

@@ -67,7 +67,7 @@ def test_roundtrip():
         [0.01, 0.08, 0.07, 0.02],
         [0.13, 0.38, 0.52, 0.06],
         [0.09, 0.41, 0.44, 0.09],
-        [0.04, 0.11, 0.10, 0.01] ]) 
+        [0.04, 0.11, 0.10, 0.01] ])
 
     for array_type in ftypes:
         image_in = galsim.Image(ref_array.astype(array_type))
@@ -85,7 +85,7 @@ def test_roundtrip():
                         array_type)
 
         # Lanczos doesn't quite get the flux right.  Wrong at the 5th decimal place.
-        # Gary says that's expected -- Lanczos isn't technically flux conserving.  
+        # Gary says that's expected -- Lanczos isn't technically flux conserving.
         # He applied the 1st order correction to the flux, but expect to be wrong at around
         # the 10^-5 level.
         # Anyway, Quintic seems to be accurate enough.
@@ -561,7 +561,7 @@ def test_pad_image():
     rng = galsim.BaseDeviate(orig_seed)
     noise = galsim.GaussianNoise(rng, sigma=noise_sigma)
 
-    # make the original image 
+    # make the original image
     orig_nx = 64
     orig_ny = 64
     orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
@@ -576,11 +576,11 @@ def test_pad_image():
     big_img = galsim.ImageF(big_nx, big_ny, scale=1.)
     big_img.setCenter(0,0)
 
-    # Use a few different kinds of shapes for that padding. 
+    # Use a few different kinds of shapes for that padding.
     for (pad_nx, pad_ny) in [ (160,160), (179,191), (256,256), (305, 307) ]:
         #print 'pad size = ',pad_nx, pad_ny
 
-        # make the pad_image 
+        # make the pad_image
         pad_img = galsim.ImageF(pad_nx, pad_ny, scale=1.)
         pad_img.addNoise(noise)
         pad_img.setCenter(0,0)
@@ -591,14 +591,14 @@ def test_pad_image():
         # draw into the larger image
         int_im.drawImage(big_img, use_true_center=False, method='no_pixel')
 
-        # check that variance is diluted by expected amount 
-        # Note -- we don't use np.var, since that computes the variance relative to the 
+        # check that variance is diluted by expected amount
+        # Note -- we don't use np.var, since that computes the variance relative to the
         # actual mean value.  We just want sum(I^2)/Npix relative to the nominal I=0 value.
         var1 = np.sum(orig_img.array**2)
         if pad_nx > big_nx and pad_ny > big_ny:
             var2 = np.sum(pad_img[big_img.bounds].array**2)
         else:
-            var2 = np.sum(pad_img.array**2) 
+            var2 = np.sum(pad_img.array**2)
         var2 -= np.sum(pad_img[orig_img.bounds].array**2)
         var_expected = (var1 + var2) / (big_nx*big_ny)
         big_img.setCenter(0,0)
@@ -615,7 +615,7 @@ def test_pad_image():
                                               noise_pad_size=max(big_nx,big_ny),
                                               rng=rng, use_true_center=False)
             int_im.drawImage(big_img, use_true_center=False, method='no_pixel')
-    
+
             var3 = (noise_var/2) * float(big_nx*big_ny - pad_nx*pad_ny)
             var_expected = (var1 + var2 + var3) / (big_nx*big_ny)
             np.testing.assert_almost_equal(
@@ -739,7 +739,7 @@ def test_realspace_conv():
     # It will almost always be much slower than the FFT convolution.  So it's probably only
     # a good idea if the image is very small and/or you absolutely need to avoid the ringing
     # that can show up in FFT convolutions.
-    # That said, we still need to make sure the code is correct.  Especially since it 
+    # That said, we still need to make sure the code is correct.  Especially since it
     # didn't used to be, as reported in issue #432.  So, here goes.
 
     # set up image scale and size
@@ -748,7 +748,7 @@ def test_realspace_conv():
 
     # We draw onto a smaller image so the unit test doesn't take forever!
     target_scale = 0.7
-    target_size = 3 
+    target_size = 3
 
     gal = galsim.Exponential(flux=1.7, half_light_radius=1.2)
     gal_im = gal.drawImage(scale=raw_scale, nx=raw_size, ny=raw_size, method='no_pixel')
@@ -761,16 +761,16 @@ def test_realspace_conv():
     else:
         interp_list = ['linear', 'cubic', 'quintic']
     for interp in interp_list:
-        # Note 1: The Lanczos interpolants pass these tests just fine.  They just take a long 
-        # time to run, even with the small images we are working with.  So skip them for regular 
+        # Note 1: The Lanczos interpolants pass these tests just fine.  They just take a long
+        # time to run, even with the small images we are working with.  So skip them for regular
         # unit testing.  Developers working on this should re-enable those while testing.
 
         # Note 2: I couldn't get 'nearest' to pass the tests.  Specifically the im3 == im4 test.
         # I don't know whether there is a bug in the Nearest class functions (seems unlikely since
         # they are so simple) or in the real-space convolver or if the nature of the Nearest
-        # interpolation (with its very large extent in k-space and hard edges in real space) is 
-        # such that we don't actually expect the test to pass.  Anyway, it also takes a very long 
-        # time to run (before failing), so it's probably not a good idea to use it for 
+        # interpolation (with its very large extent in k-space and hard edges in real space) is
+        # such that we don't actually expect the test to pass.  Anyway, it also takes a very long
+        # time to run (before failing), so it's probably not a good idea to use it for
         # real-space convolution anyway.
 
         print 'interp = ',interp
@@ -895,7 +895,7 @@ def test_Lanczos5_ref():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
-    
+
 
 def test_Lanczos7_ref():
     """Test use of Lanczos7 interpolant against some reference values
@@ -941,11 +941,11 @@ def test_conserve_dc():
     init_val = 1.
 
     im2_size = 100
-    scale2 = 0.011  
+    scale2 = 0.011
 
     im1 = galsim.ImageF(im1_size, im1_size, scale=scale1, init_value=init_val)
 
-    # im2 has a much smaller scale, but the same size, so interpolating an "infinite" 
+    # im2 has a much smaller scale, but the same size, so interpolating an "infinite"
     # constant field.
     im2 = galsim.ImageF(im2_size, im2_size, scale=scale2)
 
@@ -982,7 +982,7 @@ def test_conserve_dc():
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 'Lanczos %d did not preserve a flat input flux using xvals.'%n)
-    
+
         # Convolve with a delta function to force FFT drawing.
         delta = galsim.Gaussian(sigma=1.e-8)
         obj2 = galsim.Convolve([obj,delta])
@@ -996,7 +996,7 @@ def test_conserve_dc():
         do_pickle(obj2, lambda x: x.drawImage(method='no_pixel'))
         do_pickle(obj)
         do_pickle(obj2)
- 
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1052,4 +1052,3 @@ if __name__ == "__main__":
     test_Lanczos7_ref()
     test_conserve_dc()
     test_stepk_maxk()
-

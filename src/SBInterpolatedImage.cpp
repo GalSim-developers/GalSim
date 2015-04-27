@@ -32,7 +32,7 @@
 
 namespace galsim {
 
-    template <typename T> 
+    template <typename T>
     SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<T>& image,
         boost::shared_ptr<Interpolant> xInterp, boost::shared_ptr<Interpolant> kInterp,
@@ -45,7 +45,7 @@ namespace galsim {
                 pad_factor, stepk, maxk, gsparams)
         ) {}
 
-    template <typename T> 
+    template <typename T>
     SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<T>& image,
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
@@ -60,7 +60,7 @@ namespace galsim {
         boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp,
         const GSParamsPtr& gsparams) :
-        SBProfile(new SBInterpolatedImageImpl(multi, weights, xInterp, kInterp, gsparams)) 
+        SBProfile(new SBInterpolatedImageImpl(multi, weights, xInterp, kInterp, gsparams))
     {}
 
     SBInterpolatedImage::SBInterpolatedImage(const SBInterpolatedImage& rhs) : SBProfile(rhs) {}
@@ -146,7 +146,7 @@ namespace galsim {
         const std::vector<boost::shared_ptr<BaseImage<T> > >& images, double pad_factor) :
         _pimpl(new MultipleImageHelperImpl)
     {
-        if (images.size() == 0) 
+        if (images.size() == 0)
             throw std::runtime_error("No images passed into MultipleImageHelper");
 
         _pimpl->Ninitial = std::max( images[0]->getYMax()-images[0]->getYMin()+1,
@@ -254,7 +254,7 @@ namespace galsim {
             ", xflux = "<<_pimpl->xflux[0]<<", yflux = "<<_pimpl->yflux[0]<<std::endl;
     }
 
-    boost::shared_ptr<KTable> MultipleImageHelper::getKTable(int i) const 
+    boost::shared_ptr<KTable> MultipleImageHelper::getKTable(int i) const
     {
         if (!_pimpl->vk[i].get()) _pimpl->vk[i] = _pimpl->vx[i]->transform();
         return _pimpl->vk[i];
@@ -262,7 +262,7 @@ namespace galsim {
 
     template <typename T>
     SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<T>& image, 
+        const BaseImage<T>& image,
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
@@ -278,10 +278,10 @@ namespace galsim {
         const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _multi(multi), _wts(weights), _xInterp(xInterp), _kInterp(kInterp),
-        _stepk(0.), _maxk(0.), _readyToShoot(false) 
+        _stepk(0.), _maxk(0.), _readyToShoot(false)
     {
         assert(weights.size() == multi.size());
-        initialize(); 
+        initialize();
     }
 
     void SBInterpolatedImage::SBInterpolatedImageImpl::initialize()
@@ -297,19 +297,19 @@ namespace galsim {
         } else {
             _xtab.reset(new XTable(*_multi.getXTable(0)));
             *_xtab *= _wts[0];
-            for (size_t i=1; i<_multi.size(); ++i) 
+            for (size_t i=1; i<_multi.size(); ++i)
                 _xtab->accumulate(*_multi.getXTable(i), _wts[i]);
         }
         dbg<<"xtab size = "<<_xtab->getN()<<", scale = "<<_xtab->getDx()<<std::endl;
 
         if (_stepk <= 0.) {
             // Calculate stepK:
-            // 
-            // The amount of flux missed in a circle of radius pi/stepk should be at 
+            //
+            // The amount of flux missed in a circle of radius pi/stepk should be at
             // most folding_threshold of the flux.
             //
             // We add the size of the image and the size of the interpolant in quadrature.
-            // (Note: Since this isn't a radial profile, R isn't really a radius, but rather 
+            // (Note: Since this isn't a radial profile, R isn't really a radius, but rather
             //        the size of the square box that is enclosing all the flux.)
             double R = _multi.getNin()/2.;
             // Add xInterp range in quadrature just like convolution:
@@ -331,10 +331,10 @@ namespace galsim {
             // (at least for the default quintic interpolant) rather than maxk_threshold,
             // this will probably be larger than we really need.
             // We could modify the urange method of Interpolant to take a threshold value
-            // at that point, rather than just use the constructor's value, but it's 
+            // at that point, rather than just use the constructor's value, but it's
             // probably not worth it.
             //
-            // In practice, we will generally call calculateMaxK() after construction to 
+            // In practice, we will generally call calculateMaxK() after construction to
             // refine the value of maxk based on the actual FT of the image.
             _maxk = _maxk1;
             dbg<<"maxk = "<<_maxk<<std::endl;
@@ -346,7 +346,7 @@ namespace galsim {
 
     SBInterpolatedImage::SBInterpolatedImageImpl::~SBInterpolatedImageImpl() {}
 
-    double SBInterpolatedImage::SBInterpolatedImageImpl::calculateFlux() const 
+    double SBInterpolatedImage::SBInterpolatedImageImpl::calculateFlux() const
     {
         double flux = 0.;
         for (size_t i=0; i<_multi.size(); ++i) flux += _wts[i] * _multi.getFlux(i);
@@ -355,7 +355,7 @@ namespace galsim {
     }
 
     void SBInterpolatedImage::SBInterpolatedImageImpl::getXRange(
-        double& xmin, double& xmax, std::vector<double>& splits) const 
+        double& xmin, double& xmax, std::vector<double>& splits) const
     {
         Bounds<int> b = _multi.getInitBounds();
         double xrange = _xInterp->xrange();
@@ -371,8 +371,8 @@ namespace galsim {
     }
 
     void SBInterpolatedImage::SBInterpolatedImageImpl::getYRange(
-        double& ymin, double& ymax, std::vector<double>& splits) const 
-    { 
+        double& ymin, double& ymax, std::vector<double>& splits) const
+    {
         Bounds<int> b = _multi.getInitBounds();
         double xrange = _xInterp->xrange();
         int N = b.getXMax()-b.getXMin()+1;
@@ -386,7 +386,7 @@ namespace galsim {
         }
     }
 
-    Position<double> SBInterpolatedImage::SBInterpolatedImageImpl::centroid() const 
+    Position<double> SBInterpolatedImage::SBInterpolatedImageImpl::centroid() const
     {
         double x = 0., y=0.;
         for (size_t i=0; i<_multi.size(); ++i) {
@@ -399,7 +399,7 @@ namespace galsim {
         return Position<double>(x,y);
     }
 
-    void SBInterpolatedImage::SBInterpolatedImageImpl::checkK() const 
+    void SBInterpolatedImage::SBInterpolatedImageImpl::checkK() const
     {
         // Conduct FFT
         if (_ktab.get()) return;
@@ -415,11 +415,11 @@ namespace galsim {
         dbg<<"ktab size = "<<_ktab->getN()<<", scale = "<<_ktab->getDk()<<std::endl;
     }
 
-    double SBInterpolatedImage::SBInterpolatedImageImpl::xValue(const Position<double>& p) const 
+    double SBInterpolatedImage::SBInterpolatedImageImpl::xValue(const Position<double>& p) const
     { return _xtab->interpolate(p.x, p.y, *_xInterp); }
 
     std::complex<double> SBInterpolatedImage::SBInterpolatedImageImpl::kValue(
-        const Position<double>& k) const 
+        const Position<double>& k) const
     {
         // Don't bother if the desired k value is cut off by the x interpolant:
         if (std::abs(k.x) > _maxk1 || std::abs(k.y) > _maxk1) return std::complex<double>(0.,0.);
@@ -447,7 +447,7 @@ namespace galsim {
             for (int i=0;i<m;++i,x0+=dx) {
                 double y = y0;
                 RMIt valit = val.row(i).begin();
-                for (int j=0;j<n;++j,y+=dy) *valit++ = _xtab->interpolate(x0, y, *_xInterp); 
+                for (int j=0;j<n;++j,y+=dy) *valit++ = _xtab->interpolate(x0, y, *_xInterp);
             }
         } else {
             // Otherwise, just do the values in storage order
@@ -455,7 +455,7 @@ namespace galsim {
             for (int j=0;j<n;++j,y0+=dy) {
                 double x = x0;
                 CMIt valit = val.col(j).begin();
-                for (int i=0;i<m;++i,x+=dx) *valit++ = _xtab->interpolate(x, y0, *_xInterp); 
+                for (int i=0;i<m;++i,x+=dx) *valit++ = _xtab->interpolate(x, y0, *_xInterp);
             }
         }
     }
@@ -498,7 +498,7 @@ namespace galsim {
         It uxit = ux.begin();
         double kx = kx0;
         for (int i=i1;i<i2;++i,kx+=dkx) *uxit++ = kx * _uscale;
-            
+
         tmv::Vector<double> uy(j2-j1);
         It uyit = uy.begin();
         double ky = ky0;
@@ -506,7 +506,7 @@ namespace galsim {
 
         const InterpolantXY* kInterpXY = dynamic_cast<const InterpolantXY*>(_kInterp.get());
         if (kInterpXY) {
-            // Again, the KTable interpolation routine will go faster if we make y iteration 
+            // Again, the KTable interpolation routine will go faster if we make y iteration
             // the inner loop.
             typedef tmv::VIt<std::complex<double>,tmv::Unknown,tmv::NonConj> RMIt;
 
@@ -591,7 +591,7 @@ namespace galsim {
             double x = x0;
             double y = y0;
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
-                *valit++ = _xtab->interpolate(x, y, *_xInterp); 
+                *valit++ = _xtab->interpolate(x, y, *_xInterp);
             }
         }
     }
@@ -657,11 +657,11 @@ namespace galsim {
 
         // d1 = 0 means that we haven't yet found the d that enclosed enough flux.
         // When we find a flux > thresh, we set d1 = d.
-        // However, since the function can have negative regions, we need to keep 
+        // However, since the function can have negative regions, we need to keep
         // going to make sure an oscillation doesn't bring us back below thresh.
-        // When this happens, we set d1 to 0 again and look for a larger value that 
+        // When this happens, we set d1 to 0 again and look for a larger value that
         // enclosed enough flux again.
-        int d1 = 0; 
+        int d1 = 0;
         const int Nino2 = _multi.getNin()/2;
         const Bounds<int> b = _multi.getInitBounds();
         int dx = b.getXMin() + ((b.getXMax()-b.getXMin()+1)/2);
@@ -677,7 +677,7 @@ namespace galsim {
             xdbg<<"flux = "<<flux<<std::endl;
             // Add the left, right, top and bottom sides of box:
             for(int x = -d; x < d; ++x) {
-                // Note: All 4 corners are added exactly once by including x=-d but omitting 
+                // Note: All 4 corners are added exactly once by including x=-d but omitting
                 // x=d from the loop.
                 if (b.includes(Position<int>(x+dx,-d+dy))) flux += _xtab->xval(x,-d);  // bottom
                 if (b.includes(Position<int>(d+dx,x+dy))) flux += _xtab->xval(d,x);   // right
@@ -708,7 +708,7 @@ namespace galsim {
             dbg<<"No smaller radius found.  Keep current value of stepk\n";
             return;
         }
-        // (Note: Since this isn't a radial profile, R isn't really a radius, but rather 
+        // (Note: Since this isn't a radial profile, R isn't really a radius, but rather
         //        the size of the square box that is enclosing (1-alias_thresh) of the flux.)
         double R = (d1+0.5) * scale;
         dbg<<"d1 = "<<d1<<" => R = "<<R<<std::endl;
@@ -722,7 +722,7 @@ namespace galsim {
     }
 
     // The std library norm function uses abs to get a more accurate value.
-    // We don't actually care about the slight accuracy gain, so we use a 
+    // We don't actually care about the slight accuracy gain, so we use a
     // fast norm that just does x^2 + y^2
     inline double fast_norm(const std::complex<double>& z)
     { return real(z)*real(z) + imag(z)*imag(z); }
@@ -736,7 +736,7 @@ namespace galsim {
             <<this->gsparams->maxk_threshold<<std::endl;
         checkK();
         dbg<<"ktab size = "<<_ktab->getN()<<", scale = "<<_ktab->getDk()<<std::endl;
-        
+
         double dk = _ktab->getDk();
 
         // Among the elements with kval > thresh, find the one with the maximum ksq
@@ -754,30 +754,30 @@ namespace galsim {
         // We take the k value to be maximum of kx and ky.  This is appropriate, because
         // this is how maxK() is eventually used -- it sets the size in k-space for both
         // kx and ky when drawing.  Since kx<0 is just the conjugate of the corresponding
-        // point at (-kx,-ky), we only check the right half of the square.  i.e. the 
+        // point at (-kx,-ky), we only check the right half of the square.  i.e. the
         // upper-right and lower-right quadrants.
         for(int ix=0; ix<=max_ix; ++ix) {
             xdbg<<"Start search for ix = "<<ix<<std::endl;
             // Search along the two sides with either kx = ix or ky = ix.
             for(int iy=0; iy<=ix; ++iy) {
                 // The right side of the square in the upper-right quadrant.
-                double norm_kval = fast_norm(_ktab->kval2(ix,iy)); 
+                double norm_kval = fast_norm(_ktab->kval2(ix,iy));
                 xdbg<<"norm_kval at "<<ix<<','<<iy<<" = "<<norm_kval<<std::endl;
                 if (norm_kval <= thresh && iy != ix) {
                     // The top side of the square in the upper-right quadrant.
-                    norm_kval = fast_norm(_ktab->kval2(iy,ix));  
+                    norm_kval = fast_norm(_ktab->kval2(iy,ix));
                     xdbg<<"norm_kval at "<<iy<<','<<ix<<" = "<<norm_kval<<std::endl;
                 }
                 if (norm_kval <= thresh && iy > 0) {
                     // The right side of the square in the lower-right quadrant.
                     // The ky argument is wrapped to positive values.
-                    norm_kval = fast_norm(_ktab->kval2(ix,N-iy));  
+                    norm_kval = fast_norm(_ktab->kval2(ix,N-iy));
                     xdbg<<"norm_kval at "<<ix<<','<<-iy<<" = "<<norm_kval<<std::endl;
                 }
                 if (norm_kval <= thresh && ix > 0) {
                     // The bottom side of the square in the lower-right quadrant.
                     // The ky argument is wrapped to positive values.
-                    norm_kval = fast_norm(_ktab->kval2(iy,N-ix));  
+                    norm_kval = fast_norm(_ktab->kval2(iy,N-ix));
                     xdbg<<"norm_kval at "<<iy<<','<<-ix<<" = "<<norm_kval<<std::endl;
                 }
                 if (norm_kval > thresh) {
@@ -802,7 +802,7 @@ namespace galsim {
         dbg<<"new maxk = "<<_maxk<<std::endl;
     }
 
-    void SBInterpolatedImage::SBInterpolatedImageImpl::checkReadyToShoot() const 
+    void SBInterpolatedImage::SBInterpolatedImageImpl::checkReadyToShoot() const
     {
         if (_readyToShoot) return;
 
@@ -817,7 +817,7 @@ namespace galsim {
         int xStart = -((b.getXMax()-b.getXMin()+1)/2);
         int y = -((b.getYMax()-b.getYMin()+1)/2);
 
-        // We loop over the original bounds, since this is the region over which we 
+        // We loop over the original bounds, since this is the region over which we
         // always calculate the flux.
         //
         // ix,iy are the indices in the original image
@@ -856,7 +856,7 @@ namespace galsim {
         _readyToShoot = true;
     }
 
-    // Photon-shooting 
+    // Photon-shooting
     boost::shared_ptr<PhotonArray> SBInterpolatedImage::SBInterpolatedImageImpl::shoot(
         int N, UniformDeviate ud) const
     {
@@ -864,9 +864,9 @@ namespace galsim {
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         assert(N>=0);
         checkReadyToShoot();
-        /* The pixel coordinates are stored by cumulative absolute flux in 
+        /* The pixel coordinates are stored by cumulative absolute flux in
          * a C++ standard-libary set, so the inversion is done with a binary
-         * search tree.  There are no doubt speed gains available from sorting the 
+         * search tree.  There are no doubt speed gains available from sorting the
          * pixels by flux, and somehow weighting the tree search to the elements holding
          * the most flux.  But I'm doing it the simplest way right now.
          */
@@ -882,12 +882,12 @@ namespace galsim {
         for (int i=0; i<N; ++i) {
             double unitRandom = ud();
             const Pixel* p = _pt.find(unitRandom);
-            result->setPhoton(i, p->x, p->y, 
+            result->setPhoton(i, p->x, p->y,
                               p->isPositive ? fluxPerPhoton : -fluxPerPhoton);
         }
         dbg<<"result->getTotalFlux = "<<result->getTotalFlux()<<std::endl;
 
-        // Last step is to convolve with the interpolation kernel. 
+        // Last step is to convolve with the interpolation kernel.
         // Can skip if using a 2d delta function
         const InterpolantXY* xyPtr = dynamic_cast<const InterpolantXY*> (_xInterp.get());
         if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d().get()))) {
