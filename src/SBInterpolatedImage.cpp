@@ -875,9 +875,6 @@ namespace galsim {
 
     SBInterpolatedKImage::SBInterpolatedKImageImpl::~SBInterpolatedKImageImpl() {}
 
-    double SBInterpolatedKImage::SBInterpolatedKImageImpl::xValue(const Position<double>& p) const
-    { throw SBError("SBInterpolatedKImage::xValue() not implemented"); }
-
     std::complex<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::kValue(
         const Position<double>& k) const
     {
@@ -947,13 +944,6 @@ namespace galsim {
         tmv::MatrixView<double> m(im.getData(), N, N, 1, im.getStride(), tmv::NonConj);
         m += val.realPart();
         return im;
-    }
-
-    Position<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::centroid() const
-    {
-        double flux = getFlux();
-        if (flux == 0.) throw std::runtime_error("Flux == 0.  Centroid is undefined.");
-        return Position<double>(xcentroid, ycentroid);
     }
 
     // instantiate template functions for expected image types

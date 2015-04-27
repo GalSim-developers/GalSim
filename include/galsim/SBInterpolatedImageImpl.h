@@ -210,7 +210,6 @@ namespace galsim {
 
         ~SBInterpolatedKImageImpl();
 
-        double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& p) const;
         // void fillKValue(tmv::MatrixView<std::complex<double> > val,
         //                 double kx0, double dkx, int izero,
@@ -222,7 +221,11 @@ namespace galsim {
         ConstImageView<double> getRealKImage() const;
         ConstImageView<double> getImagKImage() const;
 
-        Position<double> centroid() const;
+        double xValue(const Position<double>& p) const
+        { throw SBError("SBInterpolatedKImage::xValue() is not implemented"); }
+
+        Position<double> centroid() const
+        { return Position<double>(0., 0.); }
 
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const
         { throw SBError("SBInterpolatedKImage::shoot() is not implemented"); }
@@ -231,8 +234,6 @@ namespace galsim {
 
         std::string repr() const;
         double _dk;
-        double xcentroid;
-        double ycentroid;
         int Ninitial;
         int Nk;
 
