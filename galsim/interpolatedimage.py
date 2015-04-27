@@ -547,7 +547,7 @@ class InterpolatedImage(GSObject):
 
 
 class InterpolatedKImage(GSObject):
-    """A class describing non-parametric profiles specified by samples (i.e., images) of their
+    """A class describing non-parametric profiles specified by samples -- i.e., images -- of their
     complex Fourier transform.
 
     The InterpolatedKImage class is useful if you have a non-parametric description of the Fourier
@@ -557,8 +557,16 @@ class InterpolatedKImage(GSObject):
     photon-shooting of InterpolatedKImages is not currently implemented.  Please submit an issue at
     http://github.com/GalSim-developers/GalSim/issues if you require either of these use cases.
 
-    The primary source of real- and imaginary- Fourier samples for most use cases is probably
-    the `drawKImage()` method of a GSObject.
+    The primary intended use case for InterpolatedKImage is to create ChromaticObjects from
+    PSF-deconvolved multi-band HST images, a functionality that will be added in a future
+    pull-request.
+
+    The images required for creating an InterpolatedKImage are precisely those returned by the
+    GSObject `.drawKImage()` method.  The `a` and `b` objects in the following command will produce
+    identical images when drawn with the `.drawImage()` method:
+
+    >>> a = returns_a_GSObject()
+    >>> b = galsim.InterpolatedKImage(*a.drawKImage())
 
     The real- and imaginary-part Images must have the same data type, same bounds, and same scale.
     The only wcs permited is a simple PixelScale.  Furthermore, the complex-valued Fourier profile
@@ -590,11 +598,12 @@ class InterpolatedKImage(GSObject):
                             to use.  [default: galsim.Quintic()]
     @param stepk            By default, the stepk value (the sampling frequency in Fourier-space)
                             of the underlying SBProfile is set by the `scale` attribute of the
-                            supplied images.  This keyword allows the user to override this
-                            parameter, which may increase efficiency at the expense decreasing
-                            the separation between neighboring copies of the DFT-rendered
-                            real-space profile.  (See the GSParams docstring for the parameter
-                            `folding_threshold` for more information).
+                            supplied images.  This keyword allows the user to specify a coarser
+                            sampling in Fourier-sapce, which may increase efficiency at the expense
+                            of decreasing the separation between neighboring copies of the
+                            DFT-rendered real-space profile.  (See the GSParams docstring for the
+                            parameter `folding_threshold` for more information).
+                            [default: real_kimage.scale]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
