@@ -47,11 +47,17 @@ API Changes
 New Features
 ------------
 
+- Made all GalSim objects picklable unless they use fundamentally unpicklable
+  things such as lambda expressions.  Also gave objects better str and repr
+  representations (str(obj) should be descriptive, but relatively succinct, 
+  and repr(obj) should be unambiguous).  Also made __eq__, __ne__, and __hash__
+  work better. (#218)
 - Added ability to set the zeropoint of a bandpass on construction.  (Only
   a numeric value; more complicated calculations still need to use the method
   `bandpass.withZeropoint()`.) (#218)
 - Added ability to set the redshift of an SED on construction. (#218)
-- Updated CorrelatedNoise to work with images that have a non-trivial WCS. (#501)
+- Updated CorrelatedNoise to work with images that have a non-trivial WCS. 
+  (#501)
 - Added new methods of the image class to simulate detector effects:
   inter-pixel capacitance (#555) and image quantization (#558).
 - Enable constructing a FitsHeader object from a dict.  This had been a hidden
@@ -91,7 +97,8 @@ Bug Fixes and Improvements
   The sign is now positive when the angle as seen from the ground sweeps in
   the counter-clockwise direction, which is a more sensible definition than
   what it had used. (#590)
-- Fixed a bug in UncorrelatedNoise where the variance was set incorrectly. (#630)
+- Fixed a bug in UncorrelatedNoise where the variance was set incorrectly.
+  (#630)
 - Changed the implementation of drawing Box and Pixel profiles in real space
   (i.e. without being convolved by anything) to actually draw the surface 
   brightness at the center of each pixel.  This is what all other profiles do,
@@ -106,5 +113,7 @@ Bug Fixes and Improvements
 Updates to config options
 -------------------------
 
+- Added Spergel type. (#616)
+- Added lam, diam, scale_units options to Airy and OpticalPSF types. (#618)
 - Added TopHat type. (#639)
 
