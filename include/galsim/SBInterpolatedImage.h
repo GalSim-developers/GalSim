@@ -19,7 +19,7 @@
 
 #ifndef GalSim_SBInterpolatedImage_H
 #define GalSim_SBInterpolatedImage_H
-/** 
+/**
  * @file SBInterpolatedImage.h @brief SBProfile that interpolates a given image.
  */
 
@@ -54,26 +54,26 @@ namespace galsim {
         void operator=(const SBInterpolated& rhs);
     };
 
-    /** 
-     * @brief Surface Brightness Profile represented by interpolation over one or more data 
+    /**
+     * @brief Surface Brightness Profile represented by interpolation over one or more data
      * tables/images.
      *
      * The SBInterpolatedImage class represents an arbitrary surface brightness profile (supplied as
      * an image), including rules for how to interpolate the profile between the supplied pixel
      * values.
      *
-     * It is assumed that input images oversample the profiles they represent.  maxK() is set at 
-     * the Nyquist frequency of the input image, although it should be noted that interpolants 
+     * It is assumed that input images oversample the profiles they represent.  maxK() is set at
+     * the Nyquist frequency of the input image, although it should be noted that interpolants
      * other than the ideal sinc function may make the max frequency higher than this.  The output
-     * is required to be periodic on a scale > original image extent + kernel footprint, and 
-     * stepK() is set accordingly. 
+     * is required to be periodic on a scale > original image extent + kernel footprint, and
+     * stepK() is set accordingly.
      *
      * The normal way to make an SBInterpolatedImage is to provide the image to interpolate
-     * and the interpolation scheme.  See Interpolant.h for more about the different 
-     * kind of interpolation.  
+     * and the interpolation scheme.  See Interpolant.h for more about the different
+     * kind of interpolation.
      *
      * You can provide different interpolation schemes for real and fourier space
-     * (passed as xInterp and kInterp respectively).  These are required, but there are 
+     * (passed as xInterp and kInterp respectively).  These are required, but there are
      * sensible defaults in the python layer wrapper class, InterpolatedImage.
      *
      * The ideal k-space interpolant is a sinc function; however, the quintic interpolant is the
@@ -90,12 +90,12 @@ namespace galsim {
     class SBInterpolatedImage : public SBInterpolated
     {
     public:
-        /** 
-         * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
+        /**
+         * @brief Initialize internal quantities and allocate data tables based on a supplied 2D
          * image.
          *
          * @param[in] image       Input Image (any of ImageF, ImageD, ImageS, ImageI).
-         * @param[in] xInterp     Interpolation scheme to adopt between pixels 
+         * @param[in] xInterp     Interpolation scheme to adopt between pixels
          * @param[in] kInterp     Interpolation scheme to adopt in k-space
          * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
          *                        for the Fourier transform.
@@ -104,7 +104,7 @@ namespace galsim {
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
          *                        image operations and rendering.
          */
-        template <typename T> 
+        template <typename T>
         SBInterpolatedImage(
             const BaseImage<T>& image,
             boost::shared_ptr<Interpolant> xInterp,
@@ -113,7 +113,7 @@ namespace galsim {
             const GSParamsPtr& gsparams);
 
         /// @brief Same as above, but take 2-d interpolants.
-        template <typename T> 
+        template <typename T>
         SBInterpolatedImage(
             const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp,
@@ -133,7 +133,7 @@ namespace galsim {
          * @brief Refine the value of stepK if the input image was larger than necessary.
          *
          * @param[in] max_stepk  Optional maximum value of stepk if you have some a priori
-         *                       knowledge about an appropriate maximum. 
+         *                       knowledge about an appropriate maximum.
          */
         void calculateStepK(double max_stepk=0.) const;
 
@@ -141,7 +141,7 @@ namespace galsim {
          * @brief Refine the value of maxK if the input image had a smaller scale than necessary.
          *
          * @param[in] max_maxk  Optional maximum value of maxk if you have some a priori
-         *                      knowledge about an appropriate maximum. 
+         *                      knowledge about an appropriate maximum.
          */
         void calculateMaxK(double max_maxk=0.) const;
 
