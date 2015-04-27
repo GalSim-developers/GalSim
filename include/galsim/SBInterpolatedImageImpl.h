@@ -224,8 +224,7 @@ namespace galsim {
         double xValue(const Position<double>& p) const
         { throw SBError("SBInterpolatedKImage::xValue() is not implemented"); }
 
-        Position<double> centroid() const
-        { return Position<double>(0., 0.); }
+        Position<double> centroid() const;
 
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const
         { throw SBError("SBInterpolatedKImage::shoot() is not implemented"); }
@@ -236,6 +235,8 @@ namespace galsim {
         double _dk;
         int Ninitial;
         int Nk;
+        mutable double xcentroid;
+        mutable double ycentroid;
 
     private:
 

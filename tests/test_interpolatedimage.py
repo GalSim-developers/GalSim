@@ -1096,6 +1096,13 @@ def test_kround_trip():
     np.testing.assert_almost_equal(2*b.stepK(), c.stepK())
     np.testing.assert_almost_equal(b.maxK(), c.maxK())
 
+    # Test centroid
+    for dx, dy in zip(KXVALS, KYVALS):
+        a = final.shift(dx, dy)
+        b = galsim.InterpolatedKImage(*a.drawKImage())
+        np.testing.assert_almost_equal(a.centroid().x, b.centroid().x, 4) #Fails at 5th decimal
+        np.testing.assert_almost_equal(a.centroid().y, b.centroid().y, 4) #Fails at 5th decimal
+
 if __name__ == "__main__":
     test_roundtrip()
     test_fluxnorm()

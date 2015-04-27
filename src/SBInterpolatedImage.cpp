@@ -871,6 +871,8 @@ namespace galsim {
         }
         _flux = kValue(Position<double>(0.,0.)).real();
         dbg<<"flux = "<<_flux<<std::endl;
+        xcentroid = NAN;
+        ycentroid = NAN;
     }
 
     SBInterpolatedKImage::SBInterpolatedKImageImpl::~SBInterpolatedKImageImpl() {}
@@ -882,6 +884,26 @@ namespace galsim {
         xdbg<<"_maxk = "<<_maxk<<std::endl;
         if (std::abs(k.x) > _maxk || std::abs(k.y) > _maxk) return std::complex<double>(0.,0.);
         return _ktab->interpolate(k.x, k.y, *_kInterp);
+    }
+
+    double xintegrand(double x, double y, double val) {
+        return x*val;
+    }
+
+    double yintegrand(double x, double y, double val) {
+        return y*val;
+    }
+
+    // Is there a better way to do this without needing to Fourier transform?
+    Position<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::centroid() const {
+        double flux = getFlux();
+        if (flux == 0.) throw std::runtime_error("Flux == 0.  Centroid is undefined.");
+        if (isnan(xcentroid)) {
+            boost::shared_ptr<XTable> _xtab = _ktab->transform();
+            xcentroid = _xtab->integrate(xintegrand) / flux;
+            ycentroid = _xtab->integrate(yintegrand) / flux;
+        }
+        return Position<double>(xcentroid, ycentroid);
     }
 
     // Adding this for symmetry with SBInterpolatedImageImpl::repr(), but I'm not sure that
