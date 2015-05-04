@@ -202,8 +202,8 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                     pupil_plane_im=galsim.wfirst.pupil_plane_file,
                     oversampling=1.2, pad_factor=2.)
             if n_waves is not None:
-                PSF.setupInterpolation(waves=np.linspace(blue_limit, red_limit, n_waves),
-                                       oversample_fac=1.5)
+                PSF = PSF.interpolate(waves=np.linspace(blue_limit, red_limit, n_waves),
+                                      oversample_fac=1.5)
         else:
             tmp_aberrations = use_aberrations * zemax_wavelength / wavelength_nm
             if approximate_struts:
