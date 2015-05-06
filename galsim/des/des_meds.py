@@ -134,7 +134,8 @@ class MultiExposureObject(object):
             self.wcs = wcs
         else:
             # Get the wcs from the images.  Probably just the pixel scale.
-            self.wcs = [ im.wcs.jacobian().setOrigin(im.trueCenter()) for im in self.images ]
+            #use withOrigin instead of setOrigin
+            self.wcs = [ im.wcs.jacobian().withOrigin(im.trueCenter()) for im in self.images ]
 
          # check if weights,segs,jacks are lists
         if not isinstance(self.weights,list):
