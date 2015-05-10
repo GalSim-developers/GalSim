@@ -856,21 +856,22 @@ namespace galsim {
 
         // Only need to fill in x>=0 since the negative x's are the Hermitian
         // conjugates of the positive x's.
-        int xStart = 0;
-        int ixStart = (realKImage.getXMin()+realKImage.getXMax()+1)/2;
-        int y = -((realKImage.getYMax()-realKImage.getYMin()+1)/2);
-        dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
-        for (int iy = realKImage.getYMin(); iy<= realKImage.getYMax(); ++iy, ++y) {
-             int x = xStart;
-             for (int ix = ixStart; ix<= realKImage.getXMax(); ++ix, ++x) {
-                 std::complex<double> value(realKImage(ix,iy), imagKImage(ix, iy));
-                 _ktab->kSet(x, y, value);
-                 xxdbg<<"ix,iy,x,y = "<<ix<<','<<iy<<','<<x<<','<<y<<std::endl;
-                 xxdbg<<"value = "<<value<<std::endl;
+        int kxStart = 0;
+        int ikxStart = (realKImage.getXMin()+realKImage.getXMax()+1)/2;
+        int ky = -((realKImage.getYMax()-realKImage.getYMin()+1)/2);
+        dbg<<"kxStart = "<<kxStart<<", kyStart = "<<ky<<std::endl;
+        for (int iky = realKImage.getYMin(); iky<= realKImage.getYMax(); ++iky, ++ky) {
+             int kx = kxStart;
+             for (int ikx = ikxStart; ikx<= realKImage.getXMax(); ++ikx, ++kx) {
+                 std::complex<double> kvalue(realKImage(ikx, iky), imagKImage(ikx, iky));
+                 _ktab->kSet(kx, ky, kvalue);
+                 xxdbg<<"ikx,iky,kx,ky = "<<ikx<<','<<iky<<','<<kx<<','<<ky<<std::endl;
+                 xxdbg<<"kvalue = "<<kvalue<<std::endl;
              }
         }
         _flux = kValue(Position<double>(0.,0.)).real();
         dbg<<"flux = "<<_flux<<std::endl;
+
         xcentroid = NAN;
         ycentroid = NAN;
     }
@@ -886,22 +887,32 @@ namespace galsim {
         return _ktab->interpolate(k.x, k.y, *_kInterp);
     }
 
-    double xintegrand(double x, double y, double val) {
-        return x*val;
-    }
-
-    double yintegrand(double x, double y, double val) {
-        return y*val;
-    }
-
-    // Is there a better way to do this without needing to Fourier transform?
     Position<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::centroid() const {
         double flux = getFlux();
         if (flux == 0.) throw std::runtime_error("Flux == 0.  Centroid is undefined.");
         if (isnan(xcentroid)) {
-            boost::shared_ptr<XTable> _xtab = _ktab->transform();
-            xcentroid = _xtab->integrate(xintegrand) / flux;
-            ycentroid = _xtab->integrate(yintegrand) / flux;
+            /*  int x f(x) dx = (x conv f)|x=0 = int FT(x conv f)(k) dk
+                              = int FT(x) FT(f) dk
+                FT(x) is divergent, but really we want the first integral above to be
+                int(x f(x) dx, -L/2..L/2) since f(x) is formally periodic once it's put on a
+                grid.  So in the last integral, we really want FT(x if |x|<L/2 else 0),
+                which works out to
+                2 i ( kx L cos(kx L/2) - 2 sin(kx L/2)) sin (ky L/2) / kx^2 / ky.
+                Noting that kx L/2 = ikx pi, the cosines are -1^ikx and the sines are 0.
+                Of course, lim kx->0 sin(kx)/kx is 1 though, so that term survives.  Algebra
+                eventually reduces the above expression to what's in the code below.
+             */
+            double xsum(0.0), ysum(0.0);
+            for (int iky = -Ninitial/2; iky < Ninitial/2; iky++) {
+                if (iky == 0) continue;
+                ysum += std::pow(-1.0, iky) / iky * _ktab->kval(0, iky).imag();
+            }
+            for (int ikx = -Ninitial/2; ikx < Ninitial/2; ikx++) {
+                if (ikx == 0) continue;
+                xsum += std::pow(-1.0, ikx) / ikx * _ktab->kval(ikx, 0).imag();
+            }
+            xcentroid = xsum/_dk/flux;
+            ycentroid = ysum/_dk/flux;
         }
         return Position<double>(xcentroid, ycentroid);
     }
