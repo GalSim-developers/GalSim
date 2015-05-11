@@ -38,6 +38,7 @@ some lower-resolution telescope.
 import galsim
 import utilities
 from galsim import GSObject
+from chromatic import ChromaticObject
 from galsim import pyfits
 import os
 
@@ -781,3 +782,72 @@ def _parse_files_dirs(file_name, image_dir, dir, noise_dir):
         full_noise_dir = noise_dir
 
     return full_file_name, full_image_dir, full_noise_dir
+
+
+class ChromaticRealGalaxy(ChromaticObject):
+    def __init__(self, chromatic_real_galaxy_catalog, index=None, id=None, random=False,
+                 rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
+                 pad_factor=4, noise_pad_size=0, gsparams=None, logger=None):
+        import numpy as np
+
+        if rng is None:
+            self.rng = galsim.BaseDeviate()
+        elif not isinstance(rng, galsim.BaseDeviate):
+            raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
+        else:
+            self.rng = rng
+        self._rng = self.rng.duplicate()  # This is only needed if we want to make sure eval(repr)
+                                          # results in the same object.
+
+        if flux is not None and flux_rescale is not None:
+            raise TypeError("Cannot supply a flux and a flux rescaling factor!")
+
+        if isinstance(chromatic_real_galaxy_catalog, tuple):
+            # Special (undocumented) way to build a ChromaticRealGalaxy without needing the rgc
+            # directly by providing the things we need from it.
+            gal_images, throughputs, self.base_SEDs, chromatic_PSF = chromatic_real_galaxy_catalog
+
+            self.base_SEDs = [bsed.withFlux(1.0, throughputs[0]) for bsed in self.base_SEDs]
+            use_index = 0  # For the logger statements below.
+            if logger:
+                logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
+            self.catalog_file = None
+        else:
+            raise ValueError("Chromatic Real Galaxy Catalog not implemented yet!")
+
+        # Need to sample both the effective PSFs and the images on the same Fourier grid.
+        maxk = np.pi / gal_images[0].scale
+        self.stepk = 2 * np.pi / max(gal_images[0].array.shape)
+        nk = int(np.ceil(2*maxk/self.stepk))
+
+        # Create effective PSFs Fourier-space images
+        eff_PSF_kimages = np.empty((len(gal_images), len(self.base_SEDs), nk, nk), dtype=complex)
+        for i, tput in enumerate(throughputs):
+            for j, bsed in enumerate(self.base_SEDs):
+                re, im = ((chromatic_PSF * bsed).drawKImage(tput, nx=nk, ny=nk, scale=self.stepk))
+                eff_PSF_kimages[i,j,:,:] = re.array + 1j * im.array
+
+        # Get Fourier-space representations of input images.
+        self.kimages = np.empty((len(gal_images), nk, nk), dtype=complex)
+        for i, gimg in enumerate(gal_images):
+            re, im = galsim.InterpolatedImage(gimg).drawKImage(nx=nk, ny=nk, scale=self.stepk)
+            self.kimages[i,:,:] = re.array + 1j * im.array
+
+        self.aj = np.empty((nk, nk, len(self.base_SEDs)), dtype=complex)
+        for iy in xrange(nk):
+            for ix in xrange(nk):
+                A = eff_PSF_kimages[:,:,iy,ix]
+                b = self.kimages[:,iy,ix]
+                x = np.linalg.lstsq(A, b)[0]
+                self.aj[iy, ix, :] = x
+
+        self.separable = False
+        self.wave_list = []
+
+    def evaluateAtWavelength(self, wave):
+        import numpy as np
+        b = [bsed(wave) for bsed in self.base_SEDs]
+        karray = np.dot(self.aj, b)
+        re = galsim.ImageD(karray, scale=self.stepk)
+        im = galsim.ImageD(karray*0, scale=self.stepk)
+        return galsim.InterpolatedKImage(re, im)
