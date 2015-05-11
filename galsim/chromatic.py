@@ -315,6 +315,77 @@ class ChromaticObject(object):
         image += integral
         return image
 
+    def drawKImage(self, bandpass, re=None, im=None, integrator='trapezoidal', **kwargs):
+        # To help developers debug extensions to ChromaticObject, check that ChromaticObject has
+        # the expected attributes
+        if self.separable: assert hasattr(self, 'SED')
+        assert hasattr(self, 'wave_list')
+
+        # setup output image (semi-arbitrarily using the bandpass effective wavelength)
+        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
+        re, im = prof0.drawKImage(re=re, im=im, **kwargs)
+        # Remove from kwargs anything that is only used for setting up image:
+        kwargs.pop('dtype', None)
+        kwargs.pop('scale', None)
+        kwargs.pop('nx', None)
+        kwargs.pop('ny', None)
+
+        # determine combined self.wave_list and bandpass.wave_list
+        wave_list = self._getCombinedWaveList(bandpass)
+
+        if self.separable:
+            if len(wave_list) > 0:
+                multiplier = np.trapz(self.SED(wave_list) * bandpass(wave_list), wave_list)
+            else:
+                multiplier = galsim.integ.int1d(lambda w: self.SED(w) * bandpass(w),
+                                                bandpass.blue_limit, bandpass.red_limit)
+            prof0 *= multiplier/self.SED(bandpass.effective_wavelength)
+            re, im = prof0.drawKImage(re=re, im=im, **kwargs)
+            return re, im
+
+        # Decide on integrator.  If the user passed one of the integrators from galsim.integ, that's
+        # fine.  Otherwise we decide based on the adopted integration rule and the presence/absence
+        # of `wave_list`.
+        if isinstance(integrator, str):
+            if integrator == 'trapezoidal':
+                rule = np.trapz
+            elif integrator == 'midpoint':
+                rule = galsim.integ.midpt
+            else:
+                raise TypeError("Unrecognized integration rule: %s"%integrator)
+            if len(wave_list) > 0:
+                integrator = galsim.integ.SampleIntegrator(rule)
+            else:
+                integrator = galsim.integ.ContinuousIntegrator(rule)
+        if not isinstance(integrator, galsim.integ.SampleIntegrator) and \
+                not isinstance(integrator, galsim.integ.ContinuousIntegrator):
+            raise TypeError("Invalid type passed in for integrator!")
+
+        # merge self.wave_list into bandpass.wave_list if using a sampling integrator
+        if isinstance(integrator, galsim.integ.SampleIntegrator):
+            bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
+                                                          interpolant='linear'))
+
+        add_to_image = kwargs.pop('add_to_image', False)
+        reint, imint = integrator(self.evaluateAtWavelength, bandpass, re, kwargs, doK=True)
+
+        # For performance profiling, store the number of evaluations used for the last integration
+        # performed.  Note that this might not be very useful for ChromaticSum instances, which are
+        # drawn one profile at a time, and hence _last_n_eval will only represent the final
+        # component drawn.
+        self._last_n_eval = integrator.last_n_eval
+
+        # Apply integral to the initial image appropriately.
+        # Note: Don't do image = integral and return that for add_to_image==False.
+        #       Remember that python doesn't actually do assignments, so this won't update the
+        #       original image if the user provided one.  The following procedure does work.
+        if not add_to_image:
+            re.setZero()
+            im.setZero()
+        re += reint
+        im += imint
+        return re, im
+
     def _getCombinedWaveList(self, bandpass):
         wave_list = bandpass.wave_list
         wave_list = np.union1d(wave_list, self.wave_list)
