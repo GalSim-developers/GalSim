@@ -290,28 +290,33 @@ def write_meds(file_name, obj_list, clobber=True):
 
     # second hdu is the object_data
     cols = []
-    cols.append( pyfits.Column(name='ncutout', format='i4', array=cat['ncutout'] ) )
-    cols.append( pyfits.Column(name='id', format='i4', array=cat['id'] ) )
-    cols.append( pyfits.Column(name='box_size', format='i4', array=cat['box_size'] ) )
-    cols.append( pyfits.Column(name='file_id', format='i4', array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='start_row', format='%di4' % MAX_NCUTOUTS,
+    cols.append( pyfits.Column(name='ncutout',        format='K', array=cat['ncutout']  ) )
+    cols.append( pyfits.Column(name='id',             format='K', array=cat['id']       ) )
+    cols.append( pyfits.Column(name='box_size',       format='K', array=cat['box_size'] ) )
+    cols.append( pyfits.Column(name='file_id',        format='%dK' % MAX_NCUTOUTS,
+                               array=[1]*n_obj) )
+    cols.append( pyfits.Column(name='start_row',      format='%dK' % MAX_NCUTOUTS,
                                array=numpy.array(cat['start_row'])) )
-    cols.append( pyfits.Column(name='orig_row', format='f8', array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='orig_col', format='f8', array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='orig_start_row', format='i4', array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='orig_start_col', format='i4', array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='dudrow', format='%df8'% MAX_NCUTOUTS,
-                               array=numpy.array(cat['dudrow']) ) )
-    cols.append( pyfits.Column(name='dudcol', format='%df8'% MAX_NCUTOUTS,
-                               array=numpy.array(cat['dudcol']) ) )
-    cols.append( pyfits.Column(name='dvdrow', format='%df8'% MAX_NCUTOUTS,
-                               array=numpy.array(cat['dvdrow']) ) )
-    cols.append( pyfits.Column(name='dvdcol', format='%df8'% MAX_NCUTOUTS,
-                               array=numpy.array(cat['dvdcol']) ) )
-    cols.append( pyfits.Column(name='cutout_row', format='%df8'% MAX_NCUTOUTS,
-                               array=numpy.array(cat['row0']) ) )
-    cols.append( pyfits.Column(name='cutout_col', format='%df8'% MAX_NCUTOUTS,
-                               array=numpy.array(cat['col0']) ) )
+    cols.append( pyfits.Column(name='orig_row',       format='%dD' % MAX_NCUTOUTS,
+                               array=[[1]*MAX_NCUTOUTS]*n_obj     ) )
+    cols.append( pyfits.Column(name='orig_col',       format='%dD' % MAX_NCUTOUTS,
+                               array=[[1]*MAX_NCUTOUTS]*n_obj     ) )
+    cols.append( pyfits.Column(name='orig_start_row', format='%dK' % MAX_NCUTOUTS,
+                               array=[[1]*MAX_NCUTOUTS]*n_obj     ) )
+    cols.append( pyfits.Column(name='orig_start_col', format='%dK' % MAX_NCUTOUTS,
+                               array=[[1]*MAX_NCUTOUTS]*n_obj     ) )
+    cols.append( pyfits.Column(name='dudrow',         format='%dD' % MAX_NCUTOUTS,
+                               array=numpy.array(cat['dudrow'])   ) )
+    cols.append( pyfits.Column(name='dudcol',         format='%dD' % MAX_NCUTOUTS,
+                               array=numpy.array(cat['dudcol'])   ) )
+    cols.append( pyfits.Column(name='dvdrow',         format='%dD' % MAX_NCUTOUTS,
+                               array=numpy.array(cat['dvdrow'])   ) )
+    cols.append( pyfits.Column(name='dvdcol',         format='%dD' % MAX_NCUTOUTS,
+                               array=numpy.array(cat['dvdcol'])   ) )
+    cols.append( pyfits.Column(name='cutout_row',     format='%dD' % MAX_NCUTOUTS,
+                               array=numpy.array(cat['row0'])     ) )
+    cols.append( pyfits.Column(name='cutout_col',     format='%dD' % MAX_NCUTOUTS,
+                               array=numpy.array(cat['col0'])     ) )
 
 
     object_data = pyfits.new_table(pyfits.ColDefs(cols))
