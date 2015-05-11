@@ -15,9 +15,9 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file getLSSTBandpass.py
-Grab LSST Bandpasses from the web, and then thin with rel_err = 1.e-5.  Note that the outputs of
-this script, which are the files GALSIM_DIR/examples/data/LSST_?.dat, are already included in the
+"""@file getACSBandpass.py
+Grab HST ACS bandpasses from the web, and then thin with rel_err = 1.e-5.  Note that the outputs of
+this script, which are the files GALSIM_DIR/examples/data/ACS*.dat, are already included in the
 repository.  This script just lets users know where these files came from and how they were altered.
 """
 
@@ -26,15 +26,13 @@ import urllib2
 import numpy as np
 import os
 
-urldir = 'https://dev.lsstcorp.org/trac/export/29728/sims/throughputs/tags/1.2/baseline/'
-for band in 'ugrizy':
-    urlfile = urldir + 'total_{0}.dat'.format(band)
-    base = os.path.basename(urlfile).replace('total_', 'LSST_')
-    if band == 'y':
-        urlfile = urldir + 'total_y4.dat'
-        base = 'LSST_y.dat'
+urldir = 'http://www.stsci.edu/hst/acs/analysis/throughputs/tables/'
+for band in ['wfc_F435W', 'wfc_F606W', 'wfc_F775W', 'wfc_F850LP']:
+    urlfile = urldir + band + '.dat'
+    base = os.path.basename(urlfile).replace('wfc_', 'ACS_wfc_')
     file_ = urllib2.urlopen(urlfile)
     x,f = np.loadtxt(file_, unpack=True)
+    x /= 10.0 #Ang -> nm
     x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5)
     x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4)
     x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3)
@@ -43,8 +41,8 @@ for band in 'ugrizy':
 
     with open(base, 'w') as out:
         out.write(
-"""# LSST {0}-band total throughput at airmass 1.2
-# File taken from https://dev.lsstcorp.org/cgit/LSST/sims/throughputs.git/snapshot/throughputs-1.2.tar.gz
+"""# ACS {0} total throughput
+# File taken from http://www.stsci.edu/hst/acs/analysis/throughputs/
 #
 # Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-5
 #

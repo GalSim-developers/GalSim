@@ -202,6 +202,14 @@ def test_real_galaxy_saved():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_chromatic_real_galaxy():
+    mock_HST_psf = galsim.ChromaticAiry(lam=700, diam=2.4)
+    mock_LSST_psf = galsim.ChromaticAtmosphere(galsim.Kolmogorov(fwhm=0.6), 700, 
+                                               zenith_angle=30*galsim.degrees)
+
+    
+
 if __name__ == "__main__":
-    test_real_galaxy_ideal()
-    test_real_galaxy_saved()
+    # test_real_galaxy_ideal()
+    # test_real_galaxy_saved()
+    test_chromatic_real_galaxy()

@@ -6,7 +6,7 @@
 #  Obtained from ZPHOT code at
 #  'http://webast.ast.obs-mip.fr/hyperz/zphot_src_1.1.tar.gz'
 #
-#  Truncated to wavelengths less than 12000 Angstroms, and thinned by
+#  Truncated to wavelengths less than 22050 Angstroms, and thinned by
 #  galsim.utilities.thin_tabulated_values to a relative error of 1.e-5
 #
 #  Angstroms     Flux/A
