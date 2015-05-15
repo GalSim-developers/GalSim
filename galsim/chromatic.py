@@ -260,6 +260,7 @@ class ChromaticObject(object):
         kwargs.pop('wcs', None)
         kwargs.pop('nx', None)
         kwargs.pop('ny', None)
+        kwargs.pop('bounds', None)
 
         # determine combined self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
@@ -327,8 +328,10 @@ class ChromaticObject(object):
         # Remove from kwargs anything that is only used for setting up image:
         kwargs.pop('dtype', None)
         kwargs.pop('scale', None)
+        kwargs.pop('wcs', None)
         kwargs.pop('nx', None)
         kwargs.pop('ny', None)
+        kwargs.pop('bounds', None)
 
         # determine combined self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
@@ -935,6 +938,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         kwargs.pop('wcs', None)
         kwargs.pop('nx', None)
         kwargs.pop('ny', None)
+        kwargs.pop('bounds', None)
 
         # determine combination of self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
@@ -1841,6 +1845,13 @@ class ChromaticConvolution(ChromaticObject):
                     tmplist.append(summand)
                     tmpobj = ChromaticConvolution(tmplist)
                     # add to previously started image
+                    # remove kwargs that would interfere with image
+                    kwargs.pop('dtype', None)
+                    kwargs.pop('scale', None)
+                    kwargs.pop('wcs', None)
+                    kwargs.pop('nx', None)
+                    kwargs.pop('ny', None)
+                    kwargs.pop('bounds', None)
                     image = tmpobj.drawImage(bandpass, image=image, integrator=integrator,
                                              iimult=iimult, add_to_image=True, **kwargs)
                 # Return the image here, breaking the loop early.  If there are two ChromaticSum
@@ -1860,6 +1871,7 @@ class ChromaticConvolution(ChromaticObject):
         kwargs.pop('wcs', None)
         kwargs.pop('nx', None)
         kwargs.pop('ny', None)
+        kwargs.pop('bounds', None)
 
         # Sort these atomic objects into separable and inseparable lists, and collect
         # the spectral parts of the separable profiles.
