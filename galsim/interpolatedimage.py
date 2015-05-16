@@ -672,7 +672,9 @@ class InterpolatedKImage(GSObject):
         if (edge_max / real_kimage.array.max()) > maxk_threshold:
             import warnings
             warnings.warn(
-                "Provided Real and Imag kimages do not meet GSParams.maxk_threshold criterion.")
+                "Provided Real and Imag kimages have maxk = {0:}"
+                ", but GSParams.maxk_threshold is {1:}.".format(edge_max / real_kimage.array.max(),
+                                                                maxk_threshold))
 
         self._real_kimage = real_kimage
         self._imag_kimage = imag_kimage
