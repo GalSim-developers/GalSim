@@ -805,9 +805,10 @@ class ChromaticRealGalaxy(ChromaticObject):
         if isinstance(chromatic_real_galaxy_catalog, tuple):
             # Special (undocumented) way to build a ChromaticRealGalaxy without needing the rgc
             # directly by providing the things we need from it.
-            gal_images, throughputs, self.base_SEDs, chromatic_PSF = chromatic_real_galaxy_catalog
+            gal_images, throughputs, base_SEDs, chromatic_PSF = chromatic_real_galaxy_catalog
 
-            self.base_SEDs = [bsed.withFlux(1.0, throughputs[0]) for bsed in self.base_SEDs]
+            self.base_SEDs = [bsed.withFlux(1.0, throughputs[0]) for bsed in base_SEDs]
+
             use_index = 0  # For the logger statements below.
             if logger:
                 logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
@@ -816,15 +817,28 @@ class ChromaticRealGalaxy(ChromaticObject):
             raise ValueError("Chromatic Real Galaxy Catalog not implemented yet!")
 
         # Need to sample both the effective PSFs and the images on the same Fourier grid.
-        maxk = np.pi / gal_images[0].scale
-        self.stepk = 2 * np.pi / max(gal_images[0].array.shape)
+        blue_PSFs = [chromatic_PSF.evaluateAtWavelength(tp.blue_limit) for tp in throughputs]
+        red_PSFs = [chromatic_PSF.evaluateAtWavelength(tp.red_limit) for tp in throughputs]
+        maxk = np.pi/np.array([gi.scale for gi in gal_images])
+        maxk = np.concatenate([maxk, [bp.maxK() for bp in blue_PSFs]])
+        maxk = np.concatenate([maxk, [rp.maxK() for rp in red_PSFs]])
+        maxk = min(maxk)
+
+        stepk = 2*np.pi / np.array([gi.scale * max(gi.array.shape) for gi in gal_images])
+        stepk = np.concatenate([stepk, [bp.stepK() for bp in blue_PSFs]])
+        stepk = np.concatenate([stepk, [rp.stepK() for rp in red_PSFs]])
+        self.stepk = min(stepk)
+
         nk = int(np.ceil(2*maxk/self.stepk))
 
         # Create effective PSFs Fourier-space images
         eff_PSF_kimages = np.empty((len(gal_images), len(self.base_SEDs), nk, nk), dtype=complex)
         for i, tput in enumerate(throughputs):
             for j, bsed in enumerate(self.base_SEDs):
-                re, im = ((chromatic_PSF * bsed).drawKImage(tput, nx=nk, ny=nk, scale=self.stepk))
+                star = galsim.Gaussian(fwhm=1e-8) * bsed
+                conv = galsim.Convolve(chromatic_PSF, star)
+                re, im = (galsim.InterpolatedImage(conv.drawImage(tput, method='no_pixel'))
+                          .drawKImage(nx=nk, ny=nk, scale=self.stepk))
                 eff_PSF_kimages[i,j,:,:] = re.array + 1j * im.array
 
         # Get Fourier-space representations of input images.
@@ -833,6 +847,9 @@ class ChromaticRealGalaxy(ChromaticObject):
             re, im = galsim.InterpolatedImage(gimg).drawKImage(nx=nk, ny=nk, scale=self.stepk)
             self.kimages[i,:,:] = re.array + 1j * im.array
 
+        # Solve the linear least squares problem.  This is effectively a constrained chromatic
+        # deconvolution.
+        # Is there a better way to loop over these?
         self.aj = np.empty((nk, nk, len(self.base_SEDs)), dtype=complex)
         for iy in xrange(nk):
             for ix in xrange(nk):
@@ -846,8 +863,13 @@ class ChromaticRealGalaxy(ChromaticObject):
 
     def evaluateAtWavelength(self, wave):
         import numpy as np
+
         b = [bsed(wave) for bsed in self.base_SEDs]
         karray = np.dot(self.aj, b)
-        re = galsim.ImageD(karray, scale=self.stepk)
-        im = galsim.ImageD(karray*0, scale=self.stepk)
-        return galsim.InterpolatedKImage(re, im)
+        re = galsim.ImageD(karray.real.copy(), scale=self.stepk)
+        im = galsim.ImageD(karray.imag.copy(), scale=self.stepk)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            out = galsim.InterpolatedKImage(re, im)
+        return out
