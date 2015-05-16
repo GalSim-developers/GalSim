@@ -20,7 +20,8 @@ import os
 import sys
 
 from galsim_test_helpers import *
-
+path, filename = os.path.split(__file__)
+datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
 try:
     import galsim
 except ImportError:
@@ -203,13 +204,80 @@ def test_real_galaxy_saved():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_chromatic_real_galaxy():
-    mock_HST_psf = galsim.ChromaticAiry(lam=700, diam=2.4)
-    mock_LSST_psf = galsim.ChromaticAtmosphere(galsim.Kolmogorov(fwhm=0.6), 700, 
-                                               zenith_angle=30*galsim.degrees)
+    """Use some HST observations in BViz (a la GOODS) to predict LSST observations,
+    and compare to exact result."""
 
-    
+    print "Constructing interpolated HST PSF"
+    HST_PSF = (galsim.ChromaticOpticalPSF(lam=700, diam=2.4, obscuration=0.33)
+               .interpolate(waves=np.arange(350.0, 1100.1, 25.0)))
+    HST_PSF = (galsim.ChromaticAiry(lam=700, diam=2.4)
+               .interpolate(waves=np.arange(350.0, 1100.1, 25.0)))
+
+    print "Constructing interpolated LSST PSF"
+    LSST_PSF = (galsim.ChromaticAtmosphere(galsim.Kolmogorov(fwhm=0.6), 700,
+                                           zenith_angle=30*galsim.degrees)
+                .interpolate(waves=np.arange(300.0, 1100.1, 25.0)))
+
+    # load filters
+    ACS_B = galsim.Bandpass(os.path.join(datapath, "ACS_wfc_F435W.dat"))
+    ACS_V = galsim.Bandpass(os.path.join(datapath, "ACS_wfc_F606W.dat"))
+    ACS_i = galsim.Bandpass(os.path.join(datapath, "ACS_wfc_F775W.dat"))
+    ACS_z = galsim.Bandpass(os.path.join(datapath, "ACS_wfc_F850LP.dat"))
+    ACS_filters = [ACS_B, ACS_V, ACS_i, ACS_z]
+    ACS_filter_names = 'BViz'
+
+    LSST_r = galsim.Bandpass(os.path.join(datapath, "LSST_r.dat"))
+    LSST_i = galsim.Bandpass(os.path.join(datapath, "LSST_i.dat"))
+    LSST_filters = [LSST_r, LSST_i]
+    LSST_filter_names = 'ri'
+
+    # load spectra
+    bulge_SED = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
+    bulge_SED = bulge_SED.withFluxDensity(target_flux_density=0.3, wavelength=500.0)
+
+    disk_SED = galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='ang')
+    disk_SED = disk_SED.withFluxDensity(target_flux_density=0.3, wavelength=500.0)
+
+    SEDs = [bulge_SED, disk_SED]
+
+    # Construct a simple chromatic bulge + disk galaxy
+    bulge = galsim.Sersic(n=4, half_light_radius=0.3).shear(e1=0.3, e2=-0.2) * bulge_SED
+    disk = galsim.Sersic(n=1, half_light_radius=0.3).shear(e1=0.3, e2=-0.2) * disk_SED
+    gal = bulge + disk
+
+    HST_sbp = galsim.Convolve(gal, HST_PSF)
+    LSST_sbp = galsim.Convolve(gal, LSST_PSF)
+
+    # Draw HST images
+    HST_images = []
+    for f, fn in zip(ACS_filters, ACS_filter_names):
+        conv = galsim.Convolve(gal, HST_PSF)
+        print "drawing HST filter: {0}".format(fn)
+        HST_images.append(conv.drawImage(f, nx=64, ny=64, scale=0.05))
+
+    # Draw LSST images
+    LSST_images = []
+    for f, fn in zip(LSST_filters, LSST_filter_names):
+        conv = galsim.Convolve(gal, LSST_PSF)
+        print "drawing LSST filter: {0}".format(fn)
+        LSST_images.append(conv.drawImage(f, nx=16, ny=16, scale=0.2))
+
+    # Now try deconvolving these with PSFs from assumed SEDs
+    print "Constructing ChromaticRealGalaxy"
+    crg = galsim.ChromaticRealGalaxy((HST_images, ACS_filters, SEDs, HST_PSF))
+
+    LSST_images_recon = []
+    conv = (galsim.Convolve(crg, LSST_PSF.original)
+            .interpolate(waves=np.arange(300.0, 1100.1, 25.0)))
+    for f, fn in zip(LSST_filters, LSST_filter_names):
+        print "drawing reconstructed LSST filter: {0}".format(fn)
+        LSST_images_recon.append(conv.drawImage(f, nx=16, ny=16, scale=0.2))
+
+    for im, im_recon in zip(LSST_images, LSST_images_recon):
+        np.testing.assert_array_almost_equal(im.array, im_recon.array, 2) # eek! only 2 decimals
+
 
 if __name__ == "__main__":
-    # test_real_galaxy_ideal()
-    # test_real_galaxy_saved()
+    test_real_galaxy_ideal()
+    test_real_galaxy_saved()
     test_chromatic_real_galaxy()
