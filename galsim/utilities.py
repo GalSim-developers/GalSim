@@ -418,3 +418,24 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
                0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
              )
 
+def interleave(im_list,n1,n2):
+  if (n1*n2 != len(im_list)):
+    print "Number counts do not match. Exiting"
+    return None
+
+  if len(im_list)<2:
+    print "'im_list' needs to have at least two images"
+
+  y_size, x_size = im_list[0].array.shape
+
+  for im in im_list[1:]:
+    if im.array.shape != (y_size,x_size):
+      print "All image instances in 'im_list' must be of the same size"
+
+  img_array = np.zeros((n2*y_size,n1*x_size))
+  for j in xrange(n2):
+    for i in xrange(n1):
+        img_array[j::n2,i::n1] = im_list[n1*j+i].array[:,:]
+
+  img = galsim.Image(img_array)
+  return img
