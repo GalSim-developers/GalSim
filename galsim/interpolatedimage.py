@@ -569,7 +569,7 @@ class InterpolatedKImage(GSObject):
     >>> b = galsim.InterpolatedKImage(*a.drawKImage())
 
     The real- and imaginary-part Images must have the same data type, same bounds, and same scale.
-    The only wcs permited is a simple PixelScale.  Furthermore, the complex-valued Fourier profile
+    The only wcs permitted is a simple PixelScale.  Furthermore, the complex-valued Fourier profile
     formed by `real_kimage` and `imag_kimage` must be Hermitian, since it represents a real-valued
     real-space profile.  The outputs from `drawKImage` automatically meet all of these criteria.
 
