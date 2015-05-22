@@ -890,7 +890,7 @@ namespace galsim {
     Position<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::centroid() const {
         double flux = getFlux();
         if (flux == 0.) throw std::runtime_error("Flux == 0.  Centroid is undefined.");
-        if (isnan(xcentroid)) {
+        if (std::isnan(xcentroid)) {
             /*  int x f(x) dx = (x conv f)|x=0 = int FT(x conv f)(k) dk
                               = int FT(x) FT(f) dk
                 FT(x) is divergent, but really we want the first integral above to be
