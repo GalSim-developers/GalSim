@@ -417,9 +417,11 @@ def test_wfirst_psfs():
     im_int = im_achrom.copy()
     obj_int = psf_int.evaluateAtWavelength(use_lam)
     im_int = obj_int.drawImage(image=im_int, scale=galsim.wfirst.pixel_scale)
-    # These images should agree *extremely* well.
+    # These images should agree well, but not perfectly.  One of them comes from drawing an image
+    # from an object directly, whereas the other comes from drawing an image of that object, making
+    # it into an InterpolatedImage, then re-drawing it.
     np.testing.assert_array_almost_equal(
-        im_int.array, im_achrom.array, decimal=8,
+        im_int.array, im_achrom.array, decimal=4,
         err_msg='PSF at a given wavelength and interpolated chromatic one evaluated at that '
         'wavelength disagree.')
 
