@@ -157,48 +157,49 @@ def test_check_all_contiguous():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_interleave():
-  import time
-  t1 = time.time()
-  # 1) Dummy image
-  x_size, y_size = 16,10
-  n1, n2 = 2, 5
-  im_list = []
-  for i in xrange(n1):
-     for j in xrange(n2):
-         x = np.arange(-x_size+2.*i/n1,x_size+2.*i/n1,2)
-         y = np.arange(-y_size+2.*j/n2,y_size+2.*j/n2,2)
-         X,Y = np.meshgrid(y,x)
-         im = galsim.Image(100.*X+Y)
-         im_list.append(im)
+    import time
+    t1 = time.time()
+    # 1) Dummy image
+    x_size, y_size = 16,10
+    n1, n2 = 2, 5
+    im_list = []
+    for i in xrange(n1):
+        for j in xrange(n2):
+            x = np.arange(-x_size+2.*i/n1,x_size+2.*i/n1,2)
+            y = np.arange(-y_size+2.*j/n2,y_size+2.*j/n2,2)
+            X,Y = np.meshgrid(y,x)
+            im = galsim.Image(100.*X+Y)
+            im_list.append(im)
 
-  im1 = galsim.utilities.interleave(im_list,N=(n2,n1))
-  x = np.arange(-x_size,x_size,2.0/n1)
-  y = np.arange(-y_size,y_size,2.0/n2)
-  X,Y = np.meshgrid(y,x)
-  im2 = galsim.Image(100.*X+Y)
-  np.testing.assert_array_almost_equal(im1.array,im2.array,decimal=11,err_msg="Interleave failed for dummy image")
+    im1 = galsim.utilities.interleave(im_list,N=(n2,n1))
+    x = np.arange(-x_size,x_size,2.0/n1)
+    y = np.arange(-y_size,y_size,2.0/n2)
+    X,Y = np.meshgrid(y,x)
+    im2 = galsim.Image(100.*X+Y)
+    np.testing.assert_array_almost_equal(im1.array,im2.array,decimal=11,err_msg="Interleave failed for dummy image")
+    assert im1.scale == None
 
-  # 2) With galsim Gaussian
-  g = galsim.Gaussian(sigma=3.7,flux=1000.)
-  gal = galsim.Convolve([g,galsim.Pixel(1.0)])
-  im_list = []
-  n = 2
-  for j in xrange(n):
-    for i in xrange(n):
-      im = galsim.Image(16*n,16*n)
-      gal.drawImage(image=im,scale=1.0,method='no_pixel',offset=galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5))
-      im_list.append(im)
+    # 2) With galsim Gaussian
+    g = galsim.Gaussian(sigma=3.7,flux=1000.)
+    gal = galsim.Convolve([g,galsim.Pixel(1.0)])
+    im_list = []
+    n = 2
+    for j in xrange(n):
+        for i in xrange(n):
+            im = galsim.Image(16*n,16*n)
+            gal.drawImage(image=im,scale=1.0,method='no_pixel',offset=galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5))
+            im_list.append(im)
 
-  img = galsim.utilities.interleave(im_list,n)
-  im = galsim.Image(16*n*n,16*n*n)
-  g = galsim.Gaussian(sigma=3.7,flux=1000.*n*n)
-  gal = galsim.Convolve([g,galsim.Pixel(1.0)])
-  gal.drawImage(image=im,method='no_pixel',offset=galsim.PositionD(0.0,0.0),scale=1.0/n)
-  np.testing.assert_array_equal(img.array,im.array,err_msg="Interleaved Gaussian images dont match")
-  assert im.scale == img.scale
+    img = galsim.utilities.interleave(im_list,n)
+    im = galsim.Image(16*n*n,16*n*n)
+    g = galsim.Gaussian(sigma=3.7,flux=1000.*n*n)
+    gal = galsim.Convolve([g,galsim.Pixel(1.0)])
+    gal.drawImage(image=im,method='no_pixel',offset=galsim.PositionD(0.0,0.0),scale=1.0/n)
+    np.testing.assert_array_equal(img.array,im.array,err_msg="Interleaved Gaussian images dont match")
+    assert im.scale == img.scale
 
-  t2 = time.time()
-  print 'time for %s = %.2f'%(funcname(),t2-t1)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_roll2d_circularity()

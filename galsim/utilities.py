@@ -419,43 +419,46 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
              )
 
 def interleave(im_list,N):
-  if isinstance(N,int):
-    n1,n2 = N,N
-  elif isinstance(N,tuple):
-    n1,n2 = N
-    if not (isinstance(n1,int) and  isinstance(n2,int)):
-      raise TypeError("'N' has to be of type int or a tuple of two integers")
-  else:
-    raise TypeError("'N' has to be of type int or a tuple of two integers")
+    if isinstance(N,int):
+        n1,n2 = N,N
+    elif isinstance(N,tuple):
+        n1,n2 = N
+        if not (isinstance(n1,int) and  isinstance(n2,int)):
+            raise TypeError("'N' has to be of type int or a tuple of two integers")
+    else:
+        raise TypeError("'N' has to be of type int or a tuple of two integers")
 
-  if (n1*n2 != len(im_list)):
-    raise ValueError("Number counts do not match. Exiting")
+    if len(im_list)<2:
+        raise TypeError("'im_list' needs to have at least two instances of galsim.Image")
 
-  if len(im_list)<2:
-    raise TypeError("'im_list' needs to have at least two instances of galsim.Image")
+    if (n1*n2 != len(im_list)):
+        raise ValueError("Number counts do not match. Exiting")
 
-  if isinstance(im_list[0],galsim.Image):
-    y_size, x_size = im_list[0].array.shape
-    scale = im_list[0].scale
-  else:
-    raise TypeError("'im_list' must be a list of galsim.Image instances")
+    if isinstance(im_list[0],galsim.Image):
+        y_size, x_size = im_list[0].array.shape
+        scale = im_list[0].scale
+    else:
+        raise TypeError("'im_list' must be a list of galsim.Image instances")
 
-  for im in im_list[1:]:
-    if not isinstance(im,galsim.Image):
-      raise TypeError("'im_list' must be a list of galsim.Image instances")
+    for im in im_list[1:]:
+        if not isinstance(im,galsim.Image):
+            raise TypeError("'im_list' must be a list of galsim.Image instances")
 
-    if im.array.shape != (y_size,x_size):
-      raise ValueError("All galsim.Image instances in 'im_list' must be of the same size")
+        if im.array.shape != (y_size,x_size):
+            raise ValueError("All galsim.Image instances in 'im_list' must be of the same size")
  
-    if im.scale != scale:
-      raise ValueError("All galsim.Image instance in 'im_list' must have the same pixel scale")
+        if im.scale != scale:
+            raise ValueError("All galsim.Image instance in 'im_list' must have the same pixel scale")
 
-  img_array = np.zeros((n2*y_size,n1*x_size))
-  for j in xrange(n2):
-    for i in xrange(n1):
-        img_array[j::n2,i::n1] = im_list[n1*j+i].array[:,:]
+    img_array = np.zeros((n2*y_size,n1*x_size))
+    for j in xrange(n2):
+        for i in xrange(n1):
+            img_array[j::n2,i::n1] = im_list[n1*j+i].array[:,:]
 
-  img = galsim.Image(img_array)
-  if (n1==n2)&(scale is not None):
-    img.scale = 1.*im_list[0].scale/N
-  return img
+    img = galsim.Image(img_array)
+    if (n1==n2):
+        if scale is not None:
+            img.scale = 1.*im_list[0].scale/N
+    else:
+        print "Interleaved image could not be assigned a pixel scale automatically"
+    return img
