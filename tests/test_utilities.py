@@ -171,15 +171,16 @@ def test_interleave():
             im = galsim.Image(100.*X+Y)
             im_list.append(im)
 
-    im1 = galsim.utilities.interleave(im_list,N=(n2,n1))
+    im1 = galsim.utilities.interleave(im_list,N=(n2,n1),suppress_warnings=True)
     x = np.arange(-x_size,x_size,2.0/n1)
     y = np.arange(-y_size,y_size,2.0/n2)
     X,Y = np.meshgrid(y,x)
     im2 = galsim.Image(100.*X+Y)
-    np.testing.assert_array_almost_equal(im1.array,im2.array,decimal=11,err_msg="Interleave failed for dummy image")
+    np.testing.assert_array_almost_equal(im1.array,im2.array,decimal=11,\
+        err_msg="Interleave failed for dummy image")
     assert im1.scale == None
 
-    # 2) With galsim Gaussian
+    # 2a) With galsim Gaussian
     g = galsim.Gaussian(sigma=3.7,flux=1000.)
     gal = galsim.Convolve([g,galsim.Pixel(1.0)])
     im_list = []
@@ -187,7 +188,9 @@ def test_interleave():
     for j in xrange(n):
         for i in xrange(n):
             im = galsim.Image(16*n,16*n)
-            gal.drawImage(image=im,scale=1.0,method='no_pixel',offset=galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5))
+            offset = galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5)
+            gal.drawImage(image=im,scale=1.0,method='no_pixel',offset=offset)
+            #gal.drawImage(image=im,scale=1.0,method='no_pixel',offset=galsim.PositionD(1.*i/n,1.*j/n))
             im_list.append(im)
 
     img = galsim.utilities.interleave(im_list,n)
@@ -195,8 +198,26 @@ def test_interleave():
     g = galsim.Gaussian(sigma=3.7,flux=1000.*n*n)
     gal = galsim.Convolve([g,galsim.Pixel(1.0)])
     gal.drawImage(image=im,method='no_pixel',offset=galsim.PositionD(0.0,0.0),scale=1.0/n)
-    np.testing.assert_array_equal(img.array,im.array,err_msg="Interleaved Gaussian images dont match")
+    np.testing.assert_array_equal(img.array,im.array,\
+        err_msg="Interleaved Gaussian images do not match")
     assert im.scale == img.scale
+
+    # 2b) With im_list and offsets permuted
+    offset_list = []
+    for j in xrange(n):
+        for i in xrange(n):
+            offset = galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5)
+            offset_list.append(offset)
+
+    np.random.seed(42) # for generating the same random permutation everytime
+    rand_idx = np.random.permutation(len(offset_list))
+    im_list_randperm = [im_list[idx] for idx in rand_idx]
+    offset_list_randperm = [offset_list[idx] for idx in rand_idx]
+    img_randperm = galsim.utilities.interleave(im_list_randperm,n,offsets=offset_list_randperm)
+
+    np.testing.assert_array_equal(img_randperm.array,img.array,\
+        err_msg="Interleaved images do not match when 'offsets' is supplied")
+    assert img_randperm.scale == img.scale
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

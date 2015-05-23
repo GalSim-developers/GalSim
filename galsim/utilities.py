@@ -418,7 +418,7 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
                0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
              )
 
-def interleave(im_list,N):
+def interleave(im_list,N,offsets=None,suppress_warnings=False):
     if isinstance(N,int):
         n1,n2 = N,N
     elif isinstance(N,tuple):
@@ -432,7 +432,14 @@ def interleave(im_list,N):
         raise TypeError("'im_list' needs to have at least two instances of galsim.Image")
 
     if (n1*n2 != len(im_list)):
-        raise ValueError("Number counts do not match. Exiting")
+        raise ValueError("'N' is incompatible with the number of images in 'im_list'")
+
+    if offsets is not None:
+        if len(im_list)!=len(offsets):
+            raise ValueError("'im_list' and 'offsets' must be lists of same length")
+        for offset in offsets:
+            if not isinstance(offset,galsim.PositionD):
+                raise TypeError("'offsets' must be a list of galsim.PositionD instances")
 
     if isinstance(im_list[0],galsim.Image):
         y_size, x_size = im_list[0].array.shape
@@ -451,14 +458,22 @@ def interleave(im_list,N):
             raise ValueError("All galsim.Image instance in 'im_list' must have the same pixel scale")
 
     img_array = np.zeros((n2*y_size,n1*x_size))
-    for j in xrange(n2):
-        for i in xrange(n1):
-            img_array[j::n2,i::n1] = im_list[n1*j+i].array[:,:]
+    if offsets is None:
+        for j in xrange(n2):
+            for i in xrange(n1):
+                img_array[j::n2,i::n1] = im_list[n1*j+i].array[:,:]
+    else:
+        for k in xrange(len(offsets)):
+            dx, dy = offsets[k].x, offsets[k].y
+            i = int(round((n1-1)*0.5-n1*dx))
+            j = int(round((n2-1)*0.5-n2*dy))
+            img_array[j::n2,i::n1] = im_list[k].array[:,:]
 
     img = galsim.Image(img_array)
     if (n1==n2):
         if scale is not None:
             img.scale = 1.*im_list[0].scale/N
-    else:
-        print "Interleaved image could not be assigned a pixel scale automatically"
+    elif suppress_warnings is False:
+        import warnings
+        warnings.warn("Interleaved image could not be assigned a pixel scale automatically")
     return img
