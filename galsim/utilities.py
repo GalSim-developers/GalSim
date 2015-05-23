@@ -472,7 +472,7 @@ def interleave(im_list,N,offsets=None,suppress_warnings=False):
     img = galsim.Image(img_array)
     if (n1==n2):
         if scale is not None:
-            img.scale = 1.*im_list[0].scale/N
+            img.scale = im_list[0].scale*(1./n1)
     elif suppress_warnings is False:
         import warnings
         warnings.warn("Interleaved image could not be assigned a pixel scale automatically")
