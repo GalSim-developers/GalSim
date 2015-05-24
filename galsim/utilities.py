@@ -418,7 +418,7 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
                0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
              )
 
-def interleave(im_list,N,offsets=None,suppress_warnings=False):
+def interleaveImages(im_list,N,offsets=None,suppress_warnings=False):
     if isinstance(N,int):
         n1,n2 = N,N
     elif isinstance(N,tuple):

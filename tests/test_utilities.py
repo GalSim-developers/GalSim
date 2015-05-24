@@ -156,7 +156,7 @@ def test_check_all_contiguous():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_interleave():
+def test_interleaveImages():
     import time
     t1 = time.time()
     # 1) Dummy image
@@ -171,7 +171,7 @@ def test_interleave():
             im = galsim.Image(100.*X+Y)
             im_list.append(im)
 
-    im1 = galsim.utilities.interleave(im_list,N=(n2,n1),suppress_warnings=True)
+    im1 = galsim.utilities.interleaveImages(im_list,N=(n2,n1),suppress_warnings=True)
     x = np.arange(-x_size,x_size,2.0/n1)
     y = np.arange(-y_size,y_size,2.0/n2)
     X,Y = np.meshgrid(y,x)
@@ -193,7 +193,7 @@ def test_interleave():
             #gal.drawImage(image=im,scale=1.0,method='no_pixel',offset=galsim.PositionD(1.*i/n,1.*j/n))
             im_list.append(im)
 
-    img = galsim.utilities.interleave(im_list,n)
+    img = galsim.utilities.interleaveImages(im_list,n)
     im = galsim.Image(16*n*n,16*n*n)
     g = galsim.Gaussian(sigma=3.7,flux=1000.*n*n)
     gal = galsim.Convolve([g,galsim.Pixel(1.0)])
@@ -213,7 +213,7 @@ def test_interleave():
     rand_idx = np.random.permutation(len(offset_list))
     im_list_randperm = [im_list[idx] for idx in rand_idx]
     offset_list_randperm = [offset_list[idx] for idx in rand_idx]
-    img_randperm = galsim.utilities.interleave(im_list_randperm,n,offsets=offset_list_randperm)
+    img_randperm = galsim.utilities.interleaveImages(im_list_randperm,n,offsets=offset_list_randperm)
 
     np.testing.assert_array_equal(img_randperm.array,img.array,\
         err_msg="Interleaved images do not match when 'offsets' is supplied")
@@ -229,4 +229,4 @@ if __name__ == "__main__":
     test_kxky()
     test_kxky_plusone()
     test_check_all_contiguous()
-    test_interleave()
+    test_interleaveImages()
