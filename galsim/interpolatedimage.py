@@ -622,7 +622,7 @@ class InterpolatedKImage(GSObject):
     _takes_rng = False
     _takes_logger = False
 
-    def __init__(self, real_kimage, imag_kimage, k_interpolant=None, stepk=0.0,
+    def __init__(self, real_kimage, imag_kimage, k_interpolant=None, stepk=None,
                  gsparams=None):
 
         # make sure real_kimage, imag_kimage are really `Image`s, are floats, and are congruent.
@@ -674,6 +674,15 @@ class InterpolatedKImage(GSObject):
             warnings.warn(
                 "Provided Real and Imag kimages do not meet GSParams.maxk_threshold criterion.")
 
+        if stepk is None:
+            stepk = real_kimage.scale
+        else:
+            if stepk < real_kimage.scale:
+                import warnings
+                warnings.warn(
+                    "Provided stepk is smaller than kimage.scale; overriding with kimage.scale.")
+                stepk = real_kimage.scale
+
         self._real_kimage = real_kimage
         self._imag_kimage = imag_kimage
         self._stepk = stepk
@@ -686,13 +695,9 @@ class InterpolatedKImage(GSObject):
         else:
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
-        scale = self._real_kimage.scale
-        if self._stepk < scale:
-            self._stepk = scale
-
         GSObject.__init__(self, galsim._galsim.SBInterpolatedKImage(
             self._real_kimage.image, self._imag_kimage.image,
-            scale, self._stepk, self.k_interpolant, gsparams))
+            self._real_kimage.scale, self._stepk, self.k_interpolant, gsparams))
 
     def __repr__(self):
         return ('galsim.InterpolatedKImage(%r, %r, %r, stepk=%r, gsparams=%r)')%(
