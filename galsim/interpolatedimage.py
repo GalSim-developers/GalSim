@@ -664,11 +664,10 @@ class InterpolatedKImage(GSObject):
             maxk_threshold = galsim.GSParams().maxk_threshold
         else:
             maxk_threshold = gsparams.maxk_threshold
-        edge_max = np.max([0.0,
-                           np.abs(real_kimage.array[0,:] + 1j*imag_kimage.array[0,:]).max(),
-                           np.abs(real_kimage.array[-1,:] + 1j*imag_kimage.array[-1,:]).max(),
-                           np.abs(real_kimage.array[:,0] + 1j*imag_kimage.array[:,0]).max(),
-                           np.abs(real_kimage.array[:,-1] + 1j*imag_kimage.array[:,-1]).max()])
+        edge = np.zeros_like(real_kimage.array, dtype=bool)
+        edge[[0,-1],:] = True # top and bottom
+        edge[:,[0,-1]] = True # left and right
+        edge_max = np.max(np.abs(real_kimage.array[edge] + 1j*imag_kimage.array[edge]))
         if (edge_max / real_kimage.array.max()) > maxk_threshold:
             import warnings
             warnings.warn(
