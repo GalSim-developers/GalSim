@@ -1089,10 +1089,9 @@ def test_kround_trip():
                                          "Transformed InterpolatedKImage image drawn incorrectly.")
 
     # Does the stepk parameter do anything?
-    a = a.original
+    a = final
     b = galsim.InterpolatedKImage(*a.drawKImage())
-    stepk = 2 * b.stepK()
-    c = galsim.InterpolatedKImage(*a.drawKImage(), stepk=stepk)
+    c = galsim.InterpolatedKImage(*a.drawKImage(), stepk=2*b.stepK())
     np.testing.assert_almost_equal(2*b.stepK(), c.stepK())
     np.testing.assert_almost_equal(b.maxK(), c.maxK())
 
