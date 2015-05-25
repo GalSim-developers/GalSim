@@ -159,7 +159,7 @@ def test_check_all_contiguous():
 def test_interleaveImages():
     import time
     t1 = time.time()
-    # 1) Dummy image
+    # 1) Interleave arrays as Images
     x_size, y_size = 16,10
     n1, n2 = 2, 5
     im_list = []
@@ -193,6 +193,7 @@ def test_interleaveImages():
             #gal.drawImage(image=im,scale=1.0,method='no_pixel',offset=galsim.PositionD(1.*i/n,1.*j/n))
             im_list.append(im)
 
+    # Input to N as an int
     img = galsim.utilities.interleaveImages(im_list,n)
     im = galsim.Image(16*n*n,16*n*n)
     g = galsim.Gaussian(sigma=3.7,flux=1000.*n*n)
@@ -204,21 +205,80 @@ def test_interleaveImages():
 
     # 2b) With im_list and offsets permuted
     offset_list = []
-    for j in xrange(n):
-        for i in xrange(n):
-            offset = galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5)
+    # An elegant way of generating the default offsets
+    DX = np.arange(0.0,-1.0,-1.0/n)
+    DX -= DX.mean()
+    DY = DX
+    for dy in DY:
+        for dx in DX:
+            offset = galsim.PositionD(dx,dy)
             offset_list.append(offset)
 
     np.random.seed(42) # for generating the same random permutation everytime
     rand_idx = np.random.permutation(len(offset_list))
     im_list_randperm = [im_list[idx] for idx in rand_idx]
     offset_list_randperm = [offset_list[idx] for idx in rand_idx]
-    img_randperm = galsim.utilities.interleaveImages(im_list_randperm,n,offsets=offset_list_randperm)
+    # Input to N as a tuple
+    img_randperm = galsim.utilities.interleaveImages(im_list_randperm,(n,n),offsets=offset_list_randperm)
 
     np.testing.assert_array_equal(img_randperm.array,img.array,\
         err_msg="Interleaved images do not match when 'offsets' is supplied")
     assert img_randperm.scale == img.scale
 
+    # 3a) Increase resolution along one direction - square to rectangular images
+    n = 2
+    g = galsim.Gaussian(sigma=3.7,flux=100.)
+    g1 = g.shear(g=1.*(n**2-1)/(n**2+1),beta=0.0*galsim.radians)
+    gal1 = g1 #galsim.Convolve([g1,galsim.Pixel(1.0)])
+    im_list = []
+    offset_list = []
+  
+    # Generating offsets in a natural way
+    DY = np.arange(0.0,1.0,1.0/(n*n))
+    DY -= DY.mean()
+    for dy in DY:
+        im = galsim.Image(16,16)
+        offset = galsim.PositionD(0.0,dy)
+        offset_list.append(offset)
+        gal1.drawImage(im,offset=offset,scale=1.0,method='no_pixel')
+        im_list.append(im)
+
+    img = galsim.utilities.interleaveImages(im_list,N=(1,n**2),offsets=offset_list,suppress_warnings=True)
+    im = galsim.Image(16,16*n*n)
+    g = galsim.Gaussian(sigma=3.7*n,flux=100.*n*n)
+    gal = g#alsim.Convolve([g,galsim.Pixel(1.0)])
+    gal.drawImage(image=im,scale=1.,method='no_pixel')
+
+    np.testing.assert_array_equal(im.array,img.array,err_msg="Sheared gaussian not interleaved correctly")
+    assert img.scale is None
+
+    # 3b) Increase resolution along one direction - rectangular to square images
+    n = 2
+    g = galsim.Gaussian(sigma=3.7,flux=100.)
+    g2 = g.shear(g=1.*(n**2-1)/(n**2+1),beta=90.*galsim.degrees)
+    gal2 = g2
+    im_list = []
+    offset_list = []
+
+    # Generating offsets in a natural way
+    DX = np.arange(0.0,1.0,1.0/n**2)
+    DX -= DX.mean()
+    for dx in DX:
+         offset = galsim.PositionD(dx,0.0)
+         offset_list.append(offset)
+         im = galsim.Image(16,16*n*n)
+         gal2.drawImage(im,offset=offset,scale=1.0,method='no_pixel')
+         im_list.append(im)
+
+    img = galsim.utilities.interleaveImages(im_list,N=(n**2,1),offsets=offset_list,suppress_warnings=True)
+    im = galsim.Image(16*n*n,16*n*n)
+    g = galsim.Gaussian(sigma=3.7,flux=100.*n*n)
+    gal = g
+    gal.drawImage(image=im,scale=1./n,method='no_pixel')
+
+    np.testing.assert_array_equal(im.array,img.array,err_msg="Sheared gaussian not interleaved correctly")
+    assert img.scale is None
+    
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
