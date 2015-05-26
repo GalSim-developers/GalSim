@@ -418,7 +418,7 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
                0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
              )
 
-def interleaveImages(im_list,N,offsets=None,suppress_warnings=False):
+def interleaveImages(im_list,N,offsets=None,add_flux=True,suppress_warnings=False):
     if isinstance(N,int):
         n1,n2 = N,N
     elif isinstance(N,tuple):
@@ -469,7 +469,11 @@ def interleaveImages(im_list,N,offsets=None,suppress_warnings=False):
             j = int(round((n2-1)*0.5-n2*dy))
             img_array[j::n2,i::n1] = im_list[k].array[:,:]
 
-    img = galsim.Image(img_array)
+    if add_flux is True:
+        img = galsim.Image(img_array)
+    else:
+        img = galsim.Image((1.0/(len(im_list)))*img_array)
+
     if (n1==n2):
         if scale is not None:
             img.scale = im_list[0].scale*(1./n1)

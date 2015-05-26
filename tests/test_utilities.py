@@ -243,9 +243,9 @@ def test_interleaveImages():
         gal1.drawImage(im,offset=offset,scale=1.0,method='no_pixel')
         im_list.append(im)
 
-    img = galsim.utilities.interleaveImages(im_list,N=(1,n**2),offsets=offset_list,suppress_warnings=True)
+    img = galsim.utilities.interleaveImages(im_list,N=(1,n**2),offsets=offset_list,add_flux=False,suppress_warnings=True)
     im = galsim.Image(16,16*n*n)
-    g = galsim.Gaussian(sigma=3.7*n,flux=100.*n*n)
+    g = galsim.Gaussian(sigma=3.7*n,flux=100.)
     gal = g#alsim.Convolve([g,galsim.Pixel(1.0)])
     gal.drawImage(image=im,scale=1.,method='no_pixel')
 
