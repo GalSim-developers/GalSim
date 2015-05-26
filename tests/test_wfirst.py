@@ -393,7 +393,7 @@ def test_wfirst_psfs():
     # First, we can draw the achromatic PSF.
     im_achrom = psf_achrom.drawImage(scale=galsim.wfirst.pixel_scale)
     im_chrom = im_achrom.copy()
-    obj_chrom = psf_achrom.evaluateAtWavelength(use_lam)
+    obj_chrom = psf_chrom.evaluateAtWavelength(use_lam)
     im_chrom = obj_chrom.drawImage(image=im_chrom, scale=galsim.wfirst.pixel_scale)
     # Normalization should probably not be right.
     im_chrom *= im_achrom.array.sum()/im_chrom.array.sum()
