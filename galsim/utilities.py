@@ -478,11 +478,15 @@ def interleaveImages(im_list,N,offsets=None,add_flux=True,suppress_warnings=Fals
             raise ValueError("All galsim.Image instance in 'im_list' must have the same pixel scale")
 
     img_array = np.zeros((n2*y_size,n1*x_size))
+    # The tricky part - going from (x,y) Image coordinates to array indices
     if offsets is None:
+        # default offset settings
         for j in xrange(n2):
             for i in xrange(n1):
                 img_array[j::n2,i::n1] = im_list[n1*j+i].array[:,:]
     else:
+        # dx[i] = i/n
+        # default_offset[i]/n = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
         for k in xrange(len(offsets)):
             dx, dy = offsets[k].x, offsets[k].y
             i = int(round((n1-1)*0.5-n1*dx))
