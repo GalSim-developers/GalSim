@@ -419,6 +419,26 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
              )
 
 def interleaveImages(im_list,N,offsets=None,add_flux=True,suppress_warnings=False):
+    """
+    Interleaves two or more images and outputs a large image. This is equivalent to
+    obtaining a finer sampled image from a dither sequence, except that this routine handles only
+    equispaced offsets. The dither sequence must be a list of galsim.Images instances supplied
+    through 'im_list'
+
+    @param im_list           A list containing the galsim.Image instances to be interleaved.
+    @param N                 Number of images to interleave in either directions. It can be of type
+                             `int' if equal number of images are interleaved in both directions or
+                             a tuple of two integers, containing the number of images in x and y
+                             directions respectively.
+    @param offsets           A list containing the offsets as galsim.PositionD instances
+                             corresponding to every image in `im_list'. The offsets must be equally
+                             spaced and must add to zero in both the directions. Usage is highly
+                             recommended. [default:None]
+    @param add_flux          Should the routine add the fluxes of all the images (True) or average
+                             them (False)?
+    @param suppress_warnings Suppresses the warnings about the pixel scale of the output, if True.
+    """
+
     if isinstance(N,int):
         n1,n2 = N,N
     elif isinstance(N,tuple):
