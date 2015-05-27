@@ -439,6 +439,8 @@ def interleaveImages(im_list,N,offsets=None,add_flux=True,suppress_warnings=Fals
     @param add_flux          Should the routine add the fluxes of all the images (True) or average
                              them (False)?
     @param suppress_warnings Suppresses the warnings about the pixel scale of the output, if True.
+
+    @returns the interleaved image
     """
 
     if isinstance(N,int):
