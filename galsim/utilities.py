@@ -432,8 +432,10 @@ def interleaveImages(im_list,N,offsets=None,add_flux=True,suppress_warnings=Fals
                              directions respectively.
     @param offsets           A list containing the offsets as galsim.PositionD instances
                              corresponding to every image in `im_list'. The offsets must be equally
-                             spaced and must add to zero in both the directions. Usage is highly
-                             recommended. [default:None]
+                             spaced and must add to zero in both the directions. The default offset
+                             ordering is to vary the offset in x from positive to negative for every
+                             offset in y which should go from positive to negative. Providing
+                             `offsets' is highly recommended. [default:None]
     @param add_flux          Should the routine add the fluxes of all the images (True) or average
                              them (False)?
     @param suppress_warnings Suppresses the warnings about the pixel scale of the output, if True.
@@ -485,8 +487,8 @@ def interleaveImages(im_list,N,offsets=None,add_flux=True,suppress_warnings=Fals
             for i in xrange(n1):
                 img_array[j::n2,i::n1] = im_list[n1*j+i].array[:,:]
     else:
-        # dx[i] = i/n
-        # default_offset[i]/n = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
+        # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
+        #    i  = -n DX[i'] + 0.5*(n-1)
         for k in xrange(len(offsets)):
             dx, dy = offsets[k].x, offsets[k].y
             i = int(round((n1-1)*0.5-n1*dx))
