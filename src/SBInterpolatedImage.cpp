@@ -444,9 +444,6 @@ namespace galsim {
         }
     }
 
-    // JM: Does this ever get used?  _galsim.SBInterpolatedImage.__repr__ is defined
-    // in galsim/interpolatedimage.py, so not there, and there aren't any repr()s in
-    // pysrc/SBInterpolatedImage.cpp
     std::string SBInterpolatedImage::SBInterpolatedImageImpl::repr() const
     {
         std::ostringstream oss(" ");
@@ -917,8 +914,6 @@ namespace galsim {
         return Position<double>(xcentroid, ycentroid);
     }
 
-    // Adding this for symmetry with SBInterpolatedImageImpl::repr(), but I'm not sure that
-    // this actually gets used anywhere...
     std::string SBInterpolatedKImage::SBInterpolatedKImageImpl::repr() const
     {
         std::ostringstream oss(" ");
