@@ -980,23 +980,12 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-
-    // JM: Do the integer templates ever actually get used?  InterpolatedImage raises an
-    //     error on non-floating point input.
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
         double stepk, double maxk, const GSParamsPtr& gsparams);
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
-        double stepk, double maxk, const GSParamsPtr& gsparams);
-    template SBInterpolatedImage::SBInterpolatedImage(
-        const BaseImage<int32_t>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
-        double stepk, double maxk, const GSParamsPtr& gsparams);
-    template SBInterpolatedImage::SBInterpolatedImage(
-        const BaseImage<int16_t>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
         double stepk, double maxk, const GSParamsPtr& gsparams);
 
@@ -1008,14 +997,6 @@ namespace galsim {
         const BaseImage<double>& image, boost::shared_ptr<Interpolant> xInterp,
         boost::shared_ptr<Interpolant> kInterp, double pad_factor,
         double stepk, double maxk, const GSParamsPtr& gsparams);
-    template SBInterpolatedImage::SBInterpolatedImage(
-        const BaseImage<int32_t>& image, boost::shared_ptr<Interpolant> xInterp,
-        boost::shared_ptr<Interpolant> kInterp, double pad_factor,
-        double stepk, double maxk, const GSParamsPtr& gsparams);
-    template SBInterpolatedImage::SBInterpolatedImage(
-        const BaseImage<int16_t>& image, boost::shared_ptr<Interpolant> xInterp,
-        boost::shared_ptr<Interpolant> kInterp, double pad_factor,
-        double stepk, double maxk, const GSParamsPtr& gsparams);
 
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
@@ -1025,14 +1006,6 @@ namespace galsim {
         const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
         double stepk, double maxk, const GSParamsPtr& gsparams);
-    template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<int32_t>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
-        double stepk, double maxk, const GSParamsPtr& gsparams);
-    template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<int16_t>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
-        double stepk, double maxk, const GSParamsPtr& gsparams);
 
     template SBInterpolatedKImage::SBInterpolatedKImage(
         const BaseImage<float>& realImage, const BaseImage<float>& imagImage,
@@ -1040,14 +1013,6 @@ namespace galsim {
         const GSParamsPtr& gsparams);
     template SBInterpolatedKImage::SBInterpolatedKImage(
         const BaseImage<double>& realImage, const BaseImage<double>& imagImage,
-        double dk, double stepk, boost::shared_ptr<Interpolant2d> kInterp,
-        const GSParamsPtr& gsparams);
-    template SBInterpolatedKImage::SBInterpolatedKImage(
-        const BaseImage<int32_t>& realImage, const BaseImage<int32_t>& imagImage,
-        double dk, double stepk, boost::shared_ptr<Interpolant2d> kInterp,
-        const GSParamsPtr& gsparams);
-    template SBInterpolatedKImage::SBInterpolatedKImage(
-        const BaseImage<int16_t>& realImage, const BaseImage<int16_t>& imagImage,
         double dk, double stepk, boost::shared_ptr<Interpolant2d> kInterp,
         const GSParamsPtr& gsparams);
 
@@ -1059,14 +1024,6 @@ namespace galsim {
         const BaseImage<double>& realImage, const BaseImage<double>& imagImage,
         double dk, double stepk, boost::shared_ptr<Interpolant> kInterp,
         const GSParamsPtr& gsparams);
-    template SBInterpolatedKImage::SBInterpolatedKImage(
-        const BaseImage<int32_t>& realImage, const BaseImage<int32_t>& imagImage,
-        double dk, double stepk, boost::shared_ptr<Interpolant> kInterp,
-        const GSParamsPtr& gsparams);
-    template SBInterpolatedKImage::SBInterpolatedKImage(
-        const BaseImage<int16_t>& realImage, const BaseImage<int16_t>& imagImage,
-        double dk, double stepk, boost::shared_ptr<Interpolant> kInterp,
-        const GSParamsPtr& gsparams);
 
     template SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
         const BaseImage<float>& realImage, const BaseImage<float>& imagImage,
@@ -1074,14 +1031,6 @@ namespace galsim {
         const GSParamsPtr& gsparams);
     template SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
         const BaseImage<double>& realImage, const BaseImage<double>& imagImage,
-        double dk, double stepk, boost::shared_ptr<Interpolant2d> kInterp,
-        const GSParamsPtr& gsparams);
-    template SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
-        const BaseImage<int32_t>& realImage, const BaseImage<int32_t>& imagImage,
-        double dk, double stepk, boost::shared_ptr<Interpolant2d> kInterp,
-        const GSParamsPtr& gsparams);
-    template SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
-        const BaseImage<int16_t>& realImage, const BaseImage<int16_t>& imagImage,
         double dk, double stepk, boost::shared_ptr<Interpolant2d> kInterp,
         const GSParamsPtr& gsparams);
 
