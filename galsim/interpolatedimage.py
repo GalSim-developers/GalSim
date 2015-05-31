@@ -553,8 +553,8 @@ class InterpolatedKImage(GSObject):
     The InterpolatedKImage class is useful if you have a non-parametric description of the Fourier
     transform of an object as a pair of Images -- one for the real part and one for the imaginary
     part -- of the complex-valued profile that you wish to manipulate / transform using GSObject
-    methods such as shear(), magnify(), shift(), etc.  Note that real-space convolution or
-    photon-shooting of InterpolatedKImages is not currently implemented.  Please submit an issue at
+    methods such as shear(), magnify(), shift(), etc.  Note that neither real-space convolution nor
+    photon-shooting of InterpolatedKImages is currently implemented.  Please submit an issue at
     http://github.com/GalSim-developers/GalSim/issues if you require either of these use cases.
 
     The primary intended use case for InterpolatedKImage is to create ChromaticObjects from
@@ -599,7 +599,7 @@ class InterpolatedKImage(GSObject):
     @param stepk            By default, the stepk value (the sampling frequency in Fourier-space)
                             of the underlying SBProfile is set by the `scale` attribute of the
                             supplied images.  This keyword allows the user to specify a coarser
-                            sampling in Fourier-sapce, which may increase efficiency at the expense
+                            sampling in Fourier-space, which may increase efficiency at the expense
                             of decreasing the separation between neighboring copies of the
                             DFT-rendered real-space profile.  (See the GSParams docstring for the
                             parameter `folding_threshold` for more information).
