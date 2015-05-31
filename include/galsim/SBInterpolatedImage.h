@@ -94,7 +94,7 @@ namespace galsim {
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D
          * image.
          *
-         * @param[in] image       Input Image (any of ImageF, ImageD, ImageS, ImageI).
+         * @param[in] image       Input Image (ImageF or ImageD).
          * @param[in] xInterp     Interpolation scheme to adopt between pixels
          * @param[in] kInterp     Interpolation scheme to adopt in k-space
          * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
@@ -167,10 +167,8 @@ namespace galsim {
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D
          * image.
          *
-         * @param[in] realKImage  Real part of input Fourier-space Image
-         *                        (any of ImageF, ImageD, ImageS, ImageI).
-         * @param[in] imagKImage  Imaginary part of input Fourier-space Image
-         *                        (any of ImageF, ImageD, ImageS, ImageI).
+         * @param[in] realKImage  Real part of input Fourier-space Image (ImageF or ImageD).
+         * @param[in] imagKImage  Imaginary part of input Fourier-space Image (ImageF or ImageD).
          * @param[in] dk          Pitch of Fourier-space image.
          * @param[in] stepk       If > 0, force stepk to this value.
          * @param[in] kInterp     Interpolation scheme to adopt in k-space
