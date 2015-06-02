@@ -159,42 +159,24 @@ def test_check_all_contiguous():
 def test_interleaveImages():
     import time
     t1 = time.time()
-    # 1) Interleave arrays as Images
-    x_size, y_size = 16,10
-    n1, n2 = 2, 5
-    im_list = []
-    for i in xrange(n1):
-        for j in xrange(n2):
-            x = np.arange(-x_size+2.*i/n1,x_size+2.*i/n1,2)
-            y = np.arange(-y_size+2.*j/n2,y_size+2.*j/n2,2)
-            X,Y = np.meshgrid(y,x)
-            im = galsim.Image(100.*X+Y)
-            im_list.append(im)
 
-    im1 = galsim.utilities.interleaveImages(im_list,N=(n2,n1),suppress_warnings=True)
-    x = np.arange(-x_size,x_size,2.0/n1)
-    y = np.arange(-y_size,y_size,2.0/n2)
-    X,Y = np.meshgrid(y,x)
-    im2 = galsim.Image(100.*X+Y)
-    np.testing.assert_array_almost_equal(im1.array,im2.array,decimal=11,\
-        err_msg="Interleave failed for dummy image")
-    assert im1.scale == None
-
-    # 2a) With galsim Gaussian
+    # 1a) With galsim Gaussian
     g = galsim.Gaussian(sigma=3.7,flux=1000.)
     gal = galsim.Convolve([g,galsim.Pixel(1.0)])
     im_list = []
+    offset_list = []
     n = 2
     for j in xrange(n):
         for i in xrange(n):
             im = galsim.Image(16*n,16*n)
             offset = galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5)
+            offset_list.append(offset)
             gal.drawImage(image=im,scale=1.0,method='no_pixel',offset=offset)
             #gal.drawImage(image=im,scale=1.0,method='no_pixel',offset=galsim.PositionD(1.*i/n,1.*j/n))
             im_list.append(im)
 
     # Input to N as an int
-    img = galsim.utilities.interleaveImages(im_list,n)
+    img = galsim.utilities.interleaveImages(im_list,n,offsets=offset_list)
     im = galsim.Image(16*n*n,16*n*n)
     g = galsim.Gaussian(sigma=3.7,flux=1000.*n*n)
     gal = galsim.Convolve([g,galsim.Pixel(1.0)])
@@ -203,7 +185,7 @@ def test_interleaveImages():
         err_msg="Interleaved Gaussian images do not match")
     assert im.scale == img.scale
 
-    # 2b) With im_list and offsets permuted
+    # 1b) With im_list and offsets permuted
     offset_list = []
     # An elegant way of generating the default offsets
     DX = np.arange(0.0,-1.0,-1.0/n)
@@ -225,7 +207,7 @@ def test_interleaveImages():
         err_msg="Interleaved images do not match when 'offsets' is supplied")
     assert img_randperm.scale == img.scale
 
-    # 3a) Increase resolution along one direction - square to rectangular images
+    # 2a) Increase resolution along one direction - square to rectangular images
     n = 2
     g = galsim.Gaussian(sigma=3.7,flux=100.)
     g1 = g.shear(g=1.*(n**2-1)/(n**2+1),beta=0.0*galsim.radians)
@@ -252,7 +234,7 @@ def test_interleaveImages():
     np.testing.assert_array_equal(im.array,img.array,err_msg="Sheared gaussian not interleaved correctly")
     assert img.scale is None
 
-    # 3b) Increase resolution along one direction - rectangular to square images
+    # 2b) Increase resolution along one direction - rectangular to square images
     n = 2
     g = galsim.Gaussian(sigma=3.7,flux=100.)
     g2 = g.shear(g=1.*(n**2-1)/(n**2+1),beta=90.*galsim.degrees)
