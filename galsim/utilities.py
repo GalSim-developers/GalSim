@@ -434,8 +434,8 @@ def interleaveImages(im_list,N,offsets=None,add_flux=True,suppress_warnings=Fals
     @param im_list           A list containing the galsim.Image instances to be interleaved.
     @param N                 Number of images to interleave in either directions. It can be of type
                              `int' if equal number of images are interleaved in both directions or
-                             a tuple of two integers, containing the number of images in x and y
-                             directions respectively.
+                             a list of tuple of two integers, containing the number of images in x
+                             and y directions respectively.
     @param offsets           A list containing the offsets as galsim.PositionD instances
                              corresponding to every image in `im_list'. The offsets must be equally
                              spaced and must span an entire pixel area. The offset values must
@@ -452,12 +452,15 @@ def interleaveImages(im_list,N,offsets=None,add_flux=True,suppress_warnings=Fals
 
     if isinstance(N,int):
         n1,n2 = N,N
-    elif isinstance(N,tuple):
-        n1,n2 = N
+    elif hasattr(N,'__iter__'):
+        if len(N)==2:
+            n1,n2 = N
+        else:
+            raise TypeError("'N' has to be a list or a tuple of two integers")
         if not (isinstance(n1,int) and  isinstance(n2,int)):
-            raise TypeError("'N' has to be of type int or a tuple of two integers")
+            raise TypeError("'N' has to be of type int or a list/tuple of two integers")
     else:
-        raise TypeError("'N' has to be of type int or a tuple of two integers")
+        raise TypeError("'N' has to be of type int or a list/tuple of two integers")
 
     if len(im_list)<2:
         raise TypeError("'im_list' needs to have at least two instances of galsim.Image")
