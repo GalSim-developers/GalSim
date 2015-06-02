@@ -207,6 +207,49 @@ def test_interleaveImages():
         err_msg="Interleaved images do not match when 'offsets' is supplied")
     assert img_randperm.scale == img.scale
 
+    # 1c) Catching errors if offsets
+    offset_list = []
+    im_list = []
+    n = 5
+    DX = np.array([-0.67,-0.33,0.,0.33,0.67])
+    DY = DX
+    for dy in DY:
+        for dx in DX:
+           offset = galsim.PositionD(dx,dy)
+           offset_list.append(offset)
+           im = galsim.Image(16,16)
+           gal.drawImage(image=im,offset=offset,scale=1.0,method='no_pixel')
+           im_list.append(im)
+
+    VE = ValueError('No error')
+    try:
+        galsim.utilities.interleaveImages(im_list,n,offsets=offset_list,catch_offset_errors=True)
+    except ValueError as VE:
+        pass
+    message =  "'offsets' must be a list of galsim.PositionD instances with x values"\
+                          +" spaced by 1/{0} and y values by 1/{1} around 0.".format(n,n)
+    assert VE.message == message
+
+    offset_list = []
+    im_list = []
+    n = 5
+    DX = np.arange(0.,1.,1./n)
+    DY = DX
+    for dy in DY:
+        for dx in DX:
+            offset = galsim.PositionD(dx,dy)
+            offset_list.append(offset)
+            im = galsim.Image(16,16)
+            gal.drawImage(image=im,offset=offset,scale=1.0,method='no_pixel')
+            im_list.append(im)
+
+    VE = ValueError('No error')
+    try:
+        galsim.utilities.interleaveImages(im_list,n,offsets=offset_list,catch_offset_errors=True)
+    except ValueError as VE:
+        pass
+    assert VE.message == message
+
     # 2a) Increase resolution along one direction - square to rectangular images
     n = 2
     g = galsim.Gaussian(sigma=3.7,flux=100.)

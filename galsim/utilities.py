@@ -418,7 +418,7 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
                0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
              )
 
-def interleaveImages(im_list,N,offsets,add_flux=True,suppress_warnings=False):
+def interleaveImages(im_list,N,offsets,add_flux=True,suppress_warnings=False,catch_offset_errors=True):
     """
     Interleaves two or more images and outputs a larger image.
 
@@ -431,21 +431,22 @@ def interleaveImages(im_list,N,offsets,add_flux=True,suppress_warnings=False):
     a dither sequence, except that this routine handles only equispaced offsets. The dither sequence
     must be a list of galsim.Image instances supplied through 'im_list'.
 
-    @param im_list           A list containing the galsim.Image instances to be interleaved.
-    @param N                 Number of images to interleave in either directions. It can be of type
-                             `int' if equal number of images are interleaved in both directions or
-                             a list or tuple of two integers, containing the number of images in x
-                             and y directions respectively.
-    @param offsets           A list containing the offsets as galsim.PositionD instances
-                             corresponding to every image in `im_list'. The offsets must be equally
-                             spaced and must span an entire pixel area. The offset values must
-                             be symmetric around zero, hence taking positive and negative values.
-                             The default offset ordering is to vary the offset in x from positive to
-                             negative for every offset in y which should go from positive to
-                             negative. Providing `offsets' is highly recommended. [default:None]
-    @param add_flux          Should the routine add the fluxes of all the images (True) or average
-                             them (False)? [default:True]
-    @param suppress_warnings Suppresses the warnings about the pixel scale of the output, if True.
+    @param im_list             A list containing the galsim.Image instances to be interleaved.
+    @param N                   Number of images to interleave in either directions. It can be of
+                               type `int' if equal number of images are interleaved in both
+                               directions or a list or tuple of two integers, containing the number
+                               of images in x and y directions respectively.
+    @param offsets             A list containing the offsets as galsim.PositionD instances
+                               corresponding to every image in `im_list'. The offsets must be spaced
+                               equally and must span an entire pixel area. The offset values must
+                               be symmetric around zero, hence taking positive and negative values.
+    @param add_flux            Should the routine add the fluxes of all the images (True) or average
+                               them (False)? [default:True]
+    @param suppress_warnings   Suppresses the warnings about the pixel scale of the output, if True.
+                               [default:False]
+    @param catch_offset_errors Checks for the consistency of `offsets` with `N` and raises Errors
+                               if inconsistencies found (True). Recommended, but could slow down
+                               the routine a little. [default:True]
 
     @returns the interleaved image
     """
@@ -497,8 +498,22 @@ def interleaveImages(im_list,N,offsets,add_flux=True,suppress_warnings=False):
     #    i  = -n DX[i'] + 0.5*(n-1)
     for k in xrange(len(offsets)):
         dx, dy = offsets[k].x, offsets[k].y
+
         i = int(round((n1-1)*0.5-n1*dx))
         j = int(round((n2-1)*0.5-n2*dy))
+
+        if catch_offset_errors is True:
+            err_i = (n1-1)*0.5-n1*dx - round((n1-1)*0.5-n1*dx)
+            err_j = (n2-1)*0.5-n2*dy - round((n2-1)*0.5-n2*dy)
+            tol = 1.e-6
+            if abs(err_i)>tol or abs(err_j)>tol:
+                raise ValueError("'offsets' must be a list of galsim.PositionD instances with x "
+                            +"values spaced by 1/{0} and y values by 1/{1} around 0.".format(n1,n2))
+
+            if i<0 or j<0 or i>=x_size or j>=y_size:
+                raise ValueError("'offsets' must be a list of galsim.PositionD instances with x "
+                            +"values spaced by 1/{0} and y values by 1/{1} around 0.".format(n1,n2))
+
         img_array[j::n2,i::n1] = im_list[k].array[:,:]
 
     if add_flux is True:
