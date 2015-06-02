@@ -426,10 +426,10 @@ def interleaveImages(im_list,N,offsets,add_flux=True,suppress_warnings=False):
     in drawImage() routine appropriately. However, pixel level detector effects can be included
     only on images drawn at the native pixel scale, which are typically undersampled. Nyquist
     sampled images that also include the effects of detector non-idealities can be obtained by
-    drawing muliple undersampled images (with the detector effects included) that are offset from
+    drawing multiple undersampled images (with the detector effects included) that are offset from
     each other by a fraction of a pixel. This is equivalent to obtaining a finer sampled image from
     a dither sequence, except that this routine handles only equispaced offsets. The dither sequence
-    must be a list of galsim.Images instances supplied through 'im_list'.
+    must be a list of galsim.Image instances supplied through 'im_list'.
 
     @param im_list           A list containing the galsim.Image instances to be interleaved.
     @param N                 Number of images to interleave in either directions. It can be of type
@@ -444,7 +444,7 @@ def interleaveImages(im_list,N,offsets,add_flux=True,suppress_warnings=False):
                              negative for every offset in y which should go from positive to
                              negative. Providing `offsets' is highly recommended. [default:None]
     @param add_flux          Should the routine add the fluxes of all the images (True) or average
-                             them (False)?
+                             them (False)? [default:True]
     @param suppress_warnings Suppresses the warnings about the pixel scale of the output, if True.
 
     @returns the interleaved image
@@ -488,7 +488,8 @@ def interleaveImages(im_list,N,offsets,add_flux=True,suppress_warnings=False):
             raise ValueError("All galsim.Image instances in 'im_list' must be of the same size")
  
         if im.scale != scale:
-            raise ValueError("All galsim.Image instance in 'im_list' must have the same pixel scale")
+            raise ValueError(
+                "All galsim.Image instances in 'im_list' must have the same pixel scale")
 
     img_array = np.zeros((n2*y_size,n1*x_size))
     # The tricky part - going from (x,y) Image coordinates to array indices
