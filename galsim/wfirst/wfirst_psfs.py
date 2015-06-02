@@ -37,7 +37,7 @@ zemax_filesuff = '_F01_W04.txt'
 zemax_wavelength = 1293. #nm
 
 def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=None,
-           wavelength_limits=None, logger=None, wavelength=None):
+           wavelength_limits=None, logger=None, wavelength=None, high_accuracy=False):
     """
     Get the PSF for WFIRST observations.
 
@@ -121,10 +121,35 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                    OpticalPSF objects defined at the effective wavelength of that
                                    bandpass.
                                    [default: False]
+    @param    high_accuracy        If True, make higher-fidelity representations of the PSF in
+                                   Fourier space, to minimize aliasing.  This is more expensive in
+                                   terms of time and RAM, and may not be necessary for many
+                                   applications. [default: False]
     @returns  A dict of ChromaticOpticalPSF or OpticalPSF objects for each SCA.
     """
     # Check which SCAs are to be done using a helper routine in this module.
     SCAs = galsim.wfirst._parse_SCAs(SCAs)
+
+    # Deal with some accuracy settings.
+    if high_accuracy:
+        if approximate_struts:
+            oversampling = 3.0
+        else:
+            oversampling = 2.0
+
+            # In this case, we need to pad the edges of the pupil plane image, so we cannot just use
+            # the stored file.
+            tmp_pupil_plane_im = galsim.fits.read(galsim.wfirst.pupil_plane_file)
+            old_bounds = tmp_pupil_plane_im.bounds
+            new_bounds = old_bounds.withBorder((old_bounds.xmax+1-old_bounds.xmin)/2)
+            pupil_plane_im = galsim.Image(bounds=new_bounds)
+            pupil_plane_im[old_bounds] = tmp_pupil_plane_im
+    else:
+        if approximate_struts:
+            oversampling = 1.5
+        else:
+            oversampling = 1.2
+            pupil_plane_im = galsim.wfirst.pupil_plane_file
 
     if wavelength is None:
         if n_waves is not None:
@@ -193,14 +218,15 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                 PSF = galsim.ChromaticOpticalPSF(
                     lam=zemax_wavelength,
                     diam=galsim.wfirst.diameter, aberrations=use_aberrations,
-                    obscuration=galsim.wfirst.obscuration, nstruts=6)
+                    obscuration=galsim.wfirst.obscuration, nstruts=6,
+                    oversampling=oversampling)
             else:
                 PSF = galsim.ChromaticOpticalPSF(
                     lam=zemax_wavelength,
                     diam=galsim.wfirst.diameter, aberrations=use_aberrations,
                     obscuration=galsim.wfirst.obscuration,
-                    pupil_plane_im=galsim.wfirst.pupil_plane_file,
-                    oversampling=1.2, pad_factor=2.)
+                    pupil_plane_im=pupil_plane_im,
+                    oversampling=oversampling, pad_factor=2.)
             if n_waves is not None:
                 PSF = PSF.interpolate(waves=np.linspace(blue_limit, red_limit, n_waves),
                                       oversample_fac=1.5)
@@ -209,13 +235,14 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
             if approximate_struts:
                 PSF = galsim.OpticalPSF(lam=wavelength_nm, diam=galsim.wfirst.diameter,
                                         aberrations=tmp_aberrations,
-                                        obscuration=galsim.wfirst.obscuration, nstruts=6)
+                                        obscuration=galsim.wfirst.obscuration, nstruts=6,
+                                        oversampling=oversampling)
             else:
                 PSF = galsim.OpticalPSF(lam=wavelength_nm, diam=galsim.wfirst.diameter,
                                         aberrations=tmp_aberrations,
                                         obscuration=galsim.wfirst.obscuration,
-                                        pupil_plane_im=galsim.wfirst.pupil_plane_file,
-                                        oversampling=1.2, pad_factor=2.)
+                                        pupil_plane_im=pupil_plane_im,
+                                        oversampling=oversampling, pad_factor=2.)
 
         PSF_dict[SCA]=PSF
 
