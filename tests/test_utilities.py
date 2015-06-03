@@ -223,11 +223,12 @@ def test_interleaveImages():
 
     VE = ValueError('No error')
     try:
-        galsim.utilities.interleaveImages(im_list,n,offsets=offset_list,catch_offset_errors=True)
+        N = (n,n)
+        galsim.utilities.interleaveImages(im_list,N=N,offsets=offset_list,catch_offset_errors=True)
     except ValueError as VE:
         pass
     message =  "'offsets' must be a list of galsim.PositionD instances with x values"\
-                          +" spaced by 1/{0} and y values by 1/{1} around 0.".format(n,n)
+                          +" spaced by 1/{0} and y values by 1/{1} around 0 for N = ".format(n,n)+str(N)
     assert VE.message == message
 
     offset_list = []
@@ -245,7 +246,8 @@ def test_interleaveImages():
 
     VE = ValueError('No error')
     try:
-        galsim.utilities.interleaveImages(im_list,n,offsets=offset_list,catch_offset_errors=True)
+        N = (n,n)
+        galsim.utilities.interleaveImages(im_list,N=N,offsets=offset_list,catch_offset_errors=True)
     except ValueError as VE:
         pass
     assert VE.message == message

@@ -508,11 +508,11 @@ def interleaveImages(im_list,N,offsets,add_flux=True,suppress_warnings=False,cat
             tol = 1.e-6
             if abs(err_i)>tol or abs(err_j)>tol:
                 raise ValueError("'offsets' must be a list of galsim.PositionD instances with x "
-                            +"values spaced by 1/{0} and y values by 1/{1} around 0.".format(n1,n2))
+                            +"values spaced by 1/{0} and y values by 1/{1} around 0 for N = .".format(n1,n2)+str(N))
 
             if i<0 or j<0 or i>=x_size or j>=y_size:
                 raise ValueError("'offsets' must be a list of galsim.PositionD instances with x "
-                            +"values spaced by 1/{0} and y values by 1/{1} around 0.".format(n1,n2))
+                            +"values spaced by 1/{0} and y values by 1/{1} around 0. for N = ".format(n1,n2)+str(N))
 
         img_array[j::n2,i::n1] = im_list[k].array[:,:]
 
