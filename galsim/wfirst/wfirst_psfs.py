@@ -122,9 +122,11 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                    bandpass.
                                    [default: False]
     @param    high_accuracy        If True, make higher-fidelity representations of the PSF in
-                                   Fourier space, to minimize aliasing.  This is more expensive in
-                                   terms of time and RAM, and may not be necessary for many
-                                   applications. [default: False]
+                                   Fourier space, to minimize aliasing (see plots on
+                                   https://github.com/GalSim-developers/GalSim/issues/661 for more
+                                   details).  This setting is more expensive in terms of time and
+                                   RAM, and may not be necessary for many applications.
+                                   [default: False]
     @returns  A dict of ChromaticOpticalPSF or OpticalPSF objects for each SCA.
     """
     # Check which SCAs are to be done using a helper routine in this module.
