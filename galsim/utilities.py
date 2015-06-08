@@ -418,7 +418,8 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
                0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
              )
 
-def interleaveImages(im_list,N,offsets,add_flux=True,suppress_warnings=False,catch_offset_errors=True):
+def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False,
+    catch_offset_errors=True):
     """
     Interleaves two or more images and outputs a larger image.
 
