@@ -270,7 +270,7 @@ class InterpolatedImage(GSObject):
         if not isinstance(image, galsim.Image):
             raise ValueError("Supplied image is not an Image instance")
         if image.dtype != np.float32 and image.dtype != np.float64:
-            raise ValueError("Supplied image is not an image of floats or doubles!")
+            raise ValueError("Supplied image does not have dtype of float32 or float64!")
 
         # it must have well-defined bounds, otherwise seg fault in SBInterpolatedImage constructor
         if not image.bounds.isDefined():
@@ -557,13 +557,9 @@ class InterpolatedKImage(GSObject):
     photon-shooting of InterpolatedKImages is currently implemented.  Please submit an issue at
     http://github.com/GalSim-developers/GalSim/issues if you require either of these use cases.
 
-    The primary intended use case for InterpolatedKImage is to create ChromaticObjects from
-    PSF-deconvolved multi-band HST images, a functionality that will be added in a future
-    pull-request.
-
     The images required for creating an InterpolatedKImage are precisely those returned by the
     GSObject `.drawKImage()` method.  The `a` and `b` objects in the following command will produce
-    identical images when drawn with the `.drawImage()` method:
+    essentially equivalent images when drawn with the `.drawImage()` method:
 
     >>> a = returns_a_GSObject()
     >>> b = galsim.InterpolatedKImage(*a.drawKImage())
@@ -571,7 +567,8 @@ class InterpolatedKImage(GSObject):
     The real- and imaginary-part Images must have the same data type, same bounds, and same scale.
     The only wcs permitted is a simple PixelScale.  Furthermore, the complex-valued Fourier profile
     formed by `real_kimage` and `imag_kimage` must be Hermitian, since it represents a real-valued
-    real-space profile.  The outputs from `drawKImage` automatically meet all of these criteria.
+    real-space profile.  (To see an example of valid input to `InterpolatedKImage`, you can look at
+    the output of `drawKImage`).
 
     The user may optionally specify an interpolant, `k_interpolant`, for Fourier-space
     manipulations (e.g., shearing, resampling).  If none is specified, then by default, a Quintic
@@ -630,7 +627,7 @@ class InterpolatedKImage(GSObject):
             raise ValueError("Supplied kimage is not an Image instance")
         if ((real_kimage.dtype != np.float32 and real_kimage.dtype != np.float64)
             or (imag_kimage.dtype != np.float32 and imag_kimage.dtype != np.float64)):
-            raise ValueError("Supplied image is not an image of floats or doubles!")
+            raise ValueError("Supplied image does not have dtype of float32 or float64!")
         if real_kimage.bounds != imag_kimage.bounds:
             raise ValueError("Real and Imag kimages must have same bounds.")
         if real_kimage.scale != imag_kimage.scale:
@@ -638,9 +635,9 @@ class InterpolatedKImage(GSObject):
 
         # Make sure any `wcs`s are `PixelScale`s.
         if ((real_kimage.wcs is not None
-             and not isinstance(real_kimage.wcs, galsim.PixelScale))
+             and not real_kimage.wcs.isPixelScale())
             or (imag_kimage.wcs is not None
-                and not isinstance(imag_kimage.wcs, galsim.PixelScale))):
+                and not imag_kimage.wcs.isPixelScale())):
             raise ValueError("Real and Imag kimage wcs's must be PixelScale's or None.")
 
         # Check for Hermitian symmetry properties of real_kimage and imag_kimage
@@ -718,9 +715,9 @@ class InterpolatedKImage(GSObject):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.__init__(self._real_kimage, self._imag_kimage, k_interpolant=self.k_interpolant,
-                      stepk=self._stepk, gsparams=self._gsparams)
-
+        self.SBProfile = galsim._galsim.SBInterpolatedKImage(
+            self._real_kimage.image, self._imag_kimage.image,
+            self._real_kimage.scale, self._stepk, self.k_interpolant, self._gsparams)
 
 _galsim.SBInterpolatedImage.__getinitargs__ = lambda self: (
         self.getImage(), self.getXInterp(), self.getKInterp(), 1.0,
