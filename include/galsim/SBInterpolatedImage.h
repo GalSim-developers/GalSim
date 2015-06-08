@@ -151,10 +151,6 @@ namespace galsim {
 
         class SBInterpolatedImageImpl;
 
-        // Wow, three classes here... I'm not even sure how this works,
-        // but the tests seem to pass...
-        SBInterpolatedImage(SBProfileImpl* pimpl) : SBInterpolated(pimpl) {}
-
     private:
         // op= is undefined
         void operator=(const SBInterpolatedImage& rhs);
@@ -204,10 +200,6 @@ namespace galsim {
     protected:
 
         class SBInterpolatedKImageImpl;
-
-        // Wow, three classes here... I'm not even sure how this works,
-        // but the tests seem to pass...
-        SBInterpolatedKImage(SBProfileImpl* pimpl) : SBInterpolated(pimpl) {}
 
     private:
         // op= is undefined
