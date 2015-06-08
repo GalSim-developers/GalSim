@@ -537,10 +537,10 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
         img_array[j::n2,i::n1] = im_list[k].array[:,:]
 
-    if add_flux is True:
-        img = galsim.Image(img_array)
-    else:
-        img = galsim.Image((1.0/(len(im_list)))*img_array)
+    img = galsim.Image(img_array)
+    if not add_flux:
+        # Fix the flux normalization
+        img /= 1.0*len(im_list)
 
     if (n1==n2):
         if scale is not None:
