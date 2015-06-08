@@ -897,13 +897,19 @@ namespace galsim {
                 eventually reduces the above expression to what's in the code below.
              */
             double xsum(0.0), ysum(0.0);
-            for (int iky = -_Ninitial/2; iky < _Ninitial/2; iky++) {
+            int iky = -_Ninitial/2;
+            double sign = (iky % 2 == 0) ? 1.0 : -1.0;
+            for (; iky < _Ninitial/2; iky++, sign = -sign) {
                 if (iky == 0) continue;
-                ysum += std::pow(-1.0, iky) / iky * _ktab->kval(0, iky).imag();
+                ysum += sign / iky * _ktab->kval(0, iky).imag();
             }
-            for (int ikx = -_Ninitial/2; ikx < _Ninitial/2; ikx++) {
+            int ikx = -_Ninitial/2;
+            sign = (ikx % 2 == 0) ? 1.0 : -1.0;
+            for (;
+                 ikx < _Ninitial/2;
+                 ikx++, sign = -sign) {
                 if (ikx == 0) continue;
-                xsum += std::pow(-1.0, ikx) / ikx * _ktab->kval(ikx, 0).imag();
+                xsum += sign / ikx * _ktab->kval(ikx, 0).imag();
             }
             _xcentroid = xsum/_dk/flux;
             _ycentroid = ysum/_dk/flux;
