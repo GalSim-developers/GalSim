@@ -834,7 +834,7 @@ namespace galsim {
         double dk, double stepk, boost::shared_ptr<Interpolant2d> kInterp,
         const GSParamsPtr& gsparams) :
         SBInterpolatedImpl(kInterp, stepk, 0., gsparams), //fill in maxk below
-        _dk(dk)
+        _dk(dk), _centroidIsDefined(false)
     {
         dbg<<"stepk = "<<stepk<<std::endl;
         dbg<<"kimage bounds = "<<realKImage.getBounds()<<std::endl;
@@ -868,9 +868,6 @@ namespace galsim {
         }
         _flux = kValue(Position<double>(0.,0.)).real();
         dbg<<"flux = "<<_flux<<std::endl;
-
-        _xcentroid = NAN;
-        _ycentroid = NAN;
     }
 
     SBInterpolatedKImage::SBInterpolatedKImageImpl::~SBInterpolatedKImageImpl() {}
@@ -887,7 +884,7 @@ namespace galsim {
     Position<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::centroid() const {
         double flux = getFlux();
         if (flux == 0.) throw std::runtime_error("Flux == 0.  Centroid is undefined.");
-        if (std::isnan(_xcentroid)) {
+        if (!_centroidIsDefined) {
             /*  int x f(x) dx = (x conv f)|x=0 = int FT(x conv f)(k) dk
                               = int FT(x) FT(f) dk
                 FT(x) is divergent, but really we want the first integral above to be
@@ -910,6 +907,7 @@ namespace galsim {
             }
             _xcentroid = xsum/_dk/flux;
             _ycentroid = ysum/_dk/flux;
+            _centroidIsDefined = true;
         }
         return Position<double>(_xcentroid, _ycentroid);
     }

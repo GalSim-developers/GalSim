@@ -237,6 +237,7 @@ namespace galsim {
         int _Nk;
         mutable double _xcentroid;
         mutable double _ycentroid;
+        mutable bool _centroidIsDefined;
 
     private:
 
