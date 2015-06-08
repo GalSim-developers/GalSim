@@ -498,9 +498,14 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
     if isinstance(im_list[0],galsim.Image):
         y_size, x_size = im_list[0].array.shape
-        scale = im_list[0].scale
+        wcs = im_list[0].wcs
     else:
         raise TypeError("'im_list' must be a list of galsim.Image instances")
+
+    if wcs is None:
+        scale = im_list[0].scale
+    else:
+        scale = wcs.PixelScale
 
     for im in im_list[1:]:
         if not isinstance(im,galsim.Image):
@@ -542,10 +547,12 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         # Fix the flux normalization
         img /= 1.0*len(im_list)
 
-    if (n1==n2):
-        if scale is not None:
-            img.scale = im_list[0].scale*(1./n1)
+    if wcs is not None:
+        img.wcs = galsim.Jacobian(1.*scale/n1, 0., 0., 1.scale/n2)
+    elif scale is not None:
+        if (n1==n2):
+            img.scale = 1.scale/n1
     elif suppress_warnings is False:
         import warnings
-        warnings.warn("Interleaved image could not be assigned a pixel scale automatically")
+        warnings.warn("Interleaved image could not be assigned a PixelScale automatically.")
     return img
