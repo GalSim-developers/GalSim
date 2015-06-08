@@ -146,11 +146,11 @@ namespace galsim {
 
     protected:  // Made protected so that these can be used in the derived CorrelationFunction class
 
-        int Ninitial;
-        int Nk;
-        Bounds<int> init_bounds;
-        double xcentroid;
-        double ycentroid;
+        int _Ninitial;
+        int _Nk;
+        Bounds<int> _init_bounds;
+        double _xcentroid;
+        double _ycentroid;
 
         boost::shared_ptr<Interpolant2d> _xInterp; ///< Interpolant used in real space.
         boost::shared_ptr<XTable> _xtab; ///< Final padded real-space image.
@@ -233,10 +233,10 @@ namespace galsim {
 
         std::string repr() const;
         double _dk;
-        int Ninitial;
-        int Nk;
-        mutable double xcentroid;
-        mutable double ycentroid;
+        int _Ninitial;
+        int _Nk;
+        mutable double _xcentroid;
+        mutable double _ycentroid;
 
     private:
 

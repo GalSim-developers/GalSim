@@ -131,18 +131,18 @@ namespace galsim {
         assert(_xInterp.get());
         assert(_kInterp.get());
 
-        Ninitial = std::max(image.getXMax()-image.getXMin()+1,
-                            image.getYMax()-image.getYMin()+1);
-        init_bounds = image.getBounds();
-        dbg<<"Ninitial = "<<Ninitial<<std::endl;
+        _Ninitial = std::max(image.getXMax()-image.getXMin()+1,
+                             image.getYMax()-image.getYMin()+1);
+        _init_bounds = image.getBounds();
+        dbg<<"Ninitial = "<<_Ninitial<<std::endl;
         assert(pad_factor > 0.);
-        Nk = goodFFTSize(int(pad_factor*Ninitial));
-        dbg<<"Nk = "<<Nk<<std::endl;
+        _Nk = goodFFTSize(int(pad_factor*_Ninitial));
+        dbg<<"_Nk = "<<_Nk<<std::endl;
         double sum = 0.;
         double sumx = 0.;
         double sumy = 0.;
 
-        _xtab = boost::shared_ptr<XTable>(new XTable(Nk, 1.));
+        _xtab = boost::shared_ptr<XTable>(new XTable(_Nk, 1.));
         int xStart = -((image.getXMax()-image.getXMin()+1)/2);
         int y = -((image.getYMax()-image.getYMin()+1)/2);
         dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
@@ -160,10 +160,10 @@ namespace galsim {
         }
 
         _flux = sum;
-        xcentroid = sumx/sum;
-        ycentroid = sumy/sum;
-        dbg<<"flux = "<<_flux<<", xcentroid = "<<xcentroid<<", ycentroid = "<<ycentroid<<std::endl;
-        dbg<<"N = "<<Ninitial<<", xrange = "<<_xInterp->xrange()<<std::endl;
+        _xcentroid = sumx/sum;
+        _ycentroid = sumy/sum;
+        dbg<<"flux = "<<_flux<<", xcentroid = "<<_xcentroid<<", ycentroid = "<<_ycentroid<<std::endl;
+        dbg<<"N = "<<_Ninitial<<", xrange = "<<_xInterp->xrange()<<std::endl;
         dbg<<"xtab size = "<<_xtab->getN()<<", scale = "<<_xtab->getDx()<<std::endl;
 
         if (_stepk <= 0.) {
@@ -175,7 +175,7 @@ namespace galsim {
             // We add the size of the image and the size of the interpolant in quadrature.
             // (Note: Since this isn't a radial profile, R isn't really a radius, but rather
             //        the size of the square box that is enclosing all the flux.)
-            double R = Ninitial/2.;
+            double R = _Ninitial/2.;
             // Add xInterp range in quadrature just like convolution:
             double R2 = _xInterp->xrange();
             dbg<<"R(image) = "<<R<<", R(interpolant) = "<<R2<<std::endl;
@@ -481,7 +481,7 @@ namespace galsim {
     void SBInterpolatedImage::SBInterpolatedImageImpl::getXRange(
         double& xmin, double& xmax, std::vector<double>& splits) const
     {
-        Bounds<int> b = init_bounds;
+        Bounds<int> b = _init_bounds;
         double xrange = _xInterp->xrange();
         int N = b.getXMax()-b.getXMin()+1;
         xmin = -(N/2 + xrange);
@@ -497,7 +497,7 @@ namespace galsim {
     void SBInterpolatedImage::SBInterpolatedImageImpl::getYRange(
         double& ymin, double& ymax, std::vector<double>& splits) const
     {
-        Bounds<int> b = init_bounds;
+        Bounds<int> b = _init_bounds;
         double xrange = _xInterp->xrange();
         int N = b.getXMax()-b.getXMin()+1;
         ymin = -(N/2 + xrange);
@@ -514,7 +514,7 @@ namespace galsim {
     {
         double flux = getFlux();
         if (flux == 0.) throw std::runtime_error("Flux == 0.  Centroid is undefined.");
-        return Position<double>(xcentroid, ycentroid);
+        return Position<double>(_xcentroid, _ycentroid);
     }
 
     // We provide an option to update the stepk value by directly calculating what
@@ -544,8 +544,8 @@ namespace galsim {
         // When this happens, we set d1 to 0 again and look for a larger value that
         // enclosed enough flux again.
         int d1 = 0;
-        const int Nino2 = Ninitial/2;
-        const Bounds<int> b = init_bounds;
+        const int Nino2 = _Ninitial/2;
+        const Bounds<int> b = _init_bounds;
         int dx = b.getXMin() + ((b.getXMax()-b.getXMin()+1)/2);
         int dy = b.getYMin() + ((b.getYMax()-b.getYMin()+1)/2);
         dbg<<"b = "<<b<<std::endl;
@@ -695,7 +695,7 @@ namespace galsim {
         _negativeFlux = 0.;
         _pt.clear();
 
-        Bounds<int> b = init_bounds;
+        Bounds<int> b = _init_bounds;
         int xStart = -((b.getXMax()-b.getXMin()+1)/2);
         int y = -((b.getYMax()-b.getYMin()+1)/2);
 
@@ -840,14 +840,14 @@ namespace galsim {
         dbg<<"kimage bounds = "<<realKImage.getBounds()<<std::endl;
         assert(_kInterp.get());
 
-        Ninitial = std::max(realKImage.getXMax()-realKImage.getXMin()+1,
+        _Ninitial = std::max(realKImage.getXMax()-realKImage.getXMin()+1,
                             realKImage.getYMax()-realKImage.getYMin()+1);
-        dbg<<"Ninitial = "<<Ninitial<<std::endl;
-        Nk = goodFFTSize(int(Ninitial));
-        dbg<<"Nk = "<<Nk<<std::endl;
+        dbg<<"_Ninitial = "<<_Ninitial<<std::endl;
+        _Nk = goodFFTSize(int(_Ninitial));
+        dbg<<"_Nk = "<<_Nk<<std::endl;
 
-        _ktab = boost::shared_ptr<KTable>(new KTable(Nk, _dk));
-        _maxk = Ninitial/2 * _dk;
+        _ktab = boost::shared_ptr<KTable>(new KTable(_Nk, _dk));
+        _maxk = _Ninitial/2 * _dk;
         dbg<<"_dk = "<<_dk<<std::endl;
         dbg<<"_maxk = "<<_maxk<<std::endl;
 
@@ -869,8 +869,8 @@ namespace galsim {
         _flux = kValue(Position<double>(0.,0.)).real();
         dbg<<"flux = "<<_flux<<std::endl;
 
-        xcentroid = NAN;
-        ycentroid = NAN;
+        _xcentroid = NAN;
+        _ycentroid = NAN;
     }
 
     SBInterpolatedKImage::SBInterpolatedKImageImpl::~SBInterpolatedKImageImpl() {}
@@ -887,7 +887,7 @@ namespace galsim {
     Position<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::centroid() const {
         double flux = getFlux();
         if (flux == 0.) throw std::runtime_error("Flux == 0.  Centroid is undefined.");
-        if (std::isnan(xcentroid)) {
+        if (std::isnan(_xcentroid)) {
             /*  int x f(x) dx = (x conv f)|x=0 = int FT(x conv f)(k) dk
                               = int FT(x) FT(f) dk
                 FT(x) is divergent, but really we want the first integral above to be
@@ -900,18 +900,18 @@ namespace galsim {
                 eventually reduces the above expression to what's in the code below.
              */
             double xsum(0.0), ysum(0.0);
-            for (int iky = -Ninitial/2; iky < Ninitial/2; iky++) {
+            for (int iky = -_Ninitial/2; iky < _Ninitial/2; iky++) {
                 if (iky == 0) continue;
                 ysum += std::pow(-1.0, iky) / iky * _ktab->kval(0, iky).imag();
             }
-            for (int ikx = -Ninitial/2; ikx < Ninitial/2; ikx++) {
+            for (int ikx = -_Ninitial/2; ikx < _Ninitial/2; ikx++) {
                 if (ikx == 0) continue;
                 xsum += std::pow(-1.0, ikx) / ikx * _ktab->kval(ikx, 0).imag();
             }
-            xcentroid = xsum/_dk/flux;
-            ycentroid = ysum/_dk/flux;
+            _xcentroid = xsum/_dk/flux;
+            _ycentroid = ysum/_dk/flux;
         }
-        return Position<double>(xcentroid, ycentroid);
+        return Position<double>(_xcentroid, _ycentroid);
     }
 
     std::string SBInterpolatedKImage::SBInterpolatedKImageImpl::repr() const
@@ -954,7 +954,7 @@ namespace galsim {
     {
         int N = _ktab->getN();
         tmv::Matrix<std::complex<double> > val(N,N);
-        int Nko2 = Nk/2;
+        int Nko2 = _Nk/2;
         fillKValue(val.view(), -Nko2, 1, Nko2, -Nko2, 1, Nko2);
         ImageAlloc<double> im(N, N);
         tmv::MatrixView<double> m(im.getData(), N, N, 1, im.getStride(), tmv::NonConj);
@@ -966,7 +966,7 @@ namespace galsim {
     {
         int N = _ktab->getN();
         tmv::Matrix<std::complex<double> > val(N,N);
-        int Nko2 = Nk/2;
+        int Nko2 = _Nk/2;
         fillKValue(val.view(), -Nko2, 1, Nko2, -Nko2, 1, Nko2);
         ImageAlloc<double> im(N, N);
         tmv::MatrixView<double> m(im.getData(), N, N, 1, im.getStride(), tmv::NonConj);
