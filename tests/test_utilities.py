@@ -226,10 +226,9 @@ def test_interleaveImages():
 
     try:
         N = (n,n)
-        galsim.utilities.interleaveImages(im_list,N=N,offsets=offset_list,catch_offset_errors=True)
-        raise RuntimeError("ValueError not raised for approximate offsets to interleaveImages")
-    except ValueError:
-        pass
+        np.testing.assert_raises(ValueError,galsim.utilities.interleaveImages,im_list,N,offset_list)
+    except ImportError:
+        print "The assert_raises tests require nose"
 
     offset_list = []
     im_list = []
@@ -246,10 +245,9 @@ def test_interleaveImages():
 
     try:
         N = (n,n)
-        galsim.utilities.interleaveImages(im_list,N=N,offsets=offset_list,catch_offset_errors=True)
-        raise RuntimeError("ValueError not raised for offsets with non-zero mean to interleaveImages")
-    except ValueError:
-        pass
+        np.testing.assert_raises(ValueError,galsim.utilities.interleaveImages,im_list,N,offset_list)
+    except ImportError:
+        print "The assert_raises tests require nose"
 
     # 2a) Increase resolution along one direction - square to rectangular images
     n = 2
