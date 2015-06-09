@@ -480,9 +480,9 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         else:
             raise TypeError("'N' has to be a list or a tuple of two integers")
         if not (isinstance(n1,int) and  isinstance(n2,int)):
-            raise TypeError("'N' has to be of type int or a list/tuple of two integers")
+            raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
     else:
-        raise TypeError("'N' has to be of type int or a list/tuple of two integers")
+        raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
 
     if len(im_list)<2:
         raise TypeError("'im_list' needs to have at least two instances of galsim.Image")
@@ -492,16 +492,18 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
     if len(im_list)!=len(offsets):
         raise ValueError("'im_list' and 'offsets' must be lists of same length")
+
     for offset in offsets:
         if not isinstance(offset,galsim.PositionD):
             raise TypeError("'offsets' must be a list of galsim.PositionD instances")
 
-    if isinstance(im_list[0],galsim.Image):
-        y_size, x_size = im_list[0].array.shape
-    else:
+    if not isinstance(im_list[0],galsim.Image):
         raise TypeError("'im_list' must be a list of galsim.Image instances")
 
+    # These should be the same for all images in `im_list'.
+    y_size, x_size = im_list[0].array.shape
     wcs = im_list[0].wcs
+
     if wcs.isPixelScale():
         scale = wcs.scale
     else:
@@ -547,13 +549,18 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         # Fix the flux normalization
         img /= 1.0*len(im_list)
 
+    # Assign an appropriate WCS for the output
     if scale is not None:
         if n1==n2:
             img.wcs = galsim.PixelScale(1.*scale/n1)
         else:
             img.wcs = galsim.JacobianWCS(1.*scale/n1, 0., 0., 1.*scale/n2)
-    elif isinstance(wcs,galsim.JacobianWCS):
-        img.wcs = galsim.JacobianWCS(1.*wcs.dudx/n1,1.*wcs.dudy/n2,1.*wcs.dvdx/n1,1.*wcs.dvdy/n2)
+    elif isinstance(wcs,galsim.JacobianWCS): # from say, a previously interleaved Image.
+        dudx, dudy, dvdx, dvdy = wcs.dudx, wcs.dudy, wcs.dvdx, wcs.dvdy
+        if (1.0*dudx/n1==1.0*dvdy/n2) and (dudy==0.0) and (dvdx==0.0):
+            img.wcs = galsim.PixelScale(1.*dudx/n1)
+        else:
+            img.wcs = galsim.JacobianWCS(1.*dudx/n1,1.*dudy/n2,1.*dvdx/n1,1.*dvdy/n2)
     elif suppress_warnings is False:
         import warnings
         warnings.warn("Interleaved image could not be assigned a WCS automatically.")
