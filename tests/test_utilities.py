@@ -171,7 +171,7 @@ def test_interleaveImages():
             im = galsim.Image(16*n,16*n)
             offset = galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5)
             offset_list.append(offset)
-            gal.drawImage(image=im,method='no_pixel',offset=offset,scale=1.0)
+            gal.drawImage(image=im,method='no_pixel',offset=offset,scale=0.5)
             im_list.append(im)
 
     scale = im.scale
@@ -257,8 +257,7 @@ def test_interleaveImages():
     # 2a) Increase resolution along one direction - square to rectangular images
     n = 2
     g = galsim.Gaussian(sigma=3.7,flux=100.)
-    g1 = g.shear(g=1.*(n**2-1)/(n**2+1),beta=0.0*galsim.radians)
-    gal1 = g1 #galsim.Convolve([g1,galsim.Pixel(1.0)])
+    gal1 = g.shear(g=1.*(n**2-1)/(n**2+1),beta=0.0*galsim.radians)
     im_list = []
     offset_list = []
   
@@ -269,23 +268,22 @@ def test_interleaveImages():
         im = galsim.Image(16,16)
         offset = galsim.PositionD(0.0,dy)
         offset_list.append(offset)
-        gal1.drawImage(im,offset=offset,method='no_pixel',scale=1.0)
+        gal1.drawImage(im,offset=offset,method='no_pixel',scale=2.0)
         im_list.append(im)
 
     img = galsim.utilities.interleaveImages(im_list,N=[1,n**2],offsets=offset_list,add_flux=False,suppress_warnings=True)
     im = galsim.Image(16,16*n*n)
-    g = galsim.Gaussian(sigma=3.7*n,flux=100.)
-    gal = g#alsim.Convolve([g,galsim.Pixel(1.0)])
-    gal.drawImage(image=im,method='no_pixel',scale=1.0)
+    # The interleaved image has the total flux averaged out since `add_flux = False'
+    gal = galsim.Gaussian(sigma=3.7*n,flux=100.)
+    gal.drawImage(image=im,method='no_pixel',scale=2.0)
 
     np.testing.assert_array_equal(im.array,img.array,err_msg="Sheared gaussian not interleaved correctly")
-    assert img.wcs == galsim.JacobianWCS(1.0,0.0,0.0,1./(n**2))
+    assert img.wcs == galsim.JacobianWCS(2.0,0.0,0.0,2./(n**2))
 
     # 2b) Increase resolution along one direction - rectangular to square images
     n = 2
     g = galsim.Gaussian(sigma=3.7,flux=100.)
-    g2 = g.shear(g=1.*(n**2-1)/(n**2+1),beta=90.*galsim.degrees)
-    gal2 = g2
+    gal2 = g.shear(g=1.*(n**2-1)/(n**2+1),beta=90.*galsim.degrees)
     im_list = []
     offset_list = []
 
@@ -296,7 +294,7 @@ def test_interleaveImages():
          offset = galsim.PositionD(dx,0.0)
          offset_list.append(offset)
          im = galsim.Image(16,16*n*n)
-         gal2.drawImage(im,offset=offset,method='no_pixel',scale=1.0)
+         gal2.drawImage(im,offset=offset,method='no_pixel',scale=3.0)
          im_list.append(im)
 
     img = galsim.utilities.interleaveImages(im_list,N=np.array([n**2,1]),offsets=offset_list,suppress_warnings=True)
