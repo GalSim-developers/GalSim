@@ -209,10 +209,11 @@ def test_interleaveImages():
         err_msg="Interleaved images do not match when 'offsets' is supplied")
     assert img_randperm.scale == img.scale
 
-    # 1c) Catching errors if offsets
+    # 1c) Catching errors in offsets
     offset_list = []
     im_list = []
     n = 5
+    # Generate approximate offsets
     DX = np.array([-0.67,-0.33,0.,0.33,0.67])
     DY = DX
     for dy in DY:
@@ -223,15 +224,12 @@ def test_interleaveImages():
            gal.drawImage(image=im,offset=offset,method='no_pixel')
            im_list.append(im)
 
-    VE = ValueError('No error')
     try:
         N = (n,n)
         galsim.utilities.interleaveImages(im_list,N=N,offsets=offset_list,catch_offset_errors=True)
-    except ValueError as VE:
+        raise RuntimeError("ValueError not raised for approximate offsets to interleaveImages")
+    except ValueError:
         pass
-    message =  "'offsets' must be a list of galsim.PositionD instances with x values"\
-                          +" spaced by 1/{0} and y values by 1/{1} around 0 for N = ".format(n,n)+str(N)
-    assert VE.message == message
 
     offset_list = []
     im_list = []
@@ -246,13 +244,12 @@ def test_interleaveImages():
             gal.drawImage(image=im,offset=offset,method='no_pixel')
             im_list.append(im)
 
-    VE = ValueError('No error')
     try:
         N = (n,n)
         galsim.utilities.interleaveImages(im_list,N=N,offsets=offset_list,catch_offset_errors=True)
-    except ValueError as VE:
+        raise RuntimeError("ValueError not raised for offsets with non-zero mean to interleaveImages")
+    except ValueError:
         pass
-    assert VE.message == message
 
     # 2a) Increase resolution along one direction - square to rectangular images
     n = 2
