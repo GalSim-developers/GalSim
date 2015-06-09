@@ -1044,8 +1044,8 @@ def test_kround_trip():
     # Check picklability
     do_pickle(b)
     do_pickle(b, lambda x: x.drawImage())
-    # do_pickle(b.SBProfile)
-    # do_pickle(b.SBProfile, lambda x: repr(x))
+    do_pickle(b.SBProfile)
+    do_pickle(b.SBProfile, lambda x: repr(x))
 
     for kx, ky in zip(KXVALS, KYVALS):
         np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 2,

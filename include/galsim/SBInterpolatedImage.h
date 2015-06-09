@@ -188,14 +188,32 @@ namespace galsim {
             boost::shared_ptr<Interpolant2d> kInterp,
             const GSParamsPtr& gsparams);
 
+        // @brief Ingest data in single "image". Used for pickling.  Note this is *not* a
+        // template since getKData only returns doubles.
+        SBInterpolatedKImage(
+            const BaseImage<double>& data,
+            double dk, double stepk,
+            boost::shared_ptr<Interpolant> kInterp,
+            double xcen, double ycen, bool cenIsSet,
+            const GSParamsPtr& gsparams);
+
+        // // @brief And similarly a 2-d interpolant version.
+        // SBInterpolatedKImage(
+        //     const BaseImage<double>& data,
+        //     double dk, double stepk,
+        //     boost::shared_ptr<Interpolant2d> kInterp,
+        //     double xcen, double ycen, bool cenIsSet,
+        //     const GSParamsPtr& gsparams);
+
         /// @brief Copy Constructor.
         SBInterpolatedKImage(const SBInterpolatedKImage& rhs);
 
         /// @brief Destructor
         ~SBInterpolatedKImage();
 
-        ConstImageView<double> getRealKImage() const;
-        ConstImageView<double> getImagKImage() const;
+        ConstImageView<double> getKData() const;
+        double dK() const;
+        bool cenIsSet() const;
 
     protected:
 

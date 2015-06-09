@@ -76,18 +76,17 @@ namespace galsim {
         {
             wrapper
                 .def(bp::init<const BaseImage<U> &,
-                     const BaseImage<U> &,
-                     double, double,
-                     boost::shared_ptr<Interpolant>,
-                     boost::shared_ptr<GSParams> >(
-                         (bp::arg("real_kimage"),
-                          bp::arg("imag_kimage"),
-                          bp::arg("dk"),
-                          bp::arg("stepk"),
-                          bp::arg("kInterp"),
-                          bp::arg("gsparams")=bp::object())
-                     )
-                )
+                              const BaseImage<U> &,
+                              double, double,
+                              boost::shared_ptr<Interpolant>,
+                              boost::shared_ptr<GSParams> >(
+                                  (bp::arg("real_kimage"),
+                                   bp::arg("imag_kimage"),
+                                   bp::arg("dk"),
+                                   bp::arg("stepk"),
+                                   bp::arg("kInterp"),
+                                   bp::arg("gsparams")=bp::object())
+                     ))
                 ;
         }
 
@@ -97,9 +96,24 @@ namespace galsim {
                 "SBInterpolatedKImage", bp::init<const SBInterpolatedKImage &>()
             );
             pySBInterpolatedKImage
+                .def(bp::init<const BaseImage<double> &,
+                              double, double,
+                              boost::shared_ptr<Interpolant>,
+                              double, double, bool,
+                              boost::shared_ptr<GSParams> >(
+                                  (bp::arg("data"),
+                                   bp::arg("dk"),
+                                   bp::arg("stepk"),
+                                   bp::arg("kInterp"),
+                                   bp::arg("xcen"),
+                                   bp::arg("ycen"),
+                                   bp::arg("cenIsSet"),
+                                   bp::arg("gsparams")=bp::object())
+                     ))
                 .def("getKInterp", &SBInterpolatedImage::getKInterp)
-                .def("getRealKImage", &SBInterpolatedKImage::getRealKImage)
-                .def("getImagKImage", &SBInterpolatedKImage::getImagKImage)
+                .def("dK", &SBInterpolatedKImage::dK)
+                .def("_cenIsSet", &SBInterpolatedKImage::cenIsSet)
+                .def("_getKData", &SBInterpolatedKImage::getKData)
                 ;
             wrapTemplates<float>(pySBInterpolatedKImage);
             wrapTemplates<double>(pySBInterpolatedKImage);

@@ -208,6 +208,13 @@ namespace galsim {
             boost::shared_ptr<Interpolant2d> kInterp,
             const GSParamsPtr& gsparams);
 
+        SBInterpolatedKImageImpl(
+            const BaseImage<double>& data,
+            double dk, double stepk,
+            boost::shared_ptr<Interpolant2d> kInterp,
+            double xcen, double ycen, bool cenIsSet,
+            const GSParamsPtr& gsparams);
+
         ~SBInterpolatedKImageImpl();
 
         std::complex<double> kValue(const Position<double>& p) const;
@@ -218,8 +225,9 @@ namespace galsim {
         //                 double kx0, double dkx, double dkxy,
         //                 double ky0, double dky, double dkyx) const;
 
-        ConstImageView<double> getRealKImage() const;
-        ConstImageView<double> getImagKImage() const;
+        ConstImageView<double> getKData() const;
+        double dK() const {return _dk;}
+        bool cenIsSet() const {return _cenIsSet;}
 
         double xValue(const Position<double>& p) const
         { throw SBError("SBInterpolatedKImage::xValue() is not implemented"); }
@@ -237,7 +245,7 @@ namespace galsim {
         int _Nk;
         mutable double _xcentroid;
         mutable double _ycentroid;
-        mutable bool _centroidIsDefined;
+        mutable bool _cenIsSet;
 
     private:
 
