@@ -498,14 +498,14 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
     if isinstance(im_list[0],galsim.Image):
         y_size, x_size = im_list[0].array.shape
-        wcs = im_list[0].wcs
     else:
         raise TypeError("'im_list' must be a list of galsim.Image instances")
 
-    if wcs is None:
-        scale = im_list[0].scale
+    wcs = im_list[0].wcs
+    if wcs.isPixelScale():
+        scale = wcs.scale
     else:
-        scale = wcs.PixelScale
+        scale = None
 
     for im in im_list[1:]:
         if not isinstance(im,galsim.Image):
@@ -514,9 +514,9 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         if im.array.shape != (y_size,x_size):
             raise ValueError("All galsim.Image instances in 'im_list' must be of the same size")
  
-        if im.scale != scale:
+        if im.wcs != wcs:
             raise ValueError(
-                "All galsim.Image instances in 'im_list' must have the same pixel scale")
+                "All galsim.Image instances in 'im_list' must have the same WCS")
 
     img_array = np.zeros((n2*y_size,n1*x_size))
     # The tricky part - going from (x,y) Image coordinates to array indices
@@ -547,12 +547,14 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         # Fix the flux normalization
         img /= 1.0*len(im_list)
 
-    if wcs is not None:
-        img.wcs = galsim.Jacobian(1.*scale/n1, 0., 0., 1.scale/n2)
-    elif scale is not None:
-        if (n1==n2):
-            img.scale = 1.scale/n1
+    if scale is not None:
+        if n1==n2:
+            img.wcs = galsim.PixelScale(1.*scale/n1)
+        else:
+            img.wcs = galsim.JacobianWCS(1.*scale/n1, 0., 0., 1.*scale/n2)
+    elif isinstance(wcs,galsim.JacobianWCS):
+        img.wcs = galsim.JacobianWCS(1.*wcs.dudx/n1,1.*wcs.dudy/n2,1.*wcs.dvdx/n1,1.*wcs.dvdy/n2)
     elif suppress_warnings is False:
         import warnings
-        warnings.warn("Interleaved image could not be assigned a PixelScale automatically.")
+        warnings.warn("Interleaved image could not be assigned a WCS automatically.")
     return img

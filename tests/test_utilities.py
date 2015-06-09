@@ -171,19 +171,21 @@ def test_interleaveImages():
             im = galsim.Image(16*n,16*n)
             offset = galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5)
             offset_list.append(offset)
-            gal.drawImage(image=im,scale=1.0,method='no_pixel',offset=offset)
-            #gal.drawImage(image=im,scale=1.0,method='no_pixel',offset=galsim.PositionD(1.*i/n,1.*j/n))
+            gal.drawImage(image=im,method='no_pixel',offset=offset,scale=1.0)
             im_list.append(im)
+
+    scale = im.scale
 
     # Input to N as an int
     img = galsim.utilities.interleaveImages(im_list,n,offsets=offset_list)
     im = galsim.Image(16*n*n,16*n*n)
     g = galsim.Gaussian(sigma=3.7,flux=1000.*n*n)
     gal = galsim.Convolve([g,galsim.Pixel(1.0)])
-    gal.drawImage(image=im,method='no_pixel',offset=galsim.PositionD(0.0,0.0),scale=1.0/n)
+    gal.drawImage(image=im,method='no_pixel',offset=galsim.PositionD(0.0,0.0),scale=1.*scale/n)
     np.testing.assert_array_equal(img.array,im.array,\
         err_msg="Interleaved Gaussian images do not match")
-    assert im.scale == img.scale
+
+    assert im.wcs == img.wcs
 
     # 1b) With im_list and offsets permuted
     offset_list = []
@@ -218,7 +220,7 @@ def test_interleaveImages():
            offset = galsim.PositionD(dx,dy)
            offset_list.append(offset)
            im = galsim.Image(16,16)
-           gal.drawImage(image=im,offset=offset,scale=1.0,method='no_pixel')
+           gal.drawImage(image=im,offset=offset,method='no_pixel')
            im_list.append(im)
 
     VE = ValueError('No error')
@@ -241,7 +243,7 @@ def test_interleaveImages():
             offset = galsim.PositionD(dx,dy)
             offset_list.append(offset)
             im = galsim.Image(16,16)
-            gal.drawImage(image=im,offset=offset,scale=1.0,method='no_pixel')
+            gal.drawImage(image=im,offset=offset,method='no_pixel')
             im_list.append(im)
 
     VE = ValueError('No error')
@@ -267,17 +269,17 @@ def test_interleaveImages():
         im = galsim.Image(16,16)
         offset = galsim.PositionD(0.0,dy)
         offset_list.append(offset)
-        gal1.drawImage(im,offset=offset,scale=1.0,method='no_pixel')
+        gal1.drawImage(im,offset=offset,method='no_pixel',scale=1.0)
         im_list.append(im)
 
-    img = galsim.utilities.interleaveImages(im_list,N=[1,n**2],offsets=offset_list,add_flux=False,suppress_warnings=True)
+    img = galsim.utilities.interleaveImages(im_list,N=[1,n**2],offsets=offset_list,add_flux=True,suppress_warnings=True)
     im = galsim.Image(16,16*n*n)
-    g = galsim.Gaussian(sigma=3.7*n,flux=100.)
+    g = galsim.Gaussian(sigma=3.7*n,flux=100.*n*n)
     gal = g#alsim.Convolve([g,galsim.Pixel(1.0)])
-    gal.drawImage(image=im,scale=1.,method='no_pixel')
+    gal.drawImage(image=im,method='no_pixel',scale=1.0)
 
     np.testing.assert_array_equal(im.array,img.array,err_msg="Sheared gaussian not interleaved correctly")
-    assert img.scale is None
+    assert img.wcs == galsim.JacobianWCS(1.0,0.0,0.0,1./(n**2))
 
     # 2b) Increase resolution along one direction - rectangular to square images
     n = 2
@@ -294,17 +296,17 @@ def test_interleaveImages():
          offset = galsim.PositionD(dx,0.0)
          offset_list.append(offset)
          im = galsim.Image(16,16*n*n)
-         gal2.drawImage(im,offset=offset,scale=1.0,method='no_pixel')
+         gal2.drawImage(im,offset=offset,method='no_pixel',scale=1.0)
          im_list.append(im)
 
     img = galsim.utilities.interleaveImages(im_list,N=np.array([n**2,1]),offsets=offset_list,suppress_warnings=True)
     im = galsim.Image(16*n*n,16*n*n)
-    g = galsim.Gaussian(sigma=3.7,flux=100.*n*n)
-    gal = g
-    gal.drawImage(image=im,scale=1./n,method='no_pixel')
+    gal = galsim.Gaussian(sigma=3.7,flux=100.*n*n)
+    scale = im_list[0].scale
+    gal.drawImage(image=im,scale=1.*scale/n,method='no_pixel')
 
     np.testing.assert_array_equal(im.array,img.array,err_msg="Sheared gaussian not interleaved correctly")
-    assert img.scale is None
+    assert img.wcs == galsim.JacobianWCS(1.*scale/n**2,0.0,0.0,scale)
     
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
