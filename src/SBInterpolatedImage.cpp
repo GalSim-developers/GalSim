@@ -770,23 +770,23 @@ namespace galsim {
 
     template <typename T>
     SBInterpolatedKImage::SBInterpolatedKImage(
-        const BaseImage<T>& realImage, const BaseImage<T>& imagImage,
+        const BaseImage<T>& realKImage, const BaseImage<T>& imageKImage,
         double dk, double stepk,
         boost::shared_ptr<Interpolant> kInterp,
         const GSParamsPtr& gsparams) :
         SBProfile(new SBInterpolatedKImageImpl(
-            realImage, imagImage, dk, stepk,
+            realKImage, imageKImage, dk, stepk,
             boost::shared_ptr<Interpolant2d>(new InterpolantXY(kInterp)), gsparams)
         ) {}
 
     template <typename T>
     SBInterpolatedKImage::SBInterpolatedKImage(
-        const BaseImage<T>& realImage, const BaseImage<T>& imagImage,
+        const BaseImage<T>& realKImage, const BaseImage<T>& imageKImage,
         double dk, double stepk,
         boost::shared_ptr<Interpolant2d> kInterp,
         const GSParamsPtr& gsparams) :
         SBProfile(new SBInterpolatedKImageImpl(
-            realImage, imagImage, dk, stepk, kInterp, gsparams)
+            realKImage, imageKImage, dk, stepk, kInterp, gsparams)
         ) {}
 
     SBInterpolatedKImage::SBInterpolatedKImage(
@@ -842,7 +842,12 @@ namespace galsim {
         SBProfileImpl(gsparams),
         _kInterp(kInterp), _stepk(stepk), _maxk(0.), _dk(dk), _cenIsSet(false) //fill in maxk below
     {
-        dbg<<"stepk = "<<stepk<<std::endl;
+        // Note that _dk is the pitch of realKImage and imagKImage.  In contrast, _stepk indicates
+        // the maximum pitch for drawImage() to use when rendering an image, which may be set
+        // larger than _dk for efficiency.
+        assert(_stepk >= _dk);
+
+        dbg<<"stepk = "<<_stepk<<std::endl;
         dbg<<"kimage bounds = "<<realKImage.getBounds()<<std::endl;
         assert(_kInterp.get());
 
@@ -1021,29 +1026,29 @@ namespace galsim {
         double stepk, double maxk, const GSParamsPtr& gsparams);
 
     template SBInterpolatedKImage::SBInterpolatedKImage(
-        const BaseImage<float>& realImage, const BaseImage<float>& imagImage,
+        const BaseImage<float>& realKImage, const BaseImage<float>& imageKImage,
         double dk, double stepk, boost::shared_ptr<Interpolant2d> kInterp,
         const GSParamsPtr& gsparams);
     template SBInterpolatedKImage::SBInterpolatedKImage(
-        const BaseImage<double>& realImage, const BaseImage<double>& imagImage,
+        const BaseImage<double>& realKImage, const BaseImage<double>& imageKImage,
         double dk, double stepk, boost::shared_ptr<Interpolant2d> kInterp,
         const GSParamsPtr& gsparams);
 
     template SBInterpolatedKImage::SBInterpolatedKImage(
-        const BaseImage<float>& realImage, const BaseImage<float>& imagImage,
+        const BaseImage<float>& realKImage, const BaseImage<float>& imageKImage,
         double dk, double stepk, boost::shared_ptr<Interpolant> kInterp,
         const GSParamsPtr& gsparams);
     template SBInterpolatedKImage::SBInterpolatedKImage(
-        const BaseImage<double>& realImage, const BaseImage<double>& imagImage,
+        const BaseImage<double>& realKImage, const BaseImage<double>& imageKImage,
         double dk, double stepk, boost::shared_ptr<Interpolant> kInterp,
         const GSParamsPtr& gsparams);
 
     template SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
-        const BaseImage<float>& realImage, const BaseImage<float>& imagImage,
+        const BaseImage<float>& realKImage, const BaseImage<float>& imageKImage,
         double dk, double stepk, boost::shared_ptr<Interpolant2d> kInterp,
         const GSParamsPtr& gsparams);
     template SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
-        const BaseImage<double>& realImage, const BaseImage<double>& imagImage,
+        const BaseImage<double>& realKImage, const BaseImage<double>& imageKImage,
         double dk, double stepk, boost::shared_ptr<Interpolant2d> kInterp,
         const GSParamsPtr& gsparams);
 

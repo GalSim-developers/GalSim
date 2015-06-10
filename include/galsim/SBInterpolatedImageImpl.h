@@ -183,7 +183,7 @@ namespace galsim {
             boost::shared_ptr<Interpolant2d> kInterp,
             const GSParamsPtr& gsparams);
 
-        // Alternative constructor used in serialization
+        // Alternative constructor used for serialization
         SBInterpolatedKImageImpl(
             const BaseImage<double>& data,
             double dk, double stepk, double maxk,
@@ -244,7 +244,7 @@ namespace galsim {
         double _maxk; ///< Stored value of maxK
         double _flux;
 
-        double _dk;
+        double _dk; ///< Pitch of stored KTable
         mutable bool _cenIsSet;
 
         std::string repr() const;
