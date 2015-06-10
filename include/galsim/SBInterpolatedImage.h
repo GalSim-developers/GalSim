@@ -29,30 +29,30 @@
 
 namespace galsim {
 
-    class SBInterpolated : public SBProfile
-    {
-    public:
+    // class SBInterpolated : public SBProfile
+    // {
+    // public:
 
-        /// @brief Copy Constructor.
-        SBInterpolated(const SBInterpolated& rhs);
+    //     /// @brief Copy Constructor.
+    //     SBInterpolated(const SBInterpolated& rhs);
 
-        /// @brief Destructor
-        ~SBInterpolated();
+    //     /// @brief Destructor
+    //     ~SBInterpolated();
 
-        boost::shared_ptr<Interpolant> getKInterp() const;
+    //     boost::shared_ptr<Interpolant> getKInterp() const;
 
-    protected:
+    // protected:
 
-        class SBInterpolatedImpl;
+    //     class SBInterpolatedImpl;
 
-        // Regular SBProfile pimpl constructor so as to be available to derived classes
-        SBInterpolated(SBProfileImpl* pimpl) : SBProfile(pimpl) {}
+    //     // Regular SBProfile pimpl constructor so as to be available to derived classes
+    //     SBInterpolated(SBProfileImpl* pimpl) : SBProfile(pimpl) {}
 
-    private:
+    // private:
 
-        // op= is undefined
-        void operator=(const SBInterpolated& rhs);
-    };
+    //     // op= is undefined
+    //     void operator=(const SBInterpolated& rhs);
+    // };
 
     /**
      * @brief Surface Brightness Profile represented by interpolation over one or more data
@@ -87,7 +87,7 @@ namespace galsim {
      * InterpolatedImage class takes care of converting between these units and the arcsec units
      * that are usually desired.
      */
-    class SBInterpolatedImage : public SBInterpolated
+    class SBInterpolatedImage : public SBProfile
     {
     public:
         /**
@@ -128,6 +128,7 @@ namespace galsim {
         ~SBInterpolatedImage();
 
         boost::shared_ptr<Interpolant> getXInterp() const;
+        boost::shared_ptr<Interpolant> getKInterp() const;
 
         /**
          * @brief Refine the value of stepK if the input image was larger than necessary.
@@ -156,7 +157,7 @@ namespace galsim {
         void operator=(const SBInterpolatedImage& rhs);
     };
 
-    class SBInterpolatedKImage : public SBInterpolated
+    class SBInterpolatedKImage : public SBProfile
     {
     public:
         /**
@@ -188,11 +189,11 @@ namespace galsim {
             boost::shared_ptr<Interpolant2d> kInterp,
             const GSParamsPtr& gsparams);
 
-        // @brief Ingest data in single "image". Used for pickling.  Note this is *not* a
-        // template since getKData only returns doubles.
+        // @brief Serialization constructor.
+        // Note this is *not* a template since getKData only returns doubles.
         SBInterpolatedKImage(
             const BaseImage<double>& data,
-            double dk, double stepk,
+            double dk, double stepk, double maxk,
             boost::shared_ptr<Interpolant> kInterp,
             double xcen, double ycen, bool cenIsSet,
             const GSParamsPtr& gsparams);
@@ -210,6 +211,8 @@ namespace galsim {
 
         /// @brief Destructor
         ~SBInterpolatedKImage();
+
+        boost::shared_ptr<Interpolant> getKInterp() const;
 
         ConstImageView<double> getKData() const;
         double dK() const;

@@ -97,20 +97,21 @@ namespace galsim {
             );
             pySBInterpolatedKImage
                 .def(bp::init<const BaseImage<double> &,
-                              double, double,
+                              double, double, double,
                               boost::shared_ptr<Interpolant>,
                               double, double, bool,
                               boost::shared_ptr<GSParams> >(
                                   (bp::arg("data"),
                                    bp::arg("dk"),
                                    bp::arg("stepk"),
+                                   bp::arg("maxk"),
                                    bp::arg("kInterp"),
                                    bp::arg("xcen"),
                                    bp::arg("ycen"),
                                    bp::arg("cenIsSet"),
                                    bp::arg("gsparams")=bp::object())
                      ))
-                .def("getKInterp", &SBInterpolatedImage::getKInterp)
+                .def("getKInterp", &SBInterpolatedKImage::getKInterp)
                 .def("dK", &SBInterpolatedKImage::dK)
                 .def("_cenIsSet", &SBInterpolatedKImage::cenIsSet)
                 .def("_getKData", &SBInterpolatedKImage::getKData)
