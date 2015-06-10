@@ -654,22 +654,6 @@ class InterpolatedKImage(GSObject):
                                -imag_kimage[bd].array[::-1,::-1])):
             raise ValueError("Real and Imag kimages must form a Hermitian complex matrix.")
 
-        # Check edges of input Images to see if gsparams.maxk_threshold criterion is met.  We
-        # can't actually know the values outside of the provide Images, of course, so this is
-        # only a warning.
-        if gsparams is None:
-            maxk_threshold = galsim.GSParams().maxk_threshold
-        else:
-            maxk_threshold = gsparams.maxk_threshold
-        edge = np.zeros_like(real_kimage.array, dtype=bool)
-        edge[[0,-1],:] = True # top and bottom
-        edge[:,[0,-1]] = True # left and right
-        edge_max = np.max(np.abs(real_kimage.array[edge] + 1j*imag_kimage.array[edge]))
-        if (edge_max / real_kimage.array.max()) > maxk_threshold:
-            import warnings
-            warnings.warn(
-                "Provided Real and Imag kimages do not meet GSParams.maxk_threshold criterion.")
-
         if stepk is None:
             stepk = real_kimage.scale
         else:
