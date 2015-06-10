@@ -1102,6 +1102,18 @@ def test_kround_trip():
         np.testing.assert_almost_equal(a.centroid().x, b.centroid().x, 4) #Fails at 5th decimal
         np.testing.assert_almost_equal(a.centroid().y, b.centroid().y, 4) #Fails at 5th decimal
 
+    # Test convolution with another object.
+    a = final
+    b = galsim.InterpolatedKImage(*a.drawKImage())
+    c = galsim.Kolmogorov(fwhm=0.8).shear(e1=0.01, e2=0.02).shift(0.01, 0.02)
+    a_conv_c = galsim.Convolve(a, c)
+    b_conv_c = galsim.Convolve(b, c)
+    a_conv_c_img = a_conv_c.drawImage()
+    b_conv_c_img = b_conv_c.drawImage(image=a_conv_c_img.copy())
+    # Fails at 6th decimal.
+    np.testing.assert_array_almost_equal(a_conv_c_img.array, b_conv_c_img.array, 5, 
+                                         "Convolution of InterpolatedKImage drawn incorrectly.")
+    
 if __name__ == "__main__":
     test_roundtrip()
     test_fluxnorm()
