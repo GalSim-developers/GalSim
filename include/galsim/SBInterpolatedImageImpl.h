@@ -26,55 +26,7 @@
 
 namespace galsim {
 
-    class SBInterpolated::SBInterpolatedImpl : public SBProfile::SBProfileImpl
-    {
-    public:
-
-        SBInterpolatedImpl(boost::shared_ptr<Interpolant2d> kInterp,
-                           double stepk, double maxk,
-                           const GSParamsPtr& gsparams);
-        ~SBInterpolatedImpl();
-
-        boost::shared_ptr<Interpolant> getKInterp() const;
-
-        bool isAxisymmetric() const { return false; }
-
-        // We'll use false here, but really, there's not an easy way to tell.
-        // Certainly an Image _could_ have hard edges.
-        bool hasHardEdges() const { return false; }
-
-        // This class will be set up so that both x and k domain values
-        // are found by interpolation of a table:
-        bool isAnalyticX() const { return true; }
-        bool isAnalyticK() const { return true; }
-
-        double maxK() const { return _maxk; }
-        double stepK() const { return _stepk; }
-
-        //Overrides for better efficiency
-
-        double getFlux() const { return _flux; }
-
-    protected:
-
-        boost::shared_ptr<Interpolant2d> _kInterp; ///< Interpolant used in k space.
-
-        mutable double _stepk; ///< Stored value of stepK
-        mutable double _maxk; ///< Stored value of maxK
-
-        mutable boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
-
-        double _flux;
-
-    private:
-
-        // Copy constructor and op= are undefined.
-        SBInterpolatedImpl(const SBInterpolatedImpl& rhs);
-        void operator=(const SBInterpolatedImpl& rhs);
-    };
-
-
-    class SBInterpolatedImage::SBInterpolatedImageImpl : public SBInterpolated::SBInterpolatedImpl
+    class SBInterpolatedImage::SBInterpolatedImageImpl : public SBProfile::SBProfileImpl
     {
     public:
 
@@ -87,32 +39,37 @@ namespace galsim {
 
         ~SBInterpolatedImageImpl();
 
+        ////////////////////////////////////////////////////////////////////////
+        // Methods of SBProfileImpl that are overriden/implemented in this subclass:
+
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& p) const;
-        boost::shared_ptr<Interpolant> getXInterp() const;
 
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double kx0, double dkx, int izero,
-                        double ky0, double dky, int jzero) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double kx0, double dkx, double dkxy,
-                        double ky0, double dky, double dkyx) const;
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
 
-        ConstImageView<double> getImage() const;
-
-        void calculateMaxK(double max_stepk) const;
-        void calculateStepK(double max_maxk) const;
-
-        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const;
-        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const;
-
+        double maxK() const { return _maxk; }
+        double stepK() const { return _stepk; }
+        bool isAxisymmetric() const { return false; }
+        // We'll use false here, but really, there's not an easy way to tell.
+        // Certainly an Image _could_ have hard edges.
+        bool hasHardEdges() const { return false; }
+        // This class will be set up so that both x and k domain values
+        // are found by interpolation of a table:
+        bool isAnalyticX() const { return true; }
+        bool isAnalyticK() const { return true; }
         Position<double> centroid() const;
+        double getFlux() const { return _flux; }
 
         /**
          *
@@ -139,21 +96,40 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;
 
-        double calculateFlux() const;
+        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const;
+        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const;
 
         double getPositiveFlux() const { checkReadyToShoot(); return _positiveFlux; }
         double getNegativeFlux() const { checkReadyToShoot(); return _negativeFlux; }
 
+
+        //////////////////////////////
+        // Additional subclass methods
+
+        boost::shared_ptr<Interpolant> getXInterp() const;
+        boost::shared_ptr<Interpolant> getKInterp() const;
+        ConstImageView<double> getImage() const;
+
+        void calculateMaxK(double max_stepk) const;
+        void calculateStepK(double max_maxk) const;
+
+        double calculateFlux() const;
+
     protected:  // Made protected so that these can be used in the derived CorrelationFunction class
 
-        int Ninitial;
-        int Nk;
-        Bounds<int> init_bounds;
-        double xcentroid;
-        double ycentroid;
+        int _Ninitial;
+        int _Nk;
+        Bounds<int> _init_bounds;
+        double _xcentroid;
+        double _ycentroid;
 
         boost::shared_ptr<Interpolant2d> _xInterp; ///< Interpolant used in real space.
+        boost::shared_ptr<Interpolant2d> _kInterp; ///< Interpolant used in k space.
         boost::shared_ptr<XTable> _xtab; ///< Final padded real-space image.
+        mutable boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
+        mutable double _stepk;
+        mutable double _maxk;
+        double _flux;
 
         double _maxk1; ///< maxk based just on the xInterp urange
         double _uscale; ///< conversion from k to u for xInterpolant
@@ -195,8 +171,7 @@ namespace galsim {
     };
 
 
-    class SBInterpolatedKImage::SBInterpolatedKImageImpl :
-        public SBInterpolated::SBInterpolatedImpl
+    class SBInterpolatedKImage::SBInterpolatedKImageImpl : public SBProfile::SBProfileImpl
     {
     public:
 
@@ -208,8 +183,21 @@ namespace galsim {
             boost::shared_ptr<Interpolant2d> kInterp,
             const GSParamsPtr& gsparams);
 
+        // Alternative constructor used for serialization
+        SBInterpolatedKImageImpl(
+            const BaseImage<double>& data,
+            double dk, double stepk, double maxk,
+            boost::shared_ptr<Interpolant2d> kInterp,
+            double xcen, double ycen, bool cenIsSet,
+            const GSParamsPtr& gsparams);
+
         ~SBInterpolatedKImageImpl();
 
+        ////////////////////////////////////////////////////////////////////////////
+        // Methods of SBProfileImpl that are overriden/implemented in this subclass:
+
+        double xValue(const Position<double>& p) const
+        { throw SBError("SBInterpolatedKImage::xValue() is not implemented"); }
         std::complex<double> kValue(const Position<double>& p) const;
         // void fillKValue(tmv::MatrixView<std::complex<double> > val,
         //                 double kx0, double dkx, int izero,
@@ -218,25 +206,48 @@ namespace galsim {
         //                 double kx0, double dkx, double dkxy,
         //                 double ky0, double dky, double dkyx) const;
 
-        ConstImageView<double> getRealKImage() const;
-        ConstImageView<double> getImagKImage() const;
+        boost::shared_ptr<Interpolant> getKInterp() const;
 
-        double xValue(const Position<double>& p) const
-        { throw SBError("SBInterpolatedKImage::xValue() is not implemented"); }
-
+        double maxK() const { return _maxk; }
+        double stepK() const { return _stepk; }
+        bool isAxisymmetric() const { return false; }
+        // We'll use false here, but really, there's not an easy way to tell.
+        // Certainly an Image _could_ have hard edges.
+        bool hasHardEdges() const { return false; }
+        // This class will be set up so that k domain values are found by interpolation of
+        // a table.  We do not currently implement xValue for real-space interpolation.
+        bool isAnalyticX() const { return false; }
+        bool isAnalyticK() const { return true; }
         Position<double> centroid() const;
-
+        double getFlux() const { return _flux; }
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const
         { throw SBError("SBInterpolatedKImage::shoot() is not implemented"); }
 
-    protected:  // Made protected so that these can be used in the derived CorrelationFunction class
+
+        //////////////////////////////
+        // Additional subclass methods
+
+        ConstImageView<double> getKData() const;
+        double dK() const {return _dk;}
+        bool cenIsSet() const {return _cenIsSet;}
+
+    protected:
+
+        int _Ninitial;
+        int _Nk;
+        mutable double _xcentroid;
+        mutable double _ycentroid;
+
+        boost::shared_ptr<Interpolant2d> _kInterp; ///< Interpolant used in k space.
+        boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
+        double _stepk; ///< Stored value of stepK
+        double _maxk; ///< Stored value of maxK
+        double _flux;
+
+        double _dk; ///< Pitch of stored KTable
+        mutable bool _cenIsSet;
 
         std::string repr() const;
-        double _dk;
-        int Ninitial;
-        int Nk;
-        mutable double xcentroid;
-        mutable double ycentroid;
 
     private:
 

@@ -29,31 +29,6 @@
 
 namespace galsim {
 
-    class SBInterpolated : public SBProfile
-    {
-    public:
-
-        /// @brief Copy Constructor.
-        SBInterpolated(const SBInterpolated& rhs);
-
-        /// @brief Destructor
-        ~SBInterpolated();
-
-        boost::shared_ptr<Interpolant> getKInterp() const;
-
-    protected:
-
-        class SBInterpolatedImpl;
-
-        // Regular SBProfile pimpl constructor so as to be available to derived classes
-        SBInterpolated(SBProfileImpl* pimpl) : SBProfile(pimpl) {}
-
-    private:
-
-        // op= is undefined
-        void operator=(const SBInterpolated& rhs);
-    };
-
     /**
      * @brief Surface Brightness Profile represented by interpolation over one or more data
      * tables/images.
@@ -72,7 +47,7 @@ namespace galsim {
      * and the interpolation scheme.  See Interpolant.h for more about the different
      * kind of interpolation.
      *
-     * You can provide different interpolation schemes for real and fourier space
+     * You can provide different interpolation schemes for real and Fourier space
      * (passed as xInterp and kInterp respectively).  These are required, but there are
      * sensible defaults in the python layer wrapper class, InterpolatedImage.
      *
@@ -87,14 +62,14 @@ namespace galsim {
      * InterpolatedImage class takes care of converting between these units and the arcsec units
      * that are usually desired.
      */
-    class SBInterpolatedImage : public SBInterpolated
+    class SBInterpolatedImage : public SBProfile
     {
     public:
         /**
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D
          * image.
          *
-         * @param[in] image       Input Image (any of ImageF, ImageD, ImageS, ImageI).
+         * @param[in] image       Input Image (ImageF or ImageD).
          * @param[in] xInterp     Interpolation scheme to adopt between pixels
          * @param[in] kInterp     Interpolation scheme to adopt in k-space
          * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
@@ -128,6 +103,7 @@ namespace galsim {
         ~SBInterpolatedImage();
 
         boost::shared_ptr<Interpolant> getXInterp() const;
+        boost::shared_ptr<Interpolant> getKInterp() const;
 
         /**
          * @brief Refine the value of stepK if the input image was larger than necessary.
@@ -151,26 +127,20 @@ namespace galsim {
 
         class SBInterpolatedImageImpl;
 
-        // Wow, three classes here... I'm not even sure how this works,
-        // but the tests seem to pass...
-        SBInterpolatedImage(SBProfileImpl* pimpl) : SBInterpolated(pimpl) {}
-
     private:
         // op= is undefined
         void operator=(const SBInterpolatedImage& rhs);
     };
 
-    class SBInterpolatedKImage : public SBInterpolated
+    class SBInterpolatedKImage : public SBProfile
     {
     public:
         /**
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D
          * image.
          *
-         * @param[in] realKImage  Real part of input Fourier-space Image
-         *                        (any of ImageF, ImageD, ImageS, ImageI).
-         * @param[in] imagKImage  Imaginary part of input Fourier-space Image
-         *                        (any of ImageF, ImageD, ImageS, ImageI).
+         * @param[in] realKImage  Real part of input Fourier-space Image (ImageF or ImageD).
+         * @param[in] imagKImage  Imaginary part of input Fourier-space Image (ImageF or ImageD).
          * @param[in] dk          Pitch of Fourier-space image.
          * @param[in] stepk       If > 0, force stepk to this value.
          * @param[in] kInterp     Interpolation scheme to adopt in k-space
@@ -179,8 +149,8 @@ namespace galsim {
          */
         template <typename T>
         SBInterpolatedKImage(
-            const BaseImage<T>& realImage,
-            const BaseImage<T>& imagImage,
+            const BaseImage<T>& realKImage,
+            const BaseImage<T>& imagKImage,
             double dk, double stepk,
             boost::shared_ptr<Interpolant> kInterp,
             const GSParamsPtr& gsparams);
@@ -188,10 +158,19 @@ namespace galsim {
         /// @brief Same as above, but take 2-d interpolants.
         template <typename T>
         SBInterpolatedKImage(
-            const BaseImage<T>& realImage,
-            const BaseImage<T>& imagImage,
+            const BaseImage<T>& realKImage,
+            const BaseImage<T>& imagKImage,
             double dk, double stepk,
             boost::shared_ptr<Interpolant2d> kInterp,
+            const GSParamsPtr& gsparams);
+
+        // @brief Serialization constructor.
+        // Note this is *not* a template since getKData only returns doubles.
+        SBInterpolatedKImage(
+            const BaseImage<double>& data,
+            double dk, double stepk, double maxk,
+            boost::shared_ptr<Interpolant> kInterp,
+            double xcen, double ycen, bool cenIsSet,
             const GSParamsPtr& gsparams);
 
         /// @brief Copy Constructor.
@@ -200,16 +179,15 @@ namespace galsim {
         /// @brief Destructor
         ~SBInterpolatedKImage();
 
-        ConstImageView<double> getRealKImage() const;
-        ConstImageView<double> getImagKImage() const;
+        boost::shared_ptr<Interpolant> getKInterp() const;
+
+        ConstImageView<double> getKData() const;
+        double dK() const;
+        bool cenIsSet() const;
 
     protected:
 
         class SBInterpolatedKImageImpl;
-
-        // Wow, three classes here... I'm not even sure how this works,
-        // but the tests seem to pass...
-        SBInterpolatedKImage(SBProfileImpl* pimpl) : SBInterpolated(pimpl) {}
 
     private:
         // op= is undefined

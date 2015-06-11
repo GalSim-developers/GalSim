@@ -1044,11 +1044,11 @@ def test_kround_trip():
     # Check picklability
     do_pickle(b)
     do_pickle(b, lambda x: x.drawImage())
-    # do_pickle(b.SBProfile)
-    # do_pickle(b.SBProfile, lambda x: repr(x))
+    do_pickle(b.SBProfile)
+    do_pickle(b.SBProfile, lambda x: repr(x))
 
     for kx, ky in zip(KXVALS, KYVALS):
-        np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 2,
+        np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 3,
             err_msg=("InterpolatedKImage evaluated incorrectly at ({:0},{:1})"
                      .format(kx, ky)))
 
@@ -1076,7 +1076,7 @@ def test_kround_trip():
 
         np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
         img_b = b.drawImage(img_a.copy())
-        # One of these fails in 0.02% of pixels at 6th decimal
+        # One of these fails at 6th decimal
         np.testing.assert_array_almost_equal(img_a.array, img_b.array, 5)
 
     # Try some additional transformations:
@@ -1089,10 +1089,9 @@ def test_kround_trip():
                                          "Transformed InterpolatedKImage image drawn incorrectly.")
 
     # Does the stepk parameter do anything?
-    a = a.original
+    a = final
     b = galsim.InterpolatedKImage(*a.drawKImage())
-    stepk = 2 * b.stepK()
-    c = galsim.InterpolatedKImage(*a.drawKImage(), stepk=stepk)
+    c = galsim.InterpolatedKImage(*a.drawKImage(), stepk=2*b.stepK())
     np.testing.assert_almost_equal(2*b.stepK(), c.stepK())
     np.testing.assert_almost_equal(b.maxK(), c.maxK())
 
@@ -1101,7 +1100,19 @@ def test_kround_trip():
         a = final.shift(dx, dy)
         b = galsim.InterpolatedKImage(*a.drawKImage())
         np.testing.assert_almost_equal(a.centroid().x, b.centroid().x, 4) #Fails at 5th decimal
-        np.testing.assert_almost_equal(a.centroid().y, b.centroid().y, 4) #Fails at 5th decimal
+        np.testing.assert_almost_equal(a.centroid().y, b.centroid().y, 4)
+
+    # Test convolution with another object.
+    a = final
+    b = galsim.InterpolatedKImage(*a.drawKImage())
+    c = galsim.Kolmogorov(fwhm=0.8).shear(e1=0.01, e2=0.02).shift(0.01, 0.02)
+    a_conv_c = galsim.Convolve(a, c)
+    b_conv_c = galsim.Convolve(b, c)
+    a_conv_c_img = a_conv_c.drawImage()
+    b_conv_c_img = b_conv_c.drawImage(image=a_conv_c_img.copy())
+    # Fails at 6th decimal.
+    np.testing.assert_array_almost_equal(a_conv_c_img.array, b_conv_c_img.array, 5,
+                                         "Convolution of InterpolatedKImage drawn incorrectly.")
 
 if __name__ == "__main__":
     test_roundtrip()
