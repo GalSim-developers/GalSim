@@ -30,7 +30,7 @@ import copy
 
 import galsim
 
-def get_multiplier(sed, bandpass, wave_list):
+def _get_multiplier(sed, bandpass, wave_list):
     wave_list = np.array(wave_list)
     if len(wave_list) > 0:
         multiplier = np.trapz(sed(wave_list) * bandpass(wave_list), wave_list)
@@ -39,9 +39,9 @@ def get_multiplier(sed, bandpass, wave_list):
                                         bandpass.blue_limit, bandpass.red_limit)
     return multiplier
 
-multiplier_cache = galsim.utilities.LRU_Cache(get_multiplier, maxsize=10)
+_multiplier_cache = galsim.utilities.LRU_Cache(_get_multiplier, maxsize=10)
 
-def get_effective_profile(sep_SED, insep_profs, bandpass,
+def _get_effective_profile(sep_SED, insep_profs, bandpass,
                           iimult, wave_list, wmult, integrator,
                           gsparams):
         # Collapse inseparable profiles into one effective profile
@@ -69,14 +69,10 @@ def get_effective_profile(sep_SED, insep_profs, bandpass,
                     insep_obj, effective_bandpass, wmult=wmult, scale=iiscale,
                     integrator=integrator, method='no_pixel')
 
-        # Image -> InterpolatedImage
-        # It could be useful to cache this result if drawing more than one object with the same
-        # PSF+SED combination.  This naturally happens in a ring test or when fitting the
-        # parameters of a galaxy profile to an image when the PSF is constant.
         effective_prof = galsim.InterpolatedImage(effective_prof_image, gsparams=gsparams)
         return effective_prof
 
-effective_prof_cache = galsim.utilities.LRU_Cache(get_effective_profile, maxsize=10)
+_effective_prof_cache = galsim.utilities.LRU_Cache(_get_effective_profile, maxsize=10)
 
 
 class ChromaticObject(object):
@@ -133,18 +129,21 @@ class ChromaticObject(object):
     #    profile at a particular wavelength.
     # 2) Define a `withScaledFlux` method, which scales the flux at all wavelengths by a fixed
     #    multiplier.
-    # 3) Initialize a `separable` attribute.  This marks whether (`separable = True`) or not
+    # 3) Potentially define their own `__repr__` and `__str__` methods.  Note that the default
+    #    assumes that `.obj` is the only attribute of significance, but this isn't always
+    #    appropriate, (e.g. ChromaticSum, ChromaticConvolution).
+    # 4) Initialize a `separable` attribute.  This marks whether (`separable = True`) or not
     #    (`separable = False`) the given chromatic profile can be factored into a spatial profile
     #    and a spectral profile.  Separable profiles can be drawn quickly by evaluating at a single
     #    wavelength and adjusting the flux via a (fast) 1D integral over the spectral component.
     #    Inseparable profiles, on the other hand, need to be evaluated at multiple wavelengths
     #    in order to draw (slow).
-    # 4) Separable objects must initialize an `SED` attribute, which is a callable object (often a
+    # 5) Separable objects must initialize an `SED` attribute, which is a callable object (often a
     #    `galsim.SED` instance) that returns the _relative_ flux of the profile at a given
     #    wavelength. (The _absolute_ flux is controlled by both the `SED` and the `.flux` attribute
     #    of the underlying chromaticized GSObject(s).  See `galsim.Chromatic` docstring for details
     #    concerning normalization.)
-    # 5) Initialize a `wave_list` attribute, which specifies wavelengths at which the profile (or
+    # 6) Initialize a `wave_list` attribute, which specifies wavelengths at which the profile (or
     #    the SED in the case of separable profiles) will be evaluated when drawing a
     #    ChromaticObject.  The type of `wave_list` should be a numpy array, and may be empty, in
     #    which case either the Bandpass object being drawn against, or the integrator being used
@@ -314,12 +313,7 @@ class ChromaticObject(object):
         wave_list = self._getCombinedWaveList(bandpass)
 
         if self.separable:
-            multiplier = multiplier_cache(self.SED, bandpass, tuple(wave_list))
-            # if len(wave_list) > 0:
-            #     multiplier = np.trapz(self.SED(wave_list) * bandpass(wave_list), wave_list)
-            # else:
-            #     multiplier = galsim.integ.int1d(lambda w: self.SED(w) * bandpass(w),
-            #                                     bandpass.blue_limit, bandpass.red_limit)
+            multiplier = _multiplier_cache(self.SED, bandpass, tuple(wave_list))
             prof0 *= multiplier/self.SED(bandpass.effective_wavelength)
             image = prof0.drawImage(image=image, **kwargs)
             return image
@@ -838,8 +832,8 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Finally, now that we have an image scale and size, draw all the images.  Note that
         # `no_pixel` is used (we want the object on its own, without a pixel response).
-        self.ims = [ obj.drawImage(scale=scale, nx=im_size, ny=im_size, method='no_pixel') \
-                         for obj in objs ]
+        self.ims = [ obj.drawImage(scale=scale, nx=im_size, ny=im_size, method='no_pixel')
+                     for obj in objs ]
 
     def __repr__(self):
         s = 'galsim.InterpolatedChromaticObject(%r,%r'%(self.original, self.waves)
@@ -1861,45 +1855,16 @@ class ChromaticConvolution(ChromaticObject):
         # ChromaticObject.drawImage() above.
 
         wmult = kwargs.get('wmult', 1)
-        effective_prof = effective_prof_cache(tuple(sep_SED), tuple(insep_profs), bandpass,
-                                              iimult, tuple(wave_list), wmult, integrator,
-                                              self.gsparams)
-        # # Collapse inseparable profiles into one effective profile
-        # SED = lambda w: reduce(lambda x,y:x*y, [s(w) for s in sep_SED], 1)
-        # insep_obj = galsim.Convolve(insep_profs, gsparams=self.gsparams)
-        # # Find scale at which to draw effective profile
-        # iiscale = insep_obj.evaluateAtWavelength(bandpass.effective_wavelength).nyquistScale()
-        # if iimult is not None:
-        #     iiscale /= iimult
-        # # Create the effective bandpass.
-        # wave_list = np.union1d(wave_list, bandpass.wave_list)
-        # wave_list = wave_list[wave_list >= bandpass.blue_limit]
-        # wave_list = wave_list[wave_list <= bandpass.red_limit]
-        # effective_bandpass = galsim.Bandpass(
-        #     galsim.LookupTable(wave_list, bandpass(wave_list) * SED(wave_list),
-        #                        interpolant='linear'))
-        # # If there's only one inseparable profile, let it draw itself.
-        # if len(insep_profs) == 1:
-        #     effective_prof_image = insep_profs[0].drawImage(
-        #         effective_bandpass, wmult=wmult, scale=iiscale, integrator=integrator,
-        #         method='no_pixel')
-        # # Otherwise, use superclass ChromaticObject to draw convolution of inseparable profiles.
-        # else:
-        #     effective_prof_image = ChromaticObject.drawImage(
-        #             insep_obj, effective_bandpass, wmult=wmult, scale=iiscale,
-        #             integrator=integrator, method='no_pixel')
-
-        # # Image -> InterpolatedImage
-        # # It could be useful to cache this result if drawing more than one object with the same
-        # # PSF+SED combination.  This naturally happens in a ring test or when fitting the
-        # # parameters of a galaxy profile to an image when the PSF is constant.
-        # effective_prof = galsim.InterpolatedImage(effective_prof_image, gsparams=self.gsparams)
+        # Collapse inseparable profiles into one effective profile
+        effective_prof = _effective_prof_cache(tuple(sep_SED), tuple(insep_profs), bandpass,
+                                               iimult, tuple(wave_list), wmult, integrator,
+                                               self.gsparams)
 
         # append effective profile to separable profiles (which should all be GSObjects)
         sep_profs.append(effective_prof)
         # finally, convolve and draw.
         final_prof = galsim.Convolve(sep_profs, gsparams=self.gsparams)
-        return final_prof.drawImage(image=image,**kwargs)
+        return final_prof.drawImage(image=image, **kwargs)
 
 
 class ChromaticDeconvolution(ChromaticObject):
