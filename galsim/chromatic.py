@@ -273,11 +273,17 @@ class ChromaticObject(object):
 
         By default, the above two integrators will use the trapezoidal rule for integration.  The
         midpoint rule for integration can be specified instead by passing an integrator that has
-        been initialized with the `rule=galsim.integ.midpt` argument.  Finally, when creating a
+        been initialized with the `rule=galsim.integ.midpt` argument.  When creating a
         ContinuousIntegrator, the number of samples `N` is also an argument.  For example:
 
             >>> integrator = galsim.ContinuousIntegrator(rule=galsim.integ.midpt, N=100)
             >>> image = chromatic_obj.drawImage(bandpass, integrator=integrator)
+
+        Finally, this method uses a cache to avoid recomputing the integral over the product of
+        the bandpass and object SED when possible (i.e., for separable profiles).  Because the
+        cache size is finite, users may find that it is more efficient when drawing many images
+        to group images using the same SEDs and bandpasses together in order to hit the cache more
+        often.
 
         @param bandpass         A Bandpass object representing the filter against which to
                                 integrate.
@@ -1735,6 +1741,13 @@ class ChromaticConvolution(ChromaticObject):
 
         Works by finding sums of profiles which include separable portions, which can then be
         integrated before doing any convolutions, which are pushed to the end.
+
+        This method uses a cache to avoid recomputing 'effective' profiles, which are the 
+        wavelength-integrated products of inseparable profiles, the spectral components of 
+        separable profiles, and the bandpass.  Because the cache size is finite, users may find 
+        that it is more efficient when drawing many images to group images using the same 
+        SEDs, bandpasses, and inseparable profiles (generally PSFs) together in order to hit the 
+        cache more often.
 
         @param bandpass         A Bandpass object representing the filter against which to
                                 integrate.
