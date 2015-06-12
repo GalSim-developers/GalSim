@@ -28,12 +28,12 @@ API Changes
   issue, and we can add them back. (#218)
 - Made all returned matrices consistently use numpy.array, rather than
   numpy.matrix.  We had been inconsistent with which type different functions
-  returned, so now all matrices are numpy.arrays.  If you rely on the 
+  returned, so now all matrices are numpy.arrays.  If you rely on the
   numpy.matrix behavior, you should recast with numpy.asmatrix(M). (#218)
-- Deprecated CorrelatedNoise.calculateCovarianceMatrix, since it is not used 
+- Deprecated CorrelatedNoise.calculateCovarianceMatrix, since it is not used
   anywhere, and we think no one really has a need for it. (#630)
 - Officially deprecated the methods and functions that had been described as
-  having been removed or changed to a different name.  In fact, many of them 
+  having been removed or changed to a different name.  In fact, many of them
   had been still valid, but no longer documented.  This was intentional to
   allow people time to change their code.  Now these methods are officially
   deprecated and will emit a warning message if used. (#643)
@@ -49,14 +49,14 @@ New Features
 
 - Made all GalSim objects picklable unless they use fundamentally unpicklable
   things such as lambda expressions.  Also gave objects better str and repr
-  representations (str(obj) should be descriptive, but relatively succinct, 
+  representations (str(obj) should be descriptive, but relatively succinct,
   and repr(obj) should be unambiguous).  Also made __eq__, __ne__, and __hash__
   work better. (#218)
 - Added ability to set the zeropoint of a bandpass on construction.  (Only
   a numeric value; more complicated calculations still need to use the method
   `bandpass.withZeropoint()`.) (#218)
 - Added ability to set the redshift of an SED on construction. (#218)
-- Updated CorrelatedNoise to work with images that have a non-trivial WCS. 
+- Updated CorrelatedNoise to work with images that have a non-trivial WCS.
   (#501)
 - Added new methods of the image class to simulate detector effects:
   inter-pixel capacitance (#555) and image quantization (#558).
@@ -80,7 +80,7 @@ New Features
   rendering process compared to brute force evaluation for chromatic objects
   with basic properties that are wavelength-dependent. (#618)
 - Added new `ChromaticAiry` and `ChromaticOpticalPSF` classes for representing
-  optical PSFs.  These new classes allow the diffraction effects and (in the 
+  optical PSFs.  These new classes allow the diffraction effects and (in the
   latter case) aberrations to be wavelength-dependent. (#618)
 - Enable initializing a DES_PSFEx object using a pyfits HDU directly instead
   of a filename. (#626)
@@ -100,7 +100,7 @@ Bug Fixes and Improvements
 - Fixed a bug in UncorrelatedNoise where the variance was set incorrectly.
   (#630)
 - Changed the implementation of drawing Box and Pixel profiles in real space
-  (i.e. without being convolved by anything) to actually draw the surface 
+  (i.e. without being convolved by anything) to actually draw the surface
   brightness at the center of each pixel.  This is what all other profiles do,
   but had not been what a Box or Pixel did. (#639)
 - Fixed a bug where InterpolatedImage and Box profiles were not correctly
@@ -108,7 +108,8 @@ Bug Fixes and Improvements
 - Fixed a bug in rendering profiles that involve two separate shifts. (#645)
 - Fixed a bug if drawImage was given odd nx, ny parameters, the drawn profile
   was not correctly centered in the image. (#645)
-
+- Added intermediate results cache to `ChromaticObject.drawImage` and
+  `ChromaticConvolution.drawImage`
 
 Updates to config options
 -------------------------
@@ -116,4 +117,3 @@ Updates to config options
 - Added Spergel type. (#616)
 - Added lam, diam, scale_units options to Airy and OpticalPSF types. (#618)
 - Added TopHat type. (#639)
-
