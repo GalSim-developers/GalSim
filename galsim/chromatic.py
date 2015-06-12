@@ -30,6 +30,55 @@ import copy
 
 import galsim
 
+def get_multiplier(sed, bandpass, wave_list):
+    wave_list = np.array(wave_list)
+    if len(wave_list) > 0:
+        multiplier = np.trapz(sed(wave_list) * bandpass(wave_list), wave_list)
+    else:
+        multiplier = galsim.integ.int1d(lambda w: sed(w) * bandpass(w),
+                                        bandpass.blue_limit, bandpass.red_limit)
+    return multiplier
+
+multiplier_cache = galsim.utilities.LRU_Cache(get_multiplier, maxsize=10)
+
+def get_effective_profile(sep_SED, insep_profs, bandpass,
+                          iimult, wave_list, wmult, integrator,
+                          gsparams):
+        # Collapse inseparable profiles into one effective profile
+        SED = lambda w: reduce(lambda x,y:x*y, [s(w) for s in sep_SED], 1)
+        insep_obj = galsim.Convolve(insep_profs, gsparams=gsparams)
+        # Find scale at which to draw effective profile
+        iiscale = insep_obj.evaluateAtWavelength(bandpass.effective_wavelength).nyquistScale()
+        if iimult is not None:
+            iiscale /= iimult
+        # Create the effective bandpass.
+        wave_list = np.union1d(wave_list, bandpass.wave_list)
+        wave_list = wave_list[wave_list >= bandpass.blue_limit]
+        wave_list = wave_list[wave_list <= bandpass.red_limit]
+        effective_bandpass = galsim.Bandpass(
+            galsim.LookupTable(wave_list, bandpass(wave_list) * SED(wave_list),
+                               interpolant='linear'))
+        # If there's only one inseparable profile, let it draw itself.
+        if len(insep_profs) == 1:
+            effective_prof_image = insep_profs[0].drawImage(
+                effective_bandpass, wmult=wmult, scale=iiscale, integrator=integrator,
+                method='no_pixel')
+        # Otherwise, use superclass ChromaticObject to draw convolution of inseparable profiles.
+        else:
+            effective_prof_image = ChromaticObject.drawImage(
+                    insep_obj, effective_bandpass, wmult=wmult, scale=iiscale,
+                    integrator=integrator, method='no_pixel')
+
+        # Image -> InterpolatedImage
+        # It could be useful to cache this result if drawing more than one object with the same
+        # PSF+SED combination.  This naturally happens in a ring test or when fitting the
+        # parameters of a galaxy profile to an image when the PSF is constant.
+        effective_prof = galsim.InterpolatedImage(effective_prof_image, gsparams=gsparams)
+        return effective_prof
+
+effective_prof_cache = galsim.utilities.LRU_Cache(get_effective_profile, maxsize=10)
+
+
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
 
@@ -212,7 +261,7 @@ class ChromaticObject(object):
 
         The task of drawImage() in a chromatic context is to integrate a chromatic surface
         brightness profile multiplied by the throughput of `bandpass`, over the wavelength interval
-        indicated by `bandpass`.  
+        indicated by `bandpass`.
 
         Several integrators are available in galsim.integ to do this integration when using the
         first method (non-interpolated integration).  By default,
@@ -265,11 +314,12 @@ class ChromaticObject(object):
         wave_list = self._getCombinedWaveList(bandpass)
 
         if self.separable:
-            if len(wave_list) > 0:
-                multiplier = np.trapz(self.SED(wave_list) * bandpass(wave_list), wave_list)
-            else:
-                multiplier = galsim.integ.int1d(lambda w: self.SED(w) * bandpass(w),
-                                                bandpass.blue_limit, bandpass.red_limit)
+            multiplier = multiplier_cache(self.SED, bandpass, tuple(wave_list))
+            # if len(wave_list) > 0:
+            #     multiplier = np.trapz(self.SED(wave_list) * bandpass(wave_list), wave_list)
+            # else:
+            #     multiplier = galsim.integ.int1d(lambda w: self.SED(w) * bandpass(w),
+            #                                     bandpass.blue_limit, bandpass.red_limit)
             prof0 *= multiplier/self.SED(bandpass.effective_wavelength)
             image = prof0.drawImage(image=image, **kwargs)
             return image
@@ -520,8 +570,8 @@ class ChromaticObject(object):
         the appropriate change in area, either use shear() with magnify(), or use lens(), which
         combines both operations.
 
-        Note that, while gravitational shear is monochromatic, the shear method may be used for 
-        many other use cases including some which may be wavelength-dependent, such as 
+        Note that, while gravitational shear is monochromatic, the shear method may be used for
+        many other use cases including some which may be wavelength-dependent, such as
         intrinsic galaxy shape, telescope dilation, atmospheric PSF shape, etc.  Thus, the
         shear argument is allowed to be a function of wavelength like other transformations.
 
@@ -566,7 +616,7 @@ class ChromaticObject(object):
 
         While gravitational lensing is achromatic, we do allow the parameters `g1`, `g2`, and `mu`
         to be callable functions to be parallel to all the other transformations of chromatic
-        objects.  In this case, the functions should take the wavelength in nanometers as the 
+        objects.  In this case, the functions should take the wavelength in nanometers as the
         argument, and the return values are the corresponding value at that wavelength.
 
         @param g1       First component of lensing (reduced) shear to apply to the object.
@@ -721,7 +771,7 @@ class InterpolatedChromaticObject(ChromaticObject):
     Any ChromaticObject can be used, although the interpolation procedure is most effective
     for non-separable objects, which can sometimes be very slow to render.
 
-    Normally, you would not create an InterpolatedChromaticObject directly.  It is the 
+    Normally, you would not create an InterpolatedChromaticObject directly.  It is the
     return type from `chrom_obj.interpolate()`.  See the description of that function
     for more details.
 
@@ -739,7 +789,7 @@ class InterpolatedChromaticObject(ChromaticObject):
                             whichever wavelength has the highest Nyquist frequency.
                             `oversample_fac`>1 results in higher accuracy but costlier
                             pre-computations (more memory and time). [default: 1]
-    """ 
+    """
     def __init__(self, obj, waves, oversample_fac=1.0):
 
         self.separable = obj.separable
@@ -926,7 +976,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         images at the specified wavelengths.
 
         This integration will take place using interpolation between stored images that were
-        setup when the object was constructed.  (See interpolate() for more details.) 
+        setup when the object was constructed.  (See interpolate() for more details.)
 
         @param bandpass         A Bandpass object representing the filter against which to
                                 integrate.
@@ -1110,7 +1160,7 @@ class ChromaticAtmosphere(ChromaticObject):
         @returns the drawn Image.
         """
         return self.build_obj().drawImage(bandpass, image, integrator, **kwargs)
- 
+
 
 class Chromatic(ChromaticObject):
     """Construct chromatic versions of galsim GSObjects.
@@ -1191,7 +1241,7 @@ class ChromaticTransformation(ChromaticObject):
     Typically, you do not need to construct a ChromaticTransformation object explicitly.
     This is the type returned by the various transformation methods of ChromaticObject such as
     shear(), rotate(), shift(), transform(), etc.  All the various transformations can be described
-    as a combination of transform() and shift(), which are described by (dudx,dudy,dvdx,dvdy) and 
+    as a combination of transform() and shift(), which are described by (dudx,dudy,dvdx,dvdy) and
     (dx,dy) respectively.
 
     @param obj              The object to be transformed.
@@ -1230,7 +1280,7 @@ class ChromaticTransformation(ChromaticObject):
             self._jac = jac
             self._offset = offset
             self._flux_ratio = flux_ratio
-            
+
         elif isinstance(obj, ChromaticTransformation):
             self.original = obj.original
             if hasattr(jac, '__call__'):
@@ -1810,37 +1860,41 @@ class ChromaticConvolution(ChromaticObject):
         # insep_profs should never be empty, since separable cases were farmed out to
         # ChromaticObject.drawImage() above.
 
-        # Collapse inseparable profiles into one effective profile
-        SED = lambda w: reduce(lambda x,y:x*y, [s(w) for s in sep_SED], 1)
-        insep_obj = galsim.Convolve(insep_profs, gsparams=self.gsparams)
-        # Find scale at which to draw effective profile
-        iiscale = insep_obj.evaluateAtWavelength(bandpass.effective_wavelength).nyquistScale()
-        if iimult is not None:
-            iiscale /= iimult
-        # Create the effective bandpass.
-        wave_list = np.union1d(wave_list, bandpass.wave_list)
-        wave_list = wave_list[wave_list >= bandpass.blue_limit]
-        wave_list = wave_list[wave_list <= bandpass.red_limit]
-        effective_bandpass = galsim.Bandpass(
-            galsim.LookupTable(wave_list, bandpass(wave_list) * SED(wave_list),
-                               interpolant='linear'))
-        # If there's only one inseparable profile, let it draw itself.
         wmult = kwargs.get('wmult', 1)
-        if len(insep_profs) == 1:
-            effective_prof_image = insep_profs[0].drawImage(
-                effective_bandpass, wmult=wmult, scale=iiscale, integrator=integrator,
-                method='no_pixel')
-        # Otherwise, use superclass ChromaticObject to draw convolution of inseparable profiles.
-        else:
-            effective_prof_image = ChromaticObject.drawImage(
-                    insep_obj, effective_bandpass, wmult=wmult, scale=iiscale,
-                    integrator=integrator, method='no_pixel')
+        effective_prof = effective_prof_cache(tuple(sep_SED), tuple(insep_profs), bandpass,
+                                              iimult, tuple(wave_list), wmult, integrator,
+                                              self.gsparams)
+        # # Collapse inseparable profiles into one effective profile
+        # SED = lambda w: reduce(lambda x,y:x*y, [s(w) for s in sep_SED], 1)
+        # insep_obj = galsim.Convolve(insep_profs, gsparams=self.gsparams)
+        # # Find scale at which to draw effective profile
+        # iiscale = insep_obj.evaluateAtWavelength(bandpass.effective_wavelength).nyquistScale()
+        # if iimult is not None:
+        #     iiscale /= iimult
+        # # Create the effective bandpass.
+        # wave_list = np.union1d(wave_list, bandpass.wave_list)
+        # wave_list = wave_list[wave_list >= bandpass.blue_limit]
+        # wave_list = wave_list[wave_list <= bandpass.red_limit]
+        # effective_bandpass = galsim.Bandpass(
+        #     galsim.LookupTable(wave_list, bandpass(wave_list) * SED(wave_list),
+        #                        interpolant='linear'))
+        # # If there's only one inseparable profile, let it draw itself.
+        # if len(insep_profs) == 1:
+        #     effective_prof_image = insep_profs[0].drawImage(
+        #         effective_bandpass, wmult=wmult, scale=iiscale, integrator=integrator,
+        #         method='no_pixel')
+        # # Otherwise, use superclass ChromaticObject to draw convolution of inseparable profiles.
+        # else:
+        #     effective_prof_image = ChromaticObject.drawImage(
+        #             insep_obj, effective_bandpass, wmult=wmult, scale=iiscale,
+        #             integrator=integrator, method='no_pixel')
 
-        # Image -> InterpolatedImage
-        # It could be useful to cache this result if drawing more than one object with the same
-        # PSF+SED combination.  This naturally happens in a ring test or when fitting the
-        # parameters of a galaxy profile to an image when the PSF is constant.
-        effective_prof = galsim.InterpolatedImage(effective_prof_image, gsparams=self.gsparams)
+        # # Image -> InterpolatedImage
+        # # It could be useful to cache this result if drawing more than one object with the same
+        # # PSF+SED combination.  This naturally happens in a ring test or when fitting the
+        # # parameters of a galaxy profile to an image when the PSF is constant.
+        # effective_prof = galsim.InterpolatedImage(effective_prof_image, gsparams=self.gsparams)
+
         # append effective profile to separable profiles (which should all be GSObjects)
         sep_profs.append(effective_prof)
         # finally, convolve and draw.
@@ -2014,7 +2068,7 @@ class ChromaticOpticalPSF(ChromaticObject):
                            [default: galsim.arcsec]
     @param   **kwargs      Any other keyword arguments to be passed to OpticalPSF, for example,
                            related to struts, obscuration, oversampling, etc.  See OpticalPSF
-                           docstring for a complete list of options. 
+                           docstring for a complete list of options.
     """
     def __init__(self, lam, diam=None, lam_over_diam=None, aberrations=None,
                            scale_unit=galsim.arcsec, **kwargs):
