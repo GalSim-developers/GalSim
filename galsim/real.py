@@ -811,7 +811,7 @@ class ChromaticRealGalaxy(ChromaticObject):
 
             use_index = 0  # For the logger statements below.
             if logger:
-                logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
+                logger.debug('RealGalaxy %d: Start RealGalaxy constructor.', use_index)
             self.catalog_file = None
         else:
             raise ValueError("Chromatic Real Galaxy Catalog not implemented yet!")
@@ -822,7 +822,7 @@ class ChromaticRealGalaxy(ChromaticObject):
         maxk = np.pi/np.array([gi.scale for gi in gal_images])
         maxk = np.concatenate([maxk, [bp.maxK() for bp in blue_PSFs]])
         maxk = np.concatenate([maxk, [rp.maxK() for rp in red_PSFs]])
-        maxk = min(maxk)
+        maxk = max(maxk)
 
         stepk = 2*np.pi / np.array([gi.scale * max(gi.array.shape) for gi in gal_images])
         stepk = np.concatenate([stepk, [bp.stepK() for bp in blue_PSFs]])
@@ -833,12 +833,12 @@ class ChromaticRealGalaxy(ChromaticObject):
 
         # Create effective PSFs Fourier-space images
         eff_PSF_kimages = np.empty((len(gal_images), len(self.base_SEDs), nk, nk), dtype=complex)
-        for i, tput in enumerate(throughputs):
+        for i, (gi, tput) in enumerate(zip(gal_images, throughputs)):
             for j, bsed in enumerate(self.base_SEDs):
                 star = galsim.Gaussian(fwhm=1e-8) * bsed
-                conv = galsim.Convolve(chromatic_PSF, star)
-                re, im = (galsim.InterpolatedImage(conv.drawImage(tput, method='no_pixel'))
-                          .drawKImage(nx=nk, ny=nk, scale=self.stepk))
+                # assume that chromatic_PSF does not yet include pixel contribution to PSF
+                conv = galsim.Convolve(chromatic_PSF, star, galsim.Pixel(gi.scale))
+                re, im = conv.drawKImage(tput, nx=nk, ny=nk, scale=self.stepk)
                 eff_PSF_kimages[i,j,:,:] = re.array + 1j * im.array
 
         # Get Fourier-space representations of input images.
@@ -868,8 +868,4 @@ class ChromaticRealGalaxy(ChromaticObject):
         karray = np.dot(self.aj, b)
         re = galsim.ImageD(karray.real.copy(), scale=self.stepk)
         im = galsim.ImageD(karray.imag.copy(), scale=self.stepk)
-        import warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            out = galsim.InterpolatedKImage(re, im)
-        return out
+        return galsim.InterpolatedKImage(re, im)

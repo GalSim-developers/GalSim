@@ -204,77 +204,100 @@ def test_real_galaxy_saved():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_chromatic_real_galaxy():
-    """Use some HST observations in BViz (a la GOODS) to predict LSST observations,
-    and compare to exact result."""
+    """Use some simplified simulated HST-like observations around r and i band to predict
+    Euclid-ish visual band observations."""
 
-    print "Constructing interpolated HST PSF"
-    HST_PSF = (galsim.ChromaticOpticalPSF(lam=700, diam=2.4, obscuration=0.33)
-               .interpolate(waves=np.arange(350.0, 1100.1, 25.0)))
-    HST_PSF = (galsim.ChromaticAiry(lam=700, diam=2.4)
-               .interpolate(waves=np.arange(350.0, 1100.1, 25.0)))
+    print "Constructing simplified HST PSF"
+    HST_PSF = galsim.ChromaticAiry(lam=700, diam=2.4)
 
-    print "Constructing interpolated LSST PSF"
-    LSST_PSF = (galsim.ChromaticAtmosphere(galsim.Kolmogorov(fwhm=0.6), 700,
-                                           zenith_angle=30*galsim.degrees)
-                .interpolate(waves=np.arange(300.0, 1100.1, 25.0)))
+    print "Constructing simplified Euclid PSF"
+    Euclid_PSF = galsim.ChromaticAiry(lam=700, diam=1.2)
 
-    # load filters
-    ACS_B = galsim.Bandpass(os.path.join(datapath, "ACS_wfc_F435W.dat"))
-    ACS_V = galsim.Bandpass(os.path.join(datapath, "ACS_wfc_F606W.dat"))
-    ACS_i = galsim.Bandpass(os.path.join(datapath, "ACS_wfc_F775W.dat"))
-    ACS_z = galsim.Bandpass(os.path.join(datapath, "ACS_wfc_F850LP.dat"))
-    ACS_filters = [ACS_B, ACS_V, ACS_i, ACS_z]
-    ACS_filter_names = 'BViz'
+    print "Constructing simple filters and SEDs"
+    waves = np.arange(550.0, 825.1, 1.0)
 
-    LSST_r = galsim.Bandpass(os.path.join(datapath, "LSST_r.dat"))
-    LSST_i = galsim.Bandpass(os.path.join(datapath, "LSST_i.dat"))
-    LSST_filters = [LSST_r, LSST_i]
-    LSST_filter_names = 'ri'
+    # Construct some simple filters.
+    visband = galsim.Bandpass(galsim.LookupTable(waves, np.ones_like(waves), interpolant='linear'))
+    rband = visband.truncate(blue_limit=550.0, red_limit=700.0)
+    iband = visband.truncate(blue_limit=700.0, red_limit=825.0)
 
-    # load spectra
-    bulge_SED = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
-    bulge_SED = bulge_SED.withFluxDensity(target_flux_density=0.3, wavelength=500.0)
+    const_SED = (galsim.SED(galsim.LookupTable(waves, np.ones_like(waves),
+                                               interpolant='linear'))
+                 .withFluxDensity(1.0, 700.0))
+    linear_SED = (galsim.SED(galsim.LookupTable(waves, (waves-550.0)/(825-550),
+                                                interpolant='linear'))
+                  .withFluxDensity(1.0, 700.0))
 
-    disk_SED = galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='ang')
-    disk_SED = disk_SED.withFluxDensity(target_flux_density=0.3, wavelength=500.0)
+    print "Constructing galaxy"
+    gal1 = galsim.Gaussian(half_light_radius=0.45).shear(e1=0.1, e2=0.2).shift(0.1, 0.2)
+    gal2 = galsim.Gaussian(half_light_radius=0.35).shear(e1=-0.1, e2=0.4).shift(-0.3, 0.5)
+    gal = gal1 * const_SED + gal2 * linear_SED
 
-    SEDs = [bulge_SED, disk_SED]
+    HST_prof = galsim.Convolve(gal, HST_PSF)
+    Euclid_prof = galsim.Convolve(gal, Euclid_PSF)
 
-    # Construct a simple chromatic bulge + disk galaxy
-    bulge = galsim.Sersic(n=4, half_light_radius=0.3).shear(e1=0.3, e2=-0.2) * bulge_SED
-    disk = galsim.Sersic(n=1, half_light_radius=0.3).shear(e1=0.3, e2=-0.2) * disk_SED
-    gal = bulge + disk
-
-    HST_sbp = galsim.Convolve(gal, HST_PSF)
-    LSST_sbp = galsim.Convolve(gal, LSST_PSF)
-
+    print "Drawing HST images"
     # Draw HST images
-    HST_images = []
-    for f, fn in zip(ACS_filters, ACS_filter_names):
-        conv = galsim.Convolve(gal, HST_PSF)
-        print "drawing HST filter: {0}".format(fn)
-        HST_images.append(conv.drawImage(f, nx=64, ny=64, scale=0.05))
+    HST_images = [HST_prof.drawImage(rband, nx=64, ny=64, scale=0.05),
+                  HST_prof.drawImage(iband, nx=64, ny=64, scale=0.05)]
 
-    # Draw LSST images
-    LSST_images = []
-    for f, fn in zip(LSST_filters, LSST_filter_names):
-        conv = galsim.Convolve(gal, LSST_PSF)
-        print "drawing LSST filter: {0}".format(fn)
-        LSST_images.append(conv.drawImage(f, nx=16, ny=16, scale=0.2))
+    print "Drawing Euclid image"
+    Euclid_image = Euclid_prof.drawImage(visband, nx=32, ny=32, scale=0.1)
 
-    # Now try deconvolving these with PSFs from assumed SEDs
+    # Now "deconvolve" the chromatic HST PSF while asserting the correct SEDs.
     print "Constructing ChromaticRealGalaxy"
-    crg = galsim.ChromaticRealGalaxy((HST_images, ACS_filters, SEDs, HST_PSF))
+    crg = galsim.ChromaticRealGalaxy((HST_images,
+                                      [rband, iband],
+                                      [const_SED, linear_SED],
+                                      HST_PSF))
 
-    LSST_images_recon = []
-    conv = (galsim.Convolve(crg, LSST_PSF.original)
-            .interpolate(waves=np.arange(300.0, 1100.1, 25.0)))
-    for f, fn in zip(LSST_filters, LSST_filter_names):
-        print "drawing reconstructed LSST filter: {0}".format(fn)
-        LSST_images_recon.append(conv.drawImage(f, nx=16, ny=16, scale=0.2))
+    # crg should be effectively the same thing as gal now.  Let's test.
 
-    for im, im_recon in zip(LSST_images, LSST_images_recon):
-        np.testing.assert_array_almost_equal(im.array, im_recon.array, 2) # eek! only 2 decimals
+    Euclid_recon_image = (galsim.Convolve(crg, Euclid_PSF)
+                          .drawImage(visband, nx=32, ny=32, scale=0.1))
+
+    np.testing.assert_almost_equal(Euclid_image.array.max()/Euclid_recon_image.array.max(),
+                                   1.0, 2)
+    np.testing.assert_almost_equal(Euclid_image.array.sum()/Euclid_recon_image.array.sum(),
+                                   1.0, 2)
+    print "Max comparison:", Euclid_image.array.max(), Euclid_recon_image.array.max()
+    print "Sum comparison:", Euclid_image.array.sum(), Euclid_recon_image.array.sum()
+    if False:
+        import matplotlib.pyplot as plt
+        fig = plt.figure(figsize=(13,10))
+        ax = fig.add_subplot(231)
+        im = ax.imshow(HST_images[0].array)
+        plt.colorbar(im)
+        ax.set_title('rband')
+        ax = fig.add_subplot(232)
+        im = ax.imshow(HST_images[1].array)
+        plt.colorbar(im)
+        ax.set_title('iband')
+        ax = fig.add_subplot(234)
+        im = ax.imshow(Euclid_image.array)
+        plt.colorbar(im)
+        ax.set_title('Euclid')
+        ax = fig.add_subplot(235)
+        im = ax.imshow(Euclid_recon_image.array)
+        plt.colorbar(im)
+        ax.set_title('Euclid reconstruction')
+        ax = fig.add_subplot(236)
+        im = ax.imshow(Euclid_recon_image.array - Euclid_image.array, cmap='seismic',
+                       vmin=-0.005, vmax=0.005)
+        plt.colorbar(im)
+        ax.set_title('Euclid residual')
+        plt.tight_layout()
+        plt.show()
+    np.testing.assert_array_almost_equal(Euclid_image.array/Euclid_image.array.max(),
+                                         Euclid_recon_image.array/Euclid_image.array.max(),
+                                         3) # Fails at 4th decimal
+
+    # Other tests:
+    #     - draw the same image as origin?
+    #     - compare intermediate products: does aj match the input spatial profiles?
+    #       (are there degeneracies?)
+    #     - stupid tests like using only one filter should perform similarly to RealGalaxy?
+    #     - ellipticity tests like those above for RealGalaxy?
 
 
 if __name__ == "__main__":
