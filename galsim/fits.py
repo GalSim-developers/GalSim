@@ -1229,13 +1229,25 @@ class FitsHeader(object):
         return self.header.items()
 
     def iteritems(self):
-        return self.header.iteritems()
+        from galsim._pyfits import pyfits_version
+        if pyfits_version < '3.1':
+            return self.header.items()
+        else:
+            return self.header.iteritems()
 
     def iterkeys(self):
-        return self.header.iterkeys()
+        from galsim._pyfits import pyfits_version
+        if pyfits_version < '3.1':
+            return self.header.keys()
+        else:
+            return self.header.iterkeys()
 
     def itervalues(self):
-        return self.header.itervalues()
+        from galsim._pyfits import pyfits_version
+        if pyfits_version < '3.1':
+            return self.header.values()
+        else:
+            return self.header.itervalues()
 
     def keys(self):
         return self.header.keys()
