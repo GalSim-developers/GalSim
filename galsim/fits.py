@@ -540,8 +540,10 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
 
     hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
     if hasattr(image, 'header'):
+        # Automatically handle old pyfits versions correctly...
+        hdu_header = galsim.FitsHeader(hdu.header)
         for key in image.header.keys():
-            hdu.header[key] = image.header[key]
+            hdu_header[key] = image.header[key]
     if image.wcs:
         image.wcs.writeToFitsHeader(hdu.header, image.bounds)
 
