@@ -1303,7 +1303,11 @@ class FitsHeader(object):
             return "galsim.FitsHeader(%s)"%self._tag
 
     def __eq__(self, other):
-        return isinstance(other,FitsHeader) and self.header == other.header
+        from galsim._pyfits import pyfits, pyfits_version
+        if pyfits_version < '3.1':
+            return isinstance(other,FitsHeader) and self.header.items() == other.header.items()
+        else:
+            return isinstance(other,FitsHeader) and self.header == other.header
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):
