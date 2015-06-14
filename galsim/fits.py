@@ -1313,6 +1313,26 @@ class FitsHeader(object):
     def __hash__(self):
         return hash(tuple(sorted(self.items())))
 
+    def __deepcopy__(self, memo):
+        # Need this because pyfits.Header deepcopy was broken before 3.0.6.
+        # cf. https://aeon.stsci.edu/ssb/trac/pyfits/ticket/115
+        from galsim._pyfits import pyfits, pyfits_version
+        import copy
+        # Biolerplate deepcopy implementation.
+        # cf. http://stackoverflow.com/questions/1500718/what-is-the-right-way-to-override-the-copy-deepcopy-operations-on-an-object-in-p
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        d1 = self.__dict__
+        # This is the special bit for this case.
+        if pyfits_version < '3.0.6':
+            # Not technically a deepcopy apparently, but good enough in most cases.
+            result.header = self.header.copy()
+            d1 = d1.copy()
+            del d1['header']
+        for k, v in d1.items():
+            setattr(result, k, copy.deepcopy(v, memo))
+        return result
 
 # inject write as method of Image class
 galsim.Image.write = write
