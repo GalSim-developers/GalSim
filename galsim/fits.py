@@ -1060,7 +1060,8 @@ class FitsHeader(object):
 
     Constructor parameters:
 
-    @param header       A pyfits Header object or in fact any dict-like object.  [default: None]
+    @param header       A pyfits Header object or in fact any dict-like object or list of 
+                        (key,value) pairs.  [default: None]
     @param file_name    The name of the file to read in.  [default: None]
     @param dir          Optionally a directory name can be provided if `file_name` does not 
                         already include it. [default: None]
@@ -1160,11 +1161,16 @@ class FitsHeader(object):
             # If header is a pyfits.Header, then we just use it.
             self.header = header
         else:
-            # Otherwise, header may be any kind of dict-like object.
-            # update() should handle anything that acts like a dict.
+            # Otherwise, header may be any kind of dict-like object or list of (key,value) pairs.
             self.header = pyfits.Header()
             if header is not None:
-                self.update(header)
+                if hasattr(header, 'items'):
+                    # update() should handle anything that acts like a dict.
+                    self.update(header)
+                else:
+                    # for a list, just add each item one at a time.
+                    for k,v in header:
+                        self.append(k,v,useblanks=False)
 
     # The rest of the functions are typical non-mutating functions for a dict, for which we just
     # pass the request along to self.header.
@@ -1283,16 +1289,18 @@ class FitsHeader(object):
         from galsim._pyfits import pyfits, pyfits_version
         self._tag = None
         if pyfits_version < '3.1':
-            self.header.ascardlist().append(pyfits.Card(key, value),
-                                            useblanks=useblanks, bottom=True)
+            # NB. append doesn't quite do what it claims when useblanks=False.
+            # If there are blanks, it doesn't put the new item after the blanks.
+            # Inserting before the end does do what we want.
+            self.header.ascardlist().insert(len(self), pyfits.Card(key, value),
+                                            useblanks=useblanks)
         else:
-            self.header.append((key, value), useblanks=useblanks, bottom=True)
+            self.header.insert(len(self), (key, value), useblanks=useblanks)
 
     def __repr__(self):
         from galsim._pyfits import pyfits_str
         if self._tag is None:
-            return "galsim.FitsHeader(header=%s.Header().fromstring(%r))"%(
-                    pyfits_str,str(self.header))
+            return "galsim.FitsHeader(header=%r)"%self.items()
         else:
             return "galsim.FitsHeader(%s)"%self._tag
 
