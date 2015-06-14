@@ -1245,7 +1245,7 @@ class FitsHeader(object):
     def itervalues(self):
         from galsim._pyfits import pyfits_version
         if pyfits_version < '3.1':
-            return self.header.values()
+            return self.header.ascard.values()
         else:
             return self.header.itervalues()
 
@@ -1263,7 +1263,11 @@ class FitsHeader(object):
             self.header.update(dict2)
 
     def values(self):
-        return self.header.values()
+        from galsim._pyfits import pyfits_version
+        if pyfits_version < '3.1':
+            return self.header.ascard.values()
+        else:
+            return self.header.values()
 
     def append(self, key, value='', useblanks=True):
         """Append an item to the end of the header.
