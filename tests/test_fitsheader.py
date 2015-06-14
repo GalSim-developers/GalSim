@@ -29,7 +29,7 @@ except ImportError:
     import galsim
 
 # Get whatever version of pyfits or astropy we are using
-from galsim import pyfits
+from galsim._pyfits import pyfits
 
 def test_read():
     """Test reading a FitsHeader from an existing FITS file
