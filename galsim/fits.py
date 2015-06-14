@@ -1225,8 +1225,13 @@ class FitsHeader(object):
             self.header[key] = value
 
     def clear(self):
+        from galsim._pyfits import pyfits_version
         self._tag = None
-        self.header.clear()
+        if pyfits_version < '3.1':
+            # Not sure when clear() was added, but not present in 2.4, and present in 3.1.
+            del self.header.ascardlist()[:]
+        else:
+            self.header.clear()
 
     def get(self, key, default=None):
         return self.header.get(key, default)
