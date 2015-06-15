@@ -35,14 +35,14 @@ def roll2d(image, (iroll, jroll)):
 def kxky(array_shape=(256, 256)):
     """Return the tuple `(kx, ky)` corresponding to the DFT of a unit integer-sampled array of input
     shape.
-    
+
     Uses the SBProfile conventions for Fourier space, so `k` varies in approximate range (-pi, pi].
     Uses the most common DFT element ordering conventions (and those of FFTW), so that `(0, 0)`
     array element corresponds to `(kx, ky) = (0, 0)`.
 
     See also the docstring for np.fftfreq, which uses the same DFT convention, and is called here,
     but misses a factor of pi.
-    
+
     Adopts NumPy array index ordering so that the trailing axis corresponds to `kx`, rather than the
     leading axis as would be expected in IDL/Fortran.  See docstring for numpy.meshgrid which also
     uses this convention.
@@ -112,7 +112,7 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
         f(name1=x, name2=y)
 
     If the inputs must be integers, set `integer=True`.
-    If there are other args/kwargs to parse after these, then their names should be 
+    If there are other args/kwargs to parse after these, then their names should be
     be given as the parameter `others`, which are passed back in a tuple after the position.
     """
     def canindex(arg):
@@ -174,13 +174,13 @@ class SimpleGenerator:
     """
     def __init__(self, obj): self._obj = obj
     def __call__(self): return self._obj
-            
+
 class AttributeDict(object):
     """Dictionary class that allows for easy initialization and refs to key values via attributes.
 
     NOTE: Modified a little from Jim's bot.git AttributeDict class so that tab completion now works
     in ipython since attributes are actually added to __dict__.
-    
+
     HOWEVER this means the __dict__ attribute has been redefined to be a collections.defaultdict()
     so that Jim's previous default attribute behaviour is also replicated.
     """
@@ -258,7 +258,7 @@ def _convertPositions(pos, units, func):
                 np.array([pos.y], dtype='float') ]
 
     # Check for list of PositionD or PositionI:
-    # The only other options allow pos[0], so if this is invalid, an exception 
+    # The only other options allow pos[0], so if this is invalid, an exception
     # will be raised:
     elif isinstance(pos[0],galsim.PositionD) or isinstance(pos[0],galsim.PositionI):
         pos = [ np.array([p.x for p in pos], dtype='float'),
@@ -297,7 +297,7 @@ def _convertPositions(pos, units, func):
 
 def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     """
-    Remove items from a set of tabulated f(x) values so that the error in the integral is still 
+    Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
 
     The input `x,f` values can be lists, NumPy arrays, or really anything that can be converted
@@ -308,7 +308,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     @param rel_err          The maximum relative error to allow in the integral from the removal.
                             [default: 1.e-4]
     @param preserve_range   Should the original range of `x` be preserved? (True) Or should the ends
-                            be trimmed to include only the region where the integral is 
+                            be trimmed to include only the region where the integral is
                             significant? (False)  [default: False]
 
     @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
@@ -421,7 +421,29 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
 
 class LRU_Cache:
     """ Simplified Least Recently Used Cache.
-    Stolen from http://code.activestate.com/recipes/577970-simplified-lru-cache/
+    Mostly stolen from http://code.activestate.com/recipes/577970-simplified-lru-cache/,
+    but added a method for dynamic resizing.  The least recently used cached item is
+    overwritten on a cache miss.
+
+    @param user_function   A python function to cache.
+    @param maxsize         Maximum number of inputs to cache.  [Default: 1024]
+
+    Usage
+    -----
+    >>> def slow_function(*args) # A slow-to-evaluate python function
+    >>>    ...
+    >>>
+    >>> v1 = slow_function(*k1)  # Calling function is slow
+    >>> v1 = slow_function(*k1)  # Calling again with same args is still slow
+    >>> cache = galsim.utilities.LRU_Cache(slow_function)
+    >>> v1 = cache(*k1)  # Returns slow_function(*k1), slowly the first time
+    >>> v1 = cache(*k1)  # Returns slow_function(*k1) again, but fast this time.
+
+    Methods
+    -------
+    >>> cache.resize(maxsize) # Resize the cache, either upwards or downwards.  Upwards resizing
+                              # is non-destructive.  Downwards resizing will remove the least
+                              # recently used items first.
     """
     def __init__(self, user_function, maxsize=1024):
         # Link layout:     [PREV, NEXT, KEY, RESULT]
@@ -440,6 +462,7 @@ class LRU_Cache:
         root = self.root
         link = cache.get(key)
         if link is not None:
+            # Cache hit: move link to last position
             link_prev, link_next, _, result = link
             link_prev[1] = link_next
             link_next[0] = link_prev
@@ -448,6 +471,8 @@ class LRU_Cache:
             link[0] = last
             link[1] = root
             return result
+        # Cache miss: evaluate and insert new key/value at root, then increment root
+        #             so that just-evaluated value is in last position.
         result = self.user_function(*key)
         root[2] = key
         root[3] = result
@@ -458,3 +483,34 @@ class LRU_Cache:
         del cache[oldkey]
         cache[key] = oldroot
         return result
+
+    def resize(self, maxsize):
+        """ Resize the cache.  Increasing the size of the cache is non-destructive, i.e.,
+        previously cached inputs remain in the cache.  Decreasing the size of the cache will
+        necessarily remove items from the cache if the cache is already filled.  Items are removed
+        in least recently used order.
+
+        @param maxsize  The new maximum number of inputs to cache.
+        """
+        oldsize = len(self.cache)
+        if maxsize == oldsize:
+            return
+        else:
+            root = self.root
+            cache = self.cache
+            if maxsize < oldsize:
+                for i in range(oldsize - maxsize):
+                    # Delete root.next
+                    current_next_link = root[1]
+                    new_next_link = root[1] = root[1][1]
+                    new_next_link[0] = root
+                    del cache[current_next_link[2]]
+            elif maxsize > oldsize:
+                for i in range(maxsize - oldsize):
+                    # Insert between root and root.next
+                    key = object()
+                    cache[key] = link = [root, root[1], key, None]
+                    root[1][0] = link
+                    root[1] = link
+            else:
+                raise ValueError("Invalid maxsize: {0:}".format(maxsize))
