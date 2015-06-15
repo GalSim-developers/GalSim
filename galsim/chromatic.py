@@ -39,11 +39,12 @@ def _get_multiplier(sed, bandpass, wave_list):
                                         bandpass.blue_limit, bandpass.red_limit)
     return multiplier
 
-_multiplier_cache = galsim.utilities.LRU_Cache(_get_multiplier, maxsize=10)
+def init_multiplier_cache(maxsize=10):
+    ChromaticObject.init_multiplier_cache(maxsize)
 
-def _get_effective_profile(sep_SED, insep_profs, bandpass,
-                          iimult, wave_list, wmult, integrator,
-                          gsparams):
+def _get_effective_prof(sep_SED, insep_profs, bandpass,
+                        iimult, wave_list, wmult, integrator,
+                        gsparams):
         # Collapse inseparable profiles into one effective profile
         SED = lambda w: reduce(lambda x,y:x*y, [s(w) for s in sep_SED], 1)
         insep_obj = galsim.Convolve(insep_profs, gsparams=gsparams)
@@ -72,8 +73,8 @@ def _get_effective_profile(sep_SED, insep_profs, bandpass,
         effective_prof = galsim.InterpolatedImage(effective_prof_image, gsparams=gsparams)
         return effective_prof
 
-_effective_prof_cache = galsim.utilities.LRU_Cache(_get_effective_profile, maxsize=10)
-
+def init_effective_prof_cache(maxsize=10):
+    ChromaticObject.init_effective_prof_cache(maxsize)
 
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
@@ -153,6 +154,9 @@ class ChromaticObject(object):
     # attribute representing a manipulated `GSObject` or `ChromaticObject`, or an `objlist`
     # attribute in the case of compound classes like `ChromaticSum` and `ChromaticConvolution`.
 
+    _multiplier_cache = None
+    _effective_prof_cache = None
+
     def __init__(self, obj):
         self.obj = obj
         if isinstance(obj, galsim.GSObject):
@@ -166,6 +170,16 @@ class ChromaticObject(object):
         else:
             raise TypeError("Can only directly instantiate ChromaticObject with a GSObject "+
                             "or ChromaticObject argument.")
+
+    @staticmethod
+    def init_multiplier_cache(maxsize=10):
+        ChromaticObject._multiplier_cache = galsim.utilities.LRU_Cache(_get_multiplier,
+                                                                       maxsize)
+
+    @staticmethod
+    def init_effective_prof_cache(maxsize=10):
+        ChromaticObject._effective_prof_cache = galsim.utilities.LRU_Cache(_get_effective_prof,
+                                                                           maxsize)
 
     def __repr__(self):
         return 'galsim.ChromaticObject(%r)'%self.obj
@@ -319,7 +333,9 @@ class ChromaticObject(object):
         wave_list = self._getCombinedWaveList(bandpass)
 
         if self.separable:
-            multiplier = _multiplier_cache(self.SED, bandpass, tuple(wave_list))
+            if ChromaticObject._multiplier_cache is None:
+                init_multiplier_cache()
+            multiplier = ChromaticObject._multiplier_cache(self.SED, bandpass, tuple(wave_list))
             prof0 *= multiplier/self.SED(bandpass.effective_wavelength)
             image = prof0.drawImage(image=image, **kwargs)
             return image
@@ -1742,11 +1758,11 @@ class ChromaticConvolution(ChromaticObject):
         Works by finding sums of profiles which include separable portions, which can then be
         integrated before doing any convolutions, which are pushed to the end.
 
-        This method uses a cache to avoid recomputing 'effective' profiles, which are the 
-        wavelength-integrated products of inseparable profiles, the spectral components of 
-        separable profiles, and the bandpass.  Because the cache size is finite, users may find 
-        that it is more efficient when drawing many images to group images using the same 
-        SEDs, bandpasses, and inseparable profiles (generally PSFs) together in order to hit the 
+        This method uses a cache to avoid recomputing 'effective' profiles, which are the
+        wavelength-integrated products of inseparable profiles, the spectral components of
+        separable profiles, and the bandpass.  Because the cache size is finite, users may find
+        that it is more efficient when drawing many images to group images using the same
+        SEDs, bandpasses, and inseparable profiles (generally PSFs) together in order to hit the
         cache more often.
 
         @param bandpass         A Bandpass object representing the filter against which to
@@ -1869,9 +1885,11 @@ class ChromaticConvolution(ChromaticObject):
 
         wmult = kwargs.get('wmult', 1)
         # Collapse inseparable profiles into one effective profile
-        effective_prof = _effective_prof_cache(tuple(sep_SED), tuple(insep_profs), bandpass,
-                                               iimult, tuple(wave_list), wmult, integrator,
-                                               self.gsparams)
+        if ChromaticObject._effective_prof_cache is None:
+            init_effective_prof_cache()
+        effective_prof = ChromaticObject._effective_prof_cache(tuple(sep_SED), tuple(insep_profs),
+                                                               bandpass, iimult, tuple(wave_list),
+                                                               wmult, integrator, self.gsparams)
 
         # append effective profile to separable profiles (which should all be GSObjects)
         sep_profs.append(effective_prof)
