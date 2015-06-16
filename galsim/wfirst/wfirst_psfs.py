@@ -202,8 +202,8 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                     pupil_plane_im=galsim.wfirst.pupil_plane_file,
                     oversampling=1.2, pad_factor=2.)
             if n_waves is not None:
-                PSF.setupInterpolation(waves=np.linspace(blue_limit, red_limit, n_waves),
-                                       oversample_fac=1.5)
+                PSF = PSF.interpolate(waves=np.linspace(blue_limit, red_limit, n_waves),
+                                      oversample_fac=1.5)
         else:
             tmp_aberrations = use_aberrations * zemax_wavelength / wavelength_nm
             if approximate_struts:
@@ -279,7 +279,8 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
     SCA_index_list = []
     for SCA in PSF_dict.keys():
         PSF = PSF_dict[SCA]
-        if not isinstance(PSF, galsim.ChromaticOpticalPSF):
+        if not isinstance(PSF, galsim.ChromaticOpticalPSF) and \
+                not isinstance(PSF, galsim.InterpolatedChromaticObject):
             raise RuntimeError("Error, PSFs are not ChromaticOpticalPSFs.")
         star = galsim.Gaussian(sigma=1.e-8, flux=1.)
 
