@@ -18,8 +18,7 @@ API Changes
 - Removed (from the python layer) Interpolant2d and InterpolantXY, since we
   we have only actually implemented 1-d interpolants. (#218)
 - Removed the MultipleImage way of constructing an SBInterpolatedImage, since
-  we do not use it anywhere, nor are there unit tests for it.  The C++ layer
-  still has the implementation of it if we ever find a need for it. (#218)
+  we do not use it anywhere, nor are there unit tests for it. (#218, #642)
 - Made the default tolerance for all Interpolants equal to 1.e-4.  It already
   was for Cubic, Quintic, and Lanczos, which are the ones we normally use,
   so this just changes the default for the others. (#218)
@@ -87,7 +86,8 @@ New Features
 - Added TopHat class implementing a circular tophat profile. (#639)
 - Added ability of Noise objects to take a new random number generator (a
   BaseDeviate instance) when being copied. (#643)
-
+- Added InterpolatedKImage GSObject for constructing a surface brightness
+  profile out of samples of its Fourier transform. (#642)
 
 Bug Fixes and Improvements
 --------------------------
