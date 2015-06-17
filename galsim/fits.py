@@ -1328,7 +1328,7 @@ class FitsHeader(object):
         # cf. https://aeon.stsci.edu/ssb/trac/pyfits/ticket/115
         from galsim._pyfits import pyfits, pyfits_version
         import copy
-        # Biolerplate deepcopy implementation.
+        # Boilerplate deepcopy implementation.
         # cf. http://stackoverflow.com/questions/1500718/what-is-the-right-way-to-override-the-copy-deepcopy-operations-on-an-object-in-p
         cls = self.__class__
         result = cls.__new__(cls)
