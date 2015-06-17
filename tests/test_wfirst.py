@@ -393,7 +393,7 @@ def test_wfirst_psfs():
     # First, we can draw the achromatic PSF.
     im_achrom = psf_achrom.drawImage(scale=galsim.wfirst.pixel_scale)
     im_chrom = im_achrom.copy()
-    obj_chrom = psf_achrom.evaluateAtWavelength(use_lam)
+    obj_chrom = psf_chrom.evaluateAtWavelength(use_lam)
     im_chrom = obj_chrom.drawImage(image=im_chrom, scale=galsim.wfirst.pixel_scale)
     # Normalization should probably not be right.
     im_chrom *= im_achrom.array.sum()/im_chrom.array.sum()
@@ -402,32 +402,32 @@ def test_wfirst_psfs():
         im_chrom.array, im_achrom.array, decimal=8,
         err_msg='PSF at a given wavelength and chromatic one evaluated at that wavelength disagree.')
 
+    # Make a very limited check that interpolation works: just 2 wavelengths, 1 SCA.
+    # Note that the limits below are the blue and red limits for the Y106 filter.
+    blue_limit = 900. # nm
+    red_limit = 1230. # nm
+    n_waves = 2
+    other_sca = 12
+    wfirst_psfs_int = galsim.wfirst.getPSF(SCAs=[use_sca, other_sca],
+                                           approximate_struts=True, n_waves=2,
+                                           wavelength_limits=(blue_limit, red_limit))
+    psf_int = wfirst_psfs_int[use_sca]
+    # Check that evaluation at the edge wavelength, which we used for previous test, is consistent
+    # with previous results.
+    im_int = im_achrom.copy()
+    obj_int = psf_int.evaluateAtWavelength(use_lam)
+    im_int = obj_int.drawImage(image=im_int, scale=galsim.wfirst.pixel_scale)
+    # These images should agree well, but not perfectly.  One of them comes from drawing an image
+    # from an object directly, whereas the other comes from drawing an image of that object, making
+    # it into an InterpolatedImage, then re-drawing it.
+    np.testing.assert_array_almost_equal(
+        im_int.array, im_achrom.array, decimal=4,
+        err_msg='PSF at a given wavelength and interpolated chromatic one evaluated at that '
+        'wavelength disagree.')
+
     # Below are some more expensive tests that will run only when running test_wfirst.py directly,
     # but not when doing "scons tests"
     if __name__ == "__main__":
-        # Make a very limited check that interpolation works: just 2 wavelengths, 1 SCA.
-        # Note that the limits below are the blue and red limits for the Y106 filter.
-        blue_limit = 900. # nm
-        red_limit = 1230. # nm
-        n_waves = 2
-        other_sca = 12
-        wfirst_psfs_int = galsim.wfirst.getPSF(SCAs=[use_sca, other_sca],
-                                               approximate_struts=True, n_waves=2,
-                                               wavelength_limits=(blue_limit, red_limit))
-        psf_int = wfirst_psfs_int[use_sca]
-        # Check that evaluation at the edge wavelength, which we used for previous test, is consistent
-        # with previous results.
-        im_int = im_achrom.copy()
-        obj_int = psf_int.evaluateAtWavelength(use_lam)
-        im_int = obj_int.drawImage(image=im_int, scale=galsim.wfirst.pixel_scale)
-        # Normalization should probably not be right.
-        im_int *= im_achrom.array.sum()/im_int.array.sum()
-        # But otherwise these images should agree *extremely* well.
-        np.testing.assert_array_almost_equal(
-            im_int.array, im_achrom.array, decimal=8,
-            err_msg='PSF at a given wavelength and interpolated chromatic one evaluated at that '
-            'wavelength disagree.')
-
         # Check that if we store and reload, what we get back is consistent with what we put in.
         test_file = 'tmp_store.fits'
         # Make sure we clear out any old versions

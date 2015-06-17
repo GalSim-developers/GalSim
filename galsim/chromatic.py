@@ -212,7 +212,7 @@ class ChromaticObject(object):
 
         The task of drawImage() in a chromatic context is to integrate a chromatic surface
         brightness profile multiplied by the throughput of `bandpass`, over the wavelength interval
-        indicated by `bandpass`.  
+        indicated by `bandpass`.
 
         Several integrators are available in galsim.integ to do this integration when using the
         first method (non-interpolated integration).  By default,
@@ -520,8 +520,8 @@ class ChromaticObject(object):
         the appropriate change in area, either use shear() with magnify(), or use lens(), which
         combines both operations.
 
-        Note that, while gravitational shear is monochromatic, the shear method may be used for 
-        many other use cases including some which may be wavelength-dependent, such as 
+        Note that, while gravitational shear is monochromatic, the shear method may be used for
+        many other use cases including some which may be wavelength-dependent, such as
         intrinsic galaxy shape, telescope dilation, atmospheric PSF shape, etc.  Thus, the
         shear argument is allowed to be a function of wavelength like other transformations.
 
@@ -566,7 +566,7 @@ class ChromaticObject(object):
 
         While gravitational lensing is achromatic, we do allow the parameters `g1`, `g2`, and `mu`
         to be callable functions to be parallel to all the other transformations of chromatic
-        objects.  In this case, the functions should take the wavelength in nanometers as the 
+        objects.  In this case, the functions should take the wavelength in nanometers as the
         argument, and the return values are the corresponding value at that wavelength.
 
         @param g1       First component of lensing (reduced) shear to apply to the object.
@@ -721,7 +721,7 @@ class InterpolatedChromaticObject(ChromaticObject):
     Any ChromaticObject can be used, although the interpolation procedure is most effective
     for non-separable objects, which can sometimes be very slow to render.
 
-    Normally, you would not create an InterpolatedChromaticObject directly.  It is the 
+    Normally, you would not create an InterpolatedChromaticObject directly.  It is the
     return type from `chrom_obj.interpolate()`.  See the description of that function
     for more details.
 
@@ -739,7 +739,7 @@ class InterpolatedChromaticObject(ChromaticObject):
                             whichever wavelength has the highest Nyquist frequency.
                             `oversample_fac`>1 results in higher accuracy but costlier
                             pre-computations (more memory and time). [default: 1]
-    """ 
+    """
     def __init__(self, obj, waves, oversample_fac=1.0):
 
         self.separable = obj.separable
@@ -926,7 +926,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         images at the specified wavelengths.
 
         This integration will take place using interpolation between stored images that were
-        setup when the object was constructed.  (See interpolate() for more details.) 
+        setup when the object was constructed.  (See interpolate() for more details.)
 
         @param bandpass         A Bandpass object representing the filter against which to
                                 integrate.
@@ -1110,7 +1110,7 @@ class ChromaticAtmosphere(ChromaticObject):
         @returns the drawn Image.
         """
         return self.build_obj().drawImage(bandpass, image, integrator, **kwargs)
- 
+
 
 class Chromatic(ChromaticObject):
     """Construct chromatic versions of galsim GSObjects.
@@ -1191,7 +1191,7 @@ class ChromaticTransformation(ChromaticObject):
     Typically, you do not need to construct a ChromaticTransformation object explicitly.
     This is the type returned by the various transformation methods of ChromaticObject such as
     shear(), rotate(), shift(), transform(), etc.  All the various transformations can be described
-    as a combination of transform() and shift(), which are described by (dudx,dudy,dvdx,dvdy) and 
+    as a combination of transform() and shift(), which are described by (dudx,dudy,dvdx,dvdy) and
     (dx,dy) respectively.
 
     @param obj              The object to be transformed.
@@ -1230,7 +1230,7 @@ class ChromaticTransformation(ChromaticObject):
             self._jac = jac
             self._offset = offset
             self._flux_ratio = flux_ratio
-            
+
         elif isinstance(obj, ChromaticTransformation):
             self.original = obj.original
             if hasattr(jac, '__call__'):
@@ -2014,7 +2014,7 @@ class ChromaticOpticalPSF(ChromaticObject):
                            [default: galsim.arcsec]
     @param   **kwargs      Any other keyword arguments to be passed to OpticalPSF, for example,
                            related to struts, obscuration, oversampling, etc.  See OpticalPSF
-                           docstring for a complete list of options. 
+                           docstring for a complete list of options.
     """
     def __init__(self, lam, diam=None, lam_over_diam=None, aberrations=None,
                            scale_unit=galsim.arcsec, **kwargs):
