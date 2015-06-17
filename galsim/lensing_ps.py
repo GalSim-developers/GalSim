@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -189,6 +189,7 @@ class PowerSpectrum(object):
         self.e_power_function = e_power_function
         self.b_power_function = b_power_function
         self.delta2 = delta2
+        self.units = units
 
         # Try these conversions, but we don't actually keep the output.  This just
         # provides a way to test if the arguments are sane.
@@ -210,6 +211,33 @@ class PowerSpectrum(object):
         else:
             self.scale = 1. * units / galsim.arcsec
 
+    def __repr__(self):
+        s = 'galsim.PowerSpectrum(e_power_function=%r'%self.e_power_function
+        if self.b_power_function is not None:
+            s += ', b_power_function=%r'%self.b_power_function
+        if self.delta2:
+            s += ', delta2=%r'%self.delta2
+        if self.units != galsim.arcsec:
+            s += ', units=%r'%self.units
+        s += ')'
+        return s
+
+    def __str__(self):
+        s = 'galsim.PowerSpectrum(e_power_function=%s'%self.e_power_function
+        if self.b_power_function is not None:
+            s += ', b_power_function=%s'%self.b_power_function
+        s += ')'
+        return s
+
+    def __eq__(self, other):
+        return (isinstance(other, PowerSpectrum) and
+                self.e_power_function == other.e_power_function and
+                self.b_power_function == other.b_power_function and
+                self.delta2 == other.delta2 and
+                self.scale == other.scale)
+    def __ne__(self, other): return not self.__eq__(other)
+
+    def __hash__(self): return hash(repr(self))
 
     def buildGrid(self, grid_spacing=None, ngrid=None, rng=None, interpolant=None,
                   center=galsim.PositionD(0,0), units=galsim.arcsec, get_convergence=False,
@@ -477,13 +505,11 @@ class PowerSpectrum(object):
         else:
             raise TypeError("The rng provided to buildGrid is not a BaseDeviate")
 
-        # Check that the interpolant is valid.  (Don't save the result though in case it is
-        # a string -- we don't want to mess up picklability.)
+        # Check that the interpolant is valid.
         if interpolant is None:
-            self.interpolant = 'lanczos5'
+            self.interpolant = galsim.Lanczos(5)
         else:
-            self.interpolant = interpolant
-            galsim.utilities.convert_interpolant_to_2d(interpolant)
+            self.interpolant = galsim.utilities.convert_interpolant(interpolant)
 
         # Convert power_functions into callables:
         e_power_function = self._convert_power_function(self.e_power_function,'e_power_function')
@@ -870,8 +896,7 @@ class PowerSpectrum(object):
         # this process doesn't make sense.
         if im.bounds.xmax - im.bounds.xmin < border:
             raise RuntimeError("Periodic wrapping does not work with images this small!")
-        expanded_bounds = galsim.BoundsI(im.bounds.xmin-border, im.bounds.xmax+border,
-                                         im.bounds.ymin-border, im.bounds.xmax+border)
+        expanded_bounds = im.bounds.withBorder(border)
         # Make new image with those bounds.
         im_new = galsim.ImageD(expanded_bounds)
         # Make the central subarray equal to what we want.
@@ -1025,10 +1050,10 @@ class PowerSpectrum(object):
 
         # Set the interpolant:
         if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(interpolant)
+            xinterp = galsim.utilities.convert_interpolant(interpolant)
         else:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
-        kinterp = galsim.InterpolantXY(galsim.Quintic())
+            xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+        kinterp = galsim.Quintic()
 
         if reduced:
             # get reduced shear (just discard magnification)
@@ -1170,10 +1195,10 @@ class PowerSpectrum(object):
 
         # Set the interpolant:
         if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(interpolant)
+            xinterp = galsim.utilities.convert_interpolant(interpolant)
         else:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
-        kinterp = galsim.InterpolantXY(galsim.Quintic())
+            xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+        kinterp = galsim.Quintic()
 
         # Make an SBInterpolatedImage, which will do the heavy lifting for the interpolation.
         # However, if we are doing wrapped interpolation then we will want to manually stick the
@@ -1283,10 +1308,10 @@ class PowerSpectrum(object):
 
         # Set the interpolant:
         if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(interpolant)
+            xinterp = galsim.utilities.convert_interpolant(interpolant)
         else:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
-        kinterp = galsim.InterpolantXY(galsim.Quintic())
+            xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+        kinterp = galsim.Quintic()
 
         # Calculate the magnification based on the convergence and shear
         _, _, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
@@ -1405,10 +1430,10 @@ class PowerSpectrum(object):
 
         # Set the interpolant:
         if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(interpolant)
+            xinterp = galsim.utilities.convert_interpolant(interpolant)
         else:
-            xinterp = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
-        kinterp = galsim.InterpolantXY(galsim.Quintic())
+            xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+        kinterp = galsim.Quintic()
 
         # Calculate the magnification based on the convergence and shear
         g1_r, g2_r, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
@@ -1501,15 +1526,25 @@ class PowerSpectrumRealizer(object):
     @param ngrid            The size of the grid in one dimension.
     @param pixel_size       The size of the pixel sides, in units consistent with the units expected
                             by the power spectrum functions.
-    @param e_power_function See description of this parameter in the documentation for the
+    @param p_E              Equivalent to e_power_function in the documentation for the
                             PowerSpectrum class.
-    @param b_power_function See description of this parameter in the documentation for the
+    @param p_B              Equivalent to b_power_function in the documentation for the
                             PowerSpectrum class.
     """
     def __init__(self, ngrid, pixel_size, p_E, p_B):
         # Set up the k grids in x and y, and the instance variables
         self.set_size(ngrid, pixel_size)
         self.set_power(p_E, p_B)
+
+    def __repr__(self):
+        return "galsim.lensing_ps.PowerSpectrumRealizer(ngrid=%r, pixel_size=%r, p_E=%r, p_B=%r)"%(
+                self.nx, self.pixel_size, self.p_E, self.p_B)
+    def __str__(self):
+        return "galsim.lensing_ps.PowerSpectrumRealizer(ngrid=%r, pixel_size=%r, p_E=%s, p_B=%s)"%(
+                self.nx, self.pixel_size, self.p_E, self.p_B)
+    def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
+    def __hash__(self): return hash(repr(self))
 
     def set_size(self, ngrid, pixel_size):
         self.nx = ngrid

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -727,17 +727,16 @@ def test_interpolated_image():
     gsobject_compare(gal1a, gal1b)
 
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
-    interp = galsim.InterpolantXY(galsim.Linear())
-    gal2b = galsim.InterpolatedImage(im, x_interpolant=interp)
+    gal2b = galsim.InterpolatedImage(im, x_interpolant=galsim.Linear())
     gsobject_compare(gal2a, gal2b)
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
-    interp = galsim.InterpolantXY(galsim.Cubic())
-    gal3b = galsim.InterpolatedImage(im, x_interpolant=interp, normalization='sb', flux=1.e4)
+    gal3b = galsim.InterpolatedImage(im, x_interpolant=galsim.Cubic(), normalization='sb',
+                                     flux=1.e4)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
-    interp = galsim.InterpolantXY(galsim.Lanczos(n=5,conserve_dc=True))
+    interp = galsim.Lanczos(n=5, conserve_dc=True)
     gal4b = galsim.InterpolatedImage(im, x_interpolant=interp, scale=0.7, flux=1.e5)
     gsobject_compare(gal4a, gal4b)
 

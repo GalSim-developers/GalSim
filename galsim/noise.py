@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -94,7 +94,6 @@ _galsim.BaseNoise.getRNG.__func__.__doc__ = """
 Get the BaseDeviate used to generate random numbers for the current noise model.
 """
 
-
 _galsim.BaseNoise.getVariance.__func__.__doc__ = "Get variance in current noise model."
 
 def Noise_withVariance(self, variance):
@@ -145,7 +144,12 @@ _galsim.BaseNoise.__mul__ = Noise_mul
 _galsim.BaseNoise.__rmul__ = Noise_mul
 _galsim.BaseNoise.__div__ = Noise_div
 _galsim.BaseNoise.__truediv__ = Noise_div
- 
+
+# Quick and dirty.  Just check reprs are equal.
+_galsim.BaseNoise.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.BaseNoise.__ne__ = lambda self, other: not self.__eq__(other)
+_galsim.BaseNoise.__hash__ = lambda self: hash(repr(self))
+
 # GaussianNoise docstrings
 _galsim.GaussianNoise.__doc__ = """
 Class implementing simple Gaussian noise.
@@ -198,7 +202,7 @@ def GaussianNoise_copy(self, rng=None):
 
         >>> noise_copy = noise.copy(rng=new_rng)
     """
-    if rng is None: rng = self.getRNG()
+    if rng is None: rng = self.rng
     return _galsim.GaussianNoise(rng, self.getSigma())
 
 _galsim.GaussianNoise.copy = GaussianNoise_copy
@@ -267,7 +271,7 @@ def PoissonNoise_copy(self, rng=None):
 
         >>> noise_copy = noise.copy(rng=new_rng)
     """
-    if rng is None: rng = self.getRNG()
+    if rng is None: rng = self.rng
     return _galsim.PoissonNoise(rng, self.getSkyLevel())
 
 _galsim.PoissonNoise.copy = PoissonNoise_copy
@@ -347,7 +351,7 @@ def CCDNoise_copy(self, rng=None):
 
         >>> noise_copy = noise.copy(rng=new_rng)
     """
-    if rng is None: rng = self.getRNG()
+    if rng is None: rng = self.rng
     return _galsim.CCDNoise(rng, self.getSkyLevel(), self.getGain(), self.getReadNoise())
 
 _galsim.CCDNoise.copy = CCDNoise_copy
@@ -405,8 +409,8 @@ def DeviateNoise_copy(self, rng=None):
 
         >>> noise_copy = noise.copy(rng=new_rng)
     """
-    if rng is None: rng = self.getRNG()
-    else: rng = self.getRNG().duplicate().reset(rng)
+    if rng is None: rng = self.rng
+    else: rng = self.rng.duplicate().reset(rng)
     return _galsim.DeviateNoise(rng)
 
 _galsim.DeviateNoise.copy = DeviateNoise_copy
@@ -476,6 +480,11 @@ class VariableGaussianNoise(_galsim.BaseNoise):
     def getRNG(self):
         return self.noise.getRNG()
 
+    @property
+    def rng(self): return self.getRNG()
+    @property
+    def var_image(self): return self.getVarImage()
+
     def copy(self, rng=None):
         """Returns a copy of the variable Gaussian noise model.
 
@@ -484,7 +493,7 @@ class VariableGaussianNoise(_galsim.BaseNoise):
 
             >>> noise_copy = noise.copy(rng=new_rng)
         """
-        if rng is None: rng = self.getRNG()
+        if rng is None: rng = self.rng
         return VariableGaussianNoise(rng, self.getVarImage())
 
     def getVariance(self):
@@ -504,3 +513,41 @@ class VariableGaussianNoise(_galsim.BaseNoise):
     def scaleVariance(self, variance):
         raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
 
+    def __repr__(self):
+        return 'galsim.VariableGaussianNoise(rng=%r, var_image%r)'%(self.rng, self.var_image)
+
+    def __str__(self):
+        return 'galsim.VariableGaussianNoise(var_image%s)'%(self.var_image)
+
+# Enable pickling of the boost-python wrapped classes
+_galsim.GaussianNoise.__getinitargs__ = lambda self: (self.rng, self.sigma)
+_galsim.PoissonNoise.__getinitargs__ = lambda self: (self.rng, self.sky_level)
+_galsim.CCDNoise.__getinitargs__ = \
+        lambda self: (self.rng, self.sky_level, self.gain, self.read_noise)
+_galsim.DeviateNoise.__getinitargs__ = lambda self: (self.rng, )
+_galsim.VarGaussianNoise.__getinitargs__ = lambda self: (self.rng, self.var_image)
+
+# Make repr and str functions
+_galsim.GaussianNoise.__repr__ = \
+        lambda self: 'galsim.GaussianNoise(rng=%r, sigma=%r)'%(self.rng, self.sigma)
+_galsim.PoissonNoise.__repr__ = \
+        lambda self: 'galsim.PoissonNoise(rng=%r, sky_level=%r)'%(self.rng, self.sky_level)
+_galsim.CCDNoise.__repr__ = \
+        lambda self: 'galsim.CCDNoise(rng=%r, sky_level=%r, gain=%r, read_noise=%r)'%(
+            self.rng, self.sky_level, self.gain, self.read_noise)
+_galsim.DeviateNoise.__repr__ = \
+        lambda self: 'galsim.DeviateNoise(dev=%r)'%(self.rng)
+_galsim.VarGaussianNoise.__repr__ = \
+        lambda self: 'galsim.VarGaussianNoise(rng=%r, var_image%r)'%(self.rng, self.var_image)
+        
+_galsim.GaussianNoise.__str__ = \
+        lambda self: 'galsim.GaussianNoise(sigma=%s)'%(self.sigma)
+_galsim.PoissonNoise.__str__ = \
+        lambda self: 'galsim.PoissonNoise(sky_level=%s)'%(self.sky_level)
+_galsim.CCDNoise.__str__ = \
+        lambda self: 'galsim.CCDNoise(sky_level=%s, gain=%s, read_noise=%s)'%(
+            self.sky_level, self.gain, self.read_noise)
+_galsim.DeviateNoise.__str__ = \
+        lambda self: 'galsim.DeviateNoise(dev=%s)'%(self.rng)
+_galsim.VarGaussianNoise.__str__ = \
+        lambda self: 'galsim.VarGaussianNoise(var_image%s)'%(self.var_image)

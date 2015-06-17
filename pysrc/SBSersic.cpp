@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -72,6 +72,8 @@ namespace galsim {
                 .def("getN", &SBSersic::getN)
                 .def("getHalfLightRadius", &SBSersic::getHalfLightRadius)
                 .def("getScaleRadius", &SBSersic::getScaleRadius)
+                .def("getTrunc", &SBSersic::getTrunc)
+                .enable_pickling()
                 ;
         }
     };
@@ -113,6 +115,7 @@ namespace galsim {
                 .def(bp::init<const SBDeVaucouleurs &>())
                 .def("getHalfLightRadius", &SBDeVaucouleurs::getHalfLightRadius)
                 .def("getScaleRadius", &SBDeVaucouleurs::getScaleRadius)
+                .def("getTrunc", &SBDeVaucouleurs::getTrunc)
                 ;
         }
     };

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -45,29 +45,23 @@ import galsim.utilities
 # a few shear values over which we will loop so we can check them all
 # note: Rachel started with these q and beta, and then calculated all the other numbers in IDL using
 # the standard formulae
-q = [0.5, 0.3, 0.1, 0.7]
+q = [0.5, 0.3, 0.1, 0.7, 0.9, 0.99, 1.-8.75e-5]
 n_shear = len(q)
-beta = [0.5*np.pi, 0.25*np.pi, 0.0*np.pi, np.pi/3.0]
-g = [0.333333, 0.538462, 0.818182, 0.176471]
-g1 = [-0.33333334, 0.0, 0.81818175, -0.088235296]
-g2 = [0.0, 0.53846157, 0.0, 0.15282802]
-e = [0.600000, 0.834862, 0.980198, 0.342282]
-e1 = [-0.6000000, 0.0, 0.98019803, -0.17114094]
-e2 = [0.0, 0.83486235, 0.0, 0.29642480]
-eta = [0.693147, 1.20397, 2.30259, 0.356675]
-eta1 = [-0.69314718, 0.0, 2.3025851, -0.17833748]
-eta2 = [0.0, 1.2039728, 0.0, 0.30888958]
+beta = [0.5*np.pi, 0.25*np.pi, 0.0*np.pi, np.pi/3.0, np.pi, -0.25*np.pi, -0.5*np.pi]
+g = [0.333333, 0.538462, 0.818182, 0.176471, 0.05263157897, 0.005025125626, 4.375191415e-5 ]
+g1 = [-0.33333334, 0.0, 0.81818175, -0.088235296, 0.05263157897, 0.0, -4.375191415e-5 ]
+g2 = [0.0, 0.53846157, 0.0, 0.15282802, 0.0, -0.005025125626, 0.0 ]
+e = [0.600000, 0.834862, 0.980198, 0.342282, 0.1049723757, 0.01004999747, 8.750382812e-5 ]
+e1 = [-0.6000000, 0.0, 0.98019803, -0.17114094, 0.1049723757, 0.0, -8.750382812e-5 ]
+e2 = [0.0, 0.83486235, 0.0, 0.29642480, 0.0, -0.01004999747, 0.0 ]
+eta = [0.693147, 1.20397, 2.30259, 0.356675, 0.1053605157, 0.01005033585, 8.750382835e-5 ]
+eta1 = [-0.69314718, 0.0, 2.3025851, -0.17833748, 0.1053605157, 0.0, -8.750382835e-5 ]
+eta2 = [0.0, 1.2039728, 0.0, 0.30888958, 0.0, -0.01005033585, 0.0 ]
 decimal = 5
-
-# some ellipse properties over which we will loop - use the shear values above, and:
-mu = [0.0, 0.5, -0.1]
-n_mu = len(mu)
-x_shift = [0.0, 1.7, -3.0]
-y_shift = [-1.3, 0.0, 9.1]
-n_shift = len(x_shift)
 
 #### some helper functions
 def all_shear_vals(test_shear, index, mult_val = 1.0):
+    print 'test_shear = ',repr(test_shear)
     # this function tests that all values of some Shear object are consistent with the tabulated
     # values, given the appropriate index against which to test, and properly accounting for the
     # fact that SBProfile sometimes has the angle in the range [pi, 2*pi)
@@ -90,6 +84,12 @@ def all_shear_vals(test_shear, index, mult_val = 1.0):
                 np.abs(mult_val)*eta[index], mult_val*mult_val*e[index]*e[index], test_beta % np.pi]
     np.testing.assert_array_almost_equal(vec, test_vec, decimal=decimal,
                                          err_msg = "Incorrectly initialized Shear")
+    if index == n_shear-1:
+        # On the last one with values < 1.e-4, multiply everything by 1.e4 and check again.
+        vec = [1.e4 * v for v in vec[:-1]]  # don't include beta now.
+        test_vec = [1.e4 * v for v in test_vec[:-1]]
+        np.testing.assert_array_almost_equal(vec, test_vec, decimal=decimal,
+                                             err_msg = "Incorrectly initialized Shear")
 
 def add_distortions(d1, d2, d1app, d2app):
     # add the distortions
@@ -150,9 +150,16 @@ def test_shear_initialization():
         # initialize with conformal shear and position angle
         s = galsim.Shear(eta = eta[ind], beta = beta[ind]*galsim.radians)
         all_shear_vals(s, ind)
-        # initialize with a wrapped C++ Shear object
-        s2 = galsim.Shear(s._shear)
+        # initialize with a complex number g1 + 1j * g2
+        s = galsim.Shear(g1[ind] + 1j * g2[ind])
+        all_shear_vals(s, ind)
+        # which should also be the value of s.shear
+        s2 = galsim.Shear(s.shear)
         all_shear_vals(s2, ind)
+
+        # Check picklability
+        do_pickle(s)
+
     # finally check some examples of invalid initializations for Shear
     try:
         np.testing.assert_raises(TypeError,galsim.Shear,0.3)
@@ -236,6 +243,40 @@ def test_shear_methods():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_shear_matrix():
+    """Test that the shear matrix is calculated correctly.
+    """
+    import time
+    t1 = time.time()
+
+    for ind in range(n_shear):
+        s1 = galsim.Shear(g1=g1[ind], g2=g2[ind])
+
+        true_m1 = np.array([[ 1.+g1[ind],  g2[ind]  ],
+                            [   g2[ind], 1.-g1[ind] ]]) / np.sqrt(1.-g1[ind]**2-g2[ind]**2)
+        m1 = s1.getMatrix()
+
+        np.testing.assert_array_almost_equal(m1, true_m1, decimal=12,
+                                             err_msg="getMatrix returned wrong matrix")
+
+        for ind2 in range(n_shear):
+            s2 = galsim.Shear(g1=g1[ind2], g2=g2[ind2])
+            m2 = s2.getMatrix()
+
+            s3 = s1 + s2
+            m3 = s3.getMatrix()
+
+            theta = s1.rotationWith(s2)
+            r = np.array([[  np.cos(theta.rad()), -np.sin(theta.rad()) ],
+                          [  np.sin(theta.rad()),  np.cos(theta.rad()) ]])
+            np.testing.assert_array_almost_equal(m3.dot(r), m1.dot(m2), decimal=12,
+                                                 err_msg="rotationWith returned wrong angle")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
     test_shear_initialization()
     test_shear_methods()
+    test_shear_matrix()

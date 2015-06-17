@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -30,6 +30,8 @@ namespace galsim {
     public:
         SBAddImpl(const std::list<SBProfile>& slist, const GSParamsPtr& gsparams);
         ~SBAddImpl() {}
+
+        std::list<SBProfile> getObjs() const { return _plist; }
 
         void add(const SBProfile& rhs);
 
@@ -132,7 +134,9 @@ namespace galsim {
         typedef std::list<SBProfile>::iterator Iter;
         typedef std::list<SBProfile>::const_iterator ConstIter;
 
-    protected:  // This is protected since we want inheritance by AddCorrelationFunctionImpl
+        std::string repr() const;
+
+    private:
 
         /// @brief The plist content is a pointer to a fresh copy of the summands.
         std::list<SBProfile> _plist; 

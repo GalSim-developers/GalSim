@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -64,6 +64,15 @@ namespace galsim {
     SBAiry::SBAiry(const SBAiry& rhs) : SBProfile(rhs) {}
 
     SBAiry::~SBAiry() {}
+
+    std::string SBAiry::SBAiryImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBAiry("<<getLamOverD()<<", "<<getObscuration()<<", "<<
+            getFlux()<<", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
 
     double SBAiry::getLamOverD() const 
     {

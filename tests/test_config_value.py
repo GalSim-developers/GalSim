@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -38,7 +38,9 @@ def test_float_value():
     t1 = time.time()
 
     config = {
-        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
+        'input' : { 'catalog' : [
+                        { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
+                        { 'dir' : 'config_input', 'file_name' : 'catalog.fits' } ],
                     'dict' : [ 
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.json' },
@@ -51,6 +53,8 @@ def test_float_value():
         'str3' : '6.e-9', 
         'cat1' : { 'type' : 'Catalog' , 'col' : 0 },
         'cat2' : { 'type' : 'Catalog' , 'col' : 1 },
+        'cat3' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'float1' },
+        'cat4' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'float2' },
         'ran1' : { 'type' : 'Random', 'min' : 0.5, 'max' : 3 },
         'ran2' : { 'type' : 'Random', 'min' : -5, 'max' : 0 },
         'gauss1' : { 'type' : 'RandomGaussian', 'sigma' : 1 },
@@ -115,17 +119,22 @@ def test_float_value():
     np.testing.assert_almost_equal(str3, 6.0e-9)
 
     # Test values read from a Catalog
-    input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
+    cat3 = []
+    cat4 = []
     config['index_key'] = 'file_num'
     for k in range(5):
         config['file_num'] = k
         cat1.append(galsim.config.ParseValue(config,'cat1',config, float)[0])
         cat2.append(galsim.config.ParseValue(config,'cat2',config, float)[0])
+        cat3.append(galsim.config.ParseValue(config,'cat3',config, float)[0])
+        cat4.append(galsim.config.ParseValue(config,'cat4',config, float)[0])
 
     np.testing.assert_array_almost_equal(cat1, [ 1.234, 2.345, 3.456, 1.234, 2.345 ])
     np.testing.assert_array_almost_equal(cat2, [ 4.131, -900, 8000, 4.131, -900 ])
+    np.testing.assert_array_almost_equal(cat3, [ 1.234, 2.345, 3.456, 1.234, 2.345 ])
+    np.testing.assert_array_almost_equal(cat4, [ 4.131, -900, 8000, 4.131, -900 ])
 
     # Test values generated from a uniform deviate
     rng = galsim.UniformDeviate(1234)
@@ -293,7 +302,9 @@ def test_int_value():
     t1 = time.time()
 
     config = {
-        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
+        'input' : { 'catalog' : [
+                        { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
+                        { 'dir' : 'config_input', 'file_name' : 'catalog.fits' } ],
                     'dict' : [ 
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.json' },
@@ -306,6 +317,8 @@ def test_int_value():
         'str2' : '-2',
         'cat1' : { 'type' : 'Catalog' , 'col' : 2 },
         'cat2' : { 'type' : 'Catalog' , 'col' : 3 },
+        'cat3' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'int1' },
+        'cat4' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'int2' },
         'ran1' : { 'type' : 'Random', 'min' : 0, 'max' : 3 },
         'ran2' : { 'type' : 'Random', 'min' : -5, 'max' : 10 },
         'dev1' : { 'type' : 'RandomPoisson', 'mean' : 137 },
@@ -357,17 +370,22 @@ def test_int_value():
     np.testing.assert_equal(str2, -2)
 
     # Test values read from a Catalog
-    input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
+    cat3 = []
+    cat4 = []
     config['index_key'] = 'image_num'
     for k in range(5):
         config['image_num'] = k
         cat1.append(galsim.config.ParseValue(config,'cat1',config, int)[0])
         cat2.append(galsim.config.ParseValue(config,'cat2',config, int)[0])
+        cat3.append(galsim.config.ParseValue(config,'cat3',config, int)[0])
+        cat4.append(galsim.config.ParseValue(config,'cat4',config, int)[0])
 
     np.testing.assert_array_equal(cat1, [ 9, 0, -4, 9, 0 ])
     np.testing.assert_array_equal(cat2, [ -3, 8, 17, -3, 8 ])
+    np.testing.assert_array_equal(cat3, [ 9, 0, -4, 9, 0 ])
+    np.testing.assert_array_equal(cat4, [ -3, 8, 17, -3, 8 ])
 
     # Test values generated from a uniform deviate
     rng = galsim.UniformDeviate(1234)
@@ -486,7 +504,9 @@ def test_bool_value():
     t1 = time.time()
 
     config = {
-        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
+        'input' : { 'catalog' : [
+                        { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
+                        { 'dir' : 'config_input', 'file_name' : 'catalog.fits' } ],
                     'dict' : [ 
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.json' },
@@ -501,6 +521,8 @@ def test_bool_value():
         'str4' : 'No',
         'cat1' : { 'type' : 'Catalog' , 'col' : 4 },
         'cat2' : { 'type' : 'Catalog' , 'col' : 5 },
+        'cat3' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'bool1' },
+        'cat4' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'bool2' },
         'ran1' : { 'type' : 'Random' },
         'dev1' : { 'type' : 'RandomBinomial', 'N' : 1 },
         'dev2' : { 'type' : 'RandomBinomial', 'N' : 1, 'p' : 0.5 },
@@ -549,17 +571,22 @@ def test_bool_value():
     np.testing.assert_equal(str4, False)
 
     # Test values read from a Catalog
-    input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
+    cat3 = []
+    cat4 = []
     config['index_key'] = 'obj_num'
     for k in range(5):
         config['obj_num'] = k
         cat1.append(galsim.config.ParseValue(config,'cat1',config, bool)[0])
         cat2.append(galsim.config.ParseValue(config,'cat2',config, bool)[0])
+        cat3.append(galsim.config.ParseValue(config,'cat3',config, bool)[0])
+        cat4.append(galsim.config.ParseValue(config,'cat4',config, bool)[0])
 
     np.testing.assert_array_equal(cat1, [ 1, 0, 1, 1, 0 ])
     np.testing.assert_array_equal(cat2, [ 1, 0, 0, 1, 0 ])
+    np.testing.assert_array_equal(cat3, [ 1, 0, 1, 1, 0 ])
+    np.testing.assert_array_equal(cat4, [ 1, 0, 0, 1, 0 ])
 
     # Test values generated from a uniform deviate
     rng = galsim.UniformDeviate(1234)
@@ -630,7 +657,9 @@ def test_str_value():
     t1 = time.time()
 
     config = {
-        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
+        'input' : { 'catalog' : [
+                        { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
+                        { 'dir' : 'config_input', 'file_name' : 'catalog.fits' } ],
                     'dict' : [ 
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.json' },
@@ -643,6 +672,8 @@ def test_str_value():
         'str2' : u"Blue",
         'cat1' : { 'type' : 'Catalog' , 'col' : 6 },
         'cat2' : { 'type' : 'Catalog' , 'col' : 7 },
+        'cat3' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'str1' },
+        'cat4' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'str2' },
         'list1' : { 'type' : 'List', 'items' : [ 'Beautiful', 'plumage!', 'Ay?' ] },
         'file1' : { 'type' : 'NumberedFile', 'root' : 'file', 'num' : 5,
                     'ext' : '.fits.fz', 'digits' : 3 },
@@ -688,18 +719,23 @@ def test_str_value():
     np.testing.assert_equal(str2, 'Blue')
 
     # Test values read from a Catalog
-    input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
+    cat3 = []
+    cat4 = []
     config['index_key'] = 'obj_num'
     for k in range(3):
         config['obj_num'] = k
         cat1.append(galsim.config.ParseValue(config,'cat1',config, str)[0])
         cat2.append(galsim.config.ParseValue(config,'cat2',config, str)[0])
+        cat3.append(galsim.config.ParseValue(config,'cat3',config, str)[0])
+        cat4.append(galsim.config.ParseValue(config,'cat4',config, str)[0])
 
     np.testing.assert_array_equal(cat1, ["He's", "bleedin'", "demised!"])
     # Note: white space in the input catalog always separates columns. ' and " don't work.
     np.testing.assert_array_equal(cat2, ['"ceased', '"bereft', '"kicked'])
+    np.testing.assert_array_equal(cat3, ["He's", "bleedin'", "demised!"])
+    np.testing.assert_array_equal(cat4, ['"ceased', '"bereft', '"kicked'])
 
     # Test values taken from a List
     list1 = []
@@ -750,7 +786,9 @@ def test_angle_value():
     t1 = time.time()
 
     config = {
-        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } },
+        'input' : { 'catalog' : [
+                        { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
+                        { 'dir' : 'config_input', 'file_name' : 'catalog.fits' } ] },
 
         'val1' : 1.9 * galsim.radians,
         'val2' : -41 * galsim.degrees,
@@ -766,6 +804,10 @@ def test_angle_value():
                    'theta' : { 'type' : 'Catalog' , 'col' : 10 } },
         'cat2' : { 'type' : 'Degrees' , 
                    'theta' : { 'type' : 'Catalog' , 'col' : 11 } },
+        'cat3' : { 'type' : 'Radians' , 
+                   'theta' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'angle1' } },
+        'cat4' : { 'type' : 'Degrees' , 
+                   'theta' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'angle2' } },
         'ran1' : { 'type' : 'Random' },
         'seq1' : { 'type' : 'Rad', 'theta' : { 'type' : 'Sequence' } },
         'seq2' : { 'type' : 'Deg', 'theta' : { 'type' : 'Sequence', 'first' : 45, 'step' : 80 } },
@@ -811,17 +853,22 @@ def test_angle_value():
     np.testing.assert_almost_equal(str8 / galsim.degrees, 0.5)
 
     # Test values read from a Catalog
-    input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
+    cat3 = []
+    cat4 = []
     config['index_key'] = 'file_num'
     for k in range(5):
         config['file_num'] = k
         cat1.append(galsim.config.ParseValue(config,'cat1',config, galsim.Angle)[0].rad())
         cat2.append(galsim.config.ParseValue(config,'cat2',config, galsim.Angle)[0]/galsim.degrees)
+        cat3.append(galsim.config.ParseValue(config,'cat3',config, galsim.Angle)[0].rad())
+        cat4.append(galsim.config.ParseValue(config,'cat4',config, galsim.Angle)[0]/galsim.degrees)
 
     np.testing.assert_array_almost_equal(cat1, [ 1.2, 0.1, -0.9, 1.2, 0.1 ])
     np.testing.assert_array_almost_equal(cat2, [ 23, 15, 82, 23, 15 ])
+    np.testing.assert_array_almost_equal(cat3, [ 1.2, 0.1, -0.9, 1.2, 0.1 ])
+    np.testing.assert_array_almost_equal(cat4, [ 23, 15, 82, 23, 15 ])
 
     # Test values generated from a uniform deviate
     rng = galsim.UniformDeviate(1234)

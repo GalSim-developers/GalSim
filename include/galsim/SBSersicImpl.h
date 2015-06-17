@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -184,6 +184,8 @@ namespace galsim {
         double getHalfLightRadius() const { return _re; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
+        /// @brief Returns the truncation radius
+        double getTrunc() const { return _trunc; }
 
         // Overrides for better efficiency
         void fillXValue(tmv::MatrixView<double> val,
@@ -198,6 +200,8 @@ namespace galsim {
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
+
+        std::string repr() const;
 
     private:
         double _n;       ///< Sersic index.

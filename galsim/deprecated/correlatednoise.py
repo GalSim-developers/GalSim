@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -32,7 +32,7 @@ def CN_createExpanded(self, scale):
 def CN_applyExpansion(self, scale):
     """A deprecated method that is roughly equivalent to obj = obj.expand(scale)"""
     depr('applyExpansion', 1.1, 'obj = obj.expand(scale)')
-    new_obj = self.expand(scale)
+    new_obj = self.copy().expand(scale)
     self._profile = new_obj._profile
     self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
     self.__class__ = new_obj.__class__
@@ -45,7 +45,7 @@ def CN_createDilated(self, scale):
 def CN_applyDilation(self, scale):
     """A deprecated method that is roughly equivalent to obj = obj.dilate(scale)"""
     depr('applyDilation', 1.1, 'obj = obj.dilate(scale)')
-    new_obj = self.dilate(scale)
+    new_obj = self.copy().dilate(scale)
     self._profile = new_obj._profile
     self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
     self.__class__ = new_obj.__class__
@@ -58,7 +58,7 @@ def CN_createMagnified(self, mu):
 def CN_applyMagnification(self, mu):
     """A deprecated method that is roughly equivalent to obj = obj.magnify(mu)"""
     depr('applyMagnification', 1.1, 'obj = obj.magnify(mu)')
-    new_obj = self.magnify(mu)
+    new_obj = self.copy().magnify(mu)
     self._profile = new_obj._profile
     self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
     self.__class__ = new_obj.__class__
@@ -71,7 +71,7 @@ def CN_createLensed(self, g1, g2, mu):
 def CN_applyLensing(self, g1, g2, mu):
     """A deprecated method that is roughly equivalent to obj = obj.lens(g1,g2,mu)"""
     depr('applyLensing', 1.1, 'obj = obj.lens(g1,g2,mu)')
-    new_obj = self.lens(g1,g2,mu)
+    new_obj = self.copy().lens(g1,g2,mu)
     self._profile = new_obj._profile
     self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
     self.__class__ = new_obj.__class__
@@ -97,7 +97,7 @@ def CN_createSheared(self, *args, **kwargs):
 def CN_applyShear(self, *args, **kwargs):
     """A deprecated method that is roughly equivalent to obj = obj.shear(shear)"""
     depr('applyShear', 1.1, 'obj = obj.shear(shear)')
-    new_obj = self.shear(*args, **kwargs)
+    new_obj = self.copy().shear(*args, **kwargs)
     self._profile = new_obj._profile
     self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
     self.__class__ = new_obj.__class__
@@ -110,7 +110,7 @@ def CN_createTransformed(self, dudx, dudy, dvdx, dvdy):
 def CN_applyTransformation(self, dudx, dudy, dvdx, dvdy):
     """A deprecated method that is roughly equivalent to obj = obj.transform(...)"""
     depr('applyTransformation', 1.1, 'obj = obj.transform(dudx,dudy,dvdx,dvdy)')
-    new_obj = self.transform(dudx,dudy,dvdx,dvdy)
+    new_obj = self.copy().transform(dudx,dudy,dvdx,dvdy)
     self._profile = new_obj._profile
     self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
     self.__class__ = new_obj.__class__
@@ -120,7 +120,7 @@ def CN_setVariance(self, variance):
     corr = corr.withVariance(variance)
     """
     depr('setVariance', 1.1, 'obj = obj.withVariance(variance)')
-    new_obj = self.withVariance(variance)
+    new_obj = self.copy().withVariance(variance)
     self._profile = new_obj._profile
     self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
     self.__class__ = new_obj.__class__
@@ -128,7 +128,7 @@ def CN_setVariance(self, variance):
 def CN_scaleVariance(self, variance_ratio):
     """A deprecated method that is roughly equivalent to corr = corr * variance_ratio"""
     depr('scaleVariance', 1.1, 'obj = obj * variance_ratio')
-    new_obj = self.withScaledVariance(variance_ratio)
+    new_obj = self.copy().withScaledVariance(variance_ratio)
     self._profile = new_obj._profile
     self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
     self.__class__ = new_obj.__class__
@@ -138,7 +138,7 @@ def CN_convolveWith(self, gsobject, gsparams=None):
     cn = cn.convolvedWith(gsobject,gsparams)
     """
     depr('convolveWith', 1.1, 'obj = obj.convolvedWith(gsobject, gsparams)')
-    new_obj = self.convolvedWith(gsobject,gsparams)
+    new_obj = self.copy().convolvedWith(gsobject,gsparams)
     self._profile = new_obj._profile
     self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
     self.__class__ = new_obj.__class__

@@ -1,7 +1,6 @@
 module.cpp
 Angle.cpp
 Bounds.cpp
-CppShear.cpp
 Image.cpp
 SBProfile.cpp
 SBAdd.cpp

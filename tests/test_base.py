@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -67,7 +67,7 @@ default_params = galsim.GSParams(
 
 
 def test_gaussian():
-    """Test the generation of a specific Gaussian profile using SBProfile against a known result.
+    """Test the generation of a specific Gaussian profile against a known result.
     """
     import time
     t1 = time.time()
@@ -111,18 +111,40 @@ def test_gaussian():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian with GSParams() disagrees with expected result")
 
+    # Use non-unity values.
+    gauss = galsim.Gaussian(flux=1.7, sigma=2.3)
+
     # Test photon shooting.
     do_shoot(gauss,myImg,"Gaussian")
 
     # Test kvalues
     do_kvalue(gauss,myImg,"Gaussian")
 
+    # Check picklability
+    do_pickle(galsim.GSParams())  # Check GSParams explicitly here too.
+    do_pickle(galsim.GSParams(
+        minimum_fft_size = 12,
+        maximum_fft_size = 40,
+        folding_threshold = 1.e-1,
+        maxk_threshold = 2.e-1,
+        kvalue_accuracy = 3.e-1,
+        xvalue_accuracy = 4.e-1,
+        shoot_accuracy = 5.e-1,
+        realspace_relerr = 6.e-1,
+        realspace_abserr = 7.e-1,
+        integration_relerr = 8.e-1,
+        integration_abserr = 9.e-1))
+    do_pickle(gauss.SBProfile, lambda x: (x.getSigma(), x.getFlux(), x.getGSParams()))
+    do_pickle(gauss, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(gauss)
+    do_pickle(gauss.SBProfile)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_gaussian_properties():
-    """Test some basic properties of the SBGaussian profile.
+    """Test some basic properties of the Gaussian profile.
     """
     import time
     t1 = time.time()
@@ -340,7 +362,7 @@ def test_gaussian_flux_scaling():
 
 
 def test_exponential():
-    """Test the generation of a specific exp profile using SBProfile against a known result.
+    """Test the generation of a specific exp profile against a known result.
     """
     import time
     t1 = time.time()
@@ -374,18 +396,27 @@ def test_exponential():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Exponential with GSParams() disagrees with expected result")
 
+    # Use non-unity values.
+    expon = galsim.Exponential(flux=1.7, scale_radius=0.91)
+
     # Test photon shooting.
     do_shoot(expon,myImg,"Exponential")
 
     # Test kvalues
     do_kvalue(expon,myImg,"Exponential")
 
+    # Check picklability
+    do_pickle(expon.SBProfile, lambda x: (x.getScaleRadius(), x.getFlux(), x.getGSParams()))
+    do_pickle(expon, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(expon)
+    do_pickle(expon.SBProfile)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_exponential_properties():
-    """Test some basic properties of the SBExponential profile.
+    """Test some basic properties of the Exponential profile.
     """
     import time
     t1 = time.time()
@@ -517,7 +548,7 @@ def test_exponential_flux_scaling():
 
 
 def test_sersic():
-    """Test the generation of a specific Sersic profile using SBProfile against a known result.
+    """Test the generation of a specific Sersic profile against a known result.
     """
     import time
     t1 = time.time()
@@ -546,6 +577,9 @@ def test_sersic():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Sersic with GSParams() disagrees with expected result")
 
+    # Use non-unity values.
+    sersic = galsim.Sersic(n=3, flux=1.7, half_light_radius=2.3)
+
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
     sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
@@ -553,6 +587,13 @@ def test_sersic():
 
     # Test kvalues
     do_kvalue(sersic,myImg,"Sersic")
+
+    # Check picklability
+    do_pickle(sersic.SBProfile,
+              lambda x: (x.getScaleRadius(), x.getTrunc(), x.getFlux(), x.getGSParams()))
+    do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(sersic)
+    do_pickle(sersic.SBProfile)
 
 
     # Now repeat everything using a truncation.  (Above had no truncation.)
@@ -568,6 +609,9 @@ def test_sersic():
             myImg.array, savedImg.array, 5,
             err_msg="Using truncated GSObject Sersic disagrees with expected result")
 
+    # Use non-unity values.
+    sersic = galsim.Sersic(n=3, flux=1.7, half_light_radius=2.3, trunc=5.9)
+
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
     sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
@@ -575,6 +619,13 @@ def test_sersic():
 
     # Test kvalues
     do_kvalue(sersic,myImg, "Truncated Sersic")
+
+    # Check picklability
+    do_pickle(sersic.SBProfile,
+              lambda x: (x.getScaleRadius(), x.getTrunc(), x.getFlux(), x.getGSParams()))
+    do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(sersic)
+    do_pickle(sersic.SBProfile)
 
     # Check for normalization consistencies with kValue checks. xValues tested in test_sersic_radii.
 
@@ -916,7 +967,7 @@ def test_sersic_1():
 
 
 def test_airy():
-    """Test the generation of a specific Airy profile using SBProfile against a known result.
+    """Test the generation of a specific Airy profile against a known result.
     """
     import time
     t1 = time.time()
@@ -953,6 +1004,12 @@ def test_airy():
     do_kvalue(airy,myImg, "Airy obscuration=0.0")
     do_kvalue(airy2,myImg, "Airy obscuration=0.1")
 
+    # Check picklability
+    do_pickle(airy.SBProfile, lambda x: (x.getLamOverD(), x.getFlux(), x.getGSParams()))
+    do_pickle(airy, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(airy)
+    do_pickle(airy.SBProfile)
+
     # Test initialization separately with lam and diam, in various units.  Since the above profiles
     # have lam/diam = 1./0.8 in arbitrary units, we will tell it that lam=1.e9 nm and diam=0.8 m,
     # and use `scale_unit` of galsim.radians.  This is rather silly, but it should work.
@@ -964,7 +1021,6 @@ def test_airy():
     np.testing.assert_array_almost_equal(
             test_im1.array, test_im2.array, 8,
             err_msg="Using GSObject Airy with different kwargs disagrees with expected result")
-
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1068,7 +1124,7 @@ def test_airy_flux_scaling():
 
 
 def test_box():
-    """Test the generation of a specific box profile using SBProfile against a known result.
+    """Test the generation of a specific box profile against a known result.
     """
     import time
     t1 = time.time()
@@ -1094,8 +1150,18 @@ def test_box():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel with GSParams() disagrees with expected result")
 
+    # Use non-unity values.
+    pixel = galsim.Pixel(flux=1.7, scale=2.3)
+
     # Test photon shooting.
     do_shoot(pixel,myImg,"Pixel")
+
+    # Check picklability
+    do_pickle(pixel.SBProfile,
+              lambda x: (x.getWidth(), x.getHeight(), x.getFlux(), x.getGSParams()))
+    do_pickle(pixel, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(pixel)
+    do_pickle(pixel.SBProfile)
 
     # Check that non-square Box profiles work correctly
     scale = 0.2939  # Use a strange scale here to make sure that the centers of the pixels
@@ -1114,24 +1180,34 @@ def test_box():
             # So only do them if running as main.
             do_kvalue(box,im,"Box with width,height = %f,%f"%(width,height))
 
+    # Check picklability
+    do_pickle(box.SBProfile, lambda x: (x.getWidth(), x.getHeight(), x.getFlux(), x.getGSParams()))
+    do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(box)
+    do_pickle(box.SBProfile)
+
     # Check sheared boxes the same way
     box = galsim.Box(width=3, height=2, flux=test_flux, gsparams=gsp)
     box = box.shear(galsim.Shear(g1=0.2, g2=-0.3))
     do_shoot(box,im, "Sheared Box")
     if __name__ == '__main__':
         do_kvalue(box,im, "Sheared Box")
+        do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
+        do_pickle(box)
 
     # This is also a profile that may be convolved using real space convolution, so test that.
     if __name__ == '__main__':
         conv = galsim.Convolve(box, galsim.Pixel(scale=scale), real_space=True)
         do_kvalue(conv,im, "Sheared Box convolved with pixel in real space")
+        do_pickle(conv, lambda x: x.xValue(0.123,-0.456))
+        do_pickle(conv)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_tophat():
-    """Test the generation of a specific tophat profile using SBProfile against a known result.
+    """Test the generation of a specific tophat profile against a known result.
     """
     import time
     t1 = time.time()
@@ -1162,6 +1238,9 @@ def test_tophat():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject TopHat with GSParams() disagrees with expected result")
 
+    # Use non-unity values.
+    tophat = galsim.TopHat(flux=1.7, radius=2.3)
+
     # Test photon shooting.
     do_shoot(tophat,myImg,"TopHat")
 
@@ -1179,6 +1258,16 @@ def test_tophat():
         do_shoot(tophat,im,"TopHat with radius = %f"%radius)
         do_kvalue(tophat,im,"TopHat with radius = %f"%radius)
 
+        # This is also a profile that may be convolved using real space convolution, so test that.
+        conv = galsim.Convolve(tophat, galsim.Pixel(scale=scale), real_space=True)
+        do_kvalue(conv,im, "Sheared TopHat convolved with pixel in real space")
+
+    # Check picklability
+    do_pickle(tophat.SBProfile, lambda x: (x.getRadius(), x.getFlux(), x.getGSParams()))
+    do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(tophat)
+    do_pickle(tophat.SBProfile)
+
     # Check sheared tophat the same way
     tophat = galsim.TopHat(radius=1.2, flux=test_flux)
     # Again, the test is very sensitive to the choice of shear here.  Most values fail because 
@@ -1188,7 +1277,11 @@ def test_tophat():
     do_shoot(tophat,im, "Sheared TopHat")
     do_kvalue(tophat,im, "Sheared TopHat")
 
-    # This is also a profile that may be convolved using real space convolution, so test that.
+    # Check picklability
+    do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(tophat)
+
+    # Check real-space convolution of the sheared tophat.
     conv = galsim.Convolve(tophat, galsim.Pixel(scale=scale), real_space=True)
     do_kvalue(conv,im, "Sheared TopHat convolved with pixel in real space")
 
@@ -1197,7 +1290,7 @@ def test_tophat():
 
 
 def test_moffat():
-    """Test the generation of a specific Moffat profile using SBProfile against a known result.
+    """Test the generation of a specific Moffat profile against a known result.
     """
     import time
     t1 = time.time()
@@ -1234,11 +1327,22 @@ def test_moffat():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat with GSParams() disagrees with expected result")
 
+    # Use non-unity values.
+    moffat = galsim.Moffat(beta=3.7, flux=1.7, half_light_radius=2.3, trunc=8.2)
+
     # Test photon shooting.
     do_shoot(moffat,myImg,"Moffat")
 
     # Test kvalues
     do_kvalue(moffat,myImg, "Moffat")
+
+    # Check picklability
+    do_pickle(moffat.SBProfile,
+              lambda x: (x.getBeta(), x.getScaleRadius(), x.getTrunc(), x.getFlux(),\
+                         x.getGSParams()))
+    do_pickle(moffat, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(moffat)
+    do_pickle(moffat.SBProfile)
 
     # The code for untruncated Moffat profiles is specialized for particular beta values, so
     # test each of these:
@@ -1253,7 +1357,7 @@ def test_moffat():
 
 
 def test_moffat_properties():
-    """Test some basic properties of the SBMoffat profile.
+    """Test some basic properties of the Moffat profile.
     """
     import time
     t1 = time.time()
@@ -1553,7 +1657,7 @@ def test_moffat_flux_scaling():
 
 
 def test_kolmogorov():
-    """Test the generation of a specific Kolmogorov profile using SBProfile against a known result.
+    """Test the generation of a specific Kolmogorov profile against a known result.
     """
     import time
     t1 = time.time()
@@ -1592,6 +1696,12 @@ def test_kolmogorov():
 
     # Test kvalues
     do_kvalue(kolm,myImg, "Kolmogorov")
+
+    # Check picklability
+    do_pickle(kolm.SBProfile, lambda x: (x.getLamOverR0(), x.getFlux(), x.getGSParams()))
+    do_pickle(kolm, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(kolm)
+    do_pickle(kolm.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1781,7 +1891,7 @@ def test_kolmogorov_flux_scaling():
 
 
 def test_spergel():
-    """Test the generation of a specific Spergel profile using SBProfile against a known result.
+    """Test the generation of a specific Spergel profile against a known result.
     """
     import time
     t1 = time.time()
@@ -1828,18 +1938,27 @@ def test_spergel():
         spergel = galsim.Spergel(nu=nu, scale_radius=1.0)
         np.testing.assert_almost_equal(
             spergel.SBProfile.calculateFluxRadius(1.e-5)/enclosing_radius, 1.0, 4,
-            err_msg="Calculated incorrect Spergel(nu={}) flux-enclosing-radius.".format(nu))
+            err_msg="Calculated incorrect Spergel(nu={0}) flux-enclosing-radius.".format(nu))
         np.testing.assert_almost_equal(
             spergel.SBProfile.calculateIntegratedFlux(1.e-5)/enclosed_flux, 1.0, 4,
-            err_msg="Calculated incorrect Spergel(nu={}) enclosed flux.".format(nu))
+            err_msg="Calculated incorrect Spergel(nu={0}) enclosed flux.".format(nu))
 
+        # Use non-unity values.
+        spergel = galsim.Spergel(nu=0.37, flux=1.7, half_light_radius=2.3)
+
+        # Check picklability
+        do_pickle(spergel.SBProfile,
+                  lambda x: (x.getNu(), x.getScaleRadius(), x.getFlux(), x.getGSParams()))
+        do_pickle(spergel, lambda x: x.drawImage(method='no_pixel'))
+        do_pickle(spergel)
+        do_pickle(spergel.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
         
 def test_spergel_properties():
-    """Test some basic properties of the SBSpergel profile.
+    """Test some basic properties of the Spergel profile.
     """
     import time
     t1 = time.time()

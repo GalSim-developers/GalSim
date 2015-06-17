@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -121,7 +121,6 @@ dLookupTableResult = (0.23721845680847731, 0.42913599265739233, 0.86176396813243
 # File with the same values
 dLookupTableFile = os.path.join('random_data','dLookupTable.dat')
 
-
 def test_uniform():
     """Test uniform random number generator
     """
@@ -218,6 +217,14 @@ def test_uniform():
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(uResult), precision,
             err_msg='Wrong uniform random number sequence generated when applied to image.')
+
+    # Check picklability
+    do_pickle(u, lambda x: x.serialize())
+    do_pickle(u, lambda x: (x(), x(), x(), x()))
+    do_pickle(galsim.DeviateNoise(u), drawNoise)
+    do_pickle(u)
+    do_pickle(galsim.DeviateNoise(u))
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -415,6 +422,16 @@ def test_gaussian():
             gn.getSigma(), 2., precision, 
             err_msg="GaussianNoise().withScaledVariance results in wrong sigma")
  
+    # Check picklability
+    do_pickle(g, lambda x: (x.serialize(), x.getMean(), x.getSigma()))
+    do_pickle(g, lambda x: (x(), x(), x(), x()))
+    do_pickle(gn, lambda x: (x.rng.serialize(), x.sigma))
+    do_pickle(gn, drawNoise)
+    do_pickle(galsim.DeviateNoise(g), drawNoise)
+    do_pickle(g)
+    do_pickle(gn)
+    do_pickle(galsim.DeviateNoise(g))
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -523,6 +540,13 @@ def test_binomial():
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(bResult), precision,
             err_msg='Wrong binomial random number sequence generated when applied to image.')
+
+    # Check picklability
+    do_pickle(b, lambda x: (x.serialize(), x.getN(), x.getP()))
+    do_pickle(b, lambda x: (x(), x(), x(), x()))
+    do_pickle(galsim.DeviateNoise(b), drawNoise)
+    do_pickle(b)
+    do_pickle(galsim.DeviateNoise(b))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -717,6 +741,16 @@ def test_poisson():
             pn.getSkyLevel(), 36., precision, 
             err_msg="PoissonNoise().withScaledVariance results in wrong skyLevel")
 
+    # Check picklability
+    do_pickle(p, lambda x: (x.serialize(), x.getMean()))
+    do_pickle(p, lambda x: (x(), x(), x(), x()))
+    do_pickle(pn, lambda x: (x.rng.serialize(), x.sky_level))
+    do_pickle(pn, drawNoise)
+    do_pickle(galsim.DeviateNoise(p), drawNoise)
+    do_pickle(p)
+    do_pickle(pn)
+    do_pickle(galsim.DeviateNoise(p))
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -834,6 +868,13 @@ def test_weibull():
             testimage.array.flatten(), np.array(wResult), precision,
             err_msg='Wrong weibull random number sequence generated when applied to image.')
 
+    # Check picklability
+    do_pickle(w, lambda x: (x.serialize(), x.getA(), x.getB()))
+    do_pickle(w, lambda x: (x(), x(), x(), x()))
+    do_pickle(galsim.DeviateNoise(w), drawNoise)
+    do_pickle(w)
+    do_pickle(galsim.DeviateNoise(w))
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -941,6 +982,13 @@ def test_gamma():
             testimage.array.flatten(), np.array(gammaResult), precision,
             err_msg='Wrong gamma random number sequence generated when applied to image.')
 
+    # Check picklability
+    do_pickle(g, lambda x: (x.serialize(), x.getK(), x.getTheta()))
+    do_pickle(g, lambda x: (x(), x(), x(), x()))
+    do_pickle(galsim.DeviateNoise(g), drawNoise)
+    do_pickle(g)
+    do_pickle(galsim.DeviateNoise(g))
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1047,6 +1095,13 @@ def test_chi2():
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(chi2Result), precision,
             err_msg='Wrong Chi^2 random number sequence generated when applied to image.')
+
+    # Check picklability
+    do_pickle(c, lambda x: (x.serialize(), x.getN()))
+    do_pickle(c, lambda x: (x(), x(), x(), x()))
+    do_pickle(galsim.DeviateNoise(c), drawNoise)
+    do_pickle(c)
+    do_pickle(galsim.DeviateNoise(c))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1195,6 +1250,12 @@ def test_distfunction():
             testimage.array.flatten(), np.array(dFunctionResult), precision,
             err_msg='Wrong DistDeviate random number sequence generated when applied to image.')
  
+    # Check picklability
+    do_pickle(d, lambda x: (x(), x(), x(), x()))
+    do_pickle(galsim.DeviateNoise(d), drawNoise)
+    do_pickle(d)
+    do_pickle(galsim.DeviateNoise(d))
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1270,6 +1331,12 @@ def test_distLookupTable():
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(dLookupTableResult), precision,
             err_msg='Wrong DistDeviate random number sequence generated when applied to image.')
+
+    # Check picklability
+    do_pickle(d, lambda x: (x(), x(), x(), x()))
+    do_pickle(galsim.DeviateNoise(d), drawNoise)
+    do_pickle(d)
+    do_pickle(galsim.DeviateNoise(d))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1433,6 +1500,11 @@ def test_ccdnoise():
     np.testing.assert_almost_equal(
             ccdnoise.getReadNoise(), 0., precision, 
             err_msg="CCDNoise().withScaledVariance results in wrong ReadNoise")
+
+    # Check picklability
+    do_pickle(ccdnoise, lambda x: (x.rng.serialize(), x.sky_level, x.gain, x.read_noise))
+    do_pickle(ccdnoise, drawNoise)
+    do_pickle(ccdnoise)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

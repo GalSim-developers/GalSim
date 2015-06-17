@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -35,14 +35,14 @@ def roll2d(image, (iroll, jroll)):
 def kxky(array_shape=(256, 256)):
     """Return the tuple `(kx, ky)` corresponding to the DFT of a unit integer-sampled array of input
     shape.
-    
+
     Uses the SBProfile conventions for Fourier space, so `k` varies in approximate range (-pi, pi].
     Uses the most common DFT element ordering conventions (and those of FFTW), so that `(0, 0)`
     array element corresponds to `(kx, ky) = (0, 0)`.
 
     See also the docstring for np.fftfreq, which uses the same DFT convention, and is called here,
     but misses a factor of pi.
-    
+
     Adopts NumPy array index ordering so that the trailing axis corresponds to `kx`, rather than the
     leading axis as would be expected in IDL/Fortran.  See docstring for numpy.meshgrid which also
     uses this convention.
@@ -96,8 +96,7 @@ def rotate_xy(x, y, theta):
     """
     if not isinstance(theta, galsim.Angle):
         raise TypeError("Input rotation angle theta must be a galsim.Angle instance.")
-    cost = np.cos(theta.rad())
-    sint = np.sin(theta.rad())
+    sint, cost = theta.sincos()
     x_rot = x * cost - y * sint
     y_rot = x * sint + y * cost
     return x_rot, y_rot
@@ -113,7 +112,7 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
         f(name1=x, name2=y)
 
     If the inputs must be integers, set `integer=True`.
-    If there are other args/kwargs to parse after these, then their names should be 
+    If there are other args/kwargs to parse after these, then their names should be
     be given as the parameter `others`, which are passed back in a tuple after the position.
     """
     def canindex(arg):
@@ -175,13 +174,13 @@ class SimpleGenerator:
     """
     def __init__(self, obj): self._obj = obj
     def __call__(self): return self._obj
-            
+
 class AttributeDict(object):
     """Dictionary class that allows for easy initialization and refs to key values via attributes.
 
     NOTE: Modified a little from Jim's bot.git AttributeDict class so that tab completion now works
     in ipython since attributes are actually added to __dict__.
-    
+
     HOWEVER this means the __dict__ attribute has been redefined to be a collections.defaultdict()
     so that Jim's previous default attribute behaviour is also replicated.
     """
@@ -235,18 +234,16 @@ def rand_arr(shape, deviate):
     tmp_img.addNoise(galsim.DeviateNoise(deviate))
     return tmp_img.array
 
-def convert_interpolant_to_2d(interpolant):
-    """Convert a given interpolant to an Interpolant2d if it is given as a string or 1-d.
+def convert_interpolant(interpolant):
+    """Convert a given interpolant to an Interpolant if it is given as a string.
     """
     if interpolant is None:
         return None  # caller is responsible for setting a default if desired.
-    elif isinstance(interpolant, galsim.Interpolant2d):
-        return interpolant
     elif isinstance(interpolant, galsim.Interpolant):
-        return galsim.InterpolantXY(interpolant)
+        return interpolant
     else:
         # Will raise an appropriate exception if this is invalid.
-        return galsim.Interpolant2d(interpolant)
+        return galsim.Interpolant(interpolant)
 
 # A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
 def _convertPositions(pos, units, func):
@@ -261,7 +258,7 @@ def _convertPositions(pos, units, func):
                 np.array([pos.y], dtype='float') ]
 
     # Check for list of PositionD or PositionI:
-    # The only other options allow pos[0], so if this is invalid, an exception 
+    # The only other options allow pos[0], so if this is invalid, an exception
     # will be raised:
     elif isinstance(pos[0],galsim.PositionD) or isinstance(pos[0],galsim.PositionI):
         pos = [ np.array([p.x for p in pos], dtype='float'),
@@ -300,7 +297,7 @@ def _convertPositions(pos, units, func):
 
 def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     """
-    Remove items from a set of tabulated f(x) values so that the error in the integral is still 
+    Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
 
     The input `x,f` values can be lists, NumPy arrays, or really anything that can be converted
@@ -311,7 +308,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     @param rel_err          The maximum relative error to allow in the integral from the removal.
                             [default: 1.e-4]
     @param preserve_range   Should the original range of `x` be preserved? (True) Or should the ends
-                            be trimmed to include only the region where the integral is 
+                            be trimmed to include only the region where the integral is
                             significant? (False)  [default: False]
 
     @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
@@ -331,7 +328,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     # Check for trivial noop.
     if len(x) <= 2:
         # Nothing to do
-        return
+        return x,f
 
     # Start by calculating the complete integral of |f|
     total_integ = numpy.trapz(abs(f),x)
@@ -420,4 +417,3 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
                0.00000000000000122678, -0.00000000000000011813, 0.00000000000000000119,
                0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
              )
-

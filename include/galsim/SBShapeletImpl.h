@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -74,6 +74,8 @@ namespace galsim {
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
                         const tmv::Matrix<double>& kx,
                         const tmv::Matrix<double>& ky) const;
+
+        std::string repr() const;
 
     private:
         double _sigma;

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -31,7 +31,7 @@
 #endif
 
 namespace galsim {
-   
+
     SBTransform::SBTransform(const SBProfile& adaptee,
                              double mA, double mB, double mC, double mD,
                              const Position<double>& cen, double fluxScaling,
@@ -41,6 +41,45 @@ namespace galsim {
     SBTransform::SBTransform(const SBTransform& rhs) : SBProfile(rhs) {}
 
     SBTransform::~SBTransform() {}
+
+    std::string SBTransform::SBTransformImpl::repr() const
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBTransform(" << getObj().repr() << ", ";
+        double mA, mB, mC, mD;
+        getJac(mA,mB,mC,mD);
+        oss << mA<<", "<<mB<<", "<<mC<<", "<<mD<<", ";
+        Position<double> shift = getOffset();
+        oss << "galsim.PositionD("<<shift.x<<", "<<shift.y<<"), "<<getFluxScaling();
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
+    SBProfile SBTransform::getObj() const
+    {
+        assert(dynamic_cast<const SBTransformImpl*>(_pimpl.get()));
+        return static_cast<const SBTransformImpl&>(*_pimpl).getObj();
+    }
+
+    void SBTransform::getJac(double& mA, double& mB, double& mC, double& mD) const
+    {
+        assert(dynamic_cast<const SBTransformImpl*>(_pimpl.get()));
+        return static_cast<const SBTransformImpl&>(*_pimpl).getJac(mA,mB,mC,mD);
+    }
+
+    Position<double> SBTransform::getOffset() const
+    {
+        assert(dynamic_cast<const SBTransformImpl*>(_pimpl.get()));
+        return static_cast<const SBTransformImpl&>(*_pimpl).getOffset();
+    }
+
+    double SBTransform::getFluxScaling() const
+    {
+        assert(dynamic_cast<const SBTransformImpl*>(_pimpl.get()));
+        return static_cast<const SBTransformImpl&>(*_pimpl).getFluxScaling();
+    }
+
 
     SBTransform::SBTransformImpl::SBTransformImpl(
         const SBProfile& adaptee, double mA, double mB, double mC, double mD,

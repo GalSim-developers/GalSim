@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -137,9 +137,11 @@ namespace hsm {
     // Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.
     template <typename T, typename U>
     CppShapeData EstimateShearView(
-        const BaseImage<T>& gal_image, const BaseImage<U>& PSF_image, const BaseImage<int>& gal_mask_image,
-        float sky_var, const char* shear_est, const std::string& recompute_flux, double guess_sig_gal,
-        double guess_sig_PSF, double precision, galsim::Position<double> guess_centroid,
+        const BaseImage<T>& gal_image, const BaseImage<U>& PSF_image,
+        const BaseImage<int>& gal_mask_image,
+        float sky_var, const char* shear_est, const std::string& recompute_flux,
+        double guess_sig_gal, double guess_sig_PSF,
+        double precision, galsim::Position<double> guess_centroid,
         boost::shared_ptr<HSMParams> hsmparams)
     {
         // define variables, create output CppShapeData struct, etc.
@@ -200,7 +202,8 @@ namespace hsm {
         dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
         results.moments_amp = 2.0*amp;
         results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
-        results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_yy));
+        results.observed_e1 = (m_xx-m_yy) / (m_xx+m_yy);
+        results.observed_e2 = 2.*m_xy / (m_xx+m_yy);
         results.moments_status = 0;
 
         // and if that worked, try doing PSF correction
@@ -232,8 +235,8 @@ namespace hsm {
         results.moments_amp = gal_data.flux;
         results.resolution_factor = gal_data.resolution;
         results.psf_sigma = PSF_data.sigma;
-        results.psf_shape = galsim::CppShear();
-        results.psf_shape.setE1E2(PSF_data.e1, PSF_data.e2);
+        results.psf_e1 = PSF_data.e1;
+        results.psf_e2 = PSF_data.e2;
 
         if (results.resolution_factor <= 0.) {
             throw HSMError("Unphysical situation: galaxy convolved with PSF is smaller than PSF!\n");
@@ -294,7 +297,8 @@ namespace hsm {
             // repackage outputs from find_ellipmom_2 to the output CppShapeData struct
             results.moments_amp = 2.0*amp;
             results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
-            results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_yy));
+            results.observed_e1 = (m_xx-m_yy) / (m_xx+m_yy);
+            results.observed_e2 = 2.*m_xy / (m_xx+m_yy);
             results.moments_status = 0;
         }
         catch (char *err_msg) {

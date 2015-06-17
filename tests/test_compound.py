@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -299,6 +299,12 @@ def test_realspace_convolve():
     # Test kvalues
     do_kvalue(conv,img,"Truncated Moffat convolved with Box")
 
+    # Check picklability
+    do_pickle(conv.SBProfile, lambda x: (repr(x.getObjs()), x.isRealSpace(), x.getGSParams()))
+    do_pickle(conv, lambda x: x.drawImage(method='sb'))
+    do_pickle(conv)
+    do_pickle(conv.SBProfile)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
  
@@ -497,6 +503,12 @@ def test_add():
     # Test kvalues
     do_kvalue(sum,myImg,"sum of 2 Gaussians")
 
+    # Check picklability
+    do_pickle(sum.SBProfile, lambda x: (repr(x.getObjs()), x.getGSParams()))
+    do_pickle(sum, lambda x: x.drawImage(method='sb'))
+    do_pickle(sum)
+    do_pickle(sum.SBProfile)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -631,6 +643,12 @@ def test_autoconvolve():
             err_msg="Asymmetric sum of Gaussians convolved with self disagrees with "+
             "AutoConvolve result")
 
+    # Check picklability
+    do_pickle(conv2.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
+    do_pickle(conv2, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(conv2)
+    do_pickle(conv2.SBProfile)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -667,6 +685,12 @@ def test_autocorrelate():
 
     # Test photon shooting.
     do_shoot(corr,myImg2,"AutoCorrelate")
+
+    # Check picklability
+    do_pickle(corr.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
+    do_pickle(corr, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(corr)
+    do_pickle(corr.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

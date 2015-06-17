@@ -54,6 +54,7 @@ namespace galsim {
 
         double maxK() const;
         double stepK() const;
+
     private:
 
         LinearOpticaletInfo(const LinearOpticaletInfo& rhs); ///< Hide the copy constructor.
@@ -134,6 +135,8 @@ namespace galsim {
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
+
+        std::string repr() const;
 
     private:
         double _r0;             ///< Scale radius specified at the constructor.

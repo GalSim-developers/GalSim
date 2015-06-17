@@ -76,6 +76,15 @@ namespace galsim {
         return static_cast<const SBMoffatletImpl&>(*_pimpl).getQ();
     }
 
+    std::string SBMoffatlet::SBMoffatletImpl::repr() const
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBMoffatlet("<<getBeta()<<", "<<getScaleRadius();
+        oss << ", " << getJ() << ", " << getQ() << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     LRUCache<boost::tuple<double,int,int,GSParamsPtr>,MoffatletInfo>
         SBMoffatlet::SBMoffatletImpl::cache(sbp::max_moffatlet_cache);
 

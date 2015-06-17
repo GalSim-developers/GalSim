@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -51,6 +51,15 @@ namespace galsim {
     {
         assert(dynamic_cast<const SBKolmogorovImpl*>(_pimpl.get()));
         return static_cast<const SBKolmogorovImpl&>(*_pimpl).getLamOverR0();
+    }
+
+    std::string SBKolmogorov::SBKolmogorovImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBKolmogorov("<<getLamOverR0()<<", "<<getFlux();
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
     }
 
     LRUCache<GSParamsPtr, KolmogorovInfo> SBKolmogorov::SBKolmogorovImpl::cache(

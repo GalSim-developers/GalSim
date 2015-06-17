@@ -83,6 +83,17 @@ namespace galsim {
         return static_cast<const SBLinearOpticaletImpl&>(*_pimpl).getM2();
     }
 
+    std::string SBLinearOpticalet::SBLinearOpticaletImpl::repr() const
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBLinearOpticalet("<<getScaleRadius();
+        oss << ", " << getN1() << ", " << getM1();
+        oss << ", " << getN2() << ", " << getM2();
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     LRUCache<boost::tuple<int,int,int,int,GSParamsPtr>,LinearOpticaletInfo>
     SBLinearOpticalet::SBLinearOpticaletImpl::cache(sbp::max_linearopticalet_cache);
 

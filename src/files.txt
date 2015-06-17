@@ -5,6 +5,7 @@ Interpolant.cpp
 Laguerre.cpp
 OneDimensionalDeviate.cpp
 PhotonArray.cpp
+GSParams.cpp
 SBProfile.cpp
 SBBox.cpp
 SBGaussian.cpp
@@ -23,7 +24,6 @@ SBKolmogorov.cpp
 SBSpergel.cpp
 SBSpergelet.cpp
 SBLinearOpticalet.cpp
-CppShear.cpp
 Table.cpp
 RealSpaceConvolve.cpp
 Random.cpp

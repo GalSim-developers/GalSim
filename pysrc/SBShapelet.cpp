@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -129,6 +129,7 @@ namespace galsim {
                 .def("getSigma", &SBShapelet::getSigma)
                 .def("getBVec", &SBShapelet::getBVec,
                      bp::return_value_policy<bp::copy_const_reference>())
+                .enable_pickling()
                 ;
             wrapImageTemplates<float>();
             wrapImageTemplates<double>();

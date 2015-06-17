@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -37,6 +37,23 @@ namespace galsim {
     
     SBAdd::~SBAdd() {}
 
+    std::list<SBProfile> SBAdd::getObjs() const
+    {
+        assert(dynamic_cast<const SBAddImpl*>(_pimpl.get()));
+        return static_cast<const SBAddImpl&>(*_pimpl).getObjs();
+    }
+
+    std::string SBAdd::SBAddImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss << "galsim._galsim.SBAdd([";
+        ConstIter sptr = _plist.begin(); 
+        oss << sptr->repr();
+        for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->repr();
+        oss << "], galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     SBAdd::SBAddImpl::SBAddImpl(const std::list<SBProfile>& slist,
                                 const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams ? gsparams : GetImpl(slist.front())->gsparams)
@@ -45,7 +62,6 @@ namespace galsim {
             add(*sptr);
         initialize();
     }
-
 
     void SBAdd::SBAddImpl::add(const SBProfile& rhs)
     {

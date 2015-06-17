@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -53,7 +53,7 @@ Use the galsim tag to flag it as a question about GalSim.
 
 
 
-Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 https://github.com/GalSim-developers
 
 Redistribution and use in source and binary forms, with or without
@@ -95,9 +95,11 @@ try:
     # To make this seamless with pyfits versions, we add 4 to the astropy version.
     from astropy import version as astropy_version
     pyfits_version = str( (4 + astropy_version.major) + astropy_version.minor/10.)
+    pyfits_str = 'astropy.io.fits'
 except:
     import pyfits
     pyfits_version = pyfits.__version__
+    pyfits_str = 'pyfits'
 
 # Import things from other files we want to be in the galsim namespace
 
@@ -126,21 +128,22 @@ from base import Exponential, Sersic, DeVaucouleurs, Spergel
 from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
 from shapelet import Shapelet, ShapeletSize, FitShapelet
-from interpolatedimage import Interpolant, Interpolant2d, InterpolantXY
+from interpolatedimage import Interpolant
 from interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
-from interpolatedimage import InterpolatedImage
+from interpolatedimage import InterpolatedImage, InterpolatedKImage
 from compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
 from compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
 from series import Series, SeriesConvolution
 from series import Spergelet, SpergelSeries
 from series import Moffatlet, MoffatSeries
 from series import LinearOpticalet, LinearOpticalSeries
+from transform import Transform, Transformation
 
 # Chromatic
 from chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum
 from chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
-from chromatic import ChromaticAutoCorrelation
-from chromatic import ChromaticOpticalPSF, ChromaticAiry
+from chromatic import ChromaticAutoCorrelation, ChromaticTransformation
+from chromatic import ChromaticOpticalPSF, ChromaticAiry, InterpolatedChromaticObject
 from sed import SED
 from bandpass import Bandpass
 
@@ -172,4 +175,3 @@ from . import hsm
 from . import dcr
 from . import meta_data
 from . import cdmodel
-

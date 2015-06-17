@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -75,6 +75,12 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        SBProfile getObj() const { return _adaptee; }
+        void getJac(double& mA, double& mB, double& mC, double& mD) const
+        { mA = _mA; mB = _mB; mC = _mC; mD = _mD; }
+        Position<double> getOffset() const { return _cen; }
+        double getFluxScaling() const { return _fluxScaling; }
+
         // Overrides for better efficiency
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, int izero,
@@ -88,6 +94,8 @@ namespace galsim {
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
+
+        std::string repr() const;
 
     private:
         SBProfile _adaptee; ///< SBProfile being adapted/transformed

@@ -121,6 +121,8 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const
         { throw SBError("SBMoffatlet::shoot() is not implemented"); }
 
+        std::string repr() const;
+
         // Overrides for better efficiency
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, int izero,

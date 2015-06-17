@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,19 +22,15 @@ A few adjustments to the Position classes at the Python layer.
 from . import _galsim
 from ._galsim import PositionD, PositionI
 
-def Position_repr(self):
-    return self.__class__.__name__+"(x="+str(self.x)+", y="+str(self.y)+")"
-
-def Position_str(self):
-    return "("+str(self.x)+", "+str(self.y)+")"
-
-def Position_getinitargs(self):
-    return self.x, self.y
-
 for Class in (_galsim.PositionD, _galsim.PositionI):
-    Class.__repr__ = Position_repr
-    Class.__str__ = Position_str
-    Class.__getinitargs__ = Position_getinitargs
+    Class.__repr__ = lambda self: "galsim.%s(x=%r, y=%r)"%(self.__class__.__name__, self.x, self.y)
+    Class.__str__ = lambda self: "galsim.%s(%s,%s)"%(self.__class__.__name__, self.x, self.y)
+    Class.__getinitargs__ = lambda self: (self.x, self.y)
+    # Quick and dirty.  Just check reprs are equal.
+    Class.__eq__ = lambda self, other: repr(self) == repr(other)
+    Class.__ne__ = lambda self, other: not self.__eq__(other)
+    Class.__hash__ = lambda self: hash(repr(self))
+
     Class.__doc__ = """A class for representing 2D positions on the plane.
 
     PositionD describes positions with floating point values in `x` and `y`.

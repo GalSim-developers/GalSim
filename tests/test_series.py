@@ -17,6 +17,7 @@
 #
 
 import numpy as np
+import warnings
 
 from galsim_test_helpers import *
 
@@ -41,7 +42,12 @@ def test_spergelet():
             # The nu = -0.5 case requires maximum_fft_size larger than 8150
             if not nu < 0:
                 test_im = galsim.Image(16, 16, scale=0.2)
-                do_kvalue(spergelet, test_im, "Spergelet")
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    # This complains about a divide-by-zero, which is a consequence of some 
+                    # Spergelets having equal amounts of positive and negative surface brightness
+                    # values.
+                    do_kvalue(spergelet, test_im, "Spergelet")
 
 
 def test_series_draw():
@@ -187,7 +193,6 @@ def test_spergelseries_dilate():
         np.testing.assert_almost_equal(im_direct.array, im_dilate.array, 5)
 
 def test_moffatlet():
-    import warnings
     betas = [2,3,4,5]
     srs = [1,1.1,1.2,1.3]
     js = [0,1,2,3]

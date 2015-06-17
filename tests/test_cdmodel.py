@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -214,6 +214,11 @@ def test_fluxconservation():
     np.testing.assert_almost_equal(
         flat.array.sum(), flatcd.array.sum(), 13-int(np.log10(galflux)),
         "Flat image flux is not left invariant by charge deflection")
+
+    # Check picklability
+    do_pickle(cd, lambda x: x.applyForward(image))
+    do_pickle(cd)
+
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
 

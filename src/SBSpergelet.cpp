@@ -76,6 +76,15 @@ namespace galsim {
         return static_cast<const SBSpergeletImpl&>(*_pimpl).getQ();
     }
 
+    std::string SBSpergelet::SBSpergeletImpl::repr() const
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBSpergelet("<<getNu()<<", "<<getScaleRadius();
+        oss << ", " << getJ() << ", " << getQ() << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     LRUCache<boost::tuple<double,int,int,GSParamsPtr>,SpergeletInfo>
         SBSpergelet::SBSpergeletImpl::cache(sbp::max_spergelet_cache);
 

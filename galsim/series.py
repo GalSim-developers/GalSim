@@ -429,7 +429,7 @@ class SpergelSeries(Series):
                 raise TypeError("Too many kwargs provided!")
         else:
             shear = galsim.Shear(**kwargs)
-        return self._applyMatrix(shear._shear.getMatrix())
+        return self._applyMatrix(shear.getMatrix())
 
     def rotate(self, theta):
         cth = math.cos(theta.rad())
@@ -604,7 +604,7 @@ class MoffatSeries(Series):
                 raise TypeError("Too many kwargs provided!")
         else:
             shear = galsim.Shear(**kwargs)
-        return self._applyMatrix(shear._shear.getMatrix())
+        return self._applyMatrix(shear.getMatrix())
 
     def rotate(self, theta):
         cth = math.cos(theta.rad())

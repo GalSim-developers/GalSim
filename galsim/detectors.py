@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -9,11 +9,11 @@
 # conditions are met:
 #
 # 1. Redistributions of source code must retain the above copyright notice, this
-# list of conditions, and the disclaimer given in the accompanying LICENSE file.
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
 # 2. Redistributions in binary form must reproduce the above copyright notice,
-# this list of conditions, and the disclaimer given in the documentation
-# and/or other materials provided with the distribution.
-#
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 """@file detectors.py
 
 Module with routines to simulate CCD and NIR detector effects like nonlinearity, reciprocity

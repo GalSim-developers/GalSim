@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -30,18 +30,16 @@ def GSObject_nyquistDx(self):
 def GSObject_setFlux(self, flux):
     """A deprecated method that is roughly equivalent to obj = obj.withFlux(flux)"""
     depr('setFlux', 1.1, 'obj = obj.withFlux(flux)')
-    new_obj = self.withFlux(flux)
-    self.SBProfile = new_obj.SBProfile
-    if hasattr(self,'noise'): self.noise = new_obj.noise
+    new_obj = self.copy().withFlux(flux)
     self.__class__ = new_obj.__class__
+    self.__setstate__(new_obj.__getstate__())
 
 def GSObject_scaleFlux(self, flux_ratio):
     """A deprecated method that is roughly equivalent to obj = obj * flux_ratio"""
     depr('scaleFlux', 1.1, 'obj = obj * flux_ratio')
-    new_obj = self * flux_ratio
-    self.SBProfile = new_obj.SBProfile
-    if hasattr(self,'noise'): self.noise = new_obj.noise
+    new_obj = self.copy() * flux_ratio
     self.__class__ = new_obj.__class__
+    self.__setstate__(new_obj.__getstate__())
 
 def GSObject_createExpanded(self, scale):
     """A deprecated synonym for expand(scale)"""
@@ -51,10 +49,9 @@ def GSObject_createExpanded(self, scale):
 def GSObject_applyExpansion(self, scale):
     """A deprecated method that is roughly equivalent to obj = obj.expand(scale)."""
     depr('applyExpansion', 1.1, 'obj = obj.expand(scale)')
-    new_obj = self.expand(scale)
-    self.SBProfile = new_obj.SBProfile
-    if hasattr(self,'noise'): self.noise = new_obj.noise
+    new_obj = self.copy().expand(scale)
     self.__class__ = new_obj.__class__
+    self.__setstate__(new_obj.__getstate__())
 
 def GSObject_createDilated(self, scale):
     """A deprecated synonym for dilate(scale)"""
@@ -64,10 +61,9 @@ def GSObject_createDilated(self, scale):
 def GSObject_applyDilation(self, scale):
     """A deprecated method that is roughly equivalent to obj = obj.dilate(scale)."""
     depr('applyDilation', 1.1, 'obj = obj.dilate(scale)')
-    new_obj = self.dilate(scale)
-    self.SBProfile = new_obj.SBProfile
-    if hasattr(self,'noise'): self.noise = new_obj.noise
+    new_obj = self.copy().dilate(scale)
     self.__class__ = new_obj.__class__
+    self.__setstate__(new_obj.__getstate__())
 
 def GSObject_createMagnified(self, mu):
     """A deprecated synonym for magnify(mu)"""
@@ -77,10 +73,9 @@ def GSObject_createMagnified(self, mu):
 def GSObject_applyMagnification(self, mu):
     """A deprecated method that is roughly equivalent to obj = obj.magnify(mu)"""
     depr('applyMagnification', 1.1, 'obj = obj.magnify(mu)')
-    new_obj = self.magnify(mu)
-    self.SBProfile = new_obj.SBProfile
-    if hasattr(self,'noise'): self.noise = new_obj.noise
+    new_obj = self.copy().magnify(mu)
     self.__class__ = new_obj.__class__
+    self.__setstate__(new_obj.__getstate__())
 
 def GSObject_createSheared(self, *args, **kwargs):
     """A deprecated synonym for shear(shear)"""
@@ -90,10 +85,9 @@ def GSObject_createSheared(self, *args, **kwargs):
 def GSObject_applyShear(self, *args, **kwargs):
     """A deprecated method that is roughly equivalent to obj = obj.shear(shear)"""
     depr('applyShear', 1.1, 'obj = obj.shear(shear)')
-    new_obj = self.shear(*args, **kwargs)
-    self.SBProfile = new_obj.SBProfile
-    if hasattr(self,'noise'): self.noise = new_obj.noise
+    new_obj = self.copy().shear(*args, **kwargs)
     self.__class__ = new_obj.__class__
+    self.__setstate__(new_obj.__getstate__())
 
 def GSObject_createLensed(self, g1, g2, mu):
     """A deprecated synonym for lens(g1,g2,mu)"""
@@ -103,10 +97,9 @@ def GSObject_createLensed(self, g1, g2, mu):
 def GSObject_applyLensing(self, g1, g2, mu):
     """A deprecated method that is roughly equivalent to obj = obj.lens(g1,g2,mu)"""
     depr('applyLensing', 1.1, 'obj = obj.lens(g1,g2,mu)')
-    new_obj = self.lens(g1,g2,mu)
-    self.SBProfile = new_obj.SBProfile
-    if hasattr(self,'noise'): self.noise = new_obj.noise
+    new_obj = self.copy().lens(g1,g2,mu)
     self.__class__ = new_obj.__class__
+    self.__setstate__(new_obj.__getstate__())
 
 def GSObject_createRotated(self, theta):
     """A deprecated synonym for rotate(theta)"""
@@ -116,10 +109,9 @@ def GSObject_createRotated(self, theta):
 def GSObject_applyRotation(self, theta):
     """A deprecated method that is roughly equivalent to obj = obj.rotate(theta)"""
     depr('applyRotation', 1.1, 'obj = obj.rotate(theta)')
-    new_obj = self.rotate(theta)
-    self.SBProfile = new_obj.SBProfile
-    if hasattr(self,'noise'): self.noise = new_obj.noise
+    new_obj = self.copy().rotate(theta)
     self.__class__ = new_obj.__class__
+    self.__setstate__(new_obj.__getstate__())
 
 def GSObject_createTransformed(self, dudx, dudy, dvdx, dvdy):
     """A deprecated sysnonym for transform()"""
@@ -129,10 +121,9 @@ def GSObject_createTransformed(self, dudx, dudy, dvdx, dvdy):
 def GSObject_applyTransformation(self, dudx, dudy, dvdx, dvdy):
     """A deprecated method that is roughly equivalent to obj = obj.transform(...)"""
     depr('applyTransformation', 1.1, 'obj = obj.transform(dudx,dudy,dvdx,dvdy)')
-    new_obj = self.transform(dudx,dudy,dvdx,dvdy)
-    self.SBProfile = new_obj.SBProfile
-    if hasattr(self,'noise'): self.noise = new_obj.noise
+    new_obj = self.copy().transform(dudx,dudy,dvdx,dvdy)
     self.__class__ = new_obj.__class__
+    self.__setstate__(new_obj.__getstate__())
 
 def GSObject_createShifted(self, *args, **kwargs):
     """A deprecated synonym for shift(dx,dy)"""
@@ -142,10 +133,9 @@ def GSObject_createShifted(self, *args, **kwargs):
 def GSObject_applyShift(self, *args, **kwargs):
     """A deprecated method that is roughly equivalent to obj = obj.shift(dx,dy)"""
     depr('applyShift', 1.1, 'obj = obj.shift(dx,dy)')
-    new_obj = self.shift(*args,**kwargs)
-    self.SBProfile = new_obj.SBProfile
-    if hasattr(self,'noise'): self.noise = new_obj.noise
+    new_obj = self.copy().shift(*args,**kwargs)
     self.__class__ = new_obj.__class__
+    self.__setstate__(new_obj.__getstate__())
 
 def GSObject_draw(self, *args, **kwargs):
     """A deprecated synonym for obj.drawImage(method='no_pixel')

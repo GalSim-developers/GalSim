@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -60,7 +60,6 @@ damages of any kind.
 
 /* object data type */
 
-#include "../CppShear.h"
 #include "../Image.h"
 #include "../Bounds.h"
 
@@ -275,8 +274,8 @@ namespace hsm {
         /// @brief Status after measuring adaptive moments; -1 indicates no attempt to measure them
         int moments_status;
 
-        /// @brief galsim::CppShear object representing the observed shape
-        CppShear observed_shape;
+        /// @brief The observed shape e1,e2
+        float observed_e1, observed_e2;
 
         /// @brief Size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels; -1 if
         /// not measured
@@ -334,21 +333,25 @@ namespace hsm {
         /// default -1.
         float psf_sigma;
 
-        /// @brief galsim::CppShear object representing the PSF shape from the adaptive moments
-        CppShear psf_shape;
+        /// @brief PSF shape from the adaptive moments
+        float psf_e1, psf_e2;
 
         /// @brief A string containing any error messages from the attempted measurements, to
         /// facilitate proper error handling in both C++ and python
         std::string error_message;
 
         /// @brief Constructor, setting defaults
+        // NB: To avoid errors associated with the infamous Mac dynamic string bug, we initialize
+        // all strings with a non-empty string.  Including error_message, which otherwise would
+        // make more sense to initialize with "".
+        // cf. http://stackoverflow.com/questions/4697859/mac-os-x-and-static-boost-libs-stdstring-fail
         CppShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
-            observed_shape(galsim::CppShear()), moments_sigma(-1.), moments_amp(-1.),
+            observed_e1(0.), observed_e2(0.), moments_sigma(-1.), moments_amp(-1.),
             moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.), moments_n_iter(0),
             correction_status(-1), corrected_e1(-10.), corrected_e2(-10.), corrected_g1(-10.), 
             corrected_g2(-10.), meas_type("None"), corrected_shape_err(-1.),
             correction_method("None"), resolution_factor(-1.),
-            psf_sigma(-1.0), psf_shape(galsim::CppShear()), error_message("")
+            psf_sigma(-1.0), psf_e1(0.), psf_e2(0.), error_message("None")
         {}
     };
 
