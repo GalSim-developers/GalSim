@@ -170,21 +170,22 @@ This module also contains the following routines:
     bestPA() - A routine to calculate the best observatory orientation angle for WFIRST when looking
                at a given position on a given date.
 
-Another routine that will be often necessary is galsim.utilities.interleaveImages().
-The WFIRST PSFs at native WFIRST pixel scale are undersampled. A well resolved PSF image can be
-obtained by a two-step process:
-1) Call the galsim.wfirst.getPSF routine and convolve the PSF with the WFIRST pixel response to get
-the effective PSF.
-2) Draw the effective PSF on to an Image using drawImage routine, with a pixel scale lesser than the
-native pixel scale.
-
-However, if pixel level effects such as nonlinearity and interpixel capacitance must be applied to
-the PSF images, then they must drawn at the native pixel scale. A well resolved PSF image can such
-cases be obtained by generating multiple such images with an offset ( a dither sequence ) and
-combined using galsim.utilities.interleaveImages(). See docstring for more details on the usage.
-
 All of the above routines have docstrings that can be accessed using
 help(galsim.wfirst.getBandpasses), and so on.
+
+Another routine that may be necessary is galsim.utilities.interleaveImages().
+The WFIRST PSFs at native WFIRST pixel scale are undersampled. A Nyquist-sampled PSF image can be
+obtained by a two-step process:
+1) Call the galsim.wfirst.getPSF() routine and convolve the PSF with the WFIRST pixel response to get
+the effective PSF.
+2) Draw the effective PSF onto an Image using drawImage routine, with a pixel scale lesser than the
+native pixel scale (using the 'method=no_pixel' option).
+
+However, if pixel-level effects such as nonlinearity and interpixel capacitance must be applied to
+the PSF images, then they must drawn at the native pixel scale. A Nyquist-sampled PSF image can be
+obtained in such cases by generating multiple images with offsets (a dither sequence) and then
+combining them using galsim.utilities.interleaveImages(). See docstring for more details on the
+usage.
 """
 import os
 import galsim
