@@ -479,12 +479,12 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
                                be symmetric around zero, hence taking positive and negative values,
                                with upper and lower limits of +0.5 and -0.5 (limit values excluded).
     @param add_flux            Should the routine add the fluxes of all the images (True) or average
-                               them (False)? [default:True]
+                               them (False)? [default: True]
     @param suppress_warnings   Suppresses the warnings about the pixel scale of the output, if True.
-                               [default:False]
+                               [default: False]
     @param catch_offset_errors Checks for the consistency of `offsets` with `N` and raises Errors
                                if inconsistencies found (True). Recommended, but could slow down
-                               the routine a little. [default:True]
+                               the routine a little. [default: True]
 
     @returns the interleaved image
     """
