@@ -36,7 +36,7 @@ class Series(object):
 
     def __init__(self, maxcache=100):
         """Abstract base class for GalSim profiles represented as a series of basis profiles.
-        Generally, coefficients of the basis profiles can be manipulated to set parameters of the 
+        Generally, coefficients of the basis profiles can be manipulated to set parameters of the
         series profile, such as size and ellipticity for SpergelSeries and MoffatSeries, or
         wavefront expansion coefficients for LinearOpticalSeries.  This allows one to rapidly
         create images with arbitrary values of these parameters by forming linear combinations of
@@ -77,10 +77,10 @@ class Series(object):
                 key = object()
                 kcache[key] = klast[1] = klast = [klast, kroot, key, None]
             kroot[0] = last
-            
+
     # TODO: could probably combine _basisCube and _basisKCube with the addition of a few helper
     # methods
-            
+
     def _basisCube(self, key):
         # Query the cache of image cubes and find the one corresponding to a particular Series object
         # with particular image settings.  If it's not present in the cache, then create it.
@@ -165,7 +165,7 @@ class Series(object):
             recube[i] = tmp[0].array.ravel()
             imcube[i] = tmp[1].array.ravel()
         root[2] = key
-        # Need to store the image shape here so we can eventually turn 1D kimage vectors back into 
+        # Need to store the image shape here so we can eventually turn 1D kimage vectors back into
         # 2D kimages.
         root[3] = (recube, imcube, shape)
         oldroot = root
@@ -191,7 +191,7 @@ class Series(object):
         coeffs = np.array(self._getCoeffs(), dtype=cube.dtype)
         im = np.dot(coeffs, cube).reshape(shape)
         return galsim.Image(im)
-        
+
     def drawKImage(self, *args, **kwargs):
         """Draw the Fourier-space image of a Series object by forming the appropriate linear
         combination of basis profile Fourier-space images.  This method will search the Series cache
@@ -233,7 +233,7 @@ class Series(object):
         xvals = [obj.xValue(*args, **kwargs) for obj in self._getBasisFuncs()]
         coeffs = self._getCoeffs()
         return np.dot(xvals, coeffs)
-        
+
     @classmethod
     def inspectCache(self):
         """ Report details of the Series cache, including the number of cached profiles and an
@@ -276,7 +276,7 @@ class Series(object):
     def _series_idx(self):
         raise NotImplementedError("subclasses of Series must define _series_idx() method")
 
-        
+
 class SeriesConvolution(Series):
     def __init__(self, *args, **kwargs):
         """A Series profile representing the convolution of multiple Series objects and/or
@@ -335,7 +335,7 @@ class SeriesConvolution(Series):
                     for o in self.objlist])
         return tuple(out)
 
-    
+
 class SpergelSeries(Series):
     def __init__(self, nu, jmax, dlnr=None, half_light_radius=None, scale_radius=None,
                  flux=1.0, gsparams=None):
@@ -343,20 +343,23 @@ class SpergelSeries(Series):
         self.jmax = jmax
         if dlnr is None:
             dlnr = np.log(1.3)
+            # dlnr = np.log(1.3) means that the next precomputed r_i after 1.0 is 1.3.
+            # Delta is then restricted to [1-exp(0.5 log(1.3))**2, 1-exp(-0.5 log(1.3))**2]
+            #                           = [1-1.3, 1-1./1.3]
+            #                           = [-0.3, 0.23] or so...
         self.dlnr = dlnr
         if half_light_radius is not None:
             prof = galsim.Spergel(nu=nu, half_light_radius=half_light_radius)
             scale_radius = prof.getScaleRadius()
-        self.scale_radius = scale_radius
         self.flux = flux
         self.gsparams = gsparams
 
-        # Store transformation relative to scale_radius=1.
-        self._A = np.matrix(np.identity(2)*self.scale_radius, dtype=float)
+        # Store transformation relative to scale_radius=1.  I.e., Delta can start out non-zero.
+        self._A = np.matrix(np.identity(2)*scale_radius, dtype=float)
         super(SpergelSeries, self).__init__()
 
     def _getCoeffs(self):
-        ellip, phi0, scale_radius, Delta = self._decomposeA()
+        epsilon, phi0, ri, Delta = self._decomposeA()
         coeffs = []
         for j in xrange(self.jmax+1):
             for q in xrange(-j, j+1):
@@ -369,32 +372,32 @@ class SpergelSeries(Series):
                     # Have to catch 0^0=1 situations...
                     if not (Delta == 0.0 and j==m):
                         num *= Delta**(j-m)
-                    if not (ellip == 0.0 and m==0):
-                        num *= ellip**m
+                    if not (epsilon == 0.0 and m==0):
+                        num *= epsilon**m
                     den = 2**(m-1) * math.factorial(j-m) * math.factorial(m-n) * math.factorial(n)
                     coeff += num/den
                 if q > 0:
-                    coeff *= self.flux * math.cos(2*q*phi0)
+                    coeff *= self.flux * (2*q*phi0).cos()
                 elif q < 0:
-                    coeff *= self.flux * math.sin(2*q*phi0)
+                    coeff *= self.flux * (2*q*phi0).sin()
                 else:
                     coeff *= self.flux * 0.5
                 coeffs.append(coeff)
         return coeffs
-                
+
     def _getBasisFuncs(self):
-        ellip, phi0, scale_radius, Delta = self._decomposeA()
+        _, _, ri, _ = self._decomposeA()
         objs = []
         for j in xrange(self.jmax+1):
             for q in xrange(-j, j+1):
-                objs.append(Spergelet(nu=self.nu, scale_radius=scale_radius,
+                objs.append(Spergelet(nu=self.nu, scale_radius=ri,
                                       j=j, q=q, gsparams=self.gsparams))
         return objs
 
     def _series_idx(self):
-        _, _, scale_radius, _ = self._decomposeA()
-        return (self.__class__, self.nu, self.jmax, scale_radius)
-    
+        _, _, ri, _ = self._decomposeA()
+        return (self.__class__, self.nu, self.jmax, ri)
+
     def copy(self):
         """Returns a copy of an object.  This preserves the original type of the object."""
         cls = self.__class__
@@ -405,9 +408,9 @@ class SpergelSeries(Series):
 
     def _applyMatrix(self, J):
         ret = self.copy()
-        ret._A *= J
-        if hasattr(ret, 'ellip'): # reset lazy affine transformation evaluation
-            del ret.ellip
+        ret._A = J * self._A
+        if hasattr(ret, 'epsilon'): # reset lazy affine transformation evaluation
+            del ret.epsilon
         return ret
 
     def dilate(self, scale):
@@ -432,51 +435,105 @@ class SpergelSeries(Series):
         return self._applyMatrix(shear.getMatrix())
 
     def rotate(self, theta):
-        cth = math.cos(theta.rad())
-        sth = math.sin(theta.rad())
+        sth, cth = theta.sincos()
         R = np.matrix([[cth, -sth],
                        [sth,  cth]],
                       dtype=float)
         return self._applyMatrix(R)
 
     def _decomposeA(self):
-        if not hasattr(self, 'ellip'):
+        # Use cached result if possible.
+        if not hasattr(self, 'epsilon'):
+            # dilate corresponds to:
+            # D(mu) = [ mu 0 ]
+            #         [ 0 mu ]
+            #
+            # rotate corresponds to:
+            # R(phi0) = [ cph  -sph ]
+            #           [ sph   cph ]
+            # where cph = cos(phi0), sph = sin(phi0)
+            #
+            # shear along x corresponds to:
+            # S(eta) = [ exp(eta/2) 0           ]
+            #          [ 0          exp(-eta/2) ]
+            # where eta is the conformal shear; g = tanh(eta/2) and b/a = exp(-eta)
+            #
+            # shear with arbitrary phase 2 beta (i.e. along angle beta wrt the +x axis)
+            # can be generated from a composition of rotates and x-axis shears.
+            # The composition dilate(mu) x rotate(phi0) x shear(eta, beta) yields:
+            #      [ a  b ]
+            # mu x [ c  d ]
+            # a =  cos(phi0) cosh(eta/2) + cos(2 beta + phi0) sinh(eta/2)
+            # b = -sin(phi0) cosh(eta/2) + sin(2 beta + phi0) sinh(eta/2)
+            # c =  sin(phi0) cosh(eta/2) + sin(2 beta + phi0) sinh(eta/2)
+            # d =  cos(phi0) cosh(eta/2) - cos(2 beta + phi0) sinh(eta/2)
+            #
+            # To decompose A then, we work backwards.  The determinant of the above yields
+            # det(A) = mu^2
+            # The following can then be used to get phi0, 2 beta, and eta.
+            # a + d =  2 mu cos(phi0) cosh(eta/2)
+            # b + c =  2 mu sin(2 beta + phi0) sinh(eta/2)
+            # a - d =  2 mu cos(2 beta + phi0) sinh(eta/2)
+            # b - c = -2 mu sin(phi0) cosh(eta/2)
+            # (a-d)**2 + (b+c)**2 = 2 mu**2 (cosh(eta/2) - 1)
+
             A = self._A
-            a = A[0,0]
-            b = A[0,1]
-            c = A[1,0]
-            d = A[1,1]
-            mu = math.sqrt(a*d-b*c)
-            phi0 = math.atan2(c-b, a+d)
-            beta = math.atan2(b+c, a-d)+phi0
-            eta = math.acosh(0.5*((a-d)**2 + (b+c)**2)/mu**2 + 1.0)
+            a = A[0, 0]
+            b = A[0, 1]
+            c = A[1, 0]
+            d = A[1, 1]
+
+            musqr = a*d-b*c
+            mu = math.sqrt(musqr)
+            phi0 = math.atan2(c-b, a+d) * galsim.radians
+            twobetaphi0 = math.atan2(b+c, a-d) * galsim.radians
+            beta = 0.5 * (twobetaphi0 - phi0)
+            eta = math.acosh(0.5*((a-d)**2 + (b+c)**2)/musqr+1.0)
 
             # print "mu: {}".format(mu)
-            # print "phi0: {}".format(phi0)
-            # print "beta: {}".format(beta)
+            # print "phi0: {}".format(phi0.wrap())
+            # print "2 beta: {}".format((2*beta).wrap())
             # print "eta: {}".format(eta)
 
-            ellip = galsim.Shear(eta1=eta).e1
-            r0 = mu/np.sqrt(np.sqrt(1.0 - ellip**2))
-            # find the nearest r_i:
+            # Note that the galsim.shear() operation leaves a*b constant where a and b are the
+            # semi-major semi-minor axes of a sheared elliptical isophote.
+            # In contrast, holding Delta constant and setting a non-zero epsilon in the Spergel
+            # expansion leaves a**2 + b**2 constant, and ab -> ab (1-epsilon**2).
+            # So our task is to figure out what a**2 + b**2 is given the params above.
+            # Some algebra:
+            #    r0**2 = a**2 + b**2                   re**2 = a b
+            #    q = b/a        e = (1-q**2) / (1 + q**2)  =>  q**2 = (1-e)/(1+e)
+            #    re/sqrt(q) = sqrt(a b) * sqrt(a/b) = sqrt(a*a) = a
+            #    re*sqrt(q) = sqrt(a b) * sqrt(b/a) = sqrt(b*b) = b
+            #    r0**2 = re**2/q + re**2 * q = re**2 * (1/q + q)
+            #    more algebra reveals:
+            #    1+q + q = sqrt((1-e)/(1+e)) + sqrt((1+e)/(1-e)) = 2/sqrt(1-e**2)
+            #    Since r0**2 = 2.0 for scale_radius=1 (i.e., a = b = 1),
+            #    this is a linear factor of 1/sqrt(sqrt(1-e**2)).
+
+            self.epsilon = galsim.Shear(eta1=eta).e1
+            r0 = mu / math.sqrt(math.sqrt(1.0 - self.epsilon**2))
+            # print "r0: {}".format(r0)
+
+            # find the nearest r_i, assume that one of the r_i is 1.0 (log r_i = 0):
             f, i = np.modf(np.log(r0)/self.dlnr)
-            # deal with negative logs
-            if f < 0.0:
+            # round up to nearest
+            if f < -0.5:
                 f += 1.0
                 i -= 1
-            # if f > 0.5, then round down from above
+            # round down to nearest
             if f > 0.5:
                 f -= 1.0
                 i += 1
-            scale_radius = np.exp(self.dlnr*i)
-            Delta = 1.0 - (r0/scale_radius)**2
-            self.ellip = ellip
-            self.phi0 = phi0+beta/2
-            self.scale_radius = scale_radius
-            self.Delta = Delta
-        return self.ellip, self.phi0, self.scale_radius, self.Delta
-        
-        
+            self.ri = np.exp(self.dlnr*i)
+            # print "i: {}".format(i)
+            # print "ri: {}".format(self.ri)
+            self.Delta = 1.0 - (r0/self.ri)**2
+            # print "Delta: {}".format(self.Delta)
+            self.phi0 = phi0+beta # This works because initial profile is azimuthally symmetric
+        return self.epsilon, self.phi0, self.ri, self.Delta
+
+
 class Spergelet(galsim.GSObject):
     """A basis function in the Taylor series expansion of the Spergel profile.
 
@@ -556,7 +613,7 @@ class MoffatSeries(Series):
                     coeff *= self.flux * math.sqrt(1.0 - ellip**2) * 0.5
                 coeffs.append(coeff)
         return coeffs
-                
+
     def _getBasisFuncs(self):
         ellip, phi0, scale_radius, Delta = self._decomposeA()
         objs = []
@@ -569,7 +626,7 @@ class MoffatSeries(Series):
     def _series_idx(self):
         _, _, scale_radius, _ = self._decomposeA()
         return (self.__class__, self.beta, self.jmax, scale_radius)
-    
+
     def copy(self):
         """Returns a copy of an object.  This preserves the original type of the object."""
         cls = self.__class__
@@ -607,8 +664,7 @@ class MoffatSeries(Series):
         return self._applyMatrix(shear.getMatrix())
 
     def rotate(self, theta):
-        cth = math.cos(theta.rad())
-        sth = math.sin(theta.rad())
+        sth, cth = theta.sincos()
         R = np.matrix([[cth, -sth],
                        [sth,  cth]],
                       dtype=float)
@@ -651,7 +707,7 @@ class MoffatSeries(Series):
             self.Delta = Delta
         return self.ellip, self.phi0, self.scale_radius, self.Delta
 
-        
+
 class Moffatlet(galsim.GSObject):
     """A basis function in the Taylor series expansion of the Moffat profile.
 
@@ -681,7 +737,7 @@ class Moffatlet(galsim.GSObject):
         """
         return self.SBProfile.getJ(), self.SBProfile.getQ()
 
-        
+
 def nollZernikeDict(jmax):
     # Return dictionary for Noll Zernike convention taking index j -> n,m.
     ret = {}
@@ -728,7 +784,7 @@ class LinearOpticalSeries(Series):
                     scale_unit = galsim.angle.get_angle_unit(scale_unit)
                 lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
         self.lam_over_diam = lam_over_diam
-        self.flux = flux        
+        self.flux = flux
 
         if aberrations is None:
             # Repackage the aberrations into a single array.
@@ -769,7 +825,7 @@ class LinearOpticalSeries(Series):
                 return np.sqrt(n+1)
             else:
                 return np.sqrt(2*n+2)
-            
+
         # Now separate into terms that are pure real and pure imag in the complex PSF
         self.realcoeffs = [1.0]
         self.imagcoeffs = []
@@ -779,7 +835,7 @@ class LinearOpticalSeries(Series):
             if j < 2:
                 continue
             n,m = nollZernike[j]
-            ipower = (m+1)%4    
+            ipower = (m+1)%4
             if ipower == 0:
                 self.realcoeffs.append(norm(n,m)*ab)
                 self.realindices.append((n,m))
@@ -808,18 +864,18 @@ class LinearOpticalSeries(Series):
         self.indices.extend([i for i in combinations(self.imagindices, 2)])
 
         super(LinearOpticalSeries, self).__init__()
-        
+
     def _getCoeffs(self):
         return self.coeffs
-        
+
     def _getBasisFuncs(self):
         return [LinearOpticalet(self.lam_over_diam, o[0][0], o[0][1], o[1][0], o[1][1]) for o in
                 self.indices]
-        
+
     def _series_idx(self):
         return (self.__class__, self.lam_over_diam, len(self.aberrations))
 
-        
+
 class LinearOpticalet(galsim.GSObject):
     """A basis function in the Taylor series expansion of the optical wavefront.
 
@@ -840,4 +896,3 @@ class LinearOpticalet(galsim.GSObject):
     def getIndices(self):
         return (self.SBProfile.getN1(), self.SBProfile.getM1(),
                 self.SBProfile.getN2(), self.SBProfile.getM2())
-        

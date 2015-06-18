@@ -44,7 +44,7 @@ def test_spergelet():
                 test_im = galsim.Image(16, 16, scale=0.2)
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
-                    # This complains about a divide-by-zero, which is a consequence of some 
+                    # This complains about a divide-by-zero, which is a consequence of some
                     # Spergelets having equal amounts of positive and negative surface brightness
                     # values.
                     do_kvalue(spergelet, test_im, "Spergelet")
@@ -93,38 +93,11 @@ def test_spergelseries_kValue():
     for nu, Delta, epsilon, phi0, x, y, kval in vals:
         gal = galsim.SpergelSeries(nu=nu, scale_radius=1.0, jmax=5)
         # Set these by hand instead of through .dilate, .shear, etc...
-        gal.ellip = epsilon
-        gal.phi0 = phi0
+        gal.epsilon = epsilon
+        gal.phi0 = phi0 * galsim.radians
         gal.Delta = Delta
-        gal.scale_radius = 1.0
+        gal.ri = 1.0
         np.testing.assert_almost_equal(gal.kValue(x,y), kval, 6)
-
-# def test_spergelseries_coeff():
-#     """Check a_jq coefficient by generating a_jmn coefficients and forming the appropriate sum.
-#     """
-#     a = (galsim.SpergelSeries(nu=0.3, scale_radius=1.0, jmax=10)
-#          .dilate(1.05)
-#          .shear(e1=0.2, e2=-0.3)
-#          .rotate(33*galsim.degrees))
-#     ellip, phi0, Delta = a._decomposeA()
-#     print ellip, phi0, Delta
-
-#     def a_jmn(j,m,n):
-#         ret = np.cos(2*(2*n-m)*phi0) + 1j*np.sin(2*(2*n-m)*phi0)
-#         ret *= Delta**(j-m)*(1-Delta)**m*(-ellip)**m
-#         return ret
-
-#     indices = a.indices
-#     coeffs = a.getCoeffs()
-#     for idx, coeff in zip(indices, coeffs):
-#         j, q = idx[2:4]
-#         # loop through m in 0..j and n in 0..m, add up entries where 2n-m == q.
-#         c = 0j
-#         for m in range(j):
-#             for n in range(m):
-#                 if 2*n-m == q:
-#                     c += a_jmn(j,m,n)
-#         print j, q, coeff, c
 
 def test_spergelseries():
     """Test that SpergelSeries converges to Spergel.
@@ -136,9 +109,9 @@ def test_spergelseries():
     #       [   nu,    e1, e2,  mu, jmax]
     vals = [
             [-0.85,  0.1, 0.1, 0.9, 5],
-            [ -0.5, -0.1, 0.2, 1.1, 5],   #Misses decimal=5 for 0.4% of pixels
-            [  0.0, 0.23, 0.2, 0.7, 6],   #Misses decimal=5 for 4% of pixels
-            [  1.1, 0.01, 0.5, 0.2, 7]    #Misses decimal=5 for 0.6% of pixels
+            [ -0.5, -0.1, 0.2, 1.1, 6],
+            [  0.0, 0.23, 0.2, 0.7, 7],
+            [  1.1, 0.01, 0.5, 0.2, 9]
     ]
     for nu, e1, e2, mu, jmax in vals:
         gal_exact = galsim.Spergel(nu=nu, half_light_radius=1.0).shear(e1=e1, e2=e2).dilate(mu)
@@ -155,7 +128,8 @@ def test_spergelseries():
             plt.subplot(122)
             plt.imshow(im_series.array)
             plt.show()
-        np.testing.assert_array_almost_equal(im_exact.array, im_series.array, 4)
+        mx = im_exact.array.max()
+        np.testing.assert_array_almost_equal(im_exact.array/mx, im_series.array/mx, 5)
 
 
 def test_spergelseries_dilate():
@@ -168,29 +142,30 @@ def test_spergelseries_dilate():
     #                  inputs
     #       [   nu,    D, eps, phi, jmax]
     vals = [
-            [-0.85,  0.2, 0.1, 0.9, 5],
-            [ -0.5, -0.2, 0.2, 1.1, 5],
-            [  0.0, 0.23, 0.2, 0.7, 6],
-            [  1.1,  0.2, 0.5, 0.2, 7]
+            [-0.85,  0.2, 0.1, 0.9, 9],
+            [ -0.5, -0.2, 0.2, 1.1, 9],
+            [  0.0, 0.23, 0.2, 0.7, 9],
+            [  1.1,  0.2, 0.5, 0.2, 9]
     ]
     for nu, Delta, eps, phi, jmax in vals:
         mu = np.sqrt(1-Delta)
         gal_direct = galsim.SpergelSeries(nu=nu, half_light_radius=1.0, jmax=jmax)
         # Set appropriate attributes directly, instead of through .decomposeA()
-        gal_direct.ellip = eps
-        gal_direct.phi0 = phi
-        gal_direct.scale_radius = mu
+        gal_direct.epsilon = eps
+        gal_direct.phi0 = phi * galsim.radians
+        gal_direct.ri = mu
         gal_direct.Delta = 0.0
         gal_dilate = galsim.SpergelSeries(nu=nu, half_light_radius=1.0, jmax=jmax)
-        gal_dilate.ellip = eps
-        gal_dilate.phi0 = phi
-        gal_dilate.scale_radius = 1.0
+        gal_dilate.epsilon = eps
+        gal_dilate.phi0 = phi * galsim.radians
+        gal_dilate.ri = 1.0
         gal_dilate.Delta = Delta
         obj_direct = galsim.SeriesConvolution(gal_direct, psf)
         obj_dilate = galsim.SeriesConvolution(gal_dilate, psf)
         im_direct = obj_direct.drawImage(nx=32, ny=32, scale=0.2)
         im_dilate = obj_dilate.drawImage(nx=32, ny=32, scale=0.2)
-        np.testing.assert_almost_equal(im_direct.array, im_dilate.array, 5)
+        mx = im_direct.array.max()
+        np.testing.assert_almost_equal(im_direct.array/mx, im_dilate.array/mx, 3)
 
 def test_moffatlet():
     betas = [2,3,4,5]
