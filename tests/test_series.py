@@ -104,9 +104,7 @@ def test_spergelseries():
     """
     # Need a PSF to handle super peaky nu < 0 Spergel profiles.  Otherwise the required fft size
     # explodes.
-    psf = galsim.Gaussian(fwhm=0.5)
-    # Higher |e| profiles require more terms to converge, so include jmax as a param to vary.
-    #       [   nu,    e1, e2,  mu, jmax]
+    psf = galsim.Gaussian(fwhm=0.6)
     vals = [
             [-0.85,  0.1, 0.1, 0.9, 5],
             [ -0.5, -0.1, 0.2, 1.1, 6],
@@ -114,21 +112,35 @@ def test_spergelseries():
             [  1.1, 0.01, 0.5, 0.2, 9]
     ]
     for nu, e1, e2, mu, jmax in vals:
-        gal_exact = galsim.Spergel(nu=nu, half_light_radius=1.0).shear(e1=e1, e2=e2).dilate(mu)
+        gal_exact = (galsim.Spergel(nu=nu, half_light_radius=1.0)
+                     .shear(e1=e1, e2=e2)
+                     .dilate(mu))
+                     # .shift(0.1, 0.1)
         gal_series = (galsim.SpergelSeries(nu=nu, half_light_radius=1.0, jmax=jmax)
-                      .shear(e1=e1, e2=e2).dilate(mu))
+                      .shear(e1=e1, e2=e2)
+                      .dilate(mu))
+                      # .shift(0.1, 0.1)
         obj_exact = galsim.Convolve(gal_exact, psf)
         obj_series = galsim.SeriesConvolution(gal_series, psf)
         im_exact = obj_exact.drawImage(nx=32, ny=32, scale=0.2)
         im_series = obj_series.drawImage(nx=32, ny=32, scale=0.2)
+        mx = im_exact.array.max()
         if False:
             import matplotlib.pyplot as plt
-            plt.subplot(121)
-            plt.imshow(im_exact.array)
-            plt.subplot(122)
-            plt.imshow(im_series.array)
+            fig = plt.figure(figsize=(9,2))
+            ax = fig.add_subplot(131)
+            im = ax.imshow(im_series.array/mx)
+            plt.colorbar(im)
+            ax = fig.add_subplot(132)
+            im = ax.imshow(im_exact.array/mx)
+            plt.colorbar(im)
+            ax = fig.add_subplot(133)
+            resid = im_series.array - im_exact.array
+            vmin = min(resid.min(), -resid.max())
+            im = ax.imshow((im_series.array - im_exact.array)/mx, 
+                           vmin=vmin, vmax=-vmin, cmap='seismic')
+            plt.colorbar(im)
             plt.show()
-        mx = im_exact.array.max()
         np.testing.assert_array_almost_equal(im_exact.array/mx, im_series.array/mx, 5)
 
 
@@ -209,12 +221,12 @@ def test_moffatseries():
             "MoffatSeries failed to converge for beta={:0}".format(beta))
 
 if __name__ == "__main__":
-    test_spergelet()
-    test_series_draw()
-    test_series_gsobject_convolution()
-    test_spergelseries_decomposeA()
-    test_spergelseries_kValue()
+    # test_spergelet()
+    # test_series_draw()
+    # test_series_gsobject_convolution()
+    # test_spergelseries_decomposeA()
+    # test_spergelseries_kValue()
     test_spergelseries()
-    test_spergelseries_dilate()
-    test_moffatlet()
-    test_moffatseries()
+    # test_spergelseries_dilate()
+    # test_moffatlet()
+    # test_moffatseries()

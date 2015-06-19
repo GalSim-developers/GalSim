@@ -189,8 +189,18 @@ class Series(object):
         key = (self._series_idx(), args, tuple(sorted(kwargs.items())))
         cube, shape = self._basisCube(key)
         coeffs = np.array(self._getCoeffs(), dtype=cube.dtype)
-        im = np.dot(coeffs, cube).reshape(shape)
-        return galsim.Image(im)
+        centroid = self.centroid()
+        try:
+            scale = kwargs['scale']
+        except KeyError:
+            scale = 1.0
+        im = galsim.Image(np.dot(coeffs, cube).reshape(shape), scale=scale)
+        if centroid.x == 0 and centroid.y == 0:
+            return im
+        else:
+            kwargs.update({'method':'no_pixel'})
+            return (galsim.InterpolatedImage(im, calculate_stepk=False, calculate_maxk=False)
+                    .shift(centroid).drawImage(*args, **kwargs))
 
     def drawKImage(self, *args, **kwargs):
         """Draw the Fourier-space image of a Series object by forming the appropriate linear
@@ -335,6 +345,9 @@ class SeriesConvolution(Series):
                     for o in self.objlist])
         return tuple(out)
 
+    def centroid(self):
+        return np.add.reduce([obj.centroid() for obj in self.objlist])
+
 
 class SpergelSeries(Series):
     def __init__(self, nu, jmax, dlnr=None, half_light_radius=None, scale_radius=None,
@@ -354,8 +367,10 @@ class SpergelSeries(Series):
         self.flux = flux
         self.gsparams = gsparams
 
-        # Store transformation relative to scale_radius=1.  I.e., Delta can start out non-zero.
-        self._A = np.matrix(np.identity(2)*scale_radius, dtype=float)
+        # Use augmented affine transformation matrix.
+        # Store transformation relative to scale_radius=1.  
+        # I.e., It's possible that Delta is already non-zero.
+        self._A = np.diag(np.array([scale_radius, scale_radius, 1], dtype=float))
         super(SpergelSeries, self).__init__()
 
     def _getCoeffs(self):
@@ -398,6 +413,9 @@ class SpergelSeries(Series):
         _, _, ri, _ = self._decomposeA()
         return (self.__class__, self.nu, self.jmax, ri)
 
+    def centroid(self):
+        return galsim.PositionD(self._A[0,2], self._A[1,2])
+
     def copy(self):
         """Returns a copy of an object.  This preserves the original type of the object."""
         cls = self.__class__
@@ -408,13 +426,13 @@ class SpergelSeries(Series):
 
     def _applyMatrix(self, J):
         ret = self.copy()
-        ret._A = J * self._A
+        ret._A = np.dot(J, self._A)
         if hasattr(ret, 'epsilon'): # reset lazy affine transformation evaluation
             del ret.epsilon
         return ret
 
     def dilate(self, scale):
-        E = np.diag([scale, scale])
+        E = np.diag(np.array([scale, scale, 1], dtype=float))
         return self._applyMatrix(E)
 
     def shear(self, *args, **kwargs):
@@ -432,15 +450,27 @@ class SpergelSeries(Series):
                 raise TypeError("Too many kwargs provided!")
         else:
             shear = galsim.Shear(**kwargs)
-        return self._applyMatrix(shear.getMatrix())
+        J = np.identity(3, dtype=float)
+        J[0:2, 0:2] = shear.getMatrix()
+        return self._applyMatrix(J)
 
     def rotate(self, theta):
         sth, cth = theta.sincos()
-        R = np.matrix([[cth, -sth],
-                       [sth,  cth]],
+        R = np.matrix([[cth, -sth, 0],
+                       [sth,  cth, 0],
+                       [  0,    0, 1]],
                       dtype=float)
         return self._applyMatrix(R)
 
+    def shift(self, *args, **kwargs):
+        offset = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
+        ret = self.copy()
+        ret._A[0, 2] += offset.x
+        ret._A[1, 2] += offset.y
+        if hasattr(ret, 'epsilon'):
+            del ret.epsilon
+        return ret
+        
     def _decomposeA(self):
         # Use cached result if possible.
         if not hasattr(self, 'epsilon'):
@@ -627,6 +657,9 @@ class MoffatSeries(Series):
         _, _, scale_radius, _ = self._decomposeA()
         return (self.__class__, self.beta, self.jmax, scale_radius)
 
+    def centroid(self):
+        return galsim.PositionD(0.0, 0.0)
+    
     def copy(self):
         """Returns a copy of an object.  This preserves the original type of the object."""
         cls = self.__class__
@@ -875,6 +908,8 @@ class LinearOpticalSeries(Series):
     def _series_idx(self):
         return (self.__class__, self.lam_over_diam, len(self.aberrations))
 
+    def centroid(self):
+        return galsim.PositionD(0.0, 0.0)
 
 class LinearOpticalet(galsim.GSObject):
     """A basis function in the Taylor series expansion of the optical wavefront.
