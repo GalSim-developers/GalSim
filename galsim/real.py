@@ -38,7 +38,6 @@ some lower-resolution telescope.
 import galsim
 import utilities
 from galsim import GSObject
-from galsim import pyfits
 import os
 
 class RealGalaxy(GSObject):
@@ -393,6 +392,7 @@ class RealGalaxyCatalog(object):
     def __init__(self, file_name=None, image_dir=None, dir=None, preload=False,
                  noise_dir=None, logger=None, _nobjects_only=False):
 
+        from galsim._pyfits import pyfits
         self.file_name, self.image_dir, self.noise_dir = \
             _parse_files_dirs(file_name, image_dir, dir, noise_dir)
 
@@ -489,6 +489,7 @@ class RealGalaxyCatalog(object):
         """
         import numpy
         from multiprocessing import Lock
+        from galsim._pyfits import pyfits
         if self.logger:
             self.logger.debug('RealGalaxyCatalog: start preload')
         for file_name in numpy.concatenate((self.gal_file_name , self.psf_file_name)):
@@ -508,6 +509,7 @@ class RealGalaxyCatalog(object):
 
     def _getFile(self, file_name):
         from multiprocessing import Lock
+        from galsim._pyfits import pyfits
         if file_name in self.loaded_files:
             if self.logger:
                 self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
@@ -591,6 +593,7 @@ class RealGalaxyCatalog(object):
                         self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
                 else:
                     import numpy
+                    from galsim._pyfits import pyfits
                     array = pyfits.getdata(self.noise_file_name[i])
                     im = galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)),
                                       scale=self.pixel_scale[i])
