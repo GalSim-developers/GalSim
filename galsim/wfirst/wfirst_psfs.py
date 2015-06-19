@@ -20,7 +20,6 @@ import galsim
 import galsim.wfirst
 import numpy as np
 import os
-from galsim import pyfits
 
 """
 @file wfirst_psfs.py
@@ -243,6 +242,7 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
     @param clobber             Should the routine clobber `filename` (if they already exist)?
                                [default: False]
     """
+    from galsim._pyfits import pyfits
     # Check for sane input PSF_dict.
     if len(PSF_dict) == 0 or len(PSF_dict) > galsim.wfirst.n_sca or \
             min(PSF_dict.keys()) < 1 or max(PSF_dict.keys()) > galsim.wfirst.n_sca:

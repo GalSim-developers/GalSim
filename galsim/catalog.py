@@ -126,7 +126,7 @@ class Catalog(object):
     def read_fits(self, hdu, _nobjects_only=False):
         """Read in an input catalog from a FITS file.
         """
-        from galsim import pyfits, pyfits_version
+        from galsim._pyfits import pyfits, pyfits_version
         raw_data = pyfits.getdata(self.file_name, hdu)
         if pyfits_version > '3.0':
             self.names = raw_data.columns.names

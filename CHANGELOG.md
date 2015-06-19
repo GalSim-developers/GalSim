@@ -59,9 +59,11 @@ New Features
   (#501)
 - Added new methods of the image class to simulate detector effects:
   inter-pixel capacitance (#555) and image quantization (#558).
-- Enable constructing a FitsHeader object from a dict.  This had been a hidden
+- Enabled constructing a FitsHeader object from a dict.  This had been a hidden
   feature that only half worked.  It should now work correctly.  Also, allow
   FitsHeader to be default constructed, which creates it with no keys. (#590)
+- Enabled constructing a FitsHeader object from a list of (key, value) pairs,
+  which preserves the order of the items in the header. (#672)
 - Added a module, galsim.wfirst, that includes information about the planned
   WFIRST mission, along with helper routines for constructing appropriate PSFs,
   bandpasses, WCS, etc.  (#590)

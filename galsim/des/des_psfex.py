@@ -120,7 +120,7 @@ class DES_PSFEx(object):
         self.read()
 
     def read(self):
-        from galsim import pyfits
+        from galsim._pyfits import pyfits
         if isinstance(self.file_name, basestring):
             hdu = pyfits.open(self.file_name)[1]
         else:
