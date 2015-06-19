@@ -22,7 +22,6 @@ COSMOS-based galaxy sample, but it could be expanded to include star samples as 
 """
 
 import galsim
-from galsim import pyfits
 import numpy as np
 import math
 import os
@@ -140,6 +139,7 @@ class COSMOSCatalog(object):
     def __init__(self, file_name=None, image_dir=None, dir=None, preload=False, noise_dir=None,
                  use_real=True, exclude_fail=True, exclude_bad=True, max_hlr=0.,
                  _nobjects_only=False):
+        from galsim._pyfits import pyfits
         self.use_real = use_real
 
         if self.use_real:

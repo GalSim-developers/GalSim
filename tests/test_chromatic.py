@@ -533,7 +533,7 @@ def test_chromatic_flux():
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
     # As an aside, check for appropriate tests of 'integrator' argument.
     try:
-        np.testing.assert_raises(TypeError, final_int.drawImage, bandpass, 
+        np.testing.assert_raises(TypeError, final_int.drawImage, bandpass,
                                  integrator='midp') # minor misspelling
         np.testing.assert_raises(TypeError, final_int.drawImage, bandpass,
                                  integrator=galsim.integ.midpt)
@@ -741,7 +741,7 @@ def test_ChromaticObject_expand():
     np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, 1.0, decimal=4)
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
 
-    # First a very simple case with no actual wavelength dependence, but using the 
+    # First a very simple case with no actual wavelength dependence, but using the
     # functional syntax.
     gal1 = galsim.ChromaticObject(gal).expand(lambda w: 1.2)
     # Use a simple bandpass so we can do the integral below analytically
@@ -863,7 +863,7 @@ def test_ChromaticObject_rotate():
     np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, (1-0.3)/fact, decimal=4)
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
 
-    # First a very simple case with no actual wavelength dependence, but using the 
+    # First a very simple case with no actual wavelength dependence, but using the
     # functional syntax.
     gal1 = galsim.ChromaticObject(gal).rotate(lambda w: 0.4 * galsim.radians)
     bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 500, 700)
@@ -963,7 +963,7 @@ def test_ChromaticObject_shear():
     np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, 1.0, decimal=4)
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0.0, decimal=4)
 
-    # First a very simple case with no actual wavelength dependence, but using the 
+    # First a very simple case with no actual wavelength dependence, but using the
     # functional syntax.
     gal1 = galsim.ChromaticObject(gal).shear(lambda w: galsim.Shear(e1=0.23, e2=0.13))
     bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 500, 700)
@@ -1519,7 +1519,7 @@ def test_ChromaticOpticalPSF():
     t1 = time.time()
 
     # For ChromaticOpticalPSF, exact evaluation is too slow for routine unit tests.  So, for
-    # this unit test, we use an interpolated version only.  The tests of 
+    # this unit test, we use an interpolated version only.  The tests of
     # ChromaticObject in the previous unit test should be enough to ensure that exact
     # and interpolated evaluation match in general (given reasonable settings).
 
@@ -1547,7 +1547,7 @@ def test_ChromaticOpticalPSF():
     # obscuration = 0.18
     # nstruts = 2
     # scale = 0.02
-    # 
+    #
     # psf = galsim.ChromaticOpticalPSF(lam=lam, diam=diam, aberrations=aberrations,
     #                                  obscuration=obscuration, nstruts=nstruts)
     # obj = galsim.Convolve(psf, star)
@@ -1643,7 +1643,7 @@ def test_ChromaticAiry():
     # diam = 3.1 # meters
     # obscuration = 0.11
     # scale = 0.02
-    # 
+    #
     # psf = galsim.ChromaticAiry(lam=lam, diam=diam, obscuration=obscuration)
     # obj = galsim.Convolve(psf, star)
     # im_r = obj.drawImage(bandpass, scale=scale)

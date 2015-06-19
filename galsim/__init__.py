@@ -88,19 +88,6 @@ from _version import __version__, __version_info__
 # previous GalSim versions that indicated the version number in this way.
 version = __version__
 
-# Two options for pyfits module:
-try:
-    import astropy.io.fits as pyfits
-    # astropy started their versioning over at 0.  (Understandably.)
-    # To make this seamless with pyfits versions, we add 4 to the astropy version.
-    from astropy import version as astropy_version
-    pyfits_version = str( (4 + astropy_version.major) + astropy_version.minor/10.)
-    pyfits_str = 'astropy.io.fits'
-except:
-    import pyfits
-    pyfits_version = pyfits.__version__
-    pyfits_str = 'pyfits'
-
 # Import things from other files we want to be in the galsim namespace
 
 # First some basic building blocks that don't usually depend on anything else
@@ -130,7 +117,7 @@ from optics import OpticalPSF
 from shapelet import Shapelet, ShapeletSize, FitShapelet
 from interpolatedimage import Interpolant
 from interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
-from interpolatedimage import InterpolatedImage
+from interpolatedimage import InterpolatedImage, InterpolatedKImage
 from compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
 from compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
 from transform import Transform, Transformation
