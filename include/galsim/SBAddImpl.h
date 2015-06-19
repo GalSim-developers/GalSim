@@ -136,7 +136,7 @@ namespace galsim {
 
         std::string repr() const;
 
-    protected:  // This is protected since we want inheritance by AddCorrelationFunctionImpl
+    private:
 
         /// @brief The plist content is a pointer to a fresh copy of the summands.
         std::list<SBProfile> _plist; 

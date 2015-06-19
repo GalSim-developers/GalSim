@@ -1036,6 +1036,84 @@ def test_stepk_maxk():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_kround_trip():
+    a = final
+    real_a, imag_a = a.drawKImage()
+    b = galsim.InterpolatedKImage(real_a, imag_a)
+
+    # Check picklability
+    do_pickle(b)
+    do_pickle(b, lambda x: x.drawImage())
+    do_pickle(b.SBProfile)
+    do_pickle(b.SBProfile, lambda x: repr(x))
+
+    for kx, ky in zip(KXVALS, KYVALS):
+        np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 3,
+            err_msg=("InterpolatedKImage evaluated incorrectly at ({0:},{1:})"
+                     .format(kx, ky)))
+
+    np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
+
+    real_b, imag_b = b.drawKImage(real_a.copy(), imag_a.copy())
+    # Fails at 4th decimal
+    np.testing.assert_array_almost_equal(real_a.array, real_b.array, 3,
+                                         "InterpolatedKImage kimage drawn incorrectly.")
+    # Fails at 4th decimal
+    np.testing.assert_array_almost_equal(imag_a.array, imag_b.array, 3,
+                                         "InterpolatedKImage kimage drawn incorrectly.")
+
+    img_a = a.drawImage()
+    img_b = b.drawImage(img_a.copy())
+    # This is the one that matters though; fails at 6th decimal
+    np.testing.assert_array_almost_equal(img_a.array, img_b.array, 5,
+                                         "InterpolatedKImage image drawn incorrectly.")
+
+    # Try some (slightly larger maxk) non-even kimages:
+    for dx, dy in zip((2,3,3), (3,2,3)):
+        shape = real_a.array.shape
+        real_a, imag_a = a.drawKImage(nx=shape[1]+dx, ny=shape[0]+dy, scale=real_a.scale)
+        b = galsim.InterpolatedKImage(real_a, imag_a)
+
+        np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
+        img_b = b.drawImage(img_a.copy())
+        # One of these fails at 6th decimal
+        np.testing.assert_array_almost_equal(img_a.array, img_b.array, 5)
+
+    # Try some additional transformations:
+    a = a.shear(g1=0.2, g2=-0.2).shift(1.1, -0.2).dilate(0.7)
+    b = b.shear(g1=0.2, g2=-0.2).shift(1.1, -0.2).dilate(0.7)
+    img_a = a.drawImage()
+    img_b = b.drawImage(img_a.copy())
+    # Fails at 6th decimal
+    np.testing.assert_array_almost_equal(img_a.array, img_b.array, 5,
+                                         "Transformed InterpolatedKImage image drawn incorrectly.")
+
+    # Does the stepk parameter do anything?
+    a = final
+    b = galsim.InterpolatedKImage(*a.drawKImage())
+    c = galsim.InterpolatedKImage(*a.drawKImage(), stepk=2*b.stepK())
+    np.testing.assert_almost_equal(2*b.stepK(), c.stepK())
+    np.testing.assert_almost_equal(b.maxK(), c.maxK())
+
+    # Test centroid
+    for dx, dy in zip(KXVALS, KYVALS):
+        a = final.shift(dx, dy)
+        b = galsim.InterpolatedKImage(*a.drawKImage())
+        np.testing.assert_almost_equal(a.centroid().x, b.centroid().x, 4) #Fails at 5th decimal
+        np.testing.assert_almost_equal(a.centroid().y, b.centroid().y, 4)
+
+    # Test convolution with another object.
+    a = final
+    b = galsim.InterpolatedKImage(*a.drawKImage())
+    c = galsim.Kolmogorov(fwhm=0.8).shear(e1=0.01, e2=0.02).shift(0.01, 0.02)
+    a_conv_c = galsim.Convolve(a, c)
+    b_conv_c = galsim.Convolve(b, c)
+    a_conv_c_img = a_conv_c.drawImage()
+    b_conv_c_img = b_conv_c.drawImage(image=a_conv_c_img.copy())
+    # Fails at 6th decimal.
+    np.testing.assert_array_almost_equal(a_conv_c_img.array, b_conv_c_img.array, 5,
+                                         "Convolution of InterpolatedKImage drawn incorrectly.")
+
 if __name__ == "__main__":
     test_roundtrip()
     test_fluxnorm()
@@ -1052,3 +1130,4 @@ if __name__ == "__main__":
     test_Lanczos7_ref()
     test_conserve_dc()
     test_stepk_maxk()
+    test_kround_trip()
