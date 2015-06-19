@@ -109,7 +109,9 @@ Bug Fixes and Improvements
 - Fixed a bug if drawImage was given odd nx, ny parameters, the drawn profile
   was not correctly centered in the image. (#645)
 - Added intermediate results cache to `ChromaticObject.drawImage` and
-  `ChromaticConvolution.drawImage`
+  `ChromaticConvolution.drawImage`, which, for some applications, can
+  significantly speed up (anywhere from 10% to 2000%) the rendering of groups
+  of similar (same SED, same Bandpass, same PSF) chromatic profiles.
 
 Updates to config options
 -------------------------
