@@ -31,6 +31,7 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+    import galsim.wfirst
 
 def test_wfirst_wcs():
     """Test the WFIRST WCS routines against those from software provided by WFIRST project office.
@@ -217,6 +218,7 @@ def test_wfirst_bandpass():
     """
     import time
     t1 = time.time()
+    from galsim._pyfits import pyfits
 
     # Obtain the bandpasses with AB_zeropoint set
     exp_time = 200. # non WFIRST exposure time
@@ -243,7 +245,7 @@ def test_wfirst_bandpass():
     # Jeff used the C-K template with solar metallicity, T=9550K, surface gravity logg=3.95.  I
     # downloaded a grid of templates and just used the nearest one, which has solar metallicity,
     # T=9500K, surface gravity logg=4.0.
-    sed_data = galsim.pyfits.getdata(os.path.join('wfirst_files','ckp00_9500.fits'))
+    sed_data = pyfits.getdata(os.path.join('wfirst_files','ckp00_9500.fits'))
     lam = sed_data.WAVELENGTH.astype(np.float64)
     t = sed_data.g40.astype(np.float64)
     sed_tab = galsim.LookupTable(x=lam, f=t, interpolant='linear')

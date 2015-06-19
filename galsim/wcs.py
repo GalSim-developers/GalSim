@@ -524,7 +524,6 @@ class BaseWCS(object):
         @param bounds       The bounds of the image.
         """
         # First write the XMIN, YMIN values
-        from galsim import pyfits_version
         if not isinstance(header, galsim.fits.FitsHeader):
             header = galsim.fits.FitsHeader(header)
         header["GS_XMIN"] = (bounds.xmin, "GalSim image minimum x coordinate")

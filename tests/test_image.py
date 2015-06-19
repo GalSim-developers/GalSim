@@ -55,7 +55,7 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-from galsim import pyfits
+from galsim._pyfits import pyfits
 
 # Setup info for tests, not likely to change
 ntypes = 4  # Note: Most tests below only run through the first 4 types.
