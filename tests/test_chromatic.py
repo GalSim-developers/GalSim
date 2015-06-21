@@ -1313,6 +1313,9 @@ def test_interpolated_ChromaticObject():
             ret = ret.shear(g1 = this_shear)
             return ret
 
+        def __repr__(self):
+            return 'galsim.ChromaticGaussian(%r)'%self.sigma
+
     # For this test, we're going to use the ChromaticGaussian defined above.  This class is simple
     # enough that evaluation of both the interpolated and exact versions is very fast, so it won't
     # slow down the tests too much to do both ways.  Note that for initial tests (fair comparison
