@@ -28,13 +28,7 @@ from itertools import product, combinations, count
 
 
 class Series(object):
-    # Share caches among all subclasses of Series
-    _cache = {}
-    _kcache = {}
-    _root = None
-    _kroot = None
-
-    def __init__(self, maxcache=100):
+    def __init__(self):
         """Abstract base class for GalSim profiles represented as a series of basis profiles.
         Generally, coefficients of the basis profiles can be manipulated to set parameters of the
         series profile, such as size and ellipticity for SpergelSeries and MoffatSeries, or
@@ -56,54 +50,18 @@ class Series(object):
         occupy 10s to 100s (or more!) MB of memory.  You can check the current state of the cache
         with the Series.inspectCache() method.
         """
-        # Initialize caches
-        if self._root is None:
-            # Steal some ideas from http://code.activestate.com/recipes/577970-simplified-lru-cache/
-            # Note that self._root = ... doesn't work since this will set [subclass]._root instead
-            # of Series._root.
-            # Link layout:       [PREV, NEXT, KEY, RESULT]
-            Series._root = root = [None, None, None, None]
-            cache = self._cache
-            last = root
-            for i in range(maxcache):
-                key = object()
-                cache[key] = last[1] = last = [last, root, key, None]
-            root[0] = last
-            # And similarly for Fourier-space cache
-            Series._kroot = kroot = [None, None, None, None]
-            kcache = self._kcache
-            klast = kroot
-            for i in range(maxcache):
-                key = object()
-                kcache[key] = klast[1] = klast = [klast, kroot, key, None]
-            kroot[0] = last
-
-    # TODO: could probably combine _basisCube and _basisKCube with the addition of a few helper
-    # methods
+        pass
 
     def _basisCube(self, key):
         # Query the cache of image cubes and find the one corresponding to a particular Series object
         # with particular image settings.  If it's not present in the cache, then create it.
         # `key` here is a 3-tuple with indices:
-        #       0: Class-specific parameters
+        #       0: Series subclass hash
         #       1: args to be used in drawImage
         #       2: kwargs to be used in drawImage, as a tuple of tuples to make it hashable.
         #          The first item of each interior tuple is the kwarg name as a string, and the
         #          second item is the associated value.
-        cache = Series._cache
-        root = Series._root
-        link = cache.get(key)
-        if link is not None:
-            link_prev, link_next, _, result = link
-            link_prev[1] = link_next
-            link_next[0] = link_prev
-            last = root[0]
-            last[1] = root[0] = link
-            link[0] = last
-            link[1] = root
-            return result
-        # Didn't find the cube we were looking for, so create it.
-        series_idx, args, kwargs = key
+        series, args, kwargs = key
         kwargs = dict(kwargs)
         objs = self._getBasisFuncs()
         im0 = objs[0].drawImage(*args, **kwargs)
@@ -115,41 +73,20 @@ class Series(object):
         cube = np.empty((len(objs), shape[0]*shape[1]), dtype=im0.array.dtype)
         for i, obj in enumerate(objs):
             cube[i] = obj.drawImage(*args, **kwargs).array.ravel()
-        root[2] = key
         # Need to store the image shape here so we can eventually turn 1D image vector back into a
         # 2D image.
-        root[3] = (cube, shape)
-        oldroot = root
-        root = Series._root = root[1]
-        root[2], oldkey = None, root[2]
-        root[3], oldvalue = None, root[3]
-        del cache[oldkey]
-        cache[key] = oldroot
         return cube, shape
 
     def _basisKCube(self, key):
         # Query the cache of kimage cubes and find the one corresponding to a particular Series
         # object with particular image settings.  If it's not present in the cache, then create it.
         # `key` here is a 3-tuple with indices:
-        #       0: Class-specific parameters
+        #       0: Series subclass hash
         #       1: args to be used in drawKImage
         #       2: kwargs to be used in drawKImage, as a tuple of tuples to make it hashable.
         #          The first item of each interior tuple is the kwarg name as a string, and the
         #          second item is the associated value.
-        cache = Series._kcache
-        root = Series._kroot
-        link = cache.get(key)
-        if link is not None:
-            link_prev, link_next, _, result = link
-            link_prev[1] = link_next
-            link_next[0] = link_prev
-            last = root[0]
-            last[1] = root[0] = link
-            link[0] = last
-            link[1] = root
-            return result
-        # Didn't find the cube we were looking for, so create it.
-        series_idx, args, kwargs = key
+        series, args, kwargs = key
         kwargs = dict(kwargs)
         objs = self._getBasisFuncs()
         re0, im0 = objs[0].drawKImage(*args, **kwargs)
@@ -164,16 +101,6 @@ class Series(object):
             tmp = obj.drawKImage(*args, **kwargs)
             recube[i] = tmp[0].array.ravel()
             imcube[i] = tmp[1].array.ravel()
-        root[2] = key
-        # Need to store the image shape here so we can eventually turn 1D kimage vectors back into
-        # 2D kimages.
-        root[3] = (recube, imcube, shape)
-        oldroot = root
-        root = Series._kroot = root[1]
-        root[2], oldkey = None, root[2]
-        root[3], oldvalue = None, root[3]
-        del cache[oldkey]
-        cache[key] = oldroot
         return recube, imcube, shape
 
     def drawImage(self, *args, **kwargs):
@@ -187,7 +114,7 @@ class Series(object):
         See GSObject.drawImage() for a description of available arguments for this method.
         """
         key = (self._series_idx(), args, tuple(sorted(kwargs.items())))
-        cube, shape = self._basisCube(key)
+        cube, shape = self._cube_cache(self, key)
         coeffs = np.array(self._getCoeffs(), dtype=cube.dtype)
         centroid = self.centroid()
         try:
@@ -213,7 +140,7 @@ class Series(object):
         See GSObject.drawKImage() for a description of available arguments for this method.
         """
         key = (self._series_idx(), args, tuple(sorted(kwargs.items())))
-        recube, imcube, shape = self._basisKCube(key)
+        recube, imcube, shape = self._kcube_cache(self, key)
         coeffs = np.array(self._getCoeffs(), dtype=recube.dtype)
         reim = np.dot(coeffs, recube).reshape(shape)
         imim = np.dot(coeffs, imcube).reshape(shape)
@@ -244,15 +171,13 @@ class Series(object):
         coeffs = self._getCoeffs()
         return np.dot(xvals, coeffs)
 
-    @classmethod
-    def inspectCache(self):
+    @staticmethod
+    def inspectCache():
         """ Report details of the Series cache, including the number of cached profiles and an
         estimate of the memory footprint of the cache.
         """
-        i=0
-        ik=0
-        mem=0
-        for k,v in self._cache.iteritems():
+        i = ik = mem = 0
+        for k, v in Series._cube_cache.cache.iteritems():
             if not isinstance(k, tuple):
                 continue
             i += 1
@@ -262,16 +187,18 @@ class Series(object):
             print "# of basis images: {:0}".format(v[3][0].shape[0])
             print "images are {:0} x {:1} pixels".format(*v[3][1])
             mem += v[3][0].nbytes
-            if k in self._kcache:
-                v = self._kcache[k]
-                ik += 1
-                print
-                print "Cached kimage object: "
-                print v[2]
-                print "# of basis kimages: {:0}".format(v[3][0].shape[0])
-                print "kimages are {:0} x {:1} pixels".format(*v[3][2])
-                mem += v[3][0].nbytes
-                mem += v[3][1].nbytes
+
+        for k, v in Series._kcube_cache.cache.iteritems():
+            if not isinstance(k, tuple):
+                continue
+            ik += 1
+            print
+            print "Cached kimage object: "
+            print v[2]
+            print "# of basis kimages: {:0}".format(v[3][0].shape[0])
+            print "kimages are {:0} x {:1} pixels".format(*v[3][2])
+            mem += v[3][0].nbytes
+            mem += v[3][1].nbytes
         print
         print "Found {:0} image caches".format(i)
         print "Found {:0} kimage caches".format(ik)
@@ -285,6 +212,13 @@ class Series(object):
 
     def _series_idx(self):
         raise NotImplementedError("subclasses of Series must define _series_idx() method")
+
+    def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
+    def __hash__(self): return hash(repr(self))
+
+Series._cube_cache = galsim.utilities.LRU_Cache(Series._basisCube, maxsize=100)
+Series._kcube_cache = galsim.utilities.LRU_Cache(Series._basisKCube, maxsize=100)
 
 
 class SeriesConvolution(Series):
@@ -306,7 +240,7 @@ class SeriesConvolution(Series):
                 raise TypeError(
                     "Single input argument must be a Series or GSObject or a list of them.")
         # Check kwargs
-        self.gsparams = kwargs.pop("gsparams", None)
+        self._gsparams = kwargs.pop("gsparams", None)
         # Make sure there is nothing left in the dict.
         if kwargs:
             raise TypeError("Got unexpected keyword argument(s): %s"%kwargs.keys())
@@ -338,12 +272,13 @@ class SeriesConvolution(Series):
                                                        for obj in self.objlist])]
 
     def _series_idx(self):
-        out = [self.__class__]
-        out.extend([o._series_idx()
-                    if not isinstance(o, galsim.GSObject)
-                    else id(o)
-                    for o in self.objlist])
-        return tuple(out)
+        if not hasattr(self, '_idx'):
+            _idx = [self.__class__]
+            _idx.extend([o._series_idx() if not isinstance(o, galsim.GSObject) else o
+                         for o in self.objlist])
+            _idx.append(self._gsparams)
+            self._idx = hash(tuple(_idx))
+        return self._idx
 
     def centroid(self):
         return np.add.reduce([obj.centroid() for obj in self.objlist])
@@ -351,7 +286,7 @@ class SeriesConvolution(Series):
 
 class SpergelSeries(Series):
     def __init__(self, nu, jmax, dlnr=None, half_light_radius=None, scale_radius=None,
-                 flux=1.0, gsparams=None):
+                 flux=1.0, gsparams=None, _A=None):
         self.nu = nu
         self.jmax = jmax
         if dlnr is None:
@@ -365,12 +300,14 @@ class SpergelSeries(Series):
             prof = galsim.Spergel(nu=nu, half_light_radius=half_light_radius)
             scale_radius = prof.getScaleRadius()
         self.flux = flux
-        self.gsparams = gsparams
+        self._gsparams = gsparams
 
         # Use augmented affine transformation matrix.
-        # Store transformation relative to scale_radius=1.  
+        # Store transformation relative to scale_radius=1.
         # I.e., It's possible that Delta is already non-zero.
-        self._A = np.diag(np.array([scale_radius, scale_radius, 1], dtype=float))
+        if _A is None:
+            _A = np.diag(np.array([scale_radius, scale_radius, 1], dtype=float))
+        self._A = _A
         super(SpergelSeries, self).__init__()
 
     def _getCoeffs(self):
@@ -406,12 +343,14 @@ class SpergelSeries(Series):
         for j in xrange(self.jmax+1):
             for q in xrange(-j, j+1):
                 objs.append(Spergelet(nu=self.nu, scale_radius=ri,
-                                      j=j, q=q, gsparams=self.gsparams))
+                                      j=j, q=q, gsparams=self._gsparams))
         return objs
 
     def _series_idx(self):
-        _, _, ri, _ = self._decomposeA()
-        return (self.__class__, self.nu, self.jmax, ri)
+        if not hasattr(self, '_idx'):
+            _, _, ri, _ = self._decomposeA()
+            self._idx = hash((self.__class__, self.nu, self.jmax, ri, self._gsparams))
+        return self._idx
 
     def centroid(self):
         return galsim.PositionD(self._A[0,2], self._A[1,2])
@@ -467,10 +406,8 @@ class SpergelSeries(Series):
         ret = self.copy()
         ret._A[0, 2] += offset.x
         ret._A[1, 2] += offset.y
-        if hasattr(ret, 'epsilon'):
-            del ret.epsilon
         return ret
-        
+
     def _decomposeA(self):
         # Use cached result if possible.
         if not hasattr(self, 'epsilon'):
@@ -563,6 +500,18 @@ class SpergelSeries(Series):
             self.phi0 = phi0+beta # This works because initial profile is azimuthally symmetric
         return self.epsilon, self.phi0, self.ri, self.Delta
 
+    def __repr__(self):
+        s = 'galsim.SpergelSeries(nu=%r, jmax=%r, flux=%r, dlnr=%r, _A=%r'%(
+            self.nu, self.jmax, self.flux, self.dlnr, self._A)
+        s += ', gsparams=%r)'%(self._gsparams)
+        return s
+
+    def __str__(self):
+        s = 'galsim.SpergelSeries(nu=%s, jmax=%s'%(self.nu, self.jmax)
+        if self.flux != 1.0:
+            s += ', flux=%s'%self.flux
+        s += ')'
+        return s
 
 class Spergelet(galsim.GSObject):
     """A basis function in the Taylor series expansion of the Spergel profile.
@@ -597,7 +546,7 @@ class Spergelet(galsim.GSObject):
 class MoffatSeries(Series):
     def __init__(self, beta, jmax, dlnr=None,
                  half_light_radius=None, scale_radius=None, fwhm=None,
-                 flux=1.0, gsparams=None):
+                 flux=1.0, gsparams=None, _A=None):
         self.beta = beta
         self.jmax = jmax
         if dlnr is None:
@@ -609,12 +558,14 @@ class MoffatSeries(Series):
         elif fwhm is not None:
             prof = galsim.Moffat(beta=beta, fwhm=fwhm)
             scale_radius = prof.getScaleRadius()
-        self.scale_radius = scale_radius
         self.flux = flux
-        self.gsparams = gsparams
+        self._gsparams = gsparams
 
         # Store transformation relative to scale_radius=1.
-        self._A = np.matrix(np.identity(2)*self.scale_radius, dtype=float)
+        if _A is None:
+            _A = np.diag(np.array([scale_radius, scale_radius, 1.0], dtype=float))
+        self._A = _A
+
         super(MoffatSeries, self).__init__()
 
     def _getCoeffs(self):
@@ -650,16 +601,18 @@ class MoffatSeries(Series):
         for j in xrange(self.jmax+1):
             for q in xrange(-j, j+1):
                 objs.append(Moffatlet(beta=self.beta, scale_radius=scale_radius,
-                                      j=j, q=q, gsparams=self.gsparams))
+                                      j=j, q=q, gsparams=self._gsparams))
         return objs
 
     def _series_idx(self):
-        _, _, scale_radius, _ = self._decomposeA()
-        return (self.__class__, self.beta, self.jmax, scale_radius)
+        if not hasattr(self, '_idx'):
+            _, _, ri, _ = self._decomposeA()
+            self._idx = hash((self.__class__, self.beta, self.jmax, ri, self._gsparams))
+        return self._idx
 
     def centroid(self):
         return galsim.PositionD(0.0, 0.0)
-    
+
     def copy(self):
         """Returns a copy of an object.  This preserves the original type of the object."""
         cls = self.__class__
@@ -670,13 +623,13 @@ class MoffatSeries(Series):
 
     def _applyMatrix(self, J):
         ret = self.copy()
-        ret._A *= J
+        ret._A = np.dot(J, self._A)
         if hasattr(ret, 'ellip'): # reset lazy affine transformation evaluation
             del ret.ellip
         return ret
 
     def dilate(self, scale):
-        E = np.diag([scale, scale])
+        E = np.diag(np.array([scale, scale, 1.0], dtype=float))
         return self._applyMatrix(E)
 
     def shear(self, *args, **kwargs):
@@ -694,14 +647,24 @@ class MoffatSeries(Series):
                 raise TypeError("Too many kwargs provided!")
         else:
             shear = galsim.Shear(**kwargs)
-        return self._applyMatrix(shear.getMatrix())
+        J = np.identity(3, dtype=float)
+        J[0:2, 0:2] = shear.getMatrix()
+        return self._applyMatrix(J)
 
     def rotate(self, theta):
         sth, cth = theta.sincos()
-        R = np.matrix([[cth, -sth],
-                       [sth,  cth]],
+        R = np.matrix([[cth, -sth, 0],
+                       [sth,  cth, 0],
+                       [  0,    0, 1]],
                       dtype=float)
         return self._applyMatrix(R)
+
+    def shift(self, *args, **kwargs):
+        offset = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
+        ret = self.copy()
+        ret._A[0, 2] += offset.x
+        ret._A[1, 2] += offset.y
+        return ret
 
     def _decomposeA(self):
         if not hasattr(self, 'ellip'):
@@ -735,10 +698,23 @@ class MoffatSeries(Series):
             scale_radius = np.exp(self.dlnr*i)
             Delta = 1.0 - (scale_radius/r0)**2
             self.ellip = ellip
-            self.phi0 = phi0+beta/2
             self.scale_radius = scale_radius
+            self.phi0 = phi0+beta/2
             self.Delta = Delta
         return self.ellip, self.phi0, self.scale_radius, self.Delta
+
+    def __repr__(self):
+        s = 'galsim.MoffatSeries(beta=%r, jmax=%r, flux=%r, dlnr=%r, _A=%r'%(
+            self.beta, self.jmax, self.flux, self.dlnr, self._A)
+        s += ', gsparams=%r)'%(self._gsparams)
+        return s
+
+    def __str__(self):
+        s = 'galsim.MoffatSeries(beta=%s, jmax=%s'%(self.beta, self.jmax)
+        if self.flux != 1.0:
+            s += ', flux=%s'%self.flux
+        s += ')'
+        return s
 
 
 class Moffatlet(galsim.GSObject):
@@ -818,6 +794,7 @@ class LinearOpticalSeries(Series):
                 lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
         self.lam_over_diam = lam_over_diam
         self.flux = flux
+        self._gsparams = gsparams
 
         if aberrations is None:
             # Repackage the aberrations into a single array.
@@ -902,11 +879,29 @@ class LinearOpticalSeries(Series):
         return self.coeffs
 
     def _getBasisFuncs(self):
-        return [LinearOpticalet(self.lam_over_diam, o[0][0], o[0][1], o[1][0], o[1][1]) for o in
-                self.indices]
+        return [LinearOpticalet(self.lam_over_diam, o[0][0], o[0][1], o[1][0], o[1][1],
+                                gsparams=self._gsparams)
+                for o in self.indices]
 
     def _series_idx(self):
-        return (self.__class__, self.lam_over_diam, len(self.aberrations))
+        if not hasattr(self, '_idx'):
+            self._idx = hash(
+                (self.__class__, self.lam_over_diam, self.aberrations, self._gsparams))
+        return self._idx
+
+    def __repr__(self):
+        s = 'galsim.LinearOpticalSeries(lam_over_diam=%r, flux=%r, aberrations=%r, gsparams=%r)'%(
+            self.lam_over_diam, self.flux, self.aberrations, self._gsparams)
+        return s
+
+    def __str__(self):
+        s = 'galsim.LinearOpticalSeries(lam_over_diam=%s'%self.lam_over_diam
+        if self.flux != 1.0:
+            s += ', flux=%s'%self.flux
+        if sum(self.aberrations.nonzero()[0]) > 0:
+            s += ', aberrations=%s'%self.aberrations
+        s += ')'
+        return s
 
     def centroid(self):
         return galsim.PositionD(0.0, 0.0)
