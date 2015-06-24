@@ -287,6 +287,8 @@ class SeriesConvolution(Series):
 class SpergelSeries(Series):
     def __init__(self, nu, jmax, dlnr=None, half_light_radius=None, scale_radius=None,
                  flux=1.0, gsparams=None, _A=None):
+        if half_light_radius is None and scale_radius is None and _A is None:
+            raise ValueError("Missing radius parameter")
         self.nu = nu
         self.jmax = jmax
         if dlnr is None:
@@ -547,6 +549,8 @@ class MoffatSeries(Series):
     def __init__(self, beta, jmax, dlnr=None,
                  half_light_radius=None, scale_radius=None, fwhm=None,
                  flux=1.0, gsparams=None, _A=None):
+        if half_light_radius is None and scale_radius is None and fwhm is None and _A is None:
+            raise ValueError("Missing radius parameter")
         self.beta = beta
         self.jmax = jmax
         if dlnr is None:
