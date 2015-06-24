@@ -114,7 +114,7 @@ class Series(object):
         See GSObject.drawImage() for a description of available arguments for this method.
         """
         key = (self._series_idx(), args, tuple(sorted(kwargs.items())))
-        cube, shape = self._cube_cache(self, key)
+        cube, shape = Series._cube_cache(key)
         coeffs = np.array(self._getCoeffs(), dtype=cube.dtype)
         centroid = self.centroid()
         try:
@@ -140,7 +140,7 @@ class Series(object):
         See GSObject.drawKImage() for a description of available arguments for this method.
         """
         key = (self._series_idx(), args, tuple(sorted(kwargs.items())))
-        recube, imcube, shape = self._kcube_cache(self, key)
+        recube, imcube, shape = Series._kcube_cache(key)
         coeffs = np.array(self._getCoeffs(), dtype=recube.dtype)
         reim = np.dot(coeffs, recube).reshape(shape)
         imim = np.dot(coeffs, imcube).reshape(shape)
