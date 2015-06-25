@@ -52,18 +52,26 @@ class Series(object):
         """
         pass
 
-    def _basisCube(self, key):
+    @staticmethod
+    def _cube(key):
         # Query the cache of image cubes and find the one corresponding to a particular Series object
         # with particular image settings.  If it's not present in the cache, then create it.
         # `key` here is a 3-tuple with indices:
-        #       0: Series subclass hash
-        #       1: args to be used in drawImage
-        #       2: kwargs to be used in drawImage, as a tuple of tuples to make it hashable.
+        #       0: Series subclass
+        #       1: Args to pass to getBasisProfiles
+        #       2: args to be used in drawImage
+        #       3: kwargs to be used in drawImage, as a tuple of tuples to make it hashable.
         #          The first item of each interior tuple is the kwarg name as a string, and the
         #          second item is the associated value.
-        series, args, kwargs = key
+        # Note that the LRU_Cache seems to only work when caching a staticmethod, which is why
+        # we pass the Series subclass in here explicitly instead of using self.  Another subtlety
+        # is that we want different Series instances to be able to use the same cache (for instance
+        # a SpergelSeries with e1=0.01, and a SpergelSeries with e1=0.02 will almost always require
+        # the same cube).  Thus, we don't want the key to include the object instance, only the
+        # object class, which is another reason to make this method static.
+        series, gbargs, args, kwargs = key
         kwargs = dict(kwargs)
-        objs = self._getBasisFuncs()
+        objs = series._getBasisProfiles(*gbargs)
         im0 = objs[0].drawImage(*args, **kwargs)
         shape = im0.array.shape
         # It's faster to store the stack of basis images as a series of 1D vectors (i.e. a 2D
@@ -77,18 +85,12 @@ class Series(object):
         # 2D image.
         return cube, shape
 
-    def _basisKCube(self, key):
-        # Query the cache of kimage cubes and find the one corresponding to a particular Series
-        # object with particular image settings.  If it's not present in the cache, then create it.
-        # `key` here is a 3-tuple with indices:
-        #       0: Series subclass hash
-        #       1: args to be used in drawKImage
-        #       2: kwargs to be used in drawKImage, as a tuple of tuples to make it hashable.
-        #          The first item of each interior tuple is the kwarg name as a string, and the
-        #          second item is the associated value.
-        series, args, kwargs = key
+    @staticmethod
+    def _kcube(key):
+        # See comment for _basisCube
+        series, gbargs, args, kwargs = key
         kwargs = dict(kwargs)
-        objs = self._getBasisFuncs()
+        objs = self._getBasisProfiles(*gbargs)
         re0, im0 = objs[0].drawKImage(*args, **kwargs)
         shape = im0.array.shape
         # It's faster to store the stack of basis images as a series of 1D vectors (i.e. a 2D
@@ -113,7 +115,7 @@ class Series(object):
 
         See GSObject.drawImage() for a description of available arguments for this method.
         """
-        key = (self._series_idx(), args, tuple(sorted(kwargs.items())))
+        key = self.__class__, self._getBasisProfileArgs(), args, tuple(sorted(kwargs.items()))
         cube, shape = Series._cube_cache(key)
         coeffs = np.array(self._getCoeffs(), dtype=cube.dtype)
         centroid = self.centroid()
@@ -139,12 +141,56 @@ class Series(object):
 
         See GSObject.drawKImage() for a description of available arguments for this method.
         """
-        key = (self._series_idx(), args, tuple(sorted(kwargs.items())))
+        key = self.__class__, self._getBasisProfileArgs(), args, tuple(sorted(kwargs.items()))
         recube, imcube, shape = Series._kcube_cache(key)
         coeffs = np.array(self._getCoeffs(), dtype=recube.dtype)
         reim = np.dot(coeffs, recube).reshape(shape)
         imim = np.dot(coeffs, imcube).reshape(shape)
+        # TODO: incorporate centroid into kimages
         return galsim.Image(reim), galsim.Image(imim)
+
+    @staticmethod
+    def drawImages(objlist, *args, **kwargs):
+        """ Usage: Series.drawImages(Series instances, draw_arguments, draw_keywords=...)
+        """
+        for obj in objlist[1:]:
+            assert obj.__class__ == objlist[0].__class__
+        try:
+            scale = kwargs['scale']
+        except:
+            scale = 1.0
+        out = [None]*len(objlist)
+        #group like cube indices together
+        gbpas = [o._getBasisProfileArgs() for o in objlist]
+        keys = []
+        groups = []
+        notgrouped = np.ones(len(objlist), dtype=bool)
+        while any(notgrouped):
+            i = np.nonzero(notgrouped)[0][0]
+            key = gbpas[i]
+            keys.append(key)
+            group = np.nonzero([o==key for o in gbpas])[0]
+            groups.append(group)
+            notgrouped[group] = False
+        for key, group in zip(keys, groups):
+            cube, shape = Series._cube_cache((objlist[0].__class__,
+                                              key,
+                                              args,
+                                              tuple(sorted(kwargs.items()))))
+            coeffs = np.empty((len(group), cube.shape[0]), dtype=cube.dtype)
+            ims = np.dot(coeffs, cube).reshape((len(group), shape[0], shape[1]))
+            for i, j in enumerate(group):
+                centroid = objlist[i].centroid()
+                im = galsim.Image(ims[i].reshape(shape), scale=scale)
+                if centroid.x == 0 and centroid.y == 0:
+                    out[j] = im
+                else:
+                    iikwargs = kwargs.copy()
+                    iikwargs.update({'method':'no_pixel'})
+                    out[j] = (galsim.InterpolatedImage(
+                        im, calculate_stepk=False, calculate_maxk=False)
+                              .shift(centroid).drawImage(*args, **iikwargs))
+        return out
 
     def kValue(self, *args, **kwargs):
         """Calculate the value of the Fourier-space image of this Series object at a particular
@@ -155,7 +201,8 @@ class Series(object):
 
         See GSObject.kValue() for a description of available arguments for this method.
         """
-        kvals = [obj.kValue(*args, **kwargs) for obj in self._getBasisFuncs()]
+        kvals = [obj.kValue(*args, **kwargs)
+                 for obj in self._getBasisProfiles(*self._getBasisProfileArgs())]
         coeffs = self._getCoeffs()
         return np.dot(kvals, coeffs)
 
@@ -167,7 +214,8 @@ class Series(object):
 
         See GSObject.xValue() for a description of available arguments for this method.
         """
-        xvals = [obj.xValue(*args, **kwargs) for obj in self._getBasisFuncs()]
+        xvals = [obj.xValue(*args, **kwargs)
+                 for obj in self._getBasisProfiles(*self._getBasisProfileArgs())]
         coeffs = self._getCoeffs()
         return np.dot(xvals, coeffs)
 
@@ -207,18 +255,18 @@ class Series(object):
     def _getCoeffs(self):
         raise NotImplementedError("subclasses of Series must define _getCoeffs() method")
 
-    def _getBasisFuncs(self):
-        raise NotImplementedError("subclasses of Series must define _getBasisFuncs() method")
+    def _getBasisProfiles(self):
+        raise NotImplementedError("subclasses of Series must define _getBasisProfiles() method")
 
-    def _series_idx(self):
-        raise NotImplementedError("subclasses of Series must define _series_idx() method")
+    def _getBasisProfileArgs(self):
+        raise NotImplementedError("subclasses of Series must define _getBasisProfileArgs() method")
 
     def __eq__(self, other): return repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 
-Series._cube_cache = galsim.utilities.LRU_Cache(Series._basisCube, maxsize=100)
-Series._kcube_cache = galsim.utilities.LRU_Cache(Series._basisKCube, maxsize=100)
+Series._cube_cache = galsim.utilities.LRU_Cache(Series._cube, maxsize=100)
+Series._kcube_cache = galsim.utilities.LRU_Cache(Series._kcube, maxsize=100)
 
 
 class SeriesConvolution(Series):
@@ -265,20 +313,23 @@ class SeriesConvolution(Series):
                                             for obj in self.objlist
                                             if not isinstance(obj, galsim.GSObject)]) ).ravel()
 
-    def _getBasisFuncs(self):
-        return [galsim.Convolve(*o) for o in product(*[[obj]
-                                                       if isinstance(obj, galsim.GSObject)
-                                                       else obj._getBasisFuncs()
-                                                       for obj in self.objlist])]
+    @staticmethod
+    def _getBasisProfiles(objlist, objargs):
+        return tuple([galsim.Convolve(*o)
+                      for o in product(*[[obj]
+                                         if isinstance(obj, galsim.GSObject)
+                                         else obj._getBasisProfiles(*objarg)
+                                         for obj, objarg in zip(objlist, objargs)])])
 
-    def _series_idx(self):
-        if not hasattr(self, '_idx'):
-            _idx = [self.__class__]
-            _idx.extend([o._series_idx() if not isinstance(o, galsim.GSObject) else o
-                         for o in self.objlist])
-            _idx.append(self._gsparams)
-            self._idx = hash(tuple(_idx))
-        return self._idx
+    def _getBasisProfileArgs(self):
+        if not hasattr(self, '_bpargs'):
+            self._objlist = tuple([o if isinstance(o, galsim.GSObject)
+                                   else o.__class__
+                                   for o in self.objlist])
+            self._bpargs = self._objlist, tuple([None if isinstance(o, galsim.GSObject)
+                                                 else o._getBasisProfileArgs()
+                                                 for o in self.objlist])
+        return self._bpargs
 
     def centroid(self):
         return np.add.reduce([obj.centroid() for obj in self.objlist])
@@ -339,20 +390,19 @@ class SpergelSeries(Series):
                 coeffs.append(coeff)
         return coeffs
 
-    def _getBasisFuncs(self):
-        _, _, ri, _ = self._decomposeA()
+    @staticmethod
+    def _getBasisProfiles(nu, jmax, ri, gsp):
         objs = []
-        for j in xrange(self.jmax+1):
+        for j in xrange(jmax+1):
             for q in xrange(-j, j+1):
-                objs.append(Spergelet(nu=self.nu, scale_radius=ri,
-                                      j=j, q=q, gsparams=self._gsparams))
+                objs.append(Spergelet(nu=nu, scale_radius=ri, j=j, q=q, gsparams=gsp))
         return objs
 
-    def _series_idx(self):
-        if not hasattr(self, '_idx'):
+    def _getBasisProfileArgs(self):
+        if not hasattr(self, '_bpargs'):
             _, _, ri, _ = self._decomposeA()
-            self._idx = hash((self.__class__, self.nu, self.jmax, ri, self._gsparams))
-        return self._idx
+            self._bpargs = self.nu, self.jmax, ri, self._gsparams
+        return self._bpargs
 
     def centroid(self):
         return galsim.PositionD(self._A[0,2], self._A[1,2])
@@ -599,23 +649,23 @@ class MoffatSeries(Series):
                 coeffs.append(coeff)
         return coeffs
 
-    def _getBasisFuncs(self):
-        ellip, phi0, scale_radius, Delta = self._decomposeA()
+    @staticmethod
+    def _getBasisProfiles(beta, jmax, ri, gsp):
         objs = []
-        for j in xrange(self.jmax+1):
+        for j in xrange(jmax+1):
             for q in xrange(-j, j+1):
-                objs.append(Moffatlet(beta=self.beta, scale_radius=scale_radius,
-                                      j=j, q=q, gsparams=self._gsparams))
+                objs.append(Moffatlet(beta=beta, scale_radius=ri,
+                                      j=j, q=q, gsparams=gsp))
         return objs
 
-    def _series_idx(self):
-        if not hasattr(self, '_idx'):
+    def _getbasisProfileArgs(self):
+        if not hasattr(self, '_bpargs'):
             _, _, ri, _ = self._decomposeA()
-            self._idx = hash((self.__class__, self.beta, self.jmax, ri, self._gsparams))
-        return self._idx
+            self._bpargs = self.nu, self.jmax, ri, self._gsparams
+        return self._bpargs
 
     def centroid(self):
-        return galsim.PositionD(0.0, 0.0)
+        return galsim.PositionD(self._A[0,2], self._A[1,2])
 
     def copy(self):
         """Returns a copy of an object.  This preserves the original type of the object."""
@@ -882,16 +932,16 @@ class LinearOpticalSeries(Series):
     def _getCoeffs(self):
         return self.coeffs
 
-    def _getBasisFuncs(self):
-        return [LinearOpticalet(self.lam_over_diam, o[0][0], o[0][1], o[1][0], o[1][1],
-                                gsparams=self._gsparams)
+    @staticmethod
+    def _getBasisProfiles(lam_over_diam, indices, gsp):
+        return [LinearOpticalet(lam_over_diam, o[0][0], o[0][1], o[1][0], o[1][1],
+                                gsparams=gsp)
                 for o in self.indices]
 
-    def _series_idx(self):
-        if not hasattr(self, '_idx'):
-            self._idx = hash(
-                (self.__class__, self.lam_over_diam, self.aberrations, self._gsparams))
-        return self._idx
+    def _getBasisProfileArgs(self):
+        if not hasattr(self, '_bpargs'):
+            self._bpargs = self.lam_over_diam, self.indices, self._gsparams
+        return self._bpargs
 
     def __repr__(self):
         s = 'galsim.LinearOpticalSeries(lam_over_diam=%r, flux=%r, aberrations=%r, gsparams=%r)'%(
