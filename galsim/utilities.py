@@ -423,10 +423,10 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     """
     Interleaves the pixel values from two or more images and into a single larger image.
 
-    This routine can be used to build a Nyquist-sampled image from a set of images that were
-    observed with pixels larger than the Nyquist scale. This routine converts a list of images taken
-    at a series of (uniform) dither offsets into a single higher resolution image, where the value
-    in each final pixel is the observed pixel value from exactly one of the original images.
+    This routine converts a list of images taken at a series of (uniform) dither offsets into a
+    single higher resolution image, where the value in each final pixel is the observed pixel
+    value from exactly one of the original images.  It can be used to build a Nyquist-sampled image
+    from a set of images that were observed with pixels larger than the Nyquist scale.
 
     In the original observed images, the integration of the surface brightness over the pixels is
     equivalent to convolution by the pixel profile and then sampling at the centers of the pixels.
