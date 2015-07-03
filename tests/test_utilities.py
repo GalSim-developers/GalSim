@@ -304,6 +304,47 @@ def test_interleaveImages():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_python_LRU_Cache():
+    f = lambda x: x+1
+    size = 10
+    # Test correct size cache gets created
+    cache = galsim.utilities.LRU_Cache(f, maxsize=size)
+    assert len(cache.cache) == size
+    # Insert f(0) = 1 into cache and check that we can get it back
+    assert cache(0) == f(0)
+    assert cache(0) == f(0)
+
+    # Manually manipulate cache so we can check for hit
+    cache.cache[(0,)][3] = 2
+    assert cache(0) == 2
+
+    # Insert (and check) 1 thru size into cache.  This should bump out the (0,).
+    for i in range(1, size+1):
+        assert cache(i) == f(i)
+    assert (0,) not in cache.cache
+
+    # Test non-destructive cache expansion
+    newsize = 20
+    cache.resize(newsize)
+    for i in range(1, size+1):
+        assert (i,) in cache.cache
+        assert cache(i) == f(i)
+    assert len(cache.cache) == 20
+
+    # Add new items until the (1,) gets bumped
+    for i in range(size+1, newsize+2):
+        assert cache(i) == f(i)
+    assert (1,) not in cache.cache
+
+    # Test mostly non-destructive cache contraction.
+    # Already bumped (0,) and (1,), so (2,) should be the first to get bumped
+    for i in range(newsize-1, size, -1):
+        assert (newsize - (i - 1),) in cache.cache
+        cache.resize(i)
+        assert (newsize - (i - 1),) not in cache.cache
+
+
 if __name__ == "__main__":
     test_roll2d_circularity()
     test_roll2d_fwdbck()
@@ -312,3 +353,4 @@ if __name__ == "__main__":
     test_kxky_plusone()
     test_check_all_contiguous()
     test_interleaveImages()
+    test_python_LRU_Cache()
