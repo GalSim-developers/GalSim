@@ -431,23 +431,27 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     In the original observed images, the integration of the surface brightness over the pixels is
     equivalent to convolution by the pixel profile and then sampling at the centers of the pixels.
     This procedure simulates an observation sampled at a higher resolution than the original images,
-    while retaining the original pixel convolution. Such an image can be obtained in a fairly
-    simple manner in simulations of surface brightness profiles by convolving them explicitly with
-    the native pixel response and setting a lower sampling scale (or higher sampling rate) using the
-    `pixel_scale' argument in drawImage() routine and setting the `method' parameter to `no_pixel'.
+    while retaining the original pixel convolution.
+    
+    Such an image can be obtained in a fairly simple manner in simulations of surface brightness
+    profiles by convolving them explicitly with the native pixel response and setting a lower
+    sampling scale (or higher sampling rate) using the `pixel_scale' argument in drawImage()
+    routine and setting the `method' parameter to `no_pixel'.
+
     However, pixel level detector effects can be included only on images drawn at the native pixel
     scale, which happen to be undersampled in most cases. Nyquist-sampled images that also include
     the effects of detector non-idealities can be obtained by drawing multiple undersampled images
     (with the detector effects included) that are offset from each other by a fraction of a pixel.
 
-    This is equivalent, in principle, to other procedures that build a higher resolution image from
-    a set of low resolution images, such as MultiDrizzle and IMCOM. A minor disadvantage of this
-    routine compared to other external generic image combination softwares is that the images must
-    be offset in equal steps along the horizontal and vertical directions respectively. This is
+    This is similar to other procedures that build a higher resolution image from a set of low
+    resolution images, such as MultiDrizzle and IMCOM. A disadvantage of this routine compared to
+    ther others is that the images must be offset in equal steps in each direction. This is
     difficult to acheive with real observations but can be precisely acheived in a series of
-    simulated images. A major advantage is that the noise in the final image is not correlated as
-    the pixel values are from just a single input image. Thus, this routine preserves the noise
-    properties of the pixels.
+    simulated images.
+    
+    An advantage of this procedure is that the noise in the final image is not correlated as the
+    pixel values are each taken from just a single input image. Thus, this routine preserves the
+    noise properties of the pixels.
 
     Here's an example script using this routine:
 
