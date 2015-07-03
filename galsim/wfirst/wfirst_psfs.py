@@ -134,7 +134,7 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     # Deal with some accuracy settings.
     if high_accuracy:
         if approximate_struts:
-            oversampling = 3.0
+            oversampling = 3.5
         else:
             oversampling = 2.0
 
