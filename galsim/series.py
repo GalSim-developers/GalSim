@@ -54,49 +54,45 @@ class Series(object):
 
     @staticmethod
     def _cube(key):
-        # Query the cache of image cubes and find the one corresponding to a particular Series object
-        # with particular image settings.  If it's not present in the cache, then create it.
-        # `key` here is a 3-tuple with indices:
+        # Create an image cube.
+        # `key` here is a 4-tuple with indices:
         #       0: Series subclass
-        #       1: Args to pass to getBasisProfiles
+        #       1: args to pass to getBasisProfiles
         #       2: args to be used in drawImage
         #       3: kwargs to be used in drawImage, as a tuple of tuples to make it hashable.
         #          The first item of each interior tuple is the kwarg name as a string, and the
         #          second item is the associated value.
-        # Note that the LRU_Cache seems to only work when caching a staticmethod, which is why
-        # we pass the Series subclass in here explicitly instead of using self.  Another subtlety
-        # is that we want different Series instances to be able to use the same cache (for instance
-        # a SpergelSeries with e1=0.01, and a SpergelSeries with e1=0.02 will almost always require
-        # the same cube).  Thus, we don't want the key to include the object instance, only the
-        # object class, which is another reason to make this method static.
+        # This method is cached using a galsim.utilities.LRU_Cache. Note that the LRU_Cache seems
+        # to only work when caching a staticmethod, which is why we pass the Series subclass in
+        # here explicitly instead of using `self`.  Another subtlety is that we want different
+        # Series instances to be able to use the same cache (for instance a SpergelSeries with
+        # e1=0.01, and a SpergelSeries with e1=0.02 will almost always require the same cube).
+        # Thus, we don't want the key to include the object instance, only the object class, which
+        # is another reason to make this method static.
         series, gbargs, args, kwargs = key
         kwargs = dict(kwargs)
         objs = series._getBasisProfiles(*gbargs)
         im0 = objs[0].drawImage(*args, **kwargs)
         shape = im0.array.shape
         # It's faster to store the stack of basis images as a series of 1D vectors (i.e. a 2D
-        # numpy array instead of a cube (or rectangular prism I guess...))
-        # This makes the linear combination step a matrix multiply, which is like lightning.
+        # numpy array instead of a cube (or rectangular prism, I guess...))
+        # This makes the linear combination step a matrix multiply, which is fast like the wind.
         # I still think of this data structure as a cube though, so that's what I'm calling it.
         cube = np.empty((len(objs), shape[0]*shape[1]), dtype=im0.array.dtype)
         for i, obj in enumerate(objs):
             cube[i] = obj.drawImage(*args, **kwargs).array.ravel()
-        # Need to store the image shape here so we can eventually turn 1D image vector back into a
-        # 2D image.
+        # Need to store the image shape here so we can eventually turn the 1D image vector back
+        # into a 2D image.
         return cube, shape
 
     @staticmethod
     def _kcube(key):
-        # See comment for _basisCube
+        # See comments for _basisCube
         series, gbargs, args, kwargs = key
         kwargs = dict(kwargs)
         objs = self._getBasisProfiles(*gbargs)
         re0, im0 = objs[0].drawKImage(*args, **kwargs)
         shape = im0.array.shape
-        # It's faster to store the stack of basis images as a series of 1D vectors (i.e. a 2D
-        # numpy array instead of a cube (or rectangular prism I guess...))
-        # This makes the linear combination step a matrix multiply, which is like lightning.
-        # I still think of this data structure as a cube though, so that's what I'm calling it.
         recube = np.empty((len(objs), shape[0]*shape[1]), dtype=im0.array.dtype)
         imcube = np.empty_like(recube)
         for i, obj in enumerate(objs):
@@ -109,9 +105,11 @@ class Series(object):
         """Draw a Series object by forming the appropriate linear combination of basis profile
         images.  This method will search the Series cache to see if the basis images for this
         object already exist, and if not then create and cache them.  Note that a separate cache is
-        created for each combination of image parameters (such as shape, wcs, scale, etc.) and also
+        created for each combination of image parameters (such as shape, wcs/scale, etc.) and also
         certain profile parameters (such as the SpergelSeries `nu` parameter or the MoffatSeries
-        `beta` parameter.)
+        `beta` parameter.)  Additional cubes may also be created if a profile parameter falls out of
+        range for an existing cube (this applies chiefly to size and ellipticity parameters of
+        SpergelSeries or MoffatSeries).
 
         See GSObject.drawImage() for a description of available arguments for this method.
         """
@@ -135,9 +133,7 @@ class Series(object):
         """Draw the Fourier-space image of a Series object by forming the appropriate linear
         combination of basis profile Fourier-space images.  This method will search the Series cache
         to see if the basis images for this object already exist, and if not then create and cache
-        them.  Note that a separate cache is created for each combination of image parameters (such
-        as shape, wcs, scale, etc.) and also certain profile parameters (such as the SpergelSeries
-        `nu` parameter or the MoffatSeries `beta` parameter.)
+        them.  See Series.drawImage() docstring for additional caveats.
 
         See GSObject.drawKImage() for a description of available arguments for this method.
         """
@@ -233,7 +229,7 @@ class Series(object):
             print "Cached image object: "
             print v[2]
             print "# of basis images: {:0}".format(v[3][0].shape[0])
-            print "images are {:0} x {:1} pixels".format(*v[3][1])
+            print "images are {:0} x {:1} arrays".format(*v[3][1])
             mem += v[3][0].nbytes
 
         for k, v in Series._kcube_cache.cache.iteritems():
@@ -244,7 +240,7 @@ class Series(object):
             print "Cached kimage object: "
             print v[2]
             print "# of basis kimages: {:0}".format(v[3][0].shape[0])
-            print "kimages are {:0} x {:1} pixels".format(*v[3][2])
+            print "kimages are {:0} x {:1} arrays".format(*v[3][2])
             mem += v[3][0].nbytes
             mem += v[3][1].nbytes
         print
