@@ -55,11 +55,10 @@ class Series(object):
     @staticmethod
     def _cube(key):
         # Create an image cube.
-        # `key` here is a 4-tuple with indices:
+        # `key` here is a 3-tuple with indices:
         #       0: Series subclass
         #       1: args to pass to getBasisProfiles
-        #       2: args to be used in drawImage
-        #       3: kwargs to be used in drawImage, as a tuple of tuples to make it hashable.
+        #       2: kwargs to be used in drawImage, as a tuple of tuples to make it hashable.
         #          The first item of each interior tuple is the kwarg name as a string, and the
         #          second item is the associated value.
         # This method is cached using a galsim.utilities.LRU_Cache. Note that the LRU_Cache seems
@@ -69,39 +68,50 @@ class Series(object):
         # e1=0.01, and a SpergelSeries with e1=0.02 will almost always require the same cube).
         # Thus, we don't want the key to include the object instance, only the object class, which
         # is another reason to make this method static.
-        series, gbargs, args, kwargs = key
+        series, gbargs, kwargs = key
         kwargs = dict(kwargs)
         objs = series._getBasisProfiles(*gbargs)
-        im0 = objs[0].drawImage(*args, **kwargs)
-        shape = im0.array.shape
+
+        iimult = kwargs['iimult']
+        dtype = kwargs['dtype']
+
+        img = objs[0].drawImage(setup_only=True)
+        N = img.array.shape[0]
+        scale = img.scale
+        print 'N: {}'.format(N)
+        print 'scale: {}'.format(scale)
+        print 'iimult: {}'.format(iimult)
+        N = int(np.ceil(N * iimult))
+        scale = objs[0].nyquistScale() / iimult
         # It's faster to store the stack of basis images as a series of 1D vectors (i.e. a 2D
         # numpy array instead of a cube (or rectangular prism, I guess...))
         # This makes the linear combination step a matrix multiply, which is fast like the wind.
         # I still think of this data structure as a cube though, so that's what I'm calling it.
-        cube = np.empty((len(objs), shape[0]*shape[1]), dtype=im0.array.dtype)
+        cube = np.empty((len(objs), N*N), dtype=dtype)
         for i, obj in enumerate(objs):
-            cube[i] = obj.drawImage(*args, **kwargs).array.ravel()
-        # Need to store the image shape here so we can eventually turn the 1D image vector back
-        # into a 2D image.
-        return cube, shape
+            cube[i] = obj.drawImage(nx=N, ny=N, scale=scale, method='no_pixel').array.ravel()
+        # Need to store the image scale and shape here so we can eventually turn the 1D image
+        # vector into a 2D InterpolatedImage when needed.
+        return cube, scale, N
 
-    @staticmethod
-    def _kcube(key):
-        # See comments for _basisCube
-        series, gbargs, args, kwargs = key
-        kwargs = dict(kwargs)
-        objs = self._getBasisProfiles(*gbargs)
-        re0, im0 = objs[0].drawKImage(*args, **kwargs)
-        shape = im0.array.shape
-        recube = np.empty((len(objs), shape[0]*shape[1]), dtype=im0.array.dtype)
-        imcube = np.empty_like(recube)
-        for i, obj in enumerate(objs):
-            tmp = obj.drawKImage(*args, **kwargs)
-            recube[i] = tmp[0].array.ravel()
-            imcube[i] = tmp[1].array.ravel()
-        return recube, imcube, shape
+    # @staticmethod
+    # def _kcube(key):
+    #     # See comments for _basisCube
+    #     series, gbargs, kwargs = key
+    #     kwargs = dict(kwargs)
+    #     objs = self._getBasisProfiles(*gbargs)
 
-    def drawImage(self, *args, **kwargs):
+    #     re0, im0 = objs[0].drawKImage(*args, **kwargs)
+    #     shape = im0.array.shape
+    #     recube = np.empty((len(objs), shape[0]*shape[1]), dtype=im0.array.dtype)
+    #     imcube = np.empty_like(recube)
+    #     for i, obj in enumerate(objs):
+    #         tmp = obj.drawKImage(*args, **kwargs)
+    #         recube[i] = tmp[0].array.ravel()
+    #         imcube[i] = tmp[1].array.ravel()
+    #     return recube, imcube, shape
+
+    def drawImage(self, **kwargs):
         """Draw a Series object by forming the appropriate linear combination of basis profile
         images.  This method will search the Series cache to see if the basis images for this
         object already exist, and if not then create and cache them.  Note that a separate cache is
@@ -113,48 +123,51 @@ class Series(object):
 
         See GSObject.drawImage() for a description of available arguments for this method.
         """
-        key = self.__class__, self._getBasisProfileArgs(), args, tuple(sorted(kwargs.items()))
-        cube, shape = Series._cube_cache(key)
+        # cube gets drawn at its nyquistScale and with a goodImageSize, (modified by iimult), and
+        # is then resampled with an InterpolatedImage below.  So strip out image setup keywords
+        # here.  For now, we require these to be explicitly set, though in the future sensible
+        # defaults should be used.
+        nx = kwargs.pop('nx')
+        ny = kwargs.pop('ny')
+        scale = kwargs.pop('scale')
+        if 'iimult' not in kwargs:
+            kwargs['iimult'] = 2.0
+        if 'dtype' not in kwargs:
+            kwargs['dtype'] = np.float64
+
+        key = self.__class__, self._getBasisProfileArgs(), tuple(sorted(kwargs.items()))
+        cube, iiscale, N = Series._cube_cache(key)
         coeffs = np.array(self._getCoeffs(), dtype=cube.dtype)
         centroid = self.centroid()
-        try:
-            scale = kwargs['scale']
-        except KeyError:
-            scale = 1.0
-        im = galsim.Image(np.dot(coeffs, cube).reshape(shape), scale=scale)
-        if centroid.x == 0 and centroid.y == 0:
-            return im
-        else:
-            kwargs.update({'method':'no_pixel'})
-            return (galsim.InterpolatedImage(im, calculate_stepk=False, calculate_maxk=False)
-                    .shift(centroid).drawImage(*args, **kwargs))
+        im = galsim.Image(np.dot(coeffs, cube).reshape((N, N)), scale=iiscale)
+        ii = (galsim.InterpolatedImage(im, calculate_stepk=False, calculate_maxk=False)
+              .shift(centroid)
+              .drawImage(nx=nx, ny=ny, scale=scale, method='no_pixel'))
+        return ii
 
-    def drawKImage(self, *args, **kwargs):
-        """Draw the Fourier-space image of a Series object by forming the appropriate linear
-        combination of basis profile Fourier-space images.  This method will search the Series cache
-        to see if the basis images for this object already exist, and if not then create and cache
-        them.  See Series.drawImage() docstring for additional caveats.
+    # def drawKImage(self, *args, **kwargs):
+    #     """Draw the Fourier-space image of a Series object by forming the appropriate linear
+    #     combination of basis profile Fourier-space images.  This method will search the Series cache
+    #     to see if the basis images for this object already exist, and if not then create and cache
+    #     them.  See Series.drawImage() docstring for additional caveats.
 
-        See GSObject.drawKImage() for a description of available arguments for this method.
-        """
-        key = self.__class__, self._getBasisProfileArgs(), args, tuple(sorted(kwargs.items()))
-        recube, imcube, shape = Series._kcube_cache(key)
-        coeffs = np.array(self._getCoeffs(), dtype=recube.dtype)
-        reim = np.dot(coeffs, recube).reshape(shape)
-        imim = np.dot(coeffs, imcube).reshape(shape)
-        # TODO: incorporate centroid into kimages
-        return galsim.Image(reim), galsim.Image(imim)
+    #     See GSObject.drawKImage() for a description of available arguments for this method.
+    #     """
+    #     key = self.__class__, self._getBasisProfileArgs(), args, tuple(sorted(kwargs.items()))
+    #     recube, imcube, shape = Series._kcube_cache(key)
+    #     coeffs = np.array(self._getCoeffs(), dtype=recube.dtype)
+    #     reim = np.dot(coeffs, recube).reshape(shape)
+    #     imim = np.dot(coeffs, imcube).reshape(shape)
+    #     # TODO: incorporate centroid into kimages
+    #     return galsim.Image(reim), galsim.Image(imim)
 
     @staticmethod
-    def drawImages(objlist, *args, **kwargs):
+    def drawImages(objlist, **kwargs):
         """ Usage: Series.drawImages(Series instances, draw_arguments, draw_keywords=...)
         """
         for obj in objlist[1:]:
             assert obj.__class__ == objlist[0].__class__
-        try:
-            scale = kwargs['scale']
-        except:
-            scale = 1.0
+        scale = kwargs['scale']
         out = [None]*len(objlist)
         #group like cube indices together
         gbpas = [o._getBasisProfileArgs() for o in objlist]
@@ -169,23 +182,17 @@ class Series(object):
             groups.append(group)
             notgrouped[group] = False
         for key, group in zip(keys, groups):
-            cube, shape = Series._cube_cache((objlist[0].__class__,
-                                              key,
-                                              args,
-                                              tuple(sorted(kwargs.items()))))
+            cube, iiscale, N = Series._cube_cache((objlist[0].__class__,
+                                                   key,
+                                                   tuple(sorted(kwargs.items()))))
             coeffs = np.empty((len(group), cube.shape[0]), dtype=cube.dtype)
             ims = np.dot(coeffs, cube).reshape((len(group), shape[0], shape[1]))
             for i, j in enumerate(group):
                 centroid = objlist[i].centroid()
-                im = galsim.Image(ims[i].reshape(shape), scale=scale)
-                if centroid.x == 0 and centroid.y == 0:
-                    out[j] = im
-                else:
-                    iikwargs = kwargs.copy()
-                    iikwargs.update({'method':'no_pixel'})
-                    out[j] = (galsim.InterpolatedImage(
-                        im, calculate_stepk=False, calculate_maxk=False)
-                              .shift(centroid).drawImage(*args, **iikwargs))
+                im = galsim.Image(ims[i].reshape((N, N)), scale=iiscale)
+                ii = (galsim.InterpolatedImage(im, calculate_stepk=False, calculate_maxk=False)
+                      .shift(centroid))
+                out[j] = ii.drawImage(nx=nx, ny=ny, scale=scale, method='no_pixel')
         return out
 
     def kValue(self, *args, **kwargs):
@@ -228,25 +235,25 @@ class Series(object):
             print
             print "Cached image object: "
             print v[2]
-            print "# of basis images: {:0}".format(v[3][0].shape[0])
-            print "images are {:0} x {:1} arrays".format(*v[3][1])
+            print "# of basis images: {0}".format(v[3][0].shape[0])
+            print "images are {0} x {0} arrays".format(v[3][2])
             mem += v[3][0].nbytes
 
-        for k, v in Series._kcube_cache.cache.iteritems():
-            if not isinstance(k, tuple):
-                continue
-            ik += 1
-            print
-            print "Cached kimage object: "
-            print v[2]
-            print "# of basis kimages: {:0}".format(v[3][0].shape[0])
-            print "kimages are {:0} x {:1} arrays".format(*v[3][2])
-            mem += v[3][0].nbytes
-            mem += v[3][1].nbytes
+        # for k, v in Series._kcube_cache.cache.iteritems():
+        #     if not isinstance(k, tuple):
+        #         continue
+        #     ik += 1
+        #     print
+        #     print "Cached kimage object: "
+        #     print v[2]
+        #     print "# of basis kimages: {0}".format(v[3][0].shape[0])
+        #     print "kimages are {0} x {0} arrays".format(v[3][2])
+        #     mem += v[3][0].nbytes
+        #     mem += v[3][1].nbytes
         print
-        print "Found {:0} image caches".format(i)
-        print "Found {:0} kimage caches".format(ik)
-        print "Cache occupies ~{:0} bytes".format(mem)
+        print "Found {0} image caches".format(i)
+        print "Found {0} kimage caches".format(ik)
+        print "Cache occupies ~{0} bytes".format(mem)
 
     def _getCoeffs(self):
         raise NotImplementedError("subclasses of Series must define _getCoeffs() method")
@@ -262,7 +269,7 @@ class Series(object):
     def __hash__(self): return hash(repr(self))
 
 Series._cube_cache = galsim.utilities.LRU_Cache(Series._cube, maxsize=100)
-Series._kcube_cache = galsim.utilities.LRU_Cache(Series._kcube, maxsize=100)
+# Series._kcube_cache = galsim.utilities.LRU_Cache(Series._kcube, maxsize=100)
 
 
 class SeriesConvolution(Series):
