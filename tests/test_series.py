@@ -55,11 +55,11 @@ def test_series_draw():
     """
     a = galsim.SpergelSeries(nu=0.0, scale_radius=1.0, jmax=4)
     im = a.drawImage(nx=15, ny=15, scale=0.2)
-    re, im = a.drawKImage(nx=15, ny=15, scale=0.2)
+    # re, im = a.drawKImage(nx=15, ny=15, scale=0.2)
 
     b = galsim.SeriesConvolution(a, a)
     im = b.drawImage(nx=15, ny=15, scale=0.2)
-    re, im = b.drawKImage(nx=15, ny=15, scale=0.2)
+    # re, im = b.drawKImage(nx=15, ny=15, scale=0.2)
 
 def test_series_gsobject_convolution():
     """ Test that we can convolve a Series and a GSObject.
@@ -67,7 +67,7 @@ def test_series_gsobject_convolution():
     a = galsim.SpergelSeries(nu=0.0, scale_radius=1.0, jmax=4)
     b = galsim.SeriesConvolution(a, galsim.Gaussian(fwhm=1))
     im = b.drawImage(nx=15, ny=15, scale=0.2)
-    re, im = b.drawKImage(nx=15, ny=15, scale=0.2)
+    # re, im = b.drawKImage(nx=15, ny=15, scale=0.2)
 
 def test_spergelseries_decomposeA():
     """ Test that the SpergelSeries decomposition of the A matrix works.
@@ -106,25 +106,26 @@ def test_spergelseries():
     # explodes.
     psf = galsim.Gaussian(fwhm=0.6)
     vals = [
-            [-0.85,  0.1, 0.1, 0.9, 5],
-            [ -0.5, -0.1, 0.2, 1.1, 6],
-            [  0.0, 0.23, 0.2, 0.7, 7],
-            [  1.1, 0.01, 0.5, 0.2, 9]
+            [-0.6,  0.1, 0.1, 0.9, 4],
+            [-0.4, -0.1, 0.2, 1.1, 5],
+            [ 0.0, 0.23, 0.2, 0.7, 4],
+            [ 1.1, 0.01, 0.5, 0.2, 4]
     ]
     for nu, e1, e2, mu, jmax in vals:
-        gal_exact = (galsim.Spergel(nu=nu, half_light_radius=1.0)
+        gal_exact = (galsim.Spergel(nu=nu, half_light_radius=0.3)
                      .shear(e1=e1, e2=e2)
-                     .dilate(mu))
-                     # .shift(0.1, 0.1)
-        gal_series = (galsim.SpergelSeries(nu=nu, half_light_radius=1.0, jmax=jmax)
+                     .dilate(mu)
+                     .shift(0.1, 0.1))
+        gal_series = (galsim.SpergelSeries(nu=nu, half_light_radius=0.3, jmax=jmax)
                       .shear(e1=e1, e2=e2)
-                      .dilate(mu))
-                      # .shift(0.1, 0.1)
+                      .dilate(mu)
+                      .shift(0.1, 0.1))
         obj_exact = galsim.Convolve(gal_exact, psf)
-        obj_series = galsim.SeriesConvolution(gal_series, psf)
-        im_exact = obj_exact.drawImage(nx=32, ny=32, scale=0.2)
-        im_series = obj_series.drawImage(nx=32, ny=32, scale=0.2)
+        obj_series = galsim.SeriesConvolution(gal_series, psf, galsim.Pixel(scale=0.2))
+        im_exact = obj_exact.drawImage(nx=16, ny=16, scale=0.2)
+        im_series = obj_series.drawImage(nx=16, ny=16, scale=0.2, iimult=3, method='no_pixel')
         mx = im_exact.array.max()
+        print (im_exact.array - im_series.array).max()/mx
         if False:
             import matplotlib.pyplot as plt
             fig = plt.figure(figsize=(9,2))
@@ -137,12 +138,11 @@ def test_spergelseries():
             ax = fig.add_subplot(133)
             resid = im_series.array - im_exact.array
             vmin = min(resid.min(), -resid.max())
-            im = ax.imshow((im_series.array - im_exact.array)/mx, 
-                           vmin=vmin, vmax=-vmin, cmap='seismic')
+            im = ax.imshow(resid/mx, vmin=vmin/mx, vmax=-vmin/mx, cmap='seismic')
             plt.colorbar(im)
             plt.show()
-        np.testing.assert_array_almost_equal(im_exact.array/mx, im_series.array/mx, 5)
-
+        np.testing.assert_array_almost_equal(im_exact.array/mx, im_series.array/mx, 4)
+    # galsim.Series.inspectCache()
 
 def test_spergelseries_dilate():
     """ Check that SpergelSeries with .scale_radius = mu gives same image as SpergelSeries with
@@ -150,34 +150,35 @@ def test_spergelseries_dilate():
     """
     # Need a PSF to handle super peaky nu < 0 Spergel profiles.  Otherwise the required fft size
     # explodes.
-    psf = galsim.Gaussian(fwhm=0.5)
+    psf = galsim.Gaussian(fwhm=0.6)
     #                  inputs
     #       [   nu,    D, eps, phi, jmax]
     vals = [
-            [-0.85,  0.2, 0.1, 0.9, 9],
-            [ -0.5, -0.2, 0.2, 1.1, 9],
-            [  0.0, 0.23, 0.2, 0.7, 9],
-            [  1.1,  0.2, 0.5, 0.2, 9]
+            [-0.85,  0.2, 0.1, 0.9, 5],
+            [ -0.5, -0.2, 0.2, 1.1, 6],
+            [  0.0, 0.21, 0.2, 0.7, 6],
+            [  0.5,  0.1, 0.2, 0.4, 5]
     ]
     for nu, Delta, eps, phi, jmax in vals:
         mu = np.sqrt(1-Delta)
-        gal_direct = galsim.SpergelSeries(nu=nu, half_light_radius=1.0, jmax=jmax)
+        gal_direct = galsim.SpergelSeries(nu=nu, half_light_radius=0.3, jmax=jmax)
         # Set appropriate attributes directly, instead of through .decomposeA()
         gal_direct.epsilon = eps
         gal_direct.phi0 = phi * galsim.radians
         gal_direct.ri = mu
         gal_direct.Delta = 0.0
-        gal_dilate = galsim.SpergelSeries(nu=nu, half_light_radius=1.0, jmax=jmax)
+        gal_dilate = galsim.SpergelSeries(nu=nu, half_light_radius=0.3, jmax=jmax)
         gal_dilate.epsilon = eps
         gal_dilate.phi0 = phi * galsim.radians
         gal_dilate.ri = 1.0
         gal_dilate.Delta = Delta
-        obj_direct = galsim.SeriesConvolution(gal_direct, psf)
-        obj_dilate = galsim.SeriesConvolution(gal_dilate, psf)
-        im_direct = obj_direct.drawImage(nx=32, ny=32, scale=0.2)
-        im_dilate = obj_dilate.drawImage(nx=32, ny=32, scale=0.2)
+        obj_direct = galsim.SeriesConvolution(gal_direct, psf, galsim.Pixel(scale=0.2))
+        obj_dilate = galsim.SeriesConvolution(gal_dilate, psf, galsim.Pixel(scale=0.2))
+        im_direct = obj_direct.drawImage(nx=16, ny=16, scale=0.2, iimult=3, method='no_pixel')
+        im_dilate = obj_dilate.drawImage(nx=16, ny=16, scale=0.2, iimult=3, method='no_pixel')
         mx = im_direct.array.max()
-        np.testing.assert_almost_equal(im_direct.array/mx, im_dilate.array/mx, 3)
+        print (im_direct.array - im_dilate.array).max()/mx
+        np.testing.assert_almost_equal(im_direct.array/mx, im_dilate.array/mx, 4)
 
 def test_moffatlet():
     betas = [2,3,4,5]
@@ -229,4 +230,4 @@ if __name__ == "__main__":
     test_spergelseries()
     test_spergelseries_dilate()
     test_moffatlet()
-    test_moffatseries()
+    # test_moffatseries()

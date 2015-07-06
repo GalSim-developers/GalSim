@@ -75,12 +75,12 @@ class Series(object):
         iimult = kwargs['iimult']
         dtype = kwargs['dtype']
 
-        img = objs[0].drawImage(setup_only=True)
+        img = objs[0].drawImage(setup_only=True, method='no_pixel')
         N = img.array.shape[0]
         scale = img.scale
-        print 'N: {}'.format(N)
-        print 'scale: {}'.format(scale)
-        print 'iimult: {}'.format(iimult)
+        # print 'N: {}'.format(N)
+        # print 'scale: {}'.format(scale)
+        # print 'iimult: {}'.format(iimult)
         N = int(np.ceil(N * iimult))
         scale = objs[0].nyquistScale() / iimult
         # It's faster to store the stack of basis images as a series of 1D vectors (i.e. a 2D
@@ -131,7 +131,7 @@ class Series(object):
         ny = kwargs.pop('ny')
         scale = kwargs.pop('scale')
         if 'iimult' not in kwargs:
-            kwargs['iimult'] = 2.0
+            kwargs['iimult'] = 1.0
         if 'dtype' not in kwargs:
             kwargs['dtype'] = np.float64
 
@@ -237,6 +237,7 @@ class Series(object):
             print v[2]
             print "# of basis images: {0}".format(v[3][0].shape[0])
             print "images are {0} x {0} arrays".format(v[3][2])
+            print "image scale is {0}".format(v[3][1])
             mem += v[3][0].nbytes
 
         # for k, v in Series._kcube_cache.cache.iteritems():
