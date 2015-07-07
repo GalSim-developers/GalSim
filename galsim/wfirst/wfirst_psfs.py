@@ -65,6 +65,13 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     simple, understood wavelength-dependence.  The resulting object can be used to draw into any of
     the WFIRST bandpasses.
 
+    For applications that require very high accuracy in the modeling of the PSF, with very limited
+    aliasing, the `high_accuracy` option can be set to True.  When using this option, the MTF has a
+    value below 1e-4 for all wavenumbers above the band limit when using `approximate_struts=True`,
+    or below 3e-4 when using `approximate_struts=False`.  In contrast, when `high_accuracy=False`
+    (the default), there are some bumps in the MTF above the band limit that reach an amplitude of
+    ~1e-2.
+
     By default, no additional aberrations are included above the basic design.  However, users can
     provide an optional keyword `extra_aberrations` that will be included on top of those that are
     part of the design.  This should be in the same format as for the ChromaticOpticalPSF class,
