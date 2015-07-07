@@ -89,7 +89,6 @@ def test_spergelseries_kValue():
             [  1.1, 0.01, 0.5, 0.1,  5.2, -2.7, 0.0003938]
     ]
 
-
     for nu, Delta, epsilon, phi0, x, y, kval in vals:
         gal = galsim.SpergelSeries(nu=nu, scale_radius=1.0, jmax=5)
         # Set these by hand instead of through .dilate, .shear, etc...
@@ -121,9 +120,9 @@ def test_spergelseries():
                       .dilate(mu)
                       .shift(0.1, 0.1))
         obj_exact = galsim.Convolve(gal_exact, psf)
-        obj_series = galsim.SeriesConvolution(gal_series, psf, galsim.Pixel(scale=0.2))
+        obj_series = galsim.SeriesConvolution(gal_series, psf)
         im_exact = obj_exact.drawImage(nx=16, ny=16, scale=0.2)
-        im_series = obj_series.drawImage(nx=16, ny=16, scale=0.2, iimult=3, method='no_pixel')
+        im_series = obj_series.drawImage(nx=16, ny=16, scale=0.2, iimult=3)
         mx = im_exact.array.max()
         print (im_exact.array - im_series.array).max()/mx
         if False:
@@ -154,10 +153,10 @@ def test_spergelseries_dilate():
     #                  inputs
     #       [   nu,    D, eps, phi, jmax]
     vals = [
-            [-0.85,  0.2, 0.1, 0.9, 5],
+            [-0.85,  0.2, 0.1, 0.9, 6],
             [ -0.5, -0.2, 0.2, 1.1, 6],
             [  0.0, 0.21, 0.2, 0.7, 6],
-            [  0.5,  0.1, 0.2, 0.4, 5]
+            [  0.5,  0.1, 0.2, 0.4, 6]
     ]
     for nu, Delta, eps, phi, jmax in vals:
         mu = np.sqrt(1-Delta)
@@ -172,10 +171,10 @@ def test_spergelseries_dilate():
         gal_dilate.phi0 = phi * galsim.radians
         gal_dilate.ri = 1.0
         gal_dilate.Delta = Delta
-        obj_direct = galsim.SeriesConvolution(gal_direct, psf, galsim.Pixel(scale=0.2))
-        obj_dilate = galsim.SeriesConvolution(gal_dilate, psf, galsim.Pixel(scale=0.2))
-        im_direct = obj_direct.drawImage(nx=16, ny=16, scale=0.2, iimult=3, method='no_pixel')
-        im_dilate = obj_dilate.drawImage(nx=16, ny=16, scale=0.2, iimult=3, method='no_pixel')
+        obj_direct = galsim.SeriesConvolution(gal_direct, psf)
+        obj_dilate = galsim.SeriesConvolution(gal_dilate, psf)
+        im_direct = obj_direct.drawImage(nx=16, ny=16, scale=0.2, iimult=3)
+        im_dilate = obj_dilate.drawImage(nx=16, ny=16, scale=0.2, iimult=3)
         mx = im_direct.array.max()
         print (im_direct.array - im_dilate.array).max()/mx
         np.testing.assert_almost_equal(im_direct.array/mx, im_dilate.array/mx, 4)
@@ -231,3 +230,4 @@ if __name__ == "__main__":
     test_spergelseries_dilate()
     test_moffatlet()
     # test_moffatseries()
+    # test_drawimages()

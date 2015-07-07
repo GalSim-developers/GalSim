@@ -135,15 +135,19 @@ class Series(object):
         if 'dtype' not in kwargs:
             kwargs['dtype'] = np.float64
 
-        key = self.__class__, self._getBasisProfileArgs(), tuple(sorted(kwargs.items()))
+        # Convolve by pixel
+        prof = galsim.SeriesConvolution(self, galsim.Pixel(scale=scale))
+
+        key = prof.__class__, prof._getBasisProfileArgs(), tuple(sorted(kwargs.items()))
         cube, iiscale, N = Series._cube_cache(key)
-        coeffs = np.array(self._getCoeffs(), dtype=cube.dtype)
+        coeffs = np.array(prof._getCoeffs(), dtype=cube.dtype)
+        cubeim = galsim.Image(np.dot(coeffs, cube).reshape((N, N)), scale=iiscale)
+
         centroid = self.centroid()
-        im = galsim.Image(np.dot(coeffs, cube).reshape((N, N)), scale=iiscale)
-        ii = (galsim.InterpolatedImage(im, calculate_stepk=False, calculate_maxk=False)
-              .shift(centroid)
-              .drawImage(nx=nx, ny=ny, scale=scale, method='no_pixel'))
-        return ii
+        ii = (galsim.InterpolatedImage(cubeim, calculate_stepk=False, calculate_maxk=False)
+              .shift(centroid))
+        img = ii.drawImage(nx=nx, ny=ny, scale=scale, method='no_pixel')
+        return img
 
     # def drawKImage(self, *args, **kwargs):
     #     """Draw the Fourier-space image of a Series object by forming the appropriate linear
