@@ -185,11 +185,11 @@ _galsim.SBAdd.__repr__ = lambda self: \
 
 
 def Convolve(*args, **kwargs):
-    """A function for convolving 2 or more GSObject or ChromaticObject instances.
+    """A function for convolving 2 or more GSObjects, ChromaticObjects, or Series instances.
 
-    This function will inspect its input arguments to decide if a Convolution object or a
-    ChromaticConvolution object is required to represent the convolution of surface
-    brightness profiles.
+    This function will inspect its input arguments to decide if a Convolution object,
+    ChromaticConvolution object, or SeriesConvolution object is required to represent the 
+    convolution of surface brightness profiles.
 
     @param args             Unnamed args should be a list of objects to convolve.
     @param real_space       Whether to use real space convolution.  [default: None, which means
@@ -198,13 +198,13 @@ def Convolve(*args, **kwargs):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    @returns a Convolution or ChromaticConvolution instance as appropriate.
+    @returns a Convolution, ChromaticConvolution, or SeriesConvolution instance as appropriate.
     """
     # First check for number of arguments != 0
     if len(args) == 0:
-        raise ValueError("At least one ChromaticObject or GSObject must be provided.")
+        raise ValueError("At least one GSObject, ChromaticObject, or Series must be provided.")
     elif len(args) == 1:
-        if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
+        if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject, galsim.Series)):
             args = [args[0]]
         elif isinstance(args[0], list) or isinstance(args[0], tuple):
             args = args[0]
@@ -214,7 +214,11 @@ def Convolve(*args, **kwargs):
     # else args is already the list of objects
 
     if any([isinstance(a, galsim.ChromaticObject) for a in args]):
+        if any([isinstance(a, galsim.Series) for a in args]):
+            raise ValueError("Convolution of Series and ChromaticObjects not implemented.")
         return galsim.ChromaticConvolution(*args, **kwargs)
+    elif any([isinstance(a, galsim.Series) for a in args]):
+        return galsim.SeriesConvolution(*args, **kwargs)
     else:
         return Convolution(*args, **kwargs)
 

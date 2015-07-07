@@ -57,7 +57,7 @@ def test_series_draw():
     im = a.drawImage(nx=15, ny=15, scale=0.2)
     # re, im = a.drawKImage(nx=15, ny=15, scale=0.2)
 
-    b = galsim.SeriesConvolution(a, a)
+    b = galsim.Convolve(a, a)
     im = b.drawImage(nx=15, ny=15, scale=0.2)
     # re, im = b.drawKImage(nx=15, ny=15, scale=0.2)
 
@@ -65,7 +65,7 @@ def test_series_gsobject_convolution():
     """ Test that we can convolve a Series and a GSObject.
     """
     a = galsim.SpergelSeries(nu=0.0, scale_radius=1.0, jmax=4)
-    b = galsim.SeriesConvolution(a, galsim.Gaussian(fwhm=1))
+    b = galsim.Convolve(a, galsim.Gaussian(fwhm=1))
     im = b.drawImage(nx=15, ny=15, scale=0.2)
     # re, im = b.drawKImage(nx=15, ny=15, scale=0.2)
 
@@ -120,7 +120,7 @@ def test_spergelseries():
                       .dilate(mu)
                       .shift(0.1, 0.1))
         obj_exact = galsim.Convolve(gal_exact, psf)
-        obj_series = galsim.SeriesConvolution(gal_series, psf)
+        obj_series = galsim.Convolve(gal_series, psf)
         im_exact = obj_exact.drawImage(nx=16, ny=16, scale=0.2)
         im_series = obj_series.drawImage(nx=16, ny=16, scale=0.2, iimult=3)
         mx = im_exact.array.max()
@@ -171,8 +171,8 @@ def test_spergelseries_dilate():
         gal_dilate.phi0 = phi * galsim.radians
         gal_dilate.ri = 1.0
         gal_dilate.Delta = Delta
-        obj_direct = galsim.SeriesConvolution(gal_direct, psf)
-        obj_dilate = galsim.SeriesConvolution(gal_dilate, psf)
+        obj_direct = galsim.Convolve(gal_direct, psf)
+        obj_dilate = galsim.Convolve(gal_dilate, psf)
         im_direct = obj_direct.drawImage(nx=16, ny=16, scale=0.2, iimult=3)
         im_dilate = obj_dilate.drawImage(nx=16, ny=16, scale=0.2, iimult=3)
         mx = im_direct.array.max()
