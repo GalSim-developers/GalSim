@@ -418,6 +418,174 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
                0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
              )
 
+def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False,
+    catch_offset_errors=True):
+    """
+    Interleaves the pixel values from two or more images and into a single larger image.
+
+    This routine converts a list of images taken at a series of (uniform) dither offsets into a
+    single higher resolution image, where the value in each final pixel is the observed pixel
+    value from exactly one of the original images.  It can be used to build a Nyquist-sampled image
+    from a set of images that were observed with pixels larger than the Nyquist scale.
+
+    In the original observed images, the integration of the surface brightness over the pixels is
+    equivalent to convolution by the pixel profile and then sampling at the centers of the pixels.
+    This procedure simulates an observation sampled at a higher resolution than the original images,
+    while retaining the original pixel convolution.
+    
+    Such an image can be obtained in a fairly simple manner in simulations of surface brightness
+    profiles by convolving them explicitly with the native pixel response and setting a lower
+    sampling scale (or higher sampling rate) using the `pixel_scale' argument in drawImage()
+    routine and setting the `method' parameter to `no_pixel'.
+
+    However, pixel level detector effects can be included only on images drawn at the native pixel
+    scale, which happen to be undersampled in most cases. Nyquist-sampled images that also include
+    the effects of detector non-idealities can be obtained by drawing multiple undersampled images
+    (with the detector effects included) that are offset from each other by a fraction of a pixel.
+
+    This is similar to other procedures that build a higher resolution image from a set of low
+    resolution images, such as MultiDrizzle and IMCOM. A disadvantage of this routine compared to
+    ther others is that the images must be offset in equal steps in each direction. This is
+    difficult to acheive with real observations but can be precisely acheived in a series of
+    simulated images.
+    
+    An advantage of this procedure is that the noise in the final image is not correlated as the
+    pixel values are each taken from just a single input image. Thus, this routine preserves the
+    noise properties of the pixels.
+
+    Here's an example script using this routine:
+
+    Interleaving two Gaussian images along the x-axis
+    -------------------------------------------------
+
+        >>> n = 2
+        >>> gal = galsim.Gaussian(sigma=2.8)
+        >>> DX = numpy.arange(0.0,1.0,1./n)
+        >>> DX -= DX.mean()
+        >>> im_list, offsets = [], []
+        >>> for dx in DX:
+            ... offset = galsim.PositionD(dx,0.0)
+            ... offsets.append(offset)
+            ... im = galsim.Image(16,16)
+            ... gal.drawImage(image=im,offset=offset,scale=1.0)
+            ... im.applyNonlinearity(lambda x: x - 0.01*x**2) # detector effects
+            ... im_list.append(im)
+        >>> img = galsim.utilities.interleaveImages(im_list=im_list,N=(n,1),offsets=offsets)
+
+    @param im_list             A list containing the galsim.Image instances to be interleaved.
+    @param N                   Number of images to interleave in either directions. It can be of
+                               type `int' if equal number of images are interleaved in both
+                               directions or a list or tuple of two integers, containing the number
+                               of images in x and y directions respectively.
+    @param offsets             A list containing the offsets as galsim.PositionD instances
+                               corresponding to every image in `im_list'. The offsets must be spaced
+                               equally and must span an entire pixel area. The offset values must
+                               be symmetric around zero, hence taking positive and negative values,
+                               with upper and lower limits of +0.5 and -0.5 (limit values excluded).
+    @param add_flux            Should the routine add the fluxes of all the images (True) or average
+                               them (False)? [default: True]
+    @param suppress_warnings   Suppresses the warnings about the pixel scale of the output, if True.
+                               [default: False]
+    @param catch_offset_errors Checks for the consistency of `offsets` with `N` and raises Errors
+                               if inconsistencies found (True). Recommended, but could slow down
+                               the routine a little. [default: True]
+
+    @returns the interleaved image
+    """
+
+    if isinstance(N,int):
+        n1,n2 = N,N
+    elif hasattr(N,'__iter__'):
+        if len(N)==2:
+            n1,n2 = N
+        else:
+            raise TypeError("'N' has to be a list or a tuple of two integers")
+        if not (isinstance(n1,int) and  isinstance(n2,int)):
+            raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+    else:
+        raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+
+    if len(im_list)<2:
+        raise TypeError("'im_list' needs to have at least two instances of galsim.Image")
+
+    if (n1*n2 != len(im_list)):
+        raise ValueError("'N' is incompatible with the number of images in 'im_list'")
+
+    if len(im_list)!=len(offsets):
+        raise ValueError("'im_list' and 'offsets' must be lists of same length")
+
+    for offset in offsets:
+        if not isinstance(offset,galsim.PositionD):
+            raise TypeError("'offsets' must be a list of galsim.PositionD instances")
+
+    if not isinstance(im_list[0],galsim.Image):
+        raise TypeError("'im_list' must be a list of galsim.Image instances")
+
+    # These should be the same for all images in `im_list'.
+    y_size, x_size = im_list[0].array.shape
+    wcs = im_list[0].wcs
+
+    if wcs.isPixelScale():
+        scale = wcs.scale
+    else:
+        scale = None
+
+    for im in im_list[1:]:
+        if not isinstance(im,galsim.Image):
+            raise TypeError("'im_list' must be a list of galsim.Image instances")
+
+        if im.array.shape != (y_size,x_size):
+            raise ValueError("All galsim.Image instances in 'im_list' must be of the same size")
+ 
+        if im.wcs != wcs:
+            raise ValueError(
+                "All galsim.Image instances in 'im_list' must have the same WCS")
+
+    img_array = np.zeros((n2*y_size,n1*x_size))
+    # The tricky part - going from (x,y) Image coordinates to array indices
+    # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
+    #    i  = -n DX[i'] + 0.5*(n-1)
+    for k in xrange(len(offsets)):
+        dx, dy = offsets[k].x, offsets[k].y
+
+        i = int(round((n1-1)*0.5-n1*dx))
+        j = int(round((n2-1)*0.5-n2*dy))
+
+        if catch_offset_errors is True:
+            err_i = (n1-1)*0.5-n1*dx - round((n1-1)*0.5-n1*dx)
+            err_j = (n2-1)*0.5-n2*dy - round((n2-1)*0.5-n2*dy)
+            tol = 1.e-6
+            if abs(err_i)>tol or abs(err_j)>tol:
+                raise ValueError("'offsets' must be a list of galsim.PositionD instances with x "
+                            +"values spaced by 1/{0} and y values by 1/{1} around 0 for N = ".format(n1,n2)+str(N))
+
+            if i<0 or j<0 or i>=x_size or j>=y_size:
+                raise ValueError("'offsets' must be a list of galsim.PositionD instances with x "
+                            +"values spaced by 1/{0} and y values by 1/{1} around 0 for N = ".format(n1,n2)+str(N))
+
+        img_array[j::n2,i::n1] = im_list[k].array[:,:]
+
+    img = galsim.Image(img_array)
+    if not add_flux:
+        # Fix the flux normalization
+        img /= 1.0*len(im_list)
+
+    # Assign an appropriate WCS for the output
+    if scale is not None:
+        if n1==n2:
+            img.wcs = galsim.PixelScale(1.*scale/n1)
+        else:
+            img.wcs = galsim.JacobianWCS(1.*scale/n1, 0., 0., 1.*scale/n2)
+    elif isinstance(wcs,galsim.JacobianWCS): # from say, a previously interleaved Image.
+        dudx, dudy, dvdx, dvdy = wcs.dudx, wcs.dudy, wcs.dvdx, wcs.dvdy
+        if (1.0*dudx/n1==1.0*dvdy/n2) and (dudy==0.0) and (dvdx==0.0):
+            img.wcs = galsim.PixelScale(1.*dudx/n1)
+        else:
+            img.wcs = galsim.JacobianWCS(1.*dudx/n1,1.*dudy/n2,1.*dvdx/n1,1.*dvdy/n2)
+    elif suppress_warnings is False:
+        import warnings
+        warnings.warn("Interleaved image could not be assigned a WCS automatically.")
+    return img
 
 class LRU_Cache:
     """ Simplified Least Recently Used Cache.
