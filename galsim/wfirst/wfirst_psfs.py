@@ -30,9 +30,8 @@ Part of the WFIRST module.  This file includes routines needed to define a reali
 # Define a default set of bandpasses for which this routine works.
 default_bandpass_list = ['J129', 'F184', 'W149', 'Y106', 'Z087', 'H158']
 # Prefix for files containing information about Zernikes for each SCA.
-zemax_filepref = os.path.join(galsim.meta_data.share_dir,
-                              "AFTA_WFI_v4-2-5_140326_192nmRMS_NoAps_PLT_Zemax_ZernStanTerm_C")
-zemax_filesuff = '_F01_W04.txt'
+zemax_filepref = "AFTA_C5_WFC_Zernike_Data_150717_SCA"
+zemax_filesuff = '.txt'
 zemax_wavelength = 1293. #nm
 
 def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=None,
@@ -42,8 +41,8 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
 
     By default, this routine returns a dict of ChromaticOpticalPSF objects, with the dict indexed by
     the SCA (Sensor Chip Array, the equivalent of a chip in an optical CCD).  The PSF for a given
-    SCA corresponds to that for the center of the SCA.  Currently we do not have information about
-    PSF variation within each SCA, though it is expected to be relatively small.
+    SCA corresponds to that for the center of the SCA.  Currently we do not use information about
+    PSF variation within each SCA, which is relatively small.
 
     This routine also takes an optional keyword `SCAs`, which can be a single number or an iterable;
     if this is specified then results are not included for the other SCAs.
@@ -77,9 +76,10 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     part of the design.  This should be in the same format as for the ChromaticOpticalPSF class,
     with units of waves at the fiducial wavelength, 1293 nm. Currently, only aberrations up to order
     11 (Noll convention) can be simulated.  For WFIRST, the current tolerance for additional
-    aberrations is a total of 195 nanometers RMS, distributed largely among coma, astigmatism,
-    trefoil, and spherical aberrations (NOT defocus).  This information might serve as a guide for
-    reasonable `extra_aberrations` inputs.
+    aberrations is a total of 90 nanometers RMS:
+    http://wfirst.gsfc.nasa.gov/science/sdt_public/wps/references/instrument/README_AFTA_C5_WFC_Zernike_and_Field_Data.pdf
+    distributed largely among coma, astigmatism, trefoil, and spherical aberrations (NOT defocus).
+    This information might serve as a guide for reasonable `extra_aberrations` inputs.
 
     Jitter and charge diffusion are, by default, not included.  Users who wish to include these can
     find some guidelines for typical length scales of the Gaussians that can represent these
@@ -184,32 +184,12 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
             raise TypeError("Keyword 'wavelength' should either be a Bandpass, float,"
                             " or None.")
 
-    # Start reading in the aberrations for the relevant SCAs.  Take advantage of symmetries, so we
-    # don't have to call the reading routine too many times.
+    # Start reading in the aberrations for the relevant SCAs.
     aberration_dict = {}
     PSF_dict = {}
     if logger: logger.debug('Beginning to loop over SCAs and get the PSF:')
     for SCA in SCAs:
-        # Check if it's above 10.  If it is, the design aberrations are the same as for the SCA with
-        # index that is 9 lower, except for certain sign flips (astig1, coma2, trefoil2) that result
-        # in symmetry about the FPA y axis (except for the struts).
-        read_SCA = SCA
-        if SCA >= 10:
-            read_SCA -= 9
-            # Check if we already read it in.  If so, just take the previously-read one, but do the
-            # necessary flips to account for symmetry.
-            if read_SCA in aberration_dict.keys():
-                tmp_aberrations = aberration_dict[read_SCA]
-                tmp_aberrations *= np.array([1.,1.,1.,1.,1.,-1.,1.,1.,-1.,1.,-1.,1.])
-                aberration_dict[SCA]=tmp_aberrations
-                read_SCA = -1 # This tells the routine not to bother reading it in.
-
-        # If we got here, then it means we have to read in the aberrations.
-        if read_SCA > 0:
-            aberrations = _read_aberrations(read_SCA)
-            if read_SCA != SCA:
-                aberrations *= np.array([1.,1.,1.,1.,1.,-1.,1.,1.,-1.,1.,-1.,1.])
-            aberration_dict[SCA]=aberrations
+        aberration_dict[SCA] = _read_aberrations(SCA)
 
         use_aberrations = aberration_dict[SCA]
         if extra_aberrations is not None:
@@ -410,19 +390,20 @@ def _read_aberrations(SCA):
     This is a helper routine that reads in aberrations for a particular SCA and wavelength from
     stored files.  It returns the aberrations in a format required by ChromaticOpticalPSF.
 
-    @param  SCA      The identifier for the SCA, from 1-9.
+    @param  SCA      The identifier for the SCA, from 1-18.
     @returns a NumPy array containing the aberrations, in the required format for
     ChromaticOpticalPSF.
     """
-    if SCA < 1 or SCA > 9:
+    if SCA < 1 or SCA > galsim.wfirst.n_sca:
         raise ValueError("SCA requested is out of range: %d"%SCA)
 
     # Construct filename.
     sca_str = '%02d'%SCA
-    infile = zemax_filepref + sca_str + zemax_filesuff
+    infile = os.path.join(galsim.meta_data.share_dir,
+                          zemax_filepref + sca_str + zemax_filesuff)
 
     # Read in data.
-    dat = np.loadtxt(infile, skiprows=41, usecols=(2,)).transpose()
+    dat = np.loadtxt(infile).transpose()
     # Put it in the required format: an array of length 12, with the first entry empty (Zernike
     # polynomials are 1-indexed so we use entries 1-11).  The units are waves.
     aberrations = np.zeros(12)
@@ -448,3 +429,37 @@ def _find_limits(bandpasses, bandpass_dict):
         if bp.blue_limit < min_wave: min_wave = bp.blue_limit
         if bp.red_limit > max_wave: max_wave = bp.red_limit
     return min_wave, max_wave
+
+def _parse_new_zernikes(infile, out_dir):
+    """
+    This is a helper routine to parse the new WFIRST Zernike information from
+
+        http://wfirst.gsfc.nasa.gov/science/sdt_public/wps/references/instrument/
+
+    More specifically, it takes as input a tab-separated version of the Zernike information in 
+
+        AFTA_C5_WFC_Zernike_and_Field_Data_150717.xlsx
+
+    isolates the entries for the center of each SCA and our wavelength that we use as default (1293
+    nm), and makes output in the per-SCA format that the `_read_aberrations` routine wants.
+    """
+    dat = np.loadtxt(infile).transpose()
+    sca_num = dat[0,:]
+    wave = dat[1,:] #in microns
+    field_pos = dat[2,:]
+    aberrs = dat[12:23,:]
+
+    # select out SCA centers (field_pos = 1) and default wavelength
+    to_use = np.logical_and.reduce(
+        [field_pos == 1,
+         1000*wave == zemax_wavelength])
+    sca_num = sca_num[to_use]
+    aberrs = aberrs[:,to_use]
+
+    for SCA in galsim.wfirst._parse_SCAs(None):
+
+        # Construct filename.
+        sca_str = '%02d'%SCA
+        outfile = os.path.join(out_dir, zemax_filepref+sca_str+zemax_filesuff)
+        outarr = aberrs[:,sca_num==SCA]
+        np.savetxt(outfile, outarr)
