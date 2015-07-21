@@ -411,7 +411,7 @@ def test_wfirst_psfs():
     n_waves = 2
     other_sca = 12
     wfirst_psfs_int = galsim.wfirst.getPSF(SCAs=[use_sca, other_sca],
-                                           approximate_struts=True, n_waves=2,
+                                           approximate_struts=True, n_waves=n_waves,
                                            wavelength_limits=(blue_limit, red_limit))
     psf_int = wfirst_psfs_int[use_sca]
     # Check that evaluation at the edge wavelength, which we used for previous test, is consistent
@@ -421,9 +421,11 @@ def test_wfirst_psfs():
     im_int = obj_int.drawImage(image=im_int, scale=galsim.wfirst.pixel_scale)
     # These images should agree well, but not perfectly.  One of them comes from drawing an image
     # from an object directly, whereas the other comes from drawing an image of that object, making
-    # it into an InterpolatedImage, then re-drawing it.
+    # it into an InterpolatedImage, then re-drawing it.  Different accuracies are used for those
+    # intermediate steps than would be used when drawing directly, so that can give rise to some
+    # disagreement.
     np.testing.assert_array_almost_equal(
-        im_int.array, im_achrom.array, decimal=4,
+        im_int.array, im_achrom.array, decimal=3,
         err_msg='PSF at a given wavelength and interpolated chromatic one evaluated at that '
         'wavelength disagree.')
 
