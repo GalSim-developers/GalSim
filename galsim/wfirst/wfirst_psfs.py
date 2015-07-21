@@ -48,21 +48,29 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     if this is specified then results are not included for the other SCAs.
 
     The default is to do the calculations using the full specification of the WFIRST pupil plane,
-    which is a costly calculation in terms of memory.  To turn this off, use the optional keyword
-    `approximate_struts`.  In this case, the pupil plane will have the correct obscuration and
-    number of struts, but the struts will be purely radial and evenly spaced instead of the true
-    configuration.  The simplicity of this arrangement leads to a much faster calculation, and
-    somewhat simplifies the configuration of the diffraction spikes.  Also note that currently the
-    orientation of the struts is fixed, rather than rotating depending on the orientation of the
-    focal plane.  Rotation of the PSF can easily be affected by the user via
+    which is a costly calculation in terms of memory.  For this, we use the provided pupil plane for
+    red bands from
+
+    http://wfirst.gsfc.nasa.gov/science/sdt_public/wps/references/instrument/   (Cycle 5)
+
+    and we neglect for now the fact that the pupil plane configuration is slightly different for
+    imaging in Z087, Y106, J129.  To avoid using the full pupil plane configuration, use the
+    optional keyword `approximate_struts`.  In this case, the pupil plane will have the correct
+    obscuration and number of struts, but the struts will be purely radial and evenly spaced instead
+    of the true configuration.  The simplicity of this arrangement leads to a much faster
+    calculation, and somewhat simplifies the configuration of the diffraction spikes.  Also note
+    that currently the orientation of the struts is fixed, rather than rotating depending on the
+    orientation of the focal plane.  Rotation of the PSF can easily be affected by the user via
 
        psf = galsim.wfirst.getPSF(...).rotate(angle)
 
     which will rotate the entire PSF (including the diffraction spikes and any other features).
 
     The calculation takes advantage of the fact that the diffraction limit and aberrations have a
-    simple, understood wavelength-dependence.  The resulting object can be used to draw into any of
-    the WFIRST bandpasses.
+    simple, understood wavelength-dependence.  (The WFIRST project webpage for Cycle 5 does in fact
+    provide aberrations as a function of wavelength, but the deviation from the expected chromatic
+    dependence is very small and we neglect it here.)  The resulting object can be used to draw into
+    any of the WFIRST bandpasses.
 
     For applications that require very high accuracy in the modeling of the PSF, with very limited
     aliasing, the `high_accuracy` option can be set to True.  When using this option, the MTF has a
