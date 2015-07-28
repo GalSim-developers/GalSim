@@ -118,6 +118,7 @@ Bug Fixes and Improvements
 Updates to config options
 -------------------------
 
+- Added COSMOSGalaxy type, with corresponding cosmos_catalog input type. (#590)
 - Added Spergel type. (#616)
 - Added lam, diam, scale_units options to Airy and OpticalPSF types. (#618)
 - Added TopHat type. (#639)
