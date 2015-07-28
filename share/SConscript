@@ -12,8 +12,9 @@ files = [ 'vega.txt', 'acs_I_unrot_sci_20_cf.fits', 'afta_throughput.txt', 'wfir
       'WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz', 'sip_422.txt', 'wfc_F814W.dat.gz',
       'CWW_E_ext.sed', 'CWW_Sbc_ext.sed', 'CWW_Scd_ext.sed' ]
 
-for N in range(1, 10):
-    files.append('AFTA_WFI_v4-2-5_140326_192nmRMS_NoAps_PLT_Zemax_ZernStanTerm_C0'+str(N)+'_F01_W04.txt')
+for N in range(1, 19):
+    str_N = '%02d'%N
+    files.append('AFTA_C5_WFC_Zernike_Data_150717_SCA'+str_N+'.txt')
 
 if 'install' in COMMAND_LINE_TARGETS:
     install_dir = env['FINAL_PREFIX']

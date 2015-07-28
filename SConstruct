@@ -1061,7 +1061,7 @@ PyMODINIT_FUNC initcheck_python(void)
         ErrorExit('Unable to compile a file with #include "Python.h" using the include path:',
                   '%s'%py_inc)
 
-    # Now see if we can build it as a LoadableModule and run in from python.
+    # Now see if we can build it as a LoadableModule and run it from python.
     # Sometimes (e.g. most linux systems), we don't need the python library to do this.
     # So the first attempt below with [''] for the libs will work.
     if CheckModuleLibs(config,[''],python_source_file,'check_python'):
