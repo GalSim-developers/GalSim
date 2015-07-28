@@ -29,6 +29,11 @@ API Changes
   numpy.matrix.  We had been inconsistent with which type different functions
   returned, so now all matrices are numpy.arrays.  If you rely on the
   numpy.matrix behavior, you should recast with numpy.asmatrix(M). (#218)
+- Made the classes PositionI, PositionD, GSParams, and HSMParams immutable.
+  It was an oversight that we failed to make them immutable in version 1.1 when
+  we made most other GalSim classes immutable.  Now rather than write to their
+  various attributes, you should make a new object. e.g. instead of `p.x = 4`
+  and `p.y = 5`, you now need to do `p = galsim.PositionD(4,5)`. (#218, #643)
 - Deprecated CorrelatedNoise.calculateCovarianceMatrix, since it is not used
   anywhere, and we think no one really has a need for it. (#630)
 - Officially deprecated the methods and functions that had been described as
@@ -36,11 +41,8 @@ API Changes
   had been still valid, but no longer documented.  This was intentional to
   allow people time to change their code.  Now these methods are officially
   deprecated and will emit a warning message if used. (#643)
-- Made the classes PositionI, PositionD, GSParams, and HSMParams immutable.
-  It was an oversight that we failed to make them immutable in version 1.1 when
-  we made most other GalSim classes immutable.  Now rather than write to their
-  various attributes, you should make a new object. e.g. instead of `p.x = 4`
-  and `p.y = 5`, you now need to do `p = galsim.PositionD(4,5)`. (#218, #643)
+- Added function to interleave a set of dithered images into a single
+  higher-resolution image. (#666)
 
 
 New Features
@@ -62,8 +64,6 @@ New Features
 - Enabled constructing a FitsHeader object from a dict.  This had been a hidden
   feature that only half worked.  It should now work correctly.  Also, allow
   FitsHeader to be default constructed, which creates it with no keys. (#590)
-- Enabled constructing a FitsHeader object from a list of (key, value) pairs,
-  which preserves the order of the items in the header. (#672)
 - Added a module, galsim.wfirst, that includes information about the planned
   WFIRST mission, along with helper routines for constructing appropriate PSFs,
   bandpasses, WCS, etc.  (#590)
@@ -90,6 +90,8 @@ New Features
   BaseDeviate instance) when being copied. (#643)
 - Added InterpolatedKImage GSObject for constructing a surface brightness
   profile out of samples of its Fourier transform. (#642)
+- Enabled constructing a FitsHeader object from a list of (key, value) pairs,
+  which preserves the order of the items in the header. (#672)
 
 Bug Fixes and Improvements
 --------------------------
@@ -113,7 +115,7 @@ Bug Fixes and Improvements
 - Added intermediate results cache to `ChromaticObject.drawImage` and
   `ChromaticConvolution.drawImage`, which, for some applications, can
   significantly speed up (anywhere from 10% to 2000%) the rendering of groups
-  of similar (same SED, same Bandpass, same PSF) chromatic profiles.
+  of similar (same SED, same Bandpass, same PSF) chromatic profiles. (#670)
 
 Updates to config options
 -------------------------
