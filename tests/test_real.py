@@ -240,9 +240,12 @@ def test_chromatic_real_galaxy():
     # Draw HST images
     HST_images = [HST_prof.drawImage(rband, nx=64, ny=64, scale=0.05),
                   HST_prof.drawImage(iband, nx=64, ny=64, scale=0.05)]
+    noise = galsim.GaussianNoise()
+    for im in HST_images:
+        im.addNoiseSNR(noise, 50, preserve_flux=True)
 
     print "Drawing Euclid image"
-    Euclid_image = Euclid_prof.drawImage(visband, nx=32, ny=32, scale=0.1)
+    Euclid_image = Euclid_prof.drawImage(visband, nx=30, ny=30, scale=0.1)
 
     # Now "deconvolve" the chromatic HST PSF while asserting the correct SEDs.
     print "Constructing ChromaticRealGalaxy"
@@ -254,14 +257,8 @@ def test_chromatic_real_galaxy():
     # crg should be effectively the same thing as gal now.  Let's test.
 
     Euclid_recon_image = (galsim.Convolve(crg, Euclid_PSF)
-                          .drawImage(visband, nx=32, ny=32, scale=0.1))
+                          .drawImage(visband, nx=30, ny=30, scale=0.1))
 
-    np.testing.assert_almost_equal(Euclid_image.array.max()/Euclid_recon_image.array.max(),
-                                   1.0, 2)
-    np.testing.assert_almost_equal(Euclid_image.array.sum()/Euclid_recon_image.array.sum(),
-                                   1.0, 2)
-    print "Max comparison:", Euclid_image.array.max(), Euclid_recon_image.array.max()
-    print "Sum comparison:", Euclid_image.array.sum(), Euclid_recon_image.array.sum()
     if False:
         import matplotlib.pyplot as plt
         fig = plt.figure(figsize=(13,10))
@@ -282,12 +279,21 @@ def test_chromatic_real_galaxy():
         plt.colorbar(im)
         ax.set_title('Euclid reconstruction')
         ax = fig.add_subplot(236)
-        im = ax.imshow(Euclid_recon_image.array - Euclid_image.array, cmap='seismic',
-                       vmin=-0.005, vmax=0.005)
+        resid = Euclid_recon_image.array - Euclid_image.array
+        vmin, vmax = np.percentile(resid, [5.0, 95.0])
+        im = ax.imshow(resid, cmap='seismic',
+                       vmin=vmin, vmax=vmax)
         plt.colorbar(im)
-        ax.set_title('Euclid residual')
+        ax.set_title('residual')
         plt.tight_layout()
         plt.show()
+
+    np.testing.assert_almost_equal(Euclid_image.array.max()/Euclid_recon_image.array.max(),
+                                   1.0, 2)
+    np.testing.assert_almost_equal(Euclid_image.array.sum()/Euclid_recon_image.array.sum(),
+                                   1.0, 2)
+    print "Max comparison:", Euclid_image.array.max(), Euclid_recon_image.array.max()
+    print "Sum comparison:", Euclid_image.array.sum(), Euclid_recon_image.array.sum()
     np.testing.assert_array_almost_equal(Euclid_image.array/Euclid_image.array.max(),
                                          Euclid_recon_image.array/Euclid_image.array.max(),
                                          3) # Fails at 4th decimal
