@@ -69,8 +69,10 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     The calculation takes advantage of the fact that the diffraction limit and aberrations have a
     simple, understood wavelength-dependence.  (The WFIRST project webpage for Cycle 5 does in fact
     provide aberrations as a function of wavelength, but the deviation from the expected chromatic
-    dependence is very small and we neglect it here.)  The resulting object can be used to draw into
-    any of the WFIRST bandpasses.
+    dependence is very small and we neglect it here.)  For reference, the script use to parse the
+    Zernikes given on the webpage and create the files in the GalSim repository can be found in
+    `devel/external/parse_wfirst_zernikes_0715.py`.  The resulting chromatic object can be used to
+    draw into any of the WFIRST bandpasses.
 
     For applications that require very high accuracy in the modeling of the PSF, with very limited
     aliasing, the `high_accuracy` option can be set to True.  When using this option, the MTF has a
@@ -438,36 +440,3 @@ def _find_limits(bandpasses, bandpass_dict):
         if bp.red_limit > max_wave: max_wave = bp.red_limit
     return min_wave, max_wave
 
-def _parse_new_zernikes(infile, out_dir):
-    """
-    This is a helper routine to parse the new WFIRST Zernike information from
-
-        http://wfirst.gsfc.nasa.gov/science/sdt_public/wps/references/instrument/
-
-    More specifically, it takes as input a tab-separated version of the Zernike information in 
-
-        AFTA_C5_WFC_Zernike_and_Field_Data_150717.xlsx
-
-    isolates the entries for the center of each SCA and our wavelength that we use as default (1293
-    nm), and makes output in the per-SCA format that the `_read_aberrations` routine wants.
-    """
-    dat = np.loadtxt(infile).transpose()
-    sca_num = dat[0,:]
-    wave = dat[1,:] #in microns
-    field_pos = dat[2,:]
-    aberrs = dat[12:23,:]
-
-    # select out SCA centers (field_pos = 1) and default wavelength
-    to_use = np.logical_and.reduce(
-        [field_pos == 1,
-         1000*wave == zemax_wavelength])
-    sca_num = sca_num[to_use]
-    aberrs = aberrs[:,to_use]
-
-    for SCA in galsim.wfirst._parse_SCAs(None):
-
-        # Construct filename.
-        sca_str = '%02d'%SCA
-        outfile = os.path.join(out_dir, zemax_filepref+sca_str+zemax_filesuff)
-        outarr = aberrs[:,sca_num==SCA]
-        np.savetxt(outfile, outarr)
