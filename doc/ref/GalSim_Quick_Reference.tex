@@ -227,7 +227,7 @@ parameters available for use (e.g.\ total \texttt{flux}) along with default valu
     \newline 
     An arbitrary rectangular box profile.
 \item[$\circ$]
-  \texttt{galsim.}\href{}{\texttt{TopHat}}\texttt{(radius, flux=1.)}
+  \texttt{galsim.}\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1base_1_1_top_hat.html}{\texttt{TopHat}}\texttt{(radius, flux=1.)}
     \newline
     A circular tophat profile.
 \item[$\circ$]
@@ -247,7 +247,7 @@ parameters available for use (e.g.\ total \texttt{flux}) along with default valu
     A De Vaucouleurs galaxy bulge profile, a S\'{e}rsic
     with index \texttt{n=4} and input \texttt{half\_light\_radius}.
 \item[$\circ$]
-  \texttt{galsim.}\href{}{\texttt{Spergel}}\texttt{(nu, \emph{size}, flux=1.)}
+  \texttt{galsim.}\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1base_1_1_spergel.html}{\texttt{Spergel}}\texttt{(nu, \emph{size}, flux=1.)}
     \newline
     A class describing a Spergel (2010) profile.   Requires one of the
     following \texttt{\emph{size}} parameters: \texttt{half\_light\_radius} or \texttt{scale\_radius}.
@@ -639,7 +639,7 @@ refraction and Kolmogorov chromatic seeing ($\mathrm{FWHM} \propto \lambda^{-0.2
 following class:
 \begin{itemize}
   \item[$\circ$] 
-  \texttt{\href{http://galsim-developers.github.io/GalSim/namespacegalsim_1_1chromatic.html\#a90f867f2cde815b9048117e9e426e968}{ChromaticAtmosphere}\texttt{(base\_obj, base\_wavelength, \dots)}}
+  \texttt{\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1chromatic_1_1_chromatic_atmosphere.html}{ChromaticAtmosphere}\texttt{(base\_obj, base\_wavelength, \dots)}}
     \newline
     where \texttt{base\_obj} is the fiducial PSF at wavelength \texttt{base\_wavelength}.
     There are a number of options for specifying details like the position of the object with
@@ -649,13 +649,13 @@ following class:
 There are also classes for representing chromatic optical PSFs:
 \begin{itemize}
    \item[$\circ$]
-   \texttt{\href{}{ChromaticAiry}\texttt{(\dots)}}
+   \texttt{\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1chromatic_1_1_chromatic_airy.html}{ChromaticAiry}\texttt{(\dots)}}
     \newline
    for representing a chromatic Airy profile, where the user must specify either \texttt{lam} (the
    telescope diameter in meters) or \texttt{lam\_over\_diam} (the ratio of some fiducial wavelength
    to the diameter).
    \item[$\circ$]
-   \texttt{\href{}{ChromaticOpticalPSF}\texttt{(\dots)}}
+   \texttt{\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1chromatic_1_1_chromatic_optical_p_s_f.html}{ChromaticOpticalPSF}\texttt{(\dots)}}
     \newline
    for representing a fully chromatic optical PSF, including chromatic aberrations.
 \end{itemize}
