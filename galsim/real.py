@@ -37,7 +37,7 @@ some lower-resolution telescope.
 
 import galsim
 from galsim import GSObject
-from chromatic import ChromaticObject
+from chromatic import ChromaticSum, ChromaticObject
 from galsim import pyfits
 import os
 
@@ -830,7 +830,7 @@ def _complex_to_real_weight(weight):
     return out
 
 
-class ChromaticRealGalaxy(ChromaticObject):
+class ChromaticRealGalaxy(ChromaticSum):
     """
     """
     def __init__(self, chromatic_real_galaxy_catalog, index=None, id=None, random=False,
@@ -868,7 +868,6 @@ class ChromaticRealGalaxy(ChromaticObject):
         # TODO: code to query not-yet-existing catalog for imgs, tputs, SEDs, cfuncs, cPSF
 
         # Need to sample both the effective PSFs and the imgs on the same Fourier grid.
-        # TODO: think harder about appropriate maxk, stepk
         imgmaxk = [np.pi/img.scale for img in imgs]
         print "image min(maxK) = ", min(imgmaxk)
         print "image max(maxK) = ", max(imgmaxk)
@@ -947,14 +946,10 @@ class ChromaticRealGalaxy(ChromaticObject):
                 self.aj[iy, ix, :] = _real_to_complex_vec(result.params)
                 self.Sigma[:, :, iy, ix] = _real_to_complex_mat(result.cov_params())
 
-        self.separable = False
-        self.wave_list = []
+        objlist = []
+        for i, sed in enumerate(self.SEDs):
+            re = galsim.ImageD(self.aj[:, :, i].real.copy(), scale=self.stepk)
+            im = galsim.ImageD(self.aj[:, :, i].imag.copy(), scale=self.stepk)
+            objlist.append(sed * galsim.InterpolatedKImage(re, im))
 
-    def evaluateAtWavelength(self, wave):
-        import numpy as np
-
-        b = [bsed(wave) for bsed in self.SEDs]
-        karray = np.dot(self.aj, b)
-        re = galsim.ImageD(karray.real.copy(), scale=self.stepk)
-        im = galsim.ImageD(karray.imag.copy(), scale=self.stepk)
-        return galsim.InterpolatedKImage(re, im)
+        super(ChromaticRealGalaxy, self).__init__(objlist)
