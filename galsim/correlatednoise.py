@@ -93,7 +93,7 @@ class _BaseCorrelatedNoise(object):
         # If _profile_for_stored is profile, then it means that we can use the stored values in
         # _rootps_store, _rootps_whitening_store, and/or _rootps_symmetrizing_store and avoid having
         # to redo the calculations.
-        # So for now, we start out with _profile_for_stored = None, and _rootps_store,  
+        # So for now, we start out with _profile_for_stored = None, and _rootps_store,
         # _rootps_whitening_store, _rootps_symmetrizing_store empty.
         self._profile_for_stored = None
         self._rootps_store = []
@@ -179,10 +179,10 @@ class _BaseCorrelatedNoise(object):
         apply correlated noise to an image with a non-trivial WCS.  The correlations will have a
         specific direction and scale in world coordinates, so if you apply them to an image with
         a WCS that has a rotation or a different pixel scale than the original, the resulting
-        correlations will have the correct direction and scale in world coordinates, but a 
+        correlations will have the correct direction and scale in world coordinates, but a
         different direction and/or scale in image coordinates.
 
-        If you want to override this behavior, you can view your image with the WCS of the 
+        If you want to override this behavior, you can view your image with the WCS of the
         correlation function and apply the noise to that.  For example:
 
             >>> image = galsim.Image(nx, ny, wcs=complicated_wcs)
@@ -628,7 +628,7 @@ class _BaseCorrelatedNoise(object):
         automatically set to 'sb' and cannot be changed, and the `gain` is set to unity.
         Also, not all the normal parameters of the GSObject method are available.
 
-        It `scale` and `wcs` are not set, and the `image` has no `wcs` attribute, then this will
+        If `scale` and `wcs` are not set, and the `image` has no `wcs` attribute, then this will
         use the wcs of the CorrelatedNoise object.
 
         @param image        If provided, this will be the image on which to draw the profile.
@@ -666,6 +666,55 @@ class _BaseCorrelatedNoise(object):
         return self._profile.drawImage(
             image=image, wcs=wcs, dtype=dtype, method='sb', gain=1., wmult=wmult,
             add_to_image=add_to_image, use_true_center=False)
+
+    def drawKImage(self, re=None, im=None, nx=None, ny=None, scale=None, dtype=None, wmult=1.,
+                   add_to_image=False, dk=None):
+        """A method for drawing profiles storing correlation functions (i.e., power spectra) in
+        Fourier space.
+
+        This is a mild reimplementation of the drawKImage() method for GSObjects.  The `gain` is
+        automatically set to unity and cannot be change.  Also, not all the normal parameters of the
+        GSObject method are available.
+
+        If `scale` is not set, and `re` and `im` have no `wcs` attributes, then this will use the
+        wcs of the CorrelatedNoise object.
+
+        @param re           If provided, this will be the real part of the k-space image.  If `re`
+                            and `im` are None, then automatically-sized images will be created.  If
+                            they are given, but the bounds are undefined, then they will be resized
+                            appropriately base on the profile's size. [default: None]
+        @param im           If provided, this will be the imaginary part of the k-space image.  A
+                            provided `im` must match the size and scale of `re`.  If `im` is None,
+                            then `re` must also be None. [default: None]
+        @param scale        If provided, use this as the pixel scale, dk, for the images.  If
+                            `scale` is None and `re` and `im` are given, then take the provided
+                            images' pixel scale (which must be equal).  If `scale` is None and `re`
+                            and `im` are None, then use the Nyquist scale.
+                            If `scale <= 0` (regardless of `re`, `im`), then use the Nyquist scale.
+                            [default: None]
+        @param dtype        The data type to use for automatically constructed images.  Only valid
+                            if `re` and `im` are None. [default: None, which means to use
+                            numpy.float32]
+        @param gain         The number of photons per ADU ("analog to digital units", the units of
+                            the numbers output from a CCD).  [default: 1.]
+        @param wmult        A multiplicative factor by which to enlarge (in each direction) the size
+                            of the image, if you are having drawKImage() automatically construct the
+                            images for you.  [default: 1]
+        @param add_to_image Whether to add to the existing images rather than clear out anything in
+                            the image before drawing.  Note: This requires that `re` and `im` be
+                            provided and that they have defined bounds. [default: False]
+
+        @returns the tuple of Image instances, `(re, im)` (created if necessary)
+        """
+        # Check for obsolete dk parameter
+        if dk is not None and scale is None:
+            from galsim.deprecated import depr
+            depr('dk', 1.1, 'scale')
+            scale = dk
+
+        return self._profile.drawKImage(
+            re=re, im=im, nx=nx, ny=ny, dtype=dtype, scale=scale, gain=1., wmult=wmult,
+            add_to_image=add_to_image)
 
     def _get_update_rootps(self, shape, wcs):
         """Internal utility function for querying the `rootps` cache, used by applyTo(),
@@ -714,7 +763,7 @@ class _BaseCorrelatedNoise(object):
 
             # Given all the above, it might make sense to warn the user if we do detect a PS that
             # doesn't "look right" (i.e. has strongly negative values where these are not expected).
-            # This is the subject of Issue #587 on GalSim's GitHub repository page (see 
+            # This is the subject of Issue #587 on GalSim's GitHub repository page (see
             # https://github.com/GalSim-developers/GalSim/issues/587)
 
             # For now we just take the sqrt(abs(PS)):
@@ -1115,7 +1164,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     scale the overall correlation function by a scalar operand.  The random number generators are
     not affected by these scaling operations.
     """
-    def __init__(self, image, rng=None, scale=None, wcs=None, x_interpolant=None, 
+    def __init__(self, image, rng=None, scale=None, wcs=None, x_interpolant=None,
         correct_periodicity=True, subtract_mean=False, gsparams=None, dx=None):
         # Check for obsolete dx parameter
         if dx is not None and scale==0.:
@@ -1136,7 +1185,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         # Need to normalize ps due to one-directional 1/N^2 in FFT conventions and the fact that
         # we *squared* the ft_array to get ps_array:
         ps_array /= np.product(image.array.shape)
-        
+
         if subtract_mean: # Quickest non-destructive way to make the PS correspond to the
                           # mean-subtracted case
             ps_array[0, 0] = 0.
@@ -1474,4 +1523,3 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
 
     def __str__(self):
         return "galsim.UncorrelatedNoise(variance=%r, wcs=%s)"%(self.variance, self.wcs)
-
