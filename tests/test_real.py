@@ -129,7 +129,7 @@ def test_real_galaxy_ideal():
                     targ_PSF = galsim.Gaussian(fwhm = tpf).shear(g1=tps1, g2=tps2)
                     # simulate image
                     sim_image = galsim.simReal(
-                            rg, targ_PSF, tps, 
+                            rg, targ_PSF, tps,
                             g1 = targ_applied_shear1, g2 = targ_applied_shear2,
                             rand_rotate = False, target_flux = fake_gal_flux)
                     # galaxy sigma, in units of pixels on the final image
@@ -203,110 +203,8 @@ def test_real_galaxy_saved():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_chromatic_real_galaxy():
-    """Use some simplified simulated HST-like observations around r and i band to predict
-    Euclid-ish visual band observations."""
-
-    print "Constructing simplified HST PSF"
-    HST_PSF = galsim.ChromaticAiry(lam=700, diam=2.4)
-
-    print "Constructing simplified Euclid PSF"
-    Euclid_PSF = galsim.ChromaticAiry(lam=700, diam=1.2)
-
-    print "Constructing simple filters and SEDs"
-    waves = np.arange(550.0, 825.1, 1.0)
-
-    # Construct some simple filters.
-    visband = galsim.Bandpass(galsim.LookupTable(waves, np.ones_like(waves), interpolant='linear'))
-    rband = visband.truncate(blue_limit=550.0, red_limit=700.0)
-    iband = visband.truncate(blue_limit=700.0, red_limit=825.0)
-
-    const_SED = (galsim.SED(galsim.LookupTable(waves, np.ones_like(waves),
-                                               interpolant='linear'))
-                 .withFluxDensity(1.0, 700.0))
-    linear_SED = (galsim.SED(galsim.LookupTable(waves, (waves-550.0)/(825-550),
-                                                interpolant='linear'))
-                  .withFluxDensity(1.0, 700.0))
-
-    print "Constructing galaxy"
-    gal1 = galsim.Gaussian(half_light_radius=0.45).shear(e1=0.1, e2=0.2).shift(0.1, 0.2)
-    gal2 = galsim.Gaussian(half_light_radius=0.35).shear(e1=-0.1, e2=0.4).shift(-0.3, 0.5)
-    gal = gal1 * const_SED + gal2 * linear_SED
-
-    HST_prof = galsim.Convolve(gal, HST_PSF)
-    Euclid_prof = galsim.Convolve(gal, Euclid_PSF)
-
-    print "Drawing HST images"
-    # Draw HST images
-    HST_images = [HST_prof.drawImage(rband, nx=64, ny=64, scale=0.05),
-                  HST_prof.drawImage(iband, nx=64, ny=64, scale=0.05)]
-    noise = galsim.GaussianNoise()
-    for im in HST_images:
-        im.addNoiseSNR(noise, 50, preserve_flux=True)
-
-    print "Drawing Euclid image"
-    Euclid_image = Euclid_prof.drawImage(visband, nx=30, ny=30, scale=0.1)
-
-    # Now "deconvolve" the chromatic HST PSF while asserting the correct SEDs.
-    print "Constructing ChromaticRealGalaxy"
-    crg = galsim.ChromaticRealGalaxy((HST_images,
-                                      [rband, iband],
-                                      [const_SED, linear_SED],
-                                      HST_PSF))
-
-    # crg should be effectively the same thing as gal now.  Let's test.
-
-    Euclid_recon_image = (galsim.Convolve(crg, Euclid_PSF)
-                          .drawImage(visband, nx=30, ny=30, scale=0.1))
-
-    if False:
-        import matplotlib.pyplot as plt
-        fig = plt.figure(figsize=(13,10))
-        ax = fig.add_subplot(231)
-        im = ax.imshow(HST_images[0].array)
-        plt.colorbar(im)
-        ax.set_title('rband')
-        ax = fig.add_subplot(232)
-        im = ax.imshow(HST_images[1].array)
-        plt.colorbar(im)
-        ax.set_title('iband')
-        ax = fig.add_subplot(234)
-        im = ax.imshow(Euclid_image.array)
-        plt.colorbar(im)
-        ax.set_title('Euclid')
-        ax = fig.add_subplot(235)
-        im = ax.imshow(Euclid_recon_image.array)
-        plt.colorbar(im)
-        ax.set_title('Euclid reconstruction')
-        ax = fig.add_subplot(236)
-        resid = Euclid_recon_image.array - Euclid_image.array
-        vmin, vmax = np.percentile(resid, [5.0, 95.0])
-        im = ax.imshow(resid, cmap='seismic',
-                       vmin=vmin, vmax=vmax)
-        plt.colorbar(im)
-        ax.set_title('residual')
-        plt.tight_layout()
-        plt.show()
-
-    np.testing.assert_almost_equal(Euclid_image.array.max()/Euclid_recon_image.array.max(),
-                                   1.0, 2)
-    np.testing.assert_almost_equal(Euclid_image.array.sum()/Euclid_recon_image.array.sum(),
-                                   1.0, 2)
-    print "Max comparison:", Euclid_image.array.max(), Euclid_recon_image.array.max()
-    print "Sum comparison:", Euclid_image.array.sum(), Euclid_recon_image.array.sum()
-    np.testing.assert_array_almost_equal(Euclid_image.array/Euclid_image.array.max(),
-                                         Euclid_recon_image.array/Euclid_image.array.max(),
-                                         3) # Fails at 4th decimal
-
-    # Other tests:
-    #     - draw the same image as origin?
-    #     - compare intermediate products: does aj match the input spatial profiles?
-    #       (are there degeneracies?)
-    #     - stupid tests like using only one filter should perform similarly to RealGalaxy?
-    #     - ellipticity tests like those above for RealGalaxy?
 
 
 if __name__ == "__main__":
     test_real_galaxy_ideal()
     test_real_galaxy_saved()
-    test_chromatic_real_galaxy()
