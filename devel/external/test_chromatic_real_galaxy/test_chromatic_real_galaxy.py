@@ -6,10 +6,10 @@ def test_CRG_noise(plot=False):
     """Test noise propagation in ChromaticRealGalaxy
     """
     print "Constructing simplified HST PSF"
-    HST_PSF = galsim.ChromaticAiry(lam=700, diam=2.4)
+    HST_PSF = galsim.ChromaticAiry(lam=700., diam=2.4)
 
     print "Constructing simplified Euclid PSF"
-    Euclid_PSF = galsim.ChromaticAiry(lam=700, diam=1.2)
+    Euclid_PSF = galsim.ChromaticAiry(lam=700., diam=1.2)
 
     print "Constructing simple filters and SEDs"
     waves = np.arange(550.0, 830.1, 10.0)
@@ -28,7 +28,8 @@ def test_CRG_noise(plot=False):
     HST_images = [galsim.Image(192, 192, scale=0.03, dtype=np.float64),
                   galsim.Image(192, 192, scale=0.03, dtype=np.float64)]
     # Use COSMOS correlated noise
-    cn1 = galsim.getCOSMOSNoise()
+    rng = galsim.BaseDeviate(1)
+    cn1 = galsim.getCOSMOSNoise(rng=rng)
     cn2 = cn1.dilate(1.5)
 
     HST_images[0].addNoise(cn1)
@@ -42,7 +43,8 @@ def test_CRG_noise(plot=False):
                                       HST_PSF))
 
     Euclid_obj = galsim.Convolve(crg, Euclid_PSF)
-    Euclid_im = Euclid_obj.drawImage(visband, nx=64, ny=64, scale=0.03)
+
+    Euclid_im = Euclid_obj.drawImage(visband, nx=64, ny=64, scale=0.03, iimult=2)
 
     if plot:
         import matplotlib.pyplot as plt
