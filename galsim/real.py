@@ -880,10 +880,11 @@ class ChromaticRealGalaxy(ChromaticObject):
         print "PSF min(maxK) = ", min(psfmaxk)
         print "PSF max(maxK) = ", max(psfmaxk)
 
-        maxk = min(imgmaxk + psfmaxk)
+        maxk = min([max(psfmaxk)]+imgmaxk)
         print "Using maxK = ", maxk
 
-        imgstepk = [2*np.pi*img.scale / max(img.array.shape) for img in imgs]
+        imgstepk = [2*np.pi/(img.scale*max(img.array.shape)) for img in imgs]
+
         print "image min(stepK) = ", min(imgstepk)
         print "image max(stepK) = ", max(imgstepk)
         psfstepk = [bp.stepK() for bp in blue_PSFs]
@@ -891,13 +892,17 @@ class ChromaticRealGalaxy(ChromaticObject):
         print "PSF min(stepK) = ", min(psfstepk)
         print "PSF max(stepK) = ", max(psfstepk)
         self.stepk = min(imgstepk + psfstepk)
-        print "Using stepK = "
+        print "Using stepK = ", self.stepk
+
+        ii = [galsim.InterpolatedImage(img) for img in imgs]
+        print [i.stepK() for i in ii]
 
         nk = int(np.ceil(2*maxk/self.stepk))
         print "maxk = ", maxk
         print "stepk = ", self.stepk
         print "nk = ", nk
 
+        print "Creating Fourier-space kimages of effective PSFs"
         # Create Fourier-space kimages of effective PSFs
         eff_PSF_kimgs = np.empty((len(imgs), len(self.SEDs), nk, nk), dtype=complex)
         for i, (img, tput) in enumerate(zip(imgs, tputs)):
@@ -908,12 +913,14 @@ class ChromaticRealGalaxy(ChromaticObject):
                 re, im = conv.drawKImage(tput, nx=nk, ny=nk, scale=self.stepk)
                 eff_PSF_kimgs[i, j, :, :] = re.array + 1j * im.array
 
+        print "Creating Fourier-space representations of input images"
         # Get Fourier-space representations of input imgs.
         self.kimgs = np.empty((len(imgs), nk, nk), dtype=complex)
         for i, img in enumerate(imgs):
             re, im = galsim.InterpolatedImage(img).drawKImage(nx=nk, ny=nk, scale=self.stepk)
             self.kimgs[i, :, :] = re.array + 1j * im.array
 
+        print "Setting up input noise power spectra"
         # Setup input noise power spectra
         pk = np.empty((len(imgs), nk, nk), dtype=float)
         for i, cfunc in enumerate(cfuncs):
@@ -921,12 +928,16 @@ class ChromaticRealGalaxy(ChromaticObject):
             re, _ = cfunc.drawKImage(nx=nk, ny=nk, scale=self.stepk)
             pk[i, :, :] = re.array
 
+        print "Allocating output noise covariance spectrum"
         # Setup output noise covariance spectrum
         self.Sigma = np.empty((len(self.SEDs), len(self.SEDs), nk, nk), dtype=complex)
         #  Solve the weighted linear least squares problem.  This is effectively a constrained
         #  chromatic deconvolution.
+        print "Allocating output Fourier mode amplitudes"
         self.aj = np.empty((nk, nk, len(self.SEDs)), dtype=complex)
+        print "Solving!"
         for iy in xrange(nk):
+            print iy, " out of ", nk
             for ix in xrange(nk):
                 A = _complex_to_real_mat(eff_PSF_kimgs[:, :, iy, ix])
                 b = _complex_to_real_vec(self.kimgs[:, iy, ix])
