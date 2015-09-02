@@ -20,13 +20,13 @@ Functions for dealing with RealGalaxy objects and the catalogs that store their 
 
 The RealGalaxy uses images of galaxies from real astrophysical data (e.g. the Hubble Space
 Telescope), along with a PSF model of the optical properties of the telescope that took these
-images, to simulate new galaxy images with a different (must be larger) telescope PSF.  A 
-description of the simulation method can be found in Section 5 of Mandelbaum et al. (2012; MNRAS, 
-540, 1518), although note that the details of the implementation in Section 7 of that work are not 
+images, to simulate new galaxy images with a different (must be larger) telescope PSF.  A
+description of the simulation method can be found in Section 5 of Mandelbaum et al. (2012; MNRAS,
+540, 1518), although note that the details of the implementation in Section 7 of that work are not
 relevant to the more recent software used here.
 
 This module defines the RealGalaxyCatalog class, used to store all required information about a
-real galaxy simulation training sample and accompanying PSF model.  For information about 
+real galaxy simulation training sample and accompanying PSF model.  For information about
 downloading GalSim-readable RealGalaxyCatalog data in FITS format, see the RealGalaxy Data Download
 page on the GalSim Wiki: https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
 
@@ -36,11 +36,11 @@ some lower-resolution telescope.
 
 
 import galsim
-import utilities
 from galsim import GSObject
 from chromatic import ChromaticObject
 from galsim import pyfits
 import os
+
 
 class RealGalaxy(GSObject):
     """A class describing real galaxies from some training dataset.  Its underlying implementation
@@ -59,8 +59,8 @@ class RealGalaxy(GSObject):
 
     Initialization
     --------------
-    
-        >>> real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
+
+        >>> real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False,
         ...                                 rng=None, x_interpolant=None, k_interpolant=None,
         ...                                 flux=None, pad_factor=4, noise_pad_size=0,
         ...                                 gsparams=None)
@@ -69,7 +69,7 @@ class RealGalaxy(GSObject):
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
     keywords for choosing a galaxy; exactly one must be set.  In future we may add more such
     options, e.g., to choose at random but accounting for the non-constant weight factors
-    (probabilities for objects to make it into the training sample).  
+    (probabilities for objects to make it into the training sample).
 
     Note that tests suggest that for optimal balance between accuracy and speed, `k_interpolant` and
     `pad_factor` should be kept at their default values.  The user should be aware that significant
@@ -156,7 +156,7 @@ class RealGalaxy(GSObject):
             self.rng = rng
         self._rng = self.rng.duplicate()  # This is only needed if we want to make sure eval(repr)
                                           # results in the same object.
- 
+
         if flux is not None and flux_rescale is not None:
             raise TypeError("Cannot supply a flux and a flux rescaling factor!")
 
@@ -180,7 +180,7 @@ class RealGalaxy(GSObject):
                 use_index = real_galaxy_catalog.getIndexForID(id)
             elif random is True:
                 uniform_deviate = galsim.UniformDeviate(self.rng)
-                use_index = int(real_galaxy_catalog.nobjects * uniform_deviate()) 
+                use_index = int(real_galaxy_catalog.nobjects * uniform_deviate())
             else:
                 raise AttributeError('No method specified for selecting a galaxy!')
             if logger:
@@ -235,7 +235,7 @@ class RealGalaxy(GSObject):
 
         # Build the InterpolatedImage of the PSF.
         self.original_psf = galsim.InterpolatedImage(
-            self.psf_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
+            self.psf_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
             flux=1.0, gsparams=gsparams)
         if logger:
             logger.debug('RealGalaxy %d: Made original_psf',use_index)
@@ -297,7 +297,7 @@ class RealGalaxy(GSObject):
     def __str__(self):
         # I think this is more intuitive without the RealGalaxyCatalog parameter listed.
         return 'galsim.RealGalaxy(index=%s, flux=%s)'%(self.index, self.flux)
- 
+
     def __getstate__(self):
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
@@ -320,7 +320,7 @@ class RealGalaxyCatalog(object):
     realistic galaxies. We assume that all files containing the images (galaxies and PSFs) live in
     one directory; they could be individual files, or multiple HDUs of the same file.  Currently
     there is no functionality that lets this be a FITS data cube, because we assume that the object
-    postage stamps will in general need to be different sizes depending on the galaxy size.  
+    postage stamps will in general need to be different sizes depending on the galaxy size.
 
     While you could create your own catalog to use with this class, the typical use cases would
     be to use one of the catalogs that we have created and distributed.  There are three such
@@ -353,7 +353,7 @@ class RealGalaxyCatalog(object):
 
     3. Finally, we provide a program that will download the large COSMOS sample for you and
        put it in the $PREFIX/share/galsim directory of your installation path.  The program is
-       
+
            galsim_download_cosmos
 
        which gets installed in the $PREFIX/bin directory when you install GalSim.  If you use
@@ -372,12 +372,12 @@ class RealGalaxyCatalog(object):
                       the catalog file.  [default: None, which means to use the same directory
                       as the catalog file.]
     @param dir        The directory of catalog file. [default: None]
-    @param preload    Whether to preload the header information.  If `preload=True`, the bulk of 
+    @param preload    Whether to preload the header information.  If `preload=True`, the bulk of
                       the I/O time is in the constructor.  If `preload=False`, there is
                       approximately the same total I/O time (assuming you eventually use most of
                       the image files referenced in the catalog), but it is spread over the
                       various calls to getGal() and getPSF().  [default: False]
-    @param noise_dir  The directory of the noise files if different from the directory of the 
+    @param noise_dir  The directory of the noise files if different from the directory of the
                       image files.  [default: image_dir]
     @param logger     An optional logger object to log progress. [default: None]
     """
@@ -425,7 +425,7 @@ class RealGalaxyCatalog(object):
         self.gal_hdu = self.cat.field('gal_hdu') # HDU containing the galaxy image
         self.psf_hdu = self.cat.field('PSF_hdu') # HDU containing the PSF image
         self.pixel_scale = self.cat.field('pixel_scale') # pixel scale for image (could be different
-        # if we have training data from other datasets... let's be general here and make it a 
+        # if we have training data from other datasets... let's be general here and make it a
         # vector in case of mixed training set)
         self.variance = self.cat.field('noise_variance') # noise variance for image
         self.mag = self.cat.field('mag')   # apparent magnitude
@@ -449,7 +449,7 @@ class RealGalaxyCatalog(object):
         if preload: self.preload()
         self._preload = preload
 
-        # eventually I think we'll want information about the training dataset, 
+        # eventually I think we'll want information about the training dataset,
         # i.e. (dataset, ID within dataset)
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
@@ -470,7 +470,7 @@ class RealGalaxyCatalog(object):
     def getFileName(self) : return self.file_name
 
     def getIndexForID(self, id):
-        """Internal function to find which index number corresponds to the value ID in the ident 
+        """Internal function to find which index number corresponds to the value ID in the ident
         field.
         """
         # Just to be completely consistent, convert id to a string in the same way we
@@ -483,9 +483,9 @@ class RealGalaxyCatalog(object):
 
     def preload(self):
         """Preload the files into memory.
-        
-        There are memory implications to this, so we don't do this by default.  However, it can be 
-        a big speedup if memory isn't an issue.  Especially if many (or all) of the images are 
+
+        There are memory implications to this, so we don't do this by default.  However, it can be
+        a big speedup if memory isn't an issue.  Especially if many (or all) of the images are
         stored in the same file as different HDUs.
         """
         import numpy
@@ -493,13 +493,13 @@ class RealGalaxyCatalog(object):
         if self.logger:
             self.logger.debug('RealGalaxyCatalog: start preload')
         for file_name in numpy.concatenate((self.gal_file_name , self.psf_file_name)):
-            # numpy sometimes add a space at the end of the string that is not present in 
+            # numpy sometimes add a space at the end of the string that is not present in
             # the original file.  Stupid.  But this next line removes it.
             file_name = file_name.strip()
             if file_name not in self.loaded_files:
                 if self.logger:
                     self.logger.debug('RealGalaxyCatalog: preloading %s',file_name)
-                # I use memmap=False, because I was getting problems with running out of 
+                # I use memmap=False, because I was getting problems with running out of
                 # file handles in the great3 real_gal run, which uses a lot of rgc files.
                 # I think there must be a bug in pyfits that leaves file handles open somewhere
                 # when memmap = True.  Anyway, I don't know what the performance implications
@@ -627,7 +627,7 @@ class RealGalaxyCatalog(object):
     def __str__(self):
         return 'galsim.RealGalaxyCatalog(%r)'%(self.file_name)
 
-    def __eq__(self, other): 
+    def __eq__(self, other):
         return (isinstance(other, RealGalaxyCatalog) and
                 self.file_name == other.file_name and
                 self.image_dir == other.image_dir and
@@ -646,7 +646,7 @@ class RealGalaxyCatalog(object):
         del d['noise_lock']
         return d
 
-    def __setstate__(self, d): 
+    def __setstate__(self, d):
         from multiprocessing import Lock
         self.__dict__ = d
         self.gal_lock = Lock()
@@ -657,21 +657,21 @@ class RealGalaxyCatalog(object):
 
 
 
-def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotation_angle=None, 
+def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotation_angle=None,
             rand_rotate=True, rng=None, target_flux=1000.0, image=None):
     """Function to simulate images (no added noise) from real galaxy training data.
 
-    This function takes a RealGalaxy from some training set, and manipulates it as needed to 
+    This function takes a RealGalaxy from some training set, and manipulates it as needed to
     simulate a (no-noise-added) image from some lower-resolution telescope.  It thus requires a
-    target PSF (which could be an image, or one of our base classes) that represents all PSF 
-    components including the pixel response, and a target pixel scale.  
+    target PSF (which could be an image, or one of our base classes) that represents all PSF
+    components including the pixel response, and a target pixel scale.
 
-    The default rotation option is to impose a random rotation to make irrelevant any real shears 
-    in the galaxy training data (optionally, the RNG can be supplied).  This default can be turned 
+    The default rotation option is to impose a random rotation to make irrelevant any real shears
+    in the galaxy training data (optionally, the RNG can be supplied).  This default can be turned
     off by setting `rand_rotate = False` or by requesting a specific rotation angle using the
     `rotation_angle` keyword, in which case `rand_rotate` is ignored.
 
-    Optionally, the user can specify a shear (default 0).  Finally, they can specify a flux 
+    Optionally, the user can specify a shear (default 0).  Finally, they can specify a flux
     normalization for the final image, default 1000.
 
     @param real_galaxy      The RealGalaxy object to use, not modified in generating the
@@ -784,11 +784,60 @@ def _parse_files_dirs(file_name, image_dir, dir, noise_dir):
     return full_file_name, full_image_dir, full_noise_dir
 
 
+def _complex_to_real_vec(vec):
+    import numpy as np
+    out = np.empty((2*vec.shape[0],), dtype=float)
+    for i in range(vec.shape[0]):
+        out[2*i] = vec[i].real
+        out[2*i+1] = vec[i].imag
+    return out
+
+
+def _real_to_complex_vec(vec):
+    import numpy as np
+    out = np.empty((vec.shape[0]/2,), dtype=complex)
+    for i in range(vec.shape[0]/2):
+        out[i] = vec[2*i] + 1j * vec[2*i+1]
+    return out
+
+
+def _complex_to_real_mat(mat):
+    import numpy as np
+    out = np.empty((2*mat.shape[0], 2*mat.shape[1]), dtype=float)
+    for i in range(mat.shape[0]):
+        for j in range(mat.shape[1]):
+            out[2*i, 2*j] = mat[i, j].real
+            out[2*i, 2*j+1] = -mat[i, j].imag
+            out[2*i+1, 2*j] = mat[i, j].imag
+            out[2*i+1, 2*j+1] = mat[i, j].real
+    return out
+
+
+def _real_to_complex_mat(mat):
+    import numpy as np
+    out = np.empty((mat.shape[0]/2, mat.shape[1]/2), dtype=complex)
+    for i in range(mat.shape[0]/2):
+        for j in range(mat.shape[1]/2):
+            out[i, j] = mat[2*i, 2*j] - 1j * mat[2*i, 2*j+1]
+    return out
+
+
+def _complex_to_real_weight(weight):
+    import numpy as np
+    out = np.empty((2*weight.shape[0],), dtype=float)
+    for i in range(weight.shape[0]):
+        out[2*i:2*i+2] = weight[i]
+    return out
+
+
 class ChromaticRealGalaxy(ChromaticObject):
+    """
+    """
     def __init__(self, chromatic_real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
                  pad_factor=4, noise_pad_size=0, gsparams=None, logger=None):
         import numpy as np
+        import statsmodels.api as sm
 
         if rng is None:
             self.rng = galsim.BaseDeviate()
@@ -796,8 +845,8 @@ class ChromaticRealGalaxy(ChromaticObject):
             raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
         else:
             self.rng = rng
-        self._rng = self.rng.duplicate()  # This is only needed if we want to make sure eval(repr)
-                                          # results in the same object.
+        # Need rng.duplicate() to make sure eval(repr) results in same object.
+        self._rng = self.rng.duplicate()
 
         if flux is not None and flux_rescale is not None:
             raise TypeError("Cannot supply a flux and a flux rescaling factor!")
@@ -805,9 +854,9 @@ class ChromaticRealGalaxy(ChromaticObject):
         if isinstance(chromatic_real_galaxy_catalog, tuple):
             # Special (undocumented) way to build a ChromaticRealGalaxy without needing the rgc
             # directly by providing the things we need from it.
-            gal_images, throughputs, base_SEDs, chromatic_PSF = chromatic_real_galaxy_catalog
+            imgs, tputs, SEDs, cfuncs, cPSF = chromatic_real_galaxy_catalog
 
-            self.base_SEDs = [bsed.withFlux(1.0, throughputs[0]) for bsed in base_SEDs]
+            self.SEDs = [bsed.withFlux(1.0, tputs[0]) for bsed in SEDs]
 
             use_index = 0  # For the logger statements below.
             if logger:
@@ -816,47 +865,76 @@ class ChromaticRealGalaxy(ChromaticObject):
         else:
             raise ValueError("Chromatic Real Galaxy Catalog not implemented yet!")
 
-        # Need to sample both the effective PSFs and the images on the same Fourier grid.
-        blue_PSFs = [chromatic_PSF.evaluateAtWavelength(tp.blue_limit) for tp in throughputs]
-        red_PSFs = [chromatic_PSF.evaluateAtWavelength(tp.red_limit) for tp in throughputs]
-        maxk = np.pi/np.array([gi.scale for gi in gal_images])
-        maxk = np.concatenate([maxk, [bp.maxK() for bp in blue_PSFs]])
-        maxk = np.concatenate([maxk, [rp.maxK() for rp in red_PSFs]])
-        maxk = max(maxk)
+        # TODO: code to query not-yet-existing catalog for imgs, tputs, SEDs, cfuncs, cPSF
 
-        stepk = 2*np.pi / np.array([gi.scale * max(gi.array.shape) for gi in gal_images])
-        stepk = np.concatenate([stepk, [bp.stepK() for bp in blue_PSFs]])
-        stepk = np.concatenate([stepk, [rp.stepK() for rp in red_PSFs]])
-        self.stepk = min(stepk)
+        # Need to sample both the effective PSFs and the imgs on the same Fourier grid.
+        # TODO: think harder about appropriate maxk, stepk
+        imgmaxk = [np.pi/img.scale for img in imgs]
+        print "image min(maxK) = ", min(imgmaxk)
+        print "image max(maxK) = ", max(imgmaxk)
+
+        blue_PSFs = [cPSF.evaluateAtWavelength(tp.blue_limit) for tp in tputs]
+        red_PSFs = [cPSF.evaluateAtWavelength(tp.red_limit) for tp in tputs]
+        psfmaxk = [bp.maxK() for bp in blue_PSFs]
+        psfmaxk += [rp.maxK() for rp in red_PSFs]
+        print "PSF min(maxK) = ", min(psfmaxk)
+        print "PSF max(maxK) = ", max(psfmaxk)
+
+        maxk = min(imgmaxk + psfmaxk)
+        print "Using maxK = ", maxk
+
+        imgstepk = [2*np.pi*img.scale / max(img.array.shape) for img in imgs]
+        print "image min(stepK) = ", min(imgstepk)
+        print "image max(stepK) = ", max(imgstepk)
+        psfstepk = [bp.stepK() for bp in blue_PSFs]
+        psfstepk += [rp.stepK() for rp in red_PSFs]
+        print "PSF min(stepK) = ", min(psfstepk)
+        print "PSF max(stepK) = ", max(psfstepk)
+        self.stepk = min(imgstepk + psfstepk)
+        print "Using stepK = "
 
         nk = int(np.ceil(2*maxk/self.stepk))
+        print "maxk = ", maxk
+        print "stepk = ", self.stepk
+        print "nk = ", nk
 
-        # Create effective PSFs Fourier-space images
-        eff_PSF_kimages = np.empty((len(gal_images), len(self.base_SEDs), nk, nk), dtype=complex)
-        for i, (gi, tput) in enumerate(zip(gal_images, throughputs)):
-            for j, bsed in enumerate(self.base_SEDs):
+        # Create Fourier-space kimages of effective PSFs
+        eff_PSF_kimgs = np.empty((len(imgs), len(self.SEDs), nk, nk), dtype=complex)
+        for i, (img, tput) in enumerate(zip(imgs, tputs)):
+            for j, bsed in enumerate(self.SEDs):
                 star = galsim.Gaussian(fwhm=1e-8) * bsed
-                # assume that chromatic_PSF does not yet include pixel contribution to PSF
-                conv = galsim.Convolve(chromatic_PSF, star, galsim.Pixel(gi.scale))
+                # assume that cPSF does not yet include pixel contribution to PSF
+                conv = galsim.Convolve(cPSF, star, galsim.Pixel(img.scale))
                 re, im = conv.drawKImage(tput, nx=nk, ny=nk, scale=self.stepk)
-                eff_PSF_kimages[i,j,:,:] = re.array + 1j * im.array
+                eff_PSF_kimgs[i, j, :, :] = re.array + 1j * im.array
 
-        # Get Fourier-space representations of input images.
-        self.kimages = np.empty((len(gal_images), nk, nk), dtype=complex)
-        for i, gimg in enumerate(gal_images):
-            re, im = galsim.InterpolatedImage(gimg).drawKImage(nx=nk, ny=nk, scale=self.stepk)
-            self.kimages[i,:,:] = re.array + 1j * im.array
+        # Get Fourier-space representations of input imgs.
+        self.kimgs = np.empty((len(imgs), nk, nk), dtype=complex)
+        for i, img in enumerate(imgs):
+            re, im = galsim.InterpolatedImage(img).drawKImage(nx=nk, ny=nk, scale=self.stepk)
+            self.kimgs[i, :, :] = re.array + 1j * im.array
 
-        # Solve the linear least squares problem.  This is effectively a constrained chromatic
-        # deconvolution.
-        # Is there a better way to loop over these?
-        self.aj = np.empty((nk, nk, len(self.base_SEDs)), dtype=complex)
+        # Setup input noise power spectra
+        pk = np.empty((len(imgs), nk, nk), dtype=float)
+        for i, cfunc in enumerate(cfuncs):
+            # transform of real even function should be real.
+            re, _ = cfunc.drawKImage(nx=nk, ny=nk, scale=self.stepk)
+            pk[i, :, :] = re.array
+
+        # Setup output noise covariance spectrum
+        self.Sigma = np.empty((len(self.SEDs), len(self.SEDs), nk, nk), dtype=complex)
+        #  Solve the weighted linear least squares problem.  This is effectively a constrained
+        #  chromatic deconvolution.
+        self.aj = np.empty((nk, nk, len(self.SEDs)), dtype=complex)
         for iy in xrange(nk):
             for ix in xrange(nk):
-                A = eff_PSF_kimages[:,:,iy,ix]
-                b = self.kimages[:,iy,ix]
-                x = np.linalg.lstsq(A, b)[0]
-                self.aj[iy, ix, :] = x
+                A = _complex_to_real_mat(eff_PSF_kimgs[:, :, iy, ix])
+                b = _complex_to_real_vec(self.kimgs[:, iy, ix])
+                w = _complex_to_real_weight(1.0 / (2.0 * np.pi * pk[:, iy, ix]))
+                model = sm.WLS(b, A, weights=w)
+                result = model.fit()
+                self.aj[iy, ix, :] = _real_to_complex_vec(result.params)
+                self.Sigma[:, :, iy, ix] = _real_to_complex_mat(result.cov_params())
 
         self.separable = False
         self.wave_list = []
@@ -864,7 +942,7 @@ class ChromaticRealGalaxy(ChromaticObject):
     def evaluateAtWavelength(self, wave):
         import numpy as np
 
-        b = [bsed(wave) for bsed in self.base_SEDs]
+        b = [bsed(wave) for bsed in self.SEDs]
         karray = np.dot(self.aj, b)
         re = galsim.ImageD(karray.real.copy(), scale=self.stepk)
         im = galsim.ImageD(karray.imag.copy(), scale=self.stepk)
