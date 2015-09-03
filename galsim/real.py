@@ -37,8 +37,7 @@ some lower-resolution telescope.
 
 import galsim
 from galsim import GSObject
-from chromatic import ChromaticSum, ChromaticObject
-from galsim import pyfits
+from chromatic import ChromaticSum
 import os
 
 
@@ -79,7 +78,7 @@ class RealGalaxy(GSObject):
     comments.
 
     If you don't set a flux, the flux of the returned object will be the flux of the original
-    COSMOS data, scaled to correspond to a 1 second HST exposure.  If you want a flux approproriate
+    COSMOS data, scaled to correspond to a 1 second HST exposure.  If you want a flux appropriate
     for a longer exposure, you can set flux_rescale = the exposure time.  You can also account
     for exposures taken with a different telescope diameter than the HST 2.4 meter diameter
     this way.
@@ -329,7 +328,7 @@ class RealGalaxyCatalog(object):
     1. A small example catalog is distributed with the GalSim distribution.  This catalog only
        has 100 galaxies, so it is not terribly useful as a representative galaxy population.
        But for simplistic use cases, it might be sufficient.  We use it for our unit tests and
-       in dome of the demo scripts (demo6, demo10, and demo11).  To use this catalog, you would
+       in some of the demo scripts (demo6, demo10, and demo11).  To use this catalog, you would
        initialize with
 
            >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_example.fits',
@@ -394,6 +393,7 @@ class RealGalaxyCatalog(object):
     def __init__(self, file_name=None, image_dir=None, dir=None, preload=False,
                  noise_dir=None, logger=None, _nobjects_only=False):
 
+        from galsim._pyfits import pyfits
         self.file_name, self.image_dir, self.noise_dir = \
             _parse_files_dirs(file_name, image_dir, dir, noise_dir)
 
@@ -490,6 +490,7 @@ class RealGalaxyCatalog(object):
         """
         import numpy
         from multiprocessing import Lock
+        from galsim._pyfits import pyfits
         if self.logger:
             self.logger.debug('RealGalaxyCatalog: start preload')
         for file_name in numpy.concatenate((self.gal_file_name , self.psf_file_name)):
@@ -509,6 +510,7 @@ class RealGalaxyCatalog(object):
 
     def _getFile(self, file_name):
         from multiprocessing import Lock
+        from galsim._pyfits import pyfits
         if file_name in self.loaded_files:
             if self.logger:
                 self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
@@ -592,6 +594,7 @@ class RealGalaxyCatalog(object):
                         self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
                 else:
                     import numpy
+                    from galsim._pyfits import pyfits
                     array = pyfits.getdata(self.noise_file_name[i])
                     im = galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)),
                                       scale=self.pixel_scale[i])

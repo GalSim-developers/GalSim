@@ -15,5 +15,19 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-__version__ = '1.4.0'
-__version_info__ = tuple(map(int, __version__.split('.')))
+
+# Make it so we can use either pyfits or astropy.io.fits as pyfits.
+
+try:
+    import astropy.io.fits as pyfits
+    # astropy started their versioning over at 0.  (Understandably.)
+    # To make this seamless with pyfits versions, we add 4 to the astropy version.
+    from astropy import version as astropy_version
+    pyfits_version = str( (4 + astropy_version.major) + astropy_version.minor/10.)
+    pyfits_str = 'astropy.io.fits'
+except:
+    import pyfits
+    pyfits_version = pyfits.__version__
+    pyfits_str = 'pyfits'
+
+

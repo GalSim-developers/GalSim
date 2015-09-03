@@ -464,7 +464,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         # PyFITSAdapter requires an hdu, not a header, so if we were given a header directly,
         # then we need to mock it up.
         if hdu is None:
-            from galsim import pyfits
+            from galsim._pyfits import pyfits
             hdu = pyfits.PrimaryHDU()
             galsim.fits.FitsHeader(hdu_list=hdu).update(header)
         import warnings
@@ -542,7 +542,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         # See https://github.com/Starlink/starlink/issues/24 for helpful information from 
         # David Berry, who assisted me in getting this working.
 
-        from galsim import pyfits
+        from galsim._pyfits import pyfits
         import starlink.Atl
 
         hdu = pyfits.PrimaryHDU()
@@ -557,6 +557,8 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             # The easiest way I found to check for them is that the string TPN is in the string 
             # version of wcsinfo.  So check for that and set success = False in that case.
             if 'TPN' in str(self._wcsinfo): success = False
+            # Likewise for SIP.  MPF seems to be an appropriate string to look for.
+            if 'MPF' in str(self._wcsinfo): success = False
             if not success:
                 # This should always work, since it uses starlinks own proprietary encoding, but 
                 # it won't necessarily be readable by ds9.

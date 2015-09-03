@@ -1049,7 +1049,7 @@ def test_kround_trip():
 
     for kx, ky in zip(KXVALS, KYVALS):
         np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 3,
-            err_msg=("InterpolatedKImage evaluated incorrectly at ({:0},{:1})"
+            err_msg=("InterpolatedKImage evaluated incorrectly at ({0:},{1:})"
                      .format(kx, ky)))
 
     np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal

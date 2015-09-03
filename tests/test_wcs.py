@@ -1604,7 +1604,7 @@ def test_pyastwcs():
         test_tags = [ 'HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TPV', 'ZPX',
                       'TAN-PV', 'REGION', 'TNX' ]
     else:
-        test_tags = [ 'ZPX' ]
+        test_tags = [ 'ZPX', 'SIP' ]
 
     dir = 'fits_files'
     for tag in test_tags:

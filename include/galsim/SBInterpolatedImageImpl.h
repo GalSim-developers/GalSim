@@ -115,7 +115,7 @@ namespace galsim {
 
         double calculateFlux() const;
 
-    protected:  // Made protected so that these can be used in the derived CorrelationFunction class
+    private:
 
         int _Ninitial;
         int _Nk;
