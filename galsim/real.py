@@ -834,7 +834,31 @@ def _complex_to_real_weight(weight):
 
 
 class ChromaticRealGalaxy(ChromaticSum):
-    """
+    """A class describing real galaxies, including chromatic gradients, from some training dataset.
+    Its underlying implementation solves for a sum of chromatic profiles which are separable into
+    spatial and spectral factors, essentially making a kind of constrained chromatic deconvolution.
+
+    Initialization
+    --------------
+    TODO
+
+    @param x_interpolant    Either an Interpolant instance or a string indicating which real-space
+                            interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
+                            'cubic', 'quintic', or 'lanczosN' where N should be the integer order
+                            to use. [default: galsim.Quintic()]
+    @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
+                            interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
+                            'cubic', 'quintic', or 'lanczosN' where N should be the integer order
+                            to use.  We strongly recommend leaving this parameter at its default
+                            value; see text above for details.  [default: galsim.Quintic()]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+    @param logger           A logger object for output of progress statements if the user wants
+                            them.  [default: None]
+    Methods
+    -------
+
+    There are no additional methods for ChromaticRealGalaxy beyond the usual GSObject methods.
     """
     def __init__(self, chromatic_real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
@@ -872,39 +896,23 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         # Need to sample both the effective PSFs and the imgs on the same Fourier grid.
         imgmaxk = [np.pi/img.scale for img in imgs]
-        print "image min(maxK) = ", min(imgmaxk)
-        print "image max(maxK) = ", max(imgmaxk)
-
         blue_PSFs = [cPSF.evaluateAtWavelength(tp.blue_limit) for tp in tputs]
         red_PSFs = [cPSF.evaluateAtWavelength(tp.red_limit) for tp in tputs]
         psfmaxk = [bp.maxK() for bp in blue_PSFs]
         psfmaxk += [rp.maxK() for rp in red_PSFs]
-        print "PSF min(maxK) = ", min(psfmaxk)
-        print "PSF max(maxK) = ", max(psfmaxk)
 
         maxk = min([max(psfmaxk)]+imgmaxk)
-        print "Using maxK = ", maxk
 
         imgstepk = [2*np.pi/(img.scale*max(img.array.shape)) for img in imgs]
-
-        print "image min(stepK) = ", min(imgstepk)
-        print "image max(stepK) = ", max(imgstepk)
         psfstepk = [bp.stepK() for bp in blue_PSFs]
         psfstepk += [rp.stepK() for rp in red_PSFs]
-        print "PSF min(stepK) = ", min(psfstepk)
-        print "PSF max(stepK) = ", max(psfstepk)
         self.stepk = min(imgstepk + psfstepk)
-        print "Using stepK = ", self.stepk
 
         ii = [galsim.InterpolatedImage(img) for img in imgs]
         print [i.stepK() for i in ii]
 
         nk = int(np.ceil(2*maxk/self.stepk))
-        print "maxk = ", maxk
-        print "stepk = ", self.stepk
-        print "nk = ", nk
 
-        print "Creating Fourier-space kimages of effective PSFs"
         # Create Fourier-space kimages of effective PSFs
         eff_PSF_kimgs = np.empty((len(imgs), len(self.SEDs), nk, nk), dtype=complex)
         for i, (img, tput) in enumerate(zip(imgs, tputs)):
@@ -915,14 +923,12 @@ class ChromaticRealGalaxy(ChromaticSum):
                 re, im = conv.drawKImage(tput, nx=nk, ny=nk, scale=self.stepk)
                 eff_PSF_kimgs[i, j, :, :] = re.array + 1j * im.array
 
-        print "Creating Fourier-space representations of input images"
         # Get Fourier-space representations of input imgs.
         self.kimgs = np.empty((len(imgs), nk, nk), dtype=complex)
         for i, img in enumerate(imgs):
             re, im = galsim.InterpolatedImage(img).drawKImage(nx=nk, ny=nk, scale=self.stepk)
             self.kimgs[i, :, :] = re.array + 1j * im.array
 
-        print "Setting up input noise power spectra"
         # Setup input noise power spectra
         pk = np.empty((len(imgs), nk, nk), dtype=float)
         for i, cfunc in enumerate(cfuncs):
@@ -930,16 +936,12 @@ class ChromaticRealGalaxy(ChromaticSum):
             re, _ = cfunc.drawKImage(nx=nk, ny=nk, scale=self.stepk)
             pk[i, :, :] = re.array
 
-        print "Allocating output noise covariance spectrum"
         # Setup output noise covariance spectrum
         self.Sigma = np.empty((len(self.SEDs), len(self.SEDs), nk, nk), dtype=complex)
         #  Solve the weighted linear least squares problem.  This is effectively a constrained
         #  chromatic deconvolution.
-        print "Allocating output Fourier mode amplitudes"
         self.aj = np.empty((nk, nk, len(self.SEDs)), dtype=complex)
-        print "Solving!"
         for iy in xrange(nk):
-            print iy, " out of ", nk
             for ix in xrange(nk):
                 A = _complex_to_real_mat(eff_PSF_kimgs[:, :, iy, ix])
                 b = _complex_to_real_vec(self.kimgs[:, iy, ix])
