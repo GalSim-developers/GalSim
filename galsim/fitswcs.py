@@ -221,25 +221,20 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
     def _xy(self, ra, dec):
         import numpy
+        import astropy
         factor = galsim.radians / galsim.degrees
         rd = numpy.atleast_2d([ra, dec]) * factor
         # Here we have to work around another astropy.wcs bug.  The way they use scipy's
         # Broyden's method doesn't work.  So I implement a fix here.
-        if False:
-            # This is what I would like to have done, but it doesn't work.  I've reported
-            # the issue at:
-            # https://github.com/astropy/astropy/issues/1977
+        if astropy.__version__ >= '1.0.1':
+            # This works now on recent vesions of astropy.  At least >= 1.0.1, but possibly 
+            # 1.0 also included the fix.
+            # cf. https://github.com/astropy/astropy/issues/1977
 
-            # Try their version first (with and without ra_dec_order) in case they fix this.
             import warnings
-            try:
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    xy = self._wcs.all_world2pix(rd, 1, ra_dec_order=True)[0]
-            except AttributeError:
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    xy = self._wcs.all_world2pix(rd, 1)[0]
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                xy = self._wcs.all_world2pix(rd, 1, ra_dec_order=True)[0]
         else:
             # This section is basically a copy of astropy.wcs's _all_world2pix function, but
             # simplified a bit to remove some features we don't need, and with corrections
@@ -293,8 +288,10 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             x, y = numpy.array(xy).transpose()
         except:
             # Otherwise, return scalars
-            assert len(xy) == 1
-            x, y = xy[0]
+            if len(xy) == 1:
+                x, y = xy[0]
+            else:
+                x, y = xy
         return x, y
 
     def _newOrigin(self, origin):
