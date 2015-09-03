@@ -141,12 +141,8 @@ references = {
     # This is in fact the output of PyAst when writing the file tpv.fits in FITS encoding.
     # It seems worth testing that all the WCS types get this input correct.
     'TAN-FLIP' : ('tanflip.fits',
-            # From wcstools
             [ ('033009.262392', '-284348.697347', 418, 78, 2859.53882),
               ('033015.718834', '-284459.073468', 148, 393, 2957.98584) ] ),
-            # From pyast
-            #[ ('033009.340036', '-284350.697347', 418, 78, 2859.53882),
-              #('033015.729002', '-284501.492576', 148, 393, 2957.98584) ] ),
     'REGION' : ('region.fits',
             [ ('140211.202432', '543007.702200', 80, 80, 2241),
               ('140417.341523', '541628.554326', 45, 54, 1227) ] ),
@@ -1695,7 +1691,7 @@ def test_gsfitswcs():
     # 1.6 seconds), but longer than my arbitrary 1 second goal for any unit test, so only do the 
     # three most important ones as part of the regular test suite runs.
     if __name__ == "__main__":
-        test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TNX', 'SIP' ]
+        test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TAN-FLIP', 'TNX', 'SIP' ]
     else:
         test_tags = [ 'TAN', 'TPV', 'SIP' ]
 

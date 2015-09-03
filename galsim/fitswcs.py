@@ -978,9 +978,13 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         # Start by reading the basic WCS stuff that most types have.
         ctype1 = header['CTYPE1']
         ctype2 = header['CTYPE2']
-        if not (ctype1.startswith('RA---') and ctype2.startswith('DEC--')):
+        if ctype1.startswith('DEC--') and ctype2.startswith('RA---'):
+            flip = True
+        elif not (ctype1.startswith('RA---') and ctype2.startswith('DEC--')):
             raise NotImplementedError("GSFitsWCS can only handle cases where CTYPE1 is RA " +
                                       "and CTYPE2 is DEC")
+        else:
+            flip = False
         if ctype1[5:] != ctype2[5:]:
             raise RuntimeError("ctype1, ctype2 do not seem to agree on the WCS type")
         self.wcs_type = ctype1[5:]
@@ -1004,20 +1008,21 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             cd21 = float(header['CD2_1'])
             cd22 = float(header['CD2_2'])
         elif 'CDELT1' in header:
-            cd11 = float(header['CDELT1'])
-            cd12 = 0.
-            cd21 = 0.
-            cd22 = float(header['CDELT2'])
+            if 'PC1_1' in header:
+                cd11 = float(header['PC1_1']) * float(header['CDELT1'])
+                cd12 = float(header['PC1_2']) * float(header['CDELT1'])
+                cd21 = float(header['PC2_1']) * float(header['CDELT2'])
+                cd22 = float(header['PC2_2']) * float(header['CDELT2'])
+            else:
+                cd11 = float(header['CDELT1'])
+                cd12 = 0.
+                cd21 = 0.
+                cd22 = float(header['CDELT2'])
         else:
             cd11 = 1.
             cd12 = 0.
             cd21 = 0.
             cd22 = 1.
-
-        import numpy
-        self.crpix = numpy.array( [ crpix1, crpix2 ] )
-        self.cd = numpy.array( [ [ cd11, cd12 ], 
-                                 [ cd21, cd22 ] ] )
 
         # Usually the units are degrees, but make sure
         if 'CUNIT1' in header:
@@ -1028,6 +1033,17 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         else:
             ra_units = galsim.degrees
             dec_units = galsim.degrees
+
+        if flip:
+            crval1, crval2 = crval2, crval1
+            ra_units, dec_units = dec_units, ra_units
+            cd11, cd21 = cd21, cd11
+            cd12, cd22 = cd22, cd12
+
+        import numpy
+        self.crpix = numpy.array( [ crpix1, crpix2 ] )
+        self.cd = numpy.array( [ [ cd11, cd12 ], 
+                                 [ cd21, cd22 ] ] )
 
         self.center = galsim.CelestialCoord(crval1 * ra_units, crval2 * dec_units)
 
