@@ -1566,37 +1566,45 @@ class ChromaticSum(ChromaticObject):
                                 +" or list of them.")
         # else args is already the list of objects
 
-        # check for separability
-        self.separable = False # assume not separable, then test for the opposite
-        if all([obj.separable for obj in args]): # needed to assure that obj.SED is always defined.
-            SED1 = args[0].SED
-            # sum is separable if all summands have the same SED.
-            if all([obj.SED == SED1 for obj in args[1:]]):
-                self.separable = True
-                self.SED = SED1
-                self.objlist = [o.copy() for o in args]
-        # if not all the same SED, try to identify groups of summands with the same SED.
-        if not self.separable:
-            # Dictionary of: SED -> List of objs with that SED.
-            SED_dict = {}
-            # Fill in objlist as we go.
-            self.objlist = []
-            for obj in args:
-                # if separable, then add to one of the dictionary lists
-                if obj.separable:
-                    if obj.SED not in SED_dict:
-                        SED_dict[obj.SED] = []
-                    SED_dict[obj.SED].append(obj)
-                # otherwise, just add to self.objlist
-                else:
-                    self.objlist.append(obj.copy())
-            # go back and populate self.objlist with separable items, grouping objs with the
-            # same SED.
-            for v in SED_dict.values():
-                if len(v) == 1:
-                    self.objlist.append(v[0].copy())
-                else:
-                    self.objlist.append(ChromaticSum(v))
+        # # check for separability
+        # self.separable = False # assume not separable, then test for the opposite
+        # if all([obj.separable for obj in args]): # needed to assure that obj.SED is always defined.
+        #     SED1 = args[0].SED
+        #     # sum is separable if all summands have the same SED.
+        #     if all([obj.SED == SED1 for obj in args[1:]]):
+        #         self.separable = True
+        #         self.SED = SED1
+        #         self.objlist = [o.copy() for o in args]
+        # # if not all the same SED, try to identify groups of summands with the same SED.
+        # if not self.separable:
+        #     # Dictionary of: SED -> List of objs with that SED.
+        #     SED_dict = {}
+        #     # Fill in objlist as we go.
+        #     self.objlist = []
+        #     for obj in args:
+        #         # if separable, then add to one of the dictionary lists
+        #         if obj.separable:
+        #             if obj.SED not in SED_dict:
+        #                 SED_dict[obj.SED] = []
+        #             SED_dict[obj.SED].append(obj)
+        #         # otherwise, just add to self.objlist
+        #         else:
+        #             self.objlist.append(obj.copy())
+        #     # go back and populate self.objlist with separable items, grouping objs with the
+        #     # same SED.
+        #     for v in SED_dict.values():
+        #         if len(v) == 1:
+        #             self.objlist.append(v[0].copy())
+        #         else:
+        #             self.objlist.append(ChromaticSum(v))
+
+        self.objlist = []
+        for obj in args:
+            if isinstance(obj, ChromaticSum):
+                self.objlist.extend([o.copy() for o in obj.objlist])
+            else:
+                self.objlist.append(obj.copy())
+
         # finish up by constructing self.wave_list
         self.wave_list = np.array([], dtype=float)
         for obj in self.objlist:
@@ -1728,10 +1736,17 @@ class ChromaticConvolution(ChromaticObject):
 
         self.objlist = []
         for obj in args:
+            if isinstance(obj, ChromaticSum):
+                if hasattr(obj, 'covariance_spectrum'):
+                    raise TypeError(
+                        "Cannot propagate covariance_spectrum when constructing"
+                        "ChromaticConvolution object directly.  Use galsim.Convolve() instead."
+                    )
             if isinstance(obj, ChromaticConvolution):
                 self.objlist.extend([o.copy() for o in obj.objlist])
             else:
                 self.objlist.append(obj.copy())
+
         if all([obj.separable for obj in self.objlist]):
             self.separable = True
             self._findSED()
@@ -1873,6 +1888,9 @@ class ChromaticConvolution(ChromaticObject):
         """
         # `ChromaticObject.drawImage()` can just as efficiently handle separable cases.
         if self.separable:
+            # remove unnecessary (in this case) `iimult` keyword
+            if 'iimult' in kwargs:
+                del kwargs['iimult']
             return ChromaticObject.drawImage(self, bandpass, image=image, **kwargs)
 
         # Only make temporary changes to objlist...

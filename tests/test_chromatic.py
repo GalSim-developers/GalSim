@@ -1187,81 +1187,81 @@ def test_gsparam():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_separable_ChromaticSum():
-    """ Test that ChromaticSum separable profile grouping.
-    """
-    import time
-    t1 = time.time()
-    psf = galsim.Gaussian(fwhm=1)
-    gal1 = galsim.Gaussian(fwhm=1)
-    gal2 = galsim.Gaussian(fwhm=1.1)
-    gal3 = galsim.Gaussian(fwhm=1.2)
-
-    # check that 2 summands with same SED make a separable sum.
-    gal = gal1 * bulge_SED + gal2 * bulge_SED
-    img1 = galsim.ImageD(32, 32, scale=0.2)
-    if not gal.separable:
-        raise AssertionError("failed to identify separable ChromaticSum")
-
-    # check that drawing the profile works as expected
-    final = galsim.Convolve(gal, psf)
-    final.drawImage(bandpass, image=img1)
-
-    img2 = galsim.ImageD(32, 32, scale=0.2)
-    component1 = galsim.Convolve(gal1*bulge_SED, psf)
-    component1.drawImage(bandpass, image=img2)
-    component2 = galsim.Convolve(gal2*bulge_SED, psf)
-    component2.drawImage(bandpass, image=img2, add_to_image=True)
-
-    np.testing.assert_array_almost_equal(img1.array, img2.array, 5,
-                                         "separable ChromaticSum not correctly drawn")
-
-    do_pickle(final)
-
-    # Check flux scaling
-    img3 = galsim.ImageD(32, 32, scale=0.2)
-    flux = img1.array.sum()
-    img3 = (final * 2).drawImage(bandpass, image=img3)
-    flux2 = img3.array.sum()
-    np.testing.assert_array_almost_equal(
-        flux2, 2.*flux, 5,
-        err_msg="ChromaticConvolution containing separable ChromaticSum * 2 resulted in wrong flux.")
-
-    final2 = galsim.Convolve(gal * 2, psf)
-    img3 = final2.drawImage(bandpass, image=img3)
-    flux2 = img3.array.sum()
-    np.testing.assert_array_almost_equal(
-        flux2, 2.*flux, 5,
-        err_msg="separable ChromaticSum * 2 resulted in wrong flux.")
-
-    do_pickle(final2)
-
-    # check that 3 summands, 2 with the same SED, 1 with a different SED, make an
-    # inseparable sum.
-    gal = galsim.Add(gal1 * bulge_SED, gal2 * bulge_SED, gal3 * disk_SED)
-    if gal.separable:
-        raise AssertionError("failed to identify inseparable ChromaticSum")
-    # check that its objlist contains a separable Chromatic and a separable ChromaticSum
-    types = dict((o.__class__, o) for o in gal.objlist)
-    if galsim.Chromatic not in types or galsim.ChromaticSum not in types:
-        raise AssertionError("failed to process list of objects with repeated SED")
-
-    # check that drawing the profile works as expected
-    final = galsim.Convolve(gal, psf)
-    final.drawImage(bandpass, image=img1)
-
-    do_pickle(final)
-
-    component3 = galsim.Convolve(gal3*disk_SED, psf)
-    component3.drawImage(bandpass, image=img2, add_to_image=True)
-
-    np.testing.assert_array_almost_equal(img1.array, img2.array, 5,
-                                         "inseparable ChromaticSum not correctly drawn")
-
-    do_pickle(component3)
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+# def test_separable_ChromaticSum():
+#     """ Test that ChromaticSum separable profile grouping.
+#     """
+#     import time
+#     t1 = time.time()
+#     psf = galsim.Gaussian(fwhm=1)
+#     gal1 = galsim.Gaussian(fwhm=1)
+#     gal2 = galsim.Gaussian(fwhm=1.1)
+#     gal3 = galsim.Gaussian(fwhm=1.2)
+#
+#     # check that 2 summands with same SED make a separable sum.
+#     gal = gal1 * bulge_SED + gal2 * bulge_SED
+#     img1 = galsim.ImageD(32, 32, scale=0.2)
+#     if not gal.separable:
+#         raise AssertionError("failed to identify separable ChromaticSum")
+#
+#     # check that drawing the profile works as expected
+#     final = galsim.Convolve(gal, psf)
+#     final.drawImage(bandpass, image=img1)
+#
+#     img2 = galsim.ImageD(32, 32, scale=0.2)
+#     component1 = galsim.Convolve(gal1*bulge_SED, psf)
+#     component1.drawImage(bandpass, image=img2)
+#     component2 = galsim.Convolve(gal2*bulge_SED, psf)
+#     component2.drawImage(bandpass, image=img2, add_to_image=True)
+#
+#     np.testing.assert_array_almost_equal(img1.array, img2.array, 5,
+#                                          "separable ChromaticSum not correctly drawn")
+#
+#     do_pickle(final)
+#
+#     # Check flux scaling
+#     img3 = galsim.ImageD(32, 32, scale=0.2)
+#     flux = img1.array.sum()
+#     img3 = (final * 2).drawImage(bandpass, image=img3)
+#     flux2 = img3.array.sum()
+#     np.testing.assert_array_almost_equal(
+#         flux2, 2.*flux, 5,
+#         err_msg="ChromaticConvolution containing separable ChromaticSum * 2 resulted in wrong flux.")
+#
+#     final2 = galsim.Convolve(gal * 2, psf)
+#     img3 = final2.drawImage(bandpass, image=img3)
+#     flux2 = img3.array.sum()
+#     np.testing.assert_array_almost_equal(
+#         flux2, 2.*flux, 5,
+#         err_msg="separable ChromaticSum * 2 resulted in wrong flux.")
+#
+#     do_pickle(final2)
+#
+#     # check that 3 summands, 2 with the same SED, 1 with a different SED, make an
+#     # inseparable sum.
+#     gal = galsim.Add(gal1 * bulge_SED, gal2 * bulge_SED, gal3 * disk_SED)
+#     if gal.separable:
+#         raise AssertionError("failed to identify inseparable ChromaticSum")
+#     # check that its objlist contains a separable Chromatic and a separable ChromaticSum
+#     types = dict((o.__class__, o) for o in gal.objlist)
+#     if galsim.Chromatic not in types or galsim.ChromaticSum not in types:
+#         raise AssertionError("failed to process list of objects with repeated SED")
+#
+#     # check that drawing the profile works as expected
+#     final = galsim.Convolve(gal, psf)
+#     final.drawImage(bandpass, image=img1)
+#
+#     do_pickle(final)
+#
+#     component3 = galsim.Convolve(gal3*disk_SED, psf)
+#     component3.drawImage(bandpass, image=img2, add_to_image=True)
+#
+#     np.testing.assert_array_almost_equal(img1.array, img2.array, 5,
+#                                          "inseparable ChromaticSum not correctly drawn")
+#
+#     do_pickle(component3)
+#
+#     t2 = time.time()
+#     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_centroid():
     """Test the ChromaticObject.centroid function."""
@@ -1736,7 +1736,7 @@ if __name__ == "__main__":
     test_ChromaticObject_compound_affine_transformation()
     test_analytic_integrator()
     test_gsparam()
-    test_separable_ChromaticSum()
+    # test_separable_ChromaticSum()
     test_centroid()
     test_interpolated_ChromaticObject()
     test_ChromaticOpticalPSF()
