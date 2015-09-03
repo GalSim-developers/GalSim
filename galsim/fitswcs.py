@@ -474,9 +474,20 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             # this next line can emit deprecation warnings.
             # We can safely ignore them (for now...)
             fc = starlink.Ast.FitsChan(starlink.Atl.PyFITSAdapter(hdu))
+            #  Read a FrameSet from the FITS header.
             wcsinfo = fc.read()
+
         if wcsinfo is None:
             raise RuntimeError("Failed to read WCS information from fits file")
+
+        # The PyAst WCS might not have (RA,Dec) axes, which we want.  It might for instance have
+        # (Dec, RA) instead.  If it's possible to convert to an (RA,Dec) system, this next line
+        # will do so.  And if not, the result will be None.
+        # cf. https://github.com/timj/starlink-pyast/issues/8
+        wcsinfo = wcsinfo.findframe(starlink.Ast.SkyFrame())
+        if wcsinfo is None:
+            raise RuntimeError("The WCS read in does not define a pair of celestial axes" )
+
         return wcsinfo
 
     @property
@@ -551,9 +562,15 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             # Again, we can get deprecation warnings here.  Safe to ignore.
             warnings.simplefilter("ignore")
             fc = starlink.Ast.FitsChan(None, starlink.Atl.PyFITSAdapter(hdu) , "Encoding=FITS-WCS")
+            # Let Ast know how big the image is that we'll be writing.
+            for key in ['NAXIS', 'NAXIS1', 'NAXIS2']:
+                if key in header:
+                    fc[key] = header[key]
             success = fc.write(self._wcsinfo)
             # PyAst doesn't write out TPV or ZPX correctly.  It writes them as TAN and ZPN 
-            # respectively.  However, it claims success nonetheless, so we need to countermand that.
+            # respectively.  However, if the maximum error is less than 0.1 pixel, it claims
+            # success nonetheless.  This doesn't seem accurate enough for many purposes,
+            # so we need to countermand that.
             # The easiest way I found to check for them is that the string TPN is in the string 
             # version of wcsinfo.  So check for that and set success = False in that case.
             if 'TPN' in str(self._wcsinfo): success = False

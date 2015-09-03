@@ -1753,6 +1753,7 @@ def test_fitswcs():
     if __name__ == "__main__":
         # For more thorough unit tests (when running python test_wcs.py explicitly), this 
         # will test everything.  If you don't have everything installed (especially 
+        # PyAst, then this may fail.
         test_tags = all_tags
     else:
         # These should always work, since GSFitsWCS will work on them.  So this 
