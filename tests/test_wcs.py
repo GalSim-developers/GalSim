@@ -137,6 +137,16 @@ references = {
     'TAN-PV' : ('tanpv.fits',
             [ ('033009.340034', '-284350.811107', 418, 78, 2859.53882),
               ('033015.728999', '-284501.488629', 148, 393, 2957.98584) ] ),
+    # It is apparently valid FITS format to have Dec as the first axis and RA as the second.
+    # This is in fact the output of PyAst when writing the file tpv.fits in FITS encoding.
+    # It seems worth testing that all the WCS types get this input correct.
+    'TAN-FLIP' : ('tanflip.fits',
+            # From wcstools
+            [ ('033009.262392', '-284348.697347', 418, 78, 2859.53882),
+              ('033015.718834', '-284459.073468', 148, 393, 2957.98584) ] ),
+            # From pyast
+            #[ ('033009.340036', '-284350.697347', 418, 78, 2859.53882),
+              #('033015.729002', '-284501.492576', 148, 393, 2957.98584) ] ),
     'REGION' : ('region.fits',
             [ ('140211.202432', '543007.702200', 80, 80, 2241),
               ('140417.341523', '541628.554326', 45, 54, 1227) ] ),
@@ -1567,14 +1577,14 @@ def test_astropywcs():
     # These all work, but it is quite slow, so only test one of them for the regular unit tests.
     # Test all of them when running python test_wcs.py.
     if __name__ == "__main__":
-        test_tags = [ 'HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'REGION' ]
+        test_tags = [ 'HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TAN-FLIP', 'REGION' ]
     else:
         test_tags = [ 'SIP' ]
 
     dir = 'fits_files'
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        #print tag,' file_name = ',file_name
+        print tag,' file_name = ',file_name
         wcs = galsim.AstropyWCS(file_name, dir=dir)
 
         do_ref(wcs, ref_list, 'AstropyWCS '+tag)
@@ -1602,14 +1612,14 @@ def test_pyastwcs():
     # Test all of them when running python test_wcs.py.
     if __name__ == "__main__":
         test_tags = [ 'HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TPV', 'ZPX',
-                      'TAN-PV', 'REGION', 'TNX' ]
+                      'TAN-PV', 'TAN-FLIP', 'REGION', 'TNX' ]
     else:
         test_tags = [ 'ZPX', 'SIP' ]
 
     dir = 'fits_files'
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        #print tag,' file_name = ',file_name
+        print tag,' file_name = ',file_name
         wcs = galsim.PyAstWCS(file_name, dir=dir)
 
         # The PyAst implementation of the SIP type only gets the inverse transformation
@@ -1619,7 +1629,9 @@ def test_pyastwcs():
 
         do_celestial_wcs(wcs, 'PyAst file '+file_name)
 
-        approx = tag in [ 'ZPX' ]
+        # TAN-FLIP has an error of 4mas after write and read here, which I don't really understand.
+        # but it's small enough an error that I don't think it's worth worrying about further.
+        approx = tag in [ 'ZPX', 'TAN-FLIP' ]
         do_wcs_image(wcs, 'PyAstWCS_'+tag, approx)
 
     t2 = time.time()
@@ -1639,7 +1651,8 @@ def test_wcstools():
         # x,y values vary between two distinct ra,dec outputs.  I have no idea what's going on,
         # since I thought the calculation ought to be deterministic, but it clearly something 
         # isn't working right.  So just skip that test.
-        test_tags = [ 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'ZPX', 'REGION', 'TNX' ]
+        test_tags = [ 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'ZPX', 'TAN-FLIP', 
+                      'REGION', 'TNX' ]
     else:
         test_tags = [ 'TNX' ]
 
@@ -1652,7 +1665,7 @@ def test_wcstools():
 
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        #print tag,' file_name = ',file_name
+        print tag,' file_name = ',file_name
         wcs = galsim.WcsToolsWCS(file_name, dir=dir)
 
         # The wcstools implementation of the SIP and TPV types only gets the inverse 
@@ -1690,7 +1703,7 @@ def test_gsfitswcs():
 
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        #print tag,' file_name = ',file_name
+        print tag,' file_name = ',file_name
         wcs = galsim.GSFitsWCS(file_name, dir=dir)
 
         do_ref(wcs, ref_list, 'GSFitsWCS '+tag)
@@ -1764,7 +1777,7 @@ def test_fitswcs():
 
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        #print tag,' file_name = ',file_name
+        print tag,' file_name = ',file_name
         wcs = galsim.FitsWCS(file_name, dir=dir, suppress_warning=True)
         print 'FitsWCS is really ',type(wcs)
 
