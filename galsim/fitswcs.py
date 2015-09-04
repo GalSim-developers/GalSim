@@ -993,11 +993,10 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         ctype2 = header['CTYPE2']
         if ctype1.startswith('DEC--') and ctype2.startswith('RA---'):
             flip = True
-        elif not (ctype1.startswith('RA---') and ctype2.startswith('DEC--')):
-            raise NotImplementedError("GSFitsWCS can only handle cases where CTYPE1 is RA " +
-                                      "and CTYPE2 is DEC")
-        else:
+        elif ctype1.startswith('RA---') and ctype2.startswith('DEC--'):
             flip = False
+        else:
+            raise RuntimeError("The WCS read in does not define a pair of celestial axes" )
         if ctype1[5:] != ctype2[5:]:
             raise RuntimeError("ctype1, ctype2 do not seem to agree on the WCS type")
         self.wcs_type = ctype1[5:]
