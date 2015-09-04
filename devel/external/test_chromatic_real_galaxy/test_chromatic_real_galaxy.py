@@ -25,6 +25,8 @@ def test_CRG_noise(plot=False):
     linear_SED = (galsim.SED(galsim.LookupTable(waves, (waves-550.0)/(825-550),
                                                 interpolant='linear'))
                   .withFluxDensity(1.0, 700.0))
+
+    print "Creating noise field images"
     HST_images = [galsim.Image(192, 192, scale=0.03, dtype=np.float64),
                   galsim.Image(192, 192, scale=0.03, dtype=np.float64)]
     # Use COSMOS correlated noise
@@ -42,9 +44,19 @@ def test_CRG_noise(plot=False):
                                       [cn1, cn2],
                                       HST_PSF))
 
-    Euclid_obj = galsim.Convolve(crg, Euclid_PSF)
+    crg2 = crg.shear(g1=0.3, g2=0.3)
 
+    print "Convolving by Euclid PSF"
+    Euclid_obj = galsim.Convolve(crg, Euclid_PSF)
+    Euclid_obj2 = galsim.Convolve(crg2, Euclid_PSF)
+
+    print "Drawing through Euclid filter"
     Euclid_im = Euclid_obj.drawImage(visband, nx=64, ny=64, scale=0.03, iimult=2)
+    Euclid_im2 = Euclid_obj2.drawImage(visband, nx=64, ny=64, scale=0.03, iimult=2)
+
+    print "Get CorrelatedNoise from image"
+    cn_image = galsim.CorrelatedNoise(Euclid_im)
+    cn_image2 = galsim.CorrelatedNoise(Euclid_im2)
 
     if plot:
         import matplotlib.pyplot as plt
@@ -65,6 +77,24 @@ def test_CRG_noise(plot=False):
         ax = fig.add_subplot(111)
         ax.set_title("Euclid image")
         im = ax.imshow(Euclid_im.array[0:64, 0:64])
+        plt.colorbar(im)
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.set_title("Observed noise correlation function")
+        im = ax.imshow(cn_image.drawImage().array)
+        plt.colorbar(im)
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.set_title("sheared Euclid image")
+        im = ax.imshow(Euclid_im2.array[0:64, 0:64])
+        plt.colorbar(im)
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.set_title("Observed sheared noise correlation function")
+        im = ax.imshow(cn_image2.drawImage().array)
         plt.colorbar(im)
 
         plt.show()

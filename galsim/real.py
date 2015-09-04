@@ -887,7 +887,7 @@ class ChromaticRealGalaxy(ChromaticSum):
 
             use_index = 0  # For the logger statements below.
             if logger:
-                logger.debug('RealGalaxy %d: Start RealGalaxy constructor.', use_index)
+                logger.debug('ChromaticRealGalaxy %d: Start RealGalaxy constructor.', use_index)
             self.catalog_file = None
         else:
             raise ValueError("Chromatic Real Galaxy Catalog not implemented yet!")
@@ -907,9 +907,6 @@ class ChromaticRealGalaxy(ChromaticSum):
         psfstepk = [bp.stepK() for bp in blue_PSFs]
         psfstepk += [rp.stepK() for rp in red_PSFs]
         self.stepk = min(imgstepk + psfstepk)
-
-        ii = [galsim.InterpolatedImage(img) for img in imgs]
-        print [i.stepK() for i in ii]
 
         nk = int(np.ceil(2*maxk/self.stepk))
 
