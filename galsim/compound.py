@@ -34,7 +34,7 @@ def Add(*args, **kwargs):
     This function will inspect its input arguments to decide if a Sum object or a
     ChromaticSum object is required to represent the sum of surface brightness profiles.
 
-    Typically, you do not need to call Add() explicitly.  Normally, you would just use the +
+    Typically, you do not need to call Add() explicitly.  Normally, you would just use the + 
     operator, which returns a Sum:
 
         >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8)
@@ -213,18 +213,6 @@ def Convolve(*args, **kwargs):
                             + "or a (possibly mixed) list of them.")
     # else args is already the list of objects
 
-    # Distribute over ChromaticSums
-    args = list(args)
-    for i, arg in enumerate(args):
-        if isinstance(arg, galsim.ChromaticSum):
-            del args[i]
-            summands = []
-            for o in arg.objlist:
-                tmp = list(args)
-                tmp.append(o)
-                summands.append(galsim.Convolve(tmp))
-            return galsim.ChromaticSum(summands)
-
     if any([isinstance(a, galsim.ChromaticObject) for a in args]):
         return galsim.ChromaticConvolution(*args, **kwargs)
     else:
@@ -272,7 +260,7 @@ class Convolution(galsim.GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Note: if `gsparams` is unspecified (or None), then the Convolution instance inherits the same
+    Note: if `gsparams` is unspecified (or None), then the Convolution instance inherits the same 
     GSParams as the first item in the list.  Also, note that parameters related to the Fourier-
     space calculations must be set when initializing the individual GSObjects that go into the Sum,
     NOT when creating the Sum (at which point the accuracy and threshold parameters will simply be
@@ -385,9 +373,9 @@ class Convolution(galsim.GSObject):
                 noise = obj.noise
                 others = [ obj2 for obj2 in args if obj2 is not obj ]
                 assert len(others) > 0
-                if len(others) == 1:
+                if len(others) == 1: 
                     noise = noise.convolvedWith(others[0])
-                else:
+                else: 
                     noise = noise.convolvedWith(galsim.Convolve(others))
 
         # Save the construction parameters (as they are at this point) as attributes so they
@@ -783,3 +771,4 @@ _galsim.SBAutoCorrelate.__getstate__ = lambda self: None
 _galsim.SBAutoCorrelate.__setstate__ = lambda self, state: 1
 _galsim.SBAutoCorrelate.__repr__ = lambda self: \
         'galsim._galsim.SBAutoCorrelate(%r, %r, %r)'%self.__getinitargs__()
+
