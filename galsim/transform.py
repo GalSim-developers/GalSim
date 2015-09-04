@@ -43,20 +43,17 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
     if not (isinstance(obj, galsim.GSObject) or isinstance(obj, galsim.ChromaticObject)):
         raise TypeError("Argument to Transform must be either a GSObject or a ChromaticObject.")
 
-    elif (hasattr(jac,'__call__') or hasattr(offset,'__call__') or
+    elif (hasattr(jac,'__call__') or hasattr(offset,'__call__') or 
           hasattr(flux_ratio,'__call__') or isinstance(obj, galsim.ChromaticObject)):
 
-        # Sometimes for Chromatic compound types, it is more efficient to apply the
+        # Sometimes for Chromatic compound types, it is more efficient to apply the 
         # transformation to the components rather than the whole.  In particular, this can
         # help preserve separability in many cases.
 
         # Don't transform ChromaticSum object, better to just transform the arguments.
         if isinstance(obj, galsim.ChromaticSum) or isinstance(obj, galsim.Sum):
-            new_obj = galsim.ChromaticSum(
+            return galsim.ChromaticSum(
                 [ Transform(o,jac,offset,flux_ratio,gsparams) for o in obj.objlist ])
-            if hasattr(obj, 'covariance_spec'):
-                new_obj.covariance_spec = obj.covariance_spec.transform(jac)*flux_ratio**2
-            return new_obj
 
         # If we are just flux scaling, then a Convolution can do that to the first element.
         # NB. Even better, if the flux scaling is chromatic, would be to find a component
@@ -80,7 +77,7 @@ class Transformation(galsim.GSObject):
     --------------
 
     Typically, you do not need to construct a Transformation object explicitly.  This is the type
-    returned by the various transformation methods of GSObject such as shear(), rotate(),
+    returned by the various transformation methods of GSObject such as shear(), rotate(), 
     shift(), transform(), etc.  All the various transformations can be described as a combination
     of transform() and shift(), which are described by (dudx,dudy,dvdx,dvdy) and (dx,dy)
     respectively.
@@ -212,3 +209,4 @@ _galsim.SBTransform.__getstate__ = lambda self: None
 _galsim.SBTransform.__setstate__ = lambda self, state: 1
 _galsim.SBTransform.__repr__ = lambda self: \
         'galsim._galsim.SBTransform(%r, %r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
+
