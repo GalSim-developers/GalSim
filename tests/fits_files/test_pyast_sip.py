@@ -1,9 +1,9 @@
 # This script is featured on pyast issue page:
 # https://github.com/timj/starlink-pyast/issues/8
-# It also constructs the file tanflip.fits, which we use in the test suite.
-# PyAst natively flipps the order of RA and Dec when writing this file as a TAN WCS.
-# This was a kind of input that wasn't otherwise featured in our test suite, but is
-# apparently allowed by the fits standard.  So I added it.
+# PyAst had been failing to write SIP files correctly, but they fixed this in
+# v3.9.0.  We override their claim of success regardless, since they aren't
+# necessarily accurate enough for our purposes (only accurate to 0.1 pixels).
+# Thus, older PyAst versions work correctly in GalSim.
 
 import starlink.Atl as Atl
 import starlink.Ast as Ast
