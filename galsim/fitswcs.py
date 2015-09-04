@@ -183,8 +183,23 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         # We allow for the option to fix up the header information when a modification can
         # make it readable by astropy.wcs.
 
-        # So far, we don't have any, but something could be added in the future.
-        pass
+        # Older versions of astropy had trouble with files where the axes were swapped.
+        # So fix them if necessary.  I know >= 1.0.1 works.  0.2.4 and 0.3.1 both fail.
+        import astropy
+        if astropy.__version__ < '1.0.1':
+            ctype1 = header.get('CTYPE1', 'RA---')
+            ctype2 = header.get('CTYPE2', 'DEC--')
+            if ctype1.startswith('DEC--') and ctype2.startswith('RA---'):
+                for key1, key2 in [ ('CTYPE1', 'CTYPE2'),
+                                    ('CRVAL1', 'CRVAL2'),
+                                    ('CDELT1', 'CDELT2'),
+                                    ('CD1_1', 'CD2_1'),
+                                    ('CD1_2', 'CD2_2'),
+                                    ('PC1_1', 'PC2_1'),
+                                    ('PC1_2', 'PC2_2'),
+                                    ('CUNIT1', 'CUNIT2') ]:
+                    if key1 in header and key2 in header:
+                        header[key1], header[key2] = header[key2], header[key1]
 
     def _radec(self, x, y):
         import numpy
@@ -192,15 +207,13 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         y1 = numpy.atleast_1d(y)
 
         try:
-            # Apparently, the returned values aren't _necessarily_ (ra, dec).  They could be
-            # (dec, ra) instead!  But if you add ra_dec_order=True, then it will be (ra, dec).
-            # I can't imagine why that isn't the default, but there you go.
-            # This currently fails with an AttributeError about astropy.wcs.Wcsprm.lattype
+            # Old versions fail with an AttributeError about astropy.wcs.Wcsprm.lattype
             # cf. https://github.com/astropy/astropy/pull/1463
-            # Once they fix it, this is what we want.
+            # This has been fixed for a while now, but leave in this workaround for old versions.
             ra, dec = self._wcs.all_pix2world(x1, y1, 1, ra_dec_order=True)
         except AttributeError:
-            # Until then, just assume that the returned values really are ra, dec.
+            # If that failed, then we should be on version < 1.0.1, and the header should have
+            # been fixed above by _fix_header.  So this should work correctly.
             ra, dec = self._wcs.all_pix2world(x1, y1, 1)
 
         # astropy outputs ra, dec in degrees.  Need to convert to radians.
