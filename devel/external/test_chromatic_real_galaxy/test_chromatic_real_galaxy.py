@@ -19,6 +19,9 @@ def test_CRG_noise(plot=False):
     rband = visband.truncate(blue_limit=550.0, red_limit=700.0)
     iband = visband.truncate(blue_limit=700.0, red_limit=825.0)
 
+    maxk = max([Euclid_PSF.evaluateAtWavelength(waves[0]).maxK(),
+                Euclid_PSF.evaluateAtWavelength(waves[-1]).maxK()])
+
     const_SED = (galsim.SED(galsim.LookupTable(waves, np.ones_like(waves),
                                                interpolant='linear'))
                  .withFluxDensity(1.0, 700.0))
@@ -42,7 +45,8 @@ def test_CRG_noise(plot=False):
                                       [rband, iband],
                                       [const_SED, linear_SED],
                                       [cn1, cn2],
-                                      HST_PSF))
+                                      HST_PSF),
+                                      maxk=maxk)
 
     crg2 = crg.shear(g1=0.3, g2=0.3)
 

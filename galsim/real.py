@@ -787,50 +787,39 @@ def _parse_files_dirs(file_name, image_dir, dir, noise_dir):
     return full_file_name, full_image_dir, full_noise_dir
 
 
-def _complex_to_real_vec(vec):
+def _complex_to_real(a):
     import numpy as np
-    out = np.empty((2*vec.shape[0],), dtype=float)
-    for i in range(vec.shape[0]):
-        out[2*i] = vec[i].real
-        out[2*i+1] = vec[i].imag
-    return out
+    if a.ndim == 1:
+        out = np.empty((2*a.shape[0],), dtype=float)
+        for i in range(a.shape[0]):
+            out[2*i] = a[i].real
+            out[2*i+1] = a[i].imag
+        return out
+    elif a.ndim == 2:
+        out = np.empty((2*a.shape[0], 2*a.shape[1]), dtype=float)
+        for i in range(a.shape[0]):
+            for j in range(a.shape[1]):
+                out[2*i, 2*j] = a[i, j].real
+                out[2*i, 2*j+1] = -a[i, j].imag
+                out[2*i+1, 2*j] = a[i, j].imag
+                out[2*i+1, 2*j+1] = a[i, j].real
+        return out
+    else:
+        raise ValueError("Unsupport dimension.")
 
-
-def _real_to_complex_vec(vec):
+def _real_to_complex(a):
     import numpy as np
-    out = np.empty((vec.shape[0]/2,), dtype=complex)
-    for i in range(vec.shape[0]/2):
-        out[i] = vec[2*i] + 1j * vec[2*i+1]
-    return out
-
-
-def _complex_to_real_mat(mat):
-    import numpy as np
-    out = np.empty((2*mat.shape[0], 2*mat.shape[1]), dtype=float)
-    for i in range(mat.shape[0]):
-        for j in range(mat.shape[1]):
-            out[2*i, 2*j] = mat[i, j].real
-            out[2*i, 2*j+1] = -mat[i, j].imag
-            out[2*i+1, 2*j] = mat[i, j].imag
-            out[2*i+1, 2*j+1] = mat[i, j].real
-    return out
-
-
-def _real_to_complex_mat(mat):
-    import numpy as np
-    out = np.empty((mat.shape[0]/2, mat.shape[1]/2), dtype=complex)
-    for i in range(mat.shape[0]/2):
-        for j in range(mat.shape[1]/2):
-            out[i, j] = mat[2*i, 2*j] - 1j * mat[2*i, 2*j+1]
-    return out
-
-
-def _complex_to_real_weight(weight):
-    import numpy as np
-    out = np.empty((2*weight.shape[0],), dtype=float)
-    for i in range(weight.shape[0]):
-        out[2*i:2*i+2] = weight[i]
-    return out
+    if a.ndim == 1:
+        out = np.empty((a.shape[0]/2,), dtype=complex)
+        for i in range(a.shape[0]/2):
+            out[i] = a[2*i] + 1j * a[2*i+1]
+        return out
+    else:
+        out = np.empty((a.shape[0]/2, a.shape[1]/2), dtype=complex)
+        for i in range(a.shape[0]/2):
+            for j in range(a.shape[1]/2):
+                out[i, j] = a[2*i, 2*j] - 1j * a[2*i, 2*j+1]
+        return out
 
 
 class ChromaticRealGalaxy(ChromaticSum):
@@ -862,9 +851,8 @@ class ChromaticRealGalaxy(ChromaticSum):
     """
     def __init__(self, chromatic_real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
-                 pad_factor=4, noise_pad_size=0, gsparams=None, logger=None):
+                 pad_factor=4, noise_pad_size=0, maxk=None, gsparams=None, logger=None):
         import numpy as np
-        import statsmodels.api as sm
 
         if rng is None:
             self.rng = galsim.BaseDeviate()
@@ -876,14 +864,14 @@ class ChromaticRealGalaxy(ChromaticSum):
         self._rng = self.rng.duplicate()
 
         if flux is not None and flux_rescale is not None:
-            raise TypeError("Cannot supply a flux and a flux rescaling factor!")
+            raise TypeError("Cannot supply both a flux and a flux rescaling factor!")
 
         if isinstance(chromatic_real_galaxy_catalog, tuple):
             # Special (undocumented) way to build a ChromaticRealGalaxy without needing the rgc
             # directly by providing the things we need from it.
-            imgs, tputs, SEDs, cfuncs, cPSF = chromatic_real_galaxy_catalog
+            imgs, tputs, SEDs, xis, PSF = chromatic_real_galaxy_catalog
 
-            self.SEDs = [bsed.withFlux(1.0, tputs[0]) for bsed in SEDs]
+            SEDs = [sed.withFlux(1.0, tputs[0]) for sed in SEDs]
 
             use_index = 0  # For the logger statements below.
             if logger:
@@ -895,63 +883,75 @@ class ChromaticRealGalaxy(ChromaticSum):
         # TODO: code to query not-yet-existing catalog for imgs, tputs, SEDs, cfuncs, cPSF
 
         # Need to sample both the effective PSFs and the imgs on the same Fourier grid.
-        imgmaxk = [np.pi/img.scale for img in imgs]
-        blue_PSFs = [cPSF.evaluateAtWavelength(tp.blue_limit) for tp in tputs]
-        red_PSFs = [cPSF.evaluateAtWavelength(tp.red_limit) for tp in tputs]
-        psfmaxk = [bp.maxK() for bp in blue_PSFs]
-        psfmaxk += [rp.maxK() for rp in red_PSFs]
 
-        maxk = min([max(psfmaxk)]+imgmaxk)
+        # Select maxk by requiring modes to be resolved both by the marginal PSFs (i.e., the
+        # achromatic PSFs obtained by evaluating the chromatic PSF at the blue and red edges of
+        # each of the filters provided, and also by the input images' pixel scales.
 
-        imgstepk = [2*np.pi/(img.scale*max(img.array.shape)) for img in imgs]
-        psfstepk = [bp.stepK() for bp in blue_PSFs]
-        psfstepk += [rp.stepK() for rp in red_PSFs]
-        self.stepk = min(imgstepk + psfstepk)
+        img_maxk = np.min([np.pi/img.scale for img in imgs])
+        marginal_PSFs = [PSF.evaluateAtWavelength(tp.blue_limit) for tp in tputs]
+        marginal_PSFs += [PSF.evaluateAtWavelength(tp.red_limit) for tp in tputs]
+        psf_maxk = np.min([p.maxK() for p in marginal_PSFs])
 
-        nk = int(np.ceil(2*maxk/self.stepk))
+        # In practice, the output PSF will almost always cut off at smaller maxK than obtained
+        # above.  In this case, the user can set maxK keyword argument for improved efficiency.
+        if maxk is None:
+            self.maxk = np.min([img_maxk, psf_maxk])
+        else:
+            self.maxk = np.min([img_maxk, psf_maxk, maxk])
+
+        # Setting stepk is trickier.  We'll assume that the postage stamp inputs are already at the
+        # critical size to avoid significant aliasing and use the implied stepK.
+        self.stepk = np.min([2*np.pi/(img.scale*max(img.array.shape)) for img in imgs])
+
+        nk = int(np.ceil(2*self.maxk/self.stepk))
 
         # Create Fourier-space kimages of effective PSFs
-        eff_PSF_kimgs = np.empty((len(imgs), len(self.SEDs), nk, nk), dtype=complex)
+        eff_PSF_kimgs = np.empty((len(imgs), len(SEDs), nk, nk), dtype=complex)
         for i, (img, tput) in enumerate(zip(imgs, tputs)):
-            for j, bsed in enumerate(self.SEDs):
-                star = galsim.Gaussian(fwhm=1e-8) * bsed
-                # assume that cPSF does not yet include pixel contribution to PSF
-                conv = galsim.Convolve(cPSF, star, galsim.Pixel(img.scale))
+            for j, sed in enumerate(SEDs):
+                star = galsim.Gaussian(fwhm=1e-8) * sed
+                # assume that PSF does not yet include pixel contribution
+                conv = galsim.Convolve(PSF, star, galsim.Pixel(img.scale))
                 re, im = conv.drawKImage(tput, nx=nk, ny=nk, scale=self.stepk)
                 eff_PSF_kimgs[i, j, :, :] = re.array + 1j * im.array
 
         # Get Fourier-space representations of input imgs.
-        self.kimgs = np.empty((len(imgs), nk, nk), dtype=complex)
+        kimgs = np.empty((len(imgs), nk, nk), dtype=complex)
         for i, img in enumerate(imgs):
             re, im = galsim.InterpolatedImage(img).drawKImage(nx=nk, ny=nk, scale=self.stepk)
-            self.kimgs[i, :, :] = re.array + 1j * im.array
+            kimgs[i, :, :] = re.array + 1j * im.array
 
         # Setup input noise power spectra
         pk = np.empty((len(imgs), nk, nk), dtype=float)
-        for i, cfunc in enumerate(cfuncs):
-            # transform of real even function should be real.
-            re, _ = cfunc.drawKImage(nx=nk, ny=nk, scale=self.stepk)
+        for i, xi in enumerate(xis):
+            # transform of real even function should be real, so ignore imag part of result.
+            re, _ = xi.drawKImage(nx=nk, ny=nk, scale=self.stepk)
             pk[i, :, :] = re.array
 
-        # Setup output noise covariance spectrum
-        self.Sigma = np.empty((len(self.SEDs), len(self.SEDs), nk, nk), dtype=complex)
-        #  Solve the weighted linear least squares problem.  This is effectively a constrained
-        #  chromatic deconvolution.
-        self.aj = np.empty((nk, nk, len(self.SEDs)), dtype=complex)
+        # Allocate output coeffs and covariances.
+        Sigma = np.empty((len(SEDs), len(SEDs), nk, nk), dtype=complex)
+        coef = np.empty((len(SEDs), nk, nk), dtype=complex)
+        # Solve the weighted linear least squares problem for each Fourier mode.  This is
+        # effectively a constrained chromatic deconvolution.
         for iy in xrange(nk):
-            for ix in xrange(nk):
-                A = _complex_to_real_mat(eff_PSF_kimgs[:, :, iy, ix])
-                b = _complex_to_real_vec(self.kimgs[:, iy, ix])
-                w = _complex_to_real_weight(1.0 / (2.0 * np.pi * pk[:, iy, ix]))
-                model = sm.WLS(b, A, weights=w)
-                result = model.fit()
-                self.aj[iy, ix, :] = _real_to_complex_vec(result.params)
-                self.Sigma[:, :, iy, ix] = _real_to_complex_mat(result.cov_params())
+            for ix in xrange(iy, nk): # Hermitian, so only need to do half of Fourier-modes
+                w = _complex_to_real(np.diag(1.0 / pk[:, iy, ix]))
+                root_w = np.sqrt(w)
+                A = np.dot(root_w, _complex_to_real(eff_PSF_kimgs[:, :, iy, ix]))
+                b = np.dot(root_w, _complex_to_real(kimgs[:, iy, ix]))
+                x = _real_to_complex(np.linalg.lstsq(A, b)[0])
+                coef[:, iy, ix] = x
+                coef[:, -iy, -ix] = np.conjugate(x)
+                dx = _real_to_complex(np.linalg.inv(np.dot(A.T, A)))
+                Sigma[:, :, iy, ix] = dx
+                Sigma[:, :, -iy, -ix] = np.conjugate(dx)
 
         objlist = []
-        for i, sed in enumerate(self.SEDs):
-            re = galsim.ImageD(self.aj[:, :, i].real.copy(), scale=self.stepk)
-            im = galsim.ImageD(self.aj[:, :, i].imag.copy(), scale=self.stepk)
+        for i, sed in enumerate(SEDs):
+            re = galsim.ImageD(coef[i, :, :].real.copy(), scale=self.stepk)
+            im = galsim.ImageD(coef[i, :, :].imag.copy(), scale=self.stepk)
             objlist.append(sed * galsim.InterpolatedKImage(re, im))
 
+        self.covspec = galsim.CovarianceSpectrum(Sigma, self.stepk)
         super(ChromaticRealGalaxy, self).__init__(objlist)

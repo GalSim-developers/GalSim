@@ -107,7 +107,7 @@ from random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate,
 from random import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate
 from noise import BaseNoise, GaussianNoise, PoissonNoise, CCDNoise
 from noise import DeviateNoise, VariableGaussianNoise
-from correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
+from correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise, CovarianceSpectrum
 
 # GSObject
 from base import GSParams, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat

@@ -54,8 +54,9 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
         if isinstance(obj, galsim.ChromaticSum) or isinstance(obj, galsim.Sum):
             new_obj = galsim.ChromaticSum(
                 [ Transform(o,jac,offset,flux_ratio,gsparams) for o in obj.objlist ])
-            if hasattr(obj, 'covariance_spec'):
-                new_obj.covariance_spec = obj.covariance_spec.transform(jac)*flux_ratio**2
+            if hasattr(obj, 'covspec'):
+                dudx, dudy, dvdx, dvdy = numpy.asarray(jac, dtype=float).flatten()
+                new_obj.covspec = obj.covspec.transform(dudx, dudy, dvdx, dvdy)*flux_ratio**2
             return new_obj
 
         # If we are just flux scaling, then a Convolution can do that to the first element.
