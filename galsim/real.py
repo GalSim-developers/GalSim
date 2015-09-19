@@ -912,7 +912,7 @@ class ChromaticRealGalaxy(ChromaticSum):
                 # assume that PSF does not include pixel contribution, so add it in.
                 conv = galsim.Convolve(PSF, star, galsim.Pixel(img.scale))
                 re, im = conv.drawKImage(tput, nx=nk, ny=nk, scale=self.stepk)
-                eff_PSF_kimgs[i, j, :, :] = re.array + 1j * im.array
+                eff_PSF_kimgs[i, j] = re.array + 1j * im.array
 
         # Get Fourier-space representations of input imgs.  It's tempting to just create
         # `InterpolatedImage` objects and use drawKImage here, but I've found that this
@@ -922,7 +922,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         kimgs = np.empty((len(imgs), nk, nk), dtype=complex)
         # for i, img in enumerate(imgs):
         #     re, im = galsim.InterpolatedImage(img).drawKImage(nx=nk, ny=nk, scale=self.stepk)
-        #     kimgs[i, :, :] = re.array + 1j * im.array
+        #     kimgs[i] = re.array + 1j * im.array
         for i, img in enumerate(imgs):
             tmp = np.fft.fftshift(np.fft.fft2(img.array))
             nx = img.array.shape[0]
@@ -931,7 +931,7 @@ class ChromaticRealGalaxy(ChromaticSum):
             im = galsim.Image(tmp.imag.copy(), scale=scale)
             tmp = galsim.InterpolatedKImage(re, im)
             re, im = tmp.drawKImage(nx=nk, ny=nk, scale=self.stepk)
-            kimgs[i, :, :] = re.array + 1j * im.array
+            kimgs[i] = re.array + 1j * im.array
 
         # Setup input noise power spectra
         # Similar to above, it's better to draw in real space, fft, then interpolate as opposed to
@@ -947,7 +947,7 @@ class ChromaticRealGalaxy(ChromaticSum):
             im = galsim.Image(tmp*0, scale=scale)
             tmp = galsim.InterpolatedKImage(re, im)
             re, _ = tmp.drawKImage(nx=nk, ny=nk, scale=self.stepk)
-            pk[i, :, :] = re.array
+            pk[i] = re.array
 
         # Allocate output coeffs and covariances.
         Sigma = np.empty((len(SEDs), len(SEDs), nk, nk), dtype=complex)
@@ -969,8 +969,8 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         objlist = []
         for i, sed in enumerate(SEDs):
-            re = galsim.ImageD(coef[i, :, :].real.copy(), scale=self.stepk)
-            im = galsim.ImageD(coef[i, :, :].imag.copy(), scale=self.stepk)
+            re = galsim.ImageD(coef[i].real.copy(), scale=self.stepk)
+            im = galsim.ImageD(coef[i].imag.copy(), scale=self.stepk)
             objlist.append(sed * galsim.InterpolatedKImage(re, im))
 
         self.covspec = galsim.CovarianceSpectrum(Sigma, self.stepk)
