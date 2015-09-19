@@ -49,6 +49,8 @@ def test_CRG_noise(plot=False):
                                      maxk=maxk)
 
     crg2 = crg.shear(g1=0.2)
+    noise = crg.noiseWithPSF(visband, Euclid_PSF)
+    noise2 = crg2.noiseWithPSF(visband, Euclid_PSF)
 
     print "Convolving by Euclid PSF"
     Euclid_obj = galsim.Convolve(crg, Euclid_PSF)
